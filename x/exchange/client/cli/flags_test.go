@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"errors"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
@@ -21,10 +23,12 @@ import (
 )
 
 const (
+	flagBool        = "bool"
 	flagInt         = "int"
 	flagString      = "string"
 	flagStringSlice = "string-slice"
 	flagUintSlice   = "uint-slice"
+	flagUint32      = "uint32"
 )
 
 func TestAddFlagsAdmin(t *testing.T) {
@@ -197,6 +201,65 @@ func TestReadFlagAuthority(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadFlagAuthority")
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagAuthority error")
 			assert.Equal(t, tc.expAddr, addr, "ReadFlagAuthority address")
+		})
+	}
+}
+
+func TestReadFlagAuthorityOrDefault(t *testing.T) {
+	goodFlagSet := func() *pflag.FlagSet {
+		flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+		flagSet.String(cli.FlagAuthority, "", "The authority")
+		return flagSet
+	}
+
+	tests := []struct {
+		name    string
+		flagSet func() *pflag.FlagSet
+		flags   []string
+		def     string
+		expAddr string
+		expErr  string
+	}{
+		{
+			name: "wrong flag type",
+			flagSet: func() *pflag.FlagSet {
+				flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+				flagSet.Int(cli.FlagAuthority, 0, "The authority")
+				return flagSet
+
+			},
+			def:     "thedefault",
+			expAddr: "thedefault",
+			expErr:  "trying to get string value of flag of type int",
+		},
+		{
+			name:    "provided",
+			flagSet: goodFlagSet,
+			flags:   []string{"--" + cli.FlagAuthority, "usemeinstead"},
+			def:     "thedefault",
+			expAddr: "usemeinstead",
+		},
+		{
+			name:    "not provided",
+			flagSet: goodFlagSet,
+			def:     "thedefault",
+			expAddr: "thedefault",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			flagSet := tc.flagSet()
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var addr string
+			testFunc := func() {
+				addr, err = cli.ReadFlagAuthorityOrDefault(flagSet, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagAuthorityOrDefault")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagAuthorityOrDefault error")
+			assert.Equal(t, tc.expAddr, addr, "ReadFlagAuthorityOrDefault address")
 		})
 	}
 }
@@ -931,6 +994,7 @@ func TestReadAccessGrantsFlag(t *testing.T) {
 		testName  string
 		flags     []string
 		name      string
+		def       []exchange.AccessGrant
 		expGrants []exchange.AccessGrant
 		expErr    string
 	}{
@@ -945,9 +1009,20 @@ func TestReadAccessGrantsFlag(t *testing.T) {
 			expErr:   "trying to get stringSlice value of flag of type int",
 		},
 		{
-			testName: "nothing provided",
+			testName: "nothing provided, nil default",
 			name:     flagStringSlice,
 			expErr:   "",
+		},
+		{
+			testName: "nothing provided, with default",
+			name:     flagStringSlice,
+			def: []exchange.AccessGrant{
+				{Address: "someone", Permissions: []exchange.Permission{3, 4}},
+			},
+			expGrants: []exchange.AccessGrant{
+				{Address: "someone", Permissions: []exchange.Permission{3, 4}},
+			},
+			expErr: "",
 		},
 		{
 			testName: "three vals, one bad",
@@ -981,7 +1056,7 @@ func TestReadAccessGrantsFlag(t *testing.T) {
 
 			var grants []exchange.AccessGrant
 			testFunc := func() {
-				grants, err = cli.ReadAccessGrantsFlag(flagSet, tc.name)
+				grants, err = cli.ReadAccessGrantsFlag(flagSet, tc.name, tc.def)
 			}
 			require.NotPanics(t, testFunc, "ReadAccessGrantsFlag(%q)", tc.name)
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadAccessGrantsFlag(%q) error", tc.name)
@@ -1208,6 +1283,7 @@ func TestReadFlatFeeFlag(t *testing.T) {
 		testName string
 		flags    []string
 		name     string
+		def      []sdk.Coin
 		expCoins []sdk.Coin
 		expErr   string
 	}{
@@ -1222,8 +1298,15 @@ func TestReadFlatFeeFlag(t *testing.T) {
 			expErr:   "trying to get stringSlice value of flag of type int",
 		},
 		{
-			testName: "nothing provided",
+			testName: "nothing provided, nil default",
 			name:     flagStringSlice,
+			expErr:   "",
+		},
+		{
+			testName: "nothing provided, with default",
+			name:     flagStringSlice,
+			def:      []sdk.Coin{sdk.NewInt64Coin("cherry", 123)},
+			expCoins: []sdk.Coin{sdk.NewInt64Coin("cherry", 123)},
 			expErr:   "",
 		},
 		{
@@ -1245,7 +1328,7 @@ func TestReadFlatFeeFlag(t *testing.T) {
 
 			var coins []sdk.Coin
 			testFunc := func() {
-				coins, err = cli.ReadFlatFeeFlag(flagSet, tc.name)
+				coins, err = cli.ReadFlatFeeFlag(flagSet, tc.name, tc.def)
 			}
 			require.NotPanics(t, testFunc, "ReadFlatFeeFlag(%q)", tc.name)
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlatFeeFlag(%q) error", tc.name)
@@ -1350,6 +1433,7 @@ func TestReadFeeRatiosFlag(t *testing.T) {
 		testName  string
 		flags     []string
 		name      string
+		def       []exchange.FeeRatio
 		expRatios []exchange.FeeRatio
 		expErr    string
 	}{
@@ -1364,9 +1448,16 @@ func TestReadFeeRatiosFlag(t *testing.T) {
 			expErr:   "trying to get stringSlice value of flag of type int",
 		},
 		{
-			testName: "nothing provided",
+			testName: "nothing provided, nil default",
 			name:     flagStringSlice,
 			expErr:   "",
+		},
+		{
+			testName:  "nothing provided, with default",
+			name:      flagStringSlice,
+			def:       []exchange.FeeRatio{{Price: sdk.NewInt64Coin("apple", 500), Fee: sdk.NewInt64Coin("plum", 3)}},
+			expRatios: []exchange.FeeRatio{{Price: sdk.NewInt64Coin("apple", 500), Fee: sdk.NewInt64Coin("plum", 3)}},
+			expErr:    "",
 		},
 		{
 			testName: "three vals, one bad",
@@ -1390,7 +1481,7 @@ func TestReadFeeRatiosFlag(t *testing.T) {
 
 			var ratios []exchange.FeeRatio
 			testFunc := func() {
-				ratios, err = cli.ReadFeeRatiosFlag(flagSet, tc.name)
+				ratios, err = cli.ReadFeeRatiosFlag(flagSet, tc.name, tc.def)
 			}
 			require.NotPanics(t, testFunc, "ReadFeeRatiosFlag(%q)", tc.name)
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFeeRatiosFlag(%q) error", tc.name)
@@ -1776,6 +1867,682 @@ func TestReadStringFlagOrArg(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadStringFlagOrArg")
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadStringFlagOrArg error")
 			assert.Equal(t, tc.expStr, str, "ReadStringFlagOrArg string")
+		})
+	}
+}
+
+func TestReadProposalFlag(t *testing.T) {
+	tests := []struct {
+		name string
+		// setup should return the proposal filename and the expected Anys.
+		setup    func(t *testing.T) (string, []*codectypes.Any)
+		flagSet  *pflag.FlagSet
+		expInErr []string
+	}{
+		{
+			name: "err getting flag",
+			setup: func(t *testing.T) (string, []*codectypes.Any) {
+				return "", nil
+			},
+			flagSet:  pflag.NewFlagSet("", pflag.ContinueOnError),
+			expInErr: []string{"flag accessed but not defined: proposal"},
+		},
+		{
+			name: "no flag given",
+			setup: func(t *testing.T) (string, []*codectypes.Any) {
+				return "", nil
+			},
+			expInErr: nil,
+		},
+		{
+			name: "file does not exist",
+			setup: func(t *testing.T) (string, []*codectypes.Any) {
+				tdir := t.TempDir()
+				noSuchFile := filepath.Join(tdir, "no-such-file.json")
+				return noSuchFile, nil
+			},
+			expInErr: []string{"open ", "no-such-file.json", "no such file or directory"},
+		},
+		{
+			name: "cannot unmarshal contents",
+			setup: func(t *testing.T) (string, []*codectypes.Any) {
+				tdir := t.TempDir()
+				notJSON := filepath.Join(tdir, "not-json.json")
+				contents := []byte("This is not\na JSON file.\n")
+				writeFile(t, notJSON, contents)
+				return notJSON, nil
+			},
+			expInErr: []string{
+				"failed to unmarshal --proposal \"", "\" contents as Tx",
+				"invalid character 'T' looking for beginning of value",
+			},
+		},
+		{
+			name: "no body",
+			setup: func(t *testing.T) (string, []*codectypes.Any) {
+				contents := `{
+  "auth_info": {
+    "signer_infos": [],
+    "fee": {
+      "amount": [],
+      "gas_limit": "200000",
+      "payer": "",
+      "granter": ""
+    },
+    "tip": null
+  },
+  "signatures": []
+}
+`
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-body.json")
+				writeFile(t, fn, []byte(contents))
+				return fn, nil
+			},
+			expInErr: []string{"the contents of \"", "\" does not have a \"body\""},
+		},
+		{
+			name: "no body messages",
+			setup: func(t *testing.T) (string, []*codectypes.Any) {
+				tx := newTx(t)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-body-messages.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"the contents of \"", "\" does not have any body messages"},
+		},
+		{
+			name: "no submit proposals",
+			setup: func(t *testing.T) (string, []*codectypes.Any) {
+				msg := &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market: exchange.Market{
+						MarketDetails: exchange.MarketDetails{
+							Name: "New Market Name",
+						},
+					},
+				}
+				tx := newTx(t, msg)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-proposals.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"no *v1.MsgSubmitProposal messages found in \""},
+		},
+		{
+			name: "no messages in submit proposals",
+			setup: func(t *testing.T) (string, []*codectypes.Any) {
+				prop := newGovProp(t)
+				tx := newTx(t, prop)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-messages-in-proposal.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"no messages found in any *v1.MsgSubmitProposal messages in \""},
+		},
+		{
+			name: "1 message found",
+			setup: func(t *testing.T) (string, []*codectypes.Any) {
+				msg := &exchange.MsgMarketWithdrawRequest{
+					Admin:     sdk.AccAddress("Admin_______________").String(),
+					MarketId:  3,
+					ToAddress: sdk.AccAddress("ToAddress___________").String(),
+					Amount:    sdk.NewCoins(sdk.NewInt64Coin("apple", 15)),
+				}
+				prop := newGovProp(t, msg)
+				tx := newTx(t, prop)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "one-message.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, prop.Messages
+			},
+			expInErr: nil,
+		},
+		{
+			name: "3 messages found",
+			setup: func(t *testing.T) (string, []*codectypes.Any) {
+				msg1 := &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market:    exchange.Market{MarketId: 88},
+				}
+				msg2 := &exchange.MsgGovManageFeesRequest{
+					Authority:           cli.AuthorityAddr.String(),
+					MarketId:            42,
+					AddFeeCreateAskFlat: []sdk.Coin{sdk.NewInt64Coin("plum", 5)},
+				}
+				msg3 := &exchange.MsgCancelOrderRequest{
+					Signer:  cli.AuthorityAddr.String(),
+					OrderId: 5555,
+				}
+				prop1 := newGovProp(t, msg1)
+				prop2 := newGovProp(t, msg2, msg3)
+				tx := newTx(t, prop1, prop2)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "three-messages.json")
+				writeFileAsJson(t, fn, tx)
+				expAnys := make([]*codectypes.Any, 0, len(prop1.Messages)+len(prop2.Messages))
+				expAnys = append(expAnys, prop1.Messages...)
+				expAnys = append(expAnys, prop2.Messages...)
+				return fn, expAnys
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			propFN, expAnys := tc.setup(t)
+
+			if tc.flagSet == nil {
+				tc.flagSet = pflag.NewFlagSet("", pflag.ContinueOnError)
+				tc.flagSet.String(cli.FlagProposal, "", "The Proposal")
+			}
+
+			if len(propFN) > 0 && len(tc.expInErr) > 0 {
+				tc.expInErr = append(tc.expInErr, propFN)
+			}
+
+			args := make([]string, 0, 2)
+			if len(propFN) > 0 {
+				args = append(args, "--"+cli.FlagProposal, propFN)
+			}
+
+			err := tc.flagSet.Parse(args)
+			require.NoError(t, err, "flagSet.Parse(%q)", args)
+
+			clientCtx := newClientContextWithCodec()
+
+			var actPropFN string
+			var actAnys []*codectypes.Any
+			testFunc := func() {
+				actPropFN, actAnys, err = cli.ReadProposalFlag(clientCtx, tc.flagSet)
+			}
+			require.NotPanics(t, testFunc, "ReadProposalFlag")
+
+			assertions.AssertErrorContents(t, err, tc.expInErr, "ReadProposalFlag error")
+			assert.Equal(t, propFN, actPropFN, "ReadProposalFlag filename")
+			// We can't just assert that expAnys and actAnys are equal due to some internal differences.
+			// All we really care about is that they have the same types and msg contents.
+			expTypes := getAnyTypes(expAnys)
+			actTypes := getAnyTypes(actAnys)
+			if assert.Equal(t, expTypes, actTypes, "ReadProposalFlag anys types") {
+				for i := range expAnys {
+					expMsg := expAnys[i].GetCachedValue()
+					actMsg := actAnys[i].GetCachedValue()
+					assert.Equal(t, expMsg, actMsg, "ReadProposalFlag anys[%d] cached value", i)
+				}
+			}
+		})
+	}
+}
+
+func TestReadMsgGovCreateMarketRequestFromProposalFlag(t *testing.T) {
+	tests := []struct {
+		name string
+		// setup should return the proposal filename and the expected Msg.
+		setup    func(t *testing.T) (string, *exchange.MsgGovCreateMarketRequest)
+		expInErr []string
+	}{
+		{
+			name: "error reading file",
+			setup: func(t *testing.T) (string, *exchange.MsgGovCreateMarketRequest) {
+				tx := newTx(t)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-body-messages.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"the contents of \"", "\" does not have any body messages"},
+		},
+		{
+			name: "no flag given",
+			setup: func(t *testing.T) (string, *exchange.MsgGovCreateMarketRequest) {
+				return "", nil
+			},
+			expInErr: nil,
+		},
+		{
+			name: "no msgs of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgGovCreateMarketRequest) {
+				msg := &exchange.MsgGovManageFeesRequest{
+					Authority:           cli.AuthorityAddr.String(),
+					MarketId:            13,
+					AddFeeCreateAskFlat: []sdk.Coin{sdk.NewInt64Coin("cherry", 5000)},
+				}
+				prop := newGovProp(t, msg)
+				tx := newTx(t, prop)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"no *exchange.MsgGovCreateMarketRequest found in \""},
+		},
+		{
+			name: "two msgs of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgGovCreateMarketRequest) {
+				msg1 := &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market:    exchange.Market{MarketDetails: exchange.MarketDetails{Name: "Some Name"}},
+				}
+				msg2 := &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market:    exchange.Market{MarketDetails: exchange.MarketDetails{Name: "Another Name"}},
+				}
+				prop := newGovProp(t, msg1, msg2)
+				tx := newTx(t, prop)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"2 *exchange.MsgGovCreateMarketRequest found in \""},
+		},
+		{
+			name: "one msg of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgGovCreateMarketRequest) {
+				msg := &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market:    exchange.Market{MarketDetails: exchange.MarketDetails{Name: "The Only Name"}},
+				}
+				prop := newGovProp(t, msg)
+				tx := newTx(t, prop)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, msg
+			},
+			expInErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			propFN, expected := tc.setup(t)
+
+			if expected == nil {
+				expected = &exchange.MsgGovCreateMarketRequest{}
+			}
+
+			if len(propFN) > 0 && len(tc.expInErr) > 0 {
+				tc.expInErr = append(tc.expInErr, propFN)
+			}
+
+			args := make([]string, 0, 2)
+			if len(propFN) > 0 {
+				args = append(args, "--"+cli.FlagProposal, propFN)
+			}
+
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(cli.FlagProposal, "", "The Proposal")
+			err := flagSet.Parse(args)
+			require.NoError(t, err, "flagSet.Parse(%q)", args)
+
+			clientCtx := newClientContextWithCodec()
+
+			var actual *exchange.MsgGovCreateMarketRequest
+			testFunc := func() {
+				actual, err = cli.ReadMsgGovCreateMarketRequestFromProposalFlag(clientCtx, flagSet)
+			}
+			require.NotPanics(t, testFunc, "ReadMsgGovCreateMarketRequestFromProposalFlag")
+			assertions.AssertErrorContents(t, err, tc.expInErr, "ReadMsgGovCreateMarketRequestFromProposalFlag error")
+			assert.Equal(t, expected, actual, "ReadMsgGovCreateMarketRequestFromProposalFlag result")
+		})
+	}
+}
+
+func TestReadMsgGovManageFeesRequestFromProposalFlag(t *testing.T) {
+	tests := []struct {
+		name string
+		// setup should return the proposal filename and the expected Msg.
+		setup    func(t *testing.T) (string, *exchange.MsgGovManageFeesRequest)
+		expInErr []string
+	}{
+		{
+			name: "error reading file",
+			setup: func(t *testing.T) (string, *exchange.MsgGovManageFeesRequest) {
+				tx := newTx(t)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-body-messages.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"the contents of \"", "\" does not have any body messages"},
+		},
+		{
+			name: "no flag given",
+			setup: func(t *testing.T) (string, *exchange.MsgGovManageFeesRequest) {
+				return "", nil
+			},
+			expInErr: nil,
+		},
+		{
+			name: "no msgs of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgGovManageFeesRequest) {
+				msg := &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market:    exchange.Market{MarketDetails: exchange.MarketDetails{Name: "Some Name"}},
+				}
+				prop := newGovProp(t, msg)
+				tx := newTx(t, prop)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"no *exchange.MsgGovManageFeesRequest found in \""},
+		},
+		{
+			name: "two msgs of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgGovManageFeesRequest) {
+				msg1 := &exchange.MsgGovManageFeesRequest{
+					Authority:              cli.AuthorityAddr.String(),
+					MarketId:               12,
+					RemoveFeeCreateAskFlat: []sdk.Coin{sdk.NewInt64Coin("banana", 99)},
+				}
+				msg2 := &exchange.MsgGovManageFeesRequest{
+					Authority:           cli.AuthorityAddr.String(),
+					MarketId:            13,
+					AddFeeCreateAskFlat: []sdk.Coin{sdk.NewInt64Coin("cherry", 5000)},
+				}
+				prop := newGovProp(t, msg1, msg2)
+				tx := newTx(t, prop)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"2 *exchange.MsgGovManageFeesRequest found in \""},
+		},
+		{
+			name: "one msg of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgGovManageFeesRequest) {
+				msg := &exchange.MsgGovManageFeesRequest{
+					Authority:                  cli.AuthorityAddr.String(),
+					MarketId:                   2,
+					AddFeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("fig", 8)},
+				}
+				prop := newGovProp(t, msg)
+				tx := newTx(t, prop)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, msg
+			},
+			expInErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			propFN, expected := tc.setup(t)
+
+			if expected == nil {
+				expected = &exchange.MsgGovManageFeesRequest{}
+			}
+
+			if len(propFN) > 0 && len(tc.expInErr) > 0 {
+				tc.expInErr = append(tc.expInErr, propFN)
+			}
+
+			args := make([]string, 0, 2)
+			if len(propFN) > 0 {
+				args = append(args, "--"+cli.FlagProposal, propFN)
+			}
+
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(cli.FlagProposal, "", "The Proposal")
+			err := flagSet.Parse(args)
+			require.NoError(t, err, "flagSet.Parse(%q)", args)
+
+			clientCtx := newClientContextWithCodec()
+
+			var actual *exchange.MsgGovManageFeesRequest
+			testFunc := func() {
+				actual, err = cli.ReadMsgGovManageFeesRequestFromProposalFlag(clientCtx, flagSet)
+			}
+			require.NotPanics(t, testFunc, "ReadMsgGovManageFeesRequestFromProposalFlag")
+			assertions.AssertErrorContents(t, err, tc.expInErr, "ReadMsgGovManageFeesRequestFromProposalFlag error")
+			assert.Equal(t, expected, actual, "ReadMsgGovManageFeesRequestFromProposalFlag result")
+		})
+	}
+}
+
+func TestReadFlagUint32OrDefault(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		def      uint32
+		exp      uint32
+		expErr   string
+	}{
+		{
+			testName: "error getting flag",
+			flags:    []string{"--" + flagString, "what"},
+			name:     flagString,
+			def:      3,
+			exp:      3,
+			expErr:   "trying to get uint32 value of flag of type string",
+		},
+		{
+			testName: "not provided, 0 default",
+			def:      0,
+			exp:      0,
+		},
+		{
+			testName: "not provided, other default",
+			def:      18,
+			exp:      18,
+		},
+		{
+			testName: "provided",
+			flags:    []string{"--" + flagUint32, "43"},
+			def:      100,
+			exp:      43,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			if len(tc.name) == 0 {
+				tc.name = flagUint32
+			}
+
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.Uint32(flagUint32, 0, "A uint32")
+			flagSet.String(flagString, "", "A string")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var act uint32
+			testFunc := func() {
+				act, err = cli.ReadFlagUint32OrDefault(flagSet, tc.name, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagUint32OrDefault")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagUint32OrDefault error")
+			assert.Equal(t, tc.exp, act, "ReadFlagUint32OrDefault result")
+		})
+	}
+}
+
+func TestReadFlagBoolOrDefault(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		def      bool
+		exp      bool
+		expErr   string
+	}{
+		{
+			testName: "error getting flag",
+			flags:    []string{"--" + flagString, "what"},
+			name:     flagString,
+			def:      true,
+			exp:      true,
+			expErr:   "trying to get bool value of flag of type string",
+		},
+		{
+			testName: "not provided, false default",
+			def:      false,
+			exp:      false,
+		},
+		{
+			testName: "not provided, true default",
+			def:      true,
+			exp:      true,
+		},
+		{
+			testName: "provided",
+			flags:    []string{"--" + flagBool},
+			def:      false,
+			exp:      true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			if len(tc.name) == 0 {
+				tc.name = flagBool
+			}
+
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.Bool(flagBool, false, "A bool")
+			flagSet.String(flagString, "", "A string")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var act bool
+			testFunc := func() {
+				act, err = cli.ReadFlagBoolOrDefault(flagSet, tc.name, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagBoolOrDefault")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagBoolOrDefault error")
+			assert.Equal(t, tc.exp, act, "ReadFlagBoolOrDefault result")
+		})
+	}
+}
+
+func TestReadFlagStringSliceOrDefault(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		def      []string
+		exp      []string
+		expErr   string
+	}{
+		{
+			testName: "error getting flag",
+			flags:    []string{"--" + flagInt, "4"},
+			name:     flagInt,
+			def:      []string{"eight"},
+			exp:      []string{"eight"},
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "not provided, nil default",
+			def:      nil,
+			exp:      nil,
+		},
+		{
+			testName: "not provided, empty default",
+			def:      []string{},
+			exp:      []string{},
+		},
+		{
+			testName: "not provided, other default",
+			def:      []string{"one", "two", "three", "fourteen"},
+			exp:      []string{"one", "two", "three", "fourteen"},
+		},
+		{
+			testName: "provided",
+			flags:    []string{"--" + flagStringSlice, "one", "--" + flagStringSlice, "two,three"},
+			def:      []string{"seven"},
+			exp:      []string{"one", "two", "three"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			if len(tc.name) == 0 {
+				tc.name = flagStringSlice
+			}
+
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "Some strings")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var act []string
+			testFunc := func() {
+				act, err = cli.ReadFlagStringSliceOrDefault(flagSet, tc.name, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagStringSliceOrDefault")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagStringSliceOrDefault error")
+			assert.Equal(t, tc.exp, act, "ReadFlagStringSliceOrDefault result")
+		})
+	}
+}
+
+func TestReadFlagStringOrDefault(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		def      string
+		exp      string
+		expErr   string
+	}{
+		{
+			testName: "error getting flag",
+			flags:    []string{"--" + flagInt, "7"},
+			name:     flagInt,
+			def:      "what",
+			exp:      "what",
+			expErr:   "trying to get string value of flag of type int",
+		},
+		{
+			testName: "not provided, empty default",
+			def:      "",
+			exp:      "",
+		},
+		{
+			testName: "not provided, other default",
+			def:      "other",
+			exp:      "other",
+		},
+		{
+			testName: "provided",
+			flags:    []string{"--" + flagString, "yayaya"},
+			def:      "thedefault",
+			exp:      "yayaya",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			if len(tc.name) == 0 {
+				tc.name = flagString
+			}
+
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(flagString, "", "A string")
+			flagSet.Int(flagInt, 0, "A uint32")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var act string
+			testFunc := func() {
+				act, err = cli.ReadFlagStringOrDefault(flagSet, tc.name, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagStringOrDefault")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagStringOrDefault error")
+			assert.Equal(t, tc.exp, act, "ReadFlagStringOrDefault result")
 		})
 	}
 }

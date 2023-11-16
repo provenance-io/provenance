@@ -50,7 +50,7 @@ func SetupCmdQueryOrderFeeCalc(cmd *cobra.Command) {
 
 // MakeQueryOrderFeeCalc reads all the SetupCmdQueryOrderFeeCalc flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryOrderFeeCalc(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryOrderFeeCalcRequest, error) {
+func MakeQueryOrderFeeCalc(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.QueryOrderFeeCalcRequest, error) {
 	bidOrder := &exchange.BidOrder{}
 
 	errs := make([]error, 10, 11)
@@ -114,7 +114,7 @@ func SetupCmdQueryGetOrder(cmd *cobra.Command) {
 
 // MakeQueryGetOrder reads all the SetupCmdQueryGetOrder flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryGetOrder(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetOrderRequest, error) {
+func MakeQueryGetOrder(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetOrderRequest, error) {
 	req := &exchange.QueryGetOrderRequest{}
 
 	var err error
@@ -142,7 +142,7 @@ func SetupCmdQueryGetOrderByExternalID(cmd *cobra.Command) {
 
 // MakeQueryGetOrderByExternalID reads all the SetupCmdQueryGetOrderByExternalID flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryGetOrderByExternalID(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetOrderByExternalIDRequest, error) {
+func MakeQueryGetOrderByExternalID(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetOrderByExternalIDRequest, error) {
 	req := &exchange.QueryGetOrderByExternalIDRequest{}
 
 	errs := make([]error, 2)
@@ -181,7 +181,7 @@ func SetupCmdQueryGetMarketOrders(cmd *cobra.Command) {
 
 // MakeQueryGetMarketOrders reads all the SetupCmdQueryGetMarketOrders flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryGetMarketOrders(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetMarketOrdersRequest, error) {
+func MakeQueryGetMarketOrders(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetMarketOrdersRequest, error) {
 	req := &exchange.QueryGetMarketOrdersRequest{}
 
 	errs := make([]error, 4)
@@ -222,7 +222,7 @@ func SetupCmdQueryGetOwnerOrders(cmd *cobra.Command) {
 
 // MakeQueryGetOwnerOrders reads all the SetupCmdQueryGetOwnerOrders flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryGetOwnerOrders(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetOwnerOrdersRequest, error) {
+func MakeQueryGetOwnerOrders(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetOwnerOrdersRequest, error) {
 	req := &exchange.QueryGetOwnerOrdersRequest{}
 
 	errs := make([]error, 5)
@@ -263,7 +263,7 @@ func SetupCmdQueryGetAssetOrders(cmd *cobra.Command) {
 
 // MakeQueryGetAssetOrders reads all the SetupCmdQueryGetAssetOrders flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryGetAssetOrders(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetAssetOrdersRequest, error) {
+func MakeQueryGetAssetOrders(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetAssetOrdersRequest, error) {
 	req := &exchange.QueryGetAssetOrdersRequest{}
 
 	errs := make([]error, 4)
@@ -289,7 +289,7 @@ func SetupCmdQueryGetAllOrders(cmd *cobra.Command) {
 
 // MakeQueryGetAllOrders reads all the SetupCmdQueryGetAllOrders flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryGetAllOrders(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllOrdersRequest, error) {
+func MakeQueryGetAllOrders(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllOrdersRequest, error) {
 	req := &exchange.QueryGetAllOrdersRequest{}
 
 	var err error
@@ -314,7 +314,7 @@ func SetupCmdQueryGetMarket(cmd *cobra.Command) {
 
 // MakeQueryGetMarket reads all the SetupCmdQueryGetMarket flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryGetMarket(flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetMarketRequest, error) {
+func MakeQueryGetMarket(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetMarketRequest, error) {
 	req := &exchange.QueryGetMarketRequest{}
 
 	var err error
@@ -337,7 +337,7 @@ func SetupCmdQueryGetAllMarkets(cmd *cobra.Command) {
 
 // MakeQueryGetAllMarkets reads all the SetupCmdQueryGetAllMarkets flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryGetAllMarkets(flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllMarketsRequest, error) {
+func MakeQueryGetAllMarkets(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllMarketsRequest, error) {
 	req := &exchange.QueryGetAllMarketsRequest{}
 
 	var err error
@@ -356,7 +356,7 @@ func SetupCmdQueryParams(cmd *cobra.Command) {
 
 // MakeQueryParams reads all the SetupCmdQueryParams flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryParams(_ *pflag.FlagSet, _ []string) (*exchange.QueryParamsRequest, error) {
+func MakeQueryParams(_ client.Context, _ *pflag.FlagSet, _ []string) (*exchange.QueryParamsRequest, error) {
 	return &exchange.QueryParamsRequest{}, nil
 }
 
@@ -367,11 +367,11 @@ func SetupCmdQueryValidateCreateMarket(cmd *cobra.Command) {
 
 // MakeQueryValidateCreateMarket reads all the SetupCmdQueryValidateCreateMarket flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryValidateCreateMarket(flags *pflag.FlagSet, args []string) (*exchange.QueryValidateCreateMarketRequest, error) {
+func MakeQueryValidateCreateMarket(clientCtx client.Context, flags *pflag.FlagSet, args []string) (*exchange.QueryValidateCreateMarketRequest, error) {
 	req := &exchange.QueryValidateCreateMarketRequest{}
 
 	var err error
-	req.CreateMarketRequest, err = MakeMsgGovCreateMarket(client.Context{}, flags, args)
+	req.CreateMarketRequest, err = MakeMsgGovCreateMarket(clientCtx, flags, args)
 
 	return req, err
 }
@@ -392,7 +392,7 @@ func SetupCmdQueryValidateMarket(cmd *cobra.Command) {
 
 // MakeQueryValidateMarket reads all the SetupCmdQueryValidateMarket flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryValidateMarket(flagSet *pflag.FlagSet, args []string) (*exchange.QueryValidateMarketRequest, error) {
+func MakeQueryValidateMarket(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryValidateMarketRequest, error) {
 	req := &exchange.QueryValidateMarketRequest{}
 
 	var err error
@@ -408,11 +408,11 @@ func SetupCmdQueryValidateManageFees(cmd *cobra.Command) {
 
 // MakeQueryValidateManageFees reads all the SetupCmdQueryValidateManageFees flags and creates the desired request.
 // Satisfies the queryReqMaker type.
-func MakeQueryValidateManageFees(flags *pflag.FlagSet, args []string) (*exchange.QueryValidateManageFeesRequest, error) {
+func MakeQueryValidateManageFees(clientCtx client.Context, flags *pflag.FlagSet, args []string) (*exchange.QueryValidateManageFeesRequest, error) {
 	req := &exchange.QueryValidateManageFeesRequest{}
 
 	var err error
-	req.ManageFeesRequest, err = MakeMsgGovManageFees(client.Context{}, flags, args)
+	req.ManageFeesRequest, err = MakeMsgGovManageFees(clientCtx, flags, args)
 
 	return req, err
 }

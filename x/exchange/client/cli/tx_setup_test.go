@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -676,6 +677,7 @@ func TestReadFlagsMarketDetails(t *testing.T) {
 		name       string
 		skipSetup  bool
 		flags      []string
+		def        exchange.MarketDetails
 		expDetails exchange.MarketDetails
 		expErr     string
 	}{
@@ -695,11 +697,27 @@ func TestReadFlagsMarketDetails(t *testing.T) {
 			expDetails: exchange.MarketDetails{Name: "Richard"},
 		},
 		{
-			name:  "name and url",
+			name:  "name and url, no defaults",
 			flags: []string{"--url", "https://example.com", "--name", "Sally"},
 			expDetails: exchange.MarketDetails{
 				Name:       "Sally",
 				WebsiteUrl: "https://example.com",
+			},
+		},
+		{
+			name:  "name and url, with defaults",
+			flags: []string{"--url", "https://example.com/new", "--name", "Glen"},
+			def: exchange.MarketDetails{
+				Name:        "Martha",
+				Description: "Some existing Description",
+				WebsiteUrl:  "https://old.example.com",
+				IconUri:     "https://example.com/icon",
+			},
+			expDetails: exchange.MarketDetails{
+				Name:        "Glen",
+				Description: "Some existing Description",
+				WebsiteUrl:  "https://example.com/new",
+				IconUri:     "https://example.com/icon",
 			},
 		},
 		{
@@ -736,7 +754,7 @@ func TestReadFlagsMarketDetails(t *testing.T) {
 
 			var details exchange.MarketDetails
 			testFunc := func() {
-				details, err = cli.ReadFlagsMarketDetails(cmd.Flags())
+				details, err = cli.ReadFlagsMarketDetails(cmd.Flags(), tc.def)
 			}
 			require.NotPanics(t, testFunc, "ReadFlagsMarketDetails")
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagsMarketDetails")
@@ -1197,6 +1215,7 @@ func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 			cli.FlagSellerFlat, cli.FlagSellerRatios, cli.FlagBuyerFlat, cli.FlagBuyerRatios,
 			cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAccessGrants,
 			cli.FlagReqAttrAsk, cli.FlagReqAttrBid,
+			cli.FlagProposal,
 		},
 		expInUse: []string{
 			"[--authority <authority>]", "[--market <market id>]",
@@ -1207,7 +1226,9 @@ func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 			"[--accepting-orders]", "[--allow-user-settle]",
 			"[--access-grants <access grants>]",
 			"[--req-attr-ask <attrs>]", "[--req-attr-bid <attrs>]",
+			"[--proposal <json filename>",
 			cli.AuthorityDesc, cli.RepeatableDesc, cli.AccessGrantsDesc, cli.FeeRatioDesc,
+			cli.ProposalFileDesc(&exchange.MsgGovCreateMarketRequest{}),
 		},
 	}
 
@@ -1217,6 +1238,7 @@ func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 		cli.FlagSellerFlat, cli.FlagSellerRatios, cli.FlagBuyerFlat, cli.FlagBuyerRatios,
 		cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAccessGrants,
 		cli.FlagReqAttrAsk, cli.FlagReqAttrBid,
+		cli.FlagProposal,
 	}
 	oneReqVal := strings.Join(oneReqFlags, " ")
 	if tc.expAnnotations == nil {
@@ -1239,6 +1261,44 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 		setup:     cli.SetupCmdTxGovCreateMarket,
 	}
 
+	tdir := t.TempDir()
+	propFN := filepath.Join(tdir, "manage-fees-prop.json")
+	fileMsg := &exchange.MsgGovCreateMarketRequest{
+		Authority: cli.AuthorityAddr.String(),
+		Market: exchange.Market{
+			MarketId: 3,
+			MarketDetails: exchange.MarketDetails{
+				Name:        "A Name",
+				Description: "A description.",
+				WebsiteUrl:  "A URL",
+				IconUri:     "An Icon",
+			},
+			FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("apple", 1)},
+			FeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("banana", 2)},
+			FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("cherry", 3)},
+			FeeSellerSettlementRatios: []exchange.FeeRatio{
+				{Price: sdk.NewInt64Coin("grape", 110), Fee: sdk.NewInt64Coin("grape", 10)},
+			},
+			FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("date", 4)},
+			FeeBuyerSettlementRatios: []exchange.FeeRatio{
+				{Price: sdk.NewInt64Coin("kiwi", 111), Fee: sdk.NewInt64Coin("kiwi", 11)},
+			},
+			AcceptingOrders:     true,
+			AllowUserSettlement: true,
+			AccessGrants: []exchange.AccessGrant{
+				{
+					Address:     sdk.AccAddress("ag1_________________").String(),
+					Permissions: []exchange.Permission{2},
+				},
+			},
+			ReqAttrCreateAsk: []string{"ask.create"},
+			ReqAttrCreateBid: []string{"bid.create"},
+		},
+	}
+	prop := newGovProp(t, fileMsg)
+	tx := newTx(t, prop)
+	writeFileAsJson(t, propFN, tx)
+
 	tests := []txMakerTestCase[*exchange.MsgGovCreateMarketRequest]{
 		{
 			name: "several errors",
@@ -1253,8 +1313,6 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 					FeeSellerSettlementRatios: []exchange.FeeRatio{},
 					AcceptingOrders:           true,
 					AccessGrants:              []exchange.AccessGrant{},
-					ReqAttrCreateAsk:          []string{},
-					ReqAttrCreateBid:          []string{},
 				},
 			},
 			expErr: joinErrs(
@@ -1319,6 +1377,35 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:      "proposal flag",
+			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
+			flags:     []string{"--proposal", propFN},
+			expMsg:    fileMsg,
+		},
+		{
+			name:      "proposal flag with others",
+			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
+			flags:     []string{"--proposal", propFN, "--market", "22"},
+			expMsg: &exchange.MsgGovCreateMarketRequest{
+				Authority: fileMsg.Authority,
+				Market: exchange.Market{
+					MarketId:                  22,
+					MarketDetails:             fileMsg.Market.MarketDetails,
+					FeeCreateAskFlat:          fileMsg.Market.FeeCreateAskFlat,
+					FeeCreateBidFlat:          fileMsg.Market.FeeCreateBidFlat,
+					FeeSellerSettlementFlat:   fileMsg.Market.FeeSellerSettlementFlat,
+					FeeSellerSettlementRatios: fileMsg.Market.FeeSellerSettlementRatios,
+					FeeBuyerSettlementFlat:    fileMsg.Market.FeeBuyerSettlementFlat,
+					FeeBuyerSettlementRatios:  fileMsg.Market.FeeBuyerSettlementRatios,
+					AcceptingOrders:           fileMsg.Market.AcceptingOrders,
+					AllowUserSettlement:       fileMsg.Market.AllowUserSettlement,
+					AccessGrants:              fileMsg.Market.AccessGrants,
+					ReqAttrCreateAsk:          fileMsg.Market.ReqAttrCreateAsk,
+					ReqAttrCreateBid:          fileMsg.Market.ReqAttrCreateBid,
+				},
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -1337,6 +1424,7 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 			cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
 			cli.FlagSellerFlatAdd, cli.FlagSellerFlatRemove, cli.FlagSellerRatiosAdd, cli.FlagSellerRatiosRemove,
 			cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
+			cli.FlagProposal,
 		},
 		expAnnotations: map[string]map[string][]string{
 			cli.FlagMarket: {required: {"true"}},
@@ -1349,7 +1437,9 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 			"[--seller-ratios-add <fee ratios>]", "[--seller-ratios-remove <fee ratios>]",
 			"[--buyer-flat-add <coins>]", "[--buyer-flat-remove <coins>]",
 			"[--buyer-ratios-add <fee ratios>]", "[--buyer-ratios-remove <fee ratios>]",
+			"[--proposal <json filename>",
 			cli.AuthorityDesc, cli.RepeatableDesc, cli.FeeRatioDesc,
+			cli.ProposalFileDesc(&exchange.MsgGovManageFeesRequest{}),
 		},
 	}
 
@@ -1357,6 +1447,7 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 		cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
 		cli.FlagSellerFlatAdd, cli.FlagSellerFlatRemove, cli.FlagSellerRatiosAdd, cli.FlagSellerRatiosRemove,
 		cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
+		cli.FlagProposal,
 	}
 	oneReqVal := strings.Join(oneReqFlags, " ")
 	if tc.expAnnotations == nil {
@@ -1378,6 +1469,36 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 		maker:     cli.MakeMsgGovManageFees,
 		setup:     cli.SetupCmdTxGovManageFees,
 	}
+
+	tdir := t.TempDir()
+	propFN := filepath.Join(tdir, "manage-fees-prop.json")
+	fileMsg := &exchange.MsgGovManageFeesRequest{
+		Authority:                     cli.AuthorityAddr.String(),
+		MarketId:                      101,
+		AddFeeCreateAskFlat:           []sdk.Coin{sdk.NewInt64Coin("apple", 5)},
+		RemoveFeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("acorn", 6)},
+		AddFeeCreateBidFlat:           []sdk.Coin{sdk.NewInt64Coin("banana", 7)},
+		RemoveFeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("blueberry", 8)},
+		AddFeeSellerSettlementFlat:    []sdk.Coin{sdk.NewInt64Coin("cherry", 9)},
+		RemoveFeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("cantaloup", 10)},
+		AddFeeSellerSettlementRatios: []exchange.FeeRatio{
+			{Price: sdk.NewInt64Coin("grape", 100), Fee: sdk.NewInt64Coin("grape", 1)},
+		},
+		RemoveFeeSellerSettlementRatios: []exchange.FeeRatio{
+			{Price: sdk.NewInt64Coin("grapefruit", 101), Fee: sdk.NewInt64Coin("grapefruit", 2)},
+		},
+		AddFeeBuyerSettlementFlat:    []sdk.Coin{sdk.NewInt64Coin("date", 11)},
+		RemoveFeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("damson", 12)},
+		AddFeeBuyerSettlementRatios: []exchange.FeeRatio{
+			{Price: sdk.NewInt64Coin("kiwi", 102), Fee: sdk.NewInt64Coin("kiwi", 3)},
+		},
+		RemoveFeeBuyerSettlementRatios: []exchange.FeeRatio{
+			{Price: sdk.NewInt64Coin("keylime", 104), Fee: sdk.NewInt64Coin("keylime", 4)},
+		},
+	}
+	prop := newGovProp(t, fileMsg)
+	tx := newTx(t, prop)
+	writeFileAsJson(t, propFN, tx)
 
 	tests := []txMakerTestCase[*exchange.MsgGovManageFeesRequest]{
 		{
@@ -1431,6 +1552,34 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 					{Price: sdk.NewInt64Coin("prune", 43), Fee: sdk.NewInt64Coin("prune", 2)},
 				},
 			},
+		},
+		{
+			name:      "proposal flag",
+			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
+			flags:     []string{"--proposal", propFN},
+			expMsg:    fileMsg,
+		},
+		{
+			name:      "proposal flag plus others",
+			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
+			flags:     []string{"--market", "5", "--proposal", propFN},
+			expMsg: &exchange.MsgGovManageFeesRequest{
+				Authority:                       fileMsg.Authority,
+				MarketId:                        5,
+				AddFeeCreateAskFlat:             fileMsg.AddFeeCreateAskFlat,
+				RemoveFeeCreateAskFlat:          fileMsg.RemoveFeeCreateAskFlat,
+				AddFeeCreateBidFlat:             fileMsg.AddFeeCreateBidFlat,
+				RemoveFeeCreateBidFlat:          fileMsg.RemoveFeeCreateBidFlat,
+				AddFeeSellerSettlementFlat:      fileMsg.AddFeeSellerSettlementFlat,
+				RemoveFeeSellerSettlementFlat:   fileMsg.RemoveFeeSellerSettlementFlat,
+				AddFeeSellerSettlementRatios:    fileMsg.AddFeeSellerSettlementRatios,
+				RemoveFeeSellerSettlementRatios: fileMsg.RemoveFeeSellerSettlementRatios,
+				AddFeeBuyerSettlementFlat:       fileMsg.AddFeeBuyerSettlementFlat,
+				RemoveFeeBuyerSettlementFlat:    fileMsg.RemoveFeeBuyerSettlementFlat,
+				AddFeeBuyerSettlementRatios:     fileMsg.AddFeeBuyerSettlementRatios,
+				RemoveFeeBuyerSettlementRatios:  fileMsg.RemoveFeeBuyerSettlementRatios,
+			},
+			expErr: "",
 		},
 	}
 

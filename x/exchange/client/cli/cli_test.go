@@ -3,11 +3,13 @@ package cli_test
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,12 +25,14 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
@@ -945,4 +949,67 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 			assert.NotNil(t, cmd.Args, "command args after %s", tc.name)
 		})
 	}
+}
+
+// newClientContextWithCodec returns a new client.Context that has a useful Codec.
+func newClientContextWithCodec() client.Context {
+	return clientContextWithCodec(client.Context{})
+}
+
+// clientContextWithCodec adds a useful Codec to the provided client context.
+func clientContextWithCodec(clientCtx client.Context) client.Context {
+	encCfg := app.MakeEncodingConfig()
+	return clientCtx.
+		WithCodec(encCfg.Marshaler).
+		WithInterfaceRegistry(encCfg.InterfaceRegistry).
+		WithTxConfig(encCfg.TxConfig)
+}
+
+// newGovProp creates a new MsgSubmitProposal containing the provided messages, requiring it to not error.
+func newGovProp(t *testing.T, msgs ...sdk.Msg) *govv1.MsgSubmitProposal {
+	rv := &govv1.MsgSubmitProposal{}
+	for _, msg := range msgs {
+		msgAny, err := codectypes.NewAnyWithValue(msg)
+		require.NoError(t, err, "NewAnyWithValue(%T)", msg)
+		rv.Messages = append(rv.Messages, msgAny)
+	}
+	return rv
+}
+
+// newTx creates a new Tx containing the provided messages, requiring it to not error.
+func newTx(t *testing.T, msgs ...sdk.Msg) *txtypes.Tx {
+	rv := &txtypes.Tx{
+		Body:       &txtypes.TxBody{},
+		AuthInfo:   &txtypes.AuthInfo{},
+		Signatures: make([][]byte, 0),
+	}
+	for _, msg := range msgs {
+		msgAny, err := codectypes.NewAnyWithValue(msg)
+		require.NoError(t, err, "NewAnyWithValue(%T)", msg)
+		rv.Body.Messages = append(rv.Body.Messages, msgAny)
+	}
+	return rv
+}
+
+// writeFileAsJson writes the provided proto message as a json file, requiring it to not error.
+func writeFileAsJson(t *testing.T, filename string, content proto.Message) {
+	clientCtx := newClientContextWithCodec()
+	bz, err := clientCtx.Codec.MarshalJSON(content)
+	require.NoError(t, err, "MarshalJSON(%T)", content)
+	writeFile(t, filename, bz)
+}
+
+// writeFile writes a file requiring it to not error.
+func writeFile(t *testing.T, filename string, bz []byte) {
+	err := os.WriteFile(filename, bz, 0o644)
+	require.NoError(t, err, "WriteFile(%q)", filename)
+}
+
+// getAnyTypes gets the TypeURL field of each of the provided anys.
+func getAnyTypes(anys []*codectypes.Any) []string {
+	rv := make([]string, len(anys))
+	for i, a := range anys {
+		rv[i] = a.GetTypeUrl()
+	}
+	return rv
 }

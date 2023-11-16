@@ -18,6 +18,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -84,7 +85,7 @@ func govTxRunE[R sdk.Msg](maker msgMaker[R]) func(cmd *cobra.Command, args []str
 // queryReqMaker is a function that creates a query request message.
 //
 // R is the type of request message.
-type queryReqMaker[R any] func(flagSet *pflag.FlagSet, args []string) (*R, error)
+type queryReqMaker[R any] func(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (*R, error)
 
 // queryEndpoint is a grpc_query endpoint function.
 //
@@ -105,7 +106,7 @@ func genericQueryRunE[R any, S proto.Message](reqMaker queryReqMaker[R], endpoin
 			return err
 		}
 
-		req, err := reqMaker(cmd.Flags(), args)
+		req, err := reqMaker(clientCtx, cmd.Flags(), args)
 		if err != nil {
 			return err
 		}
@@ -189,6 +190,36 @@ func ReqFlagUse(name string, opt string) string {
 // OptFlagUse wraps a ReqFlagUse in [], e.g. "[--name <opt>]"
 func OptFlagUse(name string, opt string) string {
 	return "[" + ReqFlagUse(name, opt) + "]"
+}
+
+// ProposalFileDesc is a description of the --proposal flag and expected file.
+func ProposalFileDesc(msgType sdk.Msg) string {
+	return fmt.Sprintf(`The file provided with the --%[1]s flag should be a json-encoded Tx.
+The Tx should have a message with a %[2]s that contains a %[3]s.
+Such a message can be generated using the --generate-only flag on the tx endpoint.
+
+Example (with just the important bits):
+{
+  "body": {
+    "messages": [
+      {
+        "@type": "%[2]s",
+        "messages": [
+          {
+            "@type": "%[3]s",
+            "authority": "...",
+            <other %[4]T fields>
+          }
+        ],
+      }
+    ],
+  },
+}
+
+If other message flags are provided with --%[1]s, they will overwrite just that field.
+`,
+		FlagProposal, sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}), sdk.MsgTypeURL(msgType), msgType,
+	)
 }
 
 var (

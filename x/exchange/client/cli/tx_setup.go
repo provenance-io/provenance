@@ -338,14 +338,14 @@ func AddFlagsMarketDetails(cmd *cobra.Command) {
 }
 
 // ReadFlagsMarketDetails reads all the AddFlagsMarketDetails flags and creates the desired MarketDetails.
-func ReadFlagsMarketDetails(flagSet *pflag.FlagSet) (exchange.MarketDetails, error) {
+func ReadFlagsMarketDetails(flagSet *pflag.FlagSet, def exchange.MarketDetails) (exchange.MarketDetails, error) {
 	rv := exchange.MarketDetails{}
 
 	errs := make([]error, 4)
-	rv.Name, errs[0] = flagSet.GetString(FlagName)
-	rv.Description, errs[1] = flagSet.GetString(FlagDescription)
-	rv.WebsiteUrl, errs[2] = flagSet.GetString(FlagURL)
-	rv.IconUri, errs[3] = flagSet.GetString(FlagIcon)
+	rv.Name, errs[0] = ReadFlagStringOrDefault(flagSet, FlagName, def.Name)
+	rv.Description, errs[1] = ReadFlagStringOrDefault(flagSet, FlagDescription, def.Description)
+	rv.WebsiteUrl, errs[2] = ReadFlagStringOrDefault(flagSet, FlagURL, def.WebsiteUrl)
+	rv.IconUri, errs[3] = ReadFlagStringOrDefault(flagSet, FlagIcon, def.IconUri)
 
 	return rv, errors.Join(errs...)
 }
@@ -384,7 +384,7 @@ func MakeMsgMarketUpdateDetails(clientCtx client.Context, flagSet *pflag.FlagSet
 	errs := make([]error, 3)
 	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
 	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
-	msg.MarketDetails, errs[2] = ReadFlagsMarketDetails(flagSet)
+	msg.MarketDetails, errs[2] = ReadFlagsMarketDetails(flagSet, exchange.MarketDetails{})
 
 	return msg, errors.Join(errs...)
 }
@@ -484,8 +484,8 @@ func MakeMsgMarketManagePermissions(clientCtx client.Context, flagSet *pflag.Fla
 	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
 	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
 	msg.RevokeAll, errs[2] = flagSet.GetStringSlice(FlagRevokeAll)
-	msg.ToRevoke, errs[3] = ReadAccessGrantsFlag(flagSet, FlagRevoke)
-	msg.ToGrant, errs[4] = ReadAccessGrantsFlag(flagSet, FlagGrant)
+	msg.ToRevoke, errs[3] = ReadAccessGrantsFlag(flagSet, FlagRevoke, nil)
+	msg.ToGrant, errs[4] = ReadAccessGrantsFlag(flagSet, FlagGrant, nil)
 
 	return msg, errors.Join(errs...)
 }
@@ -549,6 +549,7 @@ func SetupCmdTxGovCreateMarket(cmd *cobra.Command) {
 	cmd.Flags().StringSlice(FlagAccessGrants, nil, "The <access grants> that the market should have (repeatable)")
 	cmd.Flags().StringSlice(FlagReqAttrAsk, nil, "Attributes required to create ask orders (repeatable)")
 	cmd.Flags().StringSlice(FlagReqAttrBid, nil, "Attributes required to create bid orders (repeatable)")
+	cmd.Flags().String(FlagProposal, "", "a json file of a Tx with a gov proposal with a MsgGovCreateMarketRequest")
 
 	cmd.MarkFlagsOneRequired(
 		FlagMarket, FlagName, FlagDescription, FlagURL, FlagIcon,
@@ -556,6 +557,7 @@ func SetupCmdTxGovCreateMarket(cmd *cobra.Command) {
 		FlagSellerFlat, FlagSellerRatios, FlagBuyerFlat, FlagBuyerRatios,
 		FlagAcceptingOrders, FlagAllowUserSettle, FlagAccessGrants,
 		FlagReqAttrAsk, FlagReqAttrBid,
+		FlagProposal,
 	)
 
 	AddUseArgs(cmd,
@@ -583,32 +585,41 @@ func SetupCmdTxGovCreateMarket(cmd *cobra.Command) {
 		UseFlagsBreak,
 		OptFlagUse(FlagReqAttrAsk, "attrs"),
 		OptFlagUse(FlagReqAttrBid, "attrs"),
+		UseFlagsBreak,
+		OptFlagUse(FlagProposal, "json filename"),
 	)
-	AddUseDetails(cmd, AuthorityDesc, RepeatableDesc, AccessGrantsDesc, FeeRatioDesc)
+	AddUseDetails(cmd,
+		AuthorityDesc, RepeatableDesc, AccessGrantsDesc, FeeRatioDesc,
+		ProposalFileDesc(&exchange.MsgGovCreateMarketRequest{}),
+	)
 
 	cmd.Args = cobra.NoArgs
 }
 
 // MakeMsgGovCreateMarket reads all the SetupCmdTxGovCreateMarket flags and creates the desired Msg.
 // Satisfies the msgMaker type.
-func MakeMsgGovCreateMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgGovCreateMarketRequest, error) {
-	msg := &exchange.MsgGovCreateMarketRequest{}
+func MakeMsgGovCreateMarket(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgGovCreateMarketRequest, error) {
+	var msg *exchange.MsgGovCreateMarketRequest
 
-	errs := make([]error, 14)
-	msg.Authority, errs[0] = ReadFlagAuthority(flagSet)
-	msg.Market.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
-	msg.Market.MarketDetails, errs[2] = ReadFlagsMarketDetails(flagSet)
-	msg.Market.FeeCreateAskFlat, errs[3] = ReadFlatFeeFlag(flagSet, FlagCreateAsk)
-	msg.Market.FeeCreateBidFlat, errs[4] = ReadFlatFeeFlag(flagSet, FlagCreateBid)
-	msg.Market.FeeSellerSettlementFlat, errs[5] = ReadFlatFeeFlag(flagSet, FlagSellerFlat)
-	msg.Market.FeeSellerSettlementRatios, errs[6] = ReadFeeRatiosFlag(flagSet, FlagSellerRatios)
-	msg.Market.FeeBuyerSettlementFlat, errs[7] = ReadFlatFeeFlag(flagSet, FlagBuyerFlat)
-	msg.Market.FeeBuyerSettlementRatios, errs[8] = ReadFeeRatiosFlag(flagSet, FlagBuyerRatios)
-	msg.Market.AcceptingOrders, errs[9] = flagSet.GetBool(FlagAcceptingOrders)
-	msg.Market.AllowUserSettlement, errs[10] = flagSet.GetBool(FlagAllowUserSettle)
-	msg.Market.AccessGrants, errs[11] = ReadAccessGrantsFlag(flagSet, FlagAccessGrants)
-	msg.Market.ReqAttrCreateAsk, errs[12] = flagSet.GetStringSlice(FlagReqAttrAsk)
-	msg.Market.ReqAttrCreateBid, errs[13] = flagSet.GetStringSlice(FlagReqAttrBid)
+	errs := make([]error, 15)
+	msg, errs[0] = ReadMsgGovCreateMarketRequestFromProposalFlag(clientCtx, flagSet)
+	msg.Authority, errs[1] = ReadFlagAuthorityOrDefault(flagSet, msg.Authority)
+	if len(msg.Authority) == 0 {
+		msg.Authority = AuthorityAddr.String()
+	}
+	msg.Market.MarketId, errs[2] = ReadFlagUint32OrDefault(flagSet, FlagMarket, msg.Market.MarketId)
+	msg.Market.MarketDetails, errs[3] = ReadFlagsMarketDetails(flagSet, msg.Market.MarketDetails)
+	msg.Market.FeeCreateAskFlat, errs[4] = ReadFlatFeeFlag(flagSet, FlagCreateAsk, msg.Market.FeeCreateAskFlat)
+	msg.Market.FeeCreateBidFlat, errs[5] = ReadFlatFeeFlag(flagSet, FlagCreateBid, msg.Market.FeeCreateBidFlat)
+	msg.Market.FeeSellerSettlementFlat, errs[6] = ReadFlatFeeFlag(flagSet, FlagSellerFlat, msg.Market.FeeSellerSettlementFlat)
+	msg.Market.FeeSellerSettlementRatios, errs[7] = ReadFeeRatiosFlag(flagSet, FlagSellerRatios, msg.Market.FeeSellerSettlementRatios)
+	msg.Market.FeeBuyerSettlementFlat, errs[8] = ReadFlatFeeFlag(flagSet, FlagBuyerFlat, msg.Market.FeeBuyerSettlementFlat)
+	msg.Market.FeeBuyerSettlementRatios, errs[9] = ReadFeeRatiosFlag(flagSet, FlagBuyerRatios, msg.Market.FeeBuyerSettlementRatios)
+	msg.Market.AcceptingOrders, errs[10] = ReadFlagBoolOrDefault(flagSet, FlagAcceptingOrders, msg.Market.AcceptingOrders)
+	msg.Market.AllowUserSettlement, errs[11] = ReadFlagBoolOrDefault(flagSet, FlagAllowUserSettle, msg.Market.AllowUserSettlement)
+	msg.Market.AccessGrants, errs[12] = ReadAccessGrantsFlag(flagSet, FlagAccessGrants, msg.Market.AccessGrants)
+	msg.Market.ReqAttrCreateAsk, errs[13] = ReadFlagStringSliceOrDefault(flagSet, FlagReqAttrAsk, msg.Market.ReqAttrCreateAsk)
+	msg.Market.ReqAttrCreateBid, errs[14] = ReadFlagStringSliceOrDefault(flagSet, FlagReqAttrBid, msg.Market.ReqAttrCreateBid)
 
 	return msg, errors.Join(errs...)
 }
@@ -629,12 +640,14 @@ func SetupCmdTxGovManageFees(cmd *cobra.Command) {
 	cmd.Flags().StringSlice(FlagBuyerFlatRemove, nil, "Buyer settlement flat fee options to remove, e.g. 10nhash (repeatable)")
 	cmd.Flags().StringSlice(FlagBuyerRatiosAdd, nil, "Seller settlement fee ratios to add, e.g. 100nhash:1nhash (repeatable)")
 	cmd.Flags().StringSlice(FlagBuyerRatiosRemove, nil, "Seller settlement fee ratios to remove, e.g. 100nhash:1nhash (repeatable)")
+	cmd.Flags().String(FlagProposal, "", "a json file of a Tx with a gov proposal with a MsgGovManageFeesRequest")
 
 	MarkFlagsRequired(cmd, FlagMarket)
 	cmd.MarkFlagsOneRequired(
 		FlagAskAdd, FlagAskRemove, FlagBidAdd, FlagBidRemove,
 		FlagSellerFlatAdd, FlagSellerFlatRemove, FlagSellerRatiosAdd, FlagSellerRatiosRemove,
 		FlagBuyerFlatAdd, FlagBuyerFlatRemove, FlagBuyerRatiosAdd, FlagBuyerRatiosRemove,
+		FlagProposal,
 	)
 
 	AddUseArgs(cmd,
@@ -658,32 +671,41 @@ func SetupCmdTxGovManageFees(cmd *cobra.Command) {
 		UseFlagsBreak,
 		OptFlagUse(FlagBuyerRatiosAdd, "fee ratios"),
 		OptFlagUse(FlagBuyerRatiosRemove, "fee ratios"),
+		UseFlagsBreak,
+		OptFlagUse(FlagProposal, "json filename"),
 	)
-	AddUseDetails(cmd, AuthorityDesc, RepeatableDesc, FeeRatioDesc)
+	AddUseDetails(cmd,
+		AuthorityDesc, RepeatableDesc, FeeRatioDesc,
+		ProposalFileDesc(&exchange.MsgGovManageFeesRequest{}),
+	)
 
 	cmd.Args = cobra.NoArgs
 }
 
 // MakeMsgGovManageFees reads all the SetupCmdTxGovManageFees flags and creates the desired Msg.
 // Satisfies the msgMaker type.
-func MakeMsgGovManageFees(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgGovManageFeesRequest, error) {
-	msg := &exchange.MsgGovManageFeesRequest{}
+func MakeMsgGovManageFees(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgGovManageFeesRequest, error) {
+	var msg *exchange.MsgGovManageFeesRequest
 
-	errs := make([]error, 14)
-	msg.Authority, errs[0] = ReadFlagAuthority(flagSet)
-	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
-	msg.AddFeeCreateAskFlat, errs[2] = ReadFlatFeeFlag(flagSet, FlagAskAdd)
-	msg.RemoveFeeCreateAskFlat, errs[3] = ReadFlatFeeFlag(flagSet, FlagAskRemove)
-	msg.AddFeeCreateBidFlat, errs[4] = ReadFlatFeeFlag(flagSet, FlagBidAdd)
-	msg.RemoveFeeCreateBidFlat, errs[5] = ReadFlatFeeFlag(flagSet, FlagBidRemove)
-	msg.AddFeeSellerSettlementFlat, errs[6] = ReadFlatFeeFlag(flagSet, FlagSellerFlatAdd)
-	msg.RemoveFeeSellerSettlementFlat, errs[7] = ReadFlatFeeFlag(flagSet, FlagSellerFlatRemove)
-	msg.AddFeeSellerSettlementRatios, errs[8] = ReadFeeRatiosFlag(flagSet, FlagSellerRatiosAdd)
-	msg.RemoveFeeSellerSettlementRatios, errs[9] = ReadFeeRatiosFlag(flagSet, FlagSellerRatiosRemove)
-	msg.AddFeeBuyerSettlementFlat, errs[10] = ReadFlatFeeFlag(flagSet, FlagBuyerFlatAdd)
-	msg.RemoveFeeBuyerSettlementFlat, errs[11] = ReadFlatFeeFlag(flagSet, FlagBuyerFlatRemove)
-	msg.AddFeeBuyerSettlementRatios, errs[12] = ReadFeeRatiosFlag(flagSet, FlagBuyerRatiosAdd)
-	msg.RemoveFeeBuyerSettlementRatios, errs[13] = ReadFeeRatiosFlag(flagSet, FlagBuyerRatiosRemove)
+	errs := make([]error, 15)
+	msg, errs[0] = ReadMsgGovManageFeesRequestFromProposalFlag(clientCtx, flagSet)
+	if len(msg.Authority) == 0 {
+		msg.Authority = AuthorityAddr.String()
+	}
+	msg.Authority, errs[1] = ReadFlagAuthorityOrDefault(flagSet, msg.Authority)
+	msg.MarketId, errs[2] = ReadFlagUint32OrDefault(flagSet, FlagMarket, msg.MarketId)
+	msg.AddFeeCreateAskFlat, errs[3] = ReadFlatFeeFlag(flagSet, FlagAskAdd, msg.AddFeeCreateAskFlat)
+	msg.RemoveFeeCreateAskFlat, errs[4] = ReadFlatFeeFlag(flagSet, FlagAskRemove, msg.RemoveFeeCreateAskFlat)
+	msg.AddFeeCreateBidFlat, errs[5] = ReadFlatFeeFlag(flagSet, FlagBidAdd, msg.AddFeeCreateBidFlat)
+	msg.RemoveFeeCreateBidFlat, errs[6] = ReadFlatFeeFlag(flagSet, FlagBidRemove, msg.RemoveFeeCreateBidFlat)
+	msg.AddFeeSellerSettlementFlat, errs[7] = ReadFlatFeeFlag(flagSet, FlagSellerFlatAdd, msg.AddFeeSellerSettlementFlat)
+	msg.RemoveFeeSellerSettlementFlat, errs[8] = ReadFlatFeeFlag(flagSet, FlagSellerFlatRemove, msg.RemoveFeeSellerSettlementFlat)
+	msg.AddFeeSellerSettlementRatios, errs[9] = ReadFeeRatiosFlag(flagSet, FlagSellerRatiosAdd, msg.AddFeeSellerSettlementRatios)
+	msg.RemoveFeeSellerSettlementRatios, errs[10] = ReadFeeRatiosFlag(flagSet, FlagSellerRatiosRemove, msg.RemoveFeeSellerSettlementRatios)
+	msg.AddFeeBuyerSettlementFlat, errs[11] = ReadFlatFeeFlag(flagSet, FlagBuyerFlatAdd, msg.AddFeeBuyerSettlementFlat)
+	msg.RemoveFeeBuyerSettlementFlat, errs[12] = ReadFlatFeeFlag(flagSet, FlagBuyerFlatRemove, msg.RemoveFeeBuyerSettlementFlat)
+	msg.AddFeeBuyerSettlementRatios, errs[13] = ReadFeeRatiosFlag(flagSet, FlagBuyerRatiosAdd, msg.AddFeeBuyerSettlementRatios)
+	msg.RemoveFeeBuyerSettlementRatios, errs[14] = ReadFeeRatiosFlag(flagSet, FlagBuyerRatiosRemove, msg.RemoveFeeBuyerSettlementRatios)
 
 	return msg, errors.Join(errs...)
 }

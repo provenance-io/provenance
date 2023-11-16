@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -12,6 +13,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -31,7 +33,7 @@ type queryMakerTestDef[R any] struct {
 	// makerName is the name of the maker func being tested.
 	makerName string
 	// maker is the query request maker func being tested.
-	maker func(flagSet *pflag.FlagSet, args []string) (*R, error)
+	maker func(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (*R, error)
 	// setup is the command setup func that sets up a command so it has what's needed by the maker.
 	setup func(cmd *cobra.Command)
 }
@@ -67,9 +69,11 @@ func runQueryMakerTest[R any](t *testing.T, td queryMakerTestDef[R], tc queryMak
 	err := cmd.Flags().Parse(tc.flags)
 	require.NoError(t, err, "cmd.Flags().Parse(%q)", tc.flags)
 
+	clientCtx := newClientContextWithCodec()
+
 	var req *R
 	testFunc := func() {
-		req, err = td.maker(cmd.Flags(), tc.args)
+		req, err = td.maker(clientCtx, cmd.Flags(), tc.args)
 	}
 	require.NotPanics(t, testFunc, td.makerName)
 	assertions.AssertErrorValue(t, err, tc.expErr, "%s error", td.makerName)
@@ -873,6 +877,7 @@ func TestSetupCmdQueryValidateCreateMarket(t *testing.T) {
 			cli.FlagSellerFlat, cli.FlagSellerRatios, cli.FlagBuyerFlat, cli.FlagBuyerRatios,
 			cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAccessGrants,
 			cli.FlagReqAttrAsk, cli.FlagReqAttrBid,
+			cli.FlagProposal,
 		},
 		expInUse: []string{
 			"[--authority <authority>]", "[--market <market id>]",
@@ -883,7 +888,9 @@ func TestSetupCmdQueryValidateCreateMarket(t *testing.T) {
 			"[--accepting-orders]", "[--allow-user-settle]",
 			"[--access-grants <access grants>]",
 			"[--req-attr-ask <attrs>]", "[--req-attr-bid <attrs>]",
+			"[--proposal <json filename>",
 			cli.AuthorityDesc, cli.RepeatableDesc, cli.AccessGrantsDesc, cli.FeeRatioDesc,
+			cli.ProposalFileDesc(&exchange.MsgGovCreateMarketRequest{}),
 		},
 	}
 
@@ -893,6 +900,7 @@ func TestSetupCmdQueryValidateCreateMarket(t *testing.T) {
 		cli.FlagSellerFlat, cli.FlagSellerRatios, cli.FlagBuyerFlat, cli.FlagBuyerRatios,
 		cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAccessGrants,
 		cli.FlagReqAttrAsk, cli.FlagReqAttrBid,
+		cli.FlagProposal,
 	}
 	oneReqVal := strings.Join(oneReqFlags, " ")
 	if tc.expAnnotations == nil {
@@ -915,6 +923,44 @@ func TestMakeQueryValidateCreateMarket(t *testing.T) {
 		setup:     cli.SetupCmdQueryValidateCreateMarket,
 	}
 
+	tdir := t.TempDir()
+	propFN := filepath.Join(tdir, "manage-fees-prop.json")
+	fileMsg := &exchange.MsgGovCreateMarketRequest{
+		Authority: cli.AuthorityAddr.String(),
+		Market: exchange.Market{
+			MarketId: 3,
+			MarketDetails: exchange.MarketDetails{
+				Name:        "A Name",
+				Description: "A description.",
+				WebsiteUrl:  "A URL",
+				IconUri:     "An Icon",
+			},
+			FeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("apple", 1)},
+			FeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("banana", 2)},
+			FeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("cherry", 3)},
+			FeeSellerSettlementRatios: []exchange.FeeRatio{
+				{Price: sdk.NewInt64Coin("grape", 110), Fee: sdk.NewInt64Coin("grape", 10)},
+			},
+			FeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("date", 4)},
+			FeeBuyerSettlementRatios: []exchange.FeeRatio{
+				{Price: sdk.NewInt64Coin("kiwi", 111), Fee: sdk.NewInt64Coin("kiwi", 11)},
+			},
+			AcceptingOrders:     true,
+			AllowUserSettlement: true,
+			AccessGrants: []exchange.AccessGrant{
+				{
+					Address:     sdk.AccAddress("ag1_________________").String(),
+					Permissions: []exchange.Permission{2},
+				},
+			},
+			ReqAttrCreateAsk: []string{"ask.create"},
+			ReqAttrCreateBid: []string{"bid.create"},
+		},
+	}
+	prop := newGovProp(t, fileMsg)
+	tx := newTx(t, prop)
+	writeFileAsJson(t, propFN, tx)
+
 	tests := []queryMakerTestCase[exchange.QueryValidateCreateMarketRequest]{
 		{
 			name: "several errors",
@@ -930,8 +976,6 @@ func TestMakeQueryValidateCreateMarket(t *testing.T) {
 						FeeSellerSettlementRatios: []exchange.FeeRatio{},
 						AcceptingOrders:           true,
 						AccessGrants:              []exchange.AccessGrant{},
-						ReqAttrCreateAsk:          []string{},
-						ReqAttrCreateBid:          []string{},
 					},
 				},
 			},
@@ -996,6 +1040,13 @@ func TestMakeQueryValidateCreateMarket(t *testing.T) {
 						ReqAttrCreateBid: []string{"buyer.kyc"},
 					},
 				},
+			},
+		},
+		{
+			name:  "proposal flag",
+			flags: []string{"--proposal", propFN},
+			expReq: &exchange.QueryValidateCreateMarketRequest{
+				CreateMarketRequest: fileMsg,
 			},
 		},
 	}
@@ -1071,6 +1122,7 @@ func TestSetupCmdQueryValidateManageFees(t *testing.T) {
 			cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
 			cli.FlagSellerFlatAdd, cli.FlagSellerFlatRemove, cli.FlagSellerRatiosAdd, cli.FlagSellerRatiosRemove,
 			cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
+			cli.FlagProposal,
 		},
 		expAnnotations: map[string]map[string][]string{
 			cli.FlagMarket: {required: {"true"}},
@@ -1083,7 +1135,9 @@ func TestSetupCmdQueryValidateManageFees(t *testing.T) {
 			"[--seller-ratios-add <fee ratios>]", "[--seller-ratios-remove <fee ratios>]",
 			"[--buyer-flat-add <coins>]", "[--buyer-flat-remove <coins>]",
 			"[--buyer-ratios-add <fee ratios>]", "[--buyer-ratios-remove <fee ratios>]",
+			"[--proposal <json filename>",
 			cli.AuthorityDesc, cli.RepeatableDesc, cli.FeeRatioDesc,
+			cli.ProposalFileDesc(&exchange.MsgGovManageFeesRequest{}),
 		},
 	}
 
@@ -1091,6 +1145,7 @@ func TestSetupCmdQueryValidateManageFees(t *testing.T) {
 		cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
 		cli.FlagSellerFlatAdd, cli.FlagSellerFlatRemove, cli.FlagSellerRatiosAdd, cli.FlagSellerRatiosRemove,
 		cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
+		cli.FlagProposal,
 	}
 	oneReqVal := strings.Join(oneReqFlags, " ")
 	if tc.expAnnotations == nil {
@@ -1112,6 +1167,36 @@ func TestMakeQueryValidateManageFees(t *testing.T) {
 		maker:     cli.MakeQueryValidateManageFees,
 		setup:     cli.SetupCmdQueryValidateManageFees,
 	}
+
+	tdir := t.TempDir()
+	propFN := filepath.Join(tdir, "manage-fees-prop.json")
+	fileMsg := &exchange.MsgGovManageFeesRequest{
+		Authority:                     cli.AuthorityAddr.String(),
+		MarketId:                      101,
+		AddFeeCreateAskFlat:           []sdk.Coin{sdk.NewInt64Coin("apple", 5)},
+		RemoveFeeCreateAskFlat:        []sdk.Coin{sdk.NewInt64Coin("acorn", 6)},
+		AddFeeCreateBidFlat:           []sdk.Coin{sdk.NewInt64Coin("banana", 7)},
+		RemoveFeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("blueberry", 8)},
+		AddFeeSellerSettlementFlat:    []sdk.Coin{sdk.NewInt64Coin("cherry", 9)},
+		RemoveFeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("cantaloup", 10)},
+		AddFeeSellerSettlementRatios: []exchange.FeeRatio{
+			{Price: sdk.NewInt64Coin("grape", 100), Fee: sdk.NewInt64Coin("grape", 1)},
+		},
+		RemoveFeeSellerSettlementRatios: []exchange.FeeRatio{
+			{Price: sdk.NewInt64Coin("grapefruit", 101), Fee: sdk.NewInt64Coin("grapefruit", 2)},
+		},
+		AddFeeBuyerSettlementFlat:    []sdk.Coin{sdk.NewInt64Coin("date", 11)},
+		RemoveFeeBuyerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("damson", 12)},
+		AddFeeBuyerSettlementRatios: []exchange.FeeRatio{
+			{Price: sdk.NewInt64Coin("kiwi", 102), Fee: sdk.NewInt64Coin("kiwi", 3)},
+		},
+		RemoveFeeBuyerSettlementRatios: []exchange.FeeRatio{
+			{Price: sdk.NewInt64Coin("keylime", 104), Fee: sdk.NewInt64Coin("keylime", 4)},
+		},
+	}
+	prop := newGovProp(t, fileMsg)
+	tx := newTx(t, prop)
+	writeFileAsJson(t, propFN, tx)
 
 	tests := []queryMakerTestCase[exchange.QueryValidateManageFeesRequest]{
 		{
@@ -1167,6 +1252,13 @@ func TestMakeQueryValidateManageFees(t *testing.T) {
 						{Price: sdk.NewInt64Coin("prune", 43), Fee: sdk.NewInt64Coin("prune", 2)},
 					},
 				},
+			},
+		},
+		{
+			name:  "proposal flag",
+			flags: []string{"--proposal", propFN},
+			expReq: &exchange.QueryValidateManageFeesRequest{
+				ManageFeesRequest: fileMsg,
 			},
 		},
 	}

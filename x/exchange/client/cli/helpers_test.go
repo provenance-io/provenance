@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -9,7 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -391,6 +394,46 @@ func TestOptFlagUse(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "OptFlagUse(%q, %q)", tc.name, tc.opt)
 			assert.Equal(t, tc.exp, actual, "OptFlagUse(%q, %q)", tc.name, tc.opt)
+		})
+	}
+}
+
+func TestProposalFileDesc(t *testing.T) {
+	msgTypes := []sdk.Msg{
+		&exchange.MsgGovCreateMarketRequest{},
+		&exchange.MsgGovManageFeesRequest{},
+	}
+
+	for _, msgType := range msgTypes {
+		t.Run(fmt.Sprintf("%T", msgType), func(t *testing.T) {
+			expInRes := []string{
+				"--proposal", "json", "Tx", "--generate-only",
+				`{
+  "body": {
+    "messages": [
+      {
+        "@type": "` + sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}) + `",
+        "messages": [
+          {
+            "@type": "` + sdk.MsgTypeURL(msgType) + `",
+`,
+			}
+
+			var actual string
+			testFunc := func() {
+				actual = cli.ProposalFileDesc(msgType)
+			}
+			require.NotPanics(t, testFunc, "ProposalFileDesc(%T)", msgType)
+
+			defer func() {
+				if t.Failed() {
+					t.Logf("Result:\n%s", actual)
+				}
+			}()
+
+			for _, exp := range expInRes {
+				assert.Contains(t, actual, exp, "ProposalFileDesc(%T) result. Should contain:\n%s", msgType, exp)
+			}
 		})
 	}
 }
