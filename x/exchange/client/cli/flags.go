@@ -612,10 +612,19 @@ func ReadFlagUint32OrDefault(flagSet *pflag.FlagSet, name string, def uint32) (u
 // ReadFlagBoolOrDefault gets a bool flag or returns the provided default.
 func ReadFlagBoolOrDefault(flagSet *pflag.FlagSet, name string, def bool) (bool, error) {
 	rv, err := flagSet.GetBool(name)
-	if !rv || err != nil {
+	if err != nil {
 		return def, err
 	}
-	return rv, nil
+	flagGiven := false
+	flagSet.Visit(func(flag *pflag.Flag) {
+		if flag.Name == name {
+			flagGiven = true
+		}
+	})
+	if flagGiven {
+		return rv, nil
+	}
+	return def, nil
 }
 
 // ReadFlagStringSliceOrDefault gets a string slice flag or returns the provided default.

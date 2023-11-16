@@ -173,7 +173,8 @@ func TestReadFlagAuthority(t *testing.T) {
 				return flagSet
 
 			},
-			expErr: "trying to get string value of flag of type int",
+			expAddr: cli.AuthorityAddr.String(),
+			expErr:  "trying to get string value of flag of type int",
 		},
 		{
 			name:    "provided",
@@ -2314,7 +2315,7 @@ func TestReadFlagUint32OrDefault(t *testing.T) {
 	tests := []struct {
 		testName string
 		flags    []string
-		name     string
+		name     string // defaults to flagUint32.
 		def      uint32
 		exp      uint32
 		expErr   string
@@ -2372,17 +2373,25 @@ func TestReadFlagBoolOrDefault(t *testing.T) {
 	tests := []struct {
 		testName string
 		flags    []string
-		name     string
+		name     string // defaults to flagBool.
 		def      bool
 		exp      bool
 		expErr   string
 	}{
 		{
-			testName: "error getting flag",
+			testName: "error getting flag, true default",
 			flags:    []string{"--" + flagString, "what"},
 			name:     flagString,
 			def:      true,
 			exp:      true,
+			expErr:   "trying to get bool value of flag of type string",
+		},
+		{
+			testName: "error getting flag, false default",
+			flags:    []string{"--" + flagString, "what"},
+			name:     flagString,
+			def:      false,
+			exp:      false,
 			expErr:   "trying to get bool value of flag of type string",
 		},
 		{
@@ -2396,9 +2405,39 @@ func TestReadFlagBoolOrDefault(t *testing.T) {
 			exp:      true,
 		},
 		{
-			testName: "provided",
+			testName: "provided false, true default",
+			flags:    []string{"--" + flagBool + "=false"},
+			def:      true,
+			exp:      false,
+		},
+		{
+			testName: "provided false, false default",
+			flags:    []string{"--" + flagBool + "=false"},
+			def:      false,
+			exp:      false,
+		},
+		{
+			testName: "provided true, true default",
+			flags:    []string{"--" + flagBool + "=true"},
+			def:      true,
+			exp:      true,
+		},
+		{
+			testName: "provided true, false default",
+			flags:    []string{"--" + flagBool + "=true"},
+			def:      false,
+			exp:      true,
+		},
+		{
+			testName: "provided normal, false default",
 			flags:    []string{"--" + flagBool},
 			def:      false,
+			exp:      true,
+		},
+		{
+			testName: "provided normal, true default",
+			flags:    []string{"--" + flagBool},
+			def:      true,
 			exp:      true,
 		},
 	}
@@ -2430,7 +2469,7 @@ func TestReadFlagStringSliceOrDefault(t *testing.T) {
 	tests := []struct {
 		testName string
 		flags    []string
-		name     string
+		name     string // defaults to flagStringSlice.
 		def      []string
 		exp      []string
 		expErr   string
@@ -2493,7 +2532,7 @@ func TestReadFlagStringOrDefault(t *testing.T) {
 	tests := []struct {
 		testName string
 		flags    []string
-		name     string
+		name     string // defaults to flagString.
 		def      string
 		exp      string
 		expErr   string
