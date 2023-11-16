@@ -17,9 +17,6 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
-	icq "github.com/strangelove-ventures/async-icq/v6"
-	icqkeeper "github.com/strangelove-ventures/async-icq/v6/keeper"
-	icqtypes "github.com/strangelove-ventures/async-icq/v6/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -105,6 +102,9 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v6"
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v6/keeper"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
 	ica "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts"
 	icahost "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/host/keeper"
@@ -596,7 +596,7 @@ func New(
 	app.ICQKeeper = icqkeeper.NewKeeper(
 		appCodec, keys[icqtypes.StoreKey], app.GetSubspace(icqtypes.ModuleName),
 		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		scopedICQKeeper, app.BaseApp,
+		scopedICQKeeper, app.BaseApp.GRPCQueryRouter(),
 	)
 	icqModule := icq.NewAppModule(app.ICQKeeper)
 	icqIBCModule := icq.NewIBCModule(app.ICQKeeper)
