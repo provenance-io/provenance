@@ -1214,9 +1214,9 @@ func TestParseAccessGrant(t *testing.T) {
 }
 
 func TestParseAccessGrants(t *testing.T) {
-	addr1 := "pb1v9jxgu33ta047h6lta047h6lta047h6l0r6x5v" // = sdk.AccAddress("addr1_______________")
-	addr2 := "pb1v9jxgu33ta047h6lta047h6lta047h6l0r6x5v" // = sdk.AccAddress("_addr2______________")
-	addr3 := "pb10elxzerywge47h6lta047h6lta047h6l90x0zx" // = sdk.AccAddress("~~addr3_____________")
+	addr1 := "pb1v9jxgu33ta047h6lta047h6lta047h6l0r6x5v" // = sdk.AccAddress("addr1_______________").String()
+	addr2 := "pb1taskgerjxf047h6lta047h6lta047h6lrcgmd9" // = sdk.AccAddress("_addr2______________").String()
+	addr3 := "pb10elxzerywge47h6lta047h6lta047h6l90x0zx" // = sdk.AccAddress("~~addr3_____________").String()
 
 	tests := []struct {
 		name      string
