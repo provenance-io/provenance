@@ -187,7 +187,7 @@ func ReqFlagUse(name string, opt string) string {
 	return "--" + name
 }
 
-// OptFlagUse wraps a ReqFlagUse in [], e.g. "[--name <opt>]"
+// OptFlagUse wraps a ReqFlagUse in [], e.g. "[--name <opt>]".
 func OptFlagUse(name string, opt string) string {
 	return "[" + ReqFlagUse(name, opt) + "]"
 }
@@ -223,7 +223,7 @@ If other message flags are provided with --%[1]s, they will overwrite just that 
 }
 
 var (
-	// UseFlagsBreak is a string to use to start a new line of flags in the Use.
+	// UseFlagsBreak is a string to use to start a new line of flags in the Use string of a command.
 	UseFlagsBreak = "\n     "
 
 	// RepeatableDesc is a description of how repeatable flags/values can be provided.
@@ -248,7 +248,7 @@ An <admin> is required.`,
 
 	// AccessGrantsDesc is a description of the <asset grant> format.
 	AccessGrantsDesc = fmt.Sprintf(`An <access grant> has the format "<address>:<permissions>"
-In <permissions>, separate each permission with a + (plus), or . (period).
+In <permissions>, separate each permission with a + (plus) or . (period).
 An <access grant> of "<address>:all" will have all of the permissions.
 
 Example <access grant>: %s:settle+update
@@ -266,7 +266,7 @@ Both <price coin> and <fee coin> have the format "<amount><denom>".
 Example <fee ratio>: 100nhash:1nhash`
 
 	// AuthorityDesc is a description of the authority flag.
-	AuthorityDesc = fmt.Sprintf("If --%s is not provided, the governance module account is used as the <authority>.", FlagAuthority)
+	AuthorityDesc = fmt.Sprintf("If --%s <authority> is not provided, the governance module account is used as the <authority>.", FlagAuthority)
 
 	// ReqAskBidUse is a use string of the --ask and --bid flags when one is required.
 	ReqAskBidUse = fmt.Sprintf("{--%s|--%s}", FlagAsk, FlagBid)
