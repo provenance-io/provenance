@@ -167,9 +167,9 @@ func SimplePerms() string {
 
 // ReqSignerDesc returns a description of how the --<name> flag is used and sort of required.
 func ReqSignerDesc(name string) string {
-	return fmt.Sprintf(`If --%[1]s <%[1]s> is provided, that is used as the %[1]s.
-If no --%[1]s is provided, the --%[2]s account address is used as the %[1]s.
-A %[1]s is required.`,
+	return fmt.Sprintf(`If --%[1]s <%[1]s> is provided, that is used as the <%[1]s>.
+If no --%[1]s is provided, the --%[2]s account address is used as the <%[1]s>.
+A <%[1]s> is required.`,
 		name, flags.FlagFrom,
 	)
 }

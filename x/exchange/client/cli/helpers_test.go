@@ -321,7 +321,7 @@ func TestReqSignerDesc(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReqSignerDesc(%q)", name)
 			assert.Contains(t, actual, "--"+name, "ReqSignerDesc(%q)", name)
 			assert.Contains(t, actual, "<"+name+">", "ReqSignerDesc(%q)", name)
-			assert.Contains(t, actual, " "+name, "ReqSignerDesc(%q)", name)
+			assert.NotContains(t, actual, " "+name, "ReqSignerDesc(%q)", name)
 			assert.Contains(t, actual, "--"+flags.FlagFrom, "ReqSignerDesc(%q)", name)
 		})
 	}
