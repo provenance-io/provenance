@@ -268,7 +268,6 @@ func ReadFlagMarketOrArg(flagSet *pflag.FlagSet, args []string) (uint32, error) 
 
 // ReadCoinsFlag reads a string flag and converts it into sdk.Coins.
 // If the flag wasn't provided, this returns nil, nil.
-// This assumes that the flag was defined with a default of "".
 //
 // If the flag is a StringSlice, use ReadFlatFeeFlag.
 func ReadCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
@@ -305,7 +304,6 @@ func ParseCoins(coinsStr string) (sdk.Coins, error) {
 
 // ReadCoinFlag reads a string flag and converts it into *sdk.Coin.
 // If the flag wasn't provided, this returns nil, nil.
-// This assumes that the flag was defined with a default of "".
 //
 // Use ReadReqCoinFlag if the flag is required.
 func ReadCoinFlag(flagSet *pflag.FlagSet, name string) (*sdk.Coin, error) {
@@ -321,7 +319,7 @@ func ReadCoinFlag(flagSet *pflag.FlagSet, name string) (*sdk.Coin, error) {
 }
 
 // ReadReqCoinFlag reads a string flag and converts it into a sdk.Coin and requires it to have a value.
-// This assumes that the flag was defined with a default of "".
+// Returns an error if not provided.
 //
 // Use ReadCoinFlag if the flag is optional.
 func ReadReqCoinFlag(flagSet *pflag.FlagSet, name string) (sdk.Coin, error) {
@@ -336,7 +334,6 @@ func ReadReqCoinFlag(flagSet *pflag.FlagSet, name string) (sdk.Coin, error) {
 }
 
 // ReadOrderIDsFlag reads a UintSlice flag and converts it into a []uint64.
-// This assumes that the flag was defined with a default of nil or []uint{}.
 func ReadOrderIDsFlag(flagSet *pflag.FlagSet, name string) ([]uint64, error) {
 	ids, err := flagSet.GetUintSlice(name)
 	if len(ids) == 0 || err != nil {
@@ -438,7 +435,7 @@ func ParseFlatFeeOptions(vals []string) ([]sdk.Coin, error) {
 
 // ReadFeeRatiosFlag reads a StringSlice flag and converts it into a slice of exchange.FeeRatio.
 // If the flag wasn't provided, the provided default is returned.
-// This assumes that the flag was defined with a default of "".
+// This assumes that the flag was defined with a default of nil or []string{}.
 func ReadFeeRatiosFlag(flagSet *pflag.FlagSet, name string, def []exchange.FeeRatio) ([]exchange.FeeRatio, error) {
 	vals, err := flagSet.GetStringSlice(name)
 	if len(vals) == 0 || err != nil {
@@ -582,7 +579,7 @@ func ReadProposalFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (string,
 	return propFN, rv, nil
 }
 
-// getSingleMsgFromPropFlag reads the --proposal flag and extracts a Msg of a specific type from the file points to.
+// getSingleMsgFromPropFlag reads the --proposal flag and extracts a Msg of a specific type from the file it points to.
 // If --proposal wasn't provided, the emptyMsg is returned without error.
 // An error is returned if anything goes wrong or the file doesn't have exactly one T.
 // The emptyMsg is returned even if an error is returned.
@@ -612,9 +609,9 @@ func getSingleMsgFromPropFlag[T sdk.Msg](clientCtx client.Context, flagSet *pfla
 	return rvs[0], nil
 }
 
-// ReadMsgGovCreateMarketRequestFromProposalFlag reads the --proposal flag and extracts the MsgGovManageFeesRequest from the file points to.
-// An error is returned if anything goes wrong or the file doesn't have exactly one MsgGovManageFeesRequest.
-// A MsgGovManageFeesRequest is returned even if an error is returned.
+// ReadMsgGovCreateMarketRequestFromProposalFlag reads the --proposal flag and extracts the MsgGovCreateMarketRequest from the file points to.
+// An error is returned if anything goes wrong or the file doesn't have exactly one MsgGovCreateMarketRequest.
+// A MsgGovCreateMarketRequest is returned even if an error is returned.
 // This assumes that the flag was defined with a default of "".
 func ReadMsgGovCreateMarketRequestFromProposalFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (*exchange.MsgGovCreateMarketRequest, error) {
 	return getSingleMsgFromPropFlag(clientCtx, flagSet, &exchange.MsgGovCreateMarketRequest{})
