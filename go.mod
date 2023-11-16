@@ -11,6 +11,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.12
 	github.com/cosmos/go-bip39 v1.0.0
+	github.com/cosmos/ibc-apps/modules/async-icq/v6 v6.1.0
 	github.com/cosmos/ibc-go/v6 v6.2.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v1.3.3
@@ -26,7 +27,6 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.17.0
-	github.com/strangelove-ventures/async-icq/v6 v6.0.0-rc0
 	github.com/stretchr/testify v1.8.4
 	github.com/tendermint/tendermint v0.34.28
 	github.com/tendermint/tm-db v0.6.7
