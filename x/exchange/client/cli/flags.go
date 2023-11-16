@@ -137,6 +137,7 @@ func ReadFlagAuthorityOrDefault(flagSet *pflag.FlagSet, def string) (string, err
 }
 
 // ReadAddrFlagOrFrom gets the requested flag or, if it wasn't provided, gets the --from address.
+// Returns an error if neither the flag nor --from were provided.
 // This assumes that the flag was defined with a default of "".
 func ReadAddrFlagOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet, name string) (string, error) {
 	rv, err := flagSet.GetString(name)
@@ -178,8 +179,19 @@ func ReadFlagsEnableDisable(flagSet *pflag.FlagSet) (bool, error) {
 	return false, fmt.Errorf("exactly one of --%s or --%s must be provided", FlagEnable, FlagDisable)
 }
 
+// AddFlagsAsksBidsBools adds the --asks and --bids flags as bools for limiting search results.
+// Marks them mutually exclusive (but not required).
+//
+// Use ReadFlagsAsksBidsOpt to read them.
+func AddFlagsAsksBidsBools(cmd *cobra.Command) {
+	cmd.Flags().Bool(FlagAsks, false, "Limit results to only ask orders")
+	cmd.Flags().Bool(FlagBids, false, "Limit results to only bid orders")
+	cmd.MarkFlagsMutuallyExclusive(FlagAsks, FlagBids)
+}
+
 // ReadFlagsAsksBidsOpt reads the --asks and --bids bool flags, returning either "ask", "bid" or "".
-// This assumes that the flags were defined with a defaults of false.
+//
+// This assumes that the flags were defined using AddFlagsAsksBidsBools.
 func ReadFlagsAsksBidsOpt(flagSet *pflag.FlagSet) (string, error) {
 	isAsk, err := flagSet.GetBool(FlagAsks)
 	if err != nil {
@@ -276,7 +288,7 @@ func ParseCoins(coinsStr string) (sdk.Coins, error) {
 	// The sdk.ParseCoinsNormalized func allows for decimals and just truncates if there are some.
 	// But I want an error if there's a decimal portion.
 	// Its errors also always have "invalid decimal coin expression", and I don't want "decimal" in these errors.
-	// I also like having the offending coin string quoted.
+	// I also like having the offending coin string quoted since its safer and clarifies when the coinsStr is "".
 	if len(coinsStr) == 0 {
 		return nil, nil
 	}

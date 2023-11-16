@@ -157,11 +157,8 @@ func SetupCmdQueryGetMarketOrders(cmd *cobra.Command) {
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
-	cmd.Flags().Bool(FlagAsks, false, "Limit results to only ask orders")
-	cmd.Flags().Bool(FlagBids, false, "Limit results to only bid orders")
+	AddFlagsAsksBidsBools(cmd)
 	cmd.Flags().Uint64(FlagOrder, 0, "Limit results to only orders with ids larger than this")
-
-	cmd.MarkFlagsMutuallyExclusive(FlagAsks, FlagBids)
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<market id>|--%s <market id>}", FlagMarket),
@@ -198,11 +195,8 @@ func SetupCmdQueryGetOwnerOrders(cmd *cobra.Command) {
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
 	cmd.Flags().String(FlagOwner, "", "The owner")
-	cmd.Flags().Bool(FlagAsks, false, "Limit results to only ask orders")
-	cmd.Flags().Bool(FlagBids, false, "Limit results to only bid orders")
+	AddFlagsAsksBidsBools(cmd)
 	cmd.Flags().Uint64(FlagOrder, 0, "Limit results to only orders with ids larger than this")
-
-	cmd.MarkFlagsMutuallyExclusive(FlagAsks, FlagBids)
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<owner>|--%s <owner>}", FlagOwner),
@@ -239,11 +233,8 @@ func SetupCmdQueryGetAssetOrders(cmd *cobra.Command) {
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
 	cmd.Flags().String(FlagDenom, "", "The asset denom")
-	cmd.Flags().Bool(FlagAsks, false, "Limit results to only ask orders")
-	cmd.Flags().Bool(FlagBids, false, "Limit results to only bid orders")
+	AddFlagsAsksBidsBools(cmd)
 	cmd.Flags().Uint64(FlagOrder, 0, "Limit results to only orders with ids larger than this")
-
-	cmd.MarkFlagsMutuallyExclusive(FlagAsks, FlagBids)
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<asset>|--%s <asset>}", FlagDenom),

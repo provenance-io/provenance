@@ -427,6 +427,39 @@ func TestReadFlagsEnableDisable(t *testing.T) {
 	}
 }
 
+func TestAddFlagsAsksBidsBools(t *testing.T) {
+	expAnnotations := map[string][]string{
+		mutExc: {cli.FlagAsks + " " + cli.FlagBids},
+	}
+
+	cmd := &cobra.Command{
+		Use: "testing",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.New("the command should not have been run")
+		},
+	}
+
+	cli.AddFlagsAsksBidsBools(cmd)
+
+	asksFlag := cmd.Flags().Lookup(cli.FlagAsks)
+	if assert.NotNil(t, asksFlag, "The --%s flag", cli.FlagAsks) {
+		expUsage := "Limit results to only ask orders"
+		actusage := asksFlag.Usage
+		assert.Equal(t, expUsage, actusage, "--%s flag usage", cli.FlagAsks)
+		actAnnotations := asksFlag.Annotations
+		assert.Equal(t, expAnnotations, actAnnotations, "--%s flag annotations", cli.FlagAsks)
+	}
+
+	bidsFlag := cmd.Flags().Lookup(cli.FlagBids)
+	if assert.NotNil(t, bidsFlag, "The --%s flag", cli.FlagBids) {
+		expUsage := "Limit results to only bid orders"
+		actusage := bidsFlag.Usage
+		assert.Equal(t, expUsage, actusage, "--%s flag usage", cli.FlagBids)
+		actAnnotations := bidsFlag.Annotations
+		assert.Equal(t, expAnnotations, actAnnotations, "--%s flag annotations", cli.FlagBids)
+	}
+}
+
 func TestReadFlagsAsksBidsOpt(t *testing.T) {
 	goodFlagSet := func() *pflag.FlagSet {
 		flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
