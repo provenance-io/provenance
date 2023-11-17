@@ -536,7 +536,7 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateDetails() {
 				}
 				market3.MarketDetails.IconUri += "?7A9AF177=true"
 
-				args := []string{}
+				args := make([]string, 0, 8)
 				if len(market3.MarketDetails.Name) > 0 {
 					args = append(args, "--name", market3.MarketDetails.Name)
 				}

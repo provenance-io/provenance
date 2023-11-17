@@ -401,7 +401,7 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 				txResponse = &resp
 				s.Assert().Equal(int(tc.expectedCode), int(resp.Code), "response code")
 				for _, exp := range tc.expInRawLog {
-					s.Assert().Contains(resp.RawLog, exp, "TxResponse.RawLog should countain:\n%q", exp)
+					s.Assert().Contains(resp.RawLog, exp, "TxResponse.RawLog should contain:\n%q", exp)
 				}
 			}
 		}
@@ -887,7 +887,7 @@ type setupTestCase struct {
 	// expAnnotations is the annotations expected for each of the expFlags.
 	// The map is "flag name" -> "annotation type" -> values
 	// The following variables have the annotation type strings: mutExc, oneReq, required.
-	// Annotions are only checked on the flags listed in expFlags.
+	// Annotations are only checked on the flags listed in expFlags.
 	expAnnotations map[string]map[string][]string
 	// expInUse is a set of strings that are expected to be in the command's Use string.
 	// Each entry that does not start with a "[" is also checked to not be in the Use wrapped in [].

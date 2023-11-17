@@ -1178,7 +1178,7 @@ func TestMakeQueryValidateManageFees(t *testing.T) {
 		AddFeeCreateBidFlat:           []sdk.Coin{sdk.NewInt64Coin("banana", 7)},
 		RemoveFeeCreateBidFlat:        []sdk.Coin{sdk.NewInt64Coin("blueberry", 8)},
 		AddFeeSellerSettlementFlat:    []sdk.Coin{sdk.NewInt64Coin("cherry", 9)},
-		RemoveFeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("cantaloup", 10)},
+		RemoveFeeSellerSettlementFlat: []sdk.Coin{sdk.NewInt64Coin("cantaloupe", 10)},
 		AddFeeSellerSettlementRatios: []exchange.FeeRatio{
 			{Price: sdk.NewInt64Coin("grape", 100), Fee: sdk.NewInt64Coin("grape", 1)},
 		},
