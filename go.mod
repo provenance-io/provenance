@@ -182,7 +182,9 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-2
+//replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-2
+// v0.46.13-pio-2.0.20231117232244-16a8b3956dd2 is tag err-namespace-fix-v0.46.13-pio-2 on dwedul/v0.46.x-1752-error-namespace-fix.
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-2.0.20231117232244-16a8b3956dd2
 
 replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
 
