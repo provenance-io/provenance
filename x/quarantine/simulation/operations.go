@@ -48,7 +48,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec,
-	ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper, appCdc cdctypes.AnyUnpacker,
+	ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper, _ cdctypes.AnyUnpacker,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgOptIn               int
@@ -366,8 +366,8 @@ func SimulateMsgUpdateAutoResponses(ak quarantine.AccountKeeper, bk quarantine.B
 		entryCount := r.Intn(3) + 1
 		for len(msg.Updates) < entryCount {
 			entry := &quarantine.AutoResponseUpdate{}
-			acct, _ := simtypes.RandomAcc(r, accs)
-			entry.FromAddress = acct.Address.String()
+			rAcct, _ := simtypes.RandomAcc(r, accs)
+			entry.FromAddress = rAcct.Address.String()
 			respR := r.Intn(20)
 			switch respR {
 			case 0:

@@ -69,12 +69,12 @@ func ParseAutoResponseUpdatesFromArgs(args []string, startIndex int) ([]*quarant
 				// Slightly different message on purpose. Makes it easier to track down the source of an error.
 				return nil, fmt.Errorf("invalid arg %d: last arg cannot be an auto-response, got: %q", i+startIndex+1, arg)
 			}
-			arArgCount += 1
+			arArgCount++
 			ar = newAr
 			lastArArg = arg
 			arAddrCount = 0
 		} else {
-			arAddrCount += 1
+			arAddrCount++
 			fromAddr, err := validateAddress(arg, "from_address")
 			if err != nil {
 				return nil, fmt.Errorf("unknown arg %d %q: auto-response %d %q: from_address %d: %w", i+startIndex+1, arg, arArgCount, lastArArg, arAddrCount, err)

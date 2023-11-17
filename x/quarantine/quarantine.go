@@ -85,10 +85,7 @@ func (f QuarantinedFunds) Validate() error {
 		}
 		seen[addr] = struct{}{}
 	}
-	if err := f.Coins.Validate(); err != nil {
-		return err
-	}
-	return nil
+	return f.Coins.Validate()
 }
 
 // NewAutoResponseEntry creates a new quarantined auto-response entry.
