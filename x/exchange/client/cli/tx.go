@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -157,7 +159,7 @@ func CmdTxMarketWithdraw() *cobra.Command {
 func CmdTxMarketUpdateDetails() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "market-details",
-		Aliases: []string{"market-update-details"},
+		Aliases: []string{"market-update-details", "update-market-details", "update-details"},
 		Short:   "Update a market's details",
 		RunE:    genericTxRunE(MakeMsgMarketUpdateDetails),
 	}
@@ -171,7 +173,7 @@ func CmdTxMarketUpdateDetails() *cobra.Command {
 func CmdTxMarketUpdateEnabled() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "market-enabled",
-		Aliases: []string{"market-update-enabled", "update-enabled"},
+		Aliases: []string{"market-update-enabled", "update-market-enabled", "update-enabled"},
 		Short:   "Change whether a market is accepting orders",
 		RunE:    genericTxRunE(MakeMsgMarketUpdateEnabled),
 	}
@@ -185,7 +187,7 @@ func CmdTxMarketUpdateEnabled() *cobra.Command {
 func CmdTxMarketUpdateUserSettle() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "market-user-settle",
-		Aliases: []string{"market-update-user-settle", "update-user-settle"},
+		Aliases: []string{"market-update-user-settle", "update-market-user-settle", "update-user-settle"},
 		Short:   "Change whether a market allows settlements initiated by users",
 		RunE:    genericTxRunE(MakeMsgMarketUpdateUserSettle),
 	}
@@ -199,7 +201,7 @@ func CmdTxMarketUpdateUserSettle() *cobra.Command {
 func CmdTxMarketManagePermissions() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "market-permissions",
-		Aliases: []string{"market-manage-permissions", "permissions"},
+		Aliases: []string{"market-manage-permissions", "manage-market-permissions", "manage-permissions", "permissions"},
 		Short:   "Update the account permissions for a market",
 		RunE:    genericTxRunE(MakeMsgMarketManagePermissions),
 	}
@@ -212,13 +214,18 @@ func CmdTxMarketManagePermissions() *cobra.Command {
 // CmdTxMarketManageReqAttrs creates the market-req-attrs sub-command for the exchange tx command.
 func CmdTxMarketManageReqAttrs() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "market-req-attrs",
-		Aliases: []string{"market-manage-req-attrs", "manage-market-req-attrs", "manage-req-attrs", "req-attrs", "market-required-attributes",
-			"market-manage-required-attributes", "manage-required-attributes", "required-attributes",
-		},
-		Short: "Manage the attributes required to create orders in a market",
-		RunE:  genericTxRunE(MakeMsgMarketManageReqAttrs),
+		Use:     "market-req-attrs",
+		Aliases: []string{"market-manage-req-attrs", "manage-market-req-attrs", "manage-req-attrs", "req-attrs"},
+		Short:   "Manage the attributes required to create orders in a market",
+		RunE:    genericTxRunE(MakeMsgMarketManageReqAttrs),
 	}
+	newAliases := make([]string, 0, len(cmd.Aliases))
+	for _, alias := range cmd.Aliases {
+		if strings.Contains(alias, "req-attrs") {
+			newAliases = append(newAliases, strings.Replace(alias, "req-attrs", "required-attributes", 1))
+		}
+	}
+	cmd.Aliases = append(cmd.Aliases, newAliases...)
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxMarketManageReqAttrs(cmd)
