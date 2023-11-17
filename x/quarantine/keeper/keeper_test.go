@@ -178,7 +178,7 @@ func (s *TestSuite) TestQuarantineOptInOut() {
 
 		expected := sdk.Events{
 			{
-				Type: "cosmos.quarantine.v1beta1.EventOptIn",
+				Type: "provenance.quarantine.v1.EventOptIn",
 				Attributes: []abci.EventAttribute{
 					{
 						Key:   []byte("to_address"),
@@ -198,7 +198,7 @@ func (s *TestSuite) TestQuarantineOptInOut() {
 
 		expected := sdk.Events{
 			{
-				Type: "cosmos.quarantine.v1beta1.EventOptOut",
+				Type: "provenance.quarantine.v1.EventOptOut",
 				Attributes: []abci.EventAttribute{
 					{
 						Key:   []byte("to_address"),

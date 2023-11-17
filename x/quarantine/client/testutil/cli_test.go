@@ -9,12 +9,14 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/testutil"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 2
-	cfg.TimeoutCommit = 1 * time.Second
+	pioconfig.SetProvenanceConfig("stake", 0)
+	cfg := testutil.DefaultTestNetworkConfig()
+	cfg.NumValidators = 1
+	cfg.TimeoutCommit = 500 * time.Millisecond
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 }
