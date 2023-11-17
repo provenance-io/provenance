@@ -212,6 +212,11 @@ func TestReadFlagAuthorityOrDefault(t *testing.T) {
 		flagSet.String(cli.FlagAuthority, "", "The authority")
 		return flagSet
 	}
+	badFlagSet := func() *pflag.FlagSet {
+		flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+		flagSet.Int(cli.FlagAuthority, 0, "The authority")
+		return flagSet
+	}
 
 	tests := []struct {
 		name    string
@@ -222,27 +227,35 @@ func TestReadFlagAuthorityOrDefault(t *testing.T) {
 		expErr  string
 	}{
 		{
-			name: "wrong flag type",
-			flagSet: func() *pflag.FlagSet {
-				flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
-				flagSet.Int(cli.FlagAuthority, 0, "The authority")
-				return flagSet
-
-			},
+			name:    "wrong flag type, no default",
+			flagSet: badFlagSet,
+			expAddr: cli.AuthorityAddr.String(),
+			expErr:  "trying to get string value of flag of type int",
+		},
+		{
+			name:    "wrong flag type, with default",
+			flagSet: badFlagSet,
 			def:     "thedefault",
 			expAddr: "thedefault",
 			expErr:  "trying to get string value of flag of type int",
 		},
 		{
-			name:    "provided",
-			flagSet: goodFlagSet,
+			name:    "provided, no default",
+			flags:   []string{"--" + cli.FlagAuthority, "usemeinstead"},
+			expAddr: "usemeinstead",
+		},
+		{
+			name:    "provided, with default",
 			flags:   []string{"--" + cli.FlagAuthority, "usemeinstead"},
 			def:     "thedefault",
 			expAddr: "usemeinstead",
 		},
 		{
-			name:    "not provided",
-			flagSet: goodFlagSet,
+			name:    "not provided, no default",
+			expAddr: cli.AuthorityAddr.String(),
+		},
+		{
+			name:    "not provided, with default",
 			def:     "thedefault",
 			expAddr: "thedefault",
 		},
@@ -250,6 +263,9 @@ func TestReadFlagAuthorityOrDefault(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.flagSet == nil {
+				tc.flagSet = goodFlagSet
+			}
 			flagSet := tc.flagSet()
 			err := flagSet.Parse(tc.flags)
 			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)

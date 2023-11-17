@@ -604,9 +604,6 @@ func MakeMsgGovCreateMarket(clientCtx client.Context, flagSet *pflag.FlagSet, _ 
 	errs := make([]error, 15)
 	msg, errs[0] = ReadMsgGovCreateMarketRequestFromProposalFlag(clientCtx, flagSet)
 	msg.Authority, errs[1] = ReadFlagAuthorityOrDefault(flagSet, msg.Authority)
-	if len(msg.Authority) == 0 {
-		msg.Authority = AuthorityAddr.String()
-	}
 	msg.Market.MarketId, errs[2] = ReadFlagUint32OrDefault(flagSet, FlagMarket, msg.Market.MarketId)
 	msg.Market.MarketDetails, errs[3] = ReadFlagsMarketDetails(flagSet, msg.Market.MarketDetails)
 	msg.Market.FeeCreateAskFlat, errs[4] = ReadFlatFeeFlag(flagSet, FlagCreateAsk, msg.Market.FeeCreateAskFlat)
@@ -689,9 +686,6 @@ func MakeMsgGovManageFees(clientCtx client.Context, flagSet *pflag.FlagSet, _ []
 
 	errs := make([]error, 15)
 	msg, errs[0] = ReadMsgGovManageFeesRequestFromProposalFlag(clientCtx, flagSet)
-	if len(msg.Authority) == 0 {
-		msg.Authority = AuthorityAddr.String()
-	}
 	msg.Authority, errs[1] = ReadFlagAuthorityOrDefault(flagSet, msg.Authority)
 	msg.MarketId, errs[2] = ReadFlagUint32OrDefault(flagSet, FlagMarket, msg.MarketId)
 	msg.AddFeeCreateAskFlat, errs[3] = ReadFlatFeeFlag(flagSet, FlagAskAdd, msg.AddFeeCreateAskFlat)

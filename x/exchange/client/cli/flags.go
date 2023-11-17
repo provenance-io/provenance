@@ -127,12 +127,16 @@ func ReadFlagAuthority(flagSet *pflag.FlagSet) (string, error) {
 	return ReadFlagAuthorityOrDefault(flagSet, AuthorityAddr.String())
 }
 
-// ReadFlagAuthorityOrDefault reads the --authority flag, or if not provided, returns the provided default.
+// ReadFlagAuthorityOrDefault reads the --authority flag, or if not provided, returns the default.
+// If the provided default is "", the standard authority address is used as the default.
 // This assumes that the flag was defined with a default of "".
 func ReadFlagAuthorityOrDefault(flagSet *pflag.FlagSet, def string) (string, error) {
 	rv, err := flagSet.GetString(FlagAuthority)
 	if len(rv) == 0 || err != nil {
-		return def, err
+		if len(def) > 0 {
+			return def, err
+		}
+		return AuthorityAddr.String(), err
 	}
 	return rv, nil
 }
