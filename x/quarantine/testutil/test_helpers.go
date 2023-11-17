@@ -8,7 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
+
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // This file contains some functions handy for doing unit tests.

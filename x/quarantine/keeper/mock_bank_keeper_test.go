@@ -3,7 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
+
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // Define a Mock Bank Keeper that defining of SendCoins errors and

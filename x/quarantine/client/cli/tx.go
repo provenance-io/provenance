@@ -9,7 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
+
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 const (

@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/stretchr/testify/assert"
 
-	. "github.com/cosmos/cosmos-sdk/x/quarantine"
-	. "github.com/cosmos/cosmos-sdk/x/quarantine/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+
+	. "github.com/provenance-io/provenance/x/quarantine"
+	. "github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 func TestPrefixValues(t *testing.T) {

@@ -5,7 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
+
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 var _ quarantine.MsgServer = Keeper{}

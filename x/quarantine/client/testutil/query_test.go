@@ -7,9 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
-	client "github.com/cosmos/cosmos-sdk/x/quarantine/client/cli"
+
+	banktestutil "github.com/provenance-io/provenance/testutil/bank"
+	"github.com/provenance-io/provenance/x/quarantine"
+	client "github.com/provenance-io/provenance/x/quarantine/client/cli"
 )
 
 // These tests are initiated by TestIntegrationTestSuite in cli_test.go

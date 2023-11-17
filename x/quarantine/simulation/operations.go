@@ -12,9 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
-	"github.com/cosmos/cosmos-sdk/x/quarantine/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	"github.com/provenance-io/provenance/x/quarantine"
+	"github.com/provenance-io/provenance/x/quarantine/keeper"
 )
 
 // Quarantine message types.

@@ -1,10 +1,12 @@
 package quarantine
 
 import (
-	"cosmossdk.io/errors"
+	cerrs "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	qerrors "github.com/cosmos/cosmos-sdk/x/quarantine/errors"
+
+	qerrors "github.com/provenance-io/provenance/x/quarantine/errors"
 )
 
 var _ sdk.Msg = &MsgOptIn{}
@@ -139,7 +141,7 @@ func (msg MsgUpdateAutoResponses) ValidateBasic() error {
 	}
 	for i, update := range msg.Updates {
 		if err := update.Validate(); err != nil {
-			return errors.Wrapf(err, "invalid update %d", i+1)
+			return cerrs.Wrapf(err, "invalid update %d", i+1)
 		}
 	}
 	return nil

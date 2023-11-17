@@ -7,10 +7,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
-	client "github.com/cosmos/cosmos-sdk/x/quarantine/client/cli"
+
+	banktestutil "github.com/provenance-io/provenance/testutil/bank"
+	"github.com/provenance-io/provenance/x/quarantine"
+	client "github.com/provenance-io/provenance/x/quarantine/client/cli"
 )
 
 func (s *IntegrationTestSuite) TestTxOptInCmd() {

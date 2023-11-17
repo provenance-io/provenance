@@ -10,6 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
+
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -19,14 +22,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/quarantine"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 

@@ -15,9 +15,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
 
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 var (

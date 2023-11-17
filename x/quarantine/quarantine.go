@@ -6,7 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/quarantine/errors"
+
+	qerrors "github.com/provenance-io/provenance/x/quarantine/errors"
 )
 
 // containsAddress returns true if the addrToFind is an entry in the addrs.
@@ -72,7 +73,7 @@ func (f QuarantinedFunds) Validate() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %v", err)
 	}
 	if len(f.UnacceptedFromAddresses) == 0 {
-		return errors.ErrInvalidValue.Wrap("at least one unaccepted from address is required")
+		return qerrors.ErrInvalidValue.Wrap("at least one unaccepted from address is required")
 	}
 	seen := make(map[string]struct{})
 	for i, addr := range f.UnacceptedFromAddresses {
@@ -80,7 +81,7 @@ func (f QuarantinedFunds) Validate() error {
 			return sdkerrors.ErrInvalidAddress.Wrapf("invalid unaccepted from address[%d]: %v", i, err)
 		}
 		if _, found := seen[addr]; found {
-			return errors.ErrInvalidValue.Wrapf("duplicate unaccepted from address: %q", addr)
+			return qerrors.ErrInvalidValue.Wrapf("duplicate unaccepted from address: %q", addr)
 		}
 		seen[addr] = struct{}{}
 	}
@@ -108,7 +109,7 @@ func (e AutoResponseEntry) Validate() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %v", err)
 	}
 	if !e.Response.IsValid() {
-		return errors.ErrInvalidValue.Wrapf("unknown auto-response value: %d", e.Response)
+		return qerrors.ErrInvalidValue.Wrapf("unknown auto-response value: %d", e.Response)
 	}
 	return nil
 }
@@ -119,7 +120,7 @@ func (u AutoResponseUpdate) Validate() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 	}
 	if !u.Response.IsValid() {
-		return errors.ErrInvalidValue.Wrapf("unknown auto-response value: %d", u.Response)
+		return qerrors.ErrInvalidValue.Wrapf("unknown auto-response value: %d", u.Response)
 	}
 	return nil
 }
@@ -194,7 +195,7 @@ func NewQuarantineRecord(unacceptedFromAddrs []string, coins sdk.Coins, declined
 // Validate does simple stateless validation of these quarantined funds.
 func (r QuarantineRecord) Validate() error {
 	if len(r.UnacceptedFromAddresses) == 0 {
-		return errors.ErrInvalidValue.Wrap("at least one unaccepted from address is required")
+		return qerrors.ErrInvalidValue.Wrap("at least one unaccepted from address is required")
 	}
 	return r.Coins.Validate()
 }

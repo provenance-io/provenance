@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
+
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // InitGenesis updates this keeper's store using the provided GenesisState.

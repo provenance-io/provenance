@@ -12,9 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 
-	. "github.com/cosmos/cosmos-sdk/x/quarantine/testutil"
+	banktestutil "github.com/provenance-io/provenance/testutil/bank"
+
+	. "github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 type IntegrationTestSuite struct {

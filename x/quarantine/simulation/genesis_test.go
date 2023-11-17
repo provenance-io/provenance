@@ -9,18 +9,22 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
-	"github.com/cosmos/cosmos-sdk/x/quarantine/simulation"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	. "github.com/cosmos/cosmos-sdk/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/quarantine"
+	"github.com/provenance-io/provenance/x/quarantine/simulation"
+
+	. "github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 func TestRandomizedGenState(t *testing.T) {
@@ -113,22 +117,22 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 			err = simState.Cdc.UnmarshalJSON(simState.GenState[banktypes.ModuleName], &bankGen)
 			require.NoError(t, err, "UnmarshalJSON on bank genesis state")
 
-			app := simapp.Setup(t, false)
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			testApp := app.Setup(t)
+			ctx := testApp.BaseApp.NewContext(false, tmproto.Header{})
 
 			testBankInit := func() {
-				app.BankKeeper.InitGenesis(ctx, &bankGen)
+				testApp.BankKeeper.InitGenesis(ctx, &bankGen)
 			}
 			require.NotPanics(t, testBankInit, "bank InitGenesis")
 
 			testInit := func() {
-				app.QuarantineKeeper.InitGenesis(ctx, &randomGenState)
+				testApp.QuarantineKeeper.InitGenesis(ctx, &randomGenState)
 			}
 			require.NotPanics(t, testInit, "quarantine InitGenesis")
 
 			var actualGenState *quarantine.GenesisState
 			testExport := func() {
-				actualGenState = app.QuarantineKeeper.ExportGenesis(ctx)
+				actualGenState = testApp.QuarantineKeeper.ExportGenesis(ctx)
 			}
 			require.NotPanics(t, testExport, "ExportGenesis")
 

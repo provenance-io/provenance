@@ -9,9 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
 
-	. "github.com/cosmos/cosmos-sdk/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/x/quarantine"
+
+	. "github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 func TestExampleAddress(t *testing.T) {
