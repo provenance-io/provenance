@@ -468,7 +468,7 @@ func (s *CmdTestSuite) TestCmdQueryValidateCreateMarket() {
 		},
 		{
 			name:   "problem with proposal",
-			args:   []string{"val-create-market", "--market", "420", "--name", "Other Name", "--output", "json"},
+			args:   []string{"create-market-validate", "--market", "420", "--name", "Other Name", "--output", "json"},
 			expOut: `{"error":"market id 420 account cosmos1dmk5hcws5xfue8rd6pl5lu6uh8jyt9fpqs0kf6 already exists","gov_prop_will_pass":false}` + "\n",
 		},
 		{
@@ -499,7 +499,7 @@ func (s *CmdTestSuite) TestCmdQueryValidateMarket() {
 		},
 		{
 			name:   "invalid market",
-			args:   []string{"val-market", "--output", "json", "--market", "421"},
+			args:   []string{"validate-market", "--output", "json", "--market", "421"},
 			expOut: `{"error":"buyer settlement fee ratios have price denom \"plum\" but there is not a seller settlement fee ratio with that price denom"}` + "\n",
 		},
 		{
@@ -526,7 +526,7 @@ func (s *CmdTestSuite) TestCmdQueryValidateManageFees() {
 		},
 		{
 			name: "problem with proposal",
-			args: []string{"val-manage-fees", "--market", "420",
+			args: []string{"manage-fees-validate", "--market", "420",
 				"--seller-ratios-add", "123plum:5plum",
 				"--buyer-ratios-add", "123pear:5pear",
 			},
@@ -538,7 +538,7 @@ gov_prop_will_pass: true
 		},
 		{
 			name: "fixes existing problem",
-			args: []string{"val-manage-fees", "--market", "421",
+			args: []string{"validate-manage-fees", "--market", "421",
 				"--seller-ratios-add", "123plum:5plum", "--output", "json"},
 			expOut: `{"error":"","gov_prop_will_pass":true}` + "\n",
 		},

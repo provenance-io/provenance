@@ -112,7 +112,7 @@ func CmdQueryGetOwnerOrders() *cobra.Command {
 func CmdQueryGetAssetOrders() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "asset-orders",
-		Aliases: []string{"get-asset-orders", "denom-orders", "get-denom-orders"},
+		Aliases: []string{"get-asset-orders", "denom-orders", "get-denom-orders", "assets-orders", "get-assets-orders"},
 		Short:   "Look up orders with a specific asset denom",
 		RunE:    genericQueryRunE(MakeQueryGetAssetOrders, exchange.QueryClient.GetAssetOrders),
 	}
@@ -182,7 +182,7 @@ func CmdQueryParams() *cobra.Command {
 func CmdQueryValidateCreateMarket() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "validate-create-market",
-		Aliases: []string{"val-create-market", "create-market-validate", "create-market-val"},
+		Aliases: []string{"create-market-validate"},
 		Short:   "Validate a create market request",
 		RunE:    genericQueryRunE(MakeQueryValidateCreateMarket, exchange.QueryClient.ValidateCreateMarket),
 	}
@@ -196,7 +196,7 @@ func CmdQueryValidateCreateMarket() *cobra.Command {
 func CmdQueryValidateMarket() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "validate-market",
-		Aliases: []string{"val-market", "market-validate", "market-val"},
+		Aliases: []string{"market-validate"},
 		Short:   "Validate an existing market's setup",
 		RunE:    genericQueryRunE(MakeQueryValidateMarket, exchange.QueryClient.ValidateMarket),
 	}
@@ -210,7 +210,7 @@ func CmdQueryValidateMarket() *cobra.Command {
 func CmdQueryValidateManageFees() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "validate-manage-fees",
-		Aliases: []string{"val-manage-fees", "manage-fees-validate", "manage-fees-val"},
+		Aliases: []string{"manage-fees-validate"},
 		Short:   "Validate a manage fees request",
 		RunE:    genericQueryRunE(MakeQueryValidateManageFees, exchange.QueryClient.ValidateManageFees),
 	}
