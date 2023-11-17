@@ -1,11 +1,11 @@
 syntax = "proto3";
-package cosmos.quarantine.v1beta1;
+package provenance.quarantine.v1;
 
-import "cosmos/quarantine/v1beta1/quarantine.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "provenance/quarantine/v1/quarantine.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/quarantine";
+option go_package = "github.com/provenance-io/provenance/x/quarantine";
 
 // GenesisState defines the quarantine module's genesis state.
 message GenesisState {

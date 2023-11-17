@@ -1,14 +1,14 @@
 syntax = "proto3";
-package cosmos.quarantine.v1beta1;
+package provenance.quarantine.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
-import "cosmos/quarantine/v1beta1/quarantine.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "provenance/quarantine/v1/quarantine.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/quarantine";
+option go_package = "github.com/provenance-io/provenance/x/quarantine";
 
 // Query defines the quarantine gRPC msg service.
 service Msg {

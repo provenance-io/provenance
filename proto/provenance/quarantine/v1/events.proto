@@ -1,11 +1,11 @@
 syntax = "proto3";
-package cosmos.quarantine.v1beta1;
+package provenance.quarantine.v1;
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/quarantine";
+option go_package = "github.com/provenance-io/provenance/x/quarantine";
 
 // EventOptIn is an event emitted when an address opts into quarantine.
 message EventOptIn {

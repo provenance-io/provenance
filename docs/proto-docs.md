@@ -610,6 +610,48 @@
   
     - [Msg](#provenance.oracle.v1.Msg)
   
+- [provenance/quarantine/v1/events.proto](#provenance/quarantine/v1/events.proto)
+    - [EventFundsQuarantined](#provenance.quarantine.v1.EventFundsQuarantined)
+    - [EventFundsReleased](#provenance.quarantine.v1.EventFundsReleased)
+    - [EventOptIn](#provenance.quarantine.v1.EventOptIn)
+    - [EventOptOut](#provenance.quarantine.v1.EventOptOut)
+  
+- [provenance/quarantine/v1/quarantine.proto](#provenance/quarantine/v1/quarantine.proto)
+    - [AutoResponseEntry](#provenance.quarantine.v1.AutoResponseEntry)
+    - [AutoResponseUpdate](#provenance.quarantine.v1.AutoResponseUpdate)
+    - [QuarantineRecord](#provenance.quarantine.v1.QuarantineRecord)
+    - [QuarantineRecordSuffixIndex](#provenance.quarantine.v1.QuarantineRecordSuffixIndex)
+    - [QuarantinedFunds](#provenance.quarantine.v1.QuarantinedFunds)
+  
+    - [AutoResponse](#provenance.quarantine.v1.AutoResponse)
+  
+- [provenance/quarantine/v1/genesis.proto](#provenance/quarantine/v1/genesis.proto)
+    - [GenesisState](#provenance.quarantine.v1.GenesisState)
+  
+- [provenance/quarantine/v1/query.proto](#provenance/quarantine/v1/query.proto)
+    - [QueryAutoResponsesRequest](#provenance.quarantine.v1.QueryAutoResponsesRequest)
+    - [QueryAutoResponsesResponse](#provenance.quarantine.v1.QueryAutoResponsesResponse)
+    - [QueryIsQuarantinedRequest](#provenance.quarantine.v1.QueryIsQuarantinedRequest)
+    - [QueryIsQuarantinedResponse](#provenance.quarantine.v1.QueryIsQuarantinedResponse)
+    - [QueryQuarantinedFundsRequest](#provenance.quarantine.v1.QueryQuarantinedFundsRequest)
+    - [QueryQuarantinedFundsResponse](#provenance.quarantine.v1.QueryQuarantinedFundsResponse)
+  
+    - [Query](#provenance.quarantine.v1.Query)
+  
+- [provenance/quarantine/v1/tx.proto](#provenance/quarantine/v1/tx.proto)
+    - [MsgAccept](#provenance.quarantine.v1.MsgAccept)
+    - [MsgAcceptResponse](#provenance.quarantine.v1.MsgAcceptResponse)
+    - [MsgDecline](#provenance.quarantine.v1.MsgDecline)
+    - [MsgDeclineResponse](#provenance.quarantine.v1.MsgDeclineResponse)
+    - [MsgOptIn](#provenance.quarantine.v1.MsgOptIn)
+    - [MsgOptInResponse](#provenance.quarantine.v1.MsgOptInResponse)
+    - [MsgOptOut](#provenance.quarantine.v1.MsgOptOut)
+    - [MsgOptOutResponse](#provenance.quarantine.v1.MsgOptOutResponse)
+    - [MsgUpdateAutoResponses](#provenance.quarantine.v1.MsgUpdateAutoResponses)
+    - [MsgUpdateAutoResponsesResponse](#provenance.quarantine.v1.MsgUpdateAutoResponsesResponse)
+  
+    - [Msg](#provenance.quarantine.v1.Msg)
+  
 - [provenance/reward/v1/reward.proto](#provenance/reward/v1/reward.proto)
     - [ActionCounter](#provenance.reward.v1.ActionCounter)
     - [ActionDelegate](#provenance.reward.v1.ActionDelegate)
@@ -9301,6 +9343,523 @@ Msg
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `UpdateOracle` | [MsgUpdateOracleRequest](#provenance.oracle.v1.MsgUpdateOracleRequest) | [MsgUpdateOracleResponse](#provenance.oracle.v1.MsgUpdateOracleResponse) | UpdateOracle is the RPC endpoint for updating the oracle | |
 | `SendQueryOracle` | [MsgSendQueryOracleRequest](#provenance.oracle.v1.MsgSendQueryOracleRequest) | [MsgSendQueryOracleResponse](#provenance.oracle.v1.MsgSendQueryOracleResponse) | SendQueryOracle sends a query to an oracle on another chain | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/quarantine/v1/events.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/quarantine/v1/events.proto
+
+
+
+<a name="provenance.quarantine.v1.EventFundsQuarantined"></a>
+
+### EventFundsQuarantined
+EventFundsQuarantined is an event emitted when funds are quarantined.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  |  |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.EventFundsReleased"></a>
+
+### EventFundsReleased
+EventFundsReleased is an event emitted when quarantined funds are accepted and released.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  |  |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.EventOptIn"></a>
+
+### EventOptIn
+EventOptIn is an event emitted when an address opts into quarantine.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.EventOptOut"></a>
+
+### EventOptOut
+EventOptOut is an event emitted when an address opts out of quarantine.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/quarantine/v1/quarantine.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/quarantine/v1/quarantine.proto
+
+
+
+<a name="provenance.quarantine.v1.AutoResponseEntry"></a>
+
+### AutoResponseEntry
+AutoResponseEntry defines the auto response to one address from another.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  | to_address is the receiving address. |
+| `from_address` | [string](#string) |  | from_address is the sending address. |
+| `response` | [AutoResponse](#provenance.quarantine.v1.AutoResponse) |  | response is the auto-response setting for these two addresses. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.AutoResponseUpdate"></a>
+
+### AutoResponseUpdate
+AutoResponseUpdate defines a quarantine auto response update that should be applied.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `from_address` | [string](#string) |  | from_address is the address that funds would be coming from. |
+| `response` | [AutoResponse](#provenance.quarantine.v1.AutoResponse) |  | response is the automatic action to take on funds sent from from_address. Provide AUTO_RESPONSE_UNSPECIFIED to turn off an auto-response. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.QuarantineRecord"></a>
+
+### QuarantineRecord
+QuarantineRecord defines information regarding quarantined funds that is stored in state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `unaccepted_from_addresses` | [bytes](#bytes) | repeated | unaccepted_from_addresses are the senders that have not been part of an accept yet for these coins. |
+| `accepted_from_addresses` | [bytes](#bytes) | repeated | accepted_from_addresses are the senders that have already been part of an accept for these coins. |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | coins is the amount that has been quarantined. |
+| `declined` | [bool](#bool) |  | declined is whether these funds have been declined. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.QuarantineRecordSuffixIndex"></a>
+
+### QuarantineRecordSuffixIndex
+QuarantineRecordSuffixIndex defines a list of record suffixes that can be stored in state and used as an index.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `record_suffixes` | [bytes](#bytes) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.QuarantinedFunds"></a>
+
+### QuarantinedFunds
+QuarantinedFunds defines structure that represents coins that have been quarantined.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  | to_address is the intended recipient of the coins that have been quarantined. |
+| `unaccepted_from_addresses` | [string](#string) | repeated | unaccepted_from_addresses are the senders that have not been part of an accept yet for these coins. |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | coins is the amount currently in quarantined for the two addresses. |
+| `declined` | [bool](#bool) |  | declined is true if these funds were previously declined. |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance.quarantine.v1.AutoResponse"></a>
+
+### AutoResponse
+AutoResponse enumerates the quarantine auto-response options.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| AUTO_RESPONSE_UNSPECIFIED | 0 | AUTO_RESPONSE_UNSPECIFIED defines that an automatic response has not been specified. This means that no automatic action should be taken, i.e. this auto-response is off, and default quarantine behavior is used. |
+| AUTO_RESPONSE_ACCEPT | 1 | AUTO_RESPONSE_ACCEPT defines that sends should be automatically accepted, bypassing quarantine. |
+| AUTO_RESPONSE_DECLINE | 2 | AUTO_RESPONSE_DECLINE defines that sends should be automatically declined. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/quarantine/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/quarantine/v1/genesis.proto
+
+
+
+<a name="provenance.quarantine.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the quarantine module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `quarantined_addresses` | [string](#string) | repeated | quarantined_addresses defines account addresses that are opted into quarantine. |
+| `auto_responses` | [AutoResponseEntry](#provenance.quarantine.v1.AutoResponseEntry) | repeated | auto_responses defines the quarantine auto-responses for addresses. |
+| `quarantined_funds` | [QuarantinedFunds](#provenance.quarantine.v1.QuarantinedFunds) | repeated | quarantined_funds defines funds that are quarantined. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/quarantine/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/quarantine/v1/query.proto
+
+
+
+<a name="provenance.quarantine.v1.QueryAutoResponsesRequest"></a>
+
+### QueryAutoResponsesRequest
+QueryAutoResponsesRequest defines the RPC request for getting auto-response settings for an address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  | to_address is the quarantined account to get info on. |
+| `from_address` | [string](#string) |  | from_address is an optional sender address to limit results. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.QueryAutoResponsesResponse"></a>
+
+### QueryAutoResponsesResponse
+QueryAutoResponsesResponse defines the RPC response of a AutoResponses query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `auto_responses` | [AutoResponseEntry](#provenance.quarantine.v1.AutoResponseEntry) | repeated | auto_responses are the auto-response entries from the provided query. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination parameters of the response. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.QueryIsQuarantinedRequest"></a>
+
+### QueryIsQuarantinedRequest
+QueryIsQuarantinedRequest defines the RPC request for checking if an account has opted into quarantine.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  | to_address is the address to check. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.QueryIsQuarantinedResponse"></a>
+
+### QueryIsQuarantinedResponse
+QueryIsQuarantinedResponse defines the RPC response of an IsQuarantined query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `is_quarantined` | [bool](#bool) |  | is_quarantined is true if the to_address has opted into quarantine. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.QueryQuarantinedFundsRequest"></a>
+
+### QueryQuarantinedFundsRequest
+QueryQuarantinedFundsRequest defines the RPC request for looking up quarantined funds.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  | to_address is the intended recipient of the coins that have been quarantined. |
+| `from_address` | [string](#string) |  | from_address is the sender of the coins. If provided, a to_address must also be provided. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines optional pagination parameters for the request. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.QueryQuarantinedFundsResponse"></a>
+
+### QueryQuarantinedFundsResponse
+QueryQuarantinedFundsResponse defines the RPC response of a QuarantinedFunds query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `quarantinedFunds` | [QuarantinedFunds](#provenance.quarantine.v1.QuarantinedFunds) | repeated | quarantinedFunds is info about coins sitting in quarantine. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination parameters of the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.quarantine.v1.Query"></a>
+
+### Query
+Query defines the quarantine gRPC query service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `IsQuarantined` | [QueryIsQuarantinedRequest](#provenance.quarantine.v1.QueryIsQuarantinedRequest) | [QueryIsQuarantinedResponse](#provenance.quarantine.v1.QueryIsQuarantinedResponse) | IsQuarantined checks if an account has opted into quarantine. | GET|/cosmos/quarantine/v1beta1/active/{to_address}|
+| `QuarantinedFunds` | [QueryQuarantinedFundsRequest](#provenance.quarantine.v1.QueryQuarantinedFundsRequest) | [QueryQuarantinedFundsResponse](#provenance.quarantine.v1.QueryQuarantinedFundsResponse) | QuarantinedFunds gets information about funds that have been quarantined.
+
+If both a to_address and from_address are provided, any such quarantined funds will be returned regardless of whether they've been declined. If only a to_address is provided, the unaccepted and undeclined funds waiting on a response from to_address will be returned. If neither a to_address nor from_address is provided, all non-declined quarantined funds for any address will be returned. The request is invalid if only a from_address is provided. | GET|/cosmos/quarantine/v1beta1/fundsGET|/cosmos/quarantine/v1beta1/funds/{to_address}GET|/cosmos/quarantine/v1beta1/funds/{to_address}/{from_address}|
+| `AutoResponses` | [QueryAutoResponsesRequest](#provenance.quarantine.v1.QueryAutoResponsesRequest) | [QueryAutoResponsesResponse](#provenance.quarantine.v1.QueryAutoResponsesResponse) | AutoResponses gets the auto-response settings for a quarantined account.
+
+The to_address is required. If a from_address is provided only the auto response for that from_address will be returned. If no from_address is provided, all auto-response settings for the given to_address will be returned. | GET|/cosmos/quarantine/v1beta1/auto/{to_address}GET|/cosmos/quarantine/v1beta1/auto/{to_address}/{from_address}|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/quarantine/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/quarantine/v1/tx.proto
+
+
+
+<a name="provenance.quarantine.v1.MsgAccept"></a>
+
+### MsgAccept
+MsgAccept represents a message for accepting quarantined funds.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  | to_address is the address of the quarantined account that is accepting funds. |
+| `from_addresses` | [string](#string) | repeated | from_addresses is one or more addresses that have sent funds to the quarantined account. All funds quarantined for to_address from any from_addresses are marked as accepted and released if appropriate. At least one is required. |
+| `permanent` | [bool](#bool) |  | permanent, if true, sets up auto-accept for the to_address from each from_address. If false (default), only the currently quarantined funds will be accepted. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.MsgAcceptResponse"></a>
+
+### MsgAcceptResponse
+MsgAcceptResponse defines the Msg/Accept response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `funds_released` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | funds_released is the amount that was quarantined but has now been released and sent to the requester. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.MsgDecline"></a>
+
+### MsgDecline
+MsgDecline represents a message for declining quarantined funds.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  | to_address is the address of the quarantined account that is accepting funds. |
+| `from_addresses` | [string](#string) | repeated | from_addresses is one or more addresses that have sent funds to the quarantined account. All funds quarantined for to_address from any from_addresses are marked as declined. At least one is required. |
+| `permanent` | [bool](#bool) |  | permanent, if true, sets up auto-decline for the to_address from each from_address. If false (default), only the currently quarantined funds will be declined. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.MsgDeclineResponse"></a>
+
+### MsgDeclineResponse
+MsgDeclineResponse defines the Msg/Decline response type.
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.MsgOptIn"></a>
+
+### MsgOptIn
+MsgOptIn represents a message for opting in to account quarantine.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.MsgOptInResponse"></a>
+
+### MsgOptInResponse
+MsgOptInResponse defines the Msg/OptIn response type.
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.MsgOptOut"></a>
+
+### MsgOptOut
+MsgOptOut represents a message for opting in to account quarantine.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.MsgOptOutResponse"></a>
+
+### MsgOptOutResponse
+MsgOptOutResponse defines the Msg/OptOut response type.
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.MsgUpdateAutoResponses"></a>
+
+### MsgUpdateAutoResponses
+MsgUpdateAutoResponses represents a message for updating quarantine auto-responses for a receiving address.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `to_address` | [string](#string) |  | to_address is the quarantined address that would be accepting or declining funds. |
+| `updates` | [AutoResponseUpdate](#provenance.quarantine.v1.AutoResponseUpdate) | repeated | updates is the list of addresses and auto-responses that should be updated for the to_address. |
+
+
+
+
+
+
+<a name="provenance.quarantine.v1.MsgUpdateAutoResponsesResponse"></a>
+
+### MsgUpdateAutoResponsesResponse
+MsgUpdateAutoResponsesResponse defines the Msg/UpdateAutoResponse response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.quarantine.v1.Msg"></a>
+
+### Msg
+Query defines the quarantine gRPC msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `OptIn` | [MsgOptIn](#provenance.quarantine.v1.MsgOptIn) | [MsgOptInResponse](#provenance.quarantine.v1.MsgOptInResponse) | OptIn defines a method for opting in to account quarantine. Funds sent to a quarantined account must be approved before they can be received. | |
+| `OptOut` | [MsgOptOut](#provenance.quarantine.v1.MsgOptOut) | [MsgOptOutResponse](#provenance.quarantine.v1.MsgOptOutResponse) | OptOut defines a method for opting out of account quarantine. Any pending funds for the account must still be accepted, but new sends will no longer be quarantined. | |
+| `Accept` | [MsgAccept](#provenance.quarantine.v1.MsgAccept) | [MsgAcceptResponse](#provenance.quarantine.v1.MsgAcceptResponse) | Accept defines a method for accepting quarantined funds. | |
+| `Decline` | [MsgDecline](#provenance.quarantine.v1.MsgDecline) | [MsgDeclineResponse](#provenance.quarantine.v1.MsgDeclineResponse) | Decline defines a method for declining quarantined funds. | |
+| `UpdateAutoResponses` | [MsgUpdateAutoResponses](#provenance.quarantine.v1.MsgUpdateAutoResponses) | [MsgUpdateAutoResponsesResponse](#provenance.quarantine.v1.MsgUpdateAutoResponsesResponse) | UpdateAutoResponses defines a method for updating the auto-response settings for a quarantined address. | |
 
  <!-- end services -->
 

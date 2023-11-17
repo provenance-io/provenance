@@ -1,18 +1,18 @@
 syntax = "proto3";
-package cosmos.quarantine.v1beta1;
+package provenance.quarantine.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "cosmos/quarantine/v1beta1/quarantine.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
+import "provenance/quarantine/v1/quarantine.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/quarantine";
+option go_package = "github.com/provenance-io/provenance/x/quarantine";
 
 // Query defines the quarantine gRPC query service.
 service Query {
   // IsQuarantined checks if an account has opted into quarantine.
   rpc IsQuarantined(QueryIsQuarantinedRequest) returns (QueryIsQuarantinedResponse) {
-    option (google.api.http).get = "/cosmos/quarantine/v1beta1/active/{to_address}";
+    option (google.api.http).get = "/provenance/quarantine/v1/active/{to_address}";
   }
 
   // QuarantinedFunds gets information about funds that have been quarantined.
@@ -23,13 +23,9 @@ service Query {
   // quarantined funds for any address will be returned. The request is invalid if only a from_address is provided.
   rpc QuarantinedFunds(QueryQuarantinedFundsRequest) returns (QueryQuarantinedFundsResponse) {
     option (google.api.http) = {
-      get: "/cosmos/quarantine/v1beta1/funds"
-      additional_bindings: {
-        get: "/cosmos/quarantine/v1beta1/funds/{to_address}"
-      }
-      additional_bindings: {
-        get: "/cosmos/quarantine/v1beta1/funds/{to_address}/{from_address}"
-      }
+      get: "/provenance/quarantine/v1/funds"
+      additional_bindings: {get: "/provenance/quarantine/v1/funds/{to_address}"}
+      additional_bindings: {get: "/provenance/quarantine/v1/funds/{to_address}/{from_address}"}
     };
   }
 
@@ -39,10 +35,8 @@ service Query {
   // returned. If no from_address is provided, all auto-response settings for the given to_address will be returned.
   rpc AutoResponses(QueryAutoResponsesRequest) returns (QueryAutoResponsesResponse) {
     option (google.api.http) = {
-      get: "/cosmos/quarantine/v1beta1/auto/{to_address}"
-      additional_bindings: {
-        get: "/cosmos/quarantine/v1beta1/auto/{to_address}/{from_address}"
-      }
+      get: "/provenance/quarantine/v1/auto/{to_address}"
+      additional_bindings: {get: "/provenance/quarantine/v1/auto/{to_address}/{from_address}"}
     };
   }
 }
