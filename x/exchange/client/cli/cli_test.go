@@ -226,7 +226,7 @@ func (s *CmdTestSuite) SetupSuite() {
 
 	// Add balances to bank gen state.
 	// Any initial holds for an account are added to this so that
-	// this what's available to each at the start of the unit tests.
+	// this is what's available to each at the start of the unit tests.
 	balance := sdk.NewCoins(
 		sdk.NewInt64Coin(s.cfg.BondDenom, 1_000_000_000),
 		sdk.NewInt64Coin("acorn", 1_000_000_000),
@@ -332,7 +332,7 @@ type txCmdTestCase struct {
 	name string
 	// preRun is a function that is run first.
 	// It should return any arguments to append to the args and a function that will
-	// run any fallow-up checks to do after the command is run.
+	// run any follow-up checks to do after the command is run.
 	preRun func() ([]string, func(*sdk.TxResponse))
 	// args are the arguments to provide to the command.
 	args []string
@@ -467,7 +467,7 @@ func (s *CmdTestSuite) runQueryCmdTestCase(tc queryCmdTestCase) {
 	}
 
 	for _, exp := range tc.expInOut {
-		if !s.Assert().Contains(outStr, exp, "command output:\n%q", exp) {
+		if !s.Assert().Contains(outStr, exp, "command output") {
 			s.T().Logf("Not found: %q", exp)
 		}
 	}
