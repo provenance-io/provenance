@@ -19,9 +19,8 @@ func (s *CmdTestSuite) TestCmdQueryOrderFeeCalc() {
 			expInErr: []string{"market 69 does not exist", "invalid request", "InvalidArgument"},
 		},
 		{
-			name:     "only ask fees, ask",
-			args:     []string{"order-calc", "--market", "3", "--ask", "--price", "1000peach"},
-			expInOut: nil,
+			name: "only ask fees, ask",
+			args: []string{"order-calc", "--market", "3", "--ask", "--price", "1000peach"},
 			expOut: `creation_fee_options:
 - amount: "10"
   denom: peach
@@ -34,18 +33,16 @@ settlement_ratio_fee_options:
 `,
 		},
 		{
-			name:     "only ask fees, bid",
-			args:     []string{"order-calc", "--market", "3", "--bid", "--price", "1000peach"},
-			expInOut: nil,
+			name: "only ask fees, bid",
+			args: []string{"order-calc", "--market", "3", "--bid", "--price", "1000peach"},
 			expOut: `creation_fee_options: []
 settlement_flat_fee_options: []
 settlement_ratio_fee_options: []
 `,
 		},
 		{
-			name:     "only bid fees, ask",
-			args:     []string{"order-calc", "--market", "5", "--ask", "--price", "1000peach"},
-			expInOut: nil,
+			name: "only bid fees, ask",
+			args: []string{"order-calc", "--market", "5", "--ask", "--price", "1000peach"},
 			expOut: `creation_fee_options: []
 settlement_flat_fee_options: []
 settlement_ratio_fee_options: []
@@ -70,9 +67,8 @@ settlement_ratio_fee_options: []
 			},
 		},
 		{
-			name:     "both fees, bid",
-			args:     []string{"order-calc", "--market", "420", "--bid", "--price", "1000peach"},
-			expInOut: nil,
+			name: "both fees, bid",
+			args: []string{"order-calc", "--market", "420", "--bid", "--price", "1000peach"},
 			expOut: `creation_fee_options:
 - amount: "25"
   denom: peach
@@ -264,9 +260,8 @@ func (s *CmdTestSuite) TestCmdQueryGetAssetOrders() {
 			expInErr: []string{"no <asset> provided"},
 		},
 		{
-			name:     "no orders",
-			args:     []string{"asset-orders", "peach"},
-			expInOut: nil,
+			name: "no orders",
+			args: []string{"asset-orders", "peach"},
 			expOut: `orders: []
 pagination:
   next_key: null
@@ -300,7 +295,7 @@ func (s *CmdTestSuite) TestCmdQueryGetAllOrders() {
 		{
 			name: "no orders",
 			// this page key is the base64 encoded max uint64 -1, aka "the next to last possible order id."
-			// Hopefully these unit tests get up that far.
+			// Hopefully these unit tests don't get up that far.
 			args:   []string{"get-all-orders", "--page-key", "//////////4=", "--output", "json"},
 			expOut: `{"orders":[],"pagination":{"next_key":null,"total":"0"}}` + "\n",
 		},
@@ -417,7 +412,7 @@ func (s *CmdTestSuite) TestCmdQueryGetAllMarkets() {
 		{
 			name: "no markets",
 			// this page key is the base64 encoded max uint32 -1, aka "the next to last possible market id."
-			// Hopefully these unit tests get up that far.
+			// Hopefully these unit tests don't get up that far.
 			args:   []string{"get-all-markets", "--page-key", "/////g==", "--output", "json"},
 			expOut: `{"markets":[],"pagination":{"next_key":null,"total":"0"}}` + "\n",
 		},
