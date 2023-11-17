@@ -338,7 +338,7 @@ func TestSetupCmdQueryGetMarketOrders(t *testing.T) {
 		expFlags: []string{
 			flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
 			flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
-			cli.FlagMarket, cli.FlagAsks, cli.FlagBids, cli.FlagOrder,
+			cli.FlagMarket, cli.FlagAsks, cli.FlagBids, cli.FlagAfter,
 		},
 		expAnnotations: map[string]map[string][]string{
 			cli.FlagAsks: {mutExc: {cli.FlagAsks + " " + cli.FlagBids}},
@@ -346,13 +346,13 @@ func TestSetupCmdQueryGetMarketOrders(t *testing.T) {
 		},
 		expInUse: []string{
 			"{<market id>|--market <market id>}", cli.OptAsksBidsUse,
-			"[--order <after order id>", "[pagination flags]",
+			"[--after <after order id>", "[pagination flags]",
 			"A <market id> is required as either an arg or flag, but not both.",
 			cli.OptAsksBidsDesc,
 		},
 		expExamples: []string{
 			exampleStart + " 3 --asks",
-			exampleStart + " --market 1 --order 15 --limit 10",
+			exampleStart + " --market 1 --after 15 --limit 10",
 		},
 	})
 }
@@ -404,7 +404,7 @@ func TestMakeQueryGetMarketOrders(t *testing.T) {
 		{
 			name: "all opts asks",
 			flags: []string{
-				"--asks", "--order", "12", "--limit", "63",
+				"--asks", "--after", "12", "--limit", "63",
 				"--offset", "42", "--count-total",
 			},
 			args: []string{"7"},
@@ -423,7 +423,7 @@ func TestMakeQueryGetMarketOrders(t *testing.T) {
 		{
 			name: "all opts bids",
 			flags: []string{
-				"--order", "88", "--limit", "25", "--page-key", "AAAAAAAAAKA=",
+				"--after", "88", "--limit", "25", "--page-key", "AAAAAAAAAKA=",
 				"--market", "444", "--reverse", "--bids",
 			},
 			expReq: &exchange.QueryGetMarketOrdersRequest{
@@ -453,7 +453,7 @@ func TestSetupCmdQueryGetOwnerOrders(t *testing.T) {
 		expFlags: []string{
 			flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
 			flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
-			cli.FlagOwner, cli.FlagAsks, cli.FlagBids, cli.FlagOrder,
+			cli.FlagOwner, cli.FlagAsks, cli.FlagBids, cli.FlagAfter,
 		},
 		expAnnotations: map[string]map[string][]string{
 			cli.FlagAsks: {mutExc: {cli.FlagAsks + " " + cli.FlagBids}},
@@ -461,13 +461,13 @@ func TestSetupCmdQueryGetOwnerOrders(t *testing.T) {
 		},
 		expInUse: []string{
 			"{<owner>|--owner <owner>}", cli.OptAsksBidsUse,
-			"[--order <after order id>", "[pagination flags]",
+			"[--after <after order id>", "[pagination flags]",
 			"An <owner> is required as either an arg or flag, but not both.",
 			cli.OptAsksBidsDesc,
 		},
 		expExamples: []string{
 			exampleStart + " " + cli.ExampleAddr + " --bids",
-			exampleStart + " --owner " + cli.ExampleAddr + " --asks --order 15 --limit 10",
+			exampleStart + " --owner " + cli.ExampleAddr + " --asks --after 15 --limit 10",
 		},
 	})
 }
@@ -519,7 +519,7 @@ func TestMakeQueryGetOwnerOrders(t *testing.T) {
 		{
 			name: "all opts asks",
 			flags: []string{
-				"--asks", "--order", "12", "--limit", "63",
+				"--asks", "--after", "12", "--limit", "63",
 				"--offset", "42", "--count-total",
 			},
 			args: []string{"otheraddr"},
@@ -538,7 +538,7 @@ func TestMakeQueryGetOwnerOrders(t *testing.T) {
 		{
 			name: "all opts bids",
 			flags: []string{
-				"--order", "88", "--limit", "25", "--page-key", "AAAAAAAAAKA=",
+				"--after", "88", "--limit", "25", "--page-key", "AAAAAAAAAKA=",
 				"--owner", "myself", "--reverse", "--bids",
 			},
 			expReq: &exchange.QueryGetOwnerOrdersRequest{
@@ -568,7 +568,7 @@ func TestSetupCmdQueryGetAssetOrders(t *testing.T) {
 		expFlags: []string{
 			flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
 			flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
-			cli.FlagDenom, cli.FlagAsks, cli.FlagBids, cli.FlagOrder,
+			cli.FlagDenom, cli.FlagAsks, cli.FlagBids, cli.FlagAfter,
 		},
 		expAnnotations: map[string]map[string][]string{
 			cli.FlagAsks: {mutExc: {cli.FlagAsks + " " + cli.FlagBids}},
@@ -576,13 +576,13 @@ func TestSetupCmdQueryGetAssetOrders(t *testing.T) {
 		},
 		expInUse: []string{
 			"{<asset>|--denom <asset>}", cli.OptAsksBidsUse,
-			"[--order <after order id>", "[pagination flags]",
+			"[--after <after order id>", "[pagination flags]",
 			"An <asset> is required as either an arg or flag, but not both.",
 			cli.OptAsksBidsDesc,
 		},
 		expExamples: []string{
 			exampleStart + " nhash --asks",
-			exampleStart + " --denom nhash --order 15 --limit 10",
+			exampleStart + " --denom nhash --after 15 --limit 10",
 		},
 	})
 }
@@ -634,7 +634,7 @@ func TestMakeQueryGetAssetOrders(t *testing.T) {
 		{
 			name: "all opts asks",
 			flags: []string{
-				"--asks", "--order", "12", "--limit", "63",
+				"--asks", "--after", "12", "--limit", "63",
 				"--offset", "42", "--count-total",
 			},
 			args: []string{"yourcoin"},
@@ -653,7 +653,7 @@ func TestMakeQueryGetAssetOrders(t *testing.T) {
 		{
 			name: "all opts bids",
 			flags: []string{
-				"--order", "88", "--limit", "25", "--page-key", "AAAAAAAAAKA=",
+				"--after", "88", "--limit", "25", "--page-key", "AAAAAAAAAKA=",
 				"--denom", "mycoin", "--reverse", "--bids",
 			},
 			expReq: &exchange.QueryGetAssetOrdersRequest{

@@ -158,12 +158,12 @@ func SetupCmdQueryGetMarketOrders(cmd *cobra.Command) {
 
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	AddFlagsAsksBidsBools(cmd)
-	cmd.Flags().Uint64(FlagOrder, 0, "Limit results to only orders with ids larger than this")
+	cmd.Flags().Uint64(FlagAfter, 0, "Limit results to only orders with ids larger than this")
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<market id>|--%s <market id>}", FlagMarket),
 		OptAsksBidsUse,
-		OptFlagUse(FlagOrder, "after order id"),
+		OptFlagUse(FlagAfter, "after order id"),
 		"[pagination flags]",
 	)
 	AddUseDetails(cmd,
@@ -171,7 +171,7 @@ func SetupCmdQueryGetMarketOrders(cmd *cobra.Command) {
 		OptAsksBidsDesc,
 	)
 	AddQueryExample(cmd, "3", "--"+FlagAsks)
-	AddQueryExample(cmd, "--"+FlagMarket, "1", "--"+FlagOrder, "15", "--"+flags.FlagLimit, "10")
+	AddQueryExample(cmd, "--"+FlagMarket, "1", "--"+FlagAfter, "15", "--"+flags.FlagLimit, "10")
 
 	cmd.Args = cobra.MaximumNArgs(1)
 }
@@ -184,7 +184,7 @@ func MakeQueryGetMarketOrders(_ client.Context, flagSet *pflag.FlagSet, args []s
 	errs := make([]error, 4)
 	req.MarketId, errs[0] = ReadFlagMarketOrArg(flagSet, args)
 	req.OrderType, errs[1] = ReadFlagsAsksBidsOpt(flagSet)
-	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagOrder)
+	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagAfter)
 	req.Pagination, errs[3] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
 
 	return req, errors.Join(errs...)
@@ -196,12 +196,12 @@ func SetupCmdQueryGetOwnerOrders(cmd *cobra.Command) {
 
 	cmd.Flags().String(FlagOwner, "", "The owner")
 	AddFlagsAsksBidsBools(cmd)
-	cmd.Flags().Uint64(FlagOrder, 0, "Limit results to only orders with ids larger than this")
+	cmd.Flags().Uint64(FlagAfter, 0, "Limit results to only orders with ids larger than this")
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<owner>|--%s <owner>}", FlagOwner),
 		OptAsksBidsUse,
-		OptFlagUse(FlagOrder, "after order id"),
+		OptFlagUse(FlagAfter, "after order id"),
 		"[pagination flags]",
 	)
 	AddUseDetails(cmd,
@@ -209,7 +209,7 @@ func SetupCmdQueryGetOwnerOrders(cmd *cobra.Command) {
 		OptAsksBidsDesc,
 	)
 	AddQueryExample(cmd, ExampleAddr, "--"+FlagBids)
-	AddQueryExample(cmd, "--"+FlagOwner, ExampleAddr, "--"+FlagAsks, "--"+FlagOrder, "15", "--"+flags.FlagLimit, "10")
+	AddQueryExample(cmd, "--"+FlagOwner, ExampleAddr, "--"+FlagAsks, "--"+FlagAfter, "15", "--"+flags.FlagLimit, "10")
 
 	cmd.Args = cobra.MaximumNArgs(1)
 }
@@ -222,7 +222,7 @@ func MakeQueryGetOwnerOrders(_ client.Context, flagSet *pflag.FlagSet, args []st
 	errs := make([]error, 5)
 	req.Owner, errs[0] = ReadStringFlagOrArg(flagSet, args, FlagOwner, "owner")
 	req.OrderType, errs[1] = ReadFlagsAsksBidsOpt(flagSet)
-	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagOrder)
+	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagAfter)
 	req.Pagination, errs[3] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
 
 	return req, errors.Join(errs...)
@@ -234,12 +234,12 @@ func SetupCmdQueryGetAssetOrders(cmd *cobra.Command) {
 
 	cmd.Flags().String(FlagDenom, "", "The asset denom")
 	AddFlagsAsksBidsBools(cmd)
-	cmd.Flags().Uint64(FlagOrder, 0, "Limit results to only orders with ids larger than this")
+	cmd.Flags().Uint64(FlagAfter, 0, "Limit results to only orders with ids larger than this")
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<asset>|--%s <asset>}", FlagDenom),
 		OptAsksBidsUse,
-		OptFlagUse(FlagOrder, "after order id"),
+		OptFlagUse(FlagAfter, "after order id"),
 		"[pagination flags]",
 	)
 	AddUseDetails(cmd,
@@ -247,7 +247,7 @@ func SetupCmdQueryGetAssetOrders(cmd *cobra.Command) {
 		OptAsksBidsDesc,
 	)
 	AddQueryExample(cmd, "nhash", "--"+FlagAsks)
-	AddQueryExample(cmd, "--"+FlagDenom, "nhash", "--"+FlagOrder, "15", "--"+flags.FlagLimit, "10")
+	AddQueryExample(cmd, "--"+FlagDenom, "nhash", "--"+FlagAfter, "15", "--"+flags.FlagLimit, "10")
 
 	cmd.Args = cobra.MaximumNArgs(1)
 }
@@ -260,7 +260,7 @@ func MakeQueryGetAssetOrders(_ client.Context, flagSet *pflag.FlagSet, args []st
 	errs := make([]error, 4)
 	req.Asset, errs[0] = ReadStringFlagOrArg(flagSet, args, FlagDenom, "asset")
 	req.OrderType, errs[1] = ReadFlagsAsksBidsOpt(flagSet)
-	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagOrder)
+	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagAfter)
 	req.Pagination, errs[3] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
 
 	return req, errors.Join(errs...)

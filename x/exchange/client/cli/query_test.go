@@ -197,7 +197,7 @@ func (s *CmdTestSuite) TestCmdQueryGetMarketOrders() {
 		},
 		{
 			name: "no orders",
-			args: []string{"get-market-orders", "420", "--order", "1234567899"},
+			args: []string{"get-market-orders", "420", "--after", "1234567899"},
 			expOut: `orders: []
 pagination:
   next_key: null
@@ -206,7 +206,7 @@ pagination:
 		},
 		{
 			name: "several orders",
-			args: []string{"market-orders", "--asks", "--market", "420", "--order", "30", "--output", "json", "--count-total"},
+			args: []string{"market-orders", "--asks", "--market", "420", "--after", "30", "--output", "json", "--count-total"},
 			expInOut: []string{
 				`"market_id":420,`,
 				`"order_id":"31"`, `"order_id":"34"`, `"order_id":"36"`,
@@ -275,7 +275,7 @@ pagination:
 		},
 		{
 			name: "several orders",
-			args: []string{"asset-orders", "--denom", "apple", "--limit", "5", "--order", "10", "--output", "json"},
+			args: []string{"asset-orders", "--denom", "apple", "--limit", "5", "--after", "10", "--output", "json"},
 			expInOut: []string{
 				`"market_id":420,`, `"order_id":"11"`, `"order_id":"12"`,
 				`"order_id":"13"`, `"order_id":"17"`, `"order_id":"18"`,

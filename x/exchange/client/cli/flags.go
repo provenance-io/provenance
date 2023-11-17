@@ -25,6 +25,7 @@ const (
 	FlagAcceptingOrders    = "accepting-orders"
 	FlagAccessGrants       = "access-grants"
 	FlagAdmin              = "admin"
+	FlagAfter              = "after"
 	FlagAllowUserSettle    = "allow-user-settle"
 	FlagAmount             = "amount"
 	FlagAsk                = "ask"
