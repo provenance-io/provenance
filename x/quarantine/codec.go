@@ -2,23 +2,11 @@ package quarantine
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 )
-
-// RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
-// governance module.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	legacy.RegisterAminoMsg(cdc, &MsgOptIn{}, "cosmos-sdk/MsgQuarantineOptIn")
-	legacy.RegisterAminoMsg(cdc, &MsgOptOut{}, "cosmos-sdk/MsgQuarantineOptOut")
-	legacy.RegisterAminoMsg(cdc, &MsgAccept{}, "cosmos-sdk/MsgQuarantineAccept")
-	legacy.RegisterAminoMsg(cdc, &MsgDecline{}, "cosmos-sdk/MsgQuarantineDecline")
-	legacy.RegisterAminoMsg(cdc, &MsgUpdateAutoResponses{}, "cosmos-sdk/MsgUpdateQuarantineAutoResp")
-}
 
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
@@ -45,11 +33,6 @@ var (
 )
 
 func init() {
-	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
 	sdk.RegisterLegacyAminoCodec(amino)
-
-	// Register all Amino interfaces and concrete types on the authz Amino codec so that this can later be
-	// used to properly serialize MsgGrant and MsgExec instances
-	RegisterLegacyAminoCodec(authzcodec.Amino)
 }
