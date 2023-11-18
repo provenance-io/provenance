@@ -1,7 +1,3 @@
-<!--
-order: 6
--->
-
 # Client
 
 A user can interact with the `x/quarantine` module using `gRPC`, `CLI`, or `REST`.
@@ -36,9 +32,9 @@ Usage:
 
 Examples:
 
-$ simd tx quarantine opt-in cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389
+$ simd tx quarantine opt-in pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e
 $ simd tx quarantine opt-in personal
-$ simd tx quarantine opt-in --from cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389
+$ simd tx quarantine opt-in --from pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e
 $ simd tx quarantine opt-in --from personal
 ```
 
@@ -54,9 +50,9 @@ Usage:
 
 Examples:
 
-$ simd tx quarantine opt-out cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389
+$ simd tx quarantine opt-out pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e
 $ simd tx quarantine opt-out personal
-$ simd tx quarantine opt-out --from cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389
+$ simd tx quarantine opt-out --from pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e
 $ simd tx quarantine opt-out --from personal
 ```
 
@@ -72,9 +68,9 @@ Usage:
 
 Examples:
 
-$ simd tx quarantine accept cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389 cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut
-$ simd tx quarantine accept personal cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut
-$ simd tx quarantine accept personal cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut cosmos1phx24ecmuw3s7fmy8c87gh3rdq5lwskqur3t00
+$ simd tx quarantine accept pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h
+$ simd tx quarantine accept personal pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h
+$ simd tx quarantine accept personal pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h pb1phx24ecmuw3s7fmy8c87gh3rdq5lwskq4d6wzn
 ```
 
 At least one `<from_address>` is required, but multiple can be provided.
@@ -97,9 +93,9 @@ Usage:
 
 Examples:
 
-$ simd tx quarantine decline cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389 cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut
-$ simd tx quarantine decline personal cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut
-$ simd tx quarantine decline personal cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut cosmos1phx24ecmuw3s7fmy8c87gh3rdq5lwskqur3t00
+$ simd tx quarantine decline pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h
+$ simd tx quarantine decline personal pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h
+$ simd tx quarantine decline personal pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h pb1phx24ecmuw3s7fmy8c87gh3rdq5lwskq4d6wzn
 ```
 
 At least one `<from_address>` is required, but multiple can be provided.
@@ -136,9 +132,9 @@ Aliases:
 
 Examples:
 
-$ simd tx quarantine update-auto-responses cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389 accept cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut
-$ simd tx quarantine update-auto-responses personal decline cosmos1phx24ecmuw3s7fmy8c87gh3rdq5lwskqur3t00 unspecified cosmos1lfuwk97g6y9du8altct63vwgz5620t929n8g9l
-$ simd tx quarantine auto-responses personal accept cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut cosmos1qsjw3kjaf33qk2urxg54lzxkw525ngghzneujh off cosmos1lfuwk97g6y9du8altct63vwgz5620t929n8g9l
+$ simd tx quarantine update-auto-responses pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e accept pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h
+$ simd tx quarantine update-auto-responses personal decline pb1phx24ecmuw3s7fmy8c87gh3rdq5lwskq4d6wzn unspecified pb1lfuwk97g6y9du8altct63vwgz5620t92vavdgr
+$ simd tx quarantine auto-responses personal accept pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h pb1qsjw3kjaf33qk2urxg54lzxkw525ngghtajelt off pb1lfuwk97g6y9du8altct63vwgz5620t92vavdgr
 ```
 
 ### Queries
@@ -153,8 +149,8 @@ $ simd query quarantine is-quarantined --help
 Query whether an account is opted into quarantined.
 
 Examples:
-  $ simd query quarantine is-quarantined cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389
-  $ simd query quarantine is cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut
+  $ simd query quarantine is-quarantined pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e
+  $ simd query quarantine is pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h
 
 Usage:
   simd query quarantine is-quarantined <to_address> [flags]
@@ -175,8 +171,8 @@ If both a to_address and from_address are provided, quarantined funds will be re
 
 Examples:
   $ simd query quarantine funds
-  $ simd query quarantine funds cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389
-  $ simd query quarantine funds cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389 cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut
+  $ simd query quarantine funds pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e
+  $ simd query quarantine funds pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h
 
 Usage:
   simd query quarantine funds [<to_address> [<from_address>]] [flags]
@@ -194,8 +190,8 @@ If only a to_address is provided, all auto-responses set up for that address are
 If both a to_address and from_address are provided, exactly one result will be returned. This can be accept, decline or unspecified.
 
 Examples:
-  $ simd query quarantine auto-responses cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389
-  $ simd query quarantine auto-responses cosmos1c7p4v02eayvag8nswm4f5q664twfe6dxjha389 cosmos1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrk9vrut
+  $ simd query quarantine auto-responses pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e
+  $ simd query quarantine auto-responses pb1c7p4v02eayvag8nswm4f5q664twfe6dxmek52e pb1ld2qyt9pq5n8dxkp58jn3jyxh8u8ztmrlt8x3h
 
 Usage:
   simd query quarantine auto-responses <to_address> [<from_address>] [flags]
@@ -210,13 +206,13 @@ Standard pagination flags are also available for this command.
 
 Each of the quarantine `gRPC` query endpoints is also available through one or more `REST` endpoints.
 
-| Name                        | URL                                                            |
-|-----------------------------|----------------------------------------------------------------|
-| IsQuarantined               | `/cosmos/quarantine/v1beta1/active/{to_address}`               |
-| QuarantinedFunds - all      | `/cosmos/quarantine/v1beta1/funds`                             |
-| QuarantinedFunds - some     | `/cosmos/quarantine/v1beta1/funds/{to_address}`                |
-| QuarantinedFunds - specific | `/cosmos/quarantine/v1beta1/funds/{to_address}/{from_address}` |
-| AutoResponses - some        | `/cosmos/quarantine/v1beta1/auto/{to_address}`                 |
-| AutoResponses - specific    | `/cosmos/quarantine/v1beta1/auto/{to_address}/{from_address}`  |
+| Name                        | URL                                                           |
+|-----------------------------|---------------------------------------------------------------|
+| IsQuarantined               | `/provenance/quarantine/v1/active/{to_address}`               |
+| QuarantinedFunds - all      | `/provenance/quarantine/v1/funds`                             |
+| QuarantinedFunds - some     | `/provenance/quarantine/v1/funds/{to_address}`                |
+| QuarantinedFunds - specific | `/provenance/quarantine/v1/funds/{to_address}/{from_address}` |
+| AutoResponses - some        | `/provenance/quarantine/v1/auto/{to_address}`                 |
+| AutoResponses - specific    | `/provenance/quarantine/v1/auto/{to_address}/{from_address}`  |
 
 For `QuarantinedFunds` and `AutoResponses`, pagination parameters can be provided using the standard pagination query parameters.

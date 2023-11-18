@@ -1,7 +1,3 @@
-<!--
-order: 2
--->
-
 # State
 
 The `x/quarantine` module uses key/value pairs to store quarantine-related data in state.

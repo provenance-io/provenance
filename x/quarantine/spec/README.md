@@ -1,10 +1,3 @@
-<!--
-order: 0
-title: Quarantine Overview
-parent:
-  title: "quarantine"
--->
-
 # Quarantine Module
 
 ## Abstract
