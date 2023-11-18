@@ -5,7 +5,7 @@
 An account can activate quarantine using a `MsgOptIn`.
 It contains only the address to quarantine.
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/tx.proto#L33-L38
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/tx.proto#L32-L37
 
 It is expected to fail if the `to_address` is invalid.
 
@@ -15,7 +15,7 @@ It is expected to fail if the `to_address` is invalid.
 An account can deactivate quarantine using a `MsgOptOut`.
 It contains only the address to unquarantine.
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/tx.proto#L43-L48
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/tx.proto#L42-L47
 
 It is expected to fail if the `to_address` is invalid.
 
@@ -25,7 +25,7 @@ Quarantined funds can be accepted by the intended receiver using a `MsgAccept`.
 It contains a `to_address` (receiver) and one or more `from_addresses` (senders).
 It also contains a flag to indicate whether auto-accept should be set up for all provided addresses.
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/tx.proto#L53-L67
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/tx.proto#L52-L66
 
 Any quarantined funds for the `to_address` from any `from_address` are accepted (regardless of whether they've been previously declined).
 
@@ -41,7 +41,7 @@ It is expected to fail if:
 
 The response will contain a total of all funds released.
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/tx.proto#L69-L74
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/tx.proto#L68-L73
 
 ## Msg/Decline
 
@@ -49,7 +49,7 @@ Quarantined funds can be declined by the intended receiver using a `MsgDecline`.
 It contains a `to_address` (receiver) and one or more `from_addresses` (senders).
 It also contains a flag to indicate whether auto-decline should be set up for all provided addresses.
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/tx.proto#L76-L90
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/tx.proto#L75-L89
 
 Any quarantined funds for the `to_address` from any `from_address` are declined.
 
@@ -68,7 +68,7 @@ It is expected to fail if:
 Auto-Responses can be defined either through the `permanent` flags with a `MsgAccept` or `MsgDecline`, or using a `MsgUpdateAutoResponses`.
 It contains a `to_address` and a list of `updates`. Each `AutoResponseUpdate` contains a `from_address` and the desired `response` for it.
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/tx.proto#L95-L104
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/tx.proto#L94-L103
 
 Providing a `response` of `AUTO_RESPONSE_UNSPECIFIED` will cause the applicable entry to be deleted, allowing users to un-set previous auto-responses.
 

@@ -7,11 +7,11 @@ The query takes in a `to_address` and outputs `true` if the address is quarantin
 
 Request:
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/query.proto#L44-L48
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/query.proto#L44-L48
 
 Response:
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/query.proto#L50-L54
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/query.proto#L50-L54
 
 It is expected to fail if the `to_address` is invalid.
 
@@ -22,15 +22,15 @@ This query takes in an optional `to_address` and optional `from_address` and out
 
 Request:
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/query.proto#L56-L65
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/query.proto#L56-L65
 
 Response:
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/query.proto#L67-L74
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/query.proto#L67-L74
 
 QuarantinedFunds:
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/quarantine.proto#L10-L21
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/quarantine.proto#L10-L21
 
 - If neither a `to_address` nor `from_address` are provided, all non-declined quarantined funds for any addresses will be returned.
 - If the request contains a `to_address` but no `from_address`, all non-declined quarantined funds for the `to_address` are returned.
@@ -50,15 +50,15 @@ This query takes in a `to_address` and optional `from_address` and outputs infor
 
 Request:
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/query.proto#L76-L85
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/query.proto#L76-L85
 
 Response:
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/query.proto#L87-L94
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/query.proto#L87-L94
 
 AutoResponseEntry:
 
-+++ https://github.com/provenance-io/provenance/blob/28f2d31ede80204f95d351d72eba92574062b863/proto/provenance/quarantine/v1/quarantine.proto#L23-L31
++++ https://github.com/provenance-io/provenance/blob/723debe379d80419067416316ae07a8aea24dd8a/proto/provenance/quarantine/v1/quarantine.proto#L23-L31
 
 - If no `from_address` is provided, all auto-response entries for the provided `to_address` are returned. The results will not contain any entries for `AUTO_RESPONSE_UNSPECIFIED`.
 - If a `from_address` is provided, the auto-response setting that `to_address` has from `from_address` is returned. This result might be `AUTO_RESPONSE_UNSPECIFIED`.
