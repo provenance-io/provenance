@@ -66,8 +66,8 @@ message QueryQuarantinedFundsRequest {
 
 // QueryQuarantinedFundsResponse defines the RPC response of a QuarantinedFunds query.
 message QueryQuarantinedFundsResponse {
-  // quarantinedFunds is info about coins sitting in quarantine.
-  repeated QuarantinedFunds quarantinedFunds = 1;
+  // quarantined_funds is info about coins sitting in quarantine.
+  repeated QuarantinedFunds quarantined_funds = 1;
 
   // pagination defines the pagination parameters of the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 99;

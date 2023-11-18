@@ -744,17 +744,17 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_IsQuarantined_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "quarantine", "v1beta1", "active", "to_address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_IsQuarantined_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "quarantine", "v1", "active", "to_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_QuarantinedFunds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "quarantine", "v1beta1", "funds"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_QuarantinedFunds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"provenance", "quarantine", "v1", "funds"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_QuarantinedFunds_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "quarantine", "v1beta1", "funds", "to_address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_QuarantinedFunds_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "quarantine", "v1", "funds", "to_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_QuarantinedFunds_2 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "quarantine", "v1beta1", "funds", "to_address", "from_address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_QuarantinedFunds_2 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "quarantine", "v1", "funds", "to_address", "from_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AutoResponses_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "quarantine", "v1beta1", "auto", "to_address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_AutoResponses_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"provenance", "quarantine", "v1", "auto", "to_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AutoResponses_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "quarantine", "v1beta1", "auto", "to_address", "from_address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_AutoResponses_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"provenance", "quarantine", "v1", "auto", "to_address", "from_address"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

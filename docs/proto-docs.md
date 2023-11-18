@@ -9667,7 +9667,7 @@ QueryQuarantinedFundsResponse defines the RPC response of a QuarantinedFunds que
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `quarantinedFunds` | [QuarantinedFunds](#provenance.quarantine.v1.QuarantinedFunds) | repeated | quarantinedFunds is info about coins sitting in quarantine. |
+| `quarantined_funds` | [QuarantinedFunds](#provenance.quarantine.v1.QuarantinedFunds) | repeated | quarantined_funds is info about coins sitting in quarantine. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination parameters of the response. |
 
 
@@ -9688,13 +9688,13 @@ Query defines the quarantine gRPC query service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `IsQuarantined` | [QueryIsQuarantinedRequest](#provenance.quarantine.v1.QueryIsQuarantinedRequest) | [QueryIsQuarantinedResponse](#provenance.quarantine.v1.QueryIsQuarantinedResponse) | IsQuarantined checks if an account has opted into quarantine. | GET|/cosmos/quarantine/v1beta1/active/{to_address}|
+| `IsQuarantined` | [QueryIsQuarantinedRequest](#provenance.quarantine.v1.QueryIsQuarantinedRequest) | [QueryIsQuarantinedResponse](#provenance.quarantine.v1.QueryIsQuarantinedResponse) | IsQuarantined checks if an account has opted into quarantine. | GET|/provenance/quarantine/v1/active/{to_address}|
 | `QuarantinedFunds` | [QueryQuarantinedFundsRequest](#provenance.quarantine.v1.QueryQuarantinedFundsRequest) | [QueryQuarantinedFundsResponse](#provenance.quarantine.v1.QueryQuarantinedFundsResponse) | QuarantinedFunds gets information about funds that have been quarantined.
 
-If both a to_address and from_address are provided, any such quarantined funds will be returned regardless of whether they've been declined. If only a to_address is provided, the unaccepted and undeclined funds waiting on a response from to_address will be returned. If neither a to_address nor from_address is provided, all non-declined quarantined funds for any address will be returned. The request is invalid if only a from_address is provided. | GET|/cosmos/quarantine/v1beta1/fundsGET|/cosmos/quarantine/v1beta1/funds/{to_address}GET|/cosmos/quarantine/v1beta1/funds/{to_address}/{from_address}|
+If both a to_address and from_address are provided, any such quarantined funds will be returned regardless of whether they've been declined. If only a to_address is provided, the unaccepted and undeclined funds waiting on a response from to_address will be returned. If neither a to_address nor from_address is provided, all non-declined quarantined funds for any address will be returned. The request is invalid if only a from_address is provided. | GET|/provenance/quarantine/v1/fundsGET|/provenance/quarantine/v1/funds/{to_address}GET|/provenance/quarantine/v1/funds/{to_address}/{from_address}|
 | `AutoResponses` | [QueryAutoResponsesRequest](#provenance.quarantine.v1.QueryAutoResponsesRequest) | [QueryAutoResponsesResponse](#provenance.quarantine.v1.QueryAutoResponsesResponse) | AutoResponses gets the auto-response settings for a quarantined account.
 
-The to_address is required. If a from_address is provided only the auto response for that from_address will be returned. If no from_address is provided, all auto-response settings for the given to_address will be returned. | GET|/cosmos/quarantine/v1beta1/auto/{to_address}GET|/cosmos/quarantine/v1beta1/auto/{to_address}/{from_address}|
+The to_address is required. If a from_address is provided only the auto response for that from_address will be returned. If no from_address is provided, all auto-response settings for the given to_address will be returned. | GET|/provenance/quarantine/v1/auto/{to_address}GET|/provenance/quarantine/v1/auto/{to_address}/{from_address}|
 
  <!-- end services -->
 
