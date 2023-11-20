@@ -1,6 +1,6 @@
 package bank
 
-// The contents of this file were copied from the SDK: x/bank/client/testutil/cli_helpers.go (and the package chagned).
+// The contents of this file were copied from the SDK: x/bank/client/testutil/cli_helpers.go (and the package changed).
 
 import (
 	"fmt"
