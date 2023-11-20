@@ -17,8 +17,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"github.com/cosmos/cosmos-sdk/x/sanction/simulation"
+
+	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/sanction"
+	"github.com/provenance-io/provenance/x/sanction/simulation"
 )
 
 // getAccountCount gets the number of accounts to use.
@@ -306,19 +308,19 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 			}
 
 			// Create a new app, so we can init + export.
-			app := simapp.Setup(t, false)
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			testApp := app.Setup(t)
+			ctx := testApp.BaseApp.NewContext(false, tmproto.Header{})
 
 			// Do the init on the random genesis state.
 			testInit := func() {
-				app.SanctionKeeper.InitGenesis(ctx, &randomGenState)
+				testApp.SanctionKeeper.InitGenesis(ctx, &randomGenState)
 			}
 			require.NotPanics(t, testInit, "sanction InitGenesis")
 
 			// Export the app's sanction genesis state.
 			var actualGenState *sanction.GenesisState
 			testExport := func() {
-				actualGenState = app.SanctionKeeper.ExportGenesis(ctx)
+				actualGenState = testApp.SanctionKeeper.ExportGenesis(ctx)
 			}
 			require.NotPanics(t, testExport, "ExportGenesis")
 

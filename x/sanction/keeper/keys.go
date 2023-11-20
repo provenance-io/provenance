@@ -3,10 +3,12 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"github.com/gogo/protobuf/proto"
+
+	"github.com/provenance-io/provenance/x/sanction"
 )
 
 // Keys for store prefixes

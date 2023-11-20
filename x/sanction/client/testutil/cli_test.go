@@ -19,17 +19,20 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	client "github.com/cosmos/cosmos-sdk/x/sanction/client/cli"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/x/sanction"
+	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
-	cfg := network.DefaultConfig()
+	pioconfig.SetProvenanceConfig("", 0)
+	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 5
 	cfg.TimeoutCommit = 1 * time.Second
 

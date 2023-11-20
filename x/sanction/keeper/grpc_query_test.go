@@ -7,9 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"github.com/cosmos/cosmos-sdk/x/sanction/keeper"
-	"github.com/cosmos/cosmos-sdk/x/sanction/testutil"
+
+	"github.com/provenance-io/provenance/x/sanction"
+	"github.com/provenance-io/provenance/x/sanction/keeper"
+	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type QueryTestSuite struct {

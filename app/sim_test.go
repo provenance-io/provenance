@@ -13,8 +13,9 @@ import (
 	"testing"
 	"time"
 
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
 	"github.com/stretchr/testify/require"
+
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -40,7 +41,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/quarantine"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -55,6 +55,7 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	"github.com/provenance-io/provenance/x/sanction"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 

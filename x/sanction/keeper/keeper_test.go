@@ -7,13 +7,14 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"github.com/cosmos/cosmos-sdk/x/sanction/keeper"
-	"github.com/cosmos/cosmos-sdk/x/sanction/testutil"
+
+	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/sanction"
+	"github.com/provenance-io/provenance/x/sanction/keeper"
+	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type KeeperTestSuite struct {
@@ -29,7 +30,7 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	s.BaseSetup()
 
-	addrs := simapp.AddTestAddrsIncremental(s.App, s.SdkCtx, 5, sdk.NewInt(1_000_000_000))
+	addrs := app.AddTestAddrsIncremental(s.App, s.SdkCtx, 5, sdk.NewInt(1_000_000_000))
 	s.addr1 = addrs[0]
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]

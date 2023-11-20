@@ -6,7 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/sanction/keeper"
+
+	"github.com/provenance-io/provenance/x/sanction/keeper"
 )
 
 func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {

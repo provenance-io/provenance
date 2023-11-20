@@ -13,21 +13,22 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"github.com/cosmos/cosmos-sdk/x/sanction/simulation"
-	"github.com/cosmos/cosmos-sdk/x/sanction/testutil"
+
+	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/sanction"
+	"github.com/provenance-io/provenance/x/sanction/simulation"
+	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type SimTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
-	app *simapp.SimApp
+	app *app.App
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -35,7 +36,7 @@ func TestSimTestSuite(t *testing.T) {
 }
 
 func (s *SimTestSuite) SetupTest() {
-	s.app = simapp.Setup(s.T(), false)
+	s.app = app.Setup(s.T())
 	s.freshCtx()
 }
 
