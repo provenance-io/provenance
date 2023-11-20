@@ -22,6 +22,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
@@ -183,6 +184,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
+		Added: []string{ibcratelimit.ModuleName},
 	},
 	"tourmaline": { // upgrade for v1.18.0
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -194,6 +196,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
+		Added: []string{ibcratelimit.ModuleName},
 	},
 	// TODO - Add new upgrade definitions here.
 }
