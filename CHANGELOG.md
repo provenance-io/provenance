@@ -27,11 +27,12 @@ Types of changes (Stanzas):
 
 "Features" for new features.
 "Improvements" for changes in existing functionality.
-"Deprecated" for soon-to-be removed features.
 "Bug Fixes" for any bug fixes.
+"Deprecated" for soon-to-be removed features.
 "Client Breaking" for breaking CLI commands and REST routes used by end-users.
 "API Breaking" for breaking exported APIs used by developers building on SDK.
 "State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
+"Dependencies" lists version bumps and is mostly managed automatically in dependabot PRs.
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
@@ -40,6 +41,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Add upgrade handler for 1.18 [#1756](https://github.com/provenance-io/provenance/pull/1756).
+* Move the quarantine module into this repo (from our fork of the SDK) [#1752](https://github.com/provenance-io/provenance/issues/1752).
+
+### Deprecated
+
+* The `cosmos.quarantine.v1beta1` protos have been fully deprecated and are replaced with those in `provenance.quarantine.v1` [#1752](https://github.com/provenance-io/provenance/issues/1752).
+
+### Client Breaking
+
+* The REST query endpoints under `/cosmos/quarantine/v1beta1/` have been moved to `/provenance/quarantine/v1/` [#1752](https://github.com/provenance-io/provenance/issues/1752).
+
+### API Breaking
+
+* The quarantine proto messages have moved to `provenance.quarantine.v1` (from `cosmos.quarantine.v1beta1`) [#1752](https://github.com/provenance-io/provenance/issues/1752).
+* The `QueryQuarantinedFundsResponse.quarantinedFunds` field has been renamed to `quarantined_funds` [#1752](https://github.com/provenance-io/provenance/issues/1752).
 
 ### Dependencies
 
