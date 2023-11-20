@@ -658,6 +658,44 @@
   
     - [Msg](#provenance.reward.v1.Msg)
   
+- [provenance/sanction/v1/events.proto](#provenance/sanction/v1/events.proto)
+    - [EventAddressSanctioned](#provenance.sanction.v1.EventAddressSanctioned)
+    - [EventAddressUnsanctioned](#provenance.sanction.v1.EventAddressUnsanctioned)
+    - [EventParamsUpdated](#provenance.sanction.v1.EventParamsUpdated)
+    - [EventTempAddressSanctioned](#provenance.sanction.v1.EventTempAddressSanctioned)
+    - [EventTempAddressUnsanctioned](#provenance.sanction.v1.EventTempAddressUnsanctioned)
+  
+- [provenance/sanction/v1/sanction.proto](#provenance/sanction/v1/sanction.proto)
+    - [Params](#provenance.sanction.v1.Params)
+    - [TemporaryEntry](#provenance.sanction.v1.TemporaryEntry)
+  
+    - [TempStatus](#provenance.sanction.v1.TempStatus)
+  
+- [provenance/sanction/v1/genesis.proto](#provenance/sanction/v1/genesis.proto)
+    - [GenesisState](#provenance.sanction.v1.GenesisState)
+  
+- [provenance/sanction/v1/query.proto](#provenance/sanction/v1/query.proto)
+    - [QueryIsSanctionedRequest](#provenance.sanction.v1.QueryIsSanctionedRequest)
+    - [QueryIsSanctionedResponse](#provenance.sanction.v1.QueryIsSanctionedResponse)
+    - [QueryParamsRequest](#provenance.sanction.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#provenance.sanction.v1.QueryParamsResponse)
+    - [QuerySanctionedAddressesRequest](#provenance.sanction.v1.QuerySanctionedAddressesRequest)
+    - [QuerySanctionedAddressesResponse](#provenance.sanction.v1.QuerySanctionedAddressesResponse)
+    - [QueryTemporaryEntriesRequest](#provenance.sanction.v1.QueryTemporaryEntriesRequest)
+    - [QueryTemporaryEntriesResponse](#provenance.sanction.v1.QueryTemporaryEntriesResponse)
+  
+    - [Query](#provenance.sanction.v1.Query)
+  
+- [provenance/sanction/v1/tx.proto](#provenance/sanction/v1/tx.proto)
+    - [MsgSanction](#provenance.sanction.v1.MsgSanction)
+    - [MsgSanctionResponse](#provenance.sanction.v1.MsgSanctionResponse)
+    - [MsgUnsanction](#provenance.sanction.v1.MsgUnsanction)
+    - [MsgUnsanctionResponse](#provenance.sanction.v1.MsgUnsanctionResponse)
+    - [MsgUpdateParams](#provenance.sanction.v1.MsgUpdateParams)
+    - [MsgUpdateParamsResponse](#provenance.sanction.v1.MsgUpdateParamsResponse)
+  
+    - [Msg](#provenance.sanction.v1.Msg)
+  
 - [provenance/trigger/v1/event.proto](#provenance/trigger/v1/event.proto)
     - [EventTriggerCreated](#provenance.trigger.v1.EventTriggerCreated)
     - [EventTriggerDestroyed](#provenance.trigger.v1.EventTriggerDestroyed)
@@ -9972,6 +10010,440 @@ Msg
 | `EndRewardProgram` | [MsgEndRewardProgramRequest](#provenance.reward.v1.MsgEndRewardProgramRequest) | [MsgEndRewardProgramResponse](#provenance.reward.v1.MsgEndRewardProgramResponse) | EndRewardProgram is the RPC endpoint for ending a rewards program | |
 | `ClaimRewards` | [MsgClaimRewardsRequest](#provenance.reward.v1.MsgClaimRewardsRequest) | [MsgClaimRewardsResponse](#provenance.reward.v1.MsgClaimRewardsResponse) | ClaimRewards is the RPC endpoint for claiming rewards belonging to completed claim periods of a reward program | |
 | `ClaimAllRewards` | [MsgClaimAllRewardsRequest](#provenance.reward.v1.MsgClaimAllRewardsRequest) | [MsgClaimAllRewardsResponse](#provenance.reward.v1.MsgClaimAllRewardsResponse) | ClaimAllRewards is the RPC endpoint for claiming rewards for completed claim periods of every reward program for the signer of the tx. | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/sanction/v1/events.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/sanction/v1/events.proto
+
+
+
+<a name="provenance.sanction.v1.EventAddressSanctioned"></a>
+
+### EventAddressSanctioned
+EventAddressSanctioned is an event emitted when an address is sanctioned.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.EventAddressUnsanctioned"></a>
+
+### EventAddressUnsanctioned
+EventAddressUnsanctioned is an event emitted when an address is unsanctioned.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.EventParamsUpdated"></a>
+
+### EventParamsUpdated
+EventParamsUpdated is an event emitted when the sanction module params are updated.
+
+
+
+
+
+
+<a name="provenance.sanction.v1.EventTempAddressSanctioned"></a>
+
+### EventTempAddressSanctioned
+EventTempAddressSanctioned is an event emitted when an address is temporarily sanctioned.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.EventTempAddressUnsanctioned"></a>
+
+### EventTempAddressUnsanctioned
+EventTempAddressUnsanctioned is an event emitted when an address is temporarily unsanctioned.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/sanction/v1/sanction.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/sanction/v1/sanction.proto
+
+
+
+<a name="provenance.sanction.v1.Params"></a>
+
+### Params
+Params defines the configurable parameters of the sanction module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `immediate_sanction_min_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | immediate_sanction_min_deposit is the minimum deposit for a sanction to happen immediately. If this is zero, immediate sanctioning is not available. Otherwise, if a sanction governance proposal is issued with a deposit at least this large, a temporary sanction will be immediately issued that will expire when voting ends on the governance proposal. |
+| `immediate_unsanction_min_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | immediate_unsanction_min_deposit is the minimum deposit for an unsanction to happen immediately. If this is zero, immediate unsanctioning is not available. Otherwise, if an unsanction governance proposal is issued with a deposit at least this large, a temporary unsanction will be immediately issued that will expire when voting ends on the governance proposal. |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.TemporaryEntry"></a>
+
+### TemporaryEntry
+TemporaryEntry defines the information involved in a temporary sanction or unsanction.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the address of this temporary entry. |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id is the governance proposal id associated with this temporary entry. |
+| `status` | [TempStatus](#provenance.sanction.v1.TempStatus) |  | status is whether the entry is a sanction or unsanction. |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="provenance.sanction.v1.TempStatus"></a>
+
+### TempStatus
+TempStatus is whether a temporary entry is a sanction or unsanction.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| TEMP_STATUS_UNSPECIFIED | 0 | TEMP_STATUS_UNSPECIFIED represents and unspecified status value. |
+| TEMP_STATUS_SANCTIONED | 1 | TEMP_STATUS_SANCTIONED indicates a sanction is in place. |
+| TEMP_STATUS_UNSANCTIONED | 2 | TEMP_STATUS_UNSANCTIONED indicates an unsanctioned is in place. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/sanction/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/sanction/v1/genesis.proto
+
+
+
+<a name="provenance.sanction.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the sanction module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.sanction.v1.Params) |  | params are the sanction module parameters. |
+| `sanctioned_addresses` | [string](#string) | repeated | sanctioned_addresses defines account addresses that are sanctioned. |
+| `temporary_entries` | [TemporaryEntry](#provenance.sanction.v1.TemporaryEntry) | repeated | temporary_entries defines the temporary entries associated with on-going governance proposals. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/sanction/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/sanction/v1/query.proto
+
+
+
+<a name="provenance.sanction.v1.QueryIsSanctionedRequest"></a>
+
+### QueryIsSanctionedRequest
+QueryIsSanctionedRequest defines the RPC request for checking if an account is sanctioned.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.QueryIsSanctionedResponse"></a>
+
+### QueryIsSanctionedResponse
+QueryIsSanctionedResponse defines the RPC response of an IsSanctioned query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `is_sanctioned` | [bool](#bool) |  | is_sanctioned is true if the address is sanctioned. |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest defines the RPC request for getting the sanction module params.
+
+
+
+
+
+
+<a name="provenance.sanction.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse defines the RPC response of a Params query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.sanction.v1.Params) |  | params are the sanction module parameters. |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.QuerySanctionedAddressesRequest"></a>
+
+### QuerySanctionedAddressesRequest
+QuerySanctionedAddressesRequest defines the RPC request for listing sanctioned accounts.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.QuerySanctionedAddressesResponse"></a>
+
+### QuerySanctionedAddressesResponse
+QuerySanctionedAddressesResponse defines the RPC response of a SanctionedAddresses query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `addresses` | [string](#string) | repeated | addresses is the list of sanctioned account addresses. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.QueryTemporaryEntriesRequest"></a>
+
+### QueryTemporaryEntriesRequest
+QueryTemporaryEntriesRequest defines the RPC request for listing temporary sanction/unsanction entries.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is an optional address to restrict results to. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.QueryTemporaryEntriesResponse"></a>
+
+### QueryTemporaryEntriesResponse
+QueryTemporaryEntriesResponse defines the RPC response of a TemporaryEntries query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entries` | [TemporaryEntry](#provenance.sanction.v1.TemporaryEntry) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.sanction.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `IsSanctioned` | [QueryIsSanctionedRequest](#provenance.sanction.v1.QueryIsSanctionedRequest) | [QueryIsSanctionedResponse](#provenance.sanction.v1.QueryIsSanctionedResponse) | IsSanctioned checks if an account has been sanctioned. | GET|/provenance/sanction/v1/check/{address}|
+| `SanctionedAddresses` | [QuerySanctionedAddressesRequest](#provenance.sanction.v1.QuerySanctionedAddressesRequest) | [QuerySanctionedAddressesResponse](#provenance.sanction.v1.QuerySanctionedAddressesResponse) | SanctionedAddresses returns a list of sanctioned addresses. | GET|/provenance/sanction/v1/all|
+| `TemporaryEntries` | [QueryTemporaryEntriesRequest](#provenance.sanction.v1.QueryTemporaryEntriesRequest) | [QueryTemporaryEntriesResponse](#provenance.sanction.v1.QueryTemporaryEntriesResponse) | TemporaryEntries returns temporary sanction/unsanction info. | GET|/provenance/sanction/v1/temp|
+| `Params` | [QueryParamsRequest](#provenance.sanction.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.sanction.v1.QueryParamsResponse) | Params returns the sanction module's params. | GET|/provenance/sanction/v1/params|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/sanction/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/sanction/v1/tx.proto
+
+
+
+<a name="provenance.sanction.v1.MsgSanction"></a>
+
+### MsgSanction
+MsgSanction represents a message for the governance operation of sanctioning addresses.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `addresses` | [string](#string) | repeated | addresses are the addresses to sanction. |
+| `authority` | [string](#string) |  | authority is the address of the account with the authority to enact sanctions (most likely the governance module account). |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.MsgSanctionResponse"></a>
+
+### MsgSanctionResponse
+MsgOptInResponse defines the Msg/Sanction response type.
+
+
+
+
+
+
+<a name="provenance.sanction.v1.MsgUnsanction"></a>
+
+### MsgUnsanction
+MsgSanction represents a message for the governance operation of unsanctioning addresses.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `addresses` | [string](#string) | repeated | addresses are the addresses to unsanction. |
+| `authority` | [string](#string) |  | authority is the address of the account with the authority to retract sanctions (most likely the governance module account). |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.MsgUnsanctionResponse"></a>
+
+### MsgUnsanctionResponse
+MsgOptInResponse defines the Msg/Unsanction response type.
+
+
+
+
+
+
+<a name="provenance.sanction.v1.MsgUpdateParams"></a>
+
+### MsgUpdateParams
+MsgUpdateParams represents a message for the governance operation of updating the sanction module params.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.sanction.v1.Params) |  | params are the sanction module parameters. |
+| `authority` | [string](#string) |  | authority is the address of the account with the authority to update params (most likely the governance module account). |
+
+
+
+
+
+
+<a name="provenance.sanction.v1.MsgUpdateParamsResponse"></a>
+
+### MsgUpdateParamsResponse
+MsgUpdateParamsResponse defined the Msg/UpdateParams response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.sanction.v1.Msg"></a>
+
+### Msg
+Msg defines the sanction Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Sanction` | [MsgSanction](#provenance.sanction.v1.MsgSanction) | [MsgSanctionResponse](#provenance.sanction.v1.MsgSanctionResponse) | Sanction is a governance operation for sanctioning addresses. | |
+| `Unsanction` | [MsgUnsanction](#provenance.sanction.v1.MsgUnsanction) | [MsgUnsanctionResponse](#provenance.sanction.v1.MsgUnsanctionResponse) | Unsanction is a governance operation for unsanctioning addresses. | |
+| `UpdateParams` | [MsgUpdateParams](#provenance.sanction.v1.MsgUpdateParams) | [MsgUpdateParamsResponse](#provenance.sanction.v1.MsgUpdateParamsResponse) | UpdateParams is a governance operation for updating the sanction module params. | |
 
  <!-- end services -->
 
