@@ -9,7 +9,6 @@ It contains only the address to quarantine.
 
 It is expected to fail if the `to_address` is invalid.
 
-
 ## Msg/OptOut
 
 An account can deactivate quarantine using a `MsgOptOut`.
