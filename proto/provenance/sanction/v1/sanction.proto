@@ -1,11 +1,11 @@
 syntax = "proto3";
-package cosmos.sanction.v1beta1;
+package provenance.sanction.v1;
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
+option go_package = "github.com/provenance-io/provenance/x/sanction";
 
 // Params defines the configurable parameters of the sanction module.
 message Params {

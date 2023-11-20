@@ -1,33 +1,33 @@
 syntax = "proto3";
-package cosmos.sanction.v1beta1;
+package provenance.sanction.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "cosmos/sanction/v1beta1/sanction.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
+import "provenance/sanction/v1/sanction.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
+option go_package = "github.com/provenance-io/provenance/x/sanction";
 
 // Query defines the gRPC querier service.
 service Query {
   // IsSanctioned checks if an account has been sanctioned.
   rpc IsSanctioned(QueryIsSanctionedRequest) returns (QueryIsSanctionedResponse) {
-    option (google.api.http).get = "/cosmos/sanction/v1beta1/check/{address}";
+    option (google.api.http).get = "/provenance/sanction/v1/check/{address}";
   }
 
   // SanctionedAddresses returns a list of sanctioned addresses.
   rpc SanctionedAddresses(QuerySanctionedAddressesRequest) returns (QuerySanctionedAddressesResponse) {
-    option (google.api.http).get = "/cosmos/sanction/v1beta1/all";
+    option (google.api.http).get = "/provenance/sanction/v1/all";
   }
 
   // TemporaryEntries returns temporary sanction/unsanction info.
   rpc TemporaryEntries(QueryTemporaryEntriesRequest) returns (QueryTemporaryEntriesResponse) {
-    option (google.api.http).get = "/cosmos/sanction/v1beta1/temp";
+    option (google.api.http).get = "/provenance/sanction/v1/temp";
   }
 
   // Params returns the sanction module's params.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/sanction/v1beta1/params";
+    option (google.api.http).get = "/provenance/sanction/v1/params";
   }
 }
 
