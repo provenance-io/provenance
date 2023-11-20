@@ -8,10 +8,10 @@ import (
 // Define the defaults for each param field and allow consuming apps to set them.
 var (
 	// DefaultImmediateSanctionMinDeposit is the default to use for the MinDepositSanction.
-	DefaultImmediateSanctionMinDeposit sdk.Coins = nil
+	DefaultImmediateSanctionMinDeposit sdk.Coins
 
 	// DefaultImmediateUnsanctionMinDeposit is the default to use for the MinDepositUnsanction.
-	DefaultImmediateUnsanctionMinDeposit sdk.Coins = nil
+	DefaultImmediateUnsanctionMinDeposit sdk.Coins
 )
 
 func DefaultParams() *Params {

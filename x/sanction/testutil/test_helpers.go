@@ -50,7 +50,7 @@ func didPanic(f assert.PanicTestFunc) (didPanic bool, message interface{}, stack
 // AssertPanicsWithMessage asserts that the code inside the specified PanicTestFunc panics, and that
 // the recovered panic message equals the expected panic message.
 //
-//   AssertPanicsWithMessage(t, "crazy error", func(){ GoCrazy() })
+//	AssertPanicsWithMessage(t, "crazy error", func(){ GoCrazy() })
 //
 // PanicsWithValue requires a specific interface{} value to be provided, which can be problematic.
 // PanicsWithError requires that the panic value is an error.
@@ -80,7 +80,7 @@ func AssertPanicsWithMessage(t *testing.T, expected string, f assert.PanicTestFu
 // RequirePanicsWithMessage asserts that the code inside the specified PanicTestFunc panics, and that
 // the recovered panic message equals the expected panic message.
 //
-//   RequirePanicsWithMessage(t, "crazy error", func(){ GoCrazy() })
+//	RequirePanicsWithMessage(t, "crazy error", func(){ GoCrazy() })
 //
 // PanicsWithValue requires a specific interface{} value to be provided, which can be problematic.
 // PanicsWithError requires that the panic value is an error.

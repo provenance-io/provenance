@@ -10,7 +10,7 @@ import (
 	"github.com/provenance-io/provenance/x/sanction/keeper"
 )
 
-func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
+func NewDecodeStore(_ codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.HasPrefix(kvA.Key, keeper.ParamsPrefix):

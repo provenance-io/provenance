@@ -156,7 +156,7 @@ Examples:
 			}
 
 			if len(args) > 0 {
-				if _, err := sdk.AccAddressFromBech32(args[0]); err != nil {
+				if _, err = sdk.AccAddressFromBech32(args[0]); err != nil {
 					return err
 				}
 			}
