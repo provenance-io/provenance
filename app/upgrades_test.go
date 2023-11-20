@@ -476,6 +476,18 @@ func (s *UpgradeTestSuite) TestSaffron() {
 	s.AssertUpgradeHandlerLogs("saffron", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestTourmalineRC1() {
+	expInLog := []string{}
+
+	s.AssertUpgradeHandlerLogs("tourmaline-rc1", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestTourmaline() {
+	expInLog := []string{}
+
+	s.AssertUpgradeHandlerLogs("tourmaline", expInLog, nil)
+}
+
 func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	addr1 := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000000))
 	addr2 := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000000))

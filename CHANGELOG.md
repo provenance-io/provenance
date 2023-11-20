@@ -41,6 +41,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add CLI commands for the exchange module endpoints and queries [#1701](https://github.com/provenance-io/provenance/issues/1701).
 
+### Improvements
+
+* Add upgrade handler for 1.18 [#1756](https://github.com/provenance-io/provenance/pull/1756).
+
 ### Dependencies
 
 - Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.28.1 ([#1724](https://github.com/provenance-io/provenance/pull/1724), [#1744](https://github.com/provenance-io/provenance/pull/1744), [#1750](https://github.com/provenance-io/provenance/pull/1750))

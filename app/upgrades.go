@@ -173,6 +173,28 @@ var upgrades = map[string]appUpgrade{
 		},
 		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
+	"tourmaline-rc1": { // upgrade for v1.18.0-rc1
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			return vm, nil
+		},
+	},
+	"tourmaline": { // upgrade for v1.18.0
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			return vm, nil
+		},
+	},
 	// TODO - Add new upgrade definitions here.
 }
 
