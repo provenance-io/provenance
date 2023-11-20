@@ -15,6 +15,8 @@ func (k Keeper) DetectBlockEvents(ctx sdk.Context) {
 	triggers = append(triggers, k.detectTimeEvents(ctx)...)
 
 	for _, trigger := range triggers {
+		k.Logger(ctx).Debug(fmt.Sprintf("Trigger %d added to queue", trigger.Id))
+		k.emitTriggerDetected(ctx, trigger)
 		k.UnregisterTrigger(ctx, trigger)
 		k.QueueTrigger(ctx, trigger)
 	}
@@ -77,6 +79,7 @@ func (k Keeper) getMatchingTriggersUntil(ctx sdk.Context, prefix string, match f
 	err := k.IterateEventListeners(ctx, prefix, func(trigger types.Trigger) (stop bool, err error) {
 		event, _ := trigger.GetTriggerEventI()
 		if match(trigger, event) {
+			k.Logger(ctx).Debug(fmt.Sprintf("Event detected for trigger %d", trigger.Id))
 			triggers = append(triggers, trigger)
 		}
 		return terminator(trigger, event), nil
@@ -85,4 +88,14 @@ func (k Keeper) getMatchingTriggersUntil(ctx sdk.Context, prefix string, match f
 		panic(fmt.Errorf("unable to iterate event listeners for matching triggers: %w", err))
 	}
 	return
+}
+
+// emitTriggerDetected Emits an EventTriggerDetection for the provided trigger.
+func (k Keeper) emitTriggerDetected(ctx sdk.Context, trigger types.Trigger) {
+	err := ctx.EventManager().EmitTypedEvent(&types.EventTriggerDetected{
+		TriggerId: fmt.Sprintf("%d", trigger.GetId()),
+	})
+	if err != nil {
+		ctx.Logger().Error("unable to emit EventTriggerDetected", "err", err)
+	}
 }

@@ -1,24 +1,36 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
 func (s *KeeperTestSuite) TestDetectBlockEvents() {
+	detected := func(triggerID uint64) sdk.Event {
+		event, _ := sdk.TypedEventToEvent(&types.EventTriggerDetected{
+			TriggerId: fmt.Sprintf("%d", triggerID),
+		})
+		return event
+	}
+
 	tests := []struct {
 		name       string
 		triggers   []types.TriggerEventI
 		registered []types.Trigger
 		queued     []types.QueuedTrigger
+		events     sdk.Events
 	}{
 		{
 			name:       "valid - no triggers",
 			triggers:   []types.TriggerEventI{},
 			registered: []types.Trigger(nil),
 			queued:     []types.QueuedTrigger(nil),
+			events:     sdk.Events{},
 		},
 		{
 			name: "valid - triggers, but no events",
@@ -29,6 +41,7 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 				s.CreateTrigger(1, s.accountAddresses[0].String(), &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight()) + 1}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 			},
 			queued: []types.QueuedTrigger(nil),
+			events: sdk.Events{},
 		},
 		{
 			name: "valid - 1 detected transaction event",
@@ -42,6 +55,9 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 					Time:        s.ctx.BlockTime(),
 					Trigger:     s.CreateTrigger(2, s.accountAddresses[0].String(), &types.TransactionEvent{Name: "event2"}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
+			},
+			events: []sdk.Event{
+				detected(2),
 			},
 		},
 		{
@@ -57,6 +73,9 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 					Trigger:     s.CreateTrigger(3, s.accountAddresses[0].String(), &types.TransactionEvent{Name: "event1"}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
 			},
+			events: []sdk.Event{
+				detected(3),
+			},
 		},
 		{
 			name: "valid - 1 detected block height event",
@@ -71,6 +90,9 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 					Trigger:     s.CreateTrigger(4, s.accountAddresses[0].String(), &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
 			},
+			events: []sdk.Event{
+				detected(4),
+			},
 		},
 		{
 			name: "valid - 1 detected time event",
@@ -84,6 +106,9 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 					Time:        s.ctx.BlockTime(),
 					Trigger:     s.CreateTrigger(5, s.accountAddresses[0].String(), &types.BlockTimeEvent{Time: s.ctx.BlockTime()}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
+			},
+			events: []sdk.Event{
+				detected(5),
 			},
 		},
 		{
@@ -111,6 +136,11 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 					Trigger:     s.CreateTrigger(8, s.accountAddresses[0].String(), &types.TransactionEvent{Name: "event2"}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
 			},
+			events: []sdk.Event{
+				detected(6),
+				detected(7),
+				detected(8),
+			},
 		},
 		{
 			name: "valid - multiple detected block height events",
@@ -130,6 +160,10 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 					Time:        s.ctx.BlockTime(),
 					Trigger:     s.CreateTrigger(10, s.accountAddresses[0].String(), &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
+			},
+			events: []sdk.Event{
+				detected(9),
+				detected(10),
 			},
 		},
 		{
@@ -151,6 +185,10 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 					Trigger:     s.CreateTrigger(11, s.accountAddresses[0].String(), &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
 			},
+			events: []sdk.Event{
+				detected(12),
+				detected(11),
+			},
 		},
 		{
 			name: "valid - multiple detected time events",
@@ -170,6 +208,10 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 					Time:        s.ctx.BlockTime(),
 					Trigger:     s.CreateTrigger(14, s.accountAddresses[0].String(), &types.BlockTimeEvent{Time: s.ctx.BlockTime()}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
+			},
+			events: []sdk.Event{
+				detected(13),
+				detected(14),
 			},
 		},
 		{
@@ -200,6 +242,11 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 					Trigger:     s.CreateTrigger(18, s.accountAddresses[0].String(), &types.BlockTimeEvent{Time: s.ctx.BlockTime()}, &types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}),
 				},
 			},
+			events: []sdk.Event{
+				detected(15),
+				detected(17),
+				detected(18),
+			},
 		},
 	}
 
@@ -215,9 +262,13 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 				s.ctx.GasMeter().RefundGas(s.ctx.GasMeter().GasConsumed(), "testing")
 				registered = append(registered, trigger)
 			}
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(s.ctx.EventManager().GetABCIEventHistory()))
 
 			// Action
 			s.app.TriggerKeeper.DetectBlockEvents(s.ctx)
+
+			events := s.ctx.EventManager().Events()
+			assertions.AssertEqualEvents(s.T(), tc.events, events, "should have correct events from detected events in DetectBlockEvents")
 
 			// Verify
 			triggers, err := s.app.TriggerKeeper.GetAllTriggers(s.ctx)

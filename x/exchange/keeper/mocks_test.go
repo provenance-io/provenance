@@ -12,6 +12,7 @@ import (
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // #############################################################################
@@ -654,4 +655,127 @@ func NewGetHoldCoinArgs(addr sdk.AccAddress, denom string) *GetHoldCoinArgs {
 // getHoldCoinArgsString creates a string of a GetHoldCoinArgs substituting the address names as possible.
 func (s *TestSuite) getHoldCoinArgsString(a *GetHoldCoinArgs) string {
 	return fmt.Sprintf("{addr:%s, denom:%s}", s.getAddrName(a.addr), a.denom)
+}
+
+// #############################################################################
+// #############################                  ##############################
+// ###########################   MockMarkerKeeper   ############################
+// #############################                  ##############################
+// #############################################################################
+
+var _ exchange.MarkerKeeper = (*MockMarkerKeeper)(nil)
+
+// MockMarkerKeeper satisfies the exchange.MockMarkerKeeper interface but just records the calls and allows dictation of results.
+type MockMarkerKeeper struct {
+	Calls                            MarkerCalls
+	GetMarkerResultsMap              map[string]*GetMarkerResult
+	AddSetNetAssetValuesResultsQueue []string
+}
+
+// MarkerCalls contains all the calls that the mock marker keeper makes.
+type MarkerCalls struct {
+	GetMarker            []sdk.AccAddress
+	AddSetNetAssetValues []*AddSetNetAssetValuesArgs
+}
+
+// AddSetNetAssetValuesArgs is a record of a call that is made to AddSetNetAssetValues.
+type AddSetNetAssetValuesArgs struct {
+	marker         markertypes.MarkerAccountI
+	netAssetValues []markertypes.NetAssetValue
+	source         string
+}
+
+// GetMarkerResult contains the result args to return for a GetMarker call.
+type GetMarkerResult struct {
+	account markertypes.MarkerAccountI
+	err     error
+}
+
+// NewMockMarkerKeeper creates a new empty MockMarkerKeeper.
+// Follow it up with WithGetMarkerErr, WithGetMarkerAccount,
+// and/or WithAddSetNetAssetValuesResults to dictate results.
+func NewMockMarkerKeeper() *MockMarkerKeeper {
+	return &MockMarkerKeeper{
+		GetMarkerResultsMap: make(map[string]*GetMarkerResult),
+	}
+}
+
+// WithGetMarkerErr sets up this mock keeper to return the provided error when GetMarker is called for the given address.
+// This method both updates the receiver and returns it.
+func (k *MockMarkerKeeper) WithGetMarkerErr(addr sdk.AccAddress, err string) *MockMarkerKeeper {
+	k.GetMarkerResultsMap[string(addr)] = &GetMarkerResult{err: errors.New(err)}
+	return k
+}
+
+// WithGetMarkerAccount sets up this mock keeper to return the provided marker account when GetMarker is called for the given address.
+// This method both updates the receiver and returns it.
+func (k *MockMarkerKeeper) WithGetMarkerAccount(account markertypes.MarkerAccountI) *MockMarkerKeeper {
+	k.GetMarkerResultsMap[string(account.GetAddress())] = &GetMarkerResult{account: account}
+	return k
+}
+
+// WithAddSetNetAssetValuesResults queues up the provided error strings to be returned from AddSetNetAssetValues.
+// An empty string means no error. Each entry is used only once. If entries run out, nil is returned.
+// This method both updates the receiver and returns it.
+func (k *MockMarkerKeeper) WithAddSetNetAssetValuesResults(errs ...string) *MockMarkerKeeper {
+	k.AddSetNetAssetValuesResultsQueue = append(k.AddSetNetAssetValuesResultsQueue, errs...)
+	return k
+}
+
+func (k *MockMarkerKeeper) GetMarker(_ sdk.Context, address sdk.AccAddress) (markertypes.MarkerAccountI, error) {
+	k.Calls.GetMarker = append(k.Calls.GetMarker, address)
+	if rv, found := k.GetMarkerResultsMap[string(address)]; found {
+		return rv.account, rv.err
+	}
+	return nil, nil
+}
+
+func (k *MockMarkerKeeper) AddSetNetAssetValues(_ sdk.Context, marker markertypes.MarkerAccountI, netAssetValues []markertypes.NetAssetValue, source string) error {
+	k.Calls.AddSetNetAssetValues = append(k.Calls.AddSetNetAssetValues, NewAddSetNetAssetValuesArgs(marker, netAssetValues, source))
+	var err error
+	if len(k.AddSetNetAssetValuesResultsQueue) > 0 {
+		if len(k.AddSetNetAssetValuesResultsQueue[0]) > 0 {
+			err = errors.New(k.AddSetNetAssetValuesResultsQueue[0])
+		}
+		k.AddSetNetAssetValuesResultsQueue = k.AddSetNetAssetValuesResultsQueue[1:]
+	}
+	return err
+}
+
+// assertGetMarkerCalls asserts that a mock keeper's Calls.GetMarker match the provided expected calls.
+func (s *TestSuite) assertGetMarkerCalls(mk *MockMarkerKeeper, expected []sdk.AccAddress, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.GetMarker, s.getAddrName,
+		msg+" GetMarker calls", args...)
+}
+
+// assertAddSetNetAssetValuesCalls asserts that a mock keeper's Calls.AddSetNetAssetValues match the provided expected calls.
+func (s *TestSuite) assertAddSetNetAssetValuesCalls(mk *MockMarkerKeeper, expected []*AddSetNetAssetValuesArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.AddSetNetAssetValues, s.getAddSetNetAssetValuesArgsDenom,
+		msg+" AddSetNetAssetValues calls", args...)
+}
+
+// assertMarkerKeeperCalls asserts that all the calls made to a mock marker keeper match the provided expected calls.
+func (s *TestSuite) assertMarkerKeeperCalls(mk *MockMarkerKeeper, expected MarkerCalls, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	rv := s.assertGetMarkerCalls(mk, expected.GetMarker, msg, args...)
+	return s.assertAddSetNetAssetValuesCalls(mk, expected.AddSetNetAssetValues, msg, args...) && rv
+}
+
+// NewAddSetNetAssetValuesArgs creates a new record of args provided to a call to AddSetNetAssetValues.
+func NewAddSetNetAssetValuesArgs(marker markertypes.MarkerAccountI, netAssetValues []markertypes.NetAssetValue, source string) *AddSetNetAssetValuesArgs {
+	return &AddSetNetAssetValuesArgs{
+		marker:         marker,
+		netAssetValues: netAssetValues,
+		source:         source,
+	}
+}
+
+// getAddSetNetAssetValuesArgsDenom returns the denom of the marker in the provided AddSetNetAssetValuesArgs.
+func (s *TestSuite) getAddSetNetAssetValuesArgsDenom(args *AddSetNetAssetValuesArgs) string {
+	if args != nil && args.marker != nil {
+		return args.marker.GetDenom()
+	}
+	return ""
 }

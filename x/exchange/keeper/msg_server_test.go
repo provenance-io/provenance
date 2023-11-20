@@ -87,12 +87,14 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 	em := sdk.NewEventManager()
 	s.ctx = s.ctx.WithEventManager(em)
 	goCtx := sdk.WrapSDKContext(s.ctx)
+	s.logBuffer.Reset()
 	var resp *S
 	var err error
 	testFunc := func() {
 		resp, err = td.endpoint(goCtx, &tc.msg)
 	}
 	s.Require().NotPanicsf(testFunc, td.endpointName)
+	_ = s.getLogOutput(td.endpointName)
 	s.assertErrorContentsf(err, tc.expInErr, "%s error", td.endpointName)
 	s.Assert().Equalf(expResp, resp, "%s response", td.endpointName)
 
@@ -214,8 +216,7 @@ func (s *TestSuite) requireSanctionAddress(addr sdk.AccAddress) {
 
 // requireAddFinalizeAndActivateMarker creates a marker, requiring it to not error.
 func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager sdk.AccAddress, reqAttrs ...string) {
-	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
-	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
+	markerAddr := s.markerAddr(coin.Denom)
 	marker := &markertypes.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
 		Manager:     manager.String(),
@@ -239,7 +240,7 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 		RequiredAttributes:     reqAttrs,
 	}
 	nav := markertypes.NewNetAssetValue(s.coin("5navcoin"), 1)
-	err = s.app.MarkerKeeper.SetNetAssetValue(s.ctx, marker, nav, "testing")
+	err := s.app.MarkerKeeper.SetNetAssetValue(s.ctx, marker, nav, "testing")
 	s.Require().NoError(err, "SetNetAssetValue(%d)", coin.Denom)
 	err = s.app.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
 	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
@@ -1015,7 +1016,7 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 			expInErr: []string{invReqErr, "account " + s.addr1.String() + " is not allowed to create ask orders in market 1"},
 		},
 		{
-			name: "one bid, both quarantined",
+			name: "one bid, both quarantined, no markers",
 			setup: func() {
 				s.requireFundAccount(s.addr1, "50pear")
 				s.requireFundAccount(s.addr2, "10apple")
@@ -1064,6 +1065,65 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 				s.untypeEvent(&exchange.EventOrderFilled{
 					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
 				}),
+				s.navSetEvent("10apple", "50pear", 3),
+			},
+		},
+		{
+			name: "one bid, both quarantined, with markers",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("10apple"), s.addr5, "got.it")
+				s.requireAddFinalizeAndActivateMarker(s.coin("50pear"), s.addr5, "got.it")
+				s.requireSetNameRecord("got.it", s.addr5)
+				s.requireSetAttr(s.addr1, "got.it", s.addr5)
+				s.requireSetAttr(s.addr2, "got.it", s.addr5)
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireFundAccount(s.addr2, "10apple")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(54).WithBid(&exchange.BidOrder{
+					MarketId: 3, Buyer: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireAddHold(s.addr1, "50pear", 54)
+
+				s.requireQuarantineOptIn(s.addr1)
+				s.requireQuarantineOptIn(s.addr2)
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:      s.addr2.String(),
+				MarketId:    3,
+				TotalAssets: s.coins("10apple"),
+				BidOrderIds: []uint64{54},
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr1,
+					expBal:   []sdk.Coin{s.coin("10apple"), s.zeroCoin("pear")},
+					expHold:  s.zeroCoins("apple", "pear"),
+					expSpend: []sdk.Coin{s.coin("10apple"), s.zeroCoin("pear")},
+				},
+				{
+					addr:     s.addr2,
+					expBal:   []sdk.Coin{s.zeroCoin("apple"), s.coin("50pear")},
+					expHold:  s.zeroCoins("apple", "pear"),
+					expSpend: []sdk.Coin{s.zeroCoin("apple"), s.coin("50pear")},
+				},
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr1, "50pear"),
+				s.eventCoinSpent(s.addr2, "10apple"),
+				s.eventCoinReceived(s.addr1, "10apple"),
+				s.eventTransfer(s.addr1, s.addr2, "10apple"),
+				s.eventMessageSender(s.addr2),
+				s.eventCoinSpent(s.addr1, "50pear"),
+				s.eventCoinReceived(s.addr2, "50pear"),
+				s.eventTransfer(s.addr2, s.addr1, "50pear"),
+				s.eventMessageSender(s.addr1),
+				s.untypeEvent(&exchange.EventOrderFilled{
+					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
+				}),
+				s.navSetEvent("10apple", "50pear", 3),
 			},
 		},
 		{
@@ -1327,6 +1387,9 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 					ExternalId: "second order",
 				}),
 
+				// The net-asset-value event.
+				s.navSetEvent("13apple", "70pear", 1),
+
 				// Order creation fee events.
 				s.eventCoinSpent(s.addr1, "10fig"),
 				s.eventCoinReceived(s.marketAddr1, "10fig"),
@@ -1388,7 +1451,7 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 			expInErr: []string{invReqErr, "account " + s.addr1.String() + " is not allowed to create bid orders in market 1"},
 		},
 		{
-			name: "one ask, both quarantined",
+			name: "one ask, both quarantined, no markers",
 			setup: func() {
 				s.requireFundAccount(s.addr1, "50pear")
 				s.requireFundAccount(s.addr2, "10apple")
@@ -1437,6 +1500,65 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				s.untypeEvent(&exchange.EventOrderFilled{
 					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
 				}),
+				s.navSetEvent("10apple", "50pear", 3),
+			},
+		},
+		{
+			name: "one ask, both quarantined, with markers",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("10apple"), s.addr5, "got.it")
+				s.requireAddFinalizeAndActivateMarker(s.coin("50pear"), s.addr5, "got.it")
+				s.requireSetNameRecord("got.it", s.addr5)
+				s.requireSetAttr(s.addr1, "got.it", s.addr5)
+				s.requireSetAttr(s.addr2, "got.it", s.addr5)
+				s.requireFundAccount(s.addr1, "50pear")
+				s.requireFundAccount(s.addr2, "10apple")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AcceptingOrders: true, AllowUserSettlement: true,
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(54).WithAsk(&exchange.AskOrder{
+					MarketId: 3, Seller: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+				}))
+				s.requireAddHold(s.addr2, "10apple", 54)
+
+				s.requireQuarantineOptIn(s.addr1)
+				s.requireQuarantineOptIn(s.addr2)
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:       s.addr1.String(),
+				MarketId:    3,
+				TotalPrice:  s.coin("50pear"),
+				AskOrderIds: []uint64{54},
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr1,
+					expBal:   []sdk.Coin{s.coin("10apple"), s.zeroCoin("pear")},
+					expHold:  s.zeroCoins("apple", "pear"),
+					expSpend: []sdk.Coin{s.coin("10apple"), s.zeroCoin("pear")},
+				},
+				{
+					addr:     s.addr2,
+					expBal:   []sdk.Coin{s.zeroCoin("apple"), s.coin("50pear")},
+					expHold:  s.zeroCoins("apple", "pear"),
+					expSpend: []sdk.Coin{s.zeroCoin("apple"), s.coin("50pear")},
+				},
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr2, "10apple"),
+				s.eventCoinSpent(s.addr2, "10apple"),
+				s.eventCoinReceived(s.addr1, "10apple"),
+				s.eventTransfer(s.addr1, s.addr2, "10apple"),
+				s.eventMessageSender(s.addr2),
+				s.eventCoinSpent(s.addr1, "50pear"),
+				s.eventCoinReceived(s.addr2, "50pear"),
+				s.eventTransfer(s.addr2, s.addr1, "50pear"),
+				s.eventMessageSender(s.addr1),
+				s.untypeEvent(&exchange.EventOrderFilled{
+					OrderId: 54, Assets: "10apple", Price: "50pear", MarketId: 3,
+				}),
+				s.navSetEvent("10apple", "50pear", 3),
 			},
 		},
 		{
@@ -1698,6 +1820,9 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 					MarketId:   1,
 					ExternalId: "second order",
 				}),
+
+				// The net-asset-value event.
+				s.navSetEvent("13apple", "70pear", 1),
 
 				// Order creation fee events.
 				s.eventCoinSpent(s.addr1, "10fig"),
@@ -2012,6 +2137,9 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.untypeEvent(&exchange.EventOrderFilled{
 					OrderId: 22, Assets: "10apple", Price: "100pear", MarketId: 1,
 				}),
+
+				// The net-asset-value event.
+				s.navSetEvent("18apple", "185pear", 1),
 			},
 		},
 		{
@@ -2085,6 +2213,9 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.untypeEvent(&exchange.EventOrderPartiallyFilled{
 					OrderId: 1, Assets: "7apple", Price: "75pear", MarketId: 3,
 				}),
+
+				// The net-asset-value event.
+				s.navSetEvent("7apple", "75pear", 3),
 			},
 		},
 		{
@@ -2158,6 +2289,9 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.untypeEvent(&exchange.EventOrderPartiallyFilled{
 					OrderId: 22, Assets: "7apple", Price: "70pear", MarketId: 3,
 				}),
+
+				// The net-asset-value event.
+				s.navSetEvent("7apple", "70pear", 3),
 			},
 		},
 		{
@@ -2307,6 +2441,9 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 				s.untypeEvent(&exchange.EventOrderFilled{
 					OrderId: 4444, Assets: "8apple", Price: "85pear", MarketId: 2, Fees: "10pear",
 				}),
+
+				// The net-asset-value event.
+				s.navSetEvent("18apple", "185pear", 2),
 			},
 		},
 	}

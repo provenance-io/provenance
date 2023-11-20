@@ -881,3 +881,58 @@ func getPriceTransfer(f *orderFulfillment) (*Transfer, error) {
 	// This is here in case a new SubTypeI is made that isn't accounted for in here.
 	panic(fmt.Errorf("%s order %d: unknown order type", f.GetOrderType(), f.GetOrderID()))
 }
+
+// NetAssetValue is a total of assets and the price they sold for.
+type NetAssetValue struct {
+	// Assets is the funds being bought/sold
+	Assets sdk.Coin
+	// Price is the price paid for those assets.
+	Price sdk.Coin
+}
+
+// filterOrders returns all the filled orders (partial or full) that return true from the checker.
+func filterOrders(settlement *Settlement, checker func(order OrderI) bool) []OrderI {
+	var rv []OrderI
+	for _, order := range settlement.FullyFilledOrders {
+		if checker(order) {
+			rv = append(rv, order)
+		}
+	}
+	if settlement.PartialOrderFilled != nil && checker(settlement.PartialOrderFilled) {
+		rv = append(rv, settlement.PartialOrderFilled)
+	}
+	return rv
+}
+
+// GetNAVs returns all the net-asset-value entries that represent this settlement.
+func GetNAVs(settlement *Settlement) []*NetAssetValue {
+	// We need to count ONLY the bid orders or ONLY the ask orders.
+	// But some settlements are expected to only have one or the other, so look
+	// for bids first and fall back to asks if there aren't any bids.
+	// I chose bids first because they're filled at their listed price, but I don't
+	// think it really matters which one is chosen to check first.
+	orders := filterOrders(settlement, OrderI.IsBidOrder)
+	if len(orders) == 0 {
+		orders = filterOrders(settlement, OrderI.IsAskOrder)
+	}
+
+	var navs []*NetAssetValue
+	for _, order := range orders {
+		assets := order.GetAssets()
+		price := order.GetPrice()
+		found := false
+		for _, nav := range navs {
+			if nav.Assets.Denom == assets.Denom && nav.Price.Denom == price.Denom {
+				found = true
+				nav.Assets.Amount = nav.Assets.Amount.Add(assets.Amount)
+				nav.Price.Amount = nav.Price.Amount.Add(price.Amount)
+				break
+			}
+		}
+		if !found {
+			navs = append(navs, &NetAssetValue{Assets: assets, Price: price})
+		}
+	}
+
+	return navs
+}

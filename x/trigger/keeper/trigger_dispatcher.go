@@ -4,10 +4,12 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+
+	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
 const (
@@ -24,8 +26,10 @@ func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 		item := k.QueuePeek(ctx)
 		triggerID := item.GetTrigger().Id
 		gasLimit := k.GetGasLimit(ctx, triggerID)
+		k.Logger(ctx).Debug(fmt.Sprintf("Processing trigger %d with gas limit %d", triggerID, gasLimit))
 
 		if gasLimit+gasConsumed > MaximumQueueGas {
+			k.Logger(ctx).Debug(fmt.Sprintf("Exceeded MaximumQueueGas %d/%d skipping...", gasLimit+gasConsumed, MaximumQueueGas))
 			return
 		}
 		actionsProcessed++
@@ -35,12 +39,13 @@ func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 		k.RemoveGasLimit(ctx, triggerID)
 
 		actions := item.GetTrigger().Actions
-		k.runActions(ctx, gasLimit, actions)
+		err := k.runActions(ctx, gasLimit, actions)
+		k.emitTriggerExecuted(ctx, item.GetTrigger(), err == nil)
 	}
 }
 
 // RunActions Runs all the actions and constrains them by gasLimit.
-func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*types.Any) {
+func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*codectypes.Any) error {
 	cacheCtx, flush := ctx.CacheContext()
 	gasMeter := sdk.NewGasMeter(gasLimit)
 	cacheCtx = cacheCtx.WithGasMeter(gasMeter)
@@ -53,7 +58,7 @@ func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*types.An
 			"actions", actions,
 			"error", err,
 		)
-		return
+		return err
 	}
 	results, err := k.handleMsgs(cacheCtx, msgs)
 	if err != nil {
@@ -61,13 +66,15 @@ func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*types.An
 			"HandleMsgs",
 			"error", err,
 		)
-		return
+		return err
 	}
 
 	flush()
 	for _, res := range results {
 		ctx.EventManager().EmitEvents(res.GetEvents())
 	}
+
+	return nil
 }
 
 // handleMsgs Handles each message and verifies gas limit has not been exceeded.
@@ -79,6 +86,7 @@ func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error
 		if handler == nil {
 			return nil, fmt.Errorf("no message handler found for message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
+		k.Logger(ctx).Debug(fmt.Sprintf("Executing %s at position %d", sdk.MsgTypeURL(msg), i))
 		r, err := k.safeHandle(ctx, msg, handler)
 		if err != nil {
 			return nil, fmt.Errorf("error processing message %s at position %d: %w", sdk.MsgTypeURL(msg), i, err)
@@ -87,6 +95,7 @@ func (k Keeper) handleMsgs(ctx sdk.Context, msgs []sdk.Msg) ([]sdk.Result, error
 		if r == nil {
 			return nil, fmt.Errorf("got nil sdk.Result for message %s at position %d", sdk.MsgTypeURL(msg), i)
 		}
+		k.Logger(ctx).Debug(fmt.Sprintf("Successfully executed %s at position %d", sdk.MsgTypeURL(msg), i))
 
 		results[i] = *r
 	}
@@ -115,4 +124,16 @@ func (k Keeper) safeHandle(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgServ
 		}
 	}()
 	return handler(ctx, msg)
+}
+
+// emitTriggerExecuted Emits an EventTriggerExecuted for the provided trigger.
+func (k Keeper) emitTriggerExecuted(ctx sdk.Context, trigger types.Trigger, success bool) {
+	eventErr := ctx.EventManager().EmitTypedEvent(&types.EventTriggerExecuted{
+		TriggerId: fmt.Sprintf("%d", trigger.GetId()),
+		Owner:     trigger.Owner,
+		Success:   success,
+	})
+	if eventErr != nil {
+		ctx.Logger().Error("unable to emit EventTriggerExecuted", "err", eventErr)
+	}
 }
