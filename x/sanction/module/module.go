@@ -95,9 +95,7 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 }
 
 // RegisterLegacyAminoCodec registers the sanction module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	sanction.RegisterLegacyAminoCodec(cdc)
-}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInvariants does nothing, there are no invariants to enforce for the sanction module.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}

@@ -7,7 +7,11 @@ import (
 	"github.com/provenance-io/provenance/x/sanction/errors"
 )
 
-var _ sdk.Msg = &MsgSanction{}
+var allRequestMsgs = []sdk.Msg{
+	(*MsgSanction)(nil),
+	(*MsgUnsanction)(nil),
+	(*MsgUpdateParams)(nil),
+}
 
 func NewMsgSanction(authority string, addrs ...sdk.AccAddress) *MsgSanction {
 	rv := &MsgSanction{
@@ -38,8 +42,6 @@ func (m MsgSanction) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-var _ sdk.Msg = &MsgUnsanction{}
-
 func NewMsgUnsanction(authority string, addrs ...sdk.AccAddress) *MsgUnsanction {
 	rv := &MsgUnsanction{
 		Authority: authority,
@@ -68,8 +70,6 @@ func (m MsgUnsanction) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}
 }
-
-var _ sdk.Msg = &MsgUpdateParams{}
 
 func NewMsgUpdateParams(authority string, minDepSanction, minDepUnsanction sdk.Coins) *MsgUpdateParams {
 	rv := &MsgUpdateParams{
