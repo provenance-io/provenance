@@ -1129,11 +1129,11 @@ func (s *GovHooksTestSuite) TestKeeper_isModuleGovHooksMsgURL() {
 		{exp: false, url: "something random"},
 		{exp: false, url: sdk.MsgTypeURL(&sanction.MsgUpdateParams{})},
 		{exp: false, url: sdk.MsgTypeURL(&govv1.MsgExecLegacyContent{})},
-		{exp: false, url: "cosmos.sanction.v1beta1.MsgSanction"},
-		{exp: false, url: "/cosmos.sanction.v1beta1.MsgSanctio"},
-		{exp: false, url: "/cosmos.sanction.v1beta1.MsgSanction "},
-		{exp: false, url: " /cosmos.sanction.v1beta1.MsgSanction"},
-		{exp: false, url: "/cosmos.sanction.v1beta1.MsgSanction2"},
+		{exp: false, url: "provenance.sanction.v1.MsgSanction"},
+		{exp: false, url: "/provenance.sanction.v1.MsgSanctio"},
+		{exp: false, url: "/provenance.sanction.v1.MsgSanction "},
+		{exp: false, url: " /provenance.sanction.v1.MsgSanction"},
+		{exp: false, url: "/provenance.sanction.v1.MsgSanction2"},
 	}
 
 	for _, tc := range tests {
