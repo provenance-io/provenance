@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add the ibcratelimit module [#1498](https://github.com/provenance-io/provenance/issues/1498).
+* Add CLI commands for the exchange module endpoints and queries [#1701](https://github.com/provenance-io/provenance/issues/1701).
 
 ### Improvements
 
