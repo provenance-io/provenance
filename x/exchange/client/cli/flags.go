@@ -81,6 +81,15 @@ const (
 	FlagURL                = "url"
 )
 
+// MarkFlagsRequired marks the provided flags as required and panics if there's a problem.
+func MarkFlagsRequired(cmd *cobra.Command, names ...string) {
+	for _, name := range names {
+		if err := cmd.MarkFlagRequired(name); err != nil {
+			panic(fmt.Errorf("error marking --%s flag required on %s: %w", name, cmd.Name(), err))
+		}
+	}
+}
+
 // AddFlagsAdmin adds the --admin and --authority flags to a command and makes them mutually exclusive.
 // It also makes one of --admin, --authority, and --from required.
 //

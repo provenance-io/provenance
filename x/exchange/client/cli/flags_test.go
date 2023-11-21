@@ -31,6 +31,89 @@ const (
 	flagUint32      = "uint32"
 )
 
+func TestMarkFlagsRequired(t *testing.T) {
+	flagOne := "one"
+	flagTwo := "two"
+	flagThree := "three"
+	expAnnotations := map[string][]string{
+		cobra.BashCompOneRequiredFlag: {"true"},
+	}
+
+	tests := []struct {
+		name     string
+		names    []string
+		expPanic string
+	}{
+		{
+			name:     "no names",
+			names:    []string{},
+			expPanic: "",
+		},
+		{
+			name:     "one name, exists",
+			names:    []string{flagOne},
+			expPanic: "",
+		},
+		{
+			name:     "one name, not found",
+			names:    []string{"nope"},
+			expPanic: "error marking --nope flag required on testing: no such flag -nope",
+		},
+		{
+			name:     "three names, first not found",
+			names:    []string{"gold", flagThree, flagThree},
+			expPanic: "error marking --gold flag required on testing: no such flag -gold",
+		},
+		{
+			name:     "three names, second not found",
+			names:    []string{flagOne, "missing", flagThree},
+			expPanic: "error marking --missing flag required on testing: no such flag -missing",
+		},
+		{
+			name:     "three names, third not found",
+			names:    []string{flagOne, flagThree, "derp"},
+			expPanic: "error marking --derp flag required on testing: no such flag -derp",
+		},
+		{
+			name:     "three names, all exist",
+			names:    []string{flagOne, flagThree, flagThree},
+			expPanic: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := &cobra.Command{
+				Use: "testing",
+				RunE: func(cmd *cobra.Command, args []string) error {
+					return errors.New("the command should not have been run")
+				},
+			}
+			cmd.Flags().String(flagOne, "", "The one")
+			cmd.Flags().Bool(flagTwo, false, "The next best")
+			cmd.Flags().Int(flagThree, 0, "Bronze")
+
+			testFunc := func() {
+				cli.MarkFlagsRequired(cmd, tc.names...)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "MarkFlagsRequired(%q)", tc.names)
+			if len(tc.expPanic) > 0 {
+				return
+			}
+
+			cmdFlags := cmd.Flags()
+
+			for _, name := range tc.names {
+				flag := cmdFlags.Lookup(name)
+				if assert.NotNil(t, flag, "The --%s flag", name) {
+					actAnnotations := flag.Annotations
+					assert.Equal(t, expAnnotations, actAnnotations, "The --%s flag annotations", name)
+				}
+			}
+		})
+	}
+}
+
 func TestAddFlagsAdmin(t *testing.T) {
 	expAnnotations := map[string][]string{
 		mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},

@@ -122,15 +122,6 @@ func genericQueryRunE[R any, S proto.Message](reqMaker queryReqMaker[R], endpoin
 	}
 }
 
-// MarkFlagsRequired marks the provided flags as required and panics if there's a problem.
-func MarkFlagsRequired(cmd *cobra.Command, names ...string) {
-	for _, name := range names {
-		if err := cmd.MarkFlagRequired(name); err != nil {
-			panic(fmt.Errorf("error marking --%s flag required on %s: %w", name, cmd.Name(), err))
-		}
-	}
-}
-
 // AddUseArgs adds the given strings to the cmd's Use, separated by a space.
 func AddUseArgs(cmd *cobra.Command, args ...string) {
 	cmd.Use = cmd.Use + " " + strings.Join(args, " ")
