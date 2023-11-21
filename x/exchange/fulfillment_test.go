@@ -6399,7 +6399,7 @@ func TestFilterOrders(t *testing.T) {
 
 func TestGetNAVs(t *testing.T) {
 	coin := func(coinStr string) sdk.Coin {
-		rv, err := parseCoin(coinStr)
+		rv, err := ParseCoin(coinStr)
 		require.NoError(t, err, "parseCoin(%q)", coinStr)
 		return rv
 	}
