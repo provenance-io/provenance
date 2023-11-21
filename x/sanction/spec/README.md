@@ -1,10 +1,3 @@
-<!--
-order: 0
-title: Sanction Overview
-parent:
-  title: "sanction"
--->
-
 # Sanction Module
 
 ## Abstract

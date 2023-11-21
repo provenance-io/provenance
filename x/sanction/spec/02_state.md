@@ -1,7 +1,3 @@
-<!--
-order: 2
--->
-
 # State
 
 The `x/sanction` module uses key/value pairs to store sanction-related data in state.

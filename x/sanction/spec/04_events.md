@@ -1,7 +1,3 @@
-<!--
-order: 4
--->
-
 # Events
 
 The `x/sanction` module emits the following events:
@@ -10,7 +6,7 @@ The `x/sanction` module emits the following events:
 
 This event is emitted when an account is sanctioned.
 
-`@Type`: `/cosmos.sanction.v1beta1.EventAddressSanctioned`
+`@Type`: `/provenance.sanction.v1.EventAddressSanctioned`
 
 | Attribute Key | Attribute Value                       |
 |---------------|---------------------------------------|
@@ -20,7 +16,7 @@ This event is emitted when an account is sanctioned.
 
 This event is emitted when an account is unsanctioned.
 
-`@Type`: `/cosmos.sanction.v1beta1.EventAddressUnsanctioned`
+`@Type`: `/provenance.sanction.v1.EventAddressUnsanctioned`
 
 | Attribute Key | Attribute Value                         |
 |---------------|-----------------------------------------|
@@ -30,7 +26,7 @@ This event is emitted when an account is unsanctioned.
 
 This event is emitted when a temporary sanction is placed on an account.
 
-`@Type`: `/cosmos.sanction.v1beta1.EventTempAddressSanctioned`
+`@Type`: `/provenance.sanction.v1.EventTempAddressSanctioned`
 
 | Attribute Key | Attribute Value                       |
 |---------------|---------------------------------------|
@@ -40,7 +36,7 @@ This event is emitted when a temporary sanction is placed on an account.
 
 This event is emitted when a temporary unsanction is placed on an account.
 
-`@Type`: `/cosmos.sanction.v1beta1.EventTempAddressUnsanctioned`
+`@Type`: `/provenance.sanction.v1.EventTempAddressUnsanctioned`
 
 | Attribute Key | Attribute Value                         |
 |---------------|-----------------------------------------|
@@ -50,7 +46,7 @@ This event is emitted when a temporary unsanction is placed on an account.
 
 This event is emitted when the `x/sanction` module's params are updated.
 
-`@Type`: `/cosmos.sanction.v1beta1.EventParamsUpdated`
+`@Type`: `/provenance.sanction.v1.EventParamsUpdated`
 
 | Attribute Key | Attribute Value |
 |---------------|-----------------|
