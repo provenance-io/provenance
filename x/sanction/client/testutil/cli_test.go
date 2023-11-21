@@ -24,6 +24,7 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/sanction"
@@ -33,8 +34,9 @@ import (
 func TestIntegrationTestSuite(t *testing.T) {
 	pioconfig.SetProvenanceConfig("", 0)
 	cfg := testutil.DefaultTestNetworkConfig()
-	cfg.NumValidators = 5
-	cfg.TimeoutCommit = 1 * time.Second
+	cfg.NumValidators = 2 // need at least 2 so that one can sanction the other.
+	cfg.ChainID = antewrapper.SimAppChainID
+	cfg.TimeoutCommit = 500 * time.Millisecond
 
 	// Define some stuff in the sanction genesis state.
 	sanctionedAddr1 := sdk.AccAddress("1_sanctioned_address_")
@@ -92,7 +94,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	s.Require().NoError(s.network.WaitForNextBlock(), "wait for next block 1")
 	authority := s.getAuthority()
 	proposerValI := 0
-	sanctionValI := 4
+	sanctionValI := 1
 	sanctMsg := &sanction.MsgSanction{
 		Addresses: []string{s.network.Validators[sanctionValI].Address.String()},
 		Authority: authority,

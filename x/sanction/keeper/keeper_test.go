@@ -51,12 +51,12 @@ func (s *KeeperTestSuite) TestKeeperMsgUrls() {
 		{
 			name: "msgSanctionTypeURL",
 			val:  s.Keeper.OnlyTestsGetMsgSanctionTypeURL(),
-			exp:  "/cosmos.sanction.v1beta1.MsgSanction",
+			exp:  "/provenance.sanction.v1.MsgSanction",
 		},
 		{
 			name: "msgUnsanctionTypeURL",
 			val:  s.Keeper.OnlyTestsGetMsgUnsanctionTypeURL(),
-			exp:  "/cosmos.sanction.v1beta1.MsgUnsanction",
+			exp:  "/provenance.sanction.v1.MsgUnsanction",
 		},
 		{
 			name: "msgExecLegacyContentTypeURL",
