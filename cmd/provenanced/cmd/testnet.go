@@ -44,6 +44,7 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -129,6 +130,7 @@ func InitTestnet(
 
 	nodeIDs := make([]string, numValidators)
 	valPubKeys := make([]cryptotypes.PubKey, numValidators)
+	valAddrs := make([]string, numValidators)
 
 	simappConfig := srvconfig.DefaultConfig()
 	simappConfig.MinGasPrices = minGasPrices
@@ -143,6 +145,7 @@ func InitTestnet(
 		genBalances []banktypes.Balance
 		genFiles    []string
 		genMarkers  []markertypes.MarkerAccount
+		genMarkets  []exchange.Market
 	)
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -216,6 +219,7 @@ func InitTestnet(
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
+		valAddrs[i] = addr.String()
 
 		valTokens := sdk.TokensFromConsensusPower(100, app.DefaultPowerReduction)
 		createValMsg, _ := stakingtypes.NewMsgCreateValidator(
@@ -277,7 +281,9 @@ func InitTestnet(
 
 	genMarkers = append(genMarkers, *markerAcc)
 
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genFiles, numValidators, pioconfig.GetProvenanceConfig().BondDenom); err != nil {
+	genMarkets = append(genMarkets, MakeDefaultMarket(pioconfig.GetProvenanceConfig().BondDenom, valAddrs))
+
+	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genMarkets, genFiles, numValidators, pioconfig.GetProvenanceConfig().BondDenom); err != nil {
 		return err
 	}
 
@@ -296,8 +302,8 @@ func InitTestnet(
 func initGenFiles(
 	clientCtx client.Context, mbm module.BasicManager, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
-	genMarkers []markertypes.MarkerAccount, genFiles []string, numValidators int,
-	chainDenom string,
+	genMarkers []markertypes.MarkerAccount, genMarkets []exchange.Market,
+	genFiles []string, numValidators int, chainDenom string,
 ) error {
 	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
 
@@ -391,6 +397,11 @@ func initGenFiles(
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[markertypes.ModuleName], &markerGenState)
 	markerGenState.Markers = genMarkers
 	appGenState[markertypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&markerGenState)
+
+	// Add the markets.
+	if err = addMarketsToAppState(clientCtx, appGenState, genMarkets...); err != nil {
+		return err
+	}
 
 	// END OF PROVENANCE SPECIFIC CONFIG
 	// --------------------------------------------

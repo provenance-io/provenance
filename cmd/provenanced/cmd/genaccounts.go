@@ -763,7 +763,7 @@ $ ` + version.AppName + ` add-genesis-custom-market \
 
 			// Create the market and add it to the app state.
 			market := MakeDefaultMarket(feeDenom, addrs)
-			return addMarketToAppState(clientCtx, appState, market)
+			return addMarketsToAppState(clientCtx, appState, market)
 		}),
 	}
 
@@ -811,7 +811,7 @@ func AddGenesisCustomMarketCmd(defaultNodeHome string) *cobra.Command {
 
 			// Now that we've read all the flags and stuff, no need to show usage with any errors anymore in here.
 			cmd.SilenceUsage = true
-			return addMarketToAppState(clientCtx, appState, msg.Market)
+			return addMarketsToAppState(clientCtx, appState, msg.Market)
 		}),
 	}
 
@@ -821,27 +821,29 @@ func AddGenesisCustomMarketCmd(defaultNodeHome string) *cobra.Command {
 	return cmd
 }
 
-// addMarketToAppState adds the given market to the app state in the exchange module.
-// If the provided market's MarketId is 0, the next available one will be identified and used.
-func addMarketToAppState(clientCtx client.Context, appState map[string]json.RawMessage, market exchange.Market) error {
-	if err := market.Validate(); err != nil {
-		return err
-	}
-
+// addMarketsToAppState adds the given markets to the app state in the exchange module.
+// If a provided market's MarketId is 0, the next available one will be identified and used.
+func addMarketsToAppState(clientCtx client.Context, appState map[string]json.RawMessage, markets ...exchange.Market) error {
 	cdc := clientCtx.Codec
 	var exGenState exchange.GenesisState
 	if err := cdc.UnmarshalJSON(appState[exchange.ModuleName], &exGenState); err != nil {
 		return fmt.Errorf("could not extract exchange genesis state: %w", err)
 	}
 
-	if market.MarketId == 0 {
-		market.MarketId = getNextAvailableMarketID(exGenState)
-		if exGenState.LastMarketId < market.MarketId {
-			exGenState.LastMarketId = market.MarketId
+	for _, market := range markets {
+		if err := market.Validate(); err != nil {
+			return err
 		}
-	}
 
-	exGenState.Markets = append(exGenState.Markets, market)
+		if market.MarketId == 0 {
+			market.MarketId = getNextAvailableMarketID(exGenState)
+			if exGenState.LastMarketId < market.MarketId {
+				exGenState.LastMarketId = market.MarketId
+			}
+		}
+
+		exGenState.Markets = append(exGenState.Markets, market)
+	}
 
 	exGenStateBz, err := cdc.MarshalJSON(&exGenState)
 	if err != nil {
