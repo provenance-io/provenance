@@ -47,14 +47,14 @@ const (
 	flagDenom = "denom"
 )
 
-// AppStateUpdater is a function that makes modifications to an app-state.
-// Use one in conjunction with UpdateGenesisFileRunE if your command only needs to parse
+// appStateUpdater is a function that makes modifications to an app-state.
+// Use one in conjunction with updateGenesisFileRunE if your command only needs to parse
 // some inputs to make additions or changes to app-state,
-type AppStateUpdater func(clientCtx client.Context, cmd *cobra.Command, args []string, appState map[string]json.RawMessage) error
+type appStateUpdater func(clientCtx client.Context, cmd *cobra.Command, args []string, appState map[string]json.RawMessage) error
 
-// UpdateGenesisFile reads the existing genesis file, runs the app-state through the
+// updateGenesisFile reads the existing genesis file, runs the app-state through the
 // provided updater, then saves the updated genesis state over the existing genesis file.
-func UpdateGenesisFile(cmd *cobra.Command, args []string, updater AppStateUpdater) error {
+func updateGenesisFile(cmd *cobra.Command, args []string, updater appStateUpdater) error {
 	clientCtx := client.GetClientContextFromCmd(cmd)
 	serverCtx := server.GetServerContextFromCmd(cmd)
 	config := serverCtx.Config
@@ -85,10 +85,10 @@ func UpdateGenesisFile(cmd *cobra.Command, args []string, updater AppStateUpdate
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
-// UpdateGenesisFileRunE returns a cobra.Command.RunE function that runs UpdateGenesisFile using the provided updater.
-func UpdateGenesisFileRunE(updater AppStateUpdater) func(*cobra.Command, []string) error {
+// updateGenesisFileRunE returns a cobra.Command.RunE function that runs updateGenesisFile using the provided updater.
+func updateGenesisFileRunE(updater appStateUpdater) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		return UpdateGenesisFile(cmd, args, updater)
+		return updateGenesisFile(cmd, args, updater)
 	}
 }
 
@@ -715,7 +715,7 @@ $ ` + version.AppName + ` add-genesis-custom-market \
 		Short:                 "Add a default market to the genesis file",
 		DisableFlagsInUseLine: true,
 		Args:                  cobra.NoArgs,
-		RunE: UpdateGenesisFileRunE(func(clientCtx client.Context, cmd *cobra.Command, _ []string, appState map[string]json.RawMessage) error {
+		RunE: updateGenesisFileRunE(func(clientCtx client.Context, cmd *cobra.Command, _ []string, appState map[string]json.RawMessage) error {
 			// Printing usage with the errors from here won't actually help anyone.
 			cmd.SilenceUsage = true
 
@@ -803,7 +803,7 @@ func AddGenesisCustomMarketCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-genesis-custom-market",
 		Short: "Add a market to the genesis file",
-		RunE: UpdateGenesisFileRunE(func(clientCtx client.Context, cmd *cobra.Command, args []string, appState map[string]json.RawMessage) error {
+		RunE: updateGenesisFileRunE(func(clientCtx client.Context, cmd *cobra.Command, args []string, appState map[string]json.RawMessage) error {
 			msg, err := exchangecli.MakeMsgGovCreateMarket(clientCtx, cmd.Flags(), args)
 			if err != nil {
 				return err
