@@ -762,7 +762,7 @@ $ ` + version.AppName + ` add-genesis-custom-market \
 			}
 
 			// Create the market and add it to the app state.
-			market := MakeDefaultMarket(feeDenom, addrs)
+			market := makeDefaultMarket(feeDenom, addrs)
 			return addMarketsToAppState(clientCtx, appState, market)
 		}),
 	}
@@ -772,25 +772,28 @@ $ ` + version.AppName + ` add-genesis-custom-market \
 	return cmd
 }
 
-// MakeDefaultMarket creates the default market that uses the provided fee denom
+// makeDefaultMarket creates the default market that uses the provided fee denom
 // and gives all permissions to each of the provided addrs.
-func MakeDefaultMarket(feeDenom string, addrs []string) exchange.Market {
-	creationFee := sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 100))
-	settlementFlat := sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 500))
-	settlementRatio := []exchange.FeeRatio{{Price: sdk.NewInt64Coin(feeDenom, 20), Fee: sdk.NewInt64Coin(feeDenom, 1)}}
+func makeDefaultMarket(feeDenom string, addrs []string) exchange.Market {
 	market := exchange.Market{
-		MarketDetails: exchange.MarketDetails{
-			Name: fmt.Sprintf("Default %s Market", feeDenom),
-		},
-		FeeCreateAskFlat:          creationFee,
-		FeeCreateBidFlat:          creationFee,
-		FeeSellerSettlementFlat:   settlementFlat,
-		FeeSellerSettlementRatios: settlementRatio,
-		FeeBuyerSettlementFlat:    settlementFlat,
-		FeeBuyerSettlementRatios:  settlementRatio,
-		AcceptingOrders:           true,
-		AllowUserSettlement:       true,
+		MarketDetails:       exchange.MarketDetails{Name: "Default Market"},
+		AcceptingOrders:     true,
+		AllowUserSettlement: true,
 	}
+
+	if len(feeDenom) > 0 {
+		creationFee := sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 100))
+		settlementFlat := sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 500))
+		settlementRatio := []exchange.FeeRatio{{Price: sdk.NewInt64Coin(feeDenom, 20), Fee: sdk.NewInt64Coin(feeDenom, 1)}}
+		market.MarketDetails.Name = fmt.Sprintf("Default %s Market", feeDenom)
+		market.FeeCreateAskFlat = creationFee
+		market.FeeCreateBidFlat = creationFee
+		market.FeeSellerSettlementFlat = settlementFlat
+		market.FeeSellerSettlementRatios = settlementRatio
+		market.FeeBuyerSettlementFlat = settlementFlat
+		market.FeeBuyerSettlementRatios = settlementRatio
+	}
+
 	for _, addr := range addrs {
 		market.AccessGrants = append(market.AccessGrants,
 			exchange.AccessGrant{Address: addr, Permissions: exchange.AllPermissions()})

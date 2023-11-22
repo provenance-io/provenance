@@ -281,7 +281,7 @@ func InitTestnet(
 
 	genMarkers = append(genMarkers, *markerAcc)
 
-	genMarkets = append(genMarkets, MakeDefaultMarket(pioconfig.GetProvenanceConfig().BondDenom, valAddrs))
+	genMarkets = append(genMarkets, makeDefaultMarket(pioconfig.GetProvenanceConfig().BondDenom, valAddrs))
 
 	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genMarkers, genMarkets, genFiles, numValidators, pioconfig.GetProvenanceConfig().BondDenom); err != nil {
 		return err
