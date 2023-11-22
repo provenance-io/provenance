@@ -1,4 +1,4 @@
-# `name`
+# `x/name`
 
 ## Overview
 
