@@ -46,17 +46,17 @@ $ provenanced tx authz revoke <grantee> <msg-type-url> --from <granter>
 ```
 
 
-See [GenericAuthorization](https://docs.cosmos.network/master/architecture/adr-030-authz-module.html#genericauthorization) specification for more details.
+See [GenericAuthorization](https://docs.cosmos.network/v0.47/build/modules/authz#genericauthorization) specification for more details.
 
 ## Special allowances
 
-Some messages in the `metadata` module have hierarchies. A grant on a parent message type will also work for any of 
-its message subtypes, but not the other way around. Therefore, authorizations on these messages are `one way`. 
+Some messages in the `metadata` module have hierarchies. A grant on a parent message type will also work for any of
+its message subtypes, but not the other way around. Therefore, authorizations on these messages are `one way`.
 
 - An authorization on `MsgWriteScopeRequest` works for any of the listed message subtypes:
   - `MsgAddScopeDataAccessRequest`
   - `MsgAddScopeDataAccessRequest`
-  - `MsgDeleteScopeDataAccessRequest` 
+  - `MsgDeleteScopeDataAccessRequest`
   - `MsgAddScopeOwnerRequest`
   - `MsgDeleteScopeOwnerRequest`
 
@@ -72,8 +72,8 @@ its message subtypes, but not the other way around. Therefore, authorizations on
 
 - An authorization on `MsgDeleteContractSpecificationRequest` works for any of the listed message subtypes:
     - `MsgDeleteRecordSpecificationRequest`
-    
 
-Notes: 
 
-An authorization on a `Write` endpoint for an entry/spec will NOT work for its `Delete` endpoint. 
+Notes:
+
+An authorization on a `Write` endpoint for an entry/spec will NOT work for its `Delete` endpoint.

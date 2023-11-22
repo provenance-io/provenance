@@ -1,10 +1,8 @@
-# `msgfees`
+# `x/msgfees`
 
 ## Overview
 
 The msg fees modules manages additional fees that can be applied to tx msgs specified through governance.
-
-
 
 ## Contents
 

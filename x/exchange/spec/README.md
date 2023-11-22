@@ -1,4 +1,4 @@
-# `Exchange`
+# `x/exchange`
 
 ## Overview
 
