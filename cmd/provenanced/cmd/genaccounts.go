@@ -21,7 +21,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/provenance-io/provenance/x/exchange"
+	exchangecli "github.com/provenance-io/provenance/x/exchange/client/cli"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -40,7 +43,54 @@ const (
 	flagEscrow   = "escrow"
 	flagActivate = "activate"
 	flagFinalize = "finalize"
+
+	flagDenom = "denom"
 )
+
+// AppStateUpdater is a function that makes modifications to an app-state.
+// Use one in conjunction with UpdateGenesisFileRunE if your command only needs to parse
+// some inputs to make additions or changes to app-state,
+type AppStateUpdater func(clientCtx client.Context, cmd *cobra.Command, args []string, appState map[string]json.RawMessage) error
+
+// UpdateGenesisFile reads the existing genesis file, runs the app-state through the
+// provided updater, then saves the updated genesis state over the existing genesis file.
+func UpdateGenesisFile(cmd *cobra.Command, args []string, updater AppStateUpdater) error {
+	clientCtx := client.GetClientContextFromCmd(cmd)
+	serverCtx := server.GetServerContextFromCmd(cmd)
+	config := serverCtx.Config
+	config.SetRoot(clientCtx.HomeDir)
+	genFile := config.GenesisFile()
+
+	// Get existing gen state
+	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+	if err != nil {
+		cmd.SilenceUsage = true
+		return fmt.Errorf("failed to read genesis file: %w", err)
+	}
+
+	err = updater(clientCtx, cmd, args, appState)
+	if err != nil {
+		return err
+	}
+
+	// None of the possible errors that might come after this will be helped by printing usage with them.
+	cmd.SilenceUsage = true
+
+	appStateJSON, err := json.Marshal(appState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal application genesis state: %w", err)
+	}
+
+	genDoc.AppState = appStateJSON
+	return genutil.ExportGenesisFile(genDoc, genFile)
+}
+
+// UpdateGenesisFileRunE returns a cobra.Command.RunE function that runs UpdateGenesisFile using the provided updater.
+func UpdateGenesisFileRunE(updater AppStateUpdater) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		return UpdateGenesisFile(cmd, args, updater)
+	}
+}
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
 func AddGenesisAccountCmd(defaultNodeHome string) *cobra.Command {
@@ -639,4 +689,182 @@ func checkMsgTypeValid(registry types.InterfaceRegistry, msgTypeURL string) erro
 		return fmt.Errorf("message type is not a sdk message: %v", msgTypeURL)
 	}
 	return err
+}
+
+// AddGenesisDefaultMarketCmd returns add-genesis-default-market cobra command.
+func AddGenesisDefaultMarketCmd(defaultNodeHome string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use: `add-genesis-default-market [--denom <denom>]
+
+All base accounts already in the genesis file will be given all permissions on this market.
+An error is returned if no such accounts are in the existing genesis file.
+
+If --denom <denom> is not provided, the staking bond denom is used.
+If no staking bond denom is defined either, then nhash is used.
+
+This command is equivalent to the following command:
+$ ` + version.AppName + ` add-genesis-custom-market \
+    --name 'Default <denom> Market' \
+    --create-ask 100<denom> --create-bid 100<denom> \
+    --seller-flat 500<denom> --buyer-flat 500<denom> \
+    --seller-ratios 20<denom>:1<denom> --buyer-ratios 20<denom>:1<denom> \
+    --accepting-orders --allow-user-settle \
+	--access-grants <all permissions to all known base accounts>
+
+`,
+		Short:                 "Add a default market to the genesis file",
+		DisableFlagsInUseLine: true,
+		Args:                  cobra.NoArgs,
+		RunE: UpdateGenesisFileRunE(func(clientCtx client.Context, cmd *cobra.Command, _ []string, appState map[string]json.RawMessage) error {
+			// Printing usage with the errors from here won't actually help anyone.
+			cmd.SilenceUsage = true
+
+			// Identify the accounts that will get all the permissions.
+			var authGen authtypes.GenesisState
+			err := clientCtx.Codec.UnmarshalJSON(appState[authtypes.ModuleName], &authGen)
+			if err != nil {
+				return fmt.Errorf("could not extract auth genesis state: %w", err)
+			}
+			genAccts, err := authtypes.UnpackAccounts(authGen.Accounts)
+			if err != nil {
+				return fmt.Errorf("could not unpack genesis acounts: %w", err)
+			}
+			addrs := make([]string, 0, len(genAccts))
+			for _, acct := range genAccts {
+				// We specifically only want accounts that are base accounts (i.e. no markers or others).
+				// This should also include the validator accounts (that have already been added).
+				baseAcct, ok := acct.(*authtypes.BaseAccount)
+				if ok {
+					addrs = append(addrs, baseAcct.Address)
+				}
+			}
+			if len(addrs) == 0 {
+				return errors.New("genesis file must have one or more BaseAccount before a default market can be added")
+			}
+
+			// Identify the denom that we'll use for the fees.
+			feeDenom, err := cmd.Flags().GetString(flagDenom)
+			if err != nil {
+				return fmt.Errorf("error reading --%s value: %w", flagDenom, err)
+			}
+			if len(feeDenom) == 0 {
+				var stGen stakingtypes.GenesisState
+				err = clientCtx.Codec.UnmarshalJSON(appState[stakingtypes.ModuleName], &stGen)
+				if err == nil {
+					feeDenom = stGen.Params.BondDenom
+				}
+			}
+			if len(feeDenom) == 0 {
+				feeDenom = "nhash"
+			}
+			if err = sdk.ValidateDenom(feeDenom); err != nil {
+				return err
+			}
+
+			// Create the market and add it to the app state.
+			market := MakeDefaultMarket(feeDenom, addrs)
+			return addMarketToAppState(clientCtx, appState, market)
+		}),
+	}
+
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	cmd.Flags().String(flagDenom, "", "The fee denom for the market")
+	return cmd
+}
+
+// MakeDefaultMarket creates the default market that uses the provided fee denom
+// and gives all permissions to each of the provided addrs.
+func MakeDefaultMarket(feeDenom string, addrs []string) exchange.Market {
+	creationFee := sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 100))
+	settlementFlat := sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 500))
+	settlementRatio := []exchange.FeeRatio{{Price: sdk.NewInt64Coin(feeDenom, 20), Fee: sdk.NewInt64Coin(feeDenom, 1)}}
+	market := exchange.Market{
+		MarketDetails: exchange.MarketDetails{
+			Name: fmt.Sprintf("Default %s Market", feeDenom),
+		},
+		FeeCreateAskFlat:          creationFee,
+		FeeCreateBidFlat:          creationFee,
+		FeeSellerSettlementFlat:   settlementFlat,
+		FeeSellerSettlementRatios: settlementRatio,
+		FeeBuyerSettlementFlat:    settlementFlat,
+		FeeBuyerSettlementRatios:  settlementRatio,
+		AcceptingOrders:           true,
+		AllowUserSettlement:       true,
+	}
+	for _, addr := range addrs {
+		market.AccessGrants = append(market.AccessGrants,
+			exchange.AccessGrant{Address: addr, Permissions: exchange.AllPermissions()})
+	}
+	return market
+}
+
+// AddGenesisCustomMarketCmd returns add-genesis-custom-market cobra command.
+func AddGenesisCustomMarketCmd(defaultNodeHome string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-genesis-custom-market",
+		Short: "Add a market to the genesis file",
+		RunE: UpdateGenesisFileRunE(func(clientCtx client.Context, cmd *cobra.Command, args []string, appState map[string]json.RawMessage) error {
+			msg, err := exchangecli.MakeMsgGovCreateMarket(clientCtx, cmd.Flags(), args)
+			if err != nil {
+				return err
+			}
+
+			// Now that we've read all the flags and stuff, no need to show usage with any errors anymore in here.
+			cmd.SilenceUsage = true
+			return addMarketToAppState(clientCtx, appState, msg.Market)
+		}),
+	}
+
+	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	exchangecli.SetupCmdTxGovCreateMarket(cmd)
+	exchangecli.AddUseDetails(cmd, "If no <market id> is provided, the next available one will be used.")
+	return cmd
+}
+
+// addMarketToAppState adds the given market to the app state in the exchange module.
+// If the provided market's MarketId is 0, the next available one will be identified and used.
+func addMarketToAppState(clientCtx client.Context, appState map[string]json.RawMessage, market exchange.Market) error {
+	if err := market.Validate(); err != nil {
+		return err
+	}
+
+	cdc := clientCtx.Codec
+	var exGenState exchange.GenesisState
+	if err := cdc.UnmarshalJSON(appState[exchange.ModuleName], &exGenState); err != nil {
+		return fmt.Errorf("could not extract exchange genesis state: %w", err)
+	}
+
+	if market.MarketId == 0 {
+		market.MarketId = getNextAvailableMarketID(exGenState)
+		if exGenState.LastMarketId < market.MarketId {
+			exGenState.LastMarketId = market.MarketId
+		}
+	}
+
+	exGenState.Markets = append(exGenState.Markets, market)
+
+	exGenStateBz, err := cdc.MarshalJSON(&exGenState)
+	if err != nil {
+		return fmt.Errorf("failed to marshal exchange genesis state: %w", err)
+	}
+	appState[exchange.ModuleName] = exGenStateBz
+	return nil
+}
+
+// getNextAvailableMarketID returns the next available market id given all the markets in the provided genesis state.
+func getNextAvailableMarketID(exGenState exchange.GenesisState) uint32 {
+	if len(exGenState.Markets) == 0 {
+		return 1
+	}
+
+	marketIDsMap := make(map[uint32]bool, len(exGenState.Markets))
+	for _, market := range exGenState.Markets {
+		marketIDsMap[market.MarketId] = true
+	}
+
+	rv := uint32(1)
+	for marketIDsMap[rv] {
+		rv++
+	}
+	return rv
 }
