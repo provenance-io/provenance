@@ -829,8 +829,10 @@ func AddGenesisCustomMarketCmd(defaultNodeHome string) *cobra.Command {
 func addMarketsToAppState(clientCtx client.Context, appState map[string]json.RawMessage, markets ...exchange.Market) error {
 	cdc := clientCtx.Codec
 	var exGenState exchange.GenesisState
-	if err := cdc.UnmarshalJSON(appState[exchange.ModuleName], &exGenState); err != nil {
-		return fmt.Errorf("could not extract exchange genesis state: %w", err)
+	if len(appState[exchange.ModuleName]) > 0 {
+		if err := cdc.UnmarshalJSON(appState[exchange.ModuleName], &exGenState); err != nil {
+			return fmt.Errorf("could not extract exchange genesis state: %w", err)
+		}
 	}
 
 	for _, market := range markets {

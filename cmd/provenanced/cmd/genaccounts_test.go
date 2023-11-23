@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -17,13 +18,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	"github.com/provenance-io/provenance/app"
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
@@ -175,7 +179,249 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 	}
 }
 
-// TODO[1757]: func TestAddGenesisDefaultMarketCmd(t *testing.T)
+// fixEmptiesInExchangeGenState updates all nil slices to be empty slices.
+// The UnmarshalJSON function uses empty slices instead of nil, but it's cleaner and
+// easier to define test cases by setting stuff to nil (or omitting the field completely).
+func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
+	if exGenState.Params != nil && exGenState.Params.DenomSplits == nil {
+		exGenState.Params.DenomSplits = make([]exchange.DenomSplit, 0)
+	}
+
+	if exGenState.Markets == nil {
+		exGenState.Markets = make([]exchange.Market, 0)
+	}
+	for i, market := range exGenState.Markets {
+		if market.FeeCreateAskFlat == nil {
+			exGenState.Markets[i].FeeCreateAskFlat = make([]sdk.Coin, 0)
+		}
+		if market.FeeCreateBidFlat == nil {
+			exGenState.Markets[i].FeeCreateBidFlat = make([]sdk.Coin, 0)
+		}
+		if market.FeeSellerSettlementFlat == nil {
+			exGenState.Markets[i].FeeSellerSettlementFlat = make([]sdk.Coin, 0)
+		}
+		if market.FeeSellerSettlementRatios == nil {
+			exGenState.Markets[i].FeeSellerSettlementRatios = make([]exchange.FeeRatio, 0)
+		}
+		if market.FeeBuyerSettlementFlat == nil {
+			exGenState.Markets[i].FeeBuyerSettlementFlat = make([]sdk.Coin, 0)
+		}
+		if market.FeeBuyerSettlementRatios == nil {
+			exGenState.Markets[i].FeeBuyerSettlementRatios = make([]exchange.FeeRatio, 0)
+		}
+		if market.ReqAttrCreateAsk == nil {
+			exGenState.Markets[i].ReqAttrCreateAsk = make([]string, 0)
+		}
+		if market.ReqAttrCreateBid == nil {
+			exGenState.Markets[i].ReqAttrCreateBid = make([]string, 0)
+		}
+		if market.AccessGrants == nil {
+			exGenState.Markets[i].AccessGrants = make([]exchange.AccessGrant, 0)
+		}
+		for j, ag := range market.AccessGrants {
+			if ag.Permissions == nil {
+				exGenState.Markets[i].AccessGrants[j].Permissions = make([]exchange.Permission, 0)
+			}
+		}
+	}
+
+	if exGenState.Orders == nil {
+		exGenState.Orders = make([]exchange.Order, 0)
+	}
+	for _, order := range exGenState.Orders {
+		if bid := order.GetBidOrder(); bid != nil && bid.BuyerSettlementFees == nil {
+			bid.BuyerSettlementFees = make(sdk.Coins, 0)
+		}
+	}
+}
+
+func TestAddGenesisDefaultMarketCmd(t *testing.T) {
+	expDefaultMarket := func(marketID uint32, denom string, addrs ...string) exchange.Market {
+		rv := provenancecmd.MakeDefaultMarket(denom, addrs)
+		rv.MarketId = marketID
+		return rv
+	}
+	addrs := []string{
+		sdk.AccAddress("one_________________").String(),
+		sdk.AccAddress("two_________________").String(),
+		sdk.AccAddress("three_______________").String(),
+	}
+
+	tests := []struct {
+		name          string
+		iniAddrs      []string
+		iniExGenState *exchange.GenesisState
+		args          []string
+		expErr        string
+		expExGenState exchange.GenesisState
+	}{
+		{
+			name:          "Incorrect usage",
+			iniExGenState: exchange.DefaultGenesisState(),
+			args:          []string{"--denom"},
+			expErr:        "flag needs an argument: --denom",
+		},
+		{
+			name:     "no exchange gen state in file, default denom",
+			args:     []string{},
+			iniAddrs: addrs[1:2],
+			expExGenState: exchange.GenesisState{
+				Markets: []exchange.Market{
+					expDefaultMarket(1, "nhash", addrs[1]),
+				},
+				LastMarketId: 1,
+			},
+		},
+		{
+			name:          "default exchange gen state in file, denom provided",
+			iniAddrs:      addrs,
+			iniExGenState: exchange.DefaultGenesisState(),
+			args:          []string{"--denom", "vspn"},
+			expExGenState: exchange.GenesisState{
+				Params: exchange.DefaultParams(),
+				Markets: []exchange.Market{
+					expDefaultMarket(1, "vspn", addrs...),
+				},
+				LastMarketId: 1,
+			},
+		},
+		{
+			name:     "file already has two markets",
+			iniAddrs: addrs[0:2],
+			iniExGenState: &exchange.GenesisState{
+				Params: &exchange.Params{DefaultSplit: 432},
+				Markets: []exchange.Market{
+					{
+						MarketId:            1,
+						MarketDetails:       exchange.MarketDetails{Name: "Market One"},
+						AcceptingOrders:     true,
+						AllowUserSettlement: true,
+					},
+					{
+						MarketId:            53,
+						MarketDetails:       exchange.MarketDetails{Name: "Market One"},
+						AcceptingOrders:     true,
+						AllowUserSettlement: true,
+					},
+				},
+				LastMarketId: 4,
+				LastOrderId:  88,
+			},
+			args: []string{"--denom", "fruit"},
+			expExGenState: exchange.GenesisState{
+				Params: &exchange.Params{DefaultSplit: 432},
+				Markets: []exchange.Market{
+					{
+						MarketId:            1,
+						MarketDetails:       exchange.MarketDetails{Name: "Market One"},
+						AcceptingOrders:     true,
+						AllowUserSettlement: true,
+					},
+					{
+						MarketId:            53,
+						MarketDetails:       exchange.MarketDetails{Name: "Market One"},
+						AcceptingOrders:     true,
+						AllowUserSettlement: true,
+					},
+					expDefaultMarket(2, "fruit", addrs[0], addrs[1]),
+				},
+				LastMarketId: 4,
+				LastOrderId:  88,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			fixEmptiesInExchangeGenState(&tc.expExGenState)
+
+			// Create a new home dir and initialize it.
+			home := t.TempDir()
+			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+			require.NoError(t, err, "setup: CreateDefaultTendermintConfig(%q)", home)
+			cdc := sdksim.MakeTestEncodingConfig().Codec
+			err = genutiltest.ExecInitCmd(testMbm, home, cdc)
+			require.NoError(t, err, "setup: ExecInitCmd")
+
+			// Update the new genesis file to have the exchange genesis
+			// state and just the accounts defined by this test case.
+			genFile := cfg.GenesisFile()
+			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+			require.NoError(t, err, "setup: GenesisStateFromGenFile")
+
+			genDoc.GenesisTime = time.Unix(1618935600, 0) // 2021-04-20 16:20:00 +0000
+
+			if tc.iniExGenState != nil {
+				appState[exchange.ModuleName], err = cdc.MarshalJSON(tc.iniExGenState)
+				require.NoError(t, err, "setup: MarshalJSON exchange genesis state")
+			} else {
+				if _, found := appState[exchange.ModuleName]; found {
+					delete(appState, exchange.ModuleName)
+				}
+			}
+
+			var authState authtypes.GenesisState
+			if len(appState[authtypes.ModuleName]) > 0 {
+				err = cdc.UnmarshalJSON(appState[authtypes.ModuleName], &authState)
+				require.NoError(t, err, "setup: UnmarshalJSON auth genesis state")
+			}
+
+			oldAccs := authState.Accounts
+			authState.Accounts = make([]*codectypes.Any, 0, len(oldAccs)+len(tc.iniAddrs))
+			for _, acc := range oldAccs {
+				_, isBase := acc.GetCachedValue().(*authtypes.BaseAccount)
+				if !isBase {
+					authState.Accounts = append(authState.Accounts, acc)
+				}
+			}
+
+			newAccs := make([]authtypes.GenesisAccount, len(tc.iniAddrs))
+			for i, addr := range tc.iniAddrs {
+				accAddr, addrErr := sdk.AccAddressFromBech32(addr)
+				require.NoError(t, addrErr, "setup: [%d]: AccAddressFromBech32(%q)", i, addr)
+				newAccs[i] = authtypes.NewBaseAccountWithAddress(accAddr)
+			}
+			newAccAnys, err := authtypes.PackAccounts(newAccs)
+			require.NoError(t, err, "setup: PackAccounts")
+			authState.Accounts = append(authState.Accounts, newAccAnys...)
+
+			appState[authtypes.ModuleName], err = cdc.MarshalJSON(&authState)
+			require.NoError(t, err, "MarshalJSON auth genesis state")
+
+			genDoc.AppState, err = json.Marshal(appState)
+			require.NoError(t, err, "setup: Marshal app state")
+			err = genutil.ExportGenesisFile(genDoc, genFile)
+			require.NoError(t, err, "setup: ExportGenesisFile")
+
+			// Create the contexts and set up the command.
+			logger := log.NewNopLogger()
+			serverCtx := server.NewContext(viper.New(), cfg, logger)
+			clientCtx := client.Context{}.WithCodec(cdc).WithHomeDir(home)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+			cmd := provenancecmd.AddGenesisDefaultMarketCmd(home)
+			cmd.SetArgs(tc.args)
+
+			// Run it!
+			err = cmd.ExecuteContext(ctx)
+			assertions.AssertErrorValue(t, err, tc.expErr, "%q ExecuteContext", cmd.Name())
+
+			if len(tc.expErr) > 0 || err != nil {
+				return
+			}
+
+			appState, genDoc, err = genutiltypes.GenesisStateFromGenFile(genFile)
+			require.NoError(t, err, "GenesisStateFromGenFile(%q)", genFile)
+			var actExGenState exchange.GenesisState
+			err = cdc.UnmarshalJSON(appState[exchange.ModuleName], &actExGenState)
+			require.NoError(t, err, "UnmarshalJSON exchange genesis state")
+			assert.Equal(t, tc.expExGenState, actExGenState, "genesis state after %s", cmd.Name())
+		})
+	}
+}
 
 func TestMakeDefaultMarket(t *testing.T) {
 	addrs := []string{
@@ -303,7 +549,168 @@ func TestMakeDefaultMarket(t *testing.T) {
 	}
 }
 
-// TODO[1757]: func TestAddGenesisCustomMarketCmd(t *testing.T)
+func TestAddGenesisCustomMarketCmd(t *testing.T) {
+	tests := []struct {
+		name          string
+		iniExGenState *exchange.GenesisState
+		args          []string
+		expErr        string
+		expExGenState exchange.GenesisState
+	}{
+		{
+			name:          "Incorrect usage",
+			iniExGenState: exchange.DefaultGenesisState(),
+			args:          []string{"--create-ask", "nhash"},
+			expErr:        "invalid coin expression: \"nhash\"",
+		},
+		{
+			name: "no exchange gen state in file",
+			args: []string{"--name", "My New Market", "--accepting-orders"},
+			expExGenState: exchange.GenesisState{
+				Markets: []exchange.Market{
+					{
+						MarketId:        1,
+						MarketDetails:   exchange.MarketDetails{Name: "My New Market"},
+						AcceptingOrders: true,
+					},
+				},
+				LastMarketId: 1,
+			},
+		},
+		{
+			name:          "default exchange gen state in file",
+			iniExGenState: exchange.DefaultGenesisState(),
+			args:          []string{"--name", "THE market", "--market", "6"},
+			expExGenState: exchange.GenesisState{
+				Params: exchange.DefaultParams(),
+				Markets: []exchange.Market{
+					{
+						MarketId:      6,
+						MarketDetails: exchange.MarketDetails{Name: "THE market"},
+					},
+				},
+			},
+		},
+		{
+			name: "file already has two markets",
+			iniExGenState: &exchange.GenesisState{
+				Params: &exchange.Params{DefaultSplit: 432},
+				Markets: []exchange.Market{
+					{
+						MarketId:            1,
+						MarketDetails:       exchange.MarketDetails{Name: "Market One"},
+						AcceptingOrders:     true,
+						AllowUserSettlement: true,
+					},
+					{
+						MarketId:            53,
+						MarketDetails:       exchange.MarketDetails{Name: "Market One"},
+						AcceptingOrders:     true,
+						AllowUserSettlement: true,
+					},
+				},
+				LastMarketId: 4,
+				LastOrderId:  88,
+			},
+			args: []string{"--name", "A Better Market", "--create-bid", "50nhash", "--create-ask", "30nhash",
+				"--accepting-orders", "--access-grants", sdk.AccAddress("addr1_______________").String() + ":all"},
+			expExGenState: exchange.GenesisState{
+				Params: &exchange.Params{DefaultSplit: 432},
+				Markets: []exchange.Market{
+					{
+						MarketId:            1,
+						MarketDetails:       exchange.MarketDetails{Name: "Market One"},
+						AcceptingOrders:     true,
+						AllowUserSettlement: true,
+					},
+					{
+						MarketId:            53,
+						MarketDetails:       exchange.MarketDetails{Name: "Market One"},
+						AcceptingOrders:     true,
+						AllowUserSettlement: true,
+					},
+					{
+						MarketId:         2,
+						MarketDetails:    exchange.MarketDetails{Name: "A Better Market"},
+						FeeCreateAskFlat: []sdk.Coin{sdk.NewInt64Coin("nhash", 30)},
+						FeeCreateBidFlat: []sdk.Coin{sdk.NewInt64Coin("nhash", 50)},
+						AcceptingOrders:  true,
+						AccessGrants: []exchange.AccessGrant{
+							{
+								Address:     sdk.AccAddress("addr1_______________").String(),
+								Permissions: exchange.AllPermissions(),
+							},
+						},
+					},
+				},
+				LastMarketId: 4,
+				LastOrderId:  88,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			fixEmptiesInExchangeGenState(&tc.expExGenState)
+
+			// Create a new home dir and initialize it.
+			home := t.TempDir()
+			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+			require.NoError(t, err, "setup: CreateDefaultTendermintConfig(%q)", home)
+			cdc := sdksim.MakeTestEncodingConfig().Codec
+			err = genutiltest.ExecInitCmd(testMbm, home, cdc)
+			require.NoError(t, err, "setup: ExecInitCmd")
+
+			// Update the new genesis file to have the exchange genesis state defined by this test case.
+			genFile := cfg.GenesisFile()
+			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+			require.NoError(t, err, "setup: GenesisStateFromGenFile")
+
+			genDoc.GenesisTime = time.Unix(1618935600, 0) // 2021-04-20 16:20:00 +0000
+
+			if tc.iniExGenState != nil {
+				appState[exchange.ModuleName], err = cdc.MarshalJSON(tc.iniExGenState)
+				require.NoError(t, err, "setup: MarshalJSON exchange genesis state")
+			} else {
+				if _, found := appState[exchange.ModuleName]; found {
+					delete(appState, exchange.ModuleName)
+				}
+			}
+
+			genDoc.AppState, err = json.Marshal(appState)
+			require.NoError(t, err, "setup: Marshal app state")
+			err = genutil.ExportGenesisFile(genDoc, genFile)
+			require.NoError(t, err, "setup: ExportGenesisFile")
+
+			// Create the contexts and set up the command.
+			logger := log.NewNopLogger()
+			serverCtx := server.NewContext(viper.New(), cfg, logger)
+			clientCtx := client.Context{}.WithCodec(cdc).WithHomeDir(home)
+
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+			cmd := provenancecmd.AddGenesisCustomMarketCmd(home)
+			cmd.SetArgs(tc.args)
+
+			// Run it!
+			err = cmd.ExecuteContext(ctx)
+			assertions.AssertErrorValue(t, err, tc.expErr, "%q ExecuteContext", cmd.Name())
+
+			if len(tc.expErr) > 0 || err != nil {
+				return
+			}
+
+			appState, genDoc, err = genutiltypes.GenesisStateFromGenFile(genFile)
+			require.NoError(t, err, "GenesisStateFromGenFile(%q)", genFile)
+			var actExGenState exchange.GenesisState
+			err = cdc.UnmarshalJSON(appState[exchange.ModuleName], &actExGenState)
+			require.NoError(t, err, "UnmarshalJSON exchange genesis state")
+			assert.Equal(t, tc.expExGenState, actExGenState, "genesis state after %s", cmd.Name())
+		})
+	}
+}
 
 func TestAddMarketsToAppState(t *testing.T) {
 	askOrder := *exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
@@ -406,46 +813,7 @@ func TestAddMarketsToAppState(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// In UnmarshalJSON, empty lists are set to an empty slice instead of nil.
-			// So, in all the slices in the expExGenState, we need to set them if they're nil.
-			if tc.expExGenState.Markets == nil {
-				tc.expExGenState.Markets = make([]exchange.Market, 0)
-			}
-			if tc.expExGenState.Orders == nil {
-				tc.expExGenState.Orders = make([]exchange.Order, 0)
-			}
-			if tc.expExGenState.Params != nil && tc.expExGenState.Params.DenomSplits == nil {
-				tc.expExGenState.Params.DenomSplits = make([]exchange.DenomSplit, 0)
-			}
-			for i, market := range tc.expExGenState.Markets {
-				if market.FeeCreateAskFlat == nil {
-					tc.expExGenState.Markets[i].FeeCreateAskFlat = make([]sdk.Coin, 0)
-				}
-				if market.FeeCreateBidFlat == nil {
-					tc.expExGenState.Markets[i].FeeCreateBidFlat = make([]sdk.Coin, 0)
-				}
-				if market.FeeSellerSettlementFlat == nil {
-					tc.expExGenState.Markets[i].FeeSellerSettlementFlat = make([]sdk.Coin, 0)
-				}
-				if market.FeeSellerSettlementRatios == nil {
-					tc.expExGenState.Markets[i].FeeSellerSettlementRatios = make([]exchange.FeeRatio, 0)
-				}
-				if market.FeeBuyerSettlementFlat == nil {
-					tc.expExGenState.Markets[i].FeeBuyerSettlementFlat = make([]sdk.Coin, 0)
-				}
-				if market.FeeBuyerSettlementRatios == nil {
-					tc.expExGenState.Markets[i].FeeBuyerSettlementRatios = make([]exchange.FeeRatio, 0)
-				}
-				if market.ReqAttrCreateAsk == nil {
-					tc.expExGenState.Markets[i].ReqAttrCreateAsk = make([]string, 0)
-				}
-				if market.ReqAttrCreateBid == nil {
-					tc.expExGenState.Markets[i].ReqAttrCreateBid = make([]string, 0)
-				}
-				if market.AccessGrants == nil {
-					tc.expExGenState.Markets[i].AccessGrants = make([]exchange.AccessGrant, 0)
-				}
-			}
+			fixEmptiesInExchangeGenState(&tc.expExGenState)
 
 			appCdc := sdksim.MakeTestEncodingConfig().Codec
 			egsBz, err := appCdc.MarshalJSON(&tc.exGenState)
