@@ -74,11 +74,7 @@ func TestGenAutoCompleteCmd(t *testing.T) {
 			rootCmd, _ := cmd.NewRootCmd(false)
 			rootCmd.SetArgs(args)
 			err := cmd.Execute(rootCmd)
-			if len(tc.err) > 0 {
-				assertions.AssertErrorValue(t, err, tc.err, "should have correct error")
-			} else {
-				require.NoError(t, err, "should not output error on command execution")
-			}
+			assertions.AssertErrorValue(t, err, tc.err, "should have the correct output value")
 		})
 	}
 }
