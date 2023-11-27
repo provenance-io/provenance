@@ -1,4 +1,4 @@
-# `trigger`
+# `x/trigger`
 
 ## Overview
 
