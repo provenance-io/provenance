@@ -185,7 +185,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 func genAutoCompleteCmd(rootCmd *cobra.Command) {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "enable-cli-autocomplete [bash|zsh|fish|powershell]",
-		Short: "Generates cli completion scripts",
+		Short: "Generates autocomplete scripts for the provenanced binary",
 		Long: `To configure your shell to load completions for each session, add to your profile:
 
 # bash example
