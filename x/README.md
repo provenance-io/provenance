@@ -18,5 +18,6 @@ Provenance uses inherited modules from the Cosmos SDK, and has also developed mo
 * [msgfees](./msgfees/README.md) - Manages additional fees that can be applied to tx msgs.
 * [Name](./name/README.md) - Provides a system for providing human-readable names as aliases for addresses.
 * [Oracle](./oracle/README.md) - Provides the capability to dynamically expose query endpoints.
+* [Quarantine](./quarantine/spec/README.md) - Allows extra account security from unwanted funds.
 * [Reward](./reward/README.md) - Provides a system for distributing rewards to accounts.
 * [Trigger](./trigger/README.md) - Provides a system for triggering transactions based on predeterminded events.
