@@ -40,7 +40,7 @@ func NewIBCMiddleware(app porttypes.IBCModule,
 	}
 }
 
-// WithIBCModule Creates a copy of the Middleware with the base application set.
+// WithIBCModule Updates the Middleware's baseapp and returns it.
 func (im *IBCMiddleware) WithIBCModule(app porttypes.IBCModule) *IBCMiddleware {
 	im.app = app
 	return im
