@@ -47,7 +47,7 @@ func (im *IBCMiddleware) WithIBCModule(app porttypes.IBCModule) *IBCMiddleware {
 }
 
 // OnChanOpenInit implements the IBCModule interface
-func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context,
+func (im *IBCMiddleware) OnChanOpenInit(ctx sdk.Context,
 	order channeltypes.Order,
 	connectionHops []string,
 	portID string,
