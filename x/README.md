@@ -19,4 +19,5 @@ Provenance uses inherited modules from the Cosmos SDK, and has also developed mo
 * [Name](./name/README.md) - Provides a system for providing human-readable names as aliases for addresses.
 * [Oracle](./oracle/README.md) - Provides the capability to dynamically expose query endpoints.
 * [Reward](./reward/README.md) - Provides a system for distributing rewards to accounts.
+* [Sanction](./sanction/spec/README.md) - Provides a mechanism for sanctioning accounts.
 * [Trigger](./trigger/README.md) - Provides a system for triggering transactions based on predeterminded events.
