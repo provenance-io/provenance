@@ -25,7 +25,6 @@ import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 
-	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -211,7 +210,6 @@ func makeDummyCmd(t *testing.T, home string) *cobra.Command {
 }
 
 func TestPreUpgradeCmd(t *testing.T) {
-	app.SetConfig(true, false)
 	pioconfig.SetProvenanceConfig("", 0)
 
 	tmpDir := t.TempDir()
