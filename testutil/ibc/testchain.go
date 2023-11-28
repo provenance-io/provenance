@@ -45,7 +45,7 @@ func (chain *TestChain) StoreContractEchoDirect(suite *suite.Suite) uint64 {
 
 func (chain *TestChain) StoreContractRateLimiterDirect(suite *suite.Suite) uint64 {
 	codeID, err := contracts.StoreContractCode(chain.GetProvenanceApp(), chain.GetContext(), contracts.RateLimiterWasm())
-	suite.Require().NoError(err, "rate limiter contract direct code load failed", err)
+	suite.Require().NoError(err, "rate limiter contract direct code load failed")
 	println("loaded rate limiter contract with code id: ", codeID)
 	return codeID
 }
@@ -59,7 +59,7 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, code
 
 func (chain *TestChain) PinContract(suite *suite.Suite, codeID uint64) {
 	err := contracts.PinContract(chain.GetProvenanceApp(), chain.GetContext(), codeID)
-	suite.Require().NoError(err, "contract pin failed", err)
+	suite.Require().NoError(err, "contract pin failed")
 }
 
 func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddress, key []byte) string {
