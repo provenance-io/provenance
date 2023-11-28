@@ -36,7 +36,7 @@ For more information on the many TradFi institutions and Fintechs leveraging the
 
 ## Quick Start
 
-As the [Provenance Blockchain][provenance] and its core modules are based on the [Cosmos SDK][cosmos], [this introduction](https://docs.cosmos.network/main/learn/intro/overview) into Cosmos is a useful starting point.
+As the [Provenance Blockchain][provenance] and its core modules are based on the [Cosmos SDK][cosmos], [this introduction](https://docs.cosmos.network/v0.47/learn/intro/overview) into Cosmos is a useful starting point.
 
 Developers can use a local checkout and the make targets `make run` and `make localnet-start` to run a local development network.
 
