@@ -25,7 +25,7 @@ func ContractFn(r *rand.Rand, accs []simtypes.Account) string {
 	return randomAccount[0].Address.String()
 }
 
-// RandomizedGenState generates a random GenesisState for trigger
+// RandomizedGenState generates a random GenesisState for ibcratelimit
 func RandomizedGenState(simState *module.SimulationState) {
 	var contract string
 	simState.AppParams.GetOrGenerate(
