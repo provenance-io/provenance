@@ -15,7 +15,7 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"

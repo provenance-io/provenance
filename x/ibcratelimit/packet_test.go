@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/stretchr/testify/assert"
 )

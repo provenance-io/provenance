@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
-	"github.com/cosmos/ibc-go/v6/testing/simapp/helpers"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	"github.com/cosmos/ibc-go/v8/testing/simapp/helpers"
 
 	provenanceapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/contracts"

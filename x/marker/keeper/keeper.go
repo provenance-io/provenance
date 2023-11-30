@@ -13,7 +13,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )

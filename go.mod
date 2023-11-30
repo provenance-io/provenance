@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.50.1
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1
-	github.com/cosmos/ibc-go/v6 v6.2.0
+	github.com/cosmos/ibc-go/v8 v8.0.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
@@ -185,11 +185,12 @@ replace (
 	// Use cosmos fork of keyring (because the SDK does).
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
-	// TODO[1760]: Put this CosmWasm/wasmd replace back (or delete it).
+	// TODO[1760]: Put this CosmWasm/wasmd replace back with an updated version (or delete it).
 	// github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
 	// TODO[1760]: Put this replace back with an updated version of the sdk from our fork.
 	// github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-2
-	github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
+	// TODO[1760]: Put this ibc-go replace back with an updated version (or delete it).
+	// github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

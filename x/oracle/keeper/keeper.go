@@ -11,7 +11,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 
 	"github.com/provenance-io/provenance/x/oracle/types"
 )

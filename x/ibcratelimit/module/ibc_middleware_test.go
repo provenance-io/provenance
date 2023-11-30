@@ -13,9 +13,9 @@ import (
 	"golang.org/x/exp/slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"

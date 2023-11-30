@@ -13,7 +13,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	channelkeeper "github.com/cosmos/ibc-go/v6/modules/core/04-channel/keeper"
+	channelkeeper "github.com/cosmos/ibc-go/v8/modules/core/04-channel/keeper"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/pioconfig"

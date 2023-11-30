@@ -26,8 +26,8 @@ import (
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channelutils "github.com/cosmos/ibc-go/v8/modules/core/04-channel/client/utils"
 
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	"github.com/provenance-io/provenance/x/marker/types"
