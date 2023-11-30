@@ -141,6 +141,9 @@ import (
 	"github.com/provenance-io/provenance/x/ibchooks"
 	ibchookskeeper "github.com/provenance-io/provenance/x/ibchooks/keeper"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
+	ibcratelimitkeeper "github.com/provenance-io/provenance/x/ibcratelimit/keeper"
+	ibcratelimitmodule "github.com/provenance-io/provenance/x/ibcratelimit/module"
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -218,6 +221,7 @@ var (
 		ica.AppModuleBasic{},
 		icq.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
+		ibcratelimitmodule.AppModuleBasic{},
 
 		marker.AppModuleBasic{},
 		attribute.AppModuleBasic{},
@@ -310,11 +314,12 @@ type App struct {
 	TriggerKeeper    triggerkeeper.Keeper
 	OracleKeeper     oraclekeeper.Keeper
 
-	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	IBCHooksKeeper *ibchookskeeper.Keeper
-	ICAHostKeeper  *icahostkeeper.Keeper
-	TransferKeeper *ibctransferkeeper.Keeper
-	ICQKeeper      icqkeeper.Keeper
+	IBCKeeper          *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	IBCHooksKeeper     *ibchookskeeper.Keeper
+	ICAHostKeeper      *icahostkeeper.Keeper
+	TransferKeeper     *ibctransferkeeper.Keeper
+	ICQKeeper          icqkeeper.Keeper
+	RateLimitingKeeper *ibcratelimitkeeper.Keeper
 
 	MarkerKeeper    markerkeeper.Keeper
 	MetadataKeeper  metadatakeeper.Keeper
@@ -392,6 +397,7 @@ func New(
 		icahosttypes.StoreKey,
 		icqtypes.StoreKey,
 		ibchookstypes.StoreKey,
+		ibcratelimit.StoreKey,
 
 		metadatatypes.StoreKey,
 		markertypes.StoreKey,
@@ -527,12 +533,16 @@ func New(
 		app.IbcHooks,
 	)
 
+	rateLimtingKeeper := ibcratelimitkeeper.NewKeeper(appCodec, keys[ibcratelimit.StoreKey], nil)
+	app.RateLimitingKeeper = &rateLimtingKeeper
+
 	// Create Transfer Keepers
+	rateLimitingTransferModule := ibcratelimitmodule.NewIBCMiddleware(nil, app.HooksICS4Wrapper, app.RateLimitingKeeper)
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
 		keys[ibctransfertypes.StoreKey],
 		app.GetSubspace(ibctransfertypes.ModuleName),
-		app.HooksICS4Wrapper,
+		&rateLimitingTransferModule,
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
 		app.AccountKeeper,
@@ -541,7 +551,8 @@ func New(
 	)
 	app.TransferKeeper = &transferKeeper
 	transferModule := ibctransfer.NewIBCModule(*app.TransferKeeper)
-	hooksTransferModule := ibchooks.NewIBCMiddleware(transferModule, &app.HooksICS4Wrapper)
+	rateLimitingTransferModule = *rateLimitingTransferModule.WithIBCModule(transferModule)
+	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &app.HooksICS4Wrapper)
 	app.TransferStack = &hooksTransferModule
 
 	app.NameKeeper = namekeeper.NewKeeper(
@@ -660,6 +671,7 @@ func New(
 	app.Ics20WasmHooks.ContractKeeper = app.WasmKeeper // app.ContractKeeper -- this changes in the next version of wasm to a permissioned keeper
 	app.IBCHooksKeeper.ContractKeeper = app.ContractKeeper
 	app.Ics20MarkerHooks.MarkerKeeper = &app.MarkerKeeper
+	app.RateLimitingKeeper.PermissionedKeeper = app.ContractKeeper
 
 	app.IbcHooks.SendPacketPreProcessors = []ibchookstypes.PreSendPacketDataProcessingFn{app.Ics20MarkerHooks.SetupMarkerMemoFn, app.Ics20WasmHooks.GetWasmSendPacketPreProcessor}
 
@@ -766,6 +778,7 @@ func New(
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
+		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper, app.AccountKeeper, app.BankKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icqModule,
@@ -805,6 +818,7 @@ func New(
 		metadatatypes.ModuleName,
 		oracletypes.ModuleName,
 		wasm.ModuleName,
+		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
@@ -835,6 +849,7 @@ func New(
 		nametypes.ModuleName,
 		genutiltypes.ModuleName,
 		ibchost.ModuleName,
+		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
@@ -891,6 +906,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
 		icatypes.ModuleName,
+		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
@@ -928,6 +944,7 @@ func New(
 		hold.ModuleName,
 		exchange.ModuleName,
 
+		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
 		icqtypes.ModuleName,
@@ -982,6 +999,7 @@ func New(
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
+		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper, app.AccountKeeper, app.BankKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icaModule,
