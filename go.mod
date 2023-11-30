@@ -9,7 +9,7 @@ require (
 	github.com/CosmWasm/wasmvm v1.2.4
 	github.com/armon/go-metrics v0.4.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
-	github.com/cosmos/cosmos-sdk v0.46.12
+	github.com/cosmos/cosmos-sdk v0.50.1
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v6 v6.1.0
 	github.com/cosmos/ibc-go/v6 v6.2.0
@@ -180,25 +180,26 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+replace (
+	// Use cosmos fork of keyring (because the SDK does).
+	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	// This is required for https://github.com/provenance-io/provenance/issues/1414
+	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
+	// TODO[1760]: Put this replace back with an updated version of the sdk from our fork.
+	// github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-2
+	github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
+	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
+	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
+	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
+	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
+	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
+	// TODO[1760]: Check if we can get rid of this gogo/protobuf replace.
+	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	// replace broken goleveldb
+	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
+)
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-2
-
-replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
-
-// Use cometbft as requied by the SDK at v0.46.13
-replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
-
-// Replace broken goleveldb as required by the SDK at v0.46.13
-replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-
-replace github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-
-replace github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
-
-// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
-// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
-
-// TODO: This is also required for https://github.com/provenance-io/provenance/issues/1414
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
+// TODO[1760]: Replace all tendermint imports with cometbft and delete this replace line.
+replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.38.0
