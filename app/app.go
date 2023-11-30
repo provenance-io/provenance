@@ -1356,3 +1356,11 @@ func (app *App) injectUpgrade(name string) { //nolint:unused // This is designed
 		return app.BeginBlocker(ctx, req)
 	})
 }
+
+func (app *App) ModuleManager() *module.Manager {
+	return app.mm
+}
+
+func (app *App) Configurator() module.Configurator {
+	return app.configurator
+}
