@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"cosmossdk.io/x/feegrant"
 
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 )

@@ -19,7 +19,7 @@ import (
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"cosmossdk.io/x/feegrant"
 
 	pioante "github.com/provenance-io/provenance/internal/antewrapper"
 )
