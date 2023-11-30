@@ -9,6 +9,7 @@ require (
 	cosmossdk.io/store v1.0.1
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.1.0
+	cosmossdk.io/x/upgrade v0.1.0
 	github.com/CosmWasm/wasmd v0.50.0
 	github.com/CosmWasm/wasmvm v1.5.0
 	github.com/armon/go-metrics v0.4.1
@@ -209,6 +210,3 @@ replace (
 
 // TODO[1760]: Replace all tendermint imports with cometbft and delete this replace line.
 replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.38.0
-
-// TODO[1760]: Change all cosmos-sdk/x/upgrade imports and get rid of this replace line.
-replace github.com/cosmos/cosmos-sdk/x/upgrade => cosmossdk.io/x/upgrade v0.1.0
