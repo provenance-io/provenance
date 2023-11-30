@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	proto "github.com/gogo/protobuf/proto"

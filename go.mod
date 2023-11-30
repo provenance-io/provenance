@@ -12,7 +12,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.50.1
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/ibc-apps/modules/async-icq/v6 v6.1.0
+	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1
 	github.com/cosmos/ibc-go/v6 v6.2.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v1.3.3

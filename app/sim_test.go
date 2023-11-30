@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
