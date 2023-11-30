@@ -23,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "cosmossdk.io/simapp"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"

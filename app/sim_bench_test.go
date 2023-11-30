@@ -9,7 +9,7 @@ import (
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "cosmossdk.io/simapp"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )

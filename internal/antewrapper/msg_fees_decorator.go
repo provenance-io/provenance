@@ -1,7 +1,7 @@
 package antewrapper
 
 import (
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	"cosmossdk.io/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 

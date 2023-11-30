@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "cosmossdk.io/simapp"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/spf13/viper"

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	sdksim "cosmossdk.io/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 

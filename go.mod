@@ -5,8 +5,9 @@ go 1.20
 require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/math v1.2.0
-	github.com/CosmWasm/wasmd v0.29.0
-	github.com/CosmWasm/wasmvm v1.2.4
+	cosmossdk.io/simapp v0.0.0-20231107193120-9814f684b9dd
+	github.com/CosmWasm/wasmd v0.50.0
+	github.com/CosmWasm/wasmvm v1.5.0
 	github.com/armon/go-metrics v0.4.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.50.1
@@ -184,7 +185,8 @@ replace (
 	// Use cosmos fork of keyring (because the SDK does).
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
-	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
+	// TODO[1760]: Put this CosmWasm/wasmd replace back (or delete it).
+	// github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
 	// TODO[1760]: Put this replace back with an updated version of the sdk from our fork.
 	// github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-2
 	github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
@@ -203,3 +205,15 @@ replace (
 
 // TODO[1760]: Replace all tendermint imports with cometbft and delete this replace line.
 replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.38.0
+
+// TODO[1760]: Change all cosmos-sdk/store imports and get rid of this replace line.
+replace github.com/cosmos/cosmos-sdk/store => cosmossdk.io/store v1.0.1
+
+// TODO[1760]: Change all cosmos-sdk/x/evidence imports and get rid of this replace line.
+replace github.com/cosmos/cosmos-sdk/x/evidence => cosmossdk.io/x/evidence v0.1.0
+
+// TODO[1760]: Change all cosmos-sdk/x/feegrant imports and get rid of this replace line.
+replace github.com/cosmos/cosmos-sdk/x/feegrant => cosmossdk.io/x/feegrant v0.1.0
+
+// TODO[1760]: Change all cosmos-sdk/x/upgrade imports and get rid of this replace line.
+replace github.com/cosmos/cosmos-sdk/x/upgrade => cosmossdk.io/x/upgrade v0.1.0
