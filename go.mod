@@ -7,6 +7,7 @@ require (
 	cosmossdk.io/math v1.2.0
 	cosmossdk.io/simapp v0.0.0-20231107193120-9814f684b9dd
 	cosmossdk.io/store v1.0.1
+	cosmossdk.io/x/evidence v0.1.0
 	github.com/CosmWasm/wasmd v0.50.0
 	github.com/CosmWasm/wasmvm v1.5.0
 	github.com/armon/go-metrics v0.4.1
@@ -207,9 +208,6 @@ replace (
 
 // TODO[1760]: Replace all tendermint imports with cometbft and delete this replace line.
 replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.38.0
-
-// TODO[1760]: Change all cosmos-sdk/x/evidence imports and get rid of this replace line.
-replace github.com/cosmos/cosmos-sdk/x/evidence => cosmossdk.io/x/evidence v0.1.0
 
 // TODO[1760]: Change all cosmos-sdk/x/feegrant imports and get rid of this replace line.
 replace github.com/cosmos/cosmos-sdk/x/feegrant => cosmossdk.io/x/feegrant v0.1.0
