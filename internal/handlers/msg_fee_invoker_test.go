@@ -10,7 +10,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdksim "cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
-	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
+	sdkgas "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
+	sdkgas "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

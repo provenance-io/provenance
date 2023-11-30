@@ -7,7 +7,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
+	sdkgas "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
