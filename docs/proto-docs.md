@@ -188,6 +188,29 @@
   
     - [Msg](#provenance.ibchooks.v1.Msg)
   
+- [provenance/ibcratelimit/v1/event.proto](#provenance/ibcratelimit/v1/event.proto)
+    - [EventAckRevertFailure](#provenance.ibcratelimit.v1.EventAckRevertFailure)
+    - [EventParamsUpdated](#provenance.ibcratelimit.v1.EventParamsUpdated)
+    - [EventTimeoutRevertFailure](#provenance.ibcratelimit.v1.EventTimeoutRevertFailure)
+  
+- [provenance/ibcratelimit/v1/params.proto](#provenance/ibcratelimit/v1/params.proto)
+    - [Params](#provenance.ibcratelimit.v1.Params)
+  
+- [provenance/ibcratelimit/v1/genesis.proto](#provenance/ibcratelimit/v1/genesis.proto)
+    - [GenesisState](#provenance.ibcratelimit.v1.GenesisState)
+  
+- [provenance/ibcratelimit/v1/query.proto](#provenance/ibcratelimit/v1/query.proto)
+    - [ParamsRequest](#provenance.ibcratelimit.v1.ParamsRequest)
+    - [ParamsResponse](#provenance.ibcratelimit.v1.ParamsResponse)
+  
+    - [Query](#provenance.ibcratelimit.v1.Query)
+  
+- [provenance/ibcratelimit/v1/tx.proto](#provenance/ibcratelimit/v1/tx.proto)
+    - [MsgGovUpdateParamsRequest](#provenance.ibcratelimit.v1.MsgGovUpdateParamsRequest)
+    - [MsgGovUpdateParamsResponse](#provenance.ibcratelimit.v1.MsgGovUpdateParamsResponse)
+  
+    - [Msg](#provenance.ibcratelimit.v1.Msg)
+  
 - [provenance/marker/v1/accessgrant.proto](#provenance/marker/v1/accessgrant.proto)
     - [AccessGrant](#provenance.marker.v1.AccessGrant)
   
@@ -3211,6 +3234,230 @@ Msg defines the Msg service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `EmitIBCAck` | [MsgEmitIBCAck](#provenance.ibchooks.v1.MsgEmitIBCAck) | [MsgEmitIBCAckResponse](#provenance.ibchooks.v1.MsgEmitIBCAckResponse) | EmitIBCAck checks the sender can emit the ack and writes the IBC acknowledgement | |
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibcratelimit/v1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibcratelimit/v1/event.proto
+
+
+
+<a name="provenance.ibcratelimit.v1.EventAckRevertFailure"></a>
+
+### EventAckRevertFailure
+EventAckRevertFailure is emitted when an Ack revert fails
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module` | [string](#string) |  | module is the name of the module that emitted it. |
+| `packet` | [string](#string) |  | packet is the packet received on acknowledgement. |
+| `ack` | [string](#string) |  | ack is the packet's inner acknowledgement message. |
+
+
+
+
+
+
+<a name="provenance.ibcratelimit.v1.EventParamsUpdated"></a>
+
+### EventParamsUpdated
+EventParamsUpdated is an event emitted when the ibcratelimit module's params have been updated.
+
+
+
+
+
+
+<a name="provenance.ibcratelimit.v1.EventTimeoutRevertFailure"></a>
+
+### EventTimeoutRevertFailure
+EventTimeoutRevertFailure is emitted when a Timeout revert fails
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module` | [string](#string) |  | module is the name of the module that emitted it. |
+| `packet` | [string](#string) |  | packet is the packet received on timeout. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibcratelimit/v1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibcratelimit/v1/params.proto
+
+
+
+<a name="provenance.ibcratelimit.v1.Params"></a>
+
+### Params
+Params defines the parameters for the ibcratelimit module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `contract_address` | [string](#string) |  | contract_address is the address of the rate limiter contract. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibcratelimit/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibcratelimit/v1/genesis.proto
+
+
+
+<a name="provenance.ibcratelimit.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the ibcratelimit module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.ibcratelimit.v1.Params) |  | params are all the parameters of the module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibcratelimit/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibcratelimit/v1/query.proto
+
+
+
+<a name="provenance.ibcratelimit.v1.ParamsRequest"></a>
+
+### ParamsRequest
+ParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="provenance.ibcratelimit.v1.ParamsResponse"></a>
+
+### ParamsResponse
+ParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.ibcratelimit.v1.Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.ibcratelimit.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [ParamsRequest](#provenance.ibcratelimit.v1.ParamsRequest) | [ParamsResponse](#provenance.ibcratelimit.v1.ParamsResponse) | Params defines a gRPC query method that returns the ibcratelimit module's parameters. | GET|/provenance/ibcratelimit/v1/params|
+
+ <!-- end services -->
+
+
+
+<a name="provenance/ibcratelimit/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/ibcratelimit/v1/tx.proto
+
+
+
+<a name="provenance.ibcratelimit.v1.MsgGovUpdateParamsRequest"></a>
+
+### MsgGovUpdateParamsRequest
+MsgGovUpdateParamsRequest is a request message for the GovUpdateParams endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority should be the governance module account address. |
+| `params` | [Params](#provenance.ibcratelimit.v1.Params) |  | params are the new param values to set |
+
+
+
+
+
+
+<a name="provenance.ibcratelimit.v1.MsgGovUpdateParamsResponse"></a>
+
+### MsgGovUpdateParamsResponse
+MsgGovUpdateParamsResponse is a response message for the GovUpdateParams endpoint.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="provenance.ibcratelimit.v1.Msg"></a>
+
+### Msg
+Msg is the service for ibcratelimit module's tx endpoints.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GovUpdateParams` | [MsgGovUpdateParamsRequest](#provenance.ibcratelimit.v1.MsgGovUpdateParamsRequest) | [MsgGovUpdateParamsResponse](#provenance.ibcratelimit.v1.MsgGovUpdateParamsResponse) | GovUpdateParams is a governance proposal endpoint for updating the exchange module's params. | |
 
  <!-- end services -->
 

@@ -22,6 +22,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
@@ -174,6 +175,7 @@ var upgrades = map[string]appUpgrade{
 		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
 	"tourmaline-rc1": { // upgrade for v1.18.0-rc1
+		Added: []string{ibcratelimit.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			vm, err = runModuleMigrations(ctx, app, vm)
@@ -185,6 +187,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"tourmaline": { // upgrade for v1.18.0
+		Added: []string{ibcratelimit.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			vm, err = runModuleMigrations(ctx, app, vm)

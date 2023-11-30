@@ -1,0 +1,1 @@
+0b2277d8c51fe5a5bd25e97d45b85ad2de77c3aa3a39fa6366ee8b8ac38c96e3  /target/wasm32-unknown-unknown/release/rate_limiter.wasm
