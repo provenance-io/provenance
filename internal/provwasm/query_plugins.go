@@ -14,6 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	provwasmtypes "github.com/provenance-io/provenance/x/wasm/types"
 )
 
 // The maximum querier result size allowed, ~10MB.
@@ -43,10 +45,18 @@ func (qr *QuerierRegistry) RegisterQuerier(route string, querier Querier) {
 }
 
 // QueryPlugins provides provenance query support for smart contracts.
-func QueryPlugins(registry *QuerierRegistry, queryRouter baseapp.GRPCQueryRouter, codec codec.Codec) *wasm.QueryPlugins {
+func QueryPlugins(registry *QuerierRegistry, queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) *wasm.QueryPlugins {
+
+	protoCdc, ok := cdc.(*codec.ProtoCodec)
+	if !ok {
+		panic(fmt.Errorf("codec must be *codec.ProtoCodec type: actual: %T", cdc))
+	}
+
+	stargateCdc := codec.NewProtoCodec(provwasmtypes.NewWasmInterfaceRegistry(protoCdc.InterfaceRegistry()))
+
 	return &wasm.QueryPlugins{
 		Custom:   customPlugins(registry),
-		Stargate: StargateQuerier(queryRouter, codec),
+		Stargate: StargateQuerier(queryRouter, stargateCdc),
 	}
 }
 
