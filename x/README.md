@@ -6,7 +6,7 @@ sidebar_position: 0
 
 Modules are the code components of the Provenance Blockchain that execute the majority of the business logic for applications. The [Cosmos SDK](https://docs.cosmos.network/v0.47) enables developers to build modules that utilize the core structure of the SDK to allow the modules to function together. To read more about creating modules, refer to the [Cosmos documentation on modules](https://docs.cosmos.network/v0.47/building-modules/intro).
 
-Provenance Blockchain leveraged inherited modules from Cosmos SDK, and has purpose-built custom modules unique to Provenance Blockchain.
+Provenance Blockchain leverages inherited modules from Cosmos SDK, and has purpose-built custom modules unique to Provenance Blockchain.
 
 * [Inherited Cosmos modules](https://docs.cosmos.network/v0.47/build/modules)
 * [Attribute](./attribute/spec/README.md) - Functions as a blockchain registry for storing \<Name, Value\> pairs.
