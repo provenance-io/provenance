@@ -1,4 +1,4 @@
-# x/ibcratelimit
+# `x/ibcratelimit`
 
 ## Notice
 
