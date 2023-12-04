@@ -9,7 +9,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	capabilitytypes "github.com/cosmos/ibc-go/v8/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 
