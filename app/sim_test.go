@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -21,12 +20,16 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdksim "cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/helpers"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
+	evidencetypes "cosmossdk.io/x/evidence/types"
+
+	// icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types" // TODO[1760]: async-icq
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -35,7 +38,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidencetypes "cosmossdk.io/x/evidence/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -105,15 +107,16 @@ func appStateWithICQ(appState json.RawMessage, cdc codec.JSONCodec) json.RawMess
 	if err != nil {
 		panic(fmt.Sprintf("error unmarshalling appstate: %v", err))
 	}
-	icqGenJSON, icqGenFound := rawState[icqtypes.ModuleName]
-	if !icqGenFound || len(icqGenJSON) == 0 {
-		icqGenState := icqtypes.DefaultGenesis()
-		rawState[icqtypes.ModuleName] = cdc.MustMarshalJSON(icqGenState)
-		appState, err = json.Marshal(rawState)
-		if err != nil {
-			panic(fmt.Sprintf("error marshalling appstate: %v", err))
-		}
-	}
+	// TODO[1760]: async-icq
+	// icqGenJSON, icqGenFound := rawState[icqtypes.ModuleName]
+	// if !icqGenFound || len(icqGenJSON) == 0 {
+	// icqGenState := icqtypes.DefaultGenesis()
+	// 	rawState[icqtypes.ModuleName] = cdc.MustMarshalJSON(icqGenState)
+	// 	appState, err = json.Marshal(rawState)
+	// 	if err != nil {
+	// 		panic(fmt.Sprintf("error marshalling appstate: %v", err))
+	// 	}
+	// }
 	return appState
 }
 

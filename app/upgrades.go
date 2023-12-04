@@ -6,15 +6,17 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	// icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types" // TODO[1760]: async-icq
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
@@ -122,7 +124,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
+		Added: []string{ /* icqtypes.ModuleName, // TODO[1760]: async-icq */ oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
 	"saffron-rc2": { // upgrade for v1.17.0-rc2
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -172,7 +174,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
+		Added: []string{ /* icqtypes.ModuleName, // TODO[1760]: async-icq */ oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
 	"tourmaline-rc1": { // upgrade for v1.18.0-rc1
 		Added: []string{ibcratelimit.ModuleName},
@@ -389,7 +391,7 @@ func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKe
 // TODO: Remove with the saffron handlers.
 func setupICQ(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating ICQ params")
-	app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"}))
+	// app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"})) // TODO[1760]: async-icq
 	ctx.Logger().Info("Done updating ICQ params")
 }
 
