@@ -281,6 +281,7 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 }
 
 // addMarkerNavs adds navs to existing markers
+// TODO: Remove with the saffron handlers.
 func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.NetAssetValue) {
 	ctx.Logger().Info("Adding marker net asset values")
 	for denom, nav := range denomToNav {
