@@ -40,7 +40,7 @@ As the [Provenance Blockchain][provenance] and its core modules are based on the
 
 Developers can use a local checkout and the make targets `make run` and `make localnet-start` to run a local development network.
 
-Note: Requires [Go 1.20+](https://golang.org/dl/)
+Note: Requires [Go 1.21+](https://golang.org/dl/)
 
 See Also: [Building](docs/Building.md)
 
