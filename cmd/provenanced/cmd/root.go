@@ -16,7 +16,7 @@ import (
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"

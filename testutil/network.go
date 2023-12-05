@@ -6,7 +6,7 @@ import (
 	"time"
 
 	tmrand "github.com/cometbft/cometbft/libs/rand"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 
 	sdksim "cosmossdk.io/simapp"
 	pruningtypes "cosmossdk.io/store/pruning/types"

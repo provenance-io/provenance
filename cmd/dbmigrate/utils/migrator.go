@@ -13,7 +13,7 @@ import (
 
 	copier "github.com/otiai10/copy"
 
-	tmdb "github.com/tendermint/tm-db"
+	tmdb "github.com/cometbft/cometbft-db"
 
 	tmlog "cosmossdk.io/log"
 )

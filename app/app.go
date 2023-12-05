@@ -19,7 +19,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmos "github.com/cometbft/cometbft/libs/os"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/streaming" // TODO[1760]: streaming: See if we can use this directly or if we have needed modifications.
