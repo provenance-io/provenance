@@ -13,7 +13,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	tendermintclient "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/types"
+	tendermintclient "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
 	"github.com/provenance-io/provenance/x/ibchooks/types"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
