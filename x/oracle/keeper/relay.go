@@ -33,10 +33,10 @@ func (k Keeper) SendQuery(
 		return 0, cerrs.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
 	}
 
-	destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
-	destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()
-
 	// TODO[1760]: async-icq
+	// destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
+	// destinationChannel := sourceChannelEnd.GetCounterparty().GetChannelID()
+	//
 	// data, err := icqtypes.SerializeCosmosQuery(reqs)
 	// if err != nil {
 	// 	return 0, cerrs.Wrap(err, "could not serialize reqs into cosmos query")
