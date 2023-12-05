@@ -4,8 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/provenance-io/provenance/testutil"
-	msgfeestypes "github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -78,7 +77,7 @@ func (mfd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 // and some network tests won't work without a chain id being set(but they also setup everything with stake denom) so `simapp-unit-testing` chain id is skipped also.
 // This only needs to work to pio-testnet and pio-mainnet, so this is safe.
 func isTestContext(ctx sdk.Context) bool {
-	return len(ctx.ChainID()) == 0 || ctx.ChainID() == SimAppChainID || ctx.ChainID() == testutil.SimAppChainID
+	return len(ctx.ChainID()) == 0 || ctx.ChainID() == SimAppChainID || ctx.ChainID() == pioconfig.SimAppChainID
 }
 
 // EnsureSufficientFloorAndMsgFees verifies that the given transaction has supplied

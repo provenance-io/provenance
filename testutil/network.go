@@ -23,10 +23,6 @@ import (
 	"github.com/provenance-io/provenance/app/params"
 )
 
-// SimAppChainID hardcoded chainID for simulation.
-// Copied from cosmossdk.io/simapp/sim_test.go. We used to use this directly, but now its in a _test.go file.
-const SimAppChainID = "simulation-app"
-
 // NewAppConstructor returns a new provenanceapp AppConstructor
 func NewAppConstructor(encodingCfg params.EncodingConfig) testnet.AppConstructor {
 	return func(val testnet.Validator) servertypes.Application {

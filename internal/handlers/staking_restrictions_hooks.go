@@ -8,7 +8,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 // Assert proper implementation of StakingRestrictions
@@ -60,7 +60,7 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, _
 	valCount := len(h.k.GetLastValidators(ctx))
 
 	// do not bother with limits on networks this small (or under simulation).
-	if valCount < 4 || ctx.ChainID() == testutil.SimAppChainID {
+	if valCount < 4 || ctx.ChainID() == pioconfig.SimAppChainID {
 		return nil
 	}
 
