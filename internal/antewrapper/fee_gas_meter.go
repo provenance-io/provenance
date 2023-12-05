@@ -3,7 +3,7 @@ package antewrapper
 import (
 	"fmt"
 
-	"github.com/armon/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/log"
 
