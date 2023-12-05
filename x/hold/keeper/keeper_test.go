@@ -3,13 +3,13 @@ package keeper_test
 import (
 	"context"
 	"fmt"
+	"maps"
 	"sort"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	"golang.org/x/exp/maps"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 

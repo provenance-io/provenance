@@ -2,9 +2,8 @@ package cli_test
 
 import (
 	"bytes"
+	"maps"
 	"sort"
-
-	"golang.org/x/exp/maps"
 
 	sdkmath "cosmossdk.io/math"
 
