@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmcmds "github.com/tendermint/tendermint/cmd/cometbft/commands"
-	tmconfig "github.com/tendermint/tendermint/config"
+	tmcmds "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	tmconfig "github.com/cometbft/cometbft/config"
 
 	"cosmossdk.io/log"
 	sdksim "cosmossdk.io/simapp"

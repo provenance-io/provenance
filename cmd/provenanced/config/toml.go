@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"text/template"
 
-	tmos "github.com/tendermint/tendermint/libs/os"
+	tmos "github.com/cometbft/cometbft/libs/os"
 )
 
 const defaultConfigTemplate = `# This is a TOML config file.

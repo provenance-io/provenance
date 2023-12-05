@@ -7,7 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

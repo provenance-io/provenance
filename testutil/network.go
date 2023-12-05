@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	tmrand "github.com/tendermint/tendermint/libs/rand"
+	tmrand "github.com/cometbft/cometbft/libs/rand"
 	dbm "github.com/tendermint/tm-db"
 
 	sdksim "cosmossdk.io/simapp"

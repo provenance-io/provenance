@@ -1,9 +1,9 @@
 package statesync
 
 import (
-	tmrpccore "github.com/tendermint/tendermint/rpc/core"
-	tmrpc "github.com/tendermint/tendermint/rpc/jsonrpc/server"
-	tmrpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
+	tmrpccore "github.com/cometbft/cometbft/rpc/core"
+	tmrpc "github.com/cometbft/cometbft/rpc/jsonrpc/server"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 
 	"github.com/cosmos/cosmos-sdk/version"
 )
