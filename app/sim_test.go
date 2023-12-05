@@ -21,7 +21,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	sdksim "cosmossdk.io/simapp"
-	"cosmossdk.io/simapp/helpers"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
@@ -51,6 +50,7 @@ import (
 
 	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/internal/testutil"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/hold"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -409,7 +409,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.ExportParamsPath = ""
 	config.OnOperation = false
 	config.AllInvariants = false
-	config.ChainID = helpers.SimAppChainID
+	config.ChainID = testutil.SimAppChainID
 	config.DBBackend = "memdb"
 	config.Commit = true
 

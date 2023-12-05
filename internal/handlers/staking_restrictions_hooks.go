@@ -3,11 +3,12 @@ package handlers
 import (
 	"cosmossdk.io/math"
 
-	"cosmossdk.io/simapp/helpers"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/provenance-io/provenance/testutil"
 )
 
 // Assert proper implementation of StakingRestrictions
@@ -59,7 +60,7 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, _
 	valCount := len(h.k.GetLastValidators(ctx))
 
 	// do not bother with limits on networks this small (or under simulation).
-	if valCount < 4 || ctx.ChainID() == helpers.SimAppChainID {
+	if valCount < 4 || ctx.ChainID() == testutil.SimAppChainID {
 		return nil
 	}
 

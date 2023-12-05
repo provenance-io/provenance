@@ -8,12 +8,13 @@ import (
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	dbm "github.com/tendermint/tm-db"
 
+	sdksim "cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdksim "cosmossdk.io/simapp"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -21,6 +22,10 @@ import (
 	provenanceapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 )
+
+// SimAppChainID hardcoded chainID for simulation.
+// Copied from cosmossdk.io/simapp/sim_test.go. We used to use this directly, but now its in a _test.go file.
+const SimAppChainID = "simulation-app"
 
 // NewAppConstructor returns a new provenanceapp AppConstructor
 func NewAppConstructor(encodingCfg params.EncodingConfig) testnet.AppConstructor {
