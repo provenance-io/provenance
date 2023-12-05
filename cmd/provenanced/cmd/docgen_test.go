@@ -132,7 +132,7 @@ func TestDocGen(t *testing.T) {
 			}
 
 			logger := log.NewNopLogger()
-			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err, "Created default tendermint config")
 
 			appCodec := sdksim.MakeTestEncodingConfig().Codec

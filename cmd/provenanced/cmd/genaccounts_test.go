@@ -70,7 +70,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
-			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
 			appCodec := sdksim.MakeTestEncodingConfig().Codec
@@ -142,7 +142,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
-			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
 			appCodec := sdksim.MakeTestEncodingConfig().Codec
@@ -336,8 +336,8 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 
 			// Create a new home dir and initialize it.
 			home := t.TempDir()
-			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
-			require.NoError(t, err, "setup: CreateDefaultTendermintConfig(%q)", home)
+			cfg, err := genutiltest.CreateDefaultCometConfig(home)
+			require.NoError(t, err, "setup: CreateDefaultCometConfig(%q)", home)
 			cdc := sdksim.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, cdc)
 			require.NoError(t, err, "setup: ExecInitCmd")
@@ -654,8 +654,8 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 
 			// Create a new home dir and initialize it.
 			home := t.TempDir()
-			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
-			require.NoError(t, err, "setup: CreateDefaultTendermintConfig(%q)", home)
+			cfg, err := genutiltest.CreateDefaultCometConfig(home)
+			require.NoError(t, err, "setup: CreateDefaultCometConfig(%q)", home)
 			cdc := sdksim.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, cdc)
 			require.NoError(t, err, "setup: ExecInitCmd")

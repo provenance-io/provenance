@@ -28,7 +28,7 @@ func Test_TestnetCmd(t *testing.T) {
 	encodingConfig := app.MakeEncodingConfig()
 	pioconfig.SetProvenanceConfig("", 0)
 	logger := log.NewNopLogger()
-	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
 	err = genutiltest.ExecInitCmd(app.ModuleBasics, home, encodingConfig.Marshaler)
