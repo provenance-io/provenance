@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	sdkgas "cosmossdk.io/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
+
+	"cosmossdk.io/log"
+	sdkgas "cosmossdk.io/store/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )

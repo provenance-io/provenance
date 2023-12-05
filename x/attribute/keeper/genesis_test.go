@@ -8,14 +8,16 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/provenance-io/provenance/x/attribute/keeper"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )

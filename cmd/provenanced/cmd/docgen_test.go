@@ -8,14 +8,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
-	sdksim "cosmossdk.io/simapp"
-	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
-	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
+
+	"cosmossdk.io/log"
+	sdksim "cosmossdk.io/simapp"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server"
+	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+
+	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
 )
 
 func TestDocGen(t *testing.T) {

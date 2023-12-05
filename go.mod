@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	cosmossdk.io/errors v1.0.0
+	cosmossdk.io/log v1.2.1
 	cosmossdk.io/math v1.2.0
 	cosmossdk.io/simapp v0.0.0-20231107193120-9814f684b9dd
 	cosmossdk.io/store v1.0.1

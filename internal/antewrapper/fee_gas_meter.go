@@ -5,7 +5,7 @@ import (
 
 	"github.com/armon/go-metrics"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 
 	sdkgas "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"

@@ -7,7 +7,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

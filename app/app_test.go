@@ -10,15 +10,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdksim "cosmossdk.io/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
+	"cosmossdk.io/log"
+	sdksim "cosmossdk.io/simapp"
+
+	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	markermodule "github.com/provenance-io/provenance/x/marker"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"

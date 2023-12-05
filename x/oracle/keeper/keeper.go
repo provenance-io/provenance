@@ -3,14 +3,14 @@ package keeper
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 
 	"github.com/provenance-io/provenance/x/oracle/types"

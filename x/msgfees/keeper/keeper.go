@@ -5,11 +5,11 @@ import (
 
 	"golang.org/x/exp/constraints"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "cosmossdk.io/store/types"

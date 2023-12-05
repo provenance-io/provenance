@@ -16,12 +16,13 @@ import (
 
 	tmcmds "github.com/tendermint/tendermint/cmd/cometbft/commands"
 	tmconfig "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/log"
+
+	"cosmossdk.io/log"
+	sdksim "cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	sdksim "cosmossdk.io/simapp"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )

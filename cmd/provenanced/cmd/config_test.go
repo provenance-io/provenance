@@ -17,11 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
+	sdksim "cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	sdksim "cosmossdk.io/simapp"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"

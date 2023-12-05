@@ -4,31 +4,31 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"golang.org/x/exp/slices"
+	"github.com/stretchr/testify/suite"
+
+	dbm "github.com/tendermint/tm-db"
+
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	sdksim "cosmossdk.io/simapp"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
-	"github.com/stretchr/testify/suite"
-
-	sdkmath "cosmossdk.io/math"
-	sdksim "cosmossdk.io/simapp"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	testutil "github.com/provenance-io/provenance/testutil/ibc"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
-
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 )
 
 type MiddlewareTestSuite struct {

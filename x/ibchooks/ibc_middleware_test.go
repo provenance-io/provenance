@@ -5,6 +5,22 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
+	dbm "github.com/tendermint/tm-db"
+
+	"cosmossdk.io/log"
+	sdksim "cosmossdk.io/simapp"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	testutil "github.com/provenance-io/provenance/testutil/ibc"
@@ -12,22 +28,6 @@ import (
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	"github.com/stretchr/testify/suite"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	sdksim "cosmossdk.io/simapp"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (

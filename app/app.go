@@ -18,10 +18,10 @@ import (
 	"github.com/spf13/viper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/streaming" // TODO[1760]: streaming: See if we can use this directly or if we have needed modifications.
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
