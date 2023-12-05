@@ -9,20 +9,22 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/feegrant"
+
+	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"cosmossdk.io/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
@@ -1321,7 +1323,7 @@ func TestReqAttrBypassAddrs(t *testing.T) {
 	expectedNames := []string{
 		authtypes.FeeCollectorName,
 		rewardtypes.ModuleName,
-		quarantine.ModuleName,
+		// quarantine.ModuleName, // TODO[1760]: quarantine
 		govtypes.ModuleName,
 		distrtypes.ModuleName,
 		stakingtypes.BondedPoolName,

@@ -5,10 +5,12 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+
+	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -384,7 +386,7 @@ func (s *TestSuite) assertBankKeeperCalls(mk *MockBankKeeper, expected BankCalls
 // NewSendCoinsArgs creates a new record of args provided to a call to SendCoins.
 func NewSendCoinsArgs(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) *SendCoinsArgs {
 	return &SendCoinsArgs{
-		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
 		fromAddr:               fromAddr,
 		toAddr:                 toAddr,
 		amt:                    amt,
@@ -401,7 +403,7 @@ func (s *TestSuite) sendCoinsArgsString(a *SendCoinsArgs) string {
 // NewSendCoinsFromAccountToModuleArgs creates a new record of args provided to a call to SendCoinsFromAccountToModule.
 func NewSendCoinsFromAccountToModuleArgs(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) *SendCoinsFromAccountToModuleArgs {
 	return &SendCoinsFromAccountToModuleArgs{
-		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
 		senderAddr:             senderAddr,
 		recipientModule:        recipientModule,
 		amt:                    amt,
@@ -418,7 +420,7 @@ func (s *TestSuite) sendCoinsFromAccountToModuleArgsString(a *SendCoinsFromAccou
 // NewInputOutputCoinsArgs creates a new record of args provided to a call to InputOutputCoins.
 func NewInputOutputCoinsArgs(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) *InputOutputCoinsArgs {
 	return &InputOutputCoinsArgs{
-		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
 		inputs:                 inputs,
 		outputs:                outputs,
 	}
