@@ -9,18 +9,19 @@ import (
 )
 
 func RegisterSyncStatus() {
-	tmrpccore.Routes["sync_info"] = tmrpc.NewRPCFunc(GetSyncInfoAtBlock, "height")
+	tmrpccore.RoutesMap["sync_info"] = tmrpc.NewRPCFunc(GetSyncInfoAtBlock, "height")
 }
 
 func GetSyncInfoAtBlock(ctx *tmrpctypes.Context, height *int64) (*GetSyncInfo, error) {
-	block, err := tmrpccore.Block(ctx, height)
-	if err != nil {
-		return nil, err
-	}
+	// TODO[1760]: sync-info: Figure out the new way to get the current block.
+	// block, err := tmrpccore.Block(ctx, height)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	versionInfo := version.NewInfo()
 	si := &GetSyncInfo{
-		BlockHeight: block.Block.Header.Height,
-		BlockHash:   block.Block.Header.Hash().String(),
+		BlockHeight: 123,        // block.Block.Header.Height, // TODO[1760]: sync-info
+		BlockHash:   "finishme", // block.Block.Header.Hash().String(), // TODO[1760]: sync-info
 		Version:     versionInfo.Version,
 	}
 	return si, nil
