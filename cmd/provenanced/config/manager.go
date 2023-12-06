@@ -11,6 +11,8 @@ import (
 
 	tmconfig "github.com/cometbft/cometbft/config"
 
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -602,7 +604,7 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 	serverCtx.Config.SetRoot(clientCtx.HomeDir)
 
 	// Set the server context's logger using what Viper has now.
-	serverCtx.Logger = CreateSDKLogger(serverCtx, cmd.ErrOrStderr())
+	serverCtx.Logger = log.CreateSDKLogger(serverCtx, cmd.ErrOrStderr())
 
 	// Copy all settings from our viper to the global viper since some stuff uses the global one.
 	if err = viper.MergeConfigMap(serverCtx.Viper.AllSettings()); err != nil {
