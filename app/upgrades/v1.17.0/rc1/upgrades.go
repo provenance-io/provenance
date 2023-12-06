@@ -5,14 +5,22 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
 	provenance "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/app/upgrades"
 	"github.com/provenance-io/provenance/x/exchange"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
 // Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName}
-func UpgradeStrategy(ctx sdk.Context, app *provenance.App) error {
+func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error) {
+	// Migrate all the modules
+	newVM, err := upgrades.RunModuleMigrations(ctx, app, vm)
+	if err != nil {
+		return nil, err
+	}
+
 	// set ibchoooks defaults (no allowed async contracts)
 	app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
 
@@ -21,7 +29,7 @@ func UpgradeStrategy(ctx sdk.Context, app *provenance.App) error {
 	UpdateMaxSupply(ctx, app)
 	SetExchangeParams(ctx, app)
 
-	return nil
+	return newVM, err
 }
 
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.

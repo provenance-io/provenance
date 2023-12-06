@@ -3,10 +3,11 @@ package upgrades
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	provenance "github.com/provenance-io/provenance/app"
 )
 
-type UpgradeStrategy = func(ctx sdk.Context, app *provenance.App) error
+type UpgradeStrategy = func(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error)
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal
 // must have written, in order for the state migration to go smoothly.

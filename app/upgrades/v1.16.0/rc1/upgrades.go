@@ -4,21 +4,28 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	provenance "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/app/upgrades"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
-func UpgradeStrategy(ctx sdk.Context, app *provenance.App) error {
+func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error) {
+	// Migrate all the modules
+	newVM, err := upgrades.RunModuleMigrations(ctx, app, vm)
+	if err != nil {
+		return nil, err
+	}
 
 	RemoveInactiveValidatorDelegations(ctx, app)
 
-	err := SetAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
+	err = SetAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// We only need to call addGovV1SubmitFee on testnet.
@@ -28,7 +35,7 @@ func UpgradeStrategy(ctx sdk.Context, app *provenance.App) error {
 
 	FixNameIndexEntries(ctx, app)
 
-	return nil
+	return newVM, nil
 }
 
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.

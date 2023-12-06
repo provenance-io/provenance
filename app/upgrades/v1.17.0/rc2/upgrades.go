@@ -5,15 +5,23 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	provenance "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/app/upgrades"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
-func UpgradeStrategy(ctx sdk.Context, app *provenance.App) error {
+func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error) {
+	// Migrate all the modules
+	newVM, err := upgrades.RunModuleMigrations(ctx, app, vm)
+	if err != nil {
+		return nil, err
+	}
+
 	UpdateIbcMarkerDenomMetadata(ctx, app)
-	return nil
+	return newVM, err
 }
 
 // updateIbcMarkerDenomMetadata iterates markers and creates denom metadata for ibc markers

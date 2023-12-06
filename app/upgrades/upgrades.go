@@ -15,7 +15,7 @@ import (
 //
 // If state is updated prior to this migration, you run the risk of writing state using
 // a new format when the migration is expecting all state to be in the old format.
-func runModuleMigrations(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error) {
+func RunModuleMigrations(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error) {
 	// Even if this function is no longer called, do not delete it. Keep it around for the next time it's needed.
 	ctx.Logger().Info("Starting module migrations. This may take a significant amount of time to complete. Do not restart node.")
 	newVM, err := app.ModuleManager().RunMigrations(ctx, app.Configurator(), vm)
@@ -29,20 +29,14 @@ func runModuleMigrations(ctx sdk.Context, app *provenance.App, vm module.Version
 
 // Create a use of runModuleMigrations so that the linter neither complains about it not being used,
 // nor complains about a nolint:unused directive that isn't needed because the function is used.
-var _ = runModuleMigrations
+var _ = RunModuleMigrations
 
 func CreateUpgradeHandler(upgrade UpgradeStrategy, app *provenance.App) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx.Logger().Info(fmt.Sprintf("Starting upgrade to %q", plan.Name), "version-map", vm)
 
-		// Migrate all the modules
-		newVM, err := runModuleMigrations(ctx, app, vm)
-		if err != nil {
-			return nil, err
-		}
-
 		// This is where we want to run the logic
-		err = upgrade(ctx, app)
+		newVM, err := upgrade(ctx, app, vm)
 
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("Failed to upgrade to %q", plan.Name), "error", err)

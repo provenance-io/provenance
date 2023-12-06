@@ -4,25 +4,33 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	provenance "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/app/upgrades"
 	rc1 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc1"
 	rc2 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc2"
 	rc3 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc3"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
-func UpgradeStrategy(ctx sdk.Context, app *provenance.App) error {
-	if err := rc1.UpgradeStrategy(ctx, app); err != nil {
-		return err
+func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error) {
+	// Migrate all the modules
+	newVM, err := upgrades.RunModuleMigrations(ctx, app, vm)
+	if err != nil {
+		return nil, err
 	}
-	if err := rc2.UpgradeStrategy(ctx, app); err != nil {
-		return err
+
+	if newVM, err = rc1.UpgradeStrategy(ctx, app, vm); err != nil {
+		return nil, err
 	}
-	if err := rc3.UpgradeStrategy(ctx, app); err != nil {
-		return err
+	if newVM, err = rc2.UpgradeStrategy(ctx, app, newVM); err != nil {
+		return nil, err
+	}
+	if newVM, err = rc3.UpgradeStrategy(ctx, app, vm); err != nil {
+		return nil, err
 	}
 	AddMarkerNavs(ctx, app, provenance.GetPioMainnet1DenomToNav())
-	return nil
+	return newVM, nil
 }
 
 // addMarkerNavs adds navs to existing markers
