@@ -14,7 +14,7 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 	tests := []struct {
 		name     string
 		trigger  types.Trigger
-		meter    sdk.GasMeter
+		meter    storetypes.GasMeter
 		expected int
 		panic    *storetypes.ErrorOutOfGas
 	}{

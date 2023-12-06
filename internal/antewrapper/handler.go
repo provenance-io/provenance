@@ -1,6 +1,8 @@
 package antewrapper
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -20,7 +22,7 @@ type HandlerOptions struct {
 	FeegrantKeeper         msgfeestypes.FeegrantKeeper
 	MsgFeesKeeper          msgfeestypes.MsgFeesKeeper
 	SignModeHandler        authsigning.SignModeHandler
-	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
+	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
 
 func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
