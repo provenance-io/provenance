@@ -74,9 +74,9 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.coordinator.Setup(suite.path)
 
 	params := suite.chainA.GetProvenanceApp().MintKeeper.GetParams(suite.chainA.GetContext())
-	params.InflationMax = sdk.NewDec(0)
-	params.InflationRateChange = sdk.NewDec(1)
-	params.InflationMin = sdk.NewDec(0)
+	params.InflationMax = sdkmath.NewDec(0)
+	params.InflationRateChange = sdkmath.NewDec(1)
+	params.InflationMin = sdkmath.NewDec(0)
 	suite.chainA.GetProvenanceApp().MintKeeper.SetParams(suite.chainA.GetContext(), params)
 	suite.chainB.GetProvenanceApp().MintKeeper.SetParams(suite.chainB.GetContext(), params)
 }
@@ -128,7 +128,7 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 	msg := transfertypes.NewMsgTransfer(
 		suite.path.EndpointB.ChannelConfig.PortID,
 		suite.path.EndpointB.ChannelID,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1)),
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
 		suite.chainB.SenderAccount.GetAddress().String(),
 		strings.Repeat("x", 4097),
 		clienttypes.NewHeight(0, 100),
@@ -258,7 +258,7 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 }
 
 // initializeEscrow sets up the escrow on the chain.
-func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdk.Int) {
+func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdkmath.Int) {
 	provenanceApp := suite.chainA.GetProvenanceApp()
 	supply := provenanceApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 

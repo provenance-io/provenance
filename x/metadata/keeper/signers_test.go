@@ -12,14 +12,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -4657,7 +4659,7 @@ func (s *AuthzTestSuite) TestIsWasmAccount() {
 			AccessControl:          nil,
 			Status:                 markertypes.StatusActive,
 			Denom:                  denom,
-			Supply:                 sdk.OneInt(),
+			Supply:                 sdkmath.OneInt(),
 			MarkerType:             markertypes.MarkerType_Coin,
 			SupplyFixed:            false,
 			AllowGovernanceControl: false,
@@ -5113,7 +5115,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 		},
 		Status:     markertypes.StatusActive,
 		Denom:      "onecoin",
-		Supply:     sdk.OneInt(),
+		Supply:     sdkmath.OneInt(),
 		MarkerType: markertypes.MarkerType_RestrictedCoin,
 	}
 	marker1AddrAcc, marker1AddrErr := markertypes.MarkerAddress(marker1.Denom)
@@ -5127,7 +5129,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 		AccessControl: marker1.AccessControl,
 		Status:        markertypes.StatusActive,
 		Denom:         "twocoin",
-		Supply:        sdk.OneInt(),
+		Supply:        sdkmath.OneInt(),
 		MarkerType:    markertypes.MarkerType_RestrictedCoin,
 	}
 	marker2AddrAcc, marker2AddrErr := markertypes.MarkerAddress(marker2.Denom)
@@ -5691,7 +5693,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerChangeFromExisting() {
 		BaseAccount: authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
 		Status:      markertypes.StatusActive,
 		Denom:       markerDenom,
-		Supply:      sdk.NewInt(1000),
+		Supply:      sdkmath.NewInt(1000),
 		MarkerType:  markertypes.MarkerType_RestrictedCoin,
 		AccessControl: []markertypes.AccessGrant{
 			{
@@ -5899,7 +5901,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerChangeToProposed() {
 		BaseAccount: authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
 		Status:      markertypes.StatusActive,
 		Denom:       markerDenom,
-		Supply:      sdk.NewInt(1000),
+		Supply:      sdkmath.NewInt(1000),
 		MarkerType:  markertypes.MarkerType_RestrictedCoin,
 		AccessControl: []markertypes.AccessGrant{
 			{
@@ -6688,7 +6690,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			},
 		},
 		Denom:      "testcoin",
-		Supply:     sdk.NewInt(1000),
+		Supply:     sdkmath.NewInt(1000),
 		MarkerType: markertypes.MarkerType_Coin,
 		Status:     markertypes.StatusActive,
 	}

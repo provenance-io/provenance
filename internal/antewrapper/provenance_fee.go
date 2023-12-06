@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	cerrs "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -183,7 +184,7 @@ func CalculateBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestype
 	}
 	gasWanted := feeTx.GetGas()
 	floorPrice := msgfeekeeper.GetFloorGasPrice(ctx)
-	amount := floorPrice.Amount.Mul(sdk.NewIntFromUint64(gasWanted))
+	amount := floorPrice.Amount.Mul(sdkmath.NewIntFromUint64(gasWanted))
 	baseFeeToDeduct := sdk.NewCoins(sdk.NewCoin(floorPrice.Denom, amount))
 	ctx.Logger().Debug("CalculateBaseFee",
 		"gasWanted", gasWanted,

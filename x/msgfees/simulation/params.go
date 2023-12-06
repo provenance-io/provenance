@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -25,7 +27,7 @@ func ParamChanges(_ *rand.Rand) []simtypes.ParamChange {
 			func(r *rand.Rand) string {
 				jsonResp, err := json.Marshal(sdk.Coin{
 					Denom:  "stake",
-					Amount: sdk.NewIntFromUint64(FloorMinGasPrice(r)),
+					Amount: sdkmath.NewIntFromUint64(FloorMinGasPrice(r)),
 				})
 				if err != nil {
 					panic("Error happened in JSON marshal")

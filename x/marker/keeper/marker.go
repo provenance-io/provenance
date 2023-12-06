@@ -545,7 +545,7 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		totalSupply := k.bankKeeper.GetSupply(ctx, m.GetDenom()).Amount
 		escrow := k.bankKeeper.GetBalance(ctx, m.GetAddress(), m.GetDenom())
 		inCirculation := totalSupply.Sub(escrow.Amount)
-		if inCirculation.GT(sdk.ZeroInt()) {
+		if inCirculation.GT(sdkmath.ZeroInt()) {
 			// changing to %v
 			return fmt.Errorf("cannot cancel marker with %v minted coin in circulation out of %v total."+
 				" ensure marker account holds the entire supply of %s", inCirculation, totalSupply, denom)
@@ -597,7 +597,7 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	totalSupply := k.bankKeeper.GetSupply(ctx, denom).Amount
 	escrow := k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
 	inCirculation := totalSupply.Sub(escrow.AmountOf(denom))
-	if inCirculation.GT(sdk.ZeroInt()) {
+	if inCirculation.GT(sdkmath.ZeroInt()) {
 		// use %v since %d doesn't apply to Int (wraps big.Int)
 		return fmt.Errorf("cannot delete marker with %v minted coin in circulation out of %v total."+
 			" ensure marker account holds the entire supply of %s", inCirculation, totalSupply, denom)

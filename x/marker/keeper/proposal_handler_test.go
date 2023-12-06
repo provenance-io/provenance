@@ -48,7 +48,7 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 		markerType markertypes.MarkerType, allowGov bool,
 	) *markertypes.MsgAddMarkerRequest {
 		return &markertypes.MsgAddMarkerRequest{
-			Amount:                 sdk.NewCoin(denom, sdk.NewInt(100)),
+			Amount:                 sdk.NewInt64Coin(denom, 100),
 			Manager:                manager,
 			FromAddress:            s.app.MarkerKeeper.GetAuthority(),
 			Status:                 status,
@@ -89,66 +89,66 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 		// INCREASE SUPPLY PROPOSALS
 		{
 			"supply increase - valid",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewCoin("test1", sdk.NewInt(100)), s.accountAddr.String()),
+			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("test1", 100), s.accountAddr.String()),
 			nil,
 		},
 		{
 			"supply increase - on finalized marker",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewCoin("pending", sdk.NewInt(100)), s.accountAddr.String()),
+			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("pending", 100), s.accountAddr.String()),
 			nil,
 		},
 		{
 			"supply increase - marker doesn't exist",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewCoin("test", sdk.NewInt(100)), s.accountAddr.String()),
+			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("test", 100), s.accountAddr.String()),
 			fmt.Errorf("test marker does not exist"),
 		},
 		{
 			"supply increase - no governance allowed",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewCoin("testnogov", sdk.NewInt(100)), s.accountAddr.String()),
+			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("testnogov", 100), s.accountAddr.String()),
 			fmt.Errorf("testnogov marker does not allow governance control"),
 		},
 		{
 			"supply increase - valid no target",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewCoin("test1", sdk.NewInt(100)), ""),
+			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("test1", 100), ""),
 			nil,
 		},
 
 		// DECREASE SUPPLY PROPOSALS
 		{
 			"supply decrease - valid",
-			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewCoin("test1", sdk.NewInt(100))),
+			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewInt64Coin("test1", 100)),
 			nil,
 		},
 		{
 			"supply decrease - no governance allowed",
-			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewCoin("testnogov", sdk.NewInt(100))),
+			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewInt64Coin("testnogov", 100)),
 			fmt.Errorf("testnogov marker does not allow governance control"),
 		},
 		{
 			"supply decrease - marker doesnot exist",
-			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewCoin("test", sdk.NewInt(100))),
+			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewInt64Coin("test", 100)),
 			fmt.Errorf("test marker does not exist"),
 		},
 
 		// WITHDRAW PROPOSALS
 		{
 			"withdraw - valid",
-			markertypes.NewWithdrawEscrowProposal("title", "description", "test1", sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(10))), s.accountAddr.String()),
+			markertypes.NewWithdrawEscrowProposal("title", "description", "test1", sdk.NewCoins(sdk.NewInt64Coin("test1", 10)), s.accountAddr.String()),
 			nil,
 		},
 		{
 			"withdraw - no governance",
-			markertypes.NewWithdrawEscrowProposal("title", "description", "testnogov", sdk.NewCoins(sdk.NewCoin("testnogov", sdk.NewInt(1))), ""),
+			markertypes.NewWithdrawEscrowProposal("title", "description", "testnogov", sdk.NewCoins(sdk.NewInt64Coin("testnogov", 1)), ""),
 			fmt.Errorf("testnogov marker does not allow governance control"),
 		},
 		{
 			"withdraw - marker doesnot exist",
-			markertypes.NewWithdrawEscrowProposal("title", "description", "test", sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))), ""),
+			markertypes.NewWithdrawEscrowProposal("title", "description", "test", sdk.NewCoins(sdk.NewInt64Coin("test", 100)), ""),
 			fmt.Errorf("test marker does not exist"),
 		},
 		{
 			"withdraw - invalid recpient",
-			markertypes.NewWithdrawEscrowProposal("title", "description", "test1", sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(100))), "bad1address"),
+			markertypes.NewWithdrawEscrowProposal("title", "description", "test1", sdk.NewCoins(sdk.NewInt64Coin("test1", 100)), "bad1address"),
 			fmt.Errorf("decoding bech32 failed: invalid checksum (expected dpg8tu got ddress)"),
 		},
 

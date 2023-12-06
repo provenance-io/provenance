@@ -20,6 +20,8 @@ import (
 	"github.com/cometbft/cometbft/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -209,8 +211,8 @@ func InitTestnet(
 			return err
 		}
 
-		hashAmt := sdk.NewInt(100_000_000_000 / int64(numValidators))
-		convAmt := sdk.NewInt(1_000_000_000)
+		hashAmt := sdkmath.NewInt(100_000_000_000 / int64(numValidators))
+		convAmt := sdkmath.NewInt(1_000_000_000)
 		nhashAmt := hashAmt.Mul(convAmt)
 
 		coins := sdk.Coins{
@@ -227,8 +229,8 @@ func InitTestnet(
 			valPubKeys[i],
 			sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(),
+			stakingtypes.NewCommissionRates(sdkmath.OneDec(), sdkmath.OneDec(), sdkmath.OneDec()),
+			sdkmath.OneInt(),
 		)
 
 		txBuilder := clientCtx.TxConfig.NewTxBuilder()
@@ -271,7 +273,7 @@ func InitTestnet(
 			}),
 		})
 
-	if err := markerAcc.SetSupply(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
+	if err := markerAcc.SetSupply(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdkmath.NewInt(100_000_000_000).MulRaw(1_000_000_000))); err != nil {
 		return err
 	}
 
@@ -368,7 +370,7 @@ func initGenFiles(
 	// Set the gov depost denom
 	var govGenState govtypesv1beta1.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
-	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(chainDenom, sdk.NewInt(10000000)))
+	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(chainDenom, 10000000))
 	govGenState.VotingParams.VotingPeriod, _ = time.ParseDuration("360s")
 	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&govGenState)
 
@@ -376,10 +378,10 @@ func initGenFiles(
 	var mintGenState minttypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
 	mintGenState.Params.MintDenom = chainDenom
-	mintGenState.Minter.AnnualProvisions = sdk.ZeroDec()
-	mintGenState.Minter.Inflation = sdk.ZeroDec()
-	mintGenState.Params.InflationMax = sdk.ZeroDec()
-	mintGenState.Params.InflationMin = sdk.ZeroDec()
+	mintGenState.Minter.AnnualProvisions = sdkmath.ZeroDec()
+	mintGenState.Minter.Inflation = sdkmath.ZeroDec()
+	mintGenState.Params.InflationMax = sdkmath.ZeroDec()
+	mintGenState.Params.InflationMin = sdkmath.ZeroDec()
 	appGenState[minttypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&mintGenState)
 
 	// Set the root names

@@ -3,9 +3,11 @@ package marker_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -27,31 +29,31 @@ func TestBeginBlocker(t *testing.T) {
 		Status:      types.StatusActive,
 		SupplyFixed: true,
 		Denom:       "testmint",
-		Supply:      sdk.NewInt(100),
+		Supply:      sdkmath.NewInt(100),
 	}
 
 	app.MarkerKeeper.SetMarker(ctx, testmint)
 
 	// Initial supply of testmint must be zero.
-	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdk.NewInt(0))
+	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdkmath.NewInt(0))
 
 	marker.BeginBlocker(ctx, abci.RequestBeginBlock{}, app.MarkerKeeper, app.BankKeeper)
 
 	// Post begin block the supply must be 100
-	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdk.NewInt(100))
+	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdkmath.NewInt(100))
 
 	// Reset supply to a lower level
-	testmint.Supply = sdk.NewInt(50)
+	testmint.Supply = sdkmath.NewInt(50)
 	app.MarkerKeeper.SetMarker(ctx, testmint)
 
 	marker.BeginBlocker(ctx, abci.RequestBeginBlock{}, app.MarkerKeeper, app.BankKeeper)
 
 	// Post begin block the supply must be 0
-	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdk.NewInt(50))
+	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdkmath.NewInt(50))
 
 	// Cancel marker and zero out supply
 	testmint.Status = types.StatusDestroyed
-	require.NoError(t, app.MarkerKeeper.AdjustCirculation(ctx, testmint, sdk.NewCoin(testmint.Denom, sdk.ZeroInt())))
+	require.NoError(t, app.MarkerKeeper.AdjustCirculation(ctx, testmint, sdk.NewInt64Coin(testmint.Denom, 0)))
 	app.MarkerKeeper.SetMarker(ctx, testmint)
 
 	// Marker should still exist.

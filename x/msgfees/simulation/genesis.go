@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
@@ -34,12 +36,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	msgFeesGenesis := types.GenesisState{
 		Params: types.Params{
-			FloorGasPrice: sdk.Coin{Amount: sdk.NewIntFromUint64(floorGasPrice), Denom: "blah"},
+			FloorGasPrice: sdk.Coin{Amount: sdkmath.NewIntFromUint64(floorGasPrice), Denom: "blah"},
 		},
 		MsgFees: []types.MsgFee{
 			// Adding fees for create marker with asking for a large number of stake to make sure that
 			// the call is failed without the additional fee provided.
-			types.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewCoin("stake", sdk.NewInt(100000000000000)), "", types.DefaultMsgFeeBips),
+			types.NewMsgFee(sdk.MsgTypeURL(&markertypes.MsgAddMarkerRequest{}), sdk.NewInt64Coin("stake", 100_000_000_000_000), "", types.DefaultMsgFeeBips),
 		},
 	}
 

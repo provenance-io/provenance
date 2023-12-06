@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -38,8 +40,8 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 					MaximumActions:               1,
 					MinimumDelegationAmount:      &minimumDelegation,
 					MaximumDelegationAmount:      &maximumDelegation,
-					MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-					MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+					MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
+					MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
 				},
 			},
 		},
@@ -291,8 +293,8 @@ func (s *RewardMsgTypesTestSuite) TestMsgCreateRewardProgramRequestValidateBasic
 								MaximumActions:               0,
 								MinimumDelegationAmount:      &minimumDelegation,
 								MaximumDelegationAmount:      &maximumDelegation,
-								MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-								MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+								MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
+								MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
 							},
 						},
 					},

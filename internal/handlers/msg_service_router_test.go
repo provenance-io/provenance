@@ -12,12 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	sdksim "cosmossdk.io/simapp"
 	simappparams "cosmossdk.io/simapp/params"
 
@@ -244,7 +245,7 @@ func TestFailedTx(tt *testing.T) {
 	stopIfFailed(tt)
 
 	tt.Run("no msg-based fee", func(t *testing.T) {
-		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2))))
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2)))
 		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
 		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err, "SignTxAndGetBytes")
@@ -280,7 +281,7 @@ func TestFailedTx(tt *testing.T) {
 		fmt.Sprintf("funding acct1 with %s", gasFeesString))
 
 	tt.Run("10stake fee associated with msg type", func(t *testing.T) {
-		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2))))
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2)))
 		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10), "", 0)
 		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 10stake")
 		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+10))
@@ -320,7 +321,7 @@ func TestMsgService(tt *testing.T) {
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(600500)))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 600_500))
 	app := piosimapp.SetupWithGenesisAccounts(tt, "msgfee-testing",
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
@@ -341,7 +342,7 @@ func TestMsgService(tt *testing.T) {
 		// Sending 100hotdog with fees of 150000stake.
 		// account 1 will lose 100hotdog,150000stake
 		// account 2 will gain 100hotdog
-		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
 		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000))
 
 		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
@@ -376,9 +377,9 @@ func TestMsgService(tt *testing.T) {
 		// The send message will have a fee of 800hotdog.
 		// account 1 will lose 100100stake,800hotdog.
 		// account 2 will gain 50hotdog.
-		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 50)))
 		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+100), sdk.NewInt64Coin("hotdog", 800))
-		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), "", 0)
+		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("hotdog", 800), "", 0)
 		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog")
 		acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 		txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
@@ -417,7 +418,7 @@ func TestMsgService(tt *testing.T) {
 	})
 
 	tt.Run("10stake fee associated with msg type", func(t *testing.T) {
-		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(50))))
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 50)))
 		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10), "", 0)
 		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 10stake")
 
@@ -466,7 +467,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
 	gasAmt := NewTestGasLimit() + 20_000
-	acct1Balance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(1_000)), sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt)))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1_000), sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt)))
 	app := piosimapp.SetupWithGenesisAccounts(t, "msgfee-testing",
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
@@ -484,9 +485,9 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 
 	// Sending 100hotdog coin from 1 to 2.
 	// Will have a msg fee of 800hotdog, 600 will go to 2, 200 to module.
-	msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+	msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt)), sdk.NewInt64Coin("hotdog", 800))
-	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewCoin("hotdog", sdk.NewInt(800)), addr2.String(), 7_500)
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("hotdog", 800), addr2.String(), 7_500)
 	require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog addr2 75%")
 
 	txBytes, err := SignTxAndGetBytes(gasAmt, fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
@@ -533,7 +534,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
 	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
 	acct3 := authtypes.NewBaseAccount(addr3, priv2.PubKey(), 2, 0)
-	initBalance := sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(10000)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(721000)))
+	initBalance := sdk.NewCoins(sdk.NewInt64Coin("hotdog", 10_000), sdk.NewInt64Coin(sdk.DefaultBondDenom, 721_000))
 	app := piosimapp.SetupWithGenesisAccounts(tt, "msgfee-testing",
 		[]authtypes.GenesisAccount{acct1, acct2, acct3},
 		banktypes.Balance{Address: addr1.String(), Coins: initBalance},
@@ -549,7 +550,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 	sendAuth := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500)), nil)
 	require.NoError(tt, app.AuthzKeeper.SaveGrant(ctx, addr2, addr1, sendAuth, &exp1Hour), "Save Grant addr2 addr1 500hotdog")
 	// Set a MsgSend msg-based fee of 800hotdog.
-	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgSend{}), sdk.NewCoin("hotdog", sdk.NewInt(800)), "", 0)
+	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(&banktypes.MsgSend{}), sdk.NewInt64Coin("hotdog", 800), "", 0)
 	require.NoError(tt, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog")
 
 	// Check all account balances before we start.
@@ -562,7 +563,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 	stopIfFailed(tt)
 
 	tt.Run("exec one send", func(t *testing.T) {
-		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
 
 		// tx authz send message with correct amount of fees associated
 		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
@@ -604,7 +605,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 
 	tt.Run("exec two sends", func(t *testing.T) {
 		// send 2 successful authz messages
-		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(80))))
+		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 80)))
 		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
 		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 300000), sdk.NewInt64Coin("hotdog", 1600))
 		acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
@@ -643,7 +644,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 	})
 
 	tt.Run("not enough fees", func(t *testing.T) {
-		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewCoin("hotdog", sdk.NewInt(100))))
+		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
 		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
 		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin("hotdog", 799))
 		acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
@@ -919,7 +920,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	blockTime := ctx.BlockTime()
-	fundCoins := sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(NHash, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -940,7 +941,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 					Transfer: &rewardtypes.ActionTransfer{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 0),
 					},
 				},
 			},
@@ -974,7 +975,7 @@ func TestRewardsProgramStart(t *testing.T) {
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -995,7 +996,7 @@ func TestRewardsProgramStart(t *testing.T) {
 					Transfer: &rewardtypes.ActionTransfer{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 0),
 					},
 				},
 			},
@@ -1041,7 +1042,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
@@ -1062,7 +1063,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 					Transfer: &rewardtypes.ActionTransfer{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 0),
 					},
 				},
 			},
@@ -1084,7 +1085,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 
 	time.Sleep(110 * time.Millisecond)
 	// tx with a fee associated with msg type and account has funds
-	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
@@ -1170,8 +1171,8 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(50*time.Millisecond),
 		uint64(30),
 		10,
@@ -1183,7 +1184,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 					Transfer: &rewardtypes.ActionTransfer{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 0),
 					},
 				},
 			},
@@ -1198,12 +1199,12 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
-	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
@@ -1306,8 +1307,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(1),
 		100,
@@ -1319,7 +1320,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 					Transfer: &rewardtypes.ActionTransfer{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 0),
 					},
 				},
 			},
@@ -1336,12 +1337,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
-	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
@@ -1450,7 +1451,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// make sure account balance has the tokens
 	balanceChange := balanceLater.AmountOf(pioconfig.GetProvenanceConfig().FeeDenom).Sub(balance.AmountOf(pioconfig.GetProvenanceConfig().FeeDenom))
-	assert.Equal(t, sdk.NewInt(50_000_000_000).String(), balanceChange.String(), "balance change")
+	assert.Equal(t, sdkmath.NewInt(50_000_000_000).String(), balanceChange.String(), "balance change")
 }
 
 func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAccountFundedDifferentDenom(t *testing.T) {
@@ -1465,8 +1466,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("hotdog", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("hotdog", 1000_000_000_000),
+		sdk.NewInt64Coin("hotdog", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(1),
 		100,
@@ -1478,7 +1479,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 					Transfer: &rewardtypes.ActionTransfer{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 0),
 					},
 				},
 			},
@@ -1495,12 +1496,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
-	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
@@ -1614,7 +1615,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	balanceChange := balanceLater.AmountOf("hotdog").Sub(balance.AmountOf("hotdog"))
 	// make sure account balance has the tokens
-	assert.Equal(t, sdk.NewInt(50_000_000_000).String(), balanceChange.String(), "balance change")
+	assert.Equal(t, sdkmath.NewInt(50_000_000_000).String(), balanceChange.String(), "balance change")
 }
 
 func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAccountFundedDifferentDenomClaimedTogether(t *testing.T) {
@@ -1633,8 +1634,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("hotdog", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("hotdog", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("hotdog", 1000_000_000_000),
+		sdk.NewInt64Coin("hotdog", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(1),
 		100,
@@ -1646,7 +1647,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 					Transfer: &rewardtypes.ActionTransfer{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 0),
 					},
 				},
 			},
@@ -1658,8 +1659,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		"description",
 		2,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(1),
 		100,
@@ -1671,7 +1672,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 					Transfer: &rewardtypes.ActionTransfer{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 0),
 					},
 				},
 			},
@@ -1688,12 +1689,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
-	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
@@ -1812,12 +1813,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// make sure account balance has the tokens
 	balanceChangeHotDog := balanceLater.AmountOf("hotdog").Sub(balance.AmountOf("hotdog"))
-	assert.Equal(t, sdk.NewInt(50_000_000_000).String(), balanceChangeHotDog.String(), "balance change hotdog")
+	assert.Equal(t, sdkmath.NewInt(50_000_000_000).String(), balanceChangeHotDog.String(), "balance change hotdog")
 
 	balanceLater = app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// make sure account balance has the tokens
 	balanceChangeNHash := balanceLater.AmountOf("nhash").Sub(balance.AmountOf("nhash"))
-	assert.Equal(t, sdk.NewInt(50_000_000_000).String(), balanceChangeNHash.String(), "balance change nhash")
+	assert.Equal(t, sdkmath.NewInt(50_000_000_000).String(), balanceChangeNHash.String(), "balance change nhash")
 }
 
 func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAccountNotFunded(t *testing.T) {
@@ -1832,8 +1833,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(1),
 		100,
@@ -1845,7 +1846,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 					Transfer: &rewardtypes.ActionTransfer{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 0),
 					},
 				},
 			},
@@ -1861,12 +1862,12 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
-	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
@@ -1969,8 +1970,8 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(1),
 		100,
@@ -1984,7 +1985,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 						MaximumActions: 10,
 						MinimumDelegationAmount: sdk.Coin{
 							Denom:  "nhash",
-							Amount: sdk.NewInt(10_000_000_000)},
+							Amount: sdkmath.NewInt(10_000_000_000)},
 					},
 				},
 			},
@@ -1999,12 +2000,12 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
-	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
@@ -2056,8 +2057,8 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(1),
 		100,
@@ -2071,7 +2072,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 						MaximumActions: 10,
 						MinimumDelegationAmount: sdk.Coin{
 							Denom:  "nhash",
-							Amount: sdk.NewInt(100)},
+							Amount: sdkmath.NewInt(100)},
 					},
 				},
 			},
@@ -2086,12 +2087,12 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
-	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
@@ -2161,8 +2162,8 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(1),
 		100,
@@ -2176,7 +2177,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 						MaximumActions: 10,
 						MinimumDelegationAmount: sdk.Coin{
 							Denom:  "nhash",
-							Amount: sdk.NewInt(100000000)},
+							Amount: sdkmath.NewInt(100_000_000)},
 					},
 				},
 			},
@@ -2191,12 +2192,12 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
-	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(50))))
+	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
@@ -2249,8 +2250,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(30),
 		10,
@@ -2262,7 +2263,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 					Vote: &rewardtypes.ActionVote{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.ZeroInt()),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 0),
 					},
 				},
 			},
@@ -2277,7 +2278,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
@@ -2361,8 +2362,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(30),
 		10,
@@ -2374,7 +2375,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 					Vote: &rewardtypes.ActionVote{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.NewInt(1000)),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 1000),
 					},
 				},
 			},
@@ -2390,7 +2391,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct2.GetAddress(), fundCoins),
 		"funding acct2 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
@@ -2490,8 +2491,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(30),
 		10,
@@ -2503,7 +2504,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 					Vote: &rewardtypes.ActionVote{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.NewInt(1000)),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 1000),
 					},
 				},
 			},
@@ -2518,7 +2519,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
@@ -2593,7 +2594,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	)
 	require.NoError(t, err, "RewardDistributionsByAddress")
 	if assert.NotNil(t, byAddress, "byAddress") && assert.NotEmpty(t, byAddress.RewardAccountState, "RewardAccountState") {
-		assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(),
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
 			byAddress.RewardAccountState[0].TotalRewardClaim.String(), "TotalRewardClaim")
 		assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE,
 			byAddress.RewardAccountState[0].ClaimStatus, "ClaimStatus")
@@ -2613,8 +2614,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(30),
 		10,
@@ -2626,7 +2627,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 					Vote: &rewardtypes.ActionVote{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.NewInt(1000)),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 1000),
 						ValidatorMultiplier:     10,
 					},
 				},
@@ -2641,7 +2642,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -2695,7 +2696,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended.")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
 		Denom:  "nhash",
-		Amount: sdk.ZeroInt(),
+		Amount: sdkmath.ZeroInt(),
 	}), "claim period has not ended so rewards still haven't been calculated(hence 0 coins)")
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct1.Address)
@@ -2708,7 +2709,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
+	assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
 }
 
@@ -2728,8 +2729,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(30),
 		10,
@@ -2741,7 +2742,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 					Vote: &rewardtypes.ActionVote{
 						MinimumActions:          0,
 						MaximumActions:          10,
-						MinimumDelegationAmount: sdk.NewCoin("nhash", sdk.NewInt(1000)),
+						MinimumDelegationAmount: sdk.NewInt64Coin("nhash", 1000),
 						ValidatorMultiplier:     10,
 					},
 				},
@@ -2755,8 +2756,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct3.GetAddress(), sdk.NewCoins(sdk.NewCoin("nhash", sdk.NewInt(290500010)))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct3.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -2810,7 +2811,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended.")
 	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
 		Denom:  "nhash",
-		Amount: sdk.ZeroInt(),
+		Amount: sdkmath.ZeroInt(),
 	}), "claim period has not ended so rewards still haven't been calculated(hence 0 coins)")
 
 	accountState, err := app.RewardKeeper.GetRewardAccountState(ctx, uint64(1), uint64(1), acct3.Address)
@@ -2823,7 +2824,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 		ClaimStatus: rewardtypes.RewardAccountState_CLAIM_STATUS_UNSPECIFIED,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
+	assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(), byAddress.RewardAccountState[0].TotalRewardClaim.String(), "RewardDistributionsByAddress incorrect")
 	assert.Equal(t, rewardtypes.RewardAccountState_CLAIM_STATUS_UNCLAIMABLE, byAddress.RewardAccountState[0].ClaimStatus, "claim status incorrect")
 }
 
@@ -2843,8 +2844,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(30),
 		10,
@@ -2872,7 +2873,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
@@ -2967,8 +2968,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 		"description",
 		1,
 		acct1.Address,
-		sdk.NewCoin("nhash", sdk.NewInt(1000_000_000_000)),
-		sdk.NewCoin("nhash", sdk.NewInt(10_000_000_000)),
+		sdk.NewInt64Coin("nhash", 1000_000_000_000),
+		sdk.NewInt64Coin("nhash", 10_000_000_000),
 		time.Now().Add(100*time.Millisecond),
 		uint64(30),
 		10,
@@ -2982,8 +2983,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(100, 0),
+						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(100, 0),
 					},
 				},
 			},
@@ -3000,7 +3001,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(290500010)))
+	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
@@ -3037,7 +3038,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 
 	// tx with a fee associated with msg type and account has funds
 	delAddr, _ := valSet.GetByIndex(0)
-	delegation := stakingtypes.NewMsgDelegate(addr, delAddr, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))
+	delegation := stakingtypes.NewMsgDelegate(addr, delAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000))
 
 	for height := int64(3); height < int64(23); height++ {
 		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})

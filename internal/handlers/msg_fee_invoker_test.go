@@ -48,8 +48,8 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000))), msgType, "")
-		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
+		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000)), msgType, "")
+		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewInt64Coin("atom", 100_000)})
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
@@ -66,17 +66,17 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(900000)))), "fund account")
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 900_000))), "fund account")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().ErrorContains(err, "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "feeChargeFn 2")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 2")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(100000)))), "fund account again")
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 100_000))), "fund account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().NoError(err, "feeChargeFn 3")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(NHash, sdk.NewInt(1000000))}), "coins all gt 1000000nhash")
+	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewInt64Coin(NHash, 1_000_000)}), "coins all gt 1000000nhash")
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
@@ -93,8 +93,8 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000))), msgType, "")
-		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))}) // fee consumed at ante handler
+		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000)), msgType, "")
+		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewInt64Coin("atom", 100_000)}) // fee consumed at ante handler
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
@@ -106,7 +106,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	})
 	s.Require().NoError(err, "NewAdditionalMsgFeeHandler")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000)))), "funding account")
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
 	coins, _, err := feeChargeFn(s.ctx, false)
 	s.Require().ErrorContains(err, "spendable balance 0atom is smaller than 20000atom: insufficient funds", "feeChargeFn 1")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
@@ -135,8 +135,8 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000))), msgType, "")
-		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
+		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000)), msgType, "")
+		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewInt64Coin("atom", 100_000)})
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
@@ -150,7 +150,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	coins, _, err := feeChargeFn(s.ctx, false)
 	s.Require().Nil(err, "Got error when should not have.")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(NHash, sdk.NewInt(1000000))}))
+	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewInt64Coin(NHash, 1000000)}))
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
@@ -245,7 +245,7 @@ func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coin
 	})
 	s.txBuilder.SetFeeGranter(acct2.GetAddress())
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000)))), "funding account")
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
 
 	testTx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err, "CreateTestTx")

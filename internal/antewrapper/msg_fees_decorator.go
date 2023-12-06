@@ -1,6 +1,8 @@
 package antewrapper
 
 import (
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -93,7 +95,7 @@ func EnsureSufficientFloorAndMsgFees(ctx sdk.Context, feeCoins sdk.Coins, floorG
 
 	var baseFee sdk.Coins
 	if !floorGasPrice.IsZero() {
-		baseFee = baseFee.Add(sdk.NewCoin(floorGasPrice.Denom, floorGasPrice.Amount.Mul(sdk.NewIntFromUint64(gas))))
+		baseFee = baseFee.Add(sdk.NewCoin(floorGasPrice.Denom, floorGasPrice.Amount.Mul(sdkmath.NewIntFromUint64(gas))))
 	}
 	reqTotal := baseFee.Add(additionalFees...)
 

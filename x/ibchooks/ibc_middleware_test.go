@@ -10,6 +10,7 @@ import (
 	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	sdksim "cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -118,7 +119,7 @@ func NewTransferPath(chainA, chainB *testutil.TestChain) *ibctesting.Path {
 func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 	var (
 		trace    transfertypes.DenomTrace
-		amount   sdk.Int
+		amount   sdkmath.Int
 		receiver string
 		status   Status
 	)
@@ -148,7 +149,7 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 			receiver = suite.chainB.SenderAccount.GetAddress().String() // must be explicitly changed in malleate
 			status = Status{}
 
-			amount = sdk.NewInt(100) // must be explicitly changed in malleate
+			amount = sdkmath.NewInt(100) // must be explicitly changed in malleate
 			seq := uint64(1)
 
 			trace = transfertypes.ParseDenomTrace(sdk.DefaultBondDenom)
@@ -276,7 +277,7 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	// Check that the contract has no funds
 	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
-	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+	suite.Require().Equal(sdkmath.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"echo":{"msg":"test"}}}}`, addr))
@@ -290,7 +291,7 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 
 	// Check that the token has now been transferred to the contract
 	balance = suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
-	suite.Require().Equal(sdk.NewInt(1), balance.Amount)
+	suite.Require().Equal(sdkmath.NewInt(1), balance.Amount)
 }
 
 // If the wasm call wails, the contract acknowledgement should be an error and the funds returned
@@ -302,7 +303,7 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	// Check that the contract has no funds
 	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
-	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+	suite.Require().Equal(sdkmath.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC with a message that the contract will reject
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"not_echo":{"msg":"test"}}}}`, addr))
@@ -316,7 +317,7 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	// Check that the token has now been transferred to the contract
 	balance = suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	fmt.Println(balance)
-	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+	suite.Require().Equal(sdkmath.NewInt(0), balance.Amount)
 }
 
 // After successfully executing a wasm call, the contract should have the funds sent via IBC
@@ -328,7 +329,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 	// Check that the contract has no funds
 	localDenom := ibchooks.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
-	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+	suite.Require().Equal(sdkmath.NewInt(0), balance.Amount)
 
 	memo := fmt.Sprintf(`{"marker":{},"wasm":{"contract":"%s","msg":{"increment":{}}}}`, addr)
 
@@ -366,7 +367,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 
 	// Check that the token has now been transferred to the contract
 	balance = suite.chainA.GetProvenanceApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
-	suite.Require().Equal(sdk.NewInt(2), balance.Amount)
+	suite.Require().Equal(sdkmath.NewInt(2), balance.Amount)
 }
 
 // custom MsgTransfer constructor that supports Memo
@@ -455,7 +456,7 @@ func (suite *HooksTestSuite) TestAcks() {
 	// Generate swap instructions for the contract
 	callbackMemo := fmt.Sprintf(`{"ibc_callback":"%s"}`, addr)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), callbackMemo)
+	transferMsg := NewMsgTransfer(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), callbackMemo)
 	suite.FullSend(transferMsg, AtoB)
 
 	// The test contract will increment the counter for itself every time it receives an ack
@@ -478,7 +479,7 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	chainBSenderAddress := suite.chainB.SenderAccount.GetAddress()
 
 	// Sending a packet without memo to ensure that the ibc_callback middleware doesn't interfere with a regular send
-	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), chainASenderAddress.String(), chainBSenderAddress.String(), "")
+	transferMsg := NewMsgTransfer(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), chainASenderAddress.String(), chainBSenderAddress.String(), "")
 	_, _, ack, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err, "FullSend()")
 	suite.Require().Contains(ack, "result")
@@ -488,7 +489,7 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	suite.Require().NoError(err, "GetMarkerByDenom()")
 	suite.Require().Equal(marker.GetDenom(), denom)
 
-	transferMsg = NewMsgTransfer(sdk.NewCoin(denom, sdk.NewInt(100)), chainBSenderAddress.String(), chainASenderAddress.String(), "")
+	transferMsg = NewMsgTransfer(sdk.NewInt64Coin(denom, 100), chainBSenderAddress.String(), chainASenderAddress.String(), "")
 	_, _, ack, err = suite.FullSend(transferMsg, BtoA)
 	suite.Require().NoError(err, "FullSend()")
 	suite.Require().Contains(ack, "result")
@@ -520,7 +521,7 @@ func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	err = chainA.MarkerKeeper.WithdrawCoins(suite.chainA.GetContext(), chainASenderAddress, chainASenderAddress, hotdogs, sdk.NewCoins(sdk.NewInt64Coin(hotdogs, 55)))
 	suite.Require().NoError(err, "chainA WithdrawCoins()")
 
-	transferMsg = NewMsgTransfer(sdk.NewCoin(hotdogs, sdk.NewInt(55)), chainASenderAddress.String(), chainBSenderAddress.String(), "")
+	transferMsg = NewMsgTransfer(sdk.NewInt64Coin(hotdogs, 55), chainASenderAddress.String(), chainBSenderAddress.String(), "")
 	_, _, ack, err = suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err, "AtoB FullSend()")
 	suite.Require().Contains(ack, "result", "FullSend() ack check")

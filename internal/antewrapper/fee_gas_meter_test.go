@@ -23,9 +23,9 @@ func TestFeeGasMeter(t *testing.T) {
 		fees  map[string]sdk.Coin
 	}{
 		{limit: 10, usage: []sdkgas.Gas{1, 2, 3, 4}, fees: nil},
-		{limit: 1000, usage: []sdkgas.Gas{40, 30, 20, 10, 900}, fees: map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1000000)), "/provenance.marker.v1.MsgAddMarkerRequest": sdk.NewCoin("doge", sdk.NewInt(1000000))}},
-		{limit: 100000, usage: []sdkgas.Gas{99999, 1}, fees: map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1000000))}},
-		{limit: 100000000, usage: []sdkgas.Gas{50000000, 40000000, 10000000}, fees: map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(5555))}},
+		{limit: 1000, usage: []sdkgas.Gas{40, 30, 20, 10, 900}, fees: map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_000_000), "/provenance.marker.v1.MsgAddMarkerRequest": sdk.NewInt64Coin("doge", 1_000_000)}},
+		{limit: 100_000, usage: []sdkgas.Gas{99999, 1}, fees: map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_000_000)}},
+		{limit: 100_000_000, usage: []sdkgas.Gas{50_000_000, 40_000_000, 10_000_000}, fees: map[string]sdk.Coin{"/cosmos.bank.v1beta1.MsgSend": sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 5555)}},
 		{limit: 65535, usage: []sdkgas.Gas{32768, 32767}, fees: nil},
 		{limit: 65536, usage: []sdkgas.Gas{32768, 32767, 1}, fees: nil},
 	}
@@ -65,20 +65,20 @@ func TestFeeGasMeter(t *testing.T) {
 		assert.Equal(t, meter.FeeConsumed().Sort(), usedFee.Sort(), "FeeConsumed does not match all Fees")
 		meter2 := NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100), false).(*FeeGasMeter)
 		meter2.ConsumeGas(sdkgas.Gas(50), "consume half max")
-		meter2.ConsumeFee(sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1000000))), "/cosmos.bank.v1beta1.MsgSend", "")
+		meter2.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_000_000)), "/cosmos.bank.v1beta1.MsgSend", "")
 		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 50 fee consumed: 1000000nhash", meter2.String(), "expect string output to match")
 		meter2.RefundGas(uint64(20), "refund")
 		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 30 fee consumed: 1000000nhash", meter2.String(), "expect string output to match")
 		require.Equalf(t, "1000000nhash", meter2.FeeConsumed().String(), "expect string output to match")
 		require.Panics(t, func() { meter2.ConsumeGas(sdkgas.Gas(70)+2, "panic") })
-		meter2.ConsumeFee(sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(2000000))), "/cosmos.bank.v1beta1.MsgSend", "")
+		meter2.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 2_000_000)), "/cosmos.bank.v1beta1.MsgSend", "")
 		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 102 fee consumed: 3000000nhash", meter2.String(), "expect string output to match")
 		meter2.RefundGas(uint64(20), "refund")
 		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 82 fee consumed: 3000000nhash", meter2.String(), "expect string output to match")
 		require.Equalf(t, "3000000nhash", meter2.FeeConsumed().String(), "expect string output to match")
 		require.Equalf(t, "map[/cosmos.bank.v1beta1.MsgSend:3000000nhash]", fmt.Sprintf("%v", meter2.FeeConsumedByMsg()), "expect string output to match")
-		meter2.ConsumeFee(sdk.NewCoins(sdk.NewCoin("doge", sdk.NewInt(2000000))), "/provenance.marker.v1.MsgAddMarkerRequest", "")
-		meter2.ConsumeFee(sdk.NewCoins(sdk.NewCoin("jackthecat", sdk.NewInt(420))), "/provenance.marker.v1.MsgAddMarkerRequest", "")
+		meter2.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin("doge", 2_000_000)), "/provenance.marker.v1.MsgAddMarkerRequest", "")
+		meter2.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 420)), "/provenance.marker.v1.MsgAddMarkerRequest", "")
 		meter2FeesConsumed := meter2.FeeConsumed()
 		require.Equalf(t, "2000000doge,420jackthecat,3000000nhash", meter2FeesConsumed.String(), "expect string output to match")
 		require.Equalf(t, "2000000doge,420jackthecat", meter2.FeeConsumedForType("/provenance.marker.v1.MsgAddMarkerRequest", "").String(), "expect string output to match")

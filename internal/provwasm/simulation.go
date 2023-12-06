@@ -10,6 +10,8 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -162,7 +164,7 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msg := markertypes.NewMsgAddMarkerRequest(
 			denom,
-			sdk.NewIntFromUint64(1000000000),
+			sdkmath.NewIntFromUint64(1_000_000_000),
 			node.Address,
 			node.Address,
 			markertypes.MarkerType_Coin,
@@ -179,7 +181,7 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 		// fund the node account to do all of these txs
 		fundErr := testutil.FundAccount(bk, ctx, node.Address, sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(1000000000000000),
+			Amount: sdkmath.NewInt(1_000_000_000_000_000),
 		}))
 
 		if fundErr != nil {
@@ -243,7 +245,7 @@ func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.Keep
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		coins := []sdk.Coin{{
 			Denom:  denom,
-			Amount: sdk.NewIntFromUint64(1000000),
+			Amount: sdkmath.NewIntFromUint64(1_000_000),
 		}}
 		msg := markertypes.NewMsgWithdrawRequest(node.Address, consumer.Address, denom, coins)
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
@@ -350,7 +352,7 @@ func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 		amount, _ := sdk.ParseCoinsNormalized(fmt.Sprintf("100%s", denom))
 		coins := bk.SpendableCoins(ctx, consumer.Address)
 
-		if coins.AmountOf(denom).LT(sdk.NewInt(100)) {
+		if coins.AmountOf(denom).LT(sdkmath.NewInt(100)) {
 			return simtypes.NoOpMsg("provwasm", "", "not enough coins"), nil, nil
 		}
 

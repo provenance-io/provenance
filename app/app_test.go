@@ -10,11 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	sdksim "cosmossdk.io/simapp"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -87,7 +88,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	}
 
 	// Create a few accounts
-	addrs1 := AddTestAddrs(app, ctx, 10, sdk.NewInt(5_000))
+	addrs1 := AddTestAddrs(app, ctx, 10, sdkmath.NewInt(5_000))
 	require.Len(t, addrs1, 10, "addrs1")
 
 	managerAddr := addrs1[0]
@@ -110,7 +111,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 			AccessControl:          managerAllAccess,
 			Status:                 markertypes.StatusProposed,
 			Denom:                  denom,
-			Supply:                 sdk.NewInt(1_000_000),
+			Supply:                 sdkmath.NewInt(1_000_000),
 			MarkerType:             markertypes.MarkerType_RestrictedCoin,
 			SupplyFixed:            true,
 			AllowGovernanceControl: true,
@@ -122,7 +123,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	require.Len(t, markerToAddr, 3, "markerToAddr")
 
 	// Create some more accounts:
-	addrs2 := AddTestAddrs(app, ctx, 10, sdk.NewInt(5_000))
+	addrs2 := AddTestAddrs(app, ctx, 10, sdkmath.NewInt(5_000))
 	require.Len(t, addrs2, 10, "addrs2")
 
 	// Delete one of the markers.

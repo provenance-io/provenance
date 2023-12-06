@@ -176,7 +176,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail on attributes for non restricted coin",
 			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -193,7 +193,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			name: "should succeed on attributes for restricted coin",
 			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_RestrictedCoin,
@@ -210,7 +210,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			name: "should succeed on for restricted coin",
 			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_RestrictedCoin,
@@ -227,7 +227,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			name: "should succeed on for non-restricted coin",
 			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -244,7 +244,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail duplicate entries for req attrs",
 			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_RestrictedCoin,
@@ -315,7 +315,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail on empty access list",
 			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -333,7 +333,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail on attributes for non restricted coin",
 			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -351,7 +351,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should succeed",
 			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -369,7 +369,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should succeed for restricted coin with required attributes",
 			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_RestrictedCoin,
@@ -387,7 +387,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail when forced tranfers allowed with coin type",
 			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"banana",
-				sdk.NewInt(500),
+				sdkmath.NewInt(500),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,

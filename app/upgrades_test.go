@@ -16,6 +16,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -499,7 +500,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	runnerName := "removeInactiveValidatorDelegations"
 
 	delegationCoin := sdk.NewInt64Coin("stake", 10000)
-	delegationCoinAmt := sdk.NewDec(delegationCoin.Amount.Int64())
+	delegationCoinAmt := sdkmath.NewDec(delegationCoin.Amount.Int64())
 
 	s.Run("just one bonded validator", func() {
 		validators := s.app.StakingKeeper.GetAllValidators(s.ctx)
@@ -889,13 +890,13 @@ func (s *UpgradeTestSuite) TestAddMarkerNavs() {
 	testcoin := markertypes.NewEmptyMarkerAccount("testcoin",
 		address1.String(),
 		[]markertypes.AccessGrant{})
-	testcoin.Supply = sdk.OneInt()
+	testcoin.Supply = sdkmath.OneInt()
 	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, testcoin), "AddMarkerAccount() error")
 
 	testcoinInList := markertypes.NewEmptyMarkerAccount("testcoininlist",
 		address1.String(),
 		[]markertypes.AccessGrant{})
-	testcoinInList.Supply = sdk.OneInt()
+	testcoinInList.Supply = sdkmath.OneInt()
 	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, testcoinInList), "AddMarkerAccount() error")
 
 	nosupplycoin := markertypes.NewEmptyMarkerAccount("nosupplycoin",
@@ -906,7 +907,7 @@ func (s *UpgradeTestSuite) TestAddMarkerNavs() {
 	hasnavcoin := markertypes.NewEmptyMarkerAccount("hasnavcoin",
 		address1.String(),
 		[]markertypes.AccessGrant{})
-	hasnavcoin.Supply = sdk.NewInt(100)
+	hasnavcoin.Supply = sdkmath.NewInt(100)
 	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, hasnavcoin), "AddMarkerAccount() error")
 	presentnav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, int64(55)), uint64(100))
 	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hasnavcoin, []markertypes.NetAssetValue{presentnav}, "test"))

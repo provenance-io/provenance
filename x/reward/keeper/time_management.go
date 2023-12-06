@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -97,7 +99,7 @@ func (k Keeper) StartRewardProgramClaimPeriod(ctx sdk.Context, rewardProgram *ty
 	}
 
 	// Get the Claim Period Reward. It should not exceed program balance
-	claimPeriodAmount := rewardProgram.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(rewardProgram.GetClaimPeriods())))
+	claimPeriodAmount := rewardProgram.GetTotalRewardPool().Amount.Quo(sdkmath.NewInt(int64(rewardProgram.GetClaimPeriods())))
 	claimPeriodPool := sdk.NewCoin(rewardProgram.GetTotalRewardPool().Denom, claimPeriodAmount)
 	if rewardProgram.RemainingPoolBalance.IsLT(claimPeriodPool) {
 		claimPeriodPool = rewardProgram.RemainingPoolBalance
@@ -242,15 +244,15 @@ func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk
 
 // CalculateParticipantReward for each address/participant
 func (k Keeper) CalculateParticipantReward(_ sdk.Context, shares int64, totalShares int64, claimRewardPool sdk.Coin, maxReward sdk.Coin) sdk.Coin {
-	numerator := sdk.NewDec(shares)
-	denom := sdk.NewDec(totalShares)
+	numerator := sdkmath.NewDec(shares)
+	denom := sdkmath.NewDec(totalShares)
 
-	percentage := sdk.NewDec(0)
+	percentage := sdkmath.NewDec(0)
 	if totalShares > 0 {
 		percentage = numerator.Quo(denom)
 	}
 
-	pool := sdk.NewDec(claimRewardPool.Amount.Int64())
+	pool := sdkmath.NewDec(claimRewardPool.Amount.Int64())
 	reward := sdk.NewInt64Coin(claimRewardPool.Denom, pool.Mul(percentage).TruncateInt64())
 
 	if maxReward.IsLT(reward) {

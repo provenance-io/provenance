@@ -431,14 +431,14 @@ func Dispatch(
 	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
 		err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(100_000_000_000_000),
+			Amount: sdkmath.NewInt(100_000_000_000_000),
 		}))
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account with additional fee"), nil, err
 		}
 		fees = fees.Add(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(100_000_000_000_000),
+			Amount: sdkmath.NewInt(100_000_000_000_000),
 		})
 	}
 

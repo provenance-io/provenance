@@ -88,7 +88,7 @@ func TestExistingAccounts(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	user := testUserAddress("testcoin")
 	manager := testUserAddress("manager")
-	existingBalance := sdk.NewCoin("coin", sdk.NewInt(1000))
+	existingBalance := sdk.NewInt64Coin("coin", 1000)
 
 	// prefund the marker address so an account gets created before the marker does.
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
@@ -96,21 +96,21 @@ func TestExistingAccounts(t *testing.T) {
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
 	// Creating a marker over an account with zero sequence is fine.
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdkmath.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
 
 	// existing coin balance must still be present
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balances must be preserved")
 
 	// Creating a marker over an existing marker fails.
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdkmath.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.Error(t, err, "fails because marker already exists")
 
 	// replace existing test account with a new copy that has a positive sequence number
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
 
 	// Creating a marker over an existing account with a positive sequence number fails.
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdk.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdkmath.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 }
 
@@ -123,16 +123,16 @@ func TestAccountUnrestrictedDenoms(t *testing.T) {
 
 	// Require a long unrestricted denom
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("tooshort", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("tooshort", sdkmath.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.Error(t, err, "fails with unrestricted denom length fault")
 	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
 
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("itslongenough", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("itslongenough", sdkmath.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
 
 	// Set to an empty string (returns to default expression)
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("short", sdk.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("short", sdkmath.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
 }
@@ -189,7 +189,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 			*types.NewAccessGrant(admin, []types.Access{types.Access_Admin})})
 
 	require.NoError(t, mac.SetManager(user1))
-	require.NoError(t, mac.SetSupply(sdk.NewCoin(mac.Denom, sdk.OneInt())))
+	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin(mac.Denom, 1)))
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 
@@ -251,8 +251,8 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 	require.NoError(t, err)
 
 	// User2 can adjust supply up/down for a finalized marker
-	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user2, sdk.NewCoin("testcoin", sdk.OneInt())))
-	require.NoError(t, app.MarkerKeeper.BurnCoin(ctx, user1, sdk.NewCoin("testcoin", sdk.OneInt())))
+	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user2, sdk.NewInt64Coin("testcoin", 1)))
+	require.NoError(t, app.MarkerKeeper.BurnCoin(ctx, user1, sdk.NewInt64Coin("testcoin", 1)))
 
 	// Cancel marker and check permission enforcement.
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user2, "testcoin"))
@@ -296,7 +296,7 @@ func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 			*types.NewAccessGrant(admin, []types.Access{types.Access_Admin})})
 
 	require.NoError(t, mac.SetManager(user1))
-	require.NoError(t, mac.SetSupply(sdk.NewCoin(mac.Denom, sdk.OneInt())))
+	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin(mac.Denom, 1)))
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 
 	m, err := app.MarkerKeeper.GetMarker(ctx, addr)
@@ -336,7 +336,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
 		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete, types.Access_Deposit})})
 	require.NoError(t, mac.SetManager(user))
-	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
+	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin("testcoin", 1000)))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
@@ -354,7 +354,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.NoError(t, err)
 	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("testcoin", 1000))
 	// entire supply should have been allocated to markeracount
-	require.EqualValues(t, app.MarkerKeeper.GetEscrow(ctx, m).AmountOf("testcoin"), sdk.NewInt(1000))
+	require.EqualValues(t, app.MarkerKeeper.GetEscrow(ctx, m).AmountOf("testcoin"), sdkmath.NewInt(1000))
 
 	// perform a successful mint (and check)
 	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user, sdk.NewInt64Coin("testcoin", 100)))
@@ -385,12 +385,12 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 		sdk.NewCoins(sdk.NewInt64Coin("testcoin", 50))))
 
 	// verify user has the withdrawn coins
-	require.EqualValues(t, app.BankKeeper.GetBalance(ctx, user, "testcoin").Amount, sdk.NewInt(50))
+	require.EqualValues(t, app.BankKeeper.GetBalance(ctx, user, "testcoin").Amount, sdkmath.NewInt(50))
 
 	// verify marker account has remaining coins
 	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
 	require.NoError(t, err)
-	require.EqualValues(t, app.MarkerKeeper.GetEscrow(ctx, m).AmountOf("testcoin"), sdk.NewInt(950))
+	require.EqualValues(t, app.MarkerKeeper.GetEscrow(ctx, m).AmountOf("testcoin"), sdkmath.NewInt(950))
 
 	// Fail for burn too much (exceed marker account holdings)
 	require.Error(t, app.MarkerKeeper.BurnCoin(ctx, user, sdk.NewInt64Coin("testcoin", 1000)))
@@ -418,12 +418,12 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
 	// Set an escrow balance
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))), "funding account")
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1))), "funding account")
 	// Fails because there are coins in escrow.
 	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
 
 	// Remove escrow balance from account
-	require.NoError(t, app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr, "mint", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))), "sending coins to module")
+	require.NoError(t, app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr, "mint", sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1))), "sending coins to module")
 
 	// Succeeds because the bond denom coin was removed.
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
@@ -435,10 +435,10 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
 	require.NoError(t, err)
 	require.EqualValues(t, types.StatusDestroyed, m.GetStatus())
-	require.EqualValues(t, m.GetSupply().Amount, sdk.ZeroInt())
+	require.EqualValues(t, m.GetSupply().Amount, sdkmath.ZeroInt())
 
 	// supply module should also indicate a zero supply
-	require.EqualValues(t, app.BankKeeper.GetSupply(ctx, "testcoin").Amount, sdk.ZeroInt())
+	require.EqualValues(t, app.BankKeeper.GetSupply(ctx, "testcoin").Amount, sdkmath.ZeroInt())
 }
 
 func TestAccountKeeperGetAll(t *testing.T) {
@@ -486,7 +486,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	user := sdk.AccAddress(pubkey.Address())
 
 	// setup an existing account with an existing balance (and matching supply)
-	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
+	existingSupply := sdk.NewInt64Coin("testcoin", 10000)
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
 
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
@@ -498,7 +498,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	mac := types.NewEmptyMarkerAccount("testcoin", user.String(), []types.AccessGrant{*types.NewAccessGrant(user,
 		[]types.Access{types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Delete})})
 	require.NoError(t, mac.SetManager(user))
-	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
+	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin("testcoin", 1000)))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
@@ -545,7 +545,7 @@ func TestAccountImplictControl(t *testing.T) {
 
 	mac.MarkerType = types.MarkerType_RestrictedCoin
 	require.NoError(t, mac.SetManager(user))
-	require.NoError(t, mac.SetSupply(sdk.NewCoin("testcoin", sdk.NewInt(1000))))
+	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin("testcoin", 1000)))
 
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
@@ -572,9 +572,9 @@ func TestAccountImplictControl(t *testing.T) {
 		types.NewAccessGrant(user2, []types.Access{types.Access_Mint, types.Access_Delete, types.Access_Transfer})))
 
 	// succeeds for a user with transfer rights
-	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, user2, user, user2, sdk.NewCoin("testcoin", sdk.NewInt(10))))
+	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, user2, user, user2, sdk.NewInt64Coin("testcoin", 10)))
 	// fails if the admin user does not have transfer authority
-	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, user, user2, user, sdk.NewCoin("testcoin", sdk.NewInt(10))))
+	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, user, user2, user, sdk.NewInt64Coin("testcoin", 10)))
 
 	// validate authz when 'from' is different from 'admin'
 	granter := user
@@ -582,28 +582,28 @@ func TestAccountImplictControl(t *testing.T) {
 	now := ctx.BlockHeader().Time
 	require.NotNil(t, now, "now")
 	exp1Hour := now.Add(time.Hour)
-	a := types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewInt(10))), []sdk.AccAddress{})
+	a := types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewInt64Coin("testcoin", 10)), []sdk.AccAddress{})
 
 	// fails when admin user (grantee without authz permissions) has transfer authority
-	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewInt64Coin("testcoin", 5)))
 	// succeeds when admin user (grantee with authz permissions) has transfer authority
 	require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, granter, a, &exp1Hour))
-	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewInt64Coin("testcoin", 5)))
 	// succeeds when admin user (grantee with authz permissions) has transfer authority (transfer remaining balance)
-	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewInt64Coin("testcoin", 5)))
 	// fails when admin user (grantee with authz permissions) and transfer authority has transferred all coin ^^^ (grant has now been deleted)
-	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewInt64Coin("testcoin", 5)))
 
 	// validate authz when with allow list set
 	now = ctx.BlockHeader().Time
 	require.NotNil(t, now, "now")
 	exp1Hour = now.Add(time.Hour)
-	a = types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewInt(10))), []sdk.AccAddress{user})
+	a = types.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewInt64Coin("testcoin", 10)), []sdk.AccAddress{user})
 	require.NoError(t, app.AuthzKeeper.SaveGrant(ctx, grantee, granter, a, &exp1Hour))
 	// fails when admin user (grantee with authz permissions) has transfer authority but receiver is not on allowed list
-	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user2, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user2, grantee, sdk.NewInt64Coin("testcoin", 5)))
 	// succeeds when admin user (grantee with authz permissions) has transfer authority with receiver is on allowed list
-	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewInt64Coin("testcoin", 5)))
 }
 
 func TestForceTransfer(t *testing.T) {
@@ -802,14 +802,14 @@ func TestMarkerFeeGrant(t *testing.T) {
 
 	app.AccountKeeper.SetAccount(ctx, mac)
 
-	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
+	existingSupply := sdk.NewInt64Coin("testcoin", 10000)
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding accont")
 
 	allowance, err := types.NewMsgGrantAllowance(
 		"testcoin",
 		user,
 		testUserAddress("grantee"),
-		&feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewCoin("testcoin", sdk.OneInt()))})
+		&feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("testcoin", 1))})
 	require.NoError(t, err, "basic allowance creation failed")
 	_, err = server.GrantAllowance(sdk.WrapSDKContext(ctx), allowance)
 	require.NoError(t, err, "failed to grant basic allowance from admin")
@@ -830,7 +830,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	user := testUserAddress("testcoin")
 	manager := testUserAddress("manager")
-	existingBalance := sdk.NewCoin("coin", sdk.NewInt(1000))
+	existingBalance := sdk.NewInt64Coin("coin", 1000)
 
 	// prefund the marker address so an account gets created before the marker does.
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
@@ -841,7 +841,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 	// One shot marker creation
 	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
 		"testcoin",
-		sdk.NewInt(30),
+		sdkmath.NewInt(30),
 		user,
 		manager,
 		types.MarkerType_Coin,
@@ -871,7 +871,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 	// Creating a marker over an existing marker fails.
 	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
 		"testcoin",
-		sdk.NewInt(30),
+		sdkmath.NewInt(30),
 		user,
 		manager,
 		types.MarkerType_Coin,
@@ -892,7 +892,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 	require.EqualValues(t, m.GetStatus(), types.StatusActive)
 
 	// entire supply should have been allocated to marker acount
-	require.EqualValues(t, app.MarkerKeeper.GetEscrow(ctx, m).AmountOf("testcoin"), sdk.NewInt(30))
+	require.EqualValues(t, app.MarkerKeeper.GetEscrow(ctx, m).AmountOf("testcoin"), sdkmath.NewInt(30))
 }
 
 // Creating a marker over an existing account with a positive sequence number fails.
@@ -909,7 +909,7 @@ func TestInvalidAccount(t *testing.T) {
 
 	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
 		"testcoin",
-		sdk.NewInt(30),
+		sdkmath.NewInt(30),
 		user,
 		manager,
 		types.MarkerType_Coin,
@@ -938,7 +938,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx),
 		types.NewMsgAddFinalizeActivateMarkerRequest(
 			"tooshort",
-			sdk.NewInt(30),
+			sdkmath.NewInt(30),
 			user,
 			user,
 			types.MarkerType_Coin,
@@ -955,7 +955,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 
 	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
 		"itslongenough",
-		sdk.NewInt(30),
+		sdkmath.NewInt(30),
 		user,
 		user,
 		types.MarkerType_Coin,
@@ -973,7 +973,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
 	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
 		"short",
-		sdk.NewInt(30),
+		sdkmath.NewInt(30),
 		user,
 		user,
 		types.MarkerType_Coin,
@@ -1024,32 +1024,32 @@ func TestAddMarkerViaProposal(t *testing.T) {
 	}{
 		{
 			"add marker - valid",
-			newMsg("test1", sdk.NewInt(100), "", active, coin, []types.AccessGrant{}, true),
+			newMsg("test1", sdkmath.NewInt(100), "", active, coin, []types.AccessGrant{}, true),
 			nil,
 		},
 		{
 			"add marker - valid restricted marker",
-			newMsg("testrestricted", sdk.NewInt(100), "", active, restricted, []types.AccessGrant{}, true),
+			newMsg("testrestricted", sdkmath.NewInt(100), "", active, restricted, []types.AccessGrant{}, true),
 			nil,
 		},
 		{
 			"add marker - valid no governance",
-			newMsg("testnogov", sdk.NewInt(100), user, active, coin, []types.AccessGrant{}, false),
+			newMsg("testnogov", sdkmath.NewInt(100), user, active, coin, []types.AccessGrant{}, false),
 			nil,
 		},
 		{
 			"add marker - valid finalized",
-			newMsg("pending", sdk.NewInt(100), user, finalized, coin, []types.AccessGrant{}, true),
+			newMsg("pending", sdkmath.NewInt(100), user, finalized, coin, []types.AccessGrant{}, true),
 			nil,
 		},
 		{
 			"add marker - already exists",
-			newMsg("test1", sdk.NewInt(0), "", active, coin, []types.AccessGrant{}, true),
+			newMsg("test1", sdkmath.NewInt(0), "", active, coin, []types.AccessGrant{}, true),
 			fmt.Errorf("marker address already exists for cosmos1ku2jzvpkt4ffxxaajyk2r88axk9cr5jqlthcm4: invalid request"),
 		},
 		{
 			"add marker - invalid status",
-			newMsg("test2", sdk.NewInt(100), "", types.StatusUndefined, coin, []types.AccessGrant{}, true),
+			newMsg("test2", sdkmath.NewInt(100), "", types.StatusUndefined, coin, []types.AccessGrant{}, true),
 			fmt.Errorf("invalid marker status: invalid request"),
 		},
 	}

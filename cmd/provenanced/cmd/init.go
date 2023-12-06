@@ -15,7 +15,8 @@ import (
 	tmrand "github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/types"
 
-	errors "cosmossdk.io/errors"
+	cerrs "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -194,13 +195,13 @@ func createAndExportGenesisFile(
 		moduleName := minttypes.ModuleName
 		var mintGenState minttypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &mintGenState)
-		mintGenState.Minter.Inflation = sdk.ZeroDec()
-		mintGenState.Minter.AnnualProvisions = sdk.OneDec()
+		mintGenState.Minter.Inflation = sdkmath.ZeroDec()
+		mintGenState.Minter.AnnualProvisions = sdkmath.OneDec()
 		mintGenState.Params.MintDenom = pioconfig.GetProvenanceConfig().BondDenom
-		mintGenState.Params.InflationMax = sdk.ZeroDec()
-		mintGenState.Params.InflationMin = sdk.ZeroDec()
-		mintGenState.Params.InflationRateChange = sdk.OneDec()
-		mintGenState.Params.GoalBonded = sdk.OneDec()
+		mintGenState.Params.InflationMax = sdkmath.ZeroDec()
+		mintGenState.Params.InflationMin = sdkmath.ZeroDec()
+		mintGenState.Params.InflationRateChange = sdkmath.OneDec()
+		mintGenState.Params.GoalBonded = sdkmath.OneDec()
 		mintGenState.Params.BlocksPerYear = 6311520 // (86400 / 5) * 365.25
 		appGenState[moduleName] = cdc.MustMarshalJSON(&mintGenState)
 	}
@@ -228,7 +229,7 @@ func createAndExportGenesisFile(
 		moduleName := govtypes.ModuleName
 		var govGenState govtypesv1beta1.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &govGenState)
-		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, sdk.NewInt(minDeposit)))
+		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, minDeposit))
 		appGenState[moduleName] = cdc.MustMarshalJSON(&govGenState)
 	}
 
@@ -275,7 +276,7 @@ func createAndExportGenesisFile(
 	} else {
 		genDoc, err = types.GenesisDocFromFile(genFile)
 		if err != nil {
-			return errors.Wrap(err, "Failed to read genesis doc from file")
+			return cerrs.Wrap(err, "Failed to read genesis doc from file")
 		}
 	}
 
@@ -288,7 +289,7 @@ func createAndExportGenesisFile(
 	genDoc.ConsensusParams.Block.MaxGas = maxGas
 
 	if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
-		return errors.Wrap(err, "Failed to export gensis file")
+		return cerrs.Wrap(err, "Failed to export gensis file")
 	}
 
 	cmd.Printf("Genesis file created: %s\n", genFile)

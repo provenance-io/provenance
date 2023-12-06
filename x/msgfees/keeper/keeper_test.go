@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,7 +47,7 @@ func (s *TestSuite) SetupTest() {
 	s.app = app
 	s.ctx = ctx
 	s.queryClient = queryClient
-	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 4, sdk.NewInt(30000000))
+	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 4, sdkmath.NewInt(30000000))
 }
 
 func (s *TestSuite) TestKeeper() {
@@ -81,25 +83,25 @@ func (s *TestSuite) TestKeeper() {
 
 func (s *TestSuite) TestConvertDenomToHash() {
 	app, ctx, _ := s.app, s.ctx, s.addrs
-	usdDollar := sdk.NewCoin(types.UsdDenom, sdk.NewInt(7_000)) // $7.00 == 100hash
+	usdDollar := sdk.NewInt64Coin(types.UsdDenom, 7_000) // $7.00 == 100hash
 	nhash, err := app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(175_000_000_000)), nhash)
-	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(70)) // $7 == 1hash
+	s.Assert().Equal(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 175_000_000_000), nhash)
+	usdDollar = sdk.NewInt64Coin(types.UsdDenom, 70) // $7 == 1hash
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1_750_000_000)), nhash)
-	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(1_000)) // $1 == 14.2hash
+	s.Assert().Equal(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_750_000_000), nhash)
+	usdDollar = sdk.NewInt64Coin(types.UsdDenom, 1_000) // $1 == 14.2hash
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(25_000_000_000)), nhash)
+	s.Assert().Equal(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 25_000_000_000), nhash)
 
-	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(10))
+	usdDollar = sdk.NewInt64Coin(types.UsdDenom, 10)
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(250_000_000)), nhash)
+	s.Assert().Equal(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 250_000_000), nhash)
 
-	jackTheCat := sdk.NewCoin("jackThecat", sdk.NewInt(70))
+	jackTheCat := sdk.NewInt64Coin("jackThecat", 70)
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, jackTheCat)
 	s.Assert().Equal("denom not supported for conversion jackThecat: invalid type", err.Error())
 	s.Assert().Equal(sdk.Coin{}, nhash)

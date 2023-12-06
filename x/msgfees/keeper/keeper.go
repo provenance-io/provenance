@@ -215,7 +215,7 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 	switch coin.Denom {
 	case types.UsdDenom:
 		nhashPerMil := int64(k.GetNhashPerUsdMil(ctx))
-		amount := coin.Amount.Mul(sdk.NewInt(nhashPerMil))
+		amount := coin.Amount.MulRaw(nhashPerMil)
 		msgFeeCoin := sdk.NewInt64Coin(conversionDenom, amount.Int64())
 		return msgFeeCoin, nil
 	case conversionDenom:

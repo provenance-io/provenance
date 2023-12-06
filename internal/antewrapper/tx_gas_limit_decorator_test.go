@@ -4,9 +4,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
+	sdkmath "cosmossdk.io/math"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -116,7 +120,7 @@ func (s *AnteTestSuite) TestNoErrorWhenMaxGasIsUnlimited() {
 	s.Require().NoError(err)
 
 	// Set gas price (1 atom)
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
+	atomPrice := sdk.NewDecCoinFromDec("atom", sdkmath.NewDec(1))
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
@@ -142,7 +146,7 @@ func (s *AnteTestSuite) TestErrorOutWhenMaxGasIsLimited() {
 	tx, _ := createTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 	s.Require().NoError(err)
 
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdk.NewDec(1))
+	atomPrice := sdk.NewDecCoinFromDec("atom", sdkmath.NewDec(1))
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 

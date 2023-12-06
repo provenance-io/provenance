@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -42,8 +44,8 @@ func (s *KeeperTestSuite) TestClaimRewards() {
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -210,8 +212,8 @@ func (s *KeeperTestSuite) TestClaimAllRewards() {
 							MaximumActions:               1,
 							MinimumDelegationAmount:      &minDelegation,
 							MaximumDelegationAmount:      &maxDelegation,
-							MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-							MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+							MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
+							MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
 						},
 					},
 				},
@@ -275,8 +277,8 @@ func (s *KeeperTestSuite) TestClaimAllRewardsExpired() {
 							MaximumActions:               1,
 							MinimumDelegationAmount:      &minDelegation,
 							MaximumDelegationAmount:      &maxDelegation,
-							MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-							MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+							MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
+							MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
 						},
 					},
 				},

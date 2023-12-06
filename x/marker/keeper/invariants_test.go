@@ -3,12 +3,13 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	simapp "github.com/provenance-io/provenance/app"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	simapp "github.com/provenance-io/provenance/app"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -35,7 +36,7 @@ func TestMarkerInvariant(t *testing.T) {
 		})
 
 	require.NoError(t, mac.SetManager(user))
-	require.NoError(t, mac.SetSupply(sdk.NewCoin(mac.Denom, sdk.OneInt())))
+	require.NoError(t, mac.SetSupply(sdk.NewInt64Coin(mac.Denom, 1)))
 	require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, mac))
 	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, mac, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test"))
 
@@ -51,13 +52,13 @@ func TestMarkerInvariant(t *testing.T) {
 	_, isBroken = invariantChecks(ctx)
 	require.False(t, isBroken)
 
-	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user, sdk.NewCoin(mac.GetDenom(), sdk.NewInt(1000))))
+	require.NoError(t, app.MarkerKeeper.MintCoin(ctx, user, sdk.NewInt64Coin(mac.GetDenom(), 1000)))
 
 	// expect pass after mint operation
 	_, isBroken = invariantChecks(ctx)
 	require.False(t, isBroken)
 
-	require.NoError(t, app.MarkerKeeper.BurnCoin(ctx, user, sdk.NewCoin(mac.GetDenom(), sdk.NewInt(100))))
+	require.NoError(t, app.MarkerKeeper.BurnCoin(ctx, user, sdk.NewInt64Coin(mac.GetDenom(), 100)))
 
 	// expect pass after burn operation
 	_, isBroken = invariantChecks(ctx)

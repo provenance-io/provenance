@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -13,7 +15,7 @@ import (
 // cannot be a const unfortunately because it's a custom type.
 func DefaultFloorGasPrice() sdk.Coin {
 	return sdk.Coin{
-		Amount: sdk.NewInt(pioconfig.GetProvenanceConfig().MsgFeeFloorGasPrice),
+		Amount: sdkmath.NewInt(pioconfig.GetProvenanceConfig().MsgFeeFloorGasPrice),
 		Denom:  pioconfig.GetProvenanceConfig().MsgFloorDenom,
 	}
 }

@@ -56,9 +56,9 @@ func (s *TestSuite) SetupTest() {
 
 	s.bondDenom = s.app.StakingKeeper.BondDenom(s.sdkCtx)
 	s.initAmount = 1_000_000_000
-	s.initBal = sdk.NewCoins(sdk.NewCoin(s.bondDenom, sdk.NewInt(s.initAmount)))
+	s.initBal = sdk.NewCoins(sdk.NewCoin(s.bondDenom, sdkmath.NewInt(s.initAmount)))
 
-	addrs := app.AddTestAddrsIncremental(s.app, s.sdkCtx, 5, sdk.NewInt(s.initAmount))
+	addrs := app.AddTestAddrsIncremental(s.app, s.sdkCtx, 5, sdkmath.NewInt(s.initAmount))
 	s.addr1 = addrs[0]
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]

@@ -75,12 +75,12 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 	if gasAdjustment <= 0 {
 		gasAdjustment = 1.0
 	}
-	gasUsed := sdk.NewInt(int64(float64(gasInfo.GasUsed) * float64(gasAdjustment)))
-	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, minGasPrice.Amount.Mul(gasUsed)))
+	gasUsed := int64(float64(gasInfo.GasUsed) * float64(gasAdjustment))
+	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, minGasPrice.Amount.MulRaw(gasUsed)))
 
 	return &types.CalculateTxFeesResponse{
 		AdditionalFees: gasMeter.FeeConsumed(),
 		TotalFees:      totalFees,
-		EstimatedGas:   gasUsed.Uint64(),
+		EstimatedGas:   uint64(gasUsed),
 	}, nil
 }

@@ -243,7 +243,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 		{
 			name:            "no spendable coins",
 			sender:          acctZero,
-			msg:             NewMsgAddMarker("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
+			msg:             NewMsgAddMarker("test2", sdkmath.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
 			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 			comment:         "should not matter",
 			expSkip:         true,
@@ -255,7 +255,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 		{
 			name:            "not enough coins for deposit",
 			sender:          acctOne,
-			msg:             NewMsgAddMarker("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
+			msg:             NewMsgAddMarker("test2", sdkmath.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
 			deposit:         acctOneBalancePlusOne,
 			comment:         "should not be this",
 			expSkip:         true,
@@ -284,7 +284,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 				Address: acctOne.Address,
 				ConsKey: accounts[0].ConsKey,
 			},
-			msg:             NewMsgAddMarker("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
+			msg:             NewMsgAddMarker("test2", sdkmath.NewInt(100), sdk.AccAddress{}, types.StatusUndefined, types.MarkerType_Coin, []types.AccessGrant{}, true, true, "validAuthority"),
 			deposit:         acctOneBalance,
 			comment:         "this should be ignored",
 			expSkip:         true,
@@ -296,7 +296,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 		{
 			name:            "all good",
 			sender:          accounts[1],
-			msg:             NewMsgAddMarker("test2", sdk.NewInt(100), sdk.AccAddress{}, types.StatusFinalized, types.MarkerType_Coin, []types.AccessGrant{access}, true, true, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"),
+			msg:             NewMsgAddMarker("test2", sdkmath.NewInt(100), sdk.AccAddress{}, types.StatusFinalized, types.MarkerType_Coin, []types.AccessGrant{access}, true, true, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"),
 			deposit:         sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 			comment:         "this is a test comment",
 			expSkip:         false,

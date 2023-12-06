@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	coin1000   = sdk.NewCoin("stake", sdk.NewInt(1000))
-	coin500    = sdk.NewCoin("stake", sdk.NewInt(500))
+	coin1000   = sdk.NewInt64Coin("stake", 1000)
+	coin500    = sdk.NewInt64Coin("stake", 500)
 	msgTypeURL = "/provenance.marker.v1.MsgTransferRequest"
 )
 

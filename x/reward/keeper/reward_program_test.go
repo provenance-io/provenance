@@ -4,6 +4,8 @@ import (
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -697,8 +699,8 @@ func (s *KeeperTestSuite) TestCreateRewardProgram() {
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -739,8 +741,8 @@ func (s *KeeperTestSuite) TestCreateRewardProgram() {
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -782,8 +784,8 @@ func (s *KeeperTestSuite) TestCreateRewardProgram() {
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
 					},
 				},
 			},

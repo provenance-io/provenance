@@ -107,7 +107,7 @@ func SimulateCreateSupplyDecreaseProposalContent(k keeper.Keeper) simtypes.Conte
 			return nil
 		}
 		currentSupply := k.CurrentEscrow(ctx, m).AmountOf(m.GetDenom())
-		if currentSupply.LT(sdk.OneInt()) {
+		if currentSupply.LT(sdkmath.OneInt()) {
 			return nil
 		}
 		burn := sdk.NewCoin(m.GetDenom(), simtypes.RandomAmount(r, currentSupply))

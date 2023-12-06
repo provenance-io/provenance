@@ -17,11 +17,12 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
+	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmos "github.com/cometbft/cometbft/libs/os"
-	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/streaming" // TODO[1760]: streaming: See if we can use this directly or if we have needed modifications.
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
@@ -179,7 +180,7 @@ var (
 	DefaultNodeHome string
 
 	// DefaultPowerReduction pio specific value for power reduction for TokensFromConsensusPower
-	DefaultPowerReduction = sdk.NewIntFromUint64(1000000000)
+	DefaultPowerReduction = sdkmath.NewIntFromUint64(1_000_000_000)
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
