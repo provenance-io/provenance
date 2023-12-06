@@ -32,6 +32,7 @@ func (k Keeper) SendQuery(
 	if !found {
 		return 0, cerrs.Wrapf(channeltypes.ErrChannelNotFound, "port ID (%s) channel ID (%s)", sourcePort, sourceChannel)
 	}
+	_ = sourceChannelEnd // TODO[1760]: async-icq
 
 	// TODO[1760]: async-icq
 	// destinationPort := sourceChannelEnd.GetCounterparty().GetPortID()
