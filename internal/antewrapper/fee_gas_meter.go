@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/log"
 
-	sdkgas "cosmossdk.io/store/types"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -18,7 +18,7 @@ type FeeGasMeter struct {
 	// a context logger reference for info/debug output
 	log log.Logger
 	// the gas meter being wrapped
-	base sdkgas.GasMeter
+	base storetypes.GasMeter
 	// tracks amount used per purpose
 	used map[string]uint64
 	// tracks number of usages per purpose
@@ -36,7 +36,7 @@ type FeeGasMeter struct {
 }
 
 // NewFeeGasMeterWrapper returns a reference to a new tracing gas meter that will track calls to the base gas meter
-func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimulate bool) sdkgas.GasMeter {
+func NewFeeGasMeterWrapper(logger log.Logger, baseMeter storetypes.GasMeter, isSimulate bool) storetypes.GasMeter {
 	return &FeeGasMeter{
 		log:            logger,
 		base:           baseMeter,
@@ -49,10 +49,10 @@ func NewFeeGasMeterWrapper(logger log.Logger, baseMeter sdkgas.GasMeter, isSimul
 	}
 }
 
-var _ sdkgas.GasMeter = &FeeGasMeter{}
+var _ storetypes.GasMeter = &FeeGasMeter{}
 
 // GasConsumed reports the amount of gas consumed at Log.Info level
-func (g *FeeGasMeter) GasConsumed() sdkgas.Gas {
+func (g *FeeGasMeter) GasConsumed() storetypes.Gas {
 	usage := "tracingGasMeter:\n  Purpose"
 	for i, d := range g.used {
 		usage = fmt.Sprintf("%s\n   - %s (x%d) = %d", usage, i, g.calls[i], d)
@@ -69,22 +69,22 @@ func (g *FeeGasMeter) RefundGas(amount uint64, descriptor string) {
 }
 
 // GasConsumedToLimit will report the actual consumption or the meter limit, whichever is less.
-func (g *FeeGasMeter) GasConsumedToLimit() sdkgas.Gas {
+func (g *FeeGasMeter) GasConsumedToLimit() storetypes.Gas {
 	return g.base.GasConsumedToLimit()
 }
 
 // GasRemaining returns the gas left in the GasMeter.
-func (g *FeeGasMeter) GasRemaining() sdkgas.Gas {
+func (g *FeeGasMeter) GasRemaining() storetypes.Gas {
 	return g.base.GasRemaining()
 }
 
 // Limit for amount of gas that can be consumed (if zero then unlimited)
-func (g *FeeGasMeter) Limit() sdkgas.Gas {
+func (g *FeeGasMeter) Limit() storetypes.Gas {
 	return g.base.Limit()
 }
 
 // ConsumeGas increments the amount of gas used on the meter associated with a given purpose.
-func (g *FeeGasMeter) ConsumeGas(amount sdkgas.Gas, descriptor string) {
+func (g *FeeGasMeter) ConsumeGas(amount storetypes.Gas, descriptor string) {
 	cur := g.used[descriptor]
 	g.used[descriptor] = cur + amount
 

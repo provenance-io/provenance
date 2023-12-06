@@ -151,7 +151,7 @@ type Handler func(record types.MsgFee) (stop bool)
 // IterateMsgFees  iterates all msg fees with the given handler function.
 func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.MsgFeeKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.MsgFeeKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

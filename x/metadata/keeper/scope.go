@@ -5,6 +5,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -13,7 +15,7 @@ import (
 // IterateScopes processes all stored scopes with the given handler.
 func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.ScopeKeyPrefix)
+	it := storetypes.KVStorePrefixIterator(store, types.ScopeKeyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scope types.Scope
@@ -29,7 +31,7 @@ func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop b
 func (k Keeper) IterateScopesForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(scopeID types.MetadataAddress) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetAddressScopeCacheIteratorPrefix(address)
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeID types.MetadataAddress
@@ -52,7 +54,7 @@ func (k Keeper) IterateScopesForValueOwner(ctx sdk.Context, valueOwner string, h
 
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetValueOwnerScopeCacheIteratorPrefix(addr)
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeID types.MetadataAddress
@@ -73,7 +75,7 @@ func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.Met
 ) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID)
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeID types.MetadataAddress
@@ -145,7 +147,7 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 	if err != nil {
 		panic(err)
 	}
-	iter := sdk.KVStorePrefixIterator(store, prefix)
+	iter := storetypes.KVStorePrefixIterator(store, prefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		k.RemoveRecord(ctx, iter.Key())

@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/log"
 	sdksim "cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
-	sdkgas "cosmossdk.io/store/types"
+	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -45,7 +45,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	s.Require().NoError(err, "txEncoder")
 
 	s.ctx = s.ctx.WithTxBytes(bz)
-	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), storetypes.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
 		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000)), msgType, "")
@@ -90,7 +90,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 		panic(err)
 	}
 	s.ctx = s.ctx.WithTxBytes(bz)
-	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), storetypes.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
 		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000)), msgType, "")
@@ -132,7 +132,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 		panic(err)
 	}
 	s.ctx = s.ctx.WithTxBytes(bz)
-	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), storetypes.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
 		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000)), msgType, "")
@@ -164,7 +164,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 		panic(err)
 	}
 	s.ctx = s.ctx.WithTxBytes(bz)
-	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), storetypes.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  s.app.AccountKeeper,

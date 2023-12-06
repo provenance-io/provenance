@@ -117,7 +117,7 @@ func (k Keeper) GetFeeCollectorName() string {
 // getAllKeys gets all the keys in the store with the given prefix.
 func getAllKeys(store sdk.KVStore, pre []byte) [][]byte {
 	// Using a prefix iterator so that iter.Key() is the whole key (including the prefix).
-	iter := sdk.KVStorePrefixIterator(store, pre)
+	iter := storetypes.KVStorePrefixIterator(store, pre)
 	defer iter.Close()
 
 	var keys [][]byte

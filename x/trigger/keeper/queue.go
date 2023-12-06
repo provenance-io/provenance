@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/trigger/types"
@@ -89,7 +91,7 @@ func (k Keeper) removeQueueIndex(ctx sdk.Context, index uint64) bool {
 // iterateQueue Iterates through all the queue items.
 func (k Keeper) iterateQueue(ctx sdk.Context, handle func(trigger types.QueuedTrigger) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.QueueKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.QueueKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

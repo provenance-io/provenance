@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -104,7 +104,7 @@ func (k Keeper) GetAttributes(ctx sdk.Context, addr string, name string) ([]type
 func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) error {
 	// Init an attribute record iterator
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, prefix)
+	iterator := storetypes.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
@@ -351,7 +351,7 @@ func (k Keeper) UpdateAttributeExpiration(ctx sdk.Context, updateAttribute types
 func (k Keeper) AccountsByAttribute(ctx sdk.Context, name string) (addresses []sdk.AccAddress, err error) {
 	store := ctx.KVStore(k.storeKey)
 	keyPrefix := types.AttributeNameKeyPrefix(name)
-	it := sdk.KVStorePrefixIterator(store, keyPrefix)
+	it := storetypes.KVStorePrefixIterator(store, keyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		addressBytes, err := types.GetAddressFromKey(it.Key())
@@ -384,7 +384,7 @@ func (k Keeper) DeleteAttribute(ctx sdk.Context, addr string, name string, value
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.AddrStrAttributesNameKeyPrefix(addr, name))
+	iter := storetypes.KVStorePrefixIterator(store, types.AddrStrAttributesNameKeyPrefix(addr, name))
 	defer func() {
 		if iter != nil {
 			iter.Close()
@@ -463,7 +463,7 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 
 // getAddrAttributesKeysByName returns an list of attribute keys for the an account and attribute name
 func (k Keeper) getAddrAttributesKeysByName(store sdk.KVStore, acctAddr sdk.AccAddress, attributeName string) (attributeKeys [][]byte) {
-	it := sdk.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
+	it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		attributeKeys = append(attributeKeys, it.Key())
@@ -477,7 +477,7 @@ type namePred = func(string) bool
 // Scan all attributes that match the given prefix.
 func (k Keeper) prefixScan(ctx sdk.Context, prefix []byte, f namePred) (attrs []types.Attribute, err error) {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		attr := types.Attribute{}

@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -64,7 +66,7 @@ func (k Keeper) SetOSLocator(ctx sdk.Context, ownerAddr, encryptionKey sdk.AccAd
 func (k Keeper) IterateOSLocators(ctx sdk.Context, cb func(account types.ObjectStoreLocator) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.OSLocatorAddressKeyPrefix
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 
 	defer it.Close()
 
