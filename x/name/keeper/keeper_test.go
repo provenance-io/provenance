@@ -12,9 +12,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
 
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -514,7 +515,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 				// Error log lines will start with "ERR ".
 				// Info log lines will start with "INF ".
 				// Debug log lines are omitted, but would start with "DBG ".
-				logger := server.ZeroLogWrapper{Logger: zerolog.New(lw).Level(zerolog.InfoLevel)}
+				logger := log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
 
 				// And use a fresh event manager.
 				em := sdk.NewEventManager()

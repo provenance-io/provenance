@@ -12,11 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
+	sdksim "cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdksim "cosmossdk.io/simapp"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 )
@@ -184,7 +185,7 @@ func TestWarnAboutSettings(t *testing.T) {
 			// Error log lines will start with "ERR ".
 			// Info log lines will start with "INF ".
 			// Debug log lines are omitted, but would start with "DBG ".
-			logger := server.ZeroLogWrapper{Logger: zerolog.New(lw).Level(zerolog.InfoLevel)}
+			logger := log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
 
 			// Make sure the function never panics.
 			require.NotPanics(t, func() { warnAboutSettings(logger, tc.appOpts) }, "warnAboutSettings")

@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -121,7 +120,7 @@ func SetLoggerMaker(newLoggerMaker LoggerMakerFn) LoggerMakerFn {
 func NewDebugLogger() log.Logger {
 	lw := zerolog.ConsoleWriter{Out: os.Stdout}
 	logger := zerolog.New(lw).Level(zerolog.DebugLevel).With().Timestamp().Logger()
-	return server.ZeroLogWrapper{Logger: logger}
+	return log.NewCustomLogger(logger)
 }
 
 // NewInfoLogger creates a new logger to stdout with level info.
@@ -129,7 +128,7 @@ func NewDebugLogger() log.Logger {
 func NewInfoLogger() log.Logger {
 	lw := zerolog.ConsoleWriter{Out: os.Stdout}
 	logger := zerolog.New(lw).Level(zerolog.InfoLevel).With().Timestamp().Logger()
-	return server.ZeroLogWrapper{Logger: logger}
+	return log.NewCustomLogger(logger)
 }
 
 // NewAppWithCustomOptions initializes a new SimApp with custom options.

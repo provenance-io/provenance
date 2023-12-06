@@ -19,7 +19,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -58,8 +57,7 @@ func (s *UpgradeTestSuite) SetupSuite() {
 		// Error log lines will start with "ERR ".
 		// Info log lines will start with "INF ".
 		// Debug log lines are omitted, but would start with "DBG ".
-		logger := zerolog.New(lw).Level(zerolog.InfoLevel)
-		return server.ZeroLogWrapper{Logger: logger}
+		return log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
 	}
 	defer SetLoggerMaker(SetLoggerMaker(bufferedLoggerMaker))
 	s.app = Setup(s.T())

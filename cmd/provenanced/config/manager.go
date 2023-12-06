@@ -3,12 +3,9 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -605,22 +602,7 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 	serverCtx.Config.SetRoot(clientCtx.HomeDir)
 
 	// Set the server context's logger using what Viper has now.
-	var logWriter io.Writer
-	switch logFmt := serverCtx.Viper.GetString(flags.FlagLogFormat); strings.ToLower(logFmt) {
-	case tmconfig.LogFormatPlain:
-		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
-	case tmconfig.LogFormatJSON:
-		logWriter = os.Stderr
-	default:
-		return fmt.Errorf("unknown log format: %s", logFmt)
-	}
-	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
-	logLvl, perr := zerolog.ParseLevel(strings.ToLower(logLvlStr))
-	if perr != nil {
-		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, perr)
-	}
-	logger := zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()
-	serverCtx.Logger = server.ZeroLogWrapper{Logger: logger}
+	serverCtx.Logger = CreateSDKLogger(serverCtx, cmd.ErrOrStderr())
 
 	// Copy all settings from our viper to the global viper since some stuff uses the global one.
 	if err = viper.MergeConfigMap(serverCtx.Viper.AllSettings()); err != nil {

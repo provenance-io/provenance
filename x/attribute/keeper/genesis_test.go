@@ -12,7 +12,6 @@ import (
 
 	"cosmossdk.io/log"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -47,8 +46,7 @@ func (s *GenesisTestSuite) SetupSuite() {
 		// Error log lines will start with "ERR ".
 		// Info log lines will start with "INF ".
 		// Debug log lines are omitted, but would start with "DBG ".
-		logger := zerolog.New(lw).Level(zerolog.InfoLevel)
-		return server.ZeroLogWrapper{Logger: logger}
+		return log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
 	}
 	defer app.SetLoggerMaker(app.SetLoggerMaker(bufferedLoggerMaker))
 	s.app = app.Setup(s.T())

@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -69,8 +68,7 @@ func (s *TestSuite) SetupTest() {
 		// Error log lines will start with "ERR ".
 		// Info log lines will start with "INF ".
 		// Debug log lines are omitted, but would start with "DBG ".
-		logger := zerolog.New(lw).Level(zerolog.InfoLevel)
-		return server.ZeroLogWrapper{Logger: logger}
+		return log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
 	}
 	// swap in the buffered logger maker so it's used in app.Setup, but then put it back (since that's a global thing).
 	defer app.SetLoggerMaker(app.SetLoggerMaker(bufferedLoggerMaker))

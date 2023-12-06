@@ -15,7 +15,7 @@ import (
 
 	tmdb "github.com/cometbft/cometbft-db"
 
-	tmlog "cosmossdk.io/log"
+	"cosmossdk.io/log"
 )
 
 const (
@@ -136,7 +136,7 @@ type migrationManager struct {
 	SourceTypes map[string]tmdb.BackendType
 
 	// Logger is the Logger to use for logging log messages.
-	Logger tmlog.Logger
+	Logger log.Logger
 
 	// StatusTicker is the ticker used to issue regular status log messages.
 	StatusTicker *time.Ticker
@@ -263,7 +263,7 @@ func (m *Migrator) ReadSourceDataDir() error {
 // to the target type in the StagingDataDir.
 // It then copies everything in ToCopy from the SourceDataDir to the StagingDataDir.
 // It then moves the SourceDataDir to BackupDataDir and moves StagingDataDir into place where SourceDataDir was.
-func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
+func (m *Migrator) Migrate(logger log.Logger) (errRv error) {
 	defer func() {
 		if r := recover(); r != nil {
 			errRv = fmt.Errorf("recovered from panic: %v", r)
@@ -353,7 +353,7 @@ func (m *Migrator) Migrate(logger tmlog.Logger) (errRv error) {
 
 // startMigratorManager creates a migrationManager and initializes it.
 // It must later be closed.
-func (m Migrator) startMigratorManager(logger tmlog.Logger) (*migrationManager, error) {
+func (m Migrator) startMigratorManager(logger log.Logger) (*migrationManager, error) {
 	rv := &migrationManager{
 		Migrator:       m,
 		Status:         "starting",
