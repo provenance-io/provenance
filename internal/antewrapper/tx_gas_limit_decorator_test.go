@@ -120,7 +120,7 @@ func (s *AnteTestSuite) TestNoErrorWhenMaxGasIsUnlimited() {
 	s.Require().NoError(err)
 
 	// Set gas price (1 atom)
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdkmath.NewDec(1))
+	atomPrice := sdk.NewDecCoinFromDec("atom", sdkmath.LegacyNewDec(1))
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 
@@ -146,7 +146,7 @@ func (s *AnteTestSuite) TestErrorOutWhenMaxGasIsLimited() {
 	tx, _ := createTx(s, err, sdk.NewCoins(sdk.NewInt64Coin("atom", 100000)))
 	s.Require().NoError(err)
 
-	atomPrice := sdk.NewDecCoinFromDec("atom", sdkmath.NewDec(1))
+	atomPrice := sdk.NewDecCoinFromDec("atom", sdkmath.LegacyNewDec(1))
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(highGasPrice)
 

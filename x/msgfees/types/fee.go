@@ -22,9 +22,9 @@ func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePay
 		feePayoutCoin = sdk.NewInt64Coin(coin.Denom, 0)
 		return recipientCoin, feePayoutCoin, nil
 	}
-	numerator := sdkmath.NewDec(int64(bips))
-	denominator := sdkmath.NewDec(10_000)
-	decAmount := sdkmath.NewDec(coin.Amount.Int64())
+	numerator := sdkmath.LegacyNewDec(int64(bips))
+	denominator := sdkmath.LegacyNewDec(10_000)
+	decAmount := sdkmath.LegacyNewDec(coin.Amount.Int64())
 	percentage := numerator.Quo(denominator)
 	bipsAmount := decAmount.Mul(percentage).TruncateInt()
 	feePayoutAmount := coin.Amount.Sub(bipsAmount)

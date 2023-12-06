@@ -74,9 +74,9 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.coordinator.Setup(suite.path)
 
 	params := suite.chainA.GetProvenanceApp().MintKeeper.GetParams(suite.chainA.GetContext())
-	params.InflationMax = sdkmath.NewDec(0)
-	params.InflationRateChange = sdkmath.NewDec(1)
-	params.InflationMin = sdkmath.NewDec(0)
+	params.InflationMax = sdkmath.LegacyNewDec(0)
+	params.InflationRateChange = sdkmath.LegacyNewDec(1)
+	params.InflationMin = sdkmath.LegacyNewDec(0)
 	suite.chainA.GetProvenanceApp().MintKeeper.SetParams(suite.chainA.GetContext(), params)
 	suite.chainB.GetProvenanceApp().MintKeeper.SetParams(suite.chainB.GetContext(), params)
 }

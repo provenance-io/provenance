@@ -244,15 +244,15 @@ func (k Keeper) CalculateRewardClaimPeriodRewards(ctx sdk.Context, maxReward sdk
 
 // CalculateParticipantReward for each address/participant
 func (k Keeper) CalculateParticipantReward(_ sdk.Context, shares int64, totalShares int64, claimRewardPool sdk.Coin, maxReward sdk.Coin) sdk.Coin {
-	numerator := sdkmath.NewDec(shares)
-	denom := sdkmath.NewDec(totalShares)
+	numerator := sdkmath.LegacyNewDec(shares)
+	denom := sdkmath.LegacyNewDec(totalShares)
 
-	percentage := sdkmath.NewDec(0)
+	percentage := sdkmath.LegacyNewDec(0)
 	if totalShares > 0 {
 		percentage = numerator.Quo(denom)
 	}
 
-	pool := sdkmath.NewDec(claimRewardPool.Amount.Int64())
+	pool := sdkmath.LegacyNewDec(claimRewardPool.Amount.Int64())
 	reward := sdk.NewInt64Coin(claimRewardPool.Denom, pool.Mul(percentage).TruncateInt64())
 
 	if maxReward.IsLT(reward) {

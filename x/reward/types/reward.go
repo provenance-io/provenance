@@ -351,15 +351,15 @@ func (ad *ActionDelegate) GetBuilder() ActionBuilder {
 	return &DelegateActionBuilder{}
 }
 
-func (ad *ActionDelegate) getTokensFromValidator(ctx sdk.Context, provider KeeperProvider, validatorAddr sdk.ValAddress, delegator sdk.AccAddress) (sdkmath.Dec, bool) {
+func (ad *ActionDelegate) getTokensFromValidator(ctx sdk.Context, provider KeeperProvider, validatorAddr sdk.ValAddress, delegator sdk.AccAddress) (sdkmath.LegacyDec, bool) {
 	stakingKeeper := provider.GetStakingKeeper()
 	delegation, found := stakingKeeper.GetDelegation(ctx, delegator, validatorAddr)
 	if !found {
-		return sdkmath.NewDec(0), found
+		return sdkmath.LegacyNewDec(0), found
 	}
 	validator, found := stakingKeeper.GetValidator(ctx, validatorAddr)
 	if !found {
-		return sdkmath.NewDec(0), found
+		return sdkmath.LegacyNewDec(0), found
 	}
 	tokens := validator.TokensFromShares(delegation.GetShares())
 	return tokens, found
@@ -368,7 +368,7 @@ func (ad *ActionDelegate) getTokensFromValidator(ctx sdk.Context, provider Keepe
 // The percentile is dictated by the powers of the validators
 // If there are 5 validators and the first validator matches then that validator is in the 80th percentile
 // If there is 1 validator then that validator is in the 0 percentile.
-func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) sdkmath.Dec {
+func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) sdkmath.LegacyDec {
 	validators := provider.GetStakingKeeper().GetBondedValidatorsByPower(ctx)
 	ourPower := provider.GetStakingKeeper().GetLastValidatorPower(ctx, validator)
 	var numBelow int64
@@ -380,8 +380,8 @@ func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider K
 			numBelow++
 		}
 	}
-	placement := sdkmath.NewDec(numBelow)
-	vals := sdkmath.NewDec(numValidators)
+	placement := sdkmath.LegacyNewDec(numBelow)
+	vals := sdkmath.LegacyNewDec(numValidators)
 	percentile := placement.Quo(vals)
 
 	return percentile
@@ -410,19 +410,19 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, _ R
 }
 
 // GetMinimumActiveStakePercentile returns this action's minimum active stake percentile or zero if not defined.
-func (ad *ActionDelegate) GetMinimumActiveStakePercentile() sdkmath.Dec {
+func (ad *ActionDelegate) GetMinimumActiveStakePercentile() sdkmath.LegacyDec {
 	if ad != nil {
 		return ad.MinimumActiveStakePercentile
 	}
-	return sdkmath.NewDec(0)
+	return sdkmath.LegacyNewDec(0)
 }
 
 // GetMaximumActiveStakePercentile returns this action's maximum active stake percentile or zero if not defined.
-func (ad *ActionDelegate) GetMaximumActiveStakePercentile() sdkmath.Dec {
+func (ad *ActionDelegate) GetMaximumActiveStakePercentile() sdkmath.LegacyDec {
 	if ad != nil {
 		return ad.MaximumActiveStakePercentile
 	}
-	return sdkmath.NewDec(0)
+	return sdkmath.LegacyNewDec(0)
 }
 
 func (ad *ActionDelegate) PreEvaluate(_ sdk.Context, _ KeeperProvider, _ RewardAccountState) bool {

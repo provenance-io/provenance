@@ -498,7 +498,7 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	runnerName := "removeInactiveValidatorDelegations"
 
 	delegationCoin := sdk.NewInt64Coin("stake", 10000)
-	delegationCoinAmt := sdkmath.NewDec(delegationCoin.Amount.Int64())
+	delegationCoinAmt := sdkmath.LegacyNewDec(delegationCoin.Amount.Int64())
 
 	s.Run("just one bonded validator", func() {
 		validators := s.app.StakingKeeper.GetAllValidators(s.ctx)

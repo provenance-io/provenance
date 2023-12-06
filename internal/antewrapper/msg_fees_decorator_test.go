@@ -40,7 +40,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorIgnoresMinGasPrice() {
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 
 	// Set gas price to 1,000,000 stake to make sure it's not being used in the handler.
-	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdkmath.NewDec(1_000_000))
+	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdkmath.LegacyNewDec(1_000_000))
 	highGasPrice := []sdk.DecCoin{stakePrice}
 	ctx := s.ctx.WithMinGasPrices(highGasPrice).WithChainID("test-chain")
 

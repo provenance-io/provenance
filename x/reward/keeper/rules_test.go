@@ -459,7 +459,7 @@ func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator
 			{
 				DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 				ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
-				Shares:           sdkmath.NewDec(3),
+				Shares:           sdkmath.LegacyNewDec(3),
 			},
 		}
 	}
@@ -477,7 +477,7 @@ func (m MockStakingKeeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress
 	return stakingtypes.Delegation{
 		DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 		ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
-		Shares:           sdkmath.NewDec(3),
+		Shares:           sdkmath.LegacyNewDec(3),
 	}, true
 }
 
@@ -512,7 +512,7 @@ func (s *KeeperTestSuite) createTestValidators(amount int) {
 		validators = append(validators, validator)
 
 		// Create the delegations
-		bond := stakingtypes.NewDelegation(addrDels[i], valAddrs[i], sdkmath.NewDec(int64((i+1)*10)))
+		bond := stakingtypes.NewDelegation(addrDels[i], valAddrs[i], sdkmath.LegacyNewDec(int64((i+1)*10)))
 		s.app.StakingKeeper.SetDelegation(s.ctx, bond)
 
 		// We want even validators to be bonded
