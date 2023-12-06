@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -144,7 +144,7 @@ func (s *TestSuite) TestGetParams() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, ibcratelimitcli.GetParamsCmd(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, ibcratelimitcli.GetParamsCmd(), []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)})
 			if len(tc.expectErrMsg) > 0 {
 				s.EqualError(err, tc.expectErrMsg, "should have correct error message for invalid Params request")
 			} else {
@@ -195,7 +195,7 @@ func (s *TestSuite) TestParamsUpdate() {
 			}
 			tc.args = append(tc.args, flags...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, ibcratelimitcli.GetCmdParamsUpdate(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, ibcratelimitcli.GetCmdParamsUpdate(), append(tc.args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {

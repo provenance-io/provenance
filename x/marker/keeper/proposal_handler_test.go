@@ -18,7 +18,7 @@ import (
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type IntegrationTestSuite struct {
@@ -33,7 +33,7 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = provenance.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 	s.k = markerkeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(markertypes.ModuleName), s.app.GetSubspace(markertypes.ModuleName), s.app.AccountKeeper, s.app.BankKeeper, s.app.AuthzKeeper, s.app.FeeGrantKeeper, s.app.AttributeKeeper, s.app.NameKeeper, s.app.TransferKeeper, nil)
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 }

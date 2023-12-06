@@ -12,7 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/attribute/keeper"
@@ -37,7 +37,7 @@ type MsgServerTestSuite struct {
 
 func (s *MsgServerTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(true, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(true, cmtproto.Header{})
 	s.ctx = s.ctx.WithBlockHeight(1).WithBlockTime(time.Now())
 	s.msgServer = keeper.NewMsgServerImpl(s.app.AttributeKeeper)
 	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())

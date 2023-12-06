@@ -14,8 +14,8 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -232,7 +232,7 @@ func TestFailedTx(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 	gasFeesString := fmt.Sprintf("%v%s", (NewTestGasLimit()), sdk.DefaultBondDenom)
@@ -326,7 +326,7 @@ func TestMsgService(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 	gasFeesString := fmt.Sprintf("%v%s", (NewTestGasLimit()), sdk.DefaultBondDenom)
@@ -472,7 +472,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
@@ -540,7 +540,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		banktypes.Balance{Address: addr1.String(), Coins: initBalance},
 		banktypes.Balance{Address: addr2.String(), Coins: initBalance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
@@ -680,7 +680,7 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
@@ -761,7 +761,7 @@ func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
@@ -844,7 +844,7 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
@@ -917,7 +917,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	blockTime := ctx.BlockTime()
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(NHash, 290_500_010))
@@ -973,7 +973,7 @@ func TestRewardsProgramStart(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1002,7 +1002,7 @@ func TestRewardsProgramStart(t *testing.T) {
 			},
 		},
 	)
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txReward, err := SignTx(
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
@@ -1040,7 +1040,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1069,7 +1069,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 			},
 		},
 	)
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txReward, err := SignTx(
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
@@ -1090,7 +1090,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
 	for height := int64(3); height <= int64(100); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -1197,7 +1197,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 		[]authtypes.GenesisAccount{acct1}, nil,
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1212,7 +1212,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	time.Sleep(55 * time.Millisecond)
 
 	for height := int64(2); height < int64(22); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -1335,7 +1335,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1350,7 +1350,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -1415,7 +1415,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	// get the accoutn balances of acct1
 	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// claim rewards for the address
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 7, Time: time.Now().UTC()}})
 	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
 	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
 	txClaim, errClaim := SignTxAndGetBytes(
@@ -1494,7 +1494,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1509,7 +1509,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -1575,7 +1575,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	// get the accoutn balances of acct1
 	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// claim rewards for the address
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 7, Time: time.Now().UTC()}})
 	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
 	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
 	txClaim, errClaim := SignTxAndGetBytes(
@@ -1687,7 +1687,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1702,7 +1702,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -1768,7 +1768,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	// get the accoutn balances of acct1
 	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// claim rewards for the address
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 7, Time: time.Now().UTC()}})
 	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
 	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
 	// needs extra gas
@@ -1860,7 +1860,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		[]authtypes.GenesisAccount{acct1}, nil,
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -1875,7 +1875,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -1939,7 +1939,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	}
 
 	// claim rewards for the address
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 7, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 7, Time: time.Now().UTC()}})
 	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
 	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
 	txClaim, errClaim := SignTxAndGetBytes(
@@ -1998,7 +1998,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 		[]authtypes.GenesisAccount{acct1}, nil,
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -2013,7 +2013,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -2085,7 +2085,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 		[]authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2),
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -2101,7 +2101,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 
 	//go through 5 blocks, but take a time to cut blocks > claim period time interval.
 	for height := int64(2); height < int64(7); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -2190,7 +2190,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 		[]authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2),
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -2205,7 +2205,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(2); height < int64(7); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -2276,7 +2276,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1}, nil,
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -2293,7 +2293,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	seq := acct1.Sequence
 	time.Sleep(200 * time.Millisecond)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
@@ -2317,7 +2317,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal[0].Id, govtypesv1beta1.OptionYes)
 
 	for height := int64(3); height < int64(23); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -2389,7 +2389,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 		banktypes.Balance{Address: addr1.String(), Coins: acctBalance},
 		banktypes.Balance{Address: addr2.String(), Coins: acctBalance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct2.GetAddress(), fundCoins),
@@ -2404,7 +2404,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	time.Sleep(200 * time.Millisecond)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
@@ -2429,7 +2429,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	seq := acct2.Sequence
 
 	for height := int64(3); height < int64(5); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct2.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), vote2)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -2517,7 +2517,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 		[]authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2),
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -2534,7 +2534,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	seq := acct1.Sequence
 	time.Sleep(200 * time.Millisecond)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
@@ -2559,7 +2559,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 
 	// threshold will be met after 10 actions
 	for height := int64(3); height < int64(23); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -2639,7 +2639,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	//err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
 	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2), banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
@@ -2657,7 +2657,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	ctx.WithBlockTime(time.Now())
 	time.Sleep(200 * time.Millisecond)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 
@@ -2678,7 +2678,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 
 	// threshold will be met after 10 actions
 	for height := int64(3); height < int64(23); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
 		require.NoError(t, err1)
@@ -2753,7 +2753,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct3}, createValSet(t, pubKey, pubKey2), banktypes.Balance{Address: addr.String(), Coins: acct1Balance}, banktypes.Balance{Address: addr3.String(), Coins: acct1Balance})
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
@@ -2772,7 +2772,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	ctx.WithBlockTime(time.Now())
 	time.Sleep(200 * time.Millisecond)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), msg)
 	require.NoError(t, err)
 
@@ -2793,7 +2793,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 
 	// threshold will be met after 10 actions
 	for height := int64(3); height < int64(23); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct3.SetSequence(seq))
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), vote)
 		require.NoError(t, err1)
@@ -2871,7 +2871,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -2888,7 +2888,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	seq := acct1.Sequence
 	time.Sleep(110 * time.Millisecond)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
@@ -2912,7 +2912,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal[0].Id, govtypesv1beta1.OptionYes)
 
 	for height := int64(3); height < int64(15); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -2999,7 +2999,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
@@ -3016,7 +3016,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	seq := acct1.Sequence
 	time.Sleep(200 * time.Millisecond)
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}})
 	txGov, err := SignTx(
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
@@ -3041,7 +3041,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	delegation := stakingtypes.NewMsgDelegate(addr, delAddr, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000))
 
 	for height := int64(3); height < int64(23); height++ {
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height, Time: time.Now().UTC()}})
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}})
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), delegation)
 		require.NoError(t, err1, "[%d]: SignTx", height)
@@ -3095,14 +3095,14 @@ func ContentFromProposalType(title, desc, ty string) govtypesv1beta1.Content {
 	}
 }
 
-func createValSet(t *testing.T, pubKeys ...cryptotypes.PubKey) *tmtypes.ValidatorSet {
-	validators := make([]*tmtypes.Validator, len(pubKeys))
+func createValSet(t *testing.T, pubKeys ...cryptotypes.PubKey) *cmttypes.ValidatorSet {
+	validators := make([]*cmttypes.Validator, len(pubKeys))
 	for i, key := range pubKeys {
 		pk, err := cryptocodec.ToTmPubKeyInterface(key)
 		require.NoError(t, err, "ToTmPubKeyInterface")
-		validators[i] = tmtypes.NewValidator(pk, 1)
+		validators[i] = cmttypes.NewValidator(pk, 1)
 	}
-	return tmtypes.NewValidatorSet(validators)
+	return cmttypes.NewValidatorSet(validators)
 }
 
 func signAndGenTx(

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +33,7 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -69,7 +69,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	accs := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	expected := []struct {
 		weight     int
@@ -112,7 +112,7 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// bad operation
 	op := simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
@@ -152,7 +152,7 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	s.app.TriggerKeeper.SetGasLimit(s.ctx, trigger.GetId(), 1000)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgDestroyTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)

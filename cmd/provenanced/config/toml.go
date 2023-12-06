@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"text/template"
 
-	tmos "github.com/cometbft/cometbft/libs/os"
+	cmtos "github.com/cometbft/cometbft/libs/os"
 )
 
 const defaultConfigTemplate = `# This is a TOML config file.
@@ -45,5 +45,5 @@ func WriteConfigToFile(configFilePath string, config *ClientConfig) {
 		panic(err)
 	}
 
-	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
+	cmtos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
 }

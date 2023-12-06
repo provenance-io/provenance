@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	"github.com/golang/protobuf/proto"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +27,7 @@ func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}
 	h := name.NewHandler(k)
 
-	res, err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), testdata.NewTestMsg())
+	res, err := h(sdk.NewContext(nil, cmtproto.Header{}, false, nil), testdata.NewTestMsg())
 	require.Error(t, err)
 	require.Nil(t, res)
 
@@ -80,7 +80,7 @@ func TestCreateName(t *testing.T) {
 	}
 	accs := authtypes.GenesisAccounts{acc1, acc2}
 	app := simapp.SetupWithGenesisAccounts(t, "", accs)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))
@@ -139,7 +139,7 @@ func TestDeleteName(t *testing.T) {
 	}
 	accs := authtypes.GenesisAccounts{acc1}
 	app := simapp.SetupWithGenesisAccounts(t, "", accs)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))
@@ -178,7 +178,7 @@ func TestModifyName(t *testing.T) {
 	}
 	accs := authtypes.GenesisAccounts{acc1}
 	app := simapp.SetupWithGenesisAccounts(t, "", accs)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))

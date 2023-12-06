@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -158,8 +158,8 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.addr5Desc = "addr without holds and only bond denom"
 	s.addr5Bal, s.addr5Hold, s.addr5Spendable = newAmounts("addr5", "", "")
 
-	s.flagAsText = fmt.Sprintf("--%s=text", tmcli.OutputFlag)
-	s.flagAsJSON = fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+	s.flagAsText = fmt.Sprintf("--%s=text", cmtcli.OutputFlag)
+	s.flagAsJSON = fmt.Sprintf("--%s=json", cmtcli.OutputFlag)
 	s.flagOffset = "--" + flags.FlagOffset
 	s.flagLimit = "--" + flags.FlagLimit
 	s.flagReverse = "--" + flags.FlagReverse

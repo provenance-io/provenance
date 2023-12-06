@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -456,7 +456,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			"get marker params json",
 			markercli.QueryParamsCmd(),
 			[]string{
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			},
 			`{"max_total_supply":"1000000","enable_governance":true,"unrestricted_denom_regex":"","max_supply":"1000000"}`,
 		},
@@ -465,7 +465,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			markercli.MarkerCmd(),
 			[]string{
 				"testcoin",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			},
 			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos1p3sl9tll0ygj3flwt5r2w0n6fx9p5ngq2tu6mq","pub_key":null,"account_number":"8","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"testcoin","supply":"1000","marker_type":"MARKER_TYPE_COIN","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false,"required_attributes":[]}}`,
 		},
@@ -474,7 +474,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			markercli.MarkerCmd(),
 			[]string{
 				"testcoin",
-				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=text", cmtcli.OutputFlag),
 			},
 			`marker:
   '@type': /provenance.marker.v1.MarkerAccount
@@ -507,7 +507,7 @@ func (s *IntegrationTestSuite) TestMarkerQueryCommands() {
 			markercli.MarkerCmd(),
 			[]string{
 				"lockedcoin",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			},
 			`{"marker":{"@type":"/provenance.marker.v1.MarkerAccount","base_account":{"address":"cosmos16437wt0xtqtuw0pn4vt8rlf8gr2plz2det0mt2","pub_key":null,"account_number":"9","sequence":"0"},"manager":"","access_control":[],"status":"MARKER_STATUS_ACTIVE","denom":"lockedcoin","supply":"1000","marker_type":"MARKER_TYPE_RESTRICTED","supply_fixed":true,"allow_governance_control":false,"allow_forced_transfer":false,"required_attributes":[]}}`,
 		},
@@ -1332,7 +1332,7 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 }
 
 func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
-	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+	asJson := fmt.Sprintf("--%s=json", cmtcli.OutputFlag)
 
 	// Because other tests might have run before this and added markers,
 	// the s.markerCount variable isn't necessarily how many markers exist right now.

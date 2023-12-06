@@ -9,11 +9,11 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 func FreshCtx(app *simapp.App) sdk.Context {
-	return keeper.AddAuthzCacheToContext(app.BaseApp.NewContext(false, tmproto.Header{}))
+	return keeper.AddAuthzCacheToContext(app.BaseApp.NewContext(false, cmtproto.Header{}))
 }
 
 func TestValidateSetAccountData(t *testing.T) {

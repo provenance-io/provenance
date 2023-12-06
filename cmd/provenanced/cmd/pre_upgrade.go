@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tmconfig "github.com/cometbft/cometbft/config"
+	cmtconfig "github.com/cometbft/cometbft/config"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -97,7 +97,7 @@ func UpdateConfig(cmd *cobra.Command) error {
 // SafeSaveConfigs calls config.SaveConfigs but returns an error instead of panicking.
 func SafeSaveConfigs(cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *tmconfig.Config,
+	tmConfig *cmtconfig.Config,
 	clientConfig *config.ClientConfig,
 	verbose bool,
 ) (err error) {

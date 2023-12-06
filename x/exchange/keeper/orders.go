@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	db "github.com/cometbft/cometbft-db"
+	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -403,7 +403,7 @@ func filteredPaginateAfterOrder(
 }
 
 // getOrderIterator is similar to query.getIterator but allows limiting it to only entries after a certain order id.
-func getOrderIterator(prefixStore sdk.KVStore, start []byte, reverse bool, afterOrderID uint64) db.Iterator {
+func getOrderIterator(prefixStore sdk.KVStore, start []byte, reverse bool, afterOrderID uint64) dbm.Iterator {
 	if reverse {
 		var end []byte
 		if start != nil {

@@ -11,8 +11,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tmos "github.com/cometbft/cometbft/libs/os"
-	tmrand "github.com/cometbft/cometbft/libs/rand"
+	cmtos "github.com/cometbft/cometbft/libs/os"
+	cmtrand "github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/types"
 
 	cerrs "cosmossdk.io/errors"
@@ -105,7 +105,7 @@ func Init(
 
 	// Stop now if the genesis file already exists and an overwrite wasn't requested.
 	genFile := tmConfig.GenesisFile()
-	if !doOverwrite && tmos.FileExists(genFile) {
+	if !doOverwrite && cmtos.FileExists(genFile) {
 		return fmt.Errorf("genesis file already exists: %v", genFile)
 	}
 
@@ -114,7 +114,7 @@ func Init(
 
 	tmConfig.Moniker = moniker
 	if len(chainID) == 0 {
-		chainID = "provenance-chain-" + tmrand.NewRand().Str(6)
+		chainID = "provenance-chain-" + cmtrand.NewRand().Str(6)
 		cmd.Printf("chain id: %s\n", chainID)
 	}
 	clientConfig.ChainID = chainID

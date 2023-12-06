@@ -17,9 +17,9 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmjson "github.com/cometbft/cometbft/libs/json"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -51,14 +51,14 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 		MaxBytes: 200000,
 		MaxGas:   60_000_000,
 	},
-	Evidence: &tmproto.EvidenceParams{
+	Evidence: &cmtproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 		MaxBytes:        10000,
 	},
-	Validator: &tmproto.ValidatorParams{
+	Validator: &cmtproto.ValidatorParams{
 		PubKeyTypes: []string{
-			tmtypes.ABCIPubKeyTypeEd25519,
+			cmttypes.ABCIPubKeyTypeEd25519,
 		},
 	},
 }
@@ -139,8 +139,8 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	validator := cmttypes.NewValidator(pubKey, 1)
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
@@ -156,7 +156,7 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
-		stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+		stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 		require.NoError(t, err)
 
 		// Initialize the chain
@@ -181,8 +181,8 @@ func Setup(t *testing.T) *App {
 	require.NoError(t, err)
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	validator := cmttypes.NewValidator(pubKey, 1)
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
@@ -199,7 +199,7 @@ func Setup(t *testing.T) *App {
 
 func genesisStateWithValSet(t *testing.T,
 	app *App, genesisState GenesisState,
-	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
+	valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) GenesisState {
 	// set genesis accounts
@@ -271,7 +271,7 @@ func SetupQuerier(t *testing.T) *App {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit in the default token of the app from first genesis
 // account. A Nop logger is set in App.
-func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
+func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	t.Helper()
 
 	app, genesisState := setup(t, true, 5)
@@ -292,7 +292,7 @@ func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *tmtypes.Valida
 
 	// commit genesis changes
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
 		Height:             app.LastBlockHeight() + 1,
 		AppHash:            app.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
@@ -313,8 +313,8 @@ func SetupWithGenesisAccounts(t *testing.T, chainID string, genAccs []authtypes.
 	require.NoError(t, err)
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	validator := cmttypes.NewValidator(pubKey, 1)
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
 	return SetupWithGenesisValSet(t, chainID, valSet, genAccs, balances...)
 }
@@ -329,8 +329,8 @@ func GenesisStateWithSingleValidator(t *testing.T, app *App) GenesisState {
 	require.NoError(t, err)
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	validator := cmttypes.NewValidator(pubKey, 1)
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
@@ -480,7 +480,7 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 
 // SetupWithGenesisRewardsProgram initializes a new SimApp with the provided
 // rewards programs, genesis accounts, validators, and balances.
-func SetupWithGenesisRewardsProgram(t *testing.T, nextRewardProgramID uint64, genesisRewards []rewardtypes.RewardProgram, genAccs []authtypes.GenesisAccount, valSet *tmtypes.ValidatorSet, balances ...banktypes.Balance) *App {
+func SetupWithGenesisRewardsProgram(t *testing.T, nextRewardProgramID uint64, genesisRewards []rewardtypes.RewardProgram, genAccs []authtypes.GenesisAccount, valSet *cmttypes.ValidatorSet, balances ...banktypes.Balance) *App {
 	t.Helper()
 
 	// Make sure there's a validator set with at least one validator in it.
@@ -488,11 +488,11 @@ func SetupWithGenesisRewardsProgram(t *testing.T, nextRewardProgramID uint64, ge
 		privVal := mock.NewPV()
 		pubKey, err := privVal.GetPubKey()
 		require.NoError(t, err)
-		validator := tmtypes.NewValidator(pubKey, 1)
+		validator := cmttypes.NewValidator(pubKey, 1)
 		if valSet == nil {
-			valSet = tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+			valSet = cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 		} else {
-			require.NoError(t, valSet.UpdateWithChangeSet([]*tmtypes.Validator{validator}))
+			require.NoError(t, valSet.UpdateWithChangeSet([]*cmttypes.Validator{validator}))
 		}
 	}
 
@@ -512,7 +512,7 @@ func SetupWithGenesisRewardsProgram(t *testing.T, nextRewardProgramID uint64, ge
 	)
 
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, Time: time.Now().UTC()}})
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: app.LastBlockHeight() + 1, Time: time.Now().UTC()}})
 
 	return app
 }

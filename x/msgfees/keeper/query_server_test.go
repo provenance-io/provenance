@@ -8,7 +8,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -56,7 +56,7 @@ type QueryServerTestSuite struct {
 
 func (s *QueryServerTestSuite) SetupTest() {
 	s.app = simapp.SetupQuerier(s.T())
-	s.ctx = s.app.BaseApp.NewContext(true, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(true, cmtproto.Header{})
 	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
 	s.cfg = testutil.DefaultTestNetworkConfig()

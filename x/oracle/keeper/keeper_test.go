@@ -15,7 +15,7 @@ import (
 	"github.com/provenance-io/provenance/x/oracle/types"
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type KeeperTestSuite struct {
@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.CreateAccounts(4)
 	s.msgServer = keeper.NewMsgServerImpl(&s.app.OracleKeeper)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now().UTC()})
 	s.ctx = s.ctx.WithBlockHeight(100)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())

@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -47,7 +47,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
 	s.startBlockTime = time.Now()
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: s.startBlockTime})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{Time: s.startBlockTime})
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())

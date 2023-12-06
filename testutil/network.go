@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	tmrand "github.com/cometbft/cometbft/libs/rand"
+	cmtrand "github.com/cometbft/cometbft/libs/rand"
 	dbm "github.com/cometbft/cometbft-db"
 
 	sdksim "cosmossdk.io/simapp"
@@ -48,7 +48,7 @@ func DefaultTestNetworkConfig() testnet.Config {
 		AppConstructor:    NewAppConstructor(encCfg),
 		GenesisState:      provenanceapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     2 * time.Second,
-		ChainID:           "chain-" + tmrand.NewRand().Str(6),
+		ChainID:           "chain-" + cmtrand.NewRand().Str(6),
 		NumValidators:     4,
 		BondDenom:         sdk.DefaultBondDenom, // we use the SDK bond denom here, at least until the entire genesis is rewritten to match bond denom
 		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),

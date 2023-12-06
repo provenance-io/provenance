@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -31,7 +31,7 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -123,7 +123,7 @@ func (s *SimTestSuite) TestSimulateMsgAddAttribute() {
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q) error", name)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgAddAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
@@ -158,7 +158,7 @@ func (s *SimTestSuite) TestSimulateMsgUpdateAttribute() {
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
 
 	// execute operation
 	op := simulation.SimulateMsgUpdateAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
@@ -190,7 +190,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 	attr := types.NewAttribute(name, accounts[1].Address.String(), types.AttributeType_String, []byte("test"), &expireTime)
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
 
 	// execute operation
 	op := simulation.SimulateMsgDeleteAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
@@ -223,7 +223,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
 
 	// execute operation
 	op := simulation.SimulateMsgDeleteDistinctAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
@@ -249,7 +249,7 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	r := rand.New(src)
 	accounts := s.getTestingAccounts(r, 3)
 
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}})
 
 	// execute operation
 	op := simulation.SimulateMsgSetAccountData(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper)

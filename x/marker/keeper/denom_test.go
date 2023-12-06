@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 
@@ -25,7 +25,7 @@ type DenomTestSuite struct {
 
 func (s *DenomTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	s.app.MarkerKeeper.SetParams(s.ctx, types.DefaultParams())
 }

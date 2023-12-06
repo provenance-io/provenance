@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -151,7 +151,7 @@ func (s *IntegrationTestSuite) TestQueryOracleAddress() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetQueryOracleAddressCmd(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetQueryOracleAddressCmd(), []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)})
 			if len(tc.expectErrMsg) > 0 {
 				s.EqualError(err, tc.expectErrMsg, "should have correct error message for invalid QueryOracleAddress")
 			} else {
@@ -205,7 +205,7 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 			}
 			args = append(args, flags...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdOracleUpdate(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdOracleUpdate(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
@@ -278,7 +278,7 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 			}
 			args = append(args, flags...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdSendQuery(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdSendQuery(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {

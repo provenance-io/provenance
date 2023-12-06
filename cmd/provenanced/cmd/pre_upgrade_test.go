@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	tmconfig "github.com/cometbft/cometbft/config"
+	cmtconfig "github.com/cometbft/cometbft/config"
 
 	"cosmossdk.io/log"
 	sdksim "cosmossdk.io/simapp"
@@ -217,7 +217,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 
 	seenNames := make(map[string]bool)
 	// newHome creates a new home directory and saves the configs. Returns full path to home and success.
-	newHome := func(t *testing.T, name string, appCfg *serverconfig.Config, tmCfg *tmconfig.Config, clientCfg *config.ClientConfig) (string, bool) {
+	newHome := func(t *testing.T, name string, appCfg *serverconfig.Config, tmCfg *cmtconfig.Config, clientCfg *config.ClientConfig) (string, bool) {
 		require.False(t, seenNames[name], "dir name %q created in previous test", name)
 		seenNames[name] = true
 		home := filepath.Join(tmpDir, name)
@@ -230,7 +230,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 		return home, success
 	}
 	// newHomePacked creates a new home directory, saves the configs, and packs them. Returns full path to home and success.
-	newHomePacked := func(t *testing.T, name string, appCfg *serverconfig.Config, tmCfg *tmconfig.Config, clientCfg *config.ClientConfig) (string, bool) {
+	newHomePacked := func(t *testing.T, name string, appCfg *serverconfig.Config, tmCfg *cmtconfig.Config, clientCfg *config.ClientConfig) (string, bool) {
 		home, success := newHome(t, name, appCfg, tmCfg, clientCfg)
 		if !success {
 			return home, success
@@ -277,7 +277,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 		expInStderr  []string
 		expNot       []string
 		expAppCfg    *serverconfig.Config
-		expTmCfg     *tmconfig.Config
+		expTmCfg     *cmtconfig.Config
 		expClientCfg *config.ClientConfig
 	}{
 		{

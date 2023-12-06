@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -200,8 +200,8 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	genesisState[banktypes.ModuleName] = bankDataBz
 
-	s.asJson = fmt.Sprintf("--%s=json", tmcli.OutputFlag)
-	s.asText = fmt.Sprintf("--%s=text", tmcli.OutputFlag)
+	s.asJson = fmt.Sprintf("--%s=json", cmtcli.OutputFlag)
+	s.asText = fmt.Sprintf("--%s=text", cmtcli.OutputFlag)
 	s.includeRequest = "--include-request"
 
 	s.scopeUUID = uuid.New()

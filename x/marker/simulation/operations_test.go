@@ -19,7 +19,7 @@ import (
 	"github.com/provenance-io/provenance/x/marker/keeper"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -36,7 +36,7 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -135,7 +135,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarker() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgAddMarker(s.app.MarkerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
@@ -160,7 +160,7 @@ func (s *SimTestSuite) TestSimulateMsgAddActivateFinalizeMarker() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgAddFinalizeActivateMarker(s.app.MarkerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
@@ -383,7 +383,7 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	s.Require().NoError(err, "AddFinalizeActivateMarker")
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	args := s.getWeightedOpsArgs()
 	// execute operation
@@ -435,7 +435,7 @@ func (s *SimTestSuite) TestSimulateMsgUpdateSendDenyList() {
 	s.Require().NoError(err, "AddFinalizeActivateMarker")
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	args := s.getWeightedOpsArgs()
 	// execute operation
@@ -501,7 +501,7 @@ func (s *SimTestSuite) getLastGovProp() *govtypes.Proposal {
 
 // freshCtx creates a new context and sets it to this SimTestSuite's ctx field.
 func (s *SimTestSuite) freshCtx() {
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 // createTestingAccountsWithPower creates new accounts with the specified power (coins amount).

@@ -13,7 +13,7 @@ import (
 
 	copier "github.com/otiai10/copy"
 
-	tmdb "github.com/cometbft/cometbft-db"
+	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/log"
 )
@@ -21,23 +21,23 @@ import (
 const (
 	// BytesPerMB is the number of bytes in a megabyte.
 	BytesPerMB = 1_048_576
-	// unknownDBBackend is mostly a tmdb.BackendType used in output as a string.
+	// unknownDBBackend is mostly a dbm.BackendType used in output as a string.
 	// It indicates that the backend is unknown.
-	unknownDBBackend = tmdb.BackendType("UNKNOWN")
+	unknownDBBackend = dbm.BackendType("UNKNOWN")
 )
 
 // Note: The PossibleDBTypes variable is a map instead of a slice because trying to append to it was causing one type to
 //       stomp out the append from another type (concurrency issue?).
 
 // PossibleDBTypes is a map of strings to BackendTypes representing the Backend types that can be used by this utility.
-var PossibleDBTypes = map[string]tmdb.BackendType{}
+var PossibleDBTypes = map[string]dbm.BackendType{}
 
 func init() {
-	PossibleDBTypes["goleveldb"] = tmdb.GoLevelDBBackend
+	PossibleDBTypes["goleveldb"] = dbm.GoLevelDBBackend
 }
 
 // AddPossibleDBType adds a possible db backend type.
-func AddPossibleDBType(dbType tmdb.BackendType) {
+func AddPossibleDBType(dbType dbm.BackendType) {
 	PossibleDBTypes[string(dbType)] = dbType
 }
 
@@ -133,7 +133,7 @@ type migrationManager struct {
 	// Entries are set during the call to Migrate and are the return values of each MigrateDBDir call.
 	Summaries map[string]string
 	// SourceTypes is a map of ToConvert entries, to their backend type.
-	SourceTypes map[string]tmdb.BackendType
+	SourceTypes map[string]dbm.BackendType
 
 	// Logger is the Logger to use for logging log messages.
 	Logger log.Logger
@@ -359,7 +359,7 @@ func (m Migrator) startMigratorManager(logger log.Logger) (*migrationManager, er
 		Status:         "starting",
 		TimeStarted:    time.Now(),
 		Summaries:      map[string]string{},
-		SourceTypes:    map[string]tmdb.BackendType{},
+		SourceTypes:    map[string]dbm.BackendType{},
 		Logger:         logger,
 		StatusTicker:   time.NewTicker(m.StatusPeriod),
 		StatusKeyvals:  noKeyvals,
@@ -438,9 +438,9 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	// There's several things that need closing and sometimes calling close can cause a segmentation fault that,
 	// for some reason, doesn't reach the SigChan notification set up in the Migrate method.
 	// So just to have clearer control over closing order, they're all defined at once and closed in a single defer function.
-	var sourceDB, targetDB tmdb.DB
-	var iter tmdb.Iterator
-	var batch tmdb.Batch
+	var sourceDB, targetDB dbm.DB
+	var iter dbm.Iterator
+	var batch dbm.Batch
 	sourceDBType := unknownDBBackend
 	defer func() {
 		m.StatusKeyvals = noKeyvals
@@ -465,7 +465,7 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	}()
 
 	m.Status = "detecting db type"
-	sourceDBType, ok := tmdb.BackendType(m.Migrator.SourceDBType), true
+	sourceDBType, ok := dbm.BackendType(m.Migrator.SourceDBType), true
 	if len(m.Migrator.SourceDBType) == 0 {
 		sourceDBType, ok = DetectDBType(dbName, sourceDir)
 	}
@@ -489,7 +489,7 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	}
 
 	// If they're both the same type, just copy it and be done.
-	targetDBBackendType := tmdb.BackendType(m.TargetDBType)
+	targetDBBackendType := dbm.BackendType(m.TargetDBType)
 	if sourceDBType == targetDBBackendType {
 		m.Status = "copying db"
 		from := filepath.Join(m.SourceDataDir, dbDir)
@@ -510,13 +510,13 @@ func (m *migrationManager) MigrateDBDir(dbDir string) (summary string, err error
 	}
 
 	m.Status = "opening source db"
-	sourceDB, err = tmdb.NewDB(dbName, sourceDBType, sourceDir)
+	sourceDB, err = dbm.NewDB(dbName, sourceDBType, sourceDir)
 	if err != nil {
 		return summaryError, fmt.Errorf("could not open %q source db: %w", dbName, err)
 	}
 
 	m.Status = "opening target db"
-	targetDB, err = tmdb.NewDB(dbName, targetDBBackendType, targetDir)
+	targetDB, err = dbm.NewDB(dbName, targetDBBackendType, targetDir)
 	if err != nil {
 		return summaryError, fmt.Errorf("could not open %q target db: %w", dbName, err)
 	}
@@ -800,14 +800,14 @@ func GetDataDirContents(dataDirPath string) ([]string, []string, error) {
 }
 
 // DetectDBType attempts to identify the type database in the given dir with the given name.
-// The name and dir would be the same things that would be provided to tmdb.NewDB.
+// The name and dir would be the same things that would be provided to dbm.NewDB.
 //
 // The return bool indicates whether or not the DB type was identified.
 //
 // The only types this detects are LevelDB, RocksDB, and BadgerDB.
 // If the DB is another type, the behavior of this is unknown.
 // There's a chance this will return false, but there's also a chance it is falsely identified as something else.
-func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
+func DetectDBType(name, dir string) (dbm.BackendType, bool) {
 	// Here are the key differences used to differentiate the DB types.
 	// badgerdb:
 	// * In a directory named "dir/name".
@@ -850,13 +850,13 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 		}
 		// Could also check for a numbered files with the extension ".vlog", but that's expensive.
 		// And for the types involved in here, what's been done should be enough to hopefully prevent false positives.
-		return tmdb.BadgerDBBackend, true
+		return dbm.BadgerDBBackend, true
 	}
 
 	// Now lets check for boltdb. It's a file instead of directory with the same name used by rocksdb and leveldb.
 	dbDir = filepath.Join(dir, name+".db")
 	if fileExists(dbDir) {
-		return tmdb.BoltDBBackend, true
+		return dbm.BoltDBBackend, true
 	}
 
 	// The other two (rocksdb and leveldb) should be in directories named "dir/name.db".
@@ -869,23 +869,23 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 
 	// The only statically named file difference between rocksdb and leveldb is IDENTITY with rocksdb.
 	if fileExists(filepath.Join(dbDir, "IDENTITY")) {
-		return tmdb.RocksDBBackend, true
+		return dbm.RocksDBBackend, true
 	}
 
 	// At this point, we assume it's either cleveldb or goleveldb.
 	// Unfortunately, they both use the same files, but possibly with different formats.
 	// Sometimes you can treat a goleveldb as cleveldb and vice versa, but sometimes you can't.
 	// The only way I can think of to differentiate them here is to just try to open them.
-	// I didn't test like this with the other types because the tmdb.NewDB function will create
+	// I didn't test like this with the other types because the dbm.NewDB function will create
 	// a db if it doesn't exist which can cause weird behavior if trying with the wrong db type.
 	// Goleveldb and cleveldb are close enough, though that it won't cause problems.
-	canOpenDB := func(backend tmdb.BackendType) (rv bool) {
+	canOpenDB := func(backend dbm.BackendType) (rv bool) {
 		defer func() {
 			if r := recover(); r != nil {
 				rv = false
 			}
 		}()
-		db, err := tmdb.NewDB(name, backend, dir)
+		db, err := dbm.NewDB(name, backend, dir)
 		if err != nil {
 			return false
 		}
@@ -915,11 +915,11 @@ func DetectDBType(name, dir string) (tmdb.BackendType, bool) {
 		return true
 	}
 
-	if canOpenDB(tmdb.GoLevelDBBackend) {
-		return tmdb.GoLevelDBBackend, true
+	if canOpenDB(dbm.GoLevelDBBackend) {
+		return dbm.GoLevelDBBackend, true
 	}
-	if IsPossibleDBType(string(tmdb.CLevelDBBackend)) && canOpenDB(tmdb.CLevelDBBackend) {
-		return tmdb.CLevelDBBackend, true
+	if IsPossibleDBType(string(dbm.CLevelDBBackend)) && canOpenDB(dbm.CLevelDBBackend) {
+		return dbm.CLevelDBBackend, true
 	}
 
 	return unknownDBBackend, false

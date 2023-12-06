@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -70,7 +70,7 @@ func (s *AuthzTestSuite) SetupTest() {
 }
 
 func (s *AuthzTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()}))
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()}))
 }
 
 // AssertErrorValue asserts that:

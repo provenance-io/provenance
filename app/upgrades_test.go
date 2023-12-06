@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -63,7 +63,7 @@ func (s *UpgradeTestSuite) SetupSuite() {
 	s.app = Setup(s.T())
 	s.logBuffer.Reset()
 	s.startTime = time.Now()
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: s.startTime})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{Time: s.startTime})
 }
 
 // GetLogOutput gets the log buffer contents. This (probably) also clears the log buffer.

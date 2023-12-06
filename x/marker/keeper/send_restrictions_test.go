@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -28,7 +28,7 @@ func TestSendRestrictionFn(t *testing.T) {
 	}
 
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	ctxWithBypass := types.WithBypass(ctx)
 	owner := sdk.AccAddress("owner_address_______")
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, owner))
@@ -429,7 +429,7 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 	addrOther := sdk.AccAddress("other_address_______")
 
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrNameOwner.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrNameOwner))
 	err := app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", addrNameOwner, false)
@@ -523,7 +523,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 	addrWithAttr2 := sdk.AccAddress("addrWithAttr2_______")
 
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrManager.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrManager))
 	err := app.NameKeeper.SetNameRecord(ctx, "rando.io", addrManager, false)
@@ -681,7 +681,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 
 func TestNormalizeRequiredAttributes(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	testCases := []struct {
 		name               string
@@ -815,7 +815,7 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 	// Directly tests the bug described in https://github.com/provenance-io/provenance/issues/1626
 
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	owner := sdk.AccAddress("owner_address_______")
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, owner))
 	reqAttr := "quarantinetest.provenance.io"

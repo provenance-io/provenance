@@ -15,8 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtime "github.com/cometbft/cometbft/types/time"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -36,9 +36,9 @@ var bankSendAuthMsgType = banktypes.SendAuthorization{}.MsgTypeURL()
 
 func (s *TestSuite) SetupTest() {
 	app := simapp.Setup(s.T())
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	now := cmttime.Now()
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.MsgFeesKeeper)
 	queryClient := types.NewQueryClient(queryHelper)

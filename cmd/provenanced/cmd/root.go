@@ -14,8 +14,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	tmcfg "github.com/cometbft/cometbft/config"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtconfig "github.com/cometbft/cometbft/config"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/log"
@@ -127,14 +127,14 @@ func Execute(rootCmd *cobra.Command) error {
 
 	rootCmd.PersistentFlags().BoolP(EnvTypeFlag, "t", false, "Indicates this command should use the testnet configuration (default: false [mainnet])")
 	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
-	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
+	rootCmd.PersistentFlags().String(flags.FlagLogFormat, cmtconfig.LogFormatPlain, "The logging format (json|plain)")
 
 	// Custom denom flag added to root command
 	rootCmd.PersistentFlags().String(config.CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it (default nhash)")
 	// Custom msgFee floor price flag added to root command
 	rootCmd.PersistentFlags().Int64(config.CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
 
-	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
+	executor := cmtcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
 }
 
@@ -151,7 +151,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		AddGenesisCustomFloorPriceDenomCmd(app.DefaultNodeHome),
 		AddGenesisDefaultMarketCmd(app.DefaultNodeHome),
 		AddGenesisCustomMarketCmd(app.DefaultNodeHome),
-		tmcli.NewCompletionCmd(rootCmd, true),
+		cmtcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		ConfigCmd(),

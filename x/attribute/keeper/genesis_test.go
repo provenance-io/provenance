@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/log"
 
@@ -51,7 +51,7 @@ func (s *GenesisTestSuite) SetupSuite() {
 	defer app.SetLoggerMaker(app.SetLoggerMaker(bufferedLoggerMaker))
 	s.app = app.Setup(s.T())
 	s.logBuffer.Reset()
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 // newMockNameKeeper creates a mockNameKeeper backed by this suite's app's name keeper.

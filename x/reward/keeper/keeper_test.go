@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -56,7 +56,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.CreateAccounts(4)
 	s.handler = reward.NewHandler(s.app.RewardKeeper)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now().UTC()})
 	s.createTestValidators(10)
 	s.Require().NoError(testutil.FundModuleAccount(s.app.BankKeeper, s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000000000000))), "funding module")
 

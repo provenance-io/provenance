@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -18,7 +18,7 @@ import (
 func TestMarkerInvariant(t *testing.T) {
 	//app, ctx := createTestApp(true)
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	app.MarkerKeeper.SetParams(ctx, markertypes.DefaultParams())
 	user := testUserAddress("test")

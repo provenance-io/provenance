@@ -13,12 +13,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tmconfig "github.com/cometbft/cometbft/config"
-	tmos "github.com/cometbft/cometbft/libs/os"
-	tmrand "github.com/cometbft/cometbft/libs/rand"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtconfig "github.com/cometbft/cometbft/config"
+	cmtos "github.com/cometbft/cometbft/libs/os"
+	cmtrand "github.com/cometbft/cometbft/libs/rand"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
-	tmtime "github.com/cometbft/cometbft/types/time"
+	cmttime "github.com/cometbft/cometbft/types/time"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -113,7 +113,7 @@ const nodeDirPerm = 0755
 func InitTestnet(
 	clientCtx client.Context,
 	cmd *cobra.Command,
-	nodeConfig *tmconfig.Config,
+	nodeConfig *cmtconfig.Config,
 	mbm module.BasicManager,
 	genBalIterator banktypes.GenesisBalancesIterator,
 	outputDir,
@@ -127,7 +127,7 @@ func InitTestnet(
 	numValidators int,
 ) error {
 	if chainID == "" {
-		chainID = "chain-" + tmrand.NewRand().Str(6)
+		chainID = "chain-" + cmtrand.NewRand().Str(6)
 	}
 
 	nodeIDs := make([]string, numValidators)
@@ -416,18 +416,18 @@ func initGenFiles(
 	genDoc := types.GenesisDoc{
 		ChainID:  chainID,
 		AppState: appGenStateJSON,
-		ConsensusParams: &tmproto.ConsensusParams{
-			Block: tmproto.BlockParams{
+		ConsensusParams: &cmtproto.ConsensusParams{
+			Block: cmtproto.BlockParams{
 				MaxBytes:   200000,
 				MaxGas:     60_000_000,
 				TimeIotaMs: 1000,
 			},
-			Evidence: tmproto.EvidenceParams{
+			Evidence: cmtproto.EvidenceParams{
 				MaxAgeNumBlocks: 302400,
 				MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 				MaxBytes:        10000,
 			},
-			Validator: tmproto.ValidatorParams{
+			Validator: cmtproto.ValidatorParams{
 				PubKeyTypes: []string{
 					types.ABCIPubKeyTypeEd25519,
 				},
@@ -446,12 +446,12 @@ func initGenFiles(
 }
 
 func collectGenFiles(
-	clientCtx client.Context, nodeConfig *tmconfig.Config, chainID string,
+	clientCtx client.Context, nodeConfig *cmtconfig.Config, chainID string,
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
 	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
 ) error {
 	var appState json.RawMessage
-	genTime := tmtime.Now()
+	genTime := cmttime.Now()
 
 	for i := 0; i < numValidators; i++ {
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
@@ -517,12 +517,12 @@ func calculateIP(ip string, i int) (string, error) {
 func writeFile(name string, dir string, contents []byte) error {
 	file := filepath.Join(dir, name)
 
-	err := tmos.EnsureDir(dir, 0755)
+	err := cmtos.EnsureDir(dir, 0755)
 	if err != nil {
 		return err
 	}
 
-	err = tmos.WriteFile(file, contents, 0644)
+	err = cmtos.WriteFile(file, contents, 0644)
 	if err != nil {
 		return err
 	}

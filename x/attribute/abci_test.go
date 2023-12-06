@@ -12,7 +12,7 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 func TestBeginBlockDeletionOfExpired(t *testing.T) {
@@ -25,7 +25,7 @@ func TestBeginBlockDeletionOfExpired(t *testing.T) {
 	now := time.Now()
 
 	app = simapp.Setup(t)
-	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(-3 * time.Hour))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, user1Addr))
 

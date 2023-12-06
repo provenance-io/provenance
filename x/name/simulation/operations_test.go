@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -30,7 +30,7 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -120,7 +120,7 @@ func (s *SimTestSuite) TestSimulateMsgBindName() {
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgBindName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
@@ -154,7 +154,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteName() {
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgDeleteName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
@@ -186,7 +186,7 @@ func (s *SimTestSuite) TestSimulateMsgModifyName() {
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgModifyName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)

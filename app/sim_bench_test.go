@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdksim "cosmossdk.io/simapp"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -111,7 +111,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	PrintStats(config, db)
 
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight() + 1, Time: lastBlockTime})
+	ctx := app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight() + 1, Time: lastBlockTime})
 
 	// 3. Benchmark each invariant separately
 	//

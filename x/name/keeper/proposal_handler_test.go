@@ -13,7 +13,7 @@ import (
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	provenance "github.com/provenance-io/provenance/app"
 )
@@ -30,7 +30,7 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = provenance.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 	s.k = namekeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(nametypes.ModuleName), s.app.GetSubspace(nametypes.ModuleName))
 	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	s.k.SetNameRecord(s.ctx, "test.root", s.accountAddr, false)

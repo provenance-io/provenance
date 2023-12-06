@@ -5,7 +5,7 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	cerrs "cosmossdk.io/errors"
 
@@ -28,7 +28,7 @@ func (k Keeper) QueryOracle(ctx sdk.Context, query wasmtypes.RawContractMessage,
 		Query: query,
 	}
 
-	reqs := []abcitypes.RequestQuery{
+	reqs := []abci.RequestQuery{
 		{
 			Path: "/provenance.oracle.v1.Query/Oracle",
 			Data: k.cdc.MustMarshal(&q),

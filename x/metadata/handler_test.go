@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
@@ -42,7 +42,7 @@ type MetadataHandlerTestSuite struct {
 
 func (s *MetadataHandlerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 	s.handler = metadata.NewHandler(s.app.MetadataKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()

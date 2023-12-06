@@ -12,7 +12,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -88,7 +88,7 @@ func (s *ScopeKeeperTestSuite) SetupTest() {
 }
 
 func (s *ScopeKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, cmtproto.Header{}))
 }
 
 // AssertErrorValue asserts that:

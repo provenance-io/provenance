@@ -12,7 +12,7 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -79,7 +79,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 		AppOpts:            sdksim.EmptyAppOptions{},
 	}
 	app := NewAppWithCustomOptions(t, false, opts)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	initAccts := app.AccountKeeper.GetAllAccounts(ctx)
 	initAddrs := make([]sdk.AccAddress, len(initAccts))

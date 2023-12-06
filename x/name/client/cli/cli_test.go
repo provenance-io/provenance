@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -196,12 +196,12 @@ func (s *IntegrationTestSuite) TestGetNameParamsCmd() {
 	}{
 		{
 			"json output",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
 			"{\"max_segment_length\":32,\"min_segment_length\":1,\"max_name_levels\":2,\"allow_unrestricted_names\":true}",
 		},
 		{
 			"text output",
-			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			`allow_unrestricted_names: true
 max_name_levels: 2
 max_segment_length: 32
@@ -231,17 +231,17 @@ func (s *IntegrationTestSuite) TestResolveNameCommand() {
 	}{
 		{
 			"query name, json output",
-			[]string{"attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"attribute", fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
 			fmt.Sprintf("{\"address\":\"%s\",\"restricted\":false}", s.accountAddr.String()),
 		},
 		{
 			"query name, text output",
-			[]string{"attribute", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{"attribute", fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			fmt.Sprintf("address: %s\nrestricted: false", s.accountAddr.String()),
 		},
 		{
 			"query name that does not exist, text output",
-			[]string{"doesnotexist", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{"doesnotexist", fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			"",
 		},
 	}
@@ -270,22 +270,22 @@ func (s *IntegrationTestSuite) TestReverseLookupCommand() {
 	}{
 		{
 			"query name, json output",
-			[]string{s.accountAddr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{s.accountAddr.String(), fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
 			"{\"name\":[\"example.attribute\",\"attribute\"],\"pagination\":{\"next_key\":null,\"total\":\"0\"}}",
 		},
 		{
 			"query name, text output",
-			[]string{s.accountAddr.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{s.accountAddr.String(), fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			"name:\n- example.attribute\n- attribute\npagination:\n  next_key: null\n  total: \"0\"",
 		},
 		{
 			"query name that does not exist, text output",
-			[]string{addr.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{addr.String(), fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			"name: []\npagination:\n  next_key: null\n  total: \"0\"",
 		},
 		{
 			"query name that does not exist, json output",
-			[]string{addr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{addr.String(), fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
 			"{\"name\":[],\"pagination\":{\"next_key\":null,\"total\":\"0\"}}",
 		},
 	}
@@ -546,7 +546,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 }
 
 func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
-	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+	asJson := fmt.Sprintf("--%s=json", cmtcli.OutputFlag)
 
 	s.T().Run("ReverseLookupCommand", func(t *testing.T) {
 		// Choosing page size = 13 because it a) isn't the default, b) doesn't evenly divide 50.

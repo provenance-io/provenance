@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -18,7 +18,7 @@ import (
 
 func TestCreateRootNameProposalContents(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	// initialize parameters
 	s := rand.NewSource(1)

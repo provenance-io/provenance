@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 func TestSendRestrictionContextFuncs(t *testing.T) {
@@ -17,37 +17,37 @@ func TestSendRestrictionContextFuncs(t *testing.T) {
 	}{
 		{
 			name: "brand new mostly empty context",
-			ctx:  sdk.NewContext(nil, tmproto.Header{}, false, nil),
+			ctx:  sdk.NewContext(nil, cmtproto.Header{}, false, nil),
 			exp:  false,
 		},
 		{
 			name: "context with bypass",
-			ctx:  WithBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil)),
+			ctx:  WithBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil)),
 			exp:  true,
 		},
 		{
 			name: "context with bypass on one that originally was without it",
-			ctx:  WithBypass(WithoutBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil))),
+			ctx:  WithBypass(WithoutBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil))),
 			exp:  true,
 		},
 		{
 			name: "context with bypass twice",
-			ctx:  WithBypass(WithBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil))),
+			ctx:  WithBypass(WithBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil))),
 			exp:  true,
 		},
 		{
 			name: "context without bypass",
-			ctx:  WithoutBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil)),
+			ctx:  WithoutBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil)),
 			exp:  false,
 		},
 		{
 			name: "context without bypass on one that originally had it",
-			ctx:  WithoutBypass(WithoutBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil))),
+			ctx:  WithoutBypass(WithoutBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil))),
 			exp:  false,
 		},
 		{
 			name: "context without bypass twice",
-			ctx:  WithoutBypass(WithoutBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil))),
+			ctx:  WithoutBypass(WithoutBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil))),
 			exp:  false,
 		},
 	}
@@ -61,7 +61,7 @@ func TestSendRestrictionContextFuncs(t *testing.T) {
 }
 
 func TestContextFuncsDoNotModifyProvided(t *testing.T) {
-	origCtx := sdk.NewContext(nil, tmproto.Header{}, false, nil)
+	origCtx := sdk.NewContext(nil, cmtproto.Header{}, false, nil)
 	assert.False(t, HasBypass(origCtx), "HasBypass(origCtx)")
 	afterWith := WithBypass(origCtx)
 	assert.True(t, HasBypass(afterWith), "HasBypass(afterWith)")

@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmcmds "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	tmconfig "github.com/cometbft/cometbft/config"
+	cmtcmds "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtconfig "github.com/cometbft/cometbft/config"
 
 	"cosmossdk.io/log"
 	sdksim "cosmossdk.io/simapp"
@@ -394,18 +394,18 @@ func (s *ConfigManagerTestSuite) TestPackedConfigTmLoadDefaults() {
 	s.logFile(GetFullPathToPackedConf(dCmd))
 	s.Require().NoError(loadPackedConfig(dCmd), "loadPackedConfig")
 
-	s.Run("tmcmds.ParseConfig", func() {
-		var tmConfig2 *tmconfig.Config
+	s.Run("cmtcmds.ParseConfig", func() {
+		var tmConfig2 *cmtconfig.Config
 		var err error
 		s.Require().NotPanics(func() {
-			tmConfig2, err = tmcmds.ParseConfig(dCmd)
+			tmConfig2, err = cmtcmds.ParseConfig(dCmd)
 		})
-		s.Require().NoError(err, "tmcmds.ParseConfig")
+		s.Require().NoError(err, "cmtcmds.ParseConfig")
 		s.Assert().Equal(tmConfig, tmConfig2)
 	})
 
 	s.Run("ExtractTmConfig", func() {
-		var tmConfig2 *tmconfig.Config
+		var tmConfig2 *cmtconfig.Config
 		var err error
 		s.Require().NotPanics(func() {
 			tmConfig2, err = ExtractTmConfig(dCmd)

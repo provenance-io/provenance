@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/log"
@@ -266,8 +266,8 @@ func TestAppImportExport(t *testing.T) {
 		}
 	}()
 
-	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
-	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
+	ctxA := app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
+	ctxB := newApp.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
 	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
 

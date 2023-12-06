@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -270,7 +270,7 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetTriggersCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetTriggersCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			if len(tc.expectErrMsg) > 0 {
 				s.EqualError(err, tc.expectErrMsg, "should have correct error message for invalid QueryTriggers")
 			} else if tc.byId {
@@ -421,7 +421,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 			}
 			args = append(args, flags...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockHeightTrigger(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockHeightTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
@@ -576,7 +576,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			}
 			args = append(args, flags...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddTransactionTrigger(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddTransactionTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
@@ -718,7 +718,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 			}
 			args = append(args, flags...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockTimeTrigger(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockTimeTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
@@ -789,7 +789,7 @@ func (s *IntegrationTestSuite) TestDestroyTrigger() {
 			}
 			args = append(args, flags...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdDestroyTrigger(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdDestroyTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {

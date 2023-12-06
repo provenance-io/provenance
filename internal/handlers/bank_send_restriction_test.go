@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdksim "cosmossdk.io/simapp"
 
@@ -41,7 +41,7 @@ func TestBankSend(tt *testing.T) {
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 		banktypes.Balance{Address: addr2.String(), Coins: acct2Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "bank-restriction-testing"})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "bank-restriction-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	require.NoError(tt, app.NameKeeper.SetNameRecord(ctx, "some.kyc.provenance.io", addr1, false))

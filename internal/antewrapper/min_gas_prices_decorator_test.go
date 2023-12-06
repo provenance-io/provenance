@@ -7,7 +7,7 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )
@@ -242,7 +242,7 @@ func TestAnteHandle(tt *testing.T) {
 
 	for _, tc := range tests {
 		tt.Run(tc.name, func(t *testing.T) {
-			ctx := sdk.NewContext(nil, tmproto.Header{}, tc.isCheckTx, nil).WithMinGasPrices(tc.minGasPrices)
+			ctx := sdk.NewContext(nil, cmtproto.Header{}, tc.isCheckTx, nil).WithMinGasPrices(tc.minGasPrices)
 			terminator := NewTestTerminator()
 			decorator := antewrapper.NewMinGasPricesDecorator()
 			newCtx, err := decorator.AnteHandle(ctx, tc.tx, tc.simulate, terminator.AnteHandler)

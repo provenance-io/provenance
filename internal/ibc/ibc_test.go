@@ -10,7 +10,7 @@ import (
 	"github.com/provenance-io/provenance/internal/ibc"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/stretchr/testify/assert"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 func TestNewEmitErrorAcknowledgement(t *testing.T) {
@@ -55,7 +55,7 @@ func TestNewEmitErrorAcknowledgement(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := testApp.BaseApp.NewContext(false, tmproto.Header{})
+			ctx := testApp.BaseApp.NewContext(false, cmtproto.Header{})
 			ack := ibc.NewEmitErrorAcknowledgement(ctx, tc.err, tc.errCtx...)
 			events := ctx.EventManager().Events()
 			assert.Equal(t, tc.hasEvents, len(events) > 0, "should correctly decide when to emit events")
@@ -115,7 +115,7 @@ func TestEmitIBCErrorEvents(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := testApp.BaseApp.NewContext(false, tmproto.Header{})
+			ctx := testApp.BaseApp.NewContext(false, cmtproto.Header{})
 			ibc.EmitIBCErrorEvents(ctx, tc.err, tc.errCtx)
 			events := ctx.EventManager().Events()
 			assert.Equal(t, tc.events, events, "should emit the correct events")

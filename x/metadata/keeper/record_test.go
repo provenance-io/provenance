@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -92,7 +92,7 @@ func (s *RecordKeeperTestSuite) SetupTest() {
 }
 
 func (s *RecordKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, cmtproto.Header{}))
 }
 
 func TestRecordKeeperTestSuite(t *testing.T) {

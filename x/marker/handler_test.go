@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 
 	"github.com/stretchr/testify/assert"
@@ -47,7 +47,7 @@ type HandlerTestSuite struct {
 
 func (s *HandlerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 	s.handler = marker.NewHandler(s.app.MarkerKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
@@ -73,7 +73,7 @@ func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}
 	h := marker.NewHandler(k)
 
-	res, err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), testdata.NewTestMsg())
+	res, err := h(sdk.NewContext(nil, cmtproto.Header{}, false, nil), testdata.NewTestMsg())
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.Contains(t, err.Error(), "unrecognized marker message type")
@@ -84,7 +84,7 @@ func TestInvalidProposal(t *testing.T) {
 	k := keeper.Keeper{}
 	h := marker.NewProposalHandler(k)
 
-	err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), govtypesv1beta1.NewTextProposal("Test", "description"))
+	err := h(sdk.NewContext(nil, cmtproto.Header{}, false, nil), govtypesv1beta1.NewTextProposal("Test", "description"))
 	require.ErrorContains(t, err, "unrecognized marker proposal content type: *v1beta1.TextProposal")
 }
 

@@ -19,7 +19,7 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmos "github.com/cometbft/cometbft/libs/os"
+	cmtos "github.com/cometbft/cometbft/libs/os"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -1078,7 +1078,7 @@ func New(
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
-			tmos.Exit(err.Error())
+			cmtos.Exit(err.Error())
 		}
 	}
 

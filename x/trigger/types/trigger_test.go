@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 func TestNewTrigger(t *testing.T) {
@@ -192,7 +192,7 @@ func TestTransactionEventValidate(t *testing.T) {
 }
 
 func TestTransactionEventValidateContext(t *testing.T) {
-	ctx := sdk.NewContext(nil, tmproto.Header{Time: time.Now().UTC()}, false, nil)
+	ctx := sdk.NewContext(nil, cmtproto.Header{Time: time.Now().UTC()}, false, nil)
 	ctx = ctx.WithBlockHeight(100)
 
 	tests := []struct {
@@ -220,7 +220,7 @@ func TestTransactionEventValidateContext(t *testing.T) {
 }
 
 func TestBlockHeightEventValidateContext(t *testing.T) {
-	ctx := sdk.NewContext(nil, tmproto.Header{Time: time.Now().UTC()}, false, nil)
+	ctx := sdk.NewContext(nil, cmtproto.Header{Time: time.Now().UTC()}, false, nil)
 	ctx = ctx.WithBlockHeight(100)
 
 	tests := []struct {
@@ -259,7 +259,7 @@ func TestBlockHeightEventValidateContext(t *testing.T) {
 
 func TestBlockTimeEventValidateContext(t *testing.T) {
 	now := time.Now().UTC()
-	ctx := sdk.NewContext(nil, tmproto.Header{Time: now}, false, nil)
+	ctx := sdk.NewContext(nil, cmtproto.Header{Time: now}, false, nil)
 	ctx = ctx.WithBlockHeight(100)
 
 	tests := []struct {

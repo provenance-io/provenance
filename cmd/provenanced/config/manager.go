@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	tmconfig "github.com/cometbft/cometbft/config"
+	cmtconfig "github.com/cometbft/cometbft/config"
 
 	"cosmossdk.io/log"
 
@@ -93,7 +93,7 @@ func DefaultAppConfig() *serverconfig.Config {
 }
 
 // ExtractTmConfig creates a tendermint config from the command context.
-func ExtractTmConfig(cmd *cobra.Command) (*tmconfig.Config, error) {
+func ExtractTmConfig(cmd *cobra.Command) (*cmtconfig.Config, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
 	conf := DefaultTmConfig()
 	if err := v.Unmarshal(conf); err != nil {
@@ -111,7 +111,7 @@ func ExtractTmConfig(cmd *cobra.Command) (*tmconfig.Config, error) {
 }
 
 // ExtractTmConfigAndMap from the command context, creates a tendermint config and related string->value map.
-func ExtractTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap, error) {
+func ExtractTmConfigAndMap(cmd *cobra.Command) (*cmtconfig.Config, FieldValueMap, error) {
 	conf, err := ExtractTmConfig(cmd)
 	if err != nil {
 		return nil, nil, err
@@ -121,8 +121,8 @@ func ExtractTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap,
 	return conf, fields, nil
 }
 
-func DefaultTmConfig() *tmconfig.Config {
-	rv := tmconfig.DefaultConfig()
+func DefaultTmConfig() *cmtconfig.Config {
+	rv := cmtconfig.DefaultConfig()
 	rv.Consensus.TimeoutCommit = DefaultConsensusTimeoutCommit
 	return rv
 }
@@ -184,7 +184,7 @@ func GetAllConfigDefaults() FieldValueMap {
 func SaveConfigs(
 	cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *tmconfig.Config,
+	tmConfig *cmtconfig.Config,
 	clientConfig *ClientConfig,
 	verbose bool,
 ) {
@@ -201,7 +201,7 @@ func SaveConfigs(
 func writeUnpackedConfig(
 	cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *tmconfig.Config,
+	tmConfig *cmtconfig.Config,
 	clientConfig *ClientConfig,
 	verbose bool,
 ) {
@@ -221,7 +221,7 @@ func writeUnpackedConfig(
 		if verbose {
 			cmd.Printf("Writing tendermint config to: %s ... ", confFile)
 		}
-		tmconfig.WriteConfigFile(confFile, tmConfig)
+		cmtconfig.WriteConfigFile(confFile, tmConfig)
 		if verbose {
 			cmd.Printf("Done.\n")
 		}
@@ -267,7 +267,7 @@ func deleteUnpackedConfig(cmd *cobra.Command, verbose bool) error {
 func generateAndWritePackedConfig(
 	cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *tmconfig.Config,
+	tmConfig *cmtconfig.Config,
 	clientConfig *ClientConfig,
 	verbose bool,
 ) {

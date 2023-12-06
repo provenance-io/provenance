@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -28,7 +28,7 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -64,7 +64,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	accs := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	expected := []struct {
 		weight     int
@@ -106,7 +106,7 @@ func (s *SimTestSuite) TestSimulateMsgGovUpdateParams() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgGovUpdateParams(*s.app.RateLimitingKeeper, s.app.AccountKeeper, s.app.BankKeeper)

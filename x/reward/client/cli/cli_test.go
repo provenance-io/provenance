@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -317,7 +317,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), []string{tc.queryTypeArg, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), []string{tc.queryTypeArg, fmt.Sprintf("--%s=json", cmtcli.OutputFlag)})
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else if tc.byId {
@@ -458,7 +458,7 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else if tc.byId {
@@ -688,7 +688,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 			}
 			tc.args = append(tc.args, args...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramAdd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramAdd(), append(tc.args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
@@ -907,7 +907,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			args := []string{tc.addressArg, tc.stateArg, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+			args := []string{tc.addressArg, tc.stateArg, fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardsByAddressCmd(), args)
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
