@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/hold"
@@ -27,7 +27,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper h
 		storeKey:   storeKey,
 		bankKeeper: bankKeeper,
 	}
-	bankKeeper.AppendLockedCoinsGetter(rv.GetLockedCoins)
+	// bankKeeper.AppendLockedCoinsGetter(rv.GetLockedCoins) // TODO[1760]: locked-coins
 	return rv
 }
 
