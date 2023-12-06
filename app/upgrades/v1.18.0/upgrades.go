@@ -15,5 +15,5 @@ func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap)
 		return nil, err
 	}
 
-	return rc1.UpgradeStrategy(ctx, app, newVM)
+	return rc1.PerformUpgrade(ctx, app, newVM)
 }

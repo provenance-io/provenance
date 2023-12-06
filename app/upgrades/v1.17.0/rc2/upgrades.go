@@ -15,6 +15,10 @@ func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap)
 		return nil, err
 	}
 
+	return PerformUpgrade(ctx, app, newVM)
+}
+
+func PerformUpgrade(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error) {
 	common.UpdateIbcMarkerDenomMetadata(ctx, app)
-	return newVM, err
+	return vm, nil
 }

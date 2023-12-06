@@ -20,6 +20,10 @@ func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap)
 		return nil, err
 	}
 
+	return PerformUpgrade(ctx, app, newVM)
+}
+
+func PerformUpgrade(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error) {
 	// set ibchoooks defaults (no allowed async contracts)
 	app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
 
@@ -27,8 +31,7 @@ func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap)
 	SetupICQ(ctx, app)
 	UpdateMaxSupply(ctx, app)
 	SetExchangeParams(ctx, app)
-
-	return newVM, err
+	return vm, nil
 }
 
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.

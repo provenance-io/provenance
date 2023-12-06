@@ -20,13 +20,13 @@ func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap)
 		return nil, err
 	}
 
-	if newVM, err = rc1.UpgradeStrategy(ctx, app, vm); err != nil {
+	if newVM, err = rc1.PerformUpgrade(ctx, app, vm); err != nil {
 		return nil, err
 	}
-	if newVM, err = rc2.UpgradeStrategy(ctx, app, newVM); err != nil {
+	if newVM, err = rc2.PerformUpgrade(ctx, app, newVM); err != nil {
 		return nil, err
 	}
-	if newVM, err = rc3.UpgradeStrategy(ctx, app, vm); err != nil {
+	if newVM, err = rc3.PerformUpgrade(ctx, app, vm); err != nil {
 		return nil, err
 	}
 
