@@ -1,11 +1,10 @@
 package ibcratelimit
 
 import (
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // RegisterInterfaces registers implementations for the tx messages
