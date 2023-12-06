@@ -13,7 +13,6 @@ import (
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
-// Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName}
 func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error) {
 	// Migrate all the modules
 	newVM, err := upgrades.RunModuleMigrations(ctx, app, vm)

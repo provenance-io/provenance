@@ -29,6 +29,7 @@ func UpgradeStrategy(ctx sdk.Context, app *provenance.App, vm module.VersionMap)
 	if newVM, err = rc3.UpgradeStrategy(ctx, app, vm); err != nil {
 		return nil, err
 	}
+
 	AddMarkerNavs(ctx, app, provenance.GetPioMainnet1DenomToNav())
 	return newVM, nil
 }
