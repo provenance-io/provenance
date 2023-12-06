@@ -84,7 +84,7 @@ func GetAccountAttributeCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: ReadPageRequestWithPageKeyDecoded
 			if err != nil {
 				return err
 			}
@@ -130,7 +130,7 @@ func ListAccountAttributesCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: ReadPageRequestWithPageKeyDecoded
 			if err != nil {
 				return err
 			}
@@ -174,7 +174,7 @@ func ScanAccountAttributesCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: ReadPageRequestWithPageKeyDecoded
 			if err != nil {
 				return err
 			}
@@ -219,7 +219,7 @@ func GetAttributeAccountsCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			pageReq, err := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: ReadPageRequestWithPageKeyDecoded
 			if err != nil {
 				return err
 			}
