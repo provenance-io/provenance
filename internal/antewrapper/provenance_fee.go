@@ -158,7 +158,7 @@ func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper msgfeestypes.Feegr
 
 	// if feegranter set deduct base fee from feegranter account.
 	// this works with only when feegrant enabled.
-	if feeGranter != nil && !bytes.Equals(feeGranter, feePayer) {
+	if feeGranter != nil && !bytes.Equal(feeGranter, feePayer) {
 		if feegrantKeeper == nil {
 			return nil, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		}
