@@ -32,6 +32,7 @@ import (
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
+	// TODO[1760]: app-module: Add more assertions for the new types and clean up stuff no longer needed.
 )
 
 // AppModuleBasic defines the basic application module used by the reward module.
@@ -115,6 +116,12 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeepe
 	}
 }
 
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // GenerateGenesisState creates a randomized GenState of the rewards module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
@@ -154,15 +161,8 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Deprecated: Route returns the message routing key for the reward module.
 func (am AppModule) Route() sdk.Route {
+	// TODO[1760]: app-module: Delete the rewards Route() stuff.
 	return sdk.NewRoute(types.RouterKey, rewardModule.NewHandler(am.keeper))
-}
-
-// QuerierRoute returns the route we respond to for abci queries
-func (AppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns the reward module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
 }
 
 // InitGenesis performs genesis initialization for the reward module. It returns

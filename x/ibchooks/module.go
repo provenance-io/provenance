@@ -28,6 +28,7 @@ import (
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
+	// TODO[1760]: app-module: Add more assertions for the new types and clean up stuff no longer needed.
 )
 
 // AppModuleBasic defines the basic application module used by the ibchooks module.
@@ -98,6 +99,12 @@ func NewAppModule(ak authkeeper.AccountKeeper, keeper keeper.Keeper) AppModule {
 	}
 }
 
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // Name returns the ibchooks module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
@@ -105,21 +112,6 @@ func (AppModule) Name() string {
 
 // RegisterInvariants registers the ibchooks module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// Route returns the message routing key for the ibchooks module.
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
-
-// QuerierRoute returns the module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return ""
-}
-
-// LegacyQuerierHandler returns the x/ibchooks module's sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.

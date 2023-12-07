@@ -28,6 +28,7 @@ var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	// TODO[1760]: app-module: Add more assertions for the new types and clean up stuff no longer needed.
 )
 
 type AppModuleBasic struct {
@@ -89,17 +90,14 @@ func NewAppModule(cdc codec.Codec, exchangeKeeper keeper.Keeper) AppModule {
 	}
 }
 
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // RegisterInvariants registers the invariants for the exchange module.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// Deprecated: Route returns the message routing key for the exchange module, empty.
-func (am AppModule) Route() sdk.Route { return sdk.Route{} }
-
-// Deprecated: QuerierRoute returns the route we respond to for abci queries, "".
-func (AppModule) QuerierRoute() string { return "" }
-
-// Deprecated: LegacyQuerierHandler returns the exchange module sdk.Querier (nil).
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier { return nil }
 
 // InitGenesis performs genesis initialization for the exchange module. It returns
 // no validator updates.

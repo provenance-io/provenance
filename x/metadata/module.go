@@ -38,6 +38,7 @@ const StoreKey = types.StoreKey
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
+	// TODO[1760]: app-module: Add more assertions for the new types and clean up stuff no longer needed.
 )
 
 // AppModuleBasic contains non-dependent elements for the metadata module.
@@ -106,6 +107,12 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeepe
 	}
 }
 
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // Name returns the module name.
 func (AppModule) Name() string {
 	return types.ModuleName
@@ -113,6 +120,7 @@ func (AppModule) Name() string {
 
 // Route returns the message routing key for the metadata module.
 func (am AppModule) Route() sdk.Route {
+	// TODO[1760]: app-module: Delete the metadata Route() stuff.
 	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
 }
 
@@ -122,12 +130,8 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {
 
 // QuerierRoute returns the query route for this module.
 func (am AppModule) QuerierRoute() string {
+	// TODO[1760]: app-module: Delete the metadata QuerierRoute.
 	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns no sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
 }
 
 // RegisterServices registers module services.

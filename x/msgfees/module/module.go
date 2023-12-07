@@ -29,6 +29,7 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	// TODO[1760]: app-module: Add more assertions for the new types and clean up stuff no longer needed.
 )
 
 // AppModuleBasic defines the basic application module used by the msgfee module.
@@ -105,6 +106,12 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, registry cdctypes.Inter
 	}
 }
 
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // Name returns the msgfees module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
@@ -112,19 +119,6 @@ func (AppModule) Name() string {
 
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// Deprecated: Route returns the message routing key for the msgfees module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the route we respond to for abci queries
-func (AppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns the msgfees module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
 
 // InitGenesis performs genesis initialization for the msgfees module. It returns
 // no validator updates.
