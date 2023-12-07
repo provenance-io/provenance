@@ -9,7 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
@@ -21,8 +21,8 @@ const (
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
-func ParamChanges(_ *rand.Rand) []proposal.ParamChange {
-	return []proposal.ParamChange{
+func ParamChanges(_ *rand.Rand) []simtypes.ParamChange {
+	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keyFloorGasPrice,
 			func(r *rand.Rand) string {
 				jsonResp, err := json.Marshal(sdk.Coin{

@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
@@ -174,8 +173,8 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized metadata param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []proposal.ParamChange {
-	return []proposal.ParamChange{} // simulation.ParamChanges(r)
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return []simtypes.ParamChange{} // simulation.ParamChanges(r)
 }
 
 // RegisterStoreDecoder registers a decoder for metadata module's types

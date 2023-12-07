@@ -21,7 +21,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -89,8 +88,8 @@ func (pw Wrapper) ProposalContents(simState module.SimulationState) []simtypes.W
 }
 
 // RandomizedParams returns empty list as the params don't change
-func (pw Wrapper) RandomizedParams(_ *rand.Rand) []proposal.ParamChange {
-	return []proposal.ParamChange{}
+func (pw Wrapper) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
