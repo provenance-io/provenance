@@ -2,7 +2,6 @@ package app
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -26,7 +25,6 @@ import (
 
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type UpgradeTestSuite struct {
@@ -382,41 +380,6 @@ func (s *UpgradeTestSuite) TestKeysInHandlersMap() {
 	})
 }
 
-func (s *UpgradeTestSuite) TestRustRC1() {
-	// Each part is (hopefully) tested thoroughly on its own.
-	// So for this test, just make sure there's log entries for each part being done.
-
-	expInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-		`INF Setting "accountdata" name record.`,
-		`INF Creating message fee for "/cosmos.gov.v1.MsgSubmitProposal" if it doesn't already exist.`,
-		`INF Removing message fee for "/provenance.metadata.v1.MsgP8eMemorializeContractRequest" if one exists.`,
-		"INF Fixing name module store index entries.",
-	}
-
-	s.AssertUpgradeHandlerLogs("rust-rc1", expInLog, nil)
-}
-
-func (s *UpgradeTestSuite) TestRust() {
-	// Each part is (hopefully) tested thoroughly on its own.
-	// So for this test, just make sure there's log entries for each part being done.
-	// And not a log entry for stuff done in rust-rc1 but not this one.
-
-	expInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-		`INF Setting "accountdata" name record.`,
-		`INF Removing message fee for "/provenance.metadata.v1.MsgP8eMemorializeContractRequest" if one exists.`,
-		"INF Fixing name module store index entries.",
-	}
-	expNotInLog := []string{
-		`Creating message fee for "/cosmos.gov.v1.MsgSubmitProposal" if it doesn't already exist.`,
-	}
-
-	s.AssertUpgradeHandlerLogs("rust", expInLog, expNotInLog)
-}
-
 func (s *UpgradeTestSuite) TestSaffronRC1() {
 	// Each part is (hopefully) tested thoroughly on its own.
 	// So for this test, just make sure there's log entries for each part being done.
@@ -686,201 +649,6 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
 		s.Assert().Len(validators, 3, "GetAllValidators after %s", runnerName)
 	})
-}
-
-func (s *UpgradeTestSuite) TestAddGovV1SubmitFee() {
-	v1TypeURL := "/cosmos.gov.v1.MsgSubmitProposal"
-	v1B1TypeURL := "/cosmos.gov.v1beta1.MsgSubmitProposal"
-
-	startingMsg := `INF Creating message fee for "` + v1TypeURL + `" if it doesn't already exist.`
-	successMsg := func(amt string) string {
-		return `INF Successfully set fee for "` + v1TypeURL + `" with amount "` + amt + `".`
-	}
-
-	coin := func(denom string, amt int64) *sdk.Coin {
-		rv := sdk.NewInt64Coin(denom, amt)
-		return &rv
-	}
-
-	tests := []struct {
-		name     string
-		v1Amt    *sdk.Coin
-		v1B1Amt  *sdk.Coin
-		expInLog []string
-		expAmt   sdk.Coin
-	}{
-		{
-			name:    "v1 fee already exists",
-			v1Amt:   coin("foocoin", 88),
-			v1B1Amt: coin("betacoin", 99),
-			expInLog: []string{
-				startingMsg,
-				`INF Message fee for "` + v1TypeURL + `" already exists with amount "88foocoin". Nothing to do.`,
-			},
-			expAmt: *coin("foocoin", 88),
-		},
-		{
-			name:    "v1beta1 exists",
-			v1B1Amt: coin("betacoin", 99),
-			expInLog: []string{
-				startingMsg,
-				`INF Copying "` + v1B1TypeURL + `" fee to "` + v1TypeURL + `".`,
-				successMsg("99betacoin"),
-			},
-			expAmt: *coin("betacoin", 99),
-		},
-		{
-			name: "brand new",
-			expInLog: []string{
-				startingMsg,
-				`INF Creating "` + v1TypeURL + `" fee.`,
-				successMsg("100000000000nhash"),
-			},
-			expAmt: *coin("nhash", 100_000_000_000),
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			// Set/unset the v1 fee.
-			if tc.v1Amt != nil {
-				fee := msgfeetypes.NewMsgFee(v1TypeURL, *tc.v1Amt, "", 0)
-				s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, fee), "SetMsgFee v1")
-			} else {
-				err := s.app.MsgFeesKeeper.RemoveMsgFee(s.ctx, v1TypeURL)
-				if err != nil && !errors.Is(err, msgfeetypes.ErrMsgFeeDoesNotExist) {
-					s.Require().NoError(err, "RemoveMsgFee v1")
-				}
-			}
-
-			// Set/unset the v1beta1 fee.
-			if tc.v1B1Amt != nil {
-				fee := msgfeetypes.NewMsgFee(v1B1TypeURL, *tc.v1B1Amt, "", 0)
-				s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, fee), "SetMsgFee v1beta1")
-			} else {
-				err := s.app.MsgFeesKeeper.RemoveMsgFee(s.ctx, v1B1TypeURL)
-				if err != nil && !errors.Is(err, msgfeetypes.ErrMsgFeeDoesNotExist) {
-					s.Require().NoError(err, "RemoveMsgFee v1")
-				}
-			}
-
-			// Reset the log buffer to clear out unrelated entries.
-			s.logBuffer.Reset()
-			// Call addGovV1SubmitFee and relog its output (to help if things fail).
-			testFunc := func() {
-				addGovV1SubmitFee(s.ctx, s.app)
-			}
-			didNotPanic := s.Assert().NotPanics(testFunc, "addGovV1SubmitFee")
-			logOutput := s.GetLogOutput("addGovV1SubmitFee")
-			if !didNotPanic {
-				return
-			}
-
-			// Make sure the log has the expected lines.
-			s.AssertLogContents(logOutput, tc.expInLog, nil, true, "addGovV1SubmitFee")
-
-			// Get the fee and make sure it's now as expected.
-			fee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, v1TypeURL)
-			s.Require().NoError(err, "GetMsgFee(%q) error", v1TypeURL)
-			s.Require().NotNil(fee, "GetMsgFee(%q) value", v1TypeURL)
-			actFeeAmt := fee.AdditionalFee
-			s.Assert().Equal(tc.expAmt.String(), actFeeAmt.String(), "final %s fee amount", v1TypeURL)
-		})
-	}
-}
-
-func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
-	typeURL := "/provenance.metadata.v1.MsgP8eMemorializeContractRequest"
-	startingMsg := `INF Removing message fee for "` + typeURL + `" if one exists.`
-
-	coin := func(denom string, amt int64) *sdk.Coin {
-		rv := sdk.NewInt64Coin(denom, amt)
-		return &rv
-	}
-
-	tests := []struct {
-		name     string
-		amt      *sdk.Coin
-		expInLog []string
-	}{
-		{
-			name: "does not exist",
-			expInLog: []string{
-				startingMsg,
-				`INF Message fee for "` + typeURL + `" already does not exist. Nothing to do.`,
-			},
-		},
-		{
-			name: "exists",
-			amt:  coin("p8ecoin", 808),
-			expInLog: []string{
-				startingMsg,
-				`INF Successfully removed message fee for "` + typeURL + `" with amount "808p8ecoin".`,
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			// set/unset the fee
-			if tc.amt != nil {
-				fee := msgfeetypes.NewMsgFee(typeURL, *tc.amt, "", 0)
-				s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, fee), "Setup: SetMsgFee(%q)", typeURL)
-			} else {
-				err := s.app.MsgFeesKeeper.RemoveMsgFee(s.ctx, typeURL)
-				if err != nil && !errors.Is(err, msgfeetypes.ErrMsgFeeDoesNotExist) {
-					s.Require().NoError(err, "Setup: RemoveMsgFee(%q)", typeURL)
-				}
-			}
-
-			// Reset the log buffer to clear out unrelated entries.
-			s.logBuffer.Reset()
-			// Call removeP8eMemorializeContractFee and relog its output (to help if things fail).
-			testFunc := func() {
-				removeP8eMemorializeContractFee(s.ctx, s.app)
-			}
-			didNotPanic := s.Assert().NotPanics(testFunc, "removeP8eMemorializeContractFee")
-			logOutput := s.GetLogOutput("removeP8eMemorializeContractFee")
-			if !didNotPanic {
-				return
-			}
-
-			s.AssertLogContents(logOutput, tc.expInLog, nil, true, "removeP8eMemorializeContractFee")
-
-			// Make sure there isn't a fee anymore.
-			fee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, typeURL)
-			s.Require().NoError(err, "GetMsgFee(%q) error", typeURL)
-			s.Require().Nil(fee, "GetMsgFee(%q) value", typeURL)
-		})
-	}
-}
-
-func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
-	// Most of the testing should (hopefully) be done in the name module. So this is
-	// just a superficial test that makes sure it's doing something.
-	// Since the name is also created during InitGenesis, it should already be set up as needed.
-	// So in this unit test, the logs will indicate that.
-	expInLog := []string{
-		`INF Setting "accountdata" name record.`,
-		`INF The "accountdata" name record already exists as needed. Nothing to do.`,
-	}
-	// During an actual upgrade, that last line would instead be this:
-	// `INF Successfully set "accountdata" name record.`
-
-	// Reset the log buffer to clear out unrelated entries.
-	s.logBuffer.Reset()
-	// Call setAccountDataNameRecord and relog its output (to help if things fail).
-	var err error
-	testFunc := func() {
-		err = setAccountDataNameRecord(s.ctx, s.app.AccountKeeper, &s.app.NameKeeper)
-	}
-	didNotPanic := s.Assert().NotPanics(testFunc, "setAccountDataNameRecord")
-	logOutput := s.GetLogOutput("setAccountDataNameRecord")
-	if !didNotPanic {
-		return
-	}
-	s.Require().NoError(err, "setAccountDataNameRecord")
-	s.AssertLogContents(logOutput, expInLog, nil, true, "setAccountDataNameRecord")
 }
 
 func (s *UpgradeTestSuite) TestAddMarkerNavs() {
