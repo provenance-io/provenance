@@ -302,7 +302,6 @@ func New(
 		skipUpgradeHeights,
 		homePath,
 		invCheckPeriod,
-		appOpts,
 		AccountAddressPrefix,
 		logger,
 		app.interfaceRegistry,
@@ -310,7 +309,7 @@ func New(
 	)
 
 	// set the BaseApp's parameter store
-	//bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
+	// bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
 
 	/****  Module Options ****/
 

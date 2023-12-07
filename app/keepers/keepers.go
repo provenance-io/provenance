@@ -6,12 +6,12 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/spf13/viper"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -103,7 +103,6 @@ import (
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
 	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
 	oracle "github.com/provenance-io/provenance/x/oracle/module"
-	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
@@ -188,11 +187,9 @@ func NewAppKeeper(
 	legacyAmino *codec.LegacyAmino,
 	maccPerms map[string][]string,
 	modAccAddrs map[string]bool,
-	//blockedAddress map[string]bool,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	appOpts servertypes.AppOptions,
 	prefix string,
 	logger log.Logger,
 	interfaceRegistry types.InterfaceRegistry,
@@ -209,7 +206,7 @@ func NewAppKeeper(
 	*/
 
 	// Not applicable
-	//if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, appKeepers.keys); err != nil {
+	// if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, appKeepers.keys); err != nil {
 	//	tmos.Exit(err.Error())
 	//}
 
@@ -471,7 +468,7 @@ func NewAppKeeper(
 		scopedOracleKeeper,
 		wasmkeeper.Querier(appKeepers.WasmKeeper),
 	)
-	appKeepers.OracleModule = oraclemodule.NewAppModule(appCodec, appKeepers.OracleKeeper, appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.IBCKeeper.ChannelKeeper)
+	appKeepers.OracleModule = oracle.NewAppModule(appCodec, appKeepers.OracleKeeper, appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.IBCKeeper.ChannelKeeper)
 
 	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
 	for mName := range maccPerms {
@@ -560,7 +557,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *AppKeepers) GetSubspace(moduleName string) paramstypes.Subspace {
-	subspace, _ := app.ParamsKeeper.GetSubspace(moduleName)
+func (appKeepers *AppKeepers) GetSubspace(moduleName string) paramstypes.Subspace {
+	subspace, _ := appKeepers.ParamsKeeper.GetSubspace(moduleName)
 	return subspace
 }
