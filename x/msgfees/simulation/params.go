@@ -21,9 +21,9 @@ const (
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
-func ParamChanges(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyFloorGasPrice,
+func ParamChanges(_ *rand.Rand) []simtypes.LegacyParamChange {
+	return []simtypes.LegacyParamChange{
+		simulation.NewSimLegacyParamChange(types.ModuleName, keyFloorGasPrice,
 			func(r *rand.Rand) string {
 				jsonResp, err := json.Marshal(sdk.Coin{
 					Denom:  "stake",

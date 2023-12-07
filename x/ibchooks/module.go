@@ -170,8 +170,8 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized name param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for name module's types

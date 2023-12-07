@@ -123,7 +123,7 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams returns randomized module parameters for param change proposals.
-func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 	// currently no module params exist
 	return nil
 }

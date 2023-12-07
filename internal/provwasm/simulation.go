@@ -88,8 +88,8 @@ func (pw Wrapper) ProposalContents(simState module.SimulationState) []simtypes.W
 }
 
 // RandomizedParams returns empty list as the params don't change
-func (pw Wrapper) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
+func (pw Wrapper) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
