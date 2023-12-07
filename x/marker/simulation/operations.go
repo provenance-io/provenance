@@ -69,43 +69,43 @@ func WeightedOperations(
 		weightMsgUpdateSendDenyList        int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddMarker = simappparams.DefaultWeightMsgAddMarker
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgChangeStatus, &weightMsgChangeStatus, nil,
+	appParams.GetOrGenerate(OpWeightMsgChangeStatus, &weightMsgChangeStatus, nil,
 		func(_ *rand.Rand) {
 			weightMsgChangeStatus = simappparams.DefaultWeightMsgChangeStatus
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddAccess, &weightMsgAddAccess, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddAccess, &weightMsgAddAccess, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddAccess = simappparams.DefaultWeightMsgAddAccess
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddActivateFinalizeMarker, &weightMsgAddFinalizeActivateMarker, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddActivateFinalizeMarker, &weightMsgAddFinalizeActivateMarker, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddFinalizeActivateMarker = simappparams.DefaultWeightMsgAddFinalizeActivateMarker
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarkerProposal, &weightMsgAddMarkerProposal, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddMarkerProposal, &weightMsgAddMarkerProposal, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddMarkerProposal = simappparams.DefaultWeightMsgAddMarkerProposal
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSetAccountData, &weightMsgSetAccountData, nil,
+	appParams.GetOrGenerate(OpWeightMsgSetAccountData, &weightMsgSetAccountData, nil,
 		func(_ *rand.Rand) {
 			weightMsgSetAccountData = simappparams.DefaultWeightMsgSetAccountData
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateSendDenyList, &weightMsgUpdateSendDenyList, nil,
+	appParams.GetOrGenerate(OpWeightMsgUpdateSendDenyList, &weightMsgUpdateSendDenyList, nil,
 		func(_ *rand.Rand) {
 			weightMsgUpdateSendDenyList = simappparams.DefaultWeightMsgUpdateDenySendList
 		},

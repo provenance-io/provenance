@@ -45,19 +45,19 @@ func GenUnrestrictedDenomRegex(r *rand.Rand) string {
 func RandomizedGenState(simState *module.SimulationState) {
 	var maxSupply math.Int
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MaxSupply, &maxSupply, simState.Rand,
+		MaxSupply, &maxSupply, simState.Rand,
 		func(r *rand.Rand) { maxSupply = GenMaxSupply(r) },
 	)
 
 	var enableGovernance bool
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, EnableGovernance, &enableGovernance, simState.Rand,
+		EnableGovernance, &enableGovernance, simState.Rand,
 		func(r *rand.Rand) { enableGovernance = GenEnableGovernance(r) },
 	)
 
 	var unrestrictedDenomRegex string
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, UnrestrictedDenomRegex, &unrestrictedDenomRegex, simState.Rand,
+		UnrestrictedDenomRegex, &unrestrictedDenomRegex, simState.Rand,
 		func(r *rand.Rand) { unrestrictedDenomRegex = GenUnrestrictedDenomRegex(r) },
 	)
 

@@ -29,7 +29,7 @@ func ContractFn(r *rand.Rand, accs []simtypes.Account) string {
 func RandomizedGenState(simState *module.SimulationState) {
 	var contract string
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, Contract, &contract, simState.Rand,
+		Contract, &contract, simState.Rand,
 		func(r *rand.Rand) { contract = ContractFn(r, simState.Accounts) },
 	)
 

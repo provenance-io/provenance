@@ -37,7 +37,7 @@ func WeightedOperations(
 		weightMsgUpdateParams int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
+	appParams.GetOrGenerate(OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
 		func(_ *rand.Rand) {
 			weightMsgUpdateParams = simappparams.DefaultWeightGovUpdateParams
 		},

@@ -30,7 +30,7 @@ func FloorMinGasPrice(r *rand.Rand) uint64 {
 func RandomizedGenState(simState *module.SimulationState) {
 	var floorGasPrice uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, FloorGasPrice, &floorGasPrice, simState.Rand,
+		FloorGasPrice, &floorGasPrice, simState.Rand,
 		func(r *rand.Rand) { floorGasPrice = FloorMinGasPrice(r) },
 	)
 

@@ -41,12 +41,12 @@ func WeightedOperations(
 		weightMsgSendOracleQuery int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateOracle, &weightMsgUpdateOracle, nil,
+	appParams.GetOrGenerate(OpWeightMsgUpdateOracle, &weightMsgUpdateOracle, nil,
 		func(_ *rand.Rand) {
 			weightMsgUpdateOracle = simappparams.DefaultWeightUpdateOracle
 		},
 	)
-	appParams.GetOrGenerate(cdc, OpWeightMsgSendOracleQuery, &weightMsgSendOracleQuery, nil,
+	appParams.GetOrGenerate(OpWeightMsgSendOracleQuery, &weightMsgSendOracleQuery, nil,
 		func(_ *rand.Rand) {
 			weightMsgSendOracleQuery = simappparams.DefaultWeightSendOracleQuery
 		},

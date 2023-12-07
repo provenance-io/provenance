@@ -39,19 +39,19 @@ func WeightedOperations(
 		weightMsgModifyName int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgBindName, &weightMsgBindName, nil,
+	appParams.GetOrGenerate(OpWeightMsgBindName, &weightMsgBindName, nil,
 		func(_ *rand.Rand) {
 			weightMsgBindName = simappparams.DefaultWeightMsgBindName
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDeleteName, &weightMsgDeleteName, nil,
+	appParams.GetOrGenerate(OpWeightMsgDeleteName, &weightMsgDeleteName, nil,
 		func(_ *rand.Rand) {
 			weightMsgDeleteName = simappparams.DefaultWeightMsgDeleteName
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgModifyName, &weightMsgModifyName, nil,
+	appParams.GetOrGenerate(OpWeightMsgModifyName, &weightMsgModifyName, nil,
 		func(_ *rand.Rand) {
 			weightMsgModifyName = simappparams.DefaultWeightMsgModifyName
 		},

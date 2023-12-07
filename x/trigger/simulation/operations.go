@@ -39,12 +39,12 @@ func WeightedOperations(
 		weightMsgDestroyTrigger int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgCreateTrigger, &weightMsgCreateTrigger, nil,
+	appParams.GetOrGenerate(OpWeightMsgCreateTrigger, &weightMsgCreateTrigger, nil,
 		func(_ *rand.Rand) {
 			weightMsgCreateTrigger = simappparams.DefaultWeightSubmitCreateTrigger
 		},
 	)
-	appParams.GetOrGenerate(cdc, OpWeightMsgDestroyTrigger, &weightMsgDestroyTrigger, nil,
+	appParams.GetOrGenerate(OpWeightMsgDestroyTrigger, &weightMsgDestroyTrigger, nil,
 		func(_ *rand.Rand) {
 			weightMsgDestroyTrigger = simappparams.DefaultWeightSubmitDestroyTrigger
 		},

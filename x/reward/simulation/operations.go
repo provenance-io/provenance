@@ -40,12 +40,12 @@ func WeightedOperations(
 		weightMsgEndRewardProgram  int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightSubmitCreateRewardsProposal, &weightMsgAddRewardsProgram, nil,
+	appParams.GetOrGenerate(OpWeightSubmitCreateRewardsProposal, &weightMsgAddRewardsProgram, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddRewardsProgram = simappparams.DefaultWeightSubmitCreateRewards
 		},
 	)
-	appParams.GetOrGenerate(cdc, OpWeightEndRewardsProposal, &weightMsgEndRewardProgram, nil,
+	appParams.GetOrGenerate(OpWeightEndRewardsProposal, &weightMsgEndRewardProgram, nil,
 		func(_ *rand.Rand) {
 			weightMsgEndRewardProgram = simappparams.DefaultWeightSubmitEndRewards
 		},

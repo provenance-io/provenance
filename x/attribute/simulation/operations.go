@@ -49,31 +49,31 @@ func WeightedOperations(
 		weightMsgSetAccountDataRequest   int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddAttribute, &weightMsgAddAttribute, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddAttribute, &weightMsgAddAttribute, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddAttribute = simappparams.DefaultWeightMsgAddAttribute
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateAttribute, &weightMsgUpdateAttribute, nil,
+	appParams.GetOrGenerate(OpWeightMsgUpdateAttribute, &weightMsgUpdateAttribute, nil,
 		func(_ *rand.Rand) {
 			weightMsgUpdateAttribute = simappparams.DefaultWeightMsgUpdateAttribute
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDeleteAttribute, &weightMsgDeleteAttribute, nil,
+	appParams.GetOrGenerate(OpWeightMsgDeleteAttribute, &weightMsgDeleteAttribute, nil,
 		func(_ *rand.Rand) {
 			weightMsgDeleteAttribute = simappparams.DefaultWeightMsgDeleteAttribute
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDeleteDistinctAttribute, &weightMsgDeleteDistinctAttribute, nil,
+	appParams.GetOrGenerate(OpWeightMsgDeleteDistinctAttribute, &weightMsgDeleteDistinctAttribute, nil,
 		func(_ *rand.Rand) {
 			weightMsgDeleteDistinctAttribute = simappparams.DefaultWeightMsgDeleteDistinctAttribute
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSetAccountData, &weightMsgSetAccountDataRequest, nil,
+	appParams.GetOrGenerate(OpWeightMsgSetAccountData, &weightMsgSetAccountDataRequest, nil,
 		func(_ *rand.Rand) {
 			weightMsgSetAccountDataRequest = simappparams.DefaultWeightMsgSetAccountData
 		},
