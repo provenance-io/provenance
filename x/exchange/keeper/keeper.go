@@ -114,7 +114,7 @@ func (k Keeper) GetFeeCollectorName() string {
 }
 
 // getAllKeys gets all the keys in the store with the given prefix.
-func getAllKeys(store sdk.KVStore, pre []byte) [][]byte {
+func getAllKeys(store storetypes.KVStore, pre []byte) [][]byte {
 	// Using a prefix iterator so that iter.Key() is the whole key (including the prefix).
 	iter := storetypes.KVStorePrefixIterator(store, pre)
 	defer iter.Close()
@@ -128,7 +128,7 @@ func getAllKeys(store sdk.KVStore, pre []byte) [][]byte {
 }
 
 // deleteAll deletes all keys that have the given prefix.
-func deleteAll(store sdk.KVStore, pre []byte) {
+func deleteAll(store storetypes.KVStore, pre []byte) {
 	keys := getAllKeys(store, pre)
 	for _, key := range keys {
 		store.Delete(key)
@@ -138,7 +138,7 @@ func deleteAll(store sdk.KVStore, pre []byte) {
 // iterate iterates over all the entries in the store with the given prefix.
 // The key provided to the callback will NOT have the provided prefix; it will be everything after it.
 // The callback should return false to continue iteration, or true to stop.
-func iterate(store sdk.KVStore, pre []byte, cb func(key, value []byte) bool) {
+func iterate(store storetypes.KVStore, pre []byte, cb func(key, value []byte) bool) {
 	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
 	pStore := prefix.NewStore(store, pre)
 	iter := pStore.Iterator(nil, nil)
@@ -152,7 +152,7 @@ func iterate(store sdk.KVStore, pre []byte, cb func(key, value []byte) bool) {
 }
 
 // getStore gets the store for the exchange module.
-func (k Keeper) getStore(ctx sdk.Context) sdk.KVStore {
+func (k Keeper) getStore(ctx sdk.Context) storetypes.KVStore {
 	return ctx.KVStore(k.storeKey)
 }
 

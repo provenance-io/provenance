@@ -274,7 +274,7 @@ func (v scopeIndexValues) IndexKeys() [][]byte {
 //
 // If both newScope and oldScope are not nil, it is assumed that they have the same ScopeId.
 // Failure to meet this assumption will result in strange and bad behavior.
-func (k Keeper) indexScope(store sdk.KVStore, newScope, oldScope *types.Scope) {
+func (k Keeper) indexScope(store storetypes.KVStore, newScope, oldScope *types.Scope) {
 	if newScope == nil && oldScope == nil {
 		return
 	}

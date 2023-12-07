@@ -15,6 +15,7 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -571,7 +572,7 @@ func (s *TestSuite) getAddrStrName(addrStr string) string {
 }
 
 // getStore gets the exchange store.
-func (s *TestSuite) getStore() sdk.KVStore {
+func (s *TestSuite) getStore() storetypes.KVStore {
 	return s.k.GetStore(s.ctx)
 }
 
@@ -598,7 +599,7 @@ func (s *TestSuite) dumpExchangeState() []string {
 }
 
 // requireSetOrderInStore calls SetOrderInStore making sure it doesn't panic or return an error.
-func (s *TestSuite) requireSetOrderInStore(store sdk.KVStore, order *exchange.Order) {
+func (s *TestSuite) requireSetOrderInStore(store storetypes.KVStore, order *exchange.Order) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
 		return s.k.SetOrderInStore(store, *order)
 	}, "SetOrderInStore(%d)", order.OrderId)

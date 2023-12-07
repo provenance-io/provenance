@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -23,7 +25,7 @@ func sumAssetsAndPrice(orders []*exchange.Order) (sdk.Coins, sdk.Coins) {
 }
 
 // validateAcceptingOrdersAndCanUserSettle returns an error if the market isn't active or doesn't allow user settlement.
-func validateAcceptingOrdersAndCanUserSettle(store sdk.KVStore, marketID uint32) error {
+func validateAcceptingOrdersAndCanUserSettle(store storetypes.KVStore, marketID uint32) error {
 	if err := validateMarketIsAcceptingOrders(store, marketID); err != nil {
 		return err
 	}
@@ -254,7 +256,7 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 
 // closeSettlement does all the processing needed to complete a settlement.
 // It releases all the holds, does all the transfers, collects the fees, deletes/updates the orders, and emits events.
-func (k Keeper) closeSettlement(ctx sdk.Context, store sdk.KVStore, marketID uint32, settlement *exchange.Settlement) error {
+func (k Keeper) closeSettlement(ctx sdk.Context, store storetypes.KVStore, marketID uint32, settlement *exchange.Settlement) error {
 	// Release the holds!!!!
 	var errs []error
 	for _, order := range settlement.FullyFilledOrders {

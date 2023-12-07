@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"sort"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/hold"
@@ -149,7 +151,7 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 
 	tests := []struct {
 		name        string
-		setup       func(*TestSuite, sdk.KVStore)
+		setup       func(*TestSuite, storetypes.KVStore)
 		expGenState *hold.GenesisState
 		expPanic    []string
 	}{
@@ -159,14 +161,14 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 		},
 		{
 			name: "one entry: good",
-			setup: func(s *TestSuite, store sdk.KVStore) {
+			setup: func(s *TestSuite, store storetypes.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 			},
 			expGenState: genStateWithHolds(accHold(s.addr1, "99banana")),
 		},
 		{
 			name: "one entry: bad",
-			setup: func(s *TestSuite, store sdk.KVStore) {
+			setup: func(s *TestSuite, store storetypes.KVStore) {
 				s.setHoldCoinAmountRaw(store, s.addr1, "badcoin", "badvalue")
 				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 			},
@@ -177,7 +179,7 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 		},
 		{
 			name: "five addrs: all good",
-			setup: func(suite *TestSuite, store sdk.KVStore) {
+			setup: func(suite *TestSuite, store storetypes.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 				s.requireSetHoldCoinAmount(store, s.addr1, "cucumber", s.int(3))
 				s.requireSetHoldCoinAmount(store, s.addr1, "durian", s.int(8))
@@ -201,7 +203,7 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 		},
 		{
 			name: "five addrs: several bad",
-			setup: func(suite *TestSuite, store sdk.KVStore) {
+			setup: func(suite *TestSuite, store storetypes.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 				s.requireSetHoldCoinAmount(store, s.addr1, "cucumber", s.int(3))
 				s.requireSetHoldCoinAmount(store, s.addr1, "durian", s.int(8))

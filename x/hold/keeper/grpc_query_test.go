@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -103,7 +105,7 @@ func (s *TestSuite) TestKeeper_GetAllHolds() {
 
 	// standardSetup puts two denoms on hold for each addrs with incremental amounts.
 	// This is used unless the test has a specific setup function to use instead.
-	standardSetup := func(s *TestSuite, store sdk.KVStore) {
+	standardSetup := func(s *TestSuite, store storetypes.KVStore) {
 		s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 		s.requireSetHoldCoinAmount(store, s.addr1, "cherry", s.int(12))
 		s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(100))
@@ -129,7 +131,7 @@ func (s *TestSuite) TestKeeper_GetAllHolds() {
 
 	tests := []struct {
 		name        string
-		setup       func(s *TestSuite, store sdk.KVStore)
+		setup       func(s *TestSuite, store storetypes.KVStore)
 		request     *hold.GetAllHoldsRequest
 		expHolds    []*hold.AccountHold
 		expPageResp *query.PageResponse
@@ -156,7 +158,7 @@ func (s *TestSuite) TestKeeper_GetAllHolds() {
 		},
 		{
 			name: "found bad entry",
-			setup: func(s *TestSuite, store sdk.KVStore) {
+			setup: func(s *TestSuite, store storetypes.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 				s.setHoldCoinAmountRaw(store, s.addr2, "badcoin", "badvalue")
 			},
@@ -168,7 +170,7 @@ func (s *TestSuite) TestKeeper_GetAllHolds() {
 		},
 		{
 			name: "found bad entry using nextkey",
-			setup: func(s *TestSuite, store sdk.KVStore) {
+			setup: func(s *TestSuite, store storetypes.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "banana", s.int(99))
 				s.setHoldCoinAmountRaw(store, s.addr2, "badcoin", "badvalue")
 			},
@@ -183,7 +185,7 @@ func (s *TestSuite) TestKeeper_GetAllHolds() {
 		},
 		{
 			name: "bad entry but its out of the result range",
-			setup: func(s *TestSuite, store sdk.KVStore) {
+			setup: func(s *TestSuite, store storetypes.KVStore) {
 				standardSetup(s, store)
 				s.setHoldCoinAmountRaw(store, s.addr5, "zoinkscoin", "zoinksvalue")
 			},

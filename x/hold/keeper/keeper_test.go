@@ -14,6 +14,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -141,19 +142,19 @@ func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
 }
 
 // getStore returns the hold state store.
-func (s *TestSuite) getStore() sdk.KVStore {
+func (s *TestSuite) getStore() storetypes.KVStore {
 	return s.sdkCtx.KVStore(s.keeper.GetStoreKey())
 }
 
 // requireSetHoldCoinAmount calls setHoldCoinAmount making sure it doesn't panic or return an error.
-func (s *TestSuite) requireSetHoldCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) {
+func (s *TestSuite) requireSetHoldCoinAmount(store storetypes.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
 		return s.keeper.SetHoldCoinAmount(store, addr, denom, amount)
 	}, "setHoldCoinAmount(%s, %s%s)", s.getAddrName(addr), amount, denom)
 }
 
 // setHoldCoinAmountRaw sets a hold coin amount to the provided "amount" string.
-func (s *TestSuite) setHoldCoinAmountRaw(store sdk.KVStore, addr sdk.AccAddress, denom string, amount string) {
+func (s *TestSuite) setHoldCoinAmountRaw(store storetypes.KVStore, addr sdk.AccAddress, denom string, amount string) {
 	store.Set(keeper.CreateHoldCoinKey(addr, denom), []byte(amount))
 }
 
@@ -225,7 +226,7 @@ func (s *TestSuite) TestSetHoldCoinAmount() {
 	}
 	tests := []struct {
 		name       string
-		setupStore func(sdk.KVStore)
+		setupStore func(storetypes.KVStore)
 		addr       sdk.AccAddress
 		denom      string
 		amount     sdkmath.Int
@@ -241,7 +242,7 @@ func (s *TestSuite) TestSetHoldCoinAmount() {
 		},
 		{
 			name: "addr has none of this denom but one of another",
-			setupStore: func(store sdk.KVStore) {
+			setupStore: func(store storetypes.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "bag", s.int(3))
 			},
 			addr:   s.addr1,
@@ -254,7 +255,7 @@ func (s *TestSuite) TestSetHoldCoinAmount() {
 		},
 		{
 			name: "another addr has the same denom",
-			setupStore: func(store sdk.KVStore) {
+			setupStore: func(store storetypes.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr2, "banana", s.int(88))
 			},
 			addr:   s.addr1,
@@ -267,7 +268,7 @@ func (s *TestSuite) TestSetHoldCoinAmount() {
 		},
 		{
 			name: "update existing entry",
-			setupStore: func(store sdk.KVStore) {
+			setupStore: func(store storetypes.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "eclair", s.int(3))
 				s.requireSetHoldCoinAmount(store, s.addr2, "eclair", s.int(500))
 			},
@@ -281,7 +282,7 @@ func (s *TestSuite) TestSetHoldCoinAmount() {
 		},
 		{
 			name: "delete existing entry",
-			setupStore: func(store sdk.KVStore) {
+			setupStore: func(store storetypes.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr1, "blanket", s.int(12))
 				s.requireSetHoldCoinAmount(store, s.addr2, "blanket", s.int(44))
 			},
@@ -294,7 +295,7 @@ func (s *TestSuite) TestSetHoldCoinAmount() {
 		},
 		{
 			name: "zero amount without an existing entry",
-			setupStore: func(store sdk.KVStore) {
+			setupStore: func(store storetypes.KVStore) {
 				s.requireSetHoldCoinAmount(store, s.addr2, "blanket", s.int(44))
 			},
 			addr:   s.addr1,

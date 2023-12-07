@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -14,7 +15,7 @@ import (
 )
 
 // getLastAutoMarketID gets the last auto-selected market id.
-func getLastAutoMarketID(store sdk.KVStore) uint32 {
+func getLastAutoMarketID(store storetypes.KVStore) uint32 {
 	key := MakeKeyLastMarketID()
 	value := store.Get(key)
 	rv, _ := uint32FromBz(value)
@@ -22,7 +23,7 @@ func getLastAutoMarketID(store sdk.KVStore) uint32 {
 }
 
 // setLastAutoMarketID sets the last auto-selected market id to the provided value.
-func setLastAutoMarketID(store sdk.KVStore, marketID uint32) {
+func setLastAutoMarketID(store storetypes.KVStore, marketID uint32) {
 	key := MakeKeyLastMarketID()
 	value := uint32Bz(marketID)
 	store.Set(key, value)
@@ -30,7 +31,7 @@ func setLastAutoMarketID(store sdk.KVStore, marketID uint32) {
 
 // nextMarketID finds the next available market id, updates the last auto-selected
 // market id store entry, and returns the unused id it found.
-func nextMarketID(store sdk.KVStore) uint32 {
+func nextMarketID(store storetypes.KVStore) uint32 {
 	marketID := getLastAutoMarketID(store) + 1
 	for {
 		key := MakeKeyKnownMarketID(marketID)
@@ -44,19 +45,19 @@ func nextMarketID(store sdk.KVStore) uint32 {
 }
 
 // isMarketKnown returns true if the provided market id is a market that exists.
-func isMarketKnown(store sdk.KVStore, marketID uint32) bool {
+func isMarketKnown(store storetypes.KVStore, marketID uint32) bool {
 	key := MakeKeyKnownMarketID(marketID)
 	return store.Has(key)
 }
 
 // setMarketKnown sets the known market id indicator in the store.
-func setMarketKnown(store sdk.KVStore, marketID uint32) {
+func setMarketKnown(store storetypes.KVStore, marketID uint32) {
 	key := MakeKeyKnownMarketID(marketID)
 	store.Set(key, []byte{})
 }
 
 // validateMarketExists returns an error if the provided marketID does not exist.
-func validateMarketExists(store sdk.KVStore, marketID uint32) error {
+func validateMarketExists(store storetypes.KVStore, marketID uint32) error {
 	if !isMarketKnown(store, marketID) {
 		return fmt.Errorf("market %d does not exist", marketID)
 	}
@@ -101,7 +102,7 @@ var (
 )
 
 // hasFlatFee returns true if this market has any flat fee for a given type.
-func hasFlatFee(store sdk.KVStore, marketID uint32, maker flatFeeKeyMakers) bool {
+func hasFlatFee(store storetypes.KVStore, marketID uint32, maker flatFeeKeyMakers) bool {
 	rv := false
 	iterate(store, maker.prefix(marketID), func(key, value []byte) bool {
 		rv = true
@@ -111,7 +112,7 @@ func hasFlatFee(store sdk.KVStore, marketID uint32, maker flatFeeKeyMakers) bool
 }
 
 // getFlatFee is a generic getter for a flat fee coin entry.
-func getFlatFee(store sdk.KVStore, marketID uint32, denom string, maker flatFeeKeyMakers) *sdk.Coin {
+func getFlatFee(store storetypes.KVStore, marketID uint32, denom string, maker flatFeeKeyMakers) *sdk.Coin {
 	key := maker.key(marketID, denom)
 	if store.Has(key) {
 		value := string(store.Get(key))
@@ -124,14 +125,14 @@ func getFlatFee(store sdk.KVStore, marketID uint32, denom string, maker flatFeeK
 }
 
 // setFlatFee is a generic setter for a single flat fee coin entry.
-func setFlatFee(store sdk.KVStore, marketID uint32, coin sdk.Coin, maker flatFeeKeyMakers) {
+func setFlatFee(store storetypes.KVStore, marketID uint32, coin sdk.Coin, maker flatFeeKeyMakers) {
 	key := maker.key(marketID, coin.Denom)
 	value := coin.Amount.String()
 	store.Set(key, []byte(value))
 }
 
 // validateFlatFee returns an error if the provided fee is not sufficient to cover the required flat fee.
-func validateFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin, name string, maker flatFeeKeyMakers) error {
+func validateFlatFee(store storetypes.KVStore, marketID uint32, fee *sdk.Coin, name string, maker flatFeeKeyMakers) error {
 	if !hasFlatFee(store, marketID, maker) {
 		return nil
 	}
@@ -152,7 +153,7 @@ func validateFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin, name str
 
 // getAllFlatFees gets all the coin entries from the store with the given prefix.
 // The denom comes from the part of the key after the prefix, and the amount comes from the values.
-func getAllFlatFees(store sdk.KVStore, marketID uint32, maker flatFeeKeyMakers) []sdk.Coin {
+func getAllFlatFees(store storetypes.KVStore, marketID uint32, maker flatFeeKeyMakers) []sdk.Coin {
 	var coins []sdk.Coin
 	iterate(store, maker.prefix(marketID), func(key, value []byte) bool {
 		amt, ok := sdkmath.NewIntFromString(string(value))
@@ -167,7 +168,7 @@ func getAllFlatFees(store sdk.KVStore, marketID uint32, maker flatFeeKeyMakers) 
 // setAllFlatFees is a generic setter for a set of flat fee options.
 // This will delete all previous options then save the ones provided. I.e. if options doesn't have a
 // denom that currently exists in the store, those denoms will no longer be in the store after this.
-func setAllFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin, maker flatFeeKeyMakers) {
+func setAllFlatFees(store storetypes.KVStore, marketID uint32, options []sdk.Coin, maker flatFeeKeyMakers) {
 	deleteAll(store, maker.prefix(marketID))
 	for _, coin := range options {
 		setFlatFee(store, marketID, coin, maker)
@@ -175,7 +176,7 @@ func setAllFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin, make
 }
 
 // updateFlatFees deletes all the entries with a denom in toDelete, then writes all the toWrite entries.
-func updateFlatFees(store sdk.KVStore, marketID uint32, toDelete, toWrite []sdk.Coin, maker flatFeeKeyMakers) {
+func updateFlatFees(store storetypes.KVStore, marketID uint32, toDelete, toWrite []sdk.Coin, maker flatFeeKeyMakers) {
 	for _, coin := range toDelete {
 		key := maker.key(marketID, coin.Denom)
 		store.Delete(key)
@@ -186,77 +187,77 @@ func updateFlatFees(store sdk.KVStore, marketID uint32, toDelete, toWrite []sdk.
 }
 
 // validateCreateAskFlatFee returns an error if the provided fee is not a sufficient create-ask flat fee.
-func validateCreateAskFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin) error {
+func validateCreateAskFlatFee(store storetypes.KVStore, marketID uint32, fee *sdk.Coin) error {
 	return validateFlatFee(store, marketID, fee, "ask order creation", createAskFlatKeyMakers)
 }
 
 // getCreateAskFlatFees gets the create-ask flat fee options for a market.
-func getCreateAskFlatFees(store sdk.KVStore, marketID uint32) []sdk.Coin {
+func getCreateAskFlatFees(store storetypes.KVStore, marketID uint32) []sdk.Coin {
 	return getAllFlatFees(store, marketID, createAskFlatKeyMakers)
 }
 
 // setCreateAskFlatFees sets the create-ask flat fees for a market.
-func setCreateAskFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin) {
+func setCreateAskFlatFees(store storetypes.KVStore, marketID uint32, options []sdk.Coin) {
 	setAllFlatFees(store, marketID, options, createAskFlatKeyMakers)
 }
 
 // updateCreateAskFlatFees deletes all create-ask flat fees to delete then adds the ones to add.
-func updateCreateAskFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
+func updateCreateAskFlatFees(store storetypes.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
 	updateFlatFees(store, marketID, toDelete, toAdd, createAskFlatKeyMakers)
 }
 
 // validateCreateBidFlatFee returns an error if the provided fee is not a sufficient create -bid flat fee.
-func validateCreateBidFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin) error {
+func validateCreateBidFlatFee(store storetypes.KVStore, marketID uint32, fee *sdk.Coin) error {
 	return validateFlatFee(store, marketID, fee, "bid order creation", createBidFlatKeyMakers)
 }
 
 // getCreateBidFlatFees gets the create-bid flat fee options for a market.
-func getCreateBidFlatFees(store sdk.KVStore, marketID uint32) []sdk.Coin {
+func getCreateBidFlatFees(store storetypes.KVStore, marketID uint32) []sdk.Coin {
 	return getAllFlatFees(store, marketID, createBidFlatKeyMakers)
 }
 
 // setCreateBidFlatFees sets the create-bid flat fees for a market.
-func setCreateBidFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin) {
+func setCreateBidFlatFees(store storetypes.KVStore, marketID uint32, options []sdk.Coin) {
 	setAllFlatFees(store, marketID, options, createBidFlatKeyMakers)
 }
 
 // updateCreateBidFlatFees deletes all create-bid flat fees to delete then adds the ones to add.
-func updateCreateBidFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
+func updateCreateBidFlatFees(store storetypes.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
 	updateFlatFees(store, marketID, toDelete, toAdd, createBidFlatKeyMakers)
 }
 
 // validateSellerSettlementFlatFee returns an error if the provided fee is not a sufficient seller settlement flat fee.
-func validateSellerSettlementFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin) error {
+func validateSellerSettlementFlatFee(store storetypes.KVStore, marketID uint32, fee *sdk.Coin) error {
 	return validateFlatFee(store, marketID, fee, "seller settlement flat", sellerSettlementFlatKeyMakers)
 }
 
 // getSellerSettlementFlatFees gets the seller settlement flat fee options for a market.
-func getSellerSettlementFlatFees(store sdk.KVStore, marketID uint32) []sdk.Coin {
+func getSellerSettlementFlatFees(store storetypes.KVStore, marketID uint32) []sdk.Coin {
 	return getAllFlatFees(store, marketID, sellerSettlementFlatKeyMakers)
 }
 
 // setSellerSettlementFlatFees sets the seller settlement flat fees for a market.
-func setSellerSettlementFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin) {
+func setSellerSettlementFlatFees(store storetypes.KVStore, marketID uint32, options []sdk.Coin) {
 	setAllFlatFees(store, marketID, options, sellerSettlementFlatKeyMakers)
 }
 
 // updateSellerSettlementFlatFees deletes all seller settlement flat fees to delete then adds the ones to add.
-func updateSellerSettlementFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
+func updateSellerSettlementFlatFees(store storetypes.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
 	updateFlatFees(store, marketID, toDelete, toAdd, sellerSettlementFlatKeyMakers)
 }
 
 // getBuyerSettlementFlatFees gets the buyer settlement flat fee options for a market.
-func getBuyerSettlementFlatFees(store sdk.KVStore, marketID uint32) []sdk.Coin {
+func getBuyerSettlementFlatFees(store storetypes.KVStore, marketID uint32) []sdk.Coin {
 	return getAllFlatFees(store, marketID, buyerSettlementFlatKeyMakers)
 }
 
 // setBuyerSettlementFlatFees sets the buyer settlement flat fees for a market.
-func setBuyerSettlementFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin) {
+func setBuyerSettlementFlatFees(store storetypes.KVStore, marketID uint32, options []sdk.Coin) {
 	setAllFlatFees(store, marketID, options, buyerSettlementFlatKeyMakers)
 }
 
 // updateBuyerSettlementFlatFees deletes all buyer settlement flat fees to delete then adds the ones to add.
-func updateBuyerSettlementFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
+func updateBuyerSettlementFlatFees(store storetypes.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
 	updateFlatFees(store, marketID, toDelete, toAdd, buyerSettlementFlatKeyMakers)
 }
 
@@ -280,7 +281,7 @@ var (
 )
 
 // hasFeeRatio returns true if this market has any fee ratios for a given type.
-func hasFeeRatio(store sdk.KVStore, marketID uint32, maker ratioKeyMakers) bool {
+func hasFeeRatio(store storetypes.KVStore, marketID uint32, maker ratioKeyMakers) bool {
 	rv := false
 	iterate(store, maker.prefix(marketID), func(key, value []byte) bool {
 		rv = true
@@ -290,7 +291,7 @@ func hasFeeRatio(store sdk.KVStore, marketID uint32, maker ratioKeyMakers) bool 
 }
 
 // getFeeRatio is a generic getter for a fee ratio entry in the store.
-func getFeeRatio(store sdk.KVStore, marketID uint32, priceDenom, feeDenom string, maker ratioKeyMakers) *exchange.FeeRatio {
+func getFeeRatio(store storetypes.KVStore, marketID uint32, priceDenom, feeDenom string, maker ratioKeyMakers) *exchange.FeeRatio {
 	key := maker.key(marketID, exchange.FeeRatio{Price: sdk.Coin{Denom: priceDenom}, Fee: sdk.Coin{Denom: feeDenom}})
 	if store.Has(key) {
 		value := store.Get(key)
@@ -306,7 +307,7 @@ func getFeeRatio(store sdk.KVStore, marketID uint32, priceDenom, feeDenom string
 }
 
 // setFeeRatio is a generic setter for a fee ratio entry in the store.
-func setFeeRatio(store sdk.KVStore, marketID uint32, ratio exchange.FeeRatio, maker ratioKeyMakers) {
+func setFeeRatio(store storetypes.KVStore, marketID uint32, ratio exchange.FeeRatio, maker ratioKeyMakers) {
 	key := maker.key(marketID, ratio)
 	value := GetFeeRatioStoreValue(ratio)
 	store.Set(key, value)
@@ -314,7 +315,7 @@ func setFeeRatio(store sdk.KVStore, marketID uint32, ratio exchange.FeeRatio, ma
 
 // getAllFeeRatios gets all the fee ratio entries from the store with the given prefix.
 // The denoms come from the keys and amounts come from the values.
-func getAllFeeRatios(store sdk.KVStore, marketID uint32, maker ratioKeyMakers) []exchange.FeeRatio {
+func getAllFeeRatios(store storetypes.KVStore, marketID uint32, maker ratioKeyMakers) []exchange.FeeRatio {
 	var feeRatios []exchange.FeeRatio
 	iterate(store, maker.prefix(marketID), func(key, value []byte) bool {
 		priceDenom, feeDenom, kerr := ParseKeySuffixSettlementRatio(key)
@@ -335,7 +336,7 @@ func getAllFeeRatios(store sdk.KVStore, marketID uint32, maker ratioKeyMakers) [
 // setAllFeeRatios is a generic setter for a set of fee ratios.
 // This will delete all previous options then save the ones provided. I.e. if ratios doesn't have a
 // price/fee denom pair that currently exists in the store, those pairs will no longer be in the store after this.
-func setAllFeeRatios(store sdk.KVStore, marketID uint32, ratios []exchange.FeeRatio, maker ratioKeyMakers) {
+func setAllFeeRatios(store storetypes.KVStore, marketID uint32, ratios []exchange.FeeRatio, maker ratioKeyMakers) {
 	deleteAll(store, maker.prefix(marketID))
 	for _, ratio := range ratios {
 		setFeeRatio(store, marketID, ratio, maker)
@@ -343,7 +344,7 @@ func setAllFeeRatios(store sdk.KVStore, marketID uint32, ratios []exchange.FeeRa
 }
 
 // updateFeeRatios deletes all entries with the denom pairs in toDelete, then writes all the toWrite entries.
-func updateFeeRatios(store sdk.KVStore, marketID uint32, toDelete, toWrite []exchange.FeeRatio, maker ratioKeyMakers) {
+func updateFeeRatios(store storetypes.KVStore, marketID uint32, toDelete, toWrite []exchange.FeeRatio, maker ratioKeyMakers) {
 	for _, ratio := range toDelete {
 		key := maker.key(marketID, ratio)
 		store.Delete(key)
@@ -354,7 +355,7 @@ func updateFeeRatios(store sdk.KVStore, marketID uint32, toDelete, toWrite []exc
 }
 
 // getSellerSettlementRatio gets the seller settlement fee ratio for the given market with the provided denom.
-func getSellerSettlementRatio(store sdk.KVStore, marketID uint32, priceDenom string) (*exchange.FeeRatio, error) {
+func getSellerSettlementRatio(store storetypes.KVStore, marketID uint32, priceDenom string) (*exchange.FeeRatio, error) {
 	ratio := getFeeRatio(store, marketID, priceDenom, priceDenom, sellerSettlementRatioKeyMakers)
 	if ratio == nil {
 		if hasFeeRatio(store, marketID, sellerSettlementRatioKeyMakers) {
@@ -365,22 +366,22 @@ func getSellerSettlementRatio(store sdk.KVStore, marketID uint32, priceDenom str
 }
 
 // getSellerSettlementRatios gets the seller settlement fee ratios for a market.
-func getSellerSettlementRatios(store sdk.KVStore, marketID uint32) []exchange.FeeRatio {
+func getSellerSettlementRatios(store storetypes.KVStore, marketID uint32) []exchange.FeeRatio {
 	return getAllFeeRatios(store, marketID, sellerSettlementRatioKeyMakers)
 }
 
 // setSellerSettlementRatios sets the seller settlement fee ratios for a market.
-func setSellerSettlementRatios(store sdk.KVStore, marketID uint32, ratios []exchange.FeeRatio) {
+func setSellerSettlementRatios(store storetypes.KVStore, marketID uint32, ratios []exchange.FeeRatio) {
 	setAllFeeRatios(store, marketID, ratios, sellerSettlementRatioKeyMakers)
 }
 
 // updateSellerSettlementRatios deletes all seller settlement ratio entries to delete then adds the ones to add.
-func updateSellerSettlementRatios(store sdk.KVStore, marketID uint32, toDelete, toAdd []exchange.FeeRatio) {
+func updateSellerSettlementRatios(store storetypes.KVStore, marketID uint32, toDelete, toAdd []exchange.FeeRatio) {
 	updateFeeRatios(store, marketID, toDelete, toAdd, sellerSettlementRatioKeyMakers)
 }
 
 // validateAskPrice validates that the provided ask price is acceptable.
-func validateAskPrice(store sdk.KVStore, marketID uint32, price sdk.Coin, settlementFlatFee *sdk.Coin) error {
+func validateAskPrice(store storetypes.KVStore, marketID uint32, price sdk.Coin, settlementFlatFee *sdk.Coin) error {
 	ratio, err := getSellerSettlementRatio(store, marketID, price.Denom)
 	if err != nil {
 		return err
@@ -426,7 +427,7 @@ func validateAskPrice(store sdk.KVStore, marketID uint32, price sdk.Coin, settle
 }
 
 // calculateSellerSettlementRatioFee calculates the seller settlement fee required for the given price.
-func calculateSellerSettlementRatioFee(store sdk.KVStore, marketID uint32, price sdk.Coin) (*sdk.Coin, error) {
+func calculateSellerSettlementRatioFee(store storetypes.KVStore, marketID uint32, price sdk.Coin) (*sdk.Coin, error) {
 	ratio, err := getSellerSettlementRatio(store, marketID, price.Denom)
 	if err != nil {
 		return nil, err
@@ -442,22 +443,22 @@ func calculateSellerSettlementRatioFee(store sdk.KVStore, marketID uint32, price
 }
 
 // getBuyerSettlementRatios gets the buyer settlement fee ratios for a market.
-func getBuyerSettlementRatios(store sdk.KVStore, marketID uint32) []exchange.FeeRatio {
+func getBuyerSettlementRatios(store storetypes.KVStore, marketID uint32) []exchange.FeeRatio {
 	return getAllFeeRatios(store, marketID, buyerSettlementRatioKeyMakers)
 }
 
 // setBuyerSettlementRatios sets the buyer settlement fee ratios for a market.
-func setBuyerSettlementRatios(store sdk.KVStore, marketID uint32, ratios []exchange.FeeRatio) {
+func setBuyerSettlementRatios(store storetypes.KVStore, marketID uint32, ratios []exchange.FeeRatio) {
 	setAllFeeRatios(store, marketID, ratios, buyerSettlementRatioKeyMakers)
 }
 
 // updateBuyerSettlementRatios deletes all buyer settlement ratio entries to delete then adds the ones to add.
-func updateBuyerSettlementRatios(store sdk.KVStore, marketID uint32, toDelete, toAdd []exchange.FeeRatio) {
+func updateBuyerSettlementRatios(store storetypes.KVStore, marketID uint32, toDelete, toAdd []exchange.FeeRatio) {
 	updateFeeRatios(store, marketID, toDelete, toAdd, buyerSettlementRatioKeyMakers)
 }
 
 // getBuyerSettlementFeeRatiosForPriceDenom gets all the buyer settlement fee ratios in a market that have the give price denom.
-func getBuyerSettlementFeeRatiosForPriceDenom(store sdk.KVStore, marketID uint32, priceDenom string) ([]exchange.FeeRatio, error) {
+func getBuyerSettlementFeeRatiosForPriceDenom(store storetypes.KVStore, marketID uint32, priceDenom string) ([]exchange.FeeRatio, error) {
 	var ratios []exchange.FeeRatio
 	iterate(store, GetKeyPrefixMarketBuyerSettlementRatioForPriceDenom(marketID, priceDenom), func(key, value []byte) bool {
 		feeDenom := string(key)
@@ -477,7 +478,7 @@ func getBuyerSettlementFeeRatiosForPriceDenom(store sdk.KVStore, marketID uint32
 }
 
 // calcBuyerSettlementRatioFeeOptions calculates the buyer settlement ratio fee options available for the given price.
-func calcBuyerSettlementRatioFeeOptions(store sdk.KVStore, marketID uint32, price sdk.Coin) ([]sdk.Coin, error) {
+func calcBuyerSettlementRatioFeeOptions(store storetypes.KVStore, marketID uint32, price sdk.Coin) ([]sdk.Coin, error) {
 	ratios, err := getBuyerSettlementFeeRatiosForPriceDenom(store, marketID, price.Denom)
 	if err != nil {
 		return nil, err
@@ -507,7 +508,7 @@ func calcBuyerSettlementRatioFeeOptions(store sdk.KVStore, marketID uint32, pric
 
 // validateBuyerSettlementFee returns an error if the provided fee is not enough to cover both the
 // buyer settlement flat and percent fees for the given price.
-func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Coin, fee sdk.Coins) error {
+func validateBuyerSettlementFee(store storetypes.KVStore, marketID uint32, price sdk.Coin, fee sdk.Coins) error {
 	flatKeyMaker := buyerSettlementFlatKeyMakers
 	ratioKeyMaker := buyerSettlementRatioKeyMakers
 	flatFeeReq := hasFlatFee(store, marketID, flatKeyMaker)
@@ -704,13 +705,13 @@ func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesReques
 
 // isMarketActive returns true if the provided market's inactive flag does not exist.
 // See also isMarketKnown.
-func isMarketActive(store sdk.KVStore, marketID uint32) bool {
+func isMarketActive(store storetypes.KVStore, marketID uint32) bool {
 	key := MakeKeyMarketInactive(marketID)
 	return !store.Has(key)
 }
 
 // setMarketActive sets whether the provided market is accepting orders.
-func setMarketActive(store sdk.KVStore, marketID uint32, active bool) {
+func setMarketActive(store storetypes.KVStore, marketID uint32, active bool) {
 	key := MakeKeyMarketInactive(marketID)
 	if active {
 		store.Delete(key)
@@ -720,13 +721,13 @@ func setMarketActive(store sdk.KVStore, marketID uint32, active bool) {
 }
 
 // isUserSettlementAllowed gets whether user-settlement is allowed for a market.
-func isUserSettlementAllowed(store sdk.KVStore, marketID uint32) bool {
+func isUserSettlementAllowed(store storetypes.KVStore, marketID uint32) bool {
 	key := MakeKeyMarketUserSettle(marketID)
 	return store.Has(key)
 }
 
 // SetUserSettlementAllowed sets whether user-settlement is allowed for a market.
-func setUserSettlementAllowed(store sdk.KVStore, marketID uint32, allowed bool) {
+func setUserSettlementAllowed(store storetypes.KVStore, marketID uint32, allowed bool) {
 	key := MakeKeyMarketUserSettle(marketID)
 	if allowed {
 		store.Set(key, []byte{})
@@ -781,13 +782,13 @@ func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, al
 }
 
 // storeHasPermission returns true if there is an entry in the store for the given market, address, and permissions.
-func storeHasPermission(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permission exchange.Permission) bool {
+func storeHasPermission(store storetypes.KVStore, marketID uint32, addr sdk.AccAddress, permission exchange.Permission) bool {
 	key := MakeKeyMarketPermissions(marketID, addr, permission)
 	return store.Has(key)
 }
 
 // grantPermissions updates the store so that the given address has the provided permissions in a market.
-func grantPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permissions []exchange.Permission) {
+func grantPermissions(store storetypes.KVStore, marketID uint32, addr sdk.AccAddress, permissions []exchange.Permission) {
 	for _, perm := range permissions {
 		key := MakeKeyMarketPermissions(marketID, addr, perm)
 		store.Set(key, []byte{})
@@ -795,7 +796,7 @@ func grantPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, p
 }
 
 // revokePermissions updates the store so that the given address does NOT have the provided permissions for the market.
-func revokePermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, permissions []exchange.Permission) {
+func revokePermissions(store storetypes.KVStore, marketID uint32, addr sdk.AccAddress, permissions []exchange.Permission) {
 	for _, perm := range permissions {
 		key := MakeKeyMarketPermissions(marketID, addr, perm)
 		store.Delete(key)
@@ -803,13 +804,13 @@ func revokePermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, 
 }
 
 // revokeUserPermissions updates the store so that the given address does not have any permissions for the market.
-func revokeUserPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress) {
+func revokeUserPermissions(store storetypes.KVStore, marketID uint32, addr sdk.AccAddress) {
 	key := GetKeyPrefixMarketPermissionsForAddress(marketID, addr)
 	deleteAll(store, key)
 }
 
 // getUserPermissions gets all permissions that have been granted to a user in a market.
-func getUserPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress) []exchange.Permission {
+func getUserPermissions(store storetypes.KVStore, marketID uint32, addr sdk.AccAddress) []exchange.Permission {
 	var rv []exchange.Permission
 	iterate(store, GetKeyPrefixMarketPermissionsForAddress(marketID, addr), func(key, _ []byte) bool {
 		rv = append(rv, exchange.Permission(key[0]))
@@ -819,13 +820,13 @@ func getUserPermissions(store sdk.KVStore, marketID uint32, addr sdk.AccAddress)
 }
 
 // revokeAllMarketPermissions clears out all permissions for a market.
-func revokeAllMarketPermissions(store sdk.KVStore, marketID uint32) {
+func revokeAllMarketPermissions(store storetypes.KVStore, marketID uint32) {
 	key := GetKeyPrefixMarketPermissions(marketID)
 	deleteAll(store, key)
 }
 
 // getAccessGrants gets all the access grants for a market.
-func getAccessGrants(store sdk.KVStore, marketID uint32) []exchange.AccessGrant {
+func getAccessGrants(store storetypes.KVStore, marketID uint32) []exchange.AccessGrant {
 	var rv []exchange.AccessGrant
 	iterate(store, GetKeyPrefixMarketPermissions(marketID), func(key, _ []byte) bool {
 		addr, perm, err := ParseKeySuffixMarketPermissions(key)
@@ -843,7 +844,7 @@ func getAccessGrants(store sdk.KVStore, marketID uint32) []exchange.AccessGrant 
 }
 
 // setAccessGrants deletes all access grants on a market and sets just the ones provided.
-func setAccessGrants(store sdk.KVStore, marketID uint32, grants []exchange.AccessGrant) {
+func setAccessGrants(store storetypes.KVStore, marketID uint32, grants []exchange.AccessGrant) {
 	revokeAllMarketPermissions(store, marketID)
 	for _, ag := range grants {
 		grantPermissions(store, marketID, sdk.MustAccAddressFromBech32(ag.Address), ag.Permissions)
@@ -969,14 +970,14 @@ func (k Keeper) UpdatePermissions(ctx sdk.Context, msg *exchange.MsgMarketManage
 type reqAttrKeyMaker func(marketID uint32) []byte
 
 // getReqAttrs gets the required attributes for a market using the provided key maker.
-func getReqAttrs(store sdk.KVStore, marketID uint32, maker reqAttrKeyMaker) []string {
+func getReqAttrs(store storetypes.KVStore, marketID uint32, maker reqAttrKeyMaker) []string {
 	key := maker(marketID)
 	value := store.Get(key)
 	return ParseReqAttrStoreValue(value)
 }
 
 // setReqAttrs sets the required attributes for a market using the provided key maker.
-func setReqAttrs(store sdk.KVStore, marketID uint32, reqAttrs []string, maker reqAttrKeyMaker) {
+func setReqAttrs(store storetypes.KVStore, marketID uint32, reqAttrs []string, maker reqAttrKeyMaker) {
 	key := maker(marketID)
 	if len(reqAttrs) == 0 {
 		store.Delete(key)
@@ -988,7 +989,7 @@ func setReqAttrs(store sdk.KVStore, marketID uint32, reqAttrs []string, maker re
 
 // updateReqAttrs updates the required attributes in the store that use the provided key maker by removing then adding
 // the provided attributes to the existing entries.
-func updateReqAttrs(store sdk.KVStore, marketID uint32, toRemove, toAdd []string, field string, maker reqAttrKeyMaker) error {
+func updateReqAttrs(store storetypes.KVStore, marketID uint32, toRemove, toAdd []string, field string, maker reqAttrKeyMaker) error {
 	var errs []error
 	curAttrs := getReqAttrs(store, marketID, maker)
 
@@ -1022,36 +1023,36 @@ func updateReqAttrs(store sdk.KVStore, marketID uint32, toRemove, toAdd []string
 }
 
 // getReqAttrsAsk gets the attributes required to create an ask order.
-func getReqAttrsAsk(store sdk.KVStore, marketID uint32) []string {
+func getReqAttrsAsk(store storetypes.KVStore, marketID uint32) []string {
 	return getReqAttrs(store, marketID, MakeKeyMarketReqAttrAsk)
 }
 
 // setReqAttrsAsk sets the attributes required to create an ask order.
-func setReqAttrsAsk(store sdk.KVStore, marketID uint32, reqAttrs []string) {
+func setReqAttrsAsk(store storetypes.KVStore, marketID uint32, reqAttrs []string) {
 	setReqAttrs(store, marketID, reqAttrs, MakeKeyMarketReqAttrAsk)
 }
 
 // updateReqAttrsAsk updates the attributes required to create an ask order in the store by removing and adding
 // the provided entries to the existing entries.
 // It is assumed that the attributes have been normalized prior to calling this.
-func updateReqAttrsAsk(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
+func updateReqAttrsAsk(store storetypes.KVStore, marketID uint32, toRemove, toAdd []string) error {
 	return updateReqAttrs(store, marketID, toRemove, toAdd, "create-ask", MakeKeyMarketReqAttrAsk)
 }
 
 // getReqAttrsBid gets the attributes required to create a bid order.
-func getReqAttrsBid(store sdk.KVStore, marketID uint32) []string {
+func getReqAttrsBid(store storetypes.KVStore, marketID uint32) []string {
 	return getReqAttrs(store, marketID, MakeKeyMarketReqAttrBid)
 }
 
 // setReqAttrsBid sets the attributes required to create a bid order.
-func setReqAttrsBid(store sdk.KVStore, marketID uint32, reqAttrs []string) {
+func setReqAttrsBid(store storetypes.KVStore, marketID uint32, reqAttrs []string) {
 	setReqAttrs(store, marketID, reqAttrs, MakeKeyMarketReqAttrBid)
 }
 
 // updateReqAttrsBid updates the attributes required to create a bid order in the store by removing and adding
 // the provided entries to the existing entries.
 // It is assumed that the attributes have been normalized prior to calling this.
-func updateReqAttrsBid(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
+func updateReqAttrsBid(store storetypes.KVStore, marketID uint32, toRemove, toAdd []string) error {
 	return updateReqAttrs(store, marketID, toRemove, toAdd, "create-bid", MakeKeyMarketReqAttrBid)
 }
 
@@ -1184,7 +1185,7 @@ func (k Keeper) UpdateMarketDetails(ctx sdk.Context, marketID uint32, marketDeta
 }
 
 // storeMarket writes all the market fields to the state store (except MarketDetails which are in the account).
-func storeMarket(store sdk.KVStore, market exchange.Market) {
+func storeMarket(store storetypes.KVStore, market exchange.Market) {
 	marketID := market.MarketId
 	setMarketKnown(store, marketID)
 	setCreateAskFlatFees(store, marketID, market.FeeCreateAskFlat)
@@ -1202,7 +1203,7 @@ func storeMarket(store sdk.KVStore, market exchange.Market) {
 
 // initMarket is similar to CreateMarket but assumes the market has already been
 // validated and also allows for the market account to already exist.
-func (k Keeper) initMarket(ctx sdk.Context, store sdk.KVStore, market exchange.Market) {
+func (k Keeper) initMarket(ctx sdk.Context, store storetypes.KVStore, market exchange.Market) {
 	if market.MarketId == 0 {
 		market.MarketId = nextMarketID(store)
 	}

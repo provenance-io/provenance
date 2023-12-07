@@ -462,7 +462,7 @@ func (k Keeper) PurgeAttribute(ctx sdk.Context, name string, owner sdk.AccAddres
 }
 
 // getAddrAttributesKeysByName returns an list of attribute keys for the an account and attribute name
-func (k Keeper) getAddrAttributesKeysByName(store sdk.KVStore, acctAddr sdk.AccAddress, attributeName string) (attributeKeys [][]byte) {
+func (k Keeper) getAddrAttributesKeysByName(store storetypes.KVStore, acctAddr sdk.AccAddress, attributeName string) (attributeKeys [][]byte) {
 	it := storetypes.KVStorePrefixIterator(store, types.AddrAttributesNameKeyPrefix(acctAddr, attributeName))
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
@@ -565,7 +565,7 @@ func (k Keeper) DeleteExpiredAttributes(ctx sdk.Context, limit int) int {
 }
 
 // addAttributeExpireLookup safely adds attribute expire key to store, if expire date exists, else no-op
-func (k Keeper) addAttributeExpireLookup(store sdk.KVStore, attr types.Attribute) {
+func (k Keeper) addAttributeExpireLookup(store storetypes.KVStore, attr types.Attribute) {
 	expireKey := types.AttributeExpireKey(attr)
 	if expireKey != nil {
 		store.Set(expireKey, []byte{})
@@ -573,7 +573,7 @@ func (k Keeper) addAttributeExpireLookup(store sdk.KVStore, attr types.Attribute
 }
 
 // deleteAttributeExpireLookup safely removes attribute expire key from store if expire date exists, else no-op
-func (k Keeper) deleteAttributeExpireLookup(store sdk.KVStore, attr types.Attribute) {
+func (k Keeper) deleteAttributeExpireLookup(store storetypes.KVStore, attr types.Attribute) {
 	expireKey := types.AttributeExpireKey(attr)
 	if expireKey != nil {
 		store.Delete(expireKey)
