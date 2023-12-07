@@ -422,7 +422,7 @@ func Dispatch(
 		panic(err2)
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, sdkResponse, nil
+	return simtypes.NewOperationMsg(msg, true, ""), futures, sdkResponse, nil
 }
 
 // getRandomRootNameRecord finds a random root name record owned by a known account.

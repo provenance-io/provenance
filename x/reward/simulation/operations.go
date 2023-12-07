@@ -159,7 +159,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
+	return simtypes.NewOperationMsg(msg, true, ""), futures, nil
 }
 
 // SimulateMsgEndRewardsProgram sends a MsgEndRewardProgramRequest for a random existing reward program.

@@ -463,7 +463,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
+	return simtypes.NewOperationMsg(msg, true, ""), futures, nil
 }
 
 // randomUnrestrictedDenom returns a randomized unrestricted denom string value.
