@@ -16,7 +16,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -206,7 +206,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	memo := simulation.RandStringOfLength(r, r.Intn(101))
+	memo := simtypes.RandStringOfLength(r, r.Intn(101))
 
 	signMode := gen.SignModeHandler().DefaultMode()
 
