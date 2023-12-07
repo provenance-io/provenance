@@ -602,7 +602,10 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 	serverCtx.Config.SetRoot(clientCtx.HomeDir)
 
 	// Set the server context's logger using what Viper has now.
-	serverCtx.Logger = server.CreateSDKLogger(serverCtx, cmd.ErrOrStderr())
+	serverCtx.Logger, err = server.CreateSDKLogger(serverCtx, cmd.ErrOrStderr())
+	if err != nil {
+		return fmt.Errorf("error creating logger: %w", err)
+	}
 
 	// Copy all settings from our viper to the global viper since some stuff uses the global one.
 	if err = viper.MergeConfigMap(serverCtx.Viper.AllSettings()); err != nil {
