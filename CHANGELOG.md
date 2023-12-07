@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* Add the ibcratelimit module [#1498](https://github.com/provenance-io/provenance/issues/1498).
 * Add CLI commands for the exchange module endpoints and queries [#1701](https://github.com/provenance-io/provenance/issues/1701).
 * Add CLI command to generate autocomplete shell scripts [#1762](https://github.com/provenance-io/provenance/pull/1762).
 * Create CLI commands for adding a market to a genesis file [#1757](https://github.com/provenance-io/provenance/issues/1757).
@@ -48,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add upgrade handler for 1.18 [#1756](https://github.com/provenance-io/provenance/pull/1756).
 * Updated documentation for each module to work with docusaurus [PR 1763](https://github.com/provenance-io/provenance/pull/1763).
 * Create a default market in `make run`, `localnet`, `devnet` and the `provenanced testnet` command [#1757](https://github.com/provenance-io/provenance/issues/1757).
+* Remove the rust upgrade handlers [PR 1774](https://github.com/provenance-io/provenance/pull/1774).
 
 ### Dependencies
 
