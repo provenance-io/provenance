@@ -1,4 +1,4 @@
-package app
+package keepers
 
 import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
