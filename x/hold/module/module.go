@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/client/cli"
@@ -141,7 +142,7 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 
 // RandomizedParams returns randomized hold param changes for the simulator,
 // of which there are none since this module doesn't use the params module.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange { return nil }
+func (AppModule) RandomizedParams(_ *rand.Rand) []proposal.ParamChange { return nil }
 
 // RegisterStoreDecoder registers a decoder for hold module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {

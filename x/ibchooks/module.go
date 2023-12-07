@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	"github.com/provenance-io/provenance/x/ibchooks/client/cli"
 	"github.com/provenance-io/provenance/x/ibchooks/keeper"
@@ -170,8 +171,8 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized name param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
+func (AppModule) RandomizedParams(_ *rand.Rand) []proposal.ParamChange {
+	return []proposal.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for name module's types

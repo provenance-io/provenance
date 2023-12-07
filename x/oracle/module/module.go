@@ -21,6 +21,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	channelkeeper "github.com/cosmos/ibc-go/v8/modules/core/04-channel/keeper"
 
 	"github.com/provenance-io/provenance/x/oracle/client/cli"
@@ -123,7 +124,7 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams returns randomized module parameters for param change proposals.
-func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+func (am AppModule) RandomizedParams(_ *rand.Rand) []proposal.ParamChange {
 	// currently no module params exist
 	return nil
 }

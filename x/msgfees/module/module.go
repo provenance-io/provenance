@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	"github.com/provenance-io/provenance/x/msgfees/client/cli"
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
@@ -168,7 +169,7 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized msgfees param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (AppModule) RandomizedParams(r *rand.Rand) []proposal.ParamChange {
 	return simulation.ParamChanges(r)
 }
 
