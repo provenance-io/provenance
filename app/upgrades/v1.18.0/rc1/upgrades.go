@@ -3,6 +3,7 @@ package rc1
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/provenance-io/provenance/app/keepers"
 	"github.com/provenance-io/provenance/app/upgrades"
 )
@@ -17,6 +18,6 @@ func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.Versio
 	return PerformUpgrade(ctx, app.Keepers(), newVM)
 }
 
-func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers, vm module.VersionMap) (module.VersionMap, error) {
+func PerformUpgrade(_ sdk.Context, _ *keepers.AppKeepers, vm module.VersionMap) (module.VersionMap, error) {
 	return vm, nil
 }

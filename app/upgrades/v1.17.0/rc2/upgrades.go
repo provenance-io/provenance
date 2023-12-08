@@ -3,6 +3,7 @@ package rc2
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/provenance-io/provenance/app/keepers"
 	"github.com/provenance-io/provenance/app/upgrades"
 	"github.com/provenance-io/provenance/app/upgrades/v1.17.0/common"

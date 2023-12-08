@@ -4,9 +4,11 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
+
 	"github.com/provenance-io/provenance/app/keepers"
 	"github.com/provenance-io/provenance/app/upgrades"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -80,7 +82,7 @@ func SetupICQ(ctx sdk.Context, k *keepers.AppKeepers) {
 func UpdateMaxSupply(ctx sdk.Context, k *keepers.AppKeepers) {
 	ctx.Logger().Info("Updating MaxSupply marker param")
 	params := k.MarkerKeeper.GetParams(ctx)
-	//nolint:staticcheck // Populate new param with deprecated param
+
 	params.MaxSupply = math.NewIntFromUint64(params.MaxTotalSupply)
 	k.MarkerKeeper.SetParams(ctx, params)
 	ctx.Logger().Info("Done updating MaxSupply marker param")

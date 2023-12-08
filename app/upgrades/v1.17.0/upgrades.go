@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/provenance-io/provenance/app/keepers"
 	navs "github.com/provenance-io/provenance/app/navs"
 	"github.com/provenance-io/provenance/app/upgrades"
@@ -21,13 +22,13 @@ func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.Versio
 		return nil, err
 	}
 
-	if newVM, err = rc1.PerformUpgrade(ctx, app.Keepers(), vm); err != nil {
+	if newVM, err = rc1.PerformUpgrade(ctx, app.Keepers(), newVM); err != nil {
 		return nil, err
 	}
 	if newVM, err = rc2.PerformUpgrade(ctx, app.Keepers(), newVM); err != nil {
 		return nil, err
 	}
-	if newVM, err = rc3.PerformUpgrade(ctx, app.Keepers(), vm); err != nil {
+	if newVM, err = rc3.PerformUpgrade(ctx, app.Keepers(), newVM); err != nil {
 		return nil, err
 	}
 

@@ -1,12 +1,14 @@
 package upgrades
 
 import (
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/provenance-io/provenance/app/keepers"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 type AppUpgrader interface {

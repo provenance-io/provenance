@@ -3,6 +3,7 @@ package rc1
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
+
 	"github.com/provenance-io/provenance/app/upgrades"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"

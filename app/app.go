@@ -18,6 +18,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -93,7 +94,13 @@ import (
 
 	"github.com/provenance-io/provenance/app/keepers"
 	appparams "github.com/provenance-io/provenance/app/params"
-
+	appupgrades "github.com/provenance-io/provenance/app/upgrades"
+	v_1_17_0 "github.com/provenance-io/provenance/app/upgrades/v1.17.0"
+	v_1_17_0_rc1 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc1"
+	v_1_17_0_rc2 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc2"
+	v_1_17_0_rc3 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc3"
+	v_1_18_0 "github.com/provenance-io/provenance/app/upgrades/v1.18.0"
+	v_1_18_0_rc1 "github.com/provenance-io/provenance/app/upgrades/v1.18.0/rc1"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -124,14 +131,6 @@ import (
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
-
-	appupgrades "github.com/provenance-io/provenance/app/upgrades"
-	v_1_17_0 "github.com/provenance-io/provenance/app/upgrades/v1.17.0"
-	v_1_17_0_rc1 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc1"
-	v_1_17_0_rc2 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc2"
-	v_1_17_0_rc3 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc3"
-	v_1_18_0 "github.com/provenance-io/provenance/app/upgrades/v1.18.0"
-	v_1_18_0_rc1 "github.com/provenance-io/provenance/app/upgrades/v1.18.0/rc1"
 
 	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 )
@@ -641,6 +640,12 @@ func New(
 	// Add upgrade plans for each release. This must be done before the baseapp seals via LoadLatestVersion() down below.
 	appupgrades.InstallCustomUpgradeHandlers(app, Upgrades)
 	appupgrades.AttemptUpgradeStoreLoaders(app, app.Keepers(), Upgrades)
+
+	if loadLatest {
+		if err := app.LoadLatestVersion(); err != nil {
+			tmos.Exit(err.Error())
+		}
+	}
 
 	return app
 }
