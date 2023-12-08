@@ -294,14 +294,14 @@ func New(
 
 	// Setup the APP
 	app.AppKeepers = keepers.NewAppKeeper(
-		appCodec,
-		bApp,
-		legacyAmino,
+		app.appCodec,
+		app.BaseApp,
+		app.legacyAmino,
 		maccPerms,
 		moduleAccountAddresses,
 		skipUpgradeHeights,
 		homePath,
-		invCheckPeriod,
+		app.invCheckPeriod,
 		AccountAddressPrefix,
 		logger,
 		app.interfaceRegistry,
