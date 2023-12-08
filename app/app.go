@@ -93,7 +93,7 @@ import (
 
 	"github.com/provenance-io/provenance/app/keepers"
 	appparams "github.com/provenance-io/provenance/app/params"
-	appupgrades "github.com/provenance-io/provenance/app/upgrades"
+
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -125,6 +125,7 @@ import (
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 
+	appupgrades "github.com/provenance-io/provenance/app/upgrades"
 	v_1_17_0 "github.com/provenance-io/provenance/app/upgrades/v1.17.0"
 	v_1_17_0_rc1 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc1"
 	v_1_17_0_rc2 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc2"
