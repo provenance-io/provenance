@@ -1301,20 +1301,20 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 
-	paramsKeeper.Subspace(metadatatypes.ModuleName)
-	paramsKeeper.Subspace(markertypes.ModuleName)
-	paramsKeeper.Subspace(nametypes.ModuleName)
-	paramsKeeper.Subspace(attributetypes.ModuleName)
-	paramsKeeper.Subspace(msgfeestypes.ModuleName)
+	paramsKeeper.Subspace(metadatatypes.ModuleName)  // TODO[1760]: params: Migrate metadata params.
+	paramsKeeper.Subspace(markertypes.ModuleName)    // TODO[1760]: params: Migrate marker params.
+	paramsKeeper.Subspace(nametypes.ModuleName)      // TODO[1760]: params: Migrate name params.
+	paramsKeeper.Subspace(attributetypes.ModuleName) // TODO[1760]: params: Migrate attribute params.
+	paramsKeeper.Subspace(msgfeestypes.ModuleName)   // TODO[1760]: params: Migrate msgFees params.
 	paramsKeeper.Subspace(wasm.ModuleName)
-	paramsKeeper.Subspace(rewardtypes.ModuleName)
-	paramsKeeper.Subspace(triggertypes.ModuleName)
+	paramsKeeper.Subspace(rewardtypes.ModuleName)  // TODO[1760]: params: Migrate reward params.
+	paramsKeeper.Subspace(triggertypes.ModuleName) // TODO[1760]: params: Migrate trigger params.
 
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
-	paramsKeeper.Subspace(icahosttypes.SubModuleName)
-	// paramsKeeper.Subspace(icqtypes.ModuleName) // TODO[1760]: async-icq
-	paramsKeeper.Subspace(ibchookstypes.ModuleName)
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName) // TODO[1760]: params: Migrate ibc-transfer params.
+	paramsKeeper.Subspace(ibchost.ModuleName)          // TODO[1760]: params: Migrate ibc-host params.
+	paramsKeeper.Subspace(icahosttypes.SubModuleName)  // TODO[1760]: params: Migrate ica-host params.
+	// paramsKeeper.Subspace(icqtypes.ModuleName) // TODO[1760]: params: Migrate icq params.
+	paramsKeeper.Subspace(ibchookstypes.ModuleName) // TODO[1760]: params: Migrate ibc-hooks params.
 
 	return paramsKeeper
 }
