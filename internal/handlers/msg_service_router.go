@@ -29,7 +29,9 @@ type PioMsgServiceRouter struct {
 }
 
 var _ gogogrpc.Server = &PioMsgServiceRouter{}
-var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{}
+
+// TODO[1760]: msg-service-router: Make sure any fixes in the SDK's MsgServiceRouter are also considered with our PioMsgServiceRouter.
+// var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{} // TODO[1760]: msg-service-router
 
 // NewPioMsgServiceRouter creates a new PioMsgServiceRouter.
 func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {

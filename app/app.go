@@ -107,7 +107,8 @@ import (
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
-	icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host"
+
+	// icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host" // TODO[1760]: msg-service-router
 	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
@@ -374,7 +375,9 @@ func New(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
 	bApp := baseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter(encodingConfig.TxConfig.TxDecoder()))
+	// TODO[1760]: msg-service-router: Switch back to the PioMsgServiceRouter.
+	// bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter(encodingConfig.TxConfig.TxDecoder()))
+	bApp.SetMsgServiceRouter(baseapp.NewMsgServiceRouter(encodingConfig.TxConfig.TxDecoder())) // TODO[1760]: msg-service-router: delete this line.
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -483,8 +486,8 @@ func New(
 	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
 		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName), authtypes.FeeCollectorName, pioconfig.GetProvenanceConfig().FeeDenom, app.Simulate, encodingConfig.TxConfig.TxDecoder(), interfaceRegistry)
 
-	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
-	pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)
+	// pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter) // TODO[1760]: msg-service-router
+	// pioMsgFeesRouter.SetMsgFeesKeeper(app.MsgFeesKeeper)                          // TODO[1760]: msg-service-router
 
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	restrictHooks := piohandlers.NewStakingRestrictionHooks(&app.StakingKeeper, *piohandlers.DefaultRestrictionOptions)
@@ -586,18 +589,21 @@ func New(
 		app.AccountKeeper, app.AttributeKeeper, app.BankKeeper, app.HoldKeeper, app.MarkerKeeper,
 	)
 
-	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
-		return pioMsgFeesRouter.Handler(msg)
-	})
-	app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
-	icaHostKeeper := icahostkeeper.NewKeeper(
-		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
-		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		app.AccountKeeper, scopedICAHostKeeper, pioMessageRouter,
-	)
-	app.ICAHostKeeper = &icaHostKeeper
-	icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
-	icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
+	// TODO[1760]: msg-service-router: Put the pioMessageRouter back into use (and the ica host module back in).
+	/*
+		pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
+			return pioMsgFeesRouter.Handler(msg)
+		})
+		app.TriggerKeeper = triggerkeeper.NewKeeper(appCodec, keys[triggertypes.StoreKey], app.MsgServiceRouter())
+		icaHostKeeper := icahostkeeper.NewKeeper(
+			appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
+			app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
+			app.AccountKeeper, scopedICAHostKeeper, pioMessageRouter,
+		)
+		app.ICAHostKeeper = &icaHostKeeper
+		icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
+		icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
+	*/
 
 	// TODO[1760]: async-icq
 	// app.ICQKeeper = icqkeeper.NewKeeper(
@@ -651,7 +657,7 @@ func New(
 		&app.IBCKeeper.PortKeeper,
 		scopedWasmKeeper,
 		app.TransferKeeper,
-		pioMessageRouter,
+		// pioMessageRouter, // TODO[1760]: msg-service-router
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
