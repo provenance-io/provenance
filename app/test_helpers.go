@@ -385,7 +385,11 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 
 // AddTestAddrsFromPubKeys adds the addresses into the App providing only the public keys.
 func AddTestAddrsFromPubKeys(app *App, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdkmath.Int) {
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
+	bondDenom, err := app.StakingKeeper.BondDenom(ctx)
+	if err != nil || bondDenom == "" {
+		bondDenom = sdk.DefaultBondDenom
+	}
+	initCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, accAmt))
 
 	for _, pk := range pubKeys {
 		initAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
@@ -407,7 +411,11 @@ func AddTestAddrsIncremental(app *App, ctx sdk.Context, accNum int, accAmt sdkma
 func addTestAddrs(app *App, ctx sdk.Context, accNum int, accAmt sdkmath.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
+	bondDenom, err := app.StakingKeeper.BondDenom(ctx)
+	if err != nil || bondDenom == "" {
+		bondDenom = sdk.DefaultBondDenom
+	}
+	initCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, accAmt))
 
 	for _, addr := range testAddrs {
 		initAccountWithCoins(app, ctx, addr, initCoins)

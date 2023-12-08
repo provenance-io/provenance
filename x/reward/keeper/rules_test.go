@@ -496,7 +496,10 @@ func (s *KeeperTestSuite) createTestValidators(amount int) {
 	addrDels := simapp.AddTestAddrsIncremental(s.app, s.ctx, amount, sdkmath.NewInt(10000))
 	valAddrs := sdksim.ConvertAddrsToValAddrs(addrDels)
 
-	totalSupply := sdk.NewCoins(sdk.NewInt64Coin(s.app.StakingKeeper.BondDenom(s.ctx), 1_000_000_000))
+	bondDenom, err := app.StakingKeeper.BondDenom(ctx)
+	s.Require().NoError(err, "app.StakingKeeper.BondDenom(ctx)")
+
+	totalSupply := sdk.NewCoins(sdk.NewInt64Coin(bondDenom, 1_000_000_000))
 	notBondedPool := s.app.StakingKeeper.GetNotBondedPool(s.ctx)
 	s.app.AccountKeeper.SetModuleAccount(s.ctx, notBondedPool)
 

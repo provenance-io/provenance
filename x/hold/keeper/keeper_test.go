@@ -55,7 +55,9 @@ func (s *TestSuite) SetupTest() {
 	s.keeper = s.app.HoldKeeper
 	s.bankKeeper = s.app.BankKeeper
 
-	s.bondDenom = s.app.StakingKeeper.BondDenom(s.sdkCtx)
+	s.bondDenom, err = s.app.StakingKeeper.BondDenom(s.sdkCtx)
+	s.Require().NoError(err, "app.StakingKeeper.BondDenom(s.sdkCtx)")
+
 	s.initAmount = 1_000_000_000
 	s.initBal = sdk.NewCoins(sdk.NewCoin(s.bondDenom, sdkmath.NewInt(s.initAmount)))
 
