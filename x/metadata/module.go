@@ -182,7 +182,7 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for metadata module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
 	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

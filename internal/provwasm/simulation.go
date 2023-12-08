@@ -93,7 +93,7 @@ func (pw Wrapper) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
-func (pw Wrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (pw Wrapper) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	pw.wasm.RegisterStoreDecoder(sdr)
 }
 

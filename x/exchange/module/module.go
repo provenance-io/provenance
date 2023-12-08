@@ -143,7 +143,7 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange { return nil }
 
 // RegisterStoreDecoder registers a decoder for exchange module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[exchange.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
