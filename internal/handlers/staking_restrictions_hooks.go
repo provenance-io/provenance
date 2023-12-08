@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
+
 	"cosmossdk.io/math"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -56,7 +58,7 @@ func NewStakingRestrictionHooks(k *stakingkeeper.Keeper, opts RestrictionOptions
 }
 
 // Verifies that the delegation would not cause the validator's voting power to exceed our staking distribution limits
-func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, _ sdktypes.AccAddress, valAddr sdktypes.ValAddress) error {
+func (h StakingRestrictionHooks) AfterDelegationModified(ctx context.Context, _ sdk.AccAddress, valAddr sdk.ValAddress) error {
 	valCount := len(h.k.GetLastValidators(ctx))
 
 	// do not bother with limits on networks this small (or under simulation).
@@ -96,47 +98,52 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx sdktypes.Context, _
 	return nil
 }
 
-// Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) BeforeDelegationCreated(_ sdktypes.Context, _ sdktypes.AccAddress, _ sdktypes.ValAddress) error {
+// Implements sdk.ValidatorHooks
+func (h StakingRestrictionHooks) BeforeDelegationCreated(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) AfterValidatorBonded(_ sdktypes.Context, _ sdktypes.ConsAddress, _ sdktypes.ValAddress) error {
+// Implements sdk.ValidatorHooks
+func (h StakingRestrictionHooks) AfterValidatorBonded(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) AfterValidatorRemoved(_ sdktypes.Context, _ sdktypes.ConsAddress, _ sdktypes.ValAddress) error {
+// Implements sdk.ValidatorHooks
+func (h StakingRestrictionHooks) AfterValidatorRemoved(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) AfterValidatorCreated(_ sdktypes.Context, _ sdktypes.ValAddress) error {
+// Implements sdk.ValidatorHooks
+func (h StakingRestrictionHooks) AfterValidatorCreated(_ context.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) AfterValidatorBeginUnbonding(_ sdktypes.Context, _ sdktypes.ConsAddress, _ sdktypes.ValAddress) error {
+// Implements sdk.ValidatorHooks
+func (h StakingRestrictionHooks) AfterValidatorBeginUnbonding(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) BeforeValidatorModified(_ sdktypes.Context, _ sdktypes.ValAddress) error {
+// Implements sdk.ValidatorHooks
+func (h StakingRestrictionHooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) BeforeDelegationSharesModified(_ sdktypes.Context, _ sdktypes.AccAddress, _ sdktypes.ValAddress) error {
+// Implements sdk.ValidatorHooks
+func (h StakingRestrictionHooks) BeforeDelegationSharesModified(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) BeforeDelegationRemoved(_ sdktypes.Context, _ sdktypes.AccAddress, _ sdktypes.ValAddress) error {
+// Implements sdk.ValidatorHooks
+func (h StakingRestrictionHooks) BeforeDelegationRemoved(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-// Implements sdktypes.ValidatorHooks
-func (h StakingRestrictionHooks) BeforeValidatorSlashed(_ sdktypes.Context, _ sdktypes.ValAddress, _ sdktypes.Dec) error {
+// Implements sdk.ValidatorHooks
+func (h StakingRestrictionHooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdk.Dec) error {
+	return nil
+}
+
+// Implements sdk.ValidatorHooks
+func (h StakingRestrictionHooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
 	return nil
 }
