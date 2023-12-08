@@ -1026,18 +1026,21 @@ func New(
 	}
 
 	app.SetAnteHandler(anteHandler)
-	msgfeehandler, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-		AccountKeeper:  app.AccountKeeper,
-		BankKeeper:     app.BankKeeper,
-		FeegrantKeeper: app.FeeGrantKeeper,
-		MsgFeesKeeper:  app.MsgFeesKeeper,
-		Decoder:        encodingConfig.TxConfig.TxDecoder(),
-	})
+	// TODO[1760]: fee-handler: Add the msgfeehandler back to the app.
+	/*
+		msgFeeHandler, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
+			AccountKeeper:  app.AccountKeeper,
+			BankKeeper:     app.BankKeeper,
+			FeegrantKeeper: app.FeeGrantKeeper,
+			MsgFeesKeeper:  app.MsgFeesKeeper,
+			Decoder:        encodingConfig.TxConfig.TxDecoder(),
+		})
 
-	if err != nil {
-		panic(err)
-	}
-	app.SetFeeHandler(msgfeehandler)
+		if err != nil {
+			panic(err)
+		}
+		app.SetFeeHandler(msgFeeHandler)
+	*/
 
 	app.SetEndBlocker(app.EndBlocker)
 

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -16,6 +15,8 @@ type PioBaseAppKeeperOptions struct {
 	Decoder        sdk.TxDecoder
 }
 
+// TODO[1760]: fee-handler: Uncomment NewAdditionalMsgFeeHandler once the FeeHandler type is back in the SDK.
+/*
 func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.FeeHandler, error) {
 	if options.AccountKeeper == nil {
 		return nil, sdkerrors.ErrLogic.Wrap("account keeper is required for AdditionalMsgFeeHandler builder")
@@ -40,3 +41,4 @@ func NewAdditionalMsgFeeHandler(options PioBaseAppKeeperOptions) (sdk.FeeHandler
 	return NewMsgFeeInvoker(options.BankKeeper, options.AccountKeeper, options.FeegrantKeeper,
 		options.MsgFeesKeeper, options.Decoder).Invoke, nil
 }
+*/
