@@ -12,6 +12,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 
 	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
@@ -1411,49 +1412,52 @@ type dummyBankKeeper struct{}
 
 var _ types.BankKeeper = (*dummyBankKeeper)(nil)
 
-func (d dummyBankKeeper) GetAllBalances(_ sdk.Context, _ sdk.AccAddress) sdk.Coins { return nil }
+func (d dummyBankKeeper) GetAllBalances(_ context.Context, _ sdk.AccAddress) sdk.Coins { return nil }
 
-func (d dummyBankKeeper) GetBalance(_ sdk.Context, _ sdk.AccAddress, denom string) sdk.Coin {
+func (d dummyBankKeeper) GetBalance(_ context.Context, _ sdk.AccAddress, denom string) sdk.Coin {
 	return sdk.Coin{}
 }
 
-func (d dummyBankKeeper) GetSupply(_ sdk.Context, _ string) sdk.Coin { return sdk.Coin{} }
+func (d dummyBankKeeper) GetSupply(_ context.Context, _ string) sdk.Coin { return sdk.Coin{} }
 
 func (d dummyBankKeeper) DenomOwners(_ context.Context, _ *banktypes.QueryDenomOwnersRequest) (*banktypes.QueryDenomOwnersResponse, error) {
 	return nil, nil
 }
 
-func (d dummyBankKeeper) SendCoins(_ sdk.Context, _, _ sdk.AccAddress, amt sdk.Coins) error {
+func (d dummyBankKeeper) SendCoins(_ context.Context, _, _ sdk.AccAddress, amt sdk.Coins) error {
 	return nil
 }
 
-func (d dummyBankKeeper) SendCoinsFromModuleToAccount(_ sdk.Context, _ string, _ sdk.AccAddress, _ sdk.Coins) error {
+func (d dummyBankKeeper) SendCoinsFromModuleToAccount(_ context.Context, _ string, _ sdk.AccAddress, _ sdk.Coins) error {
 	return nil
 }
 
-func (d dummyBankKeeper) SendCoinsFromAccountToModule(_ sdk.Context, _ sdk.AccAddress, _ string, _ sdk.Coins) error {
+func (d dummyBankKeeper) SendCoinsFromAccountToModule(_ context.Context, _ sdk.AccAddress, _ string, _ sdk.Coins) error {
 	return nil
 }
 
-func (d dummyBankKeeper) MintCoins(_ sdk.Context, _ string, _ sdk.Coins) error { return nil }
+func (d dummyBankKeeper) MintCoins(_ context.Context, _ string, _ sdk.Coins) error { return nil }
 
-func (d dummyBankKeeper) BurnCoins(_ sdk.Context, _ string, _ sdk.Coins) error { return nil }
+func (d dummyBankKeeper) BurnCoins(_ context.Context, _ string, _ sdk.Coins) error { return nil }
 
 func (d dummyBankKeeper) AppendSendRestriction(_ banktypes.SendRestrictionFn) {}
 
 func (d dummyBankKeeper) BlockedAddr(_ sdk.AccAddress) bool { return false }
 
-func (d dummyBankKeeper) GetDenomMetaData(_ sdk.Context, _ string) (banktypes.Metadata, bool) {
+func (d dummyBankKeeper) GetDenomMetaData(_ context.Context, _ string) (banktypes.Metadata, bool) {
 	return banktypes.Metadata{}, false
 }
 
-func (d dummyBankKeeper) SetDenomMetaData(_ sdk.Context, _ banktypes.Metadata) {}
+func (d dummyBankKeeper) SetDenomMetaData(_ context.Context, _ banktypes.Metadata) {}
 
-func (d dummyBankKeeper) IterateAllBalances(_ sdk.Context, _ func(sdk.AccAddress, sdk.Coin) bool) {}
+func (d dummyBankKeeper) IterateAllBalances(_ context.Context, _ func(sdk.AccAddress, sdk.Coin) bool) {
+}
 
-func (d dummyBankKeeper) GetAllSendEnabledEntries(_ sdk.Context) []banktypes.SendEnabled { return nil }
+func (d dummyBankKeeper) GetAllSendEnabledEntries(_ context.Context) []banktypes.SendEnabled {
+	return nil
+}
 
-func (d dummyBankKeeper) DeleteSendEnabled(_ sdk.Context, _ string) {}
+func (d dummyBankKeeper) DeleteSendEnabled(_ context.Context, _ string) {}
 
 func TestBypassAddrsLocked(t *testing.T) {
 	// This test makes sure that the keeper's copy of reqAttrBypassAddrs

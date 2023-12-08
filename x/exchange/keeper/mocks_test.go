@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -316,7 +317,7 @@ func (k *MockBankKeeper) WithInputOutputCoinsResults(errs ...string) *MockBankKe
 	return k
 }
 
-func (k *MockBankKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	k.Calls.SendCoins = append(k.Calls.SendCoins, NewSendCoinsArgs(ctx, fromAddr, toAddr, amt))
 	var err error
 	if len(k.SendCoinsResultsQueue) > 0 {
@@ -328,7 +329,7 @@ func (k *MockBankKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddr
 	return err
 }
 
-func (k *MockBankKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
+func (k *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
 	k.Calls.SendCoinsFromAccountToModule = append(k.Calls.SendCoinsFromAccountToModule,
 		NewSendCoinsFromAccountToModuleArgs(ctx, senderAddr, recipientModule, amt))
 	var err error
@@ -341,7 +342,7 @@ func (k *MockBankKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAdd
 	return err
 }
 
-func (k *MockBankKeeper) InputOutputCoins(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
+func (k *MockBankKeeper) InputOutputCoins(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
 	k.Calls.InputOutputCoins = append(k.Calls.InputOutputCoins, NewInputOutputCoinsArgs(ctx, inputs, outputs))
 	var err error
 	if len(k.InputOutputCoinsResultsQueue) > 0 {

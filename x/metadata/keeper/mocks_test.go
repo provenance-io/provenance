@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -166,7 +167,7 @@ func (c SaveGrantCall) Key() string {
 }
 
 // GetAuthorization records that a GetAuthorization call has been made and returns the pre-defined value or nil.
-func (k *MockAuthzKeeper) GetAuthorization(_ sdk.Context, grantee, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
+func (k *MockAuthzKeeper) GetAuthorization(_ context.Context, grantee, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
 	call := &GetAuthorizationCall{
 		GrantInfo: GrantInfo{
 			Grantee: grantee,
@@ -180,7 +181,7 @@ func (k *MockAuthzKeeper) GetAuthorization(_ sdk.Context, grantee, granter sdk.A
 }
 
 // DeleteGrant records that a DeleteGrant call has been made and returns the pre-defined value or nil.
-func (k *MockAuthzKeeper) DeleteGrant(_ sdk.Context, grantee, granter sdk.AccAddress, msgType string) error {
+func (k *MockAuthzKeeper) DeleteGrant(_ context.Context, grantee, granter sdk.AccAddress, msgType string) error {
 	call := &DeleteGrantCall{
 		GrantInfo: GrantInfo{
 			Grantee: grantee,
@@ -194,7 +195,7 @@ func (k *MockAuthzKeeper) DeleteGrant(_ sdk.Context, grantee, granter sdk.AccAdd
 }
 
 // SaveGrant records that a SaveGrant call has been made and returns the pre-defined value or nil.
-func (k *MockAuthzKeeper) SaveGrant(_ sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error {
+func (k *MockAuthzKeeper) SaveGrant(_ context.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error {
 	call := &SaveGrantCall{
 		Grantee: grantee,
 		Granter: granter,

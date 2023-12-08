@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,9 +16,9 @@ type AuthKeeper interface {
 
 // AuthzKeeper is an interface with functions that the authz.Keeper has that are needed in this module.
 type AuthzKeeper interface {
-	GetAuthorization(ctx sdk.Context, grantee, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time)
-	DeleteGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, msgType string) error
-	SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error
+	GetAuthorization(ctx context.Context, grantee, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time)
+	DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress, msgType string) error
+	SaveGrant(ctx context.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error
 }
 
 // AttrKeeper defines the attribute functionality needed by the metadata module.
