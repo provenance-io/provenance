@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	provenance "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/app/keepers"
 )
 
 // runModuleMigrations wraps standard logging around the call to app.mm.RunMigrations.
@@ -15,7 +15,7 @@ import (
 //
 // If state is updated prior to this migration, you run the risk of writing state using
 // a new format when the migration is expecting all state to be in the old format.
-func RunModuleMigrations(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error) {
+func RunModuleMigrations(ctx sdk.Context, app AppUpgrader, vm module.VersionMap) (module.VersionMap, error) {
 	// Even if this function is no longer called, do not delete it. Keep it around for the next time it's needed.
 	ctx.Logger().Info("Starting module migrations. This may take a significant amount of time to complete. Do not restart node.")
 	newVM, err := app.ModuleManager().RunMigrations(ctx, app.Configurator(), vm)
@@ -31,7 +31,7 @@ func RunModuleMigrations(ctx sdk.Context, app *provenance.App, vm module.Version
 // nor complains about a nolint:unused directive that isn't needed because the function is used.
 var _ = RunModuleMigrations
 
-func CreateUpgradeHandler(upgrade UpgradeStrategy, app *provenance.App) upgradetypes.UpgradeHandler {
+func CreateUpgradeHandler(upgrade UpgradeStrategy, app AppUpgrader) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx.Logger().Info(fmt.Sprintf("Starting upgrade to %q", plan.Name), "version-map", vm)
 
@@ -48,27 +48,27 @@ func CreateUpgradeHandler(upgrade UpgradeStrategy, app *provenance.App) upgradet
 }
 
 // InstallCustomUpgradeHandlers sets upgrade handlers for all entries in the upgrades map.
-func InstallCustomUpgradeHandlers(app *provenance.App, upgrades []Upgrade) {
+func InstallCustomUpgradeHandlers(app AppUpgrader, upgrades []Upgrade) {
 	// Register all explicit appUpgrades
 	for _, upgrade := range upgrades {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		ref := upgrade
 		handler := CreateUpgradeHandler(ref.UpgradeStrategy, app)
-		app.UpgradeKeeper.SetUpgradeHandler(ref.UpgradeName, handler)
+		app.Keepers().UpgradeKeeper.SetUpgradeHandler(ref.UpgradeName, handler)
 	}
 }
 
-func AttemptUpgradeStoreLoaders(app *provenance.App, upgrades []Upgrade) {
+func AttemptUpgradeStoreLoaders(app StoreLoaderUpgrader, k *keepers.AppKeepers, upgrades []Upgrade) {
 	// Use the dump of $home/data/upgrade-info.json:{"name":"$plan","height":321654} to determine
 	// if we load a store upgrade from the handlers. No file == no error from read func.
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	upgradeInfo, err := k.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
 	}
 
 	// Currently in an upgrade hold for this block.
 	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight()+1 {
-		if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		if k.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 			app.Logger().Info("Skipping upgrade based on height",
 				"plan", upgradeInfo.Name,
 				"upgradeHeight", upgradeInfo.Height,
@@ -91,7 +91,7 @@ func AttemptUpgradeStoreLoaders(app *provenance.App, upgrades []Upgrade) {
 
 // GetUpgradeStoreLoader creates an StoreLoader for use in an upgrade.
 // Returns nil if no upgrade info is found or the upgrade doesn't need a store loader.
-func GetUpgradeStoreLoader(app *provenance.App, info upgradetypes.Plan, upgrades []Upgrade) baseapp.StoreLoader {
+func GetUpgradeStoreLoader(app StoreLoaderUpgrader, info upgradetypes.Plan, upgrades []Upgrade) baseapp.StoreLoader {
 	upgrade, found := FindUpgrade(info.Name, upgrades)
 	if !found {
 		return nil

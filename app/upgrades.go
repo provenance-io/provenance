@@ -15,6 +15,7 @@ import (
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 
+	"github.com/provenance-io/provenance/app/navs"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
@@ -108,7 +109,7 @@ var upgrades = map[string]appUpgrade{
 			setupICQ(ctx, app)
 			updateMaxSupply(ctx, app)
 
-			addMarkerNavs(ctx, app, GetPioMainnet1DenomToNav())
+			addMarkerNavs(ctx, app, navs.GetPioMainnet1DenomToNav())
 
 			setExchangeParams(ctx, app)
 			updateIbcMarkerDenomMetadata(ctx, app)

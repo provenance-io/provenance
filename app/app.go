@@ -18,7 +18,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -94,6 +93,7 @@ import (
 
 	"github.com/provenance-io/provenance/app/keepers"
 	appparams "github.com/provenance-io/provenance/app/params"
+	appupgrades "github.com/provenance-io/provenance/app/upgrades"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -124,6 +124,13 @@ import (
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
+
+	v_1_17_0 "github.com/provenance-io/provenance/app/upgrades/v1.17.0"
+	v_1_17_0_rc1 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc1"
+	v_1_17_0_rc2 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc2"
+	v_1_17_0_rc3 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc3"
+	v_1_18_0 "github.com/provenance-io/provenance/app/upgrades/v1.18.0"
+	v_1_18_0_rc1 "github.com/provenance-io/provenance/app/upgrades/v1.18.0/rc1"
 
 	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 )
@@ -208,6 +215,15 @@ var (
 		rewardtypes.ModuleName:    nil,
 		triggertypes.ModuleName:   nil,
 		oracletypes.ModuleName:    nil,
+	}
+
+	Upgrades = []appupgrades.Upgrade{
+		v_1_17_0_rc1.Upgrade,
+		v_1_17_0_rc2.Upgrade,
+		v_1_17_0_rc3.Upgrade,
+		v_1_17_0.Upgrade,
+		v_1_18_0_rc1.Upgrade,
+		v_1_18_0.Upgrade,
 	}
 )
 
@@ -622,43 +638,8 @@ func New(
 	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
 
 	// Add upgrade plans for each release. This must be done before the baseapp seals via LoadLatestVersion() down below.
-	InstallCustomUpgradeHandlers(app)
-
-	// Use the dump of $home/data/upgrade-info.json:{"name":"$plan","height":321654} to determine
-	// if we load a store upgrade from the handlers. No file == no error from read func.
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(err)
-	}
-
-	// Currently in an upgrade hold for this block.
-	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight()+1 {
-		if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-			app.Logger().Info("Skipping upgrade based on height",
-				"plan", upgradeInfo.Name,
-				"upgradeHeight", upgradeInfo.Height,
-				"lastHeight", app.LastBlockHeight(),
-			)
-		} else {
-			app.Logger().Info("Managing upgrade",
-				"plan", upgradeInfo.Name,
-				"upgradeHeight", upgradeInfo.Height,
-				"lastHeight", app.LastBlockHeight(),
-			)
-			// See if we have a custom store loader to use for upgrades.
-			storeLoader := GetUpgradeStoreLoader(app, upgradeInfo)
-			if storeLoader != nil {
-				app.SetStoreLoader(storeLoader)
-			}
-		}
-	}
-	// --
-
-	if loadLatest {
-		if err := app.LoadLatestVersion(); err != nil {
-			tmos.Exit(err.Error())
-		}
-	}
+	appupgrades.InstallCustomUpgradeHandlers(app, Upgrades)
+	appupgrades.AttemptUpgradeStoreLoaders(app, app.Keepers(), Upgrades)
 
 	return app
 }
@@ -891,4 +872,8 @@ func (app *App) ModuleManager() *module.Manager {
 
 func (app *App) Configurator() module.Configurator {
 	return app.configurator
+}
+
+func (app *App) Keepers() *keepers.AppKeepers {
+	return &app.AppKeepers
 }

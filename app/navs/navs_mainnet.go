@@ -1,4 +1,4 @@
-package app
+package navs
 
 import (
 	"github.com/cosmos/cosmos-sdk/types"

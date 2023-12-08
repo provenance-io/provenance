@@ -1,13 +1,27 @@
 package upgrades
 
 import (
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	provenance "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/app/keepers"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
-type UpgradeStrategy = func(ctx sdk.Context, app *provenance.App, vm module.VersionMap) (module.VersionMap, error)
+type AppUpgrader interface {
+	ModuleManager() *module.Manager
+	Configurator() module.Configurator
+	Keepers() *keepers.AppKeepers
+}
+
+type StoreLoaderUpgrader interface {
+	Logger() log.Logger
+	LastBlockHeight() int64
+	SetStoreLoader(loader baseapp.StoreLoader)
+}
+
+type UpgradeStrategy = func(ctx sdk.Context, app AppUpgrader, vm module.VersionMap) (module.VersionMap, error)
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal
 // must have written, in order for the state migration to go smoothly.
