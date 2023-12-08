@@ -133,7 +133,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	s.Assert().ErrorContains(err, "spendable balance 0jackthecat is smaller than 10jackthecat: insufficient funds")
 
 	// Account has enough funds to pay account, but not enough to sweep remaining coins
-	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))), "initial fund")
+	s.Require().NoError(testutil.FundAccount(ctx, app.BankKeeper, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))), "initial fund")
 	feeDist = make(map[string]sdk.Coins)
 	feeDist[addrs[1].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	remainingCoins = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))
@@ -145,7 +145,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	s.Assert().Equal(balances.String(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10), stakeCoin).String())
 
 	// Account has enough to pay funds to account and to sweep the remaining coins
-	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))), "followup fund")
+	s.Require().NoError(testutil.FundAccount(ctx, app.BankKeeper, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))), "followup fund")
 	feeDist = make(map[string]sdk.Coins)
 	feeDist[addrs[1].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	remainingCoins = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))
@@ -157,7 +157,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	s.Assert().Equal(balances.String(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 20), stakeCoin).String())
 
 	// Account has enough to pay funds to account, module, and to sweep the remaining coins
-	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 21))), "final fund")
+	s.Require().NoError(testutil.FundAccount(ctx, app.BankKeeper, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 21))), "final fund")
 	feeDist = make(map[string]sdk.Coins)
 	feeDist[""] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	feeDist[addrs[1].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))

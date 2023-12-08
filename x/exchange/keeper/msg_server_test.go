@@ -171,7 +171,7 @@ func (s *TestSuite) eventHoldReleased(addr sdk.AccAddress, amount string) sdk.Ev
 // requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
-		return testutil.FundAccount(s.app.BankKeeper, s.ctx, addr, s.coins(coins))
+		return testutil.FundAccount(s.ctx, s.app.BankKeeper, addr, s.coins(coins))
 	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 

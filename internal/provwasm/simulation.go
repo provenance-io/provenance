@@ -179,7 +179,7 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 		bk.SetSendEnabled(ctx, denom, true)
 
 		// fund the node account to do all of these txs
-		fundErr := testutil.FundAccount(bk, ctx, node.Address, sdk.NewCoins(sdk.Coin{
+		fundErr := testutil.FundAccount(ctx, bk, node.Address, sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
 			Amount: sdkmath.NewInt(1_000_000_000_000_000),
 		}))

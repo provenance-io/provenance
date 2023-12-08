@@ -15,7 +15,7 @@ func (s *KeeperTestSuite) TestCreateRewardProgramTransaction() {
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 100)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 200)
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000))), "funding account")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000))), "funding account")
 
 	msg := types.NewMsgCreateRewardProgramRequest(
 		"title",

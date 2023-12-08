@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
@@ -104,7 +105,7 @@ func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Accoun
 	for _, account := range accounts {
 		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
 		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		err := testutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins)
+		err := testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins)
 		s.Require().NoError(err)
 	}
 

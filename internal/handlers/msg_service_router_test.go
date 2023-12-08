@@ -276,7 +276,7 @@ func TestFailedTx(tt *testing.T) {
 	})
 
 	// Give acct1 150000stake back.
-	require.NoError(tt, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(),
+	require.NoError(tt, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(),
 		sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))),
 		fmt.Sprintf("funding acct1 with %s", gasFeesString))
 
@@ -921,7 +921,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	blockTime := ctx.BlockTime()
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(NHash, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
@@ -976,7 +976,7 @@ func TestRewardsProgramStart(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
@@ -1043,7 +1043,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	rewardProgram := *rewardtypes.NewMsgCreateRewardProgramRequest(
@@ -1200,7 +1200,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
@@ -1338,7 +1338,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
@@ -1497,7 +1497,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
@@ -1690,7 +1690,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
@@ -1863,7 +1863,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
@@ -2001,7 +2001,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
@@ -2088,7 +2088,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
@@ -2193,7 +2193,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 
 	// tx with a fee associated with msg type and account has funds
@@ -2279,7 +2279,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
@@ -2392,7 +2392,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct2.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct2.GetAddress(), fundCoins),
 		"funding acct2 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
@@ -2520,7 +2520,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
@@ -2642,7 +2642,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -2756,8 +2756,8 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct3.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct3.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
 		ContentFromProposalType("title", "description", govtypesv1beta1.ProposalTypeText),
@@ -2874,7 +2874,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(
@@ -3002,7 +3002,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, acct1.GetAddress(), fundCoins),
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
 		"funding acct1 with 290500010nhash")
 	coinsPos := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000000))
 	msg, err := govtypesv1beta1.NewMsgSubmitProposal(

@@ -664,7 +664,7 @@ func (s *KeeperTestSuite) TestGetAllRewardProgramsEmpty() {
 }
 
 func (s *KeeperTestSuite) TestCreateRewardProgram() {
-	testutil.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000000000)))
+	testutil.FundAccount(s.ctx, s.app.BankKeeper, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000000000)))
 
 	err := s.app.RewardKeeper.CreateRewardProgram(s.ctx, types.RewardProgram{})
 	s.Assert().Error(err)

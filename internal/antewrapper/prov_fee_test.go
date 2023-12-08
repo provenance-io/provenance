@@ -33,7 +33,7 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorChecksFunds() {
 	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 	s.Require().NoError(err, "funding account with %s", coins)
 	s.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "should have the new balance after funding account")
 
@@ -53,7 +53,7 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorChecksFunds() {
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	plusCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_000))
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, plusCoins)
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, plusCoins)
 	s.Require().NoError(err, "funding account with %s", plusCoins)
 	s.Require().Equal(coins.Add(plusCoins...), s.app.BankKeeper.GetAllBalances(s.ctx, addr1), "Balance before tx")
 	_, err = antehandler(s.ctx, tx, false)
@@ -91,7 +91,7 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorAdditionalFees() {
 	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, coins)
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, coins)
 	s.Require().NoError(err, "funding account with 10stake")
 
 	decorators := []sdk.AnteDecorator{pioante.NewFeeMeterContextDecorator(), pioante.NewProvenanceDeductFeeDecorator(s.app.AccountKeeper, s.app.BankKeeper, nil, s.app.MsgFeesKeeper)}
@@ -110,7 +110,7 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorAdditionalFees() {
 
 	// Set account with sufficient funds for base fees and but not additional fees
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_000)))
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 200_000)))
 	s.Require().NoError(err, "funding account with 200000stake")
 
 	s.Run("insufficient funds for just additional fees", func() {
@@ -127,7 +127,7 @@ func (s *AnteTestSuite) TestProvenanceDeductFeeDecoratorAdditionalFees() {
 	// set gas fee and msg fees (steak)
 	// Set account with sufficient funds
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("steak", 200)))
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("steak", 200)))
 	s.Require().NoError(err, "funding account with 200steak")
 
 	s.Run("sufficient funds", func() {

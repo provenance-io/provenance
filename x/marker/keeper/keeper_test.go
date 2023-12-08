@@ -93,7 +93,7 @@ func TestExistingAccounts(t *testing.T) {
 
 	// prefund the marker address so an account gets created before the marker does.
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(existingBalance)), "funding account")
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, addr, sdk.NewCoins(existingBalance)), "funding account")
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
 	// Creating a marker over an account with zero sequence is fine.
@@ -419,7 +419,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
 	// Set an escrow balance
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1))), "funding account")
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, addr, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1))), "funding account")
 	// Fails because there are coins in escrow.
 	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
 
@@ -490,7 +490,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	existingSupply := sdk.NewInt64Coin("testcoin", 10000)
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
 
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding account")
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, user, sdk.NewCoins(existingSupply)), "funding account")
 
 	//prevSupply := app.BankKeeper.GetSupply(ctx, "testcoin")
 	//app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.Amount.Add(existingSupply.Amount)))
@@ -804,7 +804,7 @@ func TestMarkerFeeGrant(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, mac)
 
 	existingSupply := sdk.NewInt64Coin("testcoin", 10000)
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding accont")
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, user, sdk.NewCoins(existingSupply)), "funding accont")
 
 	allowance, err := types.NewMsgGrantAllowance(
 		"testcoin",
@@ -835,7 +835,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 
 	// prefund the marker address so an account gets created before the marker does.
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(existingBalance)), "funding account")
+	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, addr, sdk.NewCoins(existingBalance)), "funding account")
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
 	// Creating a marker over an account with zero sequence is fine.

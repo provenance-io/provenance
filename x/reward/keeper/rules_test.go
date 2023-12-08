@@ -91,7 +91,7 @@ func (s *KeeperTestSuite) TestProcessTransactions() {
 	s.app.RewardKeeper.SetStakingKeeper(MockStakingKeeper{})
 
 	// Create a reward program
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddr,
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, s.accountAddr,
 		sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000000))), "funding accountAddr")
 	minDel := sdk.NewInt64Coin("nhash", 1)
 	maxDel := sdk.NewInt64Coin("nhash", 40)

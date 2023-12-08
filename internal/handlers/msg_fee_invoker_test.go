@@ -66,13 +66,13 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 900_000))), "fund account")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 900_000))), "fund account")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().ErrorContains(err, "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "feeChargeFn 2")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 2")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 100_000))), "fund account again")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 100_000))), "fund account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().NoError(err, "feeChargeFn 3")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
@@ -106,13 +106,13 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	})
 	s.Require().NoError(err, "NewAdditionalMsgFeeHandler")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
 	coins, _, err := feeChargeFn(s.ctx, false)
 	s.Require().ErrorContains(err, "spendable balance 0atom is smaller than 20000atom: insufficient funds", "feeChargeFn 1")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(NHash, 1000000))), "funding account again")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(NHash, 1000000))), "funding account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().Nil(err, "Got error when should have successfully paid all msg fees and swept remaining base fees")
 	s.Require().True(coins.IsEqual(sdk.Coins{sdk.NewInt64Coin(NHash, 1000000), sdk.NewInt64Coin("atom", 20000)}))
@@ -245,7 +245,7 @@ func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coin
 	})
 	s.txBuilder.SetFeeGranter(acct2.GetAddress())
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct2.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
 
 	testTx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err, "CreateTestTx")

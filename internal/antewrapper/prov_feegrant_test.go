@@ -54,11 +54,11 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 	priv5, _, addr5 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
-	err := testutil.FundAccount(s.app.BankKeeper, s.ctx, addr1, []sdk.Coin{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)})
+	err := testutil.FundAccount(s.ctx, s.app.BankKeeper, addr1, []sdk.Coin{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)})
 	s.Require().NoError(err, "funding account 1")
 
 	// Set addr2 with more funds
-	err = testutil.FundAccount(s.app.BankKeeper, s.ctx, addr2, []sdk.Coin{sdk.NewInt64Coin(sdk.DefaultBondDenom, defaultGas*10-1)})
+	err = testutil.FundAccount(s.ctx, s.app.BankKeeper, addr2, []sdk.Coin{sdk.NewInt64Coin(sdk.DefaultBondDenom, defaultGas*10-1)})
 	s.Require().NoError(err, "funding account 2")
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)

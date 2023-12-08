@@ -250,7 +250,7 @@ func (s *UpgradeTestSuite) CreateAndFundAccount(coin sdk.Coin) sdk.AccAddress {
 	key2 := secp256k1.GenPrivKey()
 	pub2 := key2.PubKey()
 	addr2 := sdk.AccAddress(pub2.Address())
-	s.LogIfError(testutil.FundAccount(s.app.BankKeeper, s.ctx, addr2, sdk.Coins{coin}), "FundAccount(..., %q)", coin.String())
+	s.LogIfError(testutil.FundAccount(s.ctx, s.app.BankKeeper, addr2, sdk.Coins{coin}), "FundAccount(..., %q)", coin.String())
 	return addr2
 }
 

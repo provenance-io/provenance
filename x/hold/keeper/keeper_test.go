@@ -161,7 +161,7 @@ func (s *TestSuite) setHoldCoinAmountRaw(store storetypes.KVStore, addr sdk.AccA
 // requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
-		return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, s.coins(coins))
+		return testutil.FundAccount(s.sdkCtx, s.app.BankKeeper, addr, s.coins(coins))
 	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 
@@ -1552,7 +1552,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 				amt := coins(action.fund)
 				logf(step, "Adding funds: %s", amtOf(amt))
 				reqNoPanicNoErr(func() error {
-					return testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, addr, amt)
+					return testutil.FundAccount(s.sdkCtx, s.app.BankKeeper, addr, amt)
 				}, "FundAccount(addr, %q)", amt)
 			}
 			if action.delegate < 0 {

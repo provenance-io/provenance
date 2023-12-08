@@ -429,7 +429,7 @@ func Dispatch(
 	}
 	// fund account with nhash for additional fees, if the account exists (100m stake)
 	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
-		err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
+		err = testutil.FundAccount(ctx, bk, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
 			Amount: sdkmath.NewInt(100_000_000_000_000),
 		}))
