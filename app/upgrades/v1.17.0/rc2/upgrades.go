@@ -16,10 +16,14 @@ func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.Versio
 		return nil, err
 	}
 
-	return PerformUpgrade(ctx, app.Keepers(), newVM)
+	if err = PerformUpgrade(ctx, app.Keepers()); err != nil {
+		return nil, err
+	}
+
+	return newVM, err
 }
 
-func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers, vm module.VersionMap) (module.VersionMap, error) {
+func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers) error {
 	common.UpdateIbcMarkerDenomMetadata(ctx, k)
-	return vm, nil
+	return nil
 }

@@ -22,10 +22,14 @@ func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.Versio
 		return nil, err
 	}
 
-	return PerformUpgrade(ctx, app.Keepers(), newVM)
+	if err = PerformUpgrade(ctx, app.Keepers()); err != nil {
+		return nil, err
+	}
+
+	return newVM, nil
 }
 
-func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers, vm module.VersionMap) (module.VersionMap, error) {
+func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers) error {
 	// set ibchoooks defaults (no allowed async contracts)
 	k.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
 
@@ -33,7 +37,7 @@ func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers, vm module.VersionMap
 	SetupICQ(ctx, k)
 	UpdateMaxSupply(ctx, k)
 	SetExchangeParams(ctx, k)
-	return vm, nil
+	return nil
 }
 
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.

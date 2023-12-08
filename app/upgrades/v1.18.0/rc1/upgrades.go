@@ -15,9 +15,13 @@ func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.Versio
 		return nil, err
 	}
 
-	return PerformUpgrade(ctx, app.Keepers(), newVM)
+	if err = PerformUpgrade(ctx, app.Keepers()); err != nil {
+		return nil, err
+	}
+
+	return newVM, nil
 }
 
-func PerformUpgrade(_ sdk.Context, _ *keepers.AppKeepers, vm module.VersionMap) (module.VersionMap, error) {
-	return vm, nil
+func PerformUpgrade(_ sdk.Context, _ *keepers.AppKeepers) error {
+	return nil
 }

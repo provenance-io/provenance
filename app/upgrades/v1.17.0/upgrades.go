@@ -22,18 +22,26 @@ func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.Versio
 		return nil, err
 	}
 
-	if newVM, err = rc1.PerformUpgrade(ctx, app.Keepers(), newVM); err != nil {
-		return nil, err
-	}
-	if newVM, err = rc2.PerformUpgrade(ctx, app.Keepers(), newVM); err != nil {
-		return nil, err
-	}
-	if newVM, err = rc3.PerformUpgrade(ctx, app.Keepers(), newVM); err != nil {
+	if err = PerformUpgrade(ctx, app.Keepers()); err != nil {
 		return nil, err
 	}
 
-	AddMarkerNavs(ctx, app.Keepers(), navs.GetPioMainnet1DenomToNav())
 	return newVM, nil
+}
+
+func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers) (err error) {
+	if err = rc1.PerformUpgrade(ctx, k); err != nil {
+		return err
+	}
+	if err = rc2.PerformUpgrade(ctx, k); err != nil {
+		return err
+	}
+	if err = rc3.PerformUpgrade(ctx, k); err != nil {
+		return err
+	}
+
+	AddMarkerNavs(ctx, k, navs.GetPioMainnet1DenomToNav())
+	return nil
 }
 
 // addMarkerNavs adds navs to existing markers
