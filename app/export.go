@@ -97,13 +97,19 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 	/* Handle fee distribution state. */
 
 	// withdraw all validator commission
-	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+	ierr := app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
 		return false
 	})
+	if ierr != nil {
+		panic(fmt.Errorf("could not iterate validators to withdraw commission: %w", err))
+	}
 
 	// withdraw all delegator rewards
-	dels := app.StakingKeeper.GetAllDelegations(ctx)
+	dels, ierr := app.StakingKeeper.GetAllDelegations(ctx)
+	if ierr != nil {
+		panic(fmt.Errorf("could not get all delegations: %w", err))
+	}
 	for _, delegation := range dels {
 		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		if err != nil {
@@ -126,7 +132,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 	ctx = ctx.WithBlockHeight(0)
 
 	// reinitialize all validators
-	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+	ierr = app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		// donate any unwithdrawn outstanding reward fraction tokens to the community pool
 		scraps := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
 		feePool := app.DistrKeeper.GetFeePool(ctx)
@@ -138,6 +144,9 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 		}
 		return false
 	})
+	if ierr != nil {
+		panic(fmt.Errorf("could not iterate validators to reinitialize them: %w", err))
+	}
 
 	// reinitialize all delegations
 	for _, del := range dels {
@@ -164,22 +173,34 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 	/* Handle staking state. */
 
 	// iterate through redelegations, reset creation height
-	app.StakingKeeper.IterateRedelegations(ctx, func(_ int64, red stakingtypes.Redelegation) (stop bool) {
+	ierr = app.StakingKeeper.IterateRedelegations(ctx, func(_ int64, red stakingtypes.Redelegation) (stop bool) {
 		for i := range red.Entries {
 			red.Entries[i].CreationHeight = 0
 		}
-		app.StakingKeeper.SetRedelegation(ctx, red)
+		err := app.StakingKeeper.SetRedelegation(ctx, red)
+		if err != nil {
+			panic(fmt.Errorf("could not set redelegation for %s: %w", red.DelegatorAddress, err))
+		}
 		return false
 	})
+	if ierr != nil {
+		panic(fmt.Errorf("could not iterate redelegations: %w", err))
+	}
 
 	// iterate through unbonding delegations, reset creation height
-	app.StakingKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd stakingtypes.UnbondingDelegation) (stop bool) {
+	ierr = app.StakingKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd stakingtypes.UnbondingDelegation) (stop bool) {
 		for i := range ubd.Entries {
 			ubd.Entries[i].CreationHeight = 0
 		}
-		app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
+		err := app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
+		if err != nil {
+			panic(fmt.Errorf("could not set unbonding delegation for %s: %w", ubd.DelegatorAddress, err))
+		}
 		return false
 	})
+	if ierr != nil {
+		panic(fmt.Errorf("could not iterate unbonding delegations: %w", err))
+	}
 
 	// Iterate through validators by power descending, reset bond heights, and
 	// update bond intra-tx counters.
@@ -189,9 +210,9 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
-		validator, found := app.StakingKeeper.GetValidator(ctx, addr)
-		if !found {
-			panic("expected validator, not found")
+		validator, err := app.StakingKeeper.GetValidator(ctx, addr)
+		if err != nil {
+			panic(fmt.Errorf("validator %s not found: %w", validator, err))
 		}
 
 		validator.UnbondingHeight = 0
@@ -199,7 +220,10 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 			validator.Jailed = true
 		}
 
-		app.StakingKeeper.SetValidator(ctx, validator)
+		err = app.StakingKeeper.SetValidator(ctx, validator)
+		if err != nil {
+			panic(fmt.Errorf("could not set validator %s: %w", validator.OperatorAddress, err))
+		}
 		counter++
 	}
 

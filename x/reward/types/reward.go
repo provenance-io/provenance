@@ -353,30 +353,36 @@ func (ad *ActionDelegate) GetBuilder() ActionBuilder {
 
 func (ad *ActionDelegate) getTokensFromValidator(ctx sdk.Context, provider KeeperProvider, validatorAddr sdk.ValAddress, delegator sdk.AccAddress) (sdkmath.LegacyDec, bool) {
 	stakingKeeper := provider.GetStakingKeeper()
-	delegation, found := stakingKeeper.GetDelegation(ctx, delegator, validatorAddr)
-	if !found {
-		return sdkmath.LegacyNewDec(0), found
+	delegation, err := stakingKeeper.GetDelegation(ctx, delegator, validatorAddr)
+	if err != nil {
+		return sdkmath.LegacyNewDec(0), false
 	}
-	validator, found := stakingKeeper.GetValidator(ctx, validatorAddr)
-	if !found {
-		return sdkmath.LegacyNewDec(0), found
+	validator, err := stakingKeeper.GetValidator(ctx, validatorAddr)
+	if err != nil {
+		return sdkmath.LegacyNewDec(0), false
 	}
 	tokens := validator.TokensFromShares(delegation.GetShares())
-	return tokens, found
+	return tokens, true
 }
 
 // The percentile is dictated by the powers of the validators
 // If there are 5 validators and the first validator matches then that validator is in the 80th percentile
 // If there is 1 validator then that validator is in the 0 percentile.
 func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider KeeperProvider, validator sdk.ValAddress) sdkmath.LegacyDec {
-	validators := provider.GetStakingKeeper().GetBondedValidatorsByPower(ctx)
-	ourPower := provider.GetStakingKeeper().GetLastValidatorPower(ctx, validator)
+	validators, err := provider.GetStakingKeeper().GetBondedValidatorsByPower(ctx)
+	if err != nil {
+		return sdkmath.LegacyNewDec(0)
+	}
+	ourPower, err := provider.GetStakingKeeper().GetLastValidatorPower(ctx, validator)
+	if err != nil {
+		return sdkmath.LegacyNewDec(0)
+	}
 	var numBelow int64
 	numValidators := int64(len(validators))
 	for i := int64(0); i < numValidators; i++ {
 		v := validators[i]
-		power := provider.GetStakingKeeper().GetLastValidatorPower(ctx, v.GetOperator())
-		if power < ourPower {
+		power, err := provider.GetStakingKeeper().GetLastValidatorPower(ctx, v.GetOperator())
+		if err != nil || power < ourPower {
 			numBelow++
 		}
 	}
@@ -544,8 +550,8 @@ func (atd *ActionVote) PostEvaluate(ctx sdk.Context, provider KeeperProvider, st
 	// get the address that voted, and see if the multiplier needs to be applied if the vote came from a validator.
 	addressVoting := evaluationResult.Address
 	valAddrStr := sdk.ValAddress(addressVoting)
-	_, found := provider.GetStakingKeeper().GetValidator(ctx, valAddrStr)
-	if found && atd.ValidatorMultiplier > 0 {
+	_, err := provider.GetStakingKeeper().GetValidator(ctx, valAddrStr)
+	if err == nil && atd.ValidatorMultiplier > 0 {
 		// shares can be negative, as per requirements, and this may lead to negative shares with multiplier.
 		evaluationResult.Shares *= int64(atd.ValidatorMultiplier)
 	}
@@ -598,18 +604,17 @@ func (qa *QualifyingAction) GetRewardAction(ctx sdk.Context) (RewardAction, erro
 // return total coin delegated and boolean to indicate if any delegations are at all present.
 func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.AccAddress) (sdk.Coin, bool) {
 	stakingKeeper := provider.GetStakingKeeper()
-	delegations := stakingKeeper.GetAllDelegatorDelegations(ctx, delegator)
+	delegations, err := stakingKeeper.GetAllDelegatorDelegations(ctx, delegator)
 	// if no delegations then return not found
-	if len(delegations) == 0 {
+	if err != nil || len(delegations) == 0 {
 		return sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 0), false
 	}
 
 	sum := sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 0)
 
 	for _, delegation := range delegations {
-		val, found := stakingKeeper.GetValidator(ctx, delegation.GetValidatorAddr())
-
-		if found {
+		val, err := stakingKeeper.GetValidator(ctx, delegation.GetValidatorAddr())
+		if err == nil {
 			tokens := val.TokensFromShares(delegation.GetShares()).TruncateInt()
 			sum = sum.Add(sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, tokens))
 		}

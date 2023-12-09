@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -453,7 +454,7 @@ func (m MockAccountKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	return nil
 }
 
-func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation {
+func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) ([]stakingtypes.Delegation, error) {
 	if delegator.String() == "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h" || delegator.String() == getOperatorBech32AddressForTestValidator().String() {
 		return []stakingtypes.Delegation{
 			{
@@ -461,35 +462,34 @@ func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator
 				ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
 				Shares:           sdkmath.LegacyNewDec(3),
 			},
-		}
+		}, nil
 	}
 	return []stakingtypes.Delegation{
 		{},
-	}
-
+	}, fmt.Errorf("mock error: delegator %s not found", delegator)
 }
 
-func (m MockStakingKeeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool) {
+func (m MockStakingKeeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, err error) {
 	if delAddr.String() != "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h" || valAddr.String() != "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun" {
-		return stakingtypes.Delegation{}, false
+		return stakingtypes.Delegation{}, fmt.Errorf("mock error: delegator %s not found for %s", delAddr, valAddr)
 	}
 
 	return stakingtypes.Delegation{
 		DelegatorAddress: "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
 		ValidatorAddress: "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun",
 		Shares:           sdkmath.LegacyNewDec(3),
-	}, true
+	}, nil
 }
 
-func (m MockStakingKeeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power int64) {
-	validators := m.GetBondedValidatorsByPower(ctx)
+func (m MockStakingKeeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power int64, err error) {
+	validators, _ := m.GetBondedValidatorsByPower(ctx)
 	for i, v := range validators {
 		power := int64(len(validators) - i)
 		if v.GetOperator().String() == operator.String() {
-			return power
+			return power, nil
 		}
 	}
-	return 0
+	return 0, fmt.Errorf("mock error: operator not found %s", operator)
 }
 
 func (s *KeeperTestSuite) createTestValidators(amount int) {
@@ -516,7 +516,8 @@ func (s *KeeperTestSuite) createTestValidators(amount int) {
 
 		// Create the delegations
 		bond := stakingtypes.NewDelegation(addrDels[i], valAddrs[i], sdkmath.LegacyNewDec(int64((i+1)*10)))
-		s.app.StakingKeeper.SetDelegation(s.ctx, bond)
+		err = s.app.StakingKeeper.SetDelegation(s.ctx, bond)
+		s.Require().NoError(err, "SetDelegation %s", bond)
 
 		// We want even validators to be bonded
 		if i%2 == 0 {
@@ -539,7 +540,7 @@ func getTestValidators(start, end int) []stakingtypes.Validator {
 	return validators
 }
 
-func (m MockStakingKeeper) GetBondedValidatorsByPower(ctx sdk.Context) []stakingtypes.Validator {
+func (m MockStakingKeeper) GetBondedValidatorsByPower(ctx sdk.Context) ([]stakingtypes.Validator, error) {
 	validatorAddress, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	validator, _ := stakingtypes.NewValidator(
 		validatorAddress,
@@ -550,19 +551,19 @@ func (m MockStakingKeeper) GetBondedValidatorsByPower(ctx sdk.Context) []staking
 	validators = append(validators, validator)
 	validators = append(validators, getTestValidators(4, 6)...)
 
-	return validators
+	return validators, nil
 }
 
-func (m MockStakingKeeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool) {
+func (m MockStakingKeeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error) {
 	validators := getTestValidators(0, 9)
 
 	for _, v := range validators {
 		if addr.Equals(v.GetOperator()) {
-			return v, true
+			return v, nil
 		}
 	}
 
-	return stakingtypes.Validator{}, false
+	return stakingtypes.Validator{}, fmt.Errorf("mock error: validator not fount %s", addr)
 }
 
 func (s *KeeperTestSuite) TestActionDelegateEvaluatePasses() {

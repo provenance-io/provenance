@@ -264,7 +264,8 @@ func (s *UpgradeTestSuite) CreateValidator(unbondedTime time.Time, status stakin
 	s.Require().NoError(err, "could not init new validator")
 	validator.UnbondingTime = unbondedTime
 	validator.Status = status
-	s.app.StakingKeeper.SetValidator(s.ctx, validator)
+	err = s.app.StakingKeeper.SetValidator(s.ctx, validator)
+	s.Require().NoError(err, "could not SetValidator ")
 	err = s.app.StakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
 	s.Require().NoError(err, "could not SetValidatorByConsAddr ")
 	err = s.app.StakingKeeper.AfterValidatorCreated(s.ctx, validator.GetOperator())
@@ -274,8 +275,8 @@ func (s *UpgradeTestSuite) CreateValidator(unbondedTime time.Time, status stakin
 
 // DelegateToValidator delegates to a validator in the app.
 func (s *UpgradeTestSuite) DelegateToValidator(valAddress sdk.ValAddress, delegatorAddress sdk.AccAddress, coin sdk.Coin) {
-	validator, found := s.app.StakingKeeper.GetValidator(s.ctx, valAddress)
-	s.Require().True(found, "GetValidator(%q)", valAddress.String())
+	validator, err := s.app.StakingKeeper.GetValidator(s.ctx, valAddress)
+	s.Require().NoError(err, "GetValidator(%q)", valAddress.String())
 	_, err := s.app.StakingKeeper.Delegate(s.ctx, delegatorAddress, coin.Amount, types.Unbonded, validator, true)
 	s.Require().NoError(err, "Delegate(%q, %q, unbonded, %q, true) error", delegatorAddress.String(), coin.String(), valAddress.String())
 }
@@ -501,7 +502,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	delegationCoinAmt := sdkmath.LegacyNewDec(delegationCoin.Amount.Int64())
 
 	s.Run("just one bonded validator", func() {
-		validators := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Require().Len(validators, 1, "GetAllValidators after setup")
 
 		expectedLogLines := []string{
@@ -510,7 +512,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
-		newValidators := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		newValidators, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Require().Len(newValidators, 1, "GetAllValidators after %s", runnerName)
 	})
 
@@ -520,7 +523,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		addr1Balance := s.app.BankKeeper.GetBalance(s.ctx, addr1, "stake")
 		s.DelegateToValidator(unbondedVal1.GetOperator(), addr1, delegationCoin)
 		s.Require().Equal(addr1Balance.Sub(delegationCoin), s.app.BankKeeper.GetBalance(s.ctx, addr1, "stake"), "addr1 should have less funds")
-		validators := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
@@ -531,10 +535,11 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
-		validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err = s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Assert().Len(validators, 1, "GetAllValidators after %s", runnerName)
-		ubd, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr1, unbondedVal1.GetOperator())
-		s.Assert().True(found, "GetUnbondingDelegation found")
+		ubd, err := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr1, unbondedVal1.GetOperator())
+		s.Assert().NoError(err, "GetUnbondingDelegation found")
 		if s.Assert().Len(ubd.Entries, 1, "UnbondingDelegation entries") {
 			s.Assert().Equal(delegationCoin.Amount, ubd.Entries[0].Balance, "UnbondingDelegation balance")
 		}
@@ -549,11 +554,12 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.DelegateToValidator(unbondedVal1.GetOperator(), addr2, delegationCoin)
 		s.Require().Equal(addr1Balance.Sub(delegationCoin), s.app.BankKeeper.GetBalance(s.ctx, addr1, "stake"), "addr1 should have less funds after delegation")
 		s.Require().Equal(addr2Balance.Sub(delegationCoin), s.app.BankKeeper.GetBalance(s.ctx, addr2, "stake"), "addr2 should have less funds after delegation")
-		var found bool
-		unbondedVal1, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal1.GetOperator())
-		s.Require().True(found, "Setup: GetValidator(unbondedVal1) found")
+		var err error
+		unbondedVal1, err = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal1.GetOperator())
+		s.Require().NoError(err, "Setup: GetValidator(unbondedVal1) found")
 		s.Require().Equal(delegationCoinAmt.Add(delegationCoinAmt), unbondedVal1.DelegatorShares, "Setup: unbondedVal1.DelegatorShares")
-		validators := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
@@ -565,15 +571,16 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, false, runnerName)
 
-		validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err = s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Assert().Len(validators, 1, "GetAllValidators after %s", runnerName)
-		ubd, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr1, unbondedVal1.GetOperator())
-		s.Assert().True(found, "GetUnbondingDelegation(addr1) found")
+		ubd, err := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr1, unbondedVal1.GetOperator())
+		s.Assert().NoError(err, "GetUnbondingDelegation(addr1) found")
 		if s.Assert().Len(ubd.Entries, 1, "GetUnbondingDelegation(addr1) entries") {
 			s.Assert().Equal(delegationCoin.Amount, ubd.Entries[0].Balance, "GetUnbondingDelegation(addr1) balance")
 		}
-		ubd, found = s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr2, unbondedVal1.GetOperator())
-		s.Assert().True(found, "GetUnbondingDelegation(addr2) found")
+		ubd, err = s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr2, unbondedVal1.GetOperator())
+		s.Assert().NoError(err, "GetUnbondingDelegation(addr2) found")
 		if s.Assert().Len(ubd.Entries, 1, "GetUnbondingDelegation(addr2) entries") {
 			s.Assert().Equal(delegationCoin.Amount, ubd.Entries[0].Balance, "GetUnbondingDelegation(addr2) balance")
 		}
@@ -584,18 +591,19 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		unbondedVal1 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
 		s.DelegateToValidator(unbondedVal1.GetOperator(), addr1, delegationCoin)
 		s.DelegateToValidator(unbondedVal1.GetOperator(), addr2, delegationCoin)
-		var found bool
-		unbondedVal1, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal1.GetOperator())
-		s.Require().True(found, "Setup: GetValidator(unbondedVal1) found")
+		var err error
+		unbondedVal1, err = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal1.GetOperator())
+		s.Require().NoError(err, "Setup: GetValidator(unbondedVal1) found")
 		s.Require().Equal(delegationCoinAmt.Add(delegationCoinAmt), unbondedVal1.DelegatorShares, "Setup: shares delegated to unbondedVal1")
 
 		unbondedVal2 := s.CreateValidator(s.startTime.Add(-29*24*time.Hour), stakingtypes.Unbonded)
 		s.DelegateToValidator(unbondedVal2.GetOperator(), addr1, delegationCoin)
 		s.DelegateToValidator(unbondedVal2.GetOperator(), addr2, delegationCoin)
-		unbondedVal2, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2.GetOperator())
-		s.Require().True(found, "Setup: GetValidator(unbondedVal2) found")
+		unbondedVal2, err = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2.GetOperator())
+		s.Require().NoError(err, "Setup: GetValidator(unbondedVal2) found")
 		s.Require().Equal(delegationCoinAmt.Add(delegationCoinAmt), unbondedVal2.DelegatorShares, "Setup: shares delegated to unbondedVal2")
-		validators := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 2 unbonded")
 
 		expectedLogLines := []string{
@@ -610,15 +618,16 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, false, runnerName)
 
-		validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err = s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Assert().Len(validators, 1, "GetAllValidators after %s", runnerName)
-		ubd, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr1, unbondedVal1.GetOperator())
-		s.Assert().True(found, "GetUnbondingDelegation(addr1) found")
+		ubd, err := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr1, unbondedVal1.GetOperator())
+		s.Assert().NoError(err, "GetUnbondingDelegation(addr1) found")
 		if s.Assert().Len(ubd.Entries, 1, "GetUnbondingDelegation(addr1) entries") {
 			s.Assert().Equal(delegationCoin.Amount, ubd.Entries[0].Balance, "GetUnbondingDelegation(addr1) balance")
 		}
-		ubd, found = s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr2, unbondedVal1.GetOperator())
-		s.Assert().True(found, "GetUnbondingDelegation(addr2) found")
+		ubd, err = s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr2, unbondedVal1.GetOperator())
+		s.Assert().NoError(err, "GetUnbondingDelegation(addr2) found")
 		if s.Assert().Len(ubd.Entries, 1, "GetUnbondingDelegation(addr2) entries") {
 			s.Assert().Equal(delegationCoin.Amount, ubd.Entries[0].Balance, "GetUnbondingDelegation(addr2) balance")
 		}
@@ -629,17 +638,18 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		unbondedVal1 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
 		s.DelegateToValidator(unbondedVal1.GetOperator(), addr1, delegationCoin)
 		s.DelegateToValidator(unbondedVal1.GetOperator(), addr2, delegationCoin)
-		var found bool
-		unbondedVal1, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal1.GetOperator())
-		s.Require().True(found, "Setup: GetValidator(unbondedVal1) found")
+		var err error
+		unbondedVal1, err = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal1.GetOperator())
+		s.Require().NoError(err, "Setup: GetValidator(unbondedVal1) found")
 		s.Require().Equal(delegationCoinAmt.Add(delegationCoinAmt), unbondedVal1.DelegatorShares, "Setup: shares delegated to unbondedVal1")
 
 		unbondedVal2 := s.CreateValidator(s.startTime.Add(-20*24*time.Hour), stakingtypes.Unbonded)
 		s.DelegateToValidator(unbondedVal2.GetOperator(), addr1, delegationCoin)
-		unbondedVal2, found = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2.GetOperator())
-		s.Require().True(found, "Setup: GetValidator(unbondedVal2) found")
+		unbondedVal2, err = s.app.StakingKeeper.GetValidator(s.ctx, unbondedVal2.GetOperator())
+		s.Require().NoError(err, "Setup: GetValidator(unbondedVal2) found")
 		s.Require().Equal(delegationCoinAmt, unbondedVal2.DelegatorShares, "Setup: shares delegated to unbondedVal1")
-		validators := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 old unbonded")
 
 		expectedLogLines := []string{
@@ -656,15 +666,16 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, notExpectedLogLines, false, runnerName)
 
-		validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err = s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Assert().Len(validators, 2, "GetAllValidators after %s", runnerName)
-		ubd, found := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr1, unbondedVal1.GetOperator())
-		s.Assert().True(found, "GetUnbondingDelegation(addr1) found")
+		ubd, err := s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr1, unbondedVal1.GetOperator())
+		s.Assert().NoError(err, "GetUnbondingDelegation(addr1) found")
 		if s.Assert().Len(ubd.Entries, 1, "GetUnbondingDelegation(addr1) entries") {
 			s.Assert().Equal(delegationCoin.Amount, ubd.Entries[0].Balance, "GetUnbondingDelegation(addr1) balance")
 		}
-		ubd, found = s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr2, unbondedVal1.GetOperator())
-		s.Assert().True(found, "GetUnbondingDelegation(addr2) found")
+		ubd, err = s.app.StakingKeeper.GetUnbondingDelegation(s.ctx, addr2, unbondedVal1.GetOperator())
+		s.Assert().NoError(err, "GetUnbondingDelegation(addr2) found")
 		if s.Assert().Len(ubd.Entries, 1, "GetUnbondingDelegation(addr2) entries") {
 			s.Assert().Equal(delegationCoin.Amount, ubd.Entries[0].Balance, "GetUnbondingDelegation(addr2) balance")
 		}
@@ -673,7 +684,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	s.Run("unbonded without delegators", func() {
 		// create a unbonded validator with out delegators, should not remove
 		unbondedVal1 := s.CreateValidator(s.startTime.Add(-30*24*time.Hour), stakingtypes.Unbonded)
-		validators := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err := s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 empty unbonded")
 
 		expectedLogLines := []string{
@@ -683,7 +695,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
-		validators = s.app.StakingKeeper.GetAllValidators(s.ctx)
+		validators, err = s.app.StakingKeeper.GetAllValidators(s.ctx)
+		s.Require().NoError(err, "GetAllValidators")
 		s.Assert().Len(validators, 3, "GetAllValidators after %s", runnerName)
 	})
 }

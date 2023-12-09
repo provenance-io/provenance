@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -59,10 +59,12 @@ func NewStakingRestrictionHooks(k *stakingkeeper.Keeper, opts RestrictionOptions
 
 // Verifies that the delegation would not cause the validator's voting power to exceed our staking distribution limits
 func (h StakingRestrictionHooks) AfterDelegationModified(ctx context.Context, _ sdk.AccAddress, valAddr sdk.ValAddress) error {
-	valCount := len(h.k.GetLastValidators(ctx))
+	vals, _ := h.k.GetLastValidators(ctx) // Ignoring error here to treat it as zero validators.
+	valCount := len(vals)
 
 	// do not bother with limits on networks this small (or under simulation).
-	if valCount < 4 || ctx.ChainID() == pioconfig.SimAppChainID {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if valCount < 4 || sdkCtx.ChainID() == pioconfig.SimAppChainID {
 		return nil
 	}
 
@@ -76,12 +78,12 @@ func (h StakingRestrictionHooks) AfterDelegationModified(ctx context.Context, _ 
 		maxValidatorPercent = h.opts.MinBondedCapPercent
 	}
 
-	oldPower := h.k.GetLastValidatorPower(ctx, valAddr)
-	validator, found := h.k.GetValidator(ctx, valAddr)
-	if found {
+	oldPower, _ := h.k.GetLastValidatorPower(ctx, valAddr) // Ignoring error here to treat the old power as zero.
+	validator, err := h.k.GetValidator(ctx, valAddr)
+	if err == nil {
 		power := validator.GetConsensusPower(h.k.PowerReduction(ctx))
-		currentBond := h.k.TotalBondedTokens(ctx)
-		maxBond := currentBond.Quo(math.NewInt(100)).MulRaw(int64(maxValidatorPercent * 100))
+		currentBond, _ := h.k.TotalBondedTokens(ctx) // Ignoring error here to treat it as zero.
+		maxBond := currentBond.Quo(sdkmath.NewInt(100)).MulRaw(int64(maxValidatorPercent * 100))
 
 		// if the power of this validator is increasing and it is over the maximum bonded token amount then we error out this transaction.
 		if power > oldPower && validator.GetBondedTokens().GT(maxBond) {
@@ -139,7 +141,7 @@ func (h StakingRestrictionHooks) BeforeDelegationRemoved(_ context.Context, _ sd
 }
 
 // Implements sdk.ValidatorHooks
-func (h StakingRestrictionHooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdk.Dec) error {
+func (h StakingRestrictionHooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec) error {
 	return nil
 }
 
