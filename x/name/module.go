@@ -119,18 +119,6 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the distribution module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the distribution module.
-func (am AppModule) Route() sdk.Route {
-	// TODO[1760]: Delete the name Route() stuff.
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
-}
-
-// QuerierRoute returns the distribution module's querier route name.
-func (AppModule) QuerierRoute() string {
-	// TODO[1760]: Delete the name QuerierRoute.
-	return types.QuerierRoute
-}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))

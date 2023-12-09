@@ -130,21 +130,9 @@ func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// Route returns the message routing key for the marker module.
-func (am AppModule) Route() sdk.Route {
-	// TODO[1760]: app-module: Delete the marker Route() stuff.
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
-}
-
 // RegisterInvariants ensures the total supply in bankKeeper matches amount declared as total in marker configuration
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper, am.bankKeeper)
-}
-
-// QuerierRoute returns the query route for this module.
-func (am AppModule) QuerierRoute() string {
-	// TODO[1760]: app-module: Delete the marker QuerierRoute.
-	return types.QuerierRoute
 }
 
 // RegisterServices registers module services.

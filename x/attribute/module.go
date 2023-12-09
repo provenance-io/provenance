@@ -124,18 +124,6 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the attribute module.
-func (am AppModule) Route() sdk.Route {
-	// TODO[1760]: app-module: Delete the atttribute Route() stuff.
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
-}
-
-// QuerierRoute returns the query route for this module.
-func (am AppModule) QuerierRoute() string {
-	// TODO[1760]: app-module: Delete the attribute QuerierRoute.
-	return types.QuerierRoute
-}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))

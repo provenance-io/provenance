@@ -118,20 +118,8 @@ func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// Route returns the message routing key for the metadata module.
-func (am AppModule) Route() sdk.Route {
-	// TODO[1760]: app-module: Delete the metadata Route() stuff.
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
-}
-
 // RegisterInvariants does not register any invariants for the metadata module
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {
-}
-
-// QuerierRoute returns the query route for this module.
-func (am AppModule) QuerierRoute() string {
-	// TODO[1760]: app-module: Delete the metadata QuerierRoute.
-	return types.QuerierRoute
 }
 
 // RegisterServices registers module services.
