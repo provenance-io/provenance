@@ -24,12 +24,14 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
+// TODO[1760]: app-module: Migrate the metadata handler tests to the keeper.
+
 type MetadataHandlerTestSuite struct {
 	suite.Suite
 
 	app     *app.App
 	ctx     sdk.Context
-	handler sdk.Handler
+	handler func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
 
 	pubkey1   cryptotypes.PubKey
 	user1     string

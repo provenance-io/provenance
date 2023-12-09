@@ -33,7 +33,8 @@ type KeeperTestSuite struct {
 	app         *simapp.App
 	ctx         sdk.Context
 	queryClient types.QueryClient
-	handler     sdk.Handler
+	// TODO[1760]: app-module: get rid of this reward handler and call the desired keeper endpoints directly in the tests.
+	handler func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
 
 	accountAddr      sdk.AccAddress
 	accountKey       *secp256k1.PrivKey

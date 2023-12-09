@@ -29,12 +29,14 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
+// TODO[1760]: app-module: Migrate the marker handler tests to the keeper.
+
 type HandlerTestSuite struct {
 	suite.Suite
 
 	app     *app.App
 	ctx     sdk.Context
-	handler sdk.Handler
+	handler func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
 
 	pubkey1   cryptotypes.PubKey
 	user1     string

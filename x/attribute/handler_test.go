@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/golang/protobuf/proto"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -20,12 +20,14 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
+// TODO[1760]: app-module: Migrate the attribute handler tests to the keeper.
+
 type HandlerTestSuite struct {
 	suite.Suite
 
 	app     *app.App
 	ctx     sdk.Context
-	handler sdk.Handler
+	handler func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
 
 	pubkey1   cryptotypes.PubKey
 	user1     string
