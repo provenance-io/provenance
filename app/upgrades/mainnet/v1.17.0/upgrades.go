@@ -9,9 +9,9 @@ import (
 	"github.com/provenance-io/provenance/app/keepers"
 	navs "github.com/provenance-io/provenance/app/navs"
 	"github.com/provenance-io/provenance/app/upgrades"
-	rc1 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc1"
-	rc2 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc2"
-	rc3 "github.com/provenance-io/provenance/app/upgrades/v1.17.0/rc3"
+	rc1 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/rc1"
+	rc2 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/rc2"
+	rc3 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/rc3"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 

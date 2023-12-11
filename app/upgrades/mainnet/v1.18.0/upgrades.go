@@ -1,4 +1,4 @@
-package rc3
+package v1_18_0
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/provenance-io/provenance/app/keepers"
 	"github.com/provenance-io/provenance/app/upgrades"
-	"github.com/provenance-io/provenance/app/upgrades/v1.17.0/common"
+	rc1 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.18.0/rc1"
 )
 
 func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.VersionMap) (module.VersionMap, error) {
@@ -23,7 +23,6 @@ func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.Versio
 	return newVM, nil
 }
 
-func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers) error {
-	common.UpdateIbcMarkerDenomMetadata(ctx, k)
-	return nil
+func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers) (err error) {
+	return rc1.PerformUpgrade(ctx, k)
 }

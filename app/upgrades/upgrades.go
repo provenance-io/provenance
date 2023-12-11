@@ -54,7 +54,11 @@ func InstallCustomUpgradeHandlers(app AppUpgrader, upgrades []Upgrade) {
 	for _, upgrade := range upgrades {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		ref := upgrade
-		handler := CreateUpgradeHandler(ref.UpgradeStrategy, app)
+		handler := NilStrategy
+		if ref.UpgradeStrategy != nil {
+			handler = CreateUpgradeHandler(ref.UpgradeStrategy, app)
+		}
+
 		app.Keepers().UpgradeKeeper.SetUpgradeHandler(ref.UpgradeName, handler)
 	}
 }
@@ -123,4 +127,9 @@ func FindUpgrade(name string, upgrades []Upgrade) (*Upgrade, bool) {
 		}
 	}
 	return nil, false
+}
+
+func NilStrategy(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
+	ctx.Logger().Info(fmt.Sprintf("Applying no-op upgrade to %q", plan.Name))
+	return versionMap, nil
 }
