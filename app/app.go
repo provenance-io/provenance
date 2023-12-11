@@ -95,12 +95,8 @@ import (
 	"github.com/provenance-io/provenance/app/keepers"
 	appparams "github.com/provenance-io/provenance/app/params"
 	appupgrades "github.com/provenance-io/provenance/app/upgrades"
-	v_1_17_0 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0"
-	v_1_17_0_rc1 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/rc1"
-	v_1_17_0_rc2 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/rc2"
-	v_1_17_0_rc3 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/rc3"
-	v_1_18_0 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.18.0"
-	v_1_18_0_rc1 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.18.0/rc1"
+	"github.com/provenance-io/provenance/app/upgrades/mainnet"
+
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -217,14 +213,7 @@ var (
 		oracletypes.ModuleName:    nil,
 	}
 
-	Upgrades = []appupgrades.Upgrade{
-		v_1_17_0_rc1.Upgrade,
-		v_1_17_0_rc2.Upgrade,
-		v_1_17_0_rc3.Upgrade,
-		v_1_17_0.Upgrade,
-		v_1_18_0_rc1.Upgrade,
-		v_1_18_0.Upgrade,
-	}
+	Upgrades = mainnet.Upgrades
 )
 
 var (

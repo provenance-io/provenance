@@ -6,7 +6,6 @@ import (
 
 	"github.com/provenance-io/provenance/app/keepers"
 	"github.com/provenance-io/provenance/app/upgrades"
-	rc1 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.18.0/rc1"
 )
 
 func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.VersionMap) (module.VersionMap, error) {
@@ -24,5 +23,5 @@ func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.Versio
 }
 
 func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers) (err error) {
-	return rc1.PerformUpgrade(ctx, k)
+	return nil
 }
