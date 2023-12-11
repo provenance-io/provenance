@@ -9,9 +9,9 @@ import (
 	"github.com/provenance-io/provenance/app/keepers"
 	navs "github.com/provenance-io/provenance/app/navs"
 	"github.com/provenance-io/provenance/app/upgrades"
-	rc1 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/rc1"
-	rc2 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/rc2"
-	rc3 "github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/rc3"
+	"github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/common"
+	"github.com/provenance-io/provenance/app/upgrades/mainnet/v1.17.0/rc1"
+	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -30,17 +30,13 @@ func UpgradeStrategy(ctx sdk.Context, app upgrades.AppUpgrader, vm module.Versio
 }
 
 func PerformUpgrade(ctx sdk.Context, k *keepers.AppKeepers) (err error) {
-	if err = rc1.PerformUpgrade(ctx, k); err != nil {
-		return err
-	}
-	if err = rc2.PerformUpgrade(ctx, k); err != nil {
-		return err
-	}
-	if err = rc3.PerformUpgrade(ctx, k); err != nil {
-		return err
-	}
-
+	k.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
+	rc1.RemoveInactiveValidatorDelegations(ctx, k)
+	rc1.SetupICQ(ctx, k)
+	rc1.UpdateMaxSupply(ctx, k)
 	AddMarkerNavs(ctx, k, navs.GetPioMainnet1DenomToNav())
+	rc1.SetExchangeParams(ctx, k)
+	common.UpdateIbcMarkerDenomMetadata(ctx, k)
 	return nil
 }
 

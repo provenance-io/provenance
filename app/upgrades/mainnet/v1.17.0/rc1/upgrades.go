@@ -87,7 +87,7 @@ func UpdateMaxSupply(ctx sdk.Context, k *keepers.AppKeepers) {
 	ctx.Logger().Info("Updating MaxSupply marker param")
 	params := k.MarkerKeeper.GetParams(ctx)
 	// Populate new param with deprecated param
-	//nolint:staticcheck
+
 	params.MaxSupply = math.NewIntFromUint64(params.MaxTotalSupply)
 	k.MarkerKeeper.SetParams(ctx, params)
 	ctx.Logger().Info("Done updating MaxSupply marker param")
