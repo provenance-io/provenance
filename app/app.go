@@ -1129,17 +1129,17 @@ func (app *App) GetTxConfig() client.TxConfig {
 func (app *App) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
-func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	return app.mm.BeginBlock(ctx, req)
+func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	return app.mm.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block
-func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
+func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return app.mm.EndBlock(ctx)
 }
 
 // InitChainer application update at chain initialization
-func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -1365,7 +1365,7 @@ func (app *App) injectUpgrade(name string) { //nolint:unused // This is designed
 	}
 	// Define a new BeginBlocker that will inject the upgrade.
 	injected := false
-	app.SetBeginBlocker(func(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	app.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
 		if !injected {
 			app.Logger().Info("Injecting upgrade plan", "plan", plan)
 			// Ideally, we'd just call ScheduleUpgrade(ctx, plan) here (and panic on error).
@@ -1378,6 +1378,6 @@ func (app *App) injectUpgrade(name string) { //nolint:unused // This is designed
 			store.Set(upgradetypes.PlanKey(), bz)
 			injected = true
 		}
-		return app.BeginBlocker(ctx, req)
+		return app.BeginBlocker(ctx)
 	})
 }

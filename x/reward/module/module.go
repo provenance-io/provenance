@@ -186,13 +186,14 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock is the `BeginBlocker` function run at the beginning of each block to
 // process rewards module updates.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	rewardModule.BeginBlocker(ctx, am.keeper)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	rewardModule.BeginBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	return nil
 }
 
 // EndBlock The `EndBlocker` abci call is ran at the end of each block. The `EventManager` is monitored
 // and `Qualifying Actions` are deduced from newly created events and prior internal state.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	rewardModule.EndBlocker(ctx, am.keeper)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) error {
+	rewardModule.EndBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	return nil
 }

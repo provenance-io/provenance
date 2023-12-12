@@ -174,15 +174,16 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock is the `BeginBlocker` function run at the beginning of each block to
 // process trigger module updates.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	triggerModule.BeginBlocker(ctx, am.keeper)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	triggerModule.BeginBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	return nil
 }
 
 // EndBlock The `EndBlocker` abci call is ran at the end of each block. The `EventManager` is monitored
 // and `Qualifying Actions` are deduced from newly created events and prior internal state.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	triggerModule.EndBlocker(ctx, am.keeper)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) error {
+	triggerModule.EndBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	return nil
 }
 
 // RegisterServices registers a gRPC query service to respond to the

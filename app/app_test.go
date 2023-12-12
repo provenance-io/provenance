@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	dbm "github.com/cometbft/cometbft-db"
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/log"
@@ -53,12 +52,12 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		map[int64]bool{}, opts.HomePath, 0, opts.EncConfig, sdksim.EmptyAppOptions{})
 	var err error
 	require.NotPanics(t, func() {
-		_, err = app2.ExportAppStateAndValidators(false, []string{})
+		_, err = app2.ExportAppStateAndValidators(false, nil, nil)
 	}, "exporting app state at current height")
 	require.NoError(t, err, "ExportAppStateAndValidators at current height")
 
 	require.NotPanics(t, func() {
-		_, err = app2.ExportAppStateAndValidators(true, []string{})
+		_, err = app2.ExportAppStateAndValidators(true, nil, nil)
 	}, "exporting app state at zero height")
 	require.NoError(t, err, "ExportAppStateAndValidators at zero height")
 }
@@ -129,7 +128,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	// Delete one of the markers.
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, managerAddr, "marker2coin"), "canceling marker2coin")
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, managerAddr, "marker2coin"), "deleting marker2coin")
-	markermodule.BeginBlocker(ctx, abci.RequestBeginBlock{}, app.MarkerKeeper, app.BankKeeper)
+	markermodule.BeginBlocker(ctx, app.MarkerKeeper, app.BankKeeper)
 	deletedMarkerAddr := markerToAddr["marker2coin"]
 
 	markerAddrs := []sdk.AccAddress{markerToAddr["marker1coin"], markerToAddr["marker3coin"]}
@@ -146,7 +145,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	app.Commit()
 
 	// Get an export
-	exported, err := app.ExportAppStateAndValidators(false, nil)
+	exported, err := app.ExportAppStateAndValidators(false, nil, nil)
 	require.NoError(t, err, "ExportAppStateAndValidators")
 
 	var genState sdksim.GenesisState

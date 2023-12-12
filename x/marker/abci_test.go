@@ -3,7 +3,6 @@ package marker_test
 import (
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
@@ -37,7 +36,7 @@ func TestBeginBlocker(t *testing.T) {
 	// Initial supply of testmint must be zero.
 	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdkmath.NewInt(0))
 
-	marker.BeginBlocker(ctx, abci.RequestBeginBlock{}, app.MarkerKeeper, app.BankKeeper)
+	marker.BeginBlocker(ctx, app.MarkerKeeper, app.BankKeeper)
 
 	// Post begin block the supply must be 100
 	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdkmath.NewInt(100))
@@ -46,7 +45,7 @@ func TestBeginBlocker(t *testing.T) {
 	testmint.Supply = sdkmath.NewInt(50)
 	app.MarkerKeeper.SetMarker(ctx, testmint)
 
-	marker.BeginBlocker(ctx, abci.RequestBeginBlock{}, app.MarkerKeeper, app.BankKeeper)
+	marker.BeginBlocker(ctx, app.MarkerKeeper, app.BankKeeper)
 
 	// Post begin block the supply must be 0
 	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdkmath.NewInt(50))
@@ -62,7 +61,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.NotNil(t, notDeleted)
 
 	// Purges destroyed status markers
-	marker.BeginBlocker(ctx, abci.RequestBeginBlock{}, app.MarkerKeeper, app.BankKeeper)
+	marker.BeginBlocker(ctx, app.MarkerKeeper, app.BankKeeper)
 
 	// Marker should no longer exist.
 	deleted, err := app.MarkerKeeper.GetMarker(ctx, types.MustGetMarkerAddress("testmint"))

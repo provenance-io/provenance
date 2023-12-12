@@ -160,14 +160,15 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 		require.NoError(t, err)
 
 		// Initialize the chain
-		app.InitChain(
-			abci.RequestInitChain{
+		_, err = app.InitChain(
+			&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 				ChainId:         options.ChainID,
 			},
 		)
+		require.NoError(t, err, "InitChain")
 	}
 
 	return app
@@ -278,27 +279,26 @@ func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *cmttypes.Valid
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	require.NoError(t, err)
+	require.NoError(t, err, "MarshalIndent genesis state")
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
+	_, err = app.InitChain(
+		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 			ChainId:         chainID,
 		},
 	)
+	require.NoError(t, err, "InitChain")
 
 	// commit genesis changes
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
-		AppHash:            app.LastCommitID().Hash,
-		ValidatorsHash:     valSet.Hash(),
+		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
-		ChainID:            chainID,
-	}})
+	})
+	require.NoError(t, err, "FinalizeBlock")
 
 	return app
 }
@@ -511,16 +511,22 @@ func SetupWithGenesisRewardsProgram(t *testing.T, nextRewardProgramID uint64, ge
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err, "marshaling genesis state to json")
 
-	app.InitChain(
-		abci.RequestInitChain{
+	_, err = app.InitChain(
+		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)
+	require.NoError(t, err, "InitChain")
 
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: app.LastBlockHeight() + 1, Time: time.Now().UTC()}})
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height:             app.LastBlockHeight() + 1,
+		Hash:               app.LastCommitID().Hash,
+		NextValidatorsHash: valSet.Hash(),
+		Time:               time.Now().UTC(),
+	})
+	require.NoError(t, err, "FinalizeBlock")
 
 	return app
 }

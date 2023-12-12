@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -15,7 +13,7 @@ import (
 )
 
 // BeginBlocker returns the begin blocker for the marker module.
-func BeginBlocker(ctx sdk.Context, _ abci.RequestBeginBlock, k keeper.Keeper, bk bankkeeper.Keeper) {
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk bankkeeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	// Iterate through all marker accounts and check for supply above or below expected targets.
 	var err error
