@@ -18,7 +18,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/provenance-io/provenance/x/marker/keeper"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
@@ -135,7 +134,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarker() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
 
 	// execute operation
 	op := simulation.SimulateMsgAddMarker(s.app.MarkerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
@@ -160,7 +159,7 @@ func (s *SimTestSuite) TestSimulateMsgAddActivateFinalizeMarker() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
 
 	// execute operation
 	op := simulation.SimulateMsgAddFinalizeActivateMarker(s.app.MarkerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
@@ -383,7 +382,7 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	s.Require().NoError(err, "AddFinalizeActivateMarker")
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
 
 	args := s.getWeightedOpsArgs()
 	// execute operation
@@ -435,7 +434,7 @@ func (s *SimTestSuite) TestSimulateMsgUpdateSendDenyList() {
 	s.Require().NoError(err, "AddFinalizeActivateMarker")
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
 
 	args := s.getWeightedOpsArgs()
 	// execute operation

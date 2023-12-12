@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -64,7 +63,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	accs := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
 
 	expected := []struct {
 		weight     int
@@ -106,7 +105,7 @@ func (s *SimTestSuite) TestSimulateMsgGovUpdateParams() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
+	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
 
 	// execute operation
 	op := simulation.SimulateMsgGovUpdateParams(*s.app.RateLimitingKeeper, s.app.AccountKeeper, s.app.BankKeeper)
