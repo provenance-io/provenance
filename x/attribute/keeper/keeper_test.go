@@ -1272,8 +1272,8 @@ func (s *KeeperTestSuite) TestSetAccountData() {
 				event := events[len(events)-1]
 				s.Assert().Contains(event.Type, "EventAccountDataUpdated", "event type")
 				if s.Assert().Len(event.Attributes, 1, "event attributes") {
-					s.Assert().Equal("account", string(event.Attributes[0].Key), "attribute key")
-					s.Assert().Equal(`"`+tc.addr+`"`, string(event.Attributes[0].Value), "attribute value")
+					s.Assert().Equal("account", event.Attributes[0].Key, "attribute key")
+					s.Assert().Equal(`"`+tc.addr+`"`, event.Attributes[0].Value, "attribute value")
 				}
 			}
 		})

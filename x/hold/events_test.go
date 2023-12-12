@@ -125,9 +125,9 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.hold.v1.EventHoldAdded",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("address"), Value: []byte(addrQ)},
-					{Key: []byte("amount"), Value: []byte(coinsQ)},
-					{Key: []byte("reason"), Value: []byte(`"test reason"`)},
+					{Key: "address", Value: addrQ},
+					{Key: "amount", Value: coinsQ},
+					{Key: "reason", Value: `"test reason"`},
 				},
 			},
 		},
@@ -137,8 +137,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.hold.v1.EventHoldReleased",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("address"), Value: []byte(addrQ)},
-					{Key: []byte("amount"), Value: []byte(coinsQ)},
+					{Key: "address", Value: addrQ},
+					{Key: "amount", Value: coinsQ},
 				},
 			},
 		},

@@ -483,8 +483,8 @@ func (s *CmdTestSuite) getEventAttribute(events []abci.Event, eventType, attribu
 	for _, event := range events {
 		if event.Type == eventType {
 			for _, attr := range event.Attributes {
-				if string(attr.Key) == attribute {
-					val := strings.Trim(string(attr.Value), `"`)
+				if attr.Key == attribute {
+					val := strings.Trim(attr.Value, `"`)
 					if len(val) > 0 {
 						return val, nil
 					}

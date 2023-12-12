@@ -494,7 +494,7 @@ func (s *MsgServerTestSuite) TestUpdateForcedTransfer() {
 					{
 						Type: sdk.EventTypeMessage,
 						Attributes: []abci.EventAttribute{
-							{Key: []byte(sdk.AttributeKeyModule), Value: []byte(types.ModuleName)},
+							{Key: sdk.AttributeKeyModule, Value: types.ModuleName},
 						},
 					},
 				}

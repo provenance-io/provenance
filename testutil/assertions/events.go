@@ -42,7 +42,7 @@ func AttrsToStrings(attrs []abci.EventAttribute) []string {
 	}
 	rv := make([]string, len(attrs))
 	for i, attr := range attrs {
-		rv[i] = fmt.Sprintf("[%d]: %q = %q", i, string(attr.Key), string(attr.Value))
+		rv[i] = fmt.Sprintf("[%d]: %q = %q", i, attr.Key, attr.Value)
 		if attr.Index {
 			rv[i] += " (indexed)"
 		}

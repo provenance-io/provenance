@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -112,7 +111,7 @@ func eventAttributesHasSubset(eventAttributes, subset []abci.EventAttribute) boo
 SubsetLoop:
 	for _, sattr := range subset {
 		for _, eattr := range eventAttributes {
-			if bytes.Equal(sattr.Key, eattr.Key) && bytes.Equal(sattr.Value, eattr.Value) {
+			if sattr.Key == eattr.Key && sattr.Value == eattr.Value {
 				continue SubsetLoop
 			}
 		}
@@ -150,8 +149,8 @@ func NewEvent(ty string, attrs ...abci.EventAttribute) abci.Event {
 
 func NewAttribute(key, value string) abci.EventAttribute {
 	return abci.EventAttribute{
-		Key:   []byte(key),
-		Value: []byte(value),
+		Key:   key,
+		Value: value,
 	}
 }
 

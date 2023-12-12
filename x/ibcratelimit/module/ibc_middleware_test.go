@@ -552,7 +552,7 @@ func ExtractAttributes(event sdk.Event) map[string]string {
 		return attrs
 	}
 	for _, a := range event.Attributes {
-		attrs[string(a.Key)] = string(a.Value)
+		attrs[a.Key] = a.Value
 	}
 	return attrs
 }

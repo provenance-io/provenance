@@ -5,6 +5,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -956,8 +957,8 @@ func (s *KeeperTestSuite) TestUpdate() {
 
 	attr := func(key, value string) abci.EventAttribute {
 		return abci.EventAttribute{
-			Key:   []byte(key),
-			Value: []byte(value),
+			Key:   key,
+			Value: value,
 		}
 	}
 	newEvent := func(typeName string, attributes ...abci.EventAttribute) sdk.Event {
@@ -1003,7 +1004,7 @@ func EventsStrings(events sdk.Events) []string {
 			if attr.Index {
 				indexed = " (indexed)"
 			}
-			rv = append(rv, fmt.Sprintf("[%d]%s[%d]: %q = %q%s", i, event.Type, j, string(attr.Key), string(attr.Value), indexed))
+			rv = append(rv, fmt.Sprintf("[%d]%s[%d]: %q = %q%s", i, event.Type, j, attr.Key, attr.Value, indexed))
 		}
 	}
 	return rv

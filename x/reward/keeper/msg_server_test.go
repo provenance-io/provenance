@@ -50,8 +50,8 @@ func (s *KeeperTestSuite) TestCreateRewardProgramTransaction() {
 	s.Assert().Less(0, len(result.GetEvents()), "should have emitted events")
 	s.Assert().Equal(result.Events[len(result.Events)-1].Type, "reward_program_created", "emitted event should have correct event type")
 	s.Assert().Equal(1, len(result.Events[len(result.Events)-1].Attributes), "emitted event should have correct event number of attributes")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Key, []byte("reward_program_id"), "should have correct key")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Value, []byte("1"), "should have correct value")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Key, "reward_program_id", "should have correct key")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Value, "1", "should have correct value")
 
 	program, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err, "No error should be returned")
@@ -160,10 +160,10 @@ func (s *KeeperTestSuite) TestRewardClaimTransaction() {
 	s.Assert().Less(0, len(result.GetEvents()), "should have emitted events")
 	s.Assert().Equal(result.Events[len(result.Events)-1].Type, "claim_rewards", "emitted event should have correct event type")
 	s.Assert().Equal(2, len(result.Events[len(result.Events)-1].Attributes), "emitted event should have correct number of attributes")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Key, []byte("reward_program_id"), "should have correct key")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Value, []byte("1"), "should have correct program id")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[1].Key, []byte("rewards_claim_address"), "should have correct key")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[1].Value, []byte(s.accountAddresses[0].String()), "should have correct address value")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Key, "reward_program_id", "should have correct key")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Value, "1", "should have correct program id")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[1].Key, "rewards_claim_address", "should have correct key")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[1].Value, s.accountAddresses[0].String(), "should have correct address value")
 }
 
 func (s *KeeperTestSuite) TestRewardClaimInvalidTransaction() {

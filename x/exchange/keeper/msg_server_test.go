@@ -110,7 +110,7 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 
 // newAttr creates a new EventAttribute with the provided key and value.
 func (s *TestSuite) newAttr(key, value string) abci.EventAttribute {
-	return abci.EventAttribute{Key: []byte(key), Value: []byte(value)}
+	return abci.EventAttribute{Key: key, Value: value}
 }
 
 // eventCoinSpent creates a new "coin_spent" event (emitted by the bank module).
