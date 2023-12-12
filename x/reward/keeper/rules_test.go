@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -1207,7 +1206,7 @@ func (s *KeeperTestSuite) TestFindQualifyingActionsWithVotes() {
 	criteria := types.NewEventCriteria([]types.ABCIEvent{
 		{
 			Type:       sdk.EventTypeMessage,
-			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte(govtypes.AttributeValueCategory)},
+			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte("governance")}, // TODO[1760]: reward: Ensure "governance" is still correct here.
 		},
 	})
 

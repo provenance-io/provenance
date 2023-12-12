@@ -55,7 +55,7 @@ type RewardAction interface {
 
 type ABCIEvent struct {
 	Type       string
-	Attributes map[string][]byte
+	Attributes map[string][]byte // TODO[1760]: reward: Use strings here since attributes switched to strings.
 }
 
 type EventCriteria struct {
