@@ -371,10 +371,11 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, fauxMerkleModeOpt)
 
-	newApp.InitChain(abci.RequestInitChain{
+	_, err = newApp.InitChain(&abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
 		Time:          lastBlockTime,
 	})
+	require.NoError(t, err, "InitChain")
 
 	sdksim.FlagGenesisTimeValue = lastBlockTime.Unix()
 	_, _, _, err = simulation.SimulateFromSeed(
