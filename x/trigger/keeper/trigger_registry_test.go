@@ -20,7 +20,7 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 	}{
 		{
 			name:     "valid - register with infinite gas meter",
-			meter:    sdk.NewInfiniteGasMeter(),
+			meter:    storetypes.NewInfiniteGasMeter(),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 2000000,
 		},
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 
 			if tc.panic == nil {
 				s.app.TriggerKeeper.RegisterTrigger(s.ctx, tc.trigger)
-				s.ctx = s.ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+				s.ctx = s.ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 
 				trigger, err := s.app.TriggerKeeper.GetTrigger(s.ctx, tc.trigger.Id)
 				s.NoError(err, "should add trigger to store in RegisterTrigger")

@@ -3,6 +3,8 @@ package handlers
 import (
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -56,7 +58,7 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, _ bool) (sdk.Coins, sdk.Events,
 		}
 
 		// eat up the gas cost for charging fees. (This one is on us, Cheers!, mainly because we don't want to fail at this step, imo, but we can remove this is f necessary)
-		ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+		ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 
 		consumedFees := feeGasMeter.FeeConsumed()
 		if consumedFees.IsAnyNegative() {
