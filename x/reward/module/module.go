@@ -159,12 +159,6 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the reward module.
-func (am AppModule) Route() sdk.Route {
-	// TODO[1760]: app-module: Delete the rewards Route() stuff.
-	return sdk.NewRoute(types.RouterKey, rewardModule.NewHandler(am.keeper))
-}
-
 // InitGenesis performs genesis initialization for the reward module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
