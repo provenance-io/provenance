@@ -61,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `cosmossdk.io/math` from 1.1.2 to 1.2.0 ([#1739](https://github.com/provenance-io/provenance/pull/1739))
 - Update `async-icq` from `github.com/strangelove-ventures/async-icq/v6` to `github.com/cosmos/ibc-apps/modules/async-icq/v6.1.0` ([#1748](https://github.com/provenance-io/provenance/pull/1748))
 - Bump `actions/setup-java` from 3 to 4 ([#1770](https://github.com/provenance-io/provenance/pull/1770))
+- Bump `google.golang.org/grpc` from 1.59.0 to 1.60.0 ([#1780](https://github.com/provenance-io/provenance/pull/1780))
 
 ---
 
