@@ -68,7 +68,7 @@ func (k Keeper) IterateRewardAccountStatesByAddressAndRewardsID(ctx sdk.Context,
 }
 
 // IterateRewardAccountStatesByLookUpIndex iterates reward account states by secondary index // [0x8] :: [addr-bytes::reward program id bytes]::[claim period id bytes] {}
-func (k Keeper) IterateRewardAccountStatesByLookUpIndex(ctx sdk.Context, addr sdk.AccAddress, iterator sdk.Iterator, handle func(state types.RewardAccountState) (stop bool)) error {
+func (k Keeper) IterateRewardAccountStatesByLookUpIndex(ctx sdk.Context, addr sdk.AccAddress, iterator storetypes.Iterator, handle func(state types.RewardAccountState) (stop bool)) error {
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		keyParsed, err := types.ParseRewardAccountLookUpKey(iterator.Key(), addr)
