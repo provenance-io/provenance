@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -59,7 +61,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.SetupEventHistory()
 
-	s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(999999999999))
+	s.ctx = s.ctx.WithGasMeter(storetypes.NewGasMeter(999999999999))
 }
 
 func TestKeeperTestSuite(t *testing.T) {

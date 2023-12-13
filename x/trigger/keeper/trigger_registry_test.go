@@ -4,7 +4,7 @@ import (
 	"math"
 
 	storetypes "cosmossdk.io/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -26,26 +26,26 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 		},
 		{
 			name:     "invalid - register with no gas",
-			meter:    sdk.NewGasMeter(0),
+			meter:    storetypes.NewGasMeter(0),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 0,
 			panic:    &storetypes.ErrorOutOfGas{Descriptor: "WriteFlat"},
 		},
 		{
 			name:     "valid - register with no gas for trigger",
-			meter:    sdk.NewGasMeter(14190),
+			meter:    storetypes.NewGasMeter(14190),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 0,
 		},
 		{
 			name:     "valid - register with gas",
-			meter:    sdk.NewGasMeter(9999999999),
+			meter:    storetypes.NewGasMeter(9999999999),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 2000000,
 		},
 		{
 			name:     "valid - register with maximum gas",
-			meter:    sdk.NewGasMeter(math.MaxUint64),
+			meter:    storetypes.NewGasMeter(math.MaxUint64),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 2000000,
 		},
