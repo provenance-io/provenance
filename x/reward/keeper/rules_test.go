@@ -44,13 +44,13 @@ func setupEventHistory(s *KeeperTestSuite) {
 		event2,
 		event3,
 	}
-	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
-	s.ctx = s.ctx.WithEventManager(eventManagerStub)
+	SetupEventHistory(s, loggedEvents)
 }
 
 func SetupEventHistory(s *KeeperTestSuite, events sdk.Events) {
-	eventManagerStub := sdk.NewEventManagerWithHistory(events.ToABCIEvents())
-	s.ctx = s.ctx.WithEventManager(eventManagerStub)
+	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
+	// eventManagerStub := sdk.NewEventManagerWithHistory(events.ToABCIEvents())
+	// s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
 // with delegate
@@ -78,8 +78,7 @@ func SetupEventHistoryWithDelegates(s *KeeperTestSuite) {
 		event3,
 		event4,
 	}
-	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
-	s.ctx = s.ctx.WithEventManager(eventManagerStub)
+	SetupEventHistory(s, loggedEvents)
 }
 
 func (s *KeeperTestSuite) TestProcessTransactions() {
@@ -1148,8 +1147,7 @@ func SetupEventHistoryWithTransfers(s *KeeperTestSuite) {
 		event1,
 		event2,
 	}
-	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
-	s.ctx = s.ctx.WithEventManager(eventManagerStub)
+	SetupEventHistory(s, loggedEvents)
 }
 
 // with vote
@@ -1174,10 +1172,11 @@ func SetupEventHistoryWithVotes(s *KeeperTestSuite, sender string) {
 		event2,
 		event3,
 	}
-	newEvents := loggedEvents.ToABCIEvents()
-	newEvents = append(newEvents, s.ctx.EventManager().GetABCIEventHistory()...)
-	eventManagerStub := sdk.NewEventManagerWithHistory(newEvents)
-	s.ctx = s.ctx.WithEventManager(eventManagerStub)
+	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
+	// newEvents := loggedEvents.ToABCIEvents()
+	// newEvents = append(newEvents, s.ctx.EventManager().GetABCIEventHistory()...)
+	// eventManagerStub := sdk.NewEventManagerWithHistory(newEvents)
+	// s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
 // transfer

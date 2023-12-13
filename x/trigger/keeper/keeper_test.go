@@ -17,8 +17,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type KeeperTestSuite struct {
@@ -85,8 +85,9 @@ func (s *KeeperTestSuite) SetupEventHistory() {
 		event2,
 		event3,
 	}
-	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
-	s.ctx = s.ctx.WithEventManager(eventManagerStub)
+	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
+	// eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
+	// s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
 func (s *KeeperTestSuite) CreateTrigger(id uint64, owner string, event types.TriggerEventI, action sdk.Msg) types.Trigger {
