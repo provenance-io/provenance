@@ -51,6 +51,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Create a default market in `make run`, `localnet`, `devnet` and the `provenanced testnet` command [#1757](https://github.com/provenance-io/provenance/issues/1757).
 * Remove the rust upgrade handlers [PR 1774](https://github.com/provenance-io/provenance/pull/1774).
 
+### Bug Fixes
+* Update linux release to not build with CLevelDB [PR 1783](https://github.com/provenance-io/provenance/pull/1783).
+
 ### Dependencies
 
 - Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.28.1 ([#1724](https://github.com/provenance-io/provenance/pull/1724), [#1744](https://github.com/provenance-io/provenance/pull/1744), [#1750](https://github.com/provenance-io/provenance/pull/1750))
