@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/provenance-io/provenance/helpers"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -63,7 +64,7 @@ func (app *App) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs
 		return servertypes.ExportedApp{}, err
 	}
 
-	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
+	validators, err := staking.WriteValidators(ctx, &app.StakingKeeper)
 	return servertypes.ExportedApp{
 		AppState:        appState,
 		Validators:      validators,
@@ -99,17 +100,17 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 
 	// withdraw all validator commission
 	ierr := app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
+		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, helpers.MustGetOperatorAddr(val))
 		return false
 	})
 	if ierr != nil {
-		panic(fmt.Errorf("could not iterate validators to withdraw commission: %w", err))
+		panic(fmt.Errorf("could not iterate validators to withdraw commission: %w", ierr))
 	}
 
 	// withdraw all delegator rewards
 	dels, ierr := app.StakingKeeper.GetAllDelegations(ctx)
 	if ierr != nil {
-		panic(fmt.Errorf("could not get all delegations: %w", err))
+		panic(fmt.Errorf("could not get all delegations: %w", ierr))
 	}
 	for _, delegation := range dels {
 		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
@@ -135,18 +136,21 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 	// reinitialize all validators
 	ierr = app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		// donate any unwithdrawn outstanding reward fraction tokens to the community pool
-		scraps := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
+		scraps, err := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, helpers.MustGetOperatorAddr(val))
+		if err != nil {
+			panic(err)
+		}
 		feePool := app.DistrKeeper.GetFeePool(ctx)
 		feePool.CommunityPool = feePool.CommunityPool.Add(scraps...)
 		app.DistrKeeper.SetFeePool(ctx, feePool)
 
-		if err := app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator()); err != nil {
+		if err = app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, helpers.MustGetOperatorAddr(val)); err != nil {
 			panic(err)
 		}
 		return false
 	})
 	if ierr != nil {
-		panic(fmt.Errorf("could not iterate validators to reinitialize them: %w", err))
+		panic(fmt.Errorf("could not iterate validators to reinitialize them: %w", ierr))
 	}
 
 	// reinitialize all delegations
@@ -185,7 +189,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 		return false
 	})
 	if ierr != nil {
-		panic(fmt.Errorf("could not iterate redelegations: %w", err))
+		panic(fmt.Errorf("could not iterate redelegations: %w", ierr))
 	}
 
 	// iterate through unbonding delegations, reset creation height
@@ -200,7 +204,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 		return false
 	})
 	if ierr != nil {
-		panic(fmt.Errorf("could not iterate unbonding delegations: %w", err))
+		panic(fmt.Errorf("could not iterate unbonding delegations: %w", ierr))
 	}
 
 	// Iterate through validators by power descending, reset bond heights, and

@@ -1,11 +1,11 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"cosmossdk.io/math"
-
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -210,13 +210,15 @@ func InstallCustomUpgradeHandlers(app *App) {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		var handler upgradetypes.UpgradeHandler
 		if upgrade.Handler == nil {
-			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
+			handler = func(goCtx context.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
+				ctx := sdk.UnwrapSDKContext(goCtx)
 				ctx.Logger().Info(fmt.Sprintf("Applying no-op upgrade to %q", plan.Name))
 				return versionMap, nil
 			}
 		} else {
 			ref := upgrade
-			handler = func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			handler = func(goCtx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				ctx := sdk.UnwrapSDKContext(goCtx)
 				ctx.Logger().Info(fmt.Sprintf("Starting upgrade to %q", plan.Name), "version-map", vm)
 				newVM, err := ref.Handler(ctx, app, vm)
 				if err != nil {
@@ -379,9 +381,16 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 
 				for _, delegation := range delegations {
 					ctx.Logger().Info(fmt.Sprintf("Undelegate delegator %v from validator %v of all shares (%v).", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
-					_, err = app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
+					var delAddr sdk.AccAddress
+					delegator := delegation.GetDelegatorAddr()
+					delAddr, err = sdk.AccAddressFromBech32(delegator)
 					if err != nil {
-						ctx.Logger().Error(fmt.Sprintf("Failed to undelegate delegator %s from validator %s: %v.", delegation.GetDelegatorAddr().String(), valAddress.String(), err))
+						ctx.Logger().Error(fmt.Sprintf("Failed to undelegate delegator %s from validator %s: could not parse delegator address: %v.", delegator, valAddress.String(), err))
+						continue
+					}
+					_, _, err = app.StakingKeeper.Undelegate(ctx, delAddr, valAddress, delegation.GetShares())
+					if err != nil {
+						ctx.Logger().Error(fmt.Sprintf("Failed to undelegate delegator %s from validator %s: %v.", delegator, valAddress.String(), err))
 						continue
 					}
 				}

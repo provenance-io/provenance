@@ -8,6 +8,7 @@ import (
 	time "time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/provenance-io/provenance/helpers"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -381,7 +382,12 @@ func (ad *ActionDelegate) getValidatorRankPercentile(ctx sdk.Context, provider K
 	numValidators := int64(len(validators))
 	for i := int64(0); i < numValidators; i++ {
 		v := validators[i]
-		power, err := provider.GetStakingKeeper().GetLastValidatorPower(ctx, v.GetOperator())
+		vAddr, err := helpers.GetOperatorAddr(v)
+		if err != nil {
+			numBelow++
+			continue
+		}
+		power, err := provider.GetStakingKeeper().GetLastValidatorPower(ctx, vAddr)
 		if err != nil || power < ourPower {
 			numBelow++
 		}
@@ -613,7 +619,11 @@ func getAllDelegations(ctx sdk.Context, provider KeeperProvider, delegator sdk.A
 	sum := sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, 0)
 
 	for _, delegation := range delegations {
-		val, err := stakingKeeper.GetValidator(ctx, delegation.GetValidatorAddr())
+		valAddr, err := sdk.ValAddressFromBech32(delegation.GetValidatorAddr())
+		if err != nil {
+			continue
+		}
+		val, err := stakingKeeper.GetValidator(ctx, valAddr)
 		if err == nil {
 			tokens := val.TokensFromShares(delegation.GetShares()).TruncateInt()
 			sum = sum.Add(sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, tokens))

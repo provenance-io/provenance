@@ -6,8 +6,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	sdksim "cosmossdk.io/simapp"
-
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -115,8 +114,8 @@ func (s *KeeperTestSuite) TestProcessTransactions() {
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDel,
 						MaximumDelegationAmount:      &maxDel,
-						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -484,7 +483,7 @@ func (m MockStakingKeeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.V
 	validators, _ := m.GetBondedValidatorsByPower(ctx)
 	for i, v := range validators {
 		power := int64(len(validators) - i)
-		if v.GetOperator().String() == operator.String() {
+		if v.GetOperator() == operator.String() {
 			return power, nil
 		}
 	}
@@ -493,16 +492,16 @@ func (m MockStakingKeeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.V
 
 func (s *KeeperTestSuite) createTestValidators(amount int) {
 	addrDels := simapp.AddTestAddrsIncremental(s.app, s.ctx, amount, sdkmath.NewInt(10000))
-	valAddrs := sdksim.ConvertAddrsToValAddrs(addrDels)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
-	bondDenom, err := app.StakingKeeper.BondDenom(ctx)
+	bondDenom, err := s.app.StakingKeeper.BondDenom(s.ctx)
 	s.Require().NoError(err, "app.StakingKeeper.BondDenom(ctx)")
 
 	totalSupply := sdk.NewCoins(sdk.NewInt64Coin(bondDenom, 1_000_000_000))
 	notBondedPool := s.app.StakingKeeper.GetNotBondedPool(s.ctx)
 	s.app.AccountKeeper.SetModuleAccount(s.ctx, notBondedPool)
 
-	s.Require().NoError(testutil.FundModuleAccount(s.app.BankKeeper, s.ctx, notBondedPool.GetName(), totalSupply),
+	s.Require().NoError(testutil.FundModuleAccount(s.ctx, s.app.BankKeeper, notBondedPool.GetName(), totalSupply),
 		"funding %s with %s", notBondedPool.GetName(), totalSupply)
 
 	var validators []stakingtypes.Validator
@@ -510,11 +509,11 @@ func (s *KeeperTestSuite) createTestValidators(amount int) {
 		validator := teststaking.NewValidator(s.T(), valAddrs[i], PKs[i])
 		tokens := s.app.StakingKeeper.TokensFromConsensusPower(s.ctx, int64(1+amount-i))
 		validator, _ = validator.AddTokensFromDel(tokens)
-		validator = keeper.TestingUpdateValidator(s.app.StakingKeeper, s.ctx, validator, true)
+		validator = keeper.TestingUpdateValidator(&s.app.StakingKeeper, s.ctx, validator, true)
 		validators = append(validators, validator)
 
 		// Create the delegations
-		bond := stakingtypes.NewDelegation(addrDels[i], valAddrs[i], sdkmath.LegacyNewDec(int64((i+1)*10)))
+		bond := stakingtypes.NewDelegation(addrDels[i].String(), valAddrs[i].String(), sdkmath.LegacyNewDec(int64((i+1)*10)))
 		err = s.app.StakingKeeper.SetDelegation(s.ctx, bond)
 		s.Require().NoError(err, "SetDelegation %s", bond)
 
@@ -542,7 +541,7 @@ func getTestValidators(start, end int) []stakingtypes.Validator {
 func (m MockStakingKeeper) GetBondedValidatorsByPower(ctx sdk.Context) ([]stakingtypes.Validator, error) {
 	validatorAddress, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	validator, _ := stakingtypes.NewValidator(
-		validatorAddress,
+		validatorAddress.String(),
 		PKs[100],
 		stakingtypes.Description{},
 	)
@@ -555,9 +554,10 @@ func (m MockStakingKeeper) GetBondedValidatorsByPower(ctx sdk.Context) ([]stakin
 
 func (m MockStakingKeeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error) {
 	validators := getTestValidators(0, 9)
+	addrStr := addr.String()
 
 	for _, v := range validators {
-		if addr.Equals(v.GetOperator()) {
+		if addrStr == v.GetOperator() {
 			return v, nil
 		}
 	}
@@ -574,8 +574,8 @@ func (s *KeeperTestSuite) TestActionDelegateEvaluatePasses() {
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = sdkmath.NewDecWithPrec(4, 1)
-	action.MaximumActiveStakePercentile = sdkmath.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(4, 1)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "", 0, []*types.ActionCounter{})
@@ -600,8 +600,8 @@ func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActionsNotMe
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = sdkmath.NewDecWithPrec(5, 1)
-	action.MaximumActiveStakePercentile = sdkmath.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(5, 1)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "", 0, []*types.ActionCounter{})
@@ -625,8 +625,8 @@ func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumActionsNotMe
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = sdkmath.NewDecWithPrec(5, 1)
-	action.MaximumActiveStakePercentile = sdkmath.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(5, 1)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "", 0, []*types.ActionCounter{})
@@ -653,8 +653,8 @@ func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegationAm
 	maxDelegation := sdk.NewInt64Coin("nhash", 1)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = sdkmath.NewDecWithPrec(5, 1)
-	action.MaximumActiveStakePercentile = sdkmath.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(5, 1)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "", 0, []*types.ActionCounter{})
@@ -679,8 +679,8 @@ func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumDelegationAm
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = sdkmath.NewDecWithPrec(5, 1)
-	action.MaximumActiveStakePercentile = sdkmath.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(5, 1)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "", 0, []*types.ActionCounter{})
@@ -705,8 +705,8 @@ func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMinimumActiveStakeP
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = sdkmath.NewDecWithPrec(11, 1)
-	action.MaximumActiveStakePercentile = sdkmath.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(11, 1)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "", 0, []*types.ActionCounter{})
@@ -731,8 +731,8 @@ func (s *KeeperTestSuite) TestActionDelegateEvaluateFailsWhenMaximumDelegationPe
 	maxDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minDelegation
 	action.MaximumDelegationAmount = &maxDelegation
-	action.MinimumActiveStakePercentile = sdkmath.NewDecWithPrec(5, 1)
-	action.MaximumActiveStakePercentile = sdkmath.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(5, 1)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	keeperProvider := MockKeeperProvider{}
 	state := types.NewRewardAccountState(0, 0, "", 0, []*types.ActionCounter{})
@@ -794,8 +794,8 @@ func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1QualifyingAction() {
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -833,8 +833,8 @@ func (s *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction() {
 						MaximumActions:               4,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -845,8 +845,8 @@ func (s *KeeperTestSuite) TestDetectQualifyingActionsWith2QualifyingAction() {
 						MaximumActions:               4,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -909,8 +909,8 @@ func (s *KeeperTestSuite) TestDetectQualifyingActionsWithNoMatchingQualifyingAct
 						MaximumActions:               1000,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -1446,8 +1446,8 @@ func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1VotingDelegateQualifyi
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -1495,8 +1495,8 @@ func (s *KeeperTestSuite) TestDetectQualifyingActionsWith1Voting1DelegateQualify
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdkmath.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdkmath.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
