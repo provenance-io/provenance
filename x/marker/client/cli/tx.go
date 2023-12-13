@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/pflag"
 
 	cerrs "cosmossdk.io/errors"
+	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"cosmossdk.io/x/feegrant"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -1050,11 +1050,6 @@ func GetCmdUpdateForcedTransfer() *cobra.Command {
 				return err
 			}
 
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
 			return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -1168,11 +1163,6 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 			denom := strings.TrimSpace(args[0])
 			netAssetValues, err := ParseNetAssetValueString(args[1])
 			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.From, netAssetValues)
-			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -1351,11 +1341,6 @@ func generateOrBroadcastOptGovProp(clientCtx client.Context, flagSet *pflag.Flag
 		authSetter(authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	} else {
 		authSetter(clientCtx.GetFromAddress().String())
-	}
-
-	err = msg.ValidateBasic()
-	if err != nil {
-		return err
 	}
 
 	if isGov {

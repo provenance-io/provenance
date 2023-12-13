@@ -11,6 +11,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/provenance-io/provenance/helpers"
 )
 
 // Encoder describes behavior for provenance smart contract message encoding.
@@ -63,7 +65,7 @@ func customEncoders(registry *EncoderRegistry, logger log.Logger) wasm.CustomEnc
 			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 		}
 		for _, msg := range msgs {
-			if err := msg.ValidateBasic(); err != nil {
+			if err := helpers.ValidateBasic(msg); err != nil {
 				logger.Error("message validation failed", "err", err)
 				return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 			}

@@ -135,11 +135,6 @@ func WriteScopeCmd() *cobra.Command {
 			)
 
 			msg := types.NewMsgWriteScopeRequest(scope, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -175,13 +170,8 @@ func RemoveScopeCmd() *cobra.Command {
 				return err
 			}
 
-			msg := *types.NewMsgDeleteScopeRequest(scopeID, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			msg := types.NewMsgDeleteScopeRequest(scopeID, signers)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -232,10 +222,7 @@ $ %[1]s tx metadata scope-data-access remove scope1qzhpuff00wpy2yuf7xr0rp8aucqst
 			} else {
 				msg = types.NewMsgDeleteScopeDataAccessRequest(scopeID, dataAccess, signers)
 			}
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -292,10 +279,7 @@ $ %[1]s tx metadata scope-owners remove scope1qzhpuff00wpy2yuf7xr0rp8aucqstsk0cn
 			} else {
 				msg = types.NewMsgDeleteScopeOwnerRequest(scopeID, ownerAddresses, signers)
 			}
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -344,11 +328,6 @@ func UpdateValueOwnersCmd() *cobra.Command {
 				return err
 			}
 
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -386,11 +365,6 @@ func MigrateValueOwnerCmd() *cobra.Command {
 			}
 
 			msg.Signers, err = parseSigners(cmd, &clientCtx)
-			if err != nil {
-				return err
-			}
-
-			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
@@ -551,11 +525,6 @@ func WriteScopeSpecificationCmd() *cobra.Command {
 			}
 
 			msg := types.NewMsgWriteScopeSpecificationRequest(scopeSpec, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -623,10 +592,6 @@ icon-url           - address to a image to be used as an icon (optional, can onl
 			}
 
 			msg := types.NewMsgWriteContractSpecificationRequest(contractSpecification, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -664,10 +629,6 @@ func AddContractSpecToScopeSpecCmd() *cobra.Command {
 			}
 
 			msg := types.NewMsgAddContractSpecToScopeSpecRequest(contractSpecID, scopeSpecID, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -796,10 +757,6 @@ ChFIRUxMTyBQUk9WRU5BTkNFIQ==`, version.AppName),
 				Context:         context,
 			}
 			writeSessionMsg := types.NewMsgWriteSessionRequest(session, signers)
-			err = writeSessionMsg.ValidateBasic()
-			if err != nil {
-				return err
-			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), writeSessionMsg)
 		},
 	}
@@ -915,22 +872,15 @@ contractspec-name
 					Parties:         parties,
 				}
 				writeSessionMsg = types.NewMsgWriteSessionRequest(session, signers)
-				err = writeSessionMsg.ValidateBasic()
-				if err != nil {
-					return err
-				}
 			default:
 				return fmt.Errorf("id must be a contract or session id: %s", contractOrSessionID.String())
 			}
-			msg := *types.NewMsgWriteRecordRequest(record, nil, "", signers, parties)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
+			msg := types.NewMsgWriteRecordRequest(record, nil, "", signers, parties)
+
 			if writeSessionMsg != nil {
-				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), writeSessionMsg, &msg)
+				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), writeSessionMsg, msg)
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -996,13 +946,8 @@ owner,originator`, version.AppName),
 				ResponsibleParties: partyTypes,
 			}
 
-			msg := *types.NewMsgWriteRecordSpecificationRequest(recordSpecification, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			msg := types.NewMsgWriteRecordSpecificationRequest(recordSpecification, signers)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -1036,12 +981,8 @@ func RemoveScopeSpecificationCmd() *cobra.Command {
 				return err
 			}
 
-			msg := *types.NewMsgDeleteScopeSpecificationRequest(specificationID, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			msg := types.NewMsgDeleteScopeSpecificationRequest(specificationID, signers)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -1076,10 +1017,6 @@ func RemoveContractSpecificationCmd() *cobra.Command {
 			}
 
 			msg := types.NewMsgDeleteContractSpecificationRequest(specificationID, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -1118,10 +1055,6 @@ func RemoveContractSpecFromScopeSpecCmd() *cobra.Command {
 			}
 
 			msg := types.NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID, scopeSpecID, signers)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

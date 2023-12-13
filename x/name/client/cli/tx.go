@@ -168,9 +168,6 @@ $ %s tx name modify-name \
 			} else {
 				req = &modifyMsg
 			}
-			if err = req.ValidateBasic(); err != nil {
-				return err
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), req)
 		},

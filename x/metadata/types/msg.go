@@ -42,6 +42,10 @@ const (
 type MetadataMsg interface {
 	sdk.Msg
 
+	// ValidateBasic runs stateless validation on a Msg.
+	ValidateBasic() error
+	// GetSigners returns the addresses of the signers of a Msg.
+	GetSigners() []sdk.AccAddress
 	// GetSignerStrs returns the bech32 address(es) that signed.
 	GetSignerStrs() []string
 }

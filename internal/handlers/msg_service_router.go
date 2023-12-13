@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/provenance-io/provenance/helpers"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
@@ -142,7 +143,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				return handler(goCtx, req)
 			}
 
-			if err = req.ValidateBasic(); err != nil {
+			if err = helpers.ValidateBasic(req); err != nil {
 				return nil, err
 			}
 

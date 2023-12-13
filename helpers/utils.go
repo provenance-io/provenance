@@ -23,3 +23,12 @@ func GetOperatorAddr(val stakingtypes.ValidatorI) (sdk.ValAddress, error) {
 func MustGetOperatorAddr(val stakingtypes.ValidatorI) sdk.ValAddress {
 	return MustValAddressFromBech32(val.GetOperator())
 }
+
+// ValidateBasic calls the ValidateBasic on the provided msg if it has that method, otherwise returns nil.
+func ValidateBasic(msg sdk.Msg) error {
+	vmsg, ok := msg.(sdk.HasValidateBasic)
+	if ok {
+		return vmsg.ValidateBasic()
+	}
+	return nil
+}
