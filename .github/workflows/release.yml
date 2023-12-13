@@ -100,12 +100,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
-      - name: Build and install cleveldb
-        run: make cleveldb
       - name: Build linux binary
         run: |
           export VERSION=${{ needs.build_init.outputs.version }}
-          export WITH_CLEVELDB=true
+          export WITH_CLEVELDB=false
+          export WITH_ROCKSDB=false
           make build-release-zip
       - name: Provenanced version
         run: build/provenanced version --long
@@ -132,12 +131,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
-      - name: Build and install cleveldb
-        run: make cleveldb
       - name: Build dbmigrate binary
         run: |
           export VERSION=${{ needs.build_init.outputs.version }}
-          export WITH_CLEVELDB=true
+          export WITH_CLEVELDB=false
           export WITH_ROCKSDB=false
           export WITH_BADGERDB=false
           make build-dbmigrate-zip
