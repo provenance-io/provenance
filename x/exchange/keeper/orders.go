@@ -11,6 +11,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -118,7 +119,7 @@ func (k Keeper) parseOrderStoreKeyValue(key, value []byte) (*exchange.Order, err
 
 // createConstantIndexEntries creates all the key/value index entries for an order that don't change.
 // See also: createMarketExternalIDToOrderEntry.
-func createConstantIndexEntries(order exchange.Order) []sdk.KVPair {
+func createConstantIndexEntries(order exchange.Order) []kv.Pair {
 	marketID := order.GetMarketID()
 	orderID := order.GetOrderID()
 	orderTypeByte := order.GetOrderTypeByte()
@@ -126,7 +127,7 @@ func createConstantIndexEntries(order exchange.Order) []sdk.KVPair {
 	addr := sdk.MustAccAddressFromBech32(owner)
 	assets := order.GetAssets()
 
-	return []sdk.KVPair{
+	return []kv.Pair{
 		{
 			Key:   MakeIndexKeyMarketToOrder(marketID, orderID),
 			Value: []byte{orderTypeByte},
@@ -144,12 +145,12 @@ func createConstantIndexEntries(order exchange.Order) []sdk.KVPair {
 
 // createMarketExternalIDToOrderEntry creates the market external id to order store entry.
 // See also createConstantIndexEntries
-func createMarketExternalIDToOrderEntry(order exchange.OrderI) *sdk.KVPair {
+func createMarketExternalIDToOrderEntry(order exchange.OrderI) *kv.Pair {
 	externalID := order.GetExternalID()
 	if len(externalID) == 0 {
 		return nil
 	}
-	return &sdk.KVPair{
+	return &kv.Pair{
 		Key:   MakeIndexKeyMarketExternalIDToOrder(order.GetMarketID(), externalID),
 		Value: uint64Bz(order.GetOrderID()),
 	}

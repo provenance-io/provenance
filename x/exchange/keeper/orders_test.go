@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
@@ -1654,7 +1655,7 @@ func (s *TestSuite) TestKeeper_CancelOrder() {
 			}
 
 			var expEvents sdk.Events
-			var expDelKVs []sdk.KVPair
+			var expDelKVs []kv.Pair
 			if cancelledOrder != nil {
 				event := exchange.NewEventOrderCancelled(cancelledOrder, tc.signer)
 				expEvents = append(expEvents, s.untypeEvent(event))
