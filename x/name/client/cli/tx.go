@@ -11,10 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+
+	// govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli" // TODO[1760]: gov-cli
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/name/types"
@@ -154,17 +154,21 @@ $ %s tx name modify-name \
 
 			var req sdk.Msg
 			if isGov {
-				var govErr error
-				proposal, govErr := govcli.ReadGovPropFlags(clientCtx, cmd.Flags())
-				if govErr != nil {
-					return govErr
-				}
-				anys, govErr := sdktx.SetMsgs([]sdk.Msg{&modifyMsg})
-				if govErr != nil {
-					return govErr
-				}
-				proposal.Messages = anys
-				req = proposal
+				// TODO[1760]: gov-cli: Replace this with GenerateOrBroadcastTxCLIAsGovProp once its back.
+				/*
+					var govErr error
+					proposal, govErr := govcli.ReadGovPropFlags(clientCtx, cmd.Flags())
+					if govErr != nil {
+						return govErr
+					}
+					anys, govErr := sdktx.SetMsgs([]sdk.Msg{&modifyMsg})
+					if govErr != nil {
+						return govErr
+					}
+					proposal.Messages = anys
+					req = proposal
+				*/
+				return fmt.Errorf("not yet updated")
 			} else {
 				req = &modifyMsg
 			}
@@ -175,7 +179,7 @@ $ %s tx name modify-name \
 
 	cmd.Flags().BoolP(FlagUnrestricted, "u", false, "Allow child name creation by everyone")
 	cmd.Flags().Bool(FlagGovProposal, false, "Run transaction as gov proposal")
-	govcli.AddGovPropFlagsToCmd(cmd)
+	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

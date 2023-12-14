@@ -23,7 +23,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+
+	// govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli" // TODO[1760]: gov-cli
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
@@ -1050,11 +1051,13 @@ func GetCmdUpdateForcedTransfer() *cobra.Command {
 				return err
 			}
 
-			return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, cmd.Flags(), msg)
+			// return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, cmd.Flags(), msg) // TODO[1760]: gov-cli
+			_, _ = msg, clientCtx
+			return fmt.Errorf("not yet updated")
 		},
 	}
 
-	govcli.AddGovPropFlagsToCmd(cmd)
+	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -1323,7 +1326,7 @@ func ParseBoolStrict(input string) (bool, error) {
 // See also: generateOrBroadcastOptGovProp
 func addOptGovPropFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagGovProposal, false, "submit message as a gov proposal")
-	govcli.AddGovPropFlagsToCmd(cmd)
+	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
 }
 
 // generateOrBroadcastOptGovProp either calls GenerateOrBroadcastTxCLIAsGovProp or GenerateOrBroadcastTxCLI
@@ -1344,7 +1347,8 @@ func generateOrBroadcastOptGovProp(clientCtx client.Context, flagSet *pflag.Flag
 	}
 
 	if isGov {
-		return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		// return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg) // TODO[1760]: gov-cli
+		return fmt.Errorf("not yet updated")
 	}
 	return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 }

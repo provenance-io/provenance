@@ -7,7 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+
+	// govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli" // TODO[1760]: gov-cli
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -242,7 +243,7 @@ func CmdTxGovCreateMarket() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-	govcli.AddGovPropFlagsToCmd(cmd)
+	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
 	SetupCmdTxGovCreateMarket(cmd)
 	return cmd
 }
@@ -257,7 +258,7 @@ func CmdTxGovManageFees() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-	govcli.AddGovPropFlagsToCmd(cmd)
+	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
 	SetupCmdTxGovManageFees(cmd)
 	return cmd
 }
@@ -272,7 +273,7 @@ func CmdTxGovUpdateParams() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-	govcli.AddGovPropFlagsToCmd(cmd)
+	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
 	SetupCmdTxGovUpdateParams(cmd)
 	return cmd
 }
