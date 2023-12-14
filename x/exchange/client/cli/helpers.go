@@ -80,6 +80,7 @@ func govTxRunE[R sdk.Msg](maker msgMaker[R]) func(cmd *cobra.Command, args []str
 
 		cmd.SilenceUsage = true
 		// return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg) // TODO[1760]: gov-cli
+		_ = msg
 		return fmt.Errorf("not yet updated")
 	}
 }
