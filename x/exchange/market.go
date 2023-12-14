@@ -268,8 +268,6 @@ func (r FeeRatio) Validate() error {
 
 // Equals returns true if this FeeRatio has the same price and fee as the provided other FeeRatio.
 func (r FeeRatio) Equals(other FeeRatio) bool {
-	// Cannot use coin.IsEqual because it panics if the denoms are different, because that makes perfect sense.
-	// The coin.Equal(interface{}) function behaves as expected, though, but with the extra casting costs.
 	return r.Price.Equal(other.Price) && r.Fee.Equal(other.Fee)
 }
 

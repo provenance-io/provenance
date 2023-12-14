@@ -2693,7 +2693,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(100), claimPeriodDistributions[0].TotalShares, "shares should have accumulated to value of 100 ( 10 action * multiplier (10) shares")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended.")
-	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
+	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.Equal(sdk.Coin{
 		Denom:  "nhash",
 		Amount: sdkmath.ZeroInt(),
 	}), "claim period has not ended so rewards still haven't been calculated(hence 0 coins)")
@@ -2808,7 +2808,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	assert.Len(t, claimPeriodDistributions, 1, "claim period reward distributions should exist")
 	assert.Equal(t, int64(10), claimPeriodDistributions[0].TotalShares, "shares should have accumulated to value of 10, ( 10 action leading to 1 share each) (no multiplier is applied) ")
 	assert.Equal(t, false, claimPeriodDistributions[0].ClaimPeriodEnded, "claim period has not ended.")
-	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.IsEqual(sdk.Coin{
+	assert.Equal(t, false, claimPeriodDistributions[0].RewardsPool.Equal(sdk.Coin{
 		Denom:  "nhash",
 		Amount: sdkmath.ZeroInt(),
 	}), "claim period has not ended so rewards still haven't been calculated(hence 0 coins)")

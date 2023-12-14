@@ -415,7 +415,7 @@ func (ad *ActionDelegate) Evaluate(ctx sdk.Context, provider KeeperProvider, _ R
 	minPercentile := ad.GetMinimumActiveStakePercentile()
 	maxPercentile := ad.GetMaximumActiveStakePercentile()
 
-	hasValidDelegationAmount := delegatedHash.IsGTE(*minDelegation) && (delegatedHash.IsLT(*maxDelegation) || delegatedHash.IsEqual(*maxDelegation))
+	hasValidDelegationAmount := delegatedHash.IsGTE(*minDelegation) && (delegatedHash.IsLT(*maxDelegation) || delegatedHash.Equal(*maxDelegation))
 	hasValidActivePercentile := percentile.GTE(minPercentile) && percentile.LTE(maxPercentile)
 
 	return hasValidDelegationAmount && hasValidActivePercentile

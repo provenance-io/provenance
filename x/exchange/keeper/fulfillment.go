@@ -61,7 +61,7 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	}
 
 	totalAssets, totalPrice := sumAssetsAndPrice(orders)
-	if !exchange.CoinsEquals(totalAssets, msg.TotalAssets) {
+	if !totalAssets.Equal(msg.TotalAssets) {
 		return fmt.Errorf("total assets %q does not equal sum of bid order assets %q", msg.TotalAssets, totalAssets)
 	}
 
@@ -157,7 +157,7 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	}
 
 	totalAssets, totalPrice := sumAssetsAndPrice(orders)
-	if !exchange.CoinsEquals(totalPrice, sdk.Coins{msg.TotalPrice}) {
+	if !totalPrice.Equal(sdk.Coins{msg.TotalPrice}) {
 		return fmt.Errorf("total price %q does not equal sum of ask order prices %q", msg.TotalPrice, totalPrice)
 	}
 

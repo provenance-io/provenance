@@ -113,7 +113,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(NHash, 1000000))), "funding account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().Nil(err, "Got error when should have successfully paid all msg fees and swept remaining base fees")
-	s.Require().True(coins.IsEqual(sdk.Coins{sdk.NewInt64Coin(NHash, 1000000), sdk.NewInt64Coin("atom", 20000)}))
+	s.Require().True(coins.Equal(sdk.Coins{sdk.NewInt64Coin(NHash, 1000000), sdk.NewInt64Coin("atom", 20000)}))
 	s.Require().NoError(err, "feeChargeFn 2")
 	expected := sdk.Coins{sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(NHash, 1000000)}
 	s.Require().Equal(expected, coins, "final coins")

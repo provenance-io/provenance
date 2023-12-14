@@ -836,5 +836,5 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 
 	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
 	// the operations as an admin on the marker.
-	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
+	return m.GetSupply().Equal(sdk.NewCoin(m.GetDenom(), balance.Amount))
 }

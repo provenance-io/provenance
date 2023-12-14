@@ -170,7 +170,7 @@ func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs 
 	ctx := ctxIn // quarantine.WithBypass(ctxIn) // TODO[1760]: quarantine
 	if len(inputs) == 1 && len(outputs) == 1 {
 		// If there's only one of each, we use SendCoins for the nicer events.
-		if !exchange.CoinsEquals(inputs[0].Coins, outputs[0].Coins) {
+		if !inputs[0].Coins.Equal(outputs[0].Coins) {
 			return fmt.Errorf("input coins %q does not equal output coins %q",
 				inputs[0].Coins, outputs[0].Coins)
 		}

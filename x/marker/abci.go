@@ -24,7 +24,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk bankkeeper.Keeper) {
 			currentSupply := bk.GetSupply(ctx, record.GetDenom())
 
 			// If the current amount of marker coin in circulation doesn't match configured supply, make adjustments
-			if !requiredSupply.IsEqual(currentSupply) {
+			if !requiredSupply.Equal(currentSupply) {
 				ctx.Logger().Error(
 					fmt.Sprintf("Current %s supply is NOT at the required amount, adjusting %s to required supply level",
 						record.GetDenom(), currentSupply))
