@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -431,7 +431,7 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating MaxSupply marker param")
 	params := app.MarkerKeeper.GetParams(ctx)
 	//nolint:staticcheck // Populate new param with deprecated param
-	params.MaxSupply = math.NewIntFromUint64(params.MaxTotalSupply)
+	params.MaxSupply = sdkmath.NewIntFromUint64(params.MaxTotalSupply)
 	app.MarkerKeeper.SetParams(ctx, params)
 	ctx.Logger().Info("Done updating MaxSupply marker param")
 }

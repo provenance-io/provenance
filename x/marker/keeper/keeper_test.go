@@ -11,7 +11,6 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 
@@ -995,7 +994,7 @@ func TestAddMarkerViaProposal(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
-	newMsg := func(denom string, amt math.Int, manager string, status types.MarkerStatus,
+	newMsg := func(denom string, amt sdkmath.Int, manager string, status types.MarkerStatus,
 		markerType types.MarkerType, access []types.AccessGrant, allowGov bool,
 	) *types.MsgAddMarkerRequest {
 		return &types.MsgAddMarkerRequest{
@@ -1129,7 +1128,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 		{
 			name: "invalid authority",
 			amount: sdk.Coin{
-				Amount: math.NewInt(100),
+				Amount: sdkmath.NewInt(100),
 				Denom:  "invalid-authority-denom",
 			},
 			targetAddress: targetAddress,
@@ -1140,7 +1139,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 		{
 			name: "marker does not exist",
 			amount: sdk.Coin{
-				Amount: math.NewInt(100),
+				Amount: sdkmath.NewInt(100),
 				Denom:  "unknown-denom",
 			},
 			targetAddress: authority,
@@ -1151,7 +1150,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 		{
 			name: "marker with governance disabled",
 			amount: sdk.Coin{
-				Amount: math.NewInt(100),
+				Amount: sdkmath.NewInt(100),
 				Denom:  govDisabledDenom.Denom,
 			},
 			targetAddress: authority,
@@ -1162,7 +1161,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 		{
 			name: "marker status is not StatusActive",
 			amount: sdk.Coin{
-				Amount: math.NewInt(100),
+				Amount: sdkmath.NewInt(100),
 				Denom:  nonActiveDenom.Denom,
 			},
 			targetAddress: authority,
@@ -1173,7 +1172,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 		{
 			name: "all good",
 			amount: sdk.Coin{
-				Amount: math.NewInt(100),
+				Amount: sdkmath.NewInt(100),
 				Denom:  beesKnees.Denom,
 			},
 			targetAddress: authority,

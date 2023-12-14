@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -37,7 +37,7 @@ func (k Keeper) GetMaxTotalSupply(ctx sdk.Context) (max uint64) {
 }
 
 // GetMaxSupply return the current parameter value for the max allowed supply (or default if unset)
-func (k Keeper) GetMaxSupply(ctx sdk.Context) (max math.Int) {
+func (k Keeper) GetMaxSupply(ctx sdk.Context) (max sdkmath.Int) {
 	max = types.StringToBigInt(types.DefaultMaxSupply)
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyMaxSupply) {
 		k.paramSpace.Get(ctx, types.ParamStoreKeyMaxSupply, &max)

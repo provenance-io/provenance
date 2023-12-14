@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -269,7 +269,7 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 
 	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
 	store := ctx.KVStore(k.storeKey)
-	if math.NewIntFromUint64(netAssetValue.Volume).GT(marker.GetSupply().Amount) {
+	if sdkmath.NewIntFromUint64(netAssetValue.Volume).GT(marker.GetSupply().Amount) {
 		return fmt.Errorf("volume(%v) cannot exceed marker %q supply(%v) ", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
 	}
 

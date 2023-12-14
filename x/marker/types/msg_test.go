@@ -7,11 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/feegrant"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"cosmossdk.io/x/feegrant"
 
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 )
@@ -286,7 +287,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail on invalid marker",
 			msg: MsgAddFinalizeActivateMarkerRequest{
 				Amount: sdk.Coin{
-					Amount: math.NewInt(100),
+					Amount: sdkmath.NewInt(100),
 					Denom:  "",
 				},
 				Manager:                "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
@@ -423,7 +424,7 @@ func TestMsgSupplyIncreaseProposalRequestGetSigners(t *testing.T) {
 	targetAddress := sdk.AccAddress("input22222222222")
 	amount :=
 		sdk.Coin{
-			Amount: math.NewInt(100),
+			Amount: sdkmath.NewInt(100),
 			Denom:  "chocolate",
 		}
 
@@ -448,7 +449,7 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 		{
 			name: "negative coin amount",
 			amount: sdk.Coin{
-				Amount: math.NewInt(-1),
+				Amount: sdkmath.NewInt(-1),
 				Denom:  "invalid-denom",
 			},
 			targetAddress: targetAddress,
@@ -459,7 +460,7 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 		{
 			name: "invalid target address",
 			amount: sdk.Coin{
-				Amount: math.NewInt(100),
+				Amount: sdkmath.NewInt(100),
 				Denom:  "bbq-hotdog",
 			},
 			targetAddress: "",
@@ -470,7 +471,7 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 		{
 			name: "invalid authority",
 			amount: sdk.Coin{
-				Amount: math.NewInt(100),
+				Amount: sdkmath.NewInt(100),
 				Denom:  "bbq-hotdog",
 			},
 			targetAddress: targetAddress,
