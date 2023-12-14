@@ -15,8 +15,10 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
+// TODO[1760]: querier: Delete the metadata Querier.
+
 // NewQuerier creates a querier for auth REST endpoints
-func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 		case types.QueryScope:
