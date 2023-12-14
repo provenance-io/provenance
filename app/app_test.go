@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	dbm "github.com/cometbft/cometbft-db"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -78,7 +77,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 		AppOpts:            sdksim.EmptyAppOptions{},
 	}
 	app := NewAppWithCustomOptions(t, false, opts)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	initAccts := app.AccountKeeper.GetAllAccounts(ctx)
 	initAddrs := make([]sdk.AccAddress, len(initAccts))

@@ -4,23 +4,21 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
-	"github.com/provenance-io/provenance/x/msgfees/keeper"
-	"github.com/provenance-io/provenance/x/msgfees/simulation"
-	"github.com/provenance-io/provenance/x/msgfees/types"
-
 	"github.com/stretchr/testify/require"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	simapp "github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/x/msgfees/keeper"
+	"github.com/provenance-io/provenance/x/msgfees/simulation"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 func TestProposalContents(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	// initialize parameters
 	s := rand.NewSource(1)

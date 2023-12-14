@@ -47,7 +47,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
 	s.startBlockTime = time.Now()
-	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{Time: s.startBlockTime})
+	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.startBlockTime})
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())

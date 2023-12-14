@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 
@@ -34,7 +32,7 @@ import (
 
 func TestAccountMapperGetSet(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	user := testUserAddress("test")
@@ -81,7 +79,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 
 func TestExistingAccounts(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -116,7 +114,7 @@ func TestExistingAccounts(t *testing.T) {
 
 func TestAccountUnrestrictedDenoms(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
 	user := testUserAddress("test")
@@ -139,7 +137,7 @@ func TestAccountUnrestrictedDenoms(t *testing.T) {
 
 func TestAccountKeeperReader(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	user := testUserAddress("test")
@@ -174,7 +172,7 @@ func TestAccountKeeperReader(t *testing.T) {
 
 func TestAccountKeeperManageAccess(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	// Easiest way to create a valid bech32 address for testing.
@@ -281,7 +279,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 
 func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	addr := types.MustGetMarkerAddress("testcoin")
 	// Easiest way to create a valid bech32 address for testing.
@@ -323,7 +321,7 @@ func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 
 func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.MarkerKeeper.SetParams(ctx, types.DefaultParams())
 	addr := types.MustGetMarkerAddress("testcoin")
 	user := testUserAddress("test")
@@ -443,7 +441,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 
 func TestAccountKeeperGetAll(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	user := testUserAddress("test")
 	mac := types.NewEmptyMarkerAccount("testcoin",
@@ -480,7 +478,7 @@ func TestAccountKeeperGetAll(t *testing.T) {
 
 func TestAccountInsufficientExisting(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	user := sdk.AccAddress(pubkey.Address())
@@ -526,7 +524,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 
 func TestAccountImplictControl(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	setAcc := func(addr sdk.AccAddress, sequence uint64) {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
@@ -608,7 +606,7 @@ func TestAccountImplictControl(t *testing.T) {
 
 func TestForceTransfer(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	setAcc := func(addr sdk.AccAddress, sequence uint64) {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
@@ -742,7 +740,7 @@ func TestForceTransfer(t *testing.T) {
 
 func TestCanForceTransferFrom(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	setAcc := func(addr sdk.AccAddress, sequence uint64) {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
@@ -776,7 +774,7 @@ func TestCanForceTransferFrom(t *testing.T) {
 
 func TestMarkerFeeGrant(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -823,7 +821,7 @@ func testUserAddress(name string) sdk.AccAddress {
 
 func TestAddFinalizeActivateMarker(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
 	addr := types.MustGetMarkerAddress("testcoin")
@@ -898,7 +896,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 // Creating a marker over an existing account with a positive sequence number fails.
 func TestInvalidAccount(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 	user := testUserAddress("testcoin")
@@ -927,7 +925,7 @@ func TestInvalidAccount(t *testing.T) {
 
 func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
 	user := testUserAddress("test")
@@ -991,7 +989,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 
 func TestAddMarkerViaProposal(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
 	newMsg := func(denom string, amt sdkmath.Int, manager string, status types.MarkerStatus,
@@ -1070,7 +1068,7 @@ func TestAddMarkerViaProposal(t *testing.T) {
 
 func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
 	authority := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
@@ -1210,7 +1208,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 
 func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)

@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simapp "github.com/provenance-io/provenance/app"
@@ -26,7 +24,7 @@ func TestBeginBlockDeletionOfExpired(t *testing.T) {
 	now := time.Now()
 
 	app = simapp.Setup(t)
-	ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx = app.BaseApp.NewContext(false)
 	ctx = ctx.WithBlockTime(now.Add(-3 * time.Hour))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, user1Addr))
 

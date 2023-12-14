@@ -11,8 +11,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -76,7 +74,7 @@ func (s *TestSuite) SetupTest() {
 
 	s.app = app.Setup(s.T())
 	s.logBuffer.Reset()
-	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.k = s.app.ExchangeKeeper
 
 	addrs := app.AddTestAddrsIncremental(s.app, s.ctx, 5, sdkmath.NewInt(1_000_000_000))

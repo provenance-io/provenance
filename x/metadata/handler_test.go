@@ -7,17 +7,14 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/metadata"
@@ -44,7 +41,7 @@ type MetadataHandlerTestSuite struct {
 
 func (s *MetadataHandlerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.handler = metadata.NewHandler(s.app.MetadataKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()

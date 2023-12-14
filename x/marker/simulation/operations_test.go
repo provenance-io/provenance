@@ -11,17 +11,16 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/provenance-io/provenance/x/marker/keeper"
-
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/simulation"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -35,7 +34,7 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -500,7 +499,7 @@ func (s *SimTestSuite) getLastGovProp() *govtypes.Proposal {
 
 // freshCtx creates a new context and sets it to this SimTestSuite's ctx field.
 func (s *SimTestSuite) freshCtx() {
-	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 // createTestingAccountsWithPower creates new accounts with the specified power (coins amount).

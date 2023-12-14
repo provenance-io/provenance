@@ -7,12 +7,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	sdksim "cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdksim "cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -53,7 +52,7 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.App, sdk.Context) {
 	} else {
 		app = simapp.Setup(t)
 	}
-	ctx := app.BaseApp.NewContext(isCheckTx, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(isCheckTx)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx

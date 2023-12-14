@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/protobuf/proto"
 
 	"github.com/stretchr/testify/assert"
@@ -36,7 +35,7 @@ type HandlerTestSuite struct {
 
 func (s *HandlerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.handler = attribute.NewHandler(s.app.AttributeKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()

@@ -46,9 +46,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 
 	s.blockStartTime = time.Now()
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{
-		Time: s.blockStartTime,
-	})
+	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.blockStartTime})
 	s.msgServer = markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
 
 	s.privkey1 = secp256k1.GenPrivKey()

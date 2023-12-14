@@ -5,8 +5,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	"cosmossdk.io/log"
 	sdksim "cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
@@ -193,7 +191,7 @@ func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeC
 // returns context and app with params set on account keeper
 func createTestApp(t *testing.T) (*simapp.App, sdk.Context) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
 	return app, ctx

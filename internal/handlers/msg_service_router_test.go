@@ -231,7 +231,7 @@ func TestFailedTx(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 	gasFeesString := fmt.Sprintf("%v%s", (NewTestGasLimit()), sdk.DefaultBondDenom)
@@ -325,7 +325,7 @@ func TestMsgService(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 	gasFeesString := fmt.Sprintf("%v%s", (NewTestGasLimit()), sdk.DefaultBondDenom)
@@ -471,7 +471,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
@@ -539,7 +539,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		banktypes.Balance{Address: addr1.String(), Coins: initBalance},
 		banktypes.Balance{Address: addr2.String(), Coins: initBalance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
@@ -679,7 +679,7 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
@@ -760,7 +760,7 @@ func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
@@ -843,7 +843,7 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{ChainID: "msgfee-testing"})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
 
@@ -916,7 +916,7 @@ func TestRewardsProgramStartError(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	blockTime := ctx.BlockTime()
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(NHash, 290_500_010))
@@ -972,7 +972,7 @@ func TestRewardsProgramStart(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()})
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -1039,7 +1039,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -1196,7 +1196,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 		[]authtypes.GenesisAccount{acct1}, nil,
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -1334,7 +1334,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -1493,7 +1493,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -1686,7 +1686,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 		banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -1859,7 +1859,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		[]authtypes.GenesisAccount{acct1}, nil,
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -1997,7 +1997,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 		[]authtypes.GenesisAccount{acct1}, nil,
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -2084,7 +2084,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 		[]authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2),
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -2189,7 +2189,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 		[]authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2),
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -2275,7 +2275,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1}, nil,
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -2388,7 +2388,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 		banktypes.Balance{Address: addr1.String(), Coins: acctBalance},
 		banktypes.Balance{Address: addr2.String(), Coins: acctBalance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct2.GetAddress(), fundCoins),
@@ -2516,7 +2516,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 		[]authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2),
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -2638,7 +2638,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	//err, bondedVal1, bondedVal2 := createTestValidators(pubKey, pubKey2, addr, addr2)
 	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct1}, createValSet(t, pubKey, pubKey2), banktypes.Balance{Address: addr.String(), Coins: acct1Balance})
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
@@ -2752,7 +2752,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	rewardProgram.State = rewardtypes.RewardProgram_STATE_PENDING
 	app := piosimapp.SetupWithGenesisRewardsProgram(t, uint64(2), []rewardtypes.RewardProgram{rewardProgram}, []authtypes.GenesisAccount{acct3}, createValSet(t, pubKey, pubKey2), banktypes.Balance{Address: addr.String(), Coins: acct1Balance}, banktypes.Balance{Address: addr3.String(), Coins: acct1Balance})
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	ctx.WithBlockTime(time.Now())
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 290_500_010))))
@@ -2870,7 +2870,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),
@@ -2998,7 +2998,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 		banktypes.Balance{Address: addr.String(), Coins: acct1Balance},
 	)
 
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 	fundCoins := sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 290_500_010))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, acct1.GetAddress(), fundCoins),

@@ -3,7 +3,6 @@ package marker_test
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
@@ -18,7 +17,7 @@ import (
 
 func TestBeginBlocker(t *testing.T) {
 	app := app.Setup(t)
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	testmint := &types.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{

@@ -19,8 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	"github.com/provenance-io/provenance/app"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
@@ -50,7 +48,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	app := app.Setup(s.T())
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	s.app = app
 	s.ctx = ctx
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
@@ -412,7 +410,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 	// b) I don't want to worry about any of the name records automatically added for the suite runs.
 
 	provApp := app.Setup(t)
-	ctx := provApp.NewContext(false, cmtproto.Header{})
+	ctx := provApp.NewContext(false)
 
 	getRecordNames := func(records nametypes.NameRecords) []string {
 		rv := make([]string, len(records))
@@ -520,7 +518,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 				// And use a fresh event manager.
 				em := sdk.NewEventManager()
 
-				tctx := provApp.NewContext(false, cmtproto.Header{}).WithEventManager(em).WithLogger(logger)
+				tctx := provApp.NewContext(false).WithEventManager(em).WithLogger(logger)
 				testFunc := func() {
 					provApp.NameKeeper.DeleteInvalidAddressIndexEntries(tctx)
 				}

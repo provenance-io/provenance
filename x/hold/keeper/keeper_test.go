@@ -11,8 +11,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -50,7 +48,7 @@ type TestSuite struct {
 
 func (s *TestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.sdkCtx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.sdkCtx = s.app.BaseApp.NewContext(false)
 	s.stdlibCtx = sdk.WrapSDKContext(s.sdkCtx)
 	s.keeper = s.app.HoldKeeper
 	s.bankKeeper = s.app.BankKeeper

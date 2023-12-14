@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/reward"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/reward"
 )
 
 func TestEndBlockWithNoActiveRewards(t *testing.T) {
@@ -19,7 +19,7 @@ func TestEndBlockWithNoActiveRewards(t *testing.T) {
 	now := time.Now()
 
 	app = simapp.Setup(t)
-	ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx = app.BaseApp.NewContext(false)
 	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
 
 	ctx = ctx.WithBlockHeight(2)
@@ -35,7 +35,7 @@ func TestBeginBlockWithNoActiveRewards(t *testing.T) {
 	now := time.Now()
 
 	app = simapp.Setup(t)
-	ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx = app.BaseApp.NewContext(false)
 	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
 
 	ctx = ctx.WithBlockHeight(2)

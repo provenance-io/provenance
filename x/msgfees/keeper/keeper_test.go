@@ -36,7 +36,7 @@ var bankSendAuthMsgType = banktypes.SendAuthorization{}.MsgTypeURL()
 
 func (s *TestSuite) SetupTest() {
 	app := simapp.Setup(s.T())
-	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	now := cmttime.Now()
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())

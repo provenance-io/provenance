@@ -5,14 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/stretchr/testify/suite"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/attribute/keeper"
@@ -37,7 +36,7 @@ type MsgServerTestSuite struct {
 
 func (s *MsgServerTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(true, cmtproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(true)
 	s.ctx = s.ctx.WithBlockHeight(1).WithBlockTime(time.Now())
 	s.msgServer = keeper.NewMsgServerImpl(s.app.AttributeKeeper)
 	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())

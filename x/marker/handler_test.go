@@ -5,13 +5,11 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -24,6 +22,7 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/provenance-io/provenance/app"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker"
 	"github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -49,7 +48,7 @@ type HandlerTestSuite struct {
 
 func (s *HandlerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.handler = marker.NewHandler(s.app.MarkerKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()

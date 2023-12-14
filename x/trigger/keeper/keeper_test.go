@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.CreateAccounts(4)
 	s.msgServer = keeper.NewMsgServerImpl(s.app.TriggerKeeper)
-	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now().UTC()})
+	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now().UTC()})
 	s.ctx = s.ctx.WithBlockHeight(100)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())

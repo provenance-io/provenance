@@ -111,7 +111,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	PrintStats(config, db)
 
-	ctx := app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight() + 1, Time: lastBlockTime})
+	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight() + 1, Time: lastBlockTime})
 
 	// 3. Benchmark each invariant separately
 	//

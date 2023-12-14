@@ -70,7 +70,7 @@ func (s *AuthzTestSuite) SetupTest() {
 }
 
 func (s *AuthzTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, cmtproto.Header{Time: time.Now()}))
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()}))
 }
 
 // AssertErrorValue asserts that:

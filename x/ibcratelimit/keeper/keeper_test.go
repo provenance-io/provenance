@@ -3,14 +3,14 @@ package keeper_test
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
-	"github.com/stretchr/testify/suite"
 )
 
 type TestSuite struct {
@@ -25,7 +25,7 @@ type TestSuite struct {
 
 func (s *TestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, cmtproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.ctx = s.ctx.WithBlockHeight(0)
 
 	s.msgServer = keeper.NewMsgServer(*s.app.RateLimitingKeeper)

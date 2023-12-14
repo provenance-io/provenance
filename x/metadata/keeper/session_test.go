@@ -6,18 +6,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
-	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
-	"github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"github.com/stretchr/testify/suite"
+	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type SessionKeeperTestSuite struct {
@@ -87,7 +85,7 @@ func (s *SessionKeeperTestSuite) SetupTest() {
 }
 
 func (s *SessionKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, cmtproto.Header{}))
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
 }
 
 func TestSessionKeeperTestSuite(t *testing.T) {
