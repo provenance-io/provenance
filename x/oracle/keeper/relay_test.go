@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"strconv"
 
-	proto "github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+
+	cerrs "cosmossdk.io/errors"
 
 	// icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types" // TODO[1760]: async-icq
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
@@ -61,8 +62,8 @@ func (s *KeeperTestSuite) TestSendQuery() {
 }
 
 func (s *KeeperTestSuite) TestOnAcknowledgementPacket() {
-	wasmError := sdkerrors.New("codespace", 2, "jackthecat ran away")
-	_, code, _ := sdkerrors.ABCIInfo(wasmError, false)
+	wasmError := cerrs.New("codespace", 2, "jackthecat ran away")
+	_, code, _ := cerrs.ABCIInfo(wasmError, false)
 
 	tests := []struct {
 		name   string
@@ -165,7 +166,7 @@ func createICQResponse(cdc codec.Codec, response string) []byte {
 	// }
 	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
 	// return icqBytes
-	return []byte{"TODO[1760]: async-icq"}
+	return []byte("TODO[1760]: async-icq")
 }
 
 func createInvalidICQPacketAck() []byte {
@@ -175,7 +176,7 @@ func createInvalidICQPacketAck() []byte {
 	// }
 	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
 	// return icqBytes
-	return []byte{"TODO[1760]: async-icq"}
+	return []byte("TODO[1760]: async-icq")
 }
 
 func createEmptyICQPacketAck() []byte {
@@ -188,7 +189,7 @@ func createEmptyICQPacketAck() []byte {
 	//
 	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
 	// return icqBytes
-	return []byte{"TODO[1760]: async-icq"}
+	return []byte("TODO[1760]: async-icq")
 }
 
 func createInvalidCosmosResponse() []byte {
@@ -202,5 +203,5 @@ func createInvalidCosmosResponse() []byte {
 	// }
 	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
 	// return icqBytes
-	return []byte{"TODO[1760]: async-icq"}
+	return []byte("TODO[1760]: async-icq")
 }
