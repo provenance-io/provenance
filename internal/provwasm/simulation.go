@@ -47,11 +47,11 @@ type Wrapper struct {
 
 func NewWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) *Wrapper {
 	return &Wrapper{
-		cdc:  cdc,
-		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk),
-		ak:   ak,
-		bk:   bk,
-		nk:   nk,
+		cdc: cdc,
+		// wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk), // TODO[1760]: wasm: Extra args needed here.
+		ak: ak,
+		bk: bk,
+		nk: nk,
 	}
 }
 
@@ -71,7 +71,6 @@ func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 		Codes:     nil,
 		Contracts: nil,
 		Sequences: nil,
-		GenMsgs:   nil,
 	}
 
 	_, err := input.Cdc.MarshalJSON(&wasmGenesis)
@@ -84,7 +83,8 @@ func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 
 // ProposalContents doesn't return any content functions for governance proposals.
 func (pw Wrapper) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return pw.wasm.ProposalContents(simState)
+	// return pw.wasm.ProposalContents(simState) // TODO[1760]: wasm: Find replacement for this or delete it.
+	return nil
 }
 
 // RandomizedParams returns empty list as the params don't change
