@@ -140,9 +140,15 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 		if err != nil {
 			panic(err)
 		}
-		feePool := app.DistrKeeper.GetFeePool(ctx)
+		feePool, err := app.DistrKeeper.FeePool.Get(ctx)
+		if err != nil {
+			panic(err)
+		}
 		feePool.CommunityPool = feePool.CommunityPool.Add(scraps...)
-		app.DistrKeeper.SetFeePool(ctx, feePool)
+		err = app.DistrKeeper.FeePool.Set(ctx, feePool)
+		if err != nil {
+			panic(err)
+		}
 
 		if err = app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, helpers.MustGetOperatorAddr(val)); err != nil {
 			panic(err)
