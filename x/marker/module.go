@@ -12,6 +12,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -20,6 +21,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 
 	"github.com/provenance-io/provenance/x/marker/client/cli"
 	"github.com/provenance-io/provenance/x/marker/keeper"
@@ -91,7 +93,7 @@ type AppModule struct {
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.Keeper
 	feegrantKeeper feegrantkeeper.Keeper
-	govKeeper      types.GovKeeper
+	govKeeper      govkeeper.Keeper
 	attrKeeper     types.AttrKeeper
 	registry       cdctypes.InterfaceRegistry
 }
@@ -103,7 +105,7 @@ func NewAppModule(
 	accountKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
 	feegrantKeeper feegrantkeeper.Keeper,
-	govKeeper types.GovKeeper,
+	govKeeper govkeeper.Keeper,
 	attrKeeper types.AttrKeeper,
 	registry cdctypes.InterfaceRegistry,
 ) AppModule {

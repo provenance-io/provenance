@@ -2,12 +2,12 @@ package antewrapper
 
 import (
 	storetypes "cosmossdk.io/store/types"
+	txsigning "cosmossdk.io/x/tx/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	cosmosante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
@@ -21,7 +21,7 @@ type HandlerOptions struct {
 	ExtensionOptionChecker cosmosante.ExtensionOptionChecker
 	FeegrantKeeper         msgfeestypes.FeegrantKeeper
 	MsgFeesKeeper          msgfeestypes.MsgFeesKeeper
-	SignModeHandler        authsigning.SignModeHandler
+	TxSigningHandlerMap    *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
 
@@ -34,8 +34,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, sdkerrors.ErrLogic.Wrap("bank keeper is required for ante builder")
 	}
 
-	if options.SignModeHandler == nil {
-		return nil, sdkerrors.ErrLogic.Wrap("sign mode handler is required for ante builder")
+	if options.TxSigningHandlerMap == nil {
+		return nil, sdkerrors.ErrLogic.Wrap("tx signing handler map is required for ante builder")
 	}
 
 	var sigGasConsumer = options.SigGasConsumer
@@ -58,7 +58,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		cosmosante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		cosmosante.NewValidateSigCountDecorator(options.AccountKeeper),
 		cosmosante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
-		// cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler), // TODO[1760]: sign mode handler map
+		cosmosante.NewSigVerificationDecorator(options.AccountKeeper, options.TxSigningHandlerMap),
 		cosmosante.NewIncrementSequenceDecorator(options.AccountKeeper),
 	}
 

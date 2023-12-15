@@ -1,10 +1,13 @@
 package types
 
 import (
+	"context"
+
+	"cosmossdk.io/x/feegrant"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"cosmossdk.io/x/feegrant"
 )
 
 // AccountKeeper defines the expected account keeper (noalias)
@@ -28,6 +31,6 @@ type MsgFeesKeeper interface {
 
 // FeegrantKeeper defines the expected feegrant keeper.
 type FeegrantKeeper interface {
-	GetAllowance(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error)
-	UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
+	GetAllowance(ctx context.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error)
+	UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
 }

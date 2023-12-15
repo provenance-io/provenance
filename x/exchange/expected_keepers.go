@@ -4,18 +4,15 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
-	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
-	NewAccount(ctx sdk.Context, acc authtypes.AccountI) authtypes.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	SetAccount(ctx context.Context, acc sdk.AccountI)
+	HasAccount(ctx context.Context, addr sdk.AccAddress) bool
+	NewAccount(ctx context.Context, acc sdk.AccountI) sdk.AccountI
 }
 
 type AttributeKeeper interface {
@@ -25,7 +22,8 @@ type AttributeKeeper interface {
 type BankKeeper interface {
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	InputOutputCoins(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) error
+	// TODO[1760]: exchange: Put InputOutputCoins back in this expected keeper once our fork is back in place.
+	// InputOutputCoins(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) error
 }
 
 type HoldKeeper interface {

@@ -1454,8 +1454,6 @@ func (d dummyBankKeeper) GetAllSendEnabledEntries(_ context.Context) []banktypes
 	return nil
 }
 
-func (d dummyBankKeeper) DeleteSendEnabled(_ context.Context, _ string) {}
-
 func TestBypassAddrsLocked(t *testing.T) {
 	// This test makes sure that the keeper's copy of reqAttrBypassAddrs
 	// isn't changed if the originally provided value is changed.

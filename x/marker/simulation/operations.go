@@ -18,6 +18,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
@@ -47,7 +48,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec,
-	k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk types.GovKeeper, attrk types.AttrKeeper,
+	k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk govkeeper.Keeper, attrk types.AttrKeeper,
 ) simulation.WeightedOperations {
 	args := &WeightedOpsArgs{
 		AppParams:  appParams,
@@ -305,7 +306,11 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 		}
 
 		// Get the governance min deposit needed
-		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
+		govParams, err := args.GK.Params.Get(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "failed to get gov params"), nil, err
+		}
+		govMinDep := sdk.NewCoins(govParams.MinDeposit...)
 
 		sender, _ := simtypes.RandomAcc(r, accs)
 
@@ -328,12 +333,12 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			return opMsg, nil, err
 		}
 
-		proposalID, err := args.GK.GetProposalID(ctx)
+		proposalID, err := args.GK.ProposalID.Next(ctx)
 		if err != nil {
 			return opMsg, nil, err
 		}
 
-		votingPeriod := args.GK.GetVotingParams(ctx).VotingPeriod
+		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
 		for i, acct := range accs {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
@@ -584,7 +589,7 @@ type WeightedOpsArgs struct {
 	ProtoCodec *codec.ProtoCodec
 	AK         authkeeper.AccountKeeper
 	BK         bankkeeper.Keeper
-	GK         types.GovKeeper
+	GK         govkeeper.Keeper
 	AttrK      types.AttrKeeper
 }
 

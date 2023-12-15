@@ -7,10 +7,8 @@ import (
 	"cosmossdk.io/x/feegrant"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -18,12 +16,12 @@ import (
 
 // AccountKeeper defines the auth/account functionality needed by the marker keeper.
 type AccountKeeper interface {
-	GetAllAccounts(ctx sdk.Context) (accounts []authtypes.AccountI)
-	GetNextAccountNumber(ctx sdk.Context) uint64
-	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
-	SetAccount(sdk.Context, authtypes.AccountI)
-	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
-	RemoveAccount(ctx sdk.Context, acc authtypes.AccountI)
+	GetAllAccounts(context.Context) []sdk.AccountI
+	NextAccountNumber(context.Context) uint64
+	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
+	SetAccount(context.Context, sdk.AccountI)
+	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
+	RemoveAccount(context.Context, sdk.AccountI)
 }
 
 // AuthzKeeper defines the authz functionality needed by the marker keeper.
@@ -35,37 +33,35 @@ type AuthzKeeper interface {
 
 // BankKeeper defines the bank functionality needed by the marker module.
 type BankKeeper interface {
-	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
-	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	GetSupply(ctx context.Context, denom string) sdk.Coin
-	DenomOwners(ctx context.Context, req *banktypes.QueryDenomOwnersRequest) (*banktypes.QueryDenomOwnersResponse, error)
+	GetAllBalances(context context.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(context context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	GetSupply(context context.Context, denom string) sdk.Coin
+	DenomOwners(context context.Context, req *banktypes.QueryDenomOwnersRequest) (*banktypes.QueryDenomOwnersResponse, error)
 
-	SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	SendCoins(context context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(context context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromAccountToModule(context context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	MintCoins(context context.Context, moduleName string, amt sdk.Coins) error
+	BurnCoins(context context.Context, moduleName string, amt sdk.Coins) error
 
 	AppendSendRestriction(restriction banktypes.SendRestrictionFn)
 	BlockedAddr(addr sdk.AccAddress) bool
 
-	GetDenomMetaData(ctx context.Context, denom string) (banktypes.Metadata, bool)
-	SetDenomMetaData(ctx context.Context, denomMetaData banktypes.Metadata)
+	GetDenomMetaData(context context.Context, denom string) (banktypes.Metadata, bool)
+	SetDenomMetaData(context context.Context, denomMetaData banktypes.Metadata)
 
-	// TODO: Delete the below entries when no longer needed.
+	// TODO[1760]: bank: Delete the below entries when no longer needed (or change this back to a regular TODO).
 
 	// IterateAllBalances only used in GetAllMarkerHolders used by the unneeded querier.
 	// The Holding query just uses the DenomOwners query endpoint.
-	IterateAllBalances(ctx context.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
+	IterateAllBalances(context context.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
 	// GetAllSendEnabledEntries only needed by RemoveIsSendEnabledEntries in the quicksilver upgrade.
-	GetAllSendEnabledEntries(ctx context.Context) []banktypes.SendEnabled
-	// DeleteSendEnabled only needed by RemoveIsSendEnabledEntries in the quicksilver upgrade.
-	DeleteSendEnabled(ctx context.Context, denom string)
+	GetAllSendEnabledEntries(context context.Context) []banktypes.SendEnabled
 }
 
 // FeeGrantKeeper defines the fee-grant functionality needed by the marker module.
 type FeeGrantKeeper interface {
-	GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error
+	GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error
 }
 
 // Note: There is no IBCKeeper interface in here.
@@ -84,14 +80,6 @@ type AttrKeeper interface {
 // NameKeeper defines the name keeper functionality needed by the marker module.
 type NameKeeper interface {
 	Normalize(ctx sdk.Context, name string) (string, error)
-}
-
-// GovKeeper defines the gov functionality needed by the marker module sims.
-type GovKeeper interface {
-	GetProposal(ctx context.Context, proposalID uint64) (govtypes.Proposal, bool)
-	GetDepositParams(ctx context.Context) govtypes.DepositParams
-	GetVotingParams(ctx context.Context) govtypes.VotingParams
-	GetProposalID(ctx context.Context) (uint64, error)
 }
 
 // IbcTransferMsgServer defines the message server functionality needed by the marker module.

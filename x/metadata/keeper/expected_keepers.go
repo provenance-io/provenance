@@ -5,13 +5,12 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // AuthKeeper is an interface with functions that the auth.Keeper has that are needed in this module.
 type AuthKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 // AuthzKeeper is an interface with functions that the authz.Keeper has that are needed in this module.

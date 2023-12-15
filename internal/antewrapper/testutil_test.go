@@ -75,12 +75,12 @@ func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 
 	anteHandler, err := antewrapper.NewAnteHandler(
 		antewrapper.HandlerOptions{
-			AccountKeeper:   s.app.AccountKeeper,
-			BankKeeper:      s.app.BankKeeper,
-			FeegrantKeeper:  s.app.FeeGrantKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			MsgFeesKeeper:   s.app.MsgFeesKeeper,
+			AccountKeeper:       s.app.AccountKeeper,
+			BankKeeper:          s.app.BankKeeper,
+			FeegrantKeeper:      s.app.FeeGrantKeeper,
+			TxSigningHandlerMap: encodingConfig.TxConfig.SignModeHandler(),
+			SigGasConsumer:      ante.DefaultSigVerificationGasConsumer,
+			MsgFeesKeeper:       s.app.MsgFeesKeeper,
 		},
 	)
 
