@@ -15,16 +15,15 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	sdksim "cosmossdk.io/simapp"
 
+	dbm "github.com/cosmos/cosmos-db"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -32,6 +31,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -46,17 +46,17 @@ import (
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // SimApp testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
+var DefaultConsensusParams = &cmttmtypes.ConsensusParams{
+	Block: &cmttmtypes.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   60_000_000,
 	},
-	Evidence: &cmtproto.EvidenceParams{
+	Evidence: &cmttmtypes.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 		MaxBytes:        10000,
 	},
-	Validator: &cmtproto.ValidatorParams{
+	Validator: &cmttmtypes.ValidatorParams{
 		PubKeyTypes: []string{
 			cmttypes.ABCIPubKeyTypeEd25519,
 		},
@@ -83,7 +83,7 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisSt
 		pioconfig.SetProvenanceConfig("", 0)
 	}
 
-	app := New(loggerMaker(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, sdksim.EmptyAppOptions{})
+	app := New(loggerMaker(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, simtestutil.EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
@@ -231,7 +231,7 @@ func genesisStateWithValSet(t *testing.T,
 			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdkmath.LegacyOneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), val.Address.String(), sdkmath.LegacyOneDec()))
 	}
 
 	// set validators and delegations
@@ -245,7 +245,7 @@ func genesisStateWithValSet(t *testing.T,
 	}
 
 	if len(delegations) > 0 {
-		bondCoins := sdk.NewCoin(sdk.DefaultBondDenom, bondAmt.MulRaw(delegations))
+		bondCoins := sdk.NewCoin(sdk.DefaultBondDenom, bondAmt.MulRaw(int64(len(delegations))))
 		// add delegated tokens to total supply
 		totalSupply = totalSupply.Add(bondCoins)
 		// add bonded amount to bonded pool module account
