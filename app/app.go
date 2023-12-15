@@ -21,6 +21,7 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+
 	// "cosmossdk.io/store/streaming" // TODO[1760]: streaming: See if we can use this directly or if we have needed modifications.
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
@@ -387,7 +388,7 @@ func New(
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
 		authzkeeper.StoreKey, group.StoreKey,
 
-		// ibchost.StoreKey, // TODO[1760]: ibc
+		// ibchost.StoreKey, // TODO[1760]: ibc-host
 		ibctransfertypes.StoreKey,
 		icahosttypes.StoreKey,
 		// icqtypes.StoreKey, // TODO[1760]: async-icq
@@ -439,7 +440,7 @@ func New(
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 
 	// grant capabilities for the ibc and ibc-transfer modules
-	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule("ibc") // TODO[1760]: ibc: was ibchost.ModuleName
+	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule("ibc") // TODO[1760]: ibc-host: was ibchost.ModuleName
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
@@ -518,7 +519,7 @@ func New(
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
 
 	// Create IBC Keeper
-	// TODO[1760]: ibc: Put back this call to NewKeeper with fixed arguments.
+	// TODO[1760]: ibc-host: Put back this call to NewKeeper with fixed arguments.
 	// app.IBCKeeper = ibckeeper.NewKeeper(
 	// 	appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	// )
@@ -807,7 +808,7 @@ func New(
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		// icqModule, // TODO[1760]: async-icq
-		// icaModule, // TODO[1760]: ica
+		// icaModule, // TODO[1760]: ica-host
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -1026,7 +1027,7 @@ func New(
 		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper, app.AccountKeeper, app.BankKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
-		// icaModule, // TODO[1760]: ica
+		// icaModule, // TODO[1760]: ica-host
 	)
 
 	app.sm.RegisterStoreDecoders()
