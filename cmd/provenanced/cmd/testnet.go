@@ -229,7 +229,7 @@ func InitTestnet(
 			valPubKeys[i],
 			sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(sdkmath.OneDec(), sdkmath.OneDec(), sdkmath.OneDec()),
+			stakingtypes.NewCommissionRates(sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
 			sdkmath.OneInt(),
 		)
 
@@ -378,10 +378,10 @@ func initGenFiles(
 	var mintGenState minttypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
 	mintGenState.Params.MintDenom = chainDenom
-	mintGenState.Minter.AnnualProvisions = sdkmath.ZeroDec()
-	mintGenState.Minter.Inflation = sdkmath.ZeroDec()
-	mintGenState.Params.InflationMax = sdkmath.ZeroDec()
-	mintGenState.Params.InflationMin = sdkmath.ZeroDec()
+	mintGenState.Minter.AnnualProvisions = sdkmath.LegacyZeroDec()
+	mintGenState.Minter.Inflation = sdkmath.LegacyZeroDec()
+	mintGenState.Params.InflationMax = sdkmath.LegacyZeroDec()
+	mintGenState.Params.InflationMin = sdkmath.LegacyZeroDec()
 	appGenState[minttypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&mintGenState)
 
 	// Set the root names

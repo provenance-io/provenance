@@ -195,13 +195,13 @@ func createAndExportGenesisFile(
 		moduleName := minttypes.ModuleName
 		var mintGenState minttypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &mintGenState)
-		mintGenState.Minter.Inflation = sdkmath.ZeroDec()
-		mintGenState.Minter.AnnualProvisions = sdkmath.OneDec()
+		mintGenState.Minter.Inflation = sdkmath.LegacyZeroDec()
+		mintGenState.Minter.AnnualProvisions = sdkmath.LegacyOneDec()
 		mintGenState.Params.MintDenom = pioconfig.GetProvenanceConfig().BondDenom
-		mintGenState.Params.InflationMax = sdkmath.ZeroDec()
-		mintGenState.Params.InflationMin = sdkmath.ZeroDec()
-		mintGenState.Params.InflationRateChange = sdkmath.OneDec()
-		mintGenState.Params.GoalBonded = sdkmath.OneDec()
+		mintGenState.Params.InflationMax = sdkmath.LegacyZeroDec()
+		mintGenState.Params.InflationMin = sdkmath.LegacyZeroDec()
+		mintGenState.Params.InflationRateChange = sdkmath.LegacyOneDec()
+		mintGenState.Params.GoalBonded = sdkmath.LegacyOneDec()
 		mintGenState.Params.BlocksPerYear = 6311520 // (86400 / 5) * 365.25
 		appGenState[moduleName] = cdc.MustMarshalJSON(&mintGenState)
 	}
