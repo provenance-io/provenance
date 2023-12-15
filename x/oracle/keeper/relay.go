@@ -47,7 +47,7 @@ func (k Keeper) SendQuery(
 	// }
 	//
 	// return k.createOutgoingPacket(ctx, sourcePort, sourceChannel, destinationPort, destinationChannel, chanCap, icqPacketData, timeoutTimestamp)
-	return 0, cerrs.Wrapf(sdkerrors.ErrNotSupported, "TODO[1760]: async-icq")
+	return 0, cerrs.Wrapf(sdkerrors.ErrNotSupported, "not yet updated")
 }
 
 // TODO[1760]: async-icq
@@ -128,7 +128,7 @@ func (k Keeper) OnAcknowledgementPacket(
 		// 	k.Logger(ctx).Error("interchain query ack response was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
 		// 	return err
 		// }
-		return cerrs.Wrapf(sdkerrors.ErrNotSupported, "TODO[1760]: async-icq")
+		return cerrs.Wrapf(sdkerrors.ErrNotSupported, "not yet updated")
 	case *channeltypes.Acknowledgement_Error:
 		err := ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryError{
 			SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),

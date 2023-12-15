@@ -129,7 +129,7 @@ func (am AppModule) OnRecvPacket(
 	_ sdk.AccAddress,
 ) ibcexported.Acknowledgement {
 	// return channeltypes.NewErrorAcknowledgement(cerrs.Wrapf(icqtypes.ErrInvalidChannelFlow, "oracle module can not receive packets")) // TODO[1760]: async-icq
-	return channeltypes.NewErrorAcknowledgement(cerrs.Wrapf(sdkerrors.ErrNotSupported, "TODO[1760]: async-icq"))
+	return channeltypes.NewErrorAcknowledgement(cerrs.Wrapf(sdkerrors.ErrNotSupported, "not yet updated"))
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface

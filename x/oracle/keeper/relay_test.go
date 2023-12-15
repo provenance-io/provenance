@@ -166,7 +166,7 @@ func createICQResponse(cdc codec.Codec, response string) []byte {
 	// }
 	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
 	// return icqBytes
-	return []byte("TODO[1760]: async-icq")
+	return []byte("not yet updated")
 }
 
 func createInvalidICQPacketAck() []byte {
@@ -176,7 +176,7 @@ func createInvalidICQPacketAck() []byte {
 	// }
 	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
 	// return icqBytes
-	return []byte("TODO[1760]: async-icq")
+	return []byte("not yet updated")
 }
 
 func createEmptyICQPacketAck() []byte {
@@ -189,7 +189,7 @@ func createEmptyICQPacketAck() []byte {
 	//
 	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
 	// return icqBytes
-	return []byte("TODO[1760]: async-icq")
+	return []byte("not yet updated")
 }
 
 func createInvalidCosmosResponse() []byte {
@@ -203,5 +203,5 @@ func createInvalidCosmosResponse() []byte {
 	// }
 	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
 	// return icqBytes
-	return []byte("TODO[1760]: async-icq")
+	return []byte("not yet updated")
 }
