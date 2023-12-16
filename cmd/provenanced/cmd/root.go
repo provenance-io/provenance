@@ -42,7 +42,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	rosettacmd "github.com/cosmos/rosetta/cmd"
+	// rosettacmd "github.com/cosmos/rosetta/cmd" // TODO[1760]: rosetta
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
@@ -176,7 +176,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	)
 
 	// Add Rosetta command
-	rootCmd.AddCommand(rosettacmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+	// rootCmd.AddCommand(rosettacmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler)) // TODO[1760]: rosetta
 	rootCmd.AddCommand(pruning.Cmd(newApp, app.DefaultNodeHome))
 	// Disable usage when the start command returns an error.
 	startCmd, _, err := rootCmd.Find([]string{"start"})
