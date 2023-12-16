@@ -1,9 +1,18 @@
 package helpers
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+// ExitCode contains the exit code for cmd exit.
+type ExitCode int
+
+func (e ExitCode) Error() string {
+	return fmt.Sprintf("exit code: %d", e)
+}
 
 // MustValAddressFromBech32 calls sdk.ValAddressFromBech32 and panics on error.
 func MustValAddressFromBech32(operatorAddr string) sdk.ValAddress {

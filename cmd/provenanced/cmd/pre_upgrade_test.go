@@ -28,6 +28,7 @@ import (
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
@@ -113,13 +114,13 @@ func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
 	rv.Result = cmd.Execute(rv.Cmd)
 	if rv.Result != nil {
 		t.Logf("Execution resulting in error: %v", rv.Result)
-		var srvErrP *server.ErrorCode
-		var srvErr server.ErrorCode
+		var srvErrP *helpers.ExitCode
+		var srvErr helpers.ExitCode
 		switch {
 		case errors.As(rv.Result, &srvErrP):
-			rv.ExitCode = srvErrP.Code
+			rv.ExitCode = int(*srvErrP)
 		case errors.As(rv.Result, &srvErr):
-			rv.ExitCode = srvErr.Code
+			rv.ExitCode = int(srvErr)
 		default:
 			rv.ExitCode = 1
 		}

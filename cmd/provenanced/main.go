@@ -4,21 +4,20 @@ import (
 	"errors"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/server"
-
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
+	"github.com/provenance-io/provenance/helpers"
 )
 
 func main() {
 	rootCmd, _ := cmd.NewRootCmd(true)
 	if err := cmd.Execute(rootCmd); err != nil {
-		var srvErrP *server.ErrorCode
-		var srvErr server.ErrorCode
+		var srvErrP *helpers.ExitCode
+		var srvErr helpers.ExitCode
 		switch {
 		case errors.As(err, &srvErrP):
-			os.Exit(srvErrP.Code)
+			os.Exit(int(*srvErrP))
 		case errors.As(err, &srvErr):
-			os.Exit(srvErr.Code)
+			os.Exit(int(srvErr))
 		default:
 			os.Exit(1)
 		}

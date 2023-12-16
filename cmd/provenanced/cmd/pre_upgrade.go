@@ -8,15 +8,15 @@ import (
 
 	cmtconfig "github.com/cometbft/cometbft/config"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
+	"github.com/provenance-io/provenance/helpers"
 )
 
 var (
-	ErrFail      error = server.ErrorCode{Code: 30}
-	ErrFailRetry error = server.ErrorCode{Code: 31}
+	ErrFail      error = helpers.ExitCode(30)
+	ErrFailRetry error = helpers.ExitCode(31)
 )
 
 // GetPreUpgradeCmd returns the pre-upgrade command which cosmovisor runs before
