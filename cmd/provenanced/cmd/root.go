@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	dbm "github.com/cometbft/cometbft-db"
 	cmtconfig "github.com/cometbft/cometbft/config"
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
@@ -22,7 +21,9 @@ import (
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -41,6 +42,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	rosettacmd "github.com/cosmos/rosetta/cmd"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
@@ -51,7 +53,7 @@ import (
 const (
 	// EnvTypeFlag is a flag for indicating a testnet
 	EnvTypeFlag = "testnet"
-	// Flag used to indicate coin type.
+	// CoinTypeFlag is a flag for indicating coin type.
 	CoinTypeFlag = "coin-type"
 )
 
@@ -66,7 +68,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithBroadcastMode(flags.BroadcastBlock).
+		WithBroadcastMode(flags.BroadcastSync). // TODO[1760]: Verify that this is not right since BroadcastBlock is gone.
 		WithHomeDir(app.DefaultNodeHome).
 		WithViper("PIO")
 	sdk.SetCoinDenomRegex(app.SdkCoinDenomRegex)
@@ -141,8 +143,8 @@ func Execute(rootCmd *cobra.Command) error {
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	rootCmd.AddCommand(
 		InitCmd(app.ModuleBasics),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
+		// genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome), // TODO[1760]: genutil
+		// genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome), // TODO[1760]: genutil
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddRootDomainAccountCmd(app.DefaultNodeHome),
@@ -167,15 +169,15 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
+		server.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(app.DefaultNodeHome),
+		keys.Commands(),
 	)
 
 	// Add Rosetta command
-	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
-	rootCmd.AddCommand(pruning.PruningCmd(newApp))
+	rootCmd.AddCommand(rosettacmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+	rootCmd.AddCommand(pruning.Cmd(newApp, app.DefaultNodeHome))
 	// Disable usage when the start command returns an error.
 	startCmd, _, err := rootCmd.Find([]string{"start"})
 	if err != nil {
@@ -234,9 +236,9 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
+		// authcmd.GetAccountCmd(), // TODO[1760]: auto-cli: Figure out how to still have this.
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		// rpc.BlockCommand(), // TODO[1760]: auto-cli: Figure out how to still have this.
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
@@ -275,10 +277,11 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
+// AppCreator func(log.Logger, dbm.DB, io.Writer, AppOptions) Application
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	warnAboutSettings(logger, appOpts)
 
-	var cache sdk.MultiStorePersistentCache
+	var cache storetypes.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -333,7 +336,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(getIAVLCacheSize(appOpts)),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
-		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(server.FlagIAVLLazyLoading))),
 	)
 }
 

@@ -13,7 +13,7 @@ import (
 
 	cmtos "github.com/cometbft/cometbft/libs/os"
 	cmtrand "github.com/cometbft/cometbft/libs/rand"
-	"github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	cerrs "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -268,27 +269,33 @@ func createAndExportGenesisFile(
 		return err
 	}
 
-	genDoc := &types.GenesisDoc{}
+	appGen := &genutiltypes.AppGenesis{}
 	if _, err = os.Stat(genFile); err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
 	} else {
-		genDoc, err = types.GenesisDocFromFile(genFile)
+		appGen, err = genutiltypes.AppGenesisFromFile(genFile)
 		if err != nil {
 			return cerrs.Wrap(err, "Failed to read genesis doc from file")
 		}
 	}
 
-	genDoc.ChainID = chainID
-	genDoc.AppState = appState
-	genDoc.Validators = nil
-	if genDoc.ConsensusParams == nil {
-		genDoc.ConsensusParams = types.DefaultConsensusParams()
+	appGen.ChainID = chainID
+	appGen.AppState = appState
+	if appGen.Consensus == nil {
+		appGen.Consensus = &genutiltypes.ConsensusGenesis{
+			Validators: nil,
+			Params:     nil,
+		}
 	}
-	genDoc.ConsensusParams.Block.MaxGas = maxGas
+	appGen.Consensus.Validators = nil
+	if appGen.Consensus.Params == nil {
+		appGen.Consensus.Params = cmttypes.DefaultConsensusParams()
+	}
+	appGen.Consensus.Params.Block.MaxGas = maxGas
 
-	if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
+	if err = genutil.ExportGenesisFile(appGen, genFile); err != nil {
 		return cerrs.Wrap(err, "Failed to export gensis file")
 	}
 
