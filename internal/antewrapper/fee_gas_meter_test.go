@@ -31,7 +31,7 @@ func TestFeeGasMeter(t *testing.T) {
 	}
 
 	for tcnum, tc := range casesFeeGas {
-		meter := NewFeeGasMeterWrapper(log.TestingLogger(), storetypes.NewGasMeter(tc.limit), false).(*FeeGasMeter)
+		meter := NewFeeGasMeterWrapper(log.NewTestLogger(t), storetypes.NewGasMeter(tc.limit), false).(*FeeGasMeter)
 		used := uint64(0)
 		var usedFee sdk.Coins
 
@@ -63,7 +63,7 @@ func TestFeeGasMeter(t *testing.T) {
 		require.Equal(t, meter.GasConsumedToLimit(), meter.Limit(), "storetypes.Gas consumption (to limit) not match limit")
 		require.Equal(t, meter.GasConsumed(), meter.Limit()+1, "storetypes.Gas consumption not match limit+1")
 		assert.Equal(t, meter.FeeConsumed().Sort(), usedFee.Sort(), "FeeConsumed does not match all Fees")
-		meter2 := NewFeeGasMeterWrapper(log.TestingLogger(), storetypes.NewGasMeter(100), false).(*FeeGasMeter)
+		meter2 := NewFeeGasMeterWrapper(log.NewTestLogger(t), storetypes.NewGasMeter(100), false).(*FeeGasMeter)
 		meter2.ConsumeGas(storetypes.Gas(50), "consume half max")
 		meter2.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_000_000)), "/cosmos.bank.v1beta1.MsgSend", "")
 		require.Equalf(t, "feeGasMeter:\n  limit: 100\n  consumed: 50 fee consumed: 1000000nhash", meter2.String(), "expect string output to match")

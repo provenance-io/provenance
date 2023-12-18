@@ -6,19 +6,21 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	sdksim "cosmossdk.io/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 )
 
 // Profile with:
 // go test -benchmem -run=^$ github.com/provenance-io/provenance/app -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
 	b.ReportAllocs()
-	config, db, dir, logger, skip, err := sdksim.SetupSimulation("goleveldb-app-sim", "Simulation")
+	config, db, dir, logger, skip, err := setupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		b.Fatalf("simulation setup failed: %s", err.Error())
 	}
@@ -36,23 +38,24 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
-	_, _, simParams, simErr := simulation.SimulateFromSeed(
+	// TODO[1760]: event-history: Add _ return arg back in.
+	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
-		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		sdksim.SimulationOperations(app, app.AppCodec(), config),
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	if err = sdksim.CheckExportSimulation(app, config, simParams); err != nil {
+	if err = simtestutil.CheckExportSimulation(app, config, simParams); err != nil {
 		b.Fatal(err)
 	}
 
@@ -65,7 +68,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 func BenchmarkInvariants(b *testing.B) {
 	b.ReportAllocs()
-	config, db, dir, logger, skip, err := sdksim.SetupSimulation("leveldb-app-invariant-bench", "Simulation")
+	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-invariant-bench", "Simulation")
 	if err != nil {
 		b.Fatalf("simulation setup failed: %s", err.Error())
 	}
@@ -85,23 +88,25 @@ func BenchmarkInvariants(b *testing.B) {
 		}
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), sdksim.FlagPeriodValue, MakeEncodingConfig(), sdksim.EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
-	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
+	// TODO[1760]: event-history: Add lastBlockTime return arg back in.
+	lastBlockTime := time.Unix(0, 0)
+	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
-		ProvAppStateFn(app.AppCodec(), app.SimulationManager()),
+		ProvAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		sdksim.SimulationOperations(app, app.AppCodec(), config),
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
 		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	if err = sdksim.CheckExportSimulation(app, config, simParams); err != nil {
+	if err = simtestutil.CheckExportSimulation(app, config, simParams); err != nil {
 		b.Fatal(err)
 	}
 
