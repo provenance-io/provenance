@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/google/uuid"
@@ -70,7 +70,7 @@ func TestMetaaddressTestSuite(t *testing.T) {
 	suite.Run(t, new(MetaaddressTestSuite))
 }
 
-func (s MetaaddressTestSuite) TestAddMetaAddressDecoder() {
+func (s *MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 	command := cmd.AddMetaAddressDecoder()
 
 	tests := []struct {
@@ -160,7 +160,7 @@ func (s MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 				require.EqualErrorf(t, err, tc.err, "%s - expected error", command.Name())
 			} else {
 				require.NoErrorf(t, err, "%s - unexpected error", command.Name())
-				out, err := ioutil.ReadAll(b)
+				out, err := io.ReadAll(b)
 				require.NoError(t, err, "%s - unexpected buffer read error", command.Name())
 				outStr := string(out)
 				for _, str := range tc.inResult {
@@ -171,7 +171,7 @@ func (s MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 	}
 }
 
-func (s MetaaddressTestSuite) TestAddMetaAddressEncoder() {
+func (s *MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 	command := cmd.AddMetaAddressEncoder()
 
 	tests := []struct {
@@ -374,7 +374,7 @@ func (s MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 				require.EqualErrorf(t, err, tc.err, "%s - expected error", command.Name())
 			} else {
 				require.NoErrorf(t, err, "%s - unexpected error", command.Name())
-				out, err := ioutil.ReadAll(b)
+				out, err := io.ReadAll(b)
 				require.NoError(t, err, "%s - unexpected buffer read error", command.Name())
 				outStr := string(out)
 				for _, str := range tc.inResult {

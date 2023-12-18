@@ -86,7 +86,7 @@ func logDir(t *testing.T, path string) {
 	}
 }
 
-// cmdResult contains the info, results, and output of the an executed command.
+// cmdResult contains the info, results, and output of the executed command.
 type cmdResult struct {
 	Cmd      *cobra.Command
 	Home     string

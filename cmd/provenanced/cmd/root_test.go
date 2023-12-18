@@ -13,17 +13,17 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	sdksim "cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 )
 
 func TestIAVLConfig(t *testing.T) {
-	require.Equal(t, getIAVLCacheSize(sdksim.EmptyAppOptions{}), cast.ToInt(serverconfig.DefaultConfig().IAVLCacheSize))
+	require.Equal(t, getIAVLCacheSize(simtestutil.EmptyAppOptions{}), cast.ToInt(serverconfig.DefaultConfig().IAVLCacheSize))
 }
 
 type testOpts map[string]interface{}

@@ -16,7 +16,7 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
-	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
+	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
@@ -108,7 +108,7 @@ func (s *SimulateTestSuite) TestSimulateCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cmd.GetCmdPioSimulateTx()
+			cmd := provenancecmd.GetCmdPioSimulateTx()
 			clientCtx := s.testnet.Validators[0].ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -135,7 +135,8 @@ func (s *SimulateTestSuite) GenerateAndSignSend(from string, to string, coins st
 		"--generate-only",
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 	}
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, bankcli.NewSendTxCmd(), args)
+	addrCdc := s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, bankcli.NewSendTxCmd(addrCdc), args)
 	s.Require().NoError(err)
 	genFilePath := filepath.Join(tmpDir, fmt.Sprintf("unsigned.%s.%s.%s.json", from, to, coins))
 	f, err := os.Create(genFilePath)
