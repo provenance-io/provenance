@@ -13,8 +13,6 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	sdksim "cosmossdk.io/simapp"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
@@ -73,7 +72,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
-			appCodec := sdksim.MakeTestEncodingConfig().Codec
+			appCodec := moduletestutil.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
@@ -145,7 +144,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
-			appCodec := sdksim.MakeTestEncodingConfig().Codec
+			appCodec := moduletestutil.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
@@ -338,7 +337,7 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 			home := t.TempDir()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err, "setup: CreateDefaultCometConfig(%q)", home)
-			cdc := sdksim.MakeTestEncodingConfig().Codec
+			cdc := moduletestutil.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, cdc)
 			require.NoError(t, err, "setup: ExecInitCmd")
 
@@ -656,7 +655,7 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 			home := t.TempDir()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err, "setup: CreateDefaultCometConfig(%q)", home)
-			cdc := sdksim.MakeTestEncodingConfig().Codec
+			cdc := moduletestutil.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, cdc)
 			require.NoError(t, err, "setup: ExecInitCmd")
 
@@ -814,7 +813,7 @@ func TestAddMarketsToAppState(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			fixEmptiesInExchangeGenState(&tc.expExGenState)
 
-			appCdc := sdksim.MakeTestEncodingConfig().Codec
+			appCdc := moduletestutil.MakeTestEncodingConfig().Codec
 			egsBz, err := appCdc.MarshalJSON(&tc.exGenState)
 			require.NoError(t, err, "MarshalJSON initial exchange genesis state")
 			appState := map[string]json.RawMessage{exchange.ModuleName: egsBz}

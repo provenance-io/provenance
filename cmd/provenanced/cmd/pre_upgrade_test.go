@@ -20,11 +20,10 @@ import (
 	cmtconfig "github.com/cometbft/cometbft/config"
 
 	"cosmossdk.io/log"
-	sdksim "cosmossdk.io/simapp"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
@@ -183,7 +182,7 @@ func assertContainsAll(t *testing.T, actual string, expected []string, msgAndArg
 
 // makeDummyCmd creates a dummy command with a context in it that can be used to test all the config stuff.
 func makeDummyCmd(t *testing.T, home string) *cobra.Command {
-	encodingConfig := sdksim.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithHomeDir(home)

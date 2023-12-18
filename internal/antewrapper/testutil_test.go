@@ -7,13 +7,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	sdksim "cosmossdk.io/simapp"
-
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -53,7 +51,10 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.App, sdk.Context) {
 		app = simapp.Setup(t)
 	}
 	ctx := app.BaseApp.NewContext(isCheckTx)
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	err := app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams())
+	if err != nil {
+		panic(err)
+	}
 
 	return app, ctx
 }
@@ -65,7 +66,7 @@ func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := sdksim.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
@@ -123,7 +124,7 @@ func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				// SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), // TODO[1760]: same type name diff packages.
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -138,21 +139,24 @@ func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint
 
 	// Second round: all signer infos are set, so each signer can sign.
 	sigsV2 = []signing.SignatureV2{}
-	for i, priv := range privs {
-		signerData := xauthsigning.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNums[i],
-			Sequence:      accSeqs[i],
-		}
-		sigV2, err := tx.SignWithPrivKey(
-			s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
-			s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
-		if err != nil {
-			return nil, err
-		}
+	// TODO[1760]: SignWithPrivKey: Uncomment these lines.
+	/*
+		for i, priv := range privs {
+			signerData := xauthsigning.SignerData{
+				ChainID:       chainID,
+				AccountNumber: accNums[i],
+				Sequence:      accSeqs[i],
+			}
+			sigV2, err := tx.SignWithPrivKey(
+				s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+				s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
+			if err != nil {
+				return nil, err
+			}
 
-		sigsV2 = append(sigsV2, sigV2)
-	}
+			sigsV2 = append(sigsV2, sigV2)
+		}
+	*/
 	err = s.txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, err

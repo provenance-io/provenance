@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	sdksim "cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
@@ -135,7 +135,7 @@ func TestDocGen(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err, "Created default tendermint config")
 
-			appCodec := sdksim.MakeTestEncodingConfig().Codec
+			appCodec := moduletestutil.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err, "Executed init command")
 

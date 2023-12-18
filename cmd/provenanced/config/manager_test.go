@@ -2,7 +2,7 @@ package config
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,11 +18,11 @@ import (
 	cmtconfig "github.com/cometbft/cometbft/config"
 
 	"cosmossdk.io/log"
-	sdksim "cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
@@ -44,7 +44,7 @@ func (s *ConfigManagerTestSuite) SetupTest() {
 
 // makeDummyCmd creates a dummy command with a context in it that can be used to test all the manager stuff.
 func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
-	encodingConfig := sdksim.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithHomeDir(s.Home)
@@ -62,8 +62,8 @@ func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
 			return nil
 		},
 	}
-	dummyCmd.SetOut(ioutil.Discard)
-	dummyCmd.SetErr(ioutil.Discard)
+	dummyCmd.SetOut(io.Discard)
+	dummyCmd.SetErr(io.Discard)
 	dummyCmd.SetArgs([]string{})
 	var err error
 	dummyCmd, err = dummyCmd.ExecuteContextC(ctx)
