@@ -68,7 +68,7 @@ type CommonTest struct {
 	expectedEvent proto.Message
 }
 
-func (s HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {
+func (s *HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {
 	events := result.GetEvents().ToABCIEvents()
 	for _, event := range events {
 		typeEvent, _ := sdk.ParseTypedEvent(event)
@@ -79,7 +79,7 @@ func (s HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message)
 	return false
 }
 
-func (s HandlerTestSuite) runTests(cases []CommonTest) {
+func (s *HandlerTestSuite) runTests(cases []CommonTest) {
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			response, err := s.handler(s.ctx, tc.msg)
@@ -97,7 +97,7 @@ func (s HandlerTestSuite) runTests(cases []CommonTest) {
 	}
 }
 
-func (s HandlerTestSuite) TestMsgAddAttributeRequest() {
+func (s *HandlerTestSuite) TestMsgAddAttributeRequest() {
 	cases := []CommonTest{
 		{
 			"should successfully add new attribute",
@@ -118,7 +118,7 @@ func (s HandlerTestSuite) TestMsgAddAttributeRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgUpdateAttributeRequest() {
+func (s *HandlerTestSuite) TestMsgUpdateAttributeRequest() {
 	testAttr := types.Attribute{
 		Address:       s.user1,
 		Name:          "example.name",
@@ -155,7 +155,7 @@ func (s HandlerTestSuite) TestMsgUpdateAttributeRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgDistinctDeleteAttributeRequest() {
+func (s *HandlerTestSuite) TestMsgDistinctDeleteAttributeRequest() {
 	testAttr := types.Attribute{
 		Address:       s.user1,
 		Name:          "example.name",
@@ -173,13 +173,13 @@ func (s HandlerTestSuite) TestMsgDistinctDeleteAttributeRequest() {
 			types.NewMsgDeleteDistinctAttributeRequest(s.user1, s.user1Addr, "example.name", []byte("value")),
 			[]string{s.user1},
 			"",
-			types.NewEventDistinctAttributeDelete("example.name", string([]byte("value")), s.user1, s.user1),
+			types.NewEventDistinctAttributeDelete("example.name", "value", s.user1, s.user1),
 		},
 	}
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgDeleteAttributeRequest() {
+func (s *HandlerTestSuite) TestMsgDeleteAttributeRequest() {
 	testAttr := types.Attribute{
 		Address:       s.user1,
 		Name:          "example.name",

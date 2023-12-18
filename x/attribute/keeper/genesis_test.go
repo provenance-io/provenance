@@ -77,7 +77,7 @@ func (s *GenesisTestSuite) TestInitGenesisModAcctAndNameRecord() {
 		modAddr := authtypes.NewModuleAddress(types.ModuleName)
 		acct := s.app.AccountKeeper.GetAccount(s.ctx, modAddr)
 		s.Require().NotNil(acct, "GetAccount(%q) (%s module account address)", modAddr.String(), types.ModuleName)
-		modAcct, isModAcct := acct.(authtypes.ModuleAccountI)
+		modAcct, isModAcct := acct.(sdk.ModuleAccountI)
 		s.Require().True(isModAcct, "can cast %T to authtypes.ModuleAccountI", acct)
 		s.Assert().Equal(types.ModuleName, modAcct.GetName(), "module account name")
 	})

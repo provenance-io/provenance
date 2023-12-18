@@ -34,7 +34,7 @@ type QueryServerTestSuite struct {
 	pubkey1    cryptotypes.PubKey
 	owner1     string
 	owner1Addr sdk.AccAddress
-	acct1      authtypes.AccountI
+	acct1      sdk.AccountI
 
 	addresses []sdk.AccAddress
 }
@@ -42,7 +42,7 @@ type QueryServerTestSuite struct {
 func (s *QueryServerTestSuite) SetupTest() {
 	s.app = simapp.SetupQuerier(s.T())
 	s.ctx = s.app.BaseApp.NewContext(true)
-	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())
+	s.app.AccountKeeper.Params.Set(s.ctx, authtypes.DefaultParams())
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
