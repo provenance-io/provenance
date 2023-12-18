@@ -59,7 +59,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.handler = reward.NewHandler(s.app.RewardKeeper)
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now().UTC()})
 	s.createTestValidators(10)
-	s.Require().NoError(testutil.FundModuleAccount(s.app.BankKeeper, s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000000000000))), "funding module")
+	s.Require().NoError(testutil.FundModuleAccount(s.ctx, s.app.BankKeeper, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000000000000))), "funding module")
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.RewardKeeper)

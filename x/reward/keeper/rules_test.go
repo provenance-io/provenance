@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -10,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -451,7 +451,7 @@ func (m MockAccountKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	return nil
 }
 
-func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) ([]stakingtypes.Delegation, error) {
+func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]stakingtypes.Delegation, error) {
 	if delegator.String() == "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h" || delegator.String() == getOperatorBech32AddressForTestValidator().String() {
 		return []stakingtypes.Delegation{
 			{
@@ -466,7 +466,7 @@ func (m MockStakingKeeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator
 	}, fmt.Errorf("mock error: delegator %s not found", delegator)
 }
 
-func (m MockStakingKeeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, err error) {
+func (m MockStakingKeeper) GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, err error) {
 	if delAddr.String() != "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h" || valAddr.String() != "cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun" {
 		return stakingtypes.Delegation{}, fmt.Errorf("mock error: delegator %s not found for %s", delAddr, valAddr)
 	}
@@ -478,7 +478,7 @@ func (m MockStakingKeeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress
 	}, nil
 }
 
-func (m MockStakingKeeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power int64, err error) {
+func (m MockStakingKeeper) GetLastValidatorPower(ctx context.Context, operator sdk.ValAddress) (power int64, err error) {
 	validators, _ := m.GetBondedValidatorsByPower(ctx)
 	for i, v := range validators {
 		power := int64(len(validators) - i)
@@ -524,7 +524,9 @@ func (s *KeeperTestSuite) createTestValidators(amount int) {
 		}
 	}
 
-	staking.EndBlocker(s.ctx, s.app.StakingKeeper)
+	// TODO[1760]: staking: Uncomment once we know how to call the staking end blocker again.
+	_, err = s.app.StakingKeeper.EndBlocker(s.ctx)
+	s.Require().NoError(err, "staking end blocker")
 
 	testValidators = validators
 }
@@ -537,7 +539,7 @@ func getTestValidators(start, end int) []stakingtypes.Validator {
 	return validators
 }
 
-func (m MockStakingKeeper) GetBondedValidatorsByPower(ctx sdk.Context) ([]stakingtypes.Validator, error) {
+func (m MockStakingKeeper) GetBondedValidatorsByPower(ctx context.Context) ([]stakingtypes.Validator, error) {
 	validatorAddress, _ := sdk.ValAddressFromBech32("cosmosvaloper15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqh6tjun")
 	validator, _ := stakingtypes.NewValidator(
 		validatorAddress.String(),
@@ -551,7 +553,7 @@ func (m MockStakingKeeper) GetBondedValidatorsByPower(ctx sdk.Context) ([]stakin
 	return validators, nil
 }
 
-func (m MockStakingKeeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error) {
+func (m MockStakingKeeper) GetValidator(ctx context.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error) {
 	validators := getTestValidators(0, 9)
 	addrStr := addr.String()
 
@@ -1173,6 +1175,7 @@ func SetupEventHistoryWithVotes(s *KeeperTestSuite, sender string) {
 		event3,
 	}
 	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
+	_ = loggedEvents
 	// newEvents := loggedEvents.ToABCIEvents()
 	// newEvents = append(newEvents, s.ctx.EventManager().GetABCIEventHistory()...)
 	// eventManagerStub := sdk.NewEventManagerWithHistory(newEvents)
