@@ -12,10 +12,10 @@ import (
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	IterateAccounts(ctx sdk.Context, process func(authtypes.AccountI) (stop bool))
-	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
-	SetAccount(sdk.Context, authtypes.AccountI)
-	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
+	IterateAccounts(ctx context.Context, process func(sdk.AccountI) (stop bool))
+	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
+	SetAccount(context.Context, sdk.AccountI)
+	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
 }
 
 // MsgFeesKeeper for additional msg fees.
