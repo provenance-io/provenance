@@ -196,8 +196,8 @@ func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
 
 func (s *IntegrationTestSuite) CreateTrigger(id uint64, owner string, event types.TriggerEventI, action sdk.Msg) types.Trigger {
 	actions, _ := sdktx.SetMsgs([]sdk.Msg{action})
-	any, _ := codectypes.NewAnyWithValue(event)
-	return types.NewTrigger(id, owner, any, actions)
+	anyMsg, _ := codectypes.NewAnyWithValue(event)
+	return types.NewTrigger(id, owner, anyMsg, actions)
 }
 
 func (s *IntegrationTestSuite) TestQueryTriggers() {
@@ -413,13 +413,13 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 				tc.height,
 				messageFile.Name(),
 			}
-			flags := []string{
+			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
-			args = append(args, flags...)
+			args = append(args, flagArgs...)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockHeightTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
@@ -568,13 +568,13 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 				txEventFile.Name(),
 				messageFile.Name(),
 			}
-			flags := []string{
+			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
-			args = append(args, flags...)
+			args = append(args, flagArgs...)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddTransactionTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
@@ -710,13 +710,13 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 				tc.blockTime,
 				messageFile.Name(),
 			}
-			flags := []string{
+			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
-			args = append(args, flags...)
+			args = append(args, flagArgs...)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockTimeTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
@@ -781,13 +781,13 @@ func (s *IntegrationTestSuite) TestDestroyTrigger() {
 			args := []string{
 				tc.triggerID,
 			}
-			flags := []string{
+			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
-			args = append(args, flags...)
+			args = append(args, flagArgs...)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdDestroyTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
