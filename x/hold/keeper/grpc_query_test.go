@@ -77,7 +77,7 @@ func (s *TestSuite) TestKeeper_GetHolds() {
 			var response *hold.GetHoldsResponse
 			var err error
 			testFunc := func() {
-				response, err = s.keeper.GetHolds(s.stdlibCtx, tc.request)
+				response, err = s.keeper.GetHolds(s.ctx, tc.request)
 			}
 			s.Require().NotPanics(testFunc, "GetHolds")
 			s.assertErrorContents(err, tc.expErr, "GetHolds error")
@@ -302,7 +302,7 @@ func (s *TestSuite) TestKeeper_GetAllHolds() {
 			var response *hold.GetAllHoldsResponse
 			var err error
 			testFunc := func() {
-				response, err = s.keeper.GetAllHolds(s.stdlibCtx, tc.request)
+				response, err = s.keeper.GetAllHolds(s.ctx, tc.request)
 			}
 			s.Require().NotPanics(testFunc, "GetAllHolds")
 			s.assertErrorContents(err, tc.expErr, "GetAllHolds error")

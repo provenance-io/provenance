@@ -1,9 +1,7 @@
 package keeper_test
 
 import (
-	"context"
 	"fmt"
-	"maps"
 	"sort"
 	"strings"
 	"testing"
@@ -21,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/helpers"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/keeper"
@@ -30,8 +29,7 @@ type TestSuite struct {
 	suite.Suite
 
 	app        *app.App
-	sdkCtx     sdk.Context
-	stdlibCtx  context.Context
+	ctx        sdk.Context
 	keeper     keeper.Keeper
 	bankKeeper bankkeeper.Keeper
 
@@ -48,18 +46,18 @@ type TestSuite struct {
 
 func (s *TestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.sdkCtx = s.app.BaseApp.NewContext(false)
-	s.stdlibCtx = sdk.WrapSDKContext(s.sdkCtx)
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.keeper = s.app.HoldKeeper
 	s.bankKeeper = s.app.BankKeeper
 
-	s.bondDenom, err = s.app.StakingKeeper.BondDenom(s.sdkCtx)
-	s.Require().NoError(err, "app.StakingKeeper.BondDenom(s.sdkCtx)")
+	var err error
+	s.bondDenom, err = s.app.StakingKeeper.BondDenom(s.ctx)
+	s.Require().NoError(err, "app.StakingKeeper.BondDenom(s.ctx)")
 
 	s.initAmount = 1_000_000_000
 	s.initBal = sdk.NewCoins(sdk.NewCoin(s.bondDenom, sdkmath.NewInt(s.initAmount)))
 
-	addrs := app.AddTestAddrsIncremental(s.app, s.sdkCtx, 5, sdkmath.NewInt(s.initAmount))
+	addrs := app.AddTestAddrsIncremental(s.app, s.ctx, 5, sdkmath.NewInt(s.initAmount))
 	s.addr1 = addrs[0]
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]
@@ -143,7 +141,7 @@ func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
 
 // getStore returns the hold state store.
 func (s *TestSuite) getStore() storetypes.KVStore {
-	return s.sdkCtx.KVStore(s.keeper.GetStoreKey())
+	return s.ctx.KVStore(s.keeper.GetStoreKey())
 }
 
 // requireSetHoldCoinAmount calls setHoldCoinAmount making sure it doesn't panic or return an error.
@@ -161,7 +159,7 @@ func (s *TestSuite) setHoldCoinAmountRaw(store storetypes.KVStore, addr sdk.AccA
 // requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
-		return testutil.FundAccount(s.sdkCtx, s.app.BankKeeper, addr, s.coins(coins))
+		return testutil.FundAccount(s.ctx, s.app.BankKeeper, addr, s.coins(coins))
 	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 
@@ -447,7 +445,7 @@ func (s *TestSuite) TestKeeper_ValidateNewHold() {
 
 			var err error
 			testFunc := func() {
-				err = k.ValidateNewHold(s.sdkCtx, tc.addr, tc.funds)
+				err = k.ValidateNewHold(s.ctx, tc.addr, tc.funds)
 			}
 			s.Require().NotPanics(testFunc, "ValidateNewHold")
 			s.assertErrorContents(err, tc.expErr, "ValidateNewHold")
@@ -642,7 +640,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 			k := s.keeper.WithBankKeeper(bk)
 
 			em := sdk.NewEventManager()
-			ctx := s.sdkCtx.WithEventManager(em)
+			ctx := s.ctx.WithEventManager(em)
 			var err error
 			testFunc := func() {
 				err = k.AddHold(ctx, tc.addr, tc.funds, tc.name)
@@ -651,7 +649,7 @@ func (s *TestSuite) TestKeeper_AddHold() {
 
 			s.assertErrorContents(err, tc.expErr, "AddHold error")
 
-			finalHold, _ := k.GetHoldCoins(s.sdkCtx, tc.addr)
+			finalHold, _ := k.GetHoldCoins(s.ctx, tc.addr)
 			s.Assert().Equal(tc.finalHold.String(), finalHold.String(), "final hold")
 
 			events := em.Events()
@@ -829,7 +827,7 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 			}
 
 			em := sdk.NewEventManager()
-			ctx := s.sdkCtx.WithEventManager(em)
+			ctx := s.ctx.WithEventManager(em)
 			var err error
 			testFunc := func() {
 				err = s.keeper.ReleaseHold(ctx, tc.addr, tc.funds)
@@ -838,7 +836,7 @@ func (s *TestSuite) TestKeeper_ReleaseHold() {
 
 			s.assertErrorContents(err, tc.expErr, "ReleaseHold error")
 
-			finalHold, _ := s.keeper.GetHoldCoins(s.sdkCtx, tc.addr)
+			finalHold, _ := s.keeper.GetHoldCoins(s.ctx, tc.addr)
 			s.Assert().Equal(tc.finalHold.String(), finalHold.String(), "final hold")
 
 			events := em.Events()
@@ -912,7 +910,7 @@ func (s *TestSuite) TestKeeper_GetHoldCoin() {
 			var coin sdk.Coin
 			var err error
 			testFunc := func() {
-				coin, err = s.keeper.GetHoldCoin(s.sdkCtx, tc.addr, tc.denom)
+				coin, err = s.keeper.GetHoldCoin(s.ctx, tc.addr, tc.denom)
 			}
 			s.Require().NotPanics(testFunc, "GetHoldCoin")
 			s.assertErrorContents(err, tc.expErr, "GetHoldCoin error")
@@ -983,7 +981,7 @@ func (s *TestSuite) TestKeeper_GetHoldCoins() {
 			var coins sdk.Coins
 			var err error
 			testFunc := func() {
-				coins, err = s.keeper.GetHoldCoins(s.sdkCtx, tc.addr)
+				coins, err = s.keeper.GetHoldCoins(s.ctx, tc.addr)
 			}
 			s.Require().NotPanics(testFunc, "GetHoldCoins")
 			s.assertErrorContents(err, tc.expErr, "GetHoldCoins error")
@@ -1120,7 +1118,7 @@ func (s *TestSuite) TestKeeper_IterateHolds() {
 			processed = nil
 			var err error
 			testFunc := func() {
-				err = s.keeper.IterateHolds(s.sdkCtx, tc.addr, tc.process)
+				err = s.keeper.IterateHolds(s.ctx, tc.addr, tc.process)
 			}
 			s.Require().NotPanics(testFunc, "IterateHolds")
 			s.assertErrorContents(err, tc.expErr, "IterateHolds error")
@@ -1251,7 +1249,7 @@ func (s *TestSuite) TestKeeper_IterateAllHolds() {
 			processed = nil
 			var err error
 			testFunc := func() {
-				err = s.keeper.IterateAllHolds(s.sdkCtx, tc.process)
+				err = s.keeper.IterateAllHolds(s.ctx, tc.process)
 			}
 			s.Require().NotPanics(testFunc, "IterateAllHolds")
 			s.assertErrorContents(err, tc.expErr, "IterateAllHolds error")
@@ -1288,7 +1286,7 @@ func (s *TestSuite) TestKeeper_GetAllAccountHolds() {
 	}
 
 	s.Run("no bad entries", func() {
-		holds, err := s.keeper.GetAllAccountHolds(s.sdkCtx)
+		holds, err := s.keeper.GetAllAccountHolds(s.ctx)
 		s.Assert().NoError(err, "GetAllAccountHolds error")
 		s.Assert().Equal(expected, holds, "GetAllAccountHolds holds")
 	})
@@ -1311,7 +1309,7 @@ func (s *TestSuite) TestKeeper_GetAllAccountHolds() {
 			"math/big: cannot unmarshal \"dreadvalue\" into a *big.Int",
 		}
 
-		holds, err := s.keeper.GetAllAccountHolds(s.sdkCtx)
+		holds, err := s.keeper.GetAllAccountHolds(s.ctx)
 		s.assertErrorContents(err, expInErr, "GetAllAccountHolds error")
 		s.Assert().Equal(expected, holds, "GetAllAccountHolds holds")
 	})
@@ -1409,9 +1407,10 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 	originalVesting := coins(totalSeconds)
 	startTime := time.Unix(0, 0)
 	endTime := startTime.Add(totalDur)
-	ctx := s.sdkCtx.WithBlockTime(startTime)
+	ctx := s.ctx.WithBlockTime(startTime)
 	baseAcc := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr).(*authtypes.BaseAccount)
-	cva := vesting.NewContinuousVestingAccount(baseAcc, originalVesting, startTime.Unix(), endTime.Unix())
+	cva, err := vesting.NewContinuousVestingAccount(baseAcc, originalVesting, startTime.Unix(), endTime.Unix())
+	s.Require().NoError(err, "NewContinuousVestingAccount")
 	s.app.AccountKeeper.SetAccount(ctx, cva)
 	s.requireFundAccount(addr, originalVesting.String())
 
@@ -1530,7 +1529,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 	}
 
 	// Put all the step values in order.
-	steps := maps.Keys(stepsMap)
+	steps := helpers.Keys(stepsMap)
 	sort.Slice(steps, func(i, j int) bool {
 		return steps[i] < steps[j]
 	})
@@ -1543,7 +1542,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 				assertions.RequireNotPanicsNoErrorf(s.T(), f, "%4ds: "+msg, append([]interface{}{step}, args...)...)
 			}
 			blockTime := startTime.Add(time.Duration(step) * time.Second)
-			ctx = s.sdkCtx.WithBlockTime(blockTime)
+			ctx = s.ctx.WithBlockTime(blockTime)
 
 			action := process[step].action
 
@@ -1552,7 +1551,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 				amt := coins(action.fund)
 				logf(step, "Adding funds: %s", amtOf(amt))
 				reqNoPanicNoErr(func() error {
-					return testutil.FundAccount(s.sdkCtx, s.app.BankKeeper, addr, amt)
+					return testutil.FundAccount(s.ctx, s.app.BankKeeper, addr, amt)
 				}, "FundAccount(addr, %q)", amt)
 			}
 			if action.delegate < 0 {
@@ -1600,13 +1599,13 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 			}, "casting addr account to %T", acc)
 
 			stepResults[i] = &stepResult{
-				step:                step,
-				balance:             s.app.BankKeeper.GetAllBalances(ctx, addr),
-				delegated:           s.app.BankKeeper.GetAllBalances(ctx, modAddr),
-				spendable:           s.app.BankKeeper.SpendableCoins(ctx, addr),
-				locked:              s.app.BankKeeper.LockedCoins(ctx, addr),
-				lockedHold:          s.keeper.GetLockedCoins(ctx, addr),
-				lockedVest:          s.app.BankKeeper.UnvestedCoins(ctx, addr),
+				step:       step,
+				balance:    s.app.BankKeeper.GetAllBalances(ctx, addr),
+				delegated:  s.app.BankKeeper.GetAllBalances(ctx, modAddr),
+				spendable:  s.app.BankKeeper.SpendableCoins(ctx, addr),
+				locked:     s.app.BankKeeper.LockedCoins(ctx, addr),
+				lockedHold: s.keeper.GetLockedCoins(ctx, addr),
+				// lockedVest:          s.app.BankKeeper.UnvestedCoins(ctx, addr), TODO[1760]: locked-coins
 				accVesting:          acc.GetVestingCoins(blockTime),
 				accVested:           acc.GetVestedCoins(blockTime),
 				accDelegatedVesting: acc.GetDelegatedVesting(),

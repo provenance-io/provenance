@@ -121,7 +121,7 @@ func (s *TestSuite) TestKeeper_InitGenesis() {
 			expectedState := expStateEntries(tc.genState)
 
 			em := sdk.NewEventManager()
-			ctx := s.sdkCtx.WithEventManager(em)
+			ctx := s.ctx.WithEventManager(em)
 			testFunc := func() {
 				s.keeper.InitGenesis(ctx, tc.genState)
 			}
@@ -242,7 +242,7 @@ func (s *TestSuite) TestKeeper_ExportGenesis() {
 
 			var genState *hold.GenesisState
 			testFunc := func() {
-				genState = s.keeper.ExportGenesis(s.sdkCtx)
+				genState = s.keeper.ExportGenesis(s.ctx)
 			}
 			s.requirePanicContents(testFunc, tc.expPanic, "ExportGenesis")
 			s.Assert().Equal(tc.expGenState, genState, "exported genesis state")

@@ -23,18 +23,20 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 	endTime := startTime.Add(time.Duration(s.initAmount) * time.Second)
 
 	// Turn addr4 into a vesting account: 1 stake per second.
-	addr4Acc := s.app.AccountKeeper.GetAccount(s.sdkCtx, s.addr4)
+	addr4Acc := s.app.AccountKeeper.GetAccount(s.ctx, s.addr4)
 	addr4AccBase, ok := addr4Acc.(*authtypes.BaseAccount)
 	s.Require().True(ok, "can cast addr4 account %T to %T", addr4Acc, addr4AccBase)
-	addr4Vest := vesting.NewContinuousVestingAccount(addr4AccBase, s.initBal, startTime.Unix(), endTime.Unix())
-	s.app.AccountKeeper.SetAccount(s.sdkCtx, addr4Vest)
+	addr4Vest, err := vesting.NewContinuousVestingAccount(addr4AccBase, s.initBal, startTime.Unix(), endTime.Unix())
+	s.Require().NoError(err, "NewContinuousVestingAccount(addr4)")
+	s.app.AccountKeeper.SetAccount(s.ctx, addr4Vest)
 
 	// Turn addr5 into a vesting account too:  1 stake per second, but give it some extra funds.
-	addr5Acc := s.app.AccountKeeper.GetAccount(s.sdkCtx, s.addr5)
+	addr5Acc := s.app.AccountKeeper.GetAccount(s.ctx, s.addr5)
 	addr5AccBase, ok := addr5Acc.(*authtypes.BaseAccount)
 	s.Require().True(ok, "can cast addr5 account %T to %T", addr5Acc, addr5AccBase)
-	addr5Vest := vesting.NewContinuousVestingAccount(addr5AccBase, s.initBal, startTime.Unix(), endTime.Unix())
-	s.app.AccountKeeper.SetAccount(s.sdkCtx, addr5Vest)
+	addr5Vest, err := vesting.NewContinuousVestingAccount(addr5AccBase, s.initBal, startTime.Unix(), endTime.Unix())
+	s.Require().NoError(err, "NewContinuousVestingAccount(addr5)")
+	s.app.AccountKeeper.SetAccount(s.ctx, addr5Vest)
 	s.requireFundAccount(s.addr5, "5000"+s.bondDenom)
 
 	errIns := func(addr sdk.AccAddress, balance, onHold string) string {
@@ -121,7 +123,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 			name: "five addrs all have everything on hold",
 			setup: func(s *TestSuite, store storetypes.KVStore) {
 				for _, addr := range []sdk.AccAddress{s.addr1, s.addr2, s.addr3, s.addr4, s.addr5} {
-					for _, coin := range s.bankKeeper.GetAllBalances(s.sdkCtx, addr) {
+					for _, coin := range s.bankKeeper.GetAllBalances(s.ctx, addr) {
 						s.requireSetHoldCoinAmount(store, addr, coin.Denom, coin.Amount)
 					}
 				}
@@ -135,7 +137,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 			name: "five addrs all have everything on hold one has too much though",
 			setup: func(s *TestSuite, store storetypes.KVStore) {
 				for _, addr := range []sdk.AccAddress{s.addr1, s.addr2, s.addr3, s.addr4, s.addr5} {
-					for _, coin := range s.bankKeeper.GetAllBalances(s.sdkCtx, addr) {
+					for _, coin := range s.bankKeeper.GetAllBalances(s.ctx, addr) {
 						s.requireSetHoldCoinAmount(store, addr, coin.Denom, coin.Amount)
 					}
 				}
@@ -151,7 +153,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 			name: "five addrs all have holds but none have enough funds",
 			setup: func(s *TestSuite, store storetypes.KVStore) {
 				for _, addr := range []sdk.AccAddress{s.addr1, s.addr2, s.addr3, s.addr4, s.addr5} {
-					for _, coin := range s.bankKeeper.GetAllBalances(s.sdkCtx, addr) {
+					for _, coin := range s.bankKeeper.GetAllBalances(s.ctx, addr) {
 						s.requireSetHoldCoinAmount(store, addr, coin.Denom, coin.Amount.Add(sdkmath.OneInt()))
 					}
 				}
@@ -274,7 +276,7 @@ func (s *TestSuite) TestHoldAccountBalancesInvariantHelper() {
 				tc.setup(s, s.getStore())
 			}
 
-			ctx := s.sdkCtx.WithBlockTime(tc.time)
+			ctx := s.ctx.WithBlockTime(tc.time)
 			var msg string
 			var broken bool
 			testFunc := func() {

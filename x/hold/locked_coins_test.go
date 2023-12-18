@@ -5,8 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestSendRestrictionContextFuncs(t *testing.T) {
