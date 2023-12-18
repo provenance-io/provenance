@@ -3,11 +3,10 @@ package antewrapper_test
 import (
 	"testing"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/stretchr/testify/assert"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -129,8 +127,8 @@ func (s *AnteTestSuite) TestNoErrorWhenMaxGasIsUnlimited() {
 	//Force the !isTestContext(ctx) to be true
 	s.ctx = s.ctx.WithChainID("mainnet")
 
-	params := &abci.ConsensusParams{
-		Block: &abci.BlockParams{
+	params := cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
 			MaxGas: int64(-1),
 		},
 	}
@@ -153,8 +151,8 @@ func (s *AnteTestSuite) TestErrorOutWhenMaxGasIsLimited() {
 	s.ctx = s.ctx.WithIsCheckTx(true)
 	s.ctx = s.ctx.WithChainID("mainnet")
 
-	params := &abci.ConsensusParams{
-		Block: &abci.BlockParams{
+	params := cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
 			MaxGas: int64(60_000_000),
 		},
 	}
@@ -165,7 +163,7 @@ func (s *AnteTestSuite) TestErrorOutWhenMaxGasIsLimited() {
 	s.Require().ErrorContains(err, "transaction gas exceeds maximum allowed")
 }
 
-func createTx(s *AnteTestSuite, err error, feeAmount sdk.Coins) (signing.Tx, authtypes.AccountI) {
+func createTx(s *AnteTestSuite, err error, feeAmount sdk.Coins) (signing.Tx, sdk.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)

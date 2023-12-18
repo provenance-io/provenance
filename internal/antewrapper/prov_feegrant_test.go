@@ -1,6 +1,7 @@
 package antewrapper_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/x/feegrant"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,8 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	sdksigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -174,7 +175,7 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
 
-			txfg, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, defaultGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
+			txfg, err := genTxWithFeeGranter(ctx, protoTxCfg, msgs, fee, defaultGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			require.NoError(t, err, "genTxWithFeeGranter")
 			_, err = feeAnteHandler(ctx, txfg, false) // tests only feegrant ante
 			if len(tc.expInErr) == 0 {
@@ -199,9 +200,9 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 	}
 }
 
-func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,
+func genTxWithFeeGranter(ctx context.Context, gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums,
 	accSeqs []uint64, feeGranter sdk.AccAddress, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
-	sigs := make([]signing.SignatureV2, len(priv))
+	sigs := make([]sdksigning.SignatureV2, len(priv))
 
 	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -213,10 +214,10 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
 	for i, p := range priv {
-		sigs[i] = signing.SignatureV2{
+		sigs[i] = sdksigning.SignatureV2{
 			PubKey: p.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode: signMode,
+			Data:   &sdksigning.SingleSignatureData{
+				// SignMode: signMode, // TODO[1760]: same type name diff packages.
 			},
 			Sequence: accSeqs[i],
 		}
@@ -238,12 +239,13 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {
-		signerData := authsign.SignerData{
+		signerData := signing.SignerData{
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, txb.GetTx())
+		txData := signing.TxData{} // TODO[1760]: signing: Base this off of txb.GetTx().
+		signBytes, err := gen.SignModeHandler().GetSignBytes(ctx, signMode, signerData, txData)
 		if err != nil {
 			panic(err)
 		}
@@ -251,7 +253,7 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 		if err != nil {
 			panic(err)
 		}
-		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
+		sigs[i].Data.(*sdksigning.SingleSignatureData).Signature = sig
 		err = txb.SetSignatures(sigs...)
 		if err != nil {
 			panic(err)
