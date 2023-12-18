@@ -47,10 +47,8 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	app := app.Setup(s.T())
-	ctx := app.BaseApp.NewContext(false)
-	s.app = app
-	s.ctx = ctx
+	s.app = app.Setup(s.T())
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
@@ -67,7 +65,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	nameData.Params.MinSegmentLength = 2
 	nameData.Params.MaxSegmentLength = 16
 
-	app.NameKeeper.InitGenesis(ctx, nameData)
+	s.app.NameKeeper.InitGenesis(s.ctx, nameData)
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))

@@ -11,6 +11,8 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	cerrs "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -32,7 +34,7 @@ func TestInvalidMsg(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	_, _, log := sdkerrors.ABCIInfo(err, false)
+	_, _, log := cerrs.ABCIInfo(err, false)
 	require.True(t, strings.Contains(log, "unrecognized name message type"))
 }
 
