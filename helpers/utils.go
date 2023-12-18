@@ -7,10 +7,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// ExitCode contains the exit code for cmd exit.
-type ExitCode int
+// ExitCodeError contains the exit code for cmd exit.
+type ExitCodeError int
 
-func (e ExitCode) Error() string {
+func (e ExitCodeError) Error() string {
 	return fmt.Sprintf("exit code: %d", e)
 }
 

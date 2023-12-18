@@ -113,8 +113,8 @@ func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
 	rv.Result = cmd.Execute(rv.Cmd)
 	if rv.Result != nil {
 		t.Logf("Execution resulting in error: %v", rv.Result)
-		var srvErrP *helpers.ExitCode
-		var srvErr helpers.ExitCode
+		var srvErrP *helpers.ExitCodeError
+		var srvErr helpers.ExitCodeError
 		switch {
 		case errors.As(rv.Result, &srvErrP):
 			rv.ExitCode = int(*srvErrP)

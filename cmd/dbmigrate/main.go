@@ -11,8 +11,8 @@ import (
 func main() {
 	rootCmd := cmd.NewDBMigrateCmd()
 	if err := cmd.Execute(rootCmd); err != nil {
-		var srvErrP *helpers.ExitCode
-		var srvErr helpers.ExitCode
+		var srvErrP *helpers.ExitCodeError
+		var srvErr helpers.ExitCodeError
 		switch {
 		case errors.As(err, &srvErrP):
 			os.Exit(int(*srvErrP))

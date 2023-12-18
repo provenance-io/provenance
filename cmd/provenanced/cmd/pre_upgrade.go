@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	ErrFail      error = helpers.ExitCode(30)
-	ErrFailRetry error = helpers.ExitCode(31)
+	ErrFail      error = helpers.ExitCodeError(30)
+	ErrFailRetry error = helpers.ExitCodeError(31)
 )
 
 // GetPreUpgradeCmd returns the pre-upgrade command which cosmovisor runs before
