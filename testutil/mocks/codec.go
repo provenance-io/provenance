@@ -3,11 +3,11 @@ package mocks
 import (
 	"errors"
 
-	"github.com/cosmos/cosmos-sdk/types/module"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 // This doesn't yet have injectable errors for all the possible things because they weren't needed yet.

@@ -2,7 +2,9 @@ package ibc
 
 import (
 	"encoding/json"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -117,7 +119,8 @@ func SignAndDeliver(
 	txCfg client.TxConfig, app *baseapp.BaseApp, _ cmtproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
-	tx, _ := simtestutil.GenTx(
+	tx, _ := simtestutil.GenSignedMockTx(
+		rand.New(rand.NewSource(time.Now().UnixNano())),
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
