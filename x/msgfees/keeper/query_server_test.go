@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -14,8 +15,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	sdksigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -41,13 +41,13 @@ type QueryServerTestSuite struct {
 	pubkey1   cryptotypes.PubKey
 	user1     string
 	user1Addr sdk.AccAddress
-	acct1     authtypes.AccountI
+	acct1     sdk.AccountI
 
 	privkey2  cryptotypes.PrivKey
 	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
-	acct2     authtypes.AccountI
+	acct2     sdk.AccountI
 
 	minGasPrice       sdk.Coin
 	usdConversionRate uint64
@@ -56,7 +56,7 @@ type QueryServerTestSuite struct {
 func (s *QueryServerTestSuite) SetupTest() {
 	s.app = simapp.SetupQuerier(s.T())
 	s.ctx = s.app.BaseApp.NewContext(true)
-	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())
+	s.app.AccountKeeper.Params.Set(s.ctx, authtypes.DefaultParams())
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
@@ -131,21 +131,21 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 	server := markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
 
 	hotdogDenom := "hotdog"
-	_, err := server.AddMarker(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0))
+	_, err := server.AddMarker(s.ctx, markertypes.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0))
 	s.Require().NoError(err)
 	access := markertypes.AccessGrant{
 		Address:     s.user1,
 		Permissions: markertypes.AccessListByNames("DELETE,MINT,WITHDRAW,TRANSFER,ADMIN,BURN"),
 	}
-	_, err = server.AddAccess(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access))
+	_, err = server.AddAccess(s.ctx, markertypes.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access))
 	s.Require().NoError(err)
-	_, err = server.Finalize(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr))
+	_, err = server.Finalize(s.ctx, markertypes.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr))
 	s.Require().NoError(err)
-	_, err = server.Activate(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgActivateRequest(hotdogDenom, s.user1Addr))
+	_, err = server.Activate(s.ctx, markertypes.NewMsgActivateRequest(hotdogDenom, s.user1Addr))
 	s.Require().NoError(err)
-	_, err = server.Mint(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgMintRequest(s.user1Addr, sdk.NewInt64Coin(hotdogDenom, 1000)))
+	_, err = server.Mint(s.ctx, markertypes.NewMsgMintRequest(s.user1Addr, sdk.NewInt64Coin(hotdogDenom, 1000)))
 	s.Require().NoError(err)
-	_, err = server.Withdraw(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, hotdogDenom, sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 10))))
+	_, err = server.Withdraw(s.ctx, markertypes.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, hotdogDenom, sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 10))))
 	s.Require().NoError(err)
 	msgGrant := &authz.MsgGrant{
 		Granter: s.user1,
@@ -154,7 +154,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 	}
 	err = msgGrant.SetAuthorization(markertypes.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 10)), []sdk.AccAddress{s.user1Addr}))
 	s.Require().NoError(err)
-	_, err = s.app.AuthzKeeper.Grant(sdk.WrapSDKContext(s.ctx), msgGrant)
+	_, err = s.app.AuthzKeeper.Grant(s.ctx, msgGrant)
 	s.Require().NoError(err)
 
 	transferRequest := markertypes.NewMsgTransferRequest(s.user1Addr, s.user1Addr, s.user2Addr, sdk.NewInt64Coin(hotdogDenom, 9))
@@ -190,7 +190,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
 	s.Assert().Equal(fmt.Sprintf("%s,%s", additionalAccessedFeesCoin.String(), expectedGasFees.String()), response.TotalFees.String())
 }
 
-func (s *QueryServerTestSuite) createTxFeesRequest(pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.AccountI, msgs ...sdk.Msg) types.CalculateTxFeesRequest {
+func (s *QueryServerTestSuite) createTxFeesRequest(pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct sdk.AccountI, msgs ...sdk.Msg) types.CalculateTxFeesRequest {
 	theTx := s.cfg.TxConfig.NewTxBuilder()
 	s.Require().NoError(theTx.SetMsgs(msgs...))
 	s.signTx(theTx, pubKey, privKey, acct)
@@ -202,20 +202,21 @@ func (s *QueryServerTestSuite) createTxFeesRequest(pubKey cryptotypes.PubKey, pr
 	}
 }
 
-func (s *QueryServerTestSuite) signTx(theTx client.TxBuilder, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.AccountI) {
-	accountSig := signing.SignatureV2{
+func (s *QueryServerTestSuite) signTx(theTx client.TxBuilder, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct sdk.AccountI) {
+	accountSig := sdksigning.SignatureV2{
 		PubKey: pubKey,
-		Data: &signing.SingleSignatureData{
-			SignMode: s.cfg.TxConfig.SignModeHandler().DefaultMode(),
+		Data: &sdksigning.SingleSignatureData{
+			SignMode: sdksigning.SignMode(s.cfg.TxConfig.SignModeHandler().DefaultMode()),
 		},
 		Sequence: acct.GetSequence(),
 	}
-	signerData := authsign.SignerData{
+	signerData := signing.SignerData{
 		ChainID:       s.cfg.ChainID,
 		AccountNumber: acct.GetAccountNumber(),
 		Sequence:      acct.GetSequence(),
 	}
-	signBytes, err := s.cfg.TxConfig.SignModeHandler().GetSignBytes(s.cfg.TxConfig.SignModeHandler().DefaultMode(), signerData, theTx.GetTx())
+	txData := signing.TxData{} // TODO[1760]: signing: Base this off of theTx.GetTx().
+	signBytes, err := s.cfg.TxConfig.SignModeHandler().GetSignBytes(s.ctx, s.cfg.TxConfig.SignModeHandler().DefaultMode(), signerData, txData)
 	if err != nil {
 		panic(err)
 	}
@@ -223,7 +224,7 @@ func (s *QueryServerTestSuite) signTx(theTx client.TxBuilder, pubKey cryptotypes
 	if err != nil {
 		panic(err)
 	}
-	accountSig.Data.(*signing.SingleSignatureData).Signature = sig
+	accountSig.Data.(*sdksigning.SingleSignatureData).Signature = sig
 	err = theTx.SetSignatures(accountSig)
 	if err != nil {
 		panic(err)

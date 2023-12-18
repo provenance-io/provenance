@@ -216,8 +216,8 @@ func genTxWithFeeGranter(ctx context.Context, gen client.TxConfig, msgs []sdk.Ms
 	for i, p := range priv {
 		sigs[i] = sdksigning.SignatureV2{
 			PubKey: p.PubKey(),
-			Data:   &sdksigning.SingleSignatureData{
-				// SignMode: signMode, // TODO[1760]: same type name diff packages.
+			Data: &sdksigning.SingleSignatureData{
+				SignMode: sdksigning.SignMode(signMode),
 			},
 			Sequence: accSeqs[i],
 		}
