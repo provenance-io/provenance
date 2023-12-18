@@ -223,7 +223,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
 		validator, err := app.StakingKeeper.GetValidator(ctx, addr)
 		if err != nil {
-			panic(fmt.Errorf("validator %s not found: %w", validator, err))
+			panic(fmt.Errorf("validator %s not found: %w", addr, err))
 		}
 
 		validator.UnbondingHeight = 0
