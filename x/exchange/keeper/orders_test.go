@@ -1692,9 +1692,9 @@ func (s *TestSuite) TestKeeper_CancelOrder() {
 			s.Assert().NoError(err, "GetOrder(%d) error after cancel")
 			s.Assert().Nil(order, "GetOrder(%d) order after cancel")
 			store := s.getStore()
-			for i, kv := range expDelKVs {
-				has := store.Has(kv.Key)
-				s.Assert().False(has, "[%d]: store.Has(%q) (index entry) after cancel", i, kv.Key)
+			for i, pair := range expDelKVs {
+				has := store.Has(pair.Key)
+				s.Assert().False(has, "[%d]: store.Has(%q) (index entry) after cancel", i, pair.Key)
 			}
 		})
 	}

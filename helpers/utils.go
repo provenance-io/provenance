@@ -41,3 +41,14 @@ func ValidateBasic(msg sdk.Msg) error {
 	}
 	return nil
 }
+
+// Keys returns the unordered keys of the given map.
+// This is the same as the experimental maps.Keys function.
+// As of writing, that isn't in the standard library version yet. Once it is, remove this and switch to that.
+func Keys[M ~map[K]V, K comparable, V any](m M) []K {
+	rv := make([]K, 0, len(m))
+	for k := range m {
+		rv = append(rv, k)
+	}
+	return rv
+}

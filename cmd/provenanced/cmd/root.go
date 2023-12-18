@@ -68,7 +68,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithBroadcastMode(flags.BroadcastSync). // TODO[1760]: Verify that this is not right since BroadcastBlock is gone.
+		WithBroadcastMode(flags.BroadcastSync). // TODO[1760]: broadcast: Verify that this is right since BroadcastBlock is gone.
 		WithHomeDir(app.DefaultNodeHome).
 		WithViper("PIO")
 	sdk.SetCoinDenomRegex(app.SdkCoinDenomRegex)

@@ -379,7 +379,7 @@ func TestNewEventMarketWithdraw(t *testing.T) {
 		event = NewEventMarketWithdraw(marketID, amountWithdrawn, destination, withdrawnBy)
 	}
 	require.NotPanics(t, testFunc, "NewEventMarketWithdraw(%d, %q, %q, %q)",
-		marketID, amountWithdrawn, string(destination), string(withdrawnBy))
+		marketID, amountWithdrawn, string(destination), withdrawnBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, amountWithdrawn.String(), event.Amount, "Amount")
 	assert.Equal(t, destination.String(), event.Destination, "Destination")
