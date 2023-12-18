@@ -558,8 +558,8 @@ func (s *AddressTestSuite) TestMetadataAddressWithInvalidData() {
 
 	scopeID := ScopeMetadataAddress(s.scopeUUID)
 	padded := make([]byte, 20)
-	len, err := scopeID.MarshalTo(padded)
-	require.EqualValues(t, 17, len)
+	length, err := scopeID.MarshalTo(padded)
+	require.EqualValues(t, 17, length)
 
 	_, err = VerifyMetadataAddressFormat(padded)
 	require.EqualValues(t, fmt.Errorf("incorrect address length (expected: %d, actual: %d)", 17, 20), err)

@@ -212,7 +212,7 @@ var _ keeper.AuthKeeper = (*MockAuthKeeper)(nil)
 
 // MockAuthKeeper is a mocked keeper.AuthKeeper.
 type MockAuthKeeper struct {
-	GetAccountResults map[string]authtypes.AccountI
+	GetAccountResults map[string]sdk.AccountI
 	GetAccountCalls   []*GetAccountCall
 }
 
@@ -220,7 +220,7 @@ type MockAuthKeeper struct {
 // Usually followed by calls to WithGetAccountResults.
 func NewMockAuthKeeper() *MockAuthKeeper {
 	return &MockAuthKeeper{
-		GetAccountResults: make(map[string]authtypes.AccountI),
+		GetAccountResults: make(map[string]sdk.AccountI),
 		GetAccountCalls:   nil,
 	}
 }
@@ -241,10 +241,10 @@ func (k *MockAuthKeeper) WithGetAccountResults(entries ...*GetAccountCall) *Mock
 // GetAccountCall has the inputs of GetAccount and the result associated with that input.
 type GetAccountCall struct {
 	Addr   sdk.AccAddress
-	Result authtypes.AccountI
+	Result sdk.AccountI
 }
 
-func NewGetAccountCall(addr sdk.AccAddress, result authtypes.AccountI) *GetAccountCall {
+func NewGetAccountCall(addr sdk.AccAddress, result sdk.AccountI) *GetAccountCall {
 	return &GetAccountCall{
 		Addr:   addr,
 		Result: result,
@@ -267,7 +267,7 @@ func (c GetAccountCall) Key() string {
 }
 
 // GetAccount records that a GetAccount call has been made and returns the pre-defined value or nil.
-func (k *MockAuthKeeper) GetAccount(_ sdk.Context, addr sdk.AccAddress) authtypes.AccountI {
+func (k *MockAuthKeeper) GetAccount(_ context.Context, addr sdk.AccAddress) sdk.AccountI {
 	call := &GetAccountCall{
 		Addr:   addr,
 		Result: nil,
@@ -303,7 +303,7 @@ func (a *MockAuthorization) WithAcceptCalls(calls ...sdk.Msg) *MockAuthorization
 }
 
 // Accept records that an Accept call has been made and returns the pre-defined values.
-func (a *MockAuthorization) Accept(_ sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+func (a *MockAuthorization) Accept(_ context.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	a.AcceptCalls = append(a.AcceptCalls, msg)
 	return a.AcceptResponse, a.AcceptResponseErr
 }
