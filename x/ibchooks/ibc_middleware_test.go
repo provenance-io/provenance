@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
-
-	dbm "github.com/cometbft/cometbft-db"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	sdksim "cosmossdk.io/simapp"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
@@ -81,7 +81,7 @@ func SetupSimApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	db := dbm.NewMemDB()
 	encCdc := app.MakeEncodingConfig()
-	provenanceApp := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, encCdc, sdksim.EmptyAppOptions{})
+	provenanceApp := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, encCdc, simtestutil.EmptyAppOptions{})
 	genesis := app.NewDefaultGenesisState(encCdc.Marshaler)
 	return provenanceApp, genesis
 }
@@ -405,7 +405,7 @@ func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesti
 	return sender, receiver
 }
 
-func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction Direction) (*sdk.Result, []byte) {
+func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction Direction) (*abci.ExecTxResult, []byte) {
 	sender, receiver := suite.GetEndpoints(direction)
 
 	err := receiver.UpdateClient()
@@ -430,7 +430,7 @@ func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction D
 	return receiveResult, ack
 }
 
-func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Result, *sdk.Result, string, error) {
+func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Result, *abci.ExecTxResult, string, error) {
 	var sender *testutil.TestChain
 	switch direction {
 	case AtoB:
@@ -441,7 +441,7 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 	sendResult, err := sender.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err)
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.Events)
 	suite.Require().NoError(err)
 
 	receiveResult, ack := suite.RelayPacket(packet, direction)
