@@ -21,7 +21,7 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
-	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 	ibcratelimitcli "github.com/provenance-io/provenance/x/ibcratelimit/client/cli"
 )
 
@@ -187,13 +187,13 @@ func (s *TestSuite) TestParamsUpdate() {
 
 			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
-			flags := []string{
+			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
-			tc.args = append(tc.args, flags...)
+			tc.args = append(tc.args, flagArgs...)
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, ibcratelimitcli.GetCmdParamsUpdate(), append(tc.args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
