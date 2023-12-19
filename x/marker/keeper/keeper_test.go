@@ -94,21 +94,21 @@ func TestExistingAccounts(t *testing.T) {
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
 	// Creating a marker over an account with zero sequence is fine.
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdkmath.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err := server.AddMarker(ctx, types.NewMsgAddMarkerRequest("testcoin", sdkmath.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.NoError(t, err, "should allow a marker over existing account that has not signed anything.")
 
 	// existing coin balance must still be present
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balances must be preserved")
 
 	// Creating a marker over an existing marker fails.
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdkmath.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err = server.AddMarker(ctx, types.NewMsgAddMarkerRequest("testcoin", sdkmath.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.Error(t, err, "fails because marker already exists")
 
 	// replace existing test account with a new copy that has a positive sequence number
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
 
 	// Creating a marker over an existing account with a positive sequence number fails.
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("testcoin", sdkmath.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err = server.AddMarker(ctx, types.NewMsgAddMarkerRequest("testcoin", sdkmath.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 }
 
@@ -121,16 +121,16 @@ func TestAccountUnrestrictedDenoms(t *testing.T) {
 
 	// Require a long unrestricted denom
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("tooshort", sdkmath.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err := server.AddMarker(ctx, types.NewMsgAddMarkerRequest("tooshort", sdkmath.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.Error(t, err, "fails with unrestricted denom length fault")
 	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
 
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("itslongenough", sdkmath.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err = server.AddMarker(ctx, types.NewMsgAddMarkerRequest("itslongenough", sdkmath.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	require.NoError(t, err, "should allow a marker with a sufficiently long denom")
 
 	// Set to an empty string (returns to default expression)
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
-	_, err = server.AddMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddMarkerRequest("short", sdkmath.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
+	_, err = server.AddMarker(ctx, types.NewMsgAddMarkerRequest("short", sdkmath.NewInt(30), user, user, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
 	// succeeds now as the default unrestricted denom expression allows any valid denom (minimum length is 2)
 	require.NoError(t, err, "should allow any valid denom with a min length of two")
 }
@@ -809,7 +809,7 @@ func TestMarkerFeeGrant(t *testing.T) {
 		testUserAddress("grantee"),
 		&feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("testcoin", 1))})
 	require.NoError(t, err, "basic allowance creation failed")
-	_, err = server.GrantAllowance(sdk.WrapSDKContext(ctx), allowance)
+	_, err = server.GrantAllowance(ctx, allowance)
 	require.NoError(t, err, "failed to grant basic allowance from admin")
 }
 
@@ -837,7 +837,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 
 	// Creating a marker over an account with zero sequence is fine.
 	// One shot marker creation
-	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+	_, err := server.AddFinalizeActivateMarker(ctx, types.NewMsgAddFinalizeActivateMarkerRequest(
 		"testcoin",
 		sdkmath.NewInt(30),
 		user,
@@ -867,7 +867,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 	require.EqualValues(t, m.GetStatus(), types.StatusActive)
 
 	// Creating a marker over an existing marker fails.
-	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+	_, err = server.AddFinalizeActivateMarker(ctx, types.NewMsgAddFinalizeActivateMarkerRequest(
 		"testcoin",
 		sdkmath.NewInt(30),
 		user,
@@ -905,7 +905,7 @@ func TestInvalidAccount(t *testing.T) {
 	// replace existing test account with a new copy that has a positive sequence number
 	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
 
-	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+	_, err := server.AddFinalizeActivateMarker(ctx, types.NewMsgAddFinalizeActivateMarkerRequest(
 		"testcoin",
 		sdkmath.NewInt(30),
 		user,
@@ -933,7 +933,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	// Require a long unrestricted denom
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: "[a-z]{12,20}"})
 
-	_, err := server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx),
+	_, err := server.AddFinalizeActivateMarker(ctx,
 		types.NewMsgAddFinalizeActivateMarkerRequest(
 			"tooshort",
 			sdkmath.NewInt(30),
@@ -951,7 +951,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 	require.Error(t, err, "fails with unrestricted denom length fault")
 	require.Equal(t, fmt.Errorf("invalid denom [tooshort] (fails unrestricted marker denom validation [a-z]{12,20})"), err, "should fail with denom restriction")
 
-	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+	_, err = server.AddFinalizeActivateMarker(ctx, types.NewMsgAddFinalizeActivateMarkerRequest(
 		"itslongenough",
 		sdkmath.NewInt(30),
 		user,
@@ -969,7 +969,7 @@ func TestAddFinalizeActivateMarkerUnrestrictedDenoms(t *testing.T) {
 
 	// Set to an empty string (returns to default expression)
 	app.MarkerKeeper.SetParams(ctx, types.Params{UnrestrictedDenomRegex: ""})
-	_, err = server.AddFinalizeActivateMarker(sdk.WrapSDKContext(ctx), types.NewMsgAddFinalizeActivateMarkerRequest(
+	_, err = server.AddFinalizeActivateMarker(ctx, types.NewMsgAddFinalizeActivateMarkerRequest(
 		"short",
 		sdkmath.NewInt(30),
 		user,
@@ -1192,7 +1192,7 @@ func TestMsgSupplyIncreaseProposalRequest(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		res, err := server.SupplyIncreaseProposal(sdk.WrapSDKContext(ctx),
+		res, err := server.SupplyIncreaseProposal(ctx,
 			types.NewMsgSupplyIncreaseProposalRequest(tc.amount, tc.targetAddress, tc.authority))
 
 		if tc.shouldFail {
@@ -1293,7 +1293,7 @@ func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := server.UpdateRequiredAttributes(sdk.WrapSDKContext(ctx),
+			res, err := server.UpdateRequiredAttributes(ctx,
 				&tc.updateMsgRequest)
 
 			if len(tc.expectedError) > 0 {
@@ -1411,7 +1411,7 @@ var _ types.BankKeeper = (*dummyBankKeeper)(nil)
 
 func (d dummyBankKeeper) GetAllBalances(_ context.Context, _ sdk.AccAddress) sdk.Coins { return nil }
 
-func (d dummyBankKeeper) GetBalance(_ context.Context, _ sdk.AccAddress, denom string) sdk.Coin {
+func (d dummyBankKeeper) GetBalance(_ context.Context, _ sdk.AccAddress, _ string) sdk.Coin {
 	return sdk.Coin{}
 }
 
@@ -1421,7 +1421,7 @@ func (d dummyBankKeeper) DenomOwners(_ context.Context, _ *banktypes.QueryDenomO
 	return nil, nil
 }
 
-func (d dummyBankKeeper) SendCoins(_ context.Context, _, _ sdk.AccAddress, amt sdk.Coins) error {
+func (d dummyBankKeeper) SendCoins(_ context.Context, _, _ sdk.AccAddress, _ sdk.Coins) error {
 	return nil
 }
 

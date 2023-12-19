@@ -37,7 +37,7 @@ type MsgServerTestSuite struct {
 	pubkey1    cryptotypes.PubKey
 	owner1     string
 	owner1Addr sdk.AccAddress
-	acct1      authtypes.AccountI
+	acct1      sdk.AccountI
 
 	addresses []sdk.AccAddress
 }
@@ -301,7 +301,7 @@ func (s *MsgServerTestSuite) TestMsgFinalizeMarkerRequest() {
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			res, err := s.msgServer.Finalize(sdk.WrapSDKContext(s.ctx),
+			res, err := s.msgServer.Finalize(s.ctx,
 				&tc.msg)
 
 			if len(tc.expErr) > 0 {
@@ -464,11 +464,11 @@ func (s *MsgServerTestSuite) TestUpdateForcedTransfer() {
 			}
 
 			em := sdk.NewEventManager()
-			goCtx := sdk.WrapSDKContext(s.ctx.WithEventManager(em))
+			ctx := s.ctx.WithEventManager(em)
 			var res *types.MsgUpdateForcedTransferResponse
 			var err error
 			testFunc := func() {
-				res, err = s.msgServer.UpdateForcedTransfer(goCtx, tc.msg)
+				res, err = s.msgServer.UpdateForcedTransfer(ctx, tc.msg)
 			}
 
 			s.Require().NotPanics(testFunc, "UpdateForcedTransfer")
@@ -594,7 +594,7 @@ func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			res, err := s.msgServer.UpdateSendDenyList(sdk.WrapSDKContext(s.ctx),
+			res, err := s.msgServer.UpdateSendDenyList(s.ctx,
 				&tc.msg)
 
 			if len(tc.expErr) > 0 {
@@ -704,7 +704,7 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			res, err := s.msgServer.AddNetAssetValues(sdk.WrapSDKContext(s.ctx),
+			res, err := s.msgServer.AddNetAssetValues(s.ctx,
 				&tc.msg)
 
 			if len(tc.expErr) > 0 {

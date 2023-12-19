@@ -10,13 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/provenance-io/provenance/app"
+	piosimapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/marker"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
 func TestBeginBlocker(t *testing.T) {
-	app := app.Setup(t)
+	app := piosimapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
 
 	testmint := &types.MarkerAccount{
