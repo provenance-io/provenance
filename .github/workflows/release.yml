@@ -79,6 +79,9 @@ jobs:
         # TODO[1760]: Re-enable the build_linux provenanced version step.
         if: false
         run: build/provenanced version --long
+      - name: Compile Tests
+        # TODO[1760]: Delete this build_osx Compile Tests step.
+        run: go test -mod=readonly -timeout 30m -tags='norace ledger test_ledger_mock' -run='ZYX_NOT_A_REAL_TEST_XZY' ./...
       - uses: actions/upload-artifact@v3
         with:
           name: osx-zip
@@ -113,6 +116,9 @@ jobs:
         # TODO[1760]: Re-enable the build_linux provenanced version step.
         if: false
         run: build/provenanced version --long
+      - name: Compile Tests
+        # TODO[1760]: Delete this build_linux Compile Tests step.
+        run: go test -mod=readonly -timeout 30m -tags='norace ledger test_ledger_mock' -run='ZYX_NOT_A_REAL_TEST_XZY' ./...
       - uses: actions/upload-artifact@v3
         with:
           name: linux-zip
