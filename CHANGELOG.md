@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* Bump cosmos-SDK to `v0.50.2` (from `v0.46.13-pio-2`) [#1772](https://github.com/provenance-io/provenance/issues/1772).
 * Add the ibcratelimit module [#1498](https://github.com/provenance-io/provenance/issues/1498).
 * Add CLI commands for the exchange module endpoints and queries [#1701](https://github.com/provenance-io/provenance/issues/1701).
 * Add CLI command to generate autocomplete shell scripts [#1762](https://github.com/provenance-io/provenance/pull/1762).
