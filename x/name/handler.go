@@ -10,7 +10,7 @@ import (
 )
 
 // Returns a handler for name messages.
-// TODO[1760]: app-module: Delete the name NewHandler.
+// TODO[1760]: name: Delete the name NewHandler.
 func NewHandler(k keeper.Keeper) func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 	msgServer := keeper.NewMsgServerImpl(k)
 

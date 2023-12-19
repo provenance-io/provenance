@@ -28,7 +28,7 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-// TODO[1760]: app-module: Migrate the marker handler tests to the keeper.
+// TODO[1760]: marker: Migrate the marker handler tests to the keeper.
 
 type HandlerTestSuite struct {
 	suite.Suite

@@ -9,7 +9,7 @@ import (
 )
 
 // NewHandler returns a handler for reward messages.
-// TODO[1760]: app-module: delete the reward NewHandler.
+// TODO[1760]: reward: Delete the reward NewHandler.
 func NewHandler(k keeper.Keeper) func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 	msgServer := keeper.NewMsgServerImpl(k)
 

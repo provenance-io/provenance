@@ -212,7 +212,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	depositPeriod := 1 * time.Second
 
 	resetParams := func(t *testing.T, ctx sdk.Context) {
-		// TODO[1760]: Figure out how to set just the deposit params and uncomment this.
+		// TODO[1760]: gov: Figure out how to set just the deposit params and uncomment this.
 		_, _ = govMinDep, depositPeriod
 		/*
 			require.NotPanics(s.T(), func() {

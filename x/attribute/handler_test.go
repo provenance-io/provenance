@@ -19,7 +19,7 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
-// TODO[1760]: app-module: Migrate the attribute handler tests to the keeper.
+// TODO[1760]: attribute: Migrate the attribute handler tests to the keeper.
 
 type HandlerTestSuite struct {
 	suite.Suite

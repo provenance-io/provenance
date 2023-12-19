@@ -15,7 +15,7 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-// TODO[1760]: querier: Delete the metadata Querier.
+// TODO[1760]: metadata: Delete the metadata Querier.
 
 // NewQuerier creates a querier for auth REST endpoints
 func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {

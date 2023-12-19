@@ -20,7 +20,7 @@ const (
 	RouterKey = ModuleName
 
 	// QuerierRoute to be used for queries
-	QuerierRoute = ModuleName // TODO[1760]: app-module: Delete this variable.
+	QuerierRoute = ModuleName // TODO[1760]: marker: Delete this variable.
 
 	// CoinPoolName to be used for coin pool associated with mint/burn activities.
 	CoinPoolName = ModuleName

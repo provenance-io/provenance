@@ -13,7 +13,7 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-// TODO[1760]: querier: Delete the marker Querier.
+// TODO[1760]: marker: Delete the marker Querier.
 
 // NewQuerier is the module level router for state queries (using the Legacy Amino Codec)
 func NewQuerier(keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {

@@ -9,7 +9,7 @@ import (
 )
 
 // NewHandler returns a handler for metadata messages.
-// TODO[1760]: app-module: Delete the metadata NewHandler.
+// TODO[1760]: metadata: Delete the metadata NewHandler.
 func NewHandler(k keeper.Keeper) func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 	msgServer := keeper.NewMsgServerImpl(k)
 

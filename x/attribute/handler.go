@@ -9,7 +9,7 @@ import (
 )
 
 // NewHandler returns a handler for attribute messages.
-// TODO[1760]: app-module: Delete the attribute NewHandler.
+// TODO[1760]: attribute: Delete the attribute NewHandler.
 func NewHandler(k keeper.Keeper) func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 	msgServer := keeper.NewMsgServerImpl(k)
 

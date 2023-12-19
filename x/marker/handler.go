@@ -10,7 +10,7 @@ import (
 )
 
 // NewHandler returns a handler for marker messages.
-// TODO[1760]: app-module: Delete the marker NewHandler.
+// TODO[1760]: marker: Delete the marker NewHandler.
 func NewHandler(k keeper.Keeper) func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 	msgServer := keeper.NewMsgServerImpl(k)
 

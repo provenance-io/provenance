@@ -21,7 +21,7 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-// TODO[1760]: app-module: Migrate the metadata handler tests to the keeper.
+// TODO[1760]: metadata: Migrate the metadata handler tests to the keeper.
 
 type MetadataHandlerTestSuite struct {
 	suite.Suite

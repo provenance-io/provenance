@@ -209,11 +209,11 @@ replace (
 	// Use cosmos fork of keyring (because the SDK does).
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
-	// TODO[1760]: Put this CosmWasm/wasmd replace back with an updated version (or delete it).
+	// TODO[1760]: wasm: Put this CosmWasm/wasmd replace back with an updated version (or delete it).
 	// github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
-	// TODO[1760]: Put this replace back with an updated version of the sdk from our fork.
+	// TODO[1760]: sdk: Put this replace back with an updated version of the sdk from our fork.
 	// github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-2
-	// TODO[1760]: Put this ibc-go replace back with an updated version (or delete it).
+	// TODO[1760]: ibc: Put this ibc-go replace back with an updated version (or delete it).
 	// github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
@@ -221,7 +221,7 @@ replace (
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
-	// TODO[1760]: Check if we can get rid of this gogo/protobuf replace.
+	// TODO[1760]: proto: Check if we can get rid of this gogo/protobuf replace.
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7

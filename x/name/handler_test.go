@@ -26,6 +26,8 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
+// TODO[1760]: name: Migrate the name handler tests to the keeper.
+
 func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}
 	h := name.NewHandler(k)

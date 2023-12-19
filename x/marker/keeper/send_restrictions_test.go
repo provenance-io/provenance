@@ -871,7 +871,7 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 
 	// Create two quarantined address: one with the required attributes, one without.
 	optIn := func(t *testing.T, addr sdk.AccAddress) {
-		// require.NoError(t, app.QuarantineKeeper.SetOptIn(ctx, addr), "SetOptIn(%q)", string(addr)) // TODO[1760]: quarantine.
+		// require.NoError(t, app.QuarantineKeeper.SetOptIn(ctx, addr), "SetOptIn(%q)", string(addr)) // TODO[1760]: quarantine
 	}
 	addrQWithAttr := sdk.AccAddress("addrQWithReqAttrs____")
 	addrQWithoutAttr := sdk.AccAddress("addrQWithoutReqAttrs____")

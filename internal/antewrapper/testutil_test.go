@@ -123,7 +123,7 @@ func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				// SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), // TODO[1760]: same type name diff packages.
+				// SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), // TODO[1760]: signing: same type name diff packages.
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -138,7 +138,7 @@ func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint
 
 	// Second round: all signer infos are set, so each signer can sign.
 	sigsV2 = []signing.SignatureV2{}
-	// TODO[1760]: SignWithPrivKey: Uncomment these lines.
+	// TODO[1760]: signing: SignWithPrivKey: Uncomment these lines.
 	/*
 		for i, priv := range privs {
 			signerData := xauthsigning.SignerData{

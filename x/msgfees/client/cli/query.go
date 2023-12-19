@@ -42,7 +42,7 @@ func AllMsgFeesCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: ReadPageRequestWithPageKeyDecoded
+			pageReq, err := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 			if err != nil {
 				return err
 			}

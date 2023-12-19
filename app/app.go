@@ -812,7 +812,7 @@ func New(
 		// icaModule, // TODO[1760]: ica-host
 	)
 
-	// TODO[1760]: BasicModuleManager: Make sure that this setup has everything we need (it was just copied from the SDK).
+	// TODO[1760]: app-module: BasicModuleManager: Make sure that this setup has everything we need (it was just copied from the SDK).
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration and genesis verification.
 	// By default it is composed of all the module from the module manager.

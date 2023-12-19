@@ -3182,7 +3182,7 @@ func signAndGenTx(
 	sigV2 := signing.SignatureV2{
 		PubKey: pubKey,
 		Data: &signing.SingleSignatureData{
-			// SignMode:  encCfg.TxConfig.SignModeHandler().DefaultMode(), // TODO[1760]: same type name diff packages.
+			// SignMode:  encCfg.TxConfig.SignModeHandler().DefaultMode(), // TODO[1760]: signing: same type name diff packages.
 			Signature: nil,
 		},
 		Sequence: acct.Sequence,
@@ -3194,7 +3194,7 @@ func signAndGenTx(
 	}
 
 	// Second round: all signer infos are set, so each signer can sign.
-	// TODO[1760]: SignWithPrivKey: Uncomment these lines.
+	// TODO[1760]: signing: SignWithPrivKey: Uncomment these lines.
 	/*
 		signerData := authsigning.SignerData{
 			ChainID:       chainId,
