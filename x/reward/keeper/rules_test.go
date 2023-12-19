@@ -524,7 +524,6 @@ func (s *KeeperTestSuite) createTestValidators(amount int) {
 		}
 	}
 
-	// TODO[1760]: staking: Uncomment once we know how to call the staking end blocker again.
 	_, err = s.app.StakingKeeper.EndBlocker(s.ctx)
 	s.Require().NoError(err, "staking end blocker")
 
