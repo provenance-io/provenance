@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/helpers"
+	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/keeper"

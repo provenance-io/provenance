@@ -4,15 +4,15 @@ import (
 	"errors"
 	"os"
 
+	cmderrors "github.com/provenance-io/provenance/cmd/errors"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
-	"github.com/provenance-io/provenance/helpers"
 )
 
 func main() {
 	rootCmd, _ := cmd.NewRootCmd(true)
 	if err := cmd.Execute(rootCmd); err != nil {
-		var srvErrP *helpers.ExitCodeError
-		var srvErr helpers.ExitCodeError
+		var srvErrP *cmderrors.ExitCodeError
+		var srvErr cmderrors.ExitCodeError
 		switch {
 		case errors.As(err, &srvErrP):
 			os.Exit(int(*srvErrP))

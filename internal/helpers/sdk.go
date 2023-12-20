@@ -1,18 +1,12 @@
 package helpers
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// ExitCodeError contains the exit code for cmd exit.
-type ExitCodeError int
-
-func (e ExitCodeError) Error() string {
-	return fmt.Sprintf("exit code: %d", e)
-}
+// These are functions that would be handy to have in the SDK.
+// But since they're not there, they go in here.
 
 // MustValAddressFromBech32 calls sdk.ValAddressFromBech32 and panics on error.
 func MustValAddressFromBech32(operatorAddr string) sdk.ValAddress {
@@ -40,15 +34,4 @@ func ValidateBasic(msg sdk.Msg) error {
 		return vmsg.ValidateBasic()
 	}
 	return nil
-}
-
-// Keys returns the unordered keys of the given map.
-// This is the same as the experimental maps.Keys function.
-// As of writing, that isn't in the standard library version yet. Once it is, remove this and switch to that.
-func Keys[M ~map[K]V, K comparable, V any](m M) []K {
-	rv := make([]K, 0, len(m))
-	for k := range m {
-		rv = append(rv, k)
-	}
-	return rv
 }

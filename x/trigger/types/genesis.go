@@ -6,7 +6,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 
-	"github.com/provenance-io/provenance/helpers"
+	"github.com/provenance-io/provenance/internal/helpers"
 )
 
 var _ types.UnpackInterfacesMessage = (*GenesisState)(nil)

@@ -8,7 +8,7 @@ import (
 	time "time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/provenance-io/provenance/helpers"
+	"github.com/provenance-io/provenance/internal/helpers"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

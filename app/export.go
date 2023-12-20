@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/provenance-io/provenance/helpers"
+	"github.com/provenance-io/provenance/internal/helpers"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 

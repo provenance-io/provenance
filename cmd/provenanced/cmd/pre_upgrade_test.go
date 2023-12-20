@@ -25,9 +25,9 @@ import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
+	cmderrors "github.com/provenance-io/provenance/cmd/errors"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
-	"github.com/provenance-io/provenance/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
@@ -113,8 +113,8 @@ func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
 	rv.Result = cmd.Execute(rv.Cmd)
 	if rv.Result != nil {
 		t.Logf("Execution resulting in error: %v", rv.Result)
-		var srvErrP *helpers.ExitCodeError
-		var srvErr helpers.ExitCodeError
+		var srvErrP *cmderrors.ExitCodeError
+		var srvErr cmderrors.ExitCodeError
 		switch {
 		case errors.As(rv.Result, &srvErrP):
 			rv.ExitCode = int(*srvErrP)

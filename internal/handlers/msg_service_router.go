@@ -15,8 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/provenance-io/provenance/helpers"
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/helpers"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
 

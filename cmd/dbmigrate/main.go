@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/provenance-io/provenance/cmd/dbmigrate/cmd"
-	"github.com/provenance-io/provenance/helpers"
+	cmderrors "github.com/provenance-io/provenance/cmd/errors"
 )
 
 func main() {
 	rootCmd := cmd.NewDBMigrateCmd()
 	if err := cmd.Execute(rootCmd); err != nil {
-		var srvErrP *helpers.ExitCodeError
-		var srvErr helpers.ExitCodeError
+		var srvErrP *cmderrors.ExitCodeError
+		var srvErr cmderrors.ExitCodeError
 		switch {
 		case errors.As(err, &srvErrP):
 			os.Exit(int(*srvErrP))

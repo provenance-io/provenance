@@ -10,13 +10,13 @@ import (
 
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 
+	cmderrors "github.com/provenance-io/provenance/cmd/errors"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
-	"github.com/provenance-io/provenance/helpers"
 )
 
 var (
-	ErrFail      error = helpers.ExitCodeError(30)
-	ErrFailRetry error = helpers.ExitCodeError(31)
+	ErrFail      error = cmderrors.ExitCodeError(30)
+	ErrFailRetry error = cmderrors.ExitCodeError(31)
 )
 
 // GetPreUpgradeCmd returns the pre-upgrade command which cosmovisor runs before
