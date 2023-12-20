@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add upgrade handler for 1.18 [#1756](https://github.com/provenance-io/provenance/pull/1756).
 * Updated documentation for each module to work with docusaurus [PR 1763](https://github.com/provenance-io/provenance/pull/1763).
 * Create a default market in `make run`, `localnet`, `devnet` and the `provenanced testnet` command [#1757](https://github.com/provenance-io/provenance/issues/1757).
+* Remove the rust upgrade handlers [PR 1774](https://github.com/provenance-io/provenance/pull/1774).
 
 ### Dependencies
 
@@ -60,6 +61,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `cosmossdk.io/math` from 1.1.2 to 1.2.0 ([#1739](https://github.com/provenance-io/provenance/pull/1739))
 - Update `async-icq` from `github.com/strangelove-ventures/async-icq/v6` to `github.com/cosmos/ibc-apps/modules/async-icq/v6.1.0` ([#1748](https://github.com/provenance-io/provenance/pull/1748))
 - Bump `github.com/spf13/viper` from 1.17.0 to 1.18.0 ([#1777](https://github.com/provenance-io/provenance/pull/1777))
+- Bump `github.com/spf13/cast` from 1.5.1 to 1.6.0 ([#1769](https://github.com/provenance-io/provenance/pull/1769))
+- Bump `actions/setup-java` from 3 to 4 ([#1770](https://github.com/provenance-io/provenance/pull/1770))
 
 ---
 
