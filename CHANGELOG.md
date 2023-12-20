@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Remove the rust upgrade handlers [PR 1774](https://github.com/provenance-io/provenance/pull/1774).
 
 ### Bug Fixes
+
 * Update linux release to not build with CLevelDB [PR 1783](https://github.com/provenance-io/provenance/pull/1783).
 
 ### Dependencies
