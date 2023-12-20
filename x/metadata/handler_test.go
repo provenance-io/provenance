@@ -7,29 +7,28 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/metadata"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
+
+// TODO[1760]: metadata: Migrate the metadata handler tests to the keeper.
 
 type MetadataHandlerTestSuite struct {
 	suite.Suite
 
 	app     *app.App
 	ctx     sdk.Context
-	handler sdk.Handler
+	handler func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
 
 	pubkey1   cryptotypes.PubKey
 	user1     string
@@ -42,7 +41,7 @@ type MetadataHandlerTestSuite struct {
 
 func (s *MetadataHandlerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.handler = metadata.NewHandler(s.app.MetadataKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()

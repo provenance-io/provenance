@@ -46,7 +46,7 @@ func SimulateCreateAddMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulator
 				simtypes.RandStringOfLength(r, 10),
 				simtypes.RandStringOfLength(r, 100),
 				sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}),
-				sdk.NewCoin("hotdog", sdk.NewInt(r.Int63n(100000000))),
+				sdk.NewInt64Coin("hotdog", r.Int63n(100_000_000)),
 				"",
 				"",
 			)
@@ -55,7 +55,7 @@ func SimulateCreateAddMsgFeesProposal(k keeper.Keeper) simtypes.ContentSimulator
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 100),
 			sdk.MsgTypeURL(&attributetypes.MsgAddAttributeRequest{}),
-			sdk.NewCoin("hotdog", sdk.NewInt(r.Int63n(100000000))),
+			sdk.NewInt64Coin("hotdog", r.Int63n(100_000_000)),
 			"",
 			"",
 		)

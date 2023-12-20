@@ -16,7 +16,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+
+	// govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli" // TODO[1760]: gov-cli
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
@@ -78,7 +79,9 @@ func govTxRunE[R sdk.Msg](maker msgMaker[R]) func(cmd *cobra.Command, args []str
 		}
 
 		cmd.SilenceUsage = true
-		return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		// return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg) // TODO[1760]: gov-cli
+		_ = msg
+		return fmt.Errorf("not yet updated")
 	}
 }
 

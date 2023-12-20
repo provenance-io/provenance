@@ -6,6 +6,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+
+	"github.com/provenance-io/provenance/internal/helpers"
 )
 
 var _ sdk.Msg = &MsgCreateTriggerRequest{}
@@ -69,12 +71,13 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 	}
 
 	for idx, action := range actions {
-		if err = action.ValidateBasic(); err != nil {
+		if err = helpers.ValidateBasic(action); err != nil {
 			return fmt.Errorf("action: %d: %w", idx, err)
 		}
-		if err = hasSigners(authorities, action.GetSigners()); err != nil {
-			return fmt.Errorf("action: %d: %w", idx, err)
-		}
+		// TODO[1760]: signers: getting signers now requies a context, so it can' live in this MsgCreateTriggerRequest ValidateBasic().
+		// if err = hasSigners(authorities, action.GetSigners()); err != nil {
+		// 	return fmt.Errorf("action: %d: %w", idx, err)
+		// }
 	}
 	return nil
 }

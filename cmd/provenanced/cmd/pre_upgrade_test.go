@@ -17,14 +17,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	tmconfig "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/log"
+	cmtconfig "github.com/cometbft/cometbft/config"
 
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
+	cmderrors "github.com/provenance-io/provenance/cmd/errors"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -85,7 +86,7 @@ func logDir(t *testing.T, path string) {
 	}
 }
 
-// cmdResult contains the info, results, and output of the an executed command.
+// cmdResult contains the info, results, and output of the executed command.
 type cmdResult struct {
 	Cmd      *cobra.Command
 	Home     string
@@ -112,13 +113,13 @@ func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
 	rv.Result = cmd.Execute(rv.Cmd)
 	if rv.Result != nil {
 		t.Logf("Execution resulting in error: %v", rv.Result)
-		var srvErrP *server.ErrorCode
-		var srvErr server.ErrorCode
+		var srvErrP *cmderrors.ExitCodeError
+		var srvErr cmderrors.ExitCodeError
 		switch {
 		case errors.As(rv.Result, &srvErrP):
-			rv.ExitCode = srvErrP.Code
+			rv.ExitCode = int(*srvErrP)
 		case errors.As(rv.Result, &srvErr):
-			rv.ExitCode = srvErr.Code
+			rv.ExitCode = int(srvErr)
 		default:
 			rv.ExitCode = 1
 		}
@@ -181,7 +182,7 @@ func assertContainsAll(t *testing.T, actual string, expected []string, msgAndArg
 
 // makeDummyCmd creates a dummy command with a context in it that can be used to test all the config stuff.
 func makeDummyCmd(t *testing.T, home string) *cobra.Command {
-	encodingConfig := sdksim.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithHomeDir(home)
@@ -216,7 +217,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 
 	seenNames := make(map[string]bool)
 	// newHome creates a new home directory and saves the configs. Returns full path to home and success.
-	newHome := func(t *testing.T, name string, appCfg *serverconfig.Config, tmCfg *tmconfig.Config, clientCfg *config.ClientConfig) (string, bool) {
+	newHome := func(t *testing.T, name string, appCfg *serverconfig.Config, tmCfg *cmtconfig.Config, clientCfg *config.ClientConfig) (string, bool) {
 		require.False(t, seenNames[name], "dir name %q created in previous test", name)
 		seenNames[name] = true
 		home := filepath.Join(tmpDir, name)
@@ -229,7 +230,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 		return home, success
 	}
 	// newHomePacked creates a new home directory, saves the configs, and packs them. Returns full path to home and success.
-	newHomePacked := func(t *testing.T, name string, appCfg *serverconfig.Config, tmCfg *tmconfig.Config, clientCfg *config.ClientConfig) (string, bool) {
+	newHomePacked := func(t *testing.T, name string, appCfg *serverconfig.Config, tmCfg *cmtconfig.Config, clientCfg *config.ClientConfig) (string, bool) {
 		home, success := newHome(t, name, appCfg, tmCfg, clientCfg)
 		if !success {
 			return home, success
@@ -276,7 +277,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 		expInStderr  []string
 		expNot       []string
 		expAppCfg    *serverconfig.Config
-		expTmCfg     *tmconfig.Config
+		expTmCfg     *cmtconfig.Config
 		expClientCfg *config.ClientConfig
 	}{
 		{

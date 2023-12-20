@@ -3,6 +3,8 @@ package types
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -15,11 +17,11 @@ import (
 func TestCreateParams(t *testing.T) {
 	msgFeeParam := NewParams(sdk.Coin{
 		Denom:  "steak",
-		Amount: sdk.NewInt(2000),
+		Amount: sdkmath.NewInt(2000),
 	}, uint64(7), pioconfig.GetProvenanceConfig().FeeDenom)
 	assert.Equal(t, sdk.Coin{
 		Denom:  "steak",
-		Amount: sdk.NewInt(2000),
+		Amount: sdkmath.NewInt(2000),
 	}, msgFeeParam.FloorGasPrice)
 	assert.Equal(t, uint64(7), msgFeeParam.NhashPerUsdMil)
 	assert.Equal(t, "nhash", msgFeeParam.ConversionFeeDenom)
@@ -29,7 +31,7 @@ func TestCreateParams(t *testing.T) {
 func TestCreateParamSet(t *testing.T) {
 	msgFeeParam := NewParams(sdk.Coin{
 		Denom:  "nhash",
-		Amount: sdk.NewInt(3000),
+		Amount: sdkmath.NewInt(3000),
 	}, uint64(7), "nhash")
 	paramsetPair := msgFeeParam.ParamSetPairs()
 	require.Equal(t, 3, len(paramsetPair))
@@ -38,7 +40,7 @@ func TestCreateParamSet(t *testing.T) {
 func TestValidateMinGasPriceParamI(t *testing.T) {
 	require.NoError(t, validateCoinParam(sdk.Coin{
 		Denom:  "steak",
-		Amount: sdk.NewInt(2000),
+		Amount: sdkmath.NewInt(2000),
 	}))
 }
 
@@ -55,7 +57,7 @@ func TestMsgFeeParamKeyTable(t *testing.T) {
 	require.Panics(t, func() {
 		keyTable.RegisterType(paramtypes.NewParamSetPair(ParamStoreKeyFloorGasPrice, sdk.Coin{
 			Denom:  "nhash",
-			Amount: sdk.NewInt(5000),
+			Amount: sdkmath.NewInt(5000),
 		}, validateCoinParam))
 	})
 	require.Panics(t, func() {

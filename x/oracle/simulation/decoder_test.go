@@ -5,16 +5,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
+	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
 	"github.com/provenance-io/provenance/x/oracle/simulation"
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(oraclemodule.AppModuleBasic{}).Codec
 	dec := simulation.NewDecodeStore(cdc)
 
 	tests := []struct {

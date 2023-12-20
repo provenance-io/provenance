@@ -84,7 +84,7 @@ filters+=( '^x/reward/simulation/operations\.go:(7[0-9]|8[0-5]):[[:space:]]+now 
 #     It's in the header creation for the BeginBlock.
 #     Since it's expected that it might move, and also that additional
 #     such uses might be added, allow it to be on any line number.
-filters+=( '^app/test_helpers\.go:[[:digit:]]+:.*tmproto\.Header{' )
+filters+=( '^app/test_helpers\.go:[[:digit:]]+:.*cmtproto\.Header{' )
 # The x/marker/client/cli/tx.go file has two legitimate uses due to authz and feegrant grant creation.
 #     Since that file is not involved in any block processing, just ignore the whole file.
 filters+=( '^x/marker/client/cli/tx\.go:' )

@@ -3453,8 +3453,8 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			testFunc := func() {
 				err = s.k.UpdateMarketActive(ctx, tc.marketID, tc.active, tc.updatedBy)
 			}
-			s.Require().NotPanics(testFunc, "UpdateMarketActive(%d, %t, %s)", tc.marketID, tc.active, string(tc.updatedBy))
-			s.assertErrorValue(err, tc.expErr, "UpdateMarketActive(%d, %t, %s)", tc.marketID, tc.active, string(tc.updatedBy))
+			s.Require().NotPanics(testFunc, "UpdateMarketActive(%d, %t, %s)", tc.marketID, tc.active, tc.updatedBy)
+			s.assertErrorValue(err, tc.expErr, "UpdateMarketActive(%d, %t, %s)", tc.marketID, tc.active, tc.updatedBy)
 
 			events := em.Events()
 			s.assertEqualEvents(expEvents, events, "events after UpdateMarketActive")
@@ -3635,8 +3635,8 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 			testFunc := func() {
 				err = s.k.UpdateUserSettlementAllowed(ctx, tc.marketID, tc.allow, tc.updatedBy)
 			}
-			s.Require().NotPanics(testFunc, "UpdateUserSettlementAllowed(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
-			s.assertErrorValue(err, tc.expErr, "UpdateUserSettlementAllowed(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
+			s.Require().NotPanics(testFunc, "UpdateUserSettlementAllowed(%d, %t, %s)", tc.marketID, tc.allow, tc.updatedBy)
+			s.assertErrorValue(err, tc.expErr, "UpdateUserSettlementAllowed(%d, %t, %s)", tc.marketID, tc.allow, tc.updatedBy)
 
 			events := em.Events()
 			s.assertEqualEvents(expEvents, events, "events after UpdateUserSettlementAllowed")
@@ -5771,7 +5771,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketDetails() {
 		updatedBy     string
 		expErr        string
 		expGetAccCall bool
-		expSetAccCall authtypes.AccountI
+		expSetAccCall sdk.AccountI
 	}{
 		{
 			name:          "invalid market details",
@@ -5870,7 +5870,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketDetails() {
 
 func (s *TestSuite) TestKeeper_CreateMarket() {
 	setAccNum := func(id uint64) AccountModifier {
-		return func(acc authtypes.AccountI) authtypes.AccountI {
+		return func(acc sdk.AccountI) sdk.AccountI {
 			err := acc.SetAccountNumber(id)
 			s.Require().NoError(err, "SetAccountNumber(%d)", id)
 			return acc

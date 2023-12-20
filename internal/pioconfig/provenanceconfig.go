@@ -14,6 +14,10 @@ const (
 	defaultMinGasPrices = 1905
 	// DefaultReDnmString is the allowed denom regex expression
 	DefaultReDnmString = `[a-zA-Z][a-zA-Z0-9/\-\.]{2,127}`
+
+	// SimAppChainID hardcoded chainID for simulation.
+	// Copied from cosmossdk.io/simapp/sim_test.go. We used to use this directly, but now its in a _test.go file.
+	SimAppChainID = "simulation-app"
 )
 
 type ProvenanceConfig struct {

@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil"
@@ -35,15 +34,15 @@ type QueryServerTestSuite struct {
 	pubkey1    cryptotypes.PubKey
 	owner1     string
 	owner1Addr sdk.AccAddress
-	acct1      authtypes.AccountI
+	acct1      sdk.AccountI
 
 	addresses []sdk.AccAddress
 }
 
 func (s *QueryServerTestSuite) SetupTest() {
 	s.app = simapp.SetupQuerier(s.T())
-	s.ctx = s.app.BaseApp.NewContext(true, tmproto.Header{})
-	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())
+	s.ctx = s.app.BaseApp.NewContext(true)
+	s.app.AccountKeeper.Params.Set(s.ctx, authtypes.DefaultParams())
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())

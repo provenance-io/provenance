@@ -5,14 +5,14 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	abcitypes "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	cerrs "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
@@ -28,7 +28,7 @@ func (k Keeper) QueryOracle(ctx sdk.Context, query wasmtypes.RawContractMessage,
 		Query: query,
 	}
 
-	reqs := []abcitypes.RequestQuery{
+	reqs := []abci.RequestQuery{
 		{
 			Path: "/provenance.oracle.v1.Query/Oracle",
 			Data: k.cdc.MustMarshal(&q),

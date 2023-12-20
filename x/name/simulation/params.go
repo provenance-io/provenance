@@ -21,26 +21,26 @@ const (
 
 // ParamChanges defines the parameters that can be modified by param change proposals
 // on the simulation
-func ParamChanges(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{
-		simulation.NewSimParamChange(types.ModuleName, keyMinSegmentLength,
+func ParamChanges(_ *rand.Rand) []simtypes.LegacyParamChange {
+	return []simtypes.LegacyParamChange{
+		simulation.NewSimLegacyParamChange(types.ModuleName, keyMinSegmentLength,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("%d", GenMinSegmentLength(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, keyMaxSegmentLength,
+		simulation.NewSimLegacyParamChange(types.ModuleName, keyMaxSegmentLength,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("%d", GenMaxSegmentLength(r))
 			},
 		),
 
-		simulation.NewSimParamChange(types.ModuleName, keyMaxNameLevels,
+		simulation.NewSimLegacyParamChange(types.ModuleName, keyMaxNameLevels,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("%d", GenMaxNameLevels(r))
 			},
 		),
 
-		simulation.NewSimParamChange(types.ModuleName, keyAllowUnrestricted,
+		simulation.NewSimLegacyParamChange(types.ModuleName, keyAllowUnrestricted,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("%v", GenAllowUnrestrictedNames(r))
 			},

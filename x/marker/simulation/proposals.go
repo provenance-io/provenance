@@ -3,7 +3,7 @@ package simulation
 import (
 	"math/rand"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -82,7 +82,7 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 		}
 
 		maxSupply := k.GetMaxSupply(ctx).Sub(k.CurrentCirculation(ctx, m))
-		newSupply := math.NewIntFromBigInt(math.ZeroInt().BigInt().Rand(r, maxSupply.BigInt()))
+		newSupply := sdkmath.NewIntFromBigInt(sdkmath.ZeroInt().BigInt().Rand(r, maxSupply.BigInt()))
 
 		// TODO: When the simulation tests are fixed to stop breaking supply invariants through incorrect minting, the following check should be removed.
 		if newSupply.GT(k.GetMaxSupply(ctx)) {
@@ -107,7 +107,7 @@ func SimulateCreateSupplyDecreaseProposalContent(k keeper.Keeper) simtypes.Conte
 			return nil
 		}
 		currentSupply := k.CurrentEscrow(ctx, m).AmountOf(m.GetDenom())
-		if currentSupply.LT(sdk.OneInt()) {
+		if currentSupply.LT(sdkmath.OneInt()) {
 			return nil
 		}
 		burn := sdk.NewCoin(m.GetDenom(), simtypes.RandomAmount(r, currentSupply))

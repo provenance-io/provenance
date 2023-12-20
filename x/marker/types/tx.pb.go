@@ -13,8 +13,8 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/x/bank/types"
 	github_com_cosmos_cosmos_sdk_x_bank_types "github.com/cosmos/cosmos-sdk/x/bank/types"
-	_ "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	github_com_cosmos_ibc_go_v6_modules_apps_transfer_types "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	_ "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	github_com_cosmos_ibc_go_v6_modules_apps_transfer_types "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
@@ -1239,7 +1239,7 @@ var xxx_messageInfo_MsgTransferResponse proto.InternalMessageInfo
 
 // MsgIbcTransferRequest defines the Msg/IbcTransfer request type for markers.
 type MsgIbcTransferRequest struct {
-	Transfer      github_com_cosmos_ibc_go_v6_modules_apps_transfer_types.MsgTransfer `protobuf:"bytes,1,opt,name=transfer,proto3,customtype=github.com/cosmos/ibc-go/v6/modules/apps/transfer/types.MsgTransfer" json:"transfer"`
+	Transfer      github_com_cosmos_ibc_go_v6_modules_apps_transfer_types.MsgTransfer `protobuf:"bytes,1,opt,name=transfer,proto3,customtype=github.com/cosmos/ibc-go/v8/modules/apps/transfer/types.MsgTransfer" json:"transfer"`
 	Administrator string                                                              `protobuf:"bytes,2,opt,name=administrator,proto3" json:"administrator,omitempty"`
 }
 

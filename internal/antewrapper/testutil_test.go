@@ -7,18 +7,14 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
@@ -30,7 +26,7 @@ import (
 
 // TestAccount represents an account used in the tests in x/auth/ante.
 type TestAccount struct {
-	acc  types.AccountI
+	acc  sdk.AccountI
 	priv cryptotypes.PrivKey
 }
 
@@ -53,8 +49,11 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.App, sdk.Context) {
 	} else {
 		app = simapp.Setup(t)
 	}
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	ctx := app.BaseApp.NewContext(isCheckTx)
+	err := app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams())
+	if err != nil {
+		panic(err)
+	}
 
 	return app, ctx
 }
@@ -66,7 +65,7 @@ func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := sdksim.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
@@ -76,12 +75,12 @@ func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 
 	anteHandler, err := antewrapper.NewAnteHandler(
 		antewrapper.HandlerOptions{
-			AccountKeeper:   s.app.AccountKeeper,
-			BankKeeper:      s.app.BankKeeper,
-			FeegrantKeeper:  s.app.FeeGrantKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			MsgFeesKeeper:   s.app.MsgFeesKeeper,
+			AccountKeeper:       s.app.AccountKeeper,
+			BankKeeper:          s.app.BankKeeper,
+			FeegrantKeeper:      s.app.FeeGrantKeeper,
+			TxSigningHandlerMap: encodingConfig.TxConfig.SignModeHandler(),
+			SigGasConsumer:      ante.DefaultSigVerificationGasConsumer,
+			MsgFeesKeeper:       s.app.MsgFeesKeeper,
 		},
 	)
 
@@ -124,7 +123,7 @@ func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				// SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), // TODO[1760]: signing: same type name diff packages.
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -139,21 +138,24 @@ func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint
 
 	// Second round: all signer infos are set, so each signer can sign.
 	sigsV2 = []signing.SignatureV2{}
-	for i, priv := range privs {
-		signerData := xauthsigning.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNums[i],
-			Sequence:      accSeqs[i],
-		}
-		sigV2, err := tx.SignWithPrivKey(
-			s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
-			s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
-		if err != nil {
-			return nil, err
-		}
+	// TODO[1760]: signing: SignWithPrivKey: Uncomment these lines.
+	/*
+		for i, priv := range privs {
+			signerData := xauthsigning.SignerData{
+				ChainID:       chainID,
+				AccountNumber: accNums[i],
+				Sequence:      accSeqs[i],
+			}
+			sigV2, err := tx.SignWithPrivKey(
+				s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+				s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
+			if err != nil {
+				return nil, err
+			}
 
-		sigsV2 = append(sigsV2, sigV2)
-	}
+			sigsV2 = append(sigsV2, sigV2)
+		}
+	*/
 	err = s.txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, err

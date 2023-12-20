@@ -3,6 +3,8 @@ package keeper
 import (
 	"encoding/binary"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -40,7 +42,7 @@ func (k Keeper) GetEventListener(ctx sdk.Context, eventName string, order uint64
 // IterateEventListeners Iterates through all the event listeners.
 func (k Keeper) IterateEventListeners(ctx sdk.Context, eventName string, handle func(trigger triggertypes.Trigger) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, triggertypes.GetEventListenerPrefix(eventName))
+	iterator := storetypes.KVStorePrefixIterator(store, triggertypes.GetEventListenerPrefix(eventName))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

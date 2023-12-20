@@ -1,6 +1,8 @@
 package types
 
 import (
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,12 +19,12 @@ func SplitCoinByBips(coin sdk.Coin, bips uint32) (recipientCoin sdk.Coin, feePay
 	// nothing to calculate if recipient gets 10_000 bips or 100%, short circuit
 	if bips == 10_000 {
 		recipientCoin = coin
-		feePayoutCoin = sdk.NewCoin(coin.Denom, sdk.NewInt(0))
+		feePayoutCoin = sdk.NewInt64Coin(coin.Denom, 0)
 		return recipientCoin, feePayoutCoin, nil
 	}
-	numerator := sdk.NewDec(int64(bips))
-	denominator := sdk.NewDec(10_000)
-	decAmount := sdk.NewDec(coin.Amount.Int64())
+	numerator := sdkmath.LegacyNewDec(int64(bips))
+	denominator := sdkmath.LegacyNewDec(10_000)
+	decAmount := sdkmath.LegacyNewDec(coin.Amount.Int64())
 	percentage := numerator.Quo(denominator)
 	bipsAmount := decAmount.Mul(percentage).TruncateInt()
 	feePayoutAmount := coin.Amount.Sub(bipsAmount)

@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
-
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
+	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -114,9 +114,9 @@ func (k Keeper) GetFeeCollectorName() string {
 }
 
 // getAllKeys gets all the keys in the store with the given prefix.
-func getAllKeys(store sdk.KVStore, pre []byte) [][]byte {
+func getAllKeys(store storetypes.KVStore, pre []byte) [][]byte {
 	// Using a prefix iterator so that iter.Key() is the whole key (including the prefix).
-	iter := sdk.KVStorePrefixIterator(store, pre)
+	iter := storetypes.KVStorePrefixIterator(store, pre)
 	defer iter.Close()
 
 	var keys [][]byte
@@ -128,7 +128,7 @@ func getAllKeys(store sdk.KVStore, pre []byte) [][]byte {
 }
 
 // deleteAll deletes all keys that have the given prefix.
-func deleteAll(store sdk.KVStore, pre []byte) {
+func deleteAll(store storetypes.KVStore, pre []byte) {
 	keys := getAllKeys(store, pre)
 	for _, key := range keys {
 		store.Delete(key)
@@ -138,7 +138,7 @@ func deleteAll(store sdk.KVStore, pre []byte) {
 // iterate iterates over all the entries in the store with the given prefix.
 // The key provided to the callback will NOT have the provided prefix; it will be everything after it.
 // The callback should return false to continue iteration, or true to stop.
-func iterate(store sdk.KVStore, pre []byte, cb func(key, value []byte) bool) {
+func iterate(store storetypes.KVStore, pre []byte, cb func(key, value []byte) bool) {
 	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
 	pStore := prefix.NewStore(store, pre)
 	iter := pStore.Iterator(nil, nil)
@@ -152,7 +152,7 @@ func iterate(store sdk.KVStore, pre []byte, cb func(key, value []byte) bool) {
 }
 
 // getStore gets the store for the exchange module.
-func (k Keeper) getStore(ctx sdk.Context) sdk.KVStore {
+func (k Keeper) getStore(ctx sdk.Context) storetypes.KVStore {
 	return ctx.KVStore(k.storeKey)
 }
 
@@ -167,10 +167,10 @@ func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) 
 func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
 	// We bypass the quarantine module here under the assumption that someone creating
 	// an order counts as acceptance of the stuff to receive (that they defined when creating the order).
-	ctx := quarantine.WithBypass(ctxIn)
+	ctx := ctxIn // quarantine.WithBypass(ctxIn) // TODO[1760]: quarantine
 	if len(inputs) == 1 && len(outputs) == 1 {
 		// If there's only one of each, we use SendCoins for the nicer events.
-		if !exchange.CoinsEquals(inputs[0].Coins, outputs[0].Coins) {
+		if !inputs[0].Coins.Equal(outputs[0].Coins) {
 			return fmt.Errorf("input coins %q does not equal output coins %q",
 				inputs[0].Coins, outputs[0].Coins)
 		}
@@ -184,7 +184,9 @@ func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs 
 		}
 		return k.bankKeeper.SendCoins(ctx, fromAddr, toAddr, inputs[0].Coins)
 	}
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	// TODO[1760]: exchange: Put this back once we have InputOutputCoins again.
+	// return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	return nil
 }
 
 // CalculateExchangeSplit calculates the amount that the exchange will keep of the provided fee.
@@ -265,9 +267,11 @@ func (k Keeper) CollectFees(ctx sdk.Context, marketID uint32, inputs []banktypes
 
 	marketAddr := exchange.GetMarketAddress(marketID)
 	outputs := []banktypes.Output{{Address: marketAddr.String(), Coins: feeAmt}}
-	if err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs); err != nil {
-		return fmt.Errorf("error collecting fees for market %d: %w", marketID, err)
-	}
+	// TODO[1760]: exchange: Put this back once we have InputOutputCoins again.
+	_ = outputs
+	// if err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs); err != nil {
+	// 	return fmt.Errorf("error collecting fees for market %d: %w", marketID, err)
+	// }
 	if !exchangeAmt.IsZero() {
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeAmt); err != nil {
 			return fmt.Errorf("error collecting exchange fee %s (based off %s) from market %d: %w", exchangeAmt, feeAmt, marketID, err)

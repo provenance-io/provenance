@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/trigger/types"
@@ -44,7 +46,7 @@ func (k Keeper) GetGasLimit(ctx sdk.Context, id types.TriggerID) (gasLimit uint6
 // IterateGasLimits Iterates through all the gas limits.
 func (k Keeper) IterateGasLimits(ctx sdk.Context, handle func(gasLimit types.GasLimit) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GasLimitKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.GasLimitKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

@@ -16,7 +16,7 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
-	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
+	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
@@ -52,14 +52,11 @@ func (s *SimulateTestSuite) SetupTest() {
 	s.Require().NoError(err2)
 	s.account2Addr = addr2
 
-	s.floorGasPrice = sdk.Coin{
-		Denom:  "stake",
-		Amount: sdk.NewInt(1000),
-	}
+	s.floorGasPrice = sdk.NewInt64Coin("stake", 1000)
 	pioconfig.SetProvenanceConfig(s.floorGasPrice.Denom, s.floorGasPrice.Amount.Int64())
 
 	s.sendMsgTypeUrl = "/cosmos.bank.v1beta1.MsgSend"
-	s.sendMsgAdditionalFee = sdk.NewCoin("stake", sdk.NewInt(1))
+	s.sendMsgAdditionalFee = sdk.NewInt64Coin("stake", 1)
 
 	s.T().Log("setting up integration test suite")
 
@@ -111,7 +108,7 @@ func (s *SimulateTestSuite) TestSimulateCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cmd.GetCmdPioSimulateTx()
+			cmd := provenancecmd.GetCmdPioSimulateTx()
 			clientCtx := s.testnet.Validators[0].ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -120,7 +117,7 @@ func (s *SimulateTestSuite) TestSimulateCmd() {
 			err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &result)
 			s.Require().NoError(err)
 			s.Assert().Equal(tc.expectedAdditionalFees, result.AdditionalFees)
-			expectedTotalFees := sdk.NewCoins(s.sendMsgAdditionalFee.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(result.EstimatedGas)*s.floorGasPrice.Amount.Int64()))))
+			expectedTotalFees := sdk.NewCoins(s.sendMsgAdditionalFee.Add(sdk.NewCoin(s.cfg.BondDenom, s.floorGasPrice.Amount.MulRaw(int64(result.EstimatedGas)))))
 			s.Assert().Equal(expectedTotalFees, result.TotalFees)
 		})
 	}
@@ -136,9 +133,10 @@ func (s *SimulateTestSuite) GenerateAndSignSend(from string, to string, coins st
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		"--generate-only",
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 	}
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, bankcli.NewSendTxCmd(), args)
+	addrCdc := s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, bankcli.NewSendTxCmd(addrCdc), args)
 	s.Require().NoError(err)
 	genFilePath := filepath.Join(tmpDir, fmt.Sprintf("unsigned.%s.%s.%s.json", from, to, coins))
 	f, err := os.Create(genFilePath)

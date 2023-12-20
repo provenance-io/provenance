@@ -1,21 +1,23 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	// icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types" // TODO[1760]: async-icq
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -122,7 +124,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
+		Added: []string{ /* icqtypes.ModuleName, // TODO[1760]: async-icq */ oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
 	"saffron-rc2": { // upgrade for v1.17.0-rc2
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -172,7 +174,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
+		Added: []string{ /* icqtypes.ModuleName, // TODO[1760]: async-icq */ oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
 	"tourmaline-rc1": { // upgrade for v1.18.0-rc1
 		Added: []string{ibcratelimit.ModuleName},
@@ -208,13 +210,15 @@ func InstallCustomUpgradeHandlers(app *App) {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		var handler upgradetypes.UpgradeHandler
 		if upgrade.Handler == nil {
-			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
+			handler = func(goCtx context.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
+				ctx := sdk.UnwrapSDKContext(goCtx)
 				ctx.Logger().Info(fmt.Sprintf("Applying no-op upgrade to %q", plan.Name))
 				return versionMap, nil
 			}
 		} else {
 			ref := upgrade
-			handler = func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			handler = func(goCtx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				ctx := sdk.UnwrapSDKContext(goCtx)
 				ctx.Logger().Info(fmt.Sprintf("Starting upgrade to %q", plan.Name), "version-map", vm)
 				newVM, err := ref.Handler(ctx, app, vm)
 				if err != nil {
@@ -340,26 +344,53 @@ func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.
 // This should be applied in most upgrades.
 func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
-	unbondingTimeParam := app.StakingKeeper.GetParams(ctx).UnbondingTime
-	ctx.Logger().Info(fmt.Sprintf("removing all delegations from validators that have been inactive (unbonded) for %d days", int64(unbondingTimeParam.Hours()/24)))
+	ctx.Logger().Info(fmt.Sprintf("Removing inactive validator delegations."))
+
+	sParams, perr := app.StakingKeeper.GetParams(ctx)
+	if perr != nil {
+		ctx.Logger().Error(fmt.Sprintf("Could not get staking params: %v.", perr))
+		return
+	}
+
+	unbondingTimeParam := sParams.UnbondingTime
+	ctx.Logger().Info(fmt.Sprintf("Threshold: %d days", int64(unbondingTimeParam.Hours()/24)))
+
+	validators, verr := app.StakingKeeper.GetAllValidators(ctx)
+	if verr != nil {
+		ctx.Logger().Error(fmt.Sprintf("Could not get all validators: %v.", perr))
+		return
+	}
+
 	removalCount := 0
-	validators := app.StakingKeeper.GetAllValidators(ctx)
 	for _, validator := range validators {
 		if validator.IsUnbonded() {
 			inactiveDuration := ctx.BlockTime().Sub(validator.UnbondingTime)
 			if inactiveDuration >= unbondingTimeParam {
-				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, int64(inactiveDuration.Hours()/24)))
+				ctx.Logger().Info(fmt.Sprintf("Validator %v has been inactive (unbonded) for %d days and will be removed.", validator.OperatorAddress, int64(inactiveDuration.Hours()/24)))
 				valAddress, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 				if err != nil {
-					ctx.Logger().Error(fmt.Sprintf("invalid operator address: %s: %v", validator.OperatorAddress, err))
+					ctx.Logger().Error(fmt.Sprintf("Invalid operator address: %s: %v.", validator.OperatorAddress, err))
 					continue
 				}
-				delegations := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
+
+				delegations, err := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
+				if err != nil {
+					ctx.Logger().Error(fmt.Sprintf("Could not delegations for validator %s: %v.", valAddress, perr))
+					continue
+				}
+
 				for _, delegation := range delegations {
-					ctx.Logger().Info(fmt.Sprintf("undelegate delegator %v from validator %v of all shares (%v)", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
-					_, err = app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
+					ctx.Logger().Info(fmt.Sprintf("Undelegate delegator %v from validator %v of all shares (%v).", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
+					var delAddr sdk.AccAddress
+					delegator := delegation.GetDelegatorAddr()
+					delAddr, err = sdk.AccAddressFromBech32(delegator)
 					if err != nil {
-						ctx.Logger().Error(fmt.Sprintf("failed to undelegate delegator %s from validator %s: %v", delegation.GetDelegatorAddr().String(), valAddress.String(), err))
+						ctx.Logger().Error(fmt.Sprintf("Failed to undelegate delegator %s from validator %s: could not parse delegator address: %v.", delegator, valAddress.String(), err))
+						continue
+					}
+					_, _, err = app.StakingKeeper.Undelegate(ctx, delAddr, valAddress, delegation.GetShares())
+					if err != nil {
+						ctx.Logger().Error(fmt.Sprintf("Failed to undelegate delegator %s from validator %s: %v.", delegator, valAddress.String(), err))
 						continue
 					}
 				}
@@ -367,7 +398,8 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 			}
 		}
 	}
-	ctx.Logger().Info(fmt.Sprintf("a total of %d inactive (unbonded) validators have had all their delegators removed", removalCount))
+
+	ctx.Logger().Info(fmt.Sprintf("A total of %d inactive (unbonded) validators have had all their delegators removed.", removalCount))
 }
 
 // fixNameIndexEntries fixes the name module's address to name index entries.
@@ -389,7 +421,7 @@ func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKe
 // TODO: Remove with the saffron handlers.
 func setupICQ(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating ICQ params")
-	app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"}))
+	// app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"})) // TODO[1760]: async-icq
 	ctx.Logger().Info("Done updating ICQ params")
 }
 
@@ -399,7 +431,7 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating MaxSupply marker param")
 	params := app.MarkerKeeper.GetParams(ctx)
 	//nolint:staticcheck // Populate new param with deprecated param
-	params.MaxSupply = math.NewIntFromUint64(params.MaxTotalSupply)
+	params.MaxSupply = sdkmath.NewIntFromUint64(params.MaxTotalSupply)
 	app.MarkerKeeper.SetParams(ctx, params)
 	ctx.Logger().Info("Done updating MaxSupply marker param")
 }

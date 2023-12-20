@@ -371,67 +371,6 @@ func TestContainsString(t *testing.T) {
 	}
 }
 
-func TestCoinsEquals(t *testing.T) {
-	coins := func(coins string) sdk.Coins {
-		rv, err := sdk.ParseCoinsNormalized(coins)
-		require.NoError(t, err, "sdk.ParseCoinsNormalized(%q)", coins)
-		return rv
-	}
-
-	tests := []struct {
-		name string
-		a    sdk.Coins
-		b    sdk.Coins
-		exp  bool
-	}{
-		{name: "nil nil", a: nil, b: nil, exp: true},
-		{name: "nil empty", a: nil, b: sdk.Coins{}, exp: true},
-		{name: "empty nil", a: sdk.Coins{}, b: nil, exp: true},
-		{name: "empty empty", a: nil, b: sdk.Coins{}, exp: true},
-		{name: "nil one", a: nil, b: coins("1one"), exp: false},
-		{name: "one nil", a: coins("1one"), b: nil, exp: false},
-		{name: "one one same", a: coins("1one"), b: coins("1one"), exp: true},
-		{name: "one one diff amount", a: coins("1one"), b: coins("2one"), exp: false},
-		{name: "one one diff denom", a: coins("1one"), b: coins("1two"), exp: false},
-		{name: "one one diff both", a: coins("1one"), b: coins("2two"), exp: false},
-		{name: "two one first", a: coins("1one,2two"), b: coins("1one"), exp: false},
-		{name: "two one second", a: coins("1one,2two"), b: coins("2two"), exp: false},
-		{name: "two one neither", a: coins("1one,2two"), b: coins("3three"), exp: false},
-		{name: "two two same", a: coins("1one,2two"), b: coins("1one,2two"), exp: true},
-		{name: "two two diff first denom", a: coins("1one,2two"), b: coins("1three,2two"), exp: false},
-		{name: "two two diff second denom", a: coins("1one,2two"), b: coins("1one,2three"), exp: false},
-		{
-			name: "one one same negative",
-			a:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(-1)}},
-			b:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(-1)}},
-			exp:  true,
-		},
-		{
-			name: "one one negative first",
-			a:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(-1)}},
-			b:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(1)}},
-			exp:  false,
-		},
-		{
-			name: "one one negative second",
-			a:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(1)}},
-			b:    sdk.Coins{sdk.Coin{Denom: "one", Amount: sdkmath.NewInt(-1)}},
-			exp:  false,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var actual bool
-			testFunc := func() {
-				actual = CoinsEquals(tc.a, tc.b)
-			}
-			require.NotPanics(t, testFunc, "CoinsEquals(%q, %q)", tc.a, tc.b)
-			assert.Equal(t, tc.exp, actual, "CoinsEquals(%q, %q)", tc.a, tc.b)
-		})
-	}
-}
-
 func TestCoinEquals(t *testing.T) {
 	tests := []struct {
 		name string

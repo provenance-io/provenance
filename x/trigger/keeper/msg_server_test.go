@@ -3,7 +3,10 @@ package keeper_test
 import (
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -33,9 +36,9 @@ func (s *KeeperTestSuite) TestCreateTrigger() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			em := sdk.NewEventManager()
-			ctx := s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999)).WithEventManager(em)
+			ctx := s.ctx.WithGasMeter(storetypes.NewGasMeter(9999999999)).WithEventManager(em)
 			response, err := s.msgServer.CreateTrigger(ctx, tc.request)
-			s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
+			s.ctx = s.ctx.WithGasMeter(storetypes.NewGasMeter(9999999999))
 
 			if len(tc.err) == 0 {
 				s.NoError(err, "should not throw an error for handler")
@@ -71,7 +74,7 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 		types.MustNewCreateTriggerRequest(owner2, event, []sdk.Msg{&action}),
 	}
 	for i, request := range setupRequests {
-		s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
+		s.ctx = s.ctx.WithGasMeter(storetypes.NewGasMeter(9999999999))
 		_, err := s.msgServer.CreateTrigger(s.ctx, request)
 		s.Require().NoError(err, "Setup[%d]: CreateTrigger", i)
 	}
@@ -106,9 +109,9 @@ func (s *KeeperTestSuite) TestDestroyTrigger() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			em := sdk.NewEventManager()
-			ctx := s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999)).WithEventManager(em)
+			ctx := s.ctx.WithGasMeter(storetypes.NewGasMeter(9999999999)).WithEventManager(em)
 			_, err := s.msgServer.DestroyTrigger(ctx, tc.request)
-			s.ctx = s.ctx.WithGasMeter(sdk.NewGasMeter(9999999999))
+			s.ctx = s.ctx.WithGasMeter(storetypes.NewGasMeter(9999999999))
 
 			if len(tc.err) == 0 {
 				s.NoError(err, "should not throw an error on valid call to handler for TriggerDestroyRequest")

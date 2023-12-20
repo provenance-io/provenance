@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -110,7 +110,7 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 
 // newAttr creates a new EventAttribute with the provided key and value.
 func (s *TestSuite) newAttr(key, value string) abci.EventAttribute {
-	return abci.EventAttribute{Key: []byte(key), Value: []byte(value)}
+	return abci.EventAttribute{Key: key, Value: value}
 }
 
 // eventCoinSpent creates a new "coin_spent" event (emitted by the bank module).
@@ -171,7 +171,7 @@ func (s *TestSuite) eventHoldReleased(addr sdk.AccAddress, amount string) sdk.Ev
 // requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
-		return testutil.FundAccount(s.app.BankKeeper, s.ctx, addr, s.coins(coins))
+		return testutil.FundAccount(s.ctx, s.app.BankKeeper, addr, s.coins(coins))
 	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 
@@ -204,14 +204,16 @@ func (s *TestSuite) requireSetAttr(addr sdk.AccAddress, name string, owner sdk.A
 
 // requireQuarantineOptIn opts an address into quarantine, requiring it to not error.
 func (s *TestSuite) requireQuarantineOptIn(addr sdk.AccAddress) {
-	err := s.app.QuarantineKeeper.SetOptIn(s.ctx, addr)
-	s.Require().NoError(err, "QuarantineKeeper.SetOptIn(%s)", s.getAddrName(addr))
+	// TODO[1760]: quarantine: Uncomment these lines.
+	// err := s.app.QuarantineKeeper.SetOptIn(s.ctx, addr)
+	// s.Require().NoError(err, "QuarantineKeeper.SetOptIn(%s)", s.getAddrName(addr))
 }
 
 // requireSanctionAddress sanctions an address, requiring it to not error.
 func (s *TestSuite) requireSanctionAddress(addr sdk.AccAddress) {
-	err := s.app.SanctionKeeper.SanctionAddresses(s.ctx, addr)
-	s.Require().NoError(err, "SanctionAddresses(%s)", s.getAddrName(addr))
+	// TODO[1760]: quarantine: Uncomment these lines.
+	// err := s.app.SanctionKeeper.SanctionAddresses(s.ctx, addr)
+	// s.Require().NoError(err, "SanctionAddresses(%s)", s.getAddrName(addr))
 }
 
 // requireAddFinalizeAndActivateMarker creates a marker, requiring it to not error.

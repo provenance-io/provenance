@@ -4,9 +4,10 @@ import (
 	"math/rand"
 	"strings"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -38,19 +39,19 @@ func WeightedOperations(
 		weightMsgModifyName int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgBindName, &weightMsgBindName, nil,
+	appParams.GetOrGenerate(OpWeightMsgBindName, &weightMsgBindName, nil,
 		func(_ *rand.Rand) {
 			weightMsgBindName = simappparams.DefaultWeightMsgBindName
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDeleteName, &weightMsgDeleteName, nil,
+	appParams.GetOrGenerate(OpWeightMsgDeleteName, &weightMsgDeleteName, nil,
 		func(_ *rand.Rand) {
 			weightMsgDeleteName = simappparams.DefaultWeightMsgDeleteName
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgModifyName, &weightMsgModifyName, nil,
+	appParams.GetOrGenerate(OpWeightMsgModifyName, &weightMsgModifyName, nil,
 		func(_ *rand.Rand) {
 			weightMsgModifyName = simappparams.DefaultWeightMsgModifyName
 		},
@@ -169,12 +170,12 @@ func Dispatch(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenSignedMockTx(
+	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -189,7 +190,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), nil, nil
+	return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 }
 
 // getRandomRecord finds a random record owned by a known account.

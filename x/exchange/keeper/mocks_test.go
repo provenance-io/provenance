@@ -1,14 +1,16 @@
 package keeper_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+
+	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -26,7 +28,7 @@ var _ exchange.AccountKeeper = (*MockAccountKeeper)(nil)
 // MockAccountKeeper satisfies the exchange.AccountKeeper interface but just records the calls and allows dictation of results.
 type MockAccountKeeper struct {
 	Calls                 AccountCalls
-	GetAccountResultsMap  map[string]authtypes.AccountI
+	GetAccountResultsMap  map[string]sdk.AccountI
 	HasAccountResultsMap  map[string]bool
 	NewAccountModifierMap map[string]AccountModifier
 }
@@ -34,16 +36,16 @@ type MockAccountKeeper struct {
 // AccountCalls contains all the calls that the mock account keeper makes.
 type AccountCalls struct {
 	GetAccount []sdk.AccAddress
-	SetAccount []authtypes.AccountI
+	SetAccount []sdk.AccountI
 	HasAccount []sdk.AccAddress
-	NewAccount []authtypes.AccountI
+	NewAccount []sdk.AccountI
 }
 
 // AccountModifier is a function that can alter an account.
-type AccountModifier func(authtypes.AccountI) authtypes.AccountI
+type AccountModifier func(sdk.AccountI) sdk.AccountI
 
 // NoopAccMod is a no-op AccountModifier.
-func NoopAccMod(a authtypes.AccountI) authtypes.AccountI {
+func NoopAccMod(a sdk.AccountI) sdk.AccountI {
 	return a
 }
 
@@ -54,7 +56,7 @@ var _ AccountModifier = NoopAccMod
 // and/or WithNewAccountResult to dictate results.
 func NewMockAccountKeeper() *MockAccountKeeper {
 	return &MockAccountKeeper{
-		GetAccountResultsMap:  make(map[string]authtypes.AccountI),
+		GetAccountResultsMap:  make(map[string]sdk.AccountI),
 		HasAccountResultsMap:  make(map[string]bool),
 		NewAccountModifierMap: make(map[string]AccountModifier),
 	}
@@ -63,7 +65,7 @@ func NewMockAccountKeeper() *MockAccountKeeper {
 // WithGetAccountResult associates the provided address and result for use with calls to GetAccount.
 // When GetAccount is called, if the address provided has an entry here, that is returned, otherwise, nil is returned.
 // This method both updates the receiver and returns it.
-func (k *MockAccountKeeper) WithGetAccountResult(addr sdk.AccAddress, result authtypes.AccountI) *MockAccountKeeper {
+func (k *MockAccountKeeper) WithGetAccountResult(addr sdk.AccAddress, result sdk.AccountI) *MockAccountKeeper {
 	k.GetAccountResultsMap[string(addr)] = result
 	return k
 }
@@ -85,7 +87,7 @@ func (k *MockAccountKeeper) WithNewAccountModifier(addr sdk.AccAddress, modifier
 	return k
 }
 
-func (k *MockAccountKeeper) GetAccount(_ sdk.Context, addr sdk.AccAddress) authtypes.AccountI {
+func (k *MockAccountKeeper) GetAccount(_ context.Context, addr sdk.AccAddress) sdk.AccountI {
 	k.Calls.GetAccount = append(k.Calls.GetAccount, addr)
 	if rv, found := k.GetAccountResultsMap[string(addr)]; found {
 		return rv
@@ -93,12 +95,12 @@ func (k *MockAccountKeeper) GetAccount(_ sdk.Context, addr sdk.AccAddress) autht
 	return nil
 }
 
-func (k *MockAccountKeeper) SetAccount(_ sdk.Context, acc authtypes.AccountI) {
+func (k *MockAccountKeeper) SetAccount(_ context.Context, acc sdk.AccountI) {
 	k.Calls.SetAccount = append(k.Calls.SetAccount, acc)
 	k.WithGetAccountResult(acc.GetAddress(), acc)
 }
 
-func (k *MockAccountKeeper) HasAccount(_ sdk.Context, addr sdk.AccAddress) bool {
+func (k *MockAccountKeeper) HasAccount(_ context.Context, addr sdk.AccAddress) bool {
 	k.Calls.HasAccount = append(k.Calls.HasAccount, addr)
 	if rv, found := k.HasAccountResultsMap[string(addr)]; found {
 		return rv
@@ -106,7 +108,7 @@ func (k *MockAccountKeeper) HasAccount(_ sdk.Context, addr sdk.AccAddress) bool 
 	return false
 }
 
-func (k *MockAccountKeeper) NewAccount(_ sdk.Context, acc authtypes.AccountI) authtypes.AccountI {
+func (k *MockAccountKeeper) NewAccount(_ context.Context, acc sdk.AccountI) sdk.AccountI {
 	k.Calls.NewAccount = append(k.Calls.NewAccount, acc)
 	if modifier, found := k.NewAccountModifierMap[string(acc.GetAddress())]; found {
 		return modifier(acc)
@@ -122,9 +124,9 @@ func (s *TestSuite) assertGetAccountCalls(mk *MockAccountKeeper, expected []sdk.
 }
 
 // assertSetAccountCalls asserts that a mock keeper's Calls.SetAccount match the provided expected calls.
-func (s *TestSuite) assertSetAccountCalls(mk *MockAccountKeeper, expected []authtypes.AccountI, msg string, args ...interface{}) bool {
+func (s *TestSuite) assertSetAccountCalls(mk *MockAccountKeeper, expected []sdk.AccountI, msg string, args ...interface{}) bool {
 	s.T().Helper()
-	return assertEqualSlice(s, expected, mk.Calls.SetAccount, authtypes.AccountI.String,
+	return assertEqualSlice(s, expected, mk.Calls.SetAccount, sdk.AccountI.String,
 		msg+" SetAccount calls", args...)
 }
 
@@ -136,9 +138,9 @@ func (s *TestSuite) assertHasAccountCalls(mk *MockAccountKeeper, expected []sdk.
 }
 
 // assertNewAccountCalls asserts that a mock keeper's Calls.NewAccount match the provided expected calls.
-func (s *TestSuite) assertNewAccountCalls(mk *MockAccountKeeper, expected []authtypes.AccountI, msg string, args ...interface{}) bool {
+func (s *TestSuite) assertNewAccountCalls(mk *MockAccountKeeper, expected []sdk.AccountI, msg string, args ...interface{}) bool {
 	s.T().Helper()
-	return assertEqualSlice(s, expected, mk.Calls.NewAccount, authtypes.AccountI.String,
+	return assertEqualSlice(s, expected, mk.Calls.NewAccount, sdk.AccountI.String,
 		msg+" NewAccount calls", args...)
 }
 
@@ -314,7 +316,7 @@ func (k *MockBankKeeper) WithInputOutputCoinsResults(errs ...string) *MockBankKe
 	return k
 }
 
-func (k *MockBankKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	k.Calls.SendCoins = append(k.Calls.SendCoins, NewSendCoinsArgs(ctx, fromAddr, toAddr, amt))
 	var err error
 	if len(k.SendCoinsResultsQueue) > 0 {
@@ -326,7 +328,7 @@ func (k *MockBankKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddr
 	return err
 }
 
-func (k *MockBankKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
+func (k *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error {
 	k.Calls.SendCoinsFromAccountToModule = append(k.Calls.SendCoinsFromAccountToModule,
 		NewSendCoinsFromAccountToModuleArgs(ctx, senderAddr, recipientModule, amt))
 	var err error
@@ -339,7 +341,7 @@ func (k *MockBankKeeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAdd
 	return err
 }
 
-func (k *MockBankKeeper) InputOutputCoins(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
+func (k *MockBankKeeper) InputOutputCoins(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
 	k.Calls.InputOutputCoins = append(k.Calls.InputOutputCoins, NewInputOutputCoinsArgs(ctx, inputs, outputs))
 	var err error
 	if len(k.InputOutputCoinsResultsQueue) > 0 {
@@ -382,9 +384,9 @@ func (s *TestSuite) assertBankKeeperCalls(mk *MockBankKeeper, expected BankCalls
 }
 
 // NewSendCoinsArgs creates a new record of args provided to a call to SendCoins.
-func NewSendCoinsArgs(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) *SendCoinsArgs {
+func NewSendCoinsArgs(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) *SendCoinsArgs {
 	return &SendCoinsArgs{
-		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
 		fromAddr:               fromAddr,
 		toAddr:                 toAddr,
 		amt:                    amt,
@@ -399,9 +401,9 @@ func (s *TestSuite) sendCoinsArgsString(a *SendCoinsArgs) string {
 }
 
 // NewSendCoinsFromAccountToModuleArgs creates a new record of args provided to a call to SendCoinsFromAccountToModule.
-func NewSendCoinsFromAccountToModuleArgs(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) *SendCoinsFromAccountToModuleArgs {
+func NewSendCoinsFromAccountToModuleArgs(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) *SendCoinsFromAccountToModuleArgs {
 	return &SendCoinsFromAccountToModuleArgs{
-		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
 		senderAddr:             senderAddr,
 		recipientModule:        recipientModule,
 		amt:                    amt,
@@ -416,9 +418,9 @@ func (s *TestSuite) sendCoinsFromAccountToModuleArgsString(a *SendCoinsFromAccou
 }
 
 // NewInputOutputCoinsArgs creates a new record of args provided to a call to InputOutputCoins.
-func NewInputOutputCoinsArgs(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) *InputOutputCoinsArgs {
+func NewInputOutputCoinsArgs(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) *InputOutputCoinsArgs {
 	return &InputOutputCoinsArgs{
-		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
 		inputs:                 inputs,
 		outputs:                outputs,
 	}

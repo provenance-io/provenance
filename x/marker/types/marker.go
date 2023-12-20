@@ -7,6 +7,8 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
+	sdkmath "cosmossdk.io/math"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -64,7 +66,7 @@ func NewEmptyMarkerAccount(denom, manager string, grants []AccessGrant) *MarkerA
 		AccessControl:          grants,
 		Denom:                  denom,
 		Manager:                manager,
-		Supply:                 sdk.ZeroInt(),
+		Supply:                 sdkmath.ZeroInt(),
 		Status:                 StatusProposed,
 		MarkerType:             MarkerType_Coin,
 		SupplyFixed:            true,
@@ -468,7 +470,7 @@ func (mnav *NetAssetValue) Validate() error {
 		return err
 	}
 
-	if mnav.Price.Amount.GT(sdk.NewInt(0)) && mnav.Volume < 1 {
+	if mnav.Price.Amount.GT(sdkmath.NewInt(0)) && mnav.Volume < 1 {
 		return fmt.Errorf("marker net asset value volume must be positive value")
 	}
 

@@ -10,10 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	simapp "github.com/provenance-io/provenance/app"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
-	"github.com/provenance-io/provenance/x/metadata/types"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -21,7 +18,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	simapp "github.com/provenance-io/provenance/app"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type ScopeKeeperTestSuite struct {
@@ -86,7 +87,7 @@ func (s *ScopeKeeperTestSuite) SetupTest() {
 }
 
 func (s *ScopeKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
 }
 
 // AssertErrorValue asserts that:
@@ -499,7 +500,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			},
 		},
 		Denom:      "testcoin",
-		Supply:     sdk.NewInt(1000),
+		Supply:     sdkmath.NewInt(1000),
 		MarkerType: markertypes.MarkerType_Coin,
 		Status:     markertypes.StatusActive,
 	})
@@ -1057,7 +1058,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 			},
 		},
 		Denom:      markerDenom,
-		Supply:     sdk.NewInt(1000),
+		Supply:     sdkmath.NewInt(1000),
 		MarkerType: markertypes.MarkerType_Coin,
 		Status:     markertypes.StatusActive,
 	})

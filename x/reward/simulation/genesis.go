@@ -46,24 +46,24 @@ func MinActionsFn(r *rand.Rand) uint64 {
 func RandomizedGenState(simState *module.SimulationState) {
 	var totalRewardsPool sdk.Coin
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, TotalRewardsPool, &totalRewardsPool, simState.Rand,
+		TotalRewardsPool, &totalRewardsPool, simState.Rand,
 		func(r *rand.Rand) { totalRewardsPool = GenTotalRewardsPool(r) },
 	)
 	var maxRewardsByAddress sdk.Coin
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MaxRewardByAddress, &maxRewardsByAddress, simState.Rand,
+		MaxRewardByAddress, &maxRewardsByAddress, simState.Rand,
 		func(r *rand.Rand) { maxRewardsByAddress = GenMaxRewardsByAddress(r) },
 	)
 
 	var maxActions uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MaxActions, &maxActions, simState.Rand,
+		MaxActions, &maxActions, simState.Rand,
 		func(r *rand.Rand) { maxActions = MaxActionsFn(r) },
 	)
 
 	var minActions uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MinActions, &minActions, simState.Rand,
+		MinActions, &minActions, simState.Rand,
 		func(r *rand.Rand) { minActions = MinActionsFn(r) },
 	)
 

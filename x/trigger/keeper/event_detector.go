@@ -24,23 +24,26 @@ func (k Keeper) DetectBlockEvents(ctx sdk.Context) {
 
 // detectTransactionEvents Detects triggers that have been activated by transaction events.
 func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigger) {
-	detectedTriggers := map[uint64]bool{}
-	terminator := func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
-		return false
-	}
+	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
+	/*
+		detectedTriggers := map[uint64]bool{}
+		terminator := func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
+			return false
+		}
 
-	for _, event := range ctx.EventManager().GetABCIEventHistory() {
-		matched := k.getMatchingTriggersUntil(ctx, event.GetType(), func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
-			if _, isDetected := detectedTriggers[trigger.Id]; isDetected {
-				return false
-			}
-			txEvent := triggerEvent.(*types.TransactionEvent)
-			detected := txEvent.Matches(event)
-			detectedTriggers[trigger.Id] = detected
-			return detected
-		}, terminator)
-		triggers = append(triggers, matched...)
-	}
+		for _, event := range ctx.EventManager().GetABCIEventHistory() {
+			matched := k.getMatchingTriggersUntil(ctx, event.GetType(), func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
+				if _, isDetected := detectedTriggers[trigger.Id]; isDetected {
+					return false
+				}
+				txEvent := triggerEvent.(*types.TransactionEvent)
+				detected := txEvent.Matches(event)
+				detectedTriggers[trigger.Id] = detected
+				return detected
+			}, terminator)
+			triggers = append(triggers, matched...)
+		}
+	*/
 	return
 }
 

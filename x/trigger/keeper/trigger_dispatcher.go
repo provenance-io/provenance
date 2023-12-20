@@ -3,9 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 
@@ -47,7 +48,7 @@ func (k Keeper) ProcessTriggers(ctx sdk.Context) {
 // RunActions Runs all the actions and constrains them by gasLimit.
 func (k Keeper) runActions(ctx sdk.Context, gasLimit uint64, actions []*codectypes.Any) error {
 	cacheCtx, flush := ctx.CacheContext()
-	gasMeter := sdk.NewGasMeter(gasLimit)
+	gasMeter := storetypes.NewGasMeter(gasLimit)
 	cacheCtx = cacheCtx.WithGasMeter(gasMeter)
 	ctx.BlockGasMeter().ConsumeGas(gasLimit, "trigger run attempt")
 

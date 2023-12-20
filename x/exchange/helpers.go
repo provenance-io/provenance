@@ -51,24 +51,10 @@ func ContainsString(vals []string, toFind string) bool {
 	})
 }
 
-// CoinsEquals returns true if the two provided coins are equal.
-//
-// sdk.Coins.IsEqual will panic if the two have the same number of entries, but different denoms.
-// This one will return false in that case instead of panicking.
-func CoinsEquals(a, b sdk.Coins) (isEqual bool) {
-	defer func() {
-		if r := recover(); r != nil {
-			isEqual = false
-		}
-	}()
-	return a.IsEqual(b)
-}
-
 // CoinEquals returns true if the two provided coin entries are equal.
 // Designed for use with intersection.
 //
-// We can't just provide sdk.Coin.IsEqual to intersection because that PANICS if the denoms are different.
-// And we can't provide sdk.Coin.Equal to intersection because it takes in an interface{} (instead of sdk.Coin).
+// We can't provide sdk.Coin.Equal to intersection because it takes in an interface{} (instead of sdk.Coin).
 func CoinEquals(a, b sdk.Coin) bool {
 	return a.Equal(b)
 }

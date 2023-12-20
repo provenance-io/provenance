@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -20,12 +19,14 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
+// TODO[1760]: attribute: Migrate the attribute handler tests to the keeper.
+
 type HandlerTestSuite struct {
 	suite.Suite
 
 	app     *app.App
 	ctx     sdk.Context
-	handler sdk.Handler
+	handler func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
 
 	pubkey1   cryptotypes.PubKey
 	user1     string
@@ -34,7 +35,7 @@ type HandlerTestSuite struct {
 
 func (s *HandlerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.handler = attribute.NewHandler(s.app.AttributeKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
@@ -67,7 +68,7 @@ type CommonTest struct {
 	expectedEvent proto.Message
 }
 
-func (s HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {
+func (s *HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {
 	events := result.GetEvents().ToABCIEvents()
 	for _, event := range events {
 		typeEvent, _ := sdk.ParseTypedEvent(event)
@@ -78,7 +79,7 @@ func (s HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message)
 	return false
 }
 
-func (s HandlerTestSuite) runTests(cases []CommonTest) {
+func (s *HandlerTestSuite) runTests(cases []CommonTest) {
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			response, err := s.handler(s.ctx, tc.msg)
@@ -96,7 +97,7 @@ func (s HandlerTestSuite) runTests(cases []CommonTest) {
 	}
 }
 
-func (s HandlerTestSuite) TestMsgAddAttributeRequest() {
+func (s *HandlerTestSuite) TestMsgAddAttributeRequest() {
 	cases := []CommonTest{
 		{
 			"should successfully add new attribute",
@@ -117,7 +118,7 @@ func (s HandlerTestSuite) TestMsgAddAttributeRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgUpdateAttributeRequest() {
+func (s *HandlerTestSuite) TestMsgUpdateAttributeRequest() {
 	testAttr := types.Attribute{
 		Address:       s.user1,
 		Name:          "example.name",
@@ -154,7 +155,7 @@ func (s HandlerTestSuite) TestMsgUpdateAttributeRequest() {
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgDistinctDeleteAttributeRequest() {
+func (s *HandlerTestSuite) TestMsgDistinctDeleteAttributeRequest() {
 	testAttr := types.Attribute{
 		Address:       s.user1,
 		Name:          "example.name",
@@ -172,13 +173,13 @@ func (s HandlerTestSuite) TestMsgDistinctDeleteAttributeRequest() {
 			types.NewMsgDeleteDistinctAttributeRequest(s.user1, s.user1Addr, "example.name", []byte("value")),
 			[]string{s.user1},
 			"",
-			types.NewEventDistinctAttributeDelete("example.name", string([]byte("value")), s.user1, s.user1),
+			types.NewEventDistinctAttributeDelete("example.name", "value", s.user1, s.user1),
 		},
 	}
 	s.runTests(cases)
 }
 
-func (s HandlerTestSuite) TestMsgDeleteAttributeRequest() {
+func (s *HandlerTestSuite) TestMsgDeleteAttributeRequest() {
 	testAttr := types.Attribute{
 		Address:       s.user1,
 		Name:          "example.name",

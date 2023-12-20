@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/pflag"
 
 	cerrs "cosmossdk.io/errors"
+	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,12 +23,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+
+	// govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli" // TODO[1760]: gov-cli
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channelutils "github.com/cosmos/ibc-go/v8/modules/core/04-channel/client/utils"
 
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -1050,16 +1051,13 @@ func GetCmdUpdateForcedTransfer() *cobra.Command {
 				return err
 			}
 
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, cmd.Flags(), msg)
+			// return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, cmd.Flags(), msg) // TODO[1760]: gov-cli
+			_, _ = msg, clientCtx
+			return fmt.Errorf("not yet updated")
 		},
 	}
 
-	govcli.AddGovPropFlagsToCmd(cmd)
+	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -1168,11 +1166,6 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 			denom := strings.TrimSpace(args[0])
 			netAssetValues, err := ParseNetAssetValueString(args[1])
 			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.From, netAssetValues)
-			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -1333,7 +1326,7 @@ func ParseBoolStrict(input string) (bool, error) {
 // See also: generateOrBroadcastOptGovProp
 func addOptGovPropFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagGovProposal, false, "submit message as a gov proposal")
-	govcli.AddGovPropFlagsToCmd(cmd)
+	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
 }
 
 // generateOrBroadcastOptGovProp either calls GenerateOrBroadcastTxCLIAsGovProp or GenerateOrBroadcastTxCLI
@@ -1353,13 +1346,9 @@ func generateOrBroadcastOptGovProp(clientCtx client.Context, flagSet *pflag.Flag
 		authSetter(clientCtx.GetFromAddress().String())
 	}
 
-	err = msg.ValidateBasic()
-	if err != nil {
-		return err
-	}
-
 	if isGov {
-		return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		// return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg) // TODO[1760]: gov-cli
+		return fmt.Errorf("not yet updated")
 	}
 	return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 }

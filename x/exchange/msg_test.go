@@ -11,6 +11,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
@@ -18,6 +19,10 @@ const (
 	emptyAddrErr = "empty address string is not allowed"
 	bech32Err    = "decoding bech32 failed: "
 )
+
+type HasGetSigners interface {
+	GetSigners() []sdk.AccAddress
+}
 
 func TestAllMsgsGetSigners(t *testing.T) {
 	// getTypeName gets just the type name of the provided thing, e.g. "MsgGovCreateMarketRequest".
@@ -133,9 +138,12 @@ func TestAllMsgsGetSigners(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			smsg, ok := tc.msg.(HasGetSigners)
+			require.True(t, ok, "%T does not have a .GetSigners method.")
+
 			var signers []sdk.AccAddress
 			testFunc := func() {
-				signers = tc.msg.GetSigners()
+				signers = smsg.GetSigners()
 			}
 
 			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetSigners")
@@ -159,7 +167,7 @@ func testValidateBasic(t *testing.T, msg sdk.Msg, expErr []string) {
 	t.Helper()
 	var err error
 	testFunc := func() {
-		err = msg.ValidateBasic()
+		err = helpers.ValidateBasic(msg)
 	}
 	require.NotPanics(t, testFunc, "%T.ValidateBasic()", msg)
 

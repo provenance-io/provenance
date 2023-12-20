@@ -7,17 +7,18 @@ import (
 	"strconv"
 	"time"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
@@ -47,7 +48,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec,
-	k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk types.GovKeeper, attrk types.AttrKeeper,
+	k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk govkeeper.Keeper, attrk types.AttrKeeper,
 ) simulation.WeightedOperations {
 	args := &WeightedOpsArgs{
 		AppParams:  appParams,
@@ -69,43 +70,43 @@ func WeightedOperations(
 		weightMsgUpdateSendDenyList        int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddMarker = simappparams.DefaultWeightMsgAddMarker
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgChangeStatus, &weightMsgChangeStatus, nil,
+	appParams.GetOrGenerate(OpWeightMsgChangeStatus, &weightMsgChangeStatus, nil,
 		func(_ *rand.Rand) {
 			weightMsgChangeStatus = simappparams.DefaultWeightMsgChangeStatus
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddAccess, &weightMsgAddAccess, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddAccess, &weightMsgAddAccess, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddAccess = simappparams.DefaultWeightMsgAddAccess
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddActivateFinalizeMarker, &weightMsgAddFinalizeActivateMarker, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddActivateFinalizeMarker, &weightMsgAddFinalizeActivateMarker, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddFinalizeActivateMarker = simappparams.DefaultWeightMsgAddFinalizeActivateMarker
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddMarkerProposal, &weightMsgAddMarkerProposal, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddMarkerProposal, &weightMsgAddMarkerProposal, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddMarkerProposal = simappparams.DefaultWeightMsgAddMarkerProposal
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSetAccountData, &weightMsgSetAccountData, nil,
+	appParams.GetOrGenerate(OpWeightMsgSetAccountData, &weightMsgSetAccountData, nil,
 		func(_ *rand.Rand) {
 			weightMsgSetAccountData = simappparams.DefaultWeightMsgSetAccountData
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateSendDenyList, &weightMsgUpdateSendDenyList, nil,
+	appParams.GetOrGenerate(OpWeightMsgUpdateSendDenyList, &weightMsgUpdateSendDenyList, nil,
 		func(_ *rand.Rand) {
 			weightMsgUpdateSendDenyList = simappparams.DefaultWeightMsgUpdateDenySendList
 		},
@@ -153,7 +154,7 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
 		msg := types.NewMsgAddMarkerRequest(
 			denom,
-			math.NewIntFromBigInt(math.ZeroInt().BigInt().Rand(r, k.GetMaxSupply(ctx).BigInt())),
+			sdkmath.NewIntFromBigInt(sdkmath.ZeroInt().BigInt().Rand(r, k.GetMaxSupply(ctx).BigInt())),
 			simAccount.Address,
 			mgrAccount.Address,
 			types.MarkerType(r.Intn(2)+1), // coin or restricted_coin
@@ -251,7 +252,7 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 		grants := randomAccessGrants(r, accs, 100, markerType)
 		msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 			denom,
-			math.NewIntFromBigInt(math.ZeroInt().BigInt().Rand(r, k.GetMaxSupply(ctx).BigInt())),
+			sdkmath.NewIntFromBigInt(sdkmath.ZeroInt().BigInt().Rand(r, k.GetMaxSupply(ctx).BigInt())),
 			simAccount.Address,
 			mgrAccount.Address,
 			markerType,
@@ -285,7 +286,7 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 		msg := &types.MsgAddMarkerRequest{
 			Amount: sdk.Coin{
 				Denom:  denom,
-				Amount: math.NewIntFromBigInt(math.ZeroInt().BigInt().Rand(r, k.GetMaxSupply(ctx).BigInt())),
+				Amount: sdkmath.NewIntFromBigInt(sdkmath.ZeroInt().BigInt().Rand(r, k.GetMaxSupply(ctx).BigInt())),
 			},
 			Manager:                simAccount.Address.String(),
 			FromAddress:            k.GetAuthority(),
@@ -305,7 +306,11 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 		}
 
 		// Get the governance min deposit needed
-		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
+		govParams, err := args.GK.Params.Get(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "failed to get gov params"), nil, err
+		}
+		govMinDep := sdk.NewCoins(govParams.MinDeposit...)
 
 		sender, _ := simtypes.RandomAcc(r, accs)
 
@@ -328,12 +333,12 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			return opMsg, nil, err
 		}
 
-		proposalID, err := args.GK.GetProposalID(ctx)
+		proposalID, err := args.GK.ProposalID.Next(ctx)
 		if err != nil {
 			return opMsg, nil, err
 		}
 
-		votingPeriod := args.GK.GetVotingParams(ctx).VotingPeriod
+		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
 		for i, acct := range accs {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
@@ -429,26 +434,26 @@ func Dispatch(
 	}
 	// fund account with nhash for additional fees, if the account exists (100m stake)
 	if sdk.MsgTypeURL(msg) == "/provenance.marker.v1.MsgAddMarkerRequest" && ak.GetAccount(ctx, account.GetAddress()) != nil {
-		err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
+		err = testutil.FundAccount(ctx, bk, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(100_000_000_000_000),
+			Amount: sdkmath.NewInt(100_000_000_000_000),
 		}))
 		if err != nil {
 			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account with additional fee"), nil, err
 		}
 		fees = fees.Add(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(100_000_000_000_000),
+			Amount: sdkmath.NewInt(100_000_000_000_000),
 		})
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenSignedMockTx(
+	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -463,7 +468,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
+	return simtypes.NewOperationMsg(msg, true, ""), futures, nil
 }
 
 // randomUnrestrictedDenom returns a randomized unrestricted denom string value.
@@ -584,7 +589,7 @@ type WeightedOpsArgs struct {
 	ProtoCodec *codec.ProtoCodec
 	AK         authkeeper.AccountKeeper
 	BK         bankkeeper.Keeper
-	GK         types.GovKeeper
+	GK         govkeeper.Keeper
 	AttrK      types.AttrKeeper
 }
 
@@ -637,7 +642,6 @@ func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
 		TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
 		Cdc:             args.ProtoCodec,
 		Msg:             govMsg,
-		MsgType:         govMsg.Type(),
 		CoinsSpentInMsg: govMsg.InitialDeposit,
 		Context:         args.Ctx,
 		SimAccount:      args.Sender,
@@ -668,7 +672,6 @@ func OperationMsgVote(args *WeightedOpsArgs, voter simtypes.Account, govPropID u
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:             args.ProtoCodec,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			CoinsSpentInMsg: sdk.Coins{},
 			Context:         ctx,
 			SimAccount:      voter,

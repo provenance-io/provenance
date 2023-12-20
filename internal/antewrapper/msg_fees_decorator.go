@@ -1,10 +1,12 @@
 package antewrapper
 
 import (
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -77,7 +79,7 @@ func (mfd MsgFeesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool
 // and some network tests won't work without a chain id being set(but they also setup everything with stake denom) so `simapp-unit-testing` chain id is skipped also.
 // This only needs to work to pio-testnet and pio-mainnet, so this is safe.
 func isTestContext(ctx sdk.Context) bool {
-	return len(ctx.ChainID()) == 0 || ctx.ChainID() == SimAppChainID || ctx.ChainID() == helpers.SimAppChainID
+	return len(ctx.ChainID()) == 0 || ctx.ChainID() == SimAppChainID || ctx.ChainID() == pioconfig.SimAppChainID
 }
 
 // EnsureSufficientFloorAndMsgFees verifies that the given transaction has supplied
@@ -93,7 +95,7 @@ func EnsureSufficientFloorAndMsgFees(ctx sdk.Context, feeCoins sdk.Coins, floorG
 
 	var baseFee sdk.Coins
 	if !floorGasPrice.IsZero() {
-		baseFee = baseFee.Add(sdk.NewCoin(floorGasPrice.Denom, floorGasPrice.Amount.Mul(sdk.NewIntFromUint64(gas))))
+		baseFee = baseFee.Add(sdk.NewCoin(floorGasPrice.Denom, floorGasPrice.Amount.Mul(sdkmath.NewIntFromUint64(gas))))
 	}
 	reqTotal := baseFee.Add(additionalFees...)
 

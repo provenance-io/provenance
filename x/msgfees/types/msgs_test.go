@@ -154,7 +154,7 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Empty type error",
 			msg: MsgAddMsgFeeProposalRequest{
 				MsgTypeUrl:           "",
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "",
 				RecipientBasisPoints: "",
 				Authority:            authority,
@@ -165,7 +165,7 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Invalid fee amounts",
 			msg: MsgAddMsgFeeProposalRequest{
 				MsgTypeUrl:           "msgType",
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(0)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 0),
 				Recipient:            "",
 				RecipientBasisPoints: "",
 				Authority:            authority,
@@ -176,7 +176,7 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Invalid proposal recipient address",
 			msg: MsgAddMsgFeeProposalRequest{
 				MsgTypeUrl:           "msgType",
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "invalid",
 				RecipientBasisPoints: "",
 				Authority:            authority,
@@ -187,7 +187,7 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Invalid proposal invalid basis points for address",
 			msg: MsgAddMsgFeeProposalRequest{
 				MsgTypeUrl:           "msgType",
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 				RecipientBasisPoints: "10001",
 				Authority:            authority,
@@ -198,7 +198,7 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Valid proposal without recipient",
 			msg: MsgAddMsgFeeProposalRequest{
 				MsgTypeUrl:           "msgType",
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "",
 				RecipientBasisPoints: "",
 				Authority:            authority,
@@ -209,7 +209,7 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Valid proposal with recipient",
 			msg: MsgAddMsgFeeProposalRequest{
 				MsgTypeUrl:           "msgType",
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 				RecipientBasisPoints: "10000",
 				Authority:            authority,
@@ -220,7 +220,7 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Valid proposal with recipient without defined bips",
 			msg: MsgAddMsgFeeProposalRequest{
 				MsgTypeUrl:           "msgType",
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 				RecipientBasisPoints: "",
 				Authority:            authority,
@@ -231,7 +231,7 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Valid proposal with recipient with defined bips",
 			msg: MsgAddMsgFeeProposalRequest{
 				MsgTypeUrl:           "msgType",
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 				RecipientBasisPoints: "10",
 				Authority:            authority,
@@ -242,7 +242,7 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "invalid authority",
 			msg: MsgAddMsgFeeProposalRequest{
 				MsgTypeUrl:           "msgType",
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 				RecipientBasisPoints: "10",
 				Authority:            "",
@@ -269,7 +269,7 @@ func TestMsgAddMsgFeeProposalRequestGetSigners(t *testing.T) {
 	authority := sdk.AccAddress("input111111111111111")
 	msg := MsgAddMsgFeeProposalRequest{
 		MsgTypeUrl:           "msgType",
-		AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+		AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 		Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 		RecipientBasisPoints: "10",
 		Authority:            authority.String(),
@@ -292,7 +292,7 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Empty type error",
 			msg: MsgUpdateMsgFeeProposalRequest{
 				MsgTypeUrl:           "",
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "",
 				RecipientBasisPoints: "",
 				Authority:            authority,
@@ -303,7 +303,7 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Invalid fee amounts",
 			msg: MsgUpdateMsgFeeProposalRequest{
 				MsgTypeUrl:           msgType,
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(0)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 0),
 				Recipient:            "",
 				RecipientBasisPoints: "",
 				Authority:            authority,
@@ -314,7 +314,7 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Invalid proposal recipient address",
 			msg: MsgUpdateMsgFeeProposalRequest{
 				MsgTypeUrl:           msgType,
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "invalid",
 				RecipientBasisPoints: "50",
 				Authority:            authority,
@@ -325,7 +325,7 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Invalid proposal invalid basis points for address",
 			msg: MsgUpdateMsgFeeProposalRequest{
 				MsgTypeUrl:           msgType,
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 				RecipientBasisPoints: "10001",
 				Authority:            authority,
@@ -336,7 +336,7 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Valid proposal without recipient",
 			msg: MsgUpdateMsgFeeProposalRequest{
 				MsgTypeUrl:           msgType,
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "",
 				RecipientBasisPoints: "",
 				Authority:            authority,
@@ -347,7 +347,7 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Valid proposal with recipient without defined bips",
 			msg: MsgUpdateMsgFeeProposalRequest{
 				MsgTypeUrl:           msgType,
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 				RecipientBasisPoints: "",
 				Authority:            authority,
@@ -358,7 +358,7 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "Valid proposal with recipient with defined bips",
 			msg: MsgUpdateMsgFeeProposalRequest{
 				MsgTypeUrl:           msgType,
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 				RecipientBasisPoints: "10",
 				Authority:            authority,
@@ -369,7 +369,7 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			name: "invalid authority",
 			msg: MsgUpdateMsgFeeProposalRequest{
 				MsgTypeUrl:           msgType,
-				AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 				Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 				RecipientBasisPoints: "10",
 				Authority:            "",
@@ -396,7 +396,7 @@ func TestMsgUpdateMsgFeeProposalRequestGetSigners(t *testing.T) {
 	authority := sdk.AccAddress("input111111111111111")
 	msg := MsgUpdateMsgFeeProposalRequest{
 		MsgTypeUrl:           "msgType",
-		AdditionalFee:        sdk.NewCoin("hotdog", sdk.NewInt(10)),
+		AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
 		Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
 		RecipientBasisPoints: "10",
 		Authority:            authority.String(),

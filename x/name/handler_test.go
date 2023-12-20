@@ -5,17 +5,20 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	cerrs "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
-	"github.com/golang/protobuf/proto"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/name"
@@ -23,15 +26,17 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
+// TODO[1760]: name: Migrate the name handler tests to the keeper.
+
 func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}
 	h := name.NewHandler(k)
 
-	res, err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), testdata.NewTestMsg())
+	res, err := h(sdk.NewContext(nil, cmtproto.Header{}, false, nil), testdata.NewTestMsg())
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	_, _, log := sdkerrors.ABCIInfo(err, false)
+	_, _, log := cerrs.ABCIInfo(err, false)
 	require.True(t, strings.Contains(log, "unrecognized name message type"))
 }
 
@@ -80,7 +85,7 @@ func TestCreateName(t *testing.T) {
 	}
 	accs := authtypes.GenesisAccounts{acc1, acc2}
 	app := simapp.SetupWithGenesisAccounts(t, "", accs)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))
@@ -139,7 +144,7 @@ func TestDeleteName(t *testing.T) {
 	}
 	accs := authtypes.GenesisAccounts{acc1}
 	app := simapp.SetupWithGenesisAccounts(t, "", accs)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))
@@ -178,7 +183,7 @@ func TestModifyName(t *testing.T) {
 	}
 	accs := authtypes.GenesisAccounts{acc1}
 	app := simapp.SetupWithGenesisAccounts(t, "", accs)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", addr1, false))

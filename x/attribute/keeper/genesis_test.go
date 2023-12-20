@@ -8,14 +8,13 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/server"
+	"cosmossdk.io/log"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/provenance-io/provenance/x/attribute/keeper"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -45,13 +44,12 @@ func (s *GenesisTestSuite) SetupSuite() {
 		// Error log lines will start with "ERR ".
 		// Info log lines will start with "INF ".
 		// Debug log lines are omitted, but would start with "DBG ".
-		logger := zerolog.New(lw).Level(zerolog.InfoLevel)
-		return server.ZeroLogWrapper{Logger: logger}
+		return log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
 	}
 	defer app.SetLoggerMaker(app.SetLoggerMaker(bufferedLoggerMaker))
 	s.app = app.Setup(s.T())
 	s.logBuffer.Reset()
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 // newMockNameKeeper creates a mockNameKeeper backed by this suite's app's name keeper.
@@ -79,7 +77,7 @@ func (s *GenesisTestSuite) TestInitGenesisModAcctAndNameRecord() {
 		modAddr := authtypes.NewModuleAddress(types.ModuleName)
 		acct := s.app.AccountKeeper.GetAccount(s.ctx, modAddr)
 		s.Require().NotNil(acct, "GetAccount(%q) (%s module account address)", modAddr.String(), types.ModuleName)
-		modAcct, isModAcct := acct.(authtypes.ModuleAccountI)
+		modAcct, isModAcct := acct.(sdk.ModuleAccountI)
 		s.Require().True(isModAcct, "can cast %T to authtypes.ModuleAccountI", acct)
 		s.Assert().Equal(types.ModuleName, modAcct.GetName(), "module account name")
 	})

@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -21,7 +19,7 @@ import (
 
 func TestProposalContents(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	// initialize parameters
 	s := rand.NewSource(1)
@@ -70,7 +68,7 @@ func addTestMarker(t *testing.T, ctx sdk.Context, app *simapp.App, r *rand.Rand,
 	simAcc, _ := simtypes.RandomAcc(r, accs)
 
 	server := keeper.NewMsgServerImpl(app.MarkerKeeper)
-	_, err := server.AddMarker(sdk.WrapSDKContext(ctx), &types.MsgAddMarkerRequest{
+	_, err := server.AddMarker(ctx, &types.MsgAddMarkerRequest{
 		Amount:      sdk.NewInt64Coin("simtestcoin", 100),
 		Manager:     "",
 		FromAddress: app.MarkerKeeper.GetAuthority(),

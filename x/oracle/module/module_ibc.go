@@ -3,14 +3,15 @@ package oracle
 import (
 	cerrs "cosmossdk.io/errors"
 
+	// icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types" // TODO[1760]: async-icq
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
-	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
-	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
@@ -127,7 +128,8 @@ func (am AppModule) OnRecvPacket(
 	_ channeltypes.Packet,
 	_ sdk.AccAddress,
 ) ibcexported.Acknowledgement {
-	return channeltypes.NewErrorAcknowledgement(cerrs.Wrapf(icqtypes.ErrInvalidChannelFlow, "oracle module can not receive packets"))
+	// return channeltypes.NewErrorAcknowledgement(cerrs.Wrapf(icqtypes.ErrInvalidChannelFlow, "oracle module can not receive packets")) // TODO[1760]: async-icq
+	return channeltypes.NewErrorAcknowledgement(cerrs.Wrapf(sdkerrors.ErrNotSupported, "not yet updated"))
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface

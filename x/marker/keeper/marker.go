@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -545,7 +545,7 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		totalSupply := k.bankKeeper.GetSupply(ctx, m.GetDenom()).Amount
 		escrow := k.bankKeeper.GetBalance(ctx, m.GetAddress(), m.GetDenom())
 		inCirculation := totalSupply.Sub(escrow.Amount)
-		if inCirculation.GT(sdk.ZeroInt()) {
+		if inCirculation.GT(sdkmath.ZeroInt()) {
 			// changing to %v
 			return fmt.Errorf("cannot cancel marker with %v minted coin in circulation out of %v total."+
 				" ensure marker account holds the entire supply of %s", inCirculation, totalSupply, denom)
@@ -597,7 +597,7 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	totalSupply := k.bankKeeper.GetSupply(ctx, denom).Amount
 	escrow := k.bankKeeper.GetAllBalances(ctx, m.GetAddress())
 	inCirculation := totalSupply.Sub(escrow.AmountOf(denom))
-	if inCirculation.GT(sdk.ZeroInt()) {
+	if inCirculation.GT(sdkmath.ZeroInt()) {
 		// use %v since %d doesn't apply to Int (wraps big.Int)
 		return fmt.Errorf("cannot delete marker with %v minted coin in circulation out of %v total."+
 			" ensure marker account holds the entire supply of %s", inCirculation, totalSupply, denom)
@@ -836,5 +836,6 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 
 	// if the given account is currently holding 100% of the supply of a marker then it should be able to invoke
 	// the operations as an admin on the marker.
-	return m.GetSupply().IsEqual(sdk.NewCoin(m.GetDenom(), balance.Amount))
+	supply := m.GetSupply()
+	return supply.Equal(sdk.NewCoin(m.GetDenom(), balance.Amount))
 }

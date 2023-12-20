@@ -9,7 +9,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,6 +28,7 @@ var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	// TODO[1760]: app-module: Add more assertions for the new types and clean up stuff no longer needed.
 )
 
 type AppModuleBasic struct {
@@ -89,17 +90,14 @@ func NewAppModule(cdc codec.Codec, exchangeKeeper keeper.Keeper) AppModule {
 	}
 }
 
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // RegisterInvariants registers the invariants for the exchange module.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// Deprecated: Route returns the message routing key for the exchange module, empty.
-func (am AppModule) Route() sdk.Route { return sdk.Route{} }
-
-// Deprecated: QuerierRoute returns the route we respond to for abci queries, "".
-func (AppModule) QuerierRoute() string { return "" }
-
-// Deprecated: LegacyQuerierHandler returns the exchange module sdk.Querier (nil).
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier { return nil }
 
 // InitGenesis performs genesis initialization for the exchange module. It returns
 // no validator updates.
@@ -142,10 +140,10 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 
 // RandomizedParams returns randomized exchange param changes for the simulator,
 // of which there are none since this module doesn't use the params module.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange { return nil }
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange { return nil }
 
 // RegisterStoreDecoder registers a decoder for exchange module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[exchange.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

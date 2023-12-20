@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -15,7 +13,7 @@ import (
 )
 
 // BeginBlocker returns the begin blocker for the marker module.
-func BeginBlocker(ctx sdk.Context, _ abci.RequestBeginBlock, k keeper.Keeper, bk bankkeeper.Keeper) {
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper, bk bankkeeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	// Iterate through all marker accounts and check for supply above or below expected targets.
 	var err error
@@ -26,7 +24,7 @@ func BeginBlocker(ctx sdk.Context, _ abci.RequestBeginBlock, k keeper.Keeper, bk
 			currentSupply := bk.GetSupply(ctx, record.GetDenom())
 
 			// If the current amount of marker coin in circulation doesn't match configured supply, make adjustments
-			if !requiredSupply.IsEqual(currentSupply) {
+			if !requiredSupply.Equal(currentSupply) {
 				ctx.Logger().Error(
 					fmt.Sprintf("Current %s supply is NOT at the required amount, adjusting %s to required supply level",
 						record.GetDenom(), currentSupply))

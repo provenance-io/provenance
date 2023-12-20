@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -36,7 +38,7 @@ func (k Keeper) SetRewardAccountState(ctx sdk.Context, state types.RewardAccount
 // IterateRewardAccountStates Iterates over the account states for a reward program's claim period
 func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rewardClaimPeriodID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardAccountStateClaimPeriodKey(rewardProgramID, rewardClaimPeriodID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetRewardAccountStateClaimPeriodKey(rewardProgramID, rewardClaimPeriodID))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -54,19 +56,19 @@ func (k Keeper) IterateRewardAccountStates(ctx sdk.Context, rewardProgramID, rew
 // IterateRewardAccountStatesByAddress Iterates over the account states by address iterator
 func (k Keeper) IterateRewardAccountStatesByAddress(ctx sdk.Context, addr sdk.AccAddress, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressPartialKey(types.MustAccAddressFromBech32(addr.String())))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressPartialKey(types.MustAccAddressFromBech32(addr.String())))
 	return k.IterateRewardAccountStatesByLookUpIndex(ctx, addr, iterator, handle)
 }
 
 // IterateRewardAccountStatesByAddressAndRewardsID Iterates over the account states by address iterator and reward id
 func (k Keeper) IterateRewardAccountStatesByAddressAndRewardsID(ctx sdk.Context, addr sdk.AccAddress, rewardsID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressAndRewardsIDPartialKey(addr, rewardsID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetAllRewardAccountByAddressAndRewardsIDPartialKey(addr, rewardsID))
 	return k.IterateRewardAccountStatesByLookUpIndex(ctx, addr, iterator, handle)
 }
 
 // IterateRewardAccountStatesByLookUpIndex iterates reward account states by secondary index // [0x8] :: [addr-bytes::reward program id bytes]::[claim period id bytes] {}
-func (k Keeper) IterateRewardAccountStatesByLookUpIndex(ctx sdk.Context, addr sdk.AccAddress, iterator sdk.Iterator, handle func(state types.RewardAccountState) (stop bool)) error {
+func (k Keeper) IterateRewardAccountStatesByLookUpIndex(ctx sdk.Context, addr sdk.AccAddress, iterator storetypes.Iterator, handle func(state types.RewardAccountState) (stop bool)) error {
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		keyParsed, err := types.ParseRewardAccountLookUpKey(iterator.Key(), addr)
@@ -87,7 +89,7 @@ func (k Keeper) IterateRewardAccountStatesByLookUpIndex(ctx sdk.Context, addr sd
 // IterateAllRewardAccountStates Iterates over the account states for every reward program
 func (k Keeper) IterateAllRewardAccountStates(ctx sdk.Context, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetAllRewardAccountStateKey())
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetAllRewardAccountStateKey())
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -105,7 +107,7 @@ func (k Keeper) IterateAllRewardAccountStates(ctx sdk.Context, handle func(state
 // IterateRewardAccountStatesForRewardProgram Iterates over the account states for a reward program
 func (k Keeper) IterateRewardAccountStatesForRewardProgram(ctx sdk.Context, rewardProgramID uint64, handle func(state types.RewardAccountState) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetRewardProgramRewardAccountStateKey(rewardProgramID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.GetRewardProgramRewardAccountStateKey(rewardProgramID))
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

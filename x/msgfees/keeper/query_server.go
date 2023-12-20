@@ -2,16 +2,15 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -53,34 +52,38 @@ func (k Keeper) QueryAllMsgFees(c context.Context, req *types.QueryAllMsgFeesReq
 }
 
 func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateTxFeesRequest) (*types.CalculateTxFeesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	// TODO[1760]: event-history: Put this back once our version of the SDK is back in with the updated baseapp.Simulate func.
+	/*
+		ctx := sdk.UnwrapSDKContext(goCtx)
 
-	gasInfo, _, txCtx, err := k.simulateFunc(request.TxBytes)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
+		gasInfo, _, txCtx, err := k.simulateFunc(request.TxBytes)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
 
-	gasMeter, err := antewrapper.GetFeeGasMeter(txCtx)
-	if err != nil {
-		return nil, err
-	}
-	// based on Carlton H's comment this is only for testing, has no real value in practical usage.
-	baseDenom := k.defaultFeeDenom
-	if request.DefaultBaseDenom != "" {
-		baseDenom = request.DefaultBaseDenom
-	}
+		gasMeter, err := antewrapper.GetFeeGasMeter(txCtx)
+		if err != nil {
+			return nil, err
+		}
+		// based on Carlton H's comment this is only for testing, has no real value in practical usage.
+		baseDenom := k.defaultFeeDenom
+		if request.DefaultBaseDenom != "" {
+			baseDenom = request.DefaultBaseDenom
+		}
 
-	minGasPrice := k.GetFloorGasPrice(ctx)
-	gasAdjustment := request.GasAdjustment
-	if gasAdjustment <= 0 {
-		gasAdjustment = 1.0
-	}
-	gasUsed := sdk.NewInt(int64(float64(gasInfo.GasUsed) * float64(gasAdjustment)))
-	totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, minGasPrice.Amount.Mul(gasUsed)))
+		minGasPrice := k.GetFloorGasPrice(ctx)
+		gasAdjustment := request.GasAdjustment
+		if gasAdjustment <= 0 {
+			gasAdjustment = 1.0
+		}
+		gasUsed := int64(float64(gasInfo.GasUsed) * float64(gasAdjustment))
+		totalFees := gasMeter.FeeConsumed().Add(sdk.NewCoin(baseDenom, minGasPrice.Amount.MulRaw(gasUsed)))
 
-	return &types.CalculateTxFeesResponse{
-		AdditionalFees: gasMeter.FeeConsumed(),
-		TotalFees:      totalFees,
-		EstimatedGas:   gasUsed.Uint64(),
-	}, nil
+		return &types.CalculateTxFeesResponse{
+			AdditionalFees: gasMeter.FeeConsumed(),
+			TotalFees:      totalFees,
+			EstimatedGas:   uint64(gasUsed),
+		}, nil
+	*/
+	return nil, errors.New("not yet updated")
 }

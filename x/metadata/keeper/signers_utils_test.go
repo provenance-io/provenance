@@ -1960,7 +1960,7 @@ func TestNewAuthzCache(t *testing.T) {
 
 func TestAuthzCache_Clear(t *testing.T) {
 	c := keeper.NewAuthzCache()
-	c.AcceptableMap()["key1"] = &authz.CountAuthorization{}
+	// c.AcceptableMap()["key1"] = &authz.CountAuthorization{} // TODO[1760]: count-authz
 	c.AcceptableMap()["key2"] = &authz.GenericAuthorization{}
 	c.IsWasmMap()["key3"] = true
 	c.IsWasmMap()["key4"] = false
@@ -1972,18 +1972,21 @@ func TestAuthzCache_Clear(t *testing.T) {
 }
 
 func TestAuthzCache_SetAcceptable(t *testing.T) {
-	c := keeper.NewAuthzCache()
-	grantee := sdk.AccAddress("grantee")
-	granter := sdk.AccAddress("granter")
-	msgTypeURL := "msgTypeURL"
-	authorization := &authz.CountAuthorization{
-		Msg:                   msgTypeURL,
-		AllowedAuthorizations: 77,
-	}
+	// TODO[1760]: count-authz: Uncomment the rest of this test once we have that back in the SDK.
+	/*
+		c := keeper.NewAuthzCache()
+		grantee := sdk.AccAddress("grantee")
+		granter := sdk.AccAddress("granter")
+		msgTypeURL := "msgTypeURL"
+		authorization := &authz.CountAuthorization{
+			Msg:                   msgTypeURL,
+			AllowedAuthorizations: 77,
+		}
 
-	c.SetAcceptable(grantee, granter, msgTypeURL, authorization)
-	actual := c.AcceptableMap()[keeper.AuthzCacheAcceptableKey(grantee, granter, msgTypeURL)]
-	assert.Equal(t, authorization, actual, "the authorization stored by SetAcceptable")
+		c.SetAcceptable(grantee, granter, msgTypeURL, authorization)
+		actual := c.AcceptableMap()[keeper.AuthzCacheAcceptableKey(grantee, granter, msgTypeURL)]
+		assert.Equal(t, authorization, actual, "the authorization stored by SetAcceptable")
+	*/
 }
 
 func TestAuthzCache_GetAcceptable(t *testing.T) {
@@ -1992,17 +1995,22 @@ func TestAuthzCache_GetAcceptable(t *testing.T) {
 	granter := sdk.AccAddress("granter")
 	msgTypeURL := "msgTypeURL"
 	key := keeper.AuthzCacheAcceptableKey(grantee, granter, msgTypeURL)
-	authorization := &authz.CountAuthorization{
-		Msg:                   msgTypeURL,
-		AllowedAuthorizations: 8,
-	}
-	c.AcceptableMap()[key] = authorization
 
-	actual := c.GetAcceptable(grantee, granter, msgTypeURL)
-	assert.Equal(t, authorization, actual, "GetAcceptable result")
+	// TODO[1760]: count-authz: Uncomment the rest of this test once we have that back in the SDK.
+	_, _ = c, key
+	/*
+		authorization := &authz.CountAuthorization{
+			Msg:                   msgTypeURL,
+			AllowedAuthorizations: 8,
+		}
+		c.AcceptableMap()[key] = authorization
 
-	notThere := c.GetAcceptable(granter, grantee, msgTypeURL)
-	assert.Nil(t, notThere, "GetAcceptable on an entry that should not exist")
+		actual := c.GetAcceptable(grantee, granter, msgTypeURL)
+		assert.Equal(t, authorization, actual, "GetAcceptable result")
+
+		notThere := c.GetAcceptable(granter, grantee, msgTypeURL)
+		assert.Nil(t, notThere, "GetAcceptable on an entry that should not exist")
+	*/
 }
 
 func TestAuthzCache_SetIsWasm(t *testing.T) {
@@ -2127,26 +2135,30 @@ func TestAddAuthzCacheToContext(t *testing.T) {
 	})
 
 	t.Run("context already has an AuthzCache", func(t *testing.T) {
-		grantee := sdk.AccAddress("grantee")
-		granter := sdk.AccAddress("granter")
-		msgTypeURL := "msgTypeURL"
-		authorization := &authz.CountAuthorization{
-			Msg:                   msgTypeURL,
-			AllowedAuthorizations: 8,
-		}
-		origCache := keeper.NewAuthzCache()
-		origCache.SetAcceptable(grantee, granter, msgTypeURL, authorization)
+		// TODO[1760]: count-authz: Uncomment the rest of this test once we have that back in the SDK.
+		/*
+			grantee := sdk.AccAddress("grantee")
+			granter := sdk.AccAddress("granter")
+			msgTypeURL := "msgTypeURL"
+			authorization := &authz.CountAuthorization{
+				Msg:                   msgTypeURL,
+				AllowedAuthorizations: 8,
+			}
+			origCache := keeper.NewAuthzCache()
+			origCache.SetAcceptable(grantee, granter, msgTypeURL, authorization)
 
-		origCtx := emptySdkContext().WithValue(keeper.AuthzCacheContextKey, origCache)
-		newCtx := keeper.AddAuthzCacheToContext(origCtx)
+			origCtx := emptySdkContext().WithValue(keeper.AuthzCacheContextKey, origCache)
+			newCtx := keeper.AddAuthzCacheToContext(origCtx)
 
-		var newCache *keeper.AuthzCache
-		testFunc := func() {
-			newCache = keeper.GetAuthzCache(newCtx)
-		}
-		require.NotPanics(t, testFunc, "GetAuthzCache")
-		assert.Same(t, origCache, newCache, "cache from new context")
-		assert.Empty(t, newCache.AcceptableMap(), "cache acceptable map")
+			var newCache *keeper.AuthzCache
+			testFunc := func() {
+				newCache = keeper.GetAuthzCache(newCtx)
+			}
+			require.NotPanics(t, testFunc, "GetAuthzCache")
+			assert.Same(t, origCache, newCache, "cache from new context")
+			assert.Empty(t, newCache.AcceptableMap(), "cache acceptable map")
+
+		*/
 	})
 
 	t.Run("context has something else", func(t *testing.T) {
@@ -2194,10 +2206,9 @@ func TestGetAuthzCache(t *testing.T) {
 
 func TestUnwrapMetadataContext(t *testing.T) {
 	origCtx := emptySdkContext()
-	goCtx := sdk.WrapSDKContext(origCtx)
 	var ctx sdk.Context
 	testUnwrap := func() {
-		ctx = keeper.UnwrapMetadataContext(goCtx)
+		ctx = keeper.UnwrapMetadataContext(origCtx)
 	}
 	require.NotPanics(t, testUnwrap, "UnwrapMetadataContext")
 	var cache *keeper.AuthzCache

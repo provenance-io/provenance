@@ -3,22 +3,21 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	sdksim "cosmossdk.io/simapp"
+
+	dbm "github.com/cosmos/cosmos-db"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	markermodule "github.com/provenance-io/provenance/x/marker"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -26,13 +25,13 @@ import (
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	opts := SetupOptions{
-		Logger:             log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		Logger:             log.NewTestLogger(t),
 		DB:                 dbm.NewMemDB(),
 		InvCheckPeriod:     0,
 		HomePath:           t.TempDir(),
 		SkipUpgradeHeights: map[int64]bool{},
 		EncConfig:          MakeEncodingConfig(),
-		AppOpts:            sdksim.EmptyAppOptions{},
+		AppOpts:            simtestutil.EmptyAppOptions{},
 	}
 	app := NewAppWithCustomOptions(t, false, opts)
 
@@ -47,16 +46,16 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := New(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), opts.DB, nil, true,
-		map[int64]bool{}, opts.HomePath, 0, opts.EncConfig, sdksim.EmptyAppOptions{})
+	app2 := New(log.NewTestLogger(t), opts.DB, nil, true,
+		map[int64]bool{}, opts.HomePath, 0, opts.EncConfig, simtestutil.EmptyAppOptions{})
 	var err error
 	require.NotPanics(t, func() {
-		_, err = app2.ExportAppStateAndValidators(false, []string{})
+		_, err = app2.ExportAppStateAndValidators(false, nil, nil)
 	}, "exporting app state at current height")
 	require.NoError(t, err, "ExportAppStateAndValidators at current height")
 
 	require.NotPanics(t, func() {
-		_, err = app2.ExportAppStateAndValidators(true, []string{})
+		_, err = app2.ExportAppStateAndValidators(true, nil, nil)
 	}, "exporting app state at zero height")
 	require.NoError(t, err, "ExportAppStateAndValidators at zero height")
 }
@@ -68,16 +67,16 @@ func TestGetMaccPerms(t *testing.T) {
 
 func TestExportAppStateAndValidators(t *testing.T) {
 	opts := SetupOptions{
-		Logger:             log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		Logger:             log.NewTestLogger(t),
 		DB:                 dbm.NewMemDB(),
 		InvCheckPeriod:     0,
 		HomePath:           t.TempDir(),
 		SkipUpgradeHeights: map[int64]bool{},
 		EncConfig:          MakeEncodingConfig(),
-		AppOpts:            sdksim.EmptyAppOptions{},
+		AppOpts:            simtestutil.EmptyAppOptions{},
 	}
 	app := NewAppWithCustomOptions(t, false, opts)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 
 	initAccts := app.AccountKeeper.GetAllAccounts(ctx)
 	initAddrs := make([]sdk.AccAddress, len(initAccts))
@@ -86,7 +85,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	}
 
 	// Create a few accounts
-	addrs1 := AddTestAddrs(app, ctx, 10, sdk.NewInt(5_000))
+	addrs1 := AddTestAddrs(app, ctx, 10, sdkmath.NewInt(5_000))
 	require.Len(t, addrs1, 10, "addrs1")
 
 	managerAddr := addrs1[0]
@@ -109,7 +108,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 			AccessControl:          managerAllAccess,
 			Status:                 markertypes.StatusProposed,
 			Denom:                  denom,
-			Supply:                 sdk.NewInt(1_000_000),
+			Supply:                 sdkmath.NewInt(1_000_000),
 			MarkerType:             markertypes.MarkerType_RestrictedCoin,
 			SupplyFixed:            true,
 			AllowGovernanceControl: true,
@@ -121,13 +120,13 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	require.Len(t, markerToAddr, 3, "markerToAddr")
 
 	// Create some more accounts:
-	addrs2 := AddTestAddrs(app, ctx, 10, sdk.NewInt(5_000))
+	addrs2 := AddTestAddrs(app, ctx, 10, sdkmath.NewInt(5_000))
 	require.Len(t, addrs2, 10, "addrs2")
 
 	// Delete one of the markers.
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, managerAddr, "marker2coin"), "canceling marker2coin")
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, managerAddr, "marker2coin"), "deleting marker2coin")
-	markermodule.BeginBlocker(ctx, abci.RequestBeginBlock{}, app.MarkerKeeper, app.BankKeeper)
+	markermodule.BeginBlocker(ctx, app.MarkerKeeper, app.BankKeeper)
 	deletedMarkerAddr := markerToAddr["marker2coin"]
 
 	markerAddrs := []sdk.AccAddress{markerToAddr["marker1coin"], markerToAddr["marker3coin"]}
@@ -144,7 +143,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	app.Commit()
 
 	// Get an export
-	exported, err := app.ExportAppStateAndValidators(false, nil)
+	exported, err := app.ExportAppStateAndValidators(false, nil, nil)
 	require.NoError(t, err, "ExportAppStateAndValidators")
 
 	var genState sdksim.GenesisState
@@ -153,7 +152,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 
 	var authGenState authtypes.GenesisState
 	require.NoError(t, app.appCodec.UnmarshalJSON(genState[authtypes.ModuleName], &authGenState), "unmarshalling auth gen state")
-	genAccounts := make([]authtypes.AccountI, len(authGenState.Accounts))
+	genAccounts := make([]sdk.AccountI, len(authGenState.Accounts))
 	for i, acctAny := range authGenState.Accounts {
 		switch acctAny.GetTypeUrl() {
 		case "/cosmos.auth.v1beta1.ModuleAccount":
@@ -167,7 +166,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 				genAccounts[i] = acct
 			}
 		default:
-			acct, ok := acctAny.GetCachedValue().(authtypes.AccountI)
+			acct, ok := acctAny.GetCachedValue().(sdk.AccountI)
 			if assert.Truef(t, ok, "casting entry %d to AccountI", i) {
 				genAccounts[i] = acct
 			}
@@ -224,7 +223,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	})
 }
 
-func logAccounts(t *testing.T, accts []authtypes.AccountI, name string) {
+func logAccounts(t *testing.T, accts []sdk.AccountI, name string) {
 	t.Helper()
 	for i, acctI := range accts {
 		switch acct := acctI.(type) {
@@ -240,7 +239,7 @@ func logAccounts(t *testing.T, accts []authtypes.AccountI, name string) {
 	}
 }
 
-func toBaseAccounts(t *testing.T, acctsI []authtypes.AccountI, name string) []*authtypes.BaseAccount {
+func toBaseAccounts(t *testing.T, acctsI []sdk.AccountI, name string) []*authtypes.BaseAccount {
 	t.Helper()
 	rv := make([]*authtypes.BaseAccount, len(acctsI))
 	for i, acctI := range acctsI {
@@ -249,7 +248,7 @@ func toBaseAccounts(t *testing.T, acctsI []authtypes.AccountI, name string) []*a
 	return rv
 }
 
-func toBaseAccount(t *testing.T, i int, acctI authtypes.AccountI, name string) *authtypes.BaseAccount {
+func toBaseAccount(t *testing.T, i int, acctI sdk.AccountI, name string) *authtypes.BaseAccount {
 	t.Helper()
 	switch acct := acctI.(type) {
 	case *authtypes.ModuleAccount:
@@ -276,9 +275,9 @@ func logAddrs(t *testing.T, addrs []sdk.AccAddress, name string) {
 	}
 }
 
-func assertNoDupeAccountNumbers(t *testing.T, ctx sdk.Context, app *App, accts []authtypes.AccountI, name string) bool {
+func assertNoDupeAccountNumbers(t *testing.T, ctx sdk.Context, app *App, accts []sdk.AccountI, name string) bool {
 	t.Helper()
-	byAcctNum := map[uint64][]authtypes.AccountI{}
+	byAcctNum := map[uint64][]sdk.AccountI{}
 	acctNums := []uint64{}
 	for _, acct := range accts {
 		acctNum := acct.GetAccountNumber()
@@ -296,14 +295,12 @@ func assertNoDupeAccountNumbers(t *testing.T, ctx sdk.Context, app *App, accts [
 		if !assert.Equalf(t, len(byAcctNum[acctNum]), 1, "%s entries with Account Number %d", name, acctNum) {
 			rv = false
 			logAccounts(t, byAcctNum[acctNum], fmt.Sprintf("byAcctNum[%d]", acctNum))
-			lastSet := app.AccountKeeper.GetAccountAddressByID(ctx, acctNum)
-			t.Logf("GetAccountAddressByID(%d): %s", acctNum, lastSet)
 		}
 	}
 	return rv
 }
 
-func assertAddrInAccounts(t *testing.T, addr sdk.AccAddress, addrName string, accts []authtypes.AccountI, acctsName string) bool {
+func assertAddrInAccounts(t *testing.T, addr sdk.AccAddress, addrName string, accts []sdk.AccountI, acctsName string) bool {
 	t.Helper()
 	for _, acct := range accts {
 		if addr.Equals(acct.GetAddress()) {
@@ -313,7 +310,7 @@ func assertAddrInAccounts(t *testing.T, addr sdk.AccAddress, addrName string, ac
 	return assert.Fail(t, fmt.Sprintf("%s address not found in %s", addrName, acctsName), addr.String())
 }
 
-func assertAddrNotInAccounts(t *testing.T, addr sdk.AccAddress, addrName string, accts []authtypes.AccountI, acctsName string) bool {
+func assertAddrNotInAccounts(t *testing.T, addr sdk.AccAddress, addrName string, accts []sdk.AccountI, acctsName string) bool {
 	t.Helper()
 	for _, acct := range accts {
 		if addr.Equals(acct.GetAddress()) {

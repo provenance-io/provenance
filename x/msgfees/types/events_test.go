@@ -16,9 +16,9 @@ func TestNewEventMsgs(t *testing.T) {
 	assert.Equal(t, 0, len(events.MsgFees))
 
 	totalCalls["msgfee_typeurl_z"] = 612
-	totalFees["msgfee_typeurl_z"] = sdk.NewCoins(sdk.NewCoin("jackthecat", sdk.NewInt(1000)))
+	totalFees["msgfee_typeurl_z"] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1000))
 	totalCalls["msgfee_typeurl_a"] = 406
-	totalFees["msgfee_typeurl_a"] = sdk.NewCoins(sdk.NewCoin("jackthecat", sdk.NewInt(5000)))
+	totalFees["msgfee_typeurl_a"] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 5000))
 
 	events = NewEventMsgs(totalCalls, totalFees)
 	assert.Equal(t, 2, len(events.MsgFees))
@@ -29,7 +29,7 @@ func TestNewEventMsgs(t *testing.T) {
 	assert.Equal(t, "msgfee_typeurl_z", events.MsgFees[1].MsgType)
 	assert.Equal(t, "1000jackthecat", events.MsgFees[1].Total)
 
-	totalFees["not_in_calls_map"] = sdk.NewCoins(sdk.NewCoin("jackthecat", sdk.NewInt(1000)))
+	totalFees["not_in_calls_map"] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1000))
 	events = NewEventMsgs(totalCalls, totalFees)
 	assert.Equal(t, 2, len(events.MsgFees))
 

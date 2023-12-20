@@ -35,7 +35,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 				}
 			} else {
 				// no existing account reference so take next account number.
-				if err := data.Markers[i].SetAccountNumber(k.authKeeper.GetNextAccountNumber(ctx)); err != nil {
+				if err := data.Markers[i].SetAccountNumber(k.authKeeper.NextAccountNumber(ctx)); err != nil {
 					panic(err)
 				}
 			}

@@ -10,7 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmdb "github.com/tendermint/tm-db"
+
+	dbm "github.com/cometbft/cometbft-db"
 )
 
 type MigratorTestSuite struct {
@@ -783,7 +784,7 @@ func (s *MigratorTestSuite) TestDetectDBType() {
 	tDir := s.T().TempDir()
 
 	s.T().Run("badger", func(t *testing.T) {
-		expected := tmdb.BadgerDBBackend
+		expected := dbm.BadgerDBBackend
 		name := "badger1"
 		dataDir := filepath.Join(tDir, "badger")
 		dbDir := filepath.Join(dataDir, name)
@@ -796,7 +797,7 @@ func (s *MigratorTestSuite) TestDetectDBType() {
 	})
 
 	s.T().Run("rocks", func(t *testing.T) {
-		expected := tmdb.RocksDBBackend
+		expected := dbm.RocksDBBackend
 		name := "rocks2"
 		dataDir := filepath.Join(tDir, "rocks")
 		dbDir := filepath.Join(dataDir, name+".db")
@@ -816,13 +817,13 @@ func (s *MigratorTestSuite) TestDetectDBType() {
 		s.T().Run("clevel", func(t *testing.T) {
 			// As far as I can tell, you can always open a cleveldb using goleveldb, but not vice versa.
 			// Since DetectDBType checks for goleveldb first, it should return as goleveldb in this test.
-			expected := tmdb.GoLevelDBBackend
+			expected := dbm.GoLevelDBBackend
 			name := "clevel3"
 			dataDir := filepath.Join(tDir, "clevel")
 			require.NoError(t, os.MkdirAll(dataDir, 0700), "making data dir")
 			// The reason the other db types aren't done this way (creating the db with NewDB) is that
 			// I didn't want to cause confusion with regard to build tags and external library dependencies.
-			db, err := tmdb.NewDB(name, tmdb.CLevelDBBackend, dataDir)
+			db, err := dbm.NewDB(name, dbm.CLevelDBBackend, dataDir)
 			require.NoError(t, err, "NewDB")
 			for i := 0; i < 15; i++ {
 				assert.NoError(t, db.Set([]byte(fmt.Sprintf("%s-key-%d", name, i)), []byte(fmt.Sprintf("%s-value-%d", name, i))), "setting key/value %d", i)
@@ -835,13 +836,13 @@ func (s *MigratorTestSuite) TestDetectDBType() {
 	}
 
 	s.T().Run("golevel", func(t *testing.T) {
-		expected := tmdb.GoLevelDBBackend
+		expected := dbm.GoLevelDBBackend
 		name := "golevel8"
 		dataDir := filepath.Join(tDir, "golevel")
 		require.NoError(t, os.MkdirAll(dataDir, 0700), "making data dir")
 		// The reason the other db types aren't done this way (creating the db with NewDB) is that
 		// I didn't want to cause confusion with regard to build tags and external library dependencies.
-		db, err := tmdb.NewDB(name, expected, dataDir)
+		db, err := dbm.NewDB(name, expected, dataDir)
 		require.NoError(t, err, "NewDB")
 		for i := 0; i < 15; i++ {
 			assert.NoError(t, db.Set([]byte(fmt.Sprintf("%s-key-%d", name, i)), []byte(fmt.Sprintf("%s-value-%d", name, i))), "setting key/value %d", i)
@@ -853,7 +854,7 @@ func (s *MigratorTestSuite) TestDetectDBType() {
 	})
 
 	s.T().Run("boltdb", func(t *testing.T) {
-		expected := tmdb.BoltDBBackend
+		expected := dbm.BoltDBBackend
 		name := "bolt7"
 		dataDir := filepath.Join(tDir, "bolt")
 		dbFile := filepath.Join(dataDir, name+".db")

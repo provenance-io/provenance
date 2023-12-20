@@ -174,7 +174,7 @@ func outputClaimPeriodRewardDistributionAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, err := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if err != nil {
 		return err
 	}

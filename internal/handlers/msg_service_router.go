@@ -16,6 +16,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	"github.com/provenance-io/provenance/internal/helpers"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
 
@@ -29,7 +30,9 @@ type PioMsgServiceRouter struct {
 }
 
 var _ gogogrpc.Server = &PioMsgServiceRouter{}
-var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{}
+
+// TODO[1760]: msg-service-router: Make sure any fixes in the SDK's MsgServiceRouter are also considered with our PioMsgServiceRouter.
+// var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{} // TODO[1760]: msg-service-router
 
 // NewPioMsgServiceRouter creates a new PioMsgServiceRouter.
 func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {
@@ -140,7 +143,7 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 				return handler(goCtx, req)
 			}
 
-			if err = req.ValidateBasic(); err != nil {
+			if err = helpers.ValidateBasic(req); err != nil {
 				return nil, err
 			}
 

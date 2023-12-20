@@ -11,10 +11,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -67,18 +67,17 @@ func (s *TestSuite) SetupTest() {
 		// Error log lines will start with "ERR ".
 		// Info log lines will start with "INF ".
 		// Debug log lines are omitted, but would start with "DBG ".
-		logger := zerolog.New(lw).Level(zerolog.InfoLevel)
-		return server.ZeroLogWrapper{Logger: logger}
+		return log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
 	}
 	// swap in the buffered logger maker so it's used in app.Setup, but then put it back (since that's a global thing).
 	defer app.SetLoggerMaker(app.SetLoggerMaker(bufferedLoggerMaker))
 
 	s.app = app.Setup(s.T())
 	s.logBuffer.Reset()
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.k = s.app.ExchangeKeeper
 
-	addrs := app.AddTestAddrsIncremental(s.app, s.ctx, 5, sdk.NewInt(1_000_000_000))
+	addrs := app.AddTestAddrsIncremental(s.app, s.ctx, 5, sdkmath.NewInt(1_000_000_000))
 	s.addr1 = addrs[0]
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]
@@ -571,7 +570,7 @@ func (s *TestSuite) getAddrStrName(addrStr string) string {
 }
 
 // getStore gets the exchange store.
-func (s *TestSuite) getStore() sdk.KVStore {
+func (s *TestSuite) getStore() storetypes.KVStore {
 	return s.k.GetStore(s.ctx)
 }
 
@@ -598,7 +597,7 @@ func (s *TestSuite) dumpExchangeState() []string {
 }
 
 // requireSetOrderInStore calls SetOrderInStore making sure it doesn't panic or return an error.
-func (s *TestSuite) requireSetOrderInStore(store sdk.KVStore, order *exchange.Order) {
+func (s *TestSuite) requireSetOrderInStore(store storetypes.KVStore, order *exchange.Order) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
 		return s.k.SetOrderInStore(store, *order)
 	}, "SetOrderInStore(%d)", order.OrderId)

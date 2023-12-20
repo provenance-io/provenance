@@ -4,15 +4,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/attribute"
 	"github.com/provenance-io/provenance/x/attribute/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestBeginBlockDeletionOfExpired(t *testing.T) {
@@ -25,7 +24,7 @@ func TestBeginBlockDeletionOfExpired(t *testing.T) {
 	now := time.Now()
 
 	app = simapp.Setup(t)
-	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = app.BaseApp.NewContext(false)
 	ctx = ctx.WithBlockTime(now.Add(-3 * time.Hour))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, user1Addr))
 
@@ -52,11 +51,11 @@ func TestBeginBlockDeletionOfExpired(t *testing.T) {
 	events := ctx.EventManager().Events()
 	assert.Len(t, events, 3)
 	assert.Equal(t, "beginblock", events[2].Type)
-	assert.Equal(t, sdk.AttributeKeyModule, string(events[2].Attributes[0].Key))
-	assert.Equal(t, types.ModuleName, string(events[2].Attributes[0].Value))
-	assert.Equal(t, sdk.AttributeKeyAction, string(events[2].Attributes[1].Key))
-	assert.Equal(t, types.EventTypeDeletedExpired, string(events[2].Attributes[1].Value))
-	assert.Equal(t, types.AttributeKeyTotalExpired, string(events[2].Attributes[2].Key))
-	assert.Equal(t, "2", string(events[2].Attributes[2].Value))
+	assert.Equal(t, sdk.AttributeKeyModule, events[2].Attributes[0].Key)
+	assert.Equal(t, types.ModuleName, events[2].Attributes[0].Value)
+	assert.Equal(t, sdk.AttributeKeyAction, events[2].Attributes[1].Key)
+	assert.Equal(t, types.EventTypeDeletedExpired, events[2].Attributes[1].Value)
+	assert.Equal(t, types.AttributeKeyTotalExpired, events[2].Attributes[2].Key)
+	assert.Equal(t, "2", events[2].Attributes[2].Value)
 
 }

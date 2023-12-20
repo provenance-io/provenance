@@ -3,11 +3,16 @@ package antewrapper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	protov2 "google.golang.org/protobuf/proto"
+
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )
@@ -39,19 +44,34 @@ func (t NonFeeTx) GetMsgs() []sdk.Msg {
 	return nil
 }
 
-func (t NonFeeTx) ValidateBasic() error {
-	return nil
+func (t NonFeeTx) GetMsgsV2() ([]protov2.Message, error) {
+	return nil, nil
+}
+
+var _ sdk.Tx = &FeeTxWrapper{}
+
+// FeeTxWrapper is a wrapper on a txtypes.Tx that also has the GetMsgsV2 func so it satisfies the sdk.Tx interface.
+type FeeTxWrapper struct {
+	txtypes.Tx
+}
+
+func (t FeeTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
+	return nil, nil
+}
+
+func NewFeeTxWrapper(tx txtypes.Tx) *FeeTxWrapper {
+	return &FeeTxWrapper{Tx: tx}
 }
 
 func NewFeeTx(gasLimit uint64, fee sdk.Coins) sdk.Tx {
-	return &txtypes.Tx{
+	return NewFeeTxWrapper(txtypes.Tx{
 		AuthInfo: &txtypes.AuthInfo{
 			Fee: &txtypes.Fee{
 				Amount:   fee,
 				GasLimit: gasLimit,
 			},
 		},
-	}
+	})
 }
 
 func TestAnteHandle(tt *testing.T) {
@@ -200,7 +220,7 @@ func TestAnteHandle(tt *testing.T) {
 			name:            "decimal min gas rounded up",
 			simulate:        false,
 			isCheckTx:       true,
-			minGasPrices:    sdk.NewDecCoins(sdk.NewDecCoinFromDec("pcoin", sdk.MustNewDecFromStr("0.15"))),
+			minGasPrices:    sdk.NewDecCoins(sdk.NewDecCoinFromDec("pcoin", sdkmath.LegacyMustNewDecFromStr("0.15"))),
 			tx:              NewFeeTx(7, sdk.NewCoins(sdk.NewInt64Coin("pcoin", 1))),
 			expectedInError: []string{"required: 2pcoin"},
 		},
@@ -242,7 +262,7 @@ func TestAnteHandle(tt *testing.T) {
 
 	for _, tc := range tests {
 		tt.Run(tc.name, func(t *testing.T) {
-			ctx := sdk.NewContext(nil, tmproto.Header{}, tc.isCheckTx, nil).WithMinGasPrices(tc.minGasPrices)
+			ctx := sdk.NewContext(nil, cmtproto.Header{}, tc.isCheckTx, nil).WithMinGasPrices(tc.minGasPrices)
 			terminator := NewTestTerminator()
 			decorator := antewrapper.NewMinGasPricesDecorator()
 			newCtx, err := decorator.AnteHandle(ctx, tc.tx, tc.simulate, terminator.AnteHandler)

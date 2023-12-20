@@ -5,11 +5,11 @@ import (
 
 	"golang.org/x/exp/constraints"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -22,7 +22,9 @@ import (
 
 const StoreKey = types.ModuleName
 
-type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
+// TODO[1760]: event-history: Put this back once our version of the SDK is back in with the updated baseapp.Simulate func.
+// type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
+type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 
 // Keeper of the Additional fee store
 type Keeper struct {
@@ -151,7 +153,7 @@ type Handler func(record types.MsgFee) (stop bool)
 // IterateMsgFees  iterates all msg fees with the given handler function.
 func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.MsgFeeKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.MsgFeeKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -215,7 +217,7 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 	switch coin.Denom {
 	case types.UsdDenom:
 		nhashPerMil := int64(k.GetNhashPerUsdMil(ctx))
-		amount := coin.Amount.Mul(sdk.NewInt(nhashPerMil))
+		amount := coin.Amount.MulRaw(nhashPerMil)
 		msgFeeCoin := sdk.NewInt64Coin(conversionDenom, amount.Int64())
 		return msgFeeCoin, nil
 	case conversionDenom:

@@ -13,12 +13,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tmconfig "github.com/tendermint/tendermint/config"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/tendermint/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	cmtconfig "github.com/cometbft/cometbft/config"
+	cmtos "github.com/cometbft/cometbft/libs/os"
+	cmtrand "github.com/cometbft/cometbft/libs/rand"
+	cmttime "github.com/cometbft/cometbft/types/time"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -111,7 +112,7 @@ const nodeDirPerm = 0755
 func InitTestnet(
 	clientCtx client.Context,
 	cmd *cobra.Command,
-	nodeConfig *tmconfig.Config,
+	nodeConfig *cmtconfig.Config,
 	mbm module.BasicManager,
 	genBalIterator banktypes.GenesisBalancesIterator,
 	outputDir,
@@ -125,7 +126,7 @@ func InitTestnet(
 	numValidators int,
 ) error {
 	if chainID == "" {
-		chainID = "chain-" + tmrand.NewRand().Str(6)
+		chainID = "chain-" + cmtrand.NewRand().Str(6)
 	}
 
 	nodeIDs := make([]string, numValidators)
@@ -209,8 +210,8 @@ func InitTestnet(
 			return err
 		}
 
-		hashAmt := sdk.NewInt(100_000_000_000 / int64(numValidators))
-		convAmt := sdk.NewInt(1_000_000_000)
+		hashAmt := sdkmath.NewInt(100_000_000_000 / int64(numValidators))
+		convAmt := sdkmath.NewInt(1_000_000_000)
 		nhashAmt := hashAmt.Mul(convAmt)
 
 		coins := sdk.Coins{
@@ -223,12 +224,12 @@ func InitTestnet(
 
 		valTokens := sdk.TokensFromConsensusPower(100, app.DefaultPowerReduction)
 		createValMsg, _ := stakingtypes.NewMsgCreateValidator(
-			sdk.ValAddress(addr),
+			sdk.ValAddress(addr).String(),
 			valPubKeys[i],
 			sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(),
+			stakingtypes.NewCommissionRates(sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
+			sdkmath.OneInt(),
 		)
 
 		txBuilder := clientCtx.TxConfig.NewTxBuilder()
@@ -245,7 +246,7 @@ func InitTestnet(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err = tx.Sign(txFactory, nodeDirName, txBuilder, true); err != nil {
+		if err = tx.Sign(clientCtx.CmdContext, txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 
@@ -271,7 +272,7 @@ func InitTestnet(
 			}),
 		})
 
-	if err := markerAcc.SetSupply(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(100_000_000_000).Mul(sdk.NewInt(1_000_000_000)))); err != nil {
+	if err := markerAcc.SetSupply(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdkmath.NewInt(100_000_000_000).MulRaw(1_000_000_000))); err != nil {
 		return err
 	}
 
@@ -290,6 +291,7 @@ func InitTestnet(
 	err := collectGenFiles(
 		clientCtx, nodeConfig, chainID, nodeIDs, valPubKeys, numValidators,
 		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
+		clientCtx.TxConfig.SigningContext().ValidatorAddressCodec(),
 	)
 	if err != nil {
 		return err
@@ -368,7 +370,7 @@ func initGenFiles(
 	// Set the gov depost denom
 	var govGenState govtypesv1beta1.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
-	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(chainDenom, sdk.NewInt(10000000)))
+	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(chainDenom, 10000000))
 	govGenState.VotingParams.VotingPeriod, _ = time.ParseDuration("360s")
 	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&govGenState)
 
@@ -376,10 +378,10 @@ func initGenFiles(
 	var mintGenState minttypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
 	mintGenState.Params.MintDenom = chainDenom
-	mintGenState.Minter.AnnualProvisions = sdk.ZeroDec()
-	mintGenState.Minter.Inflation = sdk.ZeroDec()
-	mintGenState.Params.InflationMax = sdk.ZeroDec()
-	mintGenState.Params.InflationMin = sdk.ZeroDec()
+	mintGenState.Minter.AnnualProvisions = sdkmath.LegacyZeroDec()
+	mintGenState.Minter.Inflation = sdkmath.LegacyZeroDec()
+	mintGenState.Params.InflationMax = sdkmath.LegacyZeroDec()
+	mintGenState.Params.InflationMin = sdkmath.LegacyZeroDec()
 	appGenState[minttypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&mintGenState)
 
 	// Set the root names
@@ -411,32 +413,10 @@ func initGenFiles(
 		return err
 	}
 
-	genDoc := types.GenesisDoc{
-		ChainID:  chainID,
-		AppState: appGenStateJSON,
-		ConsensusParams: &tmproto.ConsensusParams{
-			Block: tmproto.BlockParams{
-				MaxBytes:   200000,
-				MaxGas:     60_000_000,
-				TimeIotaMs: 1000,
-			},
-			Evidence: tmproto.EvidenceParams{
-				MaxAgeNumBlocks: 302400,
-				MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
-				MaxBytes:        10000,
-			},
-			Validator: tmproto.ValidatorParams{
-				PubKeyTypes: []string{
-					types.ABCIPubKeyTypeEd25519,
-				},
-			},
-		},
-		Validators: nil,
-	}
-
+	appGenesis := genutiltypes.NewAppGenesisWithVersion(chainID, appGenStateJSON)
 	// generate empty genesis files for each validator and save
 	for i := 0; i < numValidators; i++ {
-		if err := genDoc.SaveAs(genFiles[i]); err != nil {
+		if err := appGenesis.SaveAs(genFiles[i]); err != nil {
 			return err
 		}
 	}
@@ -444,12 +424,13 @@ func initGenFiles(
 }
 
 func collectGenFiles(
-	clientCtx client.Context, nodeConfig *tmconfig.Config, chainID string,
+	clientCtx client.Context, nodeConfig *cmtconfig.Config, chainID string,
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
 	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
+	valAddrCodec runtime.ValidatorAddressCodec,
 ) error {
 	var appState json.RawMessage
-	genTime := tmtime.Now()
+	genTime := cmttime.Now()
 
 	for i := 0; i < numValidators; i++ {
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
@@ -462,12 +443,13 @@ func collectGenFiles(
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
 
-		genDoc, err := types.GenesisDocFromFile(nodeConfig.GenesisFile())
+		appGenesis, err := genutiltypes.AppGenesisFromFile(nodeConfig.GenesisFile())
 		if err != nil {
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg,
+			appGenesis, genBalIterator, genutiltypes.DefaultMessageValidator, valAddrCodec)
 		if err != nil {
 			return err
 		}
@@ -515,12 +497,12 @@ func calculateIP(ip string, i int) (string, error) {
 func writeFile(name string, dir string, contents []byte) error {
 	file := filepath.Join(dir, name)
 
-	err := tmos.EnsureDir(dir, 0755)
+	err := cmtos.EnsureDir(dir, 0755)
 	if err != nil {
 		return err
 	}
 
-	err = tmos.WriteFile(file, contents, 0644)
+	err = cmtos.WriteFile(file, contents, 0644)
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -13,7 +15,7 @@ func (s *KeeperTestSuite) TestCreateRewardProgramTransaction() {
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 100)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 200)
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000))), "funding account")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, s.accountAddresses[0], sdk.NewCoins(sdk.NewInt64Coin("nhash", 100000))), "funding account")
 
 	msg := types.NewMsgCreateRewardProgramRequest(
 		"title",
@@ -34,8 +36,8 @@ func (s *KeeperTestSuite) TestCreateRewardProgramTransaction() {
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -48,8 +50,8 @@ func (s *KeeperTestSuite) TestCreateRewardProgramTransaction() {
 	s.Assert().Less(0, len(result.GetEvents()), "should have emitted events")
 	s.Assert().Equal(result.Events[len(result.Events)-1].Type, "reward_program_created", "emitted event should have correct event type")
 	s.Assert().Equal(1, len(result.Events[len(result.Events)-1].Attributes), "emitted event should have correct event number of attributes")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Key, []byte("reward_program_id"), "should have correct key")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Value, []byte("1"), "should have correct value")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Key, "reward_program_id", "should have correct key")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Value, "1", "should have correct value")
 
 	program, err := s.app.RewardKeeper.GetRewardProgram(s.ctx, 1)
 	s.Assert().NoError(err, "No error should be returned")
@@ -80,8 +82,8 @@ func (s *KeeperTestSuite) TestCreateRewardProgramFailedTransaction() {
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -130,8 +132,8 @@ func (s *KeeperTestSuite) TestRewardClaimTransaction() {
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -158,10 +160,10 @@ func (s *KeeperTestSuite) TestRewardClaimTransaction() {
 	s.Assert().Less(0, len(result.GetEvents()), "should have emitted events")
 	s.Assert().Equal(result.Events[len(result.Events)-1].Type, "claim_rewards", "emitted event should have correct event type")
 	s.Assert().Equal(2, len(result.Events[len(result.Events)-1].Attributes), "emitted event should have correct number of attributes")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Key, []byte("reward_program_id"), "should have correct key")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Value, []byte("1"), "should have correct program id")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[1].Key, []byte("rewards_claim_address"), "should have correct key")
-	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[1].Value, []byte(s.accountAddresses[0].String()), "should have correct address value")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Key, "reward_program_id", "should have correct key")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[0].Value, "1", "should have correct program id")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[1].Key, "rewards_claim_address", "should have correct key")
+	s.Assert().Equal(result.Events[len(result.Events)-1].Attributes[1].Value, s.accountAddresses[0].String(), "should have correct address value")
 }
 
 func (s *KeeperTestSuite) TestRewardClaimInvalidTransaction() {
@@ -206,8 +208,8 @@ func (s *KeeperTestSuite) TestRewardClaimTransactionInvalidClaimer() {
 						MaximumActions:               1,
 						MinimumDelegationAmount:      &minDelegation,
 						MaximumDelegationAmount:      &maxDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -271,8 +273,8 @@ func (s *KeeperTestSuite) TestClaimAllRewardsTransaction() {
 							MaximumActions:               1,
 							MinimumDelegationAmount:      &minDelegation,
 							MaximumDelegationAmount:      &maxDelegation,
-							MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-							MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+							MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+							MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 						},
 					},
 				},
@@ -356,8 +358,8 @@ func (s *KeeperTestSuite) TestRewardClaimAllRewardsInvalidAddressTransaction() {
 							MaximumActions:               1,
 							MinimumDelegationAmount:      &minDelegation,
 							MaximumDelegationAmount:      &maxDelegation,
-							MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-							MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+							MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+							MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 						},
 					},
 				},
@@ -416,8 +418,8 @@ func (s *KeeperTestSuite) TestClaimAllRewardsExpiredTransaction() {
 							MaximumActions:               1,
 							MinimumDelegationAmount:      &minDelegation,
 							MaximumDelegationAmount:      &maxDelegation,
-							MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-							MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+							MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+							MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 						},
 					},
 				},

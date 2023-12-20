@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -24,7 +25,7 @@ func sumAssetsAndPrice(orders []*exchange.Order) (sdk.Coins, sdk.Coins) {
 }
 
 // validateAcceptingOrdersAndCanUserSettle returns an error if the market isn't active or doesn't allow user settlement.
-func validateAcceptingOrdersAndCanUserSettle(store sdk.KVStore, marketID uint32) error {
+func validateAcceptingOrdersAndCanUserSettle(store storetypes.KVStore, marketID uint32) error {
 	if err := validateMarketIsAcceptingOrders(store, marketID); err != nil {
 		return err
 	}
@@ -60,7 +61,7 @@ func (k Keeper) FillBids(ctx sdk.Context, msg *exchange.MsgFillBidsRequest) erro
 	}
 
 	totalAssets, totalPrice := sumAssetsAndPrice(orders)
-	if !exchange.CoinsEquals(totalAssets, msg.TotalAssets) {
+	if !totalAssets.Equal(msg.TotalAssets) {
 		return fmt.Errorf("total assets %q does not equal sum of bid order assets %q", msg.TotalAssets, totalAssets)
 	}
 
@@ -156,7 +157,7 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 	}
 
 	totalAssets, totalPrice := sumAssetsAndPrice(orders)
-	if !exchange.CoinsEquals(totalPrice, sdk.Coins{msg.TotalPrice}) {
+	if !totalPrice.Equal(sdk.Coins{msg.TotalPrice}) {
 		return fmt.Errorf("total price %q does not equal sum of ask order prices %q", msg.TotalPrice, totalPrice)
 	}
 
@@ -255,7 +256,7 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 
 // closeSettlement does all the processing needed to complete a settlement.
 // It releases all the holds, does all the transfers, collects the fees, deletes/updates the orders, and emits events.
-func (k Keeper) closeSettlement(ctx sdk.Context, store sdk.KVStore, marketID uint32, settlement *exchange.Settlement) error {
+func (k Keeper) closeSettlement(ctx sdk.Context, store storetypes.KVStore, marketID uint32, settlement *exchange.Settlement) error {
 	// Release the holds!!!!
 	var errs []error
 	for _, order := range settlement.FullyFilledOrders {

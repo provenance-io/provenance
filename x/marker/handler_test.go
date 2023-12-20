@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
@@ -22,17 +22,20 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/provenance-io/provenance/app"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker"
 	"github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
+
+// TODO[1760]: marker: Migrate the marker handler tests to the keeper.
 
 type HandlerTestSuite struct {
 	suite.Suite
 
 	app     *app.App
 	ctx     sdk.Context
-	handler sdk.Handler
+	handler func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
 
 	pubkey1   cryptotypes.PubKey
 	user1     string
@@ -45,7 +48,7 @@ type HandlerTestSuite struct {
 
 func (s *HandlerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.handler = marker.NewHandler(s.app.MarkerKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
@@ -71,7 +74,7 @@ func TestInvalidMsg(t *testing.T) {
 	k := keeper.Keeper{}
 	h := marker.NewHandler(k)
 
-	res, err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), testdata.NewTestMsg())
+	res, err := h(sdk.NewContext(nil, cmtproto.Header{}, false, nil), testdata.NewTestMsg())
 	require.Error(t, err)
 	require.Nil(t, res)
 	require.Contains(t, err.Error(), "unrecognized marker message type")
@@ -82,7 +85,7 @@ func TestInvalidProposal(t *testing.T) {
 	k := keeper.Keeper{}
 	h := marker.NewProposalHandler(k)
 
-	err := h(sdk.NewContext(nil, tmproto.Header{}, false, nil), govtypesv1beta1.NewTextProposal("Test", "description"))
+	err := h(sdk.NewContext(nil, cmtproto.Header{}, false, nil), govtypesv1beta1.NewTextProposal("Test", "description"))
 	require.ErrorContains(t, err, "unrecognized marker proposal content type: *v1beta1.TextProposal")
 }
 
@@ -135,7 +138,7 @@ func (s *HandlerTestSuite) TestMsgAddAccessRequest() {
 	cases := []CommonTest{
 		{
 			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest("hotdog", sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
+			msg:  types.NewMsgAddMarkerRequest("hotdog", sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
 		},
 		{
 			name:          "should successfully grant access to marker",
@@ -168,7 +171,7 @@ func (s *HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
 	cases := []CommonTest{
 		{
 			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
+			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
 		},
 		{
 			name: "setup grant access to marker",
@@ -189,7 +192,7 @@ func (s *HandlerTestSuite) TestMsgActivateMarkerRequest() {
 	cases := []CommonTest{
 		{
 			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
+			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
 		},
 		{
 			name: "setup finalize marker",
@@ -214,7 +217,7 @@ func (s *HandlerTestSuite) TestMsgCancelMarkerRequest() {
 	cases := []CommonTest{
 		{
 			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
+			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
 		},
 		{
 			name: "setup grant delete access to marker",
@@ -239,7 +242,7 @@ func (s *HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 	cases := []CommonTest{
 		{
 			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
+			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
 		},
 		{
 			name: "setup grant delete access to marker",
@@ -268,7 +271,7 @@ func (s *HandlerTestSuite) TestMsgMintMarkerRequest() {
 	cases := []CommonTest{
 		{
 			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
+			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
 		},
 		{
 			name: "setup grant mint access to marker",
@@ -276,7 +279,7 @@ func (s *HandlerTestSuite) TestMsgMintMarkerRequest() {
 		},
 		{
 			name:          "should successfully mint marker",
-			msg:           types.NewMsgMintRequest(s.user1Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(100))),
+			msg:           types.NewMsgMintRequest(s.user1Addr, sdk.NewInt64Coin(hotdogDenom, 100)),
 			expectedEvent: types.NewEventMarkerMint("100", hotdogDenom, s.user1),
 		},
 	}
@@ -293,7 +296,7 @@ func (s *HandlerTestSuite) TestMsgBurnMarkerRequest() {
 	cases := []CommonTest{
 		{
 			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
+			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
 		},
 		{
 			name: "setup grant mint access to marker",
@@ -301,7 +304,7 @@ func (s *HandlerTestSuite) TestMsgBurnMarkerRequest() {
 		},
 		{
 			name:          "should successfully burn marker",
-			msg:           types.NewMsgBurnRequest(s.user1Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(100))),
+			msg:           types.NewMsgBurnRequest(s.user1Addr, sdk.NewInt64Coin(hotdogDenom, 100)),
 			expectedEvent: types.NewEventMarkerBurn("100", hotdogDenom, s.user1),
 		},
 	}
@@ -318,7 +321,7 @@ func (s *HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 	cases := []CommonTest{
 		{
 			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
+			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
 		},
 		{
 			name: "setup grant access to marker",
@@ -334,7 +337,7 @@ func (s *HandlerTestSuite) TestMsgWithdrawMarkerRequest() {
 		},
 		{
 			name:          "should successfully withdraw marker",
-			msg:           types.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, hotdogDenom, sdk.NewCoins(sdk.NewCoin(hotdogDenom, sdk.NewInt(100)))),
+			msg:           types.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, hotdogDenom, sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 100))),
 			expectedEvent: types.NewEventMarkerWithdraw("100hotdog", hotdogDenom, s.user1, s.user1),
 		},
 	}
@@ -351,7 +354,7 @@ func (s *HandlerTestSuite) TestMsgTransferMarkerRequest() {
 	cases := []CommonTest{
 		{
 			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0),
+			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0),
 		},
 		{
 			name: "setup grant access to marker",
@@ -367,11 +370,11 @@ func (s *HandlerTestSuite) TestMsgTransferMarkerRequest() {
 		},
 		{
 			name: "should successfully mint marker",
-			msg:  types.NewMsgMintRequest(s.user1Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(1000))),
+			msg:  types.NewMsgMintRequest(s.user1Addr, sdk.NewInt64Coin(hotdogDenom, 1000)),
 		},
 		{
 			name:          "should successfully transfer marker",
-			msg:           types.NewMsgTransferRequest(s.user1Addr, s.user1Addr, s.user2Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(0))),
+			msg:           types.NewMsgTransferRequest(s.user1Addr, s.user1Addr, s.user2Addr, sdk.NewInt64Coin(hotdogDenom, 0)),
 			expectedEvent: types.NewEventMarkerTransfer("0", hotdogDenom, s.user1, s.user2, s.user1),
 		},
 	}
@@ -404,7 +407,7 @@ func (s *HandlerTestSuite) TestMsgSetDenomMetadataRequest() {
 	cases := []CommonTest{
 		{
 			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(fmt.Sprintf("n%s", hotdogDenom), sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0),
+			msg:  types.NewMsgAddMarkerRequest(fmt.Sprintf("n%s", hotdogDenom), sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0),
 		},
 		{
 			name: "setup grant access to marker",
@@ -423,10 +426,10 @@ func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 	denom := "hotdog"
 	rdenom := "restrictedhotdog"
 	denomWithDashPeriod := fmt.Sprintf("%s-my.marker", denom)
-	msgWithActiveStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, 0, 0)
-	msgWithActiveStatusAttr := types.NewMsgAddFinalizeActivateMarkerRequest(rdenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{"attributes.one.com", "attributes.two.com"}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, 0, 0)
+	msgWithActiveStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, 0, 0)
+	msgWithActiveStatusAttr := types.NewMsgAddFinalizeActivateMarkerRequest(rdenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{"attributes.one.com", "attributes.two.com"}, []types.AccessGrant{*types.NewAccessGrant(s.user1Addr, []types.Access{types.Access_Mint, types.Access_Admin})}, 0, 0)
 
-	accessGrantWrongStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, nil, 0, 0)
+	accessGrantWrongStatus := types.NewMsgAddFinalizeActivateMarkerRequest(denom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, nil, 0, 0)
 
 	cases := []CommonTest{
 		{
@@ -446,12 +449,12 @@ func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 		},
 		{
 			name:     "should fail to ADD,FINALIZE,ACTIVATE new marker, marker already exists",
-			msg:      types.NewMsgAddMarkerRequest(denom, sdk.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
+			msg:      types.NewMsgAddMarkerRequest(denom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
 			errorMsg: fmt.Sprintf("marker address already exists for %s: invalid request", types.MustGetMarkerAddress(denom)),
 		},
 		{
 			name:          "should successfully add marker with dash and period",
-			msg:           types.NewMsgAddMarkerRequest(denomWithDashPeriod, sdk.NewInt(1000), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
+			msg:           types.NewMsgAddMarkerRequest(denomWithDashPeriod, sdkmath.NewInt(1000), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
 			expectedEvent: types.NewEventMarkerAdd(denomWithDashPeriod, types.MustGetMarkerAddress(denomWithDashPeriod).String(), "1000", "proposed", s.user1, types.MarkerType_Coin.String()),
 		},
 		{
@@ -485,7 +488,7 @@ func (s *HandlerTestSuite) TestMsgSetAccountDataRequest() {
 		{
 			name: "should successfully add/finalize/active unrestricted marker",
 			msg: types.NewMsgAddFinalizeActivateMarkerRequest(
-				denomU, sdk.NewInt(100),
+				denomU, sdkmath.NewInt(100),
 				s.user1Addr, s.user1Addr, // From and Manager.
 				types.MarkerType_Coin,
 				true,       // Supply fixed
@@ -503,7 +506,7 @@ func (s *HandlerTestSuite) TestMsgSetAccountDataRequest() {
 		{
 			name: "should successfully add/finalize/active restricted marker",
 			msg: types.NewMsgAddFinalizeActivateMarkerRequest(
-				denomR, sdk.NewInt(100),
+				denomR, sdkmath.NewInt(100),
 				s.user1Addr, s.user1Addr, // From and Manager.
 				types.MarkerType_RestrictedCoin,
 				true,       // Supply fixed

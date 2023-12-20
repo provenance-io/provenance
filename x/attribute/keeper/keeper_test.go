@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -47,7 +47,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
 	s.startBlockTime = time.Now()
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: s.startBlockTime})
+	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.startBlockTime})
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
@@ -1272,8 +1272,8 @@ func (s *KeeperTestSuite) TestSetAccountData() {
 				event := events[len(events)-1]
 				s.Assert().Contains(event.Type, "EventAccountDataUpdated", "event type")
 				if s.Assert().Len(event.Attributes, 1, "event attributes") {
-					s.Assert().Equal("account", string(event.Attributes[0].Key), "attribute key")
-					s.Assert().Equal(`"`+tc.addr+`"`, string(event.Attributes[0].Value), "attribute value")
+					s.Assert().Equal("account", event.Attributes[0].Key, "attribute key")
+					s.Assert().Equal(`"`+tc.addr+`"`, event.Attributes[0].Value, "attribute value")
 				}
 			}
 		})

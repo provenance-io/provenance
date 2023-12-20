@@ -26,7 +26,7 @@ func GenMaxValueLength(r *rand.Rand) uint32 {
 func RandomizedGenState(simState *module.SimulationState) {
 	var maxValueLength uint32
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MaxValueLength, &maxValueLength, simState.Rand,
+		MaxValueLength, &maxValueLength, simState.Rand,
 		func(r *rand.Rand) { maxValueLength = GenMaxValueLength(r) },
 	)
 

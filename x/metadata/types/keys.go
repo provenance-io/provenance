@@ -15,9 +15,6 @@ const (
 	// RouterKey to be used for routing msgs
 	RouterKey = ModuleName
 
-	// QuerierRoute to be used for queries
-	QuerierRoute = ModuleName
-
 	// DefaultParamspace is the name used for the parameter subspace for this module.
 	DefaultParamspace = ModuleName
 )

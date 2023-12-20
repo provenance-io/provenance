@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -372,12 +372,12 @@ func (s *IntegrationTestSuite) TestGetAccountAttributeCmd() {
 	}{
 		{
 			name:           "should get attribute by name with json output",
-			args:           []string{s.account1Addr.String(), "example.attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			args:           []string{s.account1Addr.String(), "example.attribute", fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
 			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s","expiration_date":null}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
 			name: "should get attribute by name with text output",
-			args: []string{s.account1Addr.String(), "example.attribute", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			args: []string{s.account1Addr.String(), "example.attribute", fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			expectedOutput: fmt.Sprintf(`account: %s
 attributes:
 - address: %s
@@ -391,7 +391,7 @@ pagination:
 		},
 		{
 			name: "should fail to find unknown attribute output",
-			args: []string{s.account1Addr.String(), "example.none", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			args: []string{s.account1Addr.String(), "example.none", fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			expectedOutput: fmt.Sprintf(`account: %s
 attributes: []
 pagination:
@@ -400,7 +400,7 @@ pagination:
 		},
 		{
 			name:           "should fail to find unknown attribute by name with json output",
-			args:           []string{s.account1Addr.String(), "example.none", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			args:           []string{s.account1Addr.String(), "example.none", fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
 			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String()),
 		},
 	}
@@ -425,12 +425,12 @@ func (s *IntegrationTestSuite) TestScanAccountAttributesCmd() {
 	}{
 		{
 			name:           "should get attribute by suffix with json output",
-			args:           []string{s.account1Addr.String(), "attribute", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			args:           []string{s.account1Addr.String(), "attribute", fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
 			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%s","expiration_date":null}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String(), s.account1Addr.String()),
 		},
 		{
 			name: "should get attribute by suffix with text output",
-			args: []string{s.account1Addr.String(), "attribute", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			args: []string{s.account1Addr.String(), "attribute", fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			expectedOutput: fmt.Sprintf(`account: %s
 attributes:
 - address: %s
@@ -444,7 +444,7 @@ pagination:
 		},
 		{
 			name: "should fail to find unknown attribute suffix text output",
-			args: []string{s.account1Addr.String(), "none", fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			args: []string{s.account1Addr.String(), "none", fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			expectedOutput: fmt.Sprintf(`account: %s
 attributes: []
 pagination:
@@ -453,7 +453,7 @@ pagination:
 		},
 		{
 			name:           "should get attribute by suffix with json output",
-			args:           []string{s.account1Addr.String(), "none", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			args:           []string{s.account1Addr.String(), "none", fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
 			expectedOutput: fmt.Sprintf(`{"account":"%s","attributes":[],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String()),
 		},
 	}
@@ -478,12 +478,12 @@ func (s *IntegrationTestSuite) TestListAccountAttributesCmd() {
 	}{
 		{
 			name:           "should list all attributes for account with json output",
-			args:           []string{s.account1Addr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			args:           []string{s.account1Addr.String(), fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
 			expectedOutput: fmt.Sprintf(`{"account":"%[1]s","attributes":[{"name":"example.attribute.count","value":"Mg==","attribute_type":"ATTRIBUTE_TYPE_INT","address":"%[1]s","expiration_date":null},{"name":"example.attribute","value":"ZXhhbXBsZSBhdHRyaWJ1dGUgdmFsdWUgc3RyaW5n","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%[1]s","expiration_date":null},{"name":"accountdata","value":"YWNjb3VudGRhdGEgc2V0IGF0IGdlbmVzaXM=","attribute_type":"ATTRIBUTE_TYPE_STRING","address":"%[1]s","expiration_date":null}],"pagination":{"next_key":null,"total":"0"}}`, s.account1Addr.String()),
 		},
 		{
 			name: "should list all attributes for account text output",
-			args: []string{s.account1Addr.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			args: []string{s.account1Addr.String(), fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			expectedOutput: fmt.Sprintf(`account: %[1]s
 attributes:
 - address: %[1]s
@@ -528,12 +528,12 @@ func (s *IntegrationTestSuite) TestGetAttributeParamsCmd() {
 	}{
 		{
 			name:           "json output",
-			args:           []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			args:           []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)},
 			expectedOutput: "{\"max_value_length\":128}",
 		},
 		{
 			name:           "text output",
-			args:           []string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			args:           []string{fmt.Sprintf("--%s=text", cmtcli.OutputFlag)},
 			expectedOutput: "max_value_length: 128",
 		},
 	}
@@ -567,7 +567,7 @@ func (s *IntegrationTestSuite) TestAttributeAccountsCmd() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetAttributeAccountsCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
-			tc.args = append(tc.args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			tc.args = append(tc.args, fmt.Sprintf("--%s=json", cmtcli.OutputFlag))
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedOutput, strings.TrimSpace(out.String()))
@@ -594,8 +594,8 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				"attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -611,8 +611,8 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -629,8 +629,8 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				"foo",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -647,8 +647,8 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				"2050-01-15T00:00:00Z",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -664,8 +664,8 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -681,8 +681,8 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				"3.14159",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -698,8 +698,8 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 				"3.14159",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -725,13 +725,13 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 }
 
 func (s *IntegrationTestSuite) TestAccountDataCmds() {
-	jsonOut := "--" + tmcli.OutputFlag + "=json"
+	jsonOut := "--" + cmtcli.OutputFlag + "=json"
 	txFlags := func(from string, firstArgs ...string) []string {
 		return append(firstArgs,
 			"--"+flags.FlagFrom, from,
 			"--"+flags.FlagSkipConfirmation,
-			"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
-			"--"+flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String(),
+			"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
+			"--"+flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
 			jsonOut,
 		)
 	}
@@ -901,8 +901,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				"attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -918,8 +918,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -937,8 +937,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				"10",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -956,8 +956,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				"10",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -975,8 +975,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				"10",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -994,8 +994,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				"nan",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -1013,8 +1013,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 				"10",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -1058,8 +1058,8 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				"attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -1075,8 +1075,8 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -1092,8 +1092,8 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -1109,8 +1109,8 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    true,
 			respType:     &sdk.TxResponse{},
@@ -1126,8 +1126,8 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -1171,8 +1171,8 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 				"attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -1188,8 +1188,8 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -1203,8 +1203,8 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 				s.account2Addr.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -1218,8 +1218,8 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 				s.account2Addr.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr:    false,
 			respType:     &sdk.TxResponse{},
@@ -1245,7 +1245,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 }
 
 func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
-	asJson := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+	asJson := fmt.Sprintf("--%s=json", cmtcli.OutputFlag)
 
 	s.T().Run("GetAccountAttribute", func(t *testing.T) {
 		// Choosing page size = 35 because it a) isn't the default, b) doesn't evenly divide 500.
@@ -1467,8 +1467,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				"attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectedCode: 0,
 		},
@@ -1482,8 +1482,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectedCode: 0,
 		},
@@ -1497,8 +1497,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr: `invalid address: must be either an account address or scope metadata address: "not-a-address"`,
 		},
@@ -1512,8 +1512,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectErr: `unable to parse time "test value" required format is RFC3339 (2006-01-02T15:04:05Z07:00): parsing time "test value" as "2006-01-02T15:04:05Z07:00": cannot parse "test value" as "2006"`,
 		},
@@ -1527,8 +1527,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				"2050-01-15T00:00:00Z",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectedCode: 0,
 		},
@@ -1541,8 +1541,8 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 				"test value",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			expectedCode: 0,
 		},

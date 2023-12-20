@@ -5,17 +5,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/hold/keeper"
+	holdmodule "github.com/provenance-io/provenance/x/hold/module"
 	"github.com/provenance-io/provenance/x/hold/simulation"
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := moduletestutil.MakeTestEncodingConfig(holdmodule.AppModuleBasic{}).Codec
 	dec := simulation.NewDecodeStore(cdc)
 
 	addr0 := sdk.AccAddress("addr0_______________")

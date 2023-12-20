@@ -4,9 +4,11 @@ import (
 	"regexp"
 	"testing"
 
-	"cosmossdk.io/math"
-	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestDefaultParams(t *testing.T) {
@@ -65,9 +67,9 @@ func TestParamSetPairs(t *testing.T) {
 			require.Error(t, pairs[i].ValidatorFn("foo"))
 			require.Error(t, pairs[i].ValidatorFn(-1000))
 			require.Error(t, pairs[i].ValidatorFn(1000))
-			bigint, _ := math.NewIntFromString("1944674407370955516150")
+			bigint, _ := sdkmath.NewIntFromString("1944674407370955516150")
 			require.NoError(t, pairs[i].ValidatorFn(bigint))
-			require.NoError(t, pairs[i].ValidatorFn(math.NewInt(1000)))
+			require.NoError(t, pairs[i].ValidatorFn(sdkmath.NewInt(1000)))
 		case string(ParamStoreKeyUnrestrictedDenomRegex):
 			require.Error(t, pairs[i].ValidatorFn(1))
 			require.Error(t, pairs[i].ValidatorFn("\\!(")) // invalid regex
@@ -89,12 +91,12 @@ func TestParamSetPairs(t *testing.T) {
 }
 
 func TestStringToBigInt(t *testing.T) {
-	require.Equal(t, math.NewIntFromUint64(1), StringToBigInt("1"), "should handle uint64")
-	require.Equal(t, math.NewIntFromUint64(0), StringToBigInt("0"), "should handle zero")
+	require.Equal(t, sdkmath.NewIntFromUint64(1), StringToBigInt("1"), "should handle uint64")
+	require.Equal(t, sdkmath.NewIntFromUint64(0), StringToBigInt("0"), "should handle zero")
 	require.Equal(t, "-1", StringToBigInt("-1").String(), "should handle negative")
 	assertions.AssertPanicEquals(t, func() {
 		StringToBigInt("abc")
-	}, "unable to create math.Int from string: abc", "should panic on invalid input")
-	bigNum, _ := math.NewIntFromString("100000000000000000000")
+	}, "unable to create sdkmath.Int from string: abc", "should panic on invalid input")
+	bigNum, _ := sdkmath.NewIntFromString("100000000000000000000")
 	require.Equal(t, bigNum, StringToBigInt("100000000000000000000"), "should handle large number that exceeds uint64")
 }

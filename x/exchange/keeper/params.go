@@ -1,13 +1,15 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
 // deleteAllParamsSplits deletes all the params splits in the store.
-func deleteAllParamsSplits(store sdk.KVStore) {
+func deleteAllParamsSplits(store storetypes.KVStore) {
 	keys := getAllKeys(store, GetKeyPrefixParamsSplit())
 	for _, key := range keys {
 		store.Delete(key)
@@ -15,14 +17,14 @@ func deleteAllParamsSplits(store sdk.KVStore) {
 }
 
 // setParamsSplit sets the provided params split for the provided denom.
-func setParamsSplit(store sdk.KVStore, denom string, split uint16) {
+func setParamsSplit(store storetypes.KVStore, denom string, split uint16) {
 	key := MakeKeyParamsSplit(denom)
 	value := uint16Bz(split)
 	store.Set(key, value)
 }
 
 // getParamsSplit gets the params split amount for the provided denom, and whether the entry existed.
-func getParamsSplit(store sdk.KVStore, denom string) (uint16, bool) {
+func getParamsSplit(store storetypes.KVStore, denom string) (uint16, bool) {
 	key := MakeKeyParamsSplit(denom)
 	if store.Has(key) {
 		value := store.Get(key)

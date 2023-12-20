@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -15,7 +16,8 @@ const AddressHasAccessKey = "address_has_access"
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
-func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	// In some cases, it might not be possible to add a bypass to the context.
 	// If it's from either the Marker or IBC Transfer module accounts, assume proper validation has been done elsewhere.
 	if types.HasBypass(ctx) || fromAddr.Equals(k.markerModuleAddr) || fromAddr.Equals(k.ibcTransferModuleAddr) {

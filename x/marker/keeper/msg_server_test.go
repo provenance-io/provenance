@@ -5,18 +5,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
+	"github.com/cosmos/gogoproto/proto"
 
 	simapp "github.com/provenance-io/provenance/app"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
@@ -35,7 +37,7 @@ type MsgServerTestSuite struct {
 	pubkey1    cryptotypes.PubKey
 	owner1     string
 	owner1Addr sdk.AccAddress
-	acct1      authtypes.AccountI
+	acct1      sdk.AccountI
 
 	addresses []sdk.AccAddress
 }
@@ -44,9 +46,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 
 	s.blockStartTime = time.Now()
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{
-		Time: s.blockStartTime,
-	})
+	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.blockStartTime})
 	s.msgServer = markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
 
 	s.privkey1 = secp256k1.GenPrivKey()
@@ -75,7 +75,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 		{
 			name: "successfully ADD new marker",
 			msg: types.MsgAddMarkerRequest{
-				Amount:                 sdk.NewCoin(denom, sdk.NewInt(100)),
+				Amount:                 sdk.NewInt64Coin(denom, 100),
 				Manager:                s.owner1,
 				FromAddress:            s.owner1,
 				Status:                 types.StatusProposed,
@@ -104,7 +104,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 		{
 			name: "fail to ADD new marker, invalid status",
 			msg: types.MsgAddMarkerRequest{
-				Amount:                 sdk.NewCoin(denom, sdk.NewInt(100)),
+				Amount:                 sdk.NewInt64Coin(denom, 100),
 				Manager:                s.owner1,
 				FromAddress:            s.owner1,
 				Status:                 types.StatusActive,
@@ -118,7 +118,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 		{
 			name: "fail to ADD new marker, marker already exists",
 			msg: types.MsgAddMarkerRequest{
-				Amount:                 sdk.NewCoin(denom, sdk.NewInt(100)),
+				Amount:                 sdk.NewInt64Coin(denom, 100),
 				Manager:                s.owner1,
 				FromAddress:            s.owner1,
 				Status:                 types.StatusProposed,
@@ -132,7 +132,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 		{
 			name: "fail to ADD new marker, incorrect nav config",
 			msg: types.MsgAddMarkerRequest{
-				Amount:                 sdk.NewCoin("jackthecat", sdk.NewInt(100)),
+				Amount:                 sdk.NewInt64Coin("jackthecat", 100),
 				Manager:                s.owner1,
 				FromAddress:            s.owner1,
 				Status:                 types.StatusProposed,
@@ -148,7 +148,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 		{
 			name: "successfully Add marker with nav",
 			msg: types.MsgAddMarkerRequest{
-				Amount:                 sdk.NewCoin(navDenom, sdk.NewInt(100)),
+				Amount:                 sdk.NewInt64Coin(navDenom, 100),
 				Manager:                s.owner1,
 				FromAddress:            s.owner1,
 				Status:                 types.StatusProposed,
@@ -179,7 +179,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 		{
 			name: "successfully add marker with dash and period",
 			msg: types.MsgAddMarkerRequest{
-				Amount:                 sdk.NewCoin(denomWithDashPeriod, sdk.NewInt(1000)),
+				Amount:                 sdk.NewInt64Coin(denomWithDashPeriod, 1000),
 				Manager:                s.owner1,
 				FromAddress:            s.owner1,
 				Status:                 types.StatusProposed,
@@ -208,7 +208,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 		{
 			name: "successfully ADD new marker with required attributes",
 			msg: types.MsgAddMarkerRequest{
-				Amount:                 sdk.NewCoin(rdenom, sdk.NewInt(100)),
+				Amount:                 sdk.NewInt64Coin(rdenom, 100),
 				Manager:                s.owner1,
 				FromAddress:            s.owner1,
 				Status:                 types.StatusProposed,
@@ -280,7 +280,7 @@ func (s *MsgServerTestSuite) TestMsgFinalizeMarkerRequest() {
 			{Address: authUser.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Mint}},
 		},
 	)
-	validMarker.Supply = sdk.NewInt(1)
+	validMarker.Supply = sdkmath.NewInt(1)
 	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, validMarker))
 	s.Require().NoError(s.app.MarkerKeeper.SetNetAssetValue(s.ctx, validMarker, types.NetAssetValue{Price: sdk.NewInt64Coin(types.UsdDenom, 1), Volume: 1}, "test"))
 
@@ -301,7 +301,7 @@ func (s *MsgServerTestSuite) TestMsgFinalizeMarkerRequest() {
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			res, err := s.msgServer.Finalize(sdk.WrapSDKContext(s.ctx),
+			res, err := s.msgServer.Finalize(s.ctx,
 				&tc.msg)
 
 			if len(tc.expErr) > 0 {
@@ -339,7 +339,7 @@ func (s *MsgServerTestSuite) TestUpdateForcedTransfer() {
 			},
 			Status:                 status,
 			Denom:                  denom,
-			Supply:                 sdk.NewInt(1000),
+			Supply:                 sdkmath.NewInt(1000),
 			MarkerType:             types.MarkerType_RestrictedCoin,
 			AllowGovernanceControl: true,
 			AllowForcedTransfer:    allowForcedTransfer,
@@ -464,11 +464,11 @@ func (s *MsgServerTestSuite) TestUpdateForcedTransfer() {
 			}
 
 			em := sdk.NewEventManager()
-			goCtx := sdk.WrapSDKContext(s.ctx.WithEventManager(em))
+			ctx := s.ctx.WithEventManager(em)
 			var res *types.MsgUpdateForcedTransferResponse
 			var err error
 			testFunc := func() {
-				res, err = s.msgServer.UpdateForcedTransfer(goCtx, tc.msg)
+				res, err = s.msgServer.UpdateForcedTransfer(ctx, tc.msg)
 			}
 
 			s.Require().NotPanics(testFunc, "UpdateForcedTransfer")
@@ -492,7 +492,7 @@ func (s *MsgServerTestSuite) TestUpdateForcedTransfer() {
 					{
 						Type: sdk.EventTypeMessage,
 						Attributes: []abci.EventAttribute{
-							{Key: []byte(sdk.AttributeKeyModule), Value: []byte(types.ModuleName)},
+							{Key: sdk.AttributeKeyModule, Value: types.ModuleName},
 						},
 					},
 				}
@@ -594,7 +594,7 @@ func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			res, err := s.msgServer.UpdateSendDenyList(sdk.WrapSDKContext(s.ctx),
+			res, err := s.msgServer.UpdateSendDenyList(s.ctx,
 				&tc.msg)
 
 			if len(tc.expErr) > 0 {
@@ -704,7 +704,7 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			res, err := s.msgServer.AddNetAssetValues(sdk.WrapSDKContext(s.ctx),
+			res, err := s.msgServer.AddNetAssetValues(s.ctx,
 				&tc.msg)
 
 			if len(tc.expErr) > 0 {

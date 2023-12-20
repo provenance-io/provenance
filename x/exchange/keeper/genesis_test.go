@@ -153,7 +153,7 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 			},
 			expAccCalls: AccountCalls{
 				GetAccount: []sdk.AccAddress{s.marketAddr2},
-				SetAccount: []authtypes.AccountI{marketAcc(2, "new name")},
+				SetAccount: []sdk.AccountI{marketAcc(2, "new name")},
 			},
 		},
 		{
@@ -163,8 +163,8 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 			},
 			expAccCalls: AccountCalls{
 				GetAccount: []sdk.AccAddress{s.marketAddr3},
-				NewAccount: []authtypes.AccountI{marketAcc(3, "Name Three")},
-				SetAccount: []authtypes.AccountI{marketAcc(3, "Name Three")},
+				NewAccount: []sdk.AccountI{marketAcc(3, "Name Three")},
+				SetAccount: []sdk.AccountI{marketAcc(3, "Name Three")},
 			},
 		},
 		{
@@ -218,8 +218,8 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 			},
 			expAccCalls: AccountCalls{
 				GetAccount: []sdk.AccAddress{s.marketAddr1, exchange.GetMarketAddress(75), s.marketAddr3},
-				NewAccount: []authtypes.AccountI{marketAcc(1, "First")},
-				SetAccount: []authtypes.AccountI{marketAcc(1, "First"), marketAcc(75, "New Second Wave")},
+				NewAccount: []sdk.AccountI{marketAcc(1, "First")},
+				SetAccount: []sdk.AccountI{marketAcc(1, "First"), marketAcc(75, "New Second Wave")},
 			},
 		},
 		{
@@ -435,8 +435,8 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 			},
 			expAccCalls: AccountCalls{
 				GetAccount: []sdk.AccAddress{s.marketAddr1, exchange.GetMarketAddress(420)},
-				SetAccount: []authtypes.AccountI{marketAcc(1, "First Market"), marketAcc(420, "THE Market")},
-				NewAccount: []authtypes.AccountI{marketAcc(1, "First Market"), marketAcc(420, "THE Market")},
+				SetAccount: []sdk.AccountI{marketAcc(1, "First Market"), marketAcc(420, "THE Market")},
+				NewAccount: []sdk.AccountI{marketAcc(1, "First Market"), marketAcc(420, "THE Market")},
 			},
 			expHoldCalls: HoldCalls{
 				GetHoldCoin: []*GetHoldCoinArgs{

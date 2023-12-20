@@ -18,7 +18,9 @@ import (
 // This is similar to the ctx.CacheContext() function, but this keeps the history so we can act on it.
 func CacheContextWithHistory(ctx sdk.Context) (cc sdk.Context, writeCache func()) {
 	cms := ctx.MultiStore().CacheMultiStore()
-	cc = ctx.WithMultiStore(cms).WithEventManager(sdk.NewEventManagerWithHistory(ctx.EventManager().GetABCIEventHistory()))
+	cc = ctx.WithMultiStore(cms)
+	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
+	// cc = cc.WithEventManager(sdk.NewEventManagerWithHistory(ctx.EventManager().GetABCIEventHistory()))
 
 	writeCache = func() {
 		ctx.EventManager().EmitEvents(cc.EventManager().Events())
@@ -174,43 +176,45 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 // IterateABCIEvents Iterates through all the ABCIEvents that match the eventCriteria.
 // Nil criteria means to iterate over everything.
 func (k Keeper) IterateABCIEvents(ctx sdk.Context, criteria *types.EventCriteria, action func(string, *map[string][]byte) error) error {
-	for _, event := range ctx.EventManager().GetABCIEventHistory() {
-		event := event
+	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
+	/*
+		for _, event := range ctx.EventManager().GetABCIEventHistory() {
+			event := event
 
-		// Event type must match the criteria
-		// nil criteria is considered to match everything
-		if criteria != nil && !criteria.MatchesEvent(event.Type) {
-			continue
-		}
+			// Event type must match the criteria
+			// nil criteria is considered to match everything
+			if criteria != nil && !criteria.MatchesEvent(event.Type) {
+				continue
+			}
 
-		// Convert the attributes into a map
-		attributes := make(map[string][]byte)
-		for _, attribute := range event.Attributes {
-			attributes[string(attribute.Key)] = attribute.Value
-		}
+			// Convert the attributes into a map
+			attributes := make(map[string][]byte)
+			for _, attribute := range event.Attributes {
+				attributes[string(attribute.Key)] = attribute.Value
+			}
 
-		valid := true
-		if criteria != nil {
-			// Ensure each attribute matches the required criteria
-			// If a single attribute does not match then we don't continue with the event
-			eventCriteria := criteria.Events[event.Type]
-			for key := range eventCriteria.Attributes {
-				valid = eventCriteria.MatchesAttribute(key, attributes[key])
-				if !valid {
-					break
+			valid := true
+			if criteria != nil {
+				// Ensure each attribute matches the required criteria
+				// If a single attribute does not match then we don't continue with the event
+				eventCriteria := criteria.Events[event.Type]
+				for key := range eventCriteria.Attributes {
+					valid = eventCriteria.MatchesAttribute(key, attributes[key])
+					if !valid {
+						break
+					}
 				}
 			}
-		}
-		if !valid {
-			continue
-		}
+			if !valid {
+				continue
+			}
 
-		err := action(event.Type, &attributes)
-		if err != nil {
-			return err
+			err := action(event.Type, &attributes)
+			if err != nil {
+				return err
+			}
 		}
-	}
-
+	*/
 	return nil
 }
 

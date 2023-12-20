@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"math"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -14,38 +14,38 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 	tests := []struct {
 		name     string
 		trigger  types.Trigger
-		meter    sdk.GasMeter
+		meter    storetypes.GasMeter
 		expected int
 		panic    *storetypes.ErrorOutOfGas
 	}{
 		{
 			name:     "valid - register with infinite gas meter",
-			meter:    sdk.NewInfiniteGasMeter(),
+			meter:    storetypes.NewInfiniteGasMeter(),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 2000000,
 		},
 		{
 			name:     "invalid - register with no gas",
-			meter:    sdk.NewGasMeter(0),
+			meter:    storetypes.NewGasMeter(0),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 0,
 			panic:    &storetypes.ErrorOutOfGas{Descriptor: "WriteFlat"},
 		},
 		{
 			name:     "valid - register with no gas for trigger",
-			meter:    sdk.NewGasMeter(14190),
+			meter:    storetypes.NewGasMeter(14190),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 0,
 		},
 		{
 			name:     "valid - register with gas",
-			meter:    sdk.NewGasMeter(9999999999),
+			meter:    storetypes.NewGasMeter(9999999999),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 2000000,
 		},
 		{
 			name:     "valid - register with maximum gas",
-			meter:    sdk.NewGasMeter(math.MaxUint64),
+			meter:    storetypes.NewGasMeter(math.MaxUint64),
 			trigger:  s.CreateTrigger(1, owner, &types.BlockHeightEvent{BlockHeight: uint64(s.ctx.BlockHeight())}, &types.MsgDestroyTriggerRequest{Id: 100, Authority: owner}),
 			expected: 2000000,
 		},
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestRegisterTrigger() {
 
 			if tc.panic == nil {
 				s.app.TriggerKeeper.RegisterTrigger(s.ctx, tc.trigger)
-				s.ctx = s.ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+				s.ctx = s.ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 
 				trigger, err := s.app.TriggerKeeper.GetTrigger(s.ctx, tc.trigger.Id)
 				s.NoError(err, "should add trigger to store in RegisterTrigger")
