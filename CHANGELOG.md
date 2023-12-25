@@ -62,6 +62,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Update `async-icq` from `github.com/strangelove-ventures/async-icq/v6` to `github.com/cosmos/ibc-apps/modules/async-icq/v6.1.0` ([#1748](https://github.com/provenance-io/provenance/pull/1748))
 - Bump `github.com/spf13/cast` from 1.5.1 to 1.6.0 ([#1769](https://github.com/provenance-io/provenance/pull/1769))
 - Bump `actions/setup-java` from 3 to 4 ([#1770](https://github.com/provenance-io/provenance/pull/1770))
+- Bump `google.golang.org/protobuf` from 1.31.0 to 1.32.0 ([#1790](https://github.com/provenance-io/provenance/pull/1790))
 
 ---
 
