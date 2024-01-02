@@ -353,6 +353,7 @@
     - [EventSessionCreated](#provenance.metadata.v1.EventSessionCreated)
     - [EventSessionDeleted](#provenance.metadata.v1.EventSessionDeleted)
     - [EventSessionUpdated](#provenance.metadata.v1.EventSessionUpdated)
+    - [EventSetNetAssetValue](#provenance.metadata.v1.EventSetNetAssetValue)
     - [EventTxCompleted](#provenance.metadata.v1.EventTxCompleted)
   
 - [provenance/metadata/v1/metadata.proto](#provenance/metadata/v1/metadata.proto)
@@ -376,6 +377,9 @@
   
 - [provenance/metadata/v1/scope.proto](#provenance/metadata/v1/scope.proto)
     - [AuditFields](#provenance.metadata.v1.AuditFields)
+    - [MsgAddNetAssetValuesRequest](#provenance.metadata.v1.MsgAddNetAssetValuesRequest)
+    - [MsgAddNetAssetValuesResponse](#provenance.metadata.v1.MsgAddNetAssetValuesResponse)
+    - [NetAssetValue](#provenance.metadata.v1.NetAssetValue)
     - [Party](#provenance.metadata.v1.Party)
     - [Process](#provenance.metadata.v1.Process)
     - [Record](#provenance.metadata.v1.Record)
@@ -5514,6 +5518,24 @@ EventSessionUpdated is an event message indicating a session has been updated.
 
 
 
+<a name="provenance.metadata.v1.EventSetNetAssetValue"></a>
+
+### EventSetNetAssetValue
+EventSetNetAssetValue event emitted when Net Asset Value for a scope is update or added
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `price` | [string](#string) |  |  |
+| `volume` | [string](#string) |  |  |
+| `source` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.EventTxCompleted"></a>
 
 ### EventTxCompleted
@@ -5853,6 +5875,50 @@ AuditFields capture information about the last account to make modifications and
 | `updated_by` | [string](#string) |  | the address of the account that modified this record |
 | `version` | [uint32](#uint32) |  | an optional version number that is incremented with each update |
 | `message` | [string](#string) |  | an optional message associated with the creation/update event |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgAddNetAssetValuesRequest"></a>
+
+### MsgAddNetAssetValuesRequest
+MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgAddNetAssetValuesResponse"></a>
+
+### MsgAddNetAssetValuesResponse
+MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
+
+
+
+
+
+
+<a name="provenance.metadata.v1.NetAssetValue"></a>
+
+### NetAssetValue
+NetAssetValue defines a scope's net asset value
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the complete value of the asset's volume |
+| `volume` | [uint64](#uint64) |  | volume is the number of tokens of the marker that were purchased for the price |
+| `updated_block_height` | [uint64](#uint64) |  | updated_block_height is the block height of last update |
 
 
 
@@ -8332,6 +8398,7 @@ Msg defines the Metadata Msg service.
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance.metadata.v1.MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance.metadata.v1.MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. | |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.metadata.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.metadata.v1.MsgSetAccountDataResponse) | SetAccountData associates some basic data with a metadata address. Currently, only scope ids are supported. | |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance.metadata.v1.MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance.metadata.v1.MsgAddNetAssetValuesResponse) | AddNetAssetValues set the net asset value for a scope | |
 
  <!-- end services -->
 

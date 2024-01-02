@@ -6,6 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 option java_package        = "io.provenance.metadata.v1";
 option java_multiple_files = true;
 
+import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/descriptor.proto";
@@ -252,3 +253,23 @@ message AuditFields {
   // an optional message associated with the creation/update event
   string message = 6 [(gogoproto.moretags) = "yaml:\"message,omitempty\""];
 }
+
+// NetAssetValue defines a scope's net asset value
+message NetAssetValue {
+  // price is the complete value of the asset's volume
+  cosmos.base.v1beta1.Coin price = 1 [(gogoproto.nullable) = false];
+  // volume is the number of tokens of the marker that were purchased for the price
+  uint64 volume = 2;
+  // updated_block_height is the block height of last update
+  uint64 updated_block_height = 3;
+}
+
+// MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+message MsgAddNetAssetValuesRequest {
+  string                 denom            = 1;
+  string                 administrator    = 2;
+  repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
+message MsgAddNetAssetValuesResponse {}

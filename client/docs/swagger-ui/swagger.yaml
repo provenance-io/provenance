@@ -93518,6 +93518,11 @@ definitions:
     description: >-
       MsgAddContractSpecToScopeSpecResponse is the response type for the
       Msg/AddContractSpecToScopeSpec RPC method.
+  provenance.metadata.v1.MsgAddNetAssetValuesResponse:
+    type: object
+    title: >-
+      MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response
+      type
   provenance.metadata.v1.MsgAddScopeDataAccessResponse:
     type: object
     title: >-
@@ -93952,6 +93957,33 @@ definitions:
     description: >-
       MsgWriteSessionResponse is the response type for the Msg/WriteSession RPC
       method.
+  provenance.metadata.v1.NetAssetValue:
+    type: object
+    properties:
+      price:
+        title: price is the complete value of the asset's volume
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      volume:
+        type: string
+        format: uint64
+        title: >-
+          volume is the number of tokens of the marker that were purchased for
+          the price
+      updated_block_height:
+        type: string
+        format: uint64
+        title: updated_block_height is the block height of last update
+    title: NetAssetValue defines a scope's net asset value
   provenance.metadata.v1.SessionIdComponents:
     type: object
     properties:

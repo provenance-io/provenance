@@ -82,6 +82,9 @@ service Msg {
   // SetAccountData associates some basic data with a metadata address.
   // Currently, only scope ids are supported.
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
+
+  // AddNetAssetValues set the net asset value for a scope
+  rpc AddNetAssetValues(MsgAddNetAssetValuesRequest) returns (MsgAddNetAssetValuesResponse);
 }
 
 // MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.

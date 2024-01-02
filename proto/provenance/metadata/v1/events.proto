@@ -175,3 +175,11 @@ message EventOSLocatorDeleted {
   // owner is the owner in the object store locator that was deleted.
   string owner = 1;
 }
+
+// EventSetNetAssetValue event emitted when Net Asset Value for a scope is update or added
+message EventSetNetAssetValue {
+  string denom  = 1;
+  string price  = 2;
+  string volume = 3;
+  string source = 4;
+}
