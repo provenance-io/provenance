@@ -655,8 +655,12 @@ message MsgP8eMemorializeContractResponse {
 
 // MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 message MsgAddNetAssetValuesRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)  = false;
+
   string                 scope_id         = 1;
-  string                 administrator    = 2;
+  repeated string        signers          = 2;
   repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
 }
 

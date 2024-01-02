@@ -730,33 +730,34 @@ func (k msgServer) SetAccountData(
 
 // AddNetAssetValues adds net asset values to a marker
 func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNetAssetValuesRequest) (*types.MsgAddNetAssetValuesResponse, error) {
-	// ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// scope, err := k.GetScopeSpecification(ctx, msg.Denom)
-	// if err != nil {
-	// 	return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	// }
+	scopeId, err := types.MetadataAddressFromBech32(msg.ScopeId)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
 
-	// isGovProp := marker.HasGovernanceEnabled() && msg.Administrator == k.GetAuthority()
+	scope, found := k.GetScope(ctx, scopeId)
+	if !found {
+		return nil, sdkerrors.ErrNotFound.Wrap(err.Error())
+	}
 
-	// if !isGovProp {
-	// 	hasGrants := types.GrantsForAddress(msg.GetSigners()[0], marker.GetAccessList()...).GetAccessList()
-	// 	if len(hasGrants) == 0 {
-	// 		return nil, fmt.Errorf("signer %v does not have permission to add net asset value for %q", msg.Administrator, marker.GetDenom())
-	// 	}
-	// }
+	_, err = k.validateAllRequiredSigned(ctx, scope.GetAllOwnerAddresses(), msg)
+	if err != nil {
+		return nil, sdkerrors.ErrorInvalidSigner.Wrap(err.Error())
+	}
 
 	// err = k.AddSetNetAssetValues(ctx, marker, msg.NetAssetValues, msg.Administrator)
 	// if err != nil {
 	// 	return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	// }
 
-	// ctx.EventManager().EmitEvent(
-	// 	sdk.NewEvent(
-	// 		sdk.EventTypeMessage,
-	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-	// 	),
-	// )
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
 
 	return &types.MsgAddNetAssetValuesResponse{}, nil
 }

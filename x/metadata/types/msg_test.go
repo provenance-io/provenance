@@ -66,6 +66,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signers []string) MetadataMsg { return &MsgWriteRecordSpecificationRequest{Signers: signers} },
 		func(signers []string) MetadataMsg { return &MsgDeleteRecordSpecificationRequest{Signers: signers} },
 		func(signers []string) MetadataMsg { return &MsgSetAccountDataRequest{Signers: signers} },
+		func(signers []string) MetadataMsg { return &MsgAddNetAssetValuesRequest{Signers: signers} },
 	}
 
 	singleSignerMsgMakers := []func(signer string) MetadataMsg{

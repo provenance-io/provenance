@@ -77,6 +77,8 @@ var allRequestMsgs = []MetadataMsg{
 	(*MsgModifyOSLocatorRequest)(nil),
 
 	(*MsgSetAccountDataRequest)(nil),
+
+	(*MsgAddNetAssetValuesRequest)(nil),
 }
 
 // We still need these deprecated messages to be sdk.Msg for the codec.
@@ -1169,4 +1171,53 @@ func NewMsgModifyOSLocatorResponse(objectStoreLocator ObjectStoreLocator) *MsgMo
 	return &MsgModifyOSLocatorResponse{
 		Locator: objectStoreLocator,
 	}
+}
+
+func NewMsgAddNetAssetValuesRequest(scopeID string, signers []string, netAssetValues []NetAssetValue) *MsgAddNetAssetValuesRequest {
+	return &MsgAddNetAssetValuesRequest{
+		ScopeId:        scopeID,
+		NetAssetValues: netAssetValues,
+		Signers:        signers,
+	}
+}
+
+func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
+	if len(msg.NetAssetValues) == 0 {
+		return fmt.Errorf("net asset value list cannot be empty")
+	}
+
+	seen := make(map[string]bool)
+	for _, nav := range msg.NetAssetValues {
+		if err := nav.Validate(); err != nil {
+			return err
+		}
+
+		if nav.UpdatedBlockHeight != 0 {
+			return fmt.Errorf("marker net asset value must not have update height set")
+		}
+
+		if seen[nav.Price.Denom] {
+			return fmt.Errorf("list of net asset values contains duplicates")
+		}
+		seen[nav.Price.Denom] = true
+	}
+
+	for _, signer := range msg.Signers {
+		_, err := sdk.AccAddressFromBech32(signer)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
+func (msg MsgAddNetAssetValuesRequest) GetSigners() []sdk.AccAddress {
+	return stringsToAccAddresses(msg.Signers)
+}
+
+// GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
+func (msg MsgAddNetAssetValuesRequest) GetSignerStrs() []string {
+	return msg.Signers
 }

@@ -610,3 +610,16 @@ s2Loop:
 	}
 	return true
 }
+
+// Validate returns error if NetAssetValue is not in a valid state
+func (mnav *NetAssetValue) Validate() error {
+	if err := mnav.Price.Validate(); err != nil {
+		return err
+	}
+
+	if mnav.Price.Amount.GT(sdk.NewInt(0)) && mnav.Volume < 1 {
+		return fmt.Errorf("marker net asset value volume must be positive value")
+	}
+
+	return nil
+}

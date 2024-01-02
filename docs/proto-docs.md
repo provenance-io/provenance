@@ -7620,7 +7620,7 @@ MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `scope_id` | [string](#string) |  |  |
-| `administrator` | [string](#string) |  |  |
+| `signers` | [string](#string) | repeated |  |
 | `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated |  |
 
 
