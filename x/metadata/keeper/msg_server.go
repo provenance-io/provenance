@@ -727,3 +727,36 @@ func (k msgServer) SetAccountData(
 
 	return &types.MsgSetAccountDataResponse{}, nil
 }
+
+// AddNetAssetValues adds net asset values to a marker
+func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNetAssetValuesRequest) (*types.MsgAddNetAssetValuesResponse, error) {
+	// ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// scope, err := k.GetScopeSpecification(ctx, msg.Denom)
+	// if err != nil {
+	// 	return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	// }
+
+	// isGovProp := marker.HasGovernanceEnabled() && msg.Administrator == k.GetAuthority()
+
+	// if !isGovProp {
+	// 	hasGrants := types.GrantsForAddress(msg.GetSigners()[0], marker.GetAccessList()...).GetAccessList()
+	// 	if len(hasGrants) == 0 {
+	// 		return nil, fmt.Errorf("signer %v does not have permission to add net asset value for %q", msg.Administrator, marker.GetDenom())
+	// 	}
+	// }
+
+	// err = k.AddSetNetAssetValues(ctx, marker, msg.NetAssetValues, msg.Administrator)
+	// if err != nil {
+	// 	return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	// }
+
+	// ctx.EventManager().EmitEvent(
+	// 	sdk.NewEvent(
+	// 		sdk.EventTypeMessage,
+	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+	// 	),
+	// )
+
+	return &types.MsgAddNetAssetValuesResponse{}, nil
+}

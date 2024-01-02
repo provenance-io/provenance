@@ -652,3 +652,13 @@ message MsgP8eMemorializeContractResponse {
   SessionIdInfo         session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
   repeated RecordIdInfo record_id_infos = 3 [(gogoproto.moretags) = "yaml:\"record_id_infos\""];
 }
+
+// MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+message MsgAddNetAssetValuesRequest {
+  string                 scope_id         = 1;
+  string                 administrator    = 2;
+  repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
+message MsgAddNetAssetValuesResponse {}

@@ -377,8 +377,6 @@
   
 - [provenance/metadata/v1/scope.proto](#provenance/metadata/v1/scope.proto)
     - [AuditFields](#provenance.metadata.v1.AuditFields)
-    - [MsgAddNetAssetValuesRequest](#provenance.metadata.v1.MsgAddNetAssetValuesRequest)
-    - [MsgAddNetAssetValuesResponse](#provenance.metadata.v1.MsgAddNetAssetValuesResponse)
     - [NetAssetValue](#provenance.metadata.v1.NetAssetValue)
     - [Party](#provenance.metadata.v1.Party)
     - [Process](#provenance.metadata.v1.Process)
@@ -486,6 +484,8 @@
 - [provenance/metadata/v1/tx.proto](#provenance/metadata/v1/tx.proto)
     - [MsgAddContractSpecToScopeSpecRequest](#provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest)
     - [MsgAddContractSpecToScopeSpecResponse](#provenance.metadata.v1.MsgAddContractSpecToScopeSpecResponse)
+    - [MsgAddNetAssetValuesRequest](#provenance.metadata.v1.MsgAddNetAssetValuesRequest)
+    - [MsgAddNetAssetValuesResponse](#provenance.metadata.v1.MsgAddNetAssetValuesResponse)
     - [MsgAddScopeDataAccessRequest](#provenance.metadata.v1.MsgAddScopeDataAccessRequest)
     - [MsgAddScopeDataAccessResponse](#provenance.metadata.v1.MsgAddScopeDataAccessResponse)
     - [MsgAddScopeOwnerRequest](#provenance.metadata.v1.MsgAddScopeOwnerRequest)
@@ -5881,33 +5881,6 @@ AuditFields capture information about the last account to make modifications and
 
 
 
-<a name="provenance.metadata.v1.MsgAddNetAssetValuesRequest"></a>
-
-### MsgAddNetAssetValuesRequest
-MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `administrator` | [string](#string) |  |  |
-| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated |  |
-
-
-
-
-
-
-<a name="provenance.metadata.v1.MsgAddNetAssetValuesResponse"></a>
-
-### MsgAddNetAssetValuesResponse
-MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
-
-
-
-
-
-
 <a name="provenance.metadata.v1.NetAssetValue"></a>
 
 ### NetAssetValue
@@ -7632,6 +7605,33 @@ MsgAddContractSpecToScopeSpecRequest is the request type for the Msg/AddContract
 
 ### MsgAddContractSpecToScopeSpecResponse
 MsgAddContractSpecToScopeSpecResponse is the response type for the Msg/AddContractSpecToScopeSpec RPC method.
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgAddNetAssetValuesRequest"></a>
+
+### MsgAddNetAssetValuesRequest
+MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_id` | [string](#string) |  |  |
+| `administrator` | [string](#string) |  |  |
+| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgAddNetAssetValuesResponse"></a>
+
+### MsgAddNetAssetValuesResponse
+MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
 
 
 

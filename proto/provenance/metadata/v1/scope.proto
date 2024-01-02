@@ -263,13 +263,3 @@ message NetAssetValue {
   // updated_block_height is the block height of last update
   uint64 updated_block_height = 3;
 }
-
-// MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
-message MsgAddNetAssetValuesRequest {
-  string                 denom            = 1;
-  string                 administrator    = 2;
-  repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
-}
-
-// MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
-message MsgAddNetAssetValuesResponse {}
