@@ -732,12 +732,12 @@ func (k msgServer) SetAccountData(
 func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNetAssetValuesRequest) (*types.MsgAddNetAssetValuesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	scopeId, err := types.MetadataAddressFromBech32(msg.ScopeId)
+	scopeID, err := types.MetadataAddressFromBech32(msg.ScopeId)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	scope, found := k.GetScope(ctx, scopeId)
+	scope, found := k.GetScope(ctx, scopeID)
 	if !found {
 		return nil, sdkerrors.ErrNotFound.Wrap(err.Error())
 	}

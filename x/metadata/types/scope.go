@@ -14,6 +14,7 @@ import (
 const (
 	// A sane default for maximum length of an audit message string (memo)
 	maxAuditMessageLength = 200
+	UsdDenom              = "usd"
 )
 
 // NewScope creates a new instance.

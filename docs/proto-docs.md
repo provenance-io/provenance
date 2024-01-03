@@ -5526,7 +5526,7 @@ EventSetNetAssetValue event emitted when Net Asset Value for a scope is update o
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
+| `scope_id` | [string](#string) |  |  |
 | `price` | [string](#string) |  |  |
 | `volume` | [string](#string) |  |  |
 | `source` | [string](#string) |  |  |
