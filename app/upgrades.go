@@ -204,7 +204,18 @@ func GetUpgradeStoreLoader(app *App, info upgradetypes.Plan) baseapp.StoreLoader
 		"upgrade.deleted", storeUpgrades.Deleted,
 		"upgrade.renamed", storeUpgrades.Renamed,
 	)
+
 	return upgradetypes.UpgradeStoreLoader(info.Height, &storeUpgrades)
+}
+
+// WrapStoreLoader creates a new StoreLoader by wrapping an existing one.
+func WrapStoreLoader(wrapper func(sdk.CommitMultiStore, baseapp.StoreLoader) error, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
+	return func(ms sdk.CommitMultiStore) error {
+		if storeLoader == nil {
+			storeLoader = baseapp.DefaultStoreLoader
+		}
+		return wrapper(ms, storeLoader)
+	}
 }
 
 // runModuleMigrations wraps standard logging around the call to app.mm.RunMigrations.

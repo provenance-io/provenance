@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
@@ -30,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -1057,6 +1059,7 @@ func New(
 	}
 
 	// Currently in an upgrade hold for this block.
+	var storeLoader baseapp.StoreLoader
 	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight()+1 {
 		if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 			app.Logger().Info("Skipping upgrade based on height",
@@ -1071,13 +1074,21 @@ func New(
 				"lastHeight", app.LastBlockHeight(),
 			)
 			// See if we have a custom store loader to use for upgrades.
-			storeLoader := GetUpgradeStoreLoader(app, upgradeInfo)
-			if storeLoader != nil {
-				app.SetStoreLoader(storeLoader)
-			}
+			storeLoader = GetUpgradeStoreLoader(app, upgradeInfo)
 		}
 	}
 	// --
+
+	// Wrap the StoreLoader to include a valid database type check.
+	storeLoader = WrapStoreLoader(func(ms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
+		backend := server.GetAppDBBackend(appOpts)
+		if backend != dbm.GoLevelDBBackend {
+			app.Logger().Error("%s IS NO LONGER SUPPORTED. MIGRATE TO %s", backend, dbm.GoLevelDBBackend)
+			time.Sleep(30 * time.Second)
+		}
+		return sl(ms)
+	}, storeLoader)
+	app.SetStoreLoader(storeLoader)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
