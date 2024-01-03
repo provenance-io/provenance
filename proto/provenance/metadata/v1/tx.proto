@@ -110,6 +110,11 @@ message MsgWriteScopeRequest {
   // If there is a value in scope.specification_id that is different from the one created from this uuid, an error is
   // returned.
   string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
+
+  // usd_mils value of scope in usd mils (1234 = $1.234) used for net asset value
+  uint64 usd_mils = 12;
+  // volume value of scope used for net asset value
+  uint64 volume = 13;
 }
 
 // MsgWriteScopeResponse is the response type for the Msg/WriteScope RPC method.
