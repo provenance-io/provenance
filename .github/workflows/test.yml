@@ -95,7 +95,7 @@ jobs:
         if: needs.setup-tests.outputs.should-run
         with:
           go-version: ${{ needs.setup-tests.outputs.go-version }}
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-pkgs.txt.part.${{ matrix.part }}"
@@ -123,19 +123,19 @@ jobs:
         with:
           # CodeCov requires fetch-depth > 1
           fetch-depth: 2
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-00-coverage"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-01-coverage"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-02-coverage"
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-03-coverage"
@@ -179,7 +179,7 @@ jobs:
         if: needs.setup-tests.outputs.should-run
         with:
           go-version: ${{ needs.setup-tests.outputs.go-version }}
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-pkgs.txt.part.${{ matrix.part }}"

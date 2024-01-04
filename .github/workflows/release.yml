@@ -205,12 +205,12 @@ jobs:
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Download linux zip artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: linux-zip
           path: build/
       - name: Download dbmigrate zip artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: dbmigrate-zip
           path: build/
