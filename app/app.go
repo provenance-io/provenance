@@ -1079,8 +1079,15 @@ func New(
 	}
 	// --
 
-	// Temporarily added to notify users to migrate databases.
-	storeLoader = injectDBBackendValidator(app.Logger(), appOpts, storeLoader)
+	// Wrap the StoreLoader to include a valid database type check.
+	storeLoader = WrapStoreLoader(func(ms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
+		backend := server.GetAppDBBackend(appOpts)
+		if backend != dbm.GoLevelDBBackend {
+			app.Logger().Error("%s IS NO LONGER SUPPORTED. MIGRATE TO %s", backend, dbm.GoLevelDBBackend)
+			time.Sleep(30 * time.Second)
+		}
+		return sl(ms)
+	}, storeLoader)
 	app.SetStoreLoader(storeLoader)
 
 	if loadLatest {
@@ -1377,21 +1384,4 @@ func (app *App) injectUpgrade(name string) { //nolint:unused // This is designed
 		}
 		return app.BeginBlocker(ctx, req)
 	})
-}
-
-// injectDBBackendValidator creates a new StoreLoader that first validates the DBBackend type before calling the provided StoreLoader.
-func injectDBBackendValidator(logger log.Logger, appOpts servertypes.AppOptions, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
-	return func(ms sdk.CommitMultiStore) error {
-		if storeLoader == nil {
-			storeLoader = baseapp.DefaultStoreLoader
-		}
-
-		backend := server.GetAppDBBackend(appOpts)
-		if backend != dbm.GoLevelDBBackend {
-			logger.Error("%s IS NO LONGER SUPPORTED. MIGRATE TO %s", backend, dbm.GoLevelDBBackend)
-			time.Sleep(30 * time.Second)
-		}
-
-		return storeLoader(ms)
-	}
 }
