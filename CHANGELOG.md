@@ -54,12 +54,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Dependencies
 
 - Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.28.1 ([#1724](https://github.com/provenance-io/provenance/pull/1724), [#1744](https://github.com/provenance-io/provenance/pull/1744), [#1750](https://github.com/provenance-io/provenance/pull/1750))
-- Bump `github.com/google/uuid` from 1.3.1 to 1.4.0 ([#1723](https://github.com/provenance-io/provenance/pull/1723))
+- Bump `github.com/google/uuid` from 1.3.1 to 1.5.0 ([#1723](https://github.com/provenance-io/provenance/pull/1723), [#1781](https://github.com/provenance-io/provenance/pull/1781))
 - Bump `github.com/gorilla/mux` from 1.8.0 to 1.8.1 ([#1734](https://github.com/provenance-io/provenance/pull/1734))
 - Bump `golang.org/x/text` from 0.13.0 to 0.14.0 ([#1735](https://github.com/provenance-io/provenance/pull/1735))
 - Bump `github.com/spf13/cobra` from 1.7.0 to 1.8.0 ([#1733](https://github.com/provenance-io/provenance/pull/1733))
 - Bump `cosmossdk.io/math` from 1.1.2 to 1.2.0 ([#1739](https://github.com/provenance-io/provenance/pull/1739))
 - Update `async-icq` from `github.com/strangelove-ventures/async-icq/v6` to `github.com/cosmos/ibc-apps/modules/async-icq/v6.1.0` ([#1748](https://github.com/provenance-io/provenance/pull/1748))
+- Bump `github.com/spf13/viper` from 1.17.0 to 1.18.0 ([#1777](https://github.com/provenance-io/provenance/pull/1777))
+- Bump `actions/setup-go` from 4 to 5 ([#1776](https://github.com/provenance-io/provenance/pull/1776))
+- Bump `github.com/spf13/cast` from 1.5.1 to 1.6.0 ([#1769](https://github.com/provenance-io/provenance/pull/1769))
 - Bump `actions/setup-java` from 3 to 4 ([#1770](https://github.com/provenance-io/provenance/pull/1770))
 - Bump `github/codeql-action` from 2 to 3 ([#1784](https://github.com/provenance-io/provenance/pull/1784))
 
