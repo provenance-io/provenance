@@ -6,10 +6,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 // StoreLoaderWrapper is a wrapper function that is called before the StoreLoader.
