@@ -36,11 +36,12 @@ func WrapStoreLoader(wrapper StoreLoaderWrapper, storeLoader baseapp.StoreLoader
 func PruningWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
 	return WrapStoreLoader(func(ms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
 		const MaxPruningInterval = 999
+		const SleepSeconds = 30
 		interval := cast.ToUint64(appOpts.Get("pruning-interval"))
 
 		if interval > MaxPruningInterval {
-			logger.Error(fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS", interval, MaxPruningInterval))
-			time.Sleep(30 * time.Second)
+			logger.Error(fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS. NODE WILL BOOT AFTER %d SECONDS", interval, MaxPruningInterval, SleepSeconds))
+			time.Sleep(SleepSeconds * time.Second)
 		}
 		return sl(ms)
 	}, storeLoader)
