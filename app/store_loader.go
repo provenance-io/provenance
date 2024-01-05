@@ -40,7 +40,8 @@ func PruningWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoad
 		interval := cast.ToUint64(appOpts.Get("pruning-interval"))
 
 		if interval > MaxPruningInterval {
-			logger.Error(fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS. NODE WILL BOOT AFTER %d SECONDS", interval, MaxPruningInterval, SleepSeconds))
+			logger.Error(fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS.", interval, MaxPruningInterval))
+			logger.Error(fmt.Sprintf("NODE WILL CONTINUE AFTER %d SECONDS", SleepSeconds))
 			time.Sleep(SleepSeconds * time.Second)
 		}
 		return sl(ms)
