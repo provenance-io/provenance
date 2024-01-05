@@ -1078,7 +1078,7 @@ func New(
 	// --
 
 	// Verify configuration settings
-	storeLoader = PruningWrapper(app.Logger(), appOpts, storeLoader)
+	storeLoader = ValidatorWrapper(app.Logger(), appOpts, storeLoader)
 	app.SetStoreLoader(storeLoader)
 
 	if loadLatest {

@@ -32,18 +32,31 @@ func WrapStoreLoader(wrapper StoreLoaderWrapper, storeLoader baseapp.StoreLoader
 	}
 }
 
-// PruningWrapper creates a new StoreLoader that first validates the pruning settings before calling the provided StoreLoader.
-func PruningWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
+// ValidatorWrapper creates a new StoreLoader that first checks the validator settings before calling the provided StoreLoader.
+func ValidatorWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
 	return WrapStoreLoader(func(ms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
 		const MaxPruningInterval = 999
 		const SleepSeconds = 30
 		interval := cast.ToUint64(appOpts.Get("pruning-interval"))
+		txIndexer := cast.ToStringMap(appOpts.Get("tx_index"))
+		indexer := cast.ToString(txIndexer["indexer"])
+		hasError := false
 
 		if interval > MaxPruningInterval {
-			logger.Error(fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS.", interval, MaxPruningInterval))
+			logger.Error(fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS", interval, MaxPruningInterval))
+			hasError = true
+		}
+
+		if indexer != "" {
+			logger.Error(fmt.Sprintf("indexer \"%s\" IS NOT RECOMMENDED, AND IS RECOMMENDED TO USE %s", indexer, "\"\""))
+			hasError = true
+		}
+
+		if hasError {
 			logger.Error(fmt.Sprintf("NODE WILL CONTINUE AFTER %d SECONDS", SleepSeconds))
 			time.Sleep(SleepSeconds * time.Second)
 		}
+
 		return sl(ms)
 	}, storeLoader)
 }

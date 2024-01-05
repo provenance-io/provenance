@@ -59,14 +59,15 @@ func TestWrapStoreLoader(t *testing.T) {
 	}
 }
 
-func TestPruningWrapper(t *testing.T) {
+func TestValidatorWrapper(t *testing.T) {
 	tests := []struct {
 		name    string
 		pruning string
+		indexer string
 		delta   uint64
 	}{
 		{
-			name:    "recommended pruning should not wait",
+			name:    "recommended pruning and indexer should not wait",
 			pruning: "13",
 			delta:   0,
 		},
@@ -75,13 +76,25 @@ func TestPruningWrapper(t *testing.T) {
 			pruning: "1000",
 			delta:   30,
 		},
+		{
+			name:    "non-recommended indexer should wait",
+			pruning: "13",
+			delta:   30,
+			indexer: "kv",
+		},
+		{
+			name:    "non-recommended indexer and pruning should wait",
+			pruning: "1000",
+			delta:   30,
+			indexer: "kv",
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			logger := log.NewNopLogger()
-			appOpts := MockAppOptions{pruning: tc.pruning}
-			storeLoader := PruningWrapper(logger, appOpts, createMockStoreLoader())
+			appOpts := MockAppOptions{pruning: tc.pruning, indexer: tc.indexer}
+			storeLoader := ValidatorWrapper(logger, appOpts, createMockStoreLoader())
 			db := dbm.MemDB{}
 			ms := rootmulti.NewStore(&db, nil)
 			assert.NotNil(t, ms, "should create a new multistore for testing")
@@ -90,7 +103,7 @@ func TestPruningWrapper(t *testing.T) {
 			err := storeLoader(ms)
 			delta := uint64(time.Now().Sub(start).Seconds())
 			assert.NoError(t, err, "should not throw error")
-			assert.GreaterOrEqual(t, delta, tc.delta, "should wait with non recommended pruning")
+			assert.GreaterOrEqual(t, delta, tc.delta, "should wait correct amount of time")
 		})
 	}
 }
@@ -121,9 +134,19 @@ func createMockStoreWrapper(flag *bool) StoreLoaderWrapper {
 // MockAppOptions is a mocked version of AppOpts that allows the developer to provide the pruning attribute.
 type MockAppOptions struct {
 	pruning string
+	indexer string
 }
 
-// Get returns the pruning attribute no matter what string is provided.
-func (m MockAppOptions) Get(string) interface{} {
-	return m.pruning
+// Get returns the value for the provided option.
+func (m MockAppOptions) Get(opt string) interface{} {
+	switch opt {
+	case "pruning-interval":
+		return m.pruning
+	case "tx_index":
+		return map[string]interface{}{
+			"indexer": m.indexer,
+		}
+	}
+
+	return nil
 }
