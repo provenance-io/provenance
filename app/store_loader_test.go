@@ -41,7 +41,7 @@ func TestWrapStoreLoader(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			storeLoader := WrapStoreLoader(tc.wrapper, tc.storeLoader)
-			db := dbm.GoLevelDB{}
+			db := dbm.MemDB{}
 			ms := rootmulti.NewStore(&db, nil)
 			assert.NotNil(t, ms, "should create a new multistore for testing")
 			flag = false
@@ -82,7 +82,7 @@ func TestPruningWrapper(t *testing.T) {
 			logger := log.NewNopLogger()
 			appOpts := MockAppOptions{pruning: tc.pruning}
 			storeLoader := PruningWrapper(logger, appOpts, createMockStoreLoader())
-			db := dbm.GoLevelDB{}
+			db := dbm.MemDB{}
 			ms := rootmulti.NewStore(&db, nil)
 			assert.NotNil(t, ms, "should create a new multistore for testing")
 
