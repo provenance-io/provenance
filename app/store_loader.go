@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
+// StoreLoaderWrapper is a wrapper function that is called before the StoreLoader.
 type StoreLoaderWrapper func(sdk.CommitMultiStore, baseapp.StoreLoader) error
 
 // WrapStoreLoader creates a new StoreLoader by wrapping an existing one.

@@ -95,12 +95,14 @@ func TestPruningWrapper(t *testing.T) {
 	}
 }
 
+// createMockStoreLoader creates an empty StoreLoader.
 func createMockStoreLoader() baseapp.StoreLoader {
 	return func(ms sdk.CommitMultiStore) error {
 		return nil
 	}
 }
 
+// createMockFlipWrapper creates a wrapper that has logic to flip a bit.
 func createMockFlipWrapper(flag *bool) StoreLoaderWrapper {
 	return func(cms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
 		*flag = !(*flag)
@@ -108,6 +110,7 @@ func createMockFlipWrapper(flag *bool) StoreLoaderWrapper {
 	}
 }
 
+// createMockStoreWrapper creates a wrapper that checks if the StoreLoader is nil and sets the flag accordingly.
 func createMockStoreWrapper(flag *bool) StoreLoaderWrapper {
 	return func(cms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
 		*flag = sl != nil
@@ -115,10 +118,12 @@ func createMockStoreWrapper(flag *bool) StoreLoaderWrapper {
 	}
 }
 
+// MockAppOptions is a mocked version of AppOpts that allows the developer to provide the pruning attribute.
 type MockAppOptions struct {
 	pruning string
 }
 
+// Get returns the pruning attribute no matter what string is provided.
 func (m MockAppOptions) Get(string) interface{} {
 	return m.pruning
 }
