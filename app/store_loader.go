@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -13,12 +14,19 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
+type StoreLoaderWrapper func(sdk.CommitMultiStore, baseapp.StoreLoader) error
+
 // WrapStoreLoader creates a new StoreLoader by wrapping an existing one.
-func WrapStoreLoader(wrapper func(sdk.CommitMultiStore, baseapp.StoreLoader) error, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
+func WrapStoreLoader(wrapper StoreLoaderWrapper, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
 	return func(ms sdk.CommitMultiStore) error {
 		if storeLoader == nil {
 			storeLoader = baseapp.DefaultStoreLoader
 		}
+
+		if wrapper == nil {
+			return errors.New("wrapper must not be nil")
+		}
+
 		return wrapper(ms, storeLoader)
 	}
 }
