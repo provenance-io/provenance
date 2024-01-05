@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/spf13/cast"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
