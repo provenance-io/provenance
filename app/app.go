@@ -1077,11 +1077,8 @@ func New(
 	}
 	// --
 
-	// Verify configuration settings before boot
-	// storeLoader = DBBackendWrapper(app.Logger(), appOpts, storeLoader)
+	// Verify configuration settings
 	storeLoader = PruningWrapper(app.Logger(), appOpts, storeLoader)
-	// storeLoader = IAVLWrapper(storeLoader)
-	// storeLoader = ValidatorWrapper(storeLoader)
 	app.SetStoreLoader(storeLoader)
 
 	if loadLatest {
