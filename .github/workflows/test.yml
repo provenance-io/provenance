@@ -39,7 +39,7 @@ jobs:
           echo "file-prefix=$file_prefix" >> "$GITHUB_OUTPUT"
       - name: Create a file with all the pkgs
         run: go list ./... > pkgs.txt
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt"
           path: ./pkgs.txt
@@ -52,19 +52,19 @@ jobs:
           grep -vF -e 'github.com/provenance-io/provenance/x/marker/simulation' pkgs.txt > pkgs.txt.tmp
           split -d -n l/3 pkgs.txt.tmp pkgs.txt.part.
           printf 'github.com/provenance-io/provenance/x/marker/simulation\n' > pkgs.txt.part.03
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.00"
           path: ./pkgs.txt.part.00
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.01"
           path: ./pkgs.txt.part.01
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.02"
           path: ./pkgs.txt.part.02
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.03"
           path: ./pkgs.txt.part.03
@@ -103,7 +103,7 @@ jobs:
         if: needs.setup-tests.outputs.should-run
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='norace ledger test_ledger_mock'
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}-coverage"
@@ -188,7 +188,7 @@ jobs:
         run: |
           xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock' | tee ${{ matrix.part }}-race-output.txt
           exit "${PIPESTATUS[0]}"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}-race-output"
