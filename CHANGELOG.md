@@ -67,6 +67,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/dvsekhvalnov/jose2go` from 1.5.0 to 1.6.0 ([#1793](https://github.com/provenance-io/provenance/pull/1793))
 - Bump `google.golang.org/protobuf` from 1.31.0 to 1.32.0 ([#1790](https://github.com/provenance-io/provenance/pull/1790))
 - Bump `github/codeql-action` from 2 to 3 ([#1784](https://github.com/provenance-io/provenance/pull/1784))
+- Bump `actions/download-artifact` from 3 to 4 ([#1785](https://github.com/provenance-io/provenance/pull/1785))
+- Bump `actions/upload-artifact` from 3 to 4 ([#1785](https://github.com/provenance-io/provenance/pull/1785))
 - Bump `google.golang.org/grpc` from 1.59.0 to 1.60.1 ([#1794](https://github.com/provenance-io/provenance/pull/1794))
 - Bump `golang.org/x/crypto` from 0.14.0 to 0.17.0 ([#1788](https://github.com/provenance-io/provenance/pull/1788))
 
