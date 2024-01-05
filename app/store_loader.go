@@ -35,7 +35,7 @@ func WrapStoreLoader(wrapper StoreLoaderWrapper, storeLoader baseapp.StoreLoader
 // PruningWrapper creates a new StoreLoader that first validates the pruning settings before calling the provided StoreLoader.
 func PruningWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
 	return WrapStoreLoader(func(ms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
-		const MaxPruningInterval = 13
+		const MaxPruningInterval = 999
 		interval := cast.ToUint64(appOpts.Get("pruning-interval"))
 
 		if interval > MaxPruningInterval {
