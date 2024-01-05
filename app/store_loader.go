@@ -3,9 +3,9 @@ package app
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
+	"github.com/spf13/cast"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -35,13 +35,10 @@ func WrapStoreLoader(wrapper StoreLoaderWrapper, storeLoader baseapp.StoreLoader
 func PruningWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
 	return WrapStoreLoader(func(ms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
 		const MaxPruningInterval = 13
-
-		// No error checking is needed because we leave that up to the sdk.
-		pruningString, _ := appOpts.Get("pruning-interval").(string)
-		interval, _ := strconv.ParseUint(pruningString, 10, 64)
+		interval := cast.ToUint64(appOpts.Get("pruning-interval"))
 
 		if interval > MaxPruningInterval {
-			logger.Error(fmt.Sprintf("pruning-interval %s EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS", pruningString, MaxPruningInterval))
+			logger.Error(fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS", interval, MaxPruningInterval))
 			time.Sleep(30 * time.Second)
 		}
 		return sl(ms)
