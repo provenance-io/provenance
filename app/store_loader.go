@@ -43,6 +43,7 @@ func ValidatorWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLo
 		interval := cast.ToUint64(appOpts.Get("pruning-interval"))
 		txIndexer := cast.ToStringMap(appOpts.Get("tx_index"))
 		indexer := cast.ToString(txIndexer["indexer"])
+		fastNode := cast.ToBool(appOpts.Get("iavl-disable-fastnode"))
 		var errs []string
 
 		if interval > MaxPruningInterval {
@@ -50,7 +51,11 @@ func ValidatorWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLo
 		}
 
 		if indexer != "" {
-			errs = append(errs, fmt.Sprintf("indexer \"%s\" IS NOT RECOMMENDED, AND IS RECOMMENDED TO USE %s", indexer, "\"\""))
+			errs = append(errs, fmt.Sprintf("indexer \"%s\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"%s\"", indexer, ""))
+		}
+
+		if fastNode {
+			errs = append(errs, fmt.Sprintf("iavl-disable-fastnode \"%v\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"%v\"", fastNode, !fastNode))
 		}
 
 		if backend != dbm.GoLevelDBBackend {

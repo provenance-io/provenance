@@ -66,41 +66,62 @@ func TestValidatorWrapper(t *testing.T) {
 		delta   uint64
 	}{
 		{
-			name: "recommended pruning, indexer, and db should not wait",
+			name: "recommended pruning, indexer, db, and fastnode should not wait",
 			appOpts: MockAppOptions{
-				pruning: "13",
-				db:      "goleveldb",
+				pruning:  "13",
+				db:       "goleveldb",
+				fastNode: "false",
+				indexer:  "",
 			},
 			delta: 0,
 		},
 		{
 			name: "non-recommended pruning should wait",
 			appOpts: MockAppOptions{
-				pruning: "1000",
+				pruning:  "1000",
+				db:       "goleveldb",
+				fastNode: "false",
+				indexer:  "",
 			},
 			delta: 30,
 		},
 		{
 			name: "non-recommended indexer should wait",
 			appOpts: MockAppOptions{
-				pruning: "13",
-				indexer: "kv",
+				pruning:  "13",
+				db:       "goleveldb",
+				fastNode: "false",
+				indexer:  "kv",
 			},
 			delta: 30,
 		},
 		{
 			name: "non-recommended db should wait",
 			appOpts: MockAppOptions{
-				pruning: "13",
-				db:      "cleveldb",
+				pruning:  "13",
+				db:       "cleveldb",
+				fastNode: "false",
+				indexer:  "",
+			},
+			delta: 30,
+		},
+		{
+			name: "non-recommended fastnode should wait",
+			appOpts: MockAppOptions{
+				pruning:  "13",
+				db:       "goleveldb",
+				fastNode: "true",
+				indexer:  "",
 			},
 			delta: 30,
 		},
 		{
 			name: "multiple non-recommended should wait",
 			appOpts: MockAppOptions{
-				pruning: "1000",
-				indexer: "kv",
+				pruning:  "1000",
+				db:       "cleveldb",
+				fastNode: "true",
+				indexer:  "kv",
 			},
 			delta: 30,
 		},
@@ -148,9 +169,10 @@ func createMockStoreWrapper(flag *bool) StoreLoaderWrapper {
 
 // MockAppOptions is a mocked version of AppOpts that allows the developer to provide the pruning attribute.
 type MockAppOptions struct {
-	pruning string
-	indexer string
-	db      string
+	pruning  string
+	indexer  string
+	db       string
+	fastNode string
 }
 
 // Get returns the value for the provided option.
@@ -166,6 +188,8 @@ func (m MockAppOptions) Get(opt string) interface{} {
 		return m.db
 	case "db-backend":
 		return m.db
+	case "iavl-disable-fastnode":
+		return m.fastNode
 	}
 
 	return nil
