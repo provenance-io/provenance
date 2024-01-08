@@ -174,6 +174,7 @@ func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 	k.authKeeper.RemoveAccount(ctx, marker)
 
 	k.RemoveNetAssetValues(ctx, marker.GetAddress())
+	k.ClearSendDeny(ctx, marker.GetAddress())
 	store.Delete(types.MarkerStoreKey(marker.GetAddress()))
 }
 
@@ -223,6 +224,14 @@ func (k Keeper) RemoveSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAd
 	store.Delete(types.DenySendKey(markerAddr, senderAddr))
 }
 
+// ClearSendDeny removes all entries of a marker from a send deny list
+func (k Keeper) ClearSendDeny(ctx sdk.Context, markerAddr sdk.AccAddress) {
+	list := k.GetSendDenyList(ctx, markerAddr)
+	for _, sender := range list {
+		k.RemoveSendDeny(ctx, markerAddr, sender)
+	}
+}
+
 // IterateMarkers  iterates all markers with the given handler function.
 func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
@@ -234,6 +243,20 @@ func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop 
 			break
 		}
 	}
+}
+
+// GetSendDenyList gets the list of sender addresses from the marker's deny list
+func (k Keeper) GetSendDenyList(ctx sdk.Context, markerAddr sdk.AccAddress) (list []sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.DenySendMarkerPrefix(markerAddr))
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		_, denied := types.GetDenySendAddresses(iterator.Key())
+		list = append(list, denied)
+	}
+
+	return
 }
 
 // AddSetNetAssetValues adds a set of net asset values to a marker
