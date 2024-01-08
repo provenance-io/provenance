@@ -59,7 +59,7 @@ func TestWrapStoreLoader(t *testing.T) {
 	}
 }
 
-func TestValidatorWrapper(t *testing.T) {
+func TestValidateWrapper(t *testing.T) {
 	tests := []struct {
 		name    string
 		appOpts MockAppOptions
@@ -130,7 +130,7 @@ func TestValidatorWrapper(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			logger := log.NewNopLogger()
-			storeLoader := ValidatorWrapper(logger, tc.appOpts, createMockStoreLoader())
+			storeLoader := ValidateWrapper(logger, tc.appOpts, createMockStoreLoader())
 			db := dbm.MemDB{}
 			ms := rootmulti.NewStore(&db, nil)
 			assert.NotNil(t, ms, "should create a new multistore for testing")

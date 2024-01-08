@@ -8,12 +8,12 @@ import (
 	"github.com/spf13/cast"
 
 	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 // StoreLoaderWrapper is a wrapper function that is called before the StoreLoader.
@@ -34,8 +34,8 @@ func WrapStoreLoader(wrapper StoreLoaderWrapper, storeLoader baseapp.StoreLoader
 	}
 }
 
-// ValidatorWrapper creates a new StoreLoader that first checks the validator settings before calling the provided StoreLoader.
-func ValidatorWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
+// ValidateWrapper creates a new StoreLoader that first checks the config settings before calling the provided StoreLoader.
+func ValidateWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
 	return WrapStoreLoader(func(ms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
 		const MaxPruningInterval = 999
 		const SleepSeconds = 30
