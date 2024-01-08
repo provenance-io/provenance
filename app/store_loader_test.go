@@ -62,39 +62,54 @@ func TestWrapStoreLoader(t *testing.T) {
 func TestValidatorWrapper(t *testing.T) {
 	tests := []struct {
 		name    string
-		pruning string
-		indexer string
+		appOpts MockAppOptions
 		delta   uint64
 	}{
 		{
-			name:    "recommended pruning and indexer should not wait",
-			pruning: "13",
-			delta:   0,
+			name: "recommended pruning, indexer, and db should not wait",
+			appOpts: MockAppOptions{
+				pruning: "13",
+				db:      "goleveldb",
+			},
+			delta: 0,
 		},
 		{
-			name:    "non-recommended pruning should wait",
-			pruning: "1000",
-			delta:   30,
+			name: "non-recommended pruning should wait",
+			appOpts: MockAppOptions{
+				pruning: "1000",
+			},
+			delta: 30,
 		},
 		{
-			name:    "non-recommended indexer should wait",
-			pruning: "13",
-			delta:   30,
-			indexer: "kv",
+			name: "non-recommended indexer should wait",
+			appOpts: MockAppOptions{
+				pruning: "13",
+				indexer: "kv",
+			},
+			delta: 30,
 		},
 		{
-			name:    "non-recommended indexer and pruning should wait",
-			pruning: "1000",
-			delta:   30,
-			indexer: "kv",
+			name: "non-recommended db should wait",
+			appOpts: MockAppOptions{
+				pruning: "13",
+				db:      "cleveldb",
+			},
+			delta: 30,
+		},
+		{
+			name: "multiple non-recommended should wait",
+			appOpts: MockAppOptions{
+				pruning: "1000",
+				indexer: "kv",
+			},
+			delta: 30,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			logger := log.NewNopLogger()
-			appOpts := MockAppOptions{pruning: tc.pruning, indexer: tc.indexer}
-			storeLoader := ValidatorWrapper(logger, appOpts, createMockStoreLoader())
+			storeLoader := ValidatorWrapper(logger, tc.appOpts, createMockStoreLoader())
 			db := dbm.MemDB{}
 			ms := rootmulti.NewStore(&db, nil)
 			assert.NotNil(t, ms, "should create a new multistore for testing")
@@ -135,6 +150,7 @@ func createMockStoreWrapper(flag *bool) StoreLoaderWrapper {
 type MockAppOptions struct {
 	pruning string
 	indexer string
+	db      string
 }
 
 // Get returns the value for the provided option.
@@ -146,6 +162,10 @@ func (m MockAppOptions) Get(opt string) interface{} {
 		return map[string]interface{}{
 			"indexer": m.indexer,
 		}
+	case "app-db-backend":
+		return m.db
+	case "db-backend":
+		return m.db
 	}
 
 	return nil

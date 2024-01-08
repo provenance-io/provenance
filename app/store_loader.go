@@ -10,8 +10,10 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	dbm "github.com/tendermint/tm-db"
 )
 
 // StoreLoaderWrapper is a wrapper function that is called before the StoreLoader.
@@ -37,23 +39,29 @@ func ValidatorWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLo
 	return WrapStoreLoader(func(ms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
 		const MaxPruningInterval = 999
 		const SleepSeconds = 30
+		backend := server.GetAppDBBackend(appOpts)
 		interval := cast.ToUint64(appOpts.Get("pruning-interval"))
 		txIndexer := cast.ToStringMap(appOpts.Get("tx_index"))
 		indexer := cast.ToString(txIndexer["indexer"])
-		hasError := false
+		var errs []string
 
 		if interval > MaxPruningInterval {
-			logger.Error(fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS", interval, MaxPruningInterval))
-			hasError = true
+			errs = append(errs, fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS", interval, MaxPruningInterval))
 		}
 
 		if indexer != "" {
-			logger.Error(fmt.Sprintf("indexer \"%s\" IS NOT RECOMMENDED, AND IS RECOMMENDED TO USE %s", indexer, "\"\""))
-			hasError = true
+			errs = append(errs, fmt.Sprintf("indexer \"%s\" IS NOT RECOMMENDED, AND IS RECOMMENDED TO USE %s", indexer, "\"\""))
 		}
 
-		if hasError {
+		if backend != dbm.GoLevelDBBackend {
+			errs = append(errs, fmt.Sprintf("%s IS NO LONGER SUPPORTED. MIGRATE TO %s", backend, dbm.GoLevelDBBackend))
+		}
+
+		if len(errs) > 0 {
 			logger.Error(fmt.Sprintf("NODE WILL CONTINUE AFTER %d SECONDS", SleepSeconds))
+			for _, err := range errs {
+				logger.Error(err)
+			}
 			time.Sleep(SleepSeconds * time.Second)
 		}
 
