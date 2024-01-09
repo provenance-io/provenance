@@ -1316,6 +1316,90 @@ func TestGetAuthority(t *testing.T) {
 	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MarkerKeeper.GetAuthority())
 }
 
+func TestClearSendDeny(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	type SendDenyPair struct {
+		marker   sdk.AccAddress
+		sendDeny sdk.AccAddress
+	}
+
+	tests := []struct {
+		name   string
+		pairs  []SendDenyPair
+		marker sdk.AccAddress
+	}{
+		{
+			name:   "non existant marker",
+			pairs:  []SendDenyPair{},
+			marker: sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+		},
+		{
+			name: "single entry for marker",
+			pairs: []SendDenyPair{
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+				},
+			},
+			marker: sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+		},
+		{
+			name: "multiple entry for marker",
+			pairs: []SendDenyPair{
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+				},
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+				},
+			},
+			marker: sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+		},
+		{
+			name: "multiple markers with multiple entries",
+			pairs: []SendDenyPair{
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+				},
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+				},
+				{
+					marker:   sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+					sendDeny: sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+				},
+				{
+					marker:   sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+					sendDeny: sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+				},
+			},
+			marker: sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, pair := range tc.pairs {
+				app.MarkerKeeper.AddSendDeny(ctx, pair.marker, pair.sendDeny)
+			}
+
+			app.MarkerKeeper.ClearSendDeny(ctx, tc.marker)
+			list := app.MarkerKeeper.GetSendDenyList(ctx, tc.marker)
+			assert.Empty(t, list, "should remove all entries from send deny list")
+
+			for _, pair := range tc.pairs {
+				app.MarkerKeeper.RemoveSendDeny(ctx, pair.marker, pair.sendDeny)
+			}
+		})
+	}
+}
+
 func TestGetSendDenyList(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
