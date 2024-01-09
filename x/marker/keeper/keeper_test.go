@@ -1311,9 +1311,90 @@ func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 	}
 }
 
-func TestGetAuthority(t *testing.T) {
+func TestAddRemoveSendDeny(t *testing.T) {
 	app := simapp.Setup(t)
-	require.Equal(t, "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn", app.MarkerKeeper.GetAuthority())
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	type SendDenyPair struct {
+		marker   sdk.AccAddress
+		sendDeny sdk.AccAddress
+	}
+
+	tests := []struct {
+		name  string
+		pairs []SendDenyPair
+	}{
+		{
+			name: "new marker and send deny pair",
+			pairs: []SendDenyPair{
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+				},
+			},
+		},
+		{
+			name: "duplicate marker and send deny pair",
+			pairs: []SendDenyPair{
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+				},
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+				},
+			},
+		},
+		{
+			name: "multiple senders for marker",
+			pairs: []SendDenyPair{
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+				},
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+				},
+			},
+		},
+		{
+			name: "multiple markers",
+			pairs: []SendDenyPair{
+				{
+					marker:   sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+					sendDeny: sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+				},
+				{
+					marker:   sdk.AccAddress("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
+					sendDeny: sdk.AccAddress("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, pair := range tc.pairs {
+				app.MarkerKeeper.AddSendDeny(ctx, pair.marker, pair.sendDeny)
+			}
+
+			for _, pair := range tc.pairs {
+				isSendDeny := app.MarkerKeeper.IsSendDeny(ctx, pair.marker, pair.sendDeny)
+				require.True(t, isSendDeny, "should have entry for added pair")
+			}
+
+			for _, pair := range tc.pairs {
+				app.MarkerKeeper.RemoveSendDeny(ctx, pair.marker, pair.sendDeny)
+			}
+
+			for _, pair := range tc.pairs {
+				isSendDeny := app.MarkerKeeper.IsSendDeny(ctx, pair.marker, pair.sendDeny)
+				require.False(t, isSendDeny, "should not have entry for removed pair")
+			}
+		})
+	}
 }
 
 func TestReqAttrBypassAddrs(t *testing.T) {
