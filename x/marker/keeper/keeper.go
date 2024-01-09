@@ -246,9 +246,10 @@ func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop 
 }
 
 // GetSendDenyList gets the list of sender addresses from the marker's deny list
-func (k Keeper) GetSendDenyList(ctx sdk.Context, markerAddr sdk.AccAddress) (list []sdk.AccAddress) {
+func (k Keeper) GetSendDenyList(ctx sdk.Context, markerAddr sdk.AccAddress) []sdk.AccAddress {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DenySendMarkerPrefix(markerAddr))
+	list := []sdk.AccAddress{}
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -256,7 +257,7 @@ func (k Keeper) GetSendDenyList(ctx sdk.Context, markerAddr sdk.AccAddress) (lis
 		list = append(list, denied)
 	}
 
-	return
+	return list
 }
 
 // AddSetNetAssetValues adds a set of net asset values to a marker
