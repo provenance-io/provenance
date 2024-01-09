@@ -64,7 +64,13 @@ func TestAccountMapperGetSet(t *testing.T) {
 	require.True(t, ok)
 	require.True(t, mac.AddressHasAccess(user, types.Access_Admin))
 
+	// add something to the send deny list just to verify removal
+	app.MarkerKeeper.AddSendDeny(ctx, addr, addr)
+
 	app.MarkerKeeper.RemoveMarker(ctx, mac)
+
+	// marker should not exist in send deny list
+	require.Empty(t, app.MarkerKeeper.GetSendDenyList(ctx, addr), "should not have entries in send deny list")
 
 	// getting account after delete should be nil
 	acc = app.AccountKeeper.GetAccount(ctx, addr)
