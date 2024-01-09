@@ -52,6 +52,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Remove the rust upgrade handlers [PR 1774](https://github.com/provenance-io/provenance/pull/1774).
 * Add StoreLoader wrapper to check configuration settings [#1792](https://github.com/provenance-io/provenance/pull/1792).
 
+### Bug Fixes
+
+* Remove deleted marker send deny entries [#1666](https://github.com/provenance-io/provenance/issues/1666).
+
 ### Dependencies
 
 - Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.28.1 ([#1724](https://github.com/provenance-io/provenance/pull/1724), [#1744](https://github.com/provenance-io/provenance/pull/1744), [#1750](https://github.com/provenance-io/provenance/pull/1750))
