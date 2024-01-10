@@ -1,10 +1,8 @@
 package cli
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -25,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v6/modules/core/04-channel/client/utils"
 
@@ -99,111 +96,12 @@ func GetCmdMarkerProposal() *cobra.Command {
 		Use:   "proposal [type] [proposal-file] [deposit]",
 		Args:  cobra.ExactArgs(3),
 		Short: "Submit a marker proposal along with an initial deposit",
-		Long: strings.TrimSpace(`Submit a marker proposal along with an initial deposit.
-Proposal title, description, deposit, and marker proposal params must be set in a provided JSON file.
-
-Where proposal.json contains:
-
-{
-  "title": "Test Proposal",
-  "description": "My awesome proposal",
-  "denom": "denomstring"
-  // additional properties based on type here
-}
-
-
-Valid Proposal Types (and associated parameters):
-
-- AddMarker
-	"amount": 100,
-	"manager": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", 
-	"status": "active", // [proposed, finalized, active]
-	"marker_type": "COIN", // COIN, RESTRICTED
-	"access_list": [ {"address":"pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", "permissions": [1,2,3]} ], 
-	"supply_fixed": true, 
-	"allow_governance_control": true, 
-
-- IncreaseSupply
-	"amount": {"denom":"coin", "amount":"10"}
-
-- DecreaseSupply
-	"amount": {"denom":"coin", "amount":"10"}
-
-- SetAdministrator
-	"access": [{"address":"pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", "permissions": [1,2,3]}]
-
-- RemoveAdministrator
-	"removed_address": ["pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"]
-
-- ChangeStatus
-	"new_status": "MARKER_STATUS_ACTIVE" // [finalized, active, cancelled, destroyed]
-
-- WithdrawEscrow
-	"amount": "100coin"
-	"target_address": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"
-
-- SetDenomMetadata
-	"metadata": {
-		"description": "description text",
-		"base": "basedenom",
-		"display": "displaydenom",
-		"name": "Denom Name",
-		"symbol": "DSYMB",
-		"denom_units": [
-			{"denom":"basedenom","exponent":0,"aliases":[]},
-			{"denom":"otherdenomunit","exponent":9,"aliases":[]}
-		]
-	}
+		Long: strings.TrimSpace(`This command has been deprecated, and is no longer functional.
+Please use 'gov proposal submit-proposal instead.
 `,
 		),
-		Example: fmt.Sprintf(`$ %s tx marker proposal AddMarker "path/to/proposal.json" 1000%s --from mykey`, version.AppName, sdk.DefaultBondDenom),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			contents, err := os.ReadFile(args[1])
-			if err != nil {
-				return err
-			}
-
-			var proposal govtypesv1beta1.Content
-
-			switch args[0] {
-			case types.ProposalTypeIncreaseSupply:
-				proposal = &types.SupplyIncreaseProposal{}
-			case types.ProposalTypeDecreaseSupply:
-				proposal = &types.SupplyDecreaseProposal{}
-			case types.ProposalTypeSetAdministrator:
-				proposal = &types.SetAdministratorProposal{}
-			case types.ProposalTypeRemoveAdministrator:
-				proposal = &types.RemoveAdministratorProposal{}
-			case types.ProposalTypeChangeStatus:
-				proposal = &types.ChangeStatusProposal{}
-			case types.ProposalTypeWithdrawEscrow:
-				proposal = &types.WithdrawEscrowProposal{}
-			case types.ProposalTypeSetDenomMetadata:
-				proposal = &types.SetDenomMetadataProposal{}
-			default:
-				return fmt.Errorf("unknown proposal type %s", args[0])
-			}
-			err = json.Unmarshal(contents, proposal)
-			if err != nil {
-				return err
-			}
-
-			deposit, err := sdk.ParseCoinsNormalized(args[2])
-			if err != nil {
-				return err
-			}
-
-			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
-			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %w", err)
-			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return fmt.Errorf("This command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead.")
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
