@@ -101,7 +101,7 @@ Please use 'gov proposal submit-proposal instead.
 `,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("This command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead.")
+			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
