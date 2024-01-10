@@ -47,6 +47,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Create a default market in `make run`, `localnet`, `devnet` and the `provenanced testnet` command [#1757](https://github.com/provenance-io/provenance/issues/1757).
 
+### Bug Fixes
+
+* Deprecate marker proposal transaction [#1797](https://github.com/provenance-io/provenance/issues/1797).
+
 ### Dependencies
 
 - Bump `github.com/spf13/cobra` from 1.7.0 to 1.8.0 ([#1733](https://github.com/provenance-io/provenance/pull/1733))
