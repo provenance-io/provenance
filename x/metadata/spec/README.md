@@ -1,4 +1,4 @@
-# `metadata`
+# `x/metadata`
 
 ## Overview
 
