@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Update linux release to not build with CLevelDB [PR 1783](https://github.com/provenance-io/provenance/pull/1783).
+* Remove deleted marker send deny entries [#1666](https://github.com/provenance-io/provenance/issues/1666).
 
 ### Dependencies
 
