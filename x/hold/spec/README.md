@@ -1,4 +1,4 @@
-# `Hold`
+# `x/hold`
 
 ## Overview
 
