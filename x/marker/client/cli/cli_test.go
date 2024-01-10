@@ -1240,21 +1240,21 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			"IncreaseSupply",
 			fmt.Sprintf(`{"title":"test mint marker","description":"description","manager":"%s",
 			"amount":{"denom":"propcoin","amount":"10"}}`, s.testnet.Validators[0].Address.String()),
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"burn marker proposal",
 			"DecreaseSupply",
 			fmt.Sprintf(`{"title":"test burn marker","description":"description","manager":"%s",
 			"amount":{"denom":"propcoin","amount":"10"}}`, s.testnet.Validators[0].Address.String()),
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"change status marker proposal",
 			"ChangeStatus",
 			`{"title":"test change marker status","description":"description","denom":"propcoin",
 			"new_status":"MARKER_STATUS_CANCELLED"}`,
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"add admin marker proposal",
@@ -1262,7 +1262,7 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			fmt.Sprintf(`{"title":"test add admin to marker","description":"description",
 			"denom":"propcoin","access":[{"address":"%s", "permissions": [1,2,3,4,5,6]}]}`,
 				s.testnet.Validators[0].Address.String()),
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"remove admin marker proposal",
@@ -1270,7 +1270,7 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			fmt.Sprintf(`{"title":"test remove marker admin","description":"description",
 			"denom":"propcoin","removed_address":["%s"]}`,
 				s.testnet.Validators[0].Address.String()),
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"withdraw escrow marker proposal",
@@ -1278,7 +1278,7 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			fmt.Sprintf(`{"title":"test withdraw marker","description":"description","target_address":"%s",
 			"denom":"%s", "amount":[{"denom":"%s","amount":"1"}]}`, s.testnet.Validators[0].Address.String(),
 				s.cfg.BondDenom, s.cfg.BondDenom),
-			false, &sdk.TxResponse{}, 0x5,
+			true, &sdk.TxResponse{}, 0x5,
 			// The gov module now has its own set of errors.
 			// This /should/ fail due to insufficient funds, and it does, but then the gov module erroneously wraps it again.
 			// Insufficient funds is 0x5 in the main SDK's set of errors.

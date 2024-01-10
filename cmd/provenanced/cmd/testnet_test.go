@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
+	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/provenance-io/provenance/app"
@@ -50,4 +53,10 @@ func Test_TestnetCmd(t *testing.T) {
 
 	bankGenState := banktypes.GetGenesisStateFromAppState(encodingConfig.Marshaler, appState)
 	require.NotEmpty(t, bankGenState.Supply.String())
+
+	var exGenState exchange.GenesisState
+	err = clientCtx.Codec.UnmarshalJSON(appState[exchange.ModuleName], &exGenState)
+	if assert.NoError(t, err, "UnmarshalJSON exchange genesis state") {
+		assert.Len(t, exGenState.Markets, 1, "markets in exchange genesis state")
+	}
 }
