@@ -77,6 +77,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `actions/upload-artifact` from 3 to 4 ([#1785](https://github.com/provenance-io/provenance/pull/1785))
 - Bump `google.golang.org/grpc` from 1.59.0 to 1.60.1 ([#1794](https://github.com/provenance-io/provenance/pull/1794))
 - Bump `golang.org/x/crypto` from 0.14.0 to 0.17.0 ([#1788](https://github.com/provenance-io/provenance/pull/1788))
+- Bump `github.com/CosmWasm/wasmvm` from 1.2.4 to 1.2.6 ([#1799](https://github.com/provenance-io/provenance/issues/1799))
+- Bump `github.com/CosmWasm/wasmd` from v0.30.0-pio-5 to v0.30.0-pio-6 ([#1799](https://github.com/provenance-io/provenance/issues/1799))
 
 ---
 
