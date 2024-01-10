@@ -722,6 +722,67 @@ func TestValidateBuyerFeeRatios(t *testing.T) {
 	}
 }
 
+func TestParseCoin(t *testing.T) {
+	tests := []struct {
+		name    string
+		coinStr string
+		expCoin sdk.Coin
+		expErr  bool
+	}{
+		{
+			name:    "empty string",
+			coinStr: "",
+			expErr:  true,
+		},
+		{
+			name:    "no denom",
+			coinStr: "12345",
+			expErr:  true,
+		},
+		{
+			name:    "no amount",
+			coinStr: "nhash",
+			expErr:  true,
+		},
+		{
+			name:    "decimal amount",
+			coinStr: "123.45banana",
+			expErr:  true,
+		},
+		{
+			name:    "zero amount",
+			coinStr: "0apple",
+			expCoin: sdk.NewInt64Coin("apple", 0),
+		},
+		{
+			name:    "normal",
+			coinStr: "500acorn",
+			expCoin: sdk.NewInt64Coin("acorn", 500),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var expErr string
+			if tc.expErr {
+				expErr = fmt.Sprintf("invalid coin expression: %q", tc.coinStr)
+			}
+
+			var coin sdk.Coin
+			var err error
+			testFunc := func() {
+				coin, err = ParseCoin(tc.coinStr)
+			}
+			require.NotPanics(t, testFunc, "ParseCoin(%q)", tc.coinStr)
+			assertions.AssertErrorValue(t, err, expErr, "ParseCoin(%q) error", tc.coinStr)
+			if !assert.Equal(t, tc.expCoin, coin, "ParseCoin(%q) coin", tc.coinStr) {
+				t.Logf("Expected: %s", tc.expCoin)
+				t.Logf("  Actual: %s", coin)
+			}
+		})
+	}
+}
+
 func TestParseFeeRatio(t *testing.T) {
 	ratioStr := func(ratio *FeeRatio) string {
 		if ratio == nil {

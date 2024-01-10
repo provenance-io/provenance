@@ -25,12 +25,12 @@ Fires when a marker is added using the Add Marker Msg.
 
 | Type                   | Attribute Key         | Attribute Value           |
 | ---------------------- | --------------------- | ------------------------- |
-| EventMarkerAdd         | Denom                 | {denom string}            |
-| EventMarkerAdd         | Address               | {marker  address}         |
-| EventMarkerAdd         | Amount                | {supply amount}           |
-| EventMarkerAdd         | Manager               | {admin account address}   |
-| EventMarkerAdd         | Status                | {current marker status}   |
-| EventMarkerAdd         | MarkerType            | {type of marker}          |
+| EventMarkerAdd         | Denom                 | \{denom string\}            |
+| EventMarkerAdd         | Address               | \{marker  address\}         |
+| EventMarkerAdd         | Amount                | \{supply amount\}           |
+| EventMarkerAdd         | Manager               | \{admin account address\}   |
+| EventMarkerAdd         | Status                | \{current marker status\}   |
+| EventMarkerAdd         | MarkerType            | \{type of marker\}          |
 
 `provenance.marker.v1.EventMarkerAdd`
 
@@ -41,9 +41,9 @@ Fires when administrative access is granted for a marker
 
 | Type                   | Attribute Key         | Attribute Value           |
 | ---------------------- | --------------------- | ------------------------- |
-| EventMarkerAddAccess   | Denom                 | {denom string}            |
-| EventMarkerAddAccess   | Administrator         | {admin account address}   |
-| EventMarkerAddAccess   | Access                | {access grant format}     |
+| EventMarkerAddAccess   | Denom                 | \{denom string\}            |
+| EventMarkerAddAccess   | Administrator         | \{admin account address\}   |
+| EventMarkerAddAccess   | Access                | \{access grant format\}     |
 
 `provenance.marker.v1.EventMarkerAddAccess`
 
@@ -51,8 +51,8 @@ Fires when administrative access is granted for a marker
 
 | Attribute Key         | Attribute Value          |
 | --------------------- | ------------------------ |
-| Address               | {bech32 address string}  |
-| Permissions           | {array of role names}    |
+| Address               | \{bech32 address string\}  |
+| Permissions           | \{array of role names\}    |
 
 `provenance.marker.v1.EventMarkerAccess`
 
@@ -63,9 +63,9 @@ Fires when all access grants are removed for a given address.
 
 | Type                     | Attribute Key         | Attribute Value           |
 | ------------------------ | --------------------- | ------------------------- |
-| EventMarkerDeleteAccess  | Denom                 | {denom string}            |
-| EventMarkerDeleteAccess  | Administrator         | {admin account address}   |
-| EventMarkerDeleteAccess  | RemoveAddress         | {address removed}         |
+| EventMarkerDeleteAccess  | Denom                 | \{denom string\}            |
+| EventMarkerDeleteAccess  | Administrator         | \{admin account address\}   |
+| EventMarkerDeleteAccess  | RemoveAddress         | \{address removed\}         |
 
 `provenance.marker.v1.EventMarkerDeleteAccess`
 
@@ -76,8 +76,8 @@ Fires when a marker is finalized.
 
 | Type                   | Attribute Key         | Attribute Value           |
 | ---------------------- | --------------------- | ------------------------- |
-| EventMarkerFinalize    | Denom                 | {denom string}            |
-| EventMarkerFinalize    | Administrator         | {admin account address}   |
+| EventMarkerFinalize    | Denom                 | \{denom string\}            |
+| EventMarkerFinalize    | Administrator         | \{admin account address\}   |
 
 `provenance.marker.v1.EventMarkerFinalize`
 
@@ -88,8 +88,8 @@ Fires when a marker is activated.
 
 | Type                      | Attribute Key         | Attribute Value           |
 | ------------------------- | --------------------- | ------------------------- |
-| EventMarkerActivate       | Denom                 | {denom string}            |
-| EventMarkerActivate       | Administrator         | {admin account address}   |
+| EventMarkerActivate       | Denom                 | \{denom string\}            |
+| EventMarkerActivate       | Administrator         | \{admin account address\}   |
 
 `provenance.marker.v1.EventMarkerActivate`
 
@@ -100,8 +100,8 @@ Fired when a marker is cancelled successfully.
 
 | Type                   | Attribute Key         | Attribute Value           |
 | ---------------------- | --------------------- | ------------------------- |
-| EventMarkerCancel      | Denom                 | {denom string}            |
-| EventMarkerCancel      | Administrator         | {admin account address}   |
+| EventMarkerCancel      | Denom                 | \{denom string\}            |
+| EventMarkerCancel      | Administrator         | \{admin account address\}   |
 
 `provenance.marker.v1.EventMarkerCancel`
 
@@ -112,8 +112,8 @@ Fires when a marker is marked as destroyed and ready for removal.
 
 | Type                   | Attribute Key         | Attribute Value           |
 | ---------------------- | --------------------- | ------------------------- |
-| EventMarkerDelete      | Denom                 | {denom string}            |
-| EventMarkerDelete      | Administrator         | {admin account address}   |
+| EventMarkerDelete      | Denom                 | \{denom string\}            |
+| EventMarkerDelete      | Administrator         | \{admin account address\}   |
 
 `provenance.marker.v1.EventMarkerDelete`
 
@@ -124,9 +124,9 @@ Fires when coins are minted for a marker.
 
 | Type               | Attribute Key         | Attribute Value           |
 | ------------------ | --------------------- | ------------------------- |
-| EventMarkerMint    | Denom                 | {denom string}            |
-| EventMarkerMint    | Amount                | {supply amount}           |
-| EventMarkerMint    | Administrator         | {admin account address}   |
+| EventMarkerMint    | Denom                 | \{denom string\}            |
+| EventMarkerMint    | Amount                | \{supply amount\}           |
+| EventMarkerMint    | Administrator         | \{admin account address\}   |
 
 `provenance.marker.v1.EventMarkerMint`
 
@@ -137,9 +137,9 @@ Fires when coins are burned from a marker account.
 
 | Type               | Attribute Key         | Attribute Value           |
 | ------------------ | --------------------- | ------------------------- |
-| EventMarkerBurn    | Denom                 | {denom string}            |
-| EventMarkerBurn    | Amount                | {supply amount}           |
-| EventMarkerBurn    | Administrator         | {admin account address}   |
+| EventMarkerBurn    | Denom                 | \{denom string\}            |
+| EventMarkerBurn    | Amount                | \{supply amount\}           |
+| EventMarkerBurn    | Administrator         | \{admin account address\}   |
 
 `provenance.marker.v1.EventMarkerBurn`
 
@@ -150,10 +150,10 @@ Fires when coin is removed from a marker account and transferred to another.
 
 | Type                 | Attribute Key         | Attribute Value             |
 | -------------------- | --------------------- | --------------------------- |
-| EventMarkerWithdraw  | Denom                 | {denom string}              |
-| EventMarkerWithdraw  | Amount                | {supply amount}             |
-| EventMarkerWithdraw  | Administrator         | {admin account address}     |
-| EventMarkerWithdraw  | ToAddress             | {recipient account address} |
+| EventMarkerWithdraw  | Denom                 | \{denom string\}              |
+| EventMarkerWithdraw  | Amount                | \{supply amount\}             |
+| EventMarkerWithdraw  | Administrator         | \{admin account address\}     |
+| EventMarkerWithdraw  | ToAddress             | \{recipient account address\} |
 
 `provenance.marker.v1.EventMarkerWithdraw`
 
@@ -164,11 +164,11 @@ Fires when a facilitated transfer is performed of the marker's coin between acco
 
 | Type                   | Attribute Key         | Attribute Value             |
 | ---------------------- | --------------------- | --------------------------- |
-| EventMarkerTransfer   | Denom                 | {denom string}               |
-| EventMarkerTransfer   | Amount                | {supply amount}              |
-| EventMarkerTransfer   | Administrator         | {admin account address}      |
-| EventMarkerTransfer   | FromAddress           | {source account address}     |
-| EventMarkerTransfer   | ToAddress             | {recipient account address}  |
+| EventMarkerTransfer   | Denom                 | \{denom string\}               |
+| EventMarkerTransfer   | Amount                | \{supply amount\}              |
+| EventMarkerTransfer   | Administrator         | \{admin account address\}      |
+| EventMarkerTransfer   | FromAddress           | \{source account address\}     |
+| EventMarkerTransfer   | ToAddress             | \{recipient account address\}  |
 
 `provenance.marker.v1.EventMarkerTransfer`
 
@@ -178,13 +178,13 @@ Fires when the denom metadata is set for a marker
 
 | Type                          | Attribute Key         | Attribute Value             |
 | ----------------------------- | --------------------- | --------------------------- |
-| EventMarkerSetDenomMetadata   | MetadataBase          | {marker's denom string}     |
-| EventMarkerSetDenomMetadata   | MetadataDescription   | {description string}        |
-| EventMarkerSetDenomMetadata   | MetadataDisplay       | {denom string}              |
-| EventMarkerSetDenomMetadata   | MetadataName          | {name string}               |
-| EventMarkerSetDenomMetadata   | MetadataSymbol        | {symbol string}             |
-| EventMarkerSetDenomMetadata   | MetadataDenomUnits    | {array of  denom units}     |
-| EventMarkerSetDenomMetadata   | Administrator         | {admin account address}     |
+| EventMarkerSetDenomMetadata   | MetadataBase          | \{marker's denom string\}     |
+| EventMarkerSetDenomMetadata   | MetadataDescription   | \{description string\}        |
+| EventMarkerSetDenomMetadata   | MetadataDisplay       | \{denom string\}              |
+| EventMarkerSetDenomMetadata   | MetadataName          | \{name string\}               |
+| EventMarkerSetDenomMetadata   | MetadataSymbol        | \{symbol string\}             |
+| EventMarkerSetDenomMetadata   | MetadataDenomUnits    | \{array of  denom units\}     |
+| EventMarkerSetDenomMetadata   | Administrator         | \{admin account address\}     |
 
 `provenance.marker.v1.EventMarkerSetDenomMetadata`
 
@@ -195,22 +195,22 @@ aliases for `uhash` might be `microhash` or `µhash`
 
 | Attribute Key         | Attribute Value          |
 | --------------------- | ------------------------ |
-| Denom                 | {denom string}           |
-| Exponent              | {uint}                   |
-| Aliases               | {array of denom strings} |
+| Denom                 | \{denom string\}           |
+| Exponent              | \{uint\}                   |
+| Aliases               | \{array of denom strings\} |
 
 `provenance.marker.v1.EventDenomUnit`
 
 ### Set Net Asset Value
 
-Fires when a new NetAssetValue is add or updated for a marker.  
+Fires when a new NetAssetValue is add or updated for a marker.
 
 | Type                    | Attribute Key         | Attribute Value                                   |
 | ------------------------| --------------------- | ------------------------------------------------- |
-| EventSetNetAssetValue   | Denom                 | {marker's denom string}                           |
-| EventSetNetAssetValue   | Price                 | {token amount the marker is valued at for volume} |
-| EventSetNetAssetValue   | Volume                | {total volume/shares associated with price}       |
-| EventSetNetAssetValue   | Source                | {source address of caller}                        | 
+| EventSetNetAssetValue   | Denom                 | \{marker's denom string\}                           |
+| EventSetNetAssetValue   | Price                 | \{token amount the marker is valued at for volume\} |
+| EventSetNetAssetValue   | Volume                | \{total volume/shares associated with price\}       |
+| EventSetNetAssetValue   | Source                | \{source address of caller\}                        |
 
 
 `provenance.marker.v1.EventSetNetAssetValue`

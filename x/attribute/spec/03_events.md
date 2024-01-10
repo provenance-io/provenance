@@ -18,12 +18,12 @@ Fires when an attribute is successfully added.
 
 | Type              | Attribute Key | Attribute Value        |
 |-------------------|---------------|------------------------|
-| EventAttributeAdd | Name          | {name string}          |
-| EventAttributeAdd | Value         | {attribute value}      |
-| EventAttributeAdd | Type          | {attribute value type} |
-| EventAttributeAdd | Account       | {account address}      |
-| EventAttributeAdd | Owner         | {owner address}        |
-| EventAttributeAdd | Expiration    | {expiration date/time} |
+| EventAttributeAdd | Name          | \{name string\}          |
+| EventAttributeAdd | Value         | \{attribute value\}      |
+| EventAttributeAdd | Type          | \{attribute value type\} |
+| EventAttributeAdd | Account       | \{account address\}      |
+| EventAttributeAdd | Owner         | \{owner address\}        |
+| EventAttributeAdd | Expiration    | \{expiration date/time\} |
 
 `provenance.attribute.v1.EventAttributeAdd`
 
@@ -34,13 +34,13 @@ Fires when an existing attribute is successfully updated.
 
 | Type                 | Attribute Key | Attribute Value            |
 |----------------------|---------------|----------------------------|
-| EventAttributeUpdate | Name          | {name string}              |
-| EventAttributeUpdate | OriginalValue | {attribute value}          |
-| EventAttributeUpdate | OriginalType  | {attribute value type}     |
-| EventAttributeUpdate | UpdateValue   | {new attribute value}      |
-| EventAttributeUpdate | UpdateType    | {new attribute value type} |
-| EventAttributeUpdate | Account       | {account address}          |
-| EventAttributeUpdate | Owner         | {owner address}            |
+| EventAttributeUpdate | Name          | \{name string\}              |
+| EventAttributeUpdate | OriginalValue | \{attribute value\}          |
+| EventAttributeUpdate | OriginalType  | \{attribute value type\}     |
+| EventAttributeUpdate | UpdateValue   | \{new attribute value\}      |
+| EventAttributeUpdate | UpdateType    | \{new attribute value type\} |
+| EventAttributeUpdate | Account       | \{account address\}          |
+| EventAttributeUpdate | Owner         | \{owner address\}            |
 
 `provenance.attribute.v1.EventAttributeUpdate`
 
@@ -51,12 +51,12 @@ Fires when an existing attribute's expiration is successfully updated.
 
 | Type                           | Attribute Key      | Attribute Value            |
 |--------------------------------|--------------------|----------------------------|
-| EventAttributeExpirationUpdate | Name               | {name string}              |
-| EventAttributeExpirationUpdate | Value              | {attribute value}          |
-| EventAttributeExpirationUpdate | Account            | {account address}          |
-| EventAttributeExpirationUpdate | Owner              | {owner address}            |
-| EventAttributeExpirationUpdate | OriginalExpiration | {old expiration date/time} |
-| EventAttributeExpirationUpdate | UpdatedExpiration  | {new expiration date/time} |
+| EventAttributeExpirationUpdate | Name               | \{name string\}              |
+| EventAttributeExpirationUpdate | Value              | \{attribute value\}          |
+| EventAttributeExpirationUpdate | Account            | \{account address\}          |
+| EventAttributeExpirationUpdate | Owner              | \{owner address\}            |
+| EventAttributeExpirationUpdate | OriginalExpiration | \{old expiration date/time\} |
+| EventAttributeExpirationUpdate | UpdatedExpiration  | \{new expiration date/time\} |
 
 
 ---
@@ -66,9 +66,9 @@ Fires when an existing attribute is deleted.
 
 | Type                 | Attribute Key | Attribute Value   |
 |----------------------|---------------|-------------------|
-| EventAttributeDelete | Name          | {name string}     |
-| EventAttributeDelete | Account       | {account address} |
-| EventAttributeDelete | Owner         | {owner address}   |
+| EventAttributeDelete | Name          | \{name string\}     |
+| EventAttributeDelete | Account       | \{account address\} |
+| EventAttributeDelete | Owner         | \{owner address\}   |
 
 `provenance.attribute.v1.EventAttributeDelete`
 
@@ -79,11 +79,11 @@ Fires when an existing attribute is deleted distinctly.
 
 | Type                         | Attribute Key | Attribute Value        |
 |------------------------------|---------------|------------------------|
-| EventAttributeDistinctDelete | Name          | {name string}          |
-| EventAttributeDistinctDelete | Value         | {attribute value}      |
-| EventAttributeDistinctDelete | AttributeType | {attribute value type} |
-| EventAttributeDistinctDelete | Owner         | {owner address}        |
-| EventAttributeDistinctDelete | Account       | {account address}      |
+| EventAttributeDistinctDelete | Name          | \{name string\}          |
+| EventAttributeDistinctDelete | Value         | \{attribute value\}      |
+| EventAttributeDistinctDelete | AttributeType | \{attribute value type\} |
+| EventAttributeDistinctDelete | Owner         | \{owner address\}        |
+| EventAttributeDistinctDelete | Account       | \{account address\}      |
 
 `provenance.attribute.v1.EventAttributeDistinctDelete`
 
@@ -94,12 +94,12 @@ Fires when an attribute's expriration date/time has been reached and the attribu
 
 | Type                  | Attribute Key | Attribute Value        |
 |-----------------------|---------------|------------------------|
-| EventAttributeExpired | Name          | {name string}          |
-| EventAttributeExpired | Value         | {attribute value}      |
-| EventAttributeExpired | AttributeType | {attribute value type} |
-| EventAttributeExpired | Account       | {account address}      |
-| EventAttributeExpired | Owner         | {owner address}        |
-| EventAttributeExpired | Expiration    | {expiration date/time} |
+| EventAttributeExpired | Name          | \{name string\}          |
+| EventAttributeExpired | Value         | \{attribute value\}      |
+| EventAttributeExpired | AttributeType | \{attribute value type\} |
+| EventAttributeExpired | Account       | \{account address\}      |
+| EventAttributeExpired | Owner         | \{owner address\}        |
+| EventAttributeExpired | Expiration    | \{expiration date/time\} |
 
 ---
 ## Account Data Updated
@@ -108,4 +108,4 @@ Fires when account data is updated for an account.
 
 | Type                    | Attribute Key | Attribute Value        |
 |-------------------------|---------------|------------------------|
-| EventAccountDataUpdated | Account       | {account address}      |
+| EventAccountDataUpdated | Account       | \{account address\}      |

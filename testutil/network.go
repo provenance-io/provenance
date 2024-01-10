@@ -62,6 +62,10 @@ func DefaultTestNetworkConfig() testnet.Config {
 }
 
 func CleanUp(n *testnet.Network, t *testing.T) {
+	if n == nil {
+		t.Log("nothing to tear down")
+		return
+	}
 	t.Log("teardown waiting for next block")
 	//nolint:errcheck // The test shouldn't fail because cleanup was a problem. So ignoring any error from this.
 	n.WaitForNextBlock()
