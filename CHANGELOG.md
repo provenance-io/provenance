@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * Remove deleted marker send deny entries [#1666](https://github.com/provenance-io/provenance/issues/1666).
+* Deprecate marker proposal transaction [#1797](https://github.com/provenance-io/provenance/issues/1797).
 
 ### Dependencies
 
