@@ -29,7 +29,7 @@ To migrate to `goleveldb` from `cleveldb`:
 In some cases, that process might not work and your node will fail to restart. If that happens, or if you are using `badgerdb`:
 
 1. Stop your node.
-2. If the above process failed, restore your `data` and `config` directories from your backups.
+2. If the above process failed, restore your `data` and `config` directories from your backups. Otherwise, back-up your `data` and `config` directories.
 3. Use the [dbmigrate](https://github.com/provenance-io/provenance/releases/download/v1.17.0/dbmigrate-linux-amd64-v1.17.0.zip) utility to migrate your node's database to `goleveldb`. This can take 3 hours or more to complete and should not be interrupted.
 4. Restart your node.
 
