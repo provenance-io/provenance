@@ -50,8 +50,8 @@ func ValidateWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoa
 			errs = append(errs, fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS", interval, MaxPruningInterval))
 		}
 
-		if indexer != "" {
-			errs = append(errs, fmt.Sprintf("indexer \"%s\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"%s\"", indexer, ""))
+		if indexer != "" && indexer != "null" {
+			errs = append(errs, fmt.Sprintf("indexer \"%s\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"%s\"", indexer, "null"))
 		}
 
 		if fastNode {
