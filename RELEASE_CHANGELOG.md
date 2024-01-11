@@ -12,34 +12,36 @@ The Provenance Blockchain network does not permit the permission-less upload of 
 
 ### New Configuration Recommendations
 
-Provenance has a few new recommendations reguarding node configuration.
+Provenance has a few new recommendations regarding node configuration.
 
 #### Goleveldb
 
-Provenance now recommends that nodes use `goleveldb` as their db backend. Support for `cleveldb` and `badgerdb` will be removed in a future upgrade; it would be better to do this migration outside of an upgrade. Nodes currently using those database backends should migrate to `goleveldb` at your leisure prior to that upgrade. If your node is using `cleveldb`, a warning will be issued when your node starts.
+Provenance now recommends that nodes use `goleveldb` as their db backend. Support for `cleveldb` and `badgerdb` will be removed in a future upgrade. It is better to do this migration outside of an upgrade. Nodes currently using those database backends should migrate to `goleveldb` at your leisure prior to that upgrade. If your node is using `cleveldb`, a warning will be issued when your node starts.
 
 To migrate to `goleveldb` from `cleveldb`:
 
 1. Stop your node.
-2. Back-up your `data` and `config` directories.
+2. Back up your `data` and `config` directories.
 3. Update your `config.toml` to have `db_backend = "goleveldb"`.
 4. Update your `app.toml` to have either `app-db-backend = ""` or `app-db-backend = "goleveldb"`.
 5. Restart your node.
 
-In some cases, that process might not work and your node will fail to restart. If that happens, or if you are using `badgerdb`:
+In some cases, that process might not work and your node will fail to restart. If that happens, restore your `data` and `config` directories and follow the same steps below.
+
+To migrate to `goleveldb` from `badgerdb` (or if the above steps failed):
 
 1. Stop your node.
-2. If the above process failed, restore your `data` and `config` directories from your backups. Otherwise, back-up your `data` and `config` directories.
+2. Back up your `data` and `config` directories.
 3. Use the [dbmigrate](https://github.com/provenance-io/provenance/releases/download/v1.17.0/dbmigrate-linux-amd64-v1.17.0.zip) utility to migrate your node's database to `goleveldb`. This can take 3 hours or more to complete and should not be interrupted.
 4. Restart your node.
 
-#### IAVL-Fastsync
+#### IAVL-Fastnode
 
-Provenance also recommends that nodes enable iavl-fastsync. In a future upgrade, nodes will be required to use iavl-fastnode, and it would be better to do this migration outside of an upgrade. If your node's `app.toml` has `iavl-disable-fastnode = true`, you should migrate your store at your leisure prior to the next upgrade. If your node is has iavl-fastsync disabled, a warning will be issued when your node starts.
+Provenance also recommends that nodes enable iavl-fastnode. In a future upgrade, nodes will be required to use iavl-fastnode, and it is better to do this migration outside of an upgrade. If your node's `app.toml` has `iavl-disable-fastnode = true`, you should migrate your store at your leisure prior to the next upgrade. If your node has iavl-fastnode disabled, a warning will be issued when your node starts.
 
 It might take 3 hours or more for the migration to finish. Do not stop or restart your node during this process. Your node will be unavailable during this process.
 
-To migrate to iavl-fastsync, follow these steps:
+To migrate to iavl-fastnode, follow these steps:
 
 1. Stop your node.
 2. Back up your data directory.
