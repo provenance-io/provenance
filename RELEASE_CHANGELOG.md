@@ -23,7 +23,7 @@ To migrate to `goleveldb` from `cleveldb`:
 1. Stop your node.
 2. Back-up your `data` and `config` directories.
 3. Update your `config.toml` to have `db_backend = "goleveldb"`.
-4. Update your `app.toml` to have either `app-db-backedn = ""` or `app-db-backend = "goleveldb"`.
+4. Update your `app.toml` to have either `app-db-backend = ""` or `app-db-backend = "goleveldb"`.
 5. Restart your node.
 
 In some cases, that process might not work and your node will fail to restart. If that happens, or if you are using `badgerdb`:
