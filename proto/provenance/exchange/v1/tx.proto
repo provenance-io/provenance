@@ -369,6 +369,18 @@ message MsgGovManageFeesRequest {
   repeated FeeRatio add_fee_buyer_settlement_ratios = 13 [(gogoproto.nullable) = false];
   // remove_fee_buyer_settlement_ratios are the buyer settlement fee ratios to remove.
   repeated FeeRatio remove_fee_buyer_settlement_ratios = 14 [(gogoproto.nullable) = false];
+
+  // add_fee_create_commitment_flat are the create-commitment flat fee options to add.
+  repeated cosmos.base.v1beta1.Coin add_fee_create_commitment_flat = 15 [(gogoproto.nullable) = false];
+  // remove_fee_create_commitment_flat are the create-commitment flat fee options to remove.
+  repeated cosmos.base.v1beta1.Coin remove_fee_create_commitment_flat = 16 [(gogoproto.nullable) = false];
+
+  // set_fee_commitment_settlement_bips is the new fee_commitment_settlement_bips for the market.
+  // It is ignored if it is zero. To set it to zero set unset_fee_commitment_settlement_bips to true.
+  uint32 set_fee_commitment_settlement_bips = 17;
+  // unset_fee_commitment_settlement_bips, if true, sets the fee_commitment_settlement_bips to zero.
+  // If false, it is ignored.
+  bool unset_fee_commitment_settlement_bips = 18;
 }
 
 // MsgGovManageFeesResponse is a response message for the GovManageFees endpoint.

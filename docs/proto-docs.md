@@ -1722,6 +1722,11 @@ An entry that starts with "*." will match any attributes that end with the rest 
 | `req_attr_create_bid` | [string](#string) | repeated | req_attr_create_ask is a list of attributes required on an account for it to be allowed to create a bid order. An account must have all of these attributes in order to create a bid order in this market. If the list is empty, any account can create bid orders in this market.
 
 An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x". |
+| `allow_commitments` | [bool](#bool) |  | allow_commitments is whether the market allows users to commit funds to it. |
+| `fee_create_commitment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create_commitment_flat is the flat fee charged for creating a commitment. Each coin entry is a separate option. When a commitment is created, one of these must be paid. If empty, no fee is required to create a commitment. |
+| `commitment_settlement_bips` | [uint32](#uint32) |  | commitment_settlement_bips is the fraction of a commitment settlement that will be paid to the exchange. It is represented in basis points (1/100th of 1%, e.g. 0.0001) and is limited to 0 to 10,000 inclusive. During a commitment settlement, the inputs are summed and NAVs are used to convert that total to USD, then to nhash. That is then multiplied by this value to get the amount of nhash that will be transferred out of the market's account into the exchange for that settlement.
+
+Summing the inputs effectively doubles the value of the settlement from what what is usually thought of as the value of a trade. That should be taken into account when setting this value. E.g. if two accounts are trading 10apples for 100grapes, the inputs total will be 10apples,100grapes (which is then converted to USD then nhash before applying this ratio). But usually the value of that trade would be viewed as either just 10apples or just 100grapes. |
 
 
 
@@ -2168,6 +2173,10 @@ MsgGovManageFeesRequest is a request message for the GovManageFees endpoint.
 | `remove_fee_buyer_settlement_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_buyer_settlement_flat are the buyer settlement flat fee options to remove. |
 | `add_fee_buyer_settlement_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | add_fee_buyer_settlement_ratios are the buyer settlement fee ratios to add. |
 | `remove_fee_buyer_settlement_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | remove_fee_buyer_settlement_ratios are the buyer settlement fee ratios to remove. |
+| `add_fee_create_commitment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_commitment_flat are the create-commitment flat fee options to add. |
+| `remove_fee_create_commitment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_commitment_flat are the create-commitment flat fee options to remove. |
+| `set_fee_commitment_settlement_bips` | [uint32](#uint32) |  | set_fee_commitment_settlement_bips is the new fee_commitment_settlement_bips for the market. It is ignored if it is zero. To set it to zero set unset_fee_commitment_settlement_bips to true. |
+| `unset_fee_commitment_settlement_bips` | [bool](#bool) |  | unset_fee_commitment_settlement_bips, if true, sets the fee_commitment_settlement_bips to zero. If false, it is ignored. |
 
 
 
