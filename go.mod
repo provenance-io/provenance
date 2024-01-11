@@ -5,8 +5,8 @@ go 1.20
 require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/math v1.2.0
-	github.com/CosmWasm/wasmd v0.29.0
-	github.com/CosmWasm/wasmvm v1.2.4
+	github.com/CosmWasm/wasmd v0.30.0
+	github.com/CosmWasm/wasmvm v1.2.6
 	github.com/armon/go-metrics v0.4.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.12
@@ -202,4 +202,4 @@ replace github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 // TODO: This is also required for https://github.com/provenance-io/provenance/issues/1414
-replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-6
