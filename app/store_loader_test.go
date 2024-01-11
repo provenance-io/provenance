@@ -4,12 +4,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func TestWrapStoreLoader(t *testing.T) {
@@ -67,6 +69,16 @@ func TestValidateWrapper(t *testing.T) {
 	}{
 		{
 			name: "recommended pruning, indexer, db, and fastnode should not wait",
+			appOpts: MockAppOptions{
+				pruning:  "13",
+				db:       "goleveldb",
+				fastNode: "false",
+				indexer:  "null",
+			},
+			delta: 0,
+		},
+		{
+			name: "recommended pruning, db, and fastnode and empty indexer should not wait",
 			appOpts: MockAppOptions{
 				pruning:  "13",
 				db:       "goleveldb",

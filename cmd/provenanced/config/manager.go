@@ -90,6 +90,7 @@ func ExtractAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, FieldValu
 func DefaultAppConfig() *serverconfig.Config {
 	rv := serverconfig.DefaultConfig()
 	rv.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
+	rv.IAVLDisableFastNode = false
 	return rv
 }
 
@@ -125,6 +126,7 @@ func ExtractTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap,
 func DefaultTmConfig() *tmconfig.Config {
 	rv := tmconfig.DefaultConfig()
 	rv.Consensus.TimeoutCommit = DefaultConsensusTimeoutCommit
+	rv.TxIndex.Indexer = "null"
 	return rv
 }
 
