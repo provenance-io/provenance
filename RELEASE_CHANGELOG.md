@@ -69,6 +69,7 @@ Lastly, Provenance recommends that validators do not enable tx indexing. This sh
 * Add StoreLoader wrapper to check configuration settings [#1792](https://github.com/provenance-io/provenance/pull/1792).
 * Create a default market in `make run`, `localnet`, `devnet` and the `provenanced testnet` command [#1757](https://github.com/provenance-io/provenance/issues/1757).
 * Updated documentation for each module to work with docusaurus [PR 1763](https://github.com/provenance-io/provenance/pull/1763)
+* Set the default `iavl-disable-fastnode` value to `false` and the default `tx_index.indexer` value to `"null"` [#1807](https://github.com/provenance-io/provenance/pull/1807).
 
 ### Bug Fixes
 
