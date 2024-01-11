@@ -2,7 +2,13 @@
 
 Users should upgrade to v1.17.1 at their earliest convenience.
 
-Release v1.17.1 addresses [CWA-2023-004](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-004.md) and also adds some command-line functionality.
+Release v1.17.1 addresses [CWA-2023-004](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-004.md) and also adds some command-line functionality and configuration recommendations.
+
+### [~~High~~ Low] Security Advisory CWA-2023-004
+
+Provenance 1.17.1 contains a dependency update for the CosmWasm VM to resolve a [security issue](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-004.md) which could result in non-determinism and a halt of the network.  This advisory has been reclassified from **HIGH** to **LOW** risk due to the configuration of the Provenance Blockchain Network.
+
+The Provenance Blockchain network does not permit the permission-less upload of smart contract code, resulting in a Low risk exposure for this advisory. The Provenance Blockchain Foundation advises against accepting any further smart contract code proposals until after the deployment of the 1.17.1 patch. This is to provide the network with an opportunity to mitigate potential risks effectively. Updating to the 1.17.1 release is recommended at your earliest convenience.
 
 ### New Configuration Recommendations
 
