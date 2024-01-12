@@ -41,6 +41,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/internal"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
@@ -130,6 +131,15 @@ func NewInfoLogger() log.Logger {
 	lw := zerolog.ConsoleWriter{Out: os.Stdout}
 	logger := zerolog.New(lw).Level(zerolog.InfoLevel).With().Timestamp().Logger()
 	return server.ZeroLogWrapper{Logger: logger}
+}
+
+// BufferedInfoLoggerMaker returns a logger maker function for a NewBufferedInfoLogger.
+// Error log lines will start with "ERR ".
+// Info log lines will start with "INF ".
+func BufferedInfoLoggerMaker(buffer *bytes.Buffer) LoggerMakerFn {
+	return func() log.Logger {
+		return internal.NewBufferedInfoLogger(buffer)
+	}
 }
 
 // NewAppWithCustomOptions initializes a new SimApp with custom options.

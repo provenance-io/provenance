@@ -8,13 +8,10 @@ import (
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -58,20 +55,8 @@ func (s *TestSuite) SetupTest() {
 		s.addrLookupMap = make(map[string]string)
 	}
 
-	bufferedLoggerMaker := func() log.Logger {
-		lw := zerolog.ConsoleWriter{
-			Out:          &s.logBuffer,
-			NoColor:      true,
-			PartsExclude: []string{"time"}, // Without this, each line starts with "<nil> "
-		}
-		// Error log lines will start with "ERR ".
-		// Info log lines will start with "INF ".
-		// Debug log lines are omitted, but would start with "DBG ".
-		logger := zerolog.New(lw).Level(zerolog.InfoLevel)
-		return server.ZeroLogWrapper{Logger: logger}
-	}
 	// swap in the buffered logger maker so it's used in app.Setup, but then put it back (since that's a global thing).
-	defer app.SetLoggerMaker(app.SetLoggerMaker(bufferedLoggerMaker))
+	defer app.SetLoggerMaker(app.SetLoggerMaker(app.BufferedInfoLoggerMaker(&s.logBuffer)))
 
 	s.app = app.Setup(s.T())
 	s.logBuffer.Reset()
