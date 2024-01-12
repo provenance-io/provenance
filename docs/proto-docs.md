@@ -1755,6 +1755,9 @@ An entry that starts with "*." will match any attributes that end with the rest 
 | `commitment_settlement_bips` | [uint32](#uint32) |  | commitment_settlement_bips is the fraction of a commitment settlement that will be paid to the exchange. It is represented in basis points (1/100th of 1%, e.g. 0.0001) and is limited to 0 to 10,000 inclusive. During a commitment settlement, the inputs are summed and NAVs are used to convert that total to USD, then to nhash. That is then multiplied by this value to get the amount of nhash that will be transferred out of the market's account into the exchange for that settlement.
 
 Summing the inputs effectively doubles the value of the settlement from what what is usually thought of as the value of a trade. That should be taken into account when setting this value. E.g. if two accounts are trading 10apples for 100grapes, the inputs total will be 10apples,100grapes (which is then converted to USD then nhash before applying this ratio). But usually the value of that trade would be viewed as either just 10apples or just 100grapes. |
+| `req_attr_create_commitment` | [string](#string) | repeated | req_attr_create_commitment is a list of attributes required on an account for it to be allowed to create a commitment. An account must have all of these attributes in order to create a commitment in this market. If the list is empty, any account can create commitments in this market.
+
+An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x". |
 
 
 
@@ -1817,7 +1820,7 @@ MarketDetails contains information about a market.
 
 ### NetAssetPrice
 NetAssetPrice is an association of assets and price used to record the value of things.
-It is related to the NetAssetValue message from the x/marker module.
+It is related to the NetAssetValue message from the x/marker module, and is therefore often referred to as "a NAV".
 
 
 | Field | Type | Label | Description |
@@ -2394,6 +2397,8 @@ MsgMarketManageReqAttrsRequest is a request message for the MarketManageReqAttrs
 | `create_ask_to_remove` | [string](#string) | repeated | create_ask_to_remove are the attributes that should no longer be required to create an ask order. |
 | `create_bid_to_add` | [string](#string) | repeated | create_bid_to_add are the attributes that should now also be required to create a bid order. |
 | `create_bid_to_remove` | [string](#string) | repeated | create_bid_to_remove are the attributes that should no longer be required to create a bid order. |
+| `create_commitment_to_add` | [string](#string) | repeated | create_commitment_to_add are the attributes that should now also be required to create a commitment. |
+| `create_commitment_to_remove` | [string](#string) | repeated | create_commitment_to_remove are the attributes that should no longer be required to create a commitment. |
 
 
 

@@ -55,37 +55,47 @@ message Market {
   uint32 market_id = 1;
   // market_details is some information about this market.
   MarketDetails market_details = 2 [(gogoproto.nullable) = false];
+
   // fee_create_ask_flat is the flat fee charged for creating an ask order.
   // Each coin entry is a separate option. When an ask is created, one of these must be paid.
   // If empty, no fee is required to create an ask order.
   repeated cosmos.base.v1beta1.Coin fee_create_ask_flat = 3 [(gogoproto.nullable) = false];
+
   // fee_create_bid_flat is the flat fee charged for creating a bid order.
   // Each coin entry is a separate option. When a bid is created, one of these must be paid.
   // If empty, no fee is required to create a bid order.
   repeated cosmos.base.v1beta1.Coin fee_create_bid_flat = 4 [(gogoproto.nullable) = false];
+
   // fee_seller_settlement_flat is the flat fee charged to the seller during settlement.
   // Each coin entry is a separate option.
   // When an ask is settled, the seller will pay the amount in the denom that matches the price they received.
   repeated cosmos.base.v1beta1.Coin fee_seller_settlement_flat = 5 [(gogoproto.nullable) = false];
+
   // fee_seller_settlement_ratios is the fee to charge a seller during settlement based on the price they are receiving.
   // The price and fee denoms must be equal for each entry, and only one entry for any given denom is allowed.
   repeated FeeRatio fee_seller_settlement_ratios = 6 [(gogoproto.nullable) = false];
+
   // fee_buyer_settlement_flat is the flat fee charged to the buyer during settlement.
   // Each coin entry is a separate option.
   // When a bid is created, the settlement fees provided must contain one of these.
   repeated cosmos.base.v1beta1.Coin fee_buyer_settlement_flat = 7 [(gogoproto.nullable) = false];
+
   // fee_buyer_settlement_ratios is the fee to charge a buyer during settlement based on the price they are spending.
   // The price and fee denoms do not have to equal. Multiple entries for any given price or fee denom are allowed, but
   // each price denom to fee denom pair can only have one entry.
   repeated FeeRatio fee_buyer_settlement_ratios = 8 [(gogoproto.nullable) = false];
+
   // accepting_orders is whether this market is allowing orders to be created for it.
   bool accepting_orders = 9;
+
   // allow_user_settlement is whether this market allows users to initiate their own settlements.
   // For example, the FillBids and FillAsks endpoints are available if and only if this is true.
   // The MarketSettle endpoint is only available to market actors regardless of the value of this field.
   bool allow_user_settlement = 10;
+
   // access_grants is the list of addresses and permissions granted for this market.
   repeated AccessGrant access_grants = 11 [(gogoproto.nullable) = false];
+
   // req_attr_create_ask is a list of attributes required on an account for it to be allowed to create an ask order.
   // An account must have all of these attributes in order to create an ask order in this market.
   // If the list is empty, any account can create ask orders in this market.
@@ -93,6 +103,7 @@ message Market {
   // An entry that starts with "*." will match any attributes that end with the rest of it.
   // E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "b.x.a", or "c.b.a.x".
   repeated string req_attr_create_ask = 12;
+
   // req_attr_create_ask is a list of attributes required on an account for it to be allowed to create a bid order.
   // An account must have all of these attributes in order to create a bid order in this market.
   // If the list is empty, any account can create bid orders in this market.
@@ -100,12 +111,15 @@ message Market {
   // An entry that starts with "*." will match any attributes that end with the rest of it.
   // E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x".
   repeated string req_attr_create_bid = 13;
+
   // allow_commitments is whether the market allows users to commit funds to it.
   bool allow_commitments = 14;
+
   // fee_create_commitment_flat is the flat fee charged for creating a commitment.
   // Each coin entry is a separate option. When a commitment is created, one of these must be paid.
   // If empty, no fee is required to create a commitment.
   repeated cosmos.base.v1beta1.Coin fee_create_commitment_flat = 15 [(gogoproto.nullable) = false];
+
   // commitment_settlement_bips is the fraction of a commitment settlement that will be paid to the exchange.
   // It is represented in basis points (1/100th of 1%, e.g. 0.0001) and is limited to 0 to 10,000 inclusive.
   // During a commitment settlement, the inputs are summed and NAVs are used to convert that total to USD,
@@ -118,6 +132,14 @@ message Market {
   // (which is then converted to USD then nhash before applying this ratio).
   // But usually the value of that trade would be viewed as either just 10apples or just 100grapes.
   uint32 commitment_settlement_bips = 16;
+
+  // req_attr_create_commitment is a list of attributes required on an account for it to be allowed to create a
+  // commitment. An account must have all of these attributes in order to create a commitment in this market.
+  // If the list is empty, any account can create commitments in this market.
+  //
+  // An entry that starts with "*." will match any attributes that end with the rest of it.
+  // E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x".
+  repeated string req_attr_create_commitment = 17;
 }
 
 // FeeRatio defines a ratio of price amount to fee amount.
@@ -169,7 +191,7 @@ message AccountAmount {
 }
 
 // NetAssetPrice is an association of assets and price used to record the value of things.
-// It is related to the NetAssetValue message from the x/marker module.
+// It is related to the NetAssetValue message from the x/marker module, and is therefore often referred to as "a NAV".
 message NetAssetPrice {
   option (gogoproto.goproto_stringer) = false;
   // assets is the volume and denom that has been bought or sold.
