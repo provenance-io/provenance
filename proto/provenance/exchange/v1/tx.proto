@@ -133,8 +133,8 @@ message MsgCommitFundsRequest {
   // order_creation_fee is the fee that is being paid to create this commitment.
   repeated cosmos.base.v1beta1.Coin creation_fee = 4
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // commitment_memo is a string that is included in the commitment-creation event. Max length is 100 characters.
-  string commitment_memo = 5;
+  // event_tag is a string that is included in the funds-committed event. Max length is 100 characters.
+  string event_tag = 5;
 }
 
 // MsgCommitFundsResponse is a response message for the CommitFunds endpoint.
@@ -249,8 +249,8 @@ message MsgMarketCommitmentSettleRequest {
   // max_exchange_fees is the maximum amount of fees the market is willing to pay the exchange for this settlement.
   repeated cosmos.base.v1beta1.Coin max_exchange_fees = 7
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // settlement_memo is a string that is included in the commitment-settlement event. Max length is 100 characters.
-  string settlement_memo = 8;
+  // event_tag is a string that is included in the funds-committed/released events. Max length is 100 characters.
+  string event_tag = 8;
 }
 
 // MsgMarketCommitmentSettleResponse is a response message for the MarketCommitmentSettle endpoint.
@@ -267,6 +267,8 @@ message MsgMarketReleaseCommitmentsRequest {
   // to_release is the funds that are to be released.
   // An entry with a zero amount indicates that all committed funds for that account should be released.
   repeated AccountAmount to_release = 3 [(gogoproto.nullable) = false];
+  // event_tag is a string that is included in the funds-released events. Max length is 100 characters.
+  string event_tag = 4;
 }
 
 // MsgMarketReleaseCommitmentsResponse is a response message for the MarketReleaseCommitments endpoint.

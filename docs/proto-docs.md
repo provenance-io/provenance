@@ -59,11 +59,16 @@
     - [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice)
   
 - [provenance/exchange/v1/events.proto](#provenance/exchange/v1/events.proto)
+    - [EventFundsCommitted](#provenance.exchange.v1.EventFundsCommitted)
+    - [EventFundsReleased](#provenance.exchange.v1.EventFundsReleased)
+    - [EventMarketCommitmentsDisabled](#provenance.exchange.v1.EventMarketCommitmentsDisabled)
+    - [EventMarketCommitmentsEnabled](#provenance.exchange.v1.EventMarketCommitmentsEnabled)
     - [EventMarketCreated](#provenance.exchange.v1.EventMarketCreated)
     - [EventMarketDetailsUpdated](#provenance.exchange.v1.EventMarketDetailsUpdated)
     - [EventMarketDisabled](#provenance.exchange.v1.EventMarketDisabled)
     - [EventMarketEnabled](#provenance.exchange.v1.EventMarketEnabled)
     - [EventMarketFeesUpdated](#provenance.exchange.v1.EventMarketFeesUpdated)
+    - [EventMarketIntermediaryDenomUpdated](#provenance.exchange.v1.EventMarketIntermediaryDenomUpdated)
     - [EventMarketPermissionsUpdated](#provenance.exchange.v1.EventMarketPermissionsUpdated)
     - [EventMarketReqAttrUpdated](#provenance.exchange.v1.EventMarketReqAttrUpdated)
     - [EventMarketUserSettleDisabled](#provenance.exchange.v1.EventMarketUserSettleDisabled)
@@ -1494,6 +1499,74 @@ It is related to the NetAssetValue message from the x/marker module, and is ther
 
 
 
+<a name="provenance.exchange.v1.EventFundsCommitted"></a>
+
+### EventFundsCommitted
+EventFundsCommitted is an event emitted when funds are committed to a market.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `amount` | [string](#string) |  | amount is the coins string of the newly committed funds. |
+| `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventFundsReleased"></a>
+
+### EventFundsReleased
+EventFundsReleased is an event emitted when funds are released from their commitment.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `amount` | [string](#string) |  | amount is the coins string of the funds that were released from commitment. |
+| `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketCommitmentsDisabled"></a>
+
+### EventMarketCommitmentsDisabled
+EventMarketCommitmentsDisabled is an event emitted when a market's allow_commitments option is disabled.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the allow_commitments option. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketCommitmentsEnabled"></a>
+
+### EventMarketCommitmentsEnabled
+EventMarketCommitmentsEnabled is an event emitted when a market's allow_commitments option is enabled.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the allow_commitments option. |
+
+
+
+
+
+
 <a name="provenance.exchange.v1.EventMarketCreated"></a>
 
 ### EventMarketCreated
@@ -1566,6 +1639,23 @@ EventMarketFeesUpdated is an event emitted when a market's fees have been update
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketIntermediaryDenomUpdated"></a>
+
+### EventMarketIntermediaryDenomUpdated
+EventMarketIntermediaryDenomUpdated is an event emitted when a market updates its
+commitment_settlement_intermediary_denom field.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the intermediary denom. |
 
 
 
@@ -2129,7 +2219,7 @@ MsgCommitFundsRequest is a request message for the CommitFunds endpoint.
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market the funds will be committed to. |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds being committed to the market. |
 | `creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | order_creation_fee is the fee that is being paid to create this commitment. |
-| `commitment_memo` | [string](#string) |  | commitment_memo is a string that is included in the commitment-creation event. Max length is 100 characters. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-committed event. Max length is 100 characters. |
 
 
 
@@ -2403,7 +2493,7 @@ MsgMarketCommitmentSettleRequest is a request message for the MarketCommitmentSe
 | `fees` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | fees is the funds that the market is collecting as part of this settlement. All of these funds must be already committed to the market. |
 | `navs` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) | repeated | navs are any NAV info that should be updated at the beginning of this settlement. |
 | `max_exchange_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | max_exchange_fees is the maximum amount of fees the market is willing to pay the exchange for this settlement. |
-| `settlement_memo` | [string](#string) |  | settlement_memo is a string that is included in the commitment-settlement event. Max length is 100 characters. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-committed/released events. Max length is 100 characters. |
 
 
 
@@ -2492,6 +2582,7 @@ MsgMarketReleaseCommitmentsRequest is a request message for the MarketReleaseCom
 | `admin` | [string](#string) |  | admin is the account with "cancel" permission requesting this release. |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market releasing these funds. |
 | `to_release` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | to_release is the funds that are to be released. An entry with a zero amount indicates that all committed funds for that account should be released. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-released events. Max length is 100 characters. |
 
 
 
