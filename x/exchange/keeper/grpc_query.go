@@ -218,6 +218,34 @@ func (k QueryServer) GetAllOrders(goCtx context.Context, req *exchange.QueryGetA
 	return resp, nil
 }
 
+// GetCommitment gets the funds in an account that are committed to the market.
+func (k QueryServer) GetCommitment(goCtx context.Context, req *exchange.QueryGetCommitmentRequest) (*exchange.QueryGetCommitmentResponse, error) {
+	// TODO[1789]: QueryServer.GetCommitment
+	_, _ = goCtx, req
+	panic("not implemented")
+}
+
+// GetAccountCommitments gets all the funds in an account that are committed to any market.
+func (k QueryServer) GetAccountCommitments(goCtx context.Context, req *exchange.QueryGetAccountCommitmentsRequest) (*exchange.QueryGetAccountCommitmentsResponse, error) {
+	// TODO[1789]: QueryServer.GetAccountCommitments
+	_, _ = goCtx, req
+	panic("not implemented")
+}
+
+// GetMarketCommitments gets all the funds committed to a market from any account.
+func (k QueryServer) GetMarketCommitments(goCtx context.Context, req *exchange.QueryGetMarketCommitmentsRequest) (*exchange.QueryGetMarketCommitmentsResponse, error) {
+	// TODO[1789]: QueryServer.GetMarketCommitments
+	_, _ = goCtx, req
+	panic("not implemented")
+}
+
+// GetAllCommitments gets all fund committed to any market from any account.
+func (k QueryServer) GetAllCommitments(goCtx context.Context, req *exchange.QueryGetAllCommitmentsRequest) (*exchange.QueryGetAllCommitmentsResponse, error) {
+	// TODO[1789]: QueryServer.GetAllCommitments
+	_, _ = goCtx, req
+	panic("not implemented")
+}
+
 // GetMarket returns all the information and details about a market.
 func (k QueryServer) GetMarket(goCtx context.Context, req *exchange.QueryGetMarketRequest) (*exchange.QueryGetMarketResponse, error) {
 	if req == nil || req.MarketId == 0 {
@@ -280,6 +308,13 @@ func (k QueryServer) Params(goCtx context.Context, _ *exchange.QueryParamsReques
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	resp := &exchange.QueryParamsResponse{Params: k.GetParamsOrDefaults(ctx)}
 	return resp, nil
+}
+
+// CommitmentSettlementFeeCalc calculates the fees a market will pay for a commitment settlement using current NAVs.
+func (k QueryServer) CommitmentSettlementFeeCalc(goCtx context.Context, req *exchange.QueryCommitmentSettlementFeeCalcRequest) (*exchange.QueryCommitmentSettlementFeeCalcResponse, error) {
+	// TODO[1789]: QueryServer.CommitmentSettlementFeeCalc
+	_, _ = goCtx, req
+	panic("not implemented")
 }
 
 // ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
