@@ -7,6 +7,7 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
@@ -841,6 +842,428 @@ func (m *QueryGetAllOrdersResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// QueryGetCommitmentRequest is a request message for the GetCommitment query.
+type QueryGetCommitmentRequest struct {
+	// account is the bech32 address string of the account in the commitment.
+	Account string `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	// market_id is the numeric identifier of the market in the commitment.
+	MarketId uint32 `protobuf:"varint,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+}
+
+func (m *QueryGetCommitmentRequest) Reset()         { *m = QueryGetCommitmentRequest{} }
+func (m *QueryGetCommitmentRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCommitmentRequest) ProtoMessage()    {}
+func (*QueryGetCommitmentRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{14}
+}
+func (m *QueryGetCommitmentRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetCommitmentRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetCommitmentRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetCommitmentRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCommitmentRequest.Merge(m, src)
+}
+func (m *QueryGetCommitmentRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetCommitmentRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCommitmentRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetCommitmentRequest proto.InternalMessageInfo
+
+func (m *QueryGetCommitmentRequest) GetAccount() string {
+	if m != nil {
+		return m.Account
+	}
+	return ""
+}
+
+func (m *QueryGetCommitmentRequest) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+// QueryGetCommitmentResponse is a response message for the GetCommitment query.
+type QueryGetCommitmentResponse struct {
+	// amount is the total funds committed to the market by the account.
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+}
+
+func (m *QueryGetCommitmentResponse) Reset()         { *m = QueryGetCommitmentResponse{} }
+func (m *QueryGetCommitmentResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCommitmentResponse) ProtoMessage()    {}
+func (*QueryGetCommitmentResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{15}
+}
+func (m *QueryGetCommitmentResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetCommitmentResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetCommitmentResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetCommitmentResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCommitmentResponse.Merge(m, src)
+}
+func (m *QueryGetCommitmentResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetCommitmentResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCommitmentResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetCommitmentResponse proto.InternalMessageInfo
+
+func (m *QueryGetCommitmentResponse) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Amount
+	}
+	return nil
+}
+
+// QueryGetAccountCommitmentsRequest is a request message for the GetAccountCommitments query.
+type QueryGetAccountCommitmentsRequest struct {
+	// account is the bech32 address string of the account with the commitments.
+	Account string `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryGetAccountCommitmentsRequest) Reset()         { *m = QueryGetAccountCommitmentsRequest{} }
+func (m *QueryGetAccountCommitmentsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetAccountCommitmentsRequest) ProtoMessage()    {}
+func (*QueryGetAccountCommitmentsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{16}
+}
+func (m *QueryGetAccountCommitmentsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetAccountCommitmentsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetAccountCommitmentsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetAccountCommitmentsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetAccountCommitmentsRequest.Merge(m, src)
+}
+func (m *QueryGetAccountCommitmentsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetAccountCommitmentsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetAccountCommitmentsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetAccountCommitmentsRequest proto.InternalMessageInfo
+
+func (m *QueryGetAccountCommitmentsRequest) GetAccount() string {
+	if m != nil {
+		return m.Account
+	}
+	return ""
+}
+
+func (m *QueryGetAccountCommitmentsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryGetAccountCommitmentsResponse is a response message for the GetAccountCommitments query.
+type QueryGetAccountCommitmentsResponse struct {
+	// commitments is the amounts committed from the account to the any market.
+	Commitments []*MarketAmount `protobuf:"bytes,1,rep,name=commitments,proto3" json:"commitments,omitempty"`
+	// pagination is the resulting pagination parameters.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryGetAccountCommitmentsResponse) Reset()         { *m = QueryGetAccountCommitmentsResponse{} }
+func (m *QueryGetAccountCommitmentsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetAccountCommitmentsResponse) ProtoMessage()    {}
+func (*QueryGetAccountCommitmentsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{17}
+}
+func (m *QueryGetAccountCommitmentsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetAccountCommitmentsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetAccountCommitmentsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetAccountCommitmentsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetAccountCommitmentsResponse.Merge(m, src)
+}
+func (m *QueryGetAccountCommitmentsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetAccountCommitmentsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetAccountCommitmentsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetAccountCommitmentsResponse proto.InternalMessageInfo
+
+func (m *QueryGetAccountCommitmentsResponse) GetCommitments() []*MarketAmount {
+	if m != nil {
+		return m.Commitments
+	}
+	return nil
+}
+
+func (m *QueryGetAccountCommitmentsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryGetMarketCommitmentsRequest is a request message for the GetMarketCommitments query.
+type QueryGetMarketCommitmentsRequest struct {
+	// market_id is the numeric identifier of the market with the commitment.
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryGetMarketCommitmentsRequest) Reset()         { *m = QueryGetMarketCommitmentsRequest{} }
+func (m *QueryGetMarketCommitmentsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetMarketCommitmentsRequest) ProtoMessage()    {}
+func (*QueryGetMarketCommitmentsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{18}
+}
+func (m *QueryGetMarketCommitmentsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetMarketCommitmentsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetMarketCommitmentsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetMarketCommitmentsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetMarketCommitmentsRequest.Merge(m, src)
+}
+func (m *QueryGetMarketCommitmentsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetMarketCommitmentsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetMarketCommitmentsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetMarketCommitmentsRequest proto.InternalMessageInfo
+
+func (m *QueryGetMarketCommitmentsRequest) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *QueryGetMarketCommitmentsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryGetMarketCommitmentsResponse is a response message for the GetMarketCommitments query.
+type QueryGetMarketCommitmentsResponse struct {
+	// commitments is the amounts committed to the market from any account.
+	Commitments []*AccountAmount `protobuf:"bytes,1,rep,name=commitments,proto3" json:"commitments,omitempty"`
+	// pagination is the resulting pagination parameters.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryGetMarketCommitmentsResponse) Reset()         { *m = QueryGetMarketCommitmentsResponse{} }
+func (m *QueryGetMarketCommitmentsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetMarketCommitmentsResponse) ProtoMessage()    {}
+func (*QueryGetMarketCommitmentsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{19}
+}
+func (m *QueryGetMarketCommitmentsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetMarketCommitmentsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetMarketCommitmentsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetMarketCommitmentsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetMarketCommitmentsResponse.Merge(m, src)
+}
+func (m *QueryGetMarketCommitmentsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetMarketCommitmentsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetMarketCommitmentsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetMarketCommitmentsResponse proto.InternalMessageInfo
+
+func (m *QueryGetMarketCommitmentsResponse) GetCommitments() []*AccountAmount {
+	if m != nil {
+		return m.Commitments
+	}
+	return nil
+}
+
+func (m *QueryGetMarketCommitmentsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryGetAllCommitmentsRequest is a request message for the GetAllCommitments query.
+type QueryGetAllCommitmentsRequest struct {
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryGetAllCommitmentsRequest) Reset()         { *m = QueryGetAllCommitmentsRequest{} }
+func (m *QueryGetAllCommitmentsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetAllCommitmentsRequest) ProtoMessage()    {}
+func (*QueryGetAllCommitmentsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{20}
+}
+func (m *QueryGetAllCommitmentsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetAllCommitmentsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetAllCommitmentsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetAllCommitmentsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetAllCommitmentsRequest.Merge(m, src)
+}
+func (m *QueryGetAllCommitmentsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetAllCommitmentsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetAllCommitmentsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetAllCommitmentsRequest proto.InternalMessageInfo
+
+func (m *QueryGetAllCommitmentsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryGetAllCommitmentsResponse is a response message for the GetAllCommitments query.
+type QueryGetAllCommitmentsResponse struct {
+	// commitments is the requested commitment information.
+	Commitments []*Commitment `protobuf:"bytes,1,rep,name=commitments,proto3" json:"commitments,omitempty"`
+	// pagination is the resulting pagination parameters.
+	Pagination *query.PageResponse `protobuf:"bytes,99,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryGetAllCommitmentsResponse) Reset()         { *m = QueryGetAllCommitmentsResponse{} }
+func (m *QueryGetAllCommitmentsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetAllCommitmentsResponse) ProtoMessage()    {}
+func (*QueryGetAllCommitmentsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{21}
+}
+func (m *QueryGetAllCommitmentsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetAllCommitmentsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetAllCommitmentsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetAllCommitmentsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetAllCommitmentsResponse.Merge(m, src)
+}
+func (m *QueryGetAllCommitmentsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetAllCommitmentsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetAllCommitmentsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetAllCommitmentsResponse proto.InternalMessageInfo
+
+func (m *QueryGetAllCommitmentsResponse) GetCommitments() []*Commitment {
+	if m != nil {
+		return m.Commitments
+	}
+	return nil
+}
+
+func (m *QueryGetAllCommitmentsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 // QueryGetMarketRequest is a request message for the GetMarket query.
 type QueryGetMarketRequest struct {
 	// market_id is the id of the market to look up.
@@ -851,7 +1274,7 @@ func (m *QueryGetMarketRequest) Reset()         { *m = QueryGetMarketRequest{} }
 func (m *QueryGetMarketRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryGetMarketRequest) ProtoMessage()    {}
 func (*QueryGetMarketRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{14}
+	return fileDescriptor_00949b75b1c10bfe, []int{22}
 }
 func (m *QueryGetMarketRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -899,7 +1322,7 @@ func (m *QueryGetMarketResponse) Reset()         { *m = QueryGetMarketResponse{}
 func (m *QueryGetMarketResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryGetMarketResponse) ProtoMessage()    {}
 func (*QueryGetMarketResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{15}
+	return fileDescriptor_00949b75b1c10bfe, []int{23}
 }
 func (m *QueryGetMarketResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -952,7 +1375,7 @@ func (m *QueryGetAllMarketsRequest) Reset()         { *m = QueryGetAllMarketsReq
 func (m *QueryGetAllMarketsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryGetAllMarketsRequest) ProtoMessage()    {}
 func (*QueryGetAllMarketsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{16}
+	return fileDescriptor_00949b75b1c10bfe, []int{24}
 }
 func (m *QueryGetAllMarketsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1000,7 +1423,7 @@ func (m *QueryGetAllMarketsResponse) Reset()         { *m = QueryGetAllMarketsRe
 func (m *QueryGetAllMarketsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryGetAllMarketsResponse) ProtoMessage()    {}
 func (*QueryGetAllMarketsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{17}
+	return fileDescriptor_00949b75b1c10bfe, []int{25}
 }
 func (m *QueryGetAllMarketsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1051,7 +1474,7 @@ func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
 func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsRequest) ProtoMessage()    {}
 func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{18}
+	return fileDescriptor_00949b75b1c10bfe, []int{26}
 }
 func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1090,7 +1513,7 @@ func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
 func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsResponse) ProtoMessage()    {}
 func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{19}
+	return fileDescriptor_00949b75b1c10bfe, []int{27}
 }
 func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1126,6 +1549,139 @@ func (m *QueryParamsResponse) GetParams() *Params {
 	return nil
 }
 
+// QueryCommitmentSettlementFeeCalcRequest is a request message for the CommitmentSettlementFeeCalc query.
+type QueryCommitmentSettlementFeeCalcRequest struct {
+	// settlement is a market's commitment settlement request message.
+	// If not provided, only the to_fee_nav field will be populated in the response.
+	Settlement *MsgMarketCommitmentSettleRequest `protobuf:"bytes,1,opt,name=settlement,proto3" json:"settlement,omitempty"`
+}
+
+func (m *QueryCommitmentSettlementFeeCalcRequest) Reset() {
+	*m = QueryCommitmentSettlementFeeCalcRequest{}
+}
+func (m *QueryCommitmentSettlementFeeCalcRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryCommitmentSettlementFeeCalcRequest) ProtoMessage()    {}
+func (*QueryCommitmentSettlementFeeCalcRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{28}
+}
+func (m *QueryCommitmentSettlementFeeCalcRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCommitmentSettlementFeeCalcRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCommitmentSettlementFeeCalcRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCommitmentSettlementFeeCalcRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCommitmentSettlementFeeCalcRequest.Merge(m, src)
+}
+func (m *QueryCommitmentSettlementFeeCalcRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCommitmentSettlementFeeCalcRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCommitmentSettlementFeeCalcRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCommitmentSettlementFeeCalcRequest proto.InternalMessageInfo
+
+func (m *QueryCommitmentSettlementFeeCalcRequest) GetSettlement() *MsgMarketCommitmentSettleRequest {
+	if m != nil {
+		return m.Settlement
+	}
+	return nil
+}
+
+// QueryCommitmentSettlementFeeCalcResponse is a response message for the CommitmentSettlementFeeCalc query.
+type QueryCommitmentSettlementFeeCalcResponse struct {
+	// exchange_fees is the total that the exchange would currently pay for the provided settlement.
+	ExchangeFees github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=exchange_fees,json=exchangeFees,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"exchange_fees"`
+	// input_total is the sum of all the inputs in the provided settlement.
+	InputTotal github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=input_total,json=inputTotal,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"input_total"`
+	// converted_total is the input_total converted to a single intermediary denom.
+	ConvertedTotal github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=converted_total,json=convertedTotal,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"converted_total"`
+	// conversion_navs are the NAVs used to convert the input_total to the converted_total.
+	ConversionNavs []NetAssetPrice `protobuf:"bytes,4,rep,name=conversion_navs,json=conversionNavs,proto3" json:"conversion_navs"`
+	// to_fee_nav is the NAV used to convert the converted_total into the fee denom.
+	ToFeeNav NetAssetPrice `protobuf:"bytes,5,opt,name=to_fee_nav,json=toFeeNav,proto3" json:"to_fee_nav"`
+}
+
+func (m *QueryCommitmentSettlementFeeCalcResponse) Reset() {
+	*m = QueryCommitmentSettlementFeeCalcResponse{}
+}
+func (m *QueryCommitmentSettlementFeeCalcResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryCommitmentSettlementFeeCalcResponse) ProtoMessage()    {}
+func (*QueryCommitmentSettlementFeeCalcResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00949b75b1c10bfe, []int{29}
+}
+func (m *QueryCommitmentSettlementFeeCalcResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryCommitmentSettlementFeeCalcResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryCommitmentSettlementFeeCalcResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryCommitmentSettlementFeeCalcResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryCommitmentSettlementFeeCalcResponse.Merge(m, src)
+}
+func (m *QueryCommitmentSettlementFeeCalcResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryCommitmentSettlementFeeCalcResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryCommitmentSettlementFeeCalcResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryCommitmentSettlementFeeCalcResponse proto.InternalMessageInfo
+
+func (m *QueryCommitmentSettlementFeeCalcResponse) GetExchangeFees() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.ExchangeFees
+	}
+	return nil
+}
+
+func (m *QueryCommitmentSettlementFeeCalcResponse) GetInputTotal() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.InputTotal
+	}
+	return nil
+}
+
+func (m *QueryCommitmentSettlementFeeCalcResponse) GetConvertedTotal() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.ConvertedTotal
+	}
+	return nil
+}
+
+func (m *QueryCommitmentSettlementFeeCalcResponse) GetConversionNavs() []NetAssetPrice {
+	if m != nil {
+		return m.ConversionNavs
+	}
+	return nil
+}
+
+func (m *QueryCommitmentSettlementFeeCalcResponse) GetToFeeNav() NetAssetPrice {
+	if m != nil {
+		return m.ToFeeNav
+	}
+	return NetAssetPrice{}
+}
+
 // QueryValidateCreateMarketRequest is a request message for the ValidateCreateMarket query.
 type QueryValidateCreateMarketRequest struct {
 	// create_market_request is the request to run validation on.
@@ -1136,7 +1692,7 @@ func (m *QueryValidateCreateMarketRequest) Reset()         { *m = QueryValidateC
 func (m *QueryValidateCreateMarketRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryValidateCreateMarketRequest) ProtoMessage()    {}
 func (*QueryValidateCreateMarketRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{20}
+	return fileDescriptor_00949b75b1c10bfe, []int{30}
 }
 func (m *QueryValidateCreateMarketRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1188,7 +1744,7 @@ func (m *QueryValidateCreateMarketResponse) Reset()         { *m = QueryValidate
 func (m *QueryValidateCreateMarketResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryValidateCreateMarketResponse) ProtoMessage()    {}
 func (*QueryValidateCreateMarketResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{21}
+	return fileDescriptor_00949b75b1c10bfe, []int{31}
 }
 func (m *QueryValidateCreateMarketResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1241,7 +1797,7 @@ func (m *QueryValidateMarketRequest) Reset()         { *m = QueryValidateMarketR
 func (m *QueryValidateMarketRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryValidateMarketRequest) ProtoMessage()    {}
 func (*QueryValidateMarketRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{22}
+	return fileDescriptor_00949b75b1c10bfe, []int{32}
 }
 func (m *QueryValidateMarketRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1287,7 +1843,7 @@ func (m *QueryValidateMarketResponse) Reset()         { *m = QueryValidateMarket
 func (m *QueryValidateMarketResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryValidateMarketResponse) ProtoMessage()    {}
 func (*QueryValidateMarketResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{23}
+	return fileDescriptor_00949b75b1c10bfe, []int{33}
 }
 func (m *QueryValidateMarketResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1333,7 +1889,7 @@ func (m *QueryValidateManageFeesRequest) Reset()         { *m = QueryValidateMan
 func (m *QueryValidateManageFeesRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryValidateManageFeesRequest) ProtoMessage()    {}
 func (*QueryValidateManageFeesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{24}
+	return fileDescriptor_00949b75b1c10bfe, []int{34}
 }
 func (m *QueryValidateManageFeesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1385,7 +1941,7 @@ func (m *QueryValidateManageFeesResponse) Reset()         { *m = QueryValidateMa
 func (m *QueryValidateManageFeesResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryValidateManageFeesResponse) ProtoMessage()    {}
 func (*QueryValidateManageFeesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00949b75b1c10bfe, []int{25}
+	return fileDescriptor_00949b75b1c10bfe, []int{35}
 }
 func (m *QueryValidateManageFeesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1443,12 +1999,22 @@ func init() {
 	proto.RegisterType((*QueryGetAssetOrdersResponse)(nil), "provenance.exchange.v1.QueryGetAssetOrdersResponse")
 	proto.RegisterType((*QueryGetAllOrdersRequest)(nil), "provenance.exchange.v1.QueryGetAllOrdersRequest")
 	proto.RegisterType((*QueryGetAllOrdersResponse)(nil), "provenance.exchange.v1.QueryGetAllOrdersResponse")
+	proto.RegisterType((*QueryGetCommitmentRequest)(nil), "provenance.exchange.v1.QueryGetCommitmentRequest")
+	proto.RegisterType((*QueryGetCommitmentResponse)(nil), "provenance.exchange.v1.QueryGetCommitmentResponse")
+	proto.RegisterType((*QueryGetAccountCommitmentsRequest)(nil), "provenance.exchange.v1.QueryGetAccountCommitmentsRequest")
+	proto.RegisterType((*QueryGetAccountCommitmentsResponse)(nil), "provenance.exchange.v1.QueryGetAccountCommitmentsResponse")
+	proto.RegisterType((*QueryGetMarketCommitmentsRequest)(nil), "provenance.exchange.v1.QueryGetMarketCommitmentsRequest")
+	proto.RegisterType((*QueryGetMarketCommitmentsResponse)(nil), "provenance.exchange.v1.QueryGetMarketCommitmentsResponse")
+	proto.RegisterType((*QueryGetAllCommitmentsRequest)(nil), "provenance.exchange.v1.QueryGetAllCommitmentsRequest")
+	proto.RegisterType((*QueryGetAllCommitmentsResponse)(nil), "provenance.exchange.v1.QueryGetAllCommitmentsResponse")
 	proto.RegisterType((*QueryGetMarketRequest)(nil), "provenance.exchange.v1.QueryGetMarketRequest")
 	proto.RegisterType((*QueryGetMarketResponse)(nil), "provenance.exchange.v1.QueryGetMarketResponse")
 	proto.RegisterType((*QueryGetAllMarketsRequest)(nil), "provenance.exchange.v1.QueryGetAllMarketsRequest")
 	proto.RegisterType((*QueryGetAllMarketsResponse)(nil), "provenance.exchange.v1.QueryGetAllMarketsResponse")
 	proto.RegisterType((*QueryParamsRequest)(nil), "provenance.exchange.v1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "provenance.exchange.v1.QueryParamsResponse")
+	proto.RegisterType((*QueryCommitmentSettlementFeeCalcRequest)(nil), "provenance.exchange.v1.QueryCommitmentSettlementFeeCalcRequest")
+	proto.RegisterType((*QueryCommitmentSettlementFeeCalcResponse)(nil), "provenance.exchange.v1.QueryCommitmentSettlementFeeCalcResponse")
 	proto.RegisterType((*QueryValidateCreateMarketRequest)(nil), "provenance.exchange.v1.QueryValidateCreateMarketRequest")
 	proto.RegisterType((*QueryValidateCreateMarketResponse)(nil), "provenance.exchange.v1.QueryValidateCreateMarketResponse")
 	proto.RegisterType((*QueryValidateMarketRequest)(nil), "provenance.exchange.v1.QueryValidateMarketRequest")
@@ -1462,99 +2028,133 @@ func init() {
 }
 
 var fileDescriptor_00949b75b1c10bfe = []byte{
-	// 1472 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcd, 0x73, 0x14, 0x45,
-	0x14, 0x4f, 0x27, 0x24, 0x24, 0x8f, 0xaf, 0xb2, 0xb3, 0x50, 0x9b, 0x05, 0x36, 0x61, 0xa0, 0x20,
-	0x15, 0xc8, 0x0c, 0xbb, 0x0b, 0x51, 0x0e, 0xa8, 0x04, 0x0d, 0x95, 0x2a, 0x29, 0xc2, 0x68, 0xa9,
-	0xc5, 0xc1, 0xa5, 0x77, 0xb7, 0x33, 0x4c, 0x31, 0x3b, 0xbd, 0xcc, 0x0c, 0x4b, 0x52, 0xa9, 0x1c,
-	0xfc, 0xb8, 0xe0, 0xc9, 0x2a, 0x3d, 0x60, 0x51, 0xe2, 0xc5, 0xbb, 0x1e, 0xbc, 0x79, 0xf0, 0xe0,
-	0x41, 0x8e, 0x94, 0x5e, 0xf4, 0x62, 0x59, 0xe0, 0x51, 0xff, 0x07, 0x6b, 0xba, 0x7b, 0x36, 0x33,
-	0x9b, 0xf9, 0x5a, 0xcd, 0x21, 0xa7, 0xec, 0xf4, 0xbc, 0x8f, 0xdf, 0xfb, 0xbd, 0xee, 0x37, 0xbf,
-	0x0e, 0x28, 0x1d, 0x87, 0x75, 0xa9, 0x4d, 0xec, 0x26, 0xd5, 0xe8, 0x5a, 0xf3, 0x0e, 0xb1, 0x0d,
-	0xaa, 0x75, 0x2b, 0xda, 0xbd, 0xfb, 0xd4, 0x59, 0x57, 0x3b, 0x0e, 0xf3, 0x18, 0x3e, 0xb2, 0x65,
-	0xa3, 0x06, 0x36, 0x6a, 0xb7, 0x52, 0x9a, 0x6a, 0x32, 0xb7, 0xcd, 0xdc, 0x3a, 0xb7, 0xd2, 0xc4,
-	0x83, 0x70, 0x29, 0xcd, 0x89, 0x27, 0xad, 0x41, 0x5c, 0x2a, 0x62, 0x69, 0xdd, 0x4a, 0x83, 0x7a,
-	0xa4, 0xa2, 0x75, 0x88, 0x61, 0xda, 0xc4, 0x33, 0x99, 0x2d, 0x6d, 0xcb, 0x61, 0xdb, 0xc0, 0xaa,
-	0xc9, 0xcc, 0xe0, 0xfd, 0x31, 0x83, 0x31, 0xc3, 0xa2, 0x1a, 0xe9, 0x98, 0x1a, 0xb1, 0x6d, 0xe6,
-	0x71, 0xe7, 0x20, 0x53, 0xc1, 0x60, 0x06, 0x13, 0x08, 0xfc, 0x5f, 0x72, 0xf5, 0x64, 0x42, 0x59,
-	0x6d, 0xe2, 0xdc, 0xa5, 0x5e, 0x86, 0x11, 0x73, 0x5a, 0xd4, 0x71, 0x33, 0x8c, 0x3a, 0xc4, 0x21,
-	0xed, 0xc0, 0x68, 0x3a, 0xc1, 0xc8, 0x5b, 0x13, 0x06, 0xca, 0x23, 0x04, 0xc5, 0x9b, 0x3e, 0x0d,
-	0x37, 0xfc, 0xd8, 0x4b, 0x94, 0x5e, 0x25, 0x56, 0x53, 0xa7, 0xf7, 0xee, 0x53, 0xd7, 0xc3, 0x97,
-	0x61, 0x82, 0xb8, 0x77, 0xeb, 0x3c, 0x6d, 0x71, 0x78, 0x06, 0xcd, 0xee, 0xab, 0xce, 0xa8, 0xf1,
-	0x9c, 0xab, 0x57, 0xdc, 0xbb, 0x3c, 0x84, 0x3e, 0x4e, 0xe4, 0x2f, 0xdf, 0xbd, 0x61, 0xb6, 0xa4,
-	0xfb, 0x48, 0xba, 0xfb, 0xa2, 0xd9, 0x92, 0xee, 0x0d, 0xf9, 0x4b, 0xf9, 0x6e, 0x18, 0xa6, 0x62,
-	0xa0, 0xb9, 0x1d, 0x66, 0xbb, 0x14, 0xdf, 0x84, 0x42, 0xd3, 0xa1, 0x9c, 0xf1, 0xfa, 0x2a, 0xa5,
-	0x75, 0xd6, 0xe1, 0xe4, 0x17, 0xd1, 0xcc, 0xc8, 0xec, 0xbe, 0xea, 0x94, 0x2a, 0xbb, 0xee, 0xf7,
-	0x4e, 0x95, 0xbd, 0x53, 0xaf, 0x32, 0xd3, 0x5e, 0xdc, 0xf3, 0xf4, 0x8f, 0xe9, 0x21, 0x1d, 0x07,
-	0xce, 0x4b, 0x94, 0xde, 0x10, 0xae, 0xf8, 0x03, 0x38, 0xea, 0x52, 0xcf, 0xb3, 0x68, 0x9b, 0xda,
-	0x5e, 0x7d, 0xd5, 0x22, 0x5e, 0x24, 0xf2, 0x70, 0xbe, 0xc8, 0xc5, 0xad, 0x18, 0x4b, 0x16, 0xf1,
-	0x42, 0xf1, 0x6f, 0xc3, 0xb1, 0x50, 0x7c, 0xc7, 0x4f, 0x1f, 0x49, 0x30, 0x92, 0x2f, 0xc1, 0xd4,
-	0x56, 0x10, 0xdd, 0x8f, 0xb1, 0x95, 0x41, 0xa9, 0x40, 0x81, 0x33, 0x76, 0x8d, 0x7a, 0x82, 0x4d,
-	0xd9, 0xc8, 0x29, 0x18, 0xe7, 0x5d, 0xa8, 0x9b, 0xad, 0x22, 0x9a, 0x41, 0xb3, 0x7b, 0xf4, 0xbd,
-	0xfc, 0x79, 0xb9, 0xa5, 0xbc, 0x05, 0x87, 0xfb, 0x5c, 0x24, 0xc1, 0x35, 0x18, 0x15, 0x9d, 0x43,
-	0xbc, 0x73, 0xc7, 0x93, 0x3a, 0x27, 0xbc, 0x84, 0xad, 0x72, 0x1b, 0x66, 0x22, 0xd1, 0x16, 0xd7,
-	0xdf, 0x5c, 0xf3, 0xa8, 0x63, 0x13, 0x6b, 0xf9, 0x8d, 0x00, 0xcc, 0x51, 0x98, 0x10, 0xbb, 0x3d,
-	0x40, 0x73, 0x40, 0x1f, 0x17, 0x0b, 0xcb, 0x2d, 0x3c, 0x0d, 0xfb, 0xa8, 0xf4, 0xf0, 0x5f, 0xfb,
-	0x9b, 0x6e, 0x42, 0x87, 0x60, 0x69, 0xb9, 0xa5, 0xbc, 0x0f, 0x27, 0x52, 0x32, 0xfc, 0x1f, 0xec,
-	0x3f, 0x23, 0x38, 0x1a, 0x84, 0xbe, 0xce, 0xf1, 0xf0, 0xd7, 0x6e, 0x2e, 0xdc, 0xc7, 0x01, 0x04,
-	0xc3, 0xde, 0x7a, 0x87, 0x4a, 0xd8, 0x13, 0x7c, 0xe5, 0x9d, 0xf5, 0x0e, 0xc5, 0xa7, 0xe0, 0x20,
-	0x59, 0xf5, 0xa8, 0x53, 0xef, 0xb5, 0x61, 0x84, 0xb7, 0x61, 0x3f, 0x5f, 0xbd, 0x21, 0x7a, 0x81,
-	0x97, 0x00, 0xb6, 0x86, 0x50, 0xb1, 0xc9, 0xb1, 0x9f, 0x8e, 0x6c, 0x07, 0x31, 0xfd, 0x82, 0x4d,
-	0xb1, 0x42, 0x0c, 0x2a, 0xd1, 0xe9, 0x21, 0x4f, 0xe5, 0x09, 0x82, 0x63, 0xf1, 0x95, 0x48, 0x7e,
-	0x2e, 0xc2, 0x98, 0x98, 0x25, 0xf2, 0xb8, 0x64, 0x10, 0x24, 0x8d, 0xf1, 0xb5, 0x18, 0x7c, 0x67,
-	0x32, 0xf1, 0x89, 0x9c, 0x11, 0x80, 0xbf, 0x23, 0x28, 0xf5, 0xba, 0xf8, 0xc0, 0x96, 0x0c, 0xf4,
-	0x98, 0x56, 0x61, 0x94, 0xf9, 0xab, 0x9c, 0xe5, 0x89, 0xc5, 0xe2, 0x2f, 0xdf, 0xcf, 0x17, 0x64,
-	0x96, 0x2b, 0xad, 0x96, 0x43, 0x5d, 0xf7, 0x6d, 0xcf, 0x31, 0x6d, 0x43, 0x17, 0x66, 0xbb, 0x8b,
-	0xfc, 0xaf, 0x42, 0xdb, 0x28, 0x52, 0xdb, 0x2e, 0xe1, 0xfe, 0xc7, 0x10, 0xf7, 0x57, 0x5c, 0xb7,
-	0x7f, 0x97, 0x17, 0x60, 0x94, 0xf8, 0xab, 0x82, 0x7b, 0x5d, 0x3c, 0xec, 0x5e, 0x86, 0x23, 0x15,
-	0xec, 0x12, 0x86, 0x1b, 0xf2, 0x93, 0xea, 0xc3, 0xb3, 0xac, 0x28, 0xbd, 0x3b, 0xc5, 0xc1, 0x63,
-	0x24, 0x3f, 0x8e, 0xd1, 0x24, 0xbb, 0x84, 0x81, 0x0b, 0x5b, 0x1f, 0x15, 0x31, 0x7f, 0xf2, 0xcc,
-	0x50, 0xe5, 0x13, 0x04, 0x47, 0xfa, 0xdd, 0x64, 0x41, 0x55, 0xd8, 0x4b, 0xc4, 0xc9, 0xcf, 0x9c,
-	0x09, 0x81, 0x21, 0x5e, 0x80, 0x31, 0x11, 0x5a, 0x4a, 0x97, 0x72, 0x12, 0x09, 0x32, 0x97, 0xb4,
-	0x56, 0x9a, 0x11, 0x66, 0xc5, 0xcb, 0x1d, 0xef, 0xdf, 0x37, 0xe1, 0x53, 0x18, 0xca, 0x22, 0xeb,
-	0xbd, 0x0c, 0x7b, 0x05, 0x9a, 0xa0, 0x83, 0x27, 0xd3, 0xc1, 0x2f, 0x3a, 0x26, 0x5d, 0xd5, 0x03,
-	0x9f, 0x9d, 0x6b, 0x64, 0x01, 0x30, 0x47, 0xb9, 0xc2, 0x45, 0xa5, 0x2c, 0x44, 0xb9, 0x0e, 0x93,
-	0x91, 0x55, 0x09, 0x7a, 0x01, 0xc6, 0x84, 0xf8, 0x94, 0x9f, 0xdd, 0x44, 0xc2, 0xa5, 0x9f, 0xb4,
-	0x56, 0x1e, 0x22, 0xa9, 0x1a, 0xde, 0x25, 0x96, 0xd9, 0x22, 0x1e, 0xbd, 0xea, 0x6b, 0x33, 0x1a,
-	0xdd, 0x39, 0x14, 0x0e, 0x73, 0xc9, 0x46, 0xeb, 0x72, 0x03, 0x39, 0xe2, 0x85, 0xcc, 0x55, 0x49,
-	0xe4, 0xc7, 0x35, 0xae, 0xb1, 0x6e, 0x4c, 0x44, 0x7d, 0xb2, 0xb9, 0x7d, 0x51, 0x59, 0x95, 0xf2,
-	0x22, 0x1e, 0x8a, 0x2c, 0xb4, 0x00, 0xa3, 0xd4, 0x71, 0x98, 0x13, 0xcc, 0x48, 0xfe, 0x80, 0xcf,
-	0x02, 0x36, 0x58, 0xd7, 0xbf, 0x74, 0x74, 0xea, 0x0f, 0x4c, 0xcb, 0xaa, 0x77, 0x88, 0xeb, 0xf2,
-	0xbd, 0x37, 0xae, 0x1f, 0x32, 0x58, 0x77, 0xc5, 0x61, 0x9d, 0xf7, 0x4c, 0xcb, 0x5a, 0x21, 0xae,
-	0xab, 0x5c, 0x92, 0xed, 0x0f, 0xf2, 0x0c, 0x70, 0x4c, 0x6a, 0x72, 0xfa, 0xf5, 0xbb, 0xa6, 0x81,
-	0x53, 0x3e, 0x44, 0x50, 0xee, 0xf3, 0xb2, 0x89, 0x41, 0x97, 0x28, 0xed, 0x6d, 0xed, 0x3a, 0x4c,
-	0xb6, 0xf9, 0xa2, 0x2f, 0x4a, 0xdd, 0x3e, 0x7e, 0xb5, 0x74, 0x7e, 0xb7, 0x45, 0xd3, 0x5f, 0x6a,
-	0xf7, 0x2f, 0x29, 0x2d, 0x98, 0x4e, 0x84, 0xb0, 0x63, 0xcc, 0x56, 0xbf, 0x98, 0x84, 0x51, 0x9e,
-	0x06, 0x7f, 0x8d, 0x60, 0x7f, 0xf8, 0xee, 0x80, 0xcf, 0x27, 0x15, 0x91, 0x74, 0x03, 0x2a, 0x55,
-	0x06, 0xf0, 0x10, 0x25, 0x28, 0x73, 0x1f, 0xfd, 0xfa, 0xd7, 0xe7, 0xc3, 0xa7, 0xb0, 0xa2, 0x25,
-	0xdc, 0xbd, 0x7c, 0x76, 0xc5, 0x55, 0x0e, 0x7f, 0x89, 0x60, 0x3c, 0x10, 0xb2, 0xf8, 0x5c, 0x6a,
-	0xae, 0x3e, 0x49, 0x5f, 0x9a, 0xcf, 0x69, 0x2d, 0x51, 0x9d, 0xe7, 0xa8, 0xe6, 0xf0, 0xac, 0x96,
-	0x76, 0xb7, 0xd4, 0x36, 0x82, 0x0f, 0xf8, 0x26, 0x7e, 0x34, 0x0c, 0x85, 0x38, 0x91, 0x8d, 0x5f,
-	0xc9, 0x95, 0x39, 0x46, 0xf9, 0x97, 0x2e, 0xfd, 0x07, 0x4f, 0x89, 0xff, 0x53, 0xc4, 0x0b, 0xf8,
-	0x18, 0xe1, 0xd7, 0x52, 0x2b, 0x70, 0xe5, 0x4d, 0x5a, 0xdb, 0xe8, 0x1d, 0xa0, 0x4d, 0x6d, 0x23,
-	0x74, 0xa5, 0xd8, 0xbc, 0xf5, 0x3a, 0x7e, 0x55, 0x4b, 0xbd, 0x85, 0x47, 0x7c, 0x25, 0x2f, 0xe1,
-	0x08, 0xf8, 0x6f, 0x04, 0x87, 0xfa, 0xa4, 0x35, 0xae, 0x65, 0xd5, 0x16, 0x73, 0xa5, 0x28, 0x5d,
-	0x18, 0xcc, 0x49, 0x72, 0x61, 0x73, 0x2a, 0xee, 0xe0, 0xca, 0xc0, 0x4c, 0xdc, 0xaa, 0x25, 0x3b,
-	0x25, 0xd5, 0xee, 0xe2, 0x6f, 0x11, 0x1c, 0x8c, 0x8a, 0x59, 0x5c, 0xcd, 0xec, 0xe4, 0x36, 0x55,
-	0x5f, 0xaa, 0x0d, 0xe4, 0x23, 0x6b, 0xbd, 0xc0, 0x6b, 0x55, 0xf1, 0xb9, 0x8c, 0x5a, 0xf9, 0x45,
-	0x40, 0xdb, 0xe0, 0x7f, 0x36, 0x03, 0xc4, 0x21, 0x71, 0x98, 0x8d, 0x78, 0xbb, 0x16, 0xce, 0x46,
-	0x1c, 0xa3, 0x3e, 0x73, 0x23, 0xe6, 0xc2, 0x5a, 0xdb, 0xe0, 0x7f, 0x36, 0xf1, 0x63, 0x04, 0xfb,
-	0xc3, 0x52, 0x2e, 0x63, 0x56, 0xc5, 0x48, 0xcb, 0x8c, 0x59, 0x15, 0xa7, 0x13, 0x95, 0xd3, 0x1c,
-	0xeb, 0x0c, 0x2e, 0xa7, 0x63, 0xc5, 0x4f, 0x10, 0x4c, 0xf4, 0x76, 0x23, 0x9e, 0xcf, 0xb7, 0x6b,
-	0x03, 0x5c, 0x6a, 0x5e, 0x73, 0x09, 0xaa, 0xca, 0x41, 0x9d, 0xc3, 0x73, 0xf9, 0x77, 0xaa, 0x3f,
-	0xea, 0x0f, 0x44, 0x94, 0x14, 0xce, 0xc3, 0x46, 0x54, 0xdb, 0x95, 0xaa, 0x83, 0xb8, 0x48, 0xb0,
-	0x67, 0x38, 0xd8, 0x13, 0x78, 0x3a, 0x1d, 0xac, 0x8b, 0x1f, 0x22, 0x18, 0x13, 0xba, 0x07, 0xcf,
-	0xa5, 0xe6, 0x89, 0x48, 0xad, 0xd2, 0xd9, 0x5c, 0xb6, 0x79, 0xdb, 0x29, 0x04, 0x17, 0xfe, 0x09,
-	0x41, 0x21, 0x4e, 0xe0, 0x64, 0x8c, 0xf6, 0x14, 0x79, 0x96, 0x31, 0xda, 0xd3, 0xd4, 0x94, 0xb2,
-	0xc0, 0x51, 0x9f, 0xc7, 0x6a, 0x12, 0xea, 0xae, 0xf4, 0xd6, 0x22, 0x02, 0x10, 0xff, 0x83, 0xe0,
-	0x60, 0x54, 0x03, 0x65, 0x1c, 0xf2, 0x58, 0xad, 0x95, 0x71, 0xc8, 0xe3, 0x45, 0x96, 0xe2, 0x70,
-	0xcc, 0x16, 0xae, 0x65, 0x62, 0x8e, 0x19, 0xc2, 0x17, 0x93, 0xdd, 0x62, 0x86, 0x70, 0x10, 0x09,
-	0xff, 0x80, 0x00, 0x6f, 0x97, 0x4e, 0x78, 0x21, 0x27, 0xfe, 0x3e, 0x35, 0x56, 0x7a, 0x79, 0x60,
-	0xbf, 0xbc, 0x03, 0x2e, 0x54, 0x7b, 0x4f, 0x4e, 0x2e, 0xd2, 0xa7, 0xcf, 0xcb, 0xe8, 0xd9, 0xf3,
-	0x32, 0xfa, 0xf3, 0x79, 0x19, 0x7d, 0xf6, 0xa2, 0x3c, 0xf4, 0xec, 0x45, 0x79, 0xe8, 0xb7, 0x17,
-	0xe5, 0x21, 0x98, 0x32, 0x59, 0x02, 0x94, 0x15, 0x74, 0x4b, 0x35, 0x4c, 0xef, 0xce, 0xfd, 0x86,
-	0xda, 0x64, 0xed, 0x50, 0xba, 0x79, 0x93, 0x85, 0x93, 0xaf, 0xf5, 0xd2, 0x37, 0xc6, 0xf8, 0xbf,
-	0xb5, 0x6b, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0xee, 0xee, 0x11, 0x25, 0x3f, 0x18, 0x00, 0x00,
+	// 2001 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x5a, 0xcd, 0x6f, 0x1b, 0xc7,
+	0x15, 0xf7, 0x48, 0x96, 0x2c, 0x3d, 0xd9, 0x32, 0x32, 0xa6, 0x03, 0x8a, 0xb2, 0x29, 0x79, 0xed,
+	0xc4, 0x82, 0x6c, 0x71, 0x4d, 0xca, 0x56, 0x9c, 0x00, 0x6e, 0x22, 0x29, 0x95, 0x20, 0xa0, 0xb1,
+	0x95, 0x8d, 0xd1, 0x06, 0x3e, 0x94, 0x19, 0x2d, 0x47, 0xf4, 0x42, 0xcb, 0x1d, 0x66, 0x77, 0xc5,
+	0x48, 0x10, 0x74, 0x68, 0xd3, 0xa2, 0x48, 0x4f, 0x05, 0x7a, 0x49, 0x11, 0x34, 0x41, 0x81, 0x9e,
+	0x7a, 0x49, 0x0f, 0xed, 0xa9, 0x07, 0x1f, 0x7a, 0x68, 0x2e, 0x05, 0x82, 0xf6, 0xd2, 0x02, 0x45,
+	0x5b, 0xd8, 0x3d, 0xb6, 0xff, 0x43, 0xb1, 0x33, 0xb3, 0xdc, 0x5d, 0x72, 0xbf, 0xe8, 0xd0, 0x80,
+	0x4e, 0x22, 0x87, 0xef, 0xe3, 0xf7, 0x7e, 0x6f, 0xe6, 0xcd, 0xbc, 0x67, 0x83, 0xd2, 0xb6, 0x59,
+	0x87, 0x5a, 0xc4, 0xd2, 0xa9, 0x4a, 0x0f, 0xf4, 0xc7, 0xc4, 0x6a, 0x52, 0xb5, 0x53, 0x55, 0x3f,
+	0xdc, 0xa7, 0xf6, 0x61, 0xa5, 0x6d, 0x33, 0x97, 0xe1, 0x97, 0x03, 0x99, 0x8a, 0x2f, 0x53, 0xe9,
+	0x54, 0x4b, 0x33, 0x3a, 0x73, 0x5a, 0xcc, 0xa9, 0x73, 0x29, 0x55, 0x7c, 0x11, 0x2a, 0xa5, 0x45,
+	0xf1, 0x4d, 0xdd, 0x21, 0x0e, 0x15, 0xb6, 0xd4, 0x4e, 0x75, 0x87, 0xba, 0xa4, 0xaa, 0xb6, 0x49,
+	0xd3, 0xb0, 0x88, 0x6b, 0x30, 0x4b, 0xca, 0x96, 0xc3, 0xb2, 0xbe, 0x94, 0xce, 0x0c, 0xff, 0xf7,
+	0x4b, 0x4d, 0xc6, 0x9a, 0x26, 0x55, 0x49, 0xdb, 0x50, 0x89, 0x65, 0x31, 0x97, 0x2b, 0xfb, 0x9e,
+	0x0a, 0x4d, 0xd6, 0x64, 0x02, 0x81, 0xf7, 0x49, 0xae, 0x2e, 0x24, 0x84, 0xa5, 0xb3, 0x56, 0xcb,
+	0x70, 0x5b, 0xd4, 0x72, 0x7d, 0xfd, 0xab, 0x09, 0x92, 0x2d, 0x62, 0xef, 0x51, 0x37, 0x43, 0x88,
+	0xd9, 0x0d, 0x6a, 0x67, 0x59, 0x6a, 0x13, 0x9b, 0xb4, 0x7c, 0xa1, 0xb9, 0x04, 0x21, 0xf7, 0x40,
+	0x08, 0x28, 0x9f, 0x22, 0x28, 0xbe, 0xeb, 0x11, 0xf6, 0xc0, 0xb3, 0xbd, 0x41, 0xe9, 0x3a, 0x31,
+	0x75, 0x8d, 0x7e, 0xb8, 0x4f, 0x1d, 0x17, 0xdf, 0x83, 0x49, 0xe2, 0xec, 0xd5, 0xb9, 0xdb, 0xe2,
+	0xc8, 0x3c, 0x5a, 0x98, 0xaa, 0xcd, 0x57, 0xe2, 0xb3, 0x53, 0x59, 0x75, 0xf6, 0xb8, 0x09, 0x6d,
+	0x82, 0xc8, 0x4f, 0x9e, 0xfa, 0x8e, 0xd1, 0x90, 0xea, 0xa3, 0xe9, 0xea, 0x6b, 0x46, 0x43, 0xaa,
+	0xef, 0xc8, 0x4f, 0xca, 0x6f, 0x47, 0x60, 0x26, 0x06, 0x9a, 0xd3, 0x66, 0x96, 0x43, 0xf1, 0xbb,
+	0x50, 0xd0, 0x6d, 0xca, 0x73, 0x53, 0xdf, 0xa5, 0xb4, 0xce, 0xda, 0x3c, 0x4d, 0x45, 0x34, 0x3f,
+	0xba, 0x30, 0x55, 0x9b, 0xa9, 0xc8, 0xfd, 0xe1, 0x65, 0xb9, 0x22, 0xb3, 0x5c, 0x59, 0x67, 0x86,
+	0xb5, 0x76, 0xfa, 0xab, 0x7f, 0xce, 0x9d, 0xd2, 0xb0, 0xaf, 0xbc, 0x41, 0xe9, 0x03, 0xa1, 0x8a,
+	0xbf, 0x0f, 0xb3, 0x0e, 0x75, 0x5d, 0x93, 0x7a, 0x09, 0xab, 0xef, 0x9a, 0xc4, 0x8d, 0x58, 0x1e,
+	0xc9, 0x67, 0xb9, 0x18, 0xd8, 0xd8, 0x30, 0x89, 0x1b, 0xb2, 0xff, 0x01, 0x5c, 0x0a, 0xd9, 0xb7,
+	0x3d, 0xf7, 0x11, 0x07, 0xa3, 0xf9, 0x1c, 0xcc, 0x04, 0x46, 0x34, 0xcf, 0x46, 0xe0, 0x41, 0xa9,
+	0x42, 0x81, 0x33, 0xb6, 0x49, 0x5d, 0xc1, 0xa6, 0x4c, 0xe4, 0x0c, 0x4c, 0xf0, 0x2c, 0xd4, 0x8d,
+	0x46, 0x11, 0xcd, 0xa3, 0x85, 0xd3, 0xda, 0x19, 0xfe, 0x7d, 0xab, 0xa1, 0x7c, 0x07, 0x2e, 0xf6,
+	0xa8, 0x48, 0x82, 0x97, 0x61, 0x4c, 0x64, 0x0e, 0xf1, 0xcc, 0x5d, 0x4e, 0xca, 0x9c, 0xd0, 0x12,
+	0xb2, 0xca, 0x07, 0x30, 0x1f, 0xb1, 0xb6, 0x76, 0xf8, 0xed, 0x03, 0x97, 0xda, 0x16, 0x31, 0xb7,
+	0xde, 0xf6, 0xc1, 0xcc, 0xc2, 0xa4, 0xd8, 0xed, 0x3e, 0x9a, 0x73, 0xda, 0x84, 0x58, 0xd8, 0x6a,
+	0xe0, 0x39, 0x98, 0xa2, 0x52, 0xc3, 0xfb, 0xd9, 0xdb, 0x74, 0x93, 0x1a, 0xf8, 0x4b, 0x5b, 0x0d,
+	0xe5, 0x7d, 0xb8, 0x92, 0xe2, 0xe1, 0x9b, 0x60, 0xff, 0x13, 0x82, 0x59, 0xdf, 0xf4, 0x3b, 0x1c,
+	0x0f, 0xff, 0xd9, 0xc9, 0x85, 0xfb, 0x32, 0x80, 0x60, 0xd8, 0x3d, 0x6c, 0x53, 0x09, 0x7b, 0x92,
+	0xaf, 0x3c, 0x3c, 0x6c, 0x53, 0x7c, 0x0d, 0xa6, 0xc9, 0xae, 0x4b, 0xed, 0x7a, 0x37, 0x0d, 0xa3,
+	0x3c, 0x0d, 0x67, 0xf9, 0xea, 0x03, 0x91, 0x0b, 0xbc, 0x01, 0x10, 0x94, 0xab, 0xa2, 0xce, 0xb1,
+	0xbf, 0x1a, 0xd9, 0x0e, 0xa2, 0x4e, 0xfa, 0x9b, 0x62, 0x9b, 0x34, 0xa9, 0x44, 0xa7, 0x85, 0x34,
+	0x95, 0xcf, 0x11, 0x5c, 0x8a, 0x8f, 0x44, 0xf2, 0x73, 0x07, 0xc6, 0x45, 0x2d, 0x91, 0xc7, 0x25,
+	0x83, 0x20, 0x29, 0x8c, 0x37, 0x63, 0xf0, 0x5d, 0xcf, 0xc4, 0x27, 0x7c, 0x46, 0x00, 0xfe, 0x1d,
+	0x41, 0xa9, 0x9b, 0xc5, 0x8f, 0x2c, 0xc9, 0x40, 0x97, 0xe9, 0x0a, 0x8c, 0x31, 0x6f, 0x95, 0xb3,
+	0x3c, 0xb9, 0x56, 0xfc, 0xcb, 0xef, 0x96, 0x0a, 0xd2, 0xcb, 0x6a, 0xa3, 0x61, 0x53, 0xc7, 0x79,
+	0xcf, 0xb5, 0x0d, 0xab, 0xa9, 0x09, 0xb1, 0x93, 0x45, 0xfe, 0x2f, 0x43, 0xdb, 0x28, 0x12, 0xdb,
+	0x09, 0xe1, 0xfe, 0x49, 0x88, 0xfb, 0x55, 0xc7, 0xe9, 0xdd, 0xe5, 0x05, 0x18, 0x23, 0xde, 0xaa,
+	0xe0, 0x5e, 0x13, 0x5f, 0x4e, 0x2e, 0xc3, 0x91, 0x08, 0x4e, 0x08, 0xc3, 0x3b, 0xf2, 0x4a, 0xf5,
+	0xe0, 0x99, 0x66, 0x94, 0xde, 0x61, 0x71, 0xf0, 0x19, 0x92, 0x97, 0x63, 0xd4, 0xc9, 0x09, 0x61,
+	0xc0, 0x0c, 0xc0, 0xad, 0x77, 0x9f, 0x40, 0x3e, 0x05, 0x35, 0x38, 0x43, 0x74, 0x9d, 0xed, 0x5b,
+	0x6e, 0xe6, 0xf9, 0xf6, 0x05, 0xa3, 0xb5, 0x77, 0x24, 0x5a, 0x7b, 0x95, 0x1f, 0x84, 0x76, 0x74,
+	0xd8, 0x9d, 0x24, 0x43, 0x87, 0x71, 0xd2, 0x92, 0xee, 0x32, 0x2e, 0xd8, 0x5b, 0xde, 0x05, 0xfb,
+	0x9b, 0x7f, 0xcd, 0x2d, 0x34, 0x0d, 0xf7, 0xf1, 0xfe, 0x4e, 0x45, 0x67, 0x2d, 0xf9, 0xd0, 0x94,
+	0x7f, 0x96, 0x9c, 0xc6, 0x9e, 0xea, 0x9d, 0x01, 0x87, 0x2b, 0x38, 0x9a, 0x34, 0xad, 0x7c, 0x81,
+	0x82, 0x7b, 0x69, 0x55, 0x80, 0x0e, 0xa0, 0x38, 0xdf, 0x24, 0xf4, 0x61, 0xed, 0x98, 0xdf, 0x23,
+	0x50, 0xd2, 0x10, 0x4a, 0xb6, 0x36, 0x60, 0x2a, 0xf4, 0x6a, 0x95, 0x94, 0x5d, 0x4b, 0xda, 0x3f,
+	0xe2, 0x76, 0x59, 0xe5, 0x1c, 0x68, 0x61, 0xc5, 0xe1, 0xed, 0xa5, 0x9f, 0xa0, 0xe0, 0x4d, 0x21,
+	0xdc, 0xc5, 0x10, 0x9b, 0x7a, 0x37, 0x0f, 0x91, 0xc1, 0x2b, 0x29, 0x48, 0x24, 0x81, 0x9b, 0x71,
+	0x04, 0xbe, 0x92, 0xf8, 0x6c, 0x16, 0x99, 0x78, 0xa1, 0x0c, 0x36, 0xe1, 0x72, 0xa8, 0x54, 0xc4,
+	0xb0, 0x37, 0x2c, 0x82, 0xbe, 0x44, 0x50, 0x4e, 0xf2, 0x24, 0xd9, 0x79, 0x3b, 0x8e, 0x1d, 0x25,
+	0x89, 0x9d, 0xd0, 0x69, 0x7e, 0x31, 0xd4, 0xdc, 0x0e, 0x5e, 0xbf, 0x22, 0xa3, 0x79, 0x36, 0x94,
+	0xf2, 0x23, 0x04, 0x2f, 0xf7, 0xaa, 0xc9, 0xf8, 0xbc, 0x13, 0x2e, 0xce, 0x71, 0x8e, 0x13, 0x2e,
+	0xbe, 0xe2, 0x15, 0x18, 0x17, 0xa6, 0x65, 0x8f, 0x55, 0x4e, 0x3f, 0x6d, 0x9a, 0x94, 0x56, 0xf4,
+	0xc8, 0x15, 0x20, 0x7e, 0x1c, 0x7a, 0x4e, 0x7f, 0x1d, 0x7e, 0x2e, 0x84, 0xbc, 0xc8, 0x78, 0xef,
+	0xc1, 0x19, 0x81, 0xc6, 0xcf, 0xe5, 0xd5, 0x74, 0xf0, 0x6b, 0xb6, 0x41, 0x77, 0x35, 0x5f, 0x67,
+	0x78, 0x89, 0x2c, 0x00, 0xe6, 0x28, 0xb7, 0x79, 0xf7, 0x2b, 0x03, 0x51, 0xde, 0x81, 0x0b, 0x91,
+	0x55, 0x09, 0x7a, 0x05, 0xc6, 0x45, 0x97, 0x2c, 0xfb, 0x83, 0x44, 0xc2, 0xa5, 0x9e, 0x94, 0x56,
+	0x3e, 0x46, 0x70, 0x9d, 0xdb, 0x0b, 0xf6, 0xe5, 0x7b, 0x41, 0xb3, 0x17, 0xed, 0x9d, 0xdf, 0x07,
+	0x08, 0xfa, 0x34, 0xe9, 0xe7, 0x6e, 0x22, 0x37, 0x4e, 0xb3, 0xb7, 0xa0, 0x08, 0xc3, 0xdd, 0x8c,
+	0x04, 0xb6, 0x94, 0x5f, 0x9d, 0x86, 0x85, 0x6c, 0x14, 0x32, 0xd4, 0x36, 0x9c, 0xf3, 0x1d, 0x79,
+	0xbd, 0xa6, 0xf3, 0x22, 0xee, 0xc0, 0xb3, 0xbe, 0x87, 0x0d, 0x4a, 0x1d, 0x6c, 0xc2, 0x94, 0x61,
+	0xb5, 0xf7, 0xdd, 0xba, 0xcb, 0x5c, 0x62, 0x66, 0x77, 0xcd, 0x83, 0xfb, 0x03, 0x6e, 0xff, 0xa1,
+	0x67, 0x1e, 0xbb, 0x70, 0x5e, 0x67, 0x56, 0x87, 0xda, 0x2e, 0x6d, 0x48, 0x8f, 0xa3, 0xc3, 0xf7,
+	0x38, 0xdd, 0xf5, 0x21, 0xbc, 0x3e, 0xf4, 0xbd, 0x3a, 0x06, 0xb3, 0xea, 0x16, 0xe9, 0x38, 0xc5,
+	0xd3, 0xe9, 0x75, 0xfe, 0xbe, 0x7c, 0xaa, 0x6e, 0xdb, 0x86, 0x4e, 0x65, 0x23, 0x3f, 0x1d, 0xd8,
+	0xb8, 0x4f, 0x3a, 0x0e, 0xde, 0x02, 0x70, 0xc5, 0x44, 0xc0, 0x22, 0x9d, 0xe2, 0x18, 0xdf, 0x32,
+	0x03, 0x19, 0x9c, 0x70, 0xd9, 0x06, 0xa5, 0xf7, 0x49, 0x47, 0xf9, 0xc4, 0xbf, 0x34, 0xbf, 0x4b,
+	0x4c, 0xa3, 0x41, 0x5c, 0xba, 0x6e, 0x53, 0xe2, 0xd2, 0x68, 0x8d, 0xa3, 0x70, 0x91, 0x4f, 0x41,
+	0x68, 0x5d, 0x96, 0x3a, 0x5b, 0xfc, 0x20, 0x77, 0x6b, 0x35, 0x65, 0xb7, 0x6e, 0xb2, 0x4e, 0x8c,
+	0x45, 0xed, 0x82, 0xde, 0xbf, 0xa8, 0xec, 0xca, 0x5b, 0x33, 0x1e, 0x8a, 0xdc, 0xa7, 0x05, 0x18,
+	0xa3, 0xb6, 0xcd, 0x6c, 0xbf, 0xed, 0xe0, 0x5f, 0xf0, 0x0d, 0xc0, 0x4d, 0xd6, 0xa9, 0xb7, 0x6d,
+	0xd6, 0xae, 0x7f, 0x64, 0x98, 0x66, 0xbd, 0x4d, 0x1c, 0x87, 0x57, 0xc9, 0x09, 0xed, 0x7c, 0x93,
+	0x75, 0xb6, 0x6d, 0xd6, 0xfe, 0x9e, 0x61, 0x9a, 0xdb, 0xc4, 0x71, 0x94, 0xd7, 0x65, 0xa1, 0xf2,
+	0xfd, 0x0c, 0x50, 0xd0, 0x97, 0x65, 0x43, 0xd1, 0xab, 0x9a, 0x06, 0xce, 0x7b, 0x76, 0x96, 0x7b,
+	0xb4, 0x2c, 0x22, 0x0e, 0x81, 0xef, 0xb4, 0x0e, 0x17, 0x5a, 0x7c, 0x91, 0x9f, 0xbd, 0x1e, 0x7e,
+	0xd5, 0x74, 0x7e, 0xfb, 0xac, 0x69, 0x2f, 0xb5, 0x7a, 0x97, 0x94, 0x06, 0xcc, 0x25, 0x42, 0x18,
+	0x1a, 0xb3, 0xb5, 0x27, 0xb3, 0x30, 0xc6, 0xdd, 0xe0, 0x2f, 0x10, 0x9c, 0x0d, 0x8f, 0xe3, 0xf0,
+	0xad, 0xa4, 0x20, 0x92, 0x86, 0x8a, 0xa5, 0xea, 0x00, 0x1a, 0x22, 0x04, 0x65, 0xf1, 0x87, 0x7f,
+	0xfd, 0xcf, 0xcf, 0x47, 0xae, 0x61, 0x45, 0x4d, 0x18, 0x67, 0x7a, 0xec, 0x8a, 0xe9, 0x28, 0xfe,
+	0x05, 0x82, 0x09, 0x7f, 0x36, 0x84, 0x6f, 0xa6, 0xfa, 0xea, 0x99, 0x92, 0x95, 0x96, 0x72, 0x4a,
+	0x4b, 0x54, 0xb7, 0x38, 0xaa, 0x45, 0xbc, 0xa0, 0xa6, 0x8d, 0x6b, 0xd5, 0x23, 0xbf, 0x27, 0x3e,
+	0xc6, 0x9f, 0x8e, 0x40, 0x21, 0x6e, 0x6e, 0x85, 0xef, 0xe6, 0xf2, 0x1c, 0x33, 0x4c, 0x2b, 0xbd,
+	0xfe, 0x1c, 0x9a, 0x12, 0xff, 0x4f, 0x11, 0x0f, 0xe0, 0x63, 0x84, 0xdf, 0x4c, 0x8d, 0xc0, 0x91,
+	0xc3, 0x69, 0xf5, 0xa8, 0x7b, 0x80, 0x8e, 0xd5, 0xa3, 0xd0, 0x94, 0xee, 0xf8, 0xd1, 0x5b, 0xf8,
+	0x5b, 0x6a, 0xea, 0x60, 0x3b, 0xa2, 0x2b, 0x79, 0x09, 0x5b, 0xc0, 0xff, 0x45, 0x70, 0xbe, 0x67,
+	0x5a, 0x85, 0x97, 0xb3, 0x62, 0x8b, 0x99, 0xd2, 0x95, 0x6e, 0x0f, 0xa6, 0x24, 0xb9, 0xb0, 0x38,
+	0x15, 0x8f, 0x71, 0x75, 0x60, 0x26, 0x1e, 0x2d, 0x27, 0x2b, 0x25, 0xc5, 0xee, 0xe0, 0x2f, 0x11,
+	0x4c, 0x47, 0xe7, 0x43, 0xb8, 0x96, 0x99, 0xc9, 0xbe, 0x41, 0x59, 0x69, 0x79, 0x20, 0x1d, 0x19,
+	0xeb, 0x6d, 0x1e, 0x6b, 0x05, 0xdf, 0xcc, 0x88, 0x95, 0xcf, 0xd6, 0xd4, 0x23, 0xfe, 0xe7, 0xd8,
+	0x47, 0x1c, 0x9a, 0xb7, 0x64, 0x23, 0xee, 0x1f, 0x2f, 0x65, 0x23, 0x8e, 0x19, 0xe8, 0xe4, 0x46,
+	0xcc, 0x67, 0x55, 0xea, 0x11, 0xff, 0x73, 0x8c, 0x3f, 0x43, 0x70, 0x36, 0x3c, 0x1d, 0xc9, 0xa8,
+	0x55, 0x31, 0xd3, 0x9a, 0x8c, 0x5a, 0x15, 0x37, 0x7a, 0x51, 0x5e, 0xe5, 0x58, 0xe7, 0x71, 0x39,
+	0x1d, 0x2b, 0x7e, 0x82, 0xe0, 0x5c, 0x64, 0x5e, 0x81, 0x33, 0x9d, 0xf5, 0x8d, 0x52, 0x4a, 0xb5,
+	0x41, 0x54, 0x24, 0xc0, 0x4d, 0x0e, 0x70, 0x35, 0xf9, 0xd0, 0xc7, 0xec, 0xda, 0xa0, 0xf7, 0x52,
+	0x8f, 0xe4, 0x5c, 0xe2, 0x18, 0xff, 0x19, 0xc1, 0xc5, 0xd8, 0x59, 0x02, 0xce, 0x2c, 0x4a, 0x89,
+	0x13, 0x92, 0xd2, 0x1b, 0xcf, 0xa3, 0x2a, 0x23, 0xbb, 0xc7, 0x23, 0x7b, 0x0d, 0xdf, 0x51, 0xb3,
+	0xff, 0x39, 0x4e, 0x95, 0x61, 0x84, 0xe2, 0xf9, 0xb1, 0xa8, 0xce, 0x7d, 0x9d, 0x7d, 0x76, 0x75,
+	0x4e, 0x1a, 0x4b, 0x64, 0x57, 0xe7, 0xc4, 0x31, 0x82, 0x72, 0xc0, 0x83, 0xb1, 0xf1, 0x4a, 0x9e,
+	0x60, 0x62, 0xca, 0xd2, 0xdd, 0x64, 0xcd, 0xd4, 0x04, 0xf3, 0xda, 0xf4, 0x52, 0x5f, 0x03, 0x8f,
+	0xef, 0xe4, 0x38, 0x0a, 0x31, 0x0c, 0xac, 0x0c, 0xaa, 0x26, 0xc3, 0xbf, 0xc1, 0xc3, 0x7f, 0x05,
+	0x5f, 0xcd, 0x11, 0x3e, 0xfe, 0x1c, 0xc1, 0x64, 0x97, 0x4c, 0xbc, 0x94, 0x8f, 0x74, 0x1f, 0x61,
+	0x25, 0xaf, 0xb8, 0x44, 0x56, 0xe3, 0xc8, 0x6e, 0xe2, 0xc5, 0xfc, 0xf4, 0x7a, 0xcf, 0xa6, 0x73,
+	0x91, 0xfe, 0x19, 0xe7, 0xa9, 0x2c, 0xd1, 0x8e, 0x3e, 0xfb, 0xb0, 0xf7, 0xb7, 0xe7, 0xca, 0x75,
+	0x0e, 0xf6, 0x0a, 0x9e, 0x4b, 0x07, 0xeb, 0xe0, 0x4f, 0x10, 0x8c, 0x8b, 0x6e, 0x17, 0x2f, 0xa6,
+	0xfa, 0x89, 0x34, 0xd8, 0xa5, 0x1b, 0xb9, 0x64, 0xf3, 0x96, 0x46, 0xd1, 0x66, 0xe3, 0x7f, 0x20,
+	0x98, 0x4d, 0xe9, 0x6d, 0xf1, 0x9b, 0xa9, 0x4e, 0xb3, 0x7b, 0xf3, 0xd2, 0x5b, 0xcf, 0x6f, 0x40,
+	0x86, 0xf2, 0x06, 0x0f, 0xe5, 0x36, 0xae, 0xa5, 0xbe, 0x48, 0x83, 0x3d, 0x5a, 0x0f, 0xfa, 0x77,
+	0xfc, 0x47, 0x04, 0x85, 0xb8, 0x5e, 0x28, 0xa3, 0xce, 0xa4, 0x74, 0x72, 0x19, 0x75, 0x26, 0xad,
+	0xf1, 0x52, 0x56, 0x78, 0x24, 0xb7, 0x70, 0x25, 0x29, 0x92, 0x8e, 0xd4, 0x56, 0x23, 0xbd, 0x22,
+	0xfe, 0x1f, 0x82, 0xe9, 0x68, 0xbb, 0x94, 0xf1, 0x1e, 0x88, 0x6d, 0xcb, 0x32, 0xde, 0x03, 0xf1,
+	0xfd, 0x98, 0x62, 0x73, 0xcc, 0x26, 0x5e, 0xce, 0xc4, 0x1c, 0x53, 0x18, 0xef, 0x24, 0xab, 0xc5,
+	0x14, 0x46, 0xdf, 0x12, 0xfe, 0x03, 0x02, 0xdc, 0xdf, 0x65, 0xe1, 0x95, 0x9c, 0xf8, 0x7b, 0x1a,
+	0xb7, 0xd2, 0x6b, 0x03, 0xeb, 0xe5, 0x7d, 0x0b, 0x85, 0x62, 0xef, 0x76, 0x9e, 0x6b, 0xf4, 0xab,
+	0xa7, 0x65, 0xf4, 0xf5, 0xd3, 0x32, 0xfa, 0xf7, 0xd3, 0x32, 0xfa, 0xd9, 0xb3, 0xf2, 0xa9, 0xaf,
+	0x9f, 0x95, 0x4f, 0xfd, 0xed, 0x59, 0xf9, 0x14, 0xcc, 0x18, 0x2c, 0x01, 0xca, 0x36, 0x7a, 0x54,
+	0x09, 0x4d, 0x48, 0x02, 0xa1, 0x25, 0x83, 0x85, 0x9d, 0x1f, 0x74, 0xdd, 0xef, 0x8c, 0xf3, 0xff,
+	0x54, 0xb2, 0xfc, 0xff, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6d, 0x4c, 0xcd, 0x04, 0xe7, 0x23, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1583,12 +2183,22 @@ type QueryClient interface {
 	GetAssetOrders(ctx context.Context, in *QueryGetAssetOrdersRequest, opts ...grpc.CallOption) (*QueryGetAssetOrdersResponse, error)
 	// GetAllOrders gets all orders in the exchange module.
 	GetAllOrders(ctx context.Context, in *QueryGetAllOrdersRequest, opts ...grpc.CallOption) (*QueryGetAllOrdersResponse, error)
+	// GetCommitment gets the funds in an account that are committed to the market.
+	GetCommitment(ctx context.Context, in *QueryGetCommitmentRequest, opts ...grpc.CallOption) (*QueryGetCommitmentResponse, error)
+	// GetAccountCommitments gets all the funds in an account that are committed to any market.
+	GetAccountCommitments(ctx context.Context, in *QueryGetAccountCommitmentsRequest, opts ...grpc.CallOption) (*QueryGetAccountCommitmentsResponse, error)
+	// GetMarketCommitments gets all the funds committed to a market from any account.
+	GetMarketCommitments(ctx context.Context, in *QueryGetMarketCommitmentsRequest, opts ...grpc.CallOption) (*QueryGetMarketCommitmentsResponse, error)
+	// GetAllCommitments gets all fund committed to any market from any account.
+	GetAllCommitments(ctx context.Context, in *QueryGetAllCommitmentsRequest, opts ...grpc.CallOption) (*QueryGetAllCommitmentsResponse, error)
 	// GetMarket returns all the information and details about a market.
 	GetMarket(ctx context.Context, in *QueryGetMarketRequest, opts ...grpc.CallOption) (*QueryGetMarketResponse, error)
 	// GetAllMarkets returns brief information about each market.
 	GetAllMarkets(ctx context.Context, in *QueryGetAllMarketsRequest, opts ...grpc.CallOption) (*QueryGetAllMarketsResponse, error)
 	// Params returns the exchange module parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// CommitmentSettlementFeeCalc calculates the fees a market will pay for a commitment settlement using current NAVs.
+	CommitmentSettlementFeeCalc(ctx context.Context, in *QueryCommitmentSettlementFeeCalcRequest, opts ...grpc.CallOption) (*QueryCommitmentSettlementFeeCalcResponse, error)
 	// ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
 	ValidateCreateMarket(ctx context.Context, in *QueryValidateCreateMarketRequest, opts ...grpc.CallOption) (*QueryValidateCreateMarketResponse, error)
 	// ValidateMarket checks for any problems with a market's setup.
@@ -1668,6 +2278,42 @@ func (c *queryClient) GetAllOrders(ctx context.Context, in *QueryGetAllOrdersReq
 	return out, nil
 }
 
+func (c *queryClient) GetCommitment(ctx context.Context, in *QueryGetCommitmentRequest, opts ...grpc.CallOption) (*QueryGetCommitmentResponse, error) {
+	out := new(QueryGetCommitmentResponse)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetCommitment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAccountCommitments(ctx context.Context, in *QueryGetAccountCommitmentsRequest, opts ...grpc.CallOption) (*QueryGetAccountCommitmentsResponse, error) {
+	out := new(QueryGetAccountCommitmentsResponse)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetAccountCommitments", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetMarketCommitments(ctx context.Context, in *QueryGetMarketCommitmentsRequest, opts ...grpc.CallOption) (*QueryGetMarketCommitmentsResponse, error) {
+	out := new(QueryGetMarketCommitmentsResponse)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetMarketCommitments", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAllCommitments(ctx context.Context, in *QueryGetAllCommitmentsRequest, opts ...grpc.CallOption) (*QueryGetAllCommitmentsResponse, error) {
+	out := new(QueryGetAllCommitmentsResponse)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetAllCommitments", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) GetMarket(ctx context.Context, in *QueryGetMarketRequest, opts ...grpc.CallOption) (*QueryGetMarketResponse, error) {
 	out := new(QueryGetMarketResponse)
 	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/GetMarket", in, out, opts...)
@@ -1689,6 +2335,15 @@ func (c *queryClient) GetAllMarkets(ctx context.Context, in *QueryGetAllMarketsR
 func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
 	out := new(QueryParamsResponse)
 	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/Params", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) CommitmentSettlementFeeCalc(ctx context.Context, in *QueryCommitmentSettlementFeeCalcRequest, opts ...grpc.CallOption) (*QueryCommitmentSettlementFeeCalcResponse, error) {
+	out := new(QueryCommitmentSettlementFeeCalcResponse)
+	err := c.cc.Invoke(ctx, "/provenance.exchange.v1.Query/CommitmentSettlementFeeCalc", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1738,12 +2393,22 @@ type QueryServer interface {
 	GetAssetOrders(context.Context, *QueryGetAssetOrdersRequest) (*QueryGetAssetOrdersResponse, error)
 	// GetAllOrders gets all orders in the exchange module.
 	GetAllOrders(context.Context, *QueryGetAllOrdersRequest) (*QueryGetAllOrdersResponse, error)
+	// GetCommitment gets the funds in an account that are committed to the market.
+	GetCommitment(context.Context, *QueryGetCommitmentRequest) (*QueryGetCommitmentResponse, error)
+	// GetAccountCommitments gets all the funds in an account that are committed to any market.
+	GetAccountCommitments(context.Context, *QueryGetAccountCommitmentsRequest) (*QueryGetAccountCommitmentsResponse, error)
+	// GetMarketCommitments gets all the funds committed to a market from any account.
+	GetMarketCommitments(context.Context, *QueryGetMarketCommitmentsRequest) (*QueryGetMarketCommitmentsResponse, error)
+	// GetAllCommitments gets all fund committed to any market from any account.
+	GetAllCommitments(context.Context, *QueryGetAllCommitmentsRequest) (*QueryGetAllCommitmentsResponse, error)
 	// GetMarket returns all the information and details about a market.
 	GetMarket(context.Context, *QueryGetMarketRequest) (*QueryGetMarketResponse, error)
 	// GetAllMarkets returns brief information about each market.
 	GetAllMarkets(context.Context, *QueryGetAllMarketsRequest) (*QueryGetAllMarketsResponse, error)
 	// Params returns the exchange module parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// CommitmentSettlementFeeCalc calculates the fees a market will pay for a commitment settlement using current NAVs.
+	CommitmentSettlementFeeCalc(context.Context, *QueryCommitmentSettlementFeeCalcRequest) (*QueryCommitmentSettlementFeeCalcResponse, error)
 	// ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
 	ValidateCreateMarket(context.Context, *QueryValidateCreateMarketRequest) (*QueryValidateCreateMarketResponse, error)
 	// ValidateMarket checks for any problems with a market's setup.
@@ -1777,6 +2442,18 @@ func (*UnimplementedQueryServer) GetAssetOrders(ctx context.Context, req *QueryG
 func (*UnimplementedQueryServer) GetAllOrders(ctx context.Context, req *QueryGetAllOrdersRequest) (*QueryGetAllOrdersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllOrders not implemented")
 }
+func (*UnimplementedQueryServer) GetCommitment(ctx context.Context, req *QueryGetCommitmentRequest) (*QueryGetCommitmentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCommitment not implemented")
+}
+func (*UnimplementedQueryServer) GetAccountCommitments(ctx context.Context, req *QueryGetAccountCommitmentsRequest) (*QueryGetAccountCommitmentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAccountCommitments not implemented")
+}
+func (*UnimplementedQueryServer) GetMarketCommitments(ctx context.Context, req *QueryGetMarketCommitmentsRequest) (*QueryGetMarketCommitmentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMarketCommitments not implemented")
+}
+func (*UnimplementedQueryServer) GetAllCommitments(ctx context.Context, req *QueryGetAllCommitmentsRequest) (*QueryGetAllCommitmentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllCommitments not implemented")
+}
 func (*UnimplementedQueryServer) GetMarket(ctx context.Context, req *QueryGetMarketRequest) (*QueryGetMarketResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMarket not implemented")
 }
@@ -1785,6 +2462,9 @@ func (*UnimplementedQueryServer) GetAllMarkets(ctx context.Context, req *QueryGe
 }
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) CommitmentSettlementFeeCalc(ctx context.Context, req *QueryCommitmentSettlementFeeCalcRequest) (*QueryCommitmentSettlementFeeCalcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CommitmentSettlementFeeCalc not implemented")
 }
 func (*UnimplementedQueryServer) ValidateCreateMarket(ctx context.Context, req *QueryValidateCreateMarketRequest) (*QueryValidateCreateMarketResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidateCreateMarket not implemented")
@@ -1926,6 +2606,78 @@ func _Query_GetAllOrders_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetCommitment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetCommitmentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetCommitment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.exchange.v1.Query/GetCommitment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetCommitment(ctx, req.(*QueryGetCommitmentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAccountCommitments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetAccountCommitmentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAccountCommitments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.exchange.v1.Query/GetAccountCommitments",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAccountCommitments(ctx, req.(*QueryGetAccountCommitmentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetMarketCommitments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetMarketCommitmentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetMarketCommitments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.exchange.v1.Query/GetMarketCommitments",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetMarketCommitments(ctx, req.(*QueryGetMarketCommitmentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAllCommitments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetAllCommitmentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAllCommitments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.exchange.v1.Query/GetAllCommitments",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAllCommitments(ctx, req.(*QueryGetAllCommitmentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_GetMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetMarketRequest)
 	if err := dec(in); err != nil {
@@ -1976,6 +2728,24 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_CommitmentSettlementFeeCalc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryCommitmentSettlementFeeCalcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).CommitmentSettlementFeeCalc(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.exchange.v1.Query/CommitmentSettlementFeeCalc",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).CommitmentSettlementFeeCalc(ctx, req.(*QueryCommitmentSettlementFeeCalcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2067,6 +2837,22 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_GetAllOrders_Handler,
 		},
 		{
+			MethodName: "GetCommitment",
+			Handler:    _Query_GetCommitment_Handler,
+		},
+		{
+			MethodName: "GetAccountCommitments",
+			Handler:    _Query_GetAccountCommitments_Handler,
+		},
+		{
+			MethodName: "GetMarketCommitments",
+			Handler:    _Query_GetMarketCommitments_Handler,
+		},
+		{
+			MethodName: "GetAllCommitments",
+			Handler:    _Query_GetAllCommitments_Handler,
+		},
+		{
 			MethodName: "GetMarket",
 			Handler:    _Query_GetMarket_Handler,
 		},
@@ -2077,6 +2863,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "CommitmentSettlementFeeCalc",
+			Handler:    _Query_CommitmentSettlementFeeCalc_Handler,
 		},
 		{
 			MethodName: "ValidateCreateMarket",
@@ -2747,6 +3537,354 @@ func (m *QueryGetAllOrdersResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryGetCommitmentRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetCommitmentRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetCommitmentRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Account) > 0 {
+		i -= len(m.Account)
+		copy(dAtA[i:], m.Account)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Account)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetCommitmentResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetCommitmentResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetCommitmentResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetAccountCommitmentsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetAccountCommitmentsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetAccountCommitmentsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.Account) > 0 {
+		i -= len(m.Account)
+		copy(dAtA[i:], m.Account)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Account)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetAccountCommitmentsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetAccountCommitmentsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetAccountCommitmentsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.Commitments) > 0 {
+		for iNdEx := len(m.Commitments) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Commitments[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetMarketCommitmentsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetMarketCommitmentsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetMarketCommitmentsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetMarketCommitmentsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetMarketCommitmentsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetMarketCommitmentsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.Commitments) > 0 {
+		for iNdEx := len(m.Commitments) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Commitments[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetAllCommitmentsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetAllCommitmentsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetAllCommitmentsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetAllCommitmentsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetAllCommitmentsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetAllCommitmentsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0x9a
+	}
+	if len(m.Commitments) > 0 {
+		for iNdEx := len(m.Commitments) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Commitments[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *QueryGetMarketRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2959,6 +4097,130 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCommitmentSettlementFeeCalcRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCommitmentSettlementFeeCalcRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCommitmentSettlementFeeCalcRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Settlement != nil {
+		{
+			size, err := m.Settlement.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryCommitmentSettlementFeeCalcResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryCommitmentSettlementFeeCalcResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryCommitmentSettlementFeeCalcResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.ToFeeNav.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	if len(m.ConversionNavs) > 0 {
+		for iNdEx := len(m.ConversionNavs) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ConversionNavs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.ConvertedTotal) > 0 {
+		for iNdEx := len(m.ConvertedTotal) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ConvertedTotal[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.InputTotal) > 0 {
+		for iNdEx := len(m.InputTotal) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.InputTotal[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.ExchangeFees) > 0 {
+		for iNdEx := len(m.ExchangeFees) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ExchangeFees[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -3440,6 +4702,140 @@ func (m *QueryGetAllOrdersResponse) Size() (n int) {
 	return n
 }
 
+func (m *QueryGetCommitmentRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Account)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.MarketId != 0 {
+		n += 1 + sovQuery(uint64(m.MarketId))
+	}
+	return n
+}
+
+func (m *QueryGetCommitmentResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		for _, e := range m.Amount {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryGetAccountCommitmentsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Account)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetAccountCommitmentsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Commitments) > 0 {
+		for _, e := range m.Commitments {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetMarketCommitmentsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovQuery(uint64(m.MarketId))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetMarketCommitmentsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Commitments) > 0 {
+		for _, e := range m.Commitments {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetAllCommitmentsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetAllCommitmentsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Commitments) > 0 {
+		for _, e := range m.Commitments {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 2 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
 func (m *QueryGetMarketRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -3520,6 +4916,54 @@ func (m *QueryParamsResponse) Size() (n int) {
 		l = m.Params.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
+	return n
+}
+
+func (m *QueryCommitmentSettlementFeeCalcRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Settlement != nil {
+		l = m.Settlement.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryCommitmentSettlementFeeCalcResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ExchangeFees) > 0 {
+		for _, e := range m.ExchangeFees {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if len(m.InputTotal) > 0 {
+		for _, e := range m.InputTotal {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if len(m.ConvertedTotal) > 0 {
+		for _, e := range m.ConvertedTotal {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if len(m.ConversionNavs) > 0 {
+		for _, e := range m.ConversionNavs {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	l = m.ToFeeNav.Size()
+	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
@@ -5288,6 +6732,860 @@ func (m *QueryGetAllOrdersResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *QueryGetCommitmentRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetCommitmentRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetCommitmentRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Account", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Account = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetCommitmentResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetCommitmentResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetCommitmentResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = append(m.Amount, types.Coin{})
+			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetAccountCommitmentsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetAccountCommitmentsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetAccountCommitmentsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Account", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Account = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetAccountCommitmentsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetAccountCommitmentsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetAccountCommitmentsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Commitments", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Commitments = append(m.Commitments, &MarketAmount{})
+			if err := m.Commitments[len(m.Commitments)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetMarketCommitmentsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetMarketCommitmentsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetMarketCommitmentsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetMarketCommitmentsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetMarketCommitmentsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetMarketCommitmentsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Commitments", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Commitments = append(m.Commitments, &AccountAmount{})
+			if err := m.Commitments[len(m.Commitments)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetAllCommitmentsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetAllCommitmentsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetAllCommitmentsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetAllCommitmentsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetAllCommitmentsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetAllCommitmentsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Commitments", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Commitments = append(m.Commitments, &Commitment{})
+			if err := m.Commitments[len(m.Commitments)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 99:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *QueryGetMarketRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -5793,6 +8091,311 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 				m.Params = &Params{}
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCommitmentSettlementFeeCalcRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCommitmentSettlementFeeCalcRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCommitmentSettlementFeeCalcRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Settlement", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Settlement == nil {
+				m.Settlement = &MsgMarketCommitmentSettleRequest{}
+			}
+			if err := m.Settlement.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryCommitmentSettlementFeeCalcResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryCommitmentSettlementFeeCalcResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryCommitmentSettlementFeeCalcResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExchangeFees", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ExchangeFees = append(m.ExchangeFees, types.Coin{})
+			if err := m.ExchangeFees[len(m.ExchangeFees)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InputTotal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InputTotal = append(m.InputTotal, types.Coin{})
+			if err := m.InputTotal[len(m.InputTotal)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConvertedTotal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConvertedTotal = append(m.ConvertedTotal, types.Coin{})
+			if err := m.ConvertedTotal[len(m.ConvertedTotal)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConversionNavs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConversionNavs = append(m.ConversionNavs, NetAssetPrice{})
+			if err := m.ConversionNavs[len(m.ConversionNavs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ToFeeNav", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ToFeeNav.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

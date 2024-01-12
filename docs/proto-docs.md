@@ -52,6 +52,12 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
+- [provenance/exchange/v1/commitments.proto](#provenance/exchange/v1/commitments.proto)
+    - [AccountAmount](#provenance.exchange.v1.AccountAmount)
+    - [Commitment](#provenance.exchange.v1.Commitment)
+    - [MarketAmount](#provenance.exchange.v1.MarketAmount)
+    - [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice)
+  
 - [provenance/exchange/v1/events.proto](#provenance/exchange/v1/events.proto)
     - [EventMarketCreated](#provenance.exchange.v1.EventMarketCreated)
     - [EventMarketDetailsUpdated](#provenance.exchange.v1.EventMarketDetailsUpdated)
@@ -72,13 +78,11 @@
   
 - [provenance/exchange/v1/market.proto](#provenance/exchange/v1/market.proto)
     - [AccessGrant](#provenance.exchange.v1.AccessGrant)
-    - [AccountAmount](#provenance.exchange.v1.AccountAmount)
     - [FeeRatio](#provenance.exchange.v1.FeeRatio)
     - [Market](#provenance.exchange.v1.Market)
     - [MarketAccount](#provenance.exchange.v1.MarketAccount)
     - [MarketBrief](#provenance.exchange.v1.MarketBrief)
     - [MarketDetails](#provenance.exchange.v1.MarketDetails)
-    - [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice)
   
     - [Permission](#provenance.exchange.v1.Permission)
   
@@ -141,12 +145,22 @@
     - [Msg](#provenance.exchange.v1.Msg)
   
 - [provenance/exchange/v1/query.proto](#provenance/exchange/v1/query.proto)
+    - [QueryCommitmentSettlementFeeCalcRequest](#provenance.exchange.v1.QueryCommitmentSettlementFeeCalcRequest)
+    - [QueryCommitmentSettlementFeeCalcResponse](#provenance.exchange.v1.QueryCommitmentSettlementFeeCalcResponse)
+    - [QueryGetAccountCommitmentsRequest](#provenance.exchange.v1.QueryGetAccountCommitmentsRequest)
+    - [QueryGetAccountCommitmentsResponse](#provenance.exchange.v1.QueryGetAccountCommitmentsResponse)
+    - [QueryGetAllCommitmentsRequest](#provenance.exchange.v1.QueryGetAllCommitmentsRequest)
+    - [QueryGetAllCommitmentsResponse](#provenance.exchange.v1.QueryGetAllCommitmentsResponse)
     - [QueryGetAllMarketsRequest](#provenance.exchange.v1.QueryGetAllMarketsRequest)
     - [QueryGetAllMarketsResponse](#provenance.exchange.v1.QueryGetAllMarketsResponse)
     - [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest)
     - [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse)
     - [QueryGetAssetOrdersRequest](#provenance.exchange.v1.QueryGetAssetOrdersRequest)
     - [QueryGetAssetOrdersResponse](#provenance.exchange.v1.QueryGetAssetOrdersResponse)
+    - [QueryGetCommitmentRequest](#provenance.exchange.v1.QueryGetCommitmentRequest)
+    - [QueryGetCommitmentResponse](#provenance.exchange.v1.QueryGetCommitmentResponse)
+    - [QueryGetMarketCommitmentsRequest](#provenance.exchange.v1.QueryGetMarketCommitmentsRequest)
+    - [QueryGetMarketCommitmentsResponse](#provenance.exchange.v1.QueryGetMarketCommitmentsResponse)
     - [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest)
     - [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse)
     - [QueryGetMarketRequest](#provenance.exchange.v1.QueryGetMarketRequest)
@@ -1389,6 +1403,88 @@ Msg defines the attribute module Msg service.
 
 
 
+<a name="provenance/exchange/v1/commitments.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/commitments.proto
+
+
+
+<a name="provenance.exchange.v1.AccountAmount"></a>
+
+### AccountAmount
+AccountAmount associates an account with a coins amount.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account associated with the amount. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds associated with the address. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.Commitment"></a>
+
+### Commitment
+Commitment contains information on committed funds.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string with the committed funds. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numeric identifier of the market the funds are committed to. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds that have been committed by the account to the market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MarketAmount"></a>
+
+### MarketAmount
+MarketAmount associats a market with a coins amount.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numeric identifier the amount has been committed to. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds associated with the address. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.NetAssetPrice"></a>
+
+### NetAssetPrice
+NetAssetPrice is an association of assets and price used to record the value of things.
+It is related to the NetAssetValue message from the x/marker module, and is therefore often referred to as "a NAV".
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | assets is the volume and denom that has been bought or sold. |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is what was paid for the assets. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance/exchange/v1/events.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -1692,22 +1788,6 @@ AddrPermissions associates an address with a list of permissions available for t
 
 
 
-<a name="provenance.exchange.v1.AccountAmount"></a>
-
-### AccountAmount
-AccountAmount associates an account with a coins amount.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address is the bech32 address string associated with the amount. |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds associated with the address. |
-
-
-
-
-
-
 <a name="provenance.exchange.v1.FeeRatio"></a>
 
 ### FeeRatio
@@ -1810,23 +1890,6 @@ MarketDetails contains information about a market.
 | `description` | [string](#string) |  | description extra information about this market. The field is meant to be human-readable. |
 | `website_url` | [string](#string) |  | website_url is a url people can use to get to this market, or at least get more information about this market. |
 | `icon_uri` | [string](#string) |  | icon_uri is a uri for an icon to associate with this market. |
-
-
-
-
-
-
-<a name="provenance.exchange.v1.NetAssetPrice"></a>
-
-### NetAssetPrice
-NetAssetPrice is an association of assets and price used to record the value of things.
-It is related to the NetAssetValue message from the x/marker module, and is therefore often referred to as "a NAV".
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | assets is the volume and denom that has been bought or sold. |
-| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is what was paid for the assets. |
 
 
 
@@ -2681,6 +2744,103 @@ Msg is the service for exchange module's tx endpoints.
 
 
 
+<a name="provenance.exchange.v1.QueryCommitmentSettlementFeeCalcRequest"></a>
+
+### QueryCommitmentSettlementFeeCalcRequest
+QueryCommitmentSettlementFeeCalcRequest is a request message for the CommitmentSettlementFeeCalc query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `settlement` | [MsgMarketCommitmentSettleRequest](#provenance.exchange.v1.MsgMarketCommitmentSettleRequest) |  | settlement is a market's commitment settlement request message. If not provided, only the to_fee_nav field will be populated in the response. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryCommitmentSettlementFeeCalcResponse"></a>
+
+### QueryCommitmentSettlementFeeCalcResponse
+QueryCommitmentSettlementFeeCalcResponse is a response message for the CommitmentSettlementFeeCalc query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `exchange_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | exchange_fees is the total that the exchange would currently pay for the provided settlement. |
+| `input_total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | input_total is the sum of all the inputs in the provided settlement. |
+| `converted_total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | converted_total is the input_total converted to a single intermediary denom. |
+| `conversion_navs` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) | repeated | conversion_navs are the NAVs used to convert the input_total to the converted_total. |
+| `to_fee_nav` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) |  | to_fee_nav is the NAV used to convert the converted_total into the fee denom. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAccountCommitmentsRequest"></a>
+
+### QueryGetAccountCommitmentsRequest
+QueryGetAccountCommitmentsRequest is a request message for the GetAccountCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account with the commitments. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAccountCommitmentsResponse"></a>
+
+### QueryGetAccountCommitmentsResponse
+QueryGetAccountCommitmentsResponse is a response message for the GetAccountCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `commitments` | [MarketAmount](#provenance.exchange.v1.MarketAmount) | repeated | commitments is the amounts committed from the account to the any market. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAllCommitmentsRequest"></a>
+
+### QueryGetAllCommitmentsRequest
+QueryGetAllCommitmentsRequest is a request message for the GetAllCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAllCommitmentsResponse"></a>
+
+### QueryGetAllCommitmentsResponse
+QueryGetAllCommitmentsResponse is a response message for the GetAllCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `commitments` | [Commitment](#provenance.exchange.v1.Commitment) | repeated | commitments is the requested commitment information. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
 <a name="provenance.exchange.v1.QueryGetAllMarketsRequest"></a>
 
 ### QueryGetAllMarketsRequest
@@ -2770,6 +2930,69 @@ QueryGetAssetOrdersResponse is a response message for the GetAssetOrders query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `orders` | [Order](#provenance.exchange.v1.Order) | repeated | orders are a page of the orders for the provided asset. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetCommitmentRequest"></a>
+
+### QueryGetCommitmentRequest
+QueryGetCommitmentRequest is a request message for the GetCommitment query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account in the commitment. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numeric identifier of the market in the commitment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetCommitmentResponse"></a>
+
+### QueryGetCommitmentResponse
+QueryGetCommitmentResponse is a response message for the GetCommitment query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the total funds committed to the market by the account. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetMarketCommitmentsRequest"></a>
+
+### QueryGetMarketCommitmentsRequest
+QueryGetMarketCommitmentsRequest is a request message for the GetMarketCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numeric identifier of the market with the commitment. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetMarketCommitmentsResponse"></a>
+
+### QueryGetMarketCommitmentsResponse
+QueryGetMarketCommitmentsResponse is a response message for the GetMarketCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `commitments` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | commitments is the amounts committed to the market from any account. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
 
 
@@ -3112,9 +3335,14 @@ Query is the service for exchange module's query endpoints.
 | `GetOwnerOrders` | [QueryGetOwnerOrdersRequest](#provenance.exchange.v1.QueryGetOwnerOrdersRequest) | [QueryGetOwnerOrdersResponse](#provenance.exchange.v1.QueryGetOwnerOrdersResponse) | GetOwnerOrders looks up the orders from the provided owner address. | GET|/provenance/exchange/v1/orders/owner/{owner}|
 | `GetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance.exchange.v1.QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance.exchange.v1.QueryGetAssetOrdersResponse) | GetAssetOrders looks up the orders for a specific asset denom. | GET|/provenance/exchange/v1/orders/asset/{asset}|
 | `GetAllOrders` | [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse) | GetAllOrders gets all orders in the exchange module. | GET|/provenance/exchange/v1/orders|
+| `GetCommitment` | [QueryGetCommitmentRequest](#provenance.exchange.v1.QueryGetCommitmentRequest) | [QueryGetCommitmentResponse](#provenance.exchange.v1.QueryGetCommitmentResponse) | GetCommitment gets the funds in an account that are committed to the market. | GET|/provenance/exchange/v1/market/{market_id}/commitment/{account}|
+| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance.exchange.v1.QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance.exchange.v1.QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. | GET|/provenance/exchange/v1/commitments/account/{account}|
+| `GetMarketCommitments` | [QueryGetMarketCommitmentsRequest](#provenance.exchange.v1.QueryGetMarketCommitmentsRequest) | [QueryGetMarketCommitmentsResponse](#provenance.exchange.v1.QueryGetMarketCommitmentsResponse) | GetMarketCommitments gets all the funds committed to a market from any account. | GET|/provenance/exchange/v1/commitments/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/commitments|
+| `GetAllCommitments` | [QueryGetAllCommitmentsRequest](#provenance.exchange.v1.QueryGetAllCommitmentsRequest) | [QueryGetAllCommitmentsResponse](#provenance.exchange.v1.QueryGetAllCommitmentsResponse) | GetAllCommitments gets all fund committed to any market from any account. | GET|/provenance/exchange/v1/commitments|
 | `GetMarket` | [QueryGetMarketRequest](#provenance.exchange.v1.QueryGetMarketRequest) | [QueryGetMarketResponse](#provenance.exchange.v1.QueryGetMarketResponse) | GetMarket returns all the information and details about a market. | GET|/provenance/exchange/v1/market/{market_id}|
 | `GetAllMarkets` | [QueryGetAllMarketsRequest](#provenance.exchange.v1.QueryGetAllMarketsRequest) | [QueryGetAllMarketsResponse](#provenance.exchange.v1.QueryGetAllMarketsResponse) | GetAllMarkets returns brief information about each market. | GET|/provenance/exchange/v1/markets|
 | `Params` | [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse) | Params returns the exchange module parameters. | GET|/provenance/exchange/v1/params|
+| `CommitmentSettlementFeeCalc` | [QueryCommitmentSettlementFeeCalcRequest](#provenance.exchange.v1.QueryCommitmentSettlementFeeCalcRequest) | [QueryCommitmentSettlementFeeCalcResponse](#provenance.exchange.v1.QueryCommitmentSettlementFeeCalcResponse) | CommitmentSettlementFeeCalc calculates the fees a market will pay for a commitment settlement using current NAVs. | GET|/provenance/exchange/v1/fees/commitment_settlement|
 | `ValidateCreateMarket` | [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest) | [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse) | ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have. | GET|/provenance/exchange/v1/validate/create_market|
 | `ValidateMarket` | [QueryValidateMarketRequest](#provenance.exchange.v1.QueryValidateMarketRequest) | [QueryValidateMarketResponse](#provenance.exchange.v1.QueryValidateMarketResponse) | ValidateMarket checks for any problems with a market's setup. | GET|/provenance/exchange/v1/validate/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/validate|
 | `ValidateManageFees` | [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest) | [QueryValidateManageFeesResponse](#provenance.exchange.v1.QueryValidateManageFeesResponse) | ValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have. | GET|/provenance/exchange/v1/validate/manage_fees|
