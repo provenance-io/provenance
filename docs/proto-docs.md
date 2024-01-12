@@ -72,11 +72,13 @@
   
 - [provenance/exchange/v1/market.proto](#provenance/exchange/v1/market.proto)
     - [AccessGrant](#provenance.exchange.v1.AccessGrant)
+    - [AccountAmount](#provenance.exchange.v1.AccountAmount)
     - [FeeRatio](#provenance.exchange.v1.FeeRatio)
     - [Market](#provenance.exchange.v1.Market)
     - [MarketAccount](#provenance.exchange.v1.MarketAccount)
     - [MarketBrief](#provenance.exchange.v1.MarketBrief)
     - [MarketDetails](#provenance.exchange.v1.MarketDetails)
+    - [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice)
   
     - [Permission](#provenance.exchange.v1.Permission)
   
@@ -1680,6 +1682,22 @@ AddrPermissions associates an address with a list of permissions available for t
 
 
 
+<a name="provenance.exchange.v1.AccountAmount"></a>
+
+### AccountAmount
+AccountAmount associates an account with a coins amount.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the bech32 address string associated with the amount. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds associated with the address. |
+
+
+
+
+
+
 <a name="provenance.exchange.v1.FeeRatio"></a>
 
 ### FeeRatio
@@ -1779,6 +1797,23 @@ MarketDetails contains information about a market.
 | `description` | [string](#string) |  | description extra information about this market. The field is meant to be human-readable. |
 | `website_url` | [string](#string) |  | website_url is a url people can use to get to this market, or at least get more information about this market. |
 | `icon_uri` | [string](#string) |  | icon_uri is a uri for an icon to associate with this market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.NetAssetPrice"></a>
+
+### NetAssetPrice
+NetAssetPrice is an association of assets and price used to record the value of things.
+It is related to the NetAssetValue message from the x/marker module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | assets is the volume and denom that has been bought or sold. |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is what was paid for the assets. |
 
 
 

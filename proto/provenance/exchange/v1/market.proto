@@ -157,3 +157,23 @@ enum Permission {
   // PERMISSION_ATTRIBUTES is the ability to use the MarketManageReqAttrs Tx endpoint.
   PERMISSION_ATTRIBUTES = 7 [(gogoproto.enumvalue_customname) = "attributes"];
 }
+
+// AccountAmount associates an account with a coins amount.
+message AccountAmount {
+  option (gogoproto.goproto_stringer) = false;
+  // address is the bech32 address string associated with the amount.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // amount is the funds associated with the address.
+  repeated cosmos.base.v1beta1.Coin amount = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// NetAssetPrice is an association of assets and price used to record the value of things.
+// It is related to the NetAssetValue message from the x/marker module.
+message NetAssetPrice {
+  option (gogoproto.goproto_stringer) = false;
+  // assets is the volume and denom that has been bought or sold.
+  cosmos.base.v1beta1.Coin assets = 1 [(gogoproto.nullable) = false];
+  // price is what was paid for the assets.
+  cosmos.base.v1beta1.Coin price = 2 [(gogoproto.nullable) = false];
+}
