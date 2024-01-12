@@ -41,8 +41,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/internal"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	"github.com/provenance-io/provenance/testutil/mocks"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
@@ -138,7 +138,7 @@ func NewInfoLogger() log.Logger {
 // Info log lines will start with "INF ".
 func BufferedInfoLoggerMaker(buffer *bytes.Buffer) LoggerMakerFn {
 	return func() log.Logger {
-		return mocks.NewBufferedInfoLogger(buffer)
+		return internal.NewBufferedInfoLogger(buffer)
 	}
 }
 

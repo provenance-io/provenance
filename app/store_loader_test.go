@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal"
 	"github.com/provenance-io/provenance/testutil/assertions"
-	"github.com/provenance-io/provenance/testutil/mocks"
 )
 
 // StoreLoaderMocker is a struct with a StoreLoader method that records that the store loader was called and returns a pre-determined error message.
@@ -159,7 +159,7 @@ func TestValidateWrapper(t *testing.T) {
 			}
 
 			var buffer bytes.Buffer
-			logger := mocks.NewBufferedInfoLogger(&buffer)
+			logger := internal.NewBufferedInfoLogger(&buffer)
 			slMocker := NewStoreLoaderMocker(tc.expErr)
 			storeLoader := ValidateWrapper(logger, tc.appOpts, slMocker.StoreLoader)
 
@@ -317,7 +317,7 @@ func TestIssueConfigWarnings(t *testing.T) {
 				t.Setenv("PIO_ACKWARN", tc.pioAckWarn)
 			}
 			var buffer bytes.Buffer
-			logger := mocks.NewBufferedInfoLogger(&buffer)
+			logger := internal.NewBufferedInfoLogger(&buffer)
 			sleeper := NewMockSleeper()
 
 			testFunc := func() {
@@ -325,7 +325,7 @@ func TestIssueConfigWarnings(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "IssueConfigWarnings")
 
-			loggedLines := mocks.SplitLogLines(buffer.String())
+			loggedLines := internal.SplitLogLines(buffer.String())
 			assert.ElementsMatch(t, tc.expLogLines, loggedLines, "Lines logged during IssueConfigWarnings. List A is the expected lines.")
 			actSleepDur := sleeper.LastSleep
 			assert.Equal(t, expSleepDur.String(), actSleepDur.String(), "sleep duration during IssueConfigWarnings")
