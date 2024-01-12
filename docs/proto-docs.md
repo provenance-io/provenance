@@ -97,6 +97,8 @@
 - [provenance/exchange/v1/tx.proto](#provenance/exchange/v1/tx.proto)
     - [MsgCancelOrderRequest](#provenance.exchange.v1.MsgCancelOrderRequest)
     - [MsgCancelOrderResponse](#provenance.exchange.v1.MsgCancelOrderResponse)
+    - [MsgCommitFundsRequest](#provenance.exchange.v1.MsgCommitFundsRequest)
+    - [MsgCommitFundsResponse](#provenance.exchange.v1.MsgCommitFundsResponse)
     - [MsgCreateAskRequest](#provenance.exchange.v1.MsgCreateAskRequest)
     - [MsgCreateAskResponse](#provenance.exchange.v1.MsgCreateAskResponse)
     - [MsgCreateBidRequest](#provenance.exchange.v1.MsgCreateBidRequest)
@@ -105,20 +107,28 @@
     - [MsgFillAsksResponse](#provenance.exchange.v1.MsgFillAsksResponse)
     - [MsgFillBidsRequest](#provenance.exchange.v1.MsgFillBidsRequest)
     - [MsgFillBidsResponse](#provenance.exchange.v1.MsgFillBidsResponse)
+    - [MsgGovCloseMarketRequest](#provenance.exchange.v1.MsgGovCloseMarketRequest)
+    - [MsgGovCloseMarketResponse](#provenance.exchange.v1.MsgGovCloseMarketResponse)
     - [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest)
     - [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse)
     - [MsgGovManageFeesRequest](#provenance.exchange.v1.MsgGovManageFeesRequest)
     - [MsgGovManageFeesResponse](#provenance.exchange.v1.MsgGovManageFeesResponse)
     - [MsgGovUpdateParamsRequest](#provenance.exchange.v1.MsgGovUpdateParamsRequest)
     - [MsgGovUpdateParamsResponse](#provenance.exchange.v1.MsgGovUpdateParamsResponse)
+    - [MsgMarketCommitmentSettleRequest](#provenance.exchange.v1.MsgMarketCommitmentSettleRequest)
+    - [MsgMarketCommitmentSettleResponse](#provenance.exchange.v1.MsgMarketCommitmentSettleResponse)
     - [MsgMarketManagePermissionsRequest](#provenance.exchange.v1.MsgMarketManagePermissionsRequest)
     - [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse)
     - [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest)
     - [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse)
+    - [MsgMarketReleaseCommitmentsRequest](#provenance.exchange.v1.MsgMarketReleaseCommitmentsRequest)
+    - [MsgMarketReleaseCommitmentsResponse](#provenance.exchange.v1.MsgMarketReleaseCommitmentsResponse)
     - [MsgMarketSetOrderExternalIDRequest](#provenance.exchange.v1.MsgMarketSetOrderExternalIDRequest)
     - [MsgMarketSetOrderExternalIDResponse](#provenance.exchange.v1.MsgMarketSetOrderExternalIDResponse)
     - [MsgMarketSettleRequest](#provenance.exchange.v1.MsgMarketSettleRequest)
     - [MsgMarketSettleResponse](#provenance.exchange.v1.MsgMarketSettleResponse)
+    - [MsgMarketUpdateAllowCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsRequest)
+    - [MsgMarketUpdateAllowCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsResponse)
     - [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest)
     - [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse)
     - [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest)
@@ -2038,6 +2048,35 @@ MsgCancelOrderResponse is a response message for the CancelOrder endpoint.
 
 
 
+<a name="provenance.exchange.v1.MsgCommitFundsRequest"></a>
+
+### MsgCommitFundsRequest
+MsgCommitFundsRequest is a request message for the CommitFunds endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the address of the account with the funds being committed. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market the funds will be committed to. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds being committed to the market. |
+| `creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | order_creation_fee is the fee that is being paid to create this commitment. |
+| `commitment_memo` | [string](#string) |  | commitment_memo is a string that is included in the commitment-creation event. Max length is 100 characters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCommitFundsResponse"></a>
+
+### MsgCommitFundsResponse
+MsgCommitFundsResponse is a response message for the CommitFunds endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgCreateAskRequest"></a>
 
 ### MsgCreateAskRequest
@@ -2160,6 +2199,32 @@ MsgFillBidsResponse is a response message for the FillBids endpoint.
 
 
 
+<a name="provenance.exchange.v1.MsgGovCloseMarketRequest"></a>
+
+### MsgGovCloseMarketRequest
+MsgGovCloseMarketRequest is a request message for the GovCloseMarket endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority must be the governance module account. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to close. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgGovCloseMarketResponse"></a>
+
+### MsgGovCloseMarketResponse
+MsgGovCloseMarketResponse is a response message for the GovCloseMarket endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgGovCreateMarketRequest"></a>
 
 ### MsgGovCreateMarketRequest
@@ -2254,6 +2319,38 @@ MsgGovUpdateParamsResponse is a response message for the GovUpdateParams endpoin
 
 
 
+<a name="provenance.exchange.v1.MsgMarketCommitmentSettleRequest"></a>
+
+### MsgMarketCommitmentSettleRequest
+MsgMarketCommitmentSettleRequest is a request message for the MarketCommitmentSettle endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "settle" permission requesting this settlement. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market requesting this settlement. |
+| `inputs` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | inputs defines where the funds are comming from. All of these funds must be already committed to the market. |
+| `outputs` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | outputs defines how the funds are to be distributed. These funds will be re-committed in the destination accounts. |
+| `fees` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | fees is the funds that the market is collecting as part of this settlement. All of these funds must be already committed to the market. |
+| `navs` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) | repeated | navs are any NAV info that should be updated at the beginning of this settlement. |
+| `max_exchange_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | max_exchange_fees is the maximum amount of fees the market is willing to pay the exchange for this settlement. |
+| `settlement_memo` | [string](#string) |  | settlement_memo is a string that is included in the commitment-settlement event. Max length is 100 characters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketCommitmentSettleResponse"></a>
+
+### MsgMarketCommitmentSettleResponse
+MsgMarketCommitmentSettleResponse is a response message for the MarketCommitmentSettle endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgMarketManagePermissionsRequest"></a>
 
 ### MsgMarketManagePermissionsRequest
@@ -2263,7 +2360,7 @@ MsgMarketManagePermissionsRequest is a request message for the MarketManagePermi
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "permissions" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to manage permissions for. |
 | `revoke_all` | [string](#string) | repeated | revoke_all are addresses that should have all their permissions revoked. |
 | `to_revoke` | [AccessGrant](#provenance.exchange.v1.AccessGrant) | repeated | to_revoke are the specific permissions to remove for addresses. |
 | `to_grant` | [AccessGrant](#provenance.exchange.v1.AccessGrant) | repeated | to_grant are the permissions to grant to addresses. |
@@ -2313,6 +2410,33 @@ MsgMarketManageReqAttrsResponse is a response message for the MarketManageReqAtt
 
 
 
+<a name="provenance.exchange.v1.MsgMarketReleaseCommitmentsRequest"></a>
+
+### MsgMarketReleaseCommitmentsRequest
+MsgMarketReleaseCommitmentsRequest is a request message for the MarketReleaseCommitments endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "cancel" permission requesting this release. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market releasing these funds. |
+| `to_release` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | to_release is the funds that are to be released. An entry with a zero amount indicates that all committed funds for that account should be released. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketReleaseCommitmentsResponse"></a>
+
+### MsgMarketReleaseCommitmentsResponse
+MsgMarketReleaseCommitmentsResponse is a response message for the MarketReleaseCommitments endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgMarketSetOrderExternalIDRequest"></a>
 
 ### MsgMarketSetOrderExternalIDRequest
@@ -2322,7 +2446,7 @@ MsgMarketSetOrderExternalIDRequest is a request message for the MarketSetOrderEx
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "set_ids" permission requesting this settlement. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market with the orders to update. |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order to update. |
 | `external_id` | [string](#string) |  | external_id is the new external id to associate with the order. Max length is 100 characters. If the external id is already associated with another order in this market, this update will fail. |
 
@@ -2350,7 +2474,7 @@ MsgMarketSettleRequest is a request message for the MarketSettle endpoint.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "settle" permission requesting this settlement. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market requesting this settlement. |
 | `ask_order_ids` | [uint64](#uint64) | repeated | ask_order_ids are the ask orders being filled. |
 | `bid_order_ids` | [uint64](#uint64) | repeated | bid_order_ids are the bid orders being filled. |
 | `expect_partial` | [bool](#bool) |  | expect_partial is whether to expect an order to only be partially filled. Set to true to indicate that either the last ask order, or last bid order will be partially filled by this settlement. Set to false to indicate that all provided orders will be filled in full during this settlement. |
@@ -2370,6 +2494,33 @@ MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
 
 
 
+<a name="provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsRequest"></a>
+
+### MsgMarketUpdateAllowCommitmentsRequest
+MsgMarketUpdateAllowCommitmentsRequest is a request message for the MarketUpdateAllowCommitments endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to enable or disable commitments for. |
+| `allow_commitments` | [bool](#bool) |  | allow_commitments is whether this market allows users to commit funds to it. For example, the CommitFunds endpoints is available if and only if this is true. The MarketCommitmentSettle endpoint is available (only to market actors) regardless of the value of this field. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsResponse"></a>
+
+### MsgMarketUpdateAllowCommitmentsResponse
+MsgMarketUpdateAllowCommitmentsResponse is a response message for the MarketUpdateAllowCommitments endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgMarketUpdateDetailsRequest"></a>
 
 ### MsgMarketUpdateDetailsRequest
@@ -2379,7 +2530,7 @@ MsgMarketUpdateDetailsRequest is a request message for the MarketUpdateDetails e
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update details for. |
 | `market_details` | [MarketDetails](#provenance.exchange.v1.MarketDetails) |  | market_details is some information about this market. |
 
 
@@ -2406,7 +2557,7 @@ MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled e
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to enable or disable. |
 | `accepting_orders` | [bool](#bool) |  | accepting_orders is whether this market is allowing orders to be created for it. |
 
 
@@ -2433,8 +2584,8 @@ MsgMarketUpdateUserSettleRequest is a request message for the MarketUpdateUserSe
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
-| `allow_user_settlement` | [bool](#bool) |  | allow_user_settlement is whether this market allows users to initiate their own settlements. For example, the FillBids and FillAsks endpoints are available if and only if this is true. The MarketSettle endpoint is only available to market actors regardless of the value of this field. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to enable or disable user-settlement for. |
+| `allow_user_settlement` | [bool](#bool) |  | allow_user_settlement is whether this market allows users to initiate their own settlements. For example, the FillBids and FillAsks endpoints are available if and only if this is true. The MarketSettle endpoint is available (only to market actors) regardless of the value of this field. |
 
 
 
@@ -2494,19 +2645,24 @@ Msg is the service for exchange module's tx endpoints.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateAsk` | [MsgCreateAskRequest](#provenance.exchange.v1.MsgCreateAskRequest) | [MsgCreateAskResponse](#provenance.exchange.v1.MsgCreateAskResponse) | CreateAsk creates an ask order (to sell something you own). | |
 | `CreateBid` | [MsgCreateBidRequest](#provenance.exchange.v1.MsgCreateBidRequest) | [MsgCreateBidResponse](#provenance.exchange.v1.MsgCreateBidResponse) | CreateBid creates a bid order (to buy something you want). | |
+| `CommitFunds` | [MsgCommitFundsRequest](#provenance.exchange.v1.MsgCommitFundsRequest) | [MsgCommitFundsResponse](#provenance.exchange.v1.MsgCommitFundsResponse) | CommitFunds marks funds in an account as manageable by a market. | |
 | `CancelOrder` | [MsgCancelOrderRequest](#provenance.exchange.v1.MsgCancelOrderRequest) | [MsgCancelOrderResponse](#provenance.exchange.v1.MsgCancelOrderResponse) | CancelOrder cancels an order. | |
 | `FillBids` | [MsgFillBidsRequest](#provenance.exchange.v1.MsgFillBidsRequest) | [MsgFillBidsResponse](#provenance.exchange.v1.MsgFillBidsResponse) | FillBids uses the assets in your account to fulfill one or more bids (similar to a fill-or-cancel ask). | |
 | `FillAsks` | [MsgFillAsksRequest](#provenance.exchange.v1.MsgFillAsksRequest) | [MsgFillAsksResponse](#provenance.exchange.v1.MsgFillAsksResponse) | FillAsks uses the funds in your account to fulfill one or more asks (similar to a fill-or-cancel bid). | |
 | `MarketSettle` | [MsgMarketSettleRequest](#provenance.exchange.v1.MsgMarketSettleRequest) | [MsgMarketSettleResponse](#provenance.exchange.v1.MsgMarketSettleResponse) | MarketSettle is a market endpoint to trigger the settlement of orders. | |
+| `MarketCommitmentSettle` | [MsgMarketCommitmentSettleRequest](#provenance.exchange.v1.MsgMarketCommitmentSettleRequest) | [MsgMarketCommitmentSettleResponse](#provenance.exchange.v1.MsgMarketCommitmentSettleResponse) | MarketCommitmentSettle is a market endpoint to transfer committed funds. | |
+| `MarketReleaseCommitments` | [MsgMarketReleaseCommitmentsRequest](#provenance.exchange.v1.MsgMarketReleaseCommitmentsRequest) | [MsgMarketReleaseCommitmentsResponse](#provenance.exchange.v1.MsgMarketReleaseCommitmentsResponse) | MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s). | |
 | `MarketSetOrderExternalID` | [MsgMarketSetOrderExternalIDRequest](#provenance.exchange.v1.MsgMarketSetOrderExternalIDRequest) | [MsgMarketSetOrderExternalIDResponse](#provenance.exchange.v1.MsgMarketSetOrderExternalIDResponse) | MarketSetOrderExternalID updates an order's external id field. | |
 | `MarketWithdraw` | [MsgMarketWithdrawRequest](#provenance.exchange.v1.MsgMarketWithdrawRequest) | [MsgMarketWithdrawResponse](#provenance.exchange.v1.MsgMarketWithdrawResponse) | MarketWithdraw is a market endpoint to withdraw fees that have been collected. | |
 | `MarketUpdateDetails` | [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest) | [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse) | MarketUpdateDetails is a market endpoint to update its details. | |
 | `MarketUpdateEnabled` | [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest) | [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse) | MarketUpdateEnabled is a market endpoint to update whether its accepting orders. | |
 | `MarketUpdateUserSettle` | [MsgMarketUpdateUserSettleRequest](#provenance.exchange.v1.MsgMarketUpdateUserSettleRequest) | [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse) | MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement. | |
+| `MarketUpdateAllowCommitments` | [MsgMarketUpdateAllowCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsRequest) | [MsgMarketUpdateAllowCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsResponse) | MarketUpdateAllowCommitments is a market endpoint to update whether it accepts commitments. | |
 | `MarketManagePermissions` | [MsgMarketManagePermissionsRequest](#provenance.exchange.v1.MsgMarketManagePermissionsRequest) | [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse) | MarketManagePermissions is a market endpoint to manage a market's user permissions. | |
 | `MarketManageReqAttrs` | [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest) | [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse) | MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it. | |
 | `GovCreateMarket` | [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest) | [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse) | GovCreateMarket is a governance proposal endpoint for creating a market. | |
 | `GovManageFees` | [MsgGovManageFeesRequest](#provenance.exchange.v1.MsgGovManageFeesRequest) | [MsgGovManageFeesResponse](#provenance.exchange.v1.MsgGovManageFeesResponse) | GovManageFees is a governance proposal endpoint for updating a market's fees. | |
+| `GovCloseMarket` | [MsgGovCloseMarketRequest](#provenance.exchange.v1.MsgGovCloseMarketRequest) | [MsgGovCloseMarketResponse](#provenance.exchange.v1.MsgGovCloseMarketResponse) | GovCloseMarket is a governance proposal endpoint that will disable order and commitment creation, cancel all orders, and release all commitments. | |
 | `GovUpdateParams` | [MsgGovUpdateParamsRequest](#provenance.exchange.v1.MsgGovUpdateParamsRequest) | [MsgGovUpdateParamsResponse](#provenance.exchange.v1.MsgGovUpdateParamsResponse) | GovUpdateParams is a governance proposal endpoint for updating the exchange module's params. | |
 
  <!-- end services -->
