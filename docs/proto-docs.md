@@ -1453,7 +1453,7 @@ Commitment contains information on committed funds.
 <a name="provenance.exchange.v1.MarketAmount"></a>
 
 ### MarketAmount
-MarketAmount associats a market with a coins amount.
+MarketAmount associates a market with a coins amount.
 
 
 | Field | Type | Label | Description |
@@ -2190,7 +2190,7 @@ MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `signer` | [string](#string) |  | signer is the account requesting the order cancelation. It must be either the order owner (e.g. the buyer or seller), the governance module account address, or an account with cancel permission with the market that the order is in. |
+| `signer` | [string](#string) |  | signer is the account requesting the order cancellation. It must be either the order owner (e.g. the buyer or seller), the governance module account address, or an account with cancel permission with the market that the order is in. |
 | `order_id` | [uint64](#uint64) |  | order_id is the id of the order to cancel. |
 
 
@@ -2489,7 +2489,7 @@ MsgMarketCommitmentSettleRequest is a request message for the MarketCommitmentSe
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "settle" permission requesting this settlement. |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market requesting this settlement. |
-| `inputs` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | inputs defines where the funds are comming from. All of these funds must be already committed to the market. |
+| `inputs` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | inputs defines where the funds are coming from. All of these funds must be already committed to the market. |
 | `outputs` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | outputs defines how the funds are to be distributed. These funds will be re-committed in the destination accounts. |
 | `fees` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | fees is the funds that the market is collecting as part of this settlement. All of these funds must be already committed to the market. |
 | `navs` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) | repeated | navs are any NAV info that should be updated at the beginning of this settlement. |

@@ -144,7 +144,7 @@ func (m *AccountAmount) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 	return nil
 }
 
-// MarketAmount associats a market with a coins amount.
+// MarketAmount associates a market with a coins amount.
 type MarketAmount struct {
 	// market_id is the numeric identifier the amount has been committed to.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`

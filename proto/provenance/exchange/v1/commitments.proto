@@ -31,7 +31,7 @@ message AccountAmount {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
-// MarketAmount associats a market with a coins amount.
+// MarketAmount associates a market with a coins amount.
 message MarketAmount {
   option (gogoproto.goproto_stringer) = false;
   // market_id is the numeric identifier the amount has been committed to.

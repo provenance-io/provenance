@@ -144,7 +144,7 @@ message MsgCommitFundsResponse {}
 message MsgCancelOrderRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // signer is the account requesting the order cancelation.
+  // signer is the account requesting the order cancellation.
   // It must be either the order owner (e.g. the buyer or seller), the governance module account address, or an account
   // with cancel permission with the market that the order is in.
   string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -237,7 +237,7 @@ message MsgMarketCommitmentSettleRequest {
   // market_id is the numerical identifier of the market requesting this settlement.
   uint32 market_id = 2;
 
-  // inputs defines where the funds are comming from. All of these funds must be already committed to the market.
+  // inputs defines where the funds are coming from. All of these funds must be already committed to the market.
   repeated AccountAmount inputs = 3 [(gogoproto.nullable) = false];
   // outputs defines how the funds are to be distributed. These funds will be re-committed in the destination accounts.
   repeated AccountAmount outputs = 4 [(gogoproto.nullable) = false];

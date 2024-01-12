@@ -355,7 +355,7 @@ var xxx_messageInfo_MsgCommitFundsResponse proto.InternalMessageInfo
 
 // MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
 type MsgCancelOrderRequest struct {
-	// signer is the account requesting the order cancelation.
+	// signer is the account requesting the order cancellation.
 	// It must be either the order owner (e.g. the buyer or seller), the governance module account address, or an account
 	// with cancel permission with the market that the order is in.
 	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
@@ -837,7 +837,7 @@ type MsgMarketCommitmentSettleRequest struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// market_id is the numerical identifier of the market requesting this settlement.
 	MarketId uint32 `protobuf:"varint,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
-	// inputs defines where the funds are comming from. All of these funds must be already committed to the market.
+	// inputs defines where the funds are coming from. All of these funds must be already committed to the market.
 	Inputs []AccountAmount `protobuf:"bytes,3,rep,name=inputs,proto3" json:"inputs"`
 	// outputs defines how the funds are to be distributed. These funds will be re-committed in the destination accounts.
 	Outputs []AccountAmount `protobuf:"bytes,4,rep,name=outputs,proto3" json:"outputs"`
