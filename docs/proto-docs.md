@@ -137,6 +137,8 @@
     - [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse)
     - [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest)
     - [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse)
+    - [MsgMarketUpdateIntermediaryDenomRequest](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest)
+    - [MsgMarketUpdateIntermediaryDenomResponse](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomResponse)
     - [MsgMarketUpdateUserSettleRequest](#provenance.exchange.v1.MsgMarketUpdateUserSettleRequest)
     - [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse)
     - [MsgMarketWithdrawRequest](#provenance.exchange.v1.MsgMarketWithdrawRequest)
@@ -1832,9 +1834,10 @@ An entry that starts with "*." will match any attributes that end with the rest 
 An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x". |
 | `allow_commitments` | [bool](#bool) |  | allow_commitments is whether the market allows users to commit funds to it. |
 | `fee_create_commitment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create_commitment_flat is the flat fee charged for creating a commitment. Each coin entry is a separate option. When a commitment is created, one of these must be paid. If empty, no fee is required to create a commitment. |
-| `commitment_settlement_bips` | [uint32](#uint32) |  | commitment_settlement_bips is the fraction of a commitment settlement that will be paid to the exchange. It is represented in basis points (1/100th of 1%, e.g. 0.0001) and is limited to 0 to 10,000 inclusive. During a commitment settlement, the inputs are summed and NAVs are used to convert that total to USD, then to nhash. That is then multiplied by this value to get the amount of nhash that will be transferred out of the market's account into the exchange for that settlement.
+| `commitment_settlement_bips` | [uint32](#uint32) |  | commitment_settlement_bips is the fraction of a commitment settlement that will be paid to the exchange. It is represented in basis points (1/100th of 1%, e.g. 0.0001) and is limited to 0 to 10,000 inclusive. During a commitment settlement, the inputs are summed and NAVs are used to convert that total to the intermediary denom, then to the fee denom. That is then multiplied by this value to get the fee amount that will be transferred out of the market's account into the exchange for that settlement.
 
-Summing the inputs effectively doubles the value of the settlement from what what is usually thought of as the value of a trade. That should be taken into account when setting this value. E.g. if two accounts are trading 10apples for 100grapes, the inputs total will be 10apples,100grapes (which is then converted to USD then nhash before applying this ratio). But usually the value of that trade would be viewed as either just 10apples or just 100grapes. |
+Summing the inputs effectively doubles the value of the settlement from what what is usually thought of as the value of a trade. That should be taken into account when setting this value. E.g. if two accounts are trading 10apples for 100grapes, the inputs total will be 10apples,100grapes (which might then be converted to USD then nhash before applying this ratio); Usually, though, the value of that trade would be viewed as either just 10apples or just 100grapes. |
+| `commitment_settlement_intermediary_denom` | [string](#string) |  | commitment_settlement_intermediary_denom is the denom that the inputs are all converted to (before being converted to the fee denom) during a commitment settlement. Each denom in the inputs must have a NAV to this denom (or be this denom). There must also be a NAV from this denom to the fee denom. |
 | `req_attr_create_commitment` | [string](#string) | repeated | req_attr_create_commitment is a list of attributes required on an account for it to be allowed to create a commitment. An account must have all of these attributes in order to create a commitment in this market. If the list is empty, any account can create commitments in this market.
 
 An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x". |
@@ -2643,6 +2646,33 @@ MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled
 
 
 
+<a name="provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest"></a>
+
+### MsgMarketUpdateIntermediaryDenomRequest
+MsgMarketUpdateIntermediaryDenomRequest is a request message for the MarketUpdateIntermediaryDenom endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market changing the intermediary denom. |
+| `commitment_settlement_intermediary_denom` | [string](#string) |  | commitment_settlement_intermediary_denom is the new intermediary denom for this market to use. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomResponse"></a>
+
+### MsgMarketUpdateIntermediaryDenomResponse
+MsgMarketUpdateIntermediaryDenomResponse is a response message for the MarketUpdateIntermediaryDenom endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgMarketUpdateUserSettleRequest"></a>
 
 ### MsgMarketUpdateUserSettleRequest
@@ -2726,6 +2756,7 @@ Msg is the service for exchange module's tx endpoints.
 | `MarketUpdateEnabled` | [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest) | [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse) | MarketUpdateEnabled is a market endpoint to update whether its accepting orders. | |
 | `MarketUpdateUserSettle` | [MsgMarketUpdateUserSettleRequest](#provenance.exchange.v1.MsgMarketUpdateUserSettleRequest) | [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse) | MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement. | |
 | `MarketUpdateAllowCommitments` | [MsgMarketUpdateAllowCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsRequest) | [MsgMarketUpdateAllowCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsResponse) | MarketUpdateAllowCommitments is a market endpoint to update whether it accepts commitments. | |
+| `MarketUpdateIntermediaryDenom` | [MsgMarketUpdateIntermediaryDenomRequest](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest) | [MsgMarketUpdateIntermediaryDenomResponse](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomResponse) | MarketUpdateIntermediaryDenom sets a market's intermediary denom. | |
 | `MarketManagePermissions` | [MsgMarketManagePermissionsRequest](#provenance.exchange.v1.MsgMarketManagePermissionsRequest) | [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse) | MarketManagePermissions is a market endpoint to manage a market's user permissions. | |
 | `MarketManageReqAttrs` | [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest) | [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse) | MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it. | |
 | `GovCreateMarket` | [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest) | [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse) | GovCreateMarket is a governance proposal endpoint for creating a market. | |

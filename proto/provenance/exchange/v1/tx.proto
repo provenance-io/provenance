@@ -63,6 +63,10 @@ service Msg {
   rpc MarketUpdateAllowCommitments(MsgMarketUpdateAllowCommitmentsRequest)
       returns (MsgMarketUpdateAllowCommitmentsResponse);
 
+  // MarketUpdateIntermediaryDenom sets a market's intermediary denom.
+  rpc MarketUpdateIntermediaryDenom(MsgMarketUpdateIntermediaryDenomRequest)
+      returns (MsgMarketUpdateIntermediaryDenomResponse);
+
   // MarketManagePermissions is a market endpoint to manage a market's user permissions.
   rpc MarketManagePermissions(MsgMarketManagePermissionsRequest) returns (MsgMarketManagePermissionsResponse);
 
@@ -373,6 +377,22 @@ message MsgMarketUpdateAllowCommitmentsRequest {
 
 // MsgMarketUpdateAllowCommitmentsResponse is a response message for the MarketUpdateAllowCommitments endpoint.
 message MsgMarketUpdateAllowCommitmentsResponse {}
+
+// MsgMarketUpdateIntermediaryDenomRequest is a request message for the MarketUpdateIntermediaryDenom endpoint.
+message MsgMarketUpdateIntermediaryDenomRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the account with "update" permission requesting this change.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market changing the intermediary denom.
+  uint32 market_id = 2;
+
+  // commitment_settlement_intermediary_denom is the new intermediary denom for this market to use.
+  string commitment_settlement_intermediary_denom = 3;
+}
+
+// MsgMarketUpdateIntermediaryDenomResponse is a response message for the MarketUpdateIntermediaryDenom endpoint.
+message MsgMarketUpdateIntermediaryDenomResponse {}
 
 // MsgMarketManagePermissionsRequest is a request message for the MarketManagePermissions endpoint.
 message MsgMarketManagePermissionsRequest {

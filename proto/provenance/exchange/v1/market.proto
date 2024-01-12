@@ -122,16 +122,21 @@ message Market {
 
   // commitment_settlement_bips is the fraction of a commitment settlement that will be paid to the exchange.
   // It is represented in basis points (1/100th of 1%, e.g. 0.0001) and is limited to 0 to 10,000 inclusive.
-  // During a commitment settlement, the inputs are summed and NAVs are used to convert that total to USD,
-  // then to nhash. That is then multiplied by this value to get the amount of nhash that will be transferred
-  // out of the market's account into the exchange for that settlement.
+  // During a commitment settlement, the inputs are summed and NAVs are used to convert that total to the
+  // intermediary denom, then to the fee denom. That is then multiplied by this value to get the fee amount
+  // that will be transferred out of the market's account into the exchange for that settlement.
   //
   // Summing the inputs effectively doubles the value of the settlement from what what is usually thought of
   // as the value of a trade. That should be taken into account when setting this value.
   // E.g. if two accounts are trading 10apples for 100grapes, the inputs total will be 10apples,100grapes
-  // (which is then converted to USD then nhash before applying this ratio).
-  // But usually the value of that trade would be viewed as either just 10apples or just 100grapes.
+  // (which might then be converted to USD then nhash before applying this ratio); Usually, though, the value
+  // of that trade would be viewed as either just 10apples or just 100grapes.
   uint32 commitment_settlement_bips = 16;
+
+  // commitment_settlement_intermediary_denom is the denom that the inputs are all converted to (before being converted
+  // to the fee denom) during a commitment settlement. Each denom in the inputs must have a NAV to this denom (or be
+  // this denom). There must also be a NAV from this denom to the fee denom.
+  string commitment_settlement_intermediary_denom = 17;
 
   // req_attr_create_commitment is a list of attributes required on an account for it to be allowed to create a
   // commitment. An account must have all of these attributes in order to create a commitment in this market.
@@ -139,7 +144,7 @@ message Market {
   //
   // An entry that starts with "*." will match any attributes that end with the rest of it.
   // E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x".
-  repeated string req_attr_create_commitment = 17;
+  repeated string req_attr_create_commitment = 18;
 }
 
 // FeeRatio defines a ratio of price amount to fee amount.
