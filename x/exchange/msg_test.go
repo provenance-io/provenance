@@ -42,6 +42,9 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			return &MsgCreateBidRequest{BidOrder: BidOrder{Buyer: signer}}
 		},
 		func(signer string) sdk.Msg {
+			return &MsgCommitFundsRequest{Account: signer}
+		},
+		func(signer string) sdk.Msg {
 			return &MsgCancelOrderRequest{Signer: signer}
 		},
 		func(signer string) sdk.Msg {
@@ -52,6 +55,12 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		},
 		func(signer string) sdk.Msg {
 			return &MsgMarketSettleRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketCommitmentSettleRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketReleaseCommitmentsRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
 			return &MsgMarketSetOrderExternalIDRequest{Admin: signer}
@@ -69,6 +78,12 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			return &MsgMarketUpdateUserSettleRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateAllowCommitmentsRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateIntermediaryDenomRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
 			return &MsgMarketManagePermissionsRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
@@ -79,6 +94,9 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		},
 		func(signer string) sdk.Msg {
 			return &MsgGovManageFeesRequest{Authority: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgGovCloseMarketRequest{Authority: signer}
 		},
 		func(signer string) sdk.Msg {
 			return &MsgGovUpdateParamsRequest{Authority: signer}
@@ -241,6 +259,8 @@ func TestMsgCreateBidRequest_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1789]: func TestMsgCommitFundsRequest_ValidateBasic(t *testing.T)
 
 func TestMsgCancelOrderRequest_ValidateBasic(t *testing.T) {
 	tests := []struct {
@@ -782,6 +802,10 @@ func TestMsgMarketSettleRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
+// TODO[1789]: func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T)
+
+// TODO[1789]: func TestMsgMarketReleaseCommitmentsRequest_ValidateBasic(t *testing.T)
+
 func TestMsgMarketSetOrderExternalIDRequest_ValidateBasic(t *testing.T) {
 	admin := sdk.AccAddress("admin_address_______").String()
 
@@ -1285,6 +1309,10 @@ func TestMsgMarketUpdateUserSettleRequest_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1789]: func TestMsgMarketUpdateAllowCommitmentsRequest_ValidateBasic(t *testing.T)
+
+// TODO[1789]: func TestMsgMarketUpdateIntermediaryDenomRequest_ValidateBasic(t *testing.T)
 
 func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 	goodAdminAddr := sdk.AccAddress("goodAdminAddr_______").String()
@@ -2146,6 +2174,8 @@ func TestMsgGovManageFeesRequest_HasUpdates(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1789]: func TestMsgGovCloseMarketRequest_ValidateBasic(t *testing.T)
 
 func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("authority___________").String()
