@@ -6,6 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// MaxEventTagLength is the maximum length that an event tag can have.
+// 100 was chosen because that's what we used for the external ids.
+const MaxEventTagLength = 100
+
 // String returns a string representation of this AccountAmount.
 func (a AccountAmount) String() string {
 	return fmt.Sprintf("%s:%q", a.Account, a.Amount)
@@ -20,6 +24,15 @@ func (a AccountAmount) Validate() error {
 		return fmt.Errorf("invalid amount %q: %w", a.Amount, err)
 	}
 	return nil
+}
+
+// SumAccountAmounts gets the total of all the amounts in the provided entries.
+func SumAccountAmounts(entries []AccountAmount) sdk.Coins {
+	var rv sdk.Coins
+	for _, entry := range entries {
+		rv = rv.Add(entry.Amount...)
+	}
+	return rv
 }
 
 // String returns a string representation of this MarketAmount.
@@ -48,5 +61,13 @@ func (n NetAssetPrice) Validate() error {
 		return fmt.Errorf("invalid price %q: cannot be zero", n.Price)
 	}
 
+	return nil
+}
+
+// ValidateEventTag makes sure an event tag is okay.
+func ValidateEventTag(eventTag string) error {
+	if len(eventTag) > MaxEventTagLength {
+		return fmt.Errorf("invalid event tag %q: max length %d", eventTag, MaxEventTagLength)
+	}
 	return nil
 }
