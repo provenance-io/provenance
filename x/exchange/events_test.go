@@ -368,6 +368,10 @@ func TestNewEventOrderExternalIDUpdated(t *testing.T) {
 	}
 }
 
+// TODO[1789]: func TestNewEventFundsCommitted(t *testing.T)
+
+// TODO[1789]: func TestNewEventFundsReleased(t *testing.T)
+
 func TestNewEventMarketWithdraw(t *testing.T) {
 	marketID := uint32(55)
 	amountWithdrawn := sdk.NewCoins(sdk.NewInt64Coin("mine", 188382), sdk.NewInt64Coin("yours", 3))
@@ -537,6 +541,14 @@ func TestNewEventMarketUserSettleDisabled(t *testing.T) {
 	assertEverythingSet(t, event, "EventMarketUserSettleDisabled")
 }
 
+// TODO[1789]: func TestNewEventMarketAllowCommitmentsUpdated(t *testing.T)
+
+// TODO[1789]: func TestNewEventMarketCommitmentsEnabled(t *testing.T)
+
+// TODO[1789]: func TestNewEventMarketCommitmentsDisabled(t *testing.T)
+
+// TODO[1789]: func TestNewEventMarketIntermediaryDenomUpdated(t *testing.T)
+
 func TestNewEventMarketPermissionsUpdated(t *testing.T) {
 	marketID := uint32(5432)
 	updatedBy := sdk.AccAddress("updatedBy___________").String()
@@ -602,6 +614,8 @@ func TestTypedEventToEvent(t *testing.T) {
 	quoteBz := func(str string) []byte {
 		return []byte(fmt.Sprintf("%q", str))
 	}
+	account := "account_____________"
+	accountQ := quoteBz(account)
 	cancelledBy := "cancelledBy_________"
 	cancelledByQ := quoteBz(cancelledBy)
 	destination := sdk.AccAddress("destination_________")
@@ -785,6 +799,32 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
+			name: "EventFundsCommitted",
+			tev:  NewEventFundsCommitted(account, 44, coins1, "tagTagTAG"),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventFundsCommitted",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("account"), Value: accountQ},
+					{Key: []byte("amount"), Value: coins1Q},
+					{Key: []byte("market_id"), Value: []byte("44")},
+					{Key: []byte("tag"), Value: quoteBz("tagTagTAG")},
+				},
+			},
+		},
+		{
+			name: "EventFundsReleased",
+			tev:  NewEventFundsReleased(account, 15, coins1, "something"),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventFundsReleased",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("account"), Value: accountQ},
+					{Key: []byte("amount"), Value: coins1Q},
+					{Key: []byte("market_id"), Value: []byte("15")},
+					{Key: []byte("tag"), Value: quoteBz("something")},
+				},
+			},
+		},
+		{
 			name: "EventMarketWithdraw",
 			tev:  NewEventMarketWithdraw(6, coins1, destination, withdrawnBy.String()),
 			expEvent: sdk.Event{
@@ -848,6 +888,39 @@ func TestTypedEventToEvent(t *testing.T) {
 				Type: "provenance.exchange.v1.EventMarketUserSettleDisabled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("market_id"), Value: []byte("11")},
+					{Key: []byte("updated_by"), Value: updatedByQ},
+				},
+			},
+		},
+		{
+			name: "EventMarketCommitmentsEnabled",
+			tev:  NewEventMarketCommitmentsEnabled(52, updatedBy),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventMarketCommitmentsEnabled",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("market_id"), Value: []byte("52")},
+					{Key: []byte("updated_by"), Value: updatedByQ},
+				},
+			},
+		},
+		{
+			name: "EventMarketCommitmentsDisabled",
+			tev:  NewEventMarketCommitmentsDisabled(25, updatedBy),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventMarketCommitmentsDisabled",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("market_id"), Value: []byte("25")},
+					{Key: []byte("updated_by"), Value: updatedByQ},
+				},
+			},
+		},
+		{
+			name: "EventMarketIntermediaryDenomUpdated",
+			tev:  NewEventMarketIntermediaryDenomUpdated(18, updatedBy),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventMarketIntermediaryDenomUpdated",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("market_id"), Value: []byte("18")},
 					{Key: []byte("updated_by"), Value: updatedByQ},
 				},
 			},

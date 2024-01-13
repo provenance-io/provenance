@@ -54,6 +54,24 @@ func NewEventOrderExternalIDUpdated(order OrderI) *EventOrderExternalIDUpdated {
 	}
 }
 
+func NewEventFundsCommitted(account string, marketID uint32, amount sdk.Coins, tag string) *EventFundsCommitted {
+	return &EventFundsCommitted{
+		Account:  account,
+		MarketId: marketID,
+		Amount:   amount.String(),
+		Tag:      tag,
+	}
+}
+
+func NewEventFundsReleased(account string, marketID uint32, amount sdk.Coins, tag string) *EventFundsReleased {
+	return &EventFundsReleased{
+		Account:  account,
+		MarketId: marketID,
+		Amount:   amount.String(),
+		Tag:      tag,
+	}
+}
+
 func NewEventMarketWithdraw(marketID uint32, amount sdk.Coins, destination sdk.AccAddress, withdrawnBy string) *EventMarketWithdraw {
 	return &EventMarketWithdraw{
 		MarketId:    marketID,
@@ -94,7 +112,7 @@ func NewEventMarketDisabled(marketID uint32, updatedBy string) *EventMarketDisab
 }
 
 // NewEventMarketUserSettleUpdated returns a new EventMarketUserSettleEnabled if isAllowed == true,
-// or a new EventMarketUserSettleDisabled if isActive == false.
+// or a new EventMarketUserSettleDisabled if isAllowed == false.
 func NewEventMarketUserSettleUpdated(marketID uint32, updatedBy string, isAllowed bool) proto.Message {
 	if isAllowed {
 		return NewEventMarketUserSettleEnabled(marketID, updatedBy)
@@ -111,6 +129,36 @@ func NewEventMarketUserSettleEnabled(marketID uint32, updatedBy string) *EventMa
 
 func NewEventMarketUserSettleDisabled(marketID uint32, updatedBy string) *EventMarketUserSettleDisabled {
 	return &EventMarketUserSettleDisabled{
+		MarketId:  marketID,
+		UpdatedBy: updatedBy,
+	}
+}
+
+// NewEventMarketAllowCommitmentsUpdated returns a new NewEventMarketCommitmentsEnabled if isAllowed == true,
+// or a new NewEventMarketCommitmentsDisabled if isAllowed == false.
+func NewEventMarketAllowCommitmentsUpdated(marketID uint32, updatedBy string, isAllowed bool) proto.Message {
+	if isAllowed {
+		return NewEventMarketCommitmentsEnabled(marketID, updatedBy)
+	}
+	return NewEventMarketCommitmentsDisabled(marketID, updatedBy)
+}
+
+func NewEventMarketCommitmentsEnabled(marketID uint32, updatedBy string) *EventMarketCommitmentsEnabled {
+	return &EventMarketCommitmentsEnabled{
+		MarketId:  marketID,
+		UpdatedBy: updatedBy,
+	}
+}
+
+func NewEventMarketCommitmentsDisabled(marketID uint32, updatedBy string) *EventMarketCommitmentsDisabled {
+	return &EventMarketCommitmentsDisabled{
+		MarketId:  marketID,
+		UpdatedBy: updatedBy,
+	}
+}
+
+func NewEventMarketIntermediaryDenomUpdated(marketID uint32, updatedBy string) *EventMarketIntermediaryDenomUpdated {
+	return &EventMarketIntermediaryDenomUpdated{
 		MarketId:  marketID,
 		UpdatedBy: updatedBy,
 	}
