@@ -9,14 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -45,19 +42,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 func (s *UpgradeTestSuite) SetupSuite() {
 	// Alert: This function is SetupSuite. That means all tests in here
 	// will use the same app with the same store and data.
-	bufferedLoggerMaker := func() log.Logger {
-		lw := zerolog.ConsoleWriter{
-			Out:          &s.logBuffer,
-			NoColor:      true,
-			PartsExclude: []string{"time"}, // Without this, each line starts with "<nil> "
-		}
-		// Error log lines will start with "ERR ".
-		// Info log lines will start with "INF ".
-		// Debug log lines are omitted, but would start with "DBG ".
-		logger := zerolog.New(lw).Level(zerolog.InfoLevel)
-		return server.ZeroLogWrapper{Logger: logger}
-	}
-	defer SetLoggerMaker(SetLoggerMaker(bufferedLoggerMaker))
+	defer SetLoggerMaker(SetLoggerMaker(BufferedInfoLoggerMaker(&s.logBuffer)))
 	s.app = Setup(s.T())
 	s.logBuffer.Reset()
 	s.startTime = time.Now()
