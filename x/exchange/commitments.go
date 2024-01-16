@@ -67,7 +67,8 @@ func (n NetAssetPrice) Validate() error {
 // ValidateEventTag makes sure an event tag is okay.
 func ValidateEventTag(eventTag string) error {
 	if len(eventTag) > MaxEventTagLength {
-		return fmt.Errorf("invalid event tag %q: max length %d", eventTag, MaxEventTagLength)
+		return fmt.Errorf("invalid event tag %q (length %d): exceeds max length %d",
+			eventTag[:5]+"..."+eventTag[len(eventTag)-5:], len(eventTag), MaxEventTagLength)
 	}
 	return nil
 }
