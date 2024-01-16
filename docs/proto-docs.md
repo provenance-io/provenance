@@ -395,6 +395,7 @@
   
 - [provenance/metadata/v1/genesis.proto](#provenance/metadata/v1/genesis.proto)
     - [GenesisState](#provenance.metadata.v1.GenesisState)
+    - [MarkerNetAssetValues](#provenance.metadata.v1.MarkerNetAssetValues)
   
 - [provenance/metadata/v1/p8e/p8e.proto](#provenance/metadata/v1/p8e/p8e.proto)
     - [Condition](#provenance.metadata.v1.p8e.Condition)
@@ -6140,6 +6141,23 @@ GenesisState defines the account module's genesis state.
 | `record_specifications` | [RecordSpecification](#provenance.metadata.v1.RecordSpecification) | repeated |  |
 | `o_s_locator_params` | [OSLocatorParams](#provenance.metadata.v1.OSLocatorParams) |  |  |
 | `object_store_locators` | [ObjectStoreLocator](#provenance.metadata.v1.ObjectStoreLocator) | repeated |  |
+| `net_asset_values` | [MarkerNetAssetValues](#provenance.metadata.v1.MarkerNetAssetValues) | repeated | Net asset values assigned to scopes |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MarkerNetAssetValues"></a>
+
+### MarkerNetAssetValues
+MarkerNetAssetValues defines the net asset values for a scope
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address defines the scope address |
+| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated | net_asset_values that are assigned to scope |
 
 
 
