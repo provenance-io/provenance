@@ -612,6 +612,14 @@ s2Loop:
 	return true
 }
 
+// NewNetAssetValue returns a new instance of NetAssetValue
+func NewNetAssetValue(price sdk.Coin, volume uint64) NetAssetValue {
+	return NetAssetValue{
+		Price:  price,
+		Volume: volume,
+	}
+}
+
 // Validate returns error if NetAssetValue is not in a valid state
 func (mnav *NetAssetValue) Validate() error {
 	if err := mnav.Price.Validate(); err != nil {

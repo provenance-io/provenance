@@ -43,6 +43,12 @@ func (k msgServer) WriteScope(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdMils)), msg.Volume)
+	err := k.AddSetNetAssetValues(ctx, msg.Scope.ScopeId, []types.NetAssetValue{nav}, types.ModuleName)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
 	k.SetScope(ctx, msg.Scope)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSignerStrs()))
@@ -728,7 +734,7 @@ func (k msgServer) SetAccountData(
 	return &types.MsgSetAccountDataResponse{}, nil
 }
 
-// AddNetAssetValues adds net asset values to a marker
+// AddNetAssetValues adds net asset values to a scope
 func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNetAssetValuesRequest) (*types.MsgAddNetAssetValuesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
