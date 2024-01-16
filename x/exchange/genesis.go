@@ -72,5 +72,13 @@ func (g GenesisState) Validate() error {
 
 	// No validation to do on LastMarketId.
 
+	for i, commitment := range g.Commitments {
+		if err := commitment.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("invalid commitment[%d]: %w", i, err))
+		} else if _, known := marketIDs[commitment.MarketId]; !known {
+			errs = append(errs, fmt.Errorf("invalid commitment[%d]: unknown market id %d", i, commitment.MarketId))
+		}
+	}
+
 	return errors.Join(errs...)
 }

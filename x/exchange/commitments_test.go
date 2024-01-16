@@ -12,6 +12,71 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
+func TestCommitment_Validate(t *testing.T) {
+	tests := []struct {
+		name       string
+		commitment Commitment
+		exp        string
+	}{
+		{
+			name: "bad account",
+			commitment: Commitment{
+				Account:  "badaccount",
+				MarketId: 1,
+				Amount:   sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000)),
+			},
+			exp: "invalid account \"badaccount\": decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "bad market",
+			commitment: Commitment{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 0,
+				Amount:   sdk.NewCoins(sdk.NewInt64Coin("nhash", 1000)),
+			},
+			exp: "invalid market id: cannot be zero",
+		},
+		{
+			name: "bad amount denom",
+			commitment: Commitment{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.Coin{Denom: "p", Amount: sdk.NewInt(5)}},
+			},
+			exp: "invalid amount \"5p\": invalid denom: p",
+		},
+		{
+			name: "negative amount",
+			commitment: Commitment{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.Coin{Denom: "plum", Amount: sdk.NewInt(-5)}},
+			},
+			exp: "invalid amount \"-5plum\": coin -5plum amount is not positive",
+		},
+		{
+			name: "okay",
+			commitment: Commitment{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.NewCoins(sdk.NewInt64Coin("cherry", 5000)),
+			},
+			exp: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.commitment.Validate()
+			}
+			require.NotPanics(t, testFunc, "commitment.Validate()")
+			assertions.AssertErrorValue(t, err, tc.exp, "commitment.Validate() result")
+		})
+	}
+}
+
 func TestAccountAmount_String(t *testing.T) {
 	tests := []struct {
 		name string

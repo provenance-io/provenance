@@ -217,12 +217,18 @@ func TestGenesisState_Validate(t *testing.T) {
 					askOrder(3, 3, "28fry", "2bender"),
 				},
 				LastOrderId: 1,
+				Commitments: []Commitment{
+					{Account: addr1, MarketId: 1, Amount: sdk.Coins{coin(15, "apple")}},
+					{Account: addr1, MarketId: 4, Amount: sdk.Coins{coin(45, "apple")}},
+					{Account: addr1, MarketId: 3, Amount: sdk.Coins{coin(35, "apple")}},
+				},
 			},
 			expErr: []string{
 				"invalid params: default split 10001 cannot be greater than 10000",
 				`invalid market[1]: invalid create-bid flat fee option "-1zapp": negative coin amount: -1`,
 				`invalid order[1]: unknown market id 4`,
 				"last order id 1 is less than the largest id in the provided orders 3",
+				"invalid commitment[1]: unknown market id 4",
 			},
 		},
 		{
@@ -299,6 +305,73 @@ func TestGenesisState_Validate(t *testing.T) {
 				LastOrderId: 89,
 			},
 			expErr: nil,
+		},
+		{
+			name: "one commitment: bad account",
+			genState: GenesisState{
+				Markets: []Market{{MarketId: 1}},
+				Commitments: []Commitment{
+					{Account: "notanaccountstring", MarketId: 1, Amount: sdk.Coins{coin(58, "cherry")}},
+				},
+			},
+			expErr: []string{`invalid commitment[0]: invalid account "notanaccountstring": decoding bech32 failed: invalid separator index -1`},
+		},
+		{
+			name: "one commitment: market zero",
+			genState: GenesisState{
+				Markets: []Market{{MarketId: 1}},
+				Commitments: []Commitment{
+					{Account: addr1, MarketId: 0, Amount: sdk.Coins{coin(58, "cherry")}},
+				},
+			},
+			expErr: []string{`invalid commitment[0]: invalid market id: cannot be zero`},
+		},
+		{
+			name: "one commitment: unknown market",
+			genState: GenesisState{
+				Markets: []Market{{MarketId: 1}, {MarketId: 3}},
+				Commitments: []Commitment{
+					{Account: addr1, MarketId: 2, Amount: sdk.Coins{coin(58, "cherry")}},
+				},
+			},
+			expErr: []string{`invalid commitment[0]: unknown market id 2`},
+		},
+		{
+			name: "one commitment: bad amount denom",
+			genState: GenesisState{
+				Markets: []Market{{MarketId: 1}},
+				Commitments: []Commitment{
+					{Account: addr1, MarketId: 1, Amount: sdk.Coins{coin(58, "c")}},
+				},
+			},
+			expErr: []string{`invalid commitment[0]: invalid amount "58c": invalid denom: c`},
+		},
+		{
+			name: "one commitment: negative amount",
+			genState: GenesisState{
+				Markets: []Market{{MarketId: 1}},
+				Commitments: []Commitment{
+					{Account: addr1, MarketId: 1, Amount: sdk.Coins{coin(-1, "cherry")}},
+				},
+			},
+			expErr: []string{`invalid commitment[0]: invalid amount "-1cherry": coin -1cherry amount is not positive`},
+		},
+		{
+			name: "four commitments: three invalid",
+			genState: GenesisState{
+				Markets: []Market{{MarketId: 1}, {MarketId: 8}},
+				Commitments: []Commitment{
+					{Account: addr1, MarketId: 4, Amount: sdk.Coins{coin(58, "cherry")}},
+					{Account: "whatanaddr", MarketId: 8, Amount: sdk.Coins{coin(12, "grape")}},
+					{Account: addr1, MarketId: 8, Amount: sdk.Coins{coin(19, "apple")}},
+					{Account: addr1, MarketId: 1, Amount: sdk.Coins{coin(-6, "banana")}},
+				},
+			},
+			expErr: []string{
+				`invalid commitment[0]: unknown market id 4`,
+				`invalid commitment[1]: invalid account "whatanaddr": decoding bech32 failed: invalid separator index -1`,
+				`invalid commitment[3]: invalid amount "-6banana": coin -6banana amount is not positive`,
+			},
 		},
 	}
 

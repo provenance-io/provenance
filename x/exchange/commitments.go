@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,6 +10,23 @@ import (
 // MaxEventTagLength is the maximum length that an event tag can have.
 // 100 was chosen because that's what we used for the external ids.
 const MaxEventTagLength = 100
+
+// Validate returns an error if this Commitment is invalid.
+func (c Commitment) Validate() error {
+	if _, err := sdk.AccAddressFromBech32(c.Account); err != nil {
+		return fmt.Errorf("invalid account %q: %w", c.Account, err)
+	}
+
+	if c.MarketId == 0 {
+		return errors.New("invalid market id: cannot be zero")
+	}
+
+	if err := c.Amount.Validate(); err != nil {
+		return fmt.Errorf("invalid amount %q: %w", c.Amount, err)
+	}
+
+	return nil
+}
 
 // String returns a string representation of this AccountAmount.
 func (a AccountAmount) String() string {
