@@ -83,6 +83,13 @@ func GetDenySendAddresses(key []byte) (markerAddr sdk.AccAddress, denyAddr sdk.A
 	return
 }
 
+// DenySendMarkerPrefix returns an extended prefix [prefix][denom addr] for send deny list for restricted markers
+func DenySendMarkerPrefix(markerAddr sdk.AccAddress) []byte {
+	key := DenySendKeyPrefix
+	key = append(key, address.MustLengthPrefix(markerAddr.Bytes())...)
+	return key
+}
+
 // NetAssetValueKey returns key [prefix][marker address] for marker net asset values
 func NetAssetValueKeyPrefix(markerAddr sdk.AccAddress) []byte {
 	return append(NetAssetValuePrefix, address.MustLengthPrefix(markerAddr.Bytes())...)
