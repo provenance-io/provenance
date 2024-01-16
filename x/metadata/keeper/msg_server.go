@@ -747,10 +747,10 @@ func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNet
 		return nil, sdkerrors.ErrorInvalidSigner.Wrap(err.Error())
 	}
 
-	// err = k.AddSetNetAssetValues(ctx, marker, msg.NetAssetValues, msg.Administrator)
-	// if err != nil {
-	// 	return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	// }
+	err = k.AddSetNetAssetValues(ctx, scopeID, msg.NetAssetValues, types.ModuleName)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

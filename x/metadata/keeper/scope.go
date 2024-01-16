@@ -676,7 +676,7 @@ func (k Keeper) ValidateUpdateValueOwners(
 	return k.validateSmartContractSigners(ctx, usedSigners, msg)
 }
 
-// AddSetNetAssetValues adds a set of net asset values to a marker
+// AddSetNetAssetValues adds a set of net asset values to a scope
 func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress, netAssetValues []types.NetAssetValue, source string) error {
 	for _, nav := range netAssetValues {
 		if nav.Price.Denom == scopeID.String() {
