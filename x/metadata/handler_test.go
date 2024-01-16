@@ -117,7 +117,7 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeDataAccess() {
 		},
 		{
 			"setup test with new scope",
-			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
+			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}, 0, 0),
 			[]string{s.user1},
 			"",
 		},
@@ -277,7 +277,7 @@ func (s *MetadataHandlerTestSuite) TestAddAndDeleteScopeOwners() {
 		},
 		{
 			"setup test with new scope",
-			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}),
+			types.NewMsgWriteScopeRequest(*scope, []string{s.user1}, 0, 0),
 			[]string{s.user1},
 			"",
 		},

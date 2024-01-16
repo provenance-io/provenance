@@ -23,6 +23,8 @@ const (
 	FlagRequirePartyRollup = "require-party-rollup"
 	AddSwitch              = "add"
 	RemoveSwitch           = "remove"
+	FlagUsdMils            = "usd-mils"
+	FlagVolume             = "volume"
 )
 
 // NewTxCmd is the top-level command for Metadata CLI transactions.
@@ -134,7 +136,21 @@ func WriteScopeCmd() *cobra.Command {
 				requirePartyRollup,
 			)
 
-			msg := types.NewMsgWriteScopeRequest(scope, signers)
+			usdMils, err := cmd.Flags().GetUint64(FlagUsdMils)
+			if err != nil {
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagUsdMils, err)
+			}
+
+			volume, err := cmd.Flags().GetUint64(FlagVolume)
+			if err != nil {
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagVolume, err)
+			}
+
+			if usdMils > 0 && volume == 0 {
+				return fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdMils)
+			}
+
+			msg := types.NewMsgWriteScopeRequest(scope, signers, usdMils, volume)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -147,7 +163,8 @@ func WriteScopeCmd() *cobra.Command {
 	cmd.Flags().Bool(FlagRequirePartyRollup, false, "Indicates party rollup is required in this scope")
 	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
-
+	cmd.Flags().Uint64(FlagUsdMils, 0, "Indicates the net asset value of scope in usd mils, i.e. 1234 = $1.234")
+	cmd.Flags().Uint64(FlagVolume, 0, "Indicates the volume of the net asset value")
 	return cmd
 }
 

@@ -228,7 +228,7 @@ func TestWriteScopeRoute(t *testing.T) {
 		DataAccess:        []string{"data_accessor"},
 		ValueOwnerAddress: "value_owner",
 	}
-	var msg = NewMsgWriteScopeRequest(*scope, []string{})
+	var msg = NewMsgWriteScopeRequest(*scope, []string{}, 0, 0)
 
 	require.Equal(t, sdk.MsgTypeURL(msg), "/provenance.metadata.v1.MsgWriteScopeRequest")
 	expectedYaml := `scope:
@@ -245,6 +245,8 @@ func TestWriteScopeRoute(t *testing.T) {
 signers: []
 scope_uuid: ""
 spec_uuid: ""
+usdmils: 0
+volume: 0
 `
 	bz, err := yaml.Marshal(msg)
 	require.NoError(t, err, "yaml.Marshal(msg)")
@@ -252,7 +254,7 @@ spec_uuid: ""
 
 	bz, err = ModuleCdc.MarshalJSON(msg)
 	require.NoError(t, err, "ModuleCdc.MarshalJSON(msg)")
-	assert.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\",\"require_party_rollup\":false},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\"}", string(bz))
+	assert.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\",\"require_party_rollup\":false},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\",\"usd_mils\":\"0\",\"volume\":\"0\"}", string(bz))
 }
 
 func TestWriteScopeValidation(t *testing.T) {
@@ -263,7 +265,7 @@ func TestWriteScopeValidation(t *testing.T) {
 		DataAccess:        []string{"data_accessor"},
 		ValueOwnerAddress: "value_owner",
 	}
-	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"})
+	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"}, 0, 0)
 	err := msg.ValidateBasic()
 	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1")
 	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")
