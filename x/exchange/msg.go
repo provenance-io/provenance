@@ -630,16 +630,12 @@ func (m MsgGovManageFeesRequest) ValidateBasic() error {
 			ValidateAddRemoveFeeOptions("buyer settlement flat fee", m.AddFeeBuyerSettlementFlat, m.RemoveFeeBuyerSettlementFlat),
 			ValidateBuyerFeeRatios(m.AddFeeBuyerSettlementRatios),
 			ValidateDisjointFeeRatios("buyer settlement fee", m.AddFeeBuyerSettlementRatios, m.RemoveFeeBuyerSettlementRatios),
+			ValidateBips("commitment settlement", m.SetFeeCommitmentSettlementBips),
 		)
 
 		if m.UnsetFeeCommitmentSettlementBips && m.SetFeeCommitmentSettlementBips > 0 {
 			errs = append(errs, fmt.Errorf(
 				"invalid commitment settlement bips %d: must be zero when unset_fee_commitment_settlement_bips is true",
-				m.SetFeeCommitmentSettlementBips))
-		}
-
-		if m.SetFeeCommitmentSettlementBips > 10_000 {
-			errs = append(errs, fmt.Errorf("invalid commitment settlement bips %d: exceeds max of 10000",
 				m.SetFeeCommitmentSettlementBips))
 		}
 	} else {
