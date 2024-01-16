@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add upgrade handler for 1.18 [#1756](https://github.com/provenance-io/provenance/pull/1756).
 * Remove the rust upgrade handlers [PR 1774](https://github.com/provenance-io/provenance/pull/1774).
 * Allow bypassing the config warning wait using an environment variable [PR 1810](https://github.com/provenance-io/provenance/pull/1810).
+* Update protos, naming, and documentation to use millis [#1813](https://github.com/provenance-io/provenance/issues/1813).
 
 ### Bug Fixes
 
