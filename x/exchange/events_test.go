@@ -368,9 +368,41 @@ func TestNewEventOrderExternalIDUpdated(t *testing.T) {
 	}
 }
 
-// TODO[1789]: func TestNewEventFundsCommitted(t *testing.T)
+func TestNewEventFundsCommitted(t *testing.T) {
+	account := sdk.AccAddress("account_____________").String()
+	marketID := uint32(4444)
+	amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 57), sdk.NewInt64Coin("banana", 99))
+	tag := "help-help-i-have-been-committed"
 
-// TODO[1789]: func TestNewEventFundsReleased(t *testing.T)
+	var event *EventFundsCommitted
+	testFunc := func() {
+		event = NewEventFundsCommitted(account, marketID, amount, tag)
+	}
+	require.NotPanics(t, testFunc, "NewEventFundsCommitted(%q, %d, %q, %q)", account, marketID, amount, tag)
+	assert.Equal(t, account, event.Account, "Account")
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, amount.String(), event.Amount, "Amount")
+	assert.Equal(t, tag, event.Tag, "Tag")
+	assertEverythingSet(t, event, "EventFundsCommitted")
+}
+
+func TestNewEventFundsReleased(t *testing.T) {
+	account := sdk.AccAddress("account_____________").String()
+	marketID := uint32(4444)
+	amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 57), sdk.NewInt64Coin("banana", 99))
+	tag := "i-have-been-released"
+
+	var event *EventFundsReleased
+	testFunc := func() {
+		event = NewEventFundsReleased(account, marketID, amount, tag)
+	}
+	require.NotPanics(t, testFunc, "NewEventFundsReleased(%q, %d, %q, %q)", account, marketID, amount, tag)
+	assert.Equal(t, account, event.Account, "Account")
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, amount.String(), event.Amount, "Amount")
+	assert.Equal(t, tag, event.Tag, "Tag")
+	assertEverythingSet(t, event, "EventFundsReleased")
+}
 
 func TestNewEventMarketWithdraw(t *testing.T) {
 	marketID := uint32(55)
@@ -541,13 +573,87 @@ func TestNewEventMarketUserSettleDisabled(t *testing.T) {
 	assertEverythingSet(t, event, "EventMarketUserSettleDisabled")
 }
 
-// TODO[1789]: func TestNewEventMarketAllowCommitmentsUpdated(t *testing.T)
+func TestNewEventMarketAllowCommitmentsUpdated(t *testing.T) {
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
-// TODO[1789]: func TestNewEventMarketCommitmentsEnabled(t *testing.T)
+	tests := []struct {
+		name      string
+		marketID  uint32
+		updatedBy string
+		isAllowed bool
+		expected  proto.Message
+	}{
+		{
+			name:      "enabled",
+			marketID:  575,
+			updatedBy: updatedBy,
+			isAllowed: true,
+			expected:  NewEventMarketCommitmentsEnabled(575, updatedBy),
+		},
+		{
+			name:      "disabled",
+			marketID:  406,
+			updatedBy: updatedBy,
+			isAllowed: false,
+			expected:  NewEventMarketCommitmentsDisabled(406, updatedBy),
+		},
+	}
 
-// TODO[1789]: func TestNewEventMarketCommitmentsDisabled(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event proto.Message
+			testFunc := func() {
+				event = NewEventMarketAllowCommitmentsUpdated(tc.marketID, tc.updatedBy, tc.isAllowed)
+			}
+			require.NotPanics(t, testFunc, "NewEventMarketAllowCommitmentsUpdated(%d, %q, %t) result",
+				tc.marketID, tc.updatedBy, tc.isAllowed)
+			assert.Equal(t, tc.expected, event, "NewEventMarketAllowCommitmentsUpdated(%d, %q, %t) result",
+				tc.marketID, tc.updatedBy, tc.isAllowed)
+		})
+	}
+}
 
-// TODO[1789]: func TestNewEventMarketIntermediaryDenomUpdated(t *testing.T)
+func TestNewEventMarketCommitmentsEnabled(t *testing.T) {
+	marketID := uint32(4541)
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	var event *EventMarketCommitmentsEnabled
+	testFunc := func() {
+		event = NewEventMarketCommitmentsEnabled(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketCommitmentsEnabled(%d, %q)", marketID, updatedBy)
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
+	assertEverythingSet(t, event, "EventMarketCommitmentsEnabled")
+}
+
+func TestNewEventMarketCommitmentsDisabled(t *testing.T) {
+	marketID := uint32(4541)
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	var event *EventMarketCommitmentsDisabled
+	testFunc := func() {
+		event = NewEventMarketCommitmentsDisabled(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketCommitmentsDisabled(%d, %q)", marketID, updatedBy)
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
+	assertEverythingSet(t, event, "EventMarketCommitmentsDisabled")
+}
+
+func TestNewEventMarketIntermediaryDenomUpdated(t *testing.T) {
+	marketID := uint32(4541)
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	var event *EventMarketIntermediaryDenomUpdated
+	testFunc := func() {
+		event = NewEventMarketIntermediaryDenomUpdated(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketIntermediaryDenomUpdated(%d, %q)", marketID, updatedBy)
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
+	assertEverythingSet(t, event, "EventMarketIntermediaryDenomUpdated")
+}
 
 func TestNewEventMarketPermissionsUpdated(t *testing.T) {
 	marketID := uint32(5432)
