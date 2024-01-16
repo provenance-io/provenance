@@ -575,6 +575,7 @@ func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
 		errs = append(errs,
 			ValidateAddRemoveReqAttrs("create-ask", m.CreateAskToAdd, m.CreateAskToRemove),
 			ValidateAddRemoveReqAttrs("create-bid", m.CreateBidToAdd, m.CreateBidToRemove),
+			ValidateAddRemoveReqAttrs("create-commitment", m.CreateCommitmentToAdd, m.CreateCommitmentToRemove),
 		)
 	} else {
 		errs = append(errs, errors.New("no updates"))
@@ -586,7 +587,8 @@ func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
 // HasUpdates returns true if this has at least one required attribute change, false if devoid of updates.
 func (m MsgMarketManageReqAttrsRequest) HasUpdates() bool {
 	return len(m.CreateAskToAdd) > 0 || len(m.CreateAskToRemove) > 0 ||
-		len(m.CreateBidToAdd) > 0 || len(m.CreateBidToRemove) > 0
+		len(m.CreateBidToAdd) > 0 || len(m.CreateBidToRemove) > 0 ||
+		len(m.CreateCommitmentToAdd) > 0 || len(m.CreateCommitmentToRemove) > 0
 }
 
 func (m MsgMarketManageReqAttrsRequest) GetSigners() []sdk.AccAddress {
@@ -629,6 +631,17 @@ func (m MsgGovManageFeesRequest) ValidateBasic() error {
 			ValidateBuyerFeeRatios(m.AddFeeBuyerSettlementRatios),
 			ValidateDisjointFeeRatios("buyer settlement fee", m.AddFeeBuyerSettlementRatios, m.RemoveFeeBuyerSettlementRatios),
 		)
+
+		if m.UnsetFeeCommitmentSettlementBips && m.SetFeeCommitmentSettlementBips > 0 {
+			errs = append(errs, fmt.Errorf(
+				"invalid commitment settlement bips %d: must be zero when unset_fee_commitment_settlement_bips is true",
+				m.SetFeeCommitmentSettlementBips))
+		}
+
+		if m.SetFeeCommitmentSettlementBips > 10_000 {
+			errs = append(errs, fmt.Errorf("invalid commitment settlement bips %d: exceeds max of 10000",
+				m.SetFeeCommitmentSettlementBips))
+		}
 	} else {
 		errs = append(errs, errors.New("no updates"))
 	}
@@ -643,7 +656,8 @@ func (m MsgGovManageFeesRequest) HasUpdates() bool {
 		len(m.AddFeeSellerSettlementFlat) > 0 || len(m.RemoveFeeSellerSettlementFlat) > 0 ||
 		len(m.AddFeeSellerSettlementRatios) > 0 || len(m.RemoveFeeSellerSettlementRatios) > 0 ||
 		len(m.AddFeeBuyerSettlementFlat) > 0 || len(m.RemoveFeeBuyerSettlementFlat) > 0 ||
-		len(m.AddFeeBuyerSettlementRatios) > 0 || len(m.RemoveFeeBuyerSettlementRatios) > 0
+		len(m.AddFeeBuyerSettlementRatios) > 0 || len(m.RemoveFeeBuyerSettlementRatios) > 0 ||
+		m.SetFeeCommitmentSettlementBips != 0 || m.UnsetFeeCommitmentSettlementBips
 }
 
 func (m MsgGovManageFeesRequest) GetSigners() []sdk.AccAddress {
