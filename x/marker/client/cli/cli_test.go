@@ -2175,7 +2175,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 			},
 		},
 		{
-			name: "usd-cents and volume present",
+			name: "usd-mills and volume present",
 			cmd:  getTestCmd(),
 			args: []string{argVolume + "=11", argUsdMills + "=1"},
 			exp: &markercli.NewMarkerFlagValues{
