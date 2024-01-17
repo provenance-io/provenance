@@ -5,6 +5,7 @@ All created/modified state objects specified by each message are defined within 
 [state](./02_state_transitions.md) section.
 
 <!-- TOC 2 2 -->
+- [Messages](#messages)
   - [Msg/AddMarkerRequest](#msgaddmarkerrequest)
   - [Msg/AddAccessRequest](#msgaddaccessrequest)
   - [Msg/DeleteAccessRequest](#msgdeleteaccessrequest)
@@ -34,9 +35,9 @@ A marker is created using the Add Marker service message.
 The created marker can not be directly added in an Active (or Cancelled/Destroyed) status.  Markers
 must have a valid supply and denomination value.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L77-L93
++++ https://github.com/provenance-io/provenance/blob/cee360f8130f48cb263d633d23de4f39f1de1f3a/proto/provenance/marker/v1/tx.proto#L83-L101
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L95-96
++++ https://github.com/provenance-io/provenance/blob/cee360f8130f48cb263d633d23de4f39f1de1f3a/proto/provenance/marker/v1/tx.proto#L103-L104
 
 
 This service message is expected to fail if:
@@ -297,9 +298,9 @@ This service message is expected to fail if:
 
 AddFinalizeActivate requested is used for adding, finalizing, and activating a marker in a single request.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L212-L224
++++ https://github.com/provenance-io/provenance/blob/cee360f8130f48cb263d633d23de4f39f1de1f3a/proto/provenance/marker/v1/tx.proto#L220-L234
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L226-L227 
++++ https://github.com/provenance-io/provenance/blob/cee360f8130f48cb263d633d23de4f39f1de1f3a/proto/provenance/marker/v1/tx.proto#L236-L237
 
 This service message is expected to fail if:
 
