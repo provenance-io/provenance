@@ -28,6 +28,24 @@ func (c Commitment) Validate() error {
 	return nil
 }
 
+// GetAccAddr gets this commitment's account as an AccAddress.
+func (c Commitment) GetAccAddr() (sdk.AccAddress, error) {
+	rv, err := sdk.AccAddressFromBech32(c.Account)
+	if err != nil {
+		return nil, fmt.Errorf("invalid account %q: %w", c.Account, err)
+	}
+	return rv, nil
+}
+
+// MustGetAccAddr gets this commitment's account as an AccAddress, panics on error.
+func (c Commitment) MustGetAccAddr() sdk.AccAddress {
+	rv, err := c.GetAccAddr()
+	if err != nil {
+		panic(err)
+	}
+	return rv
+}
+
 // String returns a string representation of this AccountAmount.
 func (a AccountAmount) String() string {
 	return fmt.Sprintf("%s:%q", a.Account, a.Amount)
