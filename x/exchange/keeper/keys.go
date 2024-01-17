@@ -45,9 +45,14 @@ import (
 //   Market inactive indicator: 0x01 | <market_id> | 0x06 => nil
 //   Market user-settle indicator: 0x01 | <market_id> | 0x07 => nil
 //   Market permissions: 0x01 | <market_id> | 0x08 | <addr len byte> | <address> | <permission type byte> => nil
-//   Market Required Attributes: 0x01 | <market_id> | 0x09 | <order_type_byte> => 0x1E-separated list of required attribute entries.
+//   Market Required Attributes: 0x01 | <market_id> | 0x09 | <req_attr_type_byte> => 0x1E-separated list of required attribute entries.
+//   Market allow commitments indicator: 0x01 | <market_id> | 0x10 => nil
+//   Market Create-Commitment Flat Fee: 0x01 | <market_id> | 0x11 | <denom> => <amount> (string)
+//   Market Commitment Settlement Bips: 0x01 | <market_id> | 0x12 => uint16
+//   Market Commitment Settlement Intermediary Denom: 0x01 | <market_id> | 0x13 => <denom>
 //
 //   The <permission_type_byte> is a single byte as uint8 with the same values as the enum entries.
+//   The <req_attr_type_byte> is either an order type byte or 0x63 (= 'c' for commitments).
 //
 // Orders:
 //   Order entries all have the following general format:
@@ -59,6 +64,9 @@ import (
 //   So, the specific entry formats look like this:
 //     Ask Orders: 0x02 | <order_id> (8 bytes) => 0x00 | protobuf(AskOrder)
 //     Bid Orders: 0x02 | <order_id> (8 bytes) => 0x01 | protobuf(BidOrder)
+//
+// Commitments:
+//   0x63 | <market_id> (4 bytes) | <address> => <coins> (string)
 //
 // A market to order index is maintained with the following format:
 //    0x03 | <market_id> (4 bytes) | <order_id> (8 bytes) => <order type byte>
@@ -93,6 +101,8 @@ const (
 	KeyTypeAssetToOrderIndex = byte(0x05)
 	// KeyTypeMarketExternalIDToOrderIndex is the type byte for entries in the market and uuid to order index.
 	KeyTypeMarketExternalIDToOrderIndex = byte(0x09)
+	// KeyTypeCommitment is the type byte for commitments.
+	KeyTypeCommitment = byte(0x63)
 
 	// MarketKeyTypeCreateAskFlat is the market-specific type byte for the create-ask flat fees.
 	MarketKeyTypeCreateAskFlat = byte(0x00)
@@ -114,6 +124,14 @@ const (
 	MarketKeyTypePermissions = byte(0x08)
 	// MarketKeyTypeReqAttr is the market-specific type byte for the market's required attributes lists.
 	MarketKeyTypeReqAttr = byte(0x09)
+	// MarketKeyTypeAllowCommitments is the market-specific type byte for the allow-commitments indicators.
+	MarketKeyTypeAllowCommitments = byte(0x10)
+	// MarketKeyTypeCreateCommitmentFlat is the market-specific type byte for the create-commitment flat fees.
+	MarketKeyTypeCreateCommitmentFlat = byte(0x11)
+	// MarketKeyTypeCommitmentSettlementBips is the market-specific type byte for the bips the market is charged for commitment settlements.
+	MarketKeyTypeCommitmentSettlementBips = byte(0x12)
+	// MarketKeyTypeCommitmentIntermediaryDenom is the market-specific type byte for the intermediary denom used in commitment settlement fee calcs.
+	MarketKeyTypeCommitmentIntermediaryDenom = byte(0x13)
 
 	// OrderKeyTypeAsk is the order-specific type byte for ask orders.
 	OrderKeyTypeAsk = exchange.OrderTypeByteAsk
@@ -299,6 +317,23 @@ func GetKeyPrefixMarketCreateBidFlatFee(marketID uint32) []byte {
 // MakeKeyMarketCreateBidFlatFee creates the key to use for a create-bid flat fee for the given denom.
 func MakeKeyMarketCreateBidFlatFee(marketID uint32, denom string) []byte {
 	rv := marketKeyPrefixCreateBidFlatFee(marketID, len(denom))
+	rv = append(rv, denom...)
+	return rv
+}
+
+// marketKeyPrefixCreateCommitmentFlatFee creates the key prefix for a market's create-commitment flat fees with extra capacity for the rest.
+func marketKeyPrefixCreateCommitmentFlatFee(marketID uint32, extraCap int) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeCreateCommitmentFlat, extraCap)
+}
+
+// GetKeyPrefixMarketCreateCommitmentFlatFee creates the key prefix for the create-commitment flat fees for the provided market.
+func GetKeyPrefixMarketCreateCommitmentFlatFee(marketID uint32) []byte {
+	return marketKeyPrefixCreateCommitmentFlatFee(marketID, 0)
+}
+
+// MakeKeyMarketCreateCommitmentFlatFee creates the key to use for a create-commitment flat fee for the given denom.
+func MakeKeyMarketCreateCommitmentFlatFee(marketID uint32, denom string) []byte {
+	rv := marketKeyPrefixCreateCommitmentFlatFee(marketID, len(denom))
 	rv = append(rv, denom...)
 	return rv
 }
@@ -511,23 +546,26 @@ func ParseKeySuffixMarketPermissions(suffix []byte) (sdk.AccAddress, exchange.Pe
 	return addr, exchange.Permission(remainder[0]), nil
 }
 
-// marketKeyPrefixReqAttr creates the key prefix for a market's required attributes entries with an extra byte of capacity for the order type.
-func marketKeyPrefixReqAttr(marketID uint32) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeReqAttr, 1)
+// marketKeyReqAttr creates the key for a market's required attributes entries of a specific type.
+func marketKeyReqAttr(marketID uint32, reqAttrType byte) []byte {
+	rv := keyPrefixMarketType(marketID, MarketKeyTypeReqAttr, 1)
+	rv = append(rv, reqAttrType)
+	return rv
 }
 
 // MakeKeyMarketReqAttrAsk creates the key to use for a market's attributes required to create an ask order.
 func MakeKeyMarketReqAttrAsk(marketID uint32) []byte {
-	rv := marketKeyPrefixReqAttr(marketID)
-	rv = append(rv, OrderKeyTypeAsk)
-	return rv
+	return marketKeyReqAttr(marketID, OrderKeyTypeAsk)
 }
 
 // MakeKeyMarketReqAttrBid creates the key to use for a market's attributes required to create a bid order.
 func MakeKeyMarketReqAttrBid(marketID uint32) []byte {
-	rv := marketKeyPrefixReqAttr(marketID)
-	rv = append(rv, OrderKeyTypeBid)
-	return rv
+	return marketKeyReqAttr(marketID, OrderKeyTypeBid)
+}
+
+// MakeKeyMarketReqAttrCommitment creates the key to use for a market's attributes required to create a commitment.
+func MakeKeyMarketReqAttrCommitment(marketID uint32) []byte {
+	return marketKeyReqAttr(marketID, KeyTypeCommitment)
 }
 
 // ParseReqAttrStoreValue parses a required attribute store value into it's string slice.
@@ -536,6 +574,21 @@ func ParseReqAttrStoreValue(value []byte) []string {
 		return nil
 	}
 	return strings.Split(string(value), string(RecordSeparator))
+}
+
+// MakeKeyMarketAllowCommitments creates the key to use to indicate that a market allows commitments.
+func MakeKeyMarketAllowCommitments(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeAllowCommitments, 0)
+}
+
+// MakeKeyMarketCommitmentSettlementBips creates the key to use to for a market's commitment settlement bips.
+func MakeKeyMarketCommitmentSettlementBips(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeCommitmentSettlementBips, 0)
+}
+
+// MakeKeyMarketCommitmentIntermediaryDenom creates the key to use to for a market's commitment intermediary denom.
+func MakeKeyMarketCommitmentIntermediaryDenom(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeCommitmentIntermediaryDenom, 0)
 }
 
 // keyPrefixOrder creates the key prefix for orders with the provided extra capacity for additional elements.
@@ -740,5 +793,39 @@ func MakeIndexKeyMarketExternalIDToOrder(marketID uint32, externalID string) []b
 	}
 	rv := prepKey(KeyTypeMarketExternalIDToOrderIndex, uint32Bz(marketID), len(externalID))
 	rv = append(rv, externalID...)
+	return rv
+}
+
+// keyPrefixCommitment creates the key prefix for commitments with the provided extra capacity for additional elements.
+func keyPrefixCommitment(extraCap int) []byte {
+	return prepKey(KeyTypeCommitment, nil, extraCap)
+}
+
+// keyPrefixMarketCommitments creates the key prefix for comitments to a market with the provided extra capacity for additional elements.
+func keyPrefixMarketCommitments(marketID uint32, extraCap int) []byte {
+	suffix := uint32Bz(marketID)
+	rv := keyPrefixCommitment(extraCap + len(suffix))
+	rv = append(rv, suffix...)
+	return rv
+}
+
+// GetKeyPrefixCommitments gets the key prefix for all commitments.
+func GetKeyPrefixCommitments() []byte {
+	return keyPrefixCommitment(0)
+}
+
+// GetKeyPrefixMarketCommitments gets the key prefix for all commitments in a market.
+func GetKeyPrefixMarketCommitments(marketID uint32) []byte {
+	return keyPrefixMarketCommitments(marketID, 0)
+}
+
+// MakeKeyCommitment creates the key to use for a commitment
+func MakeKeyCommitment(marketID uint32, addr sdk.AccAddress) []byte {
+	if len(addr) == 0 {
+		panic(errors.New("empty address not allowed"))
+	}
+	suffix := address.MustLengthPrefix(addr)
+	rv := keyPrefixMarketCommitments(marketID, len(suffix))
+	rv = append(rv, suffix...)
 	return rv
 }
