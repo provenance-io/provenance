@@ -5,7 +5,6 @@ All created/modified state objects specified by each message are defined within 
 [state](./02_state_transitions.md) section.
 
 <!-- TOC 2 2 -->
-- [Messages](#messages)
   - [Msg/AddMarkerRequest](#msgaddmarkerrequest)
   - [Msg/AddAccessRequest](#msgaddaccessrequest)
   - [Msg/DeleteAccessRequest](#msgdeleteaccessrequest)
