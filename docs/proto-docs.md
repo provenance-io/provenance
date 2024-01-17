@@ -4623,7 +4623,7 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
-| `usd_cents` | [uint64](#uint64) |  |  |
+| `usd_mills` | [uint64](#uint64) |  |  |
 | `volume` | [uint64](#uint64) |  |  |
 
 
@@ -4660,7 +4660,7 @@ If being provided as a governance proposal, set the from_address to the gov modu
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
-| `usd_cents` | [uint64](#uint64) |  |  |
+| `usd_mills` | [uint64](#uint64) |  |  |
 | `volume` | [uint64](#uint64) |  |  |
 
 
