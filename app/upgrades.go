@@ -127,6 +127,7 @@ var upgrades = map[string]appUpgrade{
 			}
 
 			removeInactiveValidatorDelegations(ctx, app)
+			convertNavUnits(ctx, app)
 
 			return vm, nil
 		},
@@ -141,6 +142,7 @@ var upgrades = map[string]appUpgrade{
 			}
 
 			removeInactiveValidatorDelegations(ctx, app)
+			convertNavUnits(ctx, app)
 
 			return vm, nil
 		},
@@ -348,4 +350,20 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 		return false
 	})
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
+}
+
+func convertNavUnits(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Converting NAV units")
+	app.MarkerKeeper.IterateAllNetAssetValues(ctx, func(markerAddr sdk.AccAddress, nav markertypes.NetAssetValue) (stop bool) {
+		if nav.Price.Denom == markertypes.UsdDenom {
+			nav.Price.Amount = nav.Price.Amount.Mul(math.NewInt(10))
+			marker, err := app.MarkerKeeper.GetMarker(ctx, markerAddr)
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Unable to get marker for address: %s", markerAddr))
+				return false
+			}
+			app.MarkerKeeper.SetNetAssetValue(ctx, marker, nav, "upgrade")
+		}
+		return false
+	})
 }
