@@ -140,7 +140,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 				SupplyFixed:            true,
 				AllowGovernanceControl: true,
 				AllowForcedTransfer:    false,
-				UsdCents:               1,
+				UsdMills:               1,
 				Volume:                 0,
 			},
 			expErr: `cannot set net asset value : marker net asset value volume must be positive value: invalid request`,
@@ -156,7 +156,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 				SupplyFixed:            true,
 				AllowGovernanceControl: true,
 				AllowForcedTransfer:    false,
-				UsdCents:               1,
+				UsdMills:               1,
 				Volume:                 10,
 			},
 			expEvent: []proto.Message{
