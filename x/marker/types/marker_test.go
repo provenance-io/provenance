@@ -440,7 +440,7 @@ func TestNetAssetValueValidate(t *testing.T) {
 		{
 			name: "volume must be positive if value is greater than 1",
 			nav: NetAssetValue{
-				Price:  sdk.NewInt64Coin("usdcents", 1),
+				Price:  sdk.NewInt64Coin("usdmills", 1),
 				Volume: 0,
 			},
 			expErr: "marker net asset value volume must be positive value",
@@ -448,7 +448,7 @@ func TestNetAssetValueValidate(t *testing.T) {
 		{
 			name: "successful with 0 volume and coin",
 			nav: NetAssetValue{
-				Price:  sdk.NewInt64Coin("usdcents", 0),
+				Price:  sdk.NewInt64Coin("usdmills", 0),
 				Volume: 0,
 			},
 		},
