@@ -1146,7 +1146,7 @@ func AddNewMarkerFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "Indicates that governance control is allowed")
 	cmd.Flags().Bool(FlagAllowForceTransfer, false, "Indicates that force transfer is allowed")
 	cmd.Flags().StringSlice(FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
-	cmd.Flags().Uint64(FlagUsdMills, 0, "Indicates the net asset value of marker in usd mills, i.e. 12345 = $1.2345")
+	cmd.Flags().Uint64(FlagUsdMills, 0, "Indicates the net asset value of marker in usd mills, i.e. 1234 = $1.234")
 	cmd.Flags().Uint64(FlagVolume, 0, "Indicates the volume of the net asset value")
 }
 
