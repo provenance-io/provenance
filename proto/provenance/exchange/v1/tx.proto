@@ -389,8 +389,8 @@ message MsgMarketUpdateIntermediaryDenomRequest {
   // market_id is the numerical identifier of the market changing the intermediary denom.
   uint32 market_id = 2;
 
-  // commitment_settlement_intermediary_denom is the new intermediary denom for this market to use.
-  string commitment_settlement_intermediary_denom = 3;
+  // intermediary_denom is the new intermediary denom for this market to use.
+  string intermediary_denom = 3;
 }
 
 // MsgMarketUpdateIntermediaryDenomResponse is a response message for the MarketUpdateIntermediaryDenom endpoint.

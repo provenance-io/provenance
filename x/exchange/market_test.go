@@ -76,11 +76,11 @@ func TestMarket_Validate(t *testing.T) {
 				ReqAttrCreateAsk: []string{"kyc.ask.path", "*.ask.some.other.path"},
 				ReqAttrCreateBid: []string{"kyc.bid.path", "*.bid.some.other.path"},
 
-				AllowCommitments:                      true,
-				FeeCreateCommitmentFlat:               coins("27nnibbler,3mfry"),
-				CommitmentSettlementBips:              88,
-				CommitmentSettlementIntermediaryDenom: "mleela",
-				ReqAttrCreateCommitment:               []string{"kyc.com.path", "*.com.some.other.path"},
+				AllowCommitments:         true,
+				FeeCreateCommitmentFlat:  coins("27nnibbler,3mfry"),
+				CommitmentSettlementBips: 88,
+				IntermediaryDenom:        "mleela",
+				ReqAttrCreateCommitment:  []string{"kyc.com.path", "*.com.some.other.path"},
 			},
 			expErr: nil,
 		},
@@ -162,7 +162,7 @@ func TestMarket_Validate(t *testing.T) {
 		},
 		{
 			name:   "invalid intermediary denom",
-			market: Market{CommitmentSettlementIntermediaryDenom: "123bad"},
+			market: Market{IntermediaryDenom: "123bad"},
 			expErr: []string{"invalid intermediary denom: invalid denom: 123bad"},
 		},
 		{
@@ -183,11 +183,10 @@ func TestMarket_Validate(t *testing.T) {
 				AccessGrants:              []AccessGrant{{Address: "bad_addr", Permissions: AllPermissions()}},
 				ReqAttrCreateAsk:          []string{"this-attr-is-bad"},
 				ReqAttrCreateBid:          []string{"this-attr-grrrr"},
-
-				FeeCreateCommitmentFlat:               sdk.Coins{coin(-1, "leela")},
-				CommitmentSettlementBips:              10_001,
-				CommitmentSettlementIntermediaryDenom: "123bad",
-				ReqAttrCreateCommitment:               []string{"this-attr-waaaaaah"},
+				FeeCreateCommitmentFlat:   sdk.Coins{coin(-1, "leela")},
+				CommitmentSettlementBips:  10_001,
+				IntermediaryDenom:         "123bad",
+				ReqAttrCreateCommitment:   []string{"this-attr-waaaaaah"},
 			},
 			expErr: []string{
 				fmt.Sprintf("name length %d exceeds maximum length of %d", MaxName+1, MaxName),

@@ -49,7 +49,7 @@ import (
 //   Market allow commitments indicator: 0x01 | <market_id> | 0x10 => nil
 //   Market Create-Commitment Flat Fee: 0x01 | <market_id> | 0x11 | <denom> => <amount> (string)
 //   Market Commitment Settlement Bips: 0x01 | <market_id> | 0x12 => uint16
-//   Market Commitment Settlement Intermediary Denom: 0x01 | <market_id> | 0x13 => <denom>
+//   Market Intermediary Denom: 0x01 | <market_id> | 0x13 => <denom>
 //
 //   The <permission_type_byte> is a single byte as uint8 with the same values as the enum entries.
 //   The <req_attr_type_byte> is either an order type byte or 0x63 (= 'c' for commitments).
@@ -130,8 +130,8 @@ const (
 	MarketKeyTypeCreateCommitmentFlat = byte(0x11)
 	// MarketKeyTypeCommitmentSettlementBips is the market-specific type byte for the bips the market is charged for commitment settlements.
 	MarketKeyTypeCommitmentSettlementBips = byte(0x12)
-	// MarketKeyTypeCommitmentIntermediaryDenom is the market-specific type byte for the intermediary denom used in commitment settlement fee calcs.
-	MarketKeyTypeCommitmentIntermediaryDenom = byte(0x13)
+	// MarketKeyTypeIntermediaryDenom is the market-specific type byte for the intermediary denom used in fee calcs.
+	MarketKeyTypeIntermediaryDenom = byte(0x13)
 
 	// OrderKeyTypeAsk is the order-specific type byte for ask orders.
 	OrderKeyTypeAsk = exchange.OrderTypeByteAsk
@@ -586,9 +586,9 @@ func MakeKeyMarketCommitmentSettlementBips(marketID uint32) []byte {
 	return keyPrefixMarketType(marketID, MarketKeyTypeCommitmentSettlementBips, 0)
 }
 
-// MakeKeyMarketCommitmentIntermediaryDenom creates the key to use to for a market's commitment intermediary denom.
-func MakeKeyMarketCommitmentIntermediaryDenom(marketID uint32) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeCommitmentIntermediaryDenom, 0)
+// MakeKeyMarketIntermediaryDenom creates the key to use to for a market's commitment intermediary denom.
+func MakeKeyMarketIntermediaryDenom(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeIntermediaryDenom, 0)
 }
 
 // keyPrefixOrder creates the key prefix for orders with the provided extra capacity for additional elements.

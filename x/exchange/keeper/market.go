@@ -683,16 +683,16 @@ func updateCommitmentSettlementBips(store sdk.KVStore, marketID uint32, bips uin
 	}
 }
 
-// getCommitmentIntermediaryDenom gets a market's intermediary denom.
-func getCommitmentIntermediaryDenom(store sdk.KVStore, marketID uint32) string {
-	key := MakeKeyMarketCommitmentIntermediaryDenom(marketID)
+// getIntermediaryDenom gets a market's intermediary denom.
+func getIntermediaryDenom(store sdk.KVStore, marketID uint32) string {
+	key := MakeKeyMarketIntermediaryDenom(marketID)
 	rv := store.Get(key)
 	return string(rv)
 }
 
-// setCommitmentIntermediaryDenom sets the market's intermediary denom to the provided value.
-func setCommitmentIntermediaryDenom(store sdk.KVStore, marketID uint32, denom string) {
-	key := MakeKeyMarketCommitmentIntermediaryDenom(marketID)
+// setIntermediaryDenom sets the market's intermediary denom to the provided value.
+func setIntermediaryDenom(store sdk.KVStore, marketID uint32, denom string) {
+	key := MakeKeyMarketIntermediaryDenom(marketID)
 	if len(denom) > 0 {
 		store.Set(key, []byte(denom))
 	} else {
@@ -1362,7 +1362,7 @@ func storeMarket(store sdk.KVStore, market exchange.Market) {
 	setReqAttrsCommitment(store, marketID, market.ReqAttrCreateCommitment)
 	setAllowCommitments(store, marketID, market.AllowCommitments)
 	setCommitmentSettlementBips(store, marketID, market.CommitmentSettlementBips)
-	setCommitmentIntermediaryDenom(store, marketID, market.CommitmentSettlementIntermediaryDenom)
+	setIntermediaryDenom(store, marketID, market.IntermediaryDenom)
 }
 
 // initMarket is similar to CreateMarket but assumes the market has already been
@@ -1454,7 +1454,7 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 	market.ReqAttrCreateCommitment = getReqAttrsCommitment(store, marketID)
 	market.AllowCommitments = isCommitmentAllowed(store, marketID)
 	market.CommitmentSettlementBips = getCommitmentSettlementBips(store, marketID)
-	market.CommitmentSettlementIntermediaryDenom = getCommitmentIntermediaryDenom(store, marketID)
+	market.IntermediaryDenom = getIntermediaryDenom(store, marketID)
 
 	if marketAcc := k.GetMarketAccount(ctx, marketID); marketAcc != nil {
 		market.MarketDetails = marketAcc.MarketDetails

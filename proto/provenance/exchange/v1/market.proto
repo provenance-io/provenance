@@ -133,10 +133,10 @@ message Market {
   // of that trade would be viewed as either just 10apples or just 100grapes.
   uint32 commitment_settlement_bips = 16;
 
-  // commitment_settlement_intermediary_denom is the denom that the inputs are all converted to (before being converted
-  // to the fee denom) during a commitment settlement. Each denom in the inputs must have a NAV to this denom (or be
-  // this denom). There must also be a NAV from this denom to the fee denom.
-  string commitment_settlement_intermediary_denom = 17;
+  // intermediary_denom is the denom that funds get converted to (before being converted to the chain's fee denom)
+  // when calculating the fees that are paid to the exchange. NAVs are used for this conversion and actions will fail
+  // if a NAV is needed but not available.
+  string intermediary_denom = 17;
 
   // req_attr_create_commitment is a list of attributes required on an account for it to be allowed to create a
   // commitment. An account must have all of these attributes in order to create a commitment in this market.

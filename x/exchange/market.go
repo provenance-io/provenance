@@ -52,7 +52,7 @@ func (m Market) Validate() error {
 		// Nothing to check for the AllowCommitments boolean.
 		ValidateFeeOptions("create-commitment flat fee", m.FeeCreateCommitmentFlat),
 		ValidateBips("commitment settlement", m.CommitmentSettlementBips),
-		ValidateIntermediaryDenom(m.CommitmentSettlementIntermediaryDenom),
+		ValidateIntermediaryDenom(m.IntermediaryDenom),
 		ValidateReqAttrs("create-commitment", m.ReqAttrCreateCommitment),
 	)
 }

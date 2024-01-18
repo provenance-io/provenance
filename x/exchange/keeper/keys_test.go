@@ -118,7 +118,7 @@ func TestKeyTypeUniqueness(t *testing.T) {
 				{name: "MarketKeyTypeAllowCommitments", value: keeper.MarketKeyTypeAllowCommitments},
 				{name: "MarketKeyTypeCreateCommitmentFlat", value: keeper.MarketKeyTypeCreateCommitmentFlat},
 				{name: "MarketKeyTypeCommitmentSettlementBips", value: keeper.MarketKeyTypeCommitmentSettlementBips},
-				{name: "MarketKeyTypeCommitmentIntermediaryDenom", value: keeper.MarketKeyTypeCommitmentIntermediaryDenom},
+				{name: "MarketKeyTypeIntermediaryDenom", value: keeper.MarketKeyTypeIntermediaryDenom},
 			},
 		},
 		{
@@ -3117,8 +3117,8 @@ func TestMakeKeyMarketCommitmentSettlementBips(t *testing.T) {
 	}
 }
 
-func TestMakeKeyMarketCommitmentIntermediaryDenom(t *testing.T) {
-	marketTypeByte := keeper.MarketKeyTypeCommitmentIntermediaryDenom
+func TestMakeKeyMarketIntermediaryDenom(t *testing.T) {
+	marketTypeByte := keeper.MarketKeyTypeIntermediaryDenom
 
 	tests := []struct {
 		name     string
@@ -3171,14 +3171,14 @@ func TestMakeKeyMarketCommitmentIntermediaryDenom(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyMarketCommitmentIntermediaryDenom(tc.marketID)
+					return keeper.MakeKeyMarketIntermediaryDenom(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
 					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
-			checkKey(t, ktc, "MakeKeyMarketCommitmentIntermediaryDenom(%d)", tc.marketID)
+			checkKey(t, ktc, "MakeKeyMarketIntermediaryDenom(%d)", tc.marketID)
 		})
 	}
 }

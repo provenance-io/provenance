@@ -488,8 +488,8 @@ func (m MsgMarketUpdateIntermediaryDenomRequest) ValidateBasic() error {
 	if m.MarketId == 0 {
 		errs = append(errs, fmt.Errorf("invalid market id %d: cannot be zero", m.MarketId))
 	}
-	if err := sdk.ValidateDenom(m.CommitmentSettlementIntermediaryDenom); err != nil {
-		errs = append(errs, fmt.Errorf("invalid denom %q: %w", m.CommitmentSettlementIntermediaryDenom, err))
+	if err := ValidateIntermediaryDenom(m.IntermediaryDenom); err != nil {
+		errs = append(errs, err)
 	}
 	return errors.Join(errs...)
 }
