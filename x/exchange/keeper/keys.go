@@ -814,8 +814,8 @@ func GetKeyPrefixCommitments() []byte {
 	return keyPrefixCommitment(0)
 }
 
-// GetKeyPrefixMarketCommitments gets the key prefix for all commitments in a market.
-func GetKeyPrefixMarketCommitments(marketID uint32) []byte {
+// GetKeyPrefixCommitmentsToMarket gets the key prefix for all commitments in a market.
+func GetKeyPrefixCommitmentsToMarket(marketID uint32) []byte {
 	return keyPrefixMarketCommitments(marketID, 0)
 }
 

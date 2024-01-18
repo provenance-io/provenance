@@ -2910,7 +2910,6 @@ QueryGetAccountCommitmentsRequest is a request message for the GetAccountCommitm
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `account` | [string](#string) |  | account is the bech32 address string of the account with the commitments. |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
 
 
@@ -2926,7 +2925,6 @@ QueryGetAccountCommitmentsResponse is a response message for the GetAccountCommi
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `commitments` | [MarketAmount](#provenance.exchange.v1.MarketAmount) | repeated | commitments is the amounts committed from the account to the any market. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
 
 
 

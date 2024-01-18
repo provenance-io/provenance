@@ -4240,7 +4240,7 @@ func TestGetKeyPrefixCommitments(t *testing.T) {
 
 }
 
-func TestGetKeyPrefixMarketCommitments(t *testing.T) {
+func TestGetKeyPrefixCommitmentsToMarket(t *testing.T) {
 	tests := []struct {
 		name     string
 		marketID uint32
@@ -4292,14 +4292,14 @@ func TestGetKeyPrefixMarketCommitments(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.GetKeyPrefixMarketCommitments(tc.marketID)
+					return keeper.GetKeyPrefixCommitmentsToMarket(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
 					{name: "GetKeyPrefixCommitments", value: keeper.GetKeyPrefixCommitments()},
 				},
 			}
-			checkKey(t, ktc, "GetKeyPrefixMarketCommitments(%d)", tc.marketID)
+			checkKey(t, ktc, "GetKeyPrefixCommitmentsToMarket(%d)", tc.marketID)
 		})
 	}
 }
@@ -4383,7 +4383,7 @@ func TestMakeKeyCommitment(t *testing.T) {
 			if len(tc.expPanic) == 0 {
 				ktc.expPrefixes = []expectedPrefix{
 					{name: "GetKeyPrefixCommitments", value: keeper.GetKeyPrefixCommitments()},
-					{name: "GetKeyPrefixMarketCommitments", value: keeper.GetKeyPrefixMarketCommitments(tc.marketID)},
+					{name: "GetKeyPrefixCommitmentsToMarket", value: keeper.GetKeyPrefixCommitmentsToMarket(tc.marketID)},
 				}
 			}
 			checkKey(t, ktc, "MakeKeyCommitment(%d, %s)", tc.marketID, tc.addr)

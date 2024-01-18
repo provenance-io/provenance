@@ -220,30 +220,100 @@ func (k QueryServer) GetAllOrders(goCtx context.Context, req *exchange.QueryGetA
 
 // GetCommitment gets the funds in an account that are committed to the market.
 func (k QueryServer) GetCommitment(goCtx context.Context, req *exchange.QueryGetCommitmentRequest) (*exchange.QueryGetCommitmentResponse, error) {
-	// TODO[1789]: QueryServer.GetCommitment
-	_, _ = goCtx, req
-	panic("not implemented")
+	if req == nil || len(req.Account) == 0 || req.MarketId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := sdk.AccAddressFromBech32(req.Account)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid account %q: %v", req.Account, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := &exchange.QueryGetCommitmentResponse{
+		Amount: k.GetCommitmentAmount(ctx, req.MarketId, addr),
+	}
+	return resp, nil
 }
 
 // GetAccountCommitments gets all the funds in an account that are committed to any market.
 func (k QueryServer) GetAccountCommitments(goCtx context.Context, req *exchange.QueryGetAccountCommitmentsRequest) (*exchange.QueryGetAccountCommitmentsResponse, error) {
-	// TODO[1789]: QueryServer.GetAccountCommitments
-	_, _ = goCtx, req
-	panic("not implemented")
+	if req == nil || len(req.Account) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := sdk.AccAddressFromBech32(req.Account)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid account %q: %v", req.Account, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	store := k.getStore(ctx)
+	resp := &exchange.QueryGetAccountCommitmentsResponse{}
+	k.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
+		amount := getCommitmentAmount(store, marketID, addr)
+		if !amount.IsZero() {
+			resp.Commitments = append(resp.Commitments, &exchange.MarketAmount{MarketId: marketID, Amount: amount})
+		}
+		return false
+	})
+
+	return resp, nil
 }
 
 // GetMarketCommitments gets all the funds committed to a market from any account.
 func (k QueryServer) GetMarketCommitments(goCtx context.Context, req *exchange.QueryGetMarketCommitmentsRequest) (*exchange.QueryGetMarketCommitmentsResponse, error) {
-	// TODO[1789]: QueryServer.GetMarketCommitments
-	_, _ = goCtx, req
-	panic("not implemented")
+	if req == nil || req.MarketId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetKeyPrefixCommitmentsToMarket(req.MarketId)
+	store := prefix.NewStore(k.getStore(ctx), keyPrefix)
+
+	resp := &exchange.QueryGetMarketCommitmentsResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(store, req.Pagination, func(keySuffix []byte, value []byte) error {
+		com, _ := parseCommitmentKeyValue(keyPrefix, keySuffix, value)
+		if com != nil && !com.Amount.IsZero() {
+			resp.Commitments = append(resp.Commitments, &exchange.AccountAmount{Account: com.Account, Amount: com.Amount})
+		}
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating commitments for market %d: %v", req.MarketId, pageErr)
+	}
+
+	return resp, nil
 }
 
 // GetAllCommitments gets all fund committed to any market from any account.
 func (k QueryServer) GetAllCommitments(goCtx context.Context, req *exchange.QueryGetAllCommitmentsRequest) (*exchange.QueryGetAllCommitmentsResponse, error) {
-	// TODO[1789]: QueryServer.GetAllCommitments
-	_, _ = goCtx, req
-	panic("not implemented")
+	var pageReq *query.PageRequest
+	if req != nil {
+		pageReq = req.Pagination
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetKeyPrefixCommitments()
+	store := prefix.NewStore(k.getStore(ctx), keyPrefix)
+
+	resp := &exchange.QueryGetAllCommitmentsResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(store, pageReq, func(keySuffix []byte, value []byte) error {
+		com, _ := parseCommitmentKeyValue(keyPrefix, keySuffix, value)
+		if com != nil && !com.Amount.IsZero() {
+			resp.Commitments = append(resp.Commitments, com)
+		}
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating all commitments: %v", pageErr)
+	}
+
+	return resp, nil
 }
 
 // GetMarket returns all the information and details about a market.

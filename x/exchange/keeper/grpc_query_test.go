@@ -3124,6 +3124,16 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 	}
 }
 
+// TODO[1789] func (s *TestSuite) TestQueryServer_GetCommitment()
+
+// TODO[1789] func (s *TestSuite) TestQueryServer_GetAccountCommitments()
+
+// TODO[1789] func (s *TestSuite) TestQueryServer_GetMarketCommitments()
+
+// TODO[1789] func (s *TestSuite) TestQueryServer_GetAllCommitments()
+
+// TODO[1789] func (s *TestSuite) TestQueryServer_CommitmentSettlementFeeCalc()
+
 func (s *TestSuite) TestQueryServer_GetMarket() {
 	testDef := queryTestDef[exchange.QueryGetMarketRequest, exchange.QueryGetMarketResponse]{
 		queryName: "GetMarket",
