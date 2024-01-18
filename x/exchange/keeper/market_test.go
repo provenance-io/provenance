@@ -232,6 +232,8 @@ func (s *TestSuite) TestKeeper_GetCreateBidFlatFees() {
 	}
 }
 
+// TODO[1789]: func (s *TestSuite) TestKeeper_GetCreateCommitmentFlatFees()
+
 func (s *TestSuite) TestKeeper_GetSellerSettlementFlatFees() {
 	setter := keeper.SetSellerSettlementFlatFees
 	tests := []struct {
@@ -1306,6 +1308,8 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 		})
 	}
 }
+
+// TODO[1789]: func (s *TestSuite) TestKeeper_ValidateCreateCommitmentFlatFee()
 
 func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 	setter := keeper.SetSellerSettlementFlatFees
@@ -2382,6 +2386,7 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 }
 
 func (s *TestSuite) TestKeeper_UpdateFees() {
+	// TODO[1789]: Update the TestKeeper_UpdateFees tests.
 	type marketFees struct {
 		marketID    uint32
 		createAsk   string
@@ -3650,6 +3655,10 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 	}
 }
 
+// TODO[1789]: func (s *TestSuite) TestKeeper_IsCommitmentAllowed()
+
+// TODO[1789]: func (s *TestSuite) TestKeeper_UpdateCommitmentsAllowed()
+
 func (s *TestSuite) TestKeeper_HasPermission() {
 	goodAcc := sdk.AccAddress("goodAddr____________")
 	goodAddr := goodAcc.String()
@@ -4732,6 +4741,8 @@ func (s *TestSuite) TestKeeper_GetReqAttrsBid() {
 	}
 }
 
+// TODO[1789]: func (s *TestSuite) TestKeeper_GetReqAttrsCommitment()
+
 func (s *TestSuite) TestKeeper_CanCreateAsk() {
 	setter := keeper.SetReqAttrsAsk
 	addr1 := sdk.AccAddress("addr_one____________")
@@ -5178,7 +5189,10 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 	}
 }
 
+// TODO[1789]: func (s *TestSuite) TestKeeper_CanCreateCommitment()
+
 func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
+	// TODO[1789]: Update the TestKeeper_UpdateReqAttrs tests.
 	tests := []struct {
 		name     string
 		setup    func()
@@ -5869,6 +5883,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketDetails() {
 }
 
 func (s *TestSuite) TestKeeper_CreateMarket() {
+	// TODO[1789]: Update the TestKeeper_CreateMarket tests.
 	setAccNum := func(id uint64) AccountModifier {
 		return func(acc authtypes.AccountI) authtypes.AccountI {
 			err := acc.SetAccountNumber(id)
@@ -6061,6 +6076,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 }
 
 func (s *TestSuite) TestKeeper_GetMarket() {
+	// TODO[1789]: Update the TestKeeper_GetMarket tests.
 	tests := []struct {
 		name      string
 		accKeeper *MockAccountKeeper
