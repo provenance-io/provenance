@@ -425,13 +425,17 @@ func (s *UpgradeTestSuite) TestSaffron() {
 }
 
 func (s *UpgradeTestSuite) TestTourmalineRC1() {
-	expInLog := []string{}
+	expInLog := []string{
+		"INF Converting NAV units",
+	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline-rc1", expInLog, nil)
 }
 
 func (s *UpgradeTestSuite) TestTourmaline() {
-	expInLog := []string{}
+	expInLog := []string{
+		"INF Converting NAV units",
+	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline", expInLog, nil)
 }

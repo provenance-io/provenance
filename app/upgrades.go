@@ -352,6 +352,7 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
 }
 
+// convertNavUnits iterates all the net asset values and updates their units if they are using usd.
 func convertNavUnits(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Converting NAV units")
 	app.MarkerKeeper.IterateAllNetAssetValues(ctx, func(markerAddr sdk.AccAddress, nav markertypes.NetAssetValue) (stop bool) {
