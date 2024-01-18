@@ -56,20 +56,28 @@ func setCommitmentAmount(store sdk.KVStore, marketID uint32, addr sdk.AccAddress
 	}
 }
 
+// addCommitmentAmount adds the provided amount to the funds committed by the addr to the given market.
+func addCommitmentAmount(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, amount sdk.Coins) {
+	cur := getCommitmentAmount(store, marketID, addr)
+	setCommitmentAmount(store, marketID, addr, cur.Add(amount...))
+}
+
 // GetCommitmentAmount gets the amount the given address has committed to the provided market.
 func (k Keeper) GetCommitmentAmount(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) sdk.Coins {
 	return getCommitmentAmount(k.getStore(ctx), marketID, addr)
 }
 
-// AddCommitment commits an amount by the given address to the provided market and places a hold on those funds.
-// If the address already has a commitment to the provided market, this amount is added to that commitment.
+// AddCommitment commits the provided amount by the addr to the given market, and places a hold on them.
+// If the addr already has funds committed to the market, the provided amount is added to that.
+// Otherwise a new commitment record is created.
 func (k Keeper) AddCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, amount sdk.Coins) error {
+	if amount.IsZero() {
+		return nil
+	}
 	if amount.IsAnyNegative() {
 		return fmt.Errorf("cannot add negative commitment amount %q for %s in market %d", amount, addr, marketID)
 	}
-	store := k.getStore(ctx)
-	cur := getCommitmentAmount(store, marketID, addr)
-	setCommitmentAmount(store, marketID, addr, cur.Add(amount...))
+	addCommitmentAmount(k.getStore(ctx), marketID, addr, amount)
 	return k.holdKeeper.AddHold(ctx, addr, amount, fmt.Sprintf("x/exchange: commitment to %d", marketID))
 }
 

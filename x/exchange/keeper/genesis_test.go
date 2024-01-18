@@ -11,6 +11,7 @@ import (
 )
 
 func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
+	// TODO[1789]: Update the TestKeeper_InitAndExportGenesis tests.
 	marketAcc := func(marketID uint32, name string) *exchange.MarketAccount {
 		return &exchange.MarketAccount{
 			BaseAccount:   &authtypes.BaseAccount{Address: exchange.GetMarketAddress(marketID).String()},
