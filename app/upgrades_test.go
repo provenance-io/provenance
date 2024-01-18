@@ -792,7 +792,9 @@ func (s *UpgradeTestSuite) TestConvertNAVUnits() {
 		expected   []sdk.Coins
 	}{
 		{
-			name: "should work with no markers",
+			name:       "should work with no markers",
+			markerNavs: []sdk.Coins{},
+			expected:   []sdk.Coins{},
 		},
 		{
 			name: "should work with one marker no usd denom",
