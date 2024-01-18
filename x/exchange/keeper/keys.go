@@ -829,3 +829,24 @@ func MakeKeyCommitment(marketID uint32, addr sdk.AccAddress) []byte {
 	rv = append(rv, suffix...)
 	return rv
 }
+
+// ParseKeyCommitment extracts the market id and address from a commitment key.
+// The input must have the format: <type byte> | <market id> | <addr length byte> | <addr>.
+func ParseKeyCommitment(key []byte) (uint32, sdk.AccAddress, error) {
+	if len(key) < 7 {
+		return 0, nil, fmt.Errorf("cannot parse commitment key: only has %d bytes, expected at least 7", len(key))
+	}
+	if key[0] != KeyTypeCommitment {
+		return 0, nil, fmt.Errorf("cannot parse commitment key: incorrect type byte %#x", key[0])
+	}
+	marketIDBz, addrBz := key[1:5], key[5:]
+	marketID, _ := uint32FromBz(marketIDBz)
+	addr, left, err := parseLengthPrefixedAddr(addrBz)
+	if err != nil {
+		return 0, nil, fmt.Errorf("cannot parse address from commitment key: %w", err)
+	}
+	if len(left) != 0 {
+		return 0, nil, fmt.Errorf("cannot parse address from commitment key: found %d bytes after address, expected 0", len(left))
+	}
+	return marketID, addr, nil
+}

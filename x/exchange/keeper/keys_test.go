@@ -4390,3 +4390,101 @@ func TestMakeKeyCommitment(t *testing.T) {
 		})
 	}
 }
+
+func TestParseKeyCommitment(t *testing.T) {
+	tests := []struct {
+		name        string
+		key         []byte
+		expMarketID uint32
+		expAddr     sdk.AccAddress
+		expErr      string
+	}{
+		{
+			name:   "nil",
+			key:    nil,
+			expErr: "cannot parse commitment key: only has 0 bytes, expected at least 7",
+		},
+		{
+			name:   "empty",
+			key:    []byte{},
+			expErr: "cannot parse commitment key: only has 0 bytes, expected at least 7",
+		},
+		{
+			name:   "6 bytes",
+			key:    []byte{keeper.KeyTypeCommitment, 2, 3, 4, 5, 6},
+			expErr: "cannot parse commitment key: only has 6 bytes, expected at least 7",
+		},
+		{
+			name:   "type byte one low",
+			key:    []byte{keeper.KeyTypeCommitment - 1, 2, 3, 4, 5, 6, 7},
+			expErr: "cannot parse commitment key: incorrect type byte 0x62",
+		},
+		{
+			name:   "type byte one high",
+			key:    []byte{keeper.KeyTypeCommitment + 1, 2, 3, 4, 5, 6, 7},
+			expErr: "cannot parse commitment key: incorrect type byte 0x64",
+		},
+		{
+			name:   "addr length byte zero",
+			key:    []byte{keeper.KeyTypeCommitment, 1, 2, 3, 4, 0, 7},
+			expErr: "cannot parse address from commitment key: length byte is zero",
+		},
+		{
+			name:   "addr length byte too large",
+			key:    []byte{keeper.KeyTypeCommitment, 1, 2, 3, 4, 6, 1, 2, 3, 4, 5},
+			expErr: "cannot parse address from commitment key: length byte is 6, but slice only has 5 left",
+		},
+		{
+			name:   "addr length byte too small",
+			key:    []byte{keeper.KeyTypeCommitment, 1, 2, 3, 4, 4, 1, 2, 3, 4, 5},
+			expErr: "cannot parse address from commitment key: found 1 bytes after address, expected 0",
+		},
+		{
+			name:        "market 1; 1 byte addr",
+			key:         []byte{keeper.KeyTypeCommitment, 0, 0, 0, 1, 1, 7},
+			expMarketID: 1,
+			expAddr:     sdk.AccAddress{7},
+		},
+		{
+			name: "market 2; 20 byte addr",
+			key: []byte{keeper.KeyTypeCommitment, 0, 0, 0, 2, 20,
+				1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+			expMarketID: 2,
+			expAddr:     sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+		},
+		{
+			name: "market 67,305,985; 20 byte addr",
+			key: []byte{keeper.KeyTypeCommitment, 4, 3, 2, 1, 20,
+				20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
+			expMarketID: 67_305_985,
+			expAddr:     sdk.AccAddress{20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
+		},
+		{
+			name: "market 4,294,967,295; 32 byte addr",
+			key: []byte{keeper.KeyTypeCommitment, 255, 255, 255, 255, 32,
+				101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
+				117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132,
+			},
+			expMarketID: 4_294_967_295,
+			expAddr: sdk.AccAddress{
+				101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
+				117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var marketID uint32
+			var addr sdk.AccAddress
+			var err error
+			testFunc := func() {
+				marketID, addr, err = keeper.ParseKeyCommitment(tc.key)
+			}
+			require.NotPanics(t, testFunc, "ParseKeyCommitment(%q)", tc.key)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseKeyCommitment(%q) error", tc.key)
+			assert.Equal(t, tc.expMarketID, marketID, "ParseKeyCommitment(%q) market id", tc.key)
+			assert.Equal(t, tc.expAddr, addr, "ParseKeyCommitment(%q) addr", tc.key)
+		})
+	}
+}
