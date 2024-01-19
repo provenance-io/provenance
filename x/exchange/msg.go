@@ -81,7 +81,7 @@ func (m MsgCommitFundsRequest) ValidateBasic() error {
 		errs = append(errs, fmt.Errorf("invalid amount %q: %w", m.Amount, err))
 	}
 
-	if len(m.CreationFee) > 0 {
+	if m.CreationFee != nil {
 		if err := m.CreationFee.Validate(); err != nil {
 			errs = append(errs, fmt.Errorf("invalid creation fee %q: %w", m.CreationFee, err))
 		}

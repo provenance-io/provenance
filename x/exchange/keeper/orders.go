@@ -812,3 +812,25 @@ func (k Keeper) IterateAddressOrders(ctx sdk.Context, addr sdk.AccAddress, cb fu
 func (k Keeper) IterateAssetOrders(ctx sdk.Context, assetDenom string, cb func(orderID uint64, orderTypeByte byte) bool) {
 	k.iterateOrderIndex(ctx, GetIndexKeyPrefixAssetToOrder(assetDenom), cb)
 }
+
+// CancelAllOrdersForMarket cancels all orders for a market, deleting them and releasing their holds.
+func (k Keeper) CancelAllOrdersForMarket(ctx sdk.Context, marketID uint32, signer string) {
+	var orderIDs []uint64
+	k.IterateMarketOrders(ctx, marketID, func(orderID uint64, _ byte) bool {
+		orderIDs = append(orderIDs, orderID)
+		return false
+	})
+
+	var errs []error
+	for _, orderID := range orderIDs {
+		err := k.CancelOrder(ctx, orderID, signer)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		k.logErrorf(ctx, "%d error(s) encountered closing all orders for market %d:\n%v",
+			len(errs), marketID, errors.Join(errs...))
+	}
+}

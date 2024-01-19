@@ -1,11 +1,19 @@
 package keeper_test
 
-// TODO[1789]: func TestKeeper_GetCommitmentAmount(t *testing.T)
+// TODO[1789]: func (s *TestSuite) TestKeeper_GetCommitmentAmount()
 
-// TODO[1789]: func TestKeeper_AddCommitment(t *testing.T)
+// TODO[1789]: func (s *TestSuite) TestKeeper_AddCommitment()
 
-// TODO[1789]: func TestKeeper_ReleaseCommitment(t *testing.T)
+// TODO[1789]: func (s *TestSuite) TestKeeper_ReleaseCommitment()
 
-// TODO[1789]: func TestKeeper_IterateCommitments(t *testing.T)
+// TODO[1789]: func (s *TestSuite) TestKeeper_ReleaseCommitments()
 
-// TODO[1789]: func TestKeeper_CalculateCommitmentSettlementFee(t *testing.T)
+// TODO[1789]: func (s *TestSuite) TestKeeper_ReleaseAllCommitmentsForMarket()
+
+// TODO[1789]: func (s *TestSuite) TestKeeper_IterateCommitments()
+
+// TODO[1789]: func (s *TestSuite) TestKeeper_ValidateAndCollectCommitmentCreationFee()
+
+// TODO[1789]: func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee()
+
+// TODO[1789]: func (s *TestSuite) TestKeeper_SettleCommitments()

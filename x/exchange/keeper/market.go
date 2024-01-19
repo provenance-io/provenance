@@ -792,6 +792,31 @@ func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesReques
 	k.emitEvent(ctx, exchange.NewEventMarketFeesUpdated(msg.MarketId))
 }
 
+// UpdateIntermediaryDenom sets the market's intermediary denom to the one provided.
+func (k Keeper) UpdateIntermediaryDenom(ctx sdk.Context, marketID uint32, denom string, updatedBy string) {
+	setIntermediaryDenom(k.getStore(ctx), marketID, denom)
+	k.emitEvent(ctx, exchange.NewEventMarketIntermediaryDenomUpdated(marketID, updatedBy))
+}
+
+// validateMarketUpdateAllowCommitments checks that the market has things set up
+// to change the allow-commitments flag to the provided value.
+func validateMarketUpdateAllowCommitments(store sdk.KVStore, marketID uint32, newAllow bool) error {
+	curAllow := isCommitmentAllowed(store, marketID)
+	if curAllow == newAllow {
+		return fmt.Errorf("market %d already has allow-commitments %t", marketID, curAllow)
+	}
+
+	if newAllow {
+		bips := getCommitmentSettlementBips(store, marketID)
+		cFee := getCreateCommitmentFlatFees(store, marketID)
+		if bips == 0 && len(cFee) == 0 {
+			return fmt.Errorf("market %d does not have any commitment fees defined", marketID)
+		}
+	}
+
+	return nil
+}
+
 // isMarketActive returns true if the provided market's inactive flag does not exist.
 // See also isMarketKnown.
 func isMarketActive(store sdk.KVStore, marketID uint32) bool {
@@ -993,6 +1018,12 @@ func (k Keeper) CanSettleOrders(ctx sdk.Context, marketID uint32, admin string) 
 	return k.HasPermission(ctx, marketID, admin, exchange.Permission_settle)
 }
 
+// CanSettleCommitments returns true if the provided admin bech32 address has permission to
+// settle commitments for a market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanSettleCommitments(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_settle)
+}
+
 // CanSetIDs returns true if the provided admin bech32 address has permission to
 // set UUIDs on orders for a market. Also returns true if the provided address is the authority address.
 func (k Keeper) CanSetIDs(ctx sdk.Context, marketID uint32, admin string) bool {
@@ -1002,6 +1033,12 @@ func (k Keeper) CanSetIDs(ctx sdk.Context, marketID uint32, admin string) bool {
 // CanCancelOrdersForMarket returns true if the provided admin bech32 address has permission to
 // cancel orders for a market. Also returns true if the provided address is the authority address.
 func (k Keeper) CanCancelOrdersForMarket(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_cancel)
+}
+
+// CanReleaseCommitmentsForMarket returns true if the provided admin bech32 address has permission to
+// release commitments for a market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanReleaseCommitmentsForMarket(ctx sdk.Context, marketID uint32, admin string) bool {
 	return k.HasPermission(ctx, marketID, admin, exchange.Permission_cancel)
 }
 
@@ -1533,4 +1570,13 @@ func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+// CloseMarket disables order and commitment creation in a market,
+// cancels all its existing orders, and releases all its commitments.
+func (k Keeper) CloseMarket(ctx sdk.Context, marketID uint32, signer string) {
+	_ = k.UpdateMarketActive(ctx, marketID, false, signer)
+	_ = k.UpdateCommitmentsAllowed(ctx, marketID, false, signer)
+	k.CancelAllOrdersForMarket(ctx, marketID, signer)
+	k.ReleaseAllCommitmentsForMarket(ctx, marketID)
 }

@@ -48,7 +48,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 	setLastOrderID(store, genState.LastOrderId)
 
 	for i, com := range genState.Commitments {
-		addr, err := com.GetAccAddr()
+		addr, err := sdk.AccAddressFromBech32(com.Account)
 		if err != nil {
 			panic(fmt.Errorf("failed to convert commitments[%d].Account=%q to AccAddress: %w", i, com.Account, err))
 		}

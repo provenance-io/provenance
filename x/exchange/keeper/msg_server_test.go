@@ -756,6 +756,8 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 	}
 }
 
+// TODO[1789]: func (s *TestSuite) TestMsgServer_CommitFunds()
+
 func (s *TestSuite) TestMsgServer_CancelOrder() {
 	testDef := msgServerTestDef[exchange.MsgCancelOrderRequest, exchange.MsgCancelOrderResponse, expBalances]{
 		endpointName: "CancelOrder",
@@ -2455,6 +2457,10 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 	}
 }
 
+// TODO[1789]: func (s *TestSuite) TestMsgServer_MarketCommitmentSettle()
+
+// TODO[1789]: func (s *TestSuite) TestMsgServer_MarketReleaseCommitments()
+
 func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID() {
 	type followupArgs struct{}
 	testDef := msgServerTestDef[exchange.MsgMarketSetOrderExternalIDRequest, exchange.MsgMarketSetOrderExternalIDResponse, followupArgs]{
@@ -2952,6 +2958,10 @@ func (s *TestSuite) TestMsgServer_MarketUpdateUserSettle() {
 	}
 }
 
+// TODO[1789]: func (s *TestSuite) TestMsgServer_MarketUpdateAllowCommitments()
+
+// TODO[1789]: func (s *TestSuite) TestMsgServer_MarketUpdateIntermediaryDenom()
+
 func (s *TestSuite) TestMsgServer_MarketManagePermissions() {
 	testDef := msgServerTestDef[exchange.MsgMarketManagePermissionsRequest, exchange.MsgMarketManagePermissionsResponse, []exchange.AccessGrant]{
 		endpointName: "MarketManagePermissions",
@@ -3312,6 +3322,8 @@ func (s *TestSuite) TestMsgServer_GovManageFees() {
 		})
 	}
 }
+
+// TODO[1789]: func (s *TestSuite) TestMsgServer_GovCloseMarket()
 
 func (s *TestSuite) TestMsgServer_GovUpdateParams() {
 	testDef := msgServerTestDef[exchange.MsgGovUpdateParamsRequest, exchange.MsgGovUpdateParamsResponse, struct{}]{

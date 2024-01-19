@@ -130,9 +130,8 @@ message MsgCommitFundsRequest {
   // amount is the funds being committed to the market.
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // order_creation_fee is the fee that is being paid to create this commitment.
-  repeated cosmos.base.v1beta1.Coin creation_fee = 4
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // creation_fee is the fee that is being paid to create this commitment.
+  cosmos.base.v1beta1.Coin creation_fee = 4;
   // event_tag is a string that is included in the funds-committed event. Max length is 100 characters.
   string event_tag = 5;
 }

@@ -77,52 +77,6 @@ func TestCommitment_Validate(t *testing.T) {
 	}
 }
 
-func TestCommitment_GetAccAddr(t *testing.T) {
-	tests := []struct {
-		name       string
-		commitment Commitment
-		expAddr    sdk.AccAddress
-		expErr     string
-	}{
-		{
-			name:       "empty account",
-			commitment: Commitment{Account: ""},
-			expErr:     "invalid account \"\": empty address string is not allowed",
-		},
-		{
-			name:       "bad account",
-			commitment: Commitment{Account: "notgonnaparse"},
-			expErr:     "invalid account \"notgonnaparse\": decoding bech32 failed: invalid separator index -1",
-		},
-		{
-			name:       "good account",
-			commitment: Commitment{Account: sdk.AccAddress("good_account________").String()},
-			expAddr:    sdk.AccAddress("good_account________"),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var addr sdk.AccAddress
-			var err error
-			testFunc := func() {
-				addr, err = tc.commitment.GetAccAddr()
-			}
-			if assert.NotPanics(t, testFunc, "commitment.GetAccAddr()") {
-				assertions.AssertErrorValue(t, err, tc.expErr, "commitment.GetAccAddr() error")
-				assert.Equal(t, tc.expAddr, addr, "commitment.GetAccAddr() address")
-			}
-
-			testMustFunc := func() {
-				addr = tc.commitment.MustGetAccAddr()
-			}
-			if assertions.AssertPanicEquals(t, testMustFunc, tc.expErr, "commitment.MustGetAccAddr()") {
-				assert.Equal(t, tc.expAddr, addr, "commitment.MustGetAccAddr() address")
-			}
-		})
-	}
-}
-
 func TestAccountAmount_String(t *testing.T) {
 	tests := []struct {
 		name string

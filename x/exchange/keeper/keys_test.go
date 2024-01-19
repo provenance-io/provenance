@@ -4488,3 +4488,72 @@ func TestParseKeyCommitment(t *testing.T) {
 		})
 	}
 }
+
+func TestParseKeySuffixCommitment(t *testing.T) {
+	tests := []struct {
+		name    string
+		key     []byte
+		expAddr sdk.AccAddress
+		expErr  string
+	}{
+		{
+			name:   "nil",
+			key:    nil,
+			expErr: "cannot parse address from commitment key: slice is empty",
+		},
+		{
+			name:   "empty",
+			key:    []byte{},
+			expErr: "cannot parse address from commitment key: slice is empty",
+		},
+		{
+			name:   "addr length byte zero",
+			key:    []byte{0},
+			expErr: "cannot parse address from commitment key: length byte is zero",
+		},
+		{
+			name:   "addr length byte too large",
+			key:    []byte{6, 1, 2, 3, 4, 5},
+			expErr: "cannot parse address from commitment key: length byte is 6, but slice only has 5 left",
+		},
+		{
+			name:   "addr length byte too small",
+			key:    []byte{4, 1, 2, 3, 4, 5},
+			expErr: "cannot parse address from commitment key: found 1 bytes after address, expected 0",
+		},
+		{
+			name:    "1 byte addr",
+			key:     []byte{1, 7},
+			expAddr: sdk.AccAddress{7},
+		},
+		{
+			name:    "20 byte addr",
+			key:     []byte{20, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+			expAddr: sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+		},
+		{
+			name: "32 byte addr",
+			key: []byte{32,
+				101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
+				117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132,
+			},
+			expAddr: sdk.AccAddress{
+				101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
+				117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var addr sdk.AccAddress
+			var err error
+			testFunc := func() {
+				addr, err = keeper.ParseKeySuffixCommitment(tc.key)
+			}
+			require.NotPanics(t, testFunc, "ParseKeySuffixCommitment(%q)", tc.key)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseKeySuffixCommitment(%q) error", tc.key)
+			assert.Equal(t, tc.expAddr, addr, "ParseKeySuffixCommitment(%q) addr", tc.key)
+		})
+	}
+}

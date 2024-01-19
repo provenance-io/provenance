@@ -44,9 +44,19 @@ func (k MsgServer) CreateBid(goCtx context.Context, msg *exchange.MsgCreateBidRe
 
 // CommitFunds marks funds in an account as manageable by a market.
 func (k MsgServer) CommitFunds(goCtx context.Context, msg *exchange.MsgCommitFundsRequest) (*exchange.MsgCommitFundsResponse, error) {
-	// TODO[1789]: MsgServer.CommitFunds
-	_, _ = goCtx, msg
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	addr, _ := sdk.AccAddressFromBech32(msg.Account)
+
+	err := k.ValidateAndCollectCommitmentCreationFee(ctx, msg.MarketId, addr, msg.CreationFee)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	err = k.AddCommitment(ctx, msg.MarketId, addr, msg.Amount, msg.EventTag)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgCommitFundsResponse{}, nil
 }
 
 // CancelOrder cancels an order.
@@ -99,16 +109,28 @@ func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSe
 
 // MarketCommitmentSettle is a market endpoint to transfer committed funds.
 func (k MsgServer) MarketCommitmentSettle(goCtx context.Context, msg *exchange.MsgMarketCommitmentSettleRequest) (*exchange.MsgMarketCommitmentSettleResponse, error) {
-	// TODO[1789]: MsgServer.MarketCommitmentSettle
-	_, _ = goCtx, msg
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanSettleCommitments(ctx, msg.MarketId, msg.Admin) {
+		return nil, permError("settle commitments for", msg.Admin, msg.MarketId)
+	}
+	err := k.SettleCommitments(ctx, msg)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgMarketCommitmentSettleResponse{}, nil
 }
 
 // MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s).
 func (k MsgServer) MarketReleaseCommitments(goCtx context.Context, msg *exchange.MsgMarketReleaseCommitmentsRequest) (*exchange.MsgMarketReleaseCommitmentsResponse, error) {
-	// TODO[1789]: MsgServer.MarketReleaseCommitments
-	_, _ = goCtx, msg
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanReleaseCommitmentsForMarket(ctx, msg.MarketId, msg.Admin) {
+		return nil, permError("release commitments for", msg.Admin, msg.MarketId)
+	}
+	err := k.ReleaseCommitments(ctx, msg.MarketId, msg.ToRelease, msg.EventTag)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgMarketReleaseCommitmentsResponse{}, nil
 }
 
 // MarketSetOrderExternalID updates an order's external id field.
@@ -179,16 +201,32 @@ func (k MsgServer) MarketUpdateUserSettle(goCtx context.Context, msg *exchange.M
 
 // MarketUpdateAllowCommitments is a market endpoint to update whether it accepts commitments.
 func (k MsgServer) MarketUpdateAllowCommitments(goCtx context.Context, msg *exchange.MsgMarketUpdateAllowCommitmentsRequest) (*exchange.MsgMarketUpdateAllowCommitmentsResponse, error) {
-	// TODO[1789]: MsgServer.MarketUpdateAllowCommitments
-	_, _ = goCtx, msg
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
+		return nil, permError("update", msg.Admin, msg.MarketId)
+	}
+	if !k.IsAuthority(msg.Admin) {
+		if err := validateMarketUpdateAllowCommitments(k.getStore(ctx), msg.MarketId, msg.AllowCommitments); err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
+	}
+
+	err := k.UpdateCommitmentsAllowed(ctx, msg.MarketId, msg.AllowCommitments, msg.Admin)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	return &exchange.MsgMarketUpdateAllowCommitmentsResponse{}, nil
 }
 
 // MarketUpdateIntermediaryDenom sets a market's intermediary denom.
 func (k MsgServer) MarketUpdateIntermediaryDenom(goCtx context.Context, msg *exchange.MsgMarketUpdateIntermediaryDenomRequest) (*exchange.MsgMarketUpdateIntermediaryDenomResponse, error) {
-	// TODO[1789]: MsgServer.MarketUpdateIntermediaryDenom
-	_, _ = goCtx, msg
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
+		return nil, permError("update", msg.Admin, msg.MarketId)
+	}
+	k.UpdateIntermediaryDenom(ctx, msg.MarketId, msg.IntermediaryDenom, msg.Admin)
+	return &exchange.MsgMarketUpdateIntermediaryDenomResponse{}, nil
 }
 
 // MarketManagePermissions is a market endpoint to manage a market's user permissions.
@@ -245,10 +283,16 @@ func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovMana
 }
 
 // GovCloseMarket is a governance proposal endpoint that will disable order and commitment creation,
+// cancel all orders, and release all commitments.
 func (k MsgServer) GovCloseMarket(goCtx context.Context, msg *exchange.MsgGovCloseMarketRequest) (*exchange.MsgGovCloseMarketResponse, error) {
-	// TODO[1789]: MsgServer.GovCloseMarket
-	_, _ = goCtx, msg
-	panic("not implemented")
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	k.CloseMarket(ctx, msg.MarketId, msg.Authority)
+
+	return &exchange.MsgGovCloseMarketResponse{}, nil
 }
 
 // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.

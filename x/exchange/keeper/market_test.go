@@ -3195,6 +3195,8 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 	}
 }
 
+// TODO[1789]: func (s *TestSuite) TestKeeper_UpdateIntermediaryDenom()
+
 func (s *TestSuite) TestKeeper_IsMarketKnown() {
 	tests := []struct {
 		name     string
@@ -4003,12 +4005,20 @@ func (s *TestSuite) TestKeeper_CanSettleOrders() {
 	s.runPermTest(exchange.Permission_settle, s.k.CanSettleOrders, "CanSettleOrders")
 }
 
+func (s *TestSuite) TestKeeper_CanSettleCommitments() {
+	s.runPermTest(exchange.Permission_settle, s.k.CanSettleCommitments, "CanSettleCommitments")
+}
+
 func (s *TestSuite) TestKeeper_CanSetIDs() {
 	s.runPermTest(exchange.Permission_set_ids, s.k.CanSetIDs, "CanSetIDs")
 }
 
 func (s *TestSuite) TestKeeper_CanCancelOrdersForMarket() {
 	s.runPermTest(exchange.Permission_cancel, s.k.CanCancelOrdersForMarket, "CanCancelOrdersForMarket")
+}
+
+func (s *TestSuite) TestKeeper_CanReleaseCommitmentsForMarket() {
+	s.runPermTest(exchange.Permission_cancel, s.k.CanReleaseCommitmentsForMarket, "CanReleaseCommitmentsForMarket")
 }
 
 func (s *TestSuite) TestKeeper_CanWithdrawMarketFunds() {
@@ -6758,3 +6768,5 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 		})
 	}
 }
+
+// TODO[1789]: func (s *TestSuite) TestKeeper_CloseMarket()

@@ -74,26 +74,38 @@ func (k Keeper) GetCommitmentAmount(ctx sdk.Context, marketID uint32, addr sdk.A
 // AddCommitment commits the provided amount by the addr to the given market, and places a hold on them.
 // If the addr already has funds committed to the market, the provided amount is added to that.
 // Otherwise a new commitment record is created.
-func (k Keeper) AddCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, amount sdk.Coins) error {
+func (k Keeper) AddCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, amount sdk.Coins, eventTag string) error {
 	if amount.IsZero() {
 		return nil
 	}
 	if amount.IsAnyNegative() {
 		return fmt.Errorf("cannot add negative commitment amount %q for %s in market %d", amount, addr, marketID)
 	}
+
+	err := k.holdKeeper.AddHold(ctx, addr, amount, fmt.Sprintf("x/exchange: commitment to %d", marketID))
+	if err != nil {
+		return err
+	}
+
 	addCommitmentAmount(k.getStore(ctx), marketID, addr, amount)
-	return k.holdKeeper.AddHold(ctx, addr, amount, fmt.Sprintf("x/exchange: commitment to %d", marketID))
+	k.emitEvent(ctx, exchange.NewEventFundsCommitted(addr.String(), marketID, amount, eventTag))
+	return nil
 }
 
 // ReleaseCommitment reduces the funds committed by an address to a market and releases the hold on those funds.
 // If an amount is provided, just that amount is released.
 // If the provided amount is zero, all funds committed by the address to the market are released.
-func (k Keeper) ReleaseCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, amount sdk.Coins) error {
+func (k Keeper) ReleaseCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, amount sdk.Coins, eventTag string) error {
 	if amount.IsAnyNegative() {
 		return fmt.Errorf("cannot release negative commitment amount %q for %s in market %d", amount, addr, marketID)
 	}
+
 	store := k.getStore(ctx)
 	cur := getCommitmentAmount(store, marketID, addr)
+	if cur.IsZero() {
+		return fmt.Errorf("account %s does not have any funds committed to market %d", addr, marketID)
+	}
+
 	var newAmt, toRelease sdk.Coins
 	if !amount.IsZero() {
 		var isNeg bool
@@ -106,8 +118,61 @@ func (k Keeper) ReleaseCommitment(ctx sdk.Context, marketID uint32, addr sdk.Acc
 	} else {
 		toRelease = cur
 	}
+
+	err := k.holdKeeper.ReleaseHold(ctx, addr, toRelease)
+	if err != nil {
+		return err
+	}
+
 	setCommitmentAmount(store, marketID, addr, newAmt)
-	return k.holdKeeper.ReleaseHold(ctx, addr, toRelease)
+	k.emitEvent(ctx, exchange.NewEventFundsReleased(addr.String(), marketID, amount, eventTag))
+	return nil
+}
+
+// ReleaseCommitments calls ReleaseCommitment for several accounts.
+func (k Keeper) ReleaseCommitments(ctx sdk.Context, marketID uint32, toRelease []exchange.AccountAmount, eventTag string) error {
+	var errs []error
+	for _, entry := range toRelease {
+		addr, err := sdk.AccAddressFromBech32(entry.Account)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("invalid account %q: %w", entry.Account, err))
+			continue
+		}
+		err = k.ReleaseCommitment(ctx, marketID, addr, entry.Amount, eventTag)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
+}
+
+// ReleaseAllCommitmentsForMarket releases all the commitments (and related holds)
+// that have been made to the market.
+func (k Keeper) ReleaseAllCommitmentsForMarket(ctx sdk.Context, marketID uint32) {
+	var keySuffixes [][]byte
+	keyPrefix := GetKeyPrefixCommitmentsToMarket(marketID)
+	k.iterate(ctx, keyPrefix, func(keySuffix, value []byte) bool {
+		keySuffixes = append(keySuffixes, keySuffix)
+		return false
+	})
+
+	var errs []error
+	for _, keySuffix := range keySuffixes {
+		addr, err := ParseKeySuffixCommitment(keySuffix)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("failed to parse addr from key suffix %x: %w", keySuffix, err))
+			continue
+		}
+		err = k.ReleaseCommitment(ctx, marketID, addr, nil, "GovCloseMarket")
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		k.logErrorf(ctx, "%d error(s) encountered releasing all commitments for market %d:\n%v",
+			len(errs), marketID, errors.Join(errs...))
+	}
 }
 
 // IterateCommitments iterates over all commitment entries in the store.
@@ -120,6 +185,24 @@ func (k Keeper) IterateCommitments(ctx sdk.Context, cb func(commitment exchange.
 		}
 		return cb(*commitment)
 	})
+}
+
+// ValidateAndCollectCommitmentCreationFee verifies that the provided commitment
+// creation fee is sufficient and collects it.
+func (k Keeper) ValidateAndCollectCommitmentCreationFee(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, fee *sdk.Coin) error {
+	if err := validateCreateCommitmentFlatFee(k.getStore(ctx), marketID, fee); err != nil {
+		return err
+	}
+	if fee == nil {
+		return nil
+	}
+
+	err := k.CollectFee(ctx, marketID, addr, sdk.Coins{*fee})
+	if err != nil {
+		return fmt.Errorf("error collecting commitment creation fee: %w", err)
+	}
+
+	return nil
 }
 
 // lookupNav gets a nav from the provided known navs, or if not known, gets it from the marker module.
@@ -219,4 +302,11 @@ func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.
 	rv.ExchangeFees = sdk.NewCoins(sdk.NewCoin(feeDenom, feeAmt))
 
 	return rv, nil
+}
+
+// SettleCommitments orchestrates the transfer of committed funds and collection of fees.
+func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
+	// TODO[1789]: Write SettleCommitments keeper func.
+	_, _ = ctx, req
+	return errors.New("not implemented")
 }

@@ -2219,7 +2219,7 @@ MsgCommitFundsRequest is a request message for the CommitFunds endpoint.
 | `account` | [string](#string) |  | account is the address of the account with the funds being committed. |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market the funds will be committed to. |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds being committed to the market. |
-| `creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | order_creation_fee is the fee that is being paid to create this commitment. |
+| `creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | creation_fee is the fee that is being paid to create this commitment. |
 | `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-committed event. Max length is 100 characters. |
 
 

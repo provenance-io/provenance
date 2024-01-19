@@ -841,12 +841,22 @@ func ParseKeyCommitment(key []byte) (uint32, sdk.AccAddress, error) {
 	}
 	marketIDBz, addrBz := key[1:5], key[5:]
 	marketID, _ := uint32FromBz(marketIDBz)
-	addr, left, err := parseLengthPrefixedAddr(addrBz)
+	addr, err := ParseKeySuffixCommitment(addrBz)
 	if err != nil {
-		return 0, nil, fmt.Errorf("cannot parse address from commitment key: %w", err)
-	}
-	if len(left) != 0 {
-		return 0, nil, fmt.Errorf("cannot parse address from commitment key: found %d bytes after address, expected 0", len(left))
+		return 0, nil, err
 	}
 	return marketID, addr, nil
+}
+
+// ParseKeySuffixCommitment parses the addr portion of a commitment key.
+// The input must have the format: <addr length byte> | <addr>.
+func ParseKeySuffixCommitment(suffix []byte) (sdk.AccAddress, error) {
+	addr, left, err := parseLengthPrefixedAddr(suffix)
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse address from commitment key: %w", err)
+	}
+	if len(left) != 0 {
+		return nil, fmt.Errorf("cannot parse address from commitment key: found %d bytes after address, expected 0", len(left))
+	}
+	return addr, nil
 }
