@@ -3518,6 +3518,7 @@ func (s *TestSuite) TestQueryServer_Params() {
 // TODO[1789] func (s *TestSuite) TestQueryServer_CommitmentSettlementFeeCalc()
 
 func (s *TestSuite) TestQueryServer_ValidateCreateMarket() {
+	// TODO[1789]: Update the TestQueryServer_ValidateCreateMarket tests.
 	testDef := queryTestDef[exchange.QueryValidateCreateMarketRequest, exchange.QueryValidateCreateMarketResponse]{
 		queryName: "ValidateCreateMarket",
 		query:     keeper.NewQueryServer(s.k).ValidateCreateMarket,
@@ -3626,6 +3627,7 @@ func (s *TestSuite) TestQueryServer_ValidateCreateMarket() {
 }
 
 func (s *TestSuite) TestQueryServer_ValidateMarket() {
+	// TODO[1789]: Update the TestQueryServer_ValidateMarket tests.
 	testDef := queryTestDef[exchange.QueryValidateMarketRequest, exchange.QueryValidateMarketResponse]{
 		queryName: "ValidateMarket",
 		query:     keeper.NewQueryServer(s.k).ValidateMarket,
@@ -3686,6 +3688,7 @@ func (s *TestSuite) TestQueryServer_ValidateMarket() {
 }
 
 func (s *TestSuite) TestQueryServer_ValidateManageFees() {
+	// TODO[1789]: Update the TestQueryServer_ValidateManageFees tests.
 	testDef := queryTestDef[exchange.QueryValidateManageFeesRequest, exchange.QueryValidateManageFeesResponse]{
 		queryName: "ValidateManageFees",
 		query:     keeper.NewQueryServer(s.k).ValidateManageFees,

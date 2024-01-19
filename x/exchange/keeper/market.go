@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -1508,5 +1509,28 @@ func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
 	sellerRatios := getSellerSettlementRatios(store, marketID)
 	buyerRatios := getBuyerSettlementRatios(store, marketID)
 	errs := exchange.ValidateRatioDenoms(sellerRatios, buyerRatios)
+
+	bips := getCommitmentSettlementBips(store, marketID)
+	convDenom := getIntermediaryDenom(store, marketID)
+	if bips > 0 && len(convDenom) == 0 {
+		errs = append(errs, fmt.Errorf("no intermediary denom defined, but commitment settlement bips %d is not zero", bips))
+	}
+
+	if len(convDenom) > 0 {
+		feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
+		feeNav := k.GetNav(ctx, convDenom, feeDenom)
+		if feeNav == nil {
+			errs = append(errs, fmt.Errorf("no nav exists from intermediary denom %q to fee denom %q", convDenom, feeDenom))
+		}
+	}
+
+	allowComs := isCommitmentAllowed(store, marketID)
+	if allowComs {
+		createComFee := getCreateCommitmentFlatFees(store, marketID)
+		if bips == 0 && len(createComFee) == 0 {
+			errs = append(errs, fmt.Errorf("commitments are allowed but no commitment-related fees are defined"))
+		}
+	}
+
 	return errors.Join(errs...)
 }

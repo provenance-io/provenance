@@ -6604,6 +6604,7 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 }
 
 func (s *TestSuite) TestKeeper_ValidateMarket() {
+	// TODO[1789]: Update the TestKeeper_ValidateMarket tests.
 	noBuyerErr := func(denom string) string {
 		return "seller settlement fee ratios have price denom \"" + denom + "\" but there are no " +
 			"buyer settlement fee ratios with that price denom"
