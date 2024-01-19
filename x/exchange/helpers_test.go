@@ -11,7 +11,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
@@ -843,104 +842,113 @@ func TestQuoRemInt(t *testing.T) {
 		expPanic string
 	}{
 		{
-			name:     "1/0",
 			a:        sdkmath.NewInt(1),
 			b:        sdkmath.NewInt(0),
 			expPanic: "division by zero",
 		},
 		{
-			name:   "0/1",
 			a:      sdkmath.NewInt(0),
 			b:      sdkmath.NewInt(1),
 			expQuo: sdkmath.NewInt(0),
 			expRem: sdkmath.NewInt(0),
 		},
 		{
-			name:   "0/-1",
 			a:      sdkmath.NewInt(0),
 			b:      sdkmath.NewInt(-1),
 			expQuo: sdkmath.NewInt(0),
 			expRem: sdkmath.NewInt(0),
 		},
 		{
-			name:   "16/2",
 			a:      sdkmath.NewInt(16),
 			b:      sdkmath.NewInt(2),
 			expQuo: sdkmath.NewInt(8),
 			expRem: sdkmath.NewInt(0),
 		},
 		{
-			name:   "-16/2",
 			a:      sdkmath.NewInt(-16),
 			b:      sdkmath.NewInt(2),
 			expQuo: sdkmath.NewInt(-8),
 			expRem: sdkmath.NewInt(0),
 		},
 		{
-			name:   "16/-2",
 			a:      sdkmath.NewInt(16),
 			b:      sdkmath.NewInt(-2),
 			expQuo: sdkmath.NewInt(-8),
 			expRem: sdkmath.NewInt(0),
 		},
 		{
-			name:   "-16/-2",
 			a:      sdkmath.NewInt(-16),
 			b:      sdkmath.NewInt(-2),
 			expQuo: sdkmath.NewInt(8),
 			expRem: sdkmath.NewInt(0),
 		},
 		{
-			name:   "17/2",
 			a:      sdkmath.NewInt(17),
 			b:      sdkmath.NewInt(2),
 			expQuo: sdkmath.NewInt(8),
 			expRem: sdkmath.NewInt(1),
 		},
 		{
-			name:   "-17/2",
 			a:      sdkmath.NewInt(-17),
 			b:      sdkmath.NewInt(2),
 			expQuo: sdkmath.NewInt(-8),
 			expRem: sdkmath.NewInt(-1),
 		},
 		{
-			name:   "17/-2",
 			a:      sdkmath.NewInt(17),
 			b:      sdkmath.NewInt(-2),
 			expQuo: sdkmath.NewInt(-8),
 			expRem: sdkmath.NewInt(1),
 		},
 		{
-			name:   "-17/-2",
 			a:      sdkmath.NewInt(-17),
 			b:      sdkmath.NewInt(-2),
 			expQuo: sdkmath.NewInt(8),
 			expRem: sdkmath.NewInt(-1),
 		},
 		{
-			name:   "54321/987",
+			a:      sdkmath.NewInt(5),
+			b:      sdkmath.NewInt(12),
+			expQuo: sdkmath.NewInt(0),
+			expRem: sdkmath.NewInt(5),
+		},
+		{
+			a:      sdkmath.NewInt(-5),
+			b:      sdkmath.NewInt(12),
+			expQuo: sdkmath.NewInt(0),
+			expRem: sdkmath.NewInt(-5),
+		},
+		{
+			a:      sdkmath.NewInt(5),
+			b:      sdkmath.NewInt(-12),
+			expQuo: sdkmath.NewInt(0),
+			expRem: sdkmath.NewInt(5),
+		},
+		{
+			a:      sdkmath.NewInt(-5),
+			b:      sdkmath.NewInt(-12),
+			expQuo: sdkmath.NewInt(0),
+			expRem: sdkmath.NewInt(-5),
+		},
+		{
 			a:      sdkmath.NewInt(54321),
 			b:      sdkmath.NewInt(987),
 			expQuo: sdkmath.NewInt(55),
 			expRem: sdkmath.NewInt(36),
 		},
 		{
-			name:   "-54321/987",
 			a:      sdkmath.NewInt(-54321),
 			b:      sdkmath.NewInt(987),
 			expQuo: sdkmath.NewInt(-55),
 			expRem: sdkmath.NewInt(-36),
 		},
 		{
-			name:   "54321/-987",
 			a:      sdkmath.NewInt(54321),
 			b:      sdkmath.NewInt(-987),
 			expQuo: sdkmath.NewInt(-55),
 			expRem: sdkmath.NewInt(36),
 		},
 		{
-			name:   "-54321/-987",
 			a:      sdkmath.NewInt(-54321),
 			b:      sdkmath.NewInt(-987),
 			expQuo: sdkmath.NewInt(55),
@@ -970,7 +978,11 @@ func TestQuoRemInt(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+		name := tc.name
+		if len(name) == 0 {
+			name = fmt.Sprintf("%s/%s", tc.a.String(), tc.b.String())
+		}
+		t.Run(name, func(t *testing.T) {
 			var quo, rem sdkmath.Int
 			testFunc := func() {
 				quo, rem = QuoRemInt(tc.a, tc.b)
@@ -985,4 +997,70 @@ func TestQuoRemInt(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestQuoIntRoundUp(t *testing.T) {
+	tests := []struct {
+		name     string
+		a        sdkmath.Int
+		b        sdkmath.Int
+		exp      sdkmath.Int
+		expPanic string
+	}{
+		{a: sdkmath.NewInt(1), b: sdkmath.NewInt(0), expPanic: "division by zero"},
+		{a: sdkmath.NewInt(0), b: sdkmath.NewInt(1), exp: sdkmath.NewInt(0)},
+		{a: sdkmath.NewInt(0), b: sdkmath.NewInt(-1), exp: sdkmath.NewInt(0)},
+		{a: sdkmath.NewInt(16), b: sdkmath.NewInt(2), exp: sdkmath.NewInt(8)},
+		{a: sdkmath.NewInt(-16), b: sdkmath.NewInt(2), exp: sdkmath.NewInt(-8)},
+		{a: sdkmath.NewInt(16), b: sdkmath.NewInt(-2), exp: sdkmath.NewInt(-8)},
+		{a: sdkmath.NewInt(-16), b: sdkmath.NewInt(-2), exp: sdkmath.NewInt(8)},
+		{a: sdkmath.NewInt(17), b: sdkmath.NewInt(2), exp: sdkmath.NewInt(9)},
+		{a: sdkmath.NewInt(-17), b: sdkmath.NewInt(2), exp: sdkmath.NewInt(-9)},
+		{a: sdkmath.NewInt(17), b: sdkmath.NewInt(-2), exp: sdkmath.NewInt(-9)},
+		{a: sdkmath.NewInt(-17), b: sdkmath.NewInt(-2), exp: sdkmath.NewInt(9)},
+		{a: sdkmath.NewInt(5), b: sdkmath.NewInt(12), exp: sdkmath.NewInt(1)},
+		{a: sdkmath.NewInt(-5), b: sdkmath.NewInt(12), exp: sdkmath.NewInt(-1)},
+		{a: sdkmath.NewInt(5), b: sdkmath.NewInt(-12), exp: sdkmath.NewInt(-1)},
+		{a: sdkmath.NewInt(-5), b: sdkmath.NewInt(-12), exp: sdkmath.NewInt(1)},
+		{a: sdkmath.NewInt(54321), b: sdkmath.NewInt(987), exp: sdkmath.NewInt(56)},
+		{a: sdkmath.NewInt(-54321), b: sdkmath.NewInt(987), exp: sdkmath.NewInt(-56)},
+		{a: sdkmath.NewInt(54321), b: sdkmath.NewInt(-987), exp: sdkmath.NewInt(-56)},
+		{a: sdkmath.NewInt(-54321), b: sdkmath.NewInt(-987), exp: sdkmath.NewInt(56)},
+		{
+			name: "(10^30+5)/(10^27)",
+			a:    newInt(t, "1,000,000,000,000,000,000,000,000,000,005"),
+			b:    newInt(t, "1,000,000,000,000,000,000,000,000,000"),
+			exp:  sdkmath.NewInt(1001),
+		},
+		{
+			name: "(2*10^30+3*10^9+7)/1,000)",
+			a:    newInt(t, "2,000,000,000,000,000,000,003,000,000,007"),
+			b:    newInt(t, "1,000"),
+			exp:  newInt(t, "2,000,000,000,000,000,000,003,000,001"),
+		},
+		{
+			name: "(3*10^30+9*10^26)/(10^27)",
+			a:    newInt(t, "3,000,900,000,000,000,000,000,000,000,000"),
+			b:    newInt(t, "1,000,000,000,000,000,000,000,000,000"),
+			exp:  sdkmath.NewInt(3001),
+		},
+	}
+
+	for _, tc := range tests {
+		name := tc.name
+		if len(name) == 0 {
+			name = fmt.Sprintf("%s/%s", tc.a.String(), tc.b.String())
+		}
+		t.Run(name, func(t *testing.T) {
+			var act sdkmath.Int
+			testFunc := func() {
+				act = QuoIntRoundUp(tc.a, tc.b)
+			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "QuoIntRoundUp(%s, %s)", tc.a, tc.b)
+			if len(tc.expPanic) == 0 {
+				assert.Equal(t, tc.exp.String(), act.String(), "QuoIntRoundUp(%s, %s) quo", tc.a, tc.b)
+			}
+		})
+	}
+
 }

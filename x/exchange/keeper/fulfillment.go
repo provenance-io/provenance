@@ -386,3 +386,15 @@ func (k Keeper) emitNAVEvents(ctx sdk.Context, denom string, navs []markertypes.
 	}
 	k.emitEvents(ctx, events)
 }
+
+// GetNav looks up a NAV from the marker module and returns it as a NetAssetPrice.
+func (k Keeper) GetNav(ctx sdk.Context, assetsDenom, priceDenom string) *exchange.NetAssetPrice {
+	nav, _ := k.markerKeeper.GetNetAssetValue(ctx, assetsDenom, priceDenom)
+	if nav == nil {
+		return nil
+	}
+	return &exchange.NetAssetPrice{
+		Assets: sdk.Coin{Denom: assetsDenom, Amount: sdk.NewIntFromUint64(nav.Volume)},
+		Price:  nav.Price,
+	}
+}

@@ -21,10 +21,10 @@ import (
 )
 
 var (
-	// OneInt is an sdkmath.Int of 1.
-	OneInt = sdkmath.NewInt(1)
 	// TenKInt is an sdkmath.Int of 10,000.
 	TenKInt = sdkmath.NewInt(10_000)
+	// TwentyKInt is an sdkmath.Int of 20,000.
+	TwentyKInt = sdkmath.NewInt(20_000)
 )
 
 // Keeper provides the exchange module's state store interactions.
@@ -203,10 +203,7 @@ func (k Keeper) CalculateExchangeSplit(ctx sdk.Context, feeAmt sdk.Coins) sdk.Co
 			continue
 		}
 
-		splitAmt, splitRem := exchange.QuoRemInt(coin.Amount.Mul(sdkmath.NewInt(split)), TenKInt)
-		if !splitRem.IsZero() {
-			splitAmt = splitAmt.Add(OneInt)
-		}
+		splitAmt := exchange.QuoIntRoundUp(coin.Amount.Mul(sdkmath.NewInt(split)), TenKInt)
 		exchangeAmt = append(exchangeAmt, sdk.NewCoin(coin.Denom, splitAmt))
 	}
 	if exchangeAmt.IsZero() {

@@ -1,10 +1,13 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -116,4 +119,103 @@ func (k Keeper) IterateCommitments(ctx sdk.Context, cb func(commitment exchange.
 		}
 		return cb(*commitment)
 	})
+}
+
+// lookupNav gets a nav from the provided known navs, or if not known, gets it from the marker module.
+func (k Keeper) lookupNav(ctx sdk.Context, markerDenom, priceDenom string, known []exchange.NetAssetPrice) *exchange.NetAssetPrice {
+	for _, nav := range known {
+		if nav.Assets.Denom == markerDenom && nav.Price.Denom == priceDenom {
+			return &nav
+		}
+	}
+	return k.GetNav(ctx, markerDenom, priceDenom)
+}
+
+// CalculateCommitmentSettlementFee calculates the fee that the exchange must be paid (by the market) for the provided
+// commitment settlement request. If the market does not have a bips defined, an empty result is returned (without error).
+// If no inputs are given, the result will only have the ToFeeNav field (if it exists).
+func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) (*exchange.QueryCommitmentSettlementFeeCalcResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("settlement request cannot be nil")
+	}
+	if err := req.Validate(false); err != nil {
+		return nil, err
+	}
+
+	rv := &exchange.QueryCommitmentSettlementFeeCalcResponse{}
+	store := k.getStore(ctx)
+	bips := getCommitmentSettlementBips(store, req.MarketId)
+	if bips == 0 {
+		return rv, nil
+	}
+
+	convDenom := getIntermediaryDenom(store, req.MarketId)
+	if len(convDenom) == 0 {
+		return nil, fmt.Errorf("market %d does not have an intermediary denom", req.MarketId)
+	}
+
+	feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
+	rv.ToFeeNav = k.lookupNav(ctx, convDenom, feeDenom, req.Navs)
+	if rv.ToFeeNav == nil {
+		return nil, fmt.Errorf("no nav found from intermediary denom %q to fee denom %q", convDenom, feeDenom)
+	}
+
+	// If there aren't any inputs, there's nothing left to do here.
+	if len(req.Inputs) == 0 {
+		return rv, nil
+	}
+
+	rv.InputTotal = exchange.SumAccountAmounts(req.Inputs)
+
+	var errs []error
+	var convDecAmt sdkmath.LegacyDec
+	for _, coin := range rv.InputTotal {
+		switch coin.Denom {
+		case feeDenom:
+			rv.ConvertedTotal = rv.ConvertedTotal.Add(coin)
+		case convDenom:
+			convDecAmt = convDecAmt.Add(sdkmath.LegacyNewDecFromInt(coin.Amount))
+		default:
+			nav := k.lookupNav(ctx, coin.Denom, convDenom, req.Navs)
+			if nav == nil {
+				errs = append(errs, fmt.Errorf("no nav found from assets denom %q to intermediary denom %q", coin.Denom, convDenom))
+			} else {
+				newAmt := sdkmath.LegacyNewDecFromInt(coin.Amount.Mul(nav.Price.Amount)).QuoInt(nav.Assets.Amount)
+				convDecAmt = convDecAmt.Add(newAmt)
+				rv.ConversionNavs = append(rv.ConversionNavs, *nav)
+			}
+		}
+	}
+
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+
+	convAmt := convDecAmt.TruncateInt()
+	if !convDecAmt.IsInteger() {
+		convAmt = convAmt.AddRaw(1)
+	}
+	rv.ConvertedTotal = rv.ConvertedTotal.Add(sdk.NewCoin(convDenom, convAmt))
+
+	var feeDenomTotal sdkmath.Int
+	for _, coin := range rv.ConvertedTotal {
+		switch coin.Denom {
+		case feeDenom:
+			feeDenomTotal = feeDenomTotal.Add(coin.Amount)
+		case convDenom:
+			asFee := exchange.QuoIntRoundUp(coin.Amount.Mul(rv.ToFeeNav.Price.Amount), rv.ToFeeNav.Assets.Amount)
+			feeDenomTotal = feeDenomTotal.Add(asFee)
+		default:
+			// It shouldn't be possible to get here, but just in case...
+			return nil, fmt.Errorf("unknown denom %q in the converted total: %q", coin.Denom, rv.ConvertedTotal)
+		}
+	}
+
+	// Both the assets and price funds are in the inputs. So the sum of them is twice what
+	// we usually think of as the "value of a trade." As we apply the bips, we will divide
+	// by 20,000 (instead of 10,000) in order to account for that doubling.
+	feeAmt := exchange.QuoIntRoundUp(feeDenomTotal.MulRaw(int64(bips)), TwentyKInt)
+	rv.ExchangeFees = sdk.NewCoins(sdk.NewCoin(feeDenom, feeAmt))
+
+	return rv, nil
 }

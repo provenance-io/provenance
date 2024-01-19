@@ -382,9 +382,17 @@ func (k QueryServer) Params(goCtx context.Context, _ *exchange.QueryParamsReques
 
 // CommitmentSettlementFeeCalc calculates the fees a market will pay for a commitment settlement using current NAVs.
 func (k QueryServer) CommitmentSettlementFeeCalc(goCtx context.Context, req *exchange.QueryCommitmentSettlementFeeCalcRequest) (*exchange.QueryCommitmentSettlementFeeCalcResponse, error) {
-	// TODO[1789]: QueryServer.CommitmentSettlementFeeCalc
-	_, _ = goCtx, req
-	panic("not implemented")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp, err := k.CalculateCommitmentSettlementFee(ctx, req.Settlement)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	return resp, nil
 }
 
 // ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.

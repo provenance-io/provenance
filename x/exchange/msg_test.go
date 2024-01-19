@@ -802,6 +802,8 @@ func TestMsgMarketSettleRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
+// TODO[1789]: func TestMsgMarketCommitmentSettleRequest_Validate(t *testing.T)
+
 // TODO[1789]: func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T)
 
 // TODO[1789]: func TestMsgMarketReleaseCommitmentsRequest_ValidateBasic(t *testing.T)

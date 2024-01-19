@@ -361,7 +361,7 @@ message QueryParamsResponse {
 // QueryCommitmentSettlementFeeCalcRequest is a request message for the CommitmentSettlementFeeCalc query.
 message QueryCommitmentSettlementFeeCalcRequest {
   // settlement is a market's commitment settlement request message.
-  // If not provided, only the to_fee_nav field will be populated in the response.
+  // If no inputs are provided, only the to_fee_nav field will be populated in the response.
   MsgMarketCommitmentSettleRequest settlement = 1;
 }
 
@@ -373,13 +373,13 @@ message QueryCommitmentSettlementFeeCalcResponse {
   // input_total is the sum of all the inputs in the provided settlement.
   repeated cosmos.base.v1beta1.Coin input_total = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // converted_total is the input_total converted to a single intermediary denom.
+  // converted_total is the input_total converted to a single intermediary denom or left as the fee denom.
   repeated cosmos.base.v1beta1.Coin converted_total = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // conversion_navs are the NAVs used to convert the input_total to the converted_total.
   repeated NetAssetPrice conversion_navs = 4 [(gogoproto.nullable) = false];
   // to_fee_nav is the NAV used to convert the converted_total into the fee denom.
-  NetAssetPrice to_fee_nav = 5 [(gogoproto.nullable) = false];
+  NetAssetPrice to_fee_nav = 5;
 }
 
 // QueryValidateCreateMarketRequest is a request message for the ValidateCreateMarket query.

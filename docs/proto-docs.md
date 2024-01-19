@@ -2875,7 +2875,7 @@ QueryCommitmentSettlementFeeCalcRequest is a request message for the CommitmentS
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `settlement` | [MsgMarketCommitmentSettleRequest](#provenance.exchange.v1.MsgMarketCommitmentSettleRequest) |  | settlement is a market's commitment settlement request message. If not provided, only the to_fee_nav field will be populated in the response. |
+| `settlement` | [MsgMarketCommitmentSettleRequest](#provenance.exchange.v1.MsgMarketCommitmentSettleRequest) |  | settlement is a market's commitment settlement request message. If no inputs are provided, only the to_fee_nav field will be populated in the response. |
 
 
 
@@ -2892,7 +2892,7 @@ QueryCommitmentSettlementFeeCalcResponse is a response message for the Commitmen
 | ----- | ---- | ----- | ----------- |
 | `exchange_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | exchange_fees is the total that the exchange would currently pay for the provided settlement. |
 | `input_total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | input_total is the sum of all the inputs in the provided settlement. |
-| `converted_total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | converted_total is the input_total converted to a single intermediary denom. |
+| `converted_total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | converted_total is the input_total converted to a single intermediary denom or left as the fee denom. |
 | `conversion_navs` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) | repeated | conversion_navs are the NAVs used to convert the input_total to the converted_total. |
 | `to_fee_nav` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) |  | to_fee_nav is the NAV used to convert the converted_total into the fee denom. |
 

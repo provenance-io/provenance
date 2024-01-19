@@ -2506,3 +2506,5 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 		})
 	}
 }
+
+// TODO[1789]: func (s *TestSuite) TestKeeper_GetNav()

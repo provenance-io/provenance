@@ -236,7 +236,7 @@ func (m MsgMarketSettleRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (m MsgMarketCommitmentSettleRequest) ValidateBasic() error {
+func (m MsgMarketCommitmentSettleRequest) Validate(requireInputs bool) error {
 	var errs []error
 
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
@@ -249,7 +249,9 @@ func (m MsgMarketCommitmentSettleRequest) ValidateBasic() error {
 
 	inputsOk := true
 	if len(m.Inputs) == 0 {
-		errs = append(errs, errors.New("no inputs provided"))
+		if requireInputs {
+			errs = append(errs, errors.New("no inputs provided"))
+		}
 		inputsOk = false
 	} else {
 		for i, input := range m.Inputs {
@@ -262,7 +264,9 @@ func (m MsgMarketCommitmentSettleRequest) ValidateBasic() error {
 
 	outputsOk := true
 	if len(m.Outputs) == 0 {
-		errs = append(errs, errors.New("no outputs provided"))
+		if requireInputs {
+			errs = append(errs, errors.New("no outputs provided"))
+		}
 		outputsOk = false
 	} else {
 		for i, output := range m.Outputs {
@@ -304,6 +308,10 @@ func (m MsgMarketCommitmentSettleRequest) ValidateBasic() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func (m MsgMarketCommitmentSettleRequest) ValidateBasic() error {
+	return m.Validate(true)
 }
 
 func (m MsgMarketCommitmentSettleRequest) GetSigners() []sdk.AccAddress {
