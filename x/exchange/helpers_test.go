@@ -107,6 +107,40 @@ func coinsString(coins sdk.Coins) string {
 	return fmt.Sprintf("%q", coins)
 }
 
+// assertEqualSlice asserts that expected = actual and returns true if so.
+// If not, returns false and the stringer is applied to each entry and the comparison
+// is redone on the strings in the hopes that it helps identify the problem.
+// If the strings are also equal, each individual entry is compared.
+func assertEqualSlice[E any](t *testing.T, expected, actual []E, stringer func(E) string, msg string, args ...interface{}) bool {
+	t.Helper()
+	if assert.Equalf(t, expected, actual, msg, args...) {
+		return true
+	}
+	// compare each as strings in the hopes that makes it easier to identify the problem.
+	expStrs := sliceStrings(expected, stringer)
+	actStrs := sliceStrings(actual, stringer)
+	if !assert.Equalf(t, expStrs, actStrs, "strings: "+msg, args...) {
+		return false
+	}
+	// They're the same as strings, so compare each individually.
+	for i := range expected {
+		assert.Equalf(t, expected[i], actual[i], msg+fmt.Sprintf("[%d]", i), args...)
+	}
+	return false
+}
+
+// sliceStrings converts each val into a string using the provided stringer, prefixing the slice index to each.
+func sliceStrings[T any](vals []T, stringer func(T) string) []string {
+	if vals == nil {
+		return nil
+	}
+	strs := make([]string, len(vals))
+	for i, v := range vals {
+		strs[i] = fmt.Sprintf("[%d]:%s", i, stringer(v))
+	}
+	return strs
+}
+
 func TestEqualsUint64(t *testing.T) {
 	tests := []struct {
 		name string

@@ -897,7 +897,7 @@ func filterOrders(settlement *Settlement, checker func(order OrderI) bool) []Ord
 }
 
 // GetNAVs returns all the net-asset-value entries that represent this settlement.
-func GetNAVs(settlement *Settlement) []*NetAssetPrice {
+func GetNAVs(settlement *Settlement) []NetAssetPrice {
 	// We need to count ONLY the bid orders or ONLY the ask orders.
 	// But some settlements are expected to only have one or the other, so look
 	// for bids first and fall back to asks if there aren't any bids.
@@ -908,7 +908,7 @@ func GetNAVs(settlement *Settlement) []*NetAssetPrice {
 		orders = filterOrders(settlement, OrderI.IsAskOrder)
 	}
 
-	var navs []*NetAssetPrice
+	var navs []NetAssetPrice
 	for _, order := range orders {
 		assets := order.GetAssets()
 		price := order.GetPrice()
@@ -922,7 +922,7 @@ func GetNAVs(settlement *Settlement) []*NetAssetPrice {
 			}
 		}
 		if !found {
-			navs = append(navs, &NetAssetPrice{Assets: assets, Price: price})
+			navs = append(navs, NetAssetPrice{Assets: assets, Price: price})
 		}
 	}
 

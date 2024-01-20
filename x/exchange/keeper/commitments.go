@@ -92,6 +92,23 @@ func (k Keeper) AddCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddr
 	return nil
 }
 
+// AddCommitments calls AddCommitment for several entries.
+func (k Keeper) AddCommitments(ctx sdk.Context, marketID uint32, toAdd []exchange.AccountAmount, eventTag string) error {
+	var errs []error
+	for _, entry := range toAdd {
+		addr, err := sdk.AccAddressFromBech32(entry.Account)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("invalid account %q: %w", entry.Account, err))
+			continue
+		}
+		err = k.AddCommitment(ctx, marketID, addr, entry.Amount, eventTag)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
+}
+
 // ReleaseCommitment reduces the funds committed by an address to a market and releases the hold on those funds.
 // If an amount is provided, just that amount is released.
 // If the provided amount is zero, all funds committed by the address to the market are released.
@@ -129,7 +146,7 @@ func (k Keeper) ReleaseCommitment(ctx sdk.Context, marketID uint32, addr sdk.Acc
 	return nil
 }
 
-// ReleaseCommitments calls ReleaseCommitment for several accounts.
+// ReleaseCommitments calls ReleaseCommitment for several entries.
 func (k Keeper) ReleaseCommitments(ctx sdk.Context, marketID uint32, toRelease []exchange.AccountAmount, eventTag string) error {
 	var errs []error
 	for _, entry := range toRelease {
@@ -306,7 +323,63 @@ func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.
 
 // SettleCommitments orchestrates the transfer of committed funds and collection of fees.
 func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
-	// TODO[1789]: Write SettleCommitments keeper func.
-	_, _ = ctx, req
-	return errors.New("not implemented")
+	marketID := req.MarketId
+	// Record all the navs.
+	k.recordNAVs(ctx, marketID, req.Navs)
+
+	// Calculate the exchange fees and make sure they're not too much.
+	exchangeFees, err := k.CalculateCommitmentSettlementFee(ctx, req)
+	if err != nil {
+		return fmt.Errorf("could not calculate commitment settlement fees: %w", err)
+	}
+	if !req.MaxExchangeFees.IsZero() && exchangeFees != nil && !exchangeFees.ExchangeFees.IsZero() {
+		_, isNeg := req.MaxExchangeFees.SafeSub(exchangeFees.ExchangeFees...)
+		if isNeg {
+			return fmt.Errorf("exchange fees %q exceeds max exchange fees %q", exchangeFees.ExchangeFees, req.MaxExchangeFees)
+		}
+	}
+
+	// Build the transfers
+	inputs := exchange.SimplifyAccountAmounts(req.Inputs)
+	outputs := exchange.SimplifyAccountAmounts(req.Outputs)
+	fees := exchange.SimplifyAccountAmounts(req.Fees)
+	transfers, err := exchange.BuildCommitmentTransfers(marketID, inputs, outputs, fees)
+	if err != nil {
+		return fmt.Errorf("failed to build transfers: %w", err)
+	}
+
+	// Release the commitments on the inputs
+	err = k.ReleaseCommitments(ctx, marketID, inputs, req.EventTag)
+	if err != nil {
+		return fmt.Errorf("failed to release commitments on inputs: %w", err)
+	}
+
+	// Do the transfers
+	var xferErrs []error
+	for _, transfer := range transfers {
+		err = k.DoTransfer(ctx, transfer.Inputs, transfer.Outputs)
+		if err != nil {
+			xferErrs = append(xferErrs, err)
+		}
+	}
+	if len(xferErrs) > 0 {
+		return errors.Join(xferErrs...)
+	}
+
+	// Commit the funds in the outputs.
+	err = k.AddCommitments(ctx, marketID, outputs, req.EventTag)
+	if err != nil {
+		return fmt.Errorf("failed to re-commit funds after transfer: %w", err)
+	}
+
+	// Collect the exchange fees from the market.
+	if exchangeFees != nil && !exchangeFees.ExchangeFees.IsZero() {
+		marketAddr := exchange.GetMarketAddress(marketID)
+		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeFees.ExchangeFees)
+		if err != nil {
+			return fmt.Errorf("could not collect exchange fees from market %d: %w", marketID, err)
+		}
+	}
+
+	return nil
 }

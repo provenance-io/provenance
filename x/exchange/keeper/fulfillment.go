@@ -320,7 +320,7 @@ func (k Keeper) closeSettlement(ctx sdk.Context, store sdk.KVStore, marketID uin
 // recordNAVs attempts to record the provided NAVs in the marker module.
 // If a problem is encountered for one (or more), the error is logged and the rest are still processed.
 // Events should still be emitted even for the ones that have a problem.
-func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []*exchange.NetAssetPrice) {
+func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.NetAssetPrice) {
 	source := fmt.Sprintf("x/exchange market %d", marketID)
 
 	// convert them to what the marker module needs.

@@ -236,6 +236,132 @@ func TestSumAccountAmounts(t *testing.T) {
 	}
 }
 
+func TestSimplifyAccountAmounts(t *testing.T) {
+	coins := func(val string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(val)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", val)
+		return rv
+	}
+
+	tests := []struct {
+		name     string
+		entries  []AccountAmount
+		expected []AccountAmount
+	}{
+		{
+			name:     "nil",
+			entries:  nil,
+			expected: nil,
+		},
+		{
+			name:     "empty",
+			entries:  []AccountAmount{},
+			expected: nil,
+		},
+		{
+			name:     "one entry",
+			entries:  []AccountAmount{{Account: "one", Amount: coins("1one")}},
+			expected: []AccountAmount{{Account: "one", Amount: coins("1one")}},
+		},
+		{
+			name: "two entries: diff addrs",
+			entries: []AccountAmount{
+				{Account: "addr1", Amount: coins("1onecoin")},
+				{Account: "addr2", Amount: coins("2twocoin")},
+			},
+			expected: []AccountAmount{
+				{Account: "addr1", Amount: coins("1onecoin")},
+				{Account: "addr2", Amount: coins("2twocoin")},
+			},
+		},
+		{
+			name: "two entries: same addrs",
+			entries: []AccountAmount{
+				{Account: "addr1", Amount: coins("1onecoin")},
+				{Account: "addr1", Amount: coins("2twocoin")},
+			},
+			expected: []AccountAmount{
+				{Account: "addr1", Amount: coins("1onecoin,2twocoin")},
+			},
+		},
+		{
+			name: "three entries: all diff addrs",
+			entries: []AccountAmount{
+				{Account: "addr1", Amount: coins("1apple")},
+				{Account: "addr2", Amount: coins("2apple")},
+				{Account: "addr3", Amount: coins("3apple")},
+			},
+			expected: []AccountAmount{
+				{Account: "addr1", Amount: coins("1apple")},
+				{Account: "addr2", Amount: coins("2apple")},
+				{Account: "addr3", Amount: coins("3apple")},
+			},
+		},
+		{
+			name: "three entries: first second same addr",
+			entries: []AccountAmount{
+				{Account: "addr1", Amount: coins("1apple")},
+				{Account: "addr1", Amount: coins("2apple")},
+				{Account: "addr3", Amount: coins("9apple")},
+			},
+			expected: []AccountAmount{
+				{Account: "addr1", Amount: coins("3apple")},
+				{Account: "addr3", Amount: coins("9apple")},
+			},
+		},
+		{
+			name: "three entries: first third same addr",
+			entries: []AccountAmount{
+				{Account: "addr1", Amount: coins("1apple,2banana")},
+				{Account: "addr3", Amount: coins("7prune")},
+				{Account: "addr1", Amount: coins("3apple,5cherry")},
+			},
+			expected: []AccountAmount{
+				{Account: "addr1", Amount: coins("4apple,2banana,5cherry")},
+				{Account: "addr3", Amount: coins("7prune")},
+			},
+		},
+		{
+			name: "three entries: second third same addr",
+			entries: []AccountAmount{
+				{Account: "addr3", Amount: coins("9apple")},
+				{Account: "addr1", Amount: coins("87banana")},
+				{Account: "addr1", Amount: coins("65cherry")},
+			},
+			expected: []AccountAmount{
+				{Account: "addr3", Amount: coins("9apple")},
+				{Account: "addr1", Amount: coins("87banana,65cherry")},
+			},
+		},
+		{
+			name: "three entries: all same addr",
+			entries: []AccountAmount{
+				{Account: "addr1", Amount: coins("1apple,2banana")},
+				{Account: "addr1", Amount: coins("7prune")},
+				{Account: "addr1", Amount: coins("3apple,5cherry")},
+			},
+			expected: []AccountAmount{
+				{Account: "addr1", Amount: coins("4apple,2banana,5cherry,7prune")},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual []AccountAmount
+			testFunc := func() {
+				actual = SimplifyAccountAmounts(tc.entries)
+			}
+			require.NotPanics(t, testFunc, "SimplifyAccountAmounts")
+			assertEqualSlice(t, tc.expected, actual, AccountAmount.String, "SimplifyAccountAmounts result")
+		})
+	}
+}
+
+// TODO[1789]: func TestAccountAmountsToBankInputs(t *testing.T)
+
+// TODO[1789]: func TestAccountAmountsToBankOutputs(t *testing.T)
+
 func TestMarketAmount_String(t *testing.T) {
 	tests := []struct {
 		name string
@@ -448,3 +574,15 @@ func TestValidateEventTag(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1789]: func TestBuildCommitmentTransfers(t *testing.T)
+
+// TODO[1789]: func TestNewDenomSourceMap(t *testing.T)
+
+// TODO[1789]: func TestDenomSourceMap_Sum(t *testing.T)
+
+// TODO[1789]: func TestUseFunds(t *testing.T)
+
+// TODO[1789]: func TestBuildPrimaryTransfers(t *testing.T)
+
+// TODO[1789]: func TestBuildFeesTransfer(t *testing.T)
