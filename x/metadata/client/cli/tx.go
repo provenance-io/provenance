@@ -2,7 +2,9 @@ package cli
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -23,7 +25,7 @@ const (
 	FlagRequirePartyRollup = "require-party-rollup"
 	AddSwitch              = "add"
 	RemoveSwitch           = "remove"
-	FlagUsdMils            = "usd-mils"
+	FlagUsdMills           = "usd-mills"
 	FlagVolume             = "volume"
 )
 
@@ -136,9 +138,9 @@ func WriteScopeCmd() *cobra.Command {
 				requirePartyRollup,
 			)
 
-			usdMils, err := cmd.Flags().GetUint64(FlagUsdMils)
+			usdMils, err := cmd.Flags().GetUint64(FlagUsdMills)
 			if err != nil {
-				return fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagUsdMils, err)
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagUsdMills, err)
 			}
 
 			volume, err := cmd.Flags().GetUint64(FlagVolume)
@@ -147,7 +149,7 @@ func WriteScopeCmd() *cobra.Command {
 			}
 
 			if usdMils > 0 && volume == 0 {
-				return fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdMils)
+				return fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdMills)
 			}
 
 			msg := types.NewMsgWriteScopeRequest(scope, signers, usdMils, volume)
@@ -163,7 +165,7 @@ func WriteScopeCmd() *cobra.Command {
 	cmd.Flags().Bool(FlagRequirePartyRollup, false, "Indicates party rollup is required in this scope")
 	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().Uint64(FlagUsdMils, 0, "Indicates the net asset value of scope in usd mils, i.e. 1234 = $1.234")
+	cmd.Flags().Uint64(FlagUsdMills, 0, "Indicates the net asset value of scope in usd mills, i.e. 1234 = $1.234")
 	cmd.Flags().Uint64(FlagVolume, 0, "Indicates the volume of the net asset value")
 	return cmd
 }
@@ -1267,6 +1269,50 @@ $ %[1]s tx metadata account-data %[2]s --%[5]s
 	return cmd
 }
 
+// GetCmdAddNetAssetValues returns a CLI command for adding/updating scopes net asset values.
+func GetCmdAddNetAssetValues() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "add-net-asset-values <scope-metadata-address> " + attrcli.AccountDataFlagsUse,
+		Aliases: []string{"add-navs", "anavs"},
+		Short:   "Add/updates net asset values for a scope",
+		Example: fmt.Sprintf(`$ %[1]s tx marker add-net-asset-values scope1234... 1usd,1;2nhash,3`,
+			version.AppName),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			scopeID, err := types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid metadata address %q: %w", args[0], err)
+			}
+			if !scopeID.IsScopeAddress() {
+				return fmt.Errorf("metadata address is not scope address: %v", scopeID.String())
+			}
+
+			netAssetValues, err := ParseNetAssetValueString(args[1])
+			if err != nil {
+				return err
+			}
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgAddNetAssetValuesRequest(scopeID.String(), signers, netAssetValues)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 // addSignersFlagToCmd adds the standard --signers flag to a command.
 // See also: parseSigners.
 func addSignersFlagToCmd(cmd *cobra.Command) {
@@ -1302,4 +1348,29 @@ func validateAccAddress(addr, argName string) (string, error) {
 		return "", fmt.Errorf("invalid %s %q: %w", argName, addr, err)
 	}
 	return addr, nil
+}
+
+// ParseNetAssetValueString splits string (example address1,perm1,perm2...;address2, perm1...) to list of NetAssetValue's
+func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
+	navs := strings.Split(netAssetValuesString, ";")
+	if len(navs) == 1 && len(navs[0]) == 0 {
+		return []types.NetAssetValue{}, nil
+	}
+	netAssetValues := make([]types.NetAssetValue, len(navs))
+	for i, nav := range navs {
+		parts := strings.Split(nav, ",")
+		if len(parts) != 2 {
+			return []types.NetAssetValue{}, errors.New("invalid net asset value, expected coin,volume")
+		}
+		coin, err := sdk.ParseCoinNormalized(parts[0])
+		if err != nil {
+			return []types.NetAssetValue{}, fmt.Errorf("invalid coin %s", parts[0])
+		}
+		volume, err := strconv.ParseUint(parts[1], 10, 64)
+		if err != nil {
+			return []types.NetAssetValue{}, fmt.Errorf("invalid volume %s", parts[1])
+		}
+		netAssetValues[i] = types.NewNetAssetValue(coin, volume)
+	}
+	return netAssetValues, nil
 }

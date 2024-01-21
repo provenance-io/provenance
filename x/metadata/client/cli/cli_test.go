@@ -2148,6 +2148,24 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			expectErrMsg: "parties can only be optional when require_party_rollup = true",
 		},
 		{
+			name: "usd mills present without volume",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				scopeSpecID,
+				fmt.Sprintf("%s,servicer,opt;%s,owner", s.accountAddrStr, s.accountAddrStr),
+				s.accountAddrStr,
+				s.accountAddrStr,
+				fmt.Sprintf("--%s", cli.FlagRequirePartyRollup),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "10"),
+			},
+			expectErrMsg: "incorrect value for volume flag.  Must be positive number if usd-mills flag has been set to positive value",
+		},
+		{
 			name: "should successfully write scope with optional party and rollup",
 			cmd:  cli.WriteScopeCmd(),
 			args: []string{
@@ -2161,6 +2179,8 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "10"),
+				fmt.Sprintf("--%s=%s", cli.FlagVolume, "1"),
 			},
 			expectErrMsg: "",
 			expectedCode: 0,

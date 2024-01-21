@@ -24,7 +24,7 @@ type WriteScope struct {
 	// The signers' addresses.
 	Signers []string `json:"signers"`
 	// UsdCents used to initialize the net asset value of scope
-	UsdMils uint64 `json:"usd_mils,omitempty"`
+	UsdMils uint64 `json:"usd_mills,omitempty"`
 	// Volume for the net asset value of scope
 	Volume uint64 `json:"volume,omitempty"`
 }
