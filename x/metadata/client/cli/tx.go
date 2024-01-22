@@ -70,6 +70,8 @@ func NewTxCmd() *cobra.Command {
 		RemoveRecordCmd(),
 
 		SetAccountDataCmd(),
+
+		GetCmdAddNetAssetValues(),
 	)
 
 	return txCmd

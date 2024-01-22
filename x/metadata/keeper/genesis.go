@@ -68,7 +68,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			if err != nil {
 				panic(err)
 			}
-			k.SetNetAssetValue(ctx, address, types.NewNetAssetValue(nav.Price, nav.Volume), types.ModuleName)
+			err = k.SetNetAssetValue(ctx, address, types.NewNetAssetValue(nav.Price, nav.Volume), types.ModuleName)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }

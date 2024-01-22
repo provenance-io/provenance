@@ -3859,3 +3859,60 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 
 	runTxCmdTestCases(s, testCases)
 }
+
+func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
+	scopeID := "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
+	argsWStdFlags := func(args ...string) []string {
+		return append(args,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		)
+	}
+
+	tests := []struct {
+		name   string
+		args   []string
+		expErr string
+		incLog bool // set to true to log the output regardless of failure
+	}{
+		{
+			name:   "invalid net asset string",
+			args:   argsWStdFlags(scopeID, "invalid"),
+			expErr: "invalid net asset value, expected coin,volume",
+		},
+		{
+			name:   "address not meta address",
+			args:   argsWStdFlags("notmetaaddress", "1usd,1"),
+			expErr: `invalid metadata address "notmetaaddress": decoding bech32 failed: invalid separator index -1`,
+		},
+		{
+			name:   "address not a scope address",
+			args:   argsWStdFlags("session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr", "1usd,1"),
+			expErr: "metadata address is not scope address: session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr",
+		},
+		{
+			name: "successful",
+			args: argsWStdFlags(scopeID, "1usd,1"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdAddNetAssetValues()
+
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			outBz := out.Bytes()
+			outStr := string(outBz)
+
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "GetCmdAddNetAssetValues error")
+				s.Require().Contains(outStr, tc.expErr, "GetCmdAddNetAssetValues output")
+			} else {
+				s.Require().NoError(err, "GetCmdAddNetAssetValues error")
+			}
+		})
+	}
+}

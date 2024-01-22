@@ -111,8 +111,8 @@ message MsgWriteScopeRequest {
   // returned.
   string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
 
-  // usd_mils value of scope in usd mils (1234 = $1.234) used for net asset value
-  uint64 usd_mils = 12;
+  // usd_mills value of scope in usd mills (1234 = $1.234) used for net asset value
+  uint64 usd_mills = 12;
   // volume value of scope used for net asset value
   uint64 volume = 13;
 }

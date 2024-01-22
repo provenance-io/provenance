@@ -1188,6 +1188,14 @@ func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 		return fmt.Errorf("net asset value list cannot be empty")
 	}
 
+	scopeID, err := MetadataAddressFromBech32(msg.ScopeId)
+	if err != nil {
+		return fmt.Errorf("invalid metadata address %q: %w", msg.ScopeId, err)
+	}
+	if !scopeID.IsScopeAddress() {
+		return fmt.Errorf("metadata address is not scope address: %v", scopeID.String())
+	}
+
 	seen := make(map[string]bool)
 	for _, nav := range msg.NetAssetValues {
 		if err := nav.Validate(); err != nil {
