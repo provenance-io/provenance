@@ -164,9 +164,9 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			expErr: []string{
-				`invalid order[0]: invalid order id: must not be zero`,
-				`invalid order[1]: invalid order id: must not be zero`,
-				`invalid order[2]: invalid order id: must not be zero`,
+				`invalid order[0]: invalid order id: cannot be zero`,
+				`invalid order[1]: invalid order id: cannot be zero`,
+				`invalid order[2]: invalid order id: cannot be zero`,
 			},
 		},
 		{

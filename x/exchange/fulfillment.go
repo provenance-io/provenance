@@ -913,11 +913,11 @@ func GetNAVs(settlement *Settlement) []NetAssetPrice {
 		assets := order.GetAssets()
 		price := order.GetPrice()
 		found := false
-		for _, nav := range navs {
+		for n, nav := range navs {
 			if nav.Assets.Denom == assets.Denom && nav.Price.Denom == price.Denom {
 				found = true
-				nav.Assets.Amount = nav.Assets.Amount.Add(assets.Amount)
-				nav.Price.Amount = nav.Price.Amount.Add(price.Amount)
+				navs[n].Assets.Amount = nav.Assets.Amount.Add(assets.Amount)
+				navs[n].Price.Amount = nav.Price.Amount.Add(price.Amount)
 				break
 			}
 		}

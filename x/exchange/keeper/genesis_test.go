@@ -326,7 +326,7 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 				GetHoldCoin: []*GetHoldCoinArgs{{addr: accAddr("seller", 7), denom: assetDenom}},
 			},
 			expInitPanic: "account " + accAddr("seller", 7).String() + " should have at least \"7" + assetDenom + "\" on hold " +
-				"(due to exchange orders), but only has \"6" + assetDenom + "\"",
+				"(due to the exchange module), but only has \"6" + assetDenom + "\"",
 		},
 		{
 			name:       "not enough hold on account: bid",
@@ -339,7 +339,7 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 				GetHoldCoin: []*GetHoldCoinArgs{{addr: accAddr("buyer", 777), denom: feeDenom}},
 			},
 			expInitPanic: "account " + accAddr("buyer", 777).String() + " should have at least \"777" + feeDenom + "\" on hold " +
-				"(due to exchange orders), but only has \"776" + feeDenom + "\"",
+				"(due to the exchange module), but only has \"776" + feeDenom + "\"",
 		},
 		{
 			name: "last order id too low",

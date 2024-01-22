@@ -321,7 +321,7 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 					MarketId: 0, Seller: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1peach"),
 				},
 			},
-			expInErr: []string{invReqErr, "invalid market id: must not be zero"},
+			expInErr: []string{invReqErr, "invalid market id: cannot be zero"},
 		},
 		{
 			name: "market does not exist",
@@ -571,7 +571,7 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 					MarketId: 0, Buyer: s.addr1.String(), Assets: s.coin("1apple"), Price: s.coin("1peach"),
 				},
 			},
-			expInErr: []string{invReqErr, "invalid market id: must not be zero"},
+			expInErr: []string{invReqErr, "invalid market id: cannot be zero"},
 		},
 		{
 			name: "market does not exist",

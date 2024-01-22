@@ -478,7 +478,7 @@ func (s *TestSuite) TestKeeper_CreateAskOrder() {
 				Assets:   s.coin("35apple"),
 				Price:    s.coin("10peach"),
 			},
-			expErr: "invalid market id: must not be zero",
+			expErr: "invalid market id: cannot be zero",
 		},
 		{
 			name: "market does not exist",
@@ -951,7 +951,7 @@ func (s *TestSuite) TestKeeper_CreateBidOrder() {
 				Assets:   s.coin("35apple"),
 				Price:    s.coin("10peach"),
 			},
-			expErr: "invalid market id: must not be zero",
+			expErr: "invalid market id: cannot be zero",
 		},
 		{
 			name: "market does not exist",
