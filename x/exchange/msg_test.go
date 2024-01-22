@@ -229,7 +229,7 @@ func TestMsgCreateBidRequest_ValidateBasic(t *testing.T) {
 		expErr []string
 	}{
 		{
-			name: "empty ask order",
+			name: "empty bid order",
 			msg:  MsgCreateBidRequest{},
 			expErr: []string{
 				"invalid market id: ",
@@ -260,7 +260,128 @@ func TestMsgCreateBidRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-// TODO[1789]: func TestMsgCommitFundsRequest_ValidateBasic(t *testing.T)
+func TestMsgCommitFundsRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgCommitFundsRequest
+		expErr []string
+	}{
+		{
+			name: "okay",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+			},
+			expErr: nil,
+		},
+		{
+			name: "okay with optional fields",
+			msg: MsgCommitFundsRequest{
+				Account:     sdk.AccAddress("account_____________").String(),
+				MarketId:    3,
+				Amount:      sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+				CreationFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(8)},
+				EventTag:    "just-some-tag",
+			},
+			expErr: nil,
+		},
+		{
+			name: "no account",
+			msg: MsgCommitFundsRequest{
+				Account:  "",
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+			},
+			expErr: []string{"invalid account \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad account",
+			msg: MsgCommitFundsRequest{
+				Account:  "badaccountstring",
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+			},
+			expErr: []string{"invalid account \"badaccountstring\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 0,
+				Amount:   sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "nil amount",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   nil,
+			},
+			expErr: []string{"invalid amount \"\": cannot be zero"},
+		},
+		{
+			name: "empty amount",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.Coins{},
+			},
+			expErr: []string{"invalid amount \"\": cannot be zero"},
+		},
+		{
+			name: "bad amount",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.Coin{Denom: "cherry", Amount: sdk.NewInt(-3)}},
+			},
+			expErr: []string{"invalid amount \"-3cherry\": coin -3cherry amount is not positive"},
+		},
+		{
+			name: "bad creation fee",
+			msg: MsgCommitFundsRequest{
+				Account:     sdk.AccAddress("account_____________").String(),
+				MarketId:    1,
+				Amount:      sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+				CreationFee: &sdk.Coin{Denom: "fig", Amount: sdk.NewInt(-1)},
+			},
+			expErr: []string{"invalid creation fee \"-1fig\": negative coin amount: -1"},
+		},
+		{
+			name: "bad event tag",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+				EventTag: strings.Repeat("p", 100) + "x",
+			},
+			expErr: []string{"invalid event tag \"ppppp...ppppx\" (length 101): exceeds max length 100"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgCommitFundsRequest{
+				CreationFee: &sdk.Coin{Denom: "fig", Amount: sdk.NewInt(-1)},
+				EventTag:    strings.Repeat("p", 100) + "x",
+			},
+			expErr: []string{
+				"invalid account \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+				"invalid amount \"\": cannot be zero",
+				"invalid creation fee \"-1fig\": negative coin amount: -1",
+				"invalid event tag \"ppppp...ppppx\" (length 101): exceeds max length 100",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 func TestMsgCancelOrderRequest_ValidateBasic(t *testing.T) {
 	tests := []struct {
@@ -802,11 +923,386 @@ func TestMsgMarketSettleRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-// TODO[1789]: func TestMsgMarketCommitmentSettleRequest_Validate(t *testing.T)
+func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
+	type testCase struct {
+		name         string
+		msg          MsgMarketCommitmentSettleRequest
+		expErrInReq  []string // for errors that only happen when requireInputs = true.
+		expErrInOpt  []string // for errors that only happen when requireInputs = false.
+		expErrAlways []string // for errors that happen regardless of the requireInputs value.
+	}
+	getExpErr := func(tc testCase, requireInputs bool) []string {
+		if requireInputs {
+			return append(tc.expErrAlways, tc.expErrInReq...)
+		}
+		return append(tc.expErrAlways, tc.expErrInOpt...)
+	}
+	toAccAddr := func(str string) string {
+		return sdk.AccAddress(str + strings.Repeat("_", 20-len(str))).String()
+	}
+	goodAA := func(account, amount string) AccountAmount {
+		addr := toAccAddr(account)
+		amt, err := sdk.ParseCoinsNormalized(amount)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", amount)
+		return AccountAmount{Account: addr, Amount: amt}
+	}
+	goodNAV := func(assets, price string) NetAssetPrice {
+		rv := NetAssetPrice{}
+		var err error
+		rv.Assets, err = sdk.ParseCoinNormalized(assets)
+		require.NoError(t, err, "ParseCoinNormalized(%q) (assets)", assets)
+		rv.Price, err = sdk.ParseCoinNormalized(price)
+		require.NoError(t, err, "ParseCoinNormalized(%q) (price)", price)
+		return rv
+	}
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	coins := func(amount int64, denom string) sdk.Coins {
+		return sdk.Coins{{Denom: denom, Amount: sdkmath.NewInt(amount)}}
+	}
 
-// TODO[1789]: func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T)
+	tests := []testCase{
+		{
+			name: "control",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+			},
+		},
+		{
+			name: "okay: with all optional fields",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:           toAccAddr("admin"),
+				MarketId:        1,
+				Inputs:          []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:         []AccountAmount{goodAA("output0", "13cherry")},
+				Fees:            []AccountAmount{goodAA("fee0", "7fig")},
+				Navs:            []NetAssetPrice{goodNAV("13cherry", "1990musd")},
+				MaxExchangeFees: sdk.NewCoins(sdk.NewInt64Coin("grape", 55)),
+				EventTag:        "you're it",
+			},
+		},
+		{
+			name: "no admin",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    "",
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+			},
+			expErrAlways: []string{"invalid administrator \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    "badbadadmin",
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+			},
+			expErrAlways: []string{"invalid administrator \"badbadadmin\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 0,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+			},
+			expErrAlways: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "no inputs",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+			},
+			expErrInReq: []string{"no inputs provided"},
+			expErrInOpt: []string{"input total \"\" does not equal output total \"13cherry\""},
+		},
+		{
+			name: "bad inputs",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs: []AccountAmount{
+					{Account: toAccAddr("input0"), Amount: coins(-3, "cherry")},
+					goodAA("input1", "8cherry"),
+					{Account: "badinput2addr", Amount: coins(4, "cherry")},
+				},
+			},
+			expErrInReq: []string{"no outputs provided"},
+			expErrAlways: []string{
+				"inputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+				"inputs[2]: invalid account \"badinput2addr\": " + bech32Err,
+			},
+		},
+		{
+			name: "no outputs",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+			},
+			expErrInReq: []string{"no outputs provided"},
+			expErrInOpt: []string{"input total \"13cherry\" does not equal output total \"\""},
+		},
+		{
+			name: "bad outputs",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Outputs: []AccountAmount{
+					{Account: toAccAddr("output0"), Amount: coins(-3, "cherry")},
+					goodAA("output1", "8cherry"),
+					{Account: "badoutput2addr", Amount: coins(4, "cherry")},
+				},
+			},
+			expErrInReq: []string{"no inputs provided"},
+			expErrAlways: []string{
+				"outputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+				"outputs[2]: invalid account \"badoutput2addr\": " + bech32Err,
+			},
+		},
+		{
+			name: "input output amounts not equal",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry"), goodAA("input1", "36cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "25cherry"), goodAA("output1", "23cherry")},
+			},
+			expErrAlways: []string{"input total \"49cherry\" does not equal output total \"48cherry\""},
+		},
+		{
+			name: "bad fees",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+				Fees: []AccountAmount{
+					{Account: "badfee2addr", Amount: coins(4, "cherry")},
+					goodAA("fee1", "8cherry"),
+					{Account: toAccAddr("fee0"), Amount: coins(-3, "cherry")},
+				},
+			},
+			expErrAlways: []string{
+				"fees[0]: invalid account \"badfee2addr\": " + bech32Err,
+				"fees[2]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+			},
+		},
+		{
+			name: "bad navs",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+				Navs: []NetAssetPrice{
+					{Assets: coin(-2, "cherry"), Price: coin(87, "nhash")},
+					goodNAV("13cherry", "1990musd"),
+					{Assets: coin(57, "cherry"), Price: coin(52, "x")},
+				},
+			},
+			expErrAlways: []string{
+				"navs[0]: invalid assets \"-2cherry\": negative coin amount: -2",
+				"navs[2]: invalid price \"52x\": invalid denom: x",
+			},
+		},
+		{
+			name: "bad max exchange fees",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:           toAccAddr("admin"),
+				MarketId:        1,
+				Inputs:          []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:         []AccountAmount{goodAA("output0", "13cherry")},
+				MaxExchangeFees: coins(-77, "grape"),
+			},
+			expErrAlways: []string{"invalid max exchange fees \"-77grape\": coin -77grape amount is not positive"},
+		},
+		{
+			name: "bad event tag",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+				EventTag: "p" + strings.Repeat("b", 99) + "f",
+			},
+			expErrAlways: []string{"invalid event tag \"pbbbb...bbbbf\" (length 101): exceeds max length 100"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:           "",
+				MarketId:        0,
+				Inputs:          []AccountAmount{{Account: toAccAddr("input0"), Amount: coins(-3, "cherry")}},
+				Outputs:         []AccountAmount{{Account: toAccAddr("output0"), Amount: coins(-3, "cherry")}},
+				Fees:            []AccountAmount{{Account: "badfee2addr", Amount: coins(4, "cherry")}},
+				Navs:            []NetAssetPrice{{Assets: coin(-2, "cherry"), Price: coin(87, "nhash")}},
+				MaxExchangeFees: coins(-77, "grape"),
+				EventTag:        "p" + strings.Repeat("b", 99) + "f",
+			},
+			expErrAlways: []string{
+				"invalid administrator \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+				"inputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+				"outputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+				"fees[0]: invalid account \"badfee2addr\": " + bech32Err,
+				"navs[0]: invalid assets \"-2cherry\": negative coin amount: -2",
+				"invalid max exchange fees \"-77grape\": coin -77grape amount is not positive",
+				"invalid event tag \"pbbbb...bbbbf\" (length 101): exceeds max length 100",
+			},
+		},
+	}
 
-// TODO[1789]: func TestMsgMarketReleaseCommitmentsRequest_ValidateBasic(t *testing.T)
+	for _, tc := range tests {
+		for _, requireInputs := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s: Validate(%t)", tc.name, requireInputs), func(t *testing.T) {
+				expErr := getExpErr(tc, requireInputs)
+				var err error
+				testFunc := func() {
+					err = tc.msg.Validate(requireInputs)
+				}
+				require.NotPanics(t, testFunc, "%T.Validate(%t)", tc.msg, requireInputs)
+				assertions.AssertErrorContents(t, err, expErr, "%T.Validate(%t) error", tc.msg, requireInputs)
+			})
+		}
+
+		t.Run(fmt.Sprintf("%s: ValidateBasic()", tc.name), func(t *testing.T) {
+			expErr := getExpErr(tc, true)
+			testValidateBasic(t, &tc.msg, expErr)
+		})
+	}
+}
+
+func TestMsgMarketReleaseCommitmentsRequest_ValidateBasic(t *testing.T) {
+	toAccAddr := func(str string) string {
+		return sdk.AccAddress(str + strings.Repeat("_", 20-len(str))).String()
+	}
+
+	tests := []struct {
+		name   string
+		msg    MsgMarketReleaseCommitmentsRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  1,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+			},
+		},
+		{
+			name: "control with optional fields",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  1,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+				EventTag:  "tagtagtag",
+			},
+		},
+		{
+			name: "no admin",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     "",
+				MarketId:  1,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+			},
+			expErr: []string{"invalid administrator \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     "badbadadmin",
+				MarketId:  1,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+			},
+			expErr: []string{"invalid administrator \"badbadadmin\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  0,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "nil to release",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  1,
+				ToRelease: nil,
+			},
+			expErr: []string{"nothing to release"},
+		},
+		{
+			name: "empty to release",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  1,
+				ToRelease: []AccountAmount{},
+			},
+			expErr: []string{"nothing to release"},
+		},
+		{
+			name: "bad to release entries",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				ToRelease: []AccountAmount{
+					{Account: "torelease0"},
+					{Account: toAccAddr("torelease1")},
+					{Account: toAccAddr("torelease2"), Amount: sdk.Coins{sdk.Coin{Denom: "cherry", Amount: sdkmath.NewInt(-1)}}},
+				},
+			},
+			expErr: []string{
+				"to release[0]: invalid account \"torelease0\": " + bech32Err,
+				"to release[2]: invalid amount \"-1cherry\": coin -1cherry amount is not positive",
+			},
+		},
+		{
+			name: "bad event tag",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  1,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+				EventTag:  "abcd" + strings.Repeat("M", 93) + "wxyz",
+			},
+			expErr: []string{"invalid event tag \"abcdM...Mwxyz\" (length 101): exceeds max length 100"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     "",
+				MarketId:  0,
+				ToRelease: nil,
+				EventTag:  "abcd" + strings.Repeat("M", 93) + "wxyz",
+			},
+			expErr: []string{
+				"invalid administrator \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+				"nothing to release",
+				"invalid event tag \"abcdM...Mwxyz\" (length 101): exceeds max length 100",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 func TestMsgMarketSetOrderExternalIDRequest_ValidateBasic(t *testing.T) {
 	admin := sdk.AccAddress("admin_address_______").String()
@@ -1312,9 +1808,148 @@ func TestMsgMarketUpdateUserSettleRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-// TODO[1789]: func TestMsgMarketUpdateAllowCommitmentsRequest_ValidateBasic(t *testing.T)
+func TestMsgMarketUpdateAllowCommitmentsRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgMarketUpdateAllowCommitmentsRequest
+		expErr []string
+	}{
+		{
+			name: "control: false",
+			msg: MsgMarketUpdateAllowCommitmentsRequest{
+				Admin:            sdk.AccAddress("admin_______________").String(),
+				MarketId:         1,
+				AllowCommitments: false,
+			},
+		},
+		{
+			name: "control: true",
+			msg: MsgMarketUpdateAllowCommitmentsRequest{
+				Admin:            sdk.AccAddress("admin_______________").String(),
+				MarketId:         1,
+				AllowCommitments: true,
+			},
+		},
+		{
+			name: "no admin",
+			msg: MsgMarketUpdateAllowCommitmentsRequest{
+				Admin:    "",
+				MarketId: 1,
+			},
+			expErr: []string{"invalid administrator \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketUpdateAllowCommitmentsRequest{
+				Admin:    "notanadminaddr",
+				MarketId: 1,
+			},
+			expErr: []string{"invalid administrator \"notanadminaddr\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgMarketUpdateAllowCommitmentsRequest{
+				Admin:    sdk.AccAddress("admin_______________").String(),
+				MarketId: 0,
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "multiple errors",
+			msg:  MsgMarketUpdateAllowCommitmentsRequest{},
+			expErr: []string{
+				"invalid administrator \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+			},
+		},
+	}
 
-// TODO[1789]: func TestMsgMarketUpdateIntermediaryDenomRequest_ValidateBasic(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgMarketUpdateIntermediaryDenomRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgMarketUpdateIntermediaryDenomRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             sdk.AccAddress("admin_______________").String(),
+				MarketId:          1,
+				IntermediaryDenom: "musd",
+			},
+		},
+		{
+			name: "no admin",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             "",
+				MarketId:          1,
+				IntermediaryDenom: "musd",
+			},
+			expErr: []string{"invalid administrator \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             "notanadminaddr",
+				MarketId:          1,
+				IntermediaryDenom: "musd",
+			},
+			expErr: []string{"invalid administrator \"notanadminaddr\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             sdk.AccAddress("admin_______________").String(),
+				MarketId:          0,
+				IntermediaryDenom: "musd",
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "no intermediary denom",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             sdk.AccAddress("admin_______________").String(),
+				MarketId:          1,
+				IntermediaryDenom: "",
+			},
+		},
+		{
+			name: "invalid intermediary denom",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             sdk.AccAddress("admin_______________").String(),
+				MarketId:          1,
+				IntermediaryDenom: "x",
+			},
+			expErr: []string{"invalid intermediary denom: invalid denom: x"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             "",
+				MarketId:          0,
+				IntermediaryDenom: "x",
+			},
+			expErr: []string{
+				"invalid administrator \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+				"invalid intermediary denom: invalid denom: x",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 func TestMsgMarketManagePermissionsRequest_ValidateBasic(t *testing.T) {
 	goodAdminAddr := sdk.AccAddress("goodAdminAddr_______").String()
@@ -2264,7 +2899,62 @@ func TestMsgGovManageFeesRequest_HasUpdates(t *testing.T) {
 	}
 }
 
-// TODO[1789]: func TestMsgGovCloseMarketRequest_ValidateBasic(t *testing.T)
+func TestMsgGovCloseMarketRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgGovCloseMarketRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgGovCloseMarketRequest{
+				Authority: sdk.AccAddress("authority___________").String(),
+				MarketId:  1,
+			},
+		},
+		{
+			name: "no authority",
+			msg: MsgGovCloseMarketRequest{
+				Authority: "",
+				MarketId:  1,
+			},
+			expErr: []string{"invalid authority \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad authority",
+			msg: MsgGovCloseMarketRequest{
+				Authority: "notanauthorityaddr",
+				MarketId:  1,
+			},
+			expErr: []string{"invalid authority \"notanauthorityaddr\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgGovCloseMarketRequest{
+				Authority: sdk.AccAddress("authority___________").String(),
+				MarketId:  0,
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgGovCloseMarketRequest{
+				Authority: "",
+				MarketId:  0,
+			},
+			expErr: []string{
+				"invalid authority \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
 
 func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("authority___________").String()
