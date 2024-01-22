@@ -148,6 +148,7 @@ func ValidateEventTag(eventTag string) error {
 }
 
 // BuildCommitmentTransfers builds all of the transfers needed to process the provided commitment transfers.
+// Contract: The inputs, outputs, and fees must be simplified using SimplifyAccountAmounts.
 func BuildCommitmentTransfers(marketID uint32, inputs, outputs, fees []AccountAmount) ([]*Transfer, error) {
 	rv, err := buildPrimaryTransfers(inputs, outputs)
 	if err != nil {
@@ -192,43 +193,57 @@ func (m denomSourceMap) sum() sdk.Coins {
 	return rv
 }
 
-// useFunds finds the coin amount among the denomSourceMap, and removes that amount from the map.
-func useFunds(coin sdk.Coin, funds denomSourceMap) ([]AccountAmount, error) {
+// useCoin finds the coin amount among this denomSourceMap, removes that amount from the map,
+// and returns AccountAmount entries for the funds used.
+func (m denomSourceMap) useCoin(coin sdk.Coin, splittableSource string) ([]AccountAmount, error) {
 	var rv []AccountAmount
 	amtLeft := coin.Amount
-	for amtLeft.IsPositive() && len(funds[coin.Denom]) > 0 {
-		if funds[coin.Denom][0].int.LTE(amtLeft) {
+	for amtLeft.IsPositive() && len(m[coin.Denom]) > 0 {
+		if m[coin.Denom][0].int.LTE(amtLeft) {
 			rv = append(rv, AccountAmount{
-				Account: funds[coin.Denom][0].account,
-				Amount:  sdk.Coins{sdk.Coin{Denom: coin.Denom, Amount: funds[coin.Denom][0].int}},
+				Account: m[coin.Denom][0].account,
+				Amount:  sdk.Coins{sdk.Coin{Denom: coin.Denom, Amount: m[coin.Denom][0].int}},
 			})
-			amtLeft = amtLeft.Sub(funds[coin.Denom][0].int)
-			funds[coin.Denom] = funds[coin.Denom][1:]
+			amtLeft = amtLeft.Sub(m[coin.Denom][0].int)
+			m[coin.Denom] = m[coin.Denom][1:]
 			continue
 		}
 
 		rv = append(rv, AccountAmount{
-			Account: funds[coin.Denom][0].account,
+			Account: m[coin.Denom][0].account,
 			Amount:  sdk.Coins{sdk.Coin{Denom: coin.Denom, Amount: amtLeft}},
 		})
+		m[coin.Denom][0].int = m[coin.Denom][0].int.Sub(amtLeft)
 		amtLeft = sdkmath.ZeroInt()
-		funds[coin.Denom][0].int = funds[coin.Denom][0].int.Sub(amtLeft)
 	}
 
-	if len(funds[coin.Denom]) == 0 {
-		delete(funds, coin.Denom)
+	if len(m[coin.Denom]) == 0 {
+		delete(m, coin.Denom)
 	}
 
 	if !amtLeft.IsZero() {
-		return nil, fmt.Errorf("failed to allocate %s to outputs: %s left over", coin, amtLeft)
+		return nil, fmt.Errorf("failed to allocate %s to %s: %s left over", coin, splittableSource, amtLeft)
 	}
 	return rv, nil
+}
+
+// useCoins calls useCoin on each of the provided coins.
+func (m denomSourceMap) useCoins(coins sdk.Coins, splittableSource string) ([]AccountAmount, error) {
+	var rv []AccountAmount
+	for _, coin := range coins {
+		splits, err := m.useCoin(coin, splittableSource)
+		if err != nil {
+			return nil, err
+		}
+		rv = append(rv, splits...)
+	}
+	return SimplifyAccountAmounts(rv), nil
 }
 
 // buildPrimaryTransfers builds the transfers for a set of inputs and outputs.
 func buildPrimaryTransfers(inputs, outputs []AccountAmount) ([]*Transfer, error) {
 	if len(inputs) == 1 || len(outputs) == 1 {
-		rv := make([]*Transfer, 1, 2)
+		rv := make([]*Transfer, 1, 2) // 1 extra cap to maybe hold the fees transfer.
 		rv[0] = &Transfer{
 			Inputs:  AccountAmountsToBankInputs(inputs...),
 			Outputs: AccountAmountsToBankOutputs(outputs...),
@@ -238,30 +253,28 @@ func buildPrimaryTransfers(inputs, outputs []AccountAmount) ([]*Transfer, error)
 
 	splitInputs := len(inputs) > len(outputs)
 	mainEntries, splittableEntries := inputs, outputs
+	mainSource, splittableSource := "inputs", "outputs"
 	if splitInputs {
 		mainEntries, splittableEntries = outputs, inputs
+		mainSource, splittableSource = "outputs", "inputs"
 	}
 
 	funds := newDenomSourceMap(splittableEntries)
-	rv := make([]*Transfer, 0, len(mainEntries)+1)
+	rv := make([]*Transfer, 0, len(mainEntries)+1) // 1 extra cap to maybe hold the fees transfer.
 	for _, entry := range mainEntries {
-		var trSplits []AccountAmount
-		for _, coin := range entry.Amount {
-			coinSplits, err := useFunds(coin, funds)
-			if err != nil {
-				return nil, err
-			}
-			trSplits = append(trSplits, coinSplits...)
+		splits, err := funds.useCoins(entry.Amount, splittableSource)
+		if err != nil {
+			return nil, err
 		}
 
 		if !splitInputs {
 			rv = append(rv, &Transfer{
 				Inputs:  AccountAmountsToBankInputs(entry),
-				Outputs: AccountAmountsToBankOutputs(SimplifyAccountAmounts(trSplits)...),
+				Outputs: AccountAmountsToBankOutputs(SimplifyAccountAmounts(splits)...),
 			})
 		} else {
 			rv = append(rv, &Transfer{
-				Inputs:  AccountAmountsToBankInputs(SimplifyAccountAmounts(trSplits)...),
+				Inputs:  AccountAmountsToBankInputs(SimplifyAccountAmounts(splits)...),
 				Outputs: AccountAmountsToBankOutputs(entry),
 			})
 		}
@@ -269,11 +282,7 @@ func buildPrimaryTransfers(inputs, outputs []AccountAmount) ([]*Transfer, error)
 
 	unallocated := funds.sum()
 	if !unallocated.IsZero() {
-		source := "outputs"
-		if splitInputs {
-			source = "inputs"
-		}
-		return nil, fmt.Errorf("%s are left with %s in unallocated funds", source, unallocated)
+		return nil, fmt.Errorf("%s are left with %s in unallocated funds", mainSource, unallocated)
 	}
 
 	return rv, nil
@@ -285,12 +294,11 @@ func buildFeesTransfer(marketID uint32, fees []AccountAmount) *Transfer {
 		return nil
 	}
 
-	output := AccountAmount{
-		Account: GetMarketAddress(marketID).String(),
-		Amount:  SumAccountAmounts(fees),
-	}
 	return &Transfer{
-		Inputs:  AccountAmountsToBankInputs(fees...),
-		Outputs: AccountAmountsToBankOutputs(output),
+		Inputs: AccountAmountsToBankInputs(fees...),
+		Outputs: AccountAmountsToBankOutputs(AccountAmount{
+			Account: GetMarketAddress(marketID).String(),
+			Amount:  SumAccountAmounts(fees),
+		}),
 	}
 }
