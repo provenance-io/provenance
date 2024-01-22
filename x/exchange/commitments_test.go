@@ -120,7 +120,7 @@ func TestAccountAmount_String(t *testing.T) {
 	}
 }
 
-func TestAccountAmount_Validate(t *testing.T) {
+func TestAccountAmount_ValidateWithOptionalAmount(t *testing.T) {
 	tests := []struct {
 		name string
 		val  AccountAmount
@@ -169,8 +169,77 @@ func TestAccountAmount_Validate(t *testing.T) {
 			name: "zero coin in amount",
 			val: AccountAmount{
 				Account: sdk.AccAddress("account_____________").String(),
-				Amount:  sdk.NewCoins(sdk.Coin{Denom: "zcoin", Amount: sdk.NewInt(0)}),
+				Amount:  sdk.Coins{sdk.Coin{Denom: "zcoin", Amount: sdk.NewInt(0)}},
 			},
+			exp: "invalid amount \"0zcoin\": coin 0zcoin amount is not positive",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = tc.val.ValidateWithOptionalAmount()
+			}
+			require.NotPanics(t, testFunc, "%#v.ValidateWithOptionalAmount()", tc.val)
+			assertions.AssertErrorValue(t, err, tc.exp, "ValidateWithOptionalAmount() result")
+		})
+	}
+}
+
+func TestAccountAmount_Validate(t *testing.T) {
+	tests := []struct {
+		name string
+		val  AccountAmount
+		exp  string
+	}{
+		{
+			name: "okay",
+			val: AccountAmount{
+				Account: sdk.AccAddress("account_____________").String(),
+				Amount:  sdk.NewCoins(sdk.NewInt64Coin("apple", 12)),
+			},
+			exp: "",
+		},
+		{
+			name: "bad account",
+			val: AccountAmount{
+				Account: "notanaccount",
+				Amount:  sdk.NewCoins(sdk.NewInt64Coin("apple", 12)),
+			},
+			exp: "invalid account \"notanaccount\": decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "bad amount denom",
+			val: AccountAmount{
+				Account: sdk.AccAddress("account_____________").String(),
+				Amount:  sdk.Coins{sdk.Coin{Denom: "x", Amount: sdk.NewInt(12)}},
+			},
+			exp: "invalid amount \"12x\": invalid denom: x",
+		},
+		{
+			name: "negative amount",
+			val: AccountAmount{
+				Account: sdk.AccAddress("account_____________").String(),
+				Amount:  sdk.Coins{sdk.Coin{Denom: "negcoin", Amount: sdk.NewInt(-3)}},
+			},
+			exp: "invalid amount \"-3negcoin\": coin -3negcoin amount is not positive",
+		},
+		{
+			name: "no amount",
+			val: AccountAmount{
+				Account: sdk.AccAddress("account_____________").String(),
+				Amount:  nil,
+			},
+			exp: "invalid amount \"\": cannot be zero",
+		},
+		{
+			name: "zero coin in amount",
+			val: AccountAmount{
+				Account: sdk.AccAddress("account_____________").String(),
+				Amount:  sdk.Coins{sdk.Coin{Denom: "zcoin", Amount: sdk.NewInt(0)}},
+			},
+			exp: "invalid amount \"0zcoin\": coin 0zcoin amount is not positive",
 		},
 	}
 
@@ -256,7 +325,7 @@ func TestSimplifyAccountAmounts(t *testing.T) {
 		{
 			name:     "empty",
 			entries:  []AccountAmount{},
-			expected: nil,
+			expected: []AccountAmount{},
 		},
 		{
 			name:     "one entry",

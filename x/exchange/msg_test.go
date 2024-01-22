@@ -1034,12 +1034,14 @@ func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
 					{Account: toAccAddr("input0"), Amount: coins(-3, "cherry")},
 					goodAA("input1", "8cherry"),
 					{Account: "badinput2addr", Amount: coins(4, "cherry")},
+					{Account: toAccAddr("input3"), Amount: nil},
 				},
 			},
 			expErrInReq: []string{"no outputs provided"},
 			expErrAlways: []string{
 				"inputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
 				"inputs[2]: invalid account \"badinput2addr\": " + bech32Err,
+				"inputs[3]: invalid amount \"\": cannot be zero",
 			},
 		},
 		{
@@ -1061,12 +1063,14 @@ func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
 					{Account: toAccAddr("output0"), Amount: coins(-3, "cherry")},
 					goodAA("output1", "8cherry"),
 					{Account: "badoutput2addr", Amount: coins(4, "cherry")},
+					{Account: toAccAddr("output3"), Amount: sdk.Coins{}},
 				},
 			},
 			expErrInReq: []string{"no inputs provided"},
 			expErrAlways: []string{
 				"outputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
 				"outputs[2]: invalid account \"badoutput2addr\": " + bech32Err,
+				"outputs[3]: invalid amount \"\": cannot be zero",
 			},
 		},
 		{
@@ -1087,14 +1091,16 @@ func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
 				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
 				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
 				Fees: []AccountAmount{
-					{Account: "badfee2addr", Amount: coins(4, "cherry")},
+					{Account: "badfee0addr", Amount: coins(4, "cherry")},
 					goodAA("fee1", "8cherry"),
-					{Account: toAccAddr("fee0"), Amount: coins(-3, "cherry")},
+					{Account: toAccAddr("fee2"), Amount: coins(-3, "cherry")},
+					{Account: toAccAddr("fee3"), Amount: nil},
 				},
 			},
 			expErrAlways: []string{
-				"fees[0]: invalid account \"badfee2addr\": " + bech32Err,
+				"fees[0]: invalid account \"badfee0addr\": " + bech32Err,
 				"fees[2]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+				"fees[3]: invalid amount \"\": cannot be zero",
 			},
 		},
 		{

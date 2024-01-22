@@ -36,13 +36,24 @@ func (a AccountAmount) String() string {
 	return fmt.Sprintf("%s:%q", a.Account, a.Amount)
 }
 
-// Validate returns an error if this AccountAmount is invalid.
-func (a AccountAmount) Validate() error {
+// ValidateWithOptionalAmount returns an error if this AccountAmount is invalid. The amount is allowed to be empty.
+func (a AccountAmount) ValidateWithOptionalAmount() error {
 	if _, err := sdk.AccAddressFromBech32(a.Account); err != nil {
 		return fmt.Errorf("invalid account %q: %w", a.Account, err)
 	}
 	if err := a.Amount.Validate(); err != nil {
 		return fmt.Errorf("invalid amount %q: %w", a.Amount, err)
+	}
+	return nil
+}
+
+// Validate returns an error if this AccountAmount is invalid or has a zero amount.
+func (a AccountAmount) Validate() error {
+	if err := a.ValidateWithOptionalAmount(); err != nil {
+		return err
+	}
+	if a.Amount.IsZero() {
+		return fmt.Errorf("invalid amount %q: cannot be zero", a.Amount)
 	}
 	return nil
 }

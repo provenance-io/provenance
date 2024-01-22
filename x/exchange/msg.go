@@ -335,7 +335,7 @@ func (m MsgMarketReleaseCommitmentsRequest) ValidateBasic() error {
 		errs = append(errs, errors.New("nothing to release"))
 	} else {
 		for i, toRelease := range m.ToRelease {
-			if err := toRelease.Validate(); err != nil {
+			if err := toRelease.ValidateWithOptionalAmount(); err != nil {
 				errs = append(errs, fmt.Errorf("to release[%d]: %w", i, err))
 			}
 		}
