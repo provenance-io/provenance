@@ -310,6 +310,11 @@ func (s *TestSuite) copyMarket(orig exchange.Market) exchange.Market {
 		AccessGrants:              s.copyAccessGrants(orig.AccessGrants),
 		ReqAttrCreateAsk:          s.copyStrings(orig.ReqAttrCreateAsk),
 		ReqAttrCreateBid:          s.copyStrings(orig.ReqAttrCreateBid),
+		AllowCommitments:          orig.AllowCommitments,
+		FeeCreateCommitmentFlat:   s.copyCoins(orig.FeeCreateCommitmentFlat),
+		CommitmentSettlementBips:  orig.CommitmentSettlementBips,
+		IntermediaryDenom:         orig.IntermediaryDenom,
+		ReqAttrCreateCommitment:   s.copyStrings(orig.ReqAttrCreateCommitment),
 	}
 }
 
@@ -369,6 +374,20 @@ func (s *TestSuite) copyBidOrder(orig *exchange.BidOrder) *exchange.BidOrder {
 	}
 }
 
+// copyCommitment creates a copy of a commitment.
+func (s *TestSuite) copyCommitment(orig exchange.Commitment) exchange.Commitment {
+	return exchange.Commitment{
+		Account:  orig.Account,
+		MarketId: orig.MarketId,
+		Amount:   s.copyCoins(orig.Amount),
+	}
+}
+
+// copyCommitments creates a copy of a slice of commitments.
+func (s *TestSuite) copyCommitments(orig []exchange.Commitment) []exchange.Commitment {
+	return copySlice(orig, s.copyCommitment)
+}
+
 // untypeEvent applies sdk.TypedEventToEvent(tev) requiring it to not error.
 func (s *TestSuite) untypeEvent(tev proto.Message) sdk.Event {
 	rv, err := sdk.TypedEventToEvent(tev)
@@ -422,6 +441,7 @@ func (s *TestSuite) copyGenState(genState *exchange.GenesisState) *exchange.Gene
 		Orders:       s.copyOrders(genState.Orders),
 		LastMarketId: genState.LastMarketId,
 		LastOrderId:  genState.LastOrderId,
+		Commitments:  s.copyCommitments(genState.Commitments),
 	}
 }
 
@@ -490,7 +510,55 @@ func (s *TestSuite) sortGenState(genState *exchange.GenesisState) *exchange.Gene
 			return genState.Orders[i].OrderId < genState.Orders[j].OrderId
 		})
 	}
+	if len(genState.Commitments) > 0 {
+		sort.Slice(genState.Commitments, func(i, j int) bool {
+			// compare market ids first
+			if genState.Commitments[i].MarketId != genState.Commitments[j].MarketId {
+				return genState.Commitments[i].MarketId < genState.Commitments[j].MarketId
+			}
+			// Then accounts. These need to be ordered by their byte representation.
+			accd := s.compareAddrs(genState.Commitments[i].Account, genState.Commitments[j].Account)
+			if accd != 0 {
+				return accd < 0
+			}
+			// The market and account are the same. Since those are the only thing used in state
+			// store keys of commitments, we don't compare the amounts. Just keep the existing ordering.
+			return false
+		})
+	}
 	return genState
+}
+
+// compareAddrs compares the two addresses in their byte representation.
+// Returns -1 if addri < addrj, 0 if addri = addrj, and 1 if addri > addrj.
+//
+// This is an inefficient way of sorting and shouldn't be used outside unit tests.
+// When used for sorting, the entries that are bech32 strings are sorted first,
+// in byte order; then the non-bech32 strings follow in string order.
+func (s *TestSuite) compareAddrs(addri, addrj string) int {
+	if addri == addrj {
+		return 0
+	}
+
+	acci, erri := sdk.AccAddressFromBech32(addri)
+	accj, errj := sdk.AccAddressFromBech32(addrj)
+	switch {
+	case erri == nil && errj == nil:
+		// They're both addresses, compare the bytes.
+		return bytes.Compare(acci, accj)
+	case erri == nil:
+		// Only i is an actual address, so say addri < addrj
+		return -1
+	case errj == nil:
+		// Only j is an actual address, so say addri > addrj
+		return 1
+	default:
+		// Neither are actual addresses, so just compare the strings.
+		if addri < addrj {
+			return -1
+		}
+		return 1
+	}
 }
 
 // getOrderIDStr gets a string of the given order's id.
