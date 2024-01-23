@@ -33,6 +33,7 @@ import (
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
+	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -3912,6 +3913,66 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 				s.Require().Contains(outStr, tc.expErr, "GetCmdAddNetAssetValues output")
 			} else {
 				s.Require().NoError(err, "GetCmdAddNetAssetValues error")
+			}
+		})
+	}
+}
+
+func (s *IntegrationCLITestSuite) TestParseNetAssertValueString() {
+	testCases := []struct {
+		name           string
+		netAssetValues string
+		expErr         string
+		expResult      []types.NetAssetValue
+	}{
+		{
+			name:           "successfully parses empty string",
+			netAssetValues: "",
+			expErr:         "",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "invalid coin",
+			netAssetValues: "notacoin,1",
+			expErr:         "invalid coin notacoin",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "invalid volume string",
+			netAssetValues: "1hotdog,invalidvolume",
+			expErr:         "invalid volume invalidvolume",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "invalid amount of args",
+			netAssetValues: "1hotdog,invalidvolume,notsupposedtobehere",
+			expErr:         "invalid net asset value, expected coin,volume",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "successfully parse single nav",
+			netAssetValues: "1hotdog,10",
+			expErr:         "",
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 10}},
+		},
+		{
+			name:           "successfully parse multi nav",
+			netAssetValues: "1hotdog,10;20jackthecat,40",
+			expErr:         "",
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 10}, {Price: sdk.NewInt64Coin("jackthecat", 20), Volume: 40}},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			result, err := cli.ParseNetAssetValueString(tc.netAssetValues)
+			if len(tc.expErr) > 0 {
+				s.Assert().Equal(tc.expErr, err.Error())
+				s.Assert().Empty(result)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().ElementsMatch(result, tc.expResult)
 			}
 		})
 	}
