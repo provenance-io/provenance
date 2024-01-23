@@ -779,7 +779,148 @@ func TestValidateEventTag(t *testing.T) {
 	}
 }
 
-// TODO[1789]: func TestBuildCommitmentTransfers(t *testing.T)
+func TestBuildCommitmentTransfers(t *testing.T) {
+	coins := func(str string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+
+	tests := []struct {
+		name     string
+		marketID uint32
+		inputs   []AccountAmount
+		outputs  []AccountAmount
+		fees     []AccountAmount
+		expXfers []*Transfer
+		expErr   string
+	}{
+		//
+		{
+			name:     "error building primary",
+			marketID: 2,
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("3cherry")},
+				{Account: "addr1", Amount: coins("4cherry")},
+				{Account: "addr2", Amount: coins("5cherry")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr3", Amount: coins("2cherry")},
+				{Account: "addr4", Amount: coins("11cherry")},
+			},
+			expErr: "failed to allocate 11cherry to inputs: 1 left over",
+		},
+		{
+			name:     "one primary, no fees",
+			marketID: 2,
+			inputs:   []AccountAmount{{Account: "addr0", Amount: coins("21cherry")}},
+			outputs:  []AccountAmount{{Account: "addr1", Amount: coins("21cherry")}},
+			expXfers: []*Transfer{
+				{
+					Inputs:  []banktypes.Input{{Address: "addr0", Coins: coins("21cherry")}},
+					Outputs: []banktypes.Output{{Address: "addr1", Coins: coins("21cherry")}},
+				},
+			},
+		},
+		{
+			name:     "one primary, with fees",
+			marketID: 2,
+			inputs:   []AccountAmount{{Account: "addr0", Amount: coins("21cherry")}},
+			outputs:  []AccountAmount{{Account: "addr1", Amount: coins("21cherry")}},
+			fees: []AccountAmount{
+				{Account: "addr0", Amount: coins("1fig")},
+				{Account: "addr1", Amount: coins("2fig")},
+			},
+			expXfers: []*Transfer{
+				{
+					Inputs:  []banktypes.Input{{Address: "addr0", Coins: coins("21cherry")}},
+					Outputs: []banktypes.Output{{Address: "addr1", Coins: coins("21cherry")}},
+				},
+				{
+					Inputs: []banktypes.Input{
+						{Address: "addr0", Coins: coins("1fig")},
+						{Address: "addr1", Coins: coins("2fig")},
+					},
+					Outputs: []banktypes.Output{{Address: GetMarketAddress(2).String(), Coins: coins("3fig")}},
+				},
+			},
+		},
+		{
+			name:     "two primary, no fees",
+			marketID: 2,
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("3cherry")},
+				{Account: "addr1", Amount: coins("4cherry")},
+				{Account: "addr2", Amount: coins("5cherry")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr3", Amount: coins("2cherry")},
+				{Account: "addr4", Amount: coins("10cherry")},
+			},
+			expXfers: []*Transfer{
+				{
+					Inputs:  []banktypes.Input{{Address: "addr0", Coins: coins("2cherry")}},
+					Outputs: []banktypes.Output{{Address: "addr3", Coins: coins("2cherry")}},
+				},
+				{
+					Inputs: []banktypes.Input{
+						{Address: "addr0", Coins: coins("1cherry")},
+						{Address: "addr1", Coins: coins("4cherry")},
+						{Address: "addr2", Coins: coins("5cherry")},
+					},
+					Outputs: []banktypes.Output{{Address: "addr4", Coins: coins("10cherry")}},
+				},
+			},
+		},
+		{
+			name:     "two primary, with fees",
+			marketID: 3,
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("8cherry")},
+				{Account: "addr1", Amount: coins("4cherry")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr2", Amount: coins("3cherry")},
+				{Account: "addr3", Amount: coins("4cherry")},
+				{Account: "addr4", Amount: coins("5cherry")},
+			},
+			fees: []AccountAmount{
+				{Account: "addr5", Amount: coins("23fig")},
+			},
+			expXfers: []*Transfer{
+				{
+					Inputs: []banktypes.Input{{Address: "addr0", Coins: coins("8cherry")}},
+					Outputs: []banktypes.Output{
+						{Address: "addr2", Coins: coins("3cherry")},
+						{Address: "addr3", Coins: coins("4cherry")},
+						{Address: "addr4", Coins: coins("1cherry")},
+					},
+				},
+				{
+					Inputs:  []banktypes.Input{{Address: "addr1", Coins: coins("4cherry")}},
+					Outputs: []banktypes.Output{{Address: "addr4", Coins: coins("4cherry")}},
+				},
+				{
+					Inputs:  []banktypes.Input{{Address: "addr5", Coins: coins("23fig")}},
+					Outputs: []banktypes.Output{{Address: GetMarketAddress(3).String(), Coins: coins("23fig")}},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actXfers []*Transfer
+			var err error
+			testFunc := func() {
+				actXfers, err = BuildCommitmentTransfers(tc.marketID, tc.inputs, tc.outputs, tc.fees)
+			}
+			require.NotPanics(t, testFunc, "BuildCommitmentTransfers")
+			assertions.AssertErrorValue(t, err, tc.expErr, "BuildCommitmentTransfers error")
+			assertEqualSlice(t, tc.expXfers, actXfers, transferString, "BuildCommitmentTransfers transfers")
+		})
+	}
+}
 
 func denomSourceMapString(dsm denomSourceMap) string {
 	if dsm == nil {
@@ -787,7 +928,7 @@ func denomSourceMapString(dsm denomSourceMap) string {
 	}
 
 	denoms := make([]string, 0, len(dsm))
-	for denom, _ := range dsm {
+	for denom := range dsm {
 		denoms = append(denoms, denom)
 	}
 	sort.Strings(denoms)
@@ -1283,7 +1424,327 @@ func TestDenomSourceMap_useCoins(t *testing.T) {
 	}
 }
 
-// TODO[1789]: func TestBuildPrimaryTransfers(t *testing.T)
+func TestBuildPrimaryTransfers(t *testing.T) {
+	coins := func(str string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+
+	tests := []struct {
+		name     string
+		inputs   []AccountAmount
+		outputs  []AccountAmount
+		expXfers []*Transfer
+		expErr   string
+	}{
+		{
+			name:    "1 input, 1 output: same amounts",
+			inputs:  []AccountAmount{{Account: "addr0", Amount: coins("45cherry")}},
+			outputs: []AccountAmount{{Account: "addr1", Amount: coins("45cherry")}},
+			expXfers: []*Transfer{
+				{
+					Inputs:  []banktypes.Input{{Address: "addr0", Coins: coins("45cherry")}},
+					Outputs: []banktypes.Output{{Address: "addr1", Coins: coins("45cherry")}},
+				},
+			},
+		},
+		{
+			name:    "1 input, 1 output: input has more",
+			inputs:  []AccountAmount{{Account: "addr0", Amount: coins("46cherry")}},
+			outputs: []AccountAmount{{Account: "addr1", Amount: coins("45cherry")}},
+			expXfers: []*Transfer{
+				{
+					Inputs:  []banktypes.Input{{Address: "addr0", Coins: coins("46cherry")}},
+					Outputs: []banktypes.Output{{Address: "addr1", Coins: coins("45cherry")}},
+				},
+			},
+		},
+		{
+			name:    "1 input, 1 output: output has more",
+			inputs:  []AccountAmount{{Account: "addr0", Amount: coins("45cherry")}},
+			outputs: []AccountAmount{{Account: "addr1", Amount: coins("46cherry")}},
+			expXfers: []*Transfer{
+				{
+					Inputs:  []banktypes.Input{{Address: "addr0", Coins: coins("45cherry")}},
+					Outputs: []banktypes.Output{{Address: "addr1", Coins: coins("46cherry")}},
+				},
+			},
+		},
+		{
+			name:   "1 input, 2 outputs: same amounts",
+			inputs: []AccountAmount{{Account: "addr0", Amount: coins("11cherry")}},
+			outputs: []AccountAmount{
+				{Account: "addr1", Amount: coins("8cherry")},
+				{Account: "addr2", Amount: coins("3cherry")},
+			},
+			expXfers: []*Transfer{
+				{
+					Inputs: []banktypes.Input{{Address: "addr0", Coins: coins("11cherry")}},
+					Outputs: []banktypes.Output{
+						{Address: "addr1", Coins: coins("8cherry")},
+						{Address: "addr2", Coins: coins("3cherry")},
+					},
+				},
+			},
+		},
+		{
+			name:   "1 input, 2 outputs: input has more",
+			inputs: []AccountAmount{{Account: "addr0", Amount: coins("12cherry")}},
+			outputs: []AccountAmount{
+				{Account: "addr1", Amount: coins("8cherry")},
+				{Account: "addr2", Amount: coins("3cherry")},
+			},
+			expXfers: []*Transfer{
+				{
+					Inputs: []banktypes.Input{{Address: "addr0", Coins: coins("12cherry")}},
+					Outputs: []banktypes.Output{
+						{Address: "addr1", Coins: coins("8cherry")},
+						{Address: "addr2", Coins: coins("3cherry")},
+					},
+				},
+			},
+		},
+		{
+			name:   "1 input, 2 outputs: outputs have more",
+			inputs: []AccountAmount{{Account: "addr0", Amount: coins("11cherry")}},
+			outputs: []AccountAmount{
+				{Account: "addr1", Amount: coins("9cherry")},
+				{Account: "addr2", Amount: coins("3cherry")},
+			},
+			expXfers: []*Transfer{
+				{
+					Inputs: []banktypes.Input{{Address: "addr0", Coins: coins("11cherry")}},
+					Outputs: []banktypes.Output{
+						{Address: "addr1", Coins: coins("9cherry")},
+						{Address: "addr2", Coins: coins("3cherry")},
+					},
+				},
+			},
+		},
+		{
+			name: "2 inputs, 1 output: same amounts",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("3banana,15cherry")},
+				{Account: "addr1", Amount: coins("4banana,16cherry")},
+			},
+			outputs: []AccountAmount{{Account: "addr2", Amount: coins("7banana,31cherry")}},
+			expXfers: []*Transfer{
+				{
+					Inputs: []banktypes.Input{
+						{Address: "addr0", Coins: coins("3banana,15cherry")},
+						{Address: "addr1", Coins: coins("4banana,16cherry")},
+					},
+					Outputs: []banktypes.Output{{Address: "addr2", Coins: coins("7banana,31cherry")}},
+				},
+			},
+		},
+		{
+			name: "2 inputs, 1 output: inputs have more",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("13banana,15cherry")},
+				{Account: "addr1", Amount: coins("4banana,17cherry")},
+			},
+			outputs: []AccountAmount{{Account: "addr2", Amount: coins("7banana,31cherry")}},
+			expXfers: []*Transfer{
+				{
+					Inputs: []banktypes.Input{
+						{Address: "addr0", Coins: coins("13banana,15cherry")},
+						{Address: "addr1", Coins: coins("4banana,17cherry")},
+					},
+					Outputs: []banktypes.Output{{Address: "addr2", Coins: coins("7banana,31cherry")}},
+				},
+			},
+		},
+		{
+			name: "2 inputs, 1 output: output has more",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("3banana,15cherry")},
+				{Account: "addr1", Amount: coins("4banana,16cherry")},
+			},
+			outputs: []AccountAmount{{Account: "addr2", Amount: coins("8banana,32cherry")}},
+			expXfers: []*Transfer{
+				{
+					Inputs: []banktypes.Input{
+						{Address: "addr0", Coins: coins("3banana,15cherry")},
+						{Address: "addr1", Coins: coins("4banana,16cherry")},
+					},
+					Outputs: []banktypes.Output{{Address: "addr2", Coins: coins("8banana,32cherry")}},
+				},
+			},
+		},
+		{
+			name: "2 inputs, 2 outputs: same amounts",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("3banana,15cherry")},
+				{Account: "addr1", Amount: coins("16cherry")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr1", Amount: coins("3banana")},
+				{Account: "addr2", Amount: coins("31cherry")},
+			},
+			expXfers: []*Transfer{
+				{
+					Inputs: []banktypes.Input{{Address: "addr0", Coins: coins("3banana,15cherry")}},
+					Outputs: []banktypes.Output{
+						{Address: "addr1", Coins: coins("3banana")},
+						{Address: "addr2", Coins: coins("15cherry")},
+					},
+				},
+				{
+					Inputs:  []banktypes.Input{{Address: "addr1", Coins: coins("16cherry")}},
+					Outputs: []banktypes.Output{{Address: "addr2", Coins: coins("16cherry")}},
+				},
+			},
+		},
+		{
+			name: "2 inputs, 2 outputs: inputs have more",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("4banana,15cherry")},
+				{Account: "addr1", Amount: coins("16cherry")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr1", Amount: coins("3banana")},
+				{Account: "addr2", Amount: coins("31cherry")},
+			},
+			expErr: "failed to allocate 4banana to outputs: 1 left over",
+		},
+		{
+			name: "2 inputs, 2 outputs: outputs have more",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("3banana,15cherry")},
+				{Account: "addr1", Amount: coins("16cherry")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr1", Amount: coins("3banana")},
+				{Account: "addr2", Amount: coins("32cherry")},
+			},
+			expErr: "outputs are left with 1cherry in unallocated funds",
+		},
+		{
+			name: "2 inputs, 3 outputs: same amounts",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("15apple,12orange")},
+				{Account: "addr1", Amount: coins("40acorn,13orange")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("39acorn")},
+				{Account: "addr1", Amount: coins("14apple")},
+				{Account: "addr2", Amount: coins("1acorn,1apple,25orange")},
+			},
+			expXfers: []*Transfer{
+				{
+					Inputs: []banktypes.Input{{Address: "addr0", Coins: coins("15apple,12orange")}},
+					Outputs: []banktypes.Output{
+						{Address: "addr1", Coins: coins("14apple")},
+						{Address: "addr2", Coins: coins("1apple,12orange")},
+					},
+				},
+				{
+					Inputs: []banktypes.Input{{Address: "addr1", Coins: coins("40acorn,13orange")}},
+					Outputs: []banktypes.Output{
+						{Address: "addr0", Coins: coins("39acorn")},
+						{Address: "addr2", Coins: coins("1acorn,13orange")},
+					},
+				},
+			},
+		},
+		{
+			name: "2 inputs, 3 outputs: inputs have more",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("15apple,12orange,1fig")},
+				{Account: "addr1", Amount: coins("40acorn,13orange")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("39acorn")},
+				{Account: "addr1", Amount: coins("14apple")},
+				{Account: "addr2", Amount: coins("1acorn,1apple,25orange")},
+			},
+			expErr: "failed to allocate 1fig to outputs: 1 left over",
+		},
+		{
+			name: "2 inputs, 3 outputs: outputs have more",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("15apple,12orange")},
+				{Account: "addr1", Amount: coins("40acorn,13orange")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("39acorn")},
+				{Account: "addr1", Amount: coins("14apple")},
+				{Account: "addr2", Amount: coins("1acorn,1apple,25orange,1fig")},
+			},
+			expXfers: nil,
+			expErr:   "outputs are left with 1fig in unallocated funds",
+		},
+		{
+			name: "3 inputs, 2 outputs: same amounts",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("39acorn")},
+				{Account: "addr1", Amount: coins("14apple")},
+				{Account: "addr2", Amount: coins("1acorn,1apple,25orange")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("15apple,12orange")},
+				{Account: "addr1", Amount: coins("40acorn,13orange")},
+			},
+			expXfers: []*Transfer{
+				{
+					Inputs: []banktypes.Input{
+						{Address: "addr1", Coins: coins("14apple")},
+						{Address: "addr2", Coins: coins("1apple,12orange")},
+					},
+					Outputs: []banktypes.Output{{Address: "addr0", Coins: coins("15apple,12orange")}},
+				},
+				{
+					Inputs: []banktypes.Input{
+						{Address: "addr0", Coins: coins("39acorn")},
+						{Address: "addr2", Coins: coins("1acorn,13orange")},
+					},
+					Outputs: []banktypes.Output{{Address: "addr1", Coins: coins("40acorn,13orange")}},
+				},
+			},
+		},
+		{
+			name: "3 inputs, 2 outputs: inputs have more",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("39acorn")},
+				{Account: "addr1", Amount: coins("14apple")},
+				{Account: "addr2", Amount: coins("1acorn,1apple,26orange")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("15apple,12orange")},
+				{Account: "addr1", Amount: coins("40acorn,13orange")},
+			},
+			expErr: "inputs are left with 1orange in unallocated funds",
+		},
+		{
+			name: "3 inputs, 2 outputs: outputs have more",
+			inputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("39acorn")},
+				{Account: "addr1", Amount: coins("14apple")},
+				{Account: "addr2", Amount: coins("1acorn,1apple,25orange")},
+			},
+			outputs: []AccountAmount{
+				{Account: "addr0", Amount: coins("15apple,12orange")},
+				{Account: "addr1", Amount: coins("40acorn,14orange")},
+			},
+			expErr: "failed to allocate 14orange to inputs: 1 left over",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actXfers []*Transfer
+			var err error
+			testFunc := func() {
+				actXfers, err = buildPrimaryTransfers(tc.inputs, tc.outputs)
+			}
+			require.NotPanics(t, testFunc, "buildPrimaryTransfers")
+			assertions.AssertErrorValue(t, err, tc.expErr, "buildPrimaryTransfers error")
+			assertEqualSlice(t, tc.expXfers, actXfers, transferString, "buildPrimaryTransfers transfers")
+		})
+	}
+}
 
 func TestBuildFeesTransfer(t *testing.T) {
 	coins := func(str string) sdk.Coins {
