@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -1355,9 +1353,6 @@ func ParseRecordSpecID(specID string, name string) (types.MetadataAddress, error
 
 // NetAssetValues query for returning net asset values for a marker
 func (k Keeper) ScopeNetAssetValues(c context.Context, req *types.QueryScopeNetAssetValuesRequest) (*types.QueryScopeNetAssetValuesResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
 	ctx := sdk.UnwrapSDKContext(c)
 
 	scopeID, err := types.MetadataAddressFromBech32(req.Id)
