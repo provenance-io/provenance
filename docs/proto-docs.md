@@ -450,6 +450,8 @@
     - [OwnershipResponse](#provenance.metadata.v1.OwnershipResponse)
     - [QueryParamsRequest](#provenance.metadata.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.metadata.v1.QueryParamsResponse)
+    - [QueryScopeNetAssetValuesRequest](#provenance.metadata.v1.QueryScopeNetAssetValuesRequest)
+    - [QueryScopeNetAssetValuesResponse](#provenance.metadata.v1.QueryScopeNetAssetValuesResponse)
     - [RecordSpecificationRequest](#provenance.metadata.v1.RecordSpecificationRequest)
     - [RecordSpecificationResponse](#provenance.metadata.v1.RecordSpecificationResponse)
     - [RecordSpecificationWrapper](#provenance.metadata.v1.RecordSpecificationWrapper)
@@ -7008,6 +7010,36 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 
 
+<a name="provenance.metadata.v1.QueryScopeNetAssetValuesRequest"></a>
+
+### QueryScopeNetAssetValuesRequest
+QueryNetAssetValuesRequest is the request type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | scopeid metadata address |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.QueryScopeNetAssetValuesResponse"></a>
+
+### QueryScopeNetAssetValuesResponse
+QueryNetAssetValuesRequest is the response type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated | net asset values for scope |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.RecordSpecificationRequest"></a>
 
 ### RecordSpecificationRequest
@@ -7592,6 +7624,7 @@ The specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e606
 | `OSLocatorsByScope` | [OSLocatorsByScopeRequest](#provenance.metadata.v1.OSLocatorsByScopeRequest) | [OSLocatorsByScopeResponse](#provenance.metadata.v1.OSLocatorsByScopeResponse) | OSLocatorsByScope returns all ObjectStoreLocator entries for a for all signer's present in the specified scope. | GET|/provenance/metadata/v1/locator/scope/{scope_id}|
 | `OSAllLocators` | [OSAllLocatorsRequest](#provenance.metadata.v1.OSAllLocatorsRequest) | [OSAllLocatorsResponse](#provenance.metadata.v1.OSAllLocatorsResponse) | OSAllLocators returns all ObjectStoreLocator entries. | GET|/provenance/metadata/v1/locators/all|
 | `AccountData` | [AccountDataRequest](#provenance.metadata.v1.AccountDataRequest) | [AccountDataResponse](#provenance.metadata.v1.AccountDataResponse) | AccountData gets the account data associated with a metadata address. Currently, only scope ids are supported. | GET|/provenance/metadata/v1/accountdata/{metadata_addr}|
+| `ScopeNetAssetValues` | [QueryScopeNetAssetValuesRequest](#provenance.metadata.v1.QueryScopeNetAssetValuesRequest) | [QueryScopeNetAssetValuesResponse](#provenance.metadata.v1.QueryScopeNetAssetValuesResponse) | ScopeNetAssetValues returns net asset values for scope | GET|/provenance/metadata/v1/netassetvalues/{id}|
 
  <!-- end services -->
 

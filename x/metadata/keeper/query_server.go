@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -1349,6 +1351,27 @@ func ParseRecordSpecID(specID string, name string) (types.MetadataAddress, error
 		return types.MetadataAddress{}, sdkerrors.ErrInvalidRequest.Wrap("a name is required when providing a uuid")
 	}
 	return types.RecordSpecMetadataAddress(uid, name), nil
+}
+
+// NetAssetValues query for returning net asset values for a marker
+func (k Keeper) ScopeNetAssetValues(c context.Context, req *types.QueryScopeNetAssetValuesRequest) (*types.QueryScopeNetAssetValuesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	scopeID := types.MetadataAddress(req.Id)
+
+	var navs []types.NetAssetValue
+	err := k.IterateNetAssetValues(ctx, scopeID, func(nav types.NetAssetValue) (stop bool) {
+		navs = append(navs, nav)
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryScopeNetAssetValuesResponse{NetAssetValues: navs}, nil
 }
 
 // hasPageRequest is just for use with the getPageRequest func below.

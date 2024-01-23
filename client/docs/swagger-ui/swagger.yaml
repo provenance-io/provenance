@@ -39670,6 +39670,82 @@ paths:
           format: boolean
       tags:
         - Query
+  '/provenance/metadata/v1/netassetvalues/{id}':
+    get:
+      summary: ScopeNetAssetValues returns net asset values for scope
+      operationId: ScopeNetAssetValues
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              net_asset_values:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    price:
+                      title: price is the complete value of the asset's volume
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    volume:
+                      type: string
+                      format: uint64
+                      title: >-
+                        volume is the number of tokens of the marker that were
+                        purchased for the price
+                    updated_block_height:
+                      type: string
+                      format: uint64
+                      title: updated_block_height is the block height of last update
+                  title: NetAssetValue defines a scope's net asset value
+                title: net asset values for scope
+            description: >-
+              QueryNetAssetValuesRequest is the response type for the
+              Query/NetAssetValues method.
+        default:
+          description: An unexpected error response
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: id
+          description: scopeid metadata address
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   '/provenance/metadata/v1/ownership/{address}':
     get:
       summary: >-
@@ -85796,6 +85872,33 @@ definitions:
       on or off chain) to define an input
 
       parameter
+  provenance.metadata.v1.NetAssetValue:
+    type: object
+    properties:
+      price:
+        title: price is the complete value of the asset's volume
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      volume:
+        type: string
+        format: uint64
+        title: >-
+          volume is the number of tokens of the marker that were purchased for
+          the price
+      updated_block_height:
+        type: string
+        format: uint64
+        title: updated_block_height is the block height of last update
+    title: NetAssetValue defines a scope's net asset value
   provenance.metadata.v1.OSAllLocatorsRequest:
     type: object
     properties:
@@ -86612,6 +86715,45 @@ definitions:
               include_request is a flag for whether to include this request in
               your result.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  provenance.metadata.v1.QueryScopeNetAssetValuesResponse:
+    type: object
+    properties:
+      net_asset_values:
+        type: array
+        items:
+          type: object
+          properties:
+            price:
+              title: price is the complete value of the asset's volume
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            volume:
+              type: string
+              format: uint64
+              title: >-
+                volume is the number of tokens of the marker that were purchased
+                for the price
+            updated_block_height:
+              type: string
+              format: uint64
+              title: updated_block_height is the block height of last update
+          title: NetAssetValue defines a scope's net asset value
+        title: net asset values for scope
+    description: >-
+      QueryNetAssetValuesRequest is the response type for the
+      Query/NetAssetValues method.
   provenance.metadata.v1.Record:
     type: object
     properties:
@@ -93957,33 +94099,6 @@ definitions:
     description: >-
       MsgWriteSessionResponse is the response type for the Msg/WriteSession RPC
       method.
-  provenance.metadata.v1.NetAssetValue:
-    type: object
-    properties:
-      price:
-        title: price is the complete value of the asset's volume
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-      volume:
-        type: string
-        format: uint64
-        title: >-
-          volume is the number of tokens of the marker that were purchased for
-          the price
-      updated_block_height:
-        type: string
-        format: uint64
-        title: updated_block_height is the block height of last update
-    title: NetAssetValue defines a scope's net asset value
   provenance.metadata.v1.SessionIdComponents:
     type: object
     properties:
