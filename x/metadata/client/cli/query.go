@@ -59,7 +59,7 @@ func GetQueryCmd() *cobra.Command {
 		GetValueOwnershipCmd(),
 		GetOSLocatorCmd(),
 		GetAccountDataCmd(),
-		NetAssetValuesCmd(),
+		GetCmdNetAssetValuesQuery(),
 	)
 	return queryCmd
 }
@@ -1111,12 +1111,12 @@ func outputOSLocatorsAll(cmd *cobra.Command) error {
 	return clientCtx.PrintProto(res)
 }
 
-// NetAssetValuesCmd is the CLI command for querying a scope's net asset values.
-func NetAssetValuesCmd() *cobra.Command {
+// GetCmdNetAssetValuesQuery is the CLI command for querying a scope's net asset values.
+func GetCmdNetAssetValuesQuery() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "net-asset-values [scope-id]",
 		Aliases: []string{"nav", "navs"},
-		Short:   "Get scopes's net asset values'",
+		Short:   "Get scope's net asset values'",
 		Example: fmt.Sprintf(`$ %s query metadata net-asset-values scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`, version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

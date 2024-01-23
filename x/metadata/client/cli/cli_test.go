@@ -2180,6 +2180,44 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "blah"),
+				fmt.Sprintf("--%s=%s", cli.FlagVolume, "1"),
+			},
+			expectErrMsg: `invalid argument "blah" for "--usd-mills" flag: strconv.ParseUint: parsing "blah": invalid syntax`,
+		},
+		{
+			name: "should successfully write scope with optional party and rollup",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				scopeSpecID,
+				fmt.Sprintf("%s,servicer,opt;%s,owner", s.accountAddrStr, s.accountAddrStr),
+				s.accountAddrStr,
+				s.accountAddrStr,
+				fmt.Sprintf("--%s", cli.FlagRequirePartyRollup),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "10"),
+				fmt.Sprintf("--%s=%s", cli.FlagVolume, "blah"),
+			},
+			expectErrMsg: `invalid argument "blah" for "--volume" flag: strconv.ParseUint: parsing "blah": invalid syntax`,
+		},
+		{
+			name: "should successfully write scope with optional party and rollup",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				scopeSpecID,
+				fmt.Sprintf("%s,servicer,opt;%s,owner", s.accountAddrStr, s.accountAddrStr),
+				s.accountAddrStr,
+				s.accountAddrStr,
+				fmt.Sprintf("--%s", cli.FlagRequirePartyRollup),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "10"),
 				fmt.Sprintf("--%s=%s", cli.FlagVolume, "1"),
 			},
@@ -3876,7 +3914,7 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 		name   string
 		args   []string
 		expErr string
-		incLog bool // set to true to log the output regardless of failure
+		incLog bool
 	}{
 		{
 			name:   "invalid net asset string",
@@ -3911,6 +3949,38 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 			if len(tc.expErr) > 0 {
 				s.Require().EqualError(err, tc.expErr, "GetCmdAddNetAssetValues error")
 				s.Require().Contains(outStr, tc.expErr, "GetCmdAddNetAssetValues output")
+			} else {
+				s.Require().NoError(err, "GetCmdAddNetAssetValues error")
+			}
+		})
+	}
+}
+
+func (s *IntegrationCLITestSuite) TestGetNetAssetValuesCmd() {
+	scopeID := "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
+
+	tests := []struct {
+		name   string
+		args   []string
+		expErr string
+		incLog bool
+	}{
+		{
+			name: "valid query",
+			args: []string{scopeID},
+		},
+		{
+			name:   "address not meta address",
+			args:   []string{"not-a-scope-id"},
+			expErr: `decoding bech32 failed: invalid separator index -1`,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			_, err := clitestutil.ExecTestCLICmd(s.getClientCtx(), cli.GetCmdNetAssetValuesQuery(), tc.args)
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "GetCmdAddNetAssetValues error")
 			} else {
 				s.Require().NoError(err, "GetCmdAddNetAssetValues error")
 			}
