@@ -3133,6 +3133,7 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 // TODO[1789] func (s *TestSuite) TestQueryServer_GetAllCommitments()
 
 func (s *TestSuite) TestQueryServer_GetMarket() {
+	// TODO[1789]: Update the TestQueryServer_GetMarket tests.
 	testDef := queryTestDef[exchange.QueryGetMarketRequest, exchange.QueryGetMarketResponse]{
 		queryName: "GetMarket",
 		query:     keeper.NewQueryServer(s.k).GetMarket,

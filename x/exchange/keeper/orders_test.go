@@ -2952,3 +2952,5 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 		})
 	}
 }
+
+// TODO[1789]: func (s *TestSuite) TestKeeper_CancelAllOrdersForMarket()
