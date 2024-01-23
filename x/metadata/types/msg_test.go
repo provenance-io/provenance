@@ -245,7 +245,7 @@ func TestWriteScopeRoute(t *testing.T) {
 signers: []
 scope_uuid: ""
 spec_uuid: ""
-usdmils: 0
+usdmills: 0
 volume: 0
 `
 	bz, err := yaml.Marshal(msg)
