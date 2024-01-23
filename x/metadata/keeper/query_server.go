@@ -1360,10 +1360,13 @@ func (k Keeper) ScopeNetAssetValues(c context.Context, req *types.QueryScopeNetA
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	scopeID := types.MetadataAddress(req.Id)
+	scopeID, err := types.MetadataAddressFromBech32(req.Id)
+	if err != nil {
+		return &types.QueryScopeNetAssetValuesResponse{}, fmt.Errorf("error extracting scope address: %w", err)
+	}
 
 	var navs []types.NetAssetValue
-	err := k.IterateNetAssetValues(ctx, scopeID, func(nav types.NetAssetValue) (stop bool) {
+	err = k.IterateNetAssetValues(ctx, scopeID, func(nav types.NetAssetValue) (stop bool) {
 		navs = append(navs, nav)
 		return false
 	})

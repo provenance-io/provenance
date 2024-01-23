@@ -1126,6 +1126,10 @@ func NetAssetValuesCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 			id := strings.TrimSpace(args[0])
+			_, err = types.MetadataAddressFromBech32(id)
+			if err != nil {
+				return err
+			}
 
 			var response *types.QueryScopeNetAssetValuesResponse
 			if response, err = queryClient.ScopeNetAssetValues(
