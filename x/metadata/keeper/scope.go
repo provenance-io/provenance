@@ -707,9 +707,6 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress,
 
 	key := types.NetAssetValueKey(scopeID, netAssetValue.Price.Denom)
 	store := ctx.KVStore(k.storeKey)
-	// if math.NewIntFromUint64(netAssetValue.Volume).GT(marker.GetSupply().Amount) {
-	// 	return fmt.Errorf("volume(%v) cannot exceed marker %q supply(%v) ", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
-	// }
 
 	bz, err := k.cdc.Marshal(&netAssetValue)
 	if err != nil {

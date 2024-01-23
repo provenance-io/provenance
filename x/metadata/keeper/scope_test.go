@@ -2441,3 +2441,182 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 		})
 	}
 }
+
+func (s *ScopeKeeperTestSuite) TestAddSetNetAssetValues() {
+	markerDenom := "jackthecat"
+	mAccount := authtypes.NewBaseAccount(markertypes.MustGetMarkerAddress(markerDenom), nil, 0, 0)
+	s.app.MarkerKeeper.SetMarker(s.FreshCtx(), markertypes.NewMarkerAccount(mAccount, sdk.NewInt64Coin(markerDenom, 1000), s.user1Addr, []markertypes.AccessGrant{{Address: s.user1, Permissions: []markertypes.Access{markertypes.Access_Transfer}}}, markertypes.StatusFinalized, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}))
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+	tests := []struct {
+		name           string
+		scopeID        types.MetadataAddress
+		netAssetValues []types.NetAssetValue
+		source         string
+		expErr         string
+	}{
+		{
+			name:    "Invalid Denom",
+			scopeID: scopeID,
+			netAssetValues: []types.NetAssetValue{
+				{
+					Price: sdk.Coin{
+						Denom:  "invalid",
+						Amount: sdk.NewInt(1000),
+					},
+					Volume: 100,
+				},
+			},
+			source: "source",
+			expErr: "net asset value denom does not exist",
+		},
+		{
+			name:    "Valid Net Asset Values USD",
+			scopeID: scopeID,
+			netAssetValues: []types.NetAssetValue{
+				{
+					Price: sdk.Coin{
+						Denom:  "usd",
+						Amount: sdk.NewInt(1000),
+					},
+					Volume: 100,
+				},
+			},
+			source: "source",
+		},
+		{
+			name:    "Valid Net Asset Values stake",
+			scopeID: scopeID,
+			netAssetValues: []types.NetAssetValue{
+				{
+					Price: sdk.Coin{
+						Denom:  "jackthecat",
+						Amount: sdk.NewInt(1000),
+					},
+					Volume: 100,
+				},
+			},
+			source: "source",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := s.app.MetadataKeeper.AddSetNetAssetValues(s.FreshCtx(), tc.scopeID, tc.netAssetValues, tc.source)
+			if tc.expErr == "" {
+				s.Assert().NoError(err, "AddSetNetAssetValues should have no error.")
+			} else {
+				s.Assert().Error(err, "AddSetNetAssetValues should have error.")
+				s.Assert().Contains(err.Error(), tc.expErr, "AddSetNetAssetValues error message incorrect.")
+			}
+		})
+	}
+}
+
+func (s *ScopeKeeperTestSuite) TestSetNetAssetValue() {
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+	tests := []struct {
+		name          string
+		scopeID       types.MetadataAddress
+		netAssetValue types.NetAssetValue
+		source        string
+		expErr        string
+	}{
+		{
+			name:    "Valid Net Asset Value",
+			scopeID: scopeID,
+			netAssetValue: types.NetAssetValue{
+				Price: sdk.Coin{
+					Denom:  "usd",
+					Amount: sdk.NewInt(1000),
+				},
+				Volume: 100,
+			},
+			source: "test",
+		},
+		{
+			name:    "Invalid Net Asset Value",
+			scopeID: scopeID,
+			netAssetValue: types.NetAssetValue{
+				Price: sdk.Coin{
+					Denom:  "",
+					Amount: sdk.NewInt(1000),
+				},
+				Volume: 100,
+			},
+			source: "source",
+			expErr: "invalid denom: ",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			ctx := s.FreshCtx()
+			err := s.app.MetadataKeeper.SetNetAssetValue(ctx, tc.scopeID, tc.netAssetValue, tc.source)
+			if tc.expErr == "" {
+				s.Require().NoError(err)
+				s.Assert().Len(ctx.EventManager().Events(), 1, "SetNetAssetValue ")
+				s.Assert().Len(ctx.EventManager().Events()[0].Attributes, 4, "SetNetAssetValue should only have one event")
+				s.Assert().Equal("provenance.metadata.v1.EventSetNetAssetValue", ctx.EventManager().Events()[0].Type, "SetNetAssetValue invalid event type")
+				s.Assert().Equal("price", string(ctx.EventManager().Events()[0].Attributes[0].Key), "SetNetAssetValue invalid event key")
+				s.Assert().Equal("\""+tc.netAssetValue.Price.String()+"\"", string(ctx.EventManager().Events()[0].Attributes[0].Value), "SetNetAssetValue")
+				s.Assert().Equal("scope_id", string(ctx.EventManager().Events()[0].Attributes[1].Key), "SetNetAssetValue invalid event key")
+				s.Assert().Equal("\""+scopeID.String()+"\"", string(ctx.EventManager().Events()[0].Attributes[1].Value), "SetNetAssetValue invalid event value")
+				s.Assert().Equal("source", string(ctx.EventManager().Events()[0].Attributes[2].Key), "SetNetAssetValue invalid event key")
+				s.Assert().Equal("\"test\"", string(ctx.EventManager().Events()[0].Attributes[2].Value), "SetNetAssetValue invalid event value")
+				s.Assert().Equal("volume", string(ctx.EventManager().Events()[0].Attributes[3].Key), "SetNetAssetValue invalid event key")
+				s.Assert().Equal(fmt.Sprintf("\"%v\"", tc.netAssetValue.Volume), string(ctx.EventManager().Events()[0].Attributes[3].Value), "SetNetAssetValue invalid event value")
+
+			} else {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErr)
+			}
+		})
+	}
+}
+
+func (s *ScopeKeeperTestSuite) TestRemoveNetAssetValues() {
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+	tests := []struct {
+		name          string
+		scopeID       types.MetadataAddress
+		netAssetValue types.NetAssetValue
+		expErr        string
+	}{
+		{
+			name:    "Valid Removal",
+			scopeID: scopeID,
+			netAssetValue: types.NetAssetValue{
+				Price: sdk.Coin{
+					Denom:  "usd",
+					Amount: sdk.NewInt(1000),
+				},
+				Volume: 100,
+			},
+			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			ctx := s.FreshCtx()
+			err := s.app.MetadataKeeper.SetNetAssetValue(ctx, tc.scopeID, tc.netAssetValue, "test")
+			s.Require().NoError(err, "SetNetAssetValue err")
+			netAssetValues := []types.NetAssetValue{}
+			err = s.app.MetadataKeeper.IterateNetAssetValues(ctx, tc.scopeID, func(state types.NetAssetValue) (stop bool) {
+				netAssetValues = append(netAssetValues, state)
+				return false
+			})
+			s.Require().NoError(err, "IterateNetAssetValues err")
+			s.Require().Len(netAssetValues, 1, "Should have added a NAV")
+			s.Require().Equal(tc.netAssetValue, netAssetValues[0], "Should have added the test case nave.")
+			s.app.MetadataKeeper.RemoveNetAssetValues(ctx, tc.scopeID)
+			netAssetValues = []types.NetAssetValue{}
+			err = s.app.MetadataKeeper.IterateNetAssetValues(ctx, tc.scopeID, func(state types.NetAssetValue) (stop bool) {
+				netAssetValues = append(netAssetValues, state)
+				return false
+			})
+			s.Require().NoError(err, "IterateNetAssetValues err")
+			s.Require().Len(netAssetValues, 0, "Should have removed NAV")
+		})
+	}
+}
