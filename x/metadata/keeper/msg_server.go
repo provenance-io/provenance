@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -43,7 +44,7 @@ func (k msgServer) WriteScope(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdMils)), msg.Volume)
+	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdMills)), msg.Volume)
 	err := k.AddSetNetAssetValues(ctx, msg.Scope.ScopeId, []types.NetAssetValue{nav}, types.ModuleName)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
@@ -745,7 +746,7 @@ func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNet
 
 	scope, found := k.GetScope(ctx, scopeID)
 	if !found {
-		return nil, sdkerrors.ErrNotFound.Wrap(err.Error())
+		return nil, sdkerrors.ErrNotFound.Wrap(fmt.Sprintf("scope not found: %v", scopeID.String()))
 	}
 
 	_, err = k.validateAllRequiredSigned(ctx, scope.GetAllOwnerAddresses(), msg)

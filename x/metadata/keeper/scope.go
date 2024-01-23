@@ -679,9 +679,6 @@ func (k Keeper) ValidateUpdateValueOwners(
 // AddSetNetAssetValues adds a set of net asset values to a scope
 func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress, netAssetValues []types.NetAssetValue, source string) error {
 	for _, nav := range netAssetValues {
-		if nav.Price.Denom == scopeID.String() {
-			return fmt.Errorf("net asset value denom cannot match scope id %q", scopeID.String())
-		}
 		if nav.Price.Denom != types.UsdDenom {
 			_, err := k.markerKeeper.GetMarkerByDenom(ctx, nav.Price.Denom)
 			if err != nil {
