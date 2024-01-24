@@ -86,6 +86,9 @@ type Keeper struct {
 	// When sending from one of these, if there are required attributes, the destination must have them;
 	// if there aren't required attributes, it behaves as if the sender has transfer permission.
 	reqAttrBypassAddrs types.ImmutableAccAddresses
+
+	// privilegeChecker is a set of additional checks to help verify if an account is privileged.
+	privilegeChecker types.PrivilegeChecker
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -347,4 +350,10 @@ func (k Keeper) GetReqAttrBypassAddrs() []sdk.AccAddress {
 // IsReqAttrBypassAddr returns true if the provided addr can bypass the required attributes checking.
 func (k Keeper) IsReqAttrBypassAddr(addr sdk.AccAddress) bool {
 	return k.reqAttrBypassAddrs.Has(addr)
+}
+
+// WithPrivilegeChecker returns a keeper with an updated PrivilegeChecker
+func (k Keeper) WithPrivilegeChecker(checker types.PrivilegeChecker) Keeper {
+	k.privilegeChecker = checker
+	return k
 }

@@ -97,3 +97,8 @@ type GovKeeper interface {
 type IbcTransferMsgServer interface {
 	Transfer(goCtx context.Context, msg *transfertypes.MsgTransfer) (*transfertypes.MsgTransferResponse, error)
 }
+
+// PrivilegeChecker defines the functionality for checking if an account has additional privileges.
+type PrivilegeChecker interface {
+	HasTransferPrivileges(sdk.AccAddress) bool
+}
