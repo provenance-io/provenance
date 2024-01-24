@@ -657,6 +657,14 @@ func (s *TestSuite) requireSetOrderInStore(store sdk.KVStore, order *exchange.Or
 	}, "SetOrderInStore(%d)", order.OrderId)
 }
 
+// requireSetOrdersInStore calls requireSetOrderInStore for each provided order and returns all the provided orders.
+func (s *TestSuite) requireSetOrdersInStore(store sdk.KVStore, orders ...*exchange.Order) []*exchange.Order {
+	for _, order := range orders {
+		s.requireSetOrderInStore(store, order)
+	}
+	return orders
+}
+
 // requireCreateMarket calls CreateMarket making sure it doesn't panic or return an error.
 // It also uses the TestSuite.accKeeper for the market account.
 func (s *TestSuite) requireCreateMarket(market exchange.Market) {

@@ -830,7 +830,7 @@ func (k Keeper) CancelAllOrdersForMarket(ctx sdk.Context, marketID uint32, signe
 	}
 
 	if len(errs) > 0 {
-		k.logErrorf(ctx, "%d error(s) encountered closing all orders for market %d:\n%v",
+		k.logErrorf(ctx, "%d error(s) encountered canceling all orders for market %d:\n%v",
 			len(errs), marketID, errors.Join(errs...))
 	}
 }
