@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
 	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -40,9 +41,7 @@ func (s *MsgServerTestSuite) SetupTest() {
 
 	s.blockStartTime = time.Now()
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{
-		Time: s.blockStartTime,
-	})
+	s.ctx = keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
 	s.msgServer = metadatakeeper.NewMsgServerImpl(s.app.MetadataKeeper)
 
 	s.privkey1 = secp256k1.GenPrivKey()
@@ -67,9 +66,9 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 	pubkey1 := secp256k1.GenPrivKey().PubKey()
 	user1Addr := sdk.AccAddress(pubkey1.Address())
 	user1 := user1Addr.String()
-	// pubkey2 := secp256k1.GenPrivKey().PubKey()
-	// user2Addr := sdk.AccAddress(pubkey2.Address())
-	// user2 := user2Addr.String()
+	pubkey2 := secp256k1.GenPrivKey().PubKey()
+	user2Addr := sdk.AccAddress(pubkey2.Address())
+	user2 := user2Addr.String()
 
 	ns := *types.NewScope(scopeID, scopeSpecID, ownerPartyList(user1), []string{user1}, user1, false)
 
@@ -108,21 +107,21 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 			},
 			expErr: `net asset value denom does not exist: marker hotdog not found for address: cosmos1p6l3annxy35gm5mfm6m0jz2mdj8peheuzf9alh: invalid request`,
 		},
-		// {
-		// 	name: "not authorize user",
-		// 	msg: types.MsgAddNetAssetValuesRequest{
-		// 		ScopeId: scopeID.String(),
-		// 		NetAssetValues: []types.NetAssetValue{
-		// 			{
-		// 				Price:              sdk.NewInt64Coin(types.UsdDenom, 100),
-		// 				Volume:             uint64(100),
-		// 				UpdatedBlockHeight: 1,
-		// 			},
-		// 		},
-		// 		Signers: []string{user2},
-		// 	},
-		// 	expErr: fmt.Sprintf(`signer %v does not have permission to add net asset value for "%v"`, user2, scopeID.String()),
-		// },
+		{
+			name: "not authorize user",
+			msg: types.MsgAddNetAssetValuesRequest{
+				ScopeId: scopeID.String(),
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Price:              sdk.NewInt64Coin(types.UsdDenom, 100),
+						Volume:             uint64(100),
+						UpdatedBlockHeight: 1,
+					},
+				},
+				Signers: []string{user2},
+			},
+			expErr: fmt.Sprintf("missing signature: %v: tx intended signer does not match the given signer", user1),
+		},
 		{
 			name: "successfully set nav",
 			msg: types.MsgAddNetAssetValuesRequest{
