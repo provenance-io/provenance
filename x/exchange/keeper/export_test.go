@@ -81,6 +81,8 @@ var (
 	SetCreateAskFlatFees = setCreateAskFlatFees
 	// SetCreateBidFlatFees is a test-only exposure of setCreateBidFlatFees.
 	SetCreateBidFlatFees = setCreateBidFlatFees
+	// SetCreateCommitmentFlatFees is a test-only exposure of setCreateCommitmentFlatFees.
+	SetCreateCommitmentFlatFees = setCreateCommitmentFlatFees
 	// SetSellerSettlementFlatFees is a test-only exposure of setSellerSettlementFlatFees.
 	SetSellerSettlementFlatFees = setSellerSettlementFlatFees
 	// SetBuyerSettlementFlatFees is a test-only exposure of setBuyerSettlementFlatFees.
@@ -89,6 +91,8 @@ var (
 	SetSellerSettlementRatios = setSellerSettlementRatios
 	// SetBuyerSettlementRatios is a test-only exposure of setBuyerSettlementRatios.
 	SetBuyerSettlementRatios = setBuyerSettlementRatios
+	// SetCommitmentSettlementBips is a test-only exposure of setCommitmentSettlementBips.
+	SetCommitmentSettlementBips = setCommitmentSettlementBips
 	// SetMarketActive is a test-only exposure of setMarketActive.
 	SetMarketActive = setMarketActive
 	// SetUserSettlementAllowed is a test-only exposure of setUserSettlementAllowed.
@@ -99,6 +103,8 @@ var (
 	SetReqAttrsAsk = setReqAttrsAsk
 	// SetReqAttrsBid is a test-only exposure of setReqAttrsBid.
 	SetReqAttrsBid = setReqAttrsBid
+	// SetReqAttrsCommitment is a test-only exposure of setReqAttrsCommitment.
+	SetReqAttrsCommitment = setReqAttrsCommitment
 	// StoreMarket is a test-only exposure of storeMarket.
 	StoreMarket = storeMarket
 

@@ -736,6 +736,16 @@ func (k Keeper) GetBuyerSettlementRatios(ctx sdk.Context, marketID uint32) []exc
 	return getBuyerSettlementRatios(k.getStore(ctx), marketID)
 }
 
+// GetCommitmentSettlementBips gets the commitment settlement bips for the given market.
+func (k Keeper) GetCommitmentSettlementBips(ctx sdk.Context, marketID uint32) uint32 {
+	return getCommitmentSettlementBips(k.getStore(ctx), marketID)
+}
+
+// GetIntermediaryDenom gets a market's intermediary denom.
+func (k Keeper) GetIntermediaryDenom(ctx sdk.Context, marketID uint32) string {
+	return getIntermediaryDenom(k.getStore(ctx), marketID)
+}
+
 // CalculateSellerSettlementRatioFee calculates the seller settlement fee required for the given price.
 func (k Keeper) CalculateSellerSettlementRatioFee(ctx sdk.Context, marketID uint32, price sdk.Coin) (*sdk.Coin, error) {
 	return calculateSellerSettlementRatioFee(k.getStore(ctx), marketID, price)
@@ -1565,7 +1575,7 @@ func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
 	if allowComs {
 		createComFee := getCreateCommitmentFlatFees(store, marketID)
 		if bips == 0 && len(createComFee) == 0 {
-			errs = append(errs, fmt.Errorf("commitments are allowed but no commitment-related fees are defined"))
+			errs = append(errs, errors.New("commitments are allowed but no commitment-related fees are defined"))
 		}
 	}
 

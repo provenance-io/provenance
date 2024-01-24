@@ -510,6 +510,10 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementRatios() {
 	}
 }
 
+// TODO[1789]: func (s *TestSuite) TestKeeper_GetCommitmentSettlementBips()
+
+// TODO[1789]: func (s *TestSuite) TestKeeper_GetIntermediaryDenom()
+
 func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 	setter := keeper.SetSellerSettlementRatios
 	tests := []struct {
@@ -2386,26 +2390,33 @@ func (s *TestSuite) TestKeeper_ValidateBuyerSettlementFee() {
 }
 
 func (s *TestSuite) TestKeeper_UpdateFees() {
-	// TODO[1789]: Update the TestKeeper_UpdateFees tests.
 	type marketFees struct {
 		marketID    uint32
 		createAsk   string
 		createBid   string
+		createCom   string
 		sellerFlat  string
 		sellerRatio string
 		buyerFlat   string
 		buyerRatio  string
+		comBips     string
 	}
 	getMarketFees := func(marketID uint32) marketFees {
-		return marketFees{
+		rv := marketFees{
 			marketID:    marketID,
 			createAsk:   sdk.Coins(s.k.GetCreateAskFlatFees(s.ctx, marketID)).String(),
 			createBid:   sdk.Coins(s.k.GetCreateBidFlatFees(s.ctx, marketID)).String(),
+			createCom:   sdk.Coins(s.k.GetCreateCommitmentFlatFees(s.ctx, marketID)).String(),
 			sellerFlat:  sdk.Coins(s.k.GetSellerSettlementFlatFees(s.ctx, marketID)).String(),
 			sellerRatio: exchange.FeeRatiosString(s.k.GetSellerSettlementRatios(s.ctx, marketID)),
 			buyerFlat:   sdk.Coins(s.k.GetBuyerSettlementFlatFees(s.ctx, marketID)).String(),
 			buyerRatio:  exchange.FeeRatiosString(s.k.GetBuyerSettlementRatios(s.ctx, marketID)),
 		}
+		bips := s.k.GetCommitmentSettlementBips(s.ctx, marketID)
+		if bips != 0 {
+			rv.comBips = fmt.Sprintf("%d", bips)
+		}
+		return rv
 	}
 
 	tests := []struct {
@@ -2611,6 +2622,102 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 				AddFeeCreateBidFlat:    s.coins("5honeydew,3cactus,99plum"),
 			},
 			expFees:     marketFees{marketID: 3, createBid: "3cactus,2grape,5honeydew,99plum"},
+			expNoChange: []uint32{1, 2, 4},
+		},
+
+		// Only create-commitment flat fee changes.
+		{
+			name: "create commitment: add one",
+			setup: func() {
+				keeper.SetCreateCommitmentFlatFees(s.getStore(), 3, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeCreateCommitmentFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, createCom: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create commitment: remove one, exists",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 3, s.coins("10fig"))
+				keeper.SetCreateCommitmentFlatFees(store, 5, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeCreateCommitmentFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, createCom: "8grape"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create commitment: remove one, unknown denom",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 3, s.coins("10grape"))
+				keeper.SetCreateCommitmentFlatFees(store, 5, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeCreateCommitmentFlat: s.coins("10grape")},
+			expFees:     marketFees{marketID: 5, createCom: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create commitment: remove one, known denom, wrong amount",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 4, s.coins("10grape"))
+				keeper.SetCreateCommitmentFlatFees(store, 2, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 2, RemoveFeeCreateCommitmentFlat: s.coins("8fig")},
+			expFees:     marketFees{marketID: 2, createCom: "8grape"},
+			expNoChange: []uint32{4},
+		},
+		{
+			name: "create commitment: add+remove with different denoms",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetCreateCommitmentFlatFees(store, 8, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                      8,
+				RemoveFeeCreateCommitmentFlat: s.coins("8grape"),
+				AddFeeCreateCommitmentFlat:    s.coins("2honeydew"),
+			},
+			expFees:     marketFees{marketID: 8, createCom: "10fig,2honeydew"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "create commitment: add+remove with same denoms",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetCreateCommitmentFlatFees(store, 1, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                      1,
+				RemoveFeeCreateCommitmentFlat: s.coins("10fig"),
+				AddFeeCreateCommitmentFlat:    s.coins("7fig"),
+			},
+			expFees:     marketFees{marketID: 1, createCom: "7fig,8grape"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "create commitment: complex",
+			// Remove one with wrong amount and don't replace it (10fig)
+			// Remove one with correct amount and replace it with another amount (7honeydew -> 5honeydew).
+			// Add one with a denom that already has a different amount (3cactus stomping on 7cactus)
+			// Add a brand new one (99plum).
+			// Leave one unchanged (2grape).
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 1, s.coins("10fig,4grape,2honeydew,5apple"))
+				keeper.SetCreateCommitmentFlatFees(store, 2, s.coins("9fig,3grape,1honeydew,6banana"))
+				keeper.SetCreateCommitmentFlatFees(store, 3, s.coins("12fig,2grape,7honeydew,7cactus"))
+				keeper.SetCreateCommitmentFlatFees(store, 4, s.coins("25fig,1grape,3honeydew,8durian"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                      3,
+				RemoveFeeCreateCommitmentFlat: s.coins("10fig,7honeydew"),
+				AddFeeCreateCommitmentFlat:    s.coins("5honeydew,3cactus,99plum"),
+			},
+			expFees:     marketFees{marketID: 3, createCom: "3cactus,2grape,5honeydew,99plum"},
 			expNoChange: []uint32{1, 2, 4},
 		},
 
@@ -3099,7 +3206,75 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 			expPanic:    "",
 		},
 
-		//
+		// only commitment settlement bips
+		{
+			name: "not set yet: setting",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentSettlementBips(store, 1, 100)
+				keeper.SetCommitmentSettlementBips(store, 2, 200)
+				keeper.SetCommitmentSettlementBips(store, 4, 400)
+				keeper.SetCommitmentSettlementBips(store, 5, 500)
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                       3,
+				SetFeeCommitmentSettlementBips: 25,
+			},
+			expFees: marketFees{
+				marketID: 3,
+				comBips:  "25",
+			},
+			expNoChange: []uint32{1, 2, 4, 5},
+		},
+		{
+			name: "not set yet: unsetting",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentSettlementBips(store, 1, 100)
+				keeper.SetCommitmentSettlementBips(store, 3, 300)
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                         2,
+				UnsetFeeCommitmentSettlementBips: true,
+			},
+			expFees:     marketFees{marketID: 2},
+			expNoChange: []uint32{1, 3},
+		},
+		{
+			name: "already set: setting",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentSettlementBips(store, 1, 100)
+				keeper.SetCommitmentSettlementBips(store, 2, 200)
+				keeper.SetCommitmentSettlementBips(store, 3, 300)
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                       2,
+				SetFeeCommitmentSettlementBips: 25,
+			},
+			expFees: marketFees{
+				marketID: 2,
+				comBips:  "25",
+			},
+			expNoChange: []uint32{1, 3},
+		},
+		{
+			name: "already set: unsetting",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentSettlementBips(store, 1, 100)
+				keeper.SetCommitmentSettlementBips(store, 2, 200)
+				keeper.SetCommitmentSettlementBips(store, 3, 300)
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                         2,
+				UnsetFeeCommitmentSettlementBips: true,
+			},
+			expFees:     marketFees{marketID: 2},
+			expNoChange: []uint32{1, 3},
+		},
+
+		// combo
 		{
 			name: "a little bit of everything",
 			// For each type, add one, replace one, remove one, leave one.
@@ -3107,24 +3282,30 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 				store := s.getStore()
 				keeper.SetCreateAskFlatFees(store, 1, s.coins("10grape"))
 				keeper.SetCreateBidFlatFees(store, 1, s.coins("11guava"))
+				keeper.SetCreateCommitmentFlatFees(store, 1, s.coins("14fig"))
 				keeper.SetSellerSettlementFlatFees(store, 1, s.coins("12grapefruit"))
 				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("13gooseberry"))
 				keeper.SetSellerSettlementRatios(store, 1, s.ratios("100papaya:3goumi"))
 				keeper.SetBuyerSettlementRatios(store, 1, s.ratios("120pineapple:1guarana"))
+				keeper.SetCommitmentSettlementBips(store, 1, 100)
 
 				keeper.SetCreateAskFlatFees(store, 2, s.coins("201acai,202apple,203apricot"))
 				keeper.SetCreateBidFlatFees(store, 2, s.coins("211banana,212biriba,212blueberry"))
+				keeper.SetCreateCommitmentFlatFees(store, 2, s.coins("261raisin,262raspberry,263redcurrent"))
 				keeper.SetSellerSettlementFlatFees(store, 2, s.coins("221cactus,222cantaloupe,223cherry"))
 				keeper.SetBuyerSettlementFlatFees(store, 2, s.coins("231date,232dewberry,233durian"))
 				keeper.SetSellerSettlementRatios(store, 2, s.ratios("241tangerine:1lemon,242tangerine:2lime,243tayberry:3lime"))
 				keeper.SetBuyerSettlementRatios(store, 2, s.ratios("251mandarin:4nectarine,252mango:5nectarine,253mango:6nutmeg"))
+				keeper.SetCommitmentSettlementBips(store, 2, 200)
 
 				keeper.SetCreateAskFlatFees(store, 3, s.coins("30grape"))
 				keeper.SetCreateBidFlatFees(store, 3, s.coins("31guava"))
+				keeper.SetCreateCommitmentFlatFees(store, 3, s.coins("31fig"))
 				keeper.SetSellerSettlementFlatFees(store, 3, s.coins("32grapefruit"))
 				keeper.SetBuyerSettlementFlatFees(store, 3, s.coins("33gooseberry"))
 				keeper.SetSellerSettlementRatios(store, 3, s.ratios("300papaya:3goumi"))
 				keeper.SetBuyerSettlementRatios(store, 3, s.ratios("320pineapple:1guarana"))
+				keeper.SetCommitmentSettlementBips(store, 3, 300)
 			},
 			msg: &exchange.MsgGovManageFeesRequest{
 				MarketId:                        2,
@@ -3132,6 +3313,8 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 				RemoveFeeCreateAskFlat:          s.coins("202apple,203apricot"),
 				AddFeeCreateBidFlat:             s.coins("214barbadine,2102blueberry"),
 				RemoveFeeCreateBidFlat:          s.coins("211banana,212blueberry"),
+				AddFeeCreateCommitmentFlat:      s.coins("2620raspberry,264rata"),
+				RemoveFeeCreateCommitmentFlat:   s.coins("262raspberry,263redcurrent"),
 				AddFeeSellerSettlementFlat:      s.coins("224cassaba,2201cactus"),
 				RemoveFeeSellerSettlementFlat:   s.coins("221cactus,222cantaloupe"),
 				AddFeeBuyerSettlementFlat:       s.coins("2302dewberry,234dragonfruit"),
@@ -3140,15 +3323,18 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 				RemoveFeeSellerSettlementRatios: s.ratios("241tangerine:1lemon,242tangerine:2lime"),
 				AddFeeBuyerSettlementRatios:     s.ratios("2502mango:50nectarine,254marula:7neem"),
 				RemoveFeeBuyerSettlementRatios:  s.ratios("252mango:5nectarine,253mango:6nutmeg"),
+				SetFeeCommitmentSettlementBips:  22,
 			},
 			expFees: marketFees{
 				marketID:    2,
 				createAsk:   "201acai,2002apple,204avocado",
 				createBid:   "214barbadine,212biriba,2102blueberry",
+				createCom:   "261raisin,2620raspberry,264rata",
 				sellerFlat:  "2201cactus,224cassaba,223cherry",
 				buyerFlat:   "2302dewberry,234dragonfruit,233durian",
 				sellerRatio: "244tamarillo:4lemon,2402tangerine:20lime,243tayberry:3lime",
 				buyerRatio:  "251mandarin:4nectarine,2502mango:50nectarine,254marula:7neem",
+				comBips:     "22",
 			},
 			expNoChange: []uint32{1, 3},
 		},
@@ -5202,13 +5388,13 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 // TODO[1789]: func (s *TestSuite) TestKeeper_CanCreateCommitment()
 
 func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
-	// TODO[1789]: Update the TestKeeper_UpdateReqAttrs tests.
 	tests := []struct {
 		name     string
 		setup    func()
 		msg      *exchange.MsgMarketManageReqAttrsRequest
 		expAsk   []string
 		expBid   []string
+		expCom   []string
 		expErr   string
 		expPanic string
 	}{
@@ -5222,18 +5408,22 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		{
 			name: "invalid attrs",
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
-				Admin:             "admin_addr_str",
-				MarketId:          1,
-				CreateAskToAdd:    []string{"three-dashes-not-allowed", "this.one.is.okay", "bad,punctuation"},
-				CreateAskToRemove: []string{"internal spaces are bad"}, // no error from this.
-				CreateBidToAdd:    []string{"twodashes-notallowed-either", "this.one.is.also.okay", "really*bad,punctuation"},
-				CreateBidToRemove: []string{"what&are*you(doing)?"}, // no error from this.
+				Admin:                    "admin_addr_str",
+				MarketId:                 1,
+				CreateAskToAdd:           []string{"three-dashes-not-allowed", "this.one.is.okay", "bad,punctuation"},
+				CreateAskToRemove:        []string{"internal spaces are bad"}, // no error from this.
+				CreateBidToAdd:           []string{"twodashes-notallowed-either", "this.one.is.also.okay", "really*bad,punctuation"},
+				CreateBidToRemove:        []string{"what&are*you(doing)?"}, // no error from this.
+				CreateCommitmentToAdd:    []string{"no&ampersands", "this.one.is.still.okay", "horrible|punctuation"},
+				CreateCommitmentToRemove: []string{"[oops>"}, // no error from this.
 			},
 			expErr: s.joinErrs(
 				"invalid attribute \"three-dashes-not-allowed\"",
 				"invalid attribute \"bad,punctuation\"",
 				"invalid attribute \"twodashes-notallowed-either\"",
 				"invalid attribute \"really*bad,punctuation\"",
+				"invalid attribute \"no&ampersands\"",
+				"invalid attribute \"horrible|punctuation\"",
 			),
 		},
 		{
@@ -5255,6 +5445,15 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			expErr: "cannot remove create-bid required attribute \"not.req\": attribute not currently required",
 		},
 		{
+			name: "remove create-commitment that is not required",
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 1,
+				CreateCommitmentToRemove: []string{"not.req"},
+			},
+			expErr: "cannot remove create-commitment required attribute \"not.req\": attribute not currently required",
+		},
+		{
 			name: "add create-ask that is already required",
 			setup: func() {
 				keeper.SetReqAttrsAsk(s.getStore(), 7, []string{"already.req"})
@@ -5267,7 +5466,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			expErr: "cannot add create-ask required attribute \"already.req\": attribute already required",
 		},
 		{
-			name: "add create-ask that is already required",
+			name: "add create-bid that is already required",
 			setup: func() {
 				keeper.SetReqAttrsBid(s.getStore(), 4, []string{"already.req"})
 			},
@@ -5279,19 +5478,34 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			expErr: "cannot add create-bid required attribute \"already.req\": attribute already required",
 		},
 		{
+			name: "add create-commitment that is already required",
+			setup: func() {
+				keeper.SetReqAttrsCommitment(s.getStore(), 12, []string{"already.req"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                 "admin_addr_str",
+				MarketId:              12,
+				CreateCommitmentToAdd: []string{"already.req"},
+			},
+			expErr: "cannot add create-commitment required attribute \"already.req\": attribute already required",
+		},
+		{
 			name: "multiple errors",
 			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 3, []string{"one.ask", "two.ask", "three.ask", "four.ask"})
 				keeper.SetReqAttrsBid(store, 3, []string{"one.bid", "two.bid", "three.bid", "four.bid"})
+				keeper.SetReqAttrsCommitment(store, 3, []string{"one.com", "two.com", "three.com", "four.com"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
-				Admin:             "addr_str_of_admin",
-				MarketId:          3,
-				CreateAskToAdd:    []string{"two.ask", "three .ask", "five.ask"},
-				CreateAskToRemove: []string{" four .ask", "five.ask", "six . ask"},
-				CreateBidToAdd:    []string{"two.bid ", " three.bid", "five.   bid"},
-				CreateBidToRemove: []string{"four. bid ", "five . bid", "six.bid"},
+				Admin:                    "addr_str_of_admin",
+				MarketId:                 3,
+				CreateAskToAdd:           []string{"two.ask", "three .ask", "five.ask"},
+				CreateAskToRemove:        []string{" four .ask", "five.ask", "six . ask"},
+				CreateBidToAdd:           []string{"two.bid ", " three.bid", "five.   bid"},
+				CreateBidToRemove:        []string{"four. bid ", "five . bid", "six.bid"},
+				CreateCommitmentToAdd:    []string{"two. com", "three.com", " five.com "},
+				CreateCommitmentToRemove: []string{"four. com ", "five .com", "six. com"},
 			},
 			expErr: s.joinErrs(
 				"cannot remove create-ask required attribute \"five.ask\": attribute not currently required",
@@ -5302,6 +5516,10 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				"cannot remove create-bid required attribute \"six.bid\": attribute not currently required",
 				"cannot add create-bid required attribute \"two.bid\": attribute already required",
 				"cannot add create-bid required attribute \"three.bid\": attribute already required",
+				"cannot remove create-commitment required attribute \"five.com\": attribute not currently required",
+				"cannot remove create-commitment required attribute \"six.com\": attribute not currently required",
+				"cannot add create-commitment required attribute \"two.com\": attribute already required",
+				"cannot add create-commitment required attribute \"three.com\": attribute already required",
 			),
 		},
 
@@ -5312,6 +5530,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5320,6 +5539,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: nil,
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one create-ask from two",
@@ -5327,6 +5547,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas", "also.ask.okay"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5335,6 +5556,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one create-ask with wildcard",
@@ -5345,6 +5567,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 					"*.ask.can.create.bananas", "two.ask.can.create.bananas",
 				})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5353,6 +5576,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas", "one.ask.can.create.bananas", "two.ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove last two create-ask",
@@ -5360,6 +5584,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 55, []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 55, []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 55, []string{"one.com.can.create.bananas", "two.com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5368,11 +5593,14 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: nil,
 			expBid: []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"},
+			expCom: []string{"one.com.can.create.bananas", "two.com.can.create.bananas"},
 		},
 		{
 			name: "add one create-ask to empty",
 			setup: func() {
-				keeper.SetReqAttrsBid(s.getStore(), 1, []string{"bid.can.create.bananas"})
+				store := s.getStore()
+				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 1, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:          "admin_addr_str",
@@ -5381,6 +5609,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "add one create-ask to existing",
@@ -5388,6 +5617,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 1, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:          "admin_addr_str",
@@ -5396,6 +5626,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas", "*.ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one, add diff create-ask",
@@ -5403,10 +5634,13 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 4, []string{"four.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 4, []string{"four.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 4, []string{"four.com.can.create.bananas"})
 				keeper.SetReqAttrsAsk(store, 5, []string{"five.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 5, []string{"five.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 5, []string{"five.com.can.create.bananas"})
 				keeper.SetReqAttrsAsk(store, 6, []string{"six.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 6, []string{"six.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 6, []string{"six.com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5416,6 +5650,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"*.ask.can.create.bananas"},
 			expBid: []string{"five.bid.can.create.bananas"},
+			expCom: []string{"five.com.can.create.bananas"},
 		},
 
 		// just create-bid manipulation.
@@ -5425,6 +5660,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5433,6 +5669,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: nil,
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one create-bid from two",
@@ -5440,6 +5677,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas", "also.bid.okay"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5448,6 +5686,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one create-bid with wildcard",
@@ -5458,6 +5697,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 					"bid.can.create.bananas", "one.bid.can.create.bananas",
 					"*.bid.can.create.bananas", "two.bid.can.create.bananas",
 				})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5466,6 +5706,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas", "one.bid.can.create.bananas", "two.bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove last two create-bid",
@@ -5473,6 +5714,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 55, []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 55, []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 55, []string{"one.com.can.create.bananas", "two.com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5481,11 +5723,14 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"},
 			expBid: nil,
+			expCom: []string{"one.com.can.create.bananas", "two.com.can.create.bananas"},
 		},
 		{
 			name: "add one create-bid to empty",
 			setup: func() {
-				keeper.SetReqAttrsAsk(s.getStore(), 1, []string{"ask.can.create.bananas"})
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 1, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:          "admin_addr_str",
@@ -5494,6 +5739,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "add one create-bid to existing",
@@ -5501,6 +5747,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 1, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:          "admin_addr_str",
@@ -5509,6 +5756,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas", "*.bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one, add diff create-bid",
@@ -5516,10 +5764,13 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 4, []string{"four.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 4, []string{"four.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 4, []string{"four.com.can.create.bananas"})
 				keeper.SetReqAttrsAsk(store, 5, []string{"five.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 5, []string{"five.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 5, []string{"five.com.can.create.bananas"})
 				keeper.SetReqAttrsAsk(store, 6, []string{"six.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 6, []string{"six.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 6, []string{"six.com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5529,26 +5780,161 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"five.ask.can.create.bananas"},
 			expBid: []string{"*.bid.can.create.bananas"},
+			expCom: []string{"five.com.can.create.bananas"},
 		},
 
-		// manipulation of both.
+		// just create-commitment manipulation.
+		{
+			name: "remove one create-commitment from one",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 9,
+				CreateCommitmentToRemove: []string{"com.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+			expCom: nil,
+		},
+		{
+			name: "remove one create-commitment from two",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas", "also.com.okay"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 9,
+				CreateCommitmentToRemove: []string{"also.com.okay"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
+		},
+		{
+			name: "remove one create-commitment with wildcard",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{
+					"com.can.create.bananas", "one.com.can.create.bananas",
+					"*.com.can.create.bananas", "two.com.can.create.bananas",
+				})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 9,
+				CreateCommitmentToRemove: []string{"*.com.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas", "one.com.can.create.bananas", "two.com.can.create.bananas"},
+		},
+		{
+			name: "remove last two create-commitment",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 55, []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 55, []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 55, []string{"one.com.can.create.bananas", "two.com.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 55,
+				CreateCommitmentToRemove: []string{"two.com.can.create.bananas", "one.com.can.create.bananas"},
+			},
+			expAsk: []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"},
+			expBid: []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"},
+			expCom: nil,
+		},
+		{
+			name: "add one create-commitment to empty",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                 "admin_addr_str",
+				MarketId:              1,
+				CreateCommitmentToAdd: []string{"com.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
+		},
+		{
+			name: "add one create-commitment to existing",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 1, []string{"com.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                 "admin_addr_str",
+				MarketId:              1,
+				CreateCommitmentToAdd: []string{"*.com.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas", "*.com.can.create.bananas"},
+		},
+		{
+			name: "remove one, add diff create-commitment",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 4, []string{"four.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 4, []string{"four.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 4, []string{"four.com.can.create.bananas"})
+				keeper.SetReqAttrsAsk(store, 5, []string{"five.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 5, []string{"five.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 5, []string{"five.com.can.create.bananas"})
+				keeper.SetReqAttrsAsk(store, 6, []string{"six.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 6, []string{"six.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 6, []string{"six.com.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 5,
+				CreateCommitmentToAdd:    []string{"*.com.can.create.bananas"},
+				CreateCommitmentToRemove: []string{"five.com.can.create.bananas"},
+			},
+			expAsk: []string{"five.ask.can.create.bananas"},
+			expBid: []string{"five.bid.can.create.bananas"},
+			expCom: []string{"*.com.can.create.bananas"},
+		},
+
+		// manipulation of all.
 		{
 			name: "add and remove two of each",
 			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 2, []string{"one.ask", "two.ask", "three.ask"})
 				keeper.SetReqAttrsBid(store, 2, []string{"one.bid", "two.bid", "three.bid"})
+				keeper.SetReqAttrsCommitment(store, 2, []string{"one.com", "two.com", "three.com"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
-				Admin:             "admin_addr_string",
-				MarketId:          2,
-				CreateAskToAdd:    []string{"*.other", "four.ask"},
-				CreateAskToRemove: []string{"one.ask", "three.ask"},
-				CreateBidToAdd:    []string{"*.other", "five.bid"},
-				CreateBidToRemove: []string{"three.bid", "two.bid"},
+				Admin:                    "admin_addr_string",
+				MarketId:                 2,
+				CreateAskToAdd:           []string{"*.other", "four.ask"},
+				CreateAskToRemove:        []string{"one.ask", "three.ask"},
+				CreateBidToAdd:           []string{"*.other", "five.bid"},
+				CreateBidToRemove:        []string{"three.bid", "two.bid"},
+				CreateCommitmentToAdd:    []string{"*.other", "six.com"},
+				CreateCommitmentToRemove: []string{"three.com", "two.com"},
 			},
 			expAsk: []string{"two.ask", "*.other", "four.ask"},
 			expBid: []string{"one.bid", "*.other", "five.bid"},
+			expCom: []string{"one.com", "*.other", "six.com"},
 		},
 	}
 
@@ -5583,8 +5969,10 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 
 			reqAttrAsk := s.k.GetReqAttrsAsk(s.ctx, tc.msg.MarketId)
 			reqAttrBid := s.k.GetReqAttrsBid(s.ctx, tc.msg.MarketId)
+			reqAttrCom := s.k.GetReqAttrsCommitment(s.ctx, tc.msg.MarketId)
 			s.Assert().Equal(tc.expAsk, reqAttrAsk, "create-ask req attrs after UpdateReqAttrs")
 			s.Assert().Equal(tc.expBid, reqAttrBid, "create-bid req attrs after UpdateReqAttrs")
+			s.Assert().Equal(tc.expCom, reqAttrCom, "create-commitment req attrs after UpdateReqAttrs")
 		})
 	}
 }
@@ -5893,7 +6281,6 @@ func (s *TestSuite) TestKeeper_UpdateMarketDetails() {
 }
 
 func (s *TestSuite) TestKeeper_CreateMarket() {
-	// TODO[1789]: Update the TestKeeper_CreateMarket tests.
 	setAccNum := func(id uint64) AccountModifier {
 		return func(acc authtypes.AccountI) authtypes.AccountI {
 			err := acc.SetAccountNumber(id)
@@ -6008,6 +6395,12 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 				},
 				ReqAttrCreateAsk: []string{"*.ask.whatever"},
 				ReqAttrCreateBid: []string{"*.bid.whatever"},
+
+				AllowCommitments:         true,
+				FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("orange", 77)},
+				CommitmentSettlementBips: 15,
+				IntermediaryDenom:        "cherry",
+				ReqAttrCreateCommitment:  []string{"*.com.whatever"},
 			},
 			expMarketID:   3,
 			expHasAccCall: true,
@@ -6086,7 +6479,6 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 }
 
 func (s *TestSuite) TestKeeper_GetMarket() {
-	// TODO[1789]: Update the TestKeeper_GetMarket tests.
 	tests := []struct {
 		name      string
 		accKeeper *MockAccountKeeper
@@ -6209,6 +6601,12 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 					},
 					ReqAttrCreateAsk: []string{"create-ask.my.market", "*.kyc.someone"},
 					ReqAttrCreateBid: []string{"create-bid.my.market", "*.kyc.someone"},
+
+					AllowCommitments:         true,
+					FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("orange", 77)},
+					CommitmentSettlementBips: 15,
+					IntermediaryDenom:        "cherry",
+					ReqAttrCreateCommitment:  []string{"create-com.my.market", "*.kyc.someone"},
 				}
 
 				store := s.getStore()
@@ -6614,7 +7012,6 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 }
 
 func (s *TestSuite) TestKeeper_ValidateMarket() {
-	// TODO[1789]: Update the TestKeeper_ValidateMarket tests.
 	noBuyerErr := func(denom string) string {
 		return "seller settlement fee ratios have price denom \"" + denom + "\" but there are no " +
 			"buyer settlement fee ratios with that price denom"
@@ -6749,6 +7146,40 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 			},
 			marketID: 55,
 			expErr:   "",
+		},
+		{
+			name: "commitment bips without denom",
+			setup: func() {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId:                 24,
+					CommitmentSettlementBips: 80,
+				})
+			},
+			marketID: 24,
+			expErr:   "no intermediary denom defined, but commitment settlement bips 80 is not zero",
+		},
+		{
+			name: "intermediary denom without nav",
+			setup: func() {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId:                 32,
+					CommitmentSettlementBips: 80,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			marketID: 32,
+			expErr:   "no nav exists from intermediary denom \"cherry\" to fee denom \"nhash\"",
+		},
+		{
+			name: "commitments allowed but no fees defined",
+			setup: func() {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId:         28,
+					AllowCommitments: true,
+				})
+			},
+			marketID: 28,
+			expErr:   "commitments are allowed but no commitment-related fees are defined",
 		},
 	}
 
