@@ -27,9 +27,9 @@ func (m MessageRouterFunc) Handler(msg sdk.Msg) baseapp.MsgServiceHandler {
 }
 
 // GroupPrivilegesFunc convenient type to match the PrivilegeChecker interface.
-type GroupPrivilegesFunc func(account sdk.AccAddress) bool
+type GroupPrivilegesFunc func(sdk.Context, sdk.AccAddress) bool
 
 // HasTransferPrivileges checks if the account has transfer privileges by calling the internal function.
-func (t GroupPrivilegesFunc) HasTransferPrivileges(account sdk.AccAddress) bool {
-	return t(account)
+func (t GroupPrivilegesFunc) HasTransferPrivileges(ctx sdk.Context, account sdk.AccAddress) bool {
+	return t(ctx, account)
 }

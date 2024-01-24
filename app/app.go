@@ -582,8 +582,11 @@ func New(
 		app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
 		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper, markerReqAttrBypassAddrs,
 	)
-	app.MarkerKeeper = app.MarkerKeeper.WithPrivilegeChecker(GroupPrivilegesFunc(func(account sdk.AccAddress) bool {
-		return true
+	app.MarkerKeeper = app.MarkerKeeper.WithPrivilegeChecker(GroupPrivilegesFunc(func(ctx sdk.Context, account sdk.AccAddress) bool {
+		msg := &group.QueryGroupPolicyInfoRequest{Address: account.String()}
+		goCtx := sdk.WrapSDKContext(ctx)
+		_, err := app.GroupKeeper.GroupPolicyInfo(goCtx, msg)
+		return err != nil
 	}))
 
 	app.HoldKeeper = holdkeeper.NewKeeper(

@@ -681,7 +681,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool {
 	acc := k.authKeeper.GetAccount(ctx, from)
 	// If the account is marked with additional predefined transfer privileges, then it will allow the transfer.
-	if k.privilegeChecker != nil && k.privilegeChecker.HasTransferPrivileges(from) {
+	if k.privilegeChecker != nil && k.privilegeChecker.HasTransferPrivileges(ctx, from) {
 		return true
 	}
 

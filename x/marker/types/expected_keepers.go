@@ -100,5 +100,5 @@ type IbcTransferMsgServer interface {
 
 // PrivilegeChecker defines the functionality for checking if an account has additional privileges.
 type PrivilegeChecker interface {
-	HasTransferPrivileges(sdk.AccAddress) bool
+	HasTransferPrivileges(sdk.Context, sdk.AccAddress) bool
 }
