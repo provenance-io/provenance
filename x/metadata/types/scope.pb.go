@@ -754,7 +754,7 @@ func (m *AuditFields) GetMessage() string {
 type NetAssetValue struct {
 	// price is the complete value of the asset's volume
 	Price types.Coin `protobuf:"bytes,1,opt,name=price,proto3" json:"price"`
-	// volume is the number of tokens of the marker that were purchased for the price
+	// volume is the number of tokens of that the scope was purchased for the price
 	Volume uint64 `protobuf:"varint,2,opt,name=volume,proto3" json:"volume,omitempty"`
 	// updated_block_height is the block height of last update
 	UpdatedBlockHeight uint64 `protobuf:"varint,3,opt,name=updated_block_height,json=updatedBlockHeight,proto3" json:"updated_block_height,omitempty"`

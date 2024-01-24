@@ -5895,7 +5895,7 @@ NetAssetValue defines a scope's net asset value
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the complete value of the asset's volume |
-| `volume` | [uint64](#uint64) |  | volume is the number of tokens of the marker that were purchased for the price |
+| `volume` | [uint64](#uint64) |  | volume is the number of tokens of that the scope was purchased for the price |
 | `updated_block_height` | [uint64](#uint64) |  | updated_block_height is the block height of last update |
 
 

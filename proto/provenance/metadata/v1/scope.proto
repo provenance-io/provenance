@@ -258,7 +258,7 @@ message AuditFields {
 message NetAssetValue {
   // price is the complete value of the asset's volume
   cosmos.base.v1beta1.Coin price = 1 [(gogoproto.nullable) = false];
-  // volume is the number of tokens of the marker that were purchased for the price
+  // volume is the number of tokens of that the scope was purchased for the price
   uint64 volume = 2;
   // updated_block_height is the block height of last update
   uint64 updated_block_height = 3;
