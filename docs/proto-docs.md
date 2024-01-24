@@ -2493,7 +2493,6 @@ MsgMarketCommitmentSettleRequest is a request message for the MarketCommitmentSe
 | `outputs` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | outputs defines how the funds are to be distributed. These funds will be re-committed in the destination accounts. |
 | `fees` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | fees is the funds that the market is collecting as part of this settlement. All of these funds must be already committed to the market. |
 | `navs` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) | repeated | navs are any NAV info that should be updated at the beginning of this settlement. |
-| `max_exchange_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | max_exchange_fees is the maximum amount of fees the market is willing to pay the exchange for this settlement. |
 | `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-committed/released events. Max length is 100 characters. |
 
 

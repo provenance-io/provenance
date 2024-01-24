@@ -245,11 +245,8 @@ message MsgMarketCommitmentSettleRequest {
   repeated AccountAmount fees = 5 [(gogoproto.nullable) = false];
   // navs are any NAV info that should be updated at the beginning of this settlement.
   repeated NetAssetPrice navs = 6 [(gogoproto.nullable) = false];
-  // max_exchange_fees is the maximum amount of fees the market is willing to pay the exchange for this settlement.
-  repeated cosmos.base.v1beta1.Coin max_exchange_fees = 7
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // event_tag is a string that is included in the funds-committed/released events. Max length is 100 characters.
-  string event_tag = 8;
+  string event_tag = 7;
 }
 
 // MsgMarketCommitmentSettleResponse is a response message for the MarketCommitmentSettle endpoint.

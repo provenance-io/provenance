@@ -299,12 +299,6 @@ func (m MsgMarketCommitmentSettleRequest) Validate(requireInputs bool) error {
 		}
 	}
 
-	if len(m.MaxExchangeFees) > 0 {
-		if err := m.MaxExchangeFees.Validate(); err != nil {
-			errs = append(errs, fmt.Errorf("invalid max exchange fees %q: %w", m.MaxExchangeFees, err))
-		}
-	}
-
 	if err := ValidateEventTag(m.EventTag); err != nil {
 		errs = append(errs, err)
 	}

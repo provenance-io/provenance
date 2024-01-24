@@ -975,14 +975,13 @@ func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "okay: with all optional fields",
 			msg: MsgMarketCommitmentSettleRequest{
-				Admin:           toAccAddr("admin"),
-				MarketId:        1,
-				Inputs:          []AccountAmount{goodAA("input0", "13cherry")},
-				Outputs:         []AccountAmount{goodAA("output0", "13cherry")},
-				Fees:            []AccountAmount{goodAA("fee0", "7fig")},
-				Navs:            []NetAssetPrice{goodNAV("13cherry", "1990musd")},
-				MaxExchangeFees: sdk.NewCoins(sdk.NewInt64Coin("grape", 55)),
-				EventTag:        "you're it",
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+				Fees:     []AccountAmount{goodAA("fee0", "7fig")},
+				Navs:     []NetAssetPrice{goodNAV("13cherry", "1990musd")},
+				EventTag: "you're it",
 			},
 		},
 		{
@@ -1122,17 +1121,6 @@ func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
-			name: "bad max exchange fees",
-			msg: MsgMarketCommitmentSettleRequest{
-				Admin:           toAccAddr("admin"),
-				MarketId:        1,
-				Inputs:          []AccountAmount{goodAA("input0", "13cherry")},
-				Outputs:         []AccountAmount{goodAA("output0", "13cherry")},
-				MaxExchangeFees: coins(-77, "grape"),
-			},
-			expErrAlways: []string{"invalid max exchange fees \"-77grape\": coin -77grape amount is not positive"},
-		},
-		{
 			name: "bad event tag",
 			msg: MsgMarketCommitmentSettleRequest{
 				Admin:    toAccAddr("admin"),
@@ -1146,14 +1134,13 @@ func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "multiple errors",
 			msg: MsgMarketCommitmentSettleRequest{
-				Admin:           "",
-				MarketId:        0,
-				Inputs:          []AccountAmount{{Account: toAccAddr("input0"), Amount: coins(-3, "cherry")}},
-				Outputs:         []AccountAmount{{Account: toAccAddr("output0"), Amount: coins(-3, "cherry")}},
-				Fees:            []AccountAmount{{Account: "badfee2addr", Amount: coins(4, "cherry")}},
-				Navs:            []NetAssetPrice{{Assets: coin(-2, "cherry"), Price: coin(87, "nhash")}},
-				MaxExchangeFees: coins(-77, "grape"),
-				EventTag:        "p" + strings.Repeat("b", 99) + "f",
+				Admin:    "",
+				MarketId: 0,
+				Inputs:   []AccountAmount{{Account: toAccAddr("input0"), Amount: coins(-3, "cherry")}},
+				Outputs:  []AccountAmount{{Account: toAccAddr("output0"), Amount: coins(-3, "cherry")}},
+				Fees:     []AccountAmount{{Account: "badfee2addr", Amount: coins(4, "cherry")}},
+				Navs:     []NetAssetPrice{{Assets: coin(-2, "cherry"), Price: coin(87, "nhash")}},
+				EventTag: "p" + strings.Repeat("b", 99) + "f",
 			},
 			expErrAlways: []string{
 				"invalid administrator \"\": " + emptyAddrErr,
@@ -1162,7 +1149,6 @@ func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
 				"outputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
 				"fees[0]: invalid account \"badfee2addr\": " + bech32Err,
 				"navs[0]: invalid assets \"-2cherry\": negative coin amount: -2",
-				"invalid max exchange fees \"-77grape\": coin -77grape amount is not positive",
 				"invalid event tag \"pbbbb...bbbbf\" (length 101): exceeds max length 100",
 			},
 		},
