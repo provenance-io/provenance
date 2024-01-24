@@ -500,6 +500,12 @@ func (k QueryServer) ValidateManageFees(goCtx context.Context, req *exchange.Que
 			createBidFlats, msg.AddFeeCreateBidFlat, msg.RemoveFeeCreateBidFlat)...)
 	}
 
+	if len(msg.AddFeeCreateCommitmentFlat) > 0 || len(msg.RemoveFeeCreateCommitmentFlat) > 0 {
+		createCommitmentFlatKeyMakers := getCreateCommitmentFlatFees(store, msg.MarketId)
+		errs = append(errs, exchange.ValidateAddRemoveFeeOptionsWithExisting("create-commitment",
+			createCommitmentFlatKeyMakers, msg.AddFeeCreateCommitmentFlat, msg.RemoveFeeCreateCommitmentFlat)...)
+	}
+
 	if len(msg.AddFeeSellerSettlementFlat) > 0 || len(msg.RemoveFeeSellerSettlementFlat) > 0 {
 		sellerFlats := getSellerSettlementFlatFees(store, msg.MarketId)
 		errs = append(errs, exchange.ValidateAddRemoveFeeOptionsWithExisting("seller settlement",

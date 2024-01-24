@@ -3133,7 +3133,6 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 // TODO[1789] func (s *TestSuite) TestQueryServer_GetAllCommitments()
 
 func (s *TestSuite) TestQueryServer_GetMarket() {
-	// TODO[1789]: Update the TestQueryServer_GetMarket tests.
 	testDef := queryTestDef[exchange.QueryGetMarketRequest, exchange.QueryGetMarketResponse]{
 		queryName: "GetMarket",
 		query:     keeper.NewQueryServer(s.k).GetMarket,
@@ -3196,6 +3195,12 @@ func (s *TestSuite) TestQueryServer_GetMarket() {
 					},
 					ReqAttrCreateAsk: []string{"ask.good.kyc", "*.my.custom"},
 					ReqAttrCreateBid: []string{"bid.good.kyc", "*.my.custom"},
+
+					AllowCommitments:         true,
+					FeeCreateCommitmentFlat:  s.coins("30fig,300grape"),
+					CommitmentSettlementBips: 23,
+					IntermediaryDenom:        "cherry",
+					ReqAttrCreateCommitment:  []string{"commitment.good.kyc", "*.my.custom"},
 				})
 				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 4})
 				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 5})
@@ -3228,6 +3233,12 @@ func (s *TestSuite) TestQueryServer_GetMarket() {
 					},
 					ReqAttrCreateAsk: []string{"ask.good.kyc", "*.my.custom"},
 					ReqAttrCreateBid: []string{"bid.good.kyc", "*.my.custom"},
+
+					AllowCommitments:         true,
+					FeeCreateCommitmentFlat:  s.coins("30fig,300grape"),
+					CommitmentSettlementBips: 23,
+					IntermediaryDenom:        "cherry",
+					ReqAttrCreateCommitment:  []string{"commitment.good.kyc", "*.my.custom"},
 				},
 			},
 		},
@@ -3519,7 +3530,6 @@ func (s *TestSuite) TestQueryServer_Params() {
 // TODO[1789] func (s *TestSuite) TestQueryServer_CommitmentSettlementFeeCalc()
 
 func (s *TestSuite) TestQueryServer_ValidateCreateMarket() {
-	// TODO[1789]: Update the TestQueryServer_ValidateCreateMarket tests.
 	testDef := queryTestDef[exchange.QueryValidateCreateMarketRequest, exchange.QueryValidateCreateMarketResponse]{
 		queryName: "ValidateCreateMarket",
 		query:     keeper.NewQueryServer(s.k).ValidateCreateMarket,
@@ -3628,7 +3638,6 @@ func (s *TestSuite) TestQueryServer_ValidateCreateMarket() {
 }
 
 func (s *TestSuite) TestQueryServer_ValidateMarket() {
-	// TODO[1789]: Update the TestQueryServer_ValidateMarket tests.
 	testDef := queryTestDef[exchange.QueryValidateMarketRequest, exchange.QueryValidateMarketResponse]{
 		queryName: "ValidateMarket",
 		query:     keeper.NewQueryServer(s.k).ValidateMarket,
@@ -3668,6 +3677,20 @@ func (s *TestSuite) TestQueryServer_ValidateMarket() {
 			)},
 		},
 		{
+			name: "bad commitment setup",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 3,
+					IntermediaryDenom:        "",
+				})
+			},
+			req: &exchange.QueryValidateMarketRequest{MarketId: 2},
+			expResp: &exchange.QueryValidateMarketResponse{
+				Error: "no intermediary denom defined, but commitment settlement bips 3 is not zero",
+			},
+		},
+		{
 			name: "all good",
 			setup: func() {
 				s.requireCreateMarketUnmocked(exchange.Market{
@@ -3689,7 +3712,6 @@ func (s *TestSuite) TestQueryServer_ValidateMarket() {
 }
 
 func (s *TestSuite) TestQueryServer_ValidateManageFees() {
-	// TODO[1789]: Update the TestQueryServer_ValidateManageFees tests.
 	testDef := queryTestDef[exchange.QueryValidateManageFeesRequest, exchange.QueryValidateManageFeesResponse]{
 		queryName: "ValidateManageFees",
 		query:     keeper.NewQueryServer(s.k).ValidateManageFees,
@@ -3778,6 +3800,27 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 				Error: s.joinErrs(
 					"cannot remove create-bid flat fee \"100acorn\": no such fee exists",
 					"cannot add create-bid flat fee \"90apple\": fee with that denom already exists",
+				),
+			},
+		},
+		{
+			name: "add/rem create-commitment errors",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                7,
+					FeeCreateCommitmentFlat: s.coins("100orange"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 7,
+				RemoveFeeCreateCommitmentFlat: s.coins("100olive"),
+				AddFeeCreateCommitmentFlat:    s.coins("90orange"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: s.joinErrs(
+					"cannot remove create-commitment flat fee \"100olive\": no such fee exists",
+					"cannot add create-commitment flat fee \"90orange\": fee with that denom already exists",
 				),
 			},
 		},
@@ -3942,12 +3985,27 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 			},
 		},
 		{
+			name: "setting commitment bips without intermediary denom",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 4})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 4,
+				SetFeeCommitmentSettlementBips: 35,
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error:           "no intermediary denom defined, but commitment settlement bips 35 is not zero",
+			},
+		},
+		{
 			name: "all the problems",
 			setup: func() {
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                  7,
 					FeeCreateAskFlat:          s.coins("100peach"),
 					FeeCreateBidFlat:          s.coins("100apple"),
+					FeeCreateCommitmentFlat:   s.coins("100orange"),
 					FeeSellerSettlementFlat:   s.coins("100cherry"),
 					FeeSellerSettlementRatios: s.ratios("100pear:1pear"),
 					FeeBuyerSettlementFlat:    s.coins("100date"),
@@ -3968,6 +4026,9 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 				AddFeeBuyerSettlementFlat:       s.coins("90date"),
 				RemoveFeeBuyerSettlementRatios:  s.ratios("100blueberry:1blueberry"),
 				AddFeeBuyerSettlementRatios:     s.ratios("90banana:1banana"),
+				RemoveFeeCreateCommitmentFlat:   s.coins("100olive"),
+				AddFeeCreateCommitmentFlat:      s.coins("90orange"),
+				SetFeeCommitmentSettlementBips:  35,
 			}},
 			expResp: &exchange.QueryValidateManageFeesResponse{
 				GovPropWillPass: true,
@@ -3976,6 +4037,8 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 					"cannot add create-ask flat fee \"90peach\": fee with that denom already exists",
 					"cannot remove create-bid flat fee \"100acorn\": no such fee exists",
 					"cannot add create-bid flat fee \"90apple\": fee with that denom already exists",
+					"cannot remove create-commitment flat fee \"100olive\": no such fee exists",
+					"cannot add create-commitment flat fee \"90orange\": fee with that denom already exists",
 					"cannot remove seller settlement flat fee \"100cactus\": no such fee exists",
 					"cannot add seller settlement flat fee \"90cherry\": fee with that denom already exists",
 					"cannot remove seller settlement ratio fee \"100prune:1prune\": no such ratio exists",
@@ -3988,6 +4051,7 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 						"buyer settlement fee ratios with that price denom",
 					"buyer settlement fee ratios have price denom \"banana\" but there is not a "+
 						"seller settlement fee ratio with that price denom",
+					"no intermediary denom defined, but commitment settlement bips 35 is not zero",
 				),
 			},
 		},
@@ -3998,6 +4062,7 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 					MarketId:                  7,
 					FeeCreateAskFlat:          s.coins("100peach"),
 					FeeCreateBidFlat:          s.coins("100apple"),
+					FeeCreateCommitmentFlat:   s.coins("100orange"),
 					FeeSellerSettlementFlat:   s.coins("100cherry"),
 					FeeSellerSettlementRatios: s.ratios("100pear:1pear"),
 					FeeBuyerSettlementFlat:    s.coins("100date"),

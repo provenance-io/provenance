@@ -628,6 +628,7 @@ func (m MsgGovManageFeesRequest) ValidateBasic() error {
 		errs = append(errs,
 			ValidateAddRemoveFeeOptions("create-ask flat fee", m.AddFeeCreateAskFlat, m.RemoveFeeCreateAskFlat),
 			ValidateAddRemoveFeeOptions("create-bid flat fee", m.AddFeeCreateBidFlat, m.RemoveFeeCreateBidFlat),
+			ValidateAddRemoveFeeOptions("create-commitment flat fee", m.AddFeeCreateCommitmentFlat, m.RemoveFeeCreateCommitmentFlat),
 			ValidateAddRemoveFeeOptions("seller settlement flat fee", m.AddFeeSellerSettlementFlat, m.RemoveFeeSellerSettlementFlat),
 			ValidateSellerFeeRatios(m.AddFeeSellerSettlementRatios),
 			ValidateDisjointFeeRatios("seller settlement fee", m.AddFeeSellerSettlementRatios, m.RemoveFeeSellerSettlementRatios),
@@ -657,6 +658,7 @@ func (m MsgGovManageFeesRequest) HasUpdates() bool {
 		len(m.AddFeeSellerSettlementRatios) > 0 || len(m.RemoveFeeSellerSettlementRatios) > 0 ||
 		len(m.AddFeeBuyerSettlementFlat) > 0 || len(m.RemoveFeeBuyerSettlementFlat) > 0 ||
 		len(m.AddFeeBuyerSettlementRatios) > 0 || len(m.RemoveFeeBuyerSettlementRatios) > 0 ||
+		len(m.AddFeeCreateCommitmentFlat) > 0 || len(m.RemoveFeeCreateCommitmentFlat) > 0 ||
 		m.SetFeeCommitmentSettlementBips != 0 || m.UnsetFeeCommitmentSettlementBips
 }
 

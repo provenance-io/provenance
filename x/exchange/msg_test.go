@@ -2638,6 +2638,23 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 			expErr: []string{"cannot add and remove the same create-ask flat fee options 1nhash"},
 		},
 		{
+			name: "invalid add create-commitment flat",
+			msg: MsgGovManageFeesRequest{
+				Authority:                  authority,
+				AddFeeCreateCommitmentFlat: []sdk.Coin{coin(0, "nhash")},
+			},
+			expErr: []string{`invalid create-commitment flat fee to add option "0nhash": amount cannot be zero`},
+		},
+		{
+			name: "same add and remove create-commitment flat",
+			msg: MsgGovManageFeesRequest{
+				Authority:                     authority,
+				AddFeeCreateCommitmentFlat:    []sdk.Coin{coin(1, "nhash")},
+				RemoveFeeCreateCommitmentFlat: []sdk.Coin{coin(1, "nhash")},
+			},
+			expErr: []string{"cannot add and remove the same create-commitment flat fee options 1nhash"},
+		},
+		{
 			name: "invalid add create-bid flat",
 			msg: MsgGovManageFeesRequest{
 				Authority:           authority,
@@ -2755,6 +2772,8 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				RemoveFeeBuyerSettlementFlat:     []sdk.Coin{coin(0, "nhash")},
 				AddFeeBuyerSettlementRatios:      []FeeRatio{ratio(1, "nhash", 2, "nhash")},
 				RemoveFeeBuyerSettlementRatios:   []FeeRatio{ratio(1, "nhash", 2, "nhash")},
+				AddFeeCreateCommitmentFlat:       []sdk.Coin{coin(0, "nhash")},
+				RemoveFeeCreateCommitmentFlat:    []sdk.Coin{coin(0, "nhash")},
 				SetFeeCommitmentSettlementBips:   12345,
 				UnsetFeeCommitmentSettlementBips: true,
 			},
@@ -2765,6 +2784,8 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				"cannot add and remove the same create-ask flat fee options 0nhash",
 				`invalid create-bid flat fee to add option "0nhash": amount cannot be zero`,
 				"cannot add and remove the same create-bid flat fee options 0nhash",
+				`invalid create-commitment flat fee to add option "0nhash": amount cannot be zero`,
+				"cannot add and remove the same create-commitment flat fee options 0nhash",
 				`invalid seller settlement flat fee to add option "0nhash": amount cannot be zero`,
 				"cannot add and remove the same seller settlement flat fee options 0nhash",
 				`seller fee ratio fee amount "2nhash" cannot be greater than price amount "1nhash"`,
@@ -2865,6 +2886,16 @@ func TestMsgGovManageFeesRequest_HasUpdates(t *testing.T) {
 		{
 			name: "one remove fee buyer settlement ratio",
 			msg:  MsgGovManageFeesRequest{RemoveFeeBuyerSettlementRatios: oneRatio},
+			exp:  true,
+		},
+		{
+			name: "one add fee create-commitment flat",
+			msg:  MsgGovManageFeesRequest{AddFeeCreateCommitmentFlat: oneCoin},
+			exp:  true,
+		},
+		{
+			name: "one remove fee create-commitment flat",
+			msg:  MsgGovManageFeesRequest{RemoveFeeCreateCommitmentFlat: oneCoin},
 			exp:  true,
 		},
 		{
