@@ -1125,6 +1125,11 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	responseBeginBlock := app.mm.BeginBlock(ctx, req)
+	responseBeginBlock.Events = filterBeginBlockerEvents(responseBeginBlock)
+	return responseBeginBlock
+}
+
+func filterBeginBlockerEvents(responseBeginBlock abci.ResponseBeginBlock) []abci.Event {
 	var filteredEvents []abci.Event
 	for _, e := range responseBeginBlock.Events {
 		if shouldFilterEvent(e) {
@@ -1132,15 +1137,14 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 		}
 		filteredEvents = append(filteredEvents, e)
 	}
-	responseBeginBlock.Events = filteredEvents
-	return responseBeginBlock
+	return filteredEvents
 }
 
 func shouldFilterEvent(e abci.Event) bool {
 	typeStr := string(e.Type)
-	if typeStr == "commission" || typeStr == "rewards" || typeStr == "proposer_reward" || typeStr == "transfer" || typeStr == "coin_spent" || typeStr == "coin_received" {
+	if typeStr == distrtypes.EventTypeCommission || typeStr == distrtypes.EventTypeRewards || typeStr == distrtypes.EventTypeProposerReward || typeStr == banktypes.EventTypeTransfer || typeStr == banktypes.EventTypeCoinSpent || typeStr == banktypes.EventTypeCoinReceived {
 		for _, a := range e.Attributes {
-			if string(a.Key) == "amount" && len(a.Value) == 0 {
+			if string(a.Key) == sdk.AttributeKeyAmount && len(a.Value) == 0 {
 				return true
 			}
 		}
