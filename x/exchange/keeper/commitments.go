@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 )
@@ -321,23 +322,11 @@ func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.
 	return rv, nil
 }
 
-// SettleCommitments orchestrates the transfer of committed funds and collection of fees.
+// SettleCommitments orchestrates the transfer of committed funds and collection of fees by the market.
 func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
 	marketID := req.MarketId
 	// Record all the navs.
 	k.recordNAVs(ctx, marketID, req.Navs)
-
-	// Calculate the exchange fees and make sure they're not too much.
-	exchangeFees, err := k.CalculateCommitmentSettlementFee(ctx, req)
-	if err != nil {
-		return fmt.Errorf("could not calculate commitment settlement fees: %w", err)
-	}
-	if !req.MaxExchangeFees.IsZero() && exchangeFees != nil && !exchangeFees.ExchangeFees.IsZero() {
-		_, isNeg := req.MaxExchangeFees.SafeSub(exchangeFees.ExchangeFees...)
-		if isNeg {
-			return fmt.Errorf("exchange fees %q exceeds max exchange fees %q", exchangeFees.ExchangeFees, req.MaxExchangeFees)
-		}
-	}
 
 	// Build the transfers
 	inputs := exchange.SimplifyAccountAmounts(req.Inputs)
@@ -372,13 +361,24 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 		return fmt.Errorf("failed to re-commit funds after transfer: %w", err)
 	}
 
-	// Collect the exchange fees from the market.
-	if exchangeFees != nil && !exchangeFees.ExchangeFees.IsZero() {
-		marketAddr := exchange.GetMarketAddress(marketID)
-		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeFees.ExchangeFees)
-		if err != nil {
-			return fmt.Errorf("could not collect exchange fees from market %d: %w", marketID, err)
-		}
+	return nil
+}
+
+// consumeCommitmentSettlementFee calculates and consumes the commitment settlement fee for the given request.
+func (k Keeper) consumeCommitmentSettlementFee(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
+	feeGasMeter, err := antewrapper.GetFeeGasMeter(ctx)
+	if err != nil || feeGasMeter == nil {
+		// There are some legitimate reasons why we might not get a fee gas meter here
+		// (e.g. during a gov prop). In those cases, we just skip consuming this fee and move on.
+		return nil
+	}
+
+	exchangeFees, err := k.CalculateCommitmentSettlementFee(ctx, req)
+	if err != nil {
+		return fmt.Errorf("could not calculate commitment settlement fees: %w", err)
+	}
+	if !exchangeFees.ExchangeFees.IsZero() {
+		feeGasMeter.ConsumeFee(exchangeFees.ExchangeFees, sdk.MsgTypeURL(req), "")
 	}
 
 	return nil
