@@ -322,3 +322,115 @@ func assertAddrNotInAccounts(t *testing.T, addr sdk.AccAddress, addrName string,
 	}
 	return true
 }
+
+func createEvent(eventType string, attributes []abci.EventAttribute) abci.Event {
+	return abci.Event{
+		Type:       eventType,
+		Attributes: attributes,
+	}
+}
+
+func TestShouldFilterEvent(t *testing.T) {
+	tests := []struct {
+		name   string
+		event  abci.Event
+		expect bool
+	}{
+		{"Empty commission event", createEvent("commission", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil commission event", createEvent("commission", []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty commission event", createEvent("commission", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Empty rewards event", createEvent("rewards", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil rewards event", createEvent("rewards", []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty rewards event", createEvent("rewards", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Empty proposer_reward event", createEvent("proposer_reward", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil proposer_reward event", createEvent("proposer_reward", []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty proposer_reward event", createEvent("proposer_reward", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Empty transfer event", createEvent("transfer", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil transfer event", createEvent("transfer", []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty transfer event", createEvent("transfer", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Empty coin_spent event", createEvent("coin_spent", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil coin_spent event", createEvent("coin_spent", []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty coin_spent event", createEvent("coin_spent", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Empty coin_received event", createEvent("coin_received", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil coin_received event", createEvent("coin_received", []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty coin_received event", createEvent("coin_received", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Unhandled event type with empty amount", createEvent("unhandled_type", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), false},
+		{"Unhandled event type with nil amount", createEvent("unhandled_type", []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), false},
+		{"Unhandled event type with non-empty amount", createEvent("unhandled_type", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+		{"Event with no attributes", createEvent("commission", []abci.EventAttribute{}), false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := shouldFilterEvent(tc.event)
+			assert.Equal(t, tc.expect, result, "Test %v failed: expected %v, got %v", tc.name, tc.expect, result)
+		})
+	}
+}
+
+// func TestBeginBlocker(t *testing.T) {
+// 	db := dbm.NewMemDB()
+// 	encCdc := MakeEncodingConfig()
+// 	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, "", 5, encCdc, sdksim.EmptyAppOptions{})
+// 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+// 	req := abci.RequestBeginBlock{}
+
+// 	tests := []struct {
+// 		name     string
+// 		events   []abci.Event
+// 		expected []abci.Event
+// 	}{
+// 		{
+// 			name: "Filter out events with nil or empty amounts",
+// 			events: []abci.Event{
+// 				createEvent("commission", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}),
+// 				createEvent("transfer", []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}),
+// 				createEvent("rewards", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}),
+// 			},
+// 			expected: []abci.Event{
+// 				createEvent("rewards", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}),
+// 			},
+// 		},
+// 		{
+// 			name: "No filtering when events are valid",
+// 			events: []abci.Event{
+// 				createEvent("rewards", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}),
+// 			},
+// 			expected: []abci.Event{
+// 				createEvent("rewards", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}),
+// 			},
+// 		},
+// 	}
+
+// 	for _, tc := range tests {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			responseBeginBlock := abci.ResponseBeginBlock{Events: tc.events}
+// 			ctx = ctx.WithEventManager(sdk.NewEventManager())
+// 			converted := ConvertABCIEventsToSDKEvents(responseBeginBlock.Events)
+// 			ctx.EventManager().EmitEvents(converted)
+// 			result := app.BeginBlocker(ctx, req)
+// 			assert.Equal(t, tc.expected, result.Events, "BeginBlocker returned events not expected.")
+// 		})
+// 	}
+// }
+
+// func ConvertABCIEventsToSDKEvents(abciEvents []abci.Event) []sdk.Event {
+// 	sdkEvents := make([]sdk.Event, 0, len(abciEvents))
+
+// 	for _, e := range abciEvents {
+// 		attributes := make([]sdk.Attribute, 0, len(e.Attributes))
+// 		for _, a := range e.Attributes {
+// 			attributes = append(attributes, sdk.NewAttribute(string(a.Key), string(a.Value)))
+// 		}
+// 		sdkEvent := types.NewEvent(e.Type, attributes...)
+// 		sdkEvents = append(sdkEvents, sdkEvent)
+// 	}
+
+// 	return sdkEvents
+// }
