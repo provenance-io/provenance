@@ -93,10 +93,14 @@ var (
 	SetBuyerSettlementRatios = setBuyerSettlementRatios
 	// SetCommitmentSettlementBips is a test-only exposure of setCommitmentSettlementBips.
 	SetCommitmentSettlementBips = setCommitmentSettlementBips
+	// SetIntermediaryDenom is a test-only exposure of setIntermediaryDenom.
+	SetIntermediaryDenom = setIntermediaryDenom
 	// SetMarketActive is a test-only exposure of setMarketActive.
 	SetMarketActive = setMarketActive
 	// SetUserSettlementAllowed is a test-only exposure of setUserSettlementAllowed.
 	SetUserSettlementAllowed = setUserSettlementAllowed
+	// SetAllowCommitments is a test-only exposure of setAllowCommitments.
+	SetAllowCommitments = setAllowCommitments
 	// GrantPermissions is a test-only exposure of grantPermissions.
 	GrantPermissions = grantPermissions
 	// SetReqAttrsAsk is a test-only exposure of setReqAttrsAsk.

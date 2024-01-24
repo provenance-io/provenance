@@ -232,7 +232,71 @@ func (s *TestSuite) TestKeeper_GetCreateBidFlatFees() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_GetCreateCommitmentFlatFees()
+func (s *TestSuite) TestKeeper_GetCreateCommitmentFlatFees() {
+	setter := keeper.SetCreateCommitmentFlatFees
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		expected []sdk.Coin
+	}{
+		{
+			name:     "no entries at all",
+			setup:    nil,
+			marketID: 1,
+			expected: nil,
+		},
+		{
+			name: "no entries for market",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
+				setter(store, 3, []sdk.Coin{s.coin("3apple")})
+			},
+			marketID: 2,
+			expected: nil,
+		},
+		{
+			name: "market with one entry",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
+				setter(store, 2, []sdk.Coin{s.coin("5avocado")})
+				setter(store, 3, []sdk.Coin{s.coin("3apple")})
+			},
+			marketID: 2,
+			expected: []sdk.Coin{s.coin("5avocado")},
+		},
+		{
+			name: "market with two coins",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []sdk.Coin{s.coin("1acorn")})
+				setter(store, 2, []sdk.Coin{s.coin("8plum"), s.coin("2apple")})
+				setter(store, 3, []sdk.Coin{s.coin("3acorn")})
+			},
+			marketID: 2,
+			expected: []sdk.Coin{s.coin("2apple"), s.coin("8plum")},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var actual []sdk.Coin
+			testFunc := func() {
+				actual = s.k.GetCreateCommitmentFlatFees(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetCreateCommitmentFlatFees(%d)", tc.marketID)
+			s.Assert().Equal(s.coinsString(tc.expected), s.coinsString(actual),
+				"GetCreateCommitmentFlatFees(%d)", tc.marketID)
+		})
+	}
+}
 
 func (s *TestSuite) TestKeeper_GetSellerSettlementFlatFees() {
 	setter := keeper.SetSellerSettlementFlatFees
@@ -510,9 +574,113 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementRatios() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_GetCommitmentSettlementBips()
+func (s *TestSuite) TestKeeper_GetCommitmentSettlementBips() {
+	setter := keeper.SetCommitmentSettlementBips
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		expected uint32
+	}{
+		{
+			name:     "no entries at all",
+			setup:    nil,
+			marketID: 1,
+			expected: 0,
+		},
+		{
+			name: "no entry for market",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, 10)
+				setter(store, 3, 30)
+			},
+			marketID: 2,
+			expected: 0,
+		},
+		{
+			name: "market has entry",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, 10)
+				setter(store, 2, 20)
+				setter(store, 3, 30)
+			},
+			marketID: 2,
+			expected: 20,
+		},
+	}
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_GetIntermediaryDenom()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var actual uint32
+			testFunc := func() {
+				actual = s.k.GetCommitmentSettlementBips(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetCommitmentSettlementBips(%d)", tc.marketID)
+			s.Assert().Equal(int(tc.expected), int(actual), "GetCommitmentSettlementBips(%d)", tc.marketID)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_GetIntermediaryDenom() {
+	setter := keeper.SetIntermediaryDenom
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		expected string
+	}{
+		{
+			name:     "no entries at all",
+			setup:    nil,
+			marketID: 1,
+			expected: "",
+		},
+		{
+			name: "no entry for market",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "three")
+			},
+			marketID: 2,
+			expected: "",
+		},
+		{
+			name: "market has entry",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 2, "two")
+				setter(store, 3, "three")
+			},
+			marketID: 2,
+			expected: "two",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var actual string
+			testFunc := func() {
+				actual = s.k.GetIntermediaryDenom(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetIntermediaryDenom(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "GetIntermediaryDenom(%d)", tc.marketID)
+		})
+	}
+}
 
 func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 	setter := keeper.SetSellerSettlementRatios
@@ -1313,7 +1481,212 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_ValidateCreateCommitmentFlatFee()
+func (s *TestSuite) TestKeeper_ValidateCreateCommitmentFlatFee() {
+	setter := keeper.SetCreateCommitmentFlatFees
+	name := "commitment creation"
+	nilFeeErr := func(opts string) string {
+		return fmt.Sprintf("no %s fee provided, must be one of: %s", name, opts)
+	}
+	noFeeErr := func(fee string, opts string) string {
+		return fmt.Sprintf("invalid %s fee %q, must be one of: %s", name, fee, opts)
+	}
+	lowFeeErr := func(fee string, opts string) string {
+		return fmt.Sprintf("insufficient %s fee: %q is less than required amount %q", name, fee, opts)
+	}
+
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		fee      *sdk.Coin
+		expErr   string
+	}{
+		{
+			name:     "no fees in store: nil",
+			setup:    nil,
+			marketID: 1,
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name:     "no fees in store: not nil",
+			setup:    nil,
+			marketID: 1,
+			fee:      s.coinP("8fig"),
+			expErr:   "",
+		},
+		{
+			name: "no fees for market: nil",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
+			},
+			marketID: 6,
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name: "no fees for market: not nil",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("30fig"),
+			expErr:   "",
+		},
+		{
+			name: "one fee option: nil",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      nil,
+			expErr:   nilFeeErr("11fig"),
+		},
+		{
+			name: "one fee option: diff denom",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("5grape"),
+			expErr:   noFeeErr("5grape", "11fig"),
+		},
+		{
+			name: "one fee option: insufficient",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("10fig"),
+			expErr:   lowFeeErr("10fig", "11fig"),
+		},
+		{
+			name: "one fee option: same",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("11fig"),
+			expErr:   "",
+		},
+		{
+			name: "one fee option: more",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("12fig"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: nil",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      nil,
+			expErr:   nilFeeErr("10fig,3grape,7honeydew"),
+		},
+		{
+			name: "three fee options: wrong denom",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("80apple"),
+			expErr:   noFeeErr("80apple", "10fig,3grape,7honeydew"),
+		},
+		{
+			name: "three fee options: first, low",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("9fig"),
+			expErr:   lowFeeErr("9fig", "10fig"),
+		},
+		{
+			name: "three fee options: first, ok",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("10fig"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: second, low",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("2grape"),
+			expErr:   lowFeeErr("2grape", "3grape"),
+		},
+		{
+			name: "three fee options: second, ok",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("3grape"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: third, low",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("6honeydew"),
+			expErr:   lowFeeErr("6honeydew", "7honeydew"),
+		},
+		{
+			name: "three fee options: third, ok",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("7honeydew"),
+			expErr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var err error
+			testFunc := func() {
+				err = s.k.ValidateCreateCommitmentFlatFee(s.ctx, tc.marketID, tc.fee)
+			}
+			s.Require().NotPanics(testFunc, "ValidateCreateCommitmentFlatFee(%d, %s)", tc.marketID, s.coinPString(tc.fee))
+			s.assertErrorValue(err, tc.expErr, "ValidateCreateCommitmentFlatFee(%d, %s) error", tc.marketID, s.coinPString(tc.fee))
+		})
+	}
+}
 
 func (s *TestSuite) TestKeeper_ValidateSellerSettlementFlatFee() {
 	setter := keeper.SetSellerSettlementFlatFees
@@ -3381,7 +3754,109 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_UpdateIntermediaryDenom()
+func (s *TestSuite) TestKeeper_UpdateIntermediaryDenom() {
+	setter := keeper.SetIntermediaryDenom
+	tests := []struct {
+		name      string
+		setup     func()
+		marketID  uint32
+		denom     string
+		updatedBy string
+	}{
+		{
+			name:      "no entries",
+			setup:     nil,
+			marketID:  1,
+			denom:     "banana",
+			updatedBy: "alex",
+		},
+		{
+			name: "no entry for market: new value",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "three")
+			},
+			marketID:  2,
+			denom:     "two",
+			updatedBy: "bailey",
+		},
+		{
+			name: "no entry for market: empty",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "three")
+			},
+			marketID:  2,
+			denom:     "",
+			updatedBy: "charlie",
+		},
+		{
+			name: "market has existing: same",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "two")
+				setter(store, 3, "three")
+			},
+			marketID:  2,
+			denom:     "two",
+			updatedBy: "devin",
+		},
+		{
+			name: "market has existing: different",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "two")
+				setter(store, 3, "three")
+			},
+			marketID:  2,
+			denom:     "twenty",
+			updatedBy: "emerson",
+		},
+		{
+			name: "market has existing: empty",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "two")
+				setter(store, 3, "three")
+			},
+			marketID:  2,
+			denom:     "",
+			updatedBy: "forest",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			expEvents := sdk.Events{
+				s.untypeEvent(exchange.NewEventMarketIntermediaryDenomUpdated(tc.marketID, tc.updatedBy)),
+			}
+
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			testFunc := func() {
+				s.k.UpdateIntermediaryDenom(ctx, tc.marketID, tc.denom, tc.updatedBy)
+			}
+			s.Require().NotPanics(testFunc, "UpdateIntermediaryDenom(%d, %q, %q)", tc.marketID, tc.denom, tc.updatedBy)
+
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "events emitted during UpdateIntermediaryDenom(%d, %q, %q)",
+				tc.marketID, tc.denom, tc.updatedBy)
+
+			actDenom := s.k.GetIntermediaryDenom(s.ctx, tc.marketID)
+			s.Assert().Equal(tc.denom, actDenom, "denom after UpdateIntermediaryDenom(%d, %q, %q)", tc.marketID, tc.denom, tc.updatedBy)
+		})
+	}
+}
 
 func (s *TestSuite) TestKeeper_IsMarketKnown() {
 	tests := []struct {
@@ -3843,9 +4318,189 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_IsCommitmentAllowed()
+func (s *TestSuite) TestKeeper_IsCommitmentAllowed() {
+	setter := keeper.SetAllowCommitments
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		expected bool
+	}{
+		{
+			name:     "empty state",
+			marketID: 1,
+			expected: false,
+		},
+		{
+			name: "unknown market id",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, true)
+				setter(store, 3, true)
+			},
+			marketID: 2,
+			expected: false,
+		},
+		{
+			name: "not allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, true)
+				setter(store, 2, false)
+				setter(store, 3, true)
+			},
+			marketID: 2,
+			expected: false,
+		},
+		{
+			name: "allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, true)
+				setter(store, 2, true)
+				setter(store, 3, true)
+			},
+			marketID: 2,
+			expected: true,
+		},
+	}
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_UpdateCommitmentsAllowed()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var actual bool
+			testFunc := func() {
+				actual = s.k.IsCommitmentAllowed(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "IsCommitmentAllowed(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "IsCommitmentAllowed(%d) result", tc.marketID)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_UpdateCommitmentsAllowed() {
+	setter := keeper.SetAllowCommitments
+	tests := []struct {
+		name      string
+		setup     func()
+		marketID  uint32
+		allow     bool
+		updatedBy string
+		expErr    string
+	}{
+		{
+			name:      "empty state to allowed",
+			marketID:  1,
+			allow:     true,
+			updatedBy: "updatedBy___________",
+			expErr:    "",
+		},
+		{
+			name:      "empty state to not allowed",
+			marketID:  1,
+			allow:     false,
+			updatedBy: "updatedBy___________",
+			expErr:    "market 1 already has allow-commitments false",
+		},
+		{
+			name: "allowed to allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, true)
+				setter(store, 2, false)
+				setter(store, 3, true)
+				setter(store, 4, true)
+				setter(store, 5, false)
+			},
+			marketID:  3,
+			allow:     true,
+			updatedBy: "updatedBy___________",
+			expErr:    "market 3 already has allow-commitments true",
+		},
+		{
+			name: "allowed to not allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, true)
+				setter(store, 2, false)
+				setter(store, 3, true)
+				setter(store, 4, true)
+				setter(store, 5, false)
+			},
+			marketID:  3,
+			allow:     false,
+			updatedBy: "updated_by__________",
+			expErr:    "",
+		},
+		{
+			name: "not allowed to allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 11, true)
+				setter(store, 12, false)
+				setter(store, 13, false)
+				setter(store, 14, true)
+				setter(store, 15, false)
+			},
+			marketID:  13,
+			allow:     true,
+			updatedBy: "updated___by________",
+			expErr:    "",
+		},
+		{
+			name: "not allowed to not allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 11, true)
+				setter(store, 12, false)
+				setter(store, 13, false)
+				setter(store, 14, true)
+				setter(store, 15, false)
+			},
+			marketID:  13,
+			allow:     false,
+			updatedBy: "__updated_____by____",
+			expErr:    "market 13 already has allow-commitments false",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var expEvents sdk.Events
+			if len(tc.expErr) == 0 {
+				event := exchange.NewEventMarketAllowCommitmentsUpdated(tc.marketID, tc.updatedBy, tc.allow)
+				expEvents = append(expEvents, s.untypeEvent(event))
+			}
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = s.k.UpdateCommitmentsAllowed(ctx, tc.marketID, tc.allow, tc.updatedBy)
+			}
+			s.Require().NotPanics(testFunc, "UpdateCommitmentsAllowed(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
+			s.assertErrorValue(err, tc.expErr, "UpdateCommitmentsAllowed(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
+
+			events := em.Events()
+			s.assertEqualEvents(expEvents, events, "events after UpdateCommitmentsAllowed")
+
+			if len(tc.expErr) == 0 {
+				isActive := s.k.IsCommitmentAllowed(s.ctx, tc.marketID)
+				s.Assert().Equal(tc.allow, isActive, "IsCommitmentAllowed(%d) after UpdateCommitmentsAllowed(%d, %t, ...)",
+					tc.marketID, tc.marketID, tc.allow)
+			}
+		})
+	}
+}
 
 func (s *TestSuite) TestKeeper_HasPermission() {
 	goodAcc := sdk.AccAddress("goodAddr____________")
@@ -4937,7 +5592,82 @@ func (s *TestSuite) TestKeeper_GetReqAttrsBid() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_GetReqAttrsCommitment()
+func (s *TestSuite) TestKeeper_GetReqAttrsCommitment() {
+	setter := keeper.SetReqAttrsCommitment
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		expected []string
+	}{
+		{
+			name:     "empty state",
+			setup:    nil,
+			marketID: 1,
+			expected: nil,
+		},
+		{
+			name: "market without any",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 3, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 2,
+			expected: nil,
+		},
+		{
+			name: "market with one",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 3, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 2,
+			expected: []string{"raspberry"},
+		},
+		{
+			name: "market with two",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 3, []string{"knee", "elbow"})
+				setter(store, 4, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 3,
+			expected: []string{"knee", "elbow"},
+		},
+		{
+			name: "market with three",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 33, []string{"knee", "elbow"})
+				setter(store, 444, []string{"head", "shoulders", "toes"})
+			},
+			marketID: 444,
+			expected: []string{"head", "shoulders", "toes"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var actual []string
+			testFunc := func() {
+				actual = s.k.GetReqAttrsCommitment(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetReqAttrsCommitment(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "GetReqAttrsCommitment(%d)", tc.marketID)
+		})
+	}
+}
 
 func (s *TestSuite) TestKeeper_CanCreateAsk() {
 	setter := keeper.SetReqAttrsAsk
@@ -5385,7 +6115,229 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_CanCreateCommitment()
+func (s *TestSuite) TestKeeper_CanCreateCommitment() {
+	setter := keeper.SetReqAttrsCommitment
+	addr1 := sdk.AccAddress("addr_one____________")
+	addr2 := sdk.AccAddress("addr_two____________")
+	addr3 := sdk.AccAddress("addr_three__________")
+
+	tests := []struct {
+		name           string
+		setup          func()
+		attrKeeper     *MockAttributeKeeper
+		marketID       uint32
+		addr           sdk.AccAddress
+		expected       bool
+		expGetAttrCall bool
+	}{
+		{
+			name:     "empty state",
+			marketID: 1,
+			addr:     sdk.AccAddress("empty_state_addr____"),
+			expected: true,
+		},
+		{
+			name: "no req attrs, addr without any attributes",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 7, []string{"bb.aa"})
+				setter(store, 9, []string{"yy.zz", "*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, nil, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"jk.lm.nl", "yy.zz"}, ""),
+			marketID: 8,
+			addr:     addr2,
+			expected: true,
+		},
+		{
+			name: "no req attrs, addr with some attributes",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 7, []string{"bb.aa"})
+				setter(store, 9, []string{"yy.zz", "*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"left", "right"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"jk.lm.nl", "yy.zz"}, ""),
+			marketID: 8,
+			addr:     addr2,
+			expected: true,
+		},
+		{
+			name: "error getting attributes",
+			setup: func() {
+				setter(s.getStore(), 4, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, nil, "injected test error"),
+			marketID:       4,
+			addr:           addr1,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr, acc has",
+			setup: func() {
+				setter(s.getStore(), 88, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "bb.aa", "lm.no"}, ""),
+			marketID:       88,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr, acc does not have",
+			setup: func() {
+				setter(s.getStore(), 88, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "lm.no"}, ""),
+			marketID:       88,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc has",
+			setup: func() {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "jk.lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc has two that match",
+			setup: func() {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "ab.cd.lm.no", "cc.bb.aa", "jk.lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc does not have",
+			setup: func() {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has neither",
+			setup: func() {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"one.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has just first",
+			setup: func() {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"one.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr3,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has just second",
+			setup: func() {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr3,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has both, same order",
+			setup: func() {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr1,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has both, opposite order",
+			setup: func() {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"two.bb.aa", "one.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr1,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var expCalls AttributeCalls
+			if tc.expGetAttrCall {
+				expCalls.GetAllAttributesAddr = append(expCalls.GetAllAttributesAddr, tc.addr)
+			}
+
+			if tc.attrKeeper == nil {
+				tc.attrKeeper = NewMockAttributeKeeper()
+			}
+			kpr := s.k.WithAttributeKeeper(tc.attrKeeper)
+
+			var actual bool
+			testFunc := func() {
+				actual = kpr.CanCreateCommitment(s.ctx, tc.marketID, tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "CanCreateCommitment(%d, %q)", tc.marketID, string(tc.addr))
+			s.Assert().Equal(tc.expected, actual, "CanCreateCommitment(%d, %q) result", tc.marketID, string(tc.addr))
+			s.assertAttributeKeeperCalls(tc.attrKeeper, expCalls, "CanCreateCommitment(%d, %q)", tc.marketID, string(tc.addr))
+		})
+	}
+
+}
 
 func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 	tests := []struct {
