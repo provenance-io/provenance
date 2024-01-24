@@ -24,7 +24,7 @@ type WriteScope struct {
 	// The signers' addresses.
 	Signers []string `json:"signers"`
 	// UsdCents used to initialize the net asset value of scope
-	UsdMils uint64 `json:"usd_mills,omitempty"`
+	UsdMills uint64 `json:"usd_mills,omitempty"`
 	// Volume for the net asset value of scope
 	Volume uint64 `json:"volume,omitempty"`
 }
@@ -63,7 +63,7 @@ func (params *WriteScope) Encode() ([]sdk.Msg, error) {
 		return nil, err
 	}
 
-	msg := types.NewMsgWriteScopeRequest(*scope, params.Signers, params.UsdMils, params.Volume)
+	msg := types.NewMsgWriteScopeRequest(*scope, params.Signers, params.UsdMills, params.Volume)
 
 	return []sdk.Msg{msg}, nil
 }

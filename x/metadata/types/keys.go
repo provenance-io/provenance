@@ -163,7 +163,7 @@ func NetAssetValueKeyPrefix(scopeAddr MetadataAddress) []byte {
 	return append(NetAssetValuePrefix, address.MustLengthPrefix(scopeAddr.Bytes())...)
 }
 
-// NetAssetValueKey returns key [prefix][marker address][asset denom value] for marker net asset value by value denom
+// NetAssetValueKey returns key [prefix][marker address][asset denom value] for scope's net asset value by value denom
 func NetAssetValueKey(scopeAddr MetadataAddress, denom string) []byte {
 	return append(NetAssetValueKeyPrefix(scopeAddr), denom...)
 }

@@ -1203,7 +1203,7 @@ func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 		}
 
 		if nav.UpdatedBlockHeight != 0 {
-			return fmt.Errorf("marker net asset value must not have update height set")
+			return fmt.Errorf("scope net asset value must not have update height set")
 		}
 
 		if seen[nav.Price.Denom] {

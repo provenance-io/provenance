@@ -1080,7 +1080,7 @@ func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 		{
 			name:   "block height is set",
 			msg:    MsgAddNetAssetValuesRequest{ScopeId: scopeID, NetAssetValues: []NetAssetValue{invalidNetAssetValue2}, Signers: []string{addr}},
-			expErr: "marker net asset value must not have update height set",
+			expErr: "scope net asset value must not have update height set",
 		},
 		{
 			name:   "validation of net asset value failure",

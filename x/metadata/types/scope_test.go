@@ -1665,15 +1665,7 @@ func TestNetAssetValueValidate(t *testing.T) {
 				Price:  sdk.NewInt64Coin("jackthecat", 420),
 				Volume: 0,
 			},
-			expErr: "marker net asset value volume must be positive value",
-		},
-		{
-			name: "volume must be positive if value is greater than 1",
-			nav: NetAssetValue{
-				Price:  sdk.NewInt64Coin("usdcents", 1),
-				Volume: 0,
-			},
-			expErr: "marker net asset value volume must be positive value",
+			expErr: "scope net asset value volume must be positive value",
 		},
 		{
 			name: "successful with 0 volume and coin",

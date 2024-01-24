@@ -140,7 +140,7 @@ func WriteScopeCmd() *cobra.Command {
 				requirePartyRollup,
 			)
 
-			usdMils, err := cmd.Flags().GetUint64(FlagUsdMills)
+			usdMills, err := cmd.Flags().GetUint64(FlagUsdMills)
 			if err != nil {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagUsdMills, err)
 			}
@@ -150,11 +150,11 @@ func WriteScopeCmd() *cobra.Command {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagVolume, err)
 			}
 
-			if usdMils > 0 && volume == 0 {
+			if usdMills > 0 && volume == 0 {
 				return fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdMills)
 			}
 
-			msg := types.NewMsgWriteScopeRequest(scope, signers, usdMils, volume)
+			msg := types.NewMsgWriteScopeRequest(scope, signers, usdMills, volume)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
