@@ -55,6 +55,14 @@ func TestNetAssetValueKey(t *testing.T) {
 	assert.Equal(t, "nhash", string(navKey[denomArrLen+2:]))
 }
 
+func TestGetMarkerFromNetAssetValueKey(t *testing.T) {
+	addr, err := MarkerAddress("nhash")
+	require.NoError(t, err)
+	navKey := NetAssetValueKey(addr, "nhash")
+	addr2 := GetMarkerFromNetAssetValueKey(navKey)
+	assert.Equal(t, addr, addr2, "should match original marker address")
+}
+
 func TestDenySendMarkerPrefix(t *testing.T) {
 	addr, err := MarkerAddress("nhash")
 	require.NoError(t, err, "MarkerAddress(nhash)")
