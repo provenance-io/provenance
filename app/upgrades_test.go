@@ -425,13 +425,17 @@ func (s *UpgradeTestSuite) TestSaffron() {
 }
 
 func (s *UpgradeTestSuite) TestTourmalineRC1() {
-	expInLog := []string{}
+	expInLog := []string{
+		"INF Converting NAV units",
+	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline-rc1", expInLog, nil)
 }
 
 func (s *UpgradeTestSuite) TestTourmaline() {
-	expInLog := []string{}
+	expInLog := []string{
+		"INF Converting NAV units",
+	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline", expInLog, nil)
 }
@@ -777,6 +781,113 @@ func (s *UpgradeTestSuite) TestSetExchangeParams() {
 			// Make sure the params are as expected now.
 			params := s.app.ExchangeKeeper.GetParams(s.ctx)
 			s.Assert().Equal(tc.expectedParams, params, "params after setExchangeParams")
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestConvertNAVUnits() {
+	tests := []struct {
+		name       string
+		markerNavs []sdk.Coins
+		expected   []sdk.Coins
+	}{
+		{
+			name:       "should work with no markers",
+			markerNavs: []sdk.Coins{},
+			expected:   []sdk.Coins{},
+		},
+		{
+			name: "should work with one marker no usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1)),
+			},
+			expected: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1)),
+			},
+		},
+		{
+			name: "should work with multiple markers no usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1)),
+				sdk.NewCoins(sdk.NewInt64Coin("georgethedog", 2)),
+			},
+			expected: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1)),
+				sdk.NewCoins(sdk.NewInt64Coin("georgethedog", 2)),
+			},
+		},
+		{
+			name: "should work with one marker with usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1), sdk.NewInt64Coin(markertypes.UsdDenom, 2)),
+			},
+			expected: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1), sdk.NewInt64Coin(markertypes.UsdDenom, 20)),
+			},
+		},
+		{
+			name: "should work with multiple markers with usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1), sdk.NewInt64Coin(markertypes.UsdDenom, 3)),
+				sdk.NewCoins(sdk.NewInt64Coin("georgethedog", 2), sdk.NewInt64Coin(markertypes.UsdDenom, 4)),
+			},
+			expected: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1), sdk.NewInt64Coin(markertypes.UsdDenom, 30)),
+				sdk.NewCoins(sdk.NewInt64Coin("georgethedog", 2), sdk.NewInt64Coin(markertypes.UsdDenom, 40)),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Create the marker
+			for i, prices := range tc.markerNavs {
+				address := sdk.AccAddress(fmt.Sprintf("marker%d", i))
+				marker := markertypes.NewEmptyMarkerAccount(fmt.Sprintf("coin%d", i), address.String(), []markertypes.AccessGrant{})
+				marker.Supply = sdk.OneInt()
+				s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, marker), "AddMarkerAccount() error")
+
+				var navs []markertypes.NetAssetValue
+				for _, price := range prices {
+					navs = append(navs, markertypes.NewNetAssetValue(price, uint64(1)))
+					navAddr := sdk.AccAddress(price.Denom)
+					if acc, _ := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, price.Denom); acc == nil {
+						navMarker := markertypes.NewEmptyMarkerAccount(price.Denom, navAddr.String(), []markertypes.AccessGrant{})
+						navMarker.Supply = sdk.OneInt()
+						s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, navMarker), "AddMarkerAccount() error")
+					}
+				}
+				s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, marker, navs, "AddSetNetAssetValues() error"))
+			}
+
+			// Test Logic
+			convertNavUnits(s.ctx, s.app)
+			for i := range tc.markerNavs {
+				marker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, fmt.Sprintf("coin%d", i))
+				s.Require().NoError(err, "GetMarkerByDenom() error")
+				var prices sdk.Coins
+
+				s.app.MarkerKeeper.IterateNetAssetValues(s.ctx, marker.GetAddress(), func(state markertypes.NetAssetValue) (stop bool) {
+					prices = append(prices, state.Price)
+					return false
+				})
+				s.Require().EqualValues(tc.expected[i], prices, "should update prices correctly for nav")
+			}
+
+			// Destroy the marker
+			for i, prices := range tc.markerNavs {
+				coin := fmt.Sprintf("coin%d", i)
+				marker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, coin)
+				s.Require().NoError(err, "GetMarkerByDenom() error")
+				s.app.MarkerKeeper.RemoveMarker(s.ctx, marker)
+
+				// We need to remove the nav markers
+				for _, price := range prices {
+					if navMarker, _ := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, price.Denom); navMarker != nil {
+						s.app.MarkerKeeper.RemoveMarker(s.ctx, navMarker)
+					}
+				}
+			}
 		})
 	}
 }
