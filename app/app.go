@@ -1129,6 +1129,7 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	return responseBeginBlock
 }
 
+// filterBeginBlockerEvents filters out events from a given abci.ResponseBeginBlock according to the criteria defined in shouldFilterEvent.
 func filterBeginBlockerEvents(responseBeginBlock abci.ResponseBeginBlock) []abci.Event {
 	var filteredEvents []abci.Event
 	for _, e := range responseBeginBlock.Events {
@@ -1140,6 +1141,7 @@ func filterBeginBlockerEvents(responseBeginBlock abci.ResponseBeginBlock) []abci
 	return filteredEvents
 }
 
+// shouldFilterEvent checks if an abci.Event should be filtered based on its type and attributes.
 func shouldFilterEvent(e abci.Event) bool {
 	typeStr := string(e.Type)
 	if typeStr == distrtypes.EventTypeCommission || typeStr == distrtypes.EventTypeRewards || typeStr == distrtypes.EventTypeProposerReward || typeStr == banktypes.EventTypeTransfer || typeStr == banktypes.EventTypeCoinSpent || typeStr == banktypes.EventTypeCoinReceived {
