@@ -1085,7 +1085,7 @@ func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 		{
 			name:   "validation of net asset value failure",
 			msg:    MsgAddNetAssetValuesRequest{ScopeId: scopeID, NetAssetValues: []NetAssetValue{invalidNetAssetValue}, Signers: []string{addr}},
-			expErr: "marker net asset value volume must be positive value",
+			expErr: "scope net asset value volume must be positive value",
 		},
 		{
 			name:   "duplicate net asset values",
