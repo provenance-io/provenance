@@ -13,7 +13,9 @@ import (
 )
 
 func TestNewGroupCheckerFunc(t *testing.T) {
-
+	querier := NewMockGroupPolicyQuerier(true)
+	checker := NewGroupCheckerFunc(querier)
+	assert.NotNil(t, checker, "should return a group checker function")
 }
 
 func TestIsGroupAddress(t *testing.T) {
