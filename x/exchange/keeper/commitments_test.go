@@ -943,9 +943,244 @@ func (s *TestSuite) TestKeeper_ReleaseAllCommitmentsForMarket() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_IterateCommitments()
+func (s *TestSuite) TestKeeper_IterateCommitments() {
+	var commitments []exchange.Commitment
+	stopAfter := func(count int) func(com exchange.Commitment) bool {
+		return func(com exchange.Commitment) bool {
+			commitments = append(commitments, com)
+			return len(commitments) >= count
+		}
+	}
+	getAll := func(com exchange.Commitment) bool {
+		commitments = append(commitments, com)
+		return false
+	}
+	comStr := func(com exchange.Commitment) string {
+		return fmt.Sprintf("%d %s %s", com.MarketId, s.getAddrStrName(com.Account), com.Amount)
+	}
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_ValidateAndCollectCommitmentCreationFee()
+	tests := []struct {
+		name    string
+		setup   func()
+		cb      func(com exchange.Commitment) bool
+		expComs []exchange.Commitment
+	}{
+		{
+			name:    "no commitments",
+			cb:      getAll,
+			expComs: nil,
+		},
+		{
+			name: "one commitment",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 7, s.addr4, s.coins("74cherry"))
+			},
+			cb:      getAll,
+			expComs: []exchange.Commitment{{MarketId: 7, Account: s.addr4.String(), Amount: s.coins("74cherry")}},
+		},
+		{
+			name: "three commitments: get all",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32cherry"))
+				keeper.SetCommitmentAmount(store, 7, s.addr4, s.coins("74cherry"))
+				keeper.SetCommitmentAmount(store, 22, s.addr1, s.coins("221cherry"))
+			},
+			cb: getAll,
+			expComs: []exchange.Commitment{
+				{MarketId: 3, Account: s.addr2.String(), Amount: s.coins("32cherry")},
+				{MarketId: 7, Account: s.addr4.String(), Amount: s.coins("74cherry")},
+				{MarketId: 22, Account: s.addr1.String(), Amount: s.coins("221cherry")},
+			},
+		},
+		{
+			name: "three commitments: get one",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32cherry"))
+				keeper.SetCommitmentAmount(store, 7, s.addr4, s.coins("74cherry"))
+				keeper.SetCommitmentAmount(store, 22, s.addr1, s.coins("221cherry"))
+			},
+			cb:      stopAfter(1),
+			expComs: []exchange.Commitment{{MarketId: 3, Account: s.addr2.String(), Amount: s.coins("32cherry")}},
+		},
+		{
+			name: "three commitments: get two",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32cherry"))
+				keeper.SetCommitmentAmount(store, 7, s.addr4, s.coins("74cherry"))
+				keeper.SetCommitmentAmount(store, 22, s.addr1, s.coins("221cherry"))
+			},
+			cb: stopAfter(2),
+			expComs: []exchange.Commitment{
+				{MarketId: 3, Account: s.addr2.String(), Amount: s.coins("32cherry")},
+				{MarketId: 7, Account: s.addr4.String(), Amount: s.coins("74cherry")},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			commitments = nil
+			testFunc := func() {
+				s.k.IterateCommitments(s.ctx, tc.cb)
+			}
+			s.Require().NotPanics(testFunc, "IterateCommitments")
+			assertEqualSlice(s, tc.expComs, commitments, comStr, "IterateCommitments commitments")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_ValidateAndCollectCommitmentCreationFee() {
+	tests := []struct {
+		name        string
+		market      exchange.Market
+		bankKeeper  *MockBankKeeper
+		marketID    uint32
+		addr        sdk.AccAddress
+		fee         *sdk.Coin
+		expErr      string
+		expBankCall bool
+	}{
+		{
+			name:        "market does not require fee: some",
+			market:      exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: nil},
+			marketID:    1,
+			addr:        s.addr1,
+			fee:         s.coinP("10cherry"),
+			expBankCall: true,
+		},
+		{
+			name:     "market does not require fee: none",
+			market:   exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: nil},
+			marketID: 1,
+			addr:     s.addr1,
+			fee:      nil,
+		},
+		{
+			name:     "market has one option: none",
+			market:   exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: s.coins("10cherry")},
+			marketID: 1,
+			addr:     s.addr1,
+			fee:      nil,
+			expErr:   "no commitment creation fee provided, must be one of: 10cherry",
+		},
+		{
+			name:     "market has one option: not enough",
+			market:   exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: s.coins("10cherry")},
+			marketID: 1,
+			addr:     s.addr1,
+			fee:      s.coinP("9cherry"),
+			expErr:   "insufficient commitment creation fee: \"9cherry\" is less than required amount \"10cherry\"",
+		},
+		{
+			name:        "market has one option: same",
+			market:      exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: s.coins("10cherry")},
+			marketID:    1,
+			addr:        s.addr1,
+			fee:         s.coinP("10cherry"),
+			expBankCall: true,
+		},
+		{
+			name:        "market has one option: more",
+			market:      exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: s.coins("10cherry")},
+			marketID:    1,
+			addr:        s.addr1,
+			fee:         s.coinP("11cherry"),
+			expBankCall: true,
+		},
+		{
+			name:     "market has one option: different denom",
+			market:   exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: s.coins("10cherry")},
+			marketID: 1,
+			addr:     s.addr1,
+			fee:      s.coinP("99banana"),
+			expErr:   "invalid commitment creation fee \"99banana\", must be one of: 10cherry",
+		},
+		{
+			name:     "market has two options: none",
+			market:   exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: s.coins("10cherry,3orange")},
+			marketID: 1,
+			addr:     s.addr1,
+			fee:      nil,
+			expErr:   "no commitment creation fee provided, must be one of: 10cherry,3orange",
+		},
+		{
+			name:        "market has two options: first",
+			market:      exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: s.coins("10cherry,3orange")},
+			marketID:    1,
+			addr:        s.addr1,
+			fee:         s.coinP("10cherry"),
+			expBankCall: true,
+		},
+		{
+			name:        "market has two options: second",
+			market:      exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: s.coins("10cherry,3orange")},
+			marketID:    1,
+			addr:        s.addr1,
+			fee:         s.coinP("3orange"),
+			expBankCall: true,
+		},
+		{
+			name:     "market has two options: different denom",
+			market:   exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: s.coins("10cherry,3orange")},
+			marketID: 1,
+			addr:     s.addr1,
+			fee:      s.coinP("55pear"),
+			expErr:   "invalid commitment creation fee \"55pear\", must be one of: 10cherry,3orange",
+		},
+		{
+			name:       "error collecting fee",
+			market:     exchange.Market{MarketId: 1, FeeCreateCommitmentFlat: s.coins("10cherry")},
+			bankKeeper: NewMockBankKeeper().WithSendCoinsResults("test error injected"),
+			marketID:   1,
+			addr:       s.addr1,
+			fee:        s.coinP("10cherry"),
+			expErr: "error collecting commitment creation fee: error transferring 10cherry from " +
+				"cosmos15ky9du8a2wlstz6fpx3p4mqpjyrm5cgqjwl8sq to market 1: test error injected",
+			expBankCall: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			s.k.SetParams(s.ctx, &exchange.Params{DefaultSplit: 0})
+			s.requireCreateMarket(tc.market)
+
+			var expBankCalls BankCalls
+			if tc.expBankCall {
+				expBankCalls.SendCoins = append(expBankCalls.SendCoins, &SendCoinsArgs{
+					fromAddr: tc.addr,
+					toAddr:   exchange.GetMarketAddress(tc.marketID),
+					amt:      sdk.Coins{*tc.fee},
+				})
+			}
+
+			if tc.bankKeeper == nil {
+				tc.bankKeeper = NewMockBankKeeper()
+			}
+			kpr := s.k.WithBankKeeper(tc.bankKeeper)
+			var err error
+			testFunc := func() {
+				err = kpr.ValidateAndCollectCommitmentCreationFee(s.ctx, tc.marketID, tc.addr, tc.fee)
+			}
+			s.Require().NotPanics(testFunc, "ValidateAndCollectCommitmentCreationFee(%d, %s, %s)",
+				tc.marketID, s.getAddrName(tc.addr), tc.fee)
+			s.assertErrorValue(err, tc.expErr, "ValidateAndCollectCommitmentCreationFee(%d, %s, %s) error",
+				tc.marketID, s.getAddrName(tc.addr), tc.fee)
+			s.assertBankKeeperCalls(tc.bankKeeper, expBankCalls, "ValidateAndCollectCommitmentCreationFee(%d, %s, %s)",
+				tc.marketID, s.getAddrName(tc.addr), tc.fee)
+		})
+	}
+}
 
 // TODO[1789]: func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee()
 
