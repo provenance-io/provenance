@@ -6,10 +6,12 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func (s *TestSuite) TestKeeper_GetCommitmentAmount() {
@@ -1612,4 +1614,382 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_SettleCommitments()
+func (s *TestSuite) TestKeeper_SettleCommitments() {
+	appleMarker := s.markerAccount("100000apple")
+	bananaMarker := s.markerAccount("100000banana")
+	holdReason := func(marketID uint32) string {
+		return fmt.Sprintf("x/exchange: commitment to %d", marketID)
+	}
+	navSource := func(marketID uint32) string {
+		return fmt.Sprintf("x/exchange market %d", marketID)
+	}
+
+	tests := []struct {
+		name           string
+		setup          func()
+		markerKeeper   *MockMarkerKeeper
+		holdKeeper     *MockHoldKeeper
+		bankKeeper     *MockBankKeeper
+		req            *exchange.MsgMarketCommitmentSettleRequest
+		expEvents      sdk.Events
+		expMarkerCalls MarkerCalls
+		expHoldCalls   HoldCalls
+		expBankCalls   BankCalls
+		expErr         string
+	}{
+		{
+			name: "cannot build transfers",
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 3,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("10apple")},
+					{Account: s.addr3.String(), Amount: s.coins("20apple")},
+				},
+				Outputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("10apple")},
+					{Account: s.addr3.String(), Amount: s.coins("19apple")},
+				},
+			},
+			expErr: "failed to build transfers: failed to allocate 20apple to outputs: 1 left over",
+		},
+		{
+			name: "cannot release commitments",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("9apple"))
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 2,
+				Inputs:   []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
+				Outputs:  []exchange.AccountAmount{{Account: s.addr3.String(), Amount: s.coins("10apple")}},
+			},
+			expErr: "failed to release commitments on inputs and fees: " +
+				"commitment amount to release \"10apple\" is more than currently committed amount \"9apple\" for " +
+				s.addr2.String() + " in market 2",
+		},
+		{
+			name: "transfer failure",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("10apple"))
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 2,
+				Inputs:   []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
+				Outputs:  []exchange.AccountAmount{{Account: s.addr3.String(), Amount: s.coins("11apple")}},
+				EventTag: "testtag1",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr2.String(), 2, s.coins("10apple"), "testtag1")),
+			},
+			expHoldCalls: HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{NewReleaseHoldArgs(s.addr2, s.coins("10apple"))},
+			},
+			expErr: "input coins \"10apple\" does not equal output coins \"11apple\"",
+		},
+		{
+			name: "cannot add new commitments",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 4, s.addr3, s.coins("10apple"))
+			},
+			holdKeeper: NewMockHoldKeeper().WithAddHoldResults("no hold 4u"),
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 4,
+				Inputs:   []exchange.AccountAmount{{Account: s.addr3.String(), Amount: s.coins("10apple")}},
+				Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
+				EventTag: "testtag2",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr3.String(), 4, s.coins("10apple"), "testtag2")),
+			},
+			expHoldCalls: HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{NewReleaseHoldArgs(s.addr3, s.coins("10apple"))},
+				AddHold:     []*AddHoldArgs{NewAddHoldArgs(s.addr2, s.coins("10apple"), holdReason(4))},
+			},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{fromAddr: s.addr3, toAddr: s.addr2, amt: s.coins("10apple")},
+				},
+			},
+			expErr: "failed to re-commit funds after transfer: no hold 4u",
+		},
+		{
+			name: "one in/out with navs",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 4, s.addr3, s.coins("10apple,10banana"))
+			},
+			markerKeeper: NewMockMarkerKeeper().
+				WithGetMarkerAccount(appleMarker).
+				WithGetMarkerAccount(bananaMarker),
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 4,
+				Inputs:   []exchange.AccountAmount{{Account: s.addr3.String(), Amount: s.coins("10apple,10banana")}},
+				Outputs:  []exchange.AccountAmount{{Account: s.addr5.String(), Amount: s.coins("10apple,10banana")}},
+				Navs: []exchange.NetAssetPrice{
+					{Assets: s.coin("10apple"), Price: s.coin("33cherry")},
+					{Assets: s.coin("11apple"), Price: s.coin("700nhash")},
+					{Assets: s.coin("12banana"), Price: s.coin("62cherry")},
+					{Assets: s.coin("13banana"), Price: s.coin("1500nhash")},
+				},
+				EventTag: "testtag3",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr3.String(), 4, s.coins("10apple,10banana"), "testtag3")),
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr5.String(), 4, s.coins("10apple,10banana"), "testtag3")),
+			},
+			expMarkerCalls: MarkerCalls{
+				GetMarker: []sdk.AccAddress{appleMarker.GetAddress(), bananaMarker.GetAddress()},
+				AddSetNetAssetValues: []*AddSetNetAssetValuesArgs{
+					{
+						marker: appleMarker,
+						netAssetValues: []markertypes.NetAssetValue{
+							markertypes.NewNetAssetValue(s.coin("33cherry"), 10),
+							markertypes.NewNetAssetValue(s.coin("700nhash"), 11),
+						},
+						source: navSource(4),
+					},
+					{
+						marker: bananaMarker,
+						netAssetValues: []markertypes.NetAssetValue{
+							markertypes.NewNetAssetValue(s.coin("62cherry"), 12),
+							markertypes.NewNetAssetValue(s.coin("1500nhash"), 13),
+						},
+						source: navSource(4),
+					},
+				},
+			},
+			expHoldCalls: HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{NewReleaseHoldArgs(s.addr3, s.coins("10apple,10banana"))},
+				AddHold:     []*AddHoldArgs{NewAddHoldArgs(s.addr5, s.coins("10apple,10banana"), holdReason(4))},
+			},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{fromAddr: s.addr3, toAddr: s.addr5, amt: s.coins("10apple,10banana")},
+				},
+			},
+		},
+		{
+			name: "one in/out with fees",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("1cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("2cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("3cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr4, s.coins("11apple,4cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr5, s.coins("5cherry"))
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 2,
+				Inputs:   []exchange.AccountAmount{{Account: s.addr4.String(), Amount: s.coins("10apple")}},
+				Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
+				Fees: []exchange.AccountAmount{
+					{Account: s.addr1.String(), Amount: s.coins("1cherry")},
+					{Account: s.addr2.String(), Amount: s.coins("2cherry")},
+					{Account: s.addr3.String(), Amount: s.coins("3cherry")},
+					{Account: s.addr4.String(), Amount: s.coins("4cherry")},
+					{Account: s.addr5.String(), Amount: s.coins("5cherry")},
+				},
+				EventTag: "testtag4",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr4.String(), 2, s.coins("10apple,4cherry"), "testtag4")),
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr1.String(), 2, s.coins("1cherry"), "testtag4")),
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr2.String(), 2, s.coins("2cherry"), "testtag4")),
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr3.String(), 2, s.coins("3cherry"), "testtag4")),
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr5.String(), 2, s.coins("5cherry"), "testtag4")),
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr2.String(), 2, s.coins("10apple"), "testtag4")),
+			},
+			expHoldCalls: HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{
+					NewReleaseHoldArgs(s.addr4, s.coins("10apple,4cherry")),
+					NewReleaseHoldArgs(s.addr1, s.coins("1cherry")),
+					NewReleaseHoldArgs(s.addr2, s.coins("2cherry")),
+					NewReleaseHoldArgs(s.addr3, s.coins("3cherry")),
+					NewReleaseHoldArgs(s.addr5, s.coins("5cherry")),
+				},
+				AddHold: []*AddHoldArgs{NewAddHoldArgs(s.addr2, s.coins("10apple"), holdReason(2))},
+			},
+			expBankCalls: BankCalls{
+				SendCoins: []*SendCoinsArgs{
+					{fromAddr: s.addr4, toAddr: s.addr2, amt: s.coins("10apple")},
+				},
+				InputOutputCoins: []*InputOutputCoinsArgs{
+					{
+						inputs: []banktypes.Input{
+							{Address: s.addr1.String(), Coins: s.coins("1cherry")},
+							{Address: s.addr2.String(), Coins: s.coins("2cherry")},
+							{Address: s.addr3.String(), Coins: s.coins("3cherry")},
+							{Address: s.addr4.String(), Coins: s.coins("4cherry")},
+							{Address: s.addr5.String(), Coins: s.coins("5cherry")},
+						},
+						outputs: []banktypes.Output{
+							{Address: s.marketAddr2.String(), Coins: s.coins("15cherry")},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "multiple ins/outs/fees",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("11apple,51banana,1cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("12apple,2cherry,72orange"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("13apple,3cherry,50orange,41pear"))
+				keeper.SetCommitmentAmount(store, 2, s.addr4, s.coins("14apple,4cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr5, s.coins("5cherry,500raspberry"))
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.k.GetAuthority(),
+				MarketId: 2,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr1.String(), Amount: s.coins("10apple,51banana")},
+					{Account: s.addr2.String(), Amount: s.coins("10apple,35orange")},
+					{Account: s.addr3.String(), Amount: s.coins("13apple,50orange,41pear")},
+					{Account: s.addr4.String(), Amount: s.coins("10apple")},
+					{Account: s.addr5.String(), Amount: s.coins("500raspberry")},
+				},
+				Outputs: []exchange.AccountAmount{
+					{Account: s.addr1.String(), Amount: s.coins("77orange,65raspberry")},
+					{Account: s.addr2.String(), Amount: s.coins("40pear,315raspberry")},
+					{Account: s.addr4.String(), Amount: s.coins("50banana,120raspberry,8orange")},
+					{Account: s.addr5.String(), Amount: s.coins("43apple,1banana,1pear")},
+				},
+				Fees: []exchange.AccountAmount{
+					{Account: s.addr1.String(), Amount: s.coins("1cherry")},
+					{Account: s.addr2.String(), Amount: s.coins("2cherry")},
+					{Account: s.addr3.String(), Amount: s.coins("3cherry")},
+					{Account: s.addr4.String(), Amount: s.coins("4cherry")},
+					{Account: s.addr5.String(), Amount: s.coins("5cherry")},
+				},
+				EventTag: "messytag",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr1.String(), 2, s.coins("10apple,51banana,1cherry"), "messytag")),
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr2.String(), 2, s.coins("10apple,2cherry,35orange"), "messytag")),
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr3.String(), 2, s.coins("13apple,3cherry,50orange,41pear"), "messytag")),
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr4.String(), 2, s.coins("10apple,4cherry"), "messytag")),
+				s.untypeEvent(exchange.NewEventFundsReleased(s.addr5.String(), 2, s.coins("5cherry,500raspberry"), "messytag")),
+
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr1.String(), 2, s.coins("77orange,65raspberry"), "messytag")),
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr2.String(), 2, s.coins("40pear,315raspberry"), "messytag")),
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr4.String(), 2, s.coins("50banana,120raspberry,8orange"), "messytag")),
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr5.String(), 2, s.coins("43apple,1banana,1pear"), "messytag")),
+			},
+			expHoldCalls: HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{
+					NewReleaseHoldArgs(s.addr1, s.coins("10apple,51banana,1cherry")),
+					NewReleaseHoldArgs(s.addr2, s.coins("10apple,2cherry,35orange")),
+					NewReleaseHoldArgs(s.addr3, s.coins("13apple,3cherry,50orange,41pear")),
+					NewReleaseHoldArgs(s.addr4, s.coins("10apple,4cherry")),
+					NewReleaseHoldArgs(s.addr5, s.coins("5cherry,500raspberry")),
+				},
+				AddHold: []*AddHoldArgs{
+					NewAddHoldArgs(s.addr1, s.coins("77orange,65raspberry"), holdReason(2)),
+					NewAddHoldArgs(s.addr2, s.coins("40pear,315raspberry"), holdReason(2)),
+					NewAddHoldArgs(s.addr4, s.coins("50banana,120raspberry,8orange"), holdReason(2)),
+					NewAddHoldArgs(s.addr5, s.coins("43apple,1banana,1pear"), holdReason(2)),
+				},
+			},
+			expBankCalls: BankCalls{
+				InputOutputCoins: []*InputOutputCoinsArgs{
+					{
+						inputs: []banktypes.Input{
+							{Address: s.addr2.String(), Coins: s.coins("35orange")},
+							{Address: s.addr3.String(), Coins: s.coins("42orange")},
+							{Address: s.addr5.String(), Coins: s.coins("65raspberry")},
+						},
+						outputs: []banktypes.Output{{Address: s.addr1.String(), Coins: s.coins("77orange,65raspberry")}},
+					},
+					{
+						inputs: []banktypes.Input{
+							{Address: s.addr3.String(), Coins: s.coins("40pear")},
+							{Address: s.addr5.String(), Coins: s.coins("315raspberry")},
+						},
+						outputs: []banktypes.Output{{Address: s.addr2.String(), Coins: s.coins("40pear,315raspberry")}},
+					},
+					{
+						inputs: []banktypes.Input{
+							{Address: s.addr1.String(), Coins: s.coins("50banana")},
+							{Address: s.addr3.String(), Coins: s.coins("8orange")},
+							{Address: s.addr5.String(), Coins: s.coins("120raspberry")},
+						},
+						outputs: []banktypes.Output{{Address: s.addr4.String(), Coins: s.coins("50banana,120raspberry,8orange")}},
+					},
+					{
+						inputs: []banktypes.Input{
+							{Address: s.addr1.String(), Coins: s.coins("10apple,1banana")},
+							{Address: s.addr2.String(), Coins: s.coins("10apple")},
+							{Address: s.addr3.String(), Coins: s.coins("13apple,1pear")},
+							{Address: s.addr4.String(), Coins: s.coins("10apple")},
+						},
+						outputs: []banktypes.Output{{Address: s.addr5.String(), Coins: s.coins("43apple,1banana,1pear")}},
+					},
+					{
+						inputs: []banktypes.Input{
+							{Address: s.addr1.String(), Coins: s.coins("1cherry")},
+							{Address: s.addr2.String(), Coins: s.coins("2cherry")},
+							{Address: s.addr3.String(), Coins: s.coins("3cherry")},
+							{Address: s.addr4.String(), Coins: s.coins("4cherry")},
+							{Address: s.addr5.String(), Coins: s.coins("5cherry")},
+						},
+						outputs: []banktypes.Output{{Address: s.marketAddr2.String(), Coins: s.coins("15cherry")}},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			if tc.markerKeeper == nil {
+				tc.markerKeeper = NewMockMarkerKeeper()
+			}
+			if tc.bankKeeper == nil {
+				tc.bankKeeper = NewMockBankKeeper()
+			}
+			if tc.holdKeeper == nil {
+				tc.holdKeeper = NewMockHoldKeeper()
+			}
+
+			for _, exp := range tc.expBankCalls.SendCoins {
+				exp.ctxHasQuarantineBypass = true
+			}
+			for _, exp := range tc.expBankCalls.InputOutputCoins {
+				exp.ctxHasQuarantineBypass = true
+			}
+
+			kpr := s.k.
+				WithMarkerKeeper(tc.markerKeeper).
+				WithBankKeeper(tc.bankKeeper).
+				WithHoldKeeper(tc.holdKeeper)
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = kpr.SettleCommitments(ctx, tc.req)
+			}
+			s.Require().NotPanics(testFunc, "SettleCommitments")
+			s.assertErrorValue(err, tc.expErr, "SettleCommitments error")
+
+			actEvents := em.Events()
+			s.assertEqualEvents(tc.expEvents, actEvents, "events emitted during SettleCommitments")
+			s.assertMarkerKeeperCalls(tc.markerKeeper, tc.expMarkerCalls, "SettleCommitments")
+			s.assertBankKeeperCalls(tc.bankKeeper, tc.expBankCalls, "SettleCommitments")
+			s.assertHoldKeeperCalls(tc.holdKeeper, tc.expHoldCalls, "SettleCommitments")
+		})
+	}
+}

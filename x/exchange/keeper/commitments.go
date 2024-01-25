@@ -337,10 +337,13 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 		return fmt.Errorf("failed to build transfers: %w", err)
 	}
 
-	// Release the commitments on the inputs
-	err = k.ReleaseCommitments(ctx, marketID, inputs, req.EventTag)
+	// Release the commitments on the inputs and fees
+	inputsAndFees := make([]exchange.AccountAmount, 0, len(inputs)+len(fees))
+	inputsAndFees = append(inputsAndFees, inputs...)
+	inputsAndFees = append(inputsAndFees, fees...)
+	err = k.ReleaseCommitments(ctx, marketID, exchange.SimplifyAccountAmounts(inputsAndFees), req.EventTag)
 	if err != nil {
-		return fmt.Errorf("failed to release commitments on inputs: %w", err)
+		return fmt.Errorf("failed to release commitments on inputs and fees: %w", err)
 	}
 
 	// Do the transfers
