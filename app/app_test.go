@@ -14,6 +14,8 @@ import (
 	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -321,4 +323,104 @@ func assertAddrNotInAccounts(t *testing.T, addr sdk.AccAddress, addrName string,
 		}
 	}
 	return true
+}
+
+func createEvent(eventType string, attributes []abci.EventAttribute) abci.Event {
+	return abci.Event{
+		Type:       eventType,
+		Attributes: attributes,
+	}
+}
+
+func TestShouldFilterEvent(t *testing.T) {
+	tests := []struct {
+		name   string
+		event  abci.Event
+		expect bool
+	}{
+		{"Empty commission event", createEvent(distrtypes.EventTypeCommission, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil commission event", createEvent(distrtypes.EventTypeCommission, []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty commission event", createEvent(distrtypes.EventTypeCommission, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Empty rewards event", createEvent(distrtypes.EventTypeRewards, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil rewards event", createEvent(distrtypes.EventTypeRewards, []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty rewards event", createEvent(distrtypes.EventTypeRewards, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Empty proposer_reward event", createEvent(distrtypes.EventTypeProposerReward, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil proposer_reward event", createEvent(distrtypes.EventTypeProposerReward, []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty proposer_reward event", createEvent(distrtypes.EventTypeProposerReward, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Empty transfer event", createEvent(banktypes.EventTypeTransfer, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil transfer event", createEvent(banktypes.EventTypeTransfer, []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty transfer event", createEvent(banktypes.EventTypeTransfer, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Empty coin_spent event", createEvent(banktypes.EventTypeCoinSpent, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil coin_spent event", createEvent(banktypes.EventTypeCoinSpent, []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty coin_spent event", createEvent(banktypes.EventTypeCoinSpent, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Empty coin_received event", createEvent(banktypes.EventTypeCoinReceived, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), true},
+		{"Nil coin_received event", createEvent(banktypes.EventTypeCoinReceived, []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), true},
+		{"Non-empty coin_received event", createEvent(banktypes.EventTypeCoinReceived, []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+
+		{"Unhandled event type with empty amount", createEvent("unhandled_type", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("")}}), false},
+		{"Unhandled event type with nil amount", createEvent("unhandled_type", []abci.EventAttribute{{Key: []byte("amount"), Value: nil}}), false},
+		{"Unhandled event type with non-empty amount", createEvent("unhandled_type", []abci.EventAttribute{{Key: []byte("amount"), Value: []byte("100")}}), false},
+		{"Event with no attributes", createEvent(distrtypes.EventTypeCommission, []abci.EventAttribute{}), false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := shouldFilterEvent(tc.event)
+			assert.Equal(t, tc.expect, result, "Test %v failed: expected %v, got %v", tc.name, tc.expect, result)
+		})
+	}
+}
+
+func TestFilterBeginBlockerEvents(t *testing.T) {
+	tests := []struct {
+		name     string
+		events   []abci.Event
+		expected []abci.Event
+	}{
+		{
+			name: "Filter out events with empty amounts",
+			events: []abci.Event{
+				createEvent(distrtypes.EventTypeCommission, []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyAmount), Value: []byte("")}}),
+				createEvent(distrtypes.EventTypeRewards, []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyAmount), Value: []byte("100")}}),
+			},
+			expected: []abci.Event{
+				createEvent(distrtypes.EventTypeRewards, []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyAmount), Value: []byte("100")}}),
+			},
+		},
+		{
+			name: "No filtering when all events are valid",
+			events: []abci.Event{
+				createEvent(banktypes.EventTypeTransfer, []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyAmount), Value: []byte("100")}}),
+			},
+			expected: []abci.Event{
+				createEvent(banktypes.EventTypeTransfer, []abci.EventAttribute{{Key: []byte(sdk.AttributeKeyAmount), Value: []byte("100")}}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			responseBeginBlock := abci.ResponseBeginBlock{Events: tc.events}
+			actualEvents := filterBeginBlockerEvents(responseBeginBlock)
+			assert.Equal(t, len(tc.expected), len(actualEvents), "Number of events mismatch")
+
+			for i, expectedEvent := range tc.expected {
+				actualEvent := actualEvents[i]
+				assert.Equal(t, expectedEvent.Type, actualEvent.Type, "Event types mismatch")
+
+				assert.Equal(t, len(expectedEvent.Attributes), len(actualEvent.Attributes), "Number of attributes mismatch in event %v", expectedEvent.Type)
+
+				for j, expectedAttribute := range expectedEvent.Attributes {
+					actualAttribute := actualEvent.Attributes[j]
+					assert.Equal(t, expectedAttribute.Key, actualAttribute.Key, "Attribute keys mismatch in event %v", expectedEvent.Type)
+					assert.Equal(t, expectedAttribute.Value, actualAttribute.Value, "Attribute values mismatch in event %v", expectedEvent.Type)
+				}
+			}
+		})
+	}
 }
