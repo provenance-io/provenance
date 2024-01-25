@@ -8152,4 +8152,135 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_CloseMarket()
+func (s *TestSuite) TestKeeper_CloseMarket() {
+	askOrder := func(orderID uint64, marketID uint32, addr sdk.AccAddress, assets, price string) *exchange.Order {
+		return exchange.NewOrder(orderID).WithAsk(&exchange.AskOrder{
+			MarketId: marketID,
+			Seller:   addr.String(),
+			Assets:   s.coin(assets),
+			Price:    s.coin(price),
+		})
+	}
+	bidOrder := func(orderID uint64, marketID uint32, addr sdk.AccAddress, assets, price string) *exchange.Order {
+		return exchange.NewOrder(orderID).WithBid(&exchange.BidOrder{
+			MarketId: marketID,
+			Buyer:    addr.String(),
+			Assets:   s.coin(assets),
+			Price:    s.coin(price),
+		})
+	}
+	marketID := uint32(14)
+	signer := s.k.GetAuthority()
+
+	expMarket := exchange.Market{
+		MarketId:                 marketID,
+		AcceptingOrders:          false,
+		AllowUserSettlement:      true,
+		AllowCommitments:         false,
+		CommitmentSettlementBips: 10,
+		IntermediaryDenom:        "cherry",
+	}
+
+	marketOrders := []*exchange.Order{
+		askOrder(1, marketID, s.addr1, "10apple", "20peach"),
+		askOrder(2, marketID, s.addr1, "15apple", "25peach"),
+		askOrder(3, marketID, s.addr1, "20apple", "26peach"),
+		bidOrder(10, marketID, s.addr2, "45apple", "70peach"),
+		bidOrder(22, marketID, s.addr3, "71acorn", "5plum"),
+		askOrder(24, marketID, s.addr3, "67acorn", "5plum"),
+	}
+	nonMarketOrders := []*exchange.Order{
+		askOrder(4, marketID-1, s.addr1, "10apple", "20peach"),
+		bidOrder(23, marketID+1, s.addr3, "67acorn", "5plum"),
+	}
+	allOrders := make([]*exchange.Order, 0, len(marketOrders)+len(nonMarketOrders))
+	allOrders = append(allOrders, marketOrders...)
+	allOrders = append(allOrders, nonMarketOrders...)
+
+	marketCommitments := []exchange.Commitment{
+		{MarketId: marketID, Account: s.addr1.String(), Amount: s.coins("57cherry,12orange")},
+		{MarketId: marketID, Account: s.addr3.String(), Amount: s.coins("88apple,52banana")},
+		{MarketId: marketID, Account: s.addr5.String(), Amount: s.coins("14acorn,8peach,15plum")},
+	}
+	nonMarketCommitments := []exchange.Commitment{
+		{MarketId: marketID - 1, Account: s.addr3.String(), Amount: s.coins("12apple,48banana")},
+		{MarketId: marketID + 1, Account: s.addr3.String(), Amount: s.coins("832cherry")},
+	}
+	allCommitments := make([]exchange.Commitment, 0, len(marketCommitments)+len(nonMarketCommitments))
+	allCommitments = append(allCommitments, marketCommitments...)
+	allCommitments = append(allCommitments, nonMarketCommitments...)
+
+	expHoldCalls := HoldCalls{
+		ReleaseHold: []*ReleaseHoldArgs{
+			NewReleaseHoldArgs(s.addr1, s.coins("10apple")),
+			NewReleaseHoldArgs(s.addr1, s.coins("15apple")),
+			NewReleaseHoldArgs(s.addr1, s.coins("20apple")),
+			NewReleaseHoldArgs(s.addr2, s.coins("70peach")),
+			NewReleaseHoldArgs(s.addr3, s.coins("5plum")),
+			NewReleaseHoldArgs(s.addr3, s.coins("67acorn")),
+			NewReleaseHoldArgs(s.addr1, s.coins("57cherry,12orange")),
+			NewReleaseHoldArgs(s.addr3, s.coins("88apple,52banana")),
+			NewReleaseHoldArgs(s.addr5, s.coins("14acorn,8peach,15plum")),
+		},
+	}
+	expEvents := make(sdk.Events, 2, 2+len(marketOrders)+len(marketCommitments))
+	expEvents[0] = s.untypeEvent(exchange.NewEventMarketDisabled(marketID, signer))
+	expEvents[1] = s.untypeEvent(exchange.NewEventMarketCommitmentsDisabled(marketID, signer))
+	for _, order := range marketOrders {
+		expEvents = append(expEvents, s.untypeEvent(exchange.NewEventOrderCancelled(order, signer)))
+	}
+	for _, com := range marketCommitments {
+		expEvents = append(expEvents, s.untypeEvent(exchange.NewEventFundsReleased(com.Account, marketID, com.Amount, "GovCloseMarket")))
+	}
+
+	initMarket := s.copyMarket(expMarket)
+	initMarket.AcceptingOrders = true
+	initMarket.AllowCommitments = true
+
+	s.clearExchangeState()
+	s.requireCreateMarket(initMarket)
+	store := s.getStore()
+	for _, order := range allOrders {
+		s.Require().NoError(s.k.SetOrderInStore(store, *order), "SetOrderInStore(%d)", order.OrderId)
+	}
+	for i, com := range allCommitments {
+		addr, err := sdk.AccAddressFromBech32(com.Account)
+		s.Require().NoError(err, "[%d]: AccAddressFromBech32(%q) error", i, com.Account)
+		keeper.SetCommitmentAmount(store, com.MarketId, addr, com.Amount)
+	}
+	store = nil
+
+	// Setup done, make the CloseMarket call.
+	em := sdk.NewEventManager()
+	ctx := s.ctx.WithEventManager(em)
+	holdKeeper := NewMockHoldKeeper()
+	kpr := s.k.WithHoldKeeper(holdKeeper)
+	testFunc := func() {
+		kpr.CloseMarket(ctx, marketID, signer)
+	}
+	s.Require().NotPanics(testFunc, "CloseMarket(%d, %q)", marketID, signer)
+
+	// And check everything.
+	s.assertHoldKeeperCalls(holdKeeper, expHoldCalls, "CloseMarket(%d, %q)", marketID, signer)
+	actEvents := em.Events()
+	s.assertEqualEvents(expEvents, actEvents, "events emitted during CloseMarket(%d, %q)", marketID, signer)
+
+	actMarket := s.k.GetMarket(s.ctx, marketID)
+	s.Assert().Equal(&expMarket, actMarket, "market after CloseMarket(%d, %q)", marketID, signer)
+
+	var actOrders []*exchange.Order
+	err := s.k.IterateOrders(s.ctx, func(order *exchange.Order) bool {
+		actOrders = append(actOrders, order)
+		return false
+	})
+	if s.Assert().NoError(err, "IterateOrders") {
+		s.assertEqualOrders(nonMarketOrders, actOrders, "orders left after CloseMarket(%d, %q)", marketID, signer)
+	}
+
+	var actCommitments []exchange.Commitment
+	s.k.IterateCommitments(s.ctx, func(commitment exchange.Commitment) bool {
+		actCommitments = append(actCommitments, commitment)
+		return false
+	})
+	s.assertEqualCommitments(nonMarketCommitments, actCommitments, "commitments left after CloseMarket(%d, %q)", marketID, signer)
+}

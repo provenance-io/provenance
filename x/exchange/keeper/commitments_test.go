@@ -958,9 +958,6 @@ func (s *TestSuite) TestKeeper_IterateCommitments() {
 		commitments = append(commitments, com)
 		return false
 	}
-	comStr := func(com exchange.Commitment) string {
-		return fmt.Sprintf("%d %s %s", com.MarketId, s.getAddrStrName(com.Account), com.Amount)
-	}
 
 	tests := []struct {
 		name    string
@@ -1036,7 +1033,7 @@ func (s *TestSuite) TestKeeper_IterateCommitments() {
 				s.k.IterateCommitments(s.ctx, tc.cb)
 			}
 			s.Require().NotPanics(testFunc, "IterateCommitments")
-			assertEqualSlice(s, tc.expComs, commitments, comStr, "IterateCommitments commitments")
+			s.assertEqualCommitments(tc.expComs, commitments, "IterateCommitments commitments")
 		})
 	}
 }

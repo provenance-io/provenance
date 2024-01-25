@@ -569,6 +569,11 @@ func (s *TestSuite) getOrderIDStr(order *exchange.Order) string {
 	return fmt.Sprintf("%d", order.OrderId)
 }
 
+// getCommitmentString gets a simplified string for a commitment.
+func (s *TestSuite) getCommitmentString(com exchange.Commitment) string {
+	return fmt.Sprintf("%d: %s %s", com.MarketId, com.Account, com.Amount)
+}
+
 // agCanOnly creates an AccessGrant for the given address with only the provided permission.
 func (s *TestSuite) agCanOnly(addr sdk.AccAddress, perm exchange.Permission) exchange.AccessGrant {
 	return exchange.AccessGrant{
@@ -725,6 +730,13 @@ func (s *TestSuite) assertEqualOrderID(expected, actual uint64, msgAndArgs ...in
 func (s *TestSuite) assertEqualOrders(expected, actual []*exchange.Order, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	return assertEqualSlice(s, expected, actual, s.getOrderIDStr, msg, args...)
+}
+
+// assertEqualCommitments asserts that the slices of commitments are equal.
+// If not, some further assertions are made to try to help try to clarify the differences.
+func (s *TestSuite) assertEqualCommitments(expected, actual []exchange.Commitment, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, actual, s.getCommitmentString, msg, args...)
 }
 
 // assertErrorValue is a wrapper for assertions.AssertErrorValue for this TestSuite.

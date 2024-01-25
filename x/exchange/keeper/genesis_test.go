@@ -31,7 +31,7 @@ func (s *TestSuite) assertEqualGenState(expected, actual *exchange.GenesisState,
 	assertEqualSlice(s, expected.Orders, actual.Orders, s.getGenStateOrderStr, msg+" Orders", args...)
 	s.Assert().Equalf(int(expected.LastMarketId), int(actual.LastMarketId), msg+" LastMarketId", args...)
 	s.Assert().Equalf(fmt.Sprintf("%d", expected.LastOrderId), fmt.Sprintf("%d", actual.LastOrderId), msg+" LastMarketId", args...)
-	assertEqualSlice(s, expected.Commitments, actual.Commitments, s.getGenStateCommitmentStr, msg+" Commitments", args...)
+	s.assertEqualCommitments(expected.Commitments, actual.Commitments, msg+" Commitments", args...)
 	return false
 }
 
@@ -49,11 +49,6 @@ func (s *TestSuite) getGenStateMarketStr(market exchange.Market) string {
 func (s *TestSuite) getGenStateOrderStr(order exchange.Order) string {
 	return fmt.Sprintf("%s order %d: %s %s at %s",
 		order.GetOrderType(), order.OrderId, order.GetOwner(), order.GetAssets(), order.GetPrice())
-}
-
-// getGenStateCommitmentStr returns a string representing the commitment to help identify slice entries.
-func (s *TestSuite) getGenStateCommitmentStr(commitment exchange.Commitment) string {
-	return fmt.Sprintf("%d: %s %s", commitment.MarketId, commitment.Account, commitment.Amount)
 }
 
 func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
