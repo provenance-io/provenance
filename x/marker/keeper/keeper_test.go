@@ -755,7 +755,8 @@ func TestCanForceTransferFrom(t *testing.T) {
 		app.AccountKeeper.SetAccount(ctx, acc)
 	}
 
-	createGroup := func() string {
+	createGroup := func() sdk.AccAddress {
+		goCtx := sdk.WrapSDKContext(ctx)
 		msg, err := group.NewMsgCreateGroupWithPolicy("cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 			[]group.MemberRequest{
 				{
@@ -766,15 +767,16 @@ func TestCanForceTransferFrom(t *testing.T) {
 			},
 			"", "", true, group.NewPercentageDecisionPolicy("0.5", time.Second, time.Second))
 		require.NoError(t, err, "NewMsgCreateGroupWithPolicy")
-		res, err := app.GroupKeeper.CreateGroupWithPolicy(ctx, msg)
+		res, err := app.GroupKeeper.CreateGroupWithPolicy(goCtx, msg)
 		require.NoError(t, err, "CreateGroupWithPolicy")
-		return res.GroupPolicyAddress
+
+		return sdk.MustAccAddressFromBech32(res.GroupPolicyAddress)
 	}
 
 	addrNoAcc := sdk.AccAddress("addrNoAcc___________")
 	addrSeq0 := sdk.AccAddress("addrSeq0____________")
 	addrSeq1 := sdk.AccAddress("addrSeq1____________")
-	addrGroup := sdk.AccAddress(createGroup())
+	addrGroup := createGroup()
 	setAcc(addrSeq0, 0)
 	setAcc(addrSeq1, 1)
 
