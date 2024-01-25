@@ -120,4 +120,7 @@ var (
 	CreateConstantIndexEntries = createConstantIndexEntries
 	// CreateMarketExternalIDToOrderEntry is a test-only exposure of createMarketExternalIDToOrderEntry.
 	CreateMarketExternalIDToOrderEntry = createMarketExternalIDToOrderEntry
+
+	// SetCommitmentAmount is a test-only exposure of setCommitmentAmount.
+	SetCommitmentAmount = setCommitmentAmount
 )
