@@ -577,17 +577,20 @@ func New(
 		authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName), // Allow bond denom to be a restricted coin.
 	}
 
-	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
-		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper, markerReqAttrBypassAddrs,
-	)
-	app.MarkerKeeper = app.MarkerKeeper.WithPrivilegeChecker(GroupPrivilegesFunc(func(ctx sdk.Context, account sdk.AccAddress) bool {
+	// Provides a way to check if an account is in a group.
+	groupChecker := GroupCheckerFunc(func(ctx sdk.Context, account sdk.AccAddress) bool {
 		msg := &group.QueryGroupPolicyInfoRequest{Address: account.String()}
 		goCtx := sdk.WrapSDKContext(ctx)
 		_, err := app.GroupKeeper.GroupPolicyInfo(goCtx, msg)
 		return err == nil
-	}))
+	})
+
+	app.MarkerKeeper = markerkeeper.NewKeeper(
+		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName),
+		app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
+		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper, markerReqAttrBypassAddrs,
+		groupChecker,
+	)
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
 		appCodec, keys[hold.StoreKey], app.BankKeeper,

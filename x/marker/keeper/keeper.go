@@ -87,8 +87,8 @@ type Keeper struct {
 	// if there aren't required attributes, it behaves as if the sender has transfer permission.
 	reqAttrBypassAddrs types.ImmutableAccAddresses
 
-	// privilegeChecker is a set of additional checks to help verify if an account is privileged.
-	privilegeChecker types.PrivilegeChecker
+	// groupChecker provides a way to check if an account is in a group.
+	groupChecker types.GroupChecker
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -108,6 +108,7 @@ func NewKeeper(
 	nameKeeper types.NameKeeper,
 	ibcTransferServer types.IbcTransferMsgServer,
 	reqAttrBypassAddrs []sdk.AccAddress,
+	checker types.GroupChecker,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -128,6 +129,7 @@ func NewKeeper(
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
 		ibcTransferServer:     ibcTransferServer,
 		reqAttrBypassAddrs:    types.NewImmutableAccAddresses(reqAttrBypassAddrs),
+		groupChecker:          checker,
 	}
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
@@ -368,10 +370,4 @@ func (k Keeper) GetReqAttrBypassAddrs() []sdk.AccAddress {
 // IsReqAttrBypassAddr returns true if the provided addr can bypass the required attributes checking.
 func (k Keeper) IsReqAttrBypassAddr(addr sdk.AccAddress) bool {
 	return k.reqAttrBypassAddrs.Has(addr)
-}
-
-// WithPrivilegeChecker returns a keeper with an updated PrivilegeChecker
-func (k Keeper) WithPrivilegeChecker(checker types.PrivilegeChecker) Keeper {
-	k.privilegeChecker = checker
-	return k
 }

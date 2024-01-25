@@ -1831,7 +1831,7 @@ func TestBypassAddrsLocked(t *testing.T) {
 		sdk.AccAddress("addrs[4]____________"),
 	}
 
-	mk := markerkeeper.NewKeeper(nil, nil, paramtypes.NewSubspace(nil, nil, nil, nil, "test"), nil, &dummyBankKeeper{}, nil, nil, nil, nil, nil, addrs)
+	mk := markerkeeper.NewKeeper(nil, nil, paramtypes.NewSubspace(nil, nil, nil, nil, "test"), nil, &dummyBankKeeper{}, nil, nil, nil, nil, nil, addrs, nil)
 
 	// Now that the keeper has been created using the provided addresses, change the first byte of
 	// the first address to something else. Then, get the addresses back from the keeper and make
