@@ -586,7 +586,7 @@ func New(
 		msg := &group.QueryGroupPolicyInfoRequest{Address: account.String()}
 		goCtx := sdk.WrapSDKContext(ctx)
 		_, err := app.GroupKeeper.GroupPolicyInfo(goCtx, msg)
-		return err != nil
+		return err == nil
 	}))
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
