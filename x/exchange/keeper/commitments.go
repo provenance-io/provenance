@@ -238,7 +238,7 @@ func (k Keeper) lookupNav(ctx sdk.Context, markerDenom, priceDenom string, known
 // If no inputs are given, the result will only have the ToFeeNav field (if it exists).
 func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) (*exchange.QueryCommitmentSettlementFeeCalcResponse, error) {
 	if req == nil {
-		return nil, fmt.Errorf("settlement request cannot be nil")
+		return nil, errors.New("settlement request cannot be nil")
 	}
 	if err := req.Validate(false); err != nil {
 		return nil, err
@@ -270,7 +270,7 @@ func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.
 	rv.InputTotal = exchange.SumAccountAmounts(req.Inputs)
 
 	var errs []error
-	var convDecAmt sdkmath.LegacyDec
+	convDecAmt := sdkmath.LegacyZeroDec()
 	for _, coin := range rv.InputTotal {
 		switch coin.Denom {
 		case feeDenom:
@@ -299,7 +299,7 @@ func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.
 	}
 	rv.ConvertedTotal = rv.ConvertedTotal.Add(sdk.NewCoin(convDenom, convAmt))
 
-	var feeDenomTotal sdkmath.Int
+	feeDenomTotal := sdkmath.ZeroInt()
 	for _, coin := range rv.ConvertedTotal {
 		switch coin.Denom {
 		case feeDenom:

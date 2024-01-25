@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
@@ -1182,6 +1183,433 @@ func (s *TestSuite) TestKeeper_ValidateAndCollectCommitmentCreationFee() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee()
+func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
+	// These tests all assume that the fee denom is nhash.
+	s.Require().Equal("nhash", pioconfig.GetProvenanceConfig().FeeDenom, "pioconfig.GetProvenanceConfig().FeeDenom")
+
+	tests := []struct {
+		name         string
+		setup        func()
+		markerKeeper *MockMarkerKeeper
+		expGetNav    []*GetNetAssetValueArgs
+		req          *exchange.MsgMarketCommitmentSettleRequest
+		expResp      *exchange.QueryCommitmentSettlementFeeCalcResponse
+		expErr       string
+	}{
+		{
+			name:   "nil req",
+			req:    nil,
+			expErr: "settlement request cannot be nil",
+		},
+		{
+			name:   "invalid req",
+			req:    &exchange.MsgMarketCommitmentSettleRequest{Admin: s.addr1.String(), MarketId: 0},
+			expErr: "invalid market id: cannot be zero",
+		},
+		{
+			name: "no bips",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					CommitmentSettlementBips: 0,
+					IntermediaryDenom:        "",
+				})
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 3,
+				Inputs:   []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
+				Outputs:  []exchange.AccountAmount{{Account: s.addr3.String(), Amount: s.coins("10apple")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{},
+		},
+		{
+			name: "bips but no denom",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					CommitmentSettlementBips: 10,
+					IntermediaryDenom:        "",
+				})
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 3,
+				Inputs:   []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
+				Outputs:  []exchange.AccountAmount{{Account: s.addr3.String(), Amount: s.coins("10apple")}},
+			},
+			expResp: nil,
+			expErr:  "market 3 does not have an intermediary denom",
+		},
+		{
+			name: "no nav from intermediary denom to fee denom",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					CommitmentSettlementBips: 10,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			expGetNav: []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 3,
+				Inputs:   []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
+				Outputs:  []exchange.AccountAmount{{Account: s.addr3.String(), Amount: s.coins("10apple")}},
+			},
+			expErr: "no nav found from intermediary denom \"cherry\" to fee denom \"nhash\"",
+		},
+		{
+			name: "no inputs",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					CommitmentSettlementBips: 10,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 3,
+				Navs:     []exchange.NetAssetPrice{{Assets: s.coin("10cherry"), Price: s.coin("30nhash")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				ToFeeNav: &exchange.NetAssetPrice{Assets: s.coin("10cherry"), Price: s.coin("30nhash")},
+			},
+		},
+		{
+			name: "two inputs: no navs",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					CommitmentSettlementBips: 10,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
+			expGetNav: []*GetNetAssetValueArgs{
+				{markerDenom: "cherry", priceDenom: "nhash"},
+				{markerDenom: "apple", priceDenom: "cherry"},
+				{markerDenom: "banana", priceDenom: "cherry"},
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 3,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("10apple,3banana")},
+					{Account: s.addr3.String(), Amount: s.coins("2banana")},
+				},
+				Outputs: []exchange.AccountAmount{{Account: s.addr4.String(), Amount: s.coins("10apple,5banana")}},
+			},
+			expErr: s.joinErrs(
+				"no nav found from assets denom \"apple\" to intermediary denom \"cherry\"",
+				"no nav found from assets denom \"banana\" to intermediary denom \"cherry\"",
+			),
+		},
+		{
+			name: "one input denom: fee denom: evenly divisible",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					CommitmentSettlementBips: 100,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
+			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 3,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("2200nhash")},
+					{Account: s.addr3.String(), Amount: s.coins("5400nhash")},
+				},
+				Outputs: []exchange.AccountAmount{{Account: s.addr4.String(), Amount: s.coins("7600nhash")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal:     s.coins("7600nhash"),
+				ConvertedTotal: s.coins("7600nhash"),
+				// 7500nhash * 100/20000 = 38nhash
+				ExchangeFees:   s.coins("38nhash"),
+				ConversionNavs: nil,
+				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("10cherry"), Price: s.coin("30nhash")},
+			},
+		},
+		{
+			name: "one input denom: fee denom: not evenly divisible",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					CommitmentSettlementBips: 100,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
+			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 3,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("2200nhash")},
+					{Account: s.addr3.String(), Amount: s.coins("5300nhash")},
+				},
+				Outputs: []exchange.AccountAmount{{Account: s.addr4.String(), Amount: s.coins("7500nhash")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal:     s.coins("7500nhash"),
+				ConvertedTotal: s.coins("7500nhash"),
+				// 7500nhash * 100/20000 = 37.5 => 38nhash
+				ExchangeFees:   s.coins("38nhash"),
+				ConversionNavs: nil,
+				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("10cherry"), Price: s.coin("30nhash")},
+			},
+		},
+		{
+			name: "one input denom: intermediary denom: evenly divisible",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					CommitmentSettlementBips: 100,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
+			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 3,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("358cherry")},
+					{Account: s.addr3.String(), Amount: s.coins("642cherry")},
+				},
+				Outputs: []exchange.AccountAmount{{Account: s.addr4.String(), Amount: s.coins("1000cherry")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal:     s.coins("1000cherry"),
+				ConvertedTotal: s.coins("1000cherry"),
+				// 3000nhash * 100/20000 = 15nhash
+				// 1000cherry*30nhash/10cherry = 3000nhash
+				ExchangeFees:   s.coins("15nhash"),
+				ConversionNavs: nil,
+				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("10cherry"), Price: s.coin("30nhash")},
+			},
+		},
+		{
+			name: "one input denom: intermediary denom: not evenly divisible",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 100,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("31nhash")),
+			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 2,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("35cherry")},
+					{Account: s.addr3.String(), Amount: s.coins("88cherry")},
+				},
+				Outputs: []exchange.AccountAmount{{Account: s.addr4.String(), Amount: s.coins("123cherry")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal:     s.coins("123cherry"),
+				ConvertedTotal: s.coins("123cherry"),
+				// 123cherry*31nhash/10cherry = 381.3 => 382nhash
+				// 382nhash * 100/20000 = 1.9065 => 2nhash
+				ExchangeFees:   s.coins("2nhash"),
+				ConversionNavs: nil,
+				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("10cherry"), Price: s.coin("31nhash")},
+			},
+		},
+		{
+			name: "one input denom: nav from req: evenly divisible",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 100,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
+			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 2,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("25apple")},
+					{Account: s.addr3.String(), Amount: s.coins("17apple")},
+				},
+				Outputs: []exchange.AccountAmount{{Account: s.addr4.String(), Amount: s.coins("42apple")}},
+				Navs:    []exchange.NetAssetPrice{{Assets: s.coin("21apple"), Price: s.coin("500cherry")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal: s.coins("42apple"),
+				// 42apple*500cherry/21apple = 1000cherry
+				ConvertedTotal: s.coins("1000cherry"),
+				// 1000cherry*30nhash/10cherry = 3000nhash
+				// 3000nhas * 100/20000 = 15nhash
+				ExchangeFees:   s.coins("15nhash"),
+				ConversionNavs: []exchange.NetAssetPrice{{Assets: s.coin("21apple"), Price: s.coin("500cherry")}},
+				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("10cherry"), Price: s.coin("30nhash")},
+			},
+		},
+		{
+			name: "one input denom: nav from req: not evenly divisible",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 100,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
+			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 2,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("25apple")},
+					{Account: s.addr3.String(), Amount: s.coins("18apple")},
+				},
+				Outputs: []exchange.AccountAmount{{Account: s.addr4.String(), Amount: s.coins("43apple")}},
+				Navs:    []exchange.NetAssetPrice{{Assets: s.coin("21apple"), Price: s.coin("500cherry")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal: s.coins("43apple"),
+				// 43apple*500cherry/21apple = 1023.80 => 1024cherry
+				ConvertedTotal: s.coins("1024cherry"),
+				// 1024cherry*30nhash/10cherry = 3072nhash
+				// 3072nhash * 100/20000 = 15.36 => 16nhash
+				ExchangeFees:   s.coins("16nhash"),
+				ConversionNavs: []exchange.NetAssetPrice{{Assets: s.coin("21apple"), Price: s.coin("500cherry")}},
+				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("10cherry"), Price: s.coin("30nhash")},
+			},
+		},
+		{
+			name: "one input denom: nav from marker keeper",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 100,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			markerKeeper: NewMockMarkerKeeper().
+				WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")).
+				WithGetNetAssetValueResult(s.coin("21apple"), s.coin("500cherry")),
+			expGetNav: []*GetNetAssetValueArgs{
+				{markerDenom: "cherry", priceDenom: "nhash"},
+				{markerDenom: "apple", priceDenom: "cherry"},
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 2,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("25apple")},
+					{Account: s.addr3.String(), Amount: s.coins("18apple")},
+				},
+				Outputs: []exchange.AccountAmount{{Account: s.addr4.String(), Amount: s.coins("43apple")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal: s.coins("43apple"),
+				// 43apple*500cherry/21apple = 1023.8 => 1024cherry
+				ConvertedTotal: s.coins("1024cherry"),
+				// 1024cherry*30nhash/10cherry = 3072nhash
+				// 3072nhash * 100/20000 = 15.36nhash => 16nhash
+				ExchangeFees:   s.coins("16nhash"),
+				ConversionNavs: []exchange.NetAssetPrice{{Assets: s.coin("21apple"), Price: s.coin("500cherry")}},
+				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("10cherry"), Price: s.coin("30nhash")},
+			},
+		},
+		{
+			name: "four input denoms",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 25,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			markerKeeper: NewMockMarkerKeeper().
+				WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("31nhash")).
+				WithGetNetAssetValueResult(s.coin("21apple"), s.coin("500cherry")).
+				WithGetNetAssetValueResult(s.coin("1banana"), s.coin("6666cherry")), // ignored.
+			expGetNav: []*GetNetAssetValueArgs{
+				{markerDenom: "cherry", priceDenom: "nhash"},
+				{markerDenom: "apple", priceDenom: "cherry"},
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 2,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("12apple")},
+					{Account: s.addr3.String(), Amount: s.coins("3apple,88banana")},
+					{Account: s.addr4.String(), Amount: s.coins("15apple,75cherry,300nhash")},
+					{Account: s.addr5.String(), Amount: s.coins("5banana,12cherry")},
+				},
+				Outputs: []exchange.AccountAmount{
+					{Account: s.addr5.String(), Amount: s.coins("30apple")},
+					{Account: s.addr4.String(), Amount: s.coins("93banana")},
+					{Account: s.addr2.String(), Amount: s.coins("87cherry,300nhash")},
+				},
+				Navs: []exchange.NetAssetPrice{{Assets: s.coin("44banana"), Price: s.coin("77cherry")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal: s.coins("30apple,93banana,87cherry,300nhash"),
+				// 30apple*500cherry/21apple = 714.285714285714
+				// 93banana*77cherry/44banana = 162.75
+				// 87cherry => 87
+				// sum = 964.035714285714=> 965cherry
+				ConvertedTotal: s.coins("965cherry,300nhash"),
+				// 965cherry *31nhash/10cherry = 2991.5 => 2992nhash
+				// sum = 3292nhash
+				// 3292nhash * 25/20000 = 4.115 => 5nhash
+				ExchangeFees: s.coins("5nhash"),
+				ConversionNavs: []exchange.NetAssetPrice{
+					{Assets: s.coin("21apple"), Price: s.coin("500cherry")},
+					{Assets: s.coin("44banana"), Price: s.coin("77cherry")},
+				},
+				ToFeeNav: &exchange.NetAssetPrice{Assets: s.coin("10cherry"), Price: s.coin("31nhash")},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			expMarkerCalls := MarkerCalls{GetNetAssetValue: tc.expGetNav}
+
+			if tc.markerKeeper == nil {
+				tc.markerKeeper = NewMockMarkerKeeper()
+			}
+			kpr := s.k.WithMarkerKeeper(tc.markerKeeper)
+
+			var resp *exchange.QueryCommitmentSettlementFeeCalcResponse
+			var err error
+			testFunc := func() {
+				resp, err = kpr.CalculateCommitmentSettlementFee(s.ctx, tc.req)
+			}
+			s.Require().NotPanics(testFunc, "CalculateCommitmentSettlementFee")
+			s.assertErrorValue(err, tc.expErr, "CalculateCommitmentSettlementFee error")
+			if !s.Assert().Equal(tc.expResp, resp, "CalculateCommitmentSettlementFee response") && tc.expResp != nil && resp != nil {
+				s.Assert().Equal(tc.expResp.ExchangeFees.String(), resp.ExchangeFees.String(), "ExchangeFees")
+				s.Assert().Equal(tc.expResp.InputTotal.String(), resp.InputTotal.String(), "InputTotal")
+				s.Assert().Equal(tc.expResp.ConvertedTotal.String(), resp.ConvertedTotal.String(), "ConvertedTotal")
+				assertEqualSlice(s, tc.expResp.ConversionNavs, resp.ConversionNavs, exchange.NetAssetPrice.String, "ConversionNavs")
+				if !s.Assert().Equal(tc.expResp.ToFeeNav, resp.ToFeeNav, "ToFeeNav") && tc.expResp.ToFeeNav != nil && resp.ToFeeNav != nil {
+					s.Assert().Equal(tc.expResp.ToFeeNav.String(), resp.ToFeeNav.String(), "ToFeeNav strings")
+				}
+			}
+			s.assertMarkerKeeperCalls(tc.markerKeeper, expMarkerCalls, "CalculateCommitmentSettlementFee")
+		})
+	}
+}
 
 // TODO[1789]: func (s *TestSuite) TestKeeper_SettleCommitments()
