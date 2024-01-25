@@ -1347,10 +1347,9 @@ func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValu
 	}
 	netAssetValues := make([]types.NetAssetValue, len(navs))
 	for i, nav := range navs {
-
 		coin, err := sdk.ParseCoinNormalized(nav)
 		if err != nil {
-			return []types.NetAssetValue{}, fmt.Errorf("invalid coin: %s", nav)
+			return []types.NetAssetValue{}, fmt.Errorf("invalid coin %s", nav)
 		}
 		netAssetValues[i] = types.NewNetAssetValue(coin)
 	}

@@ -621,9 +621,5 @@ func NewNetAssetValue(price sdk.Coin) NetAssetValue {
 
 // Validate returns error if NetAssetValue is not in a valid state
 func (mnav *NetAssetValue) Validate() error {
-	if err := mnav.Price.Validate(); err != nil {
-		return err
-	}
-
-	return nil
+	return mnav.Price.Validate()
 }
