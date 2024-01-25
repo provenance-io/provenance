@@ -3880,7 +3880,7 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 		{
 			name:   "invalid net asset string",
 			args:   argsWStdFlags(scopeID, "invalid"),
-			expErr: "invalid coin invalid",
+			expErr: ("invalid coin: invalid"),
 		},
 		{
 			name:   "address not meta address",
