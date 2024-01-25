@@ -17,6 +17,9 @@ type GroupPolicyQuerier interface {
 
 // IsGroupAddress checks if the account is a group address.
 func (t GroupCheckerFunc) IsGroupAddress(ctx sdk.Context, account sdk.AccAddress) bool {
+	if account == nil {
+		return false
+	}
 	return t(ctx, account)
 }
 
