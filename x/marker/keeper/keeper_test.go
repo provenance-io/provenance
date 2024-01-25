@@ -18,6 +18,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/quarantine"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -754,9 +755,26 @@ func TestCanForceTransferFrom(t *testing.T) {
 		app.AccountKeeper.SetAccount(ctx, acc)
 	}
 
+	createGroup := func() string {
+		msg, err := group.NewMsgCreateGroupWithPolicy("cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+			[]group.MemberRequest{
+				{
+					Address:  "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+					Weight:   "1",
+					Metadata: "",
+				},
+			},
+			"", "", true, group.NewPercentageDecisionPolicy("0.5", time.Second, time.Second))
+		require.NoError(t, err, "NewMsgCreateGroupWithPolicy")
+		res, err := app.GroupKeeper.CreateGroupWithPolicy(ctx, msg)
+		require.NoError(t, err, "CreateGroupWithPolicy")
+		return res.GroupPolicyAddress
+	}
+
 	addrNoAcc := sdk.AccAddress("addrNoAcc___________")
 	addrSeq0 := sdk.AccAddress("addrSeq0____________")
 	addrSeq1 := sdk.AccAddress("addrSeq1____________")
+	addrGroup := sdk.AccAddress(createGroup())
 	setAcc(addrSeq0, 0)
 	setAcc(addrSeq1, 1)
 
@@ -768,6 +786,7 @@ func TestCanForceTransferFrom(t *testing.T) {
 		{name: "address without an account", from: addrNoAcc, exp: true},
 		{name: "address with sequence 0", from: addrSeq0, exp: false},
 		{name: "address with sequence 1", from: addrSeq1, exp: true},
+		{name: "group address", from: addrGroup, exp: true},
 	}
 
 	for _, tc := range tests {
