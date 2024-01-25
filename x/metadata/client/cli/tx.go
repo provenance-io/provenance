@@ -2,9 +2,7 @@ package cli
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -26,7 +24,6 @@ const (
 	AddSwitch              = "add"
 	RemoveSwitch           = "remove"
 	FlagUsdMills           = "usd-mills"
-	FlagVolume             = "volume"
 )
 
 // NewTxCmd is the top-level command for Metadata CLI transactions.
@@ -145,16 +142,7 @@ func WriteScopeCmd() *cobra.Command {
 				return fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagUsdMills, err)
 			}
 
-			volume, err := cmd.Flags().GetUint64(FlagVolume)
-			if err != nil {
-				return fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagVolume, err)
-			}
-
-			if usdMills > 0 && volume == 0 {
-				return fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdMills)
-			}
-
-			msg := types.NewMsgWriteScopeRequest(scope, signers, usdMills, volume)
+			msg := types.NewMsgWriteScopeRequest(scope, signers, usdMills)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -168,7 +156,6 @@ func WriteScopeCmd() *cobra.Command {
 	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().Uint64(FlagUsdMills, 0, "Indicates the net asset value of scope in usd mills, i.e. 1234 = $1.234")
-	cmd.Flags().Uint64(FlagVolume, 0, "Indicates the volume of the net asset value")
 	return cmd
 }
 
@@ -1352,27 +1339,20 @@ func validateAccAddress(addr, argName string) (string, error) {
 	return addr, nil
 }
 
-// ParseNetAssetValueString splits string (example address1,perm1,perm2...;address2, perm1...) to list of NetAssetValue's
+// ParseNetAssetValueString splits string (example 1hotdog,2jackthecat) to list of NetAssetValue's
 func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
-	navs := strings.Split(netAssetValuesString, ";")
+	navs := strings.Split(netAssetValuesString, ",")
 	if len(navs) == 1 && len(navs[0]) == 0 {
 		return []types.NetAssetValue{}, nil
 	}
 	netAssetValues := make([]types.NetAssetValue, len(navs))
 	for i, nav := range navs {
-		parts := strings.Split(nav, ",")
-		if len(parts) != 2 {
-			return []types.NetAssetValue{}, errors.New("invalid net asset value, expected coin,volume")
-		}
-		coin, err := sdk.ParseCoinNormalized(parts[0])
+
+		coin, err := sdk.ParseCoinNormalized(nav)
 		if err != nil {
-			return []types.NetAssetValue{}, fmt.Errorf("invalid coin %s", parts[0])
+			return []types.NetAssetValue{}, fmt.Errorf("invalid coin %s", nav)
 		}
-		volume, err := strconv.ParseUint(parts[1], 10, 64)
-		if err != nil {
-			return []types.NetAssetValue{}, fmt.Errorf("invalid volume %s", parts[1])
-		}
-		netAssetValues[i] = types.NewNetAssetValue(coin, volume)
+		netAssetValues[i] = types.NewNetAssetValue(coin)
 	}
 	return netAssetValues, nil
 }

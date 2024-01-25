@@ -85,8 +85,7 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				ScopeId: scopeSpecIDNF.String(),
 				NetAssetValues: []types.NetAssetValue{
 					{
-						Price:  sdk.NewInt64Coin("navcoin", 1),
-						Volume: 1,
+						Price: sdk.NewInt64Coin("navcoin", 1),
 					}},
 				Signers: []string{user1},
 			},
@@ -99,7 +98,6 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				NetAssetValues: []types.NetAssetValue{
 					{
 						Price:              sdk.NewInt64Coin("hotdog", 100),
-						Volume:             uint64(100),
 						UpdatedBlockHeight: 1,
 					},
 				},
@@ -114,7 +112,6 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				NetAssetValues: []types.NetAssetValue{
 					{
 						Price:              sdk.NewInt64Coin(types.UsdDenom, 100),
-						Volume:             uint64(100),
 						UpdatedBlockHeight: 1,
 					},
 				},
@@ -129,7 +126,6 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				NetAssetValues: []types.NetAssetValue{
 					{
 						Price:              sdk.NewInt64Coin(types.UsdDenom, 100),
-						Volume:             uint64(100),
 						UpdatedBlockHeight: 1,
 					},
 				},

@@ -44,7 +44,7 @@ func (k msgServer) WriteScope(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdMills)), msg.Volume)
+	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdMills)))
 	err := k.AddSetNetAssetValues(ctx, msg.Scope.ScopeId, []types.NetAssetValue{nav}, types.ModuleName)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
@@ -69,6 +69,8 @@ func (k msgServer) DeleteScope(
 	}
 
 	k.RemoveScope(ctx, msg.ScopeId)
+
+	k.RemoveNetAssetValues(ctx, msg.ScopeId)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSignerStrs()))
 	return types.NewMsgDeleteScopeResponse(), nil

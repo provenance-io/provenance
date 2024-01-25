@@ -180,6 +180,5 @@ message EventOSLocatorDeleted {
 message EventSetNetAssetValue {
   string scope_id = 1;
   string price    = 2;
-  string volume   = 3;
-  string source   = 4;
+  string source   = 3;
 }

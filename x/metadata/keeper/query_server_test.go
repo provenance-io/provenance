@@ -1321,7 +1321,6 @@ func (s *QueryServerTestSuite) TestScopeNetAssetValuesQuery() {
 				Denom:  fmt.Sprintf("usd%v", i),
 				Amount: sdk.NewInt(100 * int64(i+1)),
 			},
-			Volume: uint64(100 * (i + 1)),
 		}
 		err := app.MetadataKeeper.SetNetAssetValue(ctx, scopeID, netAssetValues[i], "source")
 		s.Require().NoError(err)

@@ -1647,38 +1647,25 @@ func TestNetAssetValueValidate(t *testing.T) {
 		{
 			name: "price validation fails",
 			nav: NetAssetValue{
-				Price:  sdk.Coin{Denom: "invalidDenom", Amount: sdk.NewInt(-100)},
-				Volume: 10,
+				Price: sdk.Coin{Denom: "invalidDenom", Amount: sdk.NewInt(-100)},
 			},
 			expErr: "negative coin amount: -100", // Replace with the actual error message from Price.Validate()
 		},
 		{
-			name: "invalid denom",
-			nav: NetAssetValue{
-				Volume: 406,
-			},
+			name:   "invalid denom",
+			nav:    NetAssetValue{},
 			expErr: "invalid denom: ",
-		},
-		{
-			name: "volume is not positive",
-			nav: NetAssetValue{
-				Price:  sdk.NewInt64Coin("jackthecat", 420),
-				Volume: 0,
-			},
-			expErr: "scope net asset value volume must be positive value",
 		},
 		{
 			name: "successful with 0 volume and coin",
 			nav: NetAssetValue{
-				Price:  sdk.NewInt64Coin("usdcents", 0),
-				Volume: 0,
+				Price: sdk.NewInt64Coin("usdcents", 0),
 			},
 		},
 		{
 			name: "successful",
 			nav: NetAssetValue{
-				Price:  sdk.NewInt64Coin("jackthecat", 420),
-				Volume: 406,
+				Price: sdk.NewInt64Coin("jackthecat", 420),
 			},
 		},
 	}

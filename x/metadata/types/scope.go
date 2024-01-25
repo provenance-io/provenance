@@ -613,10 +613,9 @@ s2Loop:
 }
 
 // NewNetAssetValue returns a new instance of NetAssetValue
-func NewNetAssetValue(price sdk.Coin, volume uint64) NetAssetValue {
+func NewNetAssetValue(price sdk.Coin) NetAssetValue {
 	return NetAssetValue{
-		Price:  price,
-		Volume: volume,
+		Price: price,
 	}
 }
 
@@ -624,10 +623,6 @@ func NewNetAssetValue(price sdk.Coin, volume uint64) NetAssetValue {
 func (mnav *NetAssetValue) Validate() error {
 	if err := mnav.Price.Validate(); err != nil {
 		return err
-	}
-
-	if mnav.Price.Amount.GT(sdk.NewInt(0)) && mnav.Volume < 1 {
-		return fmt.Errorf("scope net asset value volume must be positive value")
 	}
 
 	return nil

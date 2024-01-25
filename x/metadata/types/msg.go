@@ -102,12 +102,11 @@ func stringsToAccAddresses(strings []string) []sdk.AccAddress {
 // ------------------  MsgWriteScopeRequest  ------------------
 
 // NewMsgWriteScopeRequest creates a new msg instance
-func NewMsgWriteScopeRequest(scope Scope, signers []string, usdMills, volume uint64) *MsgWriteScopeRequest {
+func NewMsgWriteScopeRequest(scope Scope, signers []string, usdMills uint64) *MsgWriteScopeRequest {
 	return &MsgWriteScopeRequest{
 		Scope:    scope,
 		Signers:  signers,
 		UsdMills: usdMills,
-		Volume:   volume,
 	}
 }
 

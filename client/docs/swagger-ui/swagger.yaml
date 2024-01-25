@@ -39701,12 +39701,6 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
-                    volume:
-                      type: string
-                      format: uint64
-                      title: >-
-                        volume is the number of tokens of that the scope was
-                        purchased for the price
                     updated_block_height:
                       type: string
                       format: uint64
@@ -85888,12 +85882,6 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-      volume:
-        type: string
-        format: uint64
-        title: >-
-          volume is the number of tokens of that the scope was purchased for the
-          price
       updated_block_height:
         type: string
         format: uint64
@@ -86739,12 +86727,6 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-            volume:
-              type: string
-              format: uint64
-              title: >-
-                volume is the number of tokens of that the scope was purchased
-                for the price
             updated_block_height:
               type: string
               format: uint64

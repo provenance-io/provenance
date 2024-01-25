@@ -2149,24 +2149,6 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			expectErrMsg: "parties can only be optional when require_party_rollup = true",
 		},
 		{
-			name: "usd mills present without volume",
-			cmd:  cli.WriteScopeCmd(),
-			args: []string{
-				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
-				scopeSpecID,
-				fmt.Sprintf("%s,servicer,opt;%s,owner", s.accountAddrStr, s.accountAddrStr),
-				s.accountAddrStr,
-				s.accountAddrStr,
-				fmt.Sprintf("--%s", cli.FlagRequirePartyRollup),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "10"),
-			},
-			expectErrMsg: "incorrect value for volume flag.  Must be positive number if usd-mills flag has been set to positive value",
-		},
-		{
 			name: "should successfully write scope with optional party and rollup",
 			cmd:  cli.WriteScopeCmd(),
 			args: []string{
@@ -2181,7 +2163,6 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "blah"),
-				fmt.Sprintf("--%s=%s", cli.FlagVolume, "1"),
 			},
 			expectErrMsg: `invalid argument "blah" for "--usd-mills" flag: strconv.ParseUint: parsing "blah": invalid syntax`,
 		},
@@ -2200,26 +2181,6 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "10"),
-				fmt.Sprintf("--%s=%s", cli.FlagVolume, "blah"),
-			},
-			expectErrMsg: `invalid argument "blah" for "--volume" flag: strconv.ParseUint: parsing "blah": invalid syntax`,
-		},
-		{
-			name: "should successfully write scope with optional party and rollup",
-			cmd:  cli.WriteScopeCmd(),
-			args: []string{
-				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
-				scopeSpecID,
-				fmt.Sprintf("%s,servicer,opt;%s,owner", s.accountAddrStr, s.accountAddrStr),
-				s.accountAddrStr,
-				s.accountAddrStr,
-				fmt.Sprintf("--%s", cli.FlagRequirePartyRollup),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "10"),
-				fmt.Sprintf("--%s=%s", cli.FlagVolume, "1"),
 			},
 			expectErrMsg: "",
 			expectedCode: 0,
@@ -3919,11 +3880,11 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 		{
 			name:   "invalid net asset string",
 			args:   argsWStdFlags(scopeID, "invalid"),
-			expErr: "invalid net asset value, expected coin,volume",
+			expErr: "invalid coin invalid",
 		},
 		{
 			name:   "address not meta address",
-			args:   argsWStdFlags("notmetaaddress", "1usd,1"),
+			args:   argsWStdFlags("notmetaaddress", "1usd"),
 			expErr: `invalid metadata address "notmetaaddress": decoding bech32 failed: invalid separator index -1`,
 		},
 		{
@@ -3933,7 +3894,11 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 		},
 		{
 			name: "successful",
-			args: argsWStdFlags(scopeID, "1usd,1"),
+			args: argsWStdFlags(scopeID, "1usd"),
+		},
+		{
+			name: "successful with multi net asset values",
+			args: argsWStdFlags(scopeID, "1usd,2jackthecat"),
 		},
 	}
 
@@ -4003,33 +3968,21 @@ func (s *IntegrationCLITestSuite) TestParseNetAssertValueString() {
 		},
 		{
 			name:           "invalid coin",
-			netAssetValues: "notacoin,1",
+			netAssetValues: "notacoin",
 			expErr:         "invalid coin notacoin",
 			expResult:      []types.NetAssetValue{},
 		},
 		{
-			name:           "invalid volume string",
-			netAssetValues: "1hotdog,invalidvolume",
-			expErr:         "invalid volume invalidvolume",
-			expResult:      []types.NetAssetValue{},
-		},
-		{
-			name:           "invalid amount of args",
-			netAssetValues: "1hotdog,invalidvolume,notsupposedtobehere",
-			expErr:         "invalid net asset value, expected coin,volume",
-			expResult:      []types.NetAssetValue{},
-		},
-		{
 			name:           "successfully parse single nav",
-			netAssetValues: "1hotdog,10",
+			netAssetValues: "1hotdog",
 			expErr:         "",
-			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 10}},
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1)}},
 		},
 		{
 			name:           "successfully parse multi nav",
-			netAssetValues: "1hotdog,10;20jackthecat,40",
+			netAssetValues: "1hotdog,20jackthecat",
 			expErr:         "",
-			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 10}, {Price: sdk.NewInt64Coin("jackthecat", 20), Volume: 40}},
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1)}, {Price: sdk.NewInt64Coin("jackthecat", 20)}},
 		},
 	}
 	for _, tc := range testCases {

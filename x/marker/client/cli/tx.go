@@ -1113,7 +1113,7 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 	return grants
 }
 
-// ParseNetAssetValueString splits string (example address1,perm1,perm2...;address2, perm1...) to list of NetAssetValue's
+// ParseNetAssetValueString splits string (example 1hotdog,1;2jackthecat100,...) to list of NetAssetValue's
 func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
 	navs := strings.Split(netAssetValuesString, ";")
 	if len(navs) == 1 && len(navs[0]) == 0 {

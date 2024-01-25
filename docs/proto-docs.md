@@ -5895,7 +5895,6 @@ NetAssetValue defines a scope's net asset value
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the complete value of the asset's volume |
-| `volume` | [uint64](#uint64) |  | volume is the number of tokens of that the scope was purchased for the price |
 | `updated_block_height` | [uint64](#uint64) |  | updated_block_height is the block height of last update |
 
 
@@ -8313,7 +8312,6 @@ MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
 | `scope_uuid` | [string](#string) |  | scope_uuid is an optional uuid string, e.g. "91978ba2-5f35-459a-86a7-feca1b0512e0" If provided, it will be used to generate the MetadataAddress for the scope which will override the scope_id in the provided scope. If not provided (or it is an empty string), nothing special happens. If there is a value in scope.scope_id that is different from the one created from this uuid, an error is returned. |
 | `spec_uuid` | [string](#string) |  | spec_uuid is an optional scope specification uuid string, e.g. "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2" If provided, it will be used to generate the MetadataAddress for the scope specification which will override the specification_id in the provided scope. If not provided (or it is an empty string), nothing special happens. If there is a value in scope.specification_id that is different from the one created from this uuid, an error is returned. |
 | `usd_mills` | [uint64](#uint64) |  | usd_mills value of scope in usd mills (1234 = $1.234) used for net asset value |
-| `volume` | [uint64](#uint64) |  | volume value of scope used for net asset value |
 
 
 

@@ -700,7 +700,7 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress,
 		return err
 	}
 
-	setNetAssetValueEvent := types.NewEventSetNetAssetValue(scopeID, netAssetValue.Price, netAssetValue.Volume, source)
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(scopeID, netAssetValue.Price, source)
 	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
 		return err
 	}

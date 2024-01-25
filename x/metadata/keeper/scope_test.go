@@ -2463,7 +2463,6 @@ func (s *ScopeKeeperTestSuite) TestAddSetNetAssetValues() {
 						Denom:  "invalid",
 						Amount: sdk.NewInt(1000),
 					},
-					Volume: 100,
 				},
 			},
 			source: "source",
@@ -2478,7 +2477,6 @@ func (s *ScopeKeeperTestSuite) TestAddSetNetAssetValues() {
 						Denom:  "usd",
 						Amount: sdk.NewInt(1000),
 					},
-					Volume: 100,
 				},
 			},
 			source: "source",
@@ -2492,7 +2490,6 @@ func (s *ScopeKeeperTestSuite) TestAddSetNetAssetValues() {
 						Denom:  "jackthecat",
 						Amount: sdk.NewInt(1000),
 					},
-					Volume: 100,
 				},
 			},
 			source: "source",
@@ -2529,7 +2526,6 @@ func (s *ScopeKeeperTestSuite) TestSetNetAssetValue() {
 					Denom:  "usd",
 					Amount: sdk.NewInt(1000),
 				},
-				Volume: 100,
 			},
 			source: "test",
 		},
@@ -2541,7 +2537,6 @@ func (s *ScopeKeeperTestSuite) TestSetNetAssetValue() {
 					Denom:  "",
 					Amount: sdk.NewInt(1000),
 				},
-				Volume: 100,
 			},
 			source: "source",
 			expErr: "invalid denom: ",
@@ -2564,7 +2559,6 @@ func (s *ScopeKeeperTestSuite) TestSetNetAssetValue() {
 				s.Assert().Equal("source", string(ctx.EventManager().Events()[0].Attributes[2].Key), "SetNetAssetValue invalid event key")
 				s.Assert().Equal("\"test\"", string(ctx.EventManager().Events()[0].Attributes[2].Value), "SetNetAssetValue invalid event value")
 				s.Assert().Equal("volume", string(ctx.EventManager().Events()[0].Attributes[3].Key), "SetNetAssetValue invalid event key")
-				s.Assert().Equal(fmt.Sprintf("\"%v\"", tc.netAssetValue.Volume), string(ctx.EventManager().Events()[0].Attributes[3].Value), "SetNetAssetValue invalid event value")
 
 			} else {
 				s.Require().Error(err)
@@ -2590,7 +2584,6 @@ func (s *ScopeKeeperTestSuite) TestRemoveNetAssetValues() {
 					Denom:  "usd",
 					Amount: sdk.NewInt(1000),
 				},
-				Volume: 100,
 			},
 			expErr: "",
 		},
