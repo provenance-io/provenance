@@ -25,11 +25,3 @@ type MessageRouterFunc func(msg sdk.Msg) baseapp.MsgServiceHandler
 func (m MessageRouterFunc) Handler(msg sdk.Msg) baseapp.MsgServiceHandler {
 	return m(msg)
 }
-
-// GroupCheckerFunc convenient type to match the GroupChecker interface.
-type GroupCheckerFunc func(sdk.Context, sdk.AccAddress) bool
-
-// IsGroupAddress checks if the account is a group address
-func (t GroupCheckerFunc) IsGroupAddress(ctx sdk.Context, account sdk.AccAddress) bool {
-	return t(ctx, account)
-}
