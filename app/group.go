@@ -23,7 +23,7 @@ func (t GroupCheckerFunc) IsGroupAddress(ctx sdk.Context, account sdk.AccAddress
 	return t(ctx, account)
 }
 
-// NewGroupChecker creates a new GroupChecker function for checking if an account is in a group.
+// NewGroupCheckerFunc creates a new GroupChecker function for checking if an account is in a group.
 func NewGroupCheckerFunc(querier GroupPolicyQuerier) GroupCheckerFunc {
 	return GroupCheckerFunc(func(ctx sdk.Context, account sdk.AccAddress) bool {
 		msg := &group.QueryGroupPolicyInfoRequest{Address: account.String()}
