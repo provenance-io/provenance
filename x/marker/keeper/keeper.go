@@ -86,6 +86,9 @@ type Keeper struct {
 	// When sending from one of these, if there are required attributes, the destination must have them;
 	// if there aren't required attributes, it behaves as if the sender has transfer permission.
 	reqAttrBypassAddrs types.ImmutableAccAddresses
+
+	// groupChecker provides a way to check if an account is in a group.
+	groupChecker types.GroupChecker
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -105,6 +108,7 @@ func NewKeeper(
 	nameKeeper types.NameKeeper,
 	ibcTransferServer types.IbcTransferMsgServer,
 	reqAttrBypassAddrs []sdk.AccAddress,
+	checker types.GroupChecker,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -125,6 +129,7 @@ func NewKeeper(
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
 		ibcTransferServer:     ibcTransferServer,
 		reqAttrBypassAddrs:    types.NewImmutableAccAddresses(reqAttrBypassAddrs),
+		groupChecker:          checker,
 	}
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
