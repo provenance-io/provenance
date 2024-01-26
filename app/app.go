@@ -572,10 +572,12 @@ func New(
 		authtypes.NewModuleAddress(stakingtypes.BondedPoolName),    // Allow bond denom to be a restricted coin.
 		authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName), // Allow bond denom to be a restricted coin.
 	}
+
 	app.MarkerKeeper = markerkeeper.NewKeeper(
 		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
 		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper, markerReqAttrBypassAddrs,
+		NewGroupCheckerFunc(app.GroupKeeper),
 	)
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(

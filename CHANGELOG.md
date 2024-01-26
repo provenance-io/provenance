@@ -54,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Remove deleted marker send deny entries [#1666](https://github.com/provenance-io/provenance/issues/1666).
 * Update protos, naming, and documentation to use mills [#1813](https://github.com/provenance-io/provenance/issues/1813).
+* Update marker transfer to work with groups [#1818](https://github.com/provenance-io/provenance/issues/1818).
 
 ### Dependencies
 
