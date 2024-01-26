@@ -2974,9 +2974,217 @@ func (s *TestSuite) TestMsgServer_MarketUpdateUserSettle() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestMsgServer_MarketUpdateAcceptingCommitments()
+func (s *TestSuite) TestMsgServer_MarketUpdateAcceptingCommitments() {
+	testDef := msgServerTestDef[exchange.MsgMarketUpdateAcceptingCommitmentsRequest, exchange.MsgMarketUpdateAcceptingCommitmentsResponse, struct{}]{
+		endpointName: "MarketUpdateAcceptingCommitments",
+		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateAcceptingCommitments,
+		expResp:      &exchange.MsgMarketUpdateAcceptingCommitmentsResponse{},
+		followup: func(msg *exchange.MsgMarketUpdateAcceptingCommitmentsRequest, _ struct{}) {
+			isEnabled := s.k.IsMarketAcceptingCommitments(s.ctx, msg.MarketId)
+			s.Assert().Equal(msg.AcceptingCommitments, isEnabled, "IsMarketAcceptingCommitments(%d)", msg.MarketId)
+		},
+	}
 
-// TODO[1789]: func (s *TestSuite) TestMsgServer_MarketUpdateIntermediaryDenom()
+	tests := []msgServerTestCase[exchange.MsgMarketUpdateAcceptingCommitmentsRequest, struct{}]{
+		{
+			name: "admin does not have permission to update market",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:     3,
+					AccessGrants: []exchange.AccessGrant{s.agCanAllBut(s.addr5, exchange.Permission_update)},
+				})
+			},
+			msg: exchange.MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                s.addr5.String(),
+				MarketId:             3,
+				AcceptingCommitments: true,
+			},
+			expInErr: []string{invReqErr, "account " + s.addr5.String() + " does not have permission to update market 3"},
+		},
+		{
+			name: "false to false",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_update)},
+					AcceptingCommitments: false,
+				})
+			},
+			msg: exchange.MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                s.addr5.String(),
+				MarketId:             3,
+				AcceptingCommitments: false,
+			},
+			expInErr: []string{invReqErr, "market 3 already has accepting-commitments false"},
+		},
+		{
+			name: "true to true",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_update)},
+					AcceptingCommitments: true,
+				})
+			},
+			msg: exchange.MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                s.addr5.String(),
+				MarketId:             3,
+				AcceptingCommitments: true,
+			},
+			expInErr: []string{invReqErr, "market 3 already has accepting-commitments true"},
+		},
+		{
+			name: "false to true: no fees: authority",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_update)},
+					AcceptingCommitments: false,
+				})
+			},
+			msg: exchange.MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                s.k.GetAuthority(),
+				MarketId:             3,
+				AcceptingCommitments: true,
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketCommitmentsEnabled{MarketId: 3, UpdatedBy: s.k.GetAuthority()}),
+			},
+		},
+		{
+			name: "false to true: no fees: addr",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_update)},
+					AcceptingCommitments: false,
+				})
+			},
+			msg: exchange.MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                s.addr5.String(),
+				MarketId:             3,
+				AcceptingCommitments: true,
+			},
+			expInErr: []string{invReqErr, "market 3 does not have any commitment fees defined"},
+		},
+		{
+			name: "false to true: with fees: addr",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_update)},
+					AcceptingCommitments:     false,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			msg: exchange.MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                s.addr5.String(),
+				MarketId:             3,
+				AcceptingCommitments: true,
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketCommitmentsEnabled{MarketId: 3, UpdatedBy: s.addr5.String()}),
+			},
+		},
+		{
+			name: "true to false",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 3, AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_update)},
+					AcceptingCommitments: true,
+				})
+			},
+			msg: exchange.MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                s.addr5.String(),
+				MarketId:             3,
+				AcceptingCommitments: false,
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketCommitmentsDisabled{MarketId: 3, UpdatedBy: s.addr5.String()}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_MarketUpdateIntermediaryDenom() {
+	testDef := msgServerTestDef[exchange.MsgMarketUpdateIntermediaryDenomRequest, exchange.MsgMarketUpdateIntermediaryDenomResponse, struct{}]{
+		endpointName: "MarketUpdateIntermediaryDenom",
+		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateIntermediaryDenom,
+		expResp:      &exchange.MsgMarketUpdateIntermediaryDenomResponse{},
+		followup: func(msg *exchange.MsgMarketUpdateIntermediaryDenomRequest, _ struct{}) {
+			denom := s.k.GetIntermediaryDenom(s.ctx, msg.MarketId)
+			s.Assert().Equal(msg.IntermediaryDenom, denom, "GetIntermediaryDenom(%d)", msg.MarketId)
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgMarketUpdateIntermediaryDenomRequest, struct{}]{
+		{
+			name: "admin does not have permission to update market",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                 3,
+					AccessGrants:             []exchange.AccessGrant{s.agCanAllBut(s.addr5, exchange.Permission_update)},
+					AcceptingCommitments:     true,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "banana",
+				})
+			},
+			msg: exchange.MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             s.addr5.String(),
+				MarketId:          3,
+				IntermediaryDenom: "cherry",
+			},
+			expInErr: []string{invReqErr, "account " + s.addr5.String() + " does not have permission to update market 3"},
+		},
+		{
+			name: "admin has permission",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                 3,
+					AccessGrants:             []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_update)},
+					AcceptingCommitments:     true,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "banana",
+				})
+			},
+			msg: exchange.MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             s.addr5.String(),
+				MarketId:          3,
+				IntermediaryDenom: "cherry",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketIntermediaryDenomUpdated{MarketId: 3, UpdatedBy: s.addr5.String()}),
+			},
+		},
+		{
+			name: "authority",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                 7,
+					AcceptingCommitments:     true,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "banana",
+				})
+			},
+			msg: exchange.MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             s.k.GetAuthority(),
+				MarketId:          7,
+				IntermediaryDenom: "cherry",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(&exchange.EventMarketIntermediaryDenomUpdated{MarketId: 7, UpdatedBy: s.k.GetAuthority()}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 func (s *TestSuite) TestMsgServer_MarketManagePermissions() {
 	testDef := msgServerTestDef[exchange.MsgMarketManagePermissionsRequest, exchange.MsgMarketManagePermissionsResponse, []exchange.AccessGrant]{

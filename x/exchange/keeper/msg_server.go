@@ -223,7 +223,7 @@ func (k MsgServer) MarketUpdateAcceptingCommitments(goCtx context.Context, msg *
 		}
 	}
 
-	err := k.UpdateCommitmentsAllowed(ctx, msg.MarketId, msg.AcceptingCommitments, msg.Admin)
+	err := k.UpdateMarketAcceptingCommitments(ctx, msg.MarketId, msg.AcceptingCommitments, msg.Admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

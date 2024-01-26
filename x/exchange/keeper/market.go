@@ -809,11 +809,11 @@ func (k Keeper) UpdateIntermediaryDenom(ctx sdk.Context, marketID uint32, denom 
 }
 
 // validateMarketUpdateAcceptingCommitments checks that the market has things set up
-// to change the allow-commitments flag to the provided value.
+// to change the accepting-commitments flag to the provided value.
 func validateMarketUpdateAcceptingCommitments(store sdk.KVStore, marketID uint32, newAllow bool) error {
 	curAllow := isMarketAcceptingCommitments(store, marketID)
 	if curAllow == newAllow {
-		return fmt.Errorf("market %d already has allow-commitments %t", marketID, curAllow)
+		return fmt.Errorf("market %d already has accepting-commitments %t", marketID, curAllow)
 	}
 
 	if newAllow {
@@ -921,18 +921,18 @@ func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, al
 	return nil
 }
 
-// IsCommitmentAllowed gets whether commitments are allowed for a market.
-func (k Keeper) IsCommitmentAllowed(ctx sdk.Context, marketID uint32) bool {
+// IsMarketAcceptingCommitments gets whether commitments are allowed for a market.
+func (k Keeper) IsMarketAcceptingCommitments(ctx sdk.Context, marketID uint32) bool {
 	return isMarketAcceptingCommitments(k.getStore(ctx), marketID)
 }
 
-// UpdateCommitmentsAllowed updates the allow-commitments flag for a market.
+// UpdateMarketAcceptingCommitments updates the accepting-commitments flag for a market.
 // An error is returned if the setting is already what is provided.
-func (k Keeper) UpdateCommitmentsAllowed(ctx sdk.Context, marketID uint32, accepting bool, updatedBy string) error {
+func (k Keeper) UpdateMarketAcceptingCommitments(ctx sdk.Context, marketID uint32, accepting bool, updatedBy string) error {
 	store := k.getStore(ctx)
 	current := isMarketAcceptingCommitments(store, marketID)
 	if current == accepting {
-		return fmt.Errorf("market %d already has allow-commitments %t", marketID, accepting)
+		return fmt.Errorf("market %d already has accepting-commitments %t", marketID, accepting)
 	}
 	setMarketAcceptingCommitments(store, marketID, accepting)
 	k.emitEvent(ctx, exchange.NewEventMarketAcceptingCommitmentsUpdated(marketID, updatedBy, accepting))
@@ -1586,7 +1586,7 @@ func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
 // cancels all its existing orders, and releases all its commitments.
 func (k Keeper) CloseMarket(ctx sdk.Context, marketID uint32, signer string) {
 	_ = k.UpdateMarketAcceptingOrders(ctx, marketID, false, signer)
-	_ = k.UpdateCommitmentsAllowed(ctx, marketID, false, signer)
+	_ = k.UpdateMarketAcceptingCommitments(ctx, marketID, false, signer)
 	k.CancelAllOrdersForMarket(ctx, marketID, signer)
 	k.ReleaseAllCommitmentsForMarket(ctx, marketID)
 }

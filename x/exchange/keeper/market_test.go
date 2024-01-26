@@ -4318,7 +4318,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 	}
 }
 
-func (s *TestSuite) TestKeeper_IsCommitmentAllowed() {
+func (s *TestSuite) TestKeeper_IsMarketAcceptingCommitments() {
 	setter := keeper.SetMarketAcceptingCommitments
 	tests := []struct {
 		name     string
@@ -4374,15 +4374,15 @@ func (s *TestSuite) TestKeeper_IsCommitmentAllowed() {
 
 			var actual bool
 			testFunc := func() {
-				actual = s.k.IsCommitmentAllowed(s.ctx, tc.marketID)
+				actual = s.k.IsMarketAcceptingCommitments(s.ctx, tc.marketID)
 			}
-			s.Require().NotPanics(testFunc, "IsCommitmentAllowed(%d)", tc.marketID)
-			s.Assert().Equal(tc.expected, actual, "IsCommitmentAllowed(%d) result", tc.marketID)
+			s.Require().NotPanics(testFunc, "IsMarketAcceptingCommitments(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "IsMarketAcceptingCommitments(%d) result", tc.marketID)
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_UpdateCommitmentsAllowed() {
+func (s *TestSuite) TestKeeper_UpdateMarketAcceptingCommitments() {
 	setter := keeper.SetMarketAcceptingCommitments
 	tests := []struct {
 		name      string
@@ -4404,7 +4404,7 @@ func (s *TestSuite) TestKeeper_UpdateCommitmentsAllowed() {
 			marketID:  1,
 			allow:     false,
 			updatedBy: "updatedBy___________",
-			expErr:    "market 1 already has allow-commitments false",
+			expErr:    "market 1 already has accepting-commitments false",
 		},
 		{
 			name: "allowed to allowed",
@@ -4419,7 +4419,7 @@ func (s *TestSuite) TestKeeper_UpdateCommitmentsAllowed() {
 			marketID:  3,
 			allow:     true,
 			updatedBy: "updatedBy___________",
-			expErr:    "market 3 already has allow-commitments true",
+			expErr:    "market 3 already has accepting-commitments true",
 		},
 		{
 			name: "allowed to not allowed",
@@ -4464,7 +4464,7 @@ func (s *TestSuite) TestKeeper_UpdateCommitmentsAllowed() {
 			marketID:  13,
 			allow:     false,
 			updatedBy: "__updated_____by____",
-			expErr:    "market 13 already has allow-commitments false",
+			expErr:    "market 13 already has accepting-commitments false",
 		},
 	}
 
@@ -4485,17 +4485,17 @@ func (s *TestSuite) TestKeeper_UpdateCommitmentsAllowed() {
 			ctx := s.ctx.WithEventManager(em)
 			var err error
 			testFunc := func() {
-				err = s.k.UpdateCommitmentsAllowed(ctx, tc.marketID, tc.allow, tc.updatedBy)
+				err = s.k.UpdateMarketAcceptingCommitments(ctx, tc.marketID, tc.allow, tc.updatedBy)
 			}
-			s.Require().NotPanics(testFunc, "UpdateCommitmentsAllowed(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
-			s.assertErrorValue(err, tc.expErr, "UpdateCommitmentsAllowed(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
+			s.Require().NotPanics(testFunc, "UpdateMarketAcceptingCommitments(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
+			s.assertErrorValue(err, tc.expErr, "UpdateMarketAcceptingCommitments(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
 
 			events := em.Events()
-			s.assertEqualEvents(expEvents, events, "events after UpdateCommitmentsAllowed")
+			s.assertEqualEvents(expEvents, events, "events after UpdateMarketAcceptingCommitments")
 
 			if len(tc.expErr) == 0 {
-				isActive := s.k.IsCommitmentAllowed(s.ctx, tc.marketID)
-				s.Assert().Equal(tc.allow, isActive, "IsCommitmentAllowed(%d) after UpdateCommitmentsAllowed(%d, %t, ...)",
+				isActive := s.k.IsMarketAcceptingCommitments(s.ctx, tc.marketID)
+				s.Assert().Equal(tc.allow, isActive, "IsMarketAcceptingCommitments(%d) after UpdateMarketAcceptingCommitments(%d, %t, ...)",
 					tc.marketID, tc.marketID, tc.allow)
 			}
 		})
