@@ -95,8 +95,8 @@ var (
 	SetCommitmentSettlementBips = setCommitmentSettlementBips
 	// SetIntermediaryDenom is a test-only exposure of setIntermediaryDenom.
 	SetIntermediaryDenom = setIntermediaryDenom
-	// SetMarketActive is a test-only exposure of setMarketActive.
-	SetMarketActive = setMarketActive
+	// SetMarketAcceptingOrders is a test-only exposure of setMarketAcceptingOrders.
+	SetMarketAcceptingOrders = setMarketAcceptingOrders
 	// SetUserSettlementAllowed is a test-only exposure of setUserSettlementAllowed.
 	SetUserSettlementAllowed = setUserSettlementAllowed
 	// SetMarketAcceptingCommitments is a test-only exposure of setMarketAcceptingCommitments.

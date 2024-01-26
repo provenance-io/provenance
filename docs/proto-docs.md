@@ -140,6 +140,8 @@
     - [MsgMarketSettleResponse](#provenance.exchange.v1.MsgMarketSettleResponse)
     - [MsgMarketUpdateAcceptingCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsRequest)
     - [MsgMarketUpdateAcceptingCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsResponse)
+    - [MsgMarketUpdateAcceptingOrdersRequest](#provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersRequest)
+    - [MsgMarketUpdateAcceptingOrdersResponse](#provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersResponse)
     - [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest)
     - [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse)
     - [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest)
@@ -2719,6 +2721,33 @@ MsgMarketUpdateAcceptingCommitmentsResponse is a response message for the Market
 
 
 
+<a name="provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersRequest"></a>
+
+### MsgMarketUpdateAcceptingOrdersRequest
+MsgMarketUpdateAcceptingOrdersRequest is a request message for the MarketUpdateAcceptingOrders endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to enable or disable. |
+| `accepting_orders` | [bool](#bool) |  | accepting_orders is whether this market is allowing orders to be created for it. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersResponse"></a>
+
+### MsgMarketUpdateAcceptingOrdersResponse
+MsgMarketUpdateAcceptingOrdersResponse is a response message for the MarketUpdateAcceptingOrders endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgMarketUpdateDetailsRequest"></a>
 
 ### MsgMarketUpdateDetailsRequest
@@ -2750,13 +2779,14 @@ MsgMarketUpdateDetailsResponse is a response message for the MarketUpdateDetails
 
 ### MsgMarketUpdateEnabledRequest
 MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled endpoint.
+Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to enable or disable. |
-| `accepting_orders` | [bool](#bool) |  | accepting_orders is whether this market is allowing orders to be created for it. |
+| `admin` | [string](#string) |  | **Deprecated.** admin is the account with "update" permission requesting this change. Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders. |
+| `market_id` | [uint32](#uint32) |  | **Deprecated.** market_id is the numerical identifier of the market to enable or disable. Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders. |
+| `accepting_orders` | [bool](#bool) |  | **Deprecated.** accepting_orders is whether this market is allowing orders to be created for it. Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders. |
 
 
 
@@ -2767,6 +2797,7 @@ MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled e
 
 ### MsgMarketUpdateEnabledResponse
 MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled endpoint.
+Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
 
 
 
@@ -2880,7 +2911,8 @@ Msg is the service for exchange module's tx endpoints.
 | `MarketSetOrderExternalID` | [MsgMarketSetOrderExternalIDRequest](#provenance.exchange.v1.MsgMarketSetOrderExternalIDRequest) | [MsgMarketSetOrderExternalIDResponse](#provenance.exchange.v1.MsgMarketSetOrderExternalIDResponse) | MarketSetOrderExternalID updates an order's external id field. | |
 | `MarketWithdraw` | [MsgMarketWithdrawRequest](#provenance.exchange.v1.MsgMarketWithdrawRequest) | [MsgMarketWithdrawResponse](#provenance.exchange.v1.MsgMarketWithdrawResponse) | MarketWithdraw is a market endpoint to withdraw fees that have been collected. | |
 | `MarketUpdateDetails` | [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest) | [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse) | MarketUpdateDetails is a market endpoint to update its details. | |
-| `MarketUpdateEnabled` | [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest) | [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse) | MarketUpdateEnabled is a market endpoint to update whether its accepting orders. | |
+| `MarketUpdateEnabled` | [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest) | [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse) | MarketUpdateEnabled is a market endpoint to update whether its accepting orders. Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders. | |
+| `MarketUpdateAcceptingOrders` | [MsgMarketUpdateAcceptingOrdersRequest](#provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersRequest) | [MsgMarketUpdateAcceptingOrdersResponse](#provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersResponse) | MarketUpdateAcceptingOrders is a market endpoint to update whether its accepting orders. | |
 | `MarketUpdateUserSettle` | [MsgMarketUpdateUserSettleRequest](#provenance.exchange.v1.MsgMarketUpdateUserSettleRequest) | [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse) | MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement. | |
 | `MarketUpdateAcceptingCommitments` | [MsgMarketUpdateAcceptingCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsRequest) | [MsgMarketUpdateAcceptingCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsResponse) | MarketUpdateAcceptingCommitments is a market endpoint to update whether it accepts commitments. | |
 | `MarketUpdateIntermediaryDenom` | [MsgMarketUpdateIntermediaryDenomRequest](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest) | [MsgMarketUpdateIntermediaryDenomResponse](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomResponse) | MarketUpdateIntermediaryDenom sets a market's intermediary denom. | |

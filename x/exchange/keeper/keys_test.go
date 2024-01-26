@@ -111,7 +111,7 @@ func TestKeyTypeUniqueness(t *testing.T) {
 				{name: "MarketKeyTypeSellerSettlementRatio", value: keeper.MarketKeyTypeSellerSettlementRatio},
 				{name: "MarketKeyTypeBuyerSettlementFlat", value: keeper.MarketKeyTypeBuyerSettlementFlat},
 				{name: "MarketKeyTypeBuyerSettlementRatio", value: keeper.MarketKeyTypeBuyerSettlementRatio},
-				{name: "MarketKeyTypeInactive", value: keeper.MarketKeyTypeInactive},
+				{name: "MarketKeyTypeNotAcceptingOrders", value: keeper.MarketKeyTypeNotAcceptingOrders},
 				{name: "MarketKeyTypeUserSettle", value: keeper.MarketKeyTypeUserSettle},
 				{name: "MarketKeyTypePermissions", value: keeper.MarketKeyTypePermissions},
 				{name: "MarketKeyTypeReqAttr", value: keeper.MarketKeyTypeReqAttr},
@@ -2058,8 +2058,8 @@ func TestMakeKeyMarketBuyerSettlementRatio(t *testing.T) {
 	}
 }
 
-func TestMakeKeyMarketInactive(t *testing.T) {
-	marketTypeByte := keeper.MarketKeyTypeInactive
+func TestMakeKeyMarketNotAcceptingOrders(t *testing.T) {
+	marketTypeByte := keeper.MarketKeyTypeNotAcceptingOrders
 
 	tests := []struct {
 		name     string
@@ -2112,14 +2112,14 @@ func TestMakeKeyMarketInactive(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyMarketInactive(tc.marketID)
+					return keeper.MakeKeyMarketNotAcceptingOrders(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
 					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
-			checkKey(t, ktc, "MakeKeyMarketInactive(%d)", tc.marketID)
+			checkKey(t, ktc, "MakeKeyMarketNotAcceptingOrders(%d)", tc.marketID)
 		})
 	}
 }

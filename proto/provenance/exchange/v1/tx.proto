@@ -54,7 +54,14 @@ service Msg {
   rpc MarketUpdateDetails(MsgMarketUpdateDetailsRequest) returns (MsgMarketUpdateDetailsResponse);
 
   // MarketUpdateEnabled is a market endpoint to update whether its accepting orders.
-  rpc MarketUpdateEnabled(MsgMarketUpdateEnabledRequest) returns (MsgMarketUpdateEnabledResponse);
+  // Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+  rpc MarketUpdateEnabled(MsgMarketUpdateEnabledRequest) returns (MsgMarketUpdateEnabledResponse) {
+    option deprecated = true;
+  };
+
+  // MarketUpdateAcceptingOrders is a market endpoint to update whether its accepting orders.
+  rpc MarketUpdateAcceptingOrders(MsgMarketUpdateAcceptingOrdersRequest)
+      returns (MsgMarketUpdateAcceptingOrdersResponse);
 
   // MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement.
   rpc MarketUpdateUserSettle(MsgMarketUpdateUserSettleRequest) returns (MsgMarketUpdateUserSettleResponse);
@@ -325,7 +332,31 @@ message MsgMarketUpdateDetailsRequest {
 message MsgMarketUpdateDetailsResponse {}
 
 // MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled endpoint.
+// Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
 message MsgMarketUpdateEnabledRequest {
+  option deprecated             = true;
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the account with "update" permission requesting this change.
+  // Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
+  // market_id is the numerical identifier of the market to enable or disable.
+  // Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+  uint32 market_id = 2 [deprecated = true];
+
+  // accepting_orders is whether this market is allowing orders to be created for it.
+  // Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+  bool accepting_orders = 3 [deprecated = true];
+}
+
+// MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled endpoint.
+// Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+message MsgMarketUpdateEnabledResponse {
+  option deprecated = true;
+}
+
+// MsgMarketUpdateAcceptingOrdersRequest is a request message for the MarketUpdateAcceptingOrders endpoint.
+message MsgMarketUpdateAcceptingOrdersRequest {
   option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account with "update" permission requesting this change.
@@ -337,8 +368,8 @@ message MsgMarketUpdateEnabledRequest {
   bool accepting_orders = 3;
 }
 
-// MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled endpoint.
-message MsgMarketUpdateEnabledResponse {}
+// MsgMarketUpdateAcceptingOrdersResponse is a response message for the MarketUpdateAcceptingOrders endpoint.
+message MsgMarketUpdateAcceptingOrdersResponse {}
 
 // MsgMarketUpdateUserSettleRequest is a request message for the MarketUpdateUserSettle endpoint.
 message MsgMarketUpdateUserSettleRequest {

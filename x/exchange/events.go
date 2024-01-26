@@ -88,10 +88,10 @@ func NewEventMarketDetailsUpdated(marketID uint32, updatedBy string) *EventMarke
 	}
 }
 
-// NewEventMarketAcceptingOrdersUpdated returns a new EventMarketOrdersEnabled if isActive == true,
-// or a new EventMarketOrdersDisabled if isActive == false.
-func NewEventMarketAcceptingOrdersUpdated(marketID uint32, updatedBy string, isActive bool) proto.Message {
-	if isActive {
+// NewEventMarketAcceptingOrdersUpdated returns a new EventMarketOrdersEnabled if isAccepting == true,
+// or a new EventMarketOrdersDisabled if isAccepting == false.
+func NewEventMarketAcceptingOrdersUpdated(marketID uint32, updatedBy string, isAccepting bool) proto.Message {
+	if isAccepting {
 		return NewEventMarketOrdersEnabled(marketID, updatedBy)
 	}
 	return NewEventMarketOrdersDisabled(marketID, updatedBy)
@@ -134,10 +134,10 @@ func NewEventMarketUserSettleDisabled(marketID uint32, updatedBy string) *EventM
 	}
 }
 
-// NewEventMarketAcceptingCommitmentsUpdated returns a new NewEventMarketCommitmentsEnabled if isAllowed == true,
-// or a new NewEventMarketCommitmentsDisabled if isAllowed == false.
-func NewEventMarketAcceptingCommitmentsUpdated(marketID uint32, updatedBy string, isAllowed bool) proto.Message {
-	if isAllowed {
+// NewEventMarketAcceptingCommitmentsUpdated returns a new NewEventMarketCommitmentsEnabled if isAccepting == true,
+// or a new NewEventMarketCommitmentsDisabled if isAccepting == false.
+func NewEventMarketAcceptingCommitmentsUpdated(marketID uint32, updatedBy string, isAccepting bool) proto.Message {
+	if isAccepting {
 		return NewEventMarketCommitmentsEnabled(marketID, updatedBy)
 	}
 	return NewEventMarketCommitmentsDisabled(marketID, updatedBy)

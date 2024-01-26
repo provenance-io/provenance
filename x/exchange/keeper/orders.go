@@ -440,7 +440,7 @@ func validateMarketIsAcceptingOrders(store sdk.KVStore, marketID uint32) error {
 	if err := validateMarketExists(store, marketID); err != nil {
 		return err
 	}
-	if !isMarketActive(store, marketID) {
+	if !isMarketAcceptingOrders(store, marketID) {
 		return fmt.Errorf("market %d is not accepting orders", marketID)
 	}
 	return nil

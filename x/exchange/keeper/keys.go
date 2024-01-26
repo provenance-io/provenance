@@ -42,7 +42,7 @@ import (
 //   Market Seller Settlement Fee Ratio: 0x01 | <market_id> | 0x03 | <price_denom> | 0x1E | <fee_denom> => price and fee amounts (strings) separated by 0x1E.
 //   Market Buyer Settlement Flat Fee: 0x01 | <market_id> | 0x04 | <denom> => <amount> (string)
 //   Market Buyer Settlement Fee Ratio: 0x01 | <market_id> | 0x05 | <price_denom> | 0x1E | <fee_denom> => price and fee amounts (strings) separated by 0x1E.
-//   Market inactive indicator: 0x01 | <market_id> | 0x06 => nil
+//   Market accepting orders anti-indicator: 0x01 | <market_id> | 0x06 => nil
 //   Market user-settle indicator: 0x01 | <market_id> | 0x07 => nil
 //   Market permissions: 0x01 | <market_id> | 0x08 | <addr len byte> | <address> | <permission type byte> => nil
 //   Market Required Attributes: 0x01 | <market_id> | 0x09 | <req_attr_type_byte> => 0x1E-separated list of required attribute entries.
@@ -116,15 +116,15 @@ const (
 	MarketKeyTypeBuyerSettlementFlat = byte(0x04)
 	// MarketKeyTypeBuyerSettlementRatio is the market-specific type byte for the buyer settlement ratios.
 	MarketKeyTypeBuyerSettlementRatio = byte(0x05)
-	// MarketKeyTypeInactive is the market-specific type byte for the inactive indicators.
-	MarketKeyTypeInactive = byte(0x06)
+	// MarketKeyTypeNotAcceptingOrders is the market-specific type byte for the the accepting-orders anti-indicators.
+	MarketKeyTypeNotAcceptingOrders = byte(0x06)
 	// MarketKeyTypeUserSettle is the market-specific type byte for the user-settle indicators.
 	MarketKeyTypeUserSettle = byte(0x07)
 	// MarketKeyTypePermissions is the market-specific type byte for the market permissions.
 	MarketKeyTypePermissions = byte(0x08)
 	// MarketKeyTypeReqAttr is the market-specific type byte for the market's required attributes lists.
 	MarketKeyTypeReqAttr = byte(0x09)
-	// MarketKeyTypeAcceptingCommitments is the market-specific type byte for the allow-commitments indicators.
+	// MarketKeyTypeAcceptingCommitments is the market-specific type byte for the accepting-commitments indicators.
 	MarketKeyTypeAcceptingCommitments = byte(0x10)
 	// MarketKeyTypeCreateCommitmentFlat is the market-specific type byte for the create-commitment flat fees.
 	MarketKeyTypeCreateCommitmentFlat = byte(0x11)
@@ -489,9 +489,9 @@ func MakeKeyMarketBuyerSettlementRatio(marketID uint32, ratio exchange.FeeRatio)
 	return rv
 }
 
-// MakeKeyMarketInactive creates the key to use to indicate that a market is inactive.
-func MakeKeyMarketInactive(marketID uint32) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeInactive, 0)
+// MakeKeyMarketNotAcceptingOrders creates the key to use to indicate that a market is not accepting orders.
+func MakeKeyMarketNotAcceptingOrders(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeNotAcceptingOrders, 0)
 }
 
 // MakeKeyMarketUserSettle creates the key to use to indicate that a market allows settlement by users.

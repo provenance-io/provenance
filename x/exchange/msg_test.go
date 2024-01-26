@@ -75,6 +75,9 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			return &MsgMarketUpdateEnabledRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateAcceptingOrdersRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
 			return &MsgMarketUpdateUserSettleRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
@@ -1671,16 +1674,22 @@ func TestMsgMarketUpdateDetailsRequest_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
+	msg := MsgMarketUpdateEnabledRequest{}
+	expErr := []string{"the MarketUpdateEnabled endpoint has been replaced by the MarketUpdateAcceptingOrders endpoint"}
+	testValidateBasic(t, &msg, expErr)
+}
+
+func TestMsgMarketUpdateAcceptingOrdersRequest_ValidateBasic(t *testing.T) {
 	admin := sdk.AccAddress("admin_______________").String()
 
 	tests := []struct {
 		name   string
-		msg    MsgMarketUpdateEnabledRequest
+		msg    MsgMarketUpdateAcceptingOrdersRequest
 		expErr []string
 	}{
 		{
 			name: "control: true",
-			msg: MsgMarketUpdateEnabledRequest{
+			msg: MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           admin,
 				MarketId:        1,
 				AcceptingOrders: true,
@@ -1689,7 +1698,7 @@ func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "control: false",
-			msg: MsgMarketUpdateEnabledRequest{
+			msg: MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           admin,
 				MarketId:        1,
 				AcceptingOrders: true,
@@ -1698,7 +1707,7 @@ func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty admin",
-			msg: MsgMarketUpdateEnabledRequest{
+			msg: MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:    "",
 				MarketId: 1,
 			},
@@ -1708,7 +1717,7 @@ func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad admin",
-			msg: MsgMarketUpdateEnabledRequest{
+			msg: MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:    "badadmin",
 				MarketId: 1,
 			},
@@ -1718,7 +1727,7 @@ func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "market id zero",
-			msg: MsgMarketUpdateEnabledRequest{
+			msg: MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:    admin,
 				MarketId: 0,
 			},
@@ -1800,7 +1809,7 @@ func TestMsgMarketUpdateUserSettleRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TesMsgMarketUpdateAcceptingCommitmentsRequest_ValidateBasic(t *testing.T) {
+func TestMsgMarketUpdateAcceptingCommitmentsRequest_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name   string
 		msg    MsgMarketUpdateAcceptingCommitmentsRequest

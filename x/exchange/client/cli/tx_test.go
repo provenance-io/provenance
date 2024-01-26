@@ -568,12 +568,12 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled() {
 	tests := []txCmdTestCase{
 		{
 			name:     "no market",
-			args:     []string{"market-enabled", "--from", s.addr1.String(), "--enable"},
+			args:     []string{"market-accepting-orders", "--from", s.addr1.String(), "--enable"},
 			expInErr: []string{"required flag(s) \"market\" not set"},
 		},
 		{
 			name: "market does not exist",
-			args: []string{"market-update-enabled", "--market", "419",
+			args: []string{"market-update-accepting-orders", "--market", "419",
 				"--from", s.addr4.String(), "--enable"},
 			expInRawLog: []string{"failed to execute message", "invalid request",
 				"account " + s.addr4.String() + " does not have permission to update market 419",
@@ -587,7 +587,7 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled() {
 				market420.AcceptingOrders = false
 				return nil, s.getMarketFollowup("420", market420)
 			},
-			args:         []string{"update-enabled", "--disable", "--market", "420", "--from", s.addr1.String()},
+			args:         []string{"update-accepting-orders", "--disable", "--market", "420", "--from", s.addr1.String()},
 			expectedCode: 0,
 		},
 		{
@@ -597,7 +597,7 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled() {
 				market420.AcceptingOrders = true
 				return nil, s.getMarketFollowup("420", market420)
 			},
-			args:         []string{"update-enabled", "--enable", "--market", "420", "--from", s.addr1.String()},
+			args:         []string{"update-accepting-orders", "--enable", "--market", "420", "--from", s.addr1.String()},
 			expectedCode: 0,
 		},
 	}

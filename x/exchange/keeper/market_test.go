@@ -3911,7 +3911,7 @@ func (s *TestSuite) TestKeeper_IsMarketKnown() {
 	}
 }
 
-func (s *TestSuite) TestKeeper_IsMarketActive() {
+func (s *TestSuite) TestKeeper_IsMarketAcceptingOrders() {
 	tests := []struct {
 		name     string
 		setup    func()
@@ -3928,8 +3928,8 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 			name: "unknown market id",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 3)
 			},
@@ -3940,9 +3940,9 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 			name: "market not active",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 2, false)
-				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 2, false)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
 				keeper.SetMarketKnown(store, 3)
@@ -3954,9 +3954,9 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 			name: "market active and known",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 2, true)
-				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 2, true)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
 				keeper.SetMarketKnown(store, 3)
@@ -3968,9 +3968,9 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 			name: "market inactive but known",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 2, false)
-				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 2, false)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
 				keeper.SetMarketKnown(store, 3)
@@ -3989,15 +3989,15 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 
 			var actual bool
 			testFunc := func() {
-				actual = s.k.IsMarketActive(s.ctx, tc.marketID)
+				actual = s.k.IsMarketAcceptingOrders(s.ctx, tc.marketID)
 			}
-			s.Require().NotPanics(testFunc, "IsMarketActive(%d)", tc.marketID)
-			s.Assert().Equal(tc.expected, actual, "IsMarketActive(%d) result", tc.marketID)
+			s.Require().NotPanics(testFunc, "IsMarketAcceptingOrders(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "IsMarketAcceptingOrders(%d) result", tc.marketID)
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_UpdateMarketActive() {
+func (s *TestSuite) TestKeeper_UpdateMarketAcceptingOrders() {
 	tests := []struct {
 		name      string
 		setup     func()
@@ -4024,11 +4024,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			name: "active to active",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 2, false)
-				keeper.SetMarketActive(store, 3, true)
-				keeper.SetMarketActive(store, 4, true)
-				keeper.SetMarketActive(store, 5, false)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 2, false)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 4, true)
+				keeper.SetMarketAcceptingOrders(store, 5, false)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
 				keeper.SetMarketKnown(store, 3)
@@ -4044,11 +4044,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			name: "active to inactive",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 2, false)
-				keeper.SetMarketActive(store, 3, true)
-				keeper.SetMarketActive(store, 4, true)
-				keeper.SetMarketActive(store, 5, false)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 2, false)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 4, true)
+				keeper.SetMarketAcceptingOrders(store, 5, false)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
 				keeper.SetMarketKnown(store, 3)
@@ -4064,11 +4064,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			name: "inactive to active",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 11, true)
-				keeper.SetMarketActive(store, 12, false)
-				keeper.SetMarketActive(store, 13, false)
-				keeper.SetMarketActive(store, 14, true)
-				keeper.SetMarketActive(store, 15, false)
+				keeper.SetMarketAcceptingOrders(store, 11, true)
+				keeper.SetMarketAcceptingOrders(store, 12, false)
+				keeper.SetMarketAcceptingOrders(store, 13, false)
+				keeper.SetMarketAcceptingOrders(store, 14, true)
+				keeper.SetMarketAcceptingOrders(store, 15, false)
 				keeper.SetMarketKnown(store, 11)
 				keeper.SetMarketKnown(store, 12)
 				keeper.SetMarketKnown(store, 13)
@@ -4084,11 +4084,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			name: "inactive to inactive",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 11, true)
-				keeper.SetMarketActive(store, 12, false)
-				keeper.SetMarketActive(store, 13, false)
-				keeper.SetMarketActive(store, 14, true)
-				keeper.SetMarketActive(store, 15, false)
+				keeper.SetMarketAcceptingOrders(store, 11, true)
+				keeper.SetMarketAcceptingOrders(store, 12, false)
+				keeper.SetMarketAcceptingOrders(store, 13, false)
+				keeper.SetMarketAcceptingOrders(store, 14, true)
+				keeper.SetMarketAcceptingOrders(store, 15, false)
 				keeper.SetMarketKnown(store, 11)
 				keeper.SetMarketKnown(store, 12)
 				keeper.SetMarketKnown(store, 13)
@@ -4119,17 +4119,17 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			ctx := s.ctx.WithEventManager(em)
 			var err error
 			testFunc := func() {
-				err = s.k.UpdateMarketActive(ctx, tc.marketID, tc.active, tc.updatedBy)
+				err = s.k.UpdateMarketAcceptingOrders(ctx, tc.marketID, tc.active, tc.updatedBy)
 			}
-			s.Require().NotPanics(testFunc, "UpdateMarketActive(%d, %t, %s)", tc.marketID, tc.active, string(tc.updatedBy))
-			s.assertErrorValue(err, tc.expErr, "UpdateMarketActive(%d, %t, %s)", tc.marketID, tc.active, string(tc.updatedBy))
+			s.Require().NotPanics(testFunc, "UpdateMarketAcceptingOrders(%d, %t, %s)", tc.marketID, tc.active, string(tc.updatedBy))
+			s.assertErrorValue(err, tc.expErr, "UpdateMarketAcceptingOrders(%d, %t, %s)", tc.marketID, tc.active, string(tc.updatedBy))
 
 			events := em.Events()
-			s.assertEqualEvents(expEvents, events, "events after UpdateMarketActive")
+			s.assertEqualEvents(expEvents, events, "events after UpdateMarketAcceptingOrders")
 
 			if len(tc.expErr) == 0 {
-				isActive := s.k.IsMarketActive(s.ctx, tc.marketID)
-				s.Assert().Equal(tc.active, isActive, "IsMarketActive(%d) after UpdateMarketActive(%d, %t, ...)",
+				isActive := s.k.IsMarketAcceptingOrders(s.ctx, tc.marketID)
+				s.Assert().Equal(tc.active, isActive, "IsMarketAcceptingOrders(%d) after UpdateMarketAcceptingOrders(%d, %t, ...)",
 					tc.marketID, tc.marketID, tc.active)
 			}
 		})

@@ -827,17 +827,17 @@ func validateMarketUpdateAcceptingCommitments(store sdk.KVStore, marketID uint32
 	return nil
 }
 
-// isMarketActive returns true if the provided market's inactive flag does not exist.
+// isMarketAcceptingOrders returns true if the provided market's not-accepting-orders flag does not exist.
 // See also isMarketKnown.
-func isMarketActive(store sdk.KVStore, marketID uint32) bool {
-	key := MakeKeyMarketInactive(marketID)
+func isMarketAcceptingOrders(store sdk.KVStore, marketID uint32) bool {
+	key := MakeKeyMarketNotAcceptingOrders(marketID)
 	return !store.Has(key)
 }
 
-// setMarketActive sets whether the provided market is accepting orders.
-func setMarketActive(store sdk.KVStore, marketID uint32, active bool) {
-	key := MakeKeyMarketInactive(marketID)
-	if active {
+// setMarketAcceptingOrders sets whether the provided market is accepting orders.
+func setMarketAcceptingOrders(store sdk.KVStore, marketID uint32, accepting bool) {
+	key := MakeKeyMarketNotAcceptingOrders(marketID)
+	if accepting {
 		store.Delete(key)
 	} else {
 		store.Set(key, []byte{})
@@ -881,25 +881,25 @@ func (k Keeper) IsMarketKnown(ctx sdk.Context, marketID uint32) bool {
 	return isMarketKnown(k.getStore(ctx), marketID)
 }
 
-// IsMarketActive returns true if the provided market is active.
-func (k Keeper) IsMarketActive(ctx sdk.Context, marketID uint32) bool {
+// IsMarketAcceptingOrders returns true if the provided market is accepting orders.
+func (k Keeper) IsMarketAcceptingOrders(ctx sdk.Context, marketID uint32) bool {
 	store := k.getStore(ctx)
-	if !isMarketActive(store, marketID) {
+	if !isMarketAcceptingOrders(store, marketID) {
 		return false
 	}
 	return isMarketKnown(store, marketID)
 }
 
-// UpdateMarketActive updates the active flag for a market.
+// UpdateMarketAcceptingOrders updates the accepting orders flag for a market.
 // An error is returned if the setting is already what is provided.
-func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool, updatedBy string) error {
+func (k Keeper) UpdateMarketAcceptingOrders(ctx sdk.Context, marketID uint32, accepting bool, updatedBy string) error {
 	store := k.getStore(ctx)
-	current := isMarketActive(store, marketID)
-	if current == active {
-		return fmt.Errorf("market %d already has accepting-orders %t", marketID, active)
+	current := isMarketAcceptingOrders(store, marketID)
+	if current == accepting {
+		return fmt.Errorf("market %d already has accepting-orders %t", marketID, accepting)
 	}
-	setMarketActive(store, marketID, active)
-	k.emitEvent(ctx, exchange.NewEventMarketAcceptingOrdersUpdated(marketID, updatedBy, active))
+	setMarketAcceptingOrders(store, marketID, accepting)
+	k.emitEvent(ctx, exchange.NewEventMarketAcceptingOrdersUpdated(marketID, updatedBy, accepting))
 	return nil
 }
 
@@ -928,14 +928,14 @@ func (k Keeper) IsCommitmentAllowed(ctx sdk.Context, marketID uint32) bool {
 
 // UpdateCommitmentsAllowed updates the allow-commitments flag for a market.
 // An error is returned if the setting is already what is provided.
-func (k Keeper) UpdateCommitmentsAllowed(ctx sdk.Context, marketID uint32, allow bool, updatedBy string) error {
+func (k Keeper) UpdateCommitmentsAllowed(ctx sdk.Context, marketID uint32, accepting bool, updatedBy string) error {
 	store := k.getStore(ctx)
 	current := isMarketAcceptingCommitments(store, marketID)
-	if current == allow {
-		return fmt.Errorf("market %d already has allow-commitments %t", marketID, allow)
+	if current == accepting {
+		return fmt.Errorf("market %d already has allow-commitments %t", marketID, accepting)
 	}
-	setMarketAcceptingCommitments(store, marketID, allow)
-	k.emitEvent(ctx, exchange.NewEventMarketAcceptingCommitmentsUpdated(marketID, updatedBy, allow))
+	setMarketAcceptingCommitments(store, marketID, accepting)
+	k.emitEvent(ctx, exchange.NewEventMarketAcceptingCommitmentsUpdated(marketID, updatedBy, accepting))
 	return nil
 }
 
@@ -1402,7 +1402,7 @@ func storeMarket(store sdk.KVStore, market exchange.Market) {
 	setSellerSettlementRatios(store, marketID, market.FeeSellerSettlementRatios)
 	setBuyerSettlementFlatFees(store, marketID, market.FeeBuyerSettlementFlat)
 	setBuyerSettlementRatios(store, marketID, market.FeeBuyerSettlementRatios)
-	setMarketActive(store, marketID, market.AcceptingOrders)
+	setMarketAcceptingOrders(store, marketID, market.AcceptingOrders)
 	setUserSettlementAllowed(store, marketID, market.AllowUserSettlement)
 	setAccessGrants(store, marketID, market.AccessGrants)
 	setReqAttrsAsk(store, marketID, market.ReqAttrCreateAsk)
@@ -1494,7 +1494,7 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 	market.FeeSellerSettlementRatios = getSellerSettlementRatios(store, marketID)
 	market.FeeBuyerSettlementFlat = getBuyerSettlementFlatFees(store, marketID)
 	market.FeeBuyerSettlementRatios = getBuyerSettlementRatios(store, marketID)
-	market.AcceptingOrders = isMarketActive(store, marketID)
+	market.AcceptingOrders = isMarketAcceptingOrders(store, marketID)
 	market.AllowUserSettlement = isUserSettlementAllowed(store, marketID)
 	market.AccessGrants = getAccessGrants(store, marketID)
 	market.ReqAttrCreateAsk = getReqAttrsAsk(store, marketID)
@@ -1585,7 +1585,7 @@ func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
 // CloseMarket disables order and commitment creation in a market,
 // cancels all its existing orders, and releases all its commitments.
 func (k Keeper) CloseMarket(ctx sdk.Context, marketID uint32, signer string) {
-	_ = k.UpdateMarketActive(ctx, marketID, false, signer)
+	_ = k.UpdateMarketAcceptingOrders(ctx, marketID, false, signer)
 	_ = k.UpdateCommitmentsAllowed(ctx, marketID, false, signer)
 	k.CancelAllOrdersForMarket(ctx, marketID, signer)
 	k.ReleaseAllCommitmentsForMarket(ctx, marketID)

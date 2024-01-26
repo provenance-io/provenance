@@ -23,7 +23,7 @@ func sumAssetsAndPrice(orders []*exchange.Order) (sdk.Coins, sdk.Coins) {
 	return totalAssets, totalPrice
 }
 
-// validateAcceptingOrdersAndCanUserSettle returns an error if the market isn't active or doesn't allow user settlement.
+// validateAcceptingOrdersAndCanUserSettle returns an error if the market isn't accepting orders or doesn't allow user settlement.
 func validateAcceptingOrdersAndCanUserSettle(store sdk.KVStore, marketID uint32) error {
 	if err := validateMarketIsAcceptingOrders(store, marketID); err != nil {
 		return err

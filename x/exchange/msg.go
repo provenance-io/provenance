@@ -21,6 +21,7 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgMarketWithdrawRequest)(nil),
 	(*MsgMarketUpdateDetailsRequest)(nil),
 	(*MsgMarketUpdateEnabledRequest)(nil),
+	(*MsgMarketUpdateAcceptingOrdersRequest)(nil),
 	(*MsgMarketUpdateUserSettleRequest)(nil),
 	(*MsgMarketUpdateAcceptingCommitmentsRequest)(nil),
 	(*MsgMarketUpdateIntermediaryDenomRequest)(nil),
@@ -427,6 +428,15 @@ func (m MsgMarketUpdateDetailsRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgMarketUpdateEnabledRequest) ValidateBasic() error {
+	return errors.New("the MarketUpdateEnabled endpoint has been replaced by the MarketUpdateAcceptingOrders endpoint")
+}
+
+func (m MsgMarketUpdateEnabledRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgMarketUpdateAcceptingOrdersRequest) ValidateBasic() error {
 	var errs []error
 
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
@@ -442,7 +452,7 @@ func (m MsgMarketUpdateEnabledRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-func (m MsgMarketUpdateEnabledRequest) GetSigners() []sdk.AccAddress {
+func (m MsgMarketUpdateAcceptingOrdersRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Admin)
 	return []sdk.AccAddress{addr}
 }

@@ -2761,13 +2761,29 @@ func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
 		endpointName: "MarketUpdateEnabled",
 		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateEnabled,
 		expResp:      &exchange.MsgMarketUpdateEnabledResponse{},
-		followup: func(msg *exchange.MsgMarketUpdateEnabledRequest, _ struct{}) {
-			isEnabled := s.k.IsMarketActive(s.ctx, msg.MarketId)
-			s.Assert().Equal(msg.AcceptingOrders, isEnabled, "IsMarketActive(%d)", msg.MarketId)
+	}
+
+	tc := msgServerTestCase[exchange.MsgMarketUpdateEnabledRequest, struct{}]{
+		name:     "always error",
+		msg:      exchange.MsgMarketUpdateEnabledRequest{},
+		expInErr: []string{"the MarketUpdateEnabled endpoint has been replaced by the MarketUpdateAcceptingOrders endpoint"},
+	}
+
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_MarketUpdateAcceptingOrders() {
+	testDef := msgServerTestDef[exchange.MsgMarketUpdateAcceptingOrdersRequest, exchange.MsgMarketUpdateAcceptingOrdersResponse, struct{}]{
+		endpointName: "MarketUpdateAcceptingOrders",
+		endpoint:     keeper.NewMsgServer(s.k).MarketUpdateAcceptingOrders,
+		expResp:      &exchange.MsgMarketUpdateAcceptingOrdersResponse{},
+		followup: func(msg *exchange.MsgMarketUpdateAcceptingOrdersRequest, _ struct{}) {
+			isEnabled := s.k.IsMarketAcceptingOrders(s.ctx, msg.MarketId)
+			s.Assert().Equal(msg.AcceptingOrders, isEnabled, "IsMarketAcceptingOrders(%d)", msg.MarketId)
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgMarketUpdateEnabledRequest, struct{}]{
+	tests := []msgServerTestCase[exchange.MsgMarketUpdateAcceptingOrdersRequest, struct{}]{
 		{
 			name: "admin does not have permission to update market",
 			setup: func() {
@@ -2776,7 +2792,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
 					AccessGrants: []exchange.AccessGrant{s.agCanAllBut(s.addr5, exchange.Permission_update)},
 				})
 			},
-			msg: exchange.MsgMarketUpdateEnabledRequest{
+			msg: exchange.MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           s.addr5.String(),
 				MarketId:        3,
 				AcceptingOrders: true,
@@ -2792,7 +2808,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
 					AcceptingOrders: false,
 				})
 			},
-			msg: exchange.MsgMarketUpdateEnabledRequest{
+			msg: exchange.MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           s.addr5.String(),
 				MarketId:        3,
 				AcceptingOrders: false,
@@ -2807,7 +2823,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
 					AcceptingOrders: true,
 				})
 			},
-			msg: exchange.MsgMarketUpdateEnabledRequest{
+			msg: exchange.MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           s.addr5.String(),
 				MarketId:        3,
 				AcceptingOrders: true,
@@ -2822,7 +2838,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
 					AcceptingOrders: false,
 				})
 			},
-			msg: exchange.MsgMarketUpdateEnabledRequest{
+			msg: exchange.MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           s.addr5.String(),
 				MarketId:        3,
 				AcceptingOrders: true,
@@ -2839,7 +2855,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
 					AcceptingOrders: true,
 				})
 			},
-			msg: exchange.MsgMarketUpdateEnabledRequest{
+			msg: exchange.MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           s.addr5.String(),
 				MarketId:        3,
 				AcceptingOrders: false,

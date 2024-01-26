@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -178,16 +179,23 @@ func (k MsgServer) MarketUpdateDetails(goCtx context.Context, msg *exchange.MsgM
 }
 
 // MarketUpdateEnabled is a market endpoint to update whether its accepting orders.
-func (k MsgServer) MarketUpdateEnabled(goCtx context.Context, msg *exchange.MsgMarketUpdateEnabledRequest) (*exchange.MsgMarketUpdateEnabledResponse, error) {
+//
+//nolint:staticcheck // This endpoint needs to keep existing, so use of the deprecated messages is needed.
+func (k MsgServer) MarketUpdateEnabled(_ context.Context, _ *exchange.MsgMarketUpdateEnabledRequest) (*exchange.MsgMarketUpdateEnabledResponse, error) {
+	return nil, fmt.Errorf("the MarketUpdateEnabled endpoint has been replaced by the MarketUpdateAcceptingOrders endpoint")
+}
+
+// MarketUpdateAcceptingOrders is a market endpoint to update whether its accepting orders.
+func (k MsgServer) MarketUpdateAcceptingOrders(goCtx context.Context, msg *exchange.MsgMarketUpdateAcceptingOrdersRequest) (*exchange.MsgMarketUpdateAcceptingOrdersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
-	err := k.UpdateMarketActive(ctx, msg.MarketId, msg.AcceptingOrders, msg.Admin)
+	err := k.UpdateMarketAcceptingOrders(ctx, msg.MarketId, msg.AcceptingOrders, msg.Admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	return &exchange.MsgMarketUpdateEnabledResponse{}, nil
+	return &exchange.MsgMarketUpdateAcceptingOrdersResponse{}, nil
 }
 
 // MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement.
