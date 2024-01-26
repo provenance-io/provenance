@@ -756,7 +756,129 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestMsgServer_CommitFunds()
+func (s *TestSuite) TestMsgServer_CommitFunds() {
+	testDef := msgServerTestDef[exchange.MsgCommitFundsRequest, exchange.MsgCommitFundsResponse, expBalances]{
+		endpointName: "CommitFunds",
+		endpoint:     keeper.NewMsgServer(s.k).CommitFunds,
+		expResp:      &exchange.MsgCommitFundsResponse{},
+		followup: func(_ *exchange.MsgCommitFundsRequest, expBal expBalances) {
+			s.checkBalances(expBal)
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgCommitFundsRequest, expBalances]{
+		{
+			name: "insufficient fee",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                3,
+					AcceptingCommitments:    true,
+					FeeCreateCommitmentFlat: s.coins("10cherry"),
+				})
+				s.requireFundAccount(s.addr2, "100apple,100cherry")
+			},
+			msg: exchange.MsgCommitFundsRequest{
+				Account:     s.addr2.String(),
+				MarketId:    3,
+				Amount:      s.coins("15apple"),
+				CreationFee: s.coinP("9cherry"),
+			},
+			expInErr: []string{invReqErr,
+				"insufficient commitment creation fee: \"9cherry\" is less than required amount \"10cherry\""},
+			fArgs: expBalances{
+				addr:     s.addr2,
+				expSpend: s.coins("100apple,100cherry"),
+			},
+		},
+		{
+			name: "market does not accept commitments",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:             3,
+					AcceptingCommitments: false,
+				})
+				s.requireFundAccount(s.addr2, "100apple,100cherry")
+			},
+			msg: exchange.MsgCommitFundsRequest{
+				Account:  s.addr2.String(),
+				MarketId: 3,
+				Amount:   s.coins("10apple"),
+			},
+			expInErr: []string{invReqErr, "market 3 is not accepting commitments"},
+			fArgs: expBalances{
+				addr:     s.addr2,
+				expSpend: s.coins("100apple,100cherry"),
+			},
+		},
+		{
+			name: "insufficient funds",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                3,
+					AcceptingCommitments:    true,
+					FeeCreateCommitmentFlat: s.coins("10cherry"),
+				})
+				s.requireFundAccount(s.addr2, "100apple,100cherry")
+			},
+			msg: exchange.MsgCommitFundsRequest{
+				Account:     s.addr2.String(),
+				MarketId:    3,
+				Amount:      s.coins("50apple,91cherry"),
+				CreationFee: s.coinP("10cherry"),
+			},
+			expInErr: []string{invReqErr, "account " + s.addr2.String() + " spendable balance 90cherry is less than hold amount 91cherry"},
+			fArgs: expBalances{
+				addr:     s.addr2,
+				expSpend: s.coins("100apple,100cherry"),
+			},
+		},
+		{
+			name: "okay",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                3,
+					AcceptingCommitments:    true,
+					FeeCreateCommitmentFlat: s.coins("10cherry"),
+					ReqAttrCreateCommitment: []string{"you.got.it"},
+				})
+				s.requireFundAccount(s.addr2, "100apple,100cherry")
+				s.requireSetNameRecord("you.got.it", s.addr5)
+				s.requireSetAttr(s.addr2, "you.got.it", s.addr5)
+			},
+			msg: exchange.MsgCommitFundsRequest{
+				Account:     s.addr2.String(),
+				MarketId:    3,
+				Amount:      s.coins("50apple,90cherry"),
+				CreationFee: s.coinP("10cherry"),
+				EventTag:    "yayayayeah",
+			},
+			fArgs: expBalances{
+				addr:     s.addr2,
+				expBal:   s.coins("100apple,90cherry"),
+				expHold:  s.coins("50apple,90cherry"),
+				expSpend: []sdk.Coin{s.coin("50apple"), sdk.NewInt64Coin("cherry", 0)},
+			},
+			expEvents: sdk.Events{
+				s.eventCoinSpent(s.addr2, "10cherry"),
+				s.eventCoinReceived(s.marketAddr3, "10cherry"),
+				s.eventTransfer(s.marketAddr3, s.addr2, "10cherry"),
+				s.eventMessageSender(s.addr2),
+				s.eventCoinSpent(s.marketAddr3, "1cherry"),
+				s.eventCoinReceived(s.feeCollectorAddr, "1cherry"),
+				s.eventTransfer(s.feeCollectorAddr, s.marketAddr3, "1cherry"),
+				s.eventMessageSender(s.marketAddr3),
+				s.untypeEvent(hold.NewEventHoldAdded(s.addr2, s.coins("50apple,90cherry"), "x/exchange: commitment to 3")),
+				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr2.String(), 3, s.coins("50apple,90cherry"), "yayayayeah")),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 func (s *TestSuite) TestMsgServer_CancelOrder() {
 	testDef := msgServerTestDef[exchange.MsgCancelOrderRequest, exchange.MsgCancelOrderResponse, expBalances]{
