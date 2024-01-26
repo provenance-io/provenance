@@ -112,8 +112,8 @@ message Market {
   // E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x".
   repeated string req_attr_create_bid = 13;
 
-  // allow_commitments is whether the market allows users to commit funds to it.
-  bool allow_commitments = 14;
+  // accepting_commitments is whether the market is allowing users to commit funds to it.
+  bool accepting_commitments = 14;
 
   // fee_create_commitment_flat is the flat fee charged for creating a commitment.
   // Each coin entry is a separate option. When a commitment is created, one of these must be paid.

@@ -3196,7 +3196,7 @@ func (s *TestSuite) TestQueryServer_GetMarket() {
 					ReqAttrCreateAsk: []string{"ask.good.kyc", "*.my.custom"},
 					ReqAttrCreateBid: []string{"bid.good.kyc", "*.my.custom"},
 
-					AllowCommitments:         true,
+					AcceptingCommitments:     true,
 					FeeCreateCommitmentFlat:  s.coins("30fig,300grape"),
 					CommitmentSettlementBips: 23,
 					IntermediaryDenom:        "cherry",
@@ -3234,7 +3234,7 @@ func (s *TestSuite) TestQueryServer_GetMarket() {
 					ReqAttrCreateAsk: []string{"ask.good.kyc", "*.my.custom"},
 					ReqAttrCreateBid: []string{"bid.good.kyc", "*.my.custom"},
 
-					AllowCommitments:         true,
+					AcceptingCommitments:     true,
 					FeeCreateCommitmentFlat:  s.coins("30fig,300grape"),
 					CommitmentSettlementBips: 23,
 					IntermediaryDenom:        "cherry",

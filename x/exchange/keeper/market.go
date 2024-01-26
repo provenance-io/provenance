@@ -808,10 +808,10 @@ func (k Keeper) UpdateIntermediaryDenom(ctx sdk.Context, marketID uint32, denom 
 	k.emitEvent(ctx, exchange.NewEventMarketIntermediaryDenomUpdated(marketID, updatedBy))
 }
 
-// validateMarketUpdateAllowCommitments checks that the market has things set up
+// validateMarketUpdateAcceptingCommitments checks that the market has things set up
 // to change the allow-commitments flag to the provided value.
-func validateMarketUpdateAllowCommitments(store sdk.KVStore, marketID uint32, newAllow bool) error {
-	curAllow := isCommitmentAllowed(store, marketID)
+func validateMarketUpdateAcceptingCommitments(store sdk.KVStore, marketID uint32, newAllow bool) error {
+	curAllow := isMarketAcceptingCommitments(store, marketID)
 	if curAllow == newAllow {
 		return fmt.Errorf("market %d already has allow-commitments %t", marketID, curAllow)
 	}
@@ -860,15 +860,15 @@ func setUserSettlementAllowed(store sdk.KVStore, marketID uint32, allowed bool) 
 	}
 }
 
-// isCommitmentAllowed gets whether commitments are allowed for a market.
-func isCommitmentAllowed(store sdk.KVStore, marketID uint32) bool {
-	key := MakeKeyMarketAllowCommitments(marketID)
+// isMarketAcceptingCommitments gets whether commitments are allowed for a market.
+func isMarketAcceptingCommitments(store sdk.KVStore, marketID uint32) bool {
+	key := MakeKeyMarketAcceptingCommitments(marketID)
 	return store.Has(key)
 }
 
-// setAllowCommitments sets whether commitments are allowed for a market.
-func setAllowCommitments(store sdk.KVStore, marketID uint32, allowed bool) {
-	key := MakeKeyMarketAllowCommitments(marketID)
+// setMarketAcceptingCommitments sets whether commitments are allowed for a market.
+func setMarketAcceptingCommitments(store sdk.KVStore, marketID uint32, allowed bool) {
+	key := MakeKeyMarketAcceptingCommitments(marketID)
 	if allowed {
 		store.Set(key, []byte{})
 	} else {
@@ -923,19 +923,19 @@ func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, al
 
 // IsCommitmentAllowed gets whether commitments are allowed for a market.
 func (k Keeper) IsCommitmentAllowed(ctx sdk.Context, marketID uint32) bool {
-	return isCommitmentAllowed(k.getStore(ctx), marketID)
+	return isMarketAcceptingCommitments(k.getStore(ctx), marketID)
 }
 
 // UpdateCommitmentsAllowed updates the allow-commitments flag for a market.
 // An error is returned if the setting is already what is provided.
 func (k Keeper) UpdateCommitmentsAllowed(ctx sdk.Context, marketID uint32, allow bool, updatedBy string) error {
 	store := k.getStore(ctx)
-	current := isCommitmentAllowed(store, marketID)
+	current := isMarketAcceptingCommitments(store, marketID)
 	if current == allow {
 		return fmt.Errorf("market %d already has allow-commitments %t", marketID, allow)
 	}
-	setAllowCommitments(store, marketID, allow)
-	k.emitEvent(ctx, exchange.NewEventMarketAllowCommitmentsUpdated(marketID, updatedBy, allow))
+	setMarketAcceptingCommitments(store, marketID, allow)
+	k.emitEvent(ctx, exchange.NewEventMarketAcceptingCommitmentsUpdated(marketID, updatedBy, allow))
 	return nil
 }
 
@@ -1408,7 +1408,7 @@ func storeMarket(store sdk.KVStore, market exchange.Market) {
 	setReqAttrsAsk(store, marketID, market.ReqAttrCreateAsk)
 	setReqAttrsBid(store, marketID, market.ReqAttrCreateBid)
 	setReqAttrsCommitment(store, marketID, market.ReqAttrCreateCommitment)
-	setAllowCommitments(store, marketID, market.AllowCommitments)
+	setMarketAcceptingCommitments(store, marketID, market.AcceptingCommitments)
 	setCommitmentSettlementBips(store, marketID, market.CommitmentSettlementBips)
 	setIntermediaryDenom(store, marketID, market.IntermediaryDenom)
 }
@@ -1500,7 +1500,7 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 	market.ReqAttrCreateAsk = getReqAttrsAsk(store, marketID)
 	market.ReqAttrCreateBid = getReqAttrsBid(store, marketID)
 	market.ReqAttrCreateCommitment = getReqAttrsCommitment(store, marketID)
-	market.AllowCommitments = isCommitmentAllowed(store, marketID)
+	market.AcceptingCommitments = isMarketAcceptingCommitments(store, marketID)
 	market.CommitmentSettlementBips = getCommitmentSettlementBips(store, marketID)
 	market.IntermediaryDenom = getIntermediaryDenom(store, marketID)
 
@@ -1571,7 +1571,7 @@ func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
 		}
 	}
 
-	allowComs := isCommitmentAllowed(store, marketID)
+	allowComs := isMarketAcceptingCommitments(store, marketID)
 	if allowComs {
 		createComFee := getCreateCommitmentFlatFees(store, marketID)
 		if bips == 0 && len(createComFee) == 0 {

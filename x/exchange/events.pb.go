@@ -912,11 +912,11 @@ func (m *EventMarketUserSettleDisabled) GetUpdatedBy() string {
 	return ""
 }
 
-// EventMarketCommitmentsEnabled is an event emitted when a market's allow_commitments option is enabled.
+// EventMarketCommitmentsEnabled is an event emitted when a market's accepting_commitments option is enabled.
 type EventMarketCommitmentsEnabled struct {
 	// market_id is the numerical identifier of the market.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
-	// updated_by is the account that updated the allow_commitments option.
+	// updated_by is the account that updated the accepting_commitments option.
 	UpdatedBy string `protobuf:"bytes,2,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 }
 
@@ -967,11 +967,11 @@ func (m *EventMarketCommitmentsEnabled) GetUpdatedBy() string {
 	return ""
 }
 
-// EventMarketCommitmentsDisabled is an event emitted when a market's allow_commitments option is disabled.
+// EventMarketCommitmentsDisabled is an event emitted when a market's accepting_commitments option is disabled.
 type EventMarketCommitmentsDisabled struct {
 	// market_id is the numerical identifier of the market.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
-	// updated_by is the account that updated the allow_commitments option.
+	// updated_by is the account that updated the accepting_commitments option.
 	UpdatedBy string `protobuf:"bytes,2,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 }
 

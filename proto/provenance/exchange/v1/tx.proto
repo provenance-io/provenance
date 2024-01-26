@@ -59,9 +59,9 @@ service Msg {
   // MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement.
   rpc MarketUpdateUserSettle(MsgMarketUpdateUserSettleRequest) returns (MsgMarketUpdateUserSettleResponse);
 
-  // MarketUpdateAllowCommitments is a market endpoint to update whether it accepts commitments.
-  rpc MarketUpdateAllowCommitments(MsgMarketUpdateAllowCommitmentsRequest)
-      returns (MsgMarketUpdateAllowCommitmentsResponse);
+  // MarketUpdateAcceptingCommitments is a market endpoint to update whether it accepts commitments.
+  rpc MarketUpdateAcceptingCommitments(MsgMarketUpdateAcceptingCommitmentsRequest)
+      returns (MsgMarketUpdateAcceptingCommitmentsResponse);
 
   // MarketUpdateIntermediaryDenom sets a market's intermediary denom.
   rpc MarketUpdateIntermediaryDenom(MsgMarketUpdateIntermediaryDenomRequest)
@@ -358,8 +358,8 @@ message MsgMarketUpdateUserSettleRequest {
 // MsgMarketUpdateUserSettleResponse is a response message for the MarketUpdateUserSettle endpoint.
 message MsgMarketUpdateUserSettleResponse {}
 
-// MsgMarketUpdateAllowCommitmentsRequest is a request message for the MarketUpdateAllowCommitments endpoint.
-message MsgMarketUpdateAllowCommitmentsRequest {
+// MsgMarketUpdateAcceptingCommitmentsRequest is a request message for the MarketUpdateAcceptingCommitments endpoint.
+message MsgMarketUpdateAcceptingCommitmentsRequest {
   option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account with "update" permission requesting this change.
@@ -367,14 +367,14 @@ message MsgMarketUpdateAllowCommitmentsRequest {
   // market_id is the numerical identifier of the market to enable or disable commitments for.
   uint32 market_id = 2;
 
-  // allow_commitments is whether this market allows users to commit funds to it.
-  // For example, the CommitFunds endpoints is available if and only if this is true.
+  // accepting_commitments is whether this market allows users to commit funds to it.
+  // For example, the CommitFunds endpoint is available if and only if this is true.
   // The MarketCommitmentSettle endpoint is available (only to market actors) regardless of the value of this field.
-  bool allow_commitments = 3;
+  bool accepting_commitments = 3;
 }
 
-// MsgMarketUpdateAllowCommitmentsResponse is a response message for the MarketUpdateAllowCommitments endpoint.
-message MsgMarketUpdateAllowCommitmentsResponse {}
+// MsgMarketUpdateAcceptingCommitmentsResponse is a response message for the MarketUpdateAcceptingCommitments endpoint.
+message MsgMarketUpdateAcceptingCommitmentsResponse {}
 
 // MsgMarketUpdateIntermediaryDenomRequest is a request message for the MarketUpdateIntermediaryDenom endpoint.
 message MsgMarketUpdateIntermediaryDenomRequest {

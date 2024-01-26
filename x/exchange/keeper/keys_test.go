@@ -115,7 +115,7 @@ func TestKeyTypeUniqueness(t *testing.T) {
 				{name: "MarketKeyTypeUserSettle", value: keeper.MarketKeyTypeUserSettle},
 				{name: "MarketKeyTypePermissions", value: keeper.MarketKeyTypePermissions},
 				{name: "MarketKeyTypeReqAttr", value: keeper.MarketKeyTypeReqAttr},
-				{name: "MarketKeyTypeAllowCommitments", value: keeper.MarketKeyTypeAllowCommitments},
+				{name: "MarketKeyTypeAcceptingCommitments", value: keeper.MarketKeyTypeAcceptingCommitments},
 				{name: "MarketKeyTypeCreateCommitmentFlat", value: keeper.MarketKeyTypeCreateCommitmentFlat},
 				{name: "MarketKeyTypeCommitmentSettlementBips", value: keeper.MarketKeyTypeCommitmentSettlementBips},
 				{name: "MarketKeyTypeIntermediaryDenom", value: keeper.MarketKeyTypeIntermediaryDenom},
@@ -2985,8 +2985,8 @@ func TestParseReqAttrStoreValue(t *testing.T) {
 	}
 }
 
-func TestMakeKeyMarketAllowCommitments(t *testing.T) {
-	marketTypeByte := keeper.MarketKeyTypeAllowCommitments
+func TestMakeKeyMarketAcceptingCommitments(t *testing.T) {
+	marketTypeByte := keeper.MarketKeyTypeAcceptingCommitments
 
 	tests := []struct {
 		name     string
@@ -3039,14 +3039,14 @@ func TestMakeKeyMarketAllowCommitments(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.MakeKeyMarketAllowCommitments(tc.marketID)
+					return keeper.MakeKeyMarketAcceptingCommitments(tc.marketID)
 				},
 				expected: tc.expected,
 				expPrefixes: []expectedPrefix{
 					{name: "GetKeyPrefixMarket", value: keeper.GetKeyPrefixMarket(tc.marketID)},
 				},
 			}
-			checkKey(t, ktc, "MakeKeyMarketAllowCommitments(%d)", tc.marketID)
+			checkKey(t, ktc, "MakeKeyMarketAcceptingCommitments(%d)", tc.marketID)
 		})
 	}
 }

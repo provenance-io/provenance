@@ -99,8 +99,8 @@ var (
 	SetMarketActive = setMarketActive
 	// SetUserSettlementAllowed is a test-only exposure of setUserSettlementAllowed.
 	SetUserSettlementAllowed = setUserSettlementAllowed
-	// SetAllowCommitments is a test-only exposure of setAllowCommitments.
-	SetAllowCommitments = setAllowCommitments
+	// SetMarketAcceptingCommitments is a test-only exposure of setMarketAcceptingCommitments.
+	SetMarketAcceptingCommitments = setMarketAcceptingCommitments
 	// GrantPermissions is a test-only exposure of grantPermissions.
 	GrantPermissions = grantPermissions
 	// SetReqAttrsAsk is a test-only exposure of setReqAttrsAsk.

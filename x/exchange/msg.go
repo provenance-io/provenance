@@ -22,7 +22,7 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgMarketUpdateDetailsRequest)(nil),
 	(*MsgMarketUpdateEnabledRequest)(nil),
 	(*MsgMarketUpdateUserSettleRequest)(nil),
-	(*MsgMarketUpdateAllowCommitmentsRequest)(nil),
+	(*MsgMarketUpdateAcceptingCommitmentsRequest)(nil),
 	(*MsgMarketUpdateIntermediaryDenomRequest)(nil),
 	(*MsgMarketManagePermissionsRequest)(nil),
 	(*MsgMarketManageReqAttrsRequest)(nil),
@@ -468,7 +468,7 @@ func (m MsgMarketUpdateUserSettleRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-func (m MsgMarketUpdateAllowCommitmentsRequest) ValidateBasic() error {
+func (m MsgMarketUpdateAcceptingCommitmentsRequest) ValidateBasic() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
 		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
@@ -479,7 +479,7 @@ func (m MsgMarketUpdateAllowCommitmentsRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-func (m MsgMarketUpdateAllowCommitmentsRequest) GetSigners() []sdk.AccAddress {
+func (m MsgMarketUpdateAcceptingCommitmentsRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Admin)
 	return []sdk.AccAddress{addr}
 }

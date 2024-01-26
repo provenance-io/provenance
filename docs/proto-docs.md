@@ -136,8 +136,8 @@
     - [MsgMarketSetOrderExternalIDResponse](#provenance.exchange.v1.MsgMarketSetOrderExternalIDResponse)
     - [MsgMarketSettleRequest](#provenance.exchange.v1.MsgMarketSettleRequest)
     - [MsgMarketSettleResponse](#provenance.exchange.v1.MsgMarketSettleResponse)
-    - [MsgMarketUpdateAllowCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsRequest)
-    - [MsgMarketUpdateAllowCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsResponse)
+    - [MsgMarketUpdateAcceptingCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsRequest)
+    - [MsgMarketUpdateAcceptingCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsResponse)
     - [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest)
     - [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse)
     - [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest)
@@ -1538,13 +1538,13 @@ EventFundsReleased is an event emitted when funds are released from their commit
 <a name="provenance.exchange.v1.EventMarketCommitmentsDisabled"></a>
 
 ### EventMarketCommitmentsDisabled
-EventMarketCommitmentsDisabled is an event emitted when a market's allow_commitments option is disabled.
+EventMarketCommitmentsDisabled is an event emitted when a market's accepting_commitments option is disabled.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
-| `updated_by` | [string](#string) |  | updated_by is the account that updated the allow_commitments option. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the accepting_commitments option. |
 
 
 
@@ -1554,13 +1554,13 @@ EventMarketCommitmentsDisabled is an event emitted when a market's allow_commitm
 <a name="provenance.exchange.v1.EventMarketCommitmentsEnabled"></a>
 
 ### EventMarketCommitmentsEnabled
-EventMarketCommitmentsEnabled is an event emitted when a market's allow_commitments option is enabled.
+EventMarketCommitmentsEnabled is an event emitted when a market's accepting_commitments option is enabled.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
-| `updated_by` | [string](#string) |  | updated_by is the account that updated the allow_commitments option. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the accepting_commitments option. |
 
 
 
@@ -1922,7 +1922,7 @@ An entry that starts with "*." will match any attributes that end with the rest 
 | `req_attr_create_bid` | [string](#string) | repeated | req_attr_create_ask is a list of attributes required on an account for it to be allowed to create a bid order. An account must have all of these attributes in order to create a bid order in this market. If the list is empty, any account can create bid orders in this market.
 
 An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x". |
-| `allow_commitments` | [bool](#bool) |  | allow_commitments is whether the market allows users to commit funds to it. |
+| `accepting_commitments` | [bool](#bool) |  | accepting_commitments is whether the market is allowing users to commit funds to it. |
 | `fee_create_commitment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create_commitment_flat is the flat fee charged for creating a commitment. Each coin entry is a separate option. When a commitment is created, one of these must be paid. If empty, no fee is required to create a commitment. |
 | `commitment_settlement_bips` | [uint32](#uint32) |  | commitment_settlement_bips is the fraction of a commitment settlement that will be paid to the exchange. It is represented in basis points (1/100th of 1%, e.g. 0.0001) and is limited to 0 to 10,000 inclusive. During a commitment settlement, the inputs are summed and NAVs are used to convert that total to the intermediary denom, then to the fee denom. That is then multiplied by this value to get the fee amount that will be transferred out of the market's account into the exchange for that settlement.
 
@@ -2656,27 +2656,27 @@ MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
 
 
 
-<a name="provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsRequest"></a>
+<a name="provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsRequest"></a>
 
-### MsgMarketUpdateAllowCommitmentsRequest
-MsgMarketUpdateAllowCommitmentsRequest is a request message for the MarketUpdateAllowCommitments endpoint.
+### MsgMarketUpdateAcceptingCommitmentsRequest
+MsgMarketUpdateAcceptingCommitmentsRequest is a request message for the MarketUpdateAcceptingCommitments endpoint.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to enable or disable commitments for. |
-| `allow_commitments` | [bool](#bool) |  | allow_commitments is whether this market allows users to commit funds to it. For example, the CommitFunds endpoints is available if and only if this is true. The MarketCommitmentSettle endpoint is available (only to market actors) regardless of the value of this field. |
+| `accepting_commitments` | [bool](#bool) |  | accepting_commitments is whether this market allows users to commit funds to it. For example, the CommitFunds endpoint is available if and only if this is true. The MarketCommitmentSettle endpoint is available (only to market actors) regardless of the value of this field. |
 
 
 
 
 
 
-<a name="provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsResponse"></a>
+<a name="provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsResponse"></a>
 
-### MsgMarketUpdateAllowCommitmentsResponse
-MsgMarketUpdateAllowCommitmentsResponse is a response message for the MarketUpdateAllowCommitments endpoint.
+### MsgMarketUpdateAcceptingCommitmentsResponse
+MsgMarketUpdateAcceptingCommitmentsResponse is a response message for the MarketUpdateAcceptingCommitments endpoint.
 
 
 
@@ -2846,7 +2846,7 @@ Msg is the service for exchange module's tx endpoints.
 | `MarketUpdateDetails` | [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest) | [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse) | MarketUpdateDetails is a market endpoint to update its details. | |
 | `MarketUpdateEnabled` | [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest) | [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse) | MarketUpdateEnabled is a market endpoint to update whether its accepting orders. | |
 | `MarketUpdateUserSettle` | [MsgMarketUpdateUserSettleRequest](#provenance.exchange.v1.MsgMarketUpdateUserSettleRequest) | [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse) | MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement. | |
-| `MarketUpdateAllowCommitments` | [MsgMarketUpdateAllowCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsRequest) | [MsgMarketUpdateAllowCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAllowCommitmentsResponse) | MarketUpdateAllowCommitments is a market endpoint to update whether it accepts commitments. | |
+| `MarketUpdateAcceptingCommitments` | [MsgMarketUpdateAcceptingCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsRequest) | [MsgMarketUpdateAcceptingCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsResponse) | MarketUpdateAcceptingCommitments is a market endpoint to update whether it accepts commitments. | |
 | `MarketUpdateIntermediaryDenom` | [MsgMarketUpdateIntermediaryDenomRequest](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest) | [MsgMarketUpdateIntermediaryDenomResponse](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomResponse) | MarketUpdateIntermediaryDenom sets a market's intermediary denom. | |
 | `MarketManagePermissions` | [MsgMarketManagePermissionsRequest](#provenance.exchange.v1.MsgMarketManagePermissionsRequest) | [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse) | MarketManagePermissions is a market endpoint to manage a market's user permissions. | |
 | `MarketManageReqAttrs` | [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest) | [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse) | MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it. | |

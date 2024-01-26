@@ -573,7 +573,7 @@ func TestNewEventMarketUserSettleDisabled(t *testing.T) {
 	assertEverythingSet(t, event, "EventMarketUserSettleDisabled")
 }
 
-func TestNewEventMarketAllowCommitmentsUpdated(t *testing.T) {
+func TestNewEventMarketAcceptingCommitmentsUpdated(t *testing.T) {
 	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
 	tests := []struct {
@@ -603,11 +603,11 @@ func TestNewEventMarketAllowCommitmentsUpdated(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var event proto.Message
 			testFunc := func() {
-				event = NewEventMarketAllowCommitmentsUpdated(tc.marketID, tc.updatedBy, tc.isAllowed)
+				event = NewEventMarketAcceptingCommitmentsUpdated(tc.marketID, tc.updatedBy, tc.isAllowed)
 			}
-			require.NotPanics(t, testFunc, "NewEventMarketAllowCommitmentsUpdated(%d, %q, %t) result",
+			require.NotPanics(t, testFunc, "NewEventMarketAcceptingCommitmentsUpdated(%d, %q, %t) result",
 				tc.marketID, tc.updatedBy, tc.isAllowed)
-			assert.Equal(t, tc.expected, event, "NewEventMarketAllowCommitmentsUpdated(%d, %q, %t) result",
+			assert.Equal(t, tc.expected, event, "NewEventMarketAcceptingCommitmentsUpdated(%d, %q, %t) result",
 				tc.marketID, tc.updatedBy, tc.isAllowed)
 		})
 	}

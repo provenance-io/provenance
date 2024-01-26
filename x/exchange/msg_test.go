@@ -78,7 +78,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			return &MsgMarketUpdateUserSettleRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
-			return &MsgMarketUpdateAllowCommitmentsRequest{Admin: signer}
+			return &MsgMarketUpdateAcceptingCommitmentsRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
 			return &MsgMarketUpdateIntermediaryDenomRequest{Admin: signer}
@@ -1800,31 +1800,31 @@ func TestMsgMarketUpdateUserSettleRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgMarketUpdateAllowCommitmentsRequest_ValidateBasic(t *testing.T) {
+func TesMsgMarketUpdateAcceptingCommitmentsRequest_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name   string
-		msg    MsgMarketUpdateAllowCommitmentsRequest
+		msg    MsgMarketUpdateAcceptingCommitmentsRequest
 		expErr []string
 	}{
 		{
 			name: "control: false",
-			msg: MsgMarketUpdateAllowCommitmentsRequest{
-				Admin:            sdk.AccAddress("admin_______________").String(),
-				MarketId:         1,
-				AllowCommitments: false,
+			msg: MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                sdk.AccAddress("admin_______________").String(),
+				MarketId:             1,
+				AcceptingCommitments: false,
 			},
 		},
 		{
 			name: "control: true",
-			msg: MsgMarketUpdateAllowCommitmentsRequest{
-				Admin:            sdk.AccAddress("admin_______________").String(),
-				MarketId:         1,
-				AllowCommitments: true,
+			msg: MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                sdk.AccAddress("admin_______________").String(),
+				MarketId:             1,
+				AcceptingCommitments: true,
 			},
 		},
 		{
 			name: "no admin",
-			msg: MsgMarketUpdateAllowCommitmentsRequest{
+			msg: MsgMarketUpdateAcceptingCommitmentsRequest{
 				Admin:    "",
 				MarketId: 1,
 			},
@@ -1832,7 +1832,7 @@ func TestMsgMarketUpdateAllowCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad admin",
-			msg: MsgMarketUpdateAllowCommitmentsRequest{
+			msg: MsgMarketUpdateAcceptingCommitmentsRequest{
 				Admin:    "notanadminaddr",
 				MarketId: 1,
 			},
@@ -1840,7 +1840,7 @@ func TestMsgMarketUpdateAllowCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "market zero",
-			msg: MsgMarketUpdateAllowCommitmentsRequest{
+			msg: MsgMarketUpdateAcceptingCommitmentsRequest{
 				Admin:    sdk.AccAddress("admin_______________").String(),
 				MarketId: 0,
 			},
@@ -1848,7 +1848,7 @@ func TestMsgMarketUpdateAllowCommitmentsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "multiple errors",
-			msg:  MsgMarketUpdateAllowCommitmentsRequest{},
+			msg:  MsgMarketUpdateAcceptingCommitmentsRequest{},
 			expErr: []string{
 				"invalid administrator \"\": " + emptyAddrErr,
 				"invalid market id: cannot be zero",

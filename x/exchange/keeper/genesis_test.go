@@ -179,7 +179,7 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 						},
 						ReqAttrCreateAsk:         []string{"ask.create.req"},
 						ReqAttrCreateBid:         []string{"bid.create.req"},
-						AllowCommitments:         true,
+						AcceptingCommitments:     true,
 						FeeCreateCommitmentFlat:  s.coins("9cherry"),
 						CommitmentSettlementBips: 50,
 						IntermediaryDenom:        "lemon",
@@ -546,7 +546,7 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 						AccessGrants: []exchange.AccessGrant{
 							{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
 						},
-						AllowCommitments:         true,
+						AcceptingCommitments:     true,
 						CommitmentSettlementBips: 3,
 						IntermediaryDenom:        "lemon",
 					},

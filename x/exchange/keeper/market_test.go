@@ -4319,7 +4319,7 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 }
 
 func (s *TestSuite) TestKeeper_IsCommitmentAllowed() {
-	setter := keeper.SetAllowCommitments
+	setter := keeper.SetMarketAcceptingCommitments
 	tests := []struct {
 		name     string
 		setup    func()
@@ -4383,7 +4383,7 @@ func (s *TestSuite) TestKeeper_IsCommitmentAllowed() {
 }
 
 func (s *TestSuite) TestKeeper_UpdateCommitmentsAllowed() {
-	setter := keeper.SetAllowCommitments
+	setter := keeper.SetMarketAcceptingCommitments
 	tests := []struct {
 		name      string
 		setup     func()
@@ -4477,7 +4477,7 @@ func (s *TestSuite) TestKeeper_UpdateCommitmentsAllowed() {
 
 			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
-				event := exchange.NewEventMarketAllowCommitmentsUpdated(tc.marketID, tc.updatedBy, tc.allow)
+				event := exchange.NewEventMarketAcceptingCommitmentsUpdated(tc.marketID, tc.updatedBy, tc.allow)
 				expEvents = append(expEvents, s.untypeEvent(event))
 			}
 
@@ -7348,7 +7348,7 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 				ReqAttrCreateAsk: []string{"*.ask.whatever"},
 				ReqAttrCreateBid: []string{"*.bid.whatever"},
 
-				AllowCommitments:         true,
+				AcceptingCommitments:     true,
 				FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("orange", 77)},
 				CommitmentSettlementBips: 15,
 				IntermediaryDenom:        "cherry",
@@ -7554,7 +7554,7 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 					ReqAttrCreateAsk: []string{"create-ask.my.market", "*.kyc.someone"},
 					ReqAttrCreateBid: []string{"create-bid.my.market", "*.kyc.someone"},
 
-					AllowCommitments:         true,
+					AcceptingCommitments:     true,
 					FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("orange", 77)},
 					CommitmentSettlementBips: 15,
 					IntermediaryDenom:        "cherry",
@@ -8126,8 +8126,8 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 			name: "commitments allowed but no fees defined",
 			setup: func() {
 				keeper.StoreMarket(s.getStore(), exchange.Market{
-					MarketId:         28,
-					AllowCommitments: true,
+					MarketId:             28,
+					AcceptingCommitments: true,
 				})
 			},
 			marketID: 28,
@@ -8176,7 +8176,7 @@ func (s *TestSuite) TestKeeper_CloseMarket() {
 		MarketId:                 marketID,
 		AcceptingOrders:          false,
 		AllowUserSettlement:      true,
-		AllowCommitments:         false,
+		AcceptingCommitments:     false,
 		CommitmentSettlementBips: 10,
 		IntermediaryDenom:        "cherry",
 	}
@@ -8235,7 +8235,7 @@ func (s *TestSuite) TestKeeper_CloseMarket() {
 
 	initMarket := s.copyMarket(expMarket)
 	initMarket.AcceptingOrders = true
-	initMarket.AllowCommitments = true
+	initMarket.AcceptingCommitments = true
 
 	s.clearExchangeState()
 	s.requireCreateMarket(initMarket)

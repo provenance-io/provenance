@@ -203,24 +203,24 @@ func (k MsgServer) MarketUpdateUserSettle(goCtx context.Context, msg *exchange.M
 	return &exchange.MsgMarketUpdateUserSettleResponse{}, nil
 }
 
-// MarketUpdateAllowCommitments is a market endpoint to update whether it accepts commitments.
-func (k MsgServer) MarketUpdateAllowCommitments(goCtx context.Context, msg *exchange.MsgMarketUpdateAllowCommitmentsRequest) (*exchange.MsgMarketUpdateAllowCommitmentsResponse, error) {
+// MarketUpdateAcceptingCommitments is a market endpoint to update whether it accepts commitments.
+func (k MsgServer) MarketUpdateAcceptingCommitments(goCtx context.Context, msg *exchange.MsgMarketUpdateAcceptingCommitmentsRequest) (*exchange.MsgMarketUpdateAcceptingCommitmentsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
 	if !k.IsAuthority(msg.Admin) {
-		if err := validateMarketUpdateAllowCommitments(k.getStore(ctx), msg.MarketId, msg.AllowCommitments); err != nil {
+		if err := validateMarketUpdateAcceptingCommitments(k.getStore(ctx), msg.MarketId, msg.AcceptingCommitments); err != nil {
 			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 		}
 	}
 
-	err := k.UpdateCommitmentsAllowed(ctx, msg.MarketId, msg.AllowCommitments, msg.Admin)
+	err := k.UpdateCommitmentsAllowed(ctx, msg.MarketId, msg.AcceptingCommitments, msg.Admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	return &exchange.MsgMarketUpdateAllowCommitmentsResponse{}, nil
+	return &exchange.MsgMarketUpdateAcceptingCommitmentsResponse{}, nil
 }
 
 // MarketUpdateIntermediaryDenom sets a market's intermediary denom.

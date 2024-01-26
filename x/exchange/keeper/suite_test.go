@@ -310,7 +310,7 @@ func (s *TestSuite) copyMarket(orig exchange.Market) exchange.Market {
 		AccessGrants:              s.copyAccessGrants(orig.AccessGrants),
 		ReqAttrCreateAsk:          s.copyStrings(orig.ReqAttrCreateAsk),
 		ReqAttrCreateBid:          s.copyStrings(orig.ReqAttrCreateBid),
-		AllowCommitments:          orig.AllowCommitments,
+		AcceptingCommitments:      orig.AcceptingCommitments,
 		FeeCreateCommitmentFlat:   s.copyCoins(orig.FeeCreateCommitmentFlat),
 		CommitmentSettlementBips:  orig.CommitmentSettlementBips,
 		IntermediaryDenom:         orig.IntermediaryDenom,

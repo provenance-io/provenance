@@ -134,9 +134,9 @@ func NewEventMarketUserSettleDisabled(marketID uint32, updatedBy string) *EventM
 	}
 }
 
-// NewEventMarketAllowCommitmentsUpdated returns a new NewEventMarketCommitmentsEnabled if isAllowed == true,
+// NewEventMarketAcceptingCommitmentsUpdated returns a new NewEventMarketCommitmentsEnabled if isAllowed == true,
 // or a new NewEventMarketCommitmentsDisabled if isAllowed == false.
-func NewEventMarketAllowCommitmentsUpdated(marketID uint32, updatedBy string, isAllowed bool) proto.Message {
+func NewEventMarketAcceptingCommitmentsUpdated(marketID uint32, updatedBy string, isAllowed bool) proto.Message {
 	if isAllowed {
 		return NewEventMarketCommitmentsEnabled(marketID, updatedBy)
 	}

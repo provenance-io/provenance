@@ -76,7 +76,7 @@ func TestMarket_Validate(t *testing.T) {
 				ReqAttrCreateAsk: []string{"kyc.ask.path", "*.ask.some.other.path"},
 				ReqAttrCreateBid: []string{"kyc.bid.path", "*.bid.some.other.path"},
 
-				AllowCommitments:         true,
+				AcceptingCommitments:     true,
 				FeeCreateCommitmentFlat:  coins("27nnibbler,3mfry"),
 				CommitmentSettlementBips: 88,
 				IntermediaryDenom:        "mleela",

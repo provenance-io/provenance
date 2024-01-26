@@ -124,8 +124,8 @@ const (
 	MarketKeyTypePermissions = byte(0x08)
 	// MarketKeyTypeReqAttr is the market-specific type byte for the market's required attributes lists.
 	MarketKeyTypeReqAttr = byte(0x09)
-	// MarketKeyTypeAllowCommitments is the market-specific type byte for the allow-commitments indicators.
-	MarketKeyTypeAllowCommitments = byte(0x10)
+	// MarketKeyTypeAcceptingCommitments is the market-specific type byte for the allow-commitments indicators.
+	MarketKeyTypeAcceptingCommitments = byte(0x10)
 	// MarketKeyTypeCreateCommitmentFlat is the market-specific type byte for the create-commitment flat fees.
 	MarketKeyTypeCreateCommitmentFlat = byte(0x11)
 	// MarketKeyTypeCommitmentSettlementBips is the market-specific type byte for the bips the market is charged for commitment settlements.
@@ -576,9 +576,9 @@ func ParseReqAttrStoreValue(value []byte) []string {
 	return strings.Split(string(value), string(RecordSeparator))
 }
 
-// MakeKeyMarketAllowCommitments creates the key to use to indicate that a market allows commitments.
-func MakeKeyMarketAllowCommitments(marketID uint32) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeAllowCommitments, 0)
+// MakeKeyMarketAcceptingCommitments creates the key to use to indicate that a market allows commitments.
+func MakeKeyMarketAcceptingCommitments(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeAcceptingCommitments, 0)
 }
 
 // MakeKeyMarketCommitmentSettlementBips creates the key to use to for a market's commitment settlement bips.

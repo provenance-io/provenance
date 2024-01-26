@@ -49,7 +49,7 @@ func (m Market) Validate() error {
 		// Nothing to check for with the AcceptingOrders and AllowUserSettlement booleans.
 		ValidateReqAttrs("create-ask", m.ReqAttrCreateAsk),
 		ValidateReqAttrs("create-bid", m.ReqAttrCreateBid),
-		// Nothing to check for the AllowCommitments boolean.
+		// Nothing to check for the AcceptingCommitments boolean.
 		ValidateFeeOptions("create-commitment flat fee", m.FeeCreateCommitmentFlat),
 		ValidateBips("commitment settlement", m.CommitmentSettlementBips),
 		ValidateIntermediaryDenom(m.IntermediaryDenom),

@@ -2958,7 +2958,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateUserSettle() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestMsgServer_MarketUpdateAllowCommitments()
+// TODO[1789]: func (s *TestSuite) TestMsgServer_MarketUpdateAcceptingCommitments()
 
 // TODO[1789]: func (s *TestSuite) TestMsgServer_MarketUpdateIntermediaryDenom()
 
