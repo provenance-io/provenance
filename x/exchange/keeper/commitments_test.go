@@ -1426,6 +1426,22 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 			},
 		},
 		{
+			name: "intermediary is fee: no inputs",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					CommitmentSettlementBips: 10,
+					IntermediaryDenom:        "nhash",
+				})
+			},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				MarketId: 3,
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				ToFeeNav: &exchange.NetAssetPrice{Assets: s.coin("1nhash"), Price: s.coin("1nhash")},
+			},
+		},
+		{
 			name: "two inputs: no navs",
 			setup: func() {
 				s.requireCreateMarket(exchange.Market{
@@ -1452,6 +1468,41 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 				"no nav found from assets denom \"apple\" to intermediary denom \"cherry\"",
 				"no nav found from assets denom \"banana\" to intermediary denom \"cherry\"",
 			),
+		},
+		{
+			name: "intermediary is fee: two inputs",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					CommitmentSettlementBips: 1000,
+					IntermediaryDenom:        "nhash",
+				})
+			},
+			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10apple"), s.coin("57nhash")),
+			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "apple", priceDenom: "nhash"}},
+			req: &exchange.MsgMarketCommitmentSettleRequest{
+				MarketId: 3,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("10apple,3banana")},
+					{Account: s.addr3.String(), Amount: s.coins("2banana")},
+				},
+				Outputs: []exchange.AccountAmount{{Account: s.addr4.String(), Amount: s.coins("10apple,5banana")}},
+				Navs:    []exchange.NetAssetPrice{{Assets: s.coin("5banana"), Price: s.coin("13nhash")}},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal: s.coins("10apple,5banana"),
+				// 10apple*57nhash/10apple = 57nhash
+				// 5banana*13nhash/5banana = 13nhash
+				// sum = 70nhash
+				ConvertedTotal: s.coins("70nhash"),
+				// 70nhash * 1000/20000 = 3.5 => 4nhash
+				ExchangeFees: s.coins("4nhash"),
+				ConversionNavs: []exchange.NetAssetPrice{
+					{Assets: s.coin("10apple"), Price: s.coin("57nhash")},
+					{Assets: s.coin("5banana"), Price: s.coin("13nhash")},
+				},
+				ToFeeNav: &exchange.NetAssetPrice{Assets: s.coin("1nhash"), Price: s.coin("1nhash")},
+			},
 		},
 		{
 			name: "one input denom: fee denom: evenly divisible",

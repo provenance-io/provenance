@@ -296,9 +296,13 @@ func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.
 	}
 
 	feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
-	rv.ToFeeNav = k.lookupNav(ctx, convDenom, feeDenom, req.Navs)
-	if rv.ToFeeNav == nil {
-		return nil, fmt.Errorf("no nav found from intermediary denom %q to fee denom %q", convDenom, feeDenom)
+	if convDenom != feeDenom {
+		rv.ToFeeNav = k.lookupNav(ctx, convDenom, feeDenom, req.Navs)
+		if rv.ToFeeNav == nil {
+			return nil, fmt.Errorf("no nav found from intermediary denom %q to fee denom %q", convDenom, feeDenom)
+		}
+	} else {
+		rv.ToFeeNav = &exchange.NetAssetPrice{Assets: sdk.NewInt64Coin(feeDenom, 1), Price: sdk.NewInt64Coin(feeDenom, 1)}
 	}
 
 	// If there aren't any inputs, there's nothing left to do here.
