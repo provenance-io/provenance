@@ -437,7 +437,7 @@ func TestNewEventMarketDetailsUpdated(t *testing.T) {
 	assertEverythingSet(t, event, "EventMarketDetailsUpdated")
 }
 
-func TestNewEventMarketActiveUpdated(t *testing.T) {
+func TestNewEventMarketAcceptingOrdersUpdated(t *testing.T) {
 	someAddr := sdk.AccAddress("some_address________").String()
 
 	tests := []struct {
@@ -452,14 +452,14 @@ func TestNewEventMarketActiveUpdated(t *testing.T) {
 			marketID:  33,
 			updatedBy: someAddr,
 			isActive:  true,
-			expected:  NewEventMarketEnabled(33, someAddr),
+			expected:  NewEventMarketOrdersEnabled(33, someAddr),
 		},
 		{
 			name:      "disabled",
 			marketID:  556,
 			updatedBy: someAddr,
 			isActive:  false,
-			expected:  NewEventMarketDisabled(556, someAddr),
+			expected:  NewEventMarketOrdersDisabled(556, someAddr),
 		},
 	}
 
@@ -467,42 +467,42 @@ func TestNewEventMarketActiveUpdated(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var event proto.Message
 			testFunc := func() {
-				event = NewEventMarketActiveUpdated(tc.marketID, tc.updatedBy, tc.isActive)
+				event = NewEventMarketAcceptingOrdersUpdated(tc.marketID, tc.updatedBy, tc.isActive)
 			}
-			require.NotPanics(t, testFunc, "NewEventMarketActiveUpdated(%d, %q, %t) result",
+			require.NotPanics(t, testFunc, "NewEventMarketAcceptingOrdersUpdated(%d, %q, %t) result",
 				tc.marketID, tc.updatedBy, tc.isActive)
-			assert.Equal(t, tc.expected, event, "NewEventMarketActiveUpdated(%d, %q, %t) result",
+			assert.Equal(t, tc.expected, event, "NewEventMarketAcceptingOrdersUpdated(%d, %q, %t) result",
 				tc.marketID, tc.updatedBy, tc.isActive)
 		})
 	}
 }
 
-func TestNewEventMarketEnabled(t *testing.T) {
+func TestNewEventMarketOrdersEnabled(t *testing.T) {
 	marketID := uint32(919)
 	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
-	var event *EventMarketEnabled
+	var event *EventMarketOrdersEnabled
 	testFunc := func() {
-		event = NewEventMarketEnabled(marketID, updatedBy)
+		event = NewEventMarketOrdersEnabled(marketID, updatedBy)
 	}
-	require.NotPanics(t, testFunc, "NewEventMarketEnabled(%d, %q)", marketID, updatedBy)
+	require.NotPanics(t, testFunc, "NewEventMarketOrdersEnabled(%d, %q)", marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
-	assertEverythingSet(t, event, "EventMarketEnabled")
+	assertEverythingSet(t, event, "EventMarketOrdersEnabled")
 }
 
-func TestNewEventMarketDisabled(t *testing.T) {
+func TestNewEventMarketOrdersDisabled(t *testing.T) {
 	marketID := uint32(5555)
 	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
-	var event *EventMarketDisabled
+	var event *EventMarketOrdersDisabled
 	testFunc := func() {
-		event = NewEventMarketDisabled(marketID, updatedBy)
+		event = NewEventMarketOrdersDisabled(marketID, updatedBy)
 	}
-	require.NotPanics(t, testFunc, "NewEventMarketDisabled(%d, %q)", marketID, updatedBy)
+	require.NotPanics(t, testFunc, "NewEventMarketOrdersDisabled(%d, %q)", marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
-	assertEverythingSet(t, event, "EventMarketDisabled")
+	assertEverythingSet(t, event, "EventMarketOrdersDisabled")
 }
 
 func TestNewEventMarketUserSettleUpdated(t *testing.T) {
@@ -955,10 +955,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "EventMarketEnabled",
-			tev:  NewEventMarketEnabled(8, updatedBy),
+			name: "EventMarketOrdersEnabled",
+			tev:  NewEventMarketOrdersEnabled(8, updatedBy),
 			expEvent: sdk.Event{
-				Type: "provenance.exchange.v1.EventMarketEnabled",
+				Type: "provenance.exchange.v1.EventMarketOrdersEnabled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("market_id"), Value: []byte("8")},
 					{Key: []byte("updated_by"), Value: updatedByQ},
@@ -966,10 +966,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "EventMarketDisabled",
-			tev:  NewEventMarketDisabled(9, updatedBy),
+			name: "EventMarketOrdersDisabled",
+			tev:  NewEventMarketOrdersDisabled(9, updatedBy),
 			expEvent: sdk.Event{
-				Type: "provenance.exchange.v1.EventMarketDisabled",
+				Type: "provenance.exchange.v1.EventMarketOrdersDisabled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("market_id"), Value: []byte("9")},
 					{Key: []byte("updated_by"), Value: updatedByQ},

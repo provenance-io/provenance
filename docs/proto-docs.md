@@ -69,6 +69,8 @@
     - [EventMarketEnabled](#provenance.exchange.v1.EventMarketEnabled)
     - [EventMarketFeesUpdated](#provenance.exchange.v1.EventMarketFeesUpdated)
     - [EventMarketIntermediaryDenomUpdated](#provenance.exchange.v1.EventMarketIntermediaryDenomUpdated)
+    - [EventMarketOrdersDisabled](#provenance.exchange.v1.EventMarketOrdersDisabled)
+    - [EventMarketOrdersEnabled](#provenance.exchange.v1.EventMarketOrdersEnabled)
     - [EventMarketPermissionsUpdated](#provenance.exchange.v1.EventMarketPermissionsUpdated)
     - [EventMarketReqAttrUpdated](#provenance.exchange.v1.EventMarketReqAttrUpdated)
     - [EventMarketUserSettleDisabled](#provenance.exchange.v1.EventMarketUserSettleDisabled)
@@ -1602,6 +1604,7 @@ EventMarketDetailsUpdated is an event emitted when a market's details are update
 
 ### EventMarketDisabled
 EventMarketDisabled is an event emitted when a market is disabled.
+Deprecated: This event is no longer used. It is replaced with EventMarketOrdersDisabled.
 
 
 | Field | Type | Label | Description |
@@ -1618,6 +1621,7 @@ EventMarketDisabled is an event emitted when a market is disabled.
 
 ### EventMarketEnabled
 EventMarketEnabled is an event emitted when a market is enabled.
+Deprecated: This event is no longer used. It is replaced with EventMarketOrdersEnabled.
 
 
 | Field | Type | Label | Description |
@@ -1656,6 +1660,38 @@ commitment_settlement_intermediary_denom field.
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
 | `updated_by` | [string](#string) |  | updated_by is the account that updated the intermediary denom. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketOrdersDisabled"></a>
+
+### EventMarketOrdersDisabled
+EventMarketOrdersEnabled is an event emitted when a market disables order creation.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the accepting_orders option. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketOrdersEnabled"></a>
+
+### EventMarketOrdersEnabled
+EventMarketOrdersEnabled is an event emitted when a market enables order creation.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the accepting_orders option. |
 
 
 

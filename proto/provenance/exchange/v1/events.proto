@@ -122,7 +122,9 @@ message EventMarketDetailsUpdated {
 }
 
 // EventMarketEnabled is an event emitted when a market is enabled.
+// Deprecated: This event is no longer used. It is replaced with EventMarketOrdersEnabled.
 message EventMarketEnabled {
+  option deprecated = true;
   // market_id is the numerical identifier of the market.
   uint32 market_id = 1;
   // updated_by is the account that enabled the market.
@@ -130,10 +132,28 @@ message EventMarketEnabled {
 }
 
 // EventMarketDisabled is an event emitted when a market is disabled.
+// Deprecated: This event is no longer used. It is replaced with EventMarketOrdersDisabled.
 message EventMarketDisabled {
+  option deprecated = true;
   // market_id is the numerical identifier of the market.
   uint32 market_id = 1;
   // updated_by is the account that disabled the market.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketOrdersEnabled is an event emitted when a market enables order creation.
+message EventMarketOrdersEnabled {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the accepting_orders option.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketOrdersEnabled is an event emitted when a market disables order creation.
+message EventMarketOrdersDisabled {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the accepting_orders option.
   string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 

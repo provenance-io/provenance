@@ -899,7 +899,7 @@ func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool
 		return fmt.Errorf("market %d already has accepting-orders %t", marketID, active)
 	}
 	setMarketActive(store, marketID, active)
-	k.emitEvent(ctx, exchange.NewEventMarketActiveUpdated(marketID, updatedBy, active))
+	k.emitEvent(ctx, exchange.NewEventMarketAcceptingOrdersUpdated(marketID, updatedBy, active))
 	return nil
 }
 

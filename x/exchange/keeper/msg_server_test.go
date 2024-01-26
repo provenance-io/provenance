@@ -2828,7 +2828,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
 				AcceptingOrders: true,
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(&exchange.EventMarketEnabled{MarketId: 3, UpdatedBy: s.addr5.String()}),
+				s.untypeEvent(&exchange.EventMarketOrdersEnabled{MarketId: 3, UpdatedBy: s.addr5.String()}),
 			},
 		},
 		{
@@ -2845,7 +2845,7 @@ func (s *TestSuite) TestMsgServer_MarketUpdateEnabled() {
 				AcceptingOrders: false,
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(&exchange.EventMarketDisabled{MarketId: 3, UpdatedBy: s.addr5.String()}),
+				s.untypeEvent(&exchange.EventMarketOrdersDisabled{MarketId: 3, UpdatedBy: s.addr5.String()}),
 			},
 		},
 	}

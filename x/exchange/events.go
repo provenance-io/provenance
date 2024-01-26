@@ -88,24 +88,24 @@ func NewEventMarketDetailsUpdated(marketID uint32, updatedBy string) *EventMarke
 	}
 }
 
-// NewEventMarketActiveUpdated returns a new EventMarketEnabled if isActive == true,
-// or a new EventMarketDisabled if isActive == false.
-func NewEventMarketActiveUpdated(marketID uint32, updatedBy string, isActive bool) proto.Message {
+// NewEventMarketAcceptingOrdersUpdated returns a new EventMarketOrdersEnabled if isActive == true,
+// or a new EventMarketOrdersDisabled if isActive == false.
+func NewEventMarketAcceptingOrdersUpdated(marketID uint32, updatedBy string, isActive bool) proto.Message {
 	if isActive {
-		return NewEventMarketEnabled(marketID, updatedBy)
+		return NewEventMarketOrdersEnabled(marketID, updatedBy)
 	}
-	return NewEventMarketDisabled(marketID, updatedBy)
+	return NewEventMarketOrdersDisabled(marketID, updatedBy)
 }
 
-func NewEventMarketEnabled(marketID uint32, updatedBy string) *EventMarketEnabled {
-	return &EventMarketEnabled{
+func NewEventMarketOrdersEnabled(marketID uint32, updatedBy string) *EventMarketOrdersEnabled {
+	return &EventMarketOrdersEnabled{
 		MarketId:  marketID,
 		UpdatedBy: updatedBy,
 	}
 }
 
-func NewEventMarketDisabled(marketID uint32, updatedBy string) *EventMarketDisabled {
-	return &EventMarketDisabled{
+func NewEventMarketOrdersDisabled(marketID uint32, updatedBy string) *EventMarketOrdersDisabled {
+	return &EventMarketOrdersDisabled{
 		MarketId:  marketID,
 		UpdatedBy: updatedBy,
 	}

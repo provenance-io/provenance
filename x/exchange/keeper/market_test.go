@@ -4111,7 +4111,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 
 			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
-				event := exchange.NewEventMarketActiveUpdated(tc.marketID, tc.updatedBy, tc.active)
+				event := exchange.NewEventMarketAcceptingOrdersUpdated(tc.marketID, tc.updatedBy, tc.active)
 				expEvents = append(expEvents, s.untypeEvent(event))
 			}
 
@@ -8224,7 +8224,7 @@ func (s *TestSuite) TestKeeper_CloseMarket() {
 		},
 	}
 	expEvents := make(sdk.Events, 2, 2+len(marketOrders)+len(marketCommitments))
-	expEvents[0] = s.untypeEvent(exchange.NewEventMarketDisabled(marketID, signer))
+	expEvents[0] = s.untypeEvent(exchange.NewEventMarketOrdersDisabled(marketID, signer))
 	expEvents[1] = s.untypeEvent(exchange.NewEventMarketCommitmentsDisabled(marketID, signer))
 	for _, order := range marketOrders {
 		expEvents = append(expEvents, s.untypeEvent(exchange.NewEventOrderCancelled(order, signer)))
