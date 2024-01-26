@@ -40,12 +40,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add the ibcratelimit module [#1498](https://github.com/provenance-io/provenance/issues/1498).
+* Add fix for NAV units to tourmaline upgrade handler [#1815](https://github.com/provenance-io/provenance/issues/1815).
 
 ### Improvements
 
 * Add upgrade handler for 1.18 [#1756](https://github.com/provenance-io/provenance/pull/1756).
 * Remove the rust upgrade handlers [PR 1774](https://github.com/provenance-io/provenance/pull/1774).
 * Allow bypassing the config warning wait using an environment variable [PR 1810](https://github.com/provenance-io/provenance/pull/1810).
+* Filter out empty distribution events from begin blocker [#1822](https://github.com/provenance-io/provenance/pull/1822).
 
 ### Bug Fixes
 
@@ -55,7 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Dependencies
 
 - Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.28.1 ([#1724](https://github.com/provenance-io/provenance/pull/1724), [#1744](https://github.com/provenance-io/provenance/pull/1744), [#1750](https://github.com/provenance-io/provenance/pull/1750))
-- Bump `github.com/google/uuid` from 1.3.1 to 1.5.0 ([#1723](https://github.com/provenance-io/provenance/pull/1723), [#1781](https://github.com/provenance-io/provenance/pull/1781))
+- Bump `github.com/google/uuid` from 1.3.1 to 1.6.0 ([#1723](https://github.com/provenance-io/provenance/pull/1723), [#1781](https://github.com/provenance-io/provenance/pull/1781), [#1819](https://github.com/provenance-io/provenance/pull/1819))
 - Bump `github.com/gorilla/mux` from 1.8.0 to 1.8.1 ([#1734](https://github.com/provenance-io/provenance/pull/1734))
 - Bump `golang.org/x/text` from 0.13.0 to 0.14.0 ([#1735](https://github.com/provenance-io/provenance/pull/1735))
 - Bump `cosmossdk.io/math` from 1.1.2 to 1.2.0 ([#1739](https://github.com/provenance-io/provenance/pull/1739))
@@ -69,9 +71,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github/codeql-action` from 2 to 3 ([#1784](https://github.com/provenance-io/provenance/pull/1784))
 - Bump `actions/download-artifact` from 3 to 4 ([#1785](https://github.com/provenance-io/provenance/pull/1785))
 - Bump `actions/upload-artifact` from 3 to 4 ([#1785](https://github.com/provenance-io/provenance/pull/1785))
-- Bump `google.golang.org/grpc` from 1.59.0 to 1.60.1 ([#1794](https://github.com/provenance-io/provenance/pull/1794))
+- Bump `google.golang.org/grpc` from 1.59.0 to 1.61.0 ([#1794](https://github.com/provenance-io/provenance/pull/1794), [#1820](https://github.com/provenance-io/provenance/pull/1820))
 - Bump `golang.org/x/crypto` from 0.14.0 to 0.17.0 ([#1788](https://github.com/provenance-io/provenance/pull/1788))
 - Bump `cosmossdk.io/errors` from 1.0.0 to 1.0.1 ([#1806](https://github.com/provenance-io/provenance/pull/1806))
+- Bump `actions/cache` from 3 to 4 ([#1817](https://github.com/provenance-io/provenance/pull/1817))
 
 ---
 

@@ -1700,6 +1700,100 @@ func TestGetNetAssetValue(t *testing.T) {
 	}
 }
 
+func TestIterateAllNetAssetValues(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	tests := []struct {
+		name       string
+		markerNavs []sdk.Coins
+		expected   int
+	}{
+		{
+			name:       "should work with no markers",
+			markerNavs: []sdk.Coins{},
+			expected:   0,
+		},
+		{
+			name: "should work with one marker no usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1)),
+			},
+			expected: 1,
+		},
+		{
+			name: "should work with multiple markers no usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1)),
+				sdk.NewCoins(sdk.NewInt64Coin("georgethedog", 2)),
+			},
+			expected: 2,
+		},
+		{
+			name: "should work with one marker with usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1), sdk.NewInt64Coin(types.UsdDenom, 2)),
+			},
+			expected: 2,
+		},
+		{
+			name: "should work with multiple markers with usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1), sdk.NewInt64Coin(types.UsdDenom, 3)),
+				sdk.NewCoins(sdk.NewInt64Coin("georgethedog", 2), sdk.NewInt64Coin(types.UsdDenom, 4)),
+			},
+			expected: 4,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create the marker
+			for i, prices := range tc.markerNavs {
+				address := sdk.AccAddress(fmt.Sprintf("marker%d", i))
+				marker := types.NewEmptyMarkerAccount(fmt.Sprintf("coin%d", i), address.String(), []types.AccessGrant{})
+				marker.Supply = sdk.OneInt()
+				require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, marker), "AddMarkerAccount() error")
+
+				var navs []types.NetAssetValue
+				for _, price := range prices {
+					navs = append(navs, types.NewNetAssetValue(price, uint64(1)))
+					navAddr := sdk.AccAddress(price.Denom)
+					if acc, _ := app.MarkerKeeper.GetMarkerByDenom(ctx, price.Denom); acc == nil {
+						navMarker := types.NewEmptyMarkerAccount(price.Denom, navAddr.String(), []types.AccessGrant{})
+						navMarker.Supply = sdk.OneInt()
+						require.NoError(t, app.MarkerKeeper.AddMarkerAccount(ctx, navMarker), "AddMarkerAccount() error")
+					}
+				}
+				require.NoError(t, app.MarkerKeeper.AddSetNetAssetValues(ctx, marker, navs, "AddSetNetAssetValues() error"))
+			}
+
+			// Test Logic
+			count := 0
+			app.MarkerKeeper.IterateAllNetAssetValues(ctx, func(aa sdk.AccAddress, nav types.NetAssetValue) (stop bool) {
+				count += 1
+				return false
+			})
+			assert.Equal(t, tc.expected, count, "should iterate the correct number of times")
+
+			// Destroy the marker
+			for i, prices := range tc.markerNavs {
+				coin := fmt.Sprintf("coin%d", i)
+				marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, coin)
+				require.NoError(t, err, "GetMarkerByDenom() error")
+				app.MarkerKeeper.RemoveMarker(ctx, marker)
+
+				// We need to remove the nav markers
+				for _, price := range prices {
+					if navMarker, _ := app.MarkerKeeper.GetMarkerByDenom(ctx, price.Denom); navMarker != nil {
+						app.MarkerKeeper.RemoveMarker(ctx, navMarker)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestReqAttrBypassAddrs(t *testing.T) {
 	// Tests both GetReqAttrBypassAddrs and IsReqAttrBypassAddr.
 	expectedNames := []string{
