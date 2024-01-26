@@ -31,4 +31,19 @@ message GenesisState {
 
   OSLocatorParams             o_s_locator_params    = 8 [(gogoproto.nullable) = false];
   repeated ObjectStoreLocator object_store_locators = 9 [(gogoproto.nullable) = false];
+
+  // Net asset values assigned to scopes
+  repeated MarkerNetAssetValues net_asset_values = 10 [(gogoproto.nullable) = false];
+}
+
+// MarkerNetAssetValues defines the net asset values for a scope
+message MarkerNetAssetValues {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address defines the scope address
+  string address = 1;
+
+  // net_asset_values that are assigned to scope
+  repeated NetAssetValue net_asset_values = 2 [(gogoproto.nullable) = false];
 }

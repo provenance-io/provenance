@@ -353,6 +353,7 @@
     - [EventSessionCreated](#provenance.metadata.v1.EventSessionCreated)
     - [EventSessionDeleted](#provenance.metadata.v1.EventSessionDeleted)
     - [EventSessionUpdated](#provenance.metadata.v1.EventSessionUpdated)
+    - [EventSetNetAssetValue](#provenance.metadata.v1.EventSetNetAssetValue)
     - [EventTxCompleted](#provenance.metadata.v1.EventTxCompleted)
   
 - [provenance/metadata/v1/metadata.proto](#provenance/metadata/v1/metadata.proto)
@@ -376,6 +377,7 @@
   
 - [provenance/metadata/v1/scope.proto](#provenance/metadata/v1/scope.proto)
     - [AuditFields](#provenance.metadata.v1.AuditFields)
+    - [NetAssetValue](#provenance.metadata.v1.NetAssetValue)
     - [Party](#provenance.metadata.v1.Party)
     - [Process](#provenance.metadata.v1.Process)
     - [Record](#provenance.metadata.v1.Record)
@@ -393,6 +395,7 @@
   
 - [provenance/metadata/v1/genesis.proto](#provenance/metadata/v1/genesis.proto)
     - [GenesisState](#provenance.metadata.v1.GenesisState)
+    - [MarkerNetAssetValues](#provenance.metadata.v1.MarkerNetAssetValues)
   
 - [provenance/metadata/v1/p8e/p8e.proto](#provenance/metadata/v1/p8e/p8e.proto)
     - [Condition](#provenance.metadata.v1.p8e.Condition)
@@ -447,6 +450,8 @@
     - [OwnershipResponse](#provenance.metadata.v1.OwnershipResponse)
     - [QueryParamsRequest](#provenance.metadata.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.metadata.v1.QueryParamsResponse)
+    - [QueryScopeNetAssetValuesRequest](#provenance.metadata.v1.QueryScopeNetAssetValuesRequest)
+    - [QueryScopeNetAssetValuesResponse](#provenance.metadata.v1.QueryScopeNetAssetValuesResponse)
     - [RecordSpecificationRequest](#provenance.metadata.v1.RecordSpecificationRequest)
     - [RecordSpecificationResponse](#provenance.metadata.v1.RecordSpecificationResponse)
     - [RecordSpecificationWrapper](#provenance.metadata.v1.RecordSpecificationWrapper)
@@ -482,6 +487,8 @@
 - [provenance/metadata/v1/tx.proto](#provenance/metadata/v1/tx.proto)
     - [MsgAddContractSpecToScopeSpecRequest](#provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest)
     - [MsgAddContractSpecToScopeSpecResponse](#provenance.metadata.v1.MsgAddContractSpecToScopeSpecResponse)
+    - [MsgAddNetAssetValuesRequest](#provenance.metadata.v1.MsgAddNetAssetValuesRequest)
+    - [MsgAddNetAssetValuesResponse](#provenance.metadata.v1.MsgAddNetAssetValuesResponse)
     - [MsgAddScopeDataAccessRequest](#provenance.metadata.v1.MsgAddScopeDataAccessRequest)
     - [MsgAddScopeDataAccessResponse](#provenance.metadata.v1.MsgAddScopeDataAccessResponse)
     - [MsgAddScopeOwnerRequest](#provenance.metadata.v1.MsgAddScopeOwnerRequest)
@@ -5516,6 +5523,24 @@ EventSessionUpdated is an event message indicating a session has been updated.
 
 
 
+<a name="provenance.metadata.v1.EventSetNetAssetValue"></a>
+
+### EventSetNetAssetValue
+EventSetNetAssetValue event emitted when Net Asset Value for a scope is update or added
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_id` | [string](#string) |  |  |
+| `price` | [string](#string) |  |  |
+| `volume` | [string](#string) |  |  |
+| `source` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.EventTxCompleted"></a>
 
 ### EventTxCompleted
@@ -5861,6 +5886,22 @@ AuditFields capture information about the last account to make modifications and
 
 
 
+<a name="provenance.metadata.v1.NetAssetValue"></a>
+
+### NetAssetValue
+NetAssetValue defines a scope's net asset value
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the complete value of the asset's volume |
+| `updated_block_height` | [uint64](#uint64) |  | updated_block_height is the block height of last update |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.Party"></a>
 
 ### Party
@@ -6103,6 +6144,23 @@ GenesisState defines the account module's genesis state.
 | `record_specifications` | [RecordSpecification](#provenance.metadata.v1.RecordSpecification) | repeated |  |
 | `o_s_locator_params` | [OSLocatorParams](#provenance.metadata.v1.OSLocatorParams) |  |  |
 | `object_store_locators` | [ObjectStoreLocator](#provenance.metadata.v1.ObjectStoreLocator) | repeated |  |
+| `net_asset_values` | [MarkerNetAssetValues](#provenance.metadata.v1.MarkerNetAssetValues) | repeated | Net asset values assigned to scopes |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MarkerNetAssetValues"></a>
+
+### MarkerNetAssetValues
+MarkerNetAssetValues defines the net asset values for a scope
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address defines the scope address |
+| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated | net_asset_values that are assigned to scope |
 
 
 
@@ -6951,6 +7009,36 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 
 
+<a name="provenance.metadata.v1.QueryScopeNetAssetValuesRequest"></a>
+
+### QueryScopeNetAssetValuesRequest
+QueryNetAssetValuesRequest is the request type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | scopeid metadata address |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.QueryScopeNetAssetValuesResponse"></a>
+
+### QueryScopeNetAssetValuesResponse
+QueryNetAssetValuesRequest is the response type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated | net asset values for scope |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.RecordSpecificationRequest"></a>
 
 ### RecordSpecificationRequest
@@ -7535,6 +7623,7 @@ The specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e606
 | `OSLocatorsByScope` | [OSLocatorsByScopeRequest](#provenance.metadata.v1.OSLocatorsByScopeRequest) | [OSLocatorsByScopeResponse](#provenance.metadata.v1.OSLocatorsByScopeResponse) | OSLocatorsByScope returns all ObjectStoreLocator entries for a for all signer's present in the specified scope. | GET|/provenance/metadata/v1/locator/scope/{scope_id}|
 | `OSAllLocators` | [OSAllLocatorsRequest](#provenance.metadata.v1.OSAllLocatorsRequest) | [OSAllLocatorsResponse](#provenance.metadata.v1.OSAllLocatorsResponse) | OSAllLocators returns all ObjectStoreLocator entries. | GET|/provenance/metadata/v1/locators/all|
 | `AccountData` | [AccountDataRequest](#provenance.metadata.v1.AccountDataRequest) | [AccountDataResponse](#provenance.metadata.v1.AccountDataResponse) | AccountData gets the account data associated with a metadata address. Currently, only scope ids are supported. | GET|/provenance/metadata/v1/accountdata/{metadata_addr}|
+| `ScopeNetAssetValues` | [QueryScopeNetAssetValuesRequest](#provenance.metadata.v1.QueryScopeNetAssetValuesRequest) | [QueryScopeNetAssetValuesResponse](#provenance.metadata.v1.QueryScopeNetAssetValuesResponse) | ScopeNetAssetValues returns net asset values for scope | GET|/provenance/metadata/v1/netassetvalues/{id}|
 
  <!-- end services -->
 
@@ -7568,6 +7657,33 @@ MsgAddContractSpecToScopeSpecRequest is the request type for the Msg/AddContract
 
 ### MsgAddContractSpecToScopeSpecResponse
 MsgAddContractSpecToScopeSpecResponse is the response type for the Msg/AddContractSpecToScopeSpec RPC method.
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgAddNetAssetValuesRequest"></a>
+
+### MsgAddNetAssetValuesRequest
+MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_id` | [string](#string) |  |  |
+| `signers` | [string](#string) | repeated |  |
+| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgAddNetAssetValuesResponse"></a>
+
+### MsgAddNetAssetValuesResponse
+MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
 
 
 
@@ -8195,6 +8311,7 @@ MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
 | `signers` | [string](#string) | repeated | signers is the list of address of those signing this request. |
 | `scope_uuid` | [string](#string) |  | scope_uuid is an optional uuid string, e.g. "91978ba2-5f35-459a-86a7-feca1b0512e0" If provided, it will be used to generate the MetadataAddress for the scope which will override the scope_id in the provided scope. If not provided (or it is an empty string), nothing special happens. If there is a value in scope.scope_id that is different from the one created from this uuid, an error is returned. |
 | `spec_uuid` | [string](#string) |  | spec_uuid is an optional scope specification uuid string, e.g. "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2" If provided, it will be used to generate the MetadataAddress for the scope specification which will override the specification_id in the provided scope. If not provided (or it is an empty string), nothing special happens. If there is a value in scope.specification_id that is different from the one created from this uuid, an error is returned. |
+| `usd_mills` | [uint64](#uint64) |  | usd_mills value of scope in usd mills (1234 = $1.234) used for net asset value |
 
 
 
@@ -8334,6 +8451,7 @@ Msg defines the Metadata Msg service.
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance.metadata.v1.MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance.metadata.v1.MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. | |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.metadata.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.metadata.v1.MsgSetAccountDataResponse) | SetAccountData associates some basic data with a metadata address. Currently, only scope ids are supported. | |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance.metadata.v1.MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance.metadata.v1.MsgAddNetAssetValuesResponse) | AddNetAssetValues set the net asset value for a scope | |
 
  <!-- end services -->
 

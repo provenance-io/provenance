@@ -88,6 +88,9 @@ var (
 
 	// OSLocatorAddressKeyPrefix is the key for OSLocator Record by address
 	OSLocatorAddressKeyPrefix = []byte{0x21}
+
+	// NetAssetValuePrefix prefix for net asset values of scopes
+	NetAssetValuePrefix = []byte{0x22}
 )
 
 // GetAddressScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
@@ -153,4 +156,14 @@ func GetAddressContractSpecCacheKey(addr sdk.AccAddress, contractSpecID Metadata
 // GetOSLocatorKey returns a store key for an object store locator entry
 func GetOSLocatorKey(addr sdk.AccAddress) []byte {
 	return append(OSLocatorAddressKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
+}
+
+// NetAssetValueKey returns key [prefix][scope address] for scope net asset values
+func NetAssetValueKeyPrefix(scopeAddr MetadataAddress) []byte {
+	return append(NetAssetValuePrefix, address.MustLengthPrefix(scopeAddr.Bytes())...)
+}
+
+// NetAssetValueKey returns key [prefix][marker address][asset denom value] for scope's net asset value by value denom
+func NetAssetValueKey(scopeAddr MetadataAddress, denom string) []byte {
+	return append(NetAssetValueKeyPrefix(scopeAddr), denom...)
 }
