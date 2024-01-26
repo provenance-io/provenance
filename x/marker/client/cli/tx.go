@@ -1127,7 +1127,7 @@ func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValu
 		}
 		coin, err := sdk.ParseCoinNormalized(parts[0])
 		if err != nil {
-			return []types.NetAssetValue{}, fmt.Errorf("invalid coin %s", parts[0])
+			return []types.NetAssetValue{}, fmt.Errorf("invalid net asset value coin : %s", parts[0])
 		}
 		volume, err := strconv.ParseUint(parts[1], 10, 64)
 		if err != nil {
