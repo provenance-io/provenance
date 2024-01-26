@@ -11,7 +11,6 @@ import (
 
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 const invalidArgErr = "rpc error: code = InvalidArgument"
@@ -3969,17 +3968,11 @@ func (s *TestSuite) TestQueryServer_CommitmentSettlementFeeCalc() {
 				s.requireAddFinalizeAndActivateMarker(s.coin("1000000apple"), s.addr5)
 				s.requireAddFinalizeAndActivateMarker(s.coin("1000000cherry"), s.addr5)
 
-				appleMarker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "apple")
-				s.Require().NoError(err, "GetMarkerByDenom(apple)")
-				cherryMarker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "cherry")
-				s.Require().NoError(err, "GetMarkerByDenom(cherry)")
+				appleMarker := s.requireGetMarker("apple")
+				cherryMarker := s.requireGetMarker("cherry")
 
-				appleCherryNav := markertypes.NewNetAssetValue(s.coin("4cherry"), 1)
-				err = s.app.MarkerKeeper.SetNetAssetValue(s.ctx, appleMarker, appleCherryNav, "testing")
-				s.Require().NoError(err, "SetNetAssetValue apple cherry")
-				cherryNhashNav := markertypes.NewNetAssetValue(s.coin("20nhash"), 1)
-				err = s.app.MarkerKeeper.SetNetAssetValue(s.ctx, cherryMarker, cherryNhashNav, "testing")
-				s.Require().NoError(err, "SetNetAssetValue cherry nhash")
+				s.requireSetNav(appleMarker, 1, "4cherry")
+				s.requireSetNav(cherryMarker, 1, "20nhash")
 			},
 			req: &exchange.QueryCommitmentSettlementFeeCalcRequest{
 				Settlement: &exchange.MsgMarketCommitmentSettleRequest{

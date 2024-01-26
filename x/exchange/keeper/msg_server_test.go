@@ -156,16 +156,28 @@ func (s *TestSuite) eventMessageSender(sender sdk.AccAddress) sdk.Event {
 	}
 }
 
-// eventHoldAdded creates a new event emitted when a hold is added (emitted by the hold module).
-func (s *TestSuite) eventHoldAdded(addr sdk.AccAddress, amount string, orderID uint64) sdk.Event {
+// eventHoldAddedOrder creates a new event emitted when a hold is added for an order (emitted by the hold module).
+func (s *TestSuite) eventHoldAddedOrder(addr sdk.AccAddress, amount string, orderID uint64) sdk.Event {
 	return s.untypeEvent(&hold.EventHoldAdded{
 		Address: addr.String(), Amount: amount, Reason: fmt.Sprintf("x/exchange: order %d", orderID),
 	})
 }
 
-// eventHoldAdded creates a new event emitted when a hold is released (emitted by the hold module).
+// eventHoldAddedCommitment creates a new event emitted when a hold is added for a commitment (emitted by the hold module).
+func (s *TestSuite) eventHoldAddedCommitment(addr sdk.AccAddress, amount string, marketID uint32) sdk.Event {
+	return s.untypeEvent(&hold.EventHoldAdded{
+		Address: addr.String(), Amount: amount, Reason: fmt.Sprintf("x/exchange: commitment to %d", marketID),
+	})
+}
+
+// eventHoldReleased creates a new event emitted when a hold is released (emitted by the hold module).
 func (s *TestSuite) eventHoldReleased(addr sdk.AccAddress, amount string) sdk.Event {
 	return s.untypeEvent(&hold.EventHoldReleased{Address: addr.String(), Amount: amount})
+}
+
+// eventFundsCommitted creates a new event emitted when funds are committed.
+func (s *TestSuite) eventFundsCommitted(addr sdk.AccAddress, marketID uint32, amount string, eventTag string) sdk.Event {
+	return s.untypeEvent(exchange.NewEventFundsCommitted(addr.String(), marketID, s.coins(amount), eventTag))
 }
 
 // eventCommitmentReleased creates a new event emitted when a commitment is released.
@@ -259,6 +271,20 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 	s.Require().NoError(err, "SetNetAssetValue(%d)", coin.Denom)
 	err = s.app.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
 	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
+}
+
+// requireGetMarker gets a marker requiring it to not come with an error.
+func (s *TestSuite) requireGetMarker(denom string) markertypes.MarkerAccountI {
+	rv, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, denom)
+	s.Require().NoError(err, "GetMarkerByDenom(%q)", denom)
+	return rv
+}
+
+// requireSetNav sets a nav and requires that it does not error.
+func (s *TestSuite) requireSetNav(marker markertypes.MarkerAccountI, volume uint64, price string) {
+	nav := markertypes.NewNetAssetValue(s.coin(price), volume)
+	err := s.app.MarkerKeeper.SetNetAssetValue(s.ctx, marker, nav, "testing")
+	s.Require().NoError(err, "SetNetAssetValue %d%s %s", volume, marker.GetDenom(), price)
 }
 
 // expBalances is the definition of an account's expected balance, hold, and spendable.
@@ -460,7 +486,7 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 				},
 			},
 			expEvents: sdk.Events{
-				s.eventHoldAdded(s.addr2, "60apple", 84),
+				s.eventHoldAddedOrder(s.addr2, "60apple", 84),
 				s.untypeEvent(&exchange.EventOrderCreated{
 					OrderId: 84, OrderType: "ask", MarketId: 5, ExternalId: "",
 				}),
@@ -504,7 +530,7 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 				s.eventCoinReceived(s.feeCollectorAddr, "1pear"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr2, "1pear"),
 				s.eventMessageSender(s.marketAddr2),
-				s.eventHoldAdded(s.addr2, "75apple", 7),
+				s.eventHoldAddedOrder(s.addr2, "75apple", 7),
 				s.untypeEvent(&exchange.EventOrderCreated{
 					OrderId: 7, OrderType: "ask", MarketId: 2, ExternalId: "just-an-id",
 				}),
@@ -547,7 +573,7 @@ func (s *TestSuite) TestMsgServer_CreateAsk() {
 				s.eventCoinReceived(s.feeCollectorAddr, "1fig"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr3, "1fig"),
 				s.eventMessageSender(s.marketAddr3),
-				s.eventHoldAdded(s.addr2, "75apple,12fig", 12345),
+				s.eventHoldAddedOrder(s.addr2, "75apple,12fig", 12345),
 				s.untypeEvent(&exchange.EventOrderCreated{
 					OrderId: 12345, OrderType: "ask", MarketId: 3, ExternalId: "",
 				}),
@@ -710,7 +736,7 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 				},
 			},
 			expEvents: sdk.Events{
-				s.eventHoldAdded(s.addr2, "45pear", 84),
+				s.eventHoldAddedOrder(s.addr2, "45pear", 84),
 				s.untypeEvent(&exchange.EventOrderCreated{
 					OrderId: 84, OrderType: "bid", MarketId: 2, ExternalId: "",
 				}),
@@ -754,7 +780,7 @@ func (s *TestSuite) TestMsgServer_CreateBid() {
 				s.eventCoinReceived(s.feeCollectorAddr, "1pear"),
 				s.eventTransfer(s.feeCollectorAddr, s.marketAddr2, "1pear"),
 				s.eventMessageSender(s.marketAddr2),
-				s.eventHoldAdded(s.addr2, "87pear", 7),
+				s.eventHoldAddedOrder(s.addr2, "87pear", 7),
 				s.untypeEvent(&exchange.EventOrderCreated{
 					OrderId: 7, OrderType: "bid", MarketId: 2, ExternalId: "some-random-id",
 				}),
@@ -2594,7 +2620,201 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestMsgServer_MarketCommitmentSettle()
+func (s *TestSuite) TestMsgServer_MarketCommitmentSettle() {
+	testDef := msgServerTestDef[exchange.MsgMarketCommitmentSettleRequest, exchange.MsgMarketCommitmentSettleResponse, []expBalances]{
+		endpointName: "MarketCommitmentSettle",
+		endpoint:     keeper.NewMsgServer(s.k).MarketCommitmentSettle,
+		expResp:      &exchange.MsgMarketCommitmentSettleResponse{},
+		followup: func(_ *exchange.MsgMarketCommitmentSettleRequest, expBals []expBalances) {
+			for _, eb := range expBals {
+				s.checkBalances(eb)
+			}
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgMarketCommitmentSettleRequest, []expBalances]{
+		{
+			name: "does not have permission",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					AccessGrants:             []exchange.AccessGrant{s.agCanAllBut(s.addr5, exchange.Permission_settle)},
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "cherry",
+				})
+				attr := "can.do"
+				s.requireSetNameRecord(attr, s.addr5)
+				s.requireSetAttr(s.addr1, attr, s.addr5)
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000apple"), s.addr5, attr)
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000plum"), s.addr5, attr)
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000cherry"), s.addr5, attr)
+				appleMarker := s.requireGetMarker("apple")
+				plumMarker := s.requireGetMarker("plum")
+				cherryMarker := s.requireGetMarker("cherry")
+				s.requireSetNav(appleMarker, 100, "23cherry")
+				s.requireSetNav(appleMarker, 5, "12plum")
+				s.requireSetNav(plumMarker, 77, "50cherry")
+				s.requireSetNav(plumMarker, 12, "5apple")
+				s.requireSetNav(cherryMarker, 6, "25nhash")
+
+				s.requireFundAccount(s.addr1, "30apple")
+				s.requireSetCommitmentAmount(3, s.addr1, "25apple")
+			},
+			msg: exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr5.String(),
+				MarketId: 3,
+				Inputs:   []exchange.AccountAmount{{Account: s.addr1.String(), Amount: s.coins("10apple")}},
+				Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
+				EventTag: "nopetag",
+			},
+			expInErr: []string{invReqErr, "account " + s.addr5.String() + " does not have permission to settle commitments for market 3"},
+			fArgs: []expBalances{
+				{addr: s.addr1, expBal: s.coins("30apple"), expHold: s.coins("25apple"), expSpend: s.coins("5apple")},
+				{addr: s.addr2, expBal: s.zeroCoins("apple"), expHold: s.zeroCoins("apple"), expSpend: s.zeroCoins("apple")},
+			},
+		},
+		{
+			name: "success",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 3,
+					AccessGrants:             []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_settle)},
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "cherry",
+				})
+				attr := "can.do"
+				s.requireSetNameRecord(attr, s.addr5)
+				s.requireSetAttr(s.addr1, attr, s.addr5)
+				s.requireSetAttr(s.addr2, attr, s.addr5)
+				s.requireSetAttr(s.addr3, attr, s.addr5)
+				s.requireSetAttr(s.addr4, attr, s.addr5)
+				s.requireSetAttr(s.marketAddr3, attr, s.addr5)
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000apple"), s.addr5, attr)
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000plum"), s.addr5, attr)
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000cherry"), s.addr5, attr)
+				appleMarker := s.requireGetMarker("apple")
+				plumMarker := s.requireGetMarker("plum")
+				cherryMarker := s.requireGetMarker("cherry")
+				s.requireSetNav(appleMarker, 100, "23cherry")
+				s.requireSetNav(appleMarker, 5, "12plum")
+				s.requireSetNav(plumMarker, 77, "50cherry")
+				s.requireSetNav(plumMarker, 12, "5apple")
+				s.requireSetNav(cherryMarker, 6, "25nhash")
+
+				s.requireFundAccount(s.addr1, "100apple,12cherry")
+				s.requireFundAccount(s.addr2, "50apple,50cherry,50plum")
+				s.requireFundAccount(s.addr3, "900plum")
+
+				s.requireSetCommitmentAmount(3, s.addr1, "100apple,2cherry")
+				s.requireSetCommitmentAmount(3, s.addr2, "10apple,5cherry,50plum")
+				s.requireSetCommitmentAmount(3, s.addr3, "100plum")
+			},
+			msg: exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    s.addr5.String(),
+				MarketId: 3,
+				Inputs: []exchange.AccountAmount{
+					{Account: s.addr1.String(), Amount: s.coins("95apple")},
+					{Account: s.addr2.String(), Amount: s.coins("50plum")},
+					{Account: s.addr3.String(), Amount: s.coins("77plum")},
+				},
+				Outputs: []exchange.AccountAmount{
+					{Account: s.addr1.String(), Amount: s.coins("90plum")},
+					{Account: s.addr2.String(), Amount: s.coins("57apple")},
+					{Account: s.addr3.String(), Amount: s.coins("12apple")},
+					{Account: s.addr4.String(), Amount: s.coins("26apple,37plum")},
+				},
+				Fees: []exchange.AccountAmount{
+					{Account: s.addr1.String(), Amount: s.coins("2cherry")},
+					{Account: s.addr2.String(), Amount: s.coins("3cherry")},
+				},
+				EventTag: "tagtestbackagain",
+			},
+			expEvents: sdk.Events{
+				// commitment releases
+				s.eventHoldReleased(s.addr1, "95apple,2cherry"),
+				s.eventCommitmentReleased(s.addr1, 3, "95apple,2cherry", "tagtestbackagain"),
+				s.eventHoldReleased(s.addr2, "3cherry,50plum"),
+				s.eventCommitmentReleased(s.addr2, 3, "3cherry,50plum", "tagtestbackagain"),
+				s.eventHoldReleased(s.addr3, "77plum"),
+				s.eventCommitmentReleased(s.addr3, 3, "77plum", "tagtestbackagain"),
+
+				// Transfer from addr1
+				s.eventCoinSpent(s.addr1, "95apple"),
+				s.eventMessageSender(s.addr1),
+				s.eventCoinReceived(s.addr2, "57apple"),
+				s.eventTransfer(s.addr2, nil, "57apple"),
+				s.eventCoinReceived(s.addr3, "12apple"),
+				s.eventTransfer(s.addr3, nil, "12apple"),
+				s.eventCoinReceived(s.addr4, "26apple"),
+				s.eventTransfer(s.addr4, nil, "26apple"),
+
+				// Transfer from addr2
+				s.eventCoinSpent(s.addr2, "50plum"),
+				s.eventCoinReceived(s.addr1, "50plum"),
+				s.eventTransfer(s.addr1, s.addr2, "50plum"),
+				s.eventMessageSender(s.addr2),
+
+				// Transfer from addr3
+				s.eventCoinSpent(s.addr3, "77plum"),
+				s.eventMessageSender(s.addr3),
+				s.eventCoinReceived(s.addr1, "40plum"),
+				s.eventTransfer(s.addr1, nil, "40plum"),
+				s.eventCoinReceived(s.addr4, "37plum"),
+				s.eventTransfer(s.addr4, nil, "37plum"),
+
+				// Fee Transfer
+				s.eventCoinSpent(s.addr1, "2cherry"),
+				s.eventMessageSender(s.addr1),
+				s.eventCoinSpent(s.addr2, "3cherry"),
+				s.eventMessageSender(s.addr2),
+				s.eventCoinReceived(s.marketAddr3, "5cherry"),
+				s.eventTransfer(s.marketAddr3, nil, "5cherry"),
+
+				// re-commits
+				s.eventHoldAddedCommitment(s.addr1, "90plum", 3),
+				s.eventFundsCommitted(s.addr1, 3, "90plum", "tagtestbackagain"),
+				s.eventHoldAddedCommitment(s.addr2, "57apple", 3),
+				s.eventFundsCommitted(s.addr2, 3, "57apple", "tagtestbackagain"),
+				s.eventHoldAddedCommitment(s.addr3, "12apple", 3),
+				s.eventFundsCommitted(s.addr3, 3, "12apple", "tagtestbackagain"),
+				s.eventHoldAddedCommitment(s.addr4, "26apple,37plum", 3),
+				s.eventFundsCommitted(s.addr4, 3, "26apple,37plum", "tagtestbackagain"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr1,
+					expBal:   s.coins("5apple,10cherry,90plum"),
+					expHold:  []sdk.Coin{s.coin("5apple"), s.zeroCoin("cherry"), s.coin("90plum")},
+					expSpend: []sdk.Coin{s.zeroCoin("apple"), s.coin("10cherry"), s.zeroCoin("plum")},
+				},
+				{
+					addr:     s.addr2,
+					expBal:   []sdk.Coin{s.coin("107apple"), s.coin("47cherry"), s.zeroCoin("plum")},
+					expHold:  []sdk.Coin{s.coin("67apple"), s.zeroCoin("plum"), s.coin("2cherry")},
+					expSpend: []sdk.Coin{s.coin("40apple"), s.zeroCoin("plum"), s.coin("45cherry")},
+				},
+				{
+					addr:     s.addr3,
+					expBal:   []sdk.Coin{s.coin("12apple"), s.zeroCoin("cherry"), s.coin("823plum")},
+					expHold:  []sdk.Coin{s.coin("12apple"), s.zeroCoin("cherry"), s.coin("23plum")},
+					expSpend: []sdk.Coin{s.zeroCoin("apple"), s.zeroCoin("cherry"), s.coin("800plum")},
+				},
+				{
+					addr:     s.addr4,
+					expBal:   []sdk.Coin{s.coin("26apple"), s.zeroCoin("cherry"), s.coin("37plum")},
+					expHold:  []sdk.Coin{s.coin("26apple"), s.zeroCoin("cherry"), s.coin("37plum")},
+					expSpend: s.zeroCoins("apple", "cherry", "plum"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 func (s *TestSuite) TestMsgServer_MarketReleaseCommitments() {
 	testDef := msgServerTestDef[exchange.MsgMarketReleaseCommitmentsRequest, exchange.MsgMarketReleaseCommitmentsResponse, []expBalances]{
