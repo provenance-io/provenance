@@ -127,6 +127,7 @@ var upgrades = map[string]appUpgrade{
 			}
 
 			removeInactiveValidatorDelegations(ctx, app)
+			convertNavUnits(ctx, app)
 
 			return vm, nil
 		},
@@ -141,6 +142,7 @@ var upgrades = map[string]appUpgrade{
 			}
 
 			removeInactiveValidatorDelegations(ctx, app)
+			convertNavUnits(ctx, app)
 
 			return vm, nil
 		},
@@ -348,4 +350,28 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 		return false
 	})
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
+}
+
+// convertNavUnits iterates all the net asset values and updates their units if they are using usd.
+func convertNavUnits(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Converting NAV units")
+	err := app.MarkerKeeper.IterateAllNetAssetValues(ctx, func(markerAddr sdk.AccAddress, nav markertypes.NetAssetValue) (stop bool) {
+		if nav.Price.Denom == markertypes.UsdDenom {
+			nav.Price.Amount = nav.Price.Amount.Mul(math.NewInt(10))
+			marker, err := app.MarkerKeeper.GetMarker(ctx, markerAddr)
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Unable to get marker for address: %s, error: %s", markerAddr, err))
+				return false
+			}
+			err = app.MarkerKeeper.SetNetAssetValue(ctx, marker, nav, "upgrade")
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Unable to set net asset value for marker: %s, error: %s", markerAddr, err))
+				return false
+			}
+		}
+		return false
+	})
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Unable to iterate all net asset values error: %s", err))
+	}
 }

@@ -83,13 +83,13 @@ jobs:
           echo "      db-cache-path: [${{ needs.setup.outputs.db-cache-path }}]"
           echo "go-cache-key-suffix: [${{ needs.setup.outputs.go-cache-key-suffix }}]"
           echo "      go-cache-path: [${{ needs.setup.outputs.go-cache-path }}]"
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Load db cache
         id: db-cache-setup
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
           path: ${{ needs.setup.outputs.db-cache-path }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Load go cache
         id: go-cache-setup
         with:
@@ -144,7 +144,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Load go cache
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
@@ -203,12 +203,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Load db cache
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
           path: ${{ needs.setup.outputs.db-cache-path }}
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Load go cache
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
@@ -261,7 +261,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Load go cache
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}

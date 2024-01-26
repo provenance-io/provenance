@@ -1,8 +1,10 @@
 package app
 
 import (
-	"errors"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/cast"
@@ -16,60 +18,79 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// StoreLoaderWrapper is a wrapper function that is called before the StoreLoader.
-type StoreLoaderWrapper func(sdk.CommitMultiStore, baseapp.StoreLoader) error
-
-// WrapStoreLoader creates a new StoreLoader by wrapping an existing one.
-func WrapStoreLoader(wrapper StoreLoaderWrapper, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
-	return func(ms sdk.CommitMultiStore) error {
-		if storeLoader == nil {
-			storeLoader = baseapp.DefaultStoreLoader
-		}
-
-		if wrapper == nil {
-			return errors.New("wrapper must not be nil")
-		}
-
-		return wrapper(ms, storeLoader)
-	}
-}
+// ValidateWrapperSleeper is the sleeper that the ValidateWrapper will use.
+// It primarily exists so it can be changed for unit tests on ValidateWrapper so they don't take so long.
+var ValidateWrapperSleeper Sleeper = &DefaultSleeper{}
 
 // ValidateWrapper creates a new StoreLoader that first checks the config settings before calling the provided StoreLoader.
 func ValidateWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
-	return WrapStoreLoader(func(ms sdk.CommitMultiStore, sl baseapp.StoreLoader) error {
-		const MaxPruningInterval = 999
-		const SleepSeconds = 30
-		backend := server.GetAppDBBackend(appOpts)
-		interval := cast.ToUint64(appOpts.Get("pruning-interval"))
-		txIndexer := cast.ToStringMap(appOpts.Get("tx_index"))
-		indexer := cast.ToString(txIndexer["indexer"])
-		fastNode := cast.ToBool(appOpts.Get("iavl-disable-fastnode"))
-		var errs []string
+	return func(ms sdk.CommitMultiStore) error {
+		IssueConfigWarnings(logger, appOpts, ValidateWrapperSleeper)
+		return storeLoader(ms)
+	}
+}
 
-		if interval > MaxPruningInterval {
-			errs = append(errs, fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS", interval, MaxPruningInterval))
+// Sleeper is an interface for something with a Sleep function.
+type Sleeper interface {
+	Sleep(d time.Duration)
+}
+
+// DefaultSleeper uses the time.Sleep function for sleeping.
+type DefaultSleeper struct{}
+
+// Sleep is a wrapper for time.Sleep(d).
+func (s DefaultSleeper) Sleep(d time.Duration) {
+	time.Sleep(d)
+}
+
+// IssueConfigWarnings checks a few values in the configs and issues warnings and sleeps if appropriate.
+func IssueConfigWarnings(logger log.Logger, appOpts servertypes.AppOptions, sleeper Sleeper) {
+	const MaxPruningInterval = 999
+	const SleepSeconds = 30
+	interval := cast.ToUint64(appOpts.Get("pruning-interval"))
+	txIndexer := cast.ToStringMap(appOpts.Get("tx_index"))
+	indexer := cast.ToString(txIndexer["indexer"])
+	fastNode := cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))
+	backend := server.GetAppDBBackend(appOpts)
+	var errs []string
+
+	if interval > MaxPruningInterval {
+		errs = append(errs, fmt.Sprintf("pruning-interval %d EXCEEDS %d AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS.", interval, MaxPruningInterval))
+	}
+
+	if indexer != "" && indexer != "null" {
+		errs = append(errs, fmt.Sprintf("indexer \"%s\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"%s\".", indexer, "null"))
+	}
+
+	if fastNode {
+		errs = append(errs, fmt.Sprintf("%s \"%v\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"%v\".", server.FlagDisableIAVLFastNode, fastNode, !fastNode))
+	}
+
+	if backend != dbm.GoLevelDBBackend {
+		errs = append(errs, fmt.Sprintf("%s IS NO LONGER SUPPORTED. MIGRATE TO %s.", backend, dbm.GoLevelDBBackend))
+	}
+
+	if len(errs) > 0 {
+		for _, err := range errs {
+			logger.Error(err)
 		}
-
-		if indexer != "" {
-			errs = append(errs, fmt.Sprintf("indexer \"%s\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"%s\"", indexer, ""))
+		if !HaveAckWarn() {
+			logger.Error(fmt.Sprintf("NODE WILL CONTINUE AFTER %d SECONDS.", SleepSeconds))
+			logger.Error("This wait can be bypassed by fixing the above warnings or setting the PIO_ACKWARN environment variable to \"1\".")
+			sleeper.Sleep(SleepSeconds * time.Second)
 		}
+	}
+}
 
-		if fastNode {
-			errs = append(errs, fmt.Sprintf("iavl-disable-fastnode \"%v\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"%v\"", fastNode, !fastNode))
-		}
+// HaveAckWarn returns true if the PIO_ACKWARN env var is set and isn't a false value (e.g. "0", "f" or "false").
+func HaveAckWarn() bool {
+	ackWarn := strings.TrimSpace(os.Getenv("PIO_ACKWARN"))
+	if len(ackWarn) == 0 {
+		return false
+	}
 
-		if backend != dbm.GoLevelDBBackend {
-			errs = append(errs, fmt.Sprintf("%s IS NO LONGER SUPPORTED. MIGRATE TO %s", backend, dbm.GoLevelDBBackend))
-		}
-
-		if len(errs) > 0 {
-			logger.Error(fmt.Sprintf("NODE WILL CONTINUE AFTER %d SECONDS", SleepSeconds))
-			for _, err := range errs {
-				logger.Error(err)
-			}
-			time.Sleep(SleepSeconds * time.Second)
-		}
-
-		return sl(ms)
-	}, storeLoader)
+	rv, err := strconv.ParseBool(ackWarn)
+	// We return false only if it parsed successfully to a false value.
+	// If parsing failed or it parsed to a true value, we return true.
+	return err != nil || rv
 }

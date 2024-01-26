@@ -1057,7 +1057,7 @@ func New(
 	}
 
 	// Currently in an upgrade hold for this block.
-	var storeLoader baseapp.StoreLoader
+	storeLoader := baseapp.DefaultStoreLoader
 	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight()+1 {
 		if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 			app.Logger().Info("Skipping upgrade based on height",
@@ -1075,7 +1075,6 @@ func New(
 			storeLoader = GetUpgradeStoreLoader(app, upgradeInfo)
 		}
 	}
-	// --
 
 	// Verify configuration settings
 	storeLoader = ValidateWrapper(app.Logger(), appOpts, storeLoader)
@@ -1125,7 +1124,33 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	return app.mm.BeginBlock(ctx, req)
+	responseBeginBlock := app.mm.BeginBlock(ctx, req)
+	responseBeginBlock.Events = filterBeginBlockerEvents(responseBeginBlock)
+	return responseBeginBlock
+}
+
+// filterBeginBlockerEvents filters out events from a given abci.ResponseBeginBlock according to the criteria defined in shouldFilterEvent.
+func filterBeginBlockerEvents(responseBeginBlock abci.ResponseBeginBlock) []abci.Event {
+	filteredEvents := make([]abci.Event, 0)
+	for _, e := range responseBeginBlock.Events {
+		if shouldFilterEvent(e) {
+			continue
+		}
+		filteredEvents = append(filteredEvents, e)
+	}
+	return filteredEvents
+}
+
+// shouldFilterEvent checks if an abci.Event should be filtered based on its type and attributes.
+func shouldFilterEvent(e abci.Event) bool {
+	if e.Type == distrtypes.EventTypeCommission || e.Type == distrtypes.EventTypeRewards || e.Type == distrtypes.EventTypeProposerReward || e.Type == banktypes.EventTypeTransfer || e.Type == banktypes.EventTypeCoinSpent || e.Type == banktypes.EventTypeCoinReceived {
+		for _, a := range e.Attributes {
+			if string(a.Key) == sdk.AttributeKeyAmount && len(a.Value) == 0 {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // EndBlocker application updates every end block

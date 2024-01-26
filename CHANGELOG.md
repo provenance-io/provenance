@@ -40,31 +40,27 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add the ibcratelimit module [#1498](https://github.com/provenance-io/provenance/issues/1498).
-* Add CLI commands for the exchange module endpoints and queries [#1701](https://github.com/provenance-io/provenance/issues/1701).
-* Add CLI command to generate autocomplete shell scripts [#1762](https://github.com/provenance-io/provenance/pull/1762).
-* Create CLI commands for adding a market to a genesis file [#1757](https://github.com/provenance-io/provenance/issues/1757).
+* Add fix for NAV units to tourmaline upgrade handler [#1815](https://github.com/provenance-io/provenance/issues/1815).
 
 ### Improvements
 
 * Add upgrade handler for 1.18 [#1756](https://github.com/provenance-io/provenance/pull/1756).
-* Updated documentation for each module to work with docusaurus [PR 1763](https://github.com/provenance-io/provenance/pull/1763).
-* Create a default market in `make run`, `localnet`, `devnet` and the `provenanced testnet` command [#1757](https://github.com/provenance-io/provenance/issues/1757).
 * Remove the rust upgrade handlers [PR 1774](https://github.com/provenance-io/provenance/pull/1774).
-* Add StoreLoader wrapper to check configuration settings [#1792](https://github.com/provenance-io/provenance/pull/1792).
+* Allow bypassing the config warning wait using an environment variable [PR 1810](https://github.com/provenance-io/provenance/pull/1810).
+* Filter out empty distribution events from begin blocker [#1822](https://github.com/provenance-io/provenance/pull/1822).
 
 ### Bug Fixes
 
 * Update linux release to not build with CLevelDB [PR 1783](https://github.com/provenance-io/provenance/pull/1783).
 * Remove deleted marker send deny entries [#1666](https://github.com/provenance-io/provenance/issues/1666).
-* Deprecate marker proposal transaction [#1797](https://github.com/provenance-io/provenance/issues/1797).
+* Update protos, naming, and documentation to use mills [#1813](https://github.com/provenance-io/provenance/issues/1813).
 
 ### Dependencies
 
 - Bump `bufbuild/buf-setup-action` from 1.27.1 to 1.28.1 ([#1724](https://github.com/provenance-io/provenance/pull/1724), [#1744](https://github.com/provenance-io/provenance/pull/1744), [#1750](https://github.com/provenance-io/provenance/pull/1750))
-- Bump `github.com/google/uuid` from 1.3.1 to 1.5.0 ([#1723](https://github.com/provenance-io/provenance/pull/1723), [#1781](https://github.com/provenance-io/provenance/pull/1781))
+- Bump `github.com/google/uuid` from 1.3.1 to 1.6.0 ([#1723](https://github.com/provenance-io/provenance/pull/1723), [#1781](https://github.com/provenance-io/provenance/pull/1781), [#1819](https://github.com/provenance-io/provenance/pull/1819))
 - Bump `github.com/gorilla/mux` from 1.8.0 to 1.8.1 ([#1734](https://github.com/provenance-io/provenance/pull/1734))
 - Bump `golang.org/x/text` from 0.13.0 to 0.14.0 ([#1735](https://github.com/provenance-io/provenance/pull/1735))
-- Bump `github.com/spf13/cobra` from 1.7.0 to 1.8.0 ([#1733](https://github.com/provenance-io/provenance/pull/1733))
 - Bump `cosmossdk.io/math` from 1.1.2 to 1.2.0 ([#1739](https://github.com/provenance-io/provenance/pull/1739))
 - Update `async-icq` from `github.com/strangelove-ventures/async-icq/v6` to `github.com/cosmos/ibc-apps/modules/async-icq/v6.1.0` ([#1748](https://github.com/provenance-io/provenance/pull/1748))
 - Bump `github.com/spf13/viper` from 1.17.0 to 1.18.2 ([#1777](https://github.com/provenance-io/provenance/pull/1777), [#1795](https://github.com/provenance-io/provenance/pull/1795))
@@ -76,10 +72,41 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github/codeql-action` from 2 to 3 ([#1784](https://github.com/provenance-io/provenance/pull/1784))
 - Bump `actions/download-artifact` from 3 to 4 ([#1785](https://github.com/provenance-io/provenance/pull/1785))
 - Bump `actions/upload-artifact` from 3 to 4 ([#1785](https://github.com/provenance-io/provenance/pull/1785))
-- Bump `google.golang.org/grpc` from 1.59.0 to 1.60.1 ([#1794](https://github.com/provenance-io/provenance/pull/1794))
+- Bump `google.golang.org/grpc` from 1.59.0 to 1.61.0 ([#1794](https://github.com/provenance-io/provenance/pull/1794), [#1820](https://github.com/provenance-io/provenance/pull/1820))
 - Bump `golang.org/x/crypto` from 0.14.0 to 0.17.0 ([#1788](https://github.com/provenance-io/provenance/pull/1788))
+- Bump `cosmossdk.io/errors` from 1.0.0 to 1.0.1 ([#1806](https://github.com/provenance-io/provenance/pull/1806))
+- Bump `actions/cache` from 3 to 4 ([#1817](https://github.com/provenance-io/provenance/pull/1817))
+
+---
+
+## [v1.17.1](https://github.com/provenance-io/provenance/releases/tag/v1.17.1) - 2024-01-11
+
+### Features
+
+* Add CLI commands for the exchange module endpoints and queries [#1701](https://github.com/provenance-io/provenance/issues/1701).
+* Create CLI commands for adding a market to a genesis file [#1757](https://github.com/provenance-io/provenance/issues/1757).
+* Add CLI command to generate autocomplete shell scripts [#1762](https://github.com/provenance-io/provenance/pull/1762).
+
+### Improvements
+
+* Add StoreLoader wrapper to check configuration settings [#1792](https://github.com/provenance-io/provenance/pull/1792).
+* Create a default market in `make run`, `localnet`, `devnet` and the `provenanced testnet` command [#1757](https://github.com/provenance-io/provenance/issues/1757).
+* Updated documentation for each module to work with docusaurus [PR 1763](https://github.com/provenance-io/provenance/pull/1763)
+* Set the default `iavl-disable-fastnode` value to `false` and the default `tx_index.indexer` value to `"null"` [#1807](https://github.com/provenance-io/provenance/pull/1807).
+
+### Bug Fixes
+
+* Deprecate marker proposal transaction [#1797](https://github.com/provenance-io/provenance/issues/1797).
+
+### Dependencies
+
+- Bump `github.com/spf13/cobra` from 1.7.0 to 1.8.0 ([#1733](https://github.com/provenance-io/provenance/pull/1733))
 - Bump `github.com/CosmWasm/wasmvm` from 1.2.4 to 1.2.6 ([#1799](https://github.com/provenance-io/provenance/issues/1799))
 - Bump `github.com/CosmWasm/wasmd` from v0.30.0-pio-5 to v0.30.0-pio-6 ([#1799](https://github.com/provenance-io/provenance/issues/1799))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.17.0...v1.17.1
 
 ---
 
