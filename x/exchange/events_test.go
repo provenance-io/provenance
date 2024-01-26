@@ -386,22 +386,22 @@ func TestNewEventFundsCommitted(t *testing.T) {
 	assertEverythingSet(t, event, "EventFundsCommitted")
 }
 
-func TestNewEventFundsReleased(t *testing.T) {
+func TestNewEventCommitmentReleased(t *testing.T) {
 	account := sdk.AccAddress("account_____________").String()
 	marketID := uint32(4444)
 	amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 57), sdk.NewInt64Coin("banana", 99))
 	tag := "i-have-been-released"
 
-	var event *EventFundsReleased
+	var event *EventCommitmentReleased
 	testFunc := func() {
-		event = NewEventFundsReleased(account, marketID, amount, tag)
+		event = NewEventCommitmentReleased(account, marketID, amount, tag)
 	}
-	require.NotPanics(t, testFunc, "NewEventFundsReleased(%q, %d, %q, %q)", account, marketID, amount, tag)
+	require.NotPanics(t, testFunc, "NewEventCommitmentReleased(%q, %d, %q, %q)", account, marketID, amount, tag)
 	assert.Equal(t, account, event.Account, "Account")
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, amount.String(), event.Amount, "Amount")
 	assert.Equal(t, tag, event.Tag, "Tag")
-	assertEverythingSet(t, event, "EventFundsReleased")
+	assertEverythingSet(t, event, "EventCommitmentReleased")
 }
 
 func TestNewEventMarketWithdraw(t *testing.T) {
@@ -918,10 +918,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "EventFundsReleased",
-			tev:  NewEventFundsReleased(account, 15, coins1, "something"),
+			name: "EventCommitmentReleased",
+			tev:  NewEventCommitmentReleased(account, 15, coins1, "something"),
 			expEvent: sdk.Event{
-				Type: "provenance.exchange.v1.EventFundsReleased",
+				Type: "provenance.exchange.v1.EventCommitmentReleased",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("account"), Value: accountQ},
 					{Key: []byte("amount"), Value: coins1Q},

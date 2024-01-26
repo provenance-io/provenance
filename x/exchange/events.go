@@ -63,8 +63,8 @@ func NewEventFundsCommitted(account string, marketID uint32, amount sdk.Coins, t
 	}
 }
 
-func NewEventFundsReleased(account string, marketID uint32, amount sdk.Coins, tag string) *EventFundsReleased {
-	return &EventFundsReleased{
+func NewEventCommitmentReleased(account string, marketID uint32, amount sdk.Coins, tag string) *EventCommitmentReleased {
+	return &EventCommitmentReleased{
 		Account:  account,
 		MarketId: marketID,
 		Amount:   amount.String(),

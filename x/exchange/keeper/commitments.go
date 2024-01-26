@@ -143,7 +143,7 @@ func (k Keeper) ReleaseCommitment(ctx sdk.Context, marketID uint32, addr sdk.Acc
 	}
 
 	setCommitmentAmount(store, marketID, addr, newAmt)
-	k.emitEvent(ctx, exchange.NewEventFundsReleased(addr.String(), marketID, toRelease, eventTag))
+	k.emitEvent(ctx, exchange.NewEventCommitmentReleased(addr.String(), marketID, toRelease, eventTag))
 	return nil
 }
 

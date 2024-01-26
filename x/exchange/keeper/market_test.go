@@ -8230,7 +8230,7 @@ func (s *TestSuite) TestKeeper_CloseMarket() {
 		expEvents = append(expEvents, s.untypeEvent(exchange.NewEventOrderCancelled(order, signer)))
 	}
 	for _, com := range marketCommitments {
-		expEvents = append(expEvents, s.untypeEvent(exchange.NewEventFundsReleased(com.Account, marketID, com.Amount, "GovCloseMarket")))
+		expEvents = append(expEvents, s.untypeEvent(exchange.NewEventCommitmentReleased(com.Account, marketID, com.Amount, "GovCloseMarket")))
 	}
 
 	initMarket := s.copyMarket(expMarket)

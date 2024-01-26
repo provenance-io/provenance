@@ -59,8 +59,8 @@
     - [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice)
   
 - [provenance/exchange/v1/events.proto](#provenance/exchange/v1/events.proto)
+    - [EventCommitmentReleased](#provenance.exchange.v1.EventCommitmentReleased)
     - [EventFundsCommitted](#provenance.exchange.v1.EventFundsCommitted)
-    - [EventFundsReleased](#provenance.exchange.v1.EventFundsReleased)
     - [EventMarketCommitmentsDisabled](#provenance.exchange.v1.EventMarketCommitmentsDisabled)
     - [EventMarketCommitmentsEnabled](#provenance.exchange.v1.EventMarketCommitmentsEnabled)
     - [EventMarketCreated](#provenance.exchange.v1.EventMarketCreated)
@@ -1503,6 +1503,24 @@ It is related to the NetAssetValue message from the x/marker module, and is ther
 
 
 
+<a name="provenance.exchange.v1.EventCommitmentReleased"></a>
+
+### EventCommitmentReleased
+EventCommitmentReleased is an event emitted when funds are released from their commitment.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `amount` | [string](#string) |  | amount is the coins string of the funds that were released from commitment. |
+| `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
+
+
+
+
+
+
 <a name="provenance.exchange.v1.EventFundsCommitted"></a>
 
 ### EventFundsCommitted
@@ -1514,24 +1532,6 @@ EventFundsCommitted is an event emitted when funds are committed to a market.
 | `account` | [string](#string) |  | account is the bech32 address string of the account. |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
 | `amount` | [string](#string) |  | amount is the coins string of the newly committed funds. |
-| `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
-
-
-
-
-
-
-<a name="provenance.exchange.v1.EventFundsReleased"></a>
-
-### EventFundsReleased
-EventFundsReleased is an event emitted when funds are released from their commitment.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `account` | [string](#string) |  | account is the bech32 address string of the account. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
-| `amount` | [string](#string) |  | amount is the coins string of the funds that were released from commitment. |
 | `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
 
 

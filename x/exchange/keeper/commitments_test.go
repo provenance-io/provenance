@@ -609,7 +609,7 @@ func (s *TestSuite) TestKeeper_ReleaseCommitment() {
 
 			var expEvents sdk.Events
 			if tc.expEventAmt != nil {
-				expEvents = append(expEvents, s.untypeEvent(exchange.NewEventFundsReleased(tc.addr.String(), tc.marketID, tc.expEventAmt, tc.name)))
+				expEvents = append(expEvents, s.untypeEvent(exchange.NewEventCommitmentReleased(tc.addr.String(), tc.marketID, tc.expEventAmt, tc.name)))
 			}
 
 			s.clearExchangeState()
@@ -743,7 +743,7 @@ func (s *TestSuite) TestKeeper_ReleaseCommitments() {
 				{Account: s.addr5.String(), Amount: nil},
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr2.String(), 2, s.coins("3apple"), eventTag)),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr2.String(), 2, s.coins("3apple"), eventTag)),
 			},
 			expRelHoldCalls: []*ReleaseHoldArgs{NewReleaseHoldArgs(s.addr2, s.coins("3apple"))},
 		},
@@ -760,7 +760,7 @@ func (s *TestSuite) TestKeeper_ReleaseCommitments() {
 				{Account: s.addr5.String(), Amount: nil},
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr2.String(), 2, s.coins("22apple"), eventTag)),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr2.String(), 2, s.coins("22apple"), eventTag)),
 			},
 			expRelHoldCalls: []*ReleaseHoldArgs{NewReleaseHoldArgs(s.addr2, s.coins("22apple"))},
 		},
@@ -791,7 +791,7 @@ func (s *TestSuite) TestKeeper_ReleaseCommitments() {
 				{Account: s.addr5.String(), Amount: nil},
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr4.String(), 2, s.coins("24apple"), eventTag)),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr4.String(), 2, s.coins("24apple"), eventTag)),
 			},
 			expRelHoldCalls: []*ReleaseHoldArgs{
 				NewReleaseHoldArgs(s.addr1, s.coins("1apple")),
@@ -816,10 +816,10 @@ func (s *TestSuite) TestKeeper_ReleaseCommitments() {
 				{Account: s.addr5.String(), Amount: nil},
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr1.String(), 2, s.coins("21apple"), eventTag)),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr2.String(), 2, s.coins("22apple"), eventTag)),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr4.String(), 2, s.coins("5apple"), eventTag)),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr4.String(), 2, s.coins("6apple"), eventTag)),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr1.String(), 2, s.coins("21apple"), eventTag)),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr2.String(), 2, s.coins("22apple"), eventTag)),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr4.String(), 2, s.coins("5apple"), eventTag)),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr4.String(), 2, s.coins("6apple"), eventTag)),
 			},
 			expRelHoldCalls: []*ReleaseHoldArgs{
 				NewReleaseHoldArgs(s.addr1, s.coins("21apple")),
@@ -1667,7 +1667,7 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				EventTag: "testtag1",
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr2.String(), 2, s.coins("10apple"), "testtag1")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr2.String(), 2, s.coins("10apple"), "testtag1")),
 			},
 			expHoldCalls: HoldCalls{
 				ReleaseHold: []*ReleaseHoldArgs{NewReleaseHoldArgs(s.addr2, s.coins("10apple"))},
@@ -1689,7 +1689,7 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				EventTag: "testtag2",
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr3.String(), 4, s.coins("10apple"), "testtag2")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr3.String(), 4, s.coins("10apple"), "testtag2")),
 			},
 			expHoldCalls: HoldCalls{
 				ReleaseHold: []*ReleaseHoldArgs{NewReleaseHoldArgs(s.addr3, s.coins("10apple"))},
@@ -1725,7 +1725,7 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				EventTag: "testtag3",
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr3.String(), 4, s.coins("10apple,10banana"), "testtag3")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr3.String(), 4, s.coins("10apple,10banana"), "testtag3")),
 				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr5.String(), 4, s.coins("10apple,10banana"), "testtag3")),
 			},
 			expMarkerCalls: MarkerCalls{
@@ -1784,11 +1784,11 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				EventTag: "testtag4",
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr4.String(), 2, s.coins("10apple,4cherry"), "testtag4")),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr1.String(), 2, s.coins("1cherry"), "testtag4")),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr2.String(), 2, s.coins("2cherry"), "testtag4")),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr3.String(), 2, s.coins("3cherry"), "testtag4")),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr5.String(), 2, s.coins("5cherry"), "testtag4")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr4.String(), 2, s.coins("10apple,4cherry"), "testtag4")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr1.String(), 2, s.coins("1cherry"), "testtag4")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr2.String(), 2, s.coins("2cherry"), "testtag4")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr3.String(), 2, s.coins("3cherry"), "testtag4")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr5.String(), 2, s.coins("5cherry"), "testtag4")),
 				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr2.String(), 2, s.coins("10apple"), "testtag4")),
 			},
 			expHoldCalls: HoldCalls{
@@ -1857,11 +1857,11 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				EventTag: "messytag",
 			},
 			expEvents: sdk.Events{
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr1.String(), 2, s.coins("10apple,51banana,1cherry"), "messytag")),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr2.String(), 2, s.coins("10apple,2cherry,35orange"), "messytag")),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr3.String(), 2, s.coins("13apple,3cherry,50orange,41pear"), "messytag")),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr4.String(), 2, s.coins("10apple,4cherry"), "messytag")),
-				s.untypeEvent(exchange.NewEventFundsReleased(s.addr5.String(), 2, s.coins("5cherry,500raspberry"), "messytag")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr1.String(), 2, s.coins("10apple,51banana,1cherry"), "messytag")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr2.String(), 2, s.coins("10apple,2cherry,35orange"), "messytag")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr3.String(), 2, s.coins("13apple,3cherry,50orange,41pear"), "messytag")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr4.String(), 2, s.coins("10apple,4cherry"), "messytag")),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr5.String(), 2, s.coins("5cherry,500raspberry"), "messytag")),
 
 				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr1.String(), 2, s.coins("77orange,65raspberry"), "messytag")),
 				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr2.String(), 2, s.coins("40pear,315raspberry"), "messytag")),
