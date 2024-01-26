@@ -168,6 +168,11 @@ func (s *TestSuite) eventHoldReleased(addr sdk.AccAddress, amount string) sdk.Ev
 	return s.untypeEvent(&hold.EventHoldReleased{Address: addr.String(), Amount: amount})
 }
 
+// eventCommitmentReleased creates a new event emitted when a commitment is released.
+func (s *TestSuite) eventCommitmentReleased(addr sdk.AccAddress, marketID uint32, amount string, eventTag string) sdk.Event {
+	return s.untypeEvent(exchange.NewEventCommitmentReleased(addr.String(), marketID, s.coins(amount), eventTag))
+}
+
 // requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
@@ -182,6 +187,16 @@ func (s *TestSuite) requireAddHold(addr sdk.AccAddress, holdCoins string, orderI
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
 		return s.app.HoldKeeper.AddHold(s.ctx, addr, coins, reason)
 	}, "AddHold(%s, %q, %q)", s.getAddrName(addr), holdCoins, reason)
+}
+
+// requireSetCommitmentAmount sets the commitment amount and adds a hold for that amount.
+func (s *TestSuite) requireSetCommitmentAmount(marketID uint32, addr sdk.AccAddress, amount string) {
+	coins := s.coins(amount)
+	keeper.SetCommitmentAmount(s.getStore(), marketID, addr, coins)
+	reason := fmt.Sprintf("test commitment for market %d", marketID)
+	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+		return s.app.HoldKeeper.AddHold(s.ctx, addr, coins, reason)
+	}, "AddHold(%s, %q, %q)", s.getAddrName(addr), amount, reason)
 }
 
 // requireSetNameRecord creates a name record, requiring it to not error.
@@ -856,7 +871,7 @@ func (s *TestSuite) TestMsgServer_CommitFunds() {
 				addr:     s.addr2,
 				expBal:   s.coins("100apple,90cherry"),
 				expHold:  s.coins("50apple,90cherry"),
-				expSpend: []sdk.Coin{s.coin("50apple"), sdk.NewInt64Coin("cherry", 0)},
+				expSpend: []sdk.Coin{s.coin("50apple"), s.zeroCoin("cherry")},
 			},
 			expEvents: sdk.Events{
 				s.eventCoinSpent(s.addr2, "10cherry"),
@@ -2581,7 +2596,331 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 
 // TODO[1789]: func (s *TestSuite) TestMsgServer_MarketCommitmentSettle()
 
-// TODO[1789]: func (s *TestSuite) TestMsgServer_MarketReleaseCommitments()
+func (s *TestSuite) TestMsgServer_MarketReleaseCommitments() {
+	testDef := msgServerTestDef[exchange.MsgMarketReleaseCommitmentsRequest, exchange.MsgMarketReleaseCommitmentsResponse, []expBalances]{
+		endpointName: "MarketReleaseCommitments",
+		endpoint:     keeper.NewMsgServer(s.k).MarketReleaseCommitments,
+		expResp:      &exchange.MsgMarketReleaseCommitmentsResponse{},
+		followup: func(_ *exchange.MsgMarketReleaseCommitmentsRequest, expBals []expBalances) {
+			for _, eb := range expBals {
+				s.checkBalances(eb)
+			}
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgMarketReleaseCommitmentsRequest, []expBalances]{
+		{
+			name: "no permission",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{s.agCanAllBut(s.addr1, exchange.Permission_cancel)},
+				})
+				s.requireFundAccount(s.addr2, "100apple,100cherry")
+				s.requireSetCommitmentAmount(1, s.addr2, "50apple")
+			},
+			msg: exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin:     s.addr1.String(),
+				MarketId:  1,
+				ToRelease: []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("50apple")}},
+			},
+			expInErr: []string{invReqErr, "account " + s.addr1.String() + " does not have permission to release commitments for market 1"},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple,100cherry"),
+					expHold:  s.coins("50apple"),
+					expSpend: s.coins("50apple,100cherry"),
+				},
+			},
+		},
+		{
+			name: "has permission: error in release",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+				})
+				s.requireFundAccount(s.addr2, "100apple,100cherry")
+				s.requireSetCommitmentAmount(1, s.addr2, "50apple")
+			},
+			msg: exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin:     s.addr1.String(),
+				MarketId:  1,
+				ToRelease: []exchange.AccountAmount{{Account: "badbadaddr", Amount: s.coins("50apple")}},
+			},
+			expInErr: []string{invReqErr, "invalid account \"badbadaddr\""},
+			fArgs: []expBalances{{
+				addr:     s.addr2,
+				expBal:   s.coins("100apple,100cherry"),
+				expHold:  s.coins("50apple"),
+				expSpend: s.coins("50apple,100cherry"),
+			}},
+		},
+		{
+			name: "okay: partial",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+				})
+				s.requireFundAccount(s.addr2, "100apple,100cherry")
+				s.requireSetCommitmentAmount(1, s.addr2, "50apple")
+			},
+			msg: exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin:     s.addr1.String(),
+				MarketId:  1,
+				ToRelease: []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("40apple")}},
+				EventTag:  "byebyebye",
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr2, "40apple"),
+				s.eventCommitmentReleased(s.addr2, 1, "40apple", "byebyebye"),
+			},
+			fArgs: []expBalances{{
+				addr:     s.addr2,
+				expBal:   s.coins("100apple,100cherry"),
+				expHold:  s.coins("10apple"),
+				expSpend: s.coins("90apple,100cherry"),
+			}},
+		},
+		{
+			name: "okay: all provided",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+				})
+				s.requireFundAccount(s.addr2, "100apple,100cherry")
+				s.requireSetCommitmentAmount(1, s.addr2, "50apple")
+			},
+			msg: exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin:     s.addr1.String(),
+				MarketId:  1,
+				ToRelease: []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("50apple")}},
+				EventTag:  "hellogoodbye",
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr2, "50apple"),
+				s.eventCommitmentReleased(s.addr2, 1, "50apple", "hellogoodbye"),
+			},
+			fArgs: []expBalances{{
+				addr:     s.addr2,
+				expBal:   s.coins("100apple,100cherry"),
+				expHold:  s.zeroCoins("apple"),
+				expSpend: s.coins("100apple,100cherry"),
+			}},
+		},
+		{
+			name: "okay: empty amt",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+				})
+				s.requireFundAccount(s.addr2, "100apple,100cherry")
+				s.requireSetCommitmentAmount(1, s.addr2, "50apple")
+			},
+			msg: exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin:     s.addr1.String(),
+				MarketId:  1,
+				ToRelease: []exchange.AccountAmount{{Account: s.addr2.String()}},
+				EventTag:  "allgonow",
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr2, "50apple"),
+				s.eventCommitmentReleased(s.addr2, 1, "50apple", "allgonow"),
+			},
+			fArgs: []expBalances{{
+				addr:     s.addr2,
+				expBal:   s.coins("100apple,100cherry"),
+				expHold:  s.zeroCoins("apple"),
+				expSpend: s.coins("100apple,100cherry"),
+			}},
+		},
+		{
+			name: "multiple okay",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     2,
+					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+				})
+				bal := "100apple,200cherry"
+				s.requireFundAccount(s.addr1, bal)
+				s.requireFundAccount(s.addr2, bal)
+				s.requireFundAccount(s.addr3, bal)
+				s.requireFundAccount(s.addr4, bal)
+				s.requireFundAccount(s.addr5, bal)
+				s.requireSetCommitmentAmount(2, s.addr1, "100apple")
+				s.requireSetCommitmentAmount(2, s.addr2, "200cherry")
+				s.requireSetCommitmentAmount(2, s.addr3, "10apple,200cherry")
+				s.requireSetCommitmentAmount(2, s.addr4, "100apple,20cherry")
+				s.requireSetCommitmentAmount(2, s.addr5, "90apple,180cherry")
+			},
+			msg: exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 2,
+				ToRelease: []exchange.AccountAmount{
+					{Account: s.addr3.String(), Amount: s.coins("6apple,111cherry")},
+					{Account: s.addr5.String(), Amount: s.coins("180cherry")},
+					{Account: s.addr1.String(), Amount: s.coins("75apple")},
+					{Account: s.addr4.String()},
+					{Account: s.addr2.String(), Amount: s.coins("200cherry")},
+				},
+				EventTag: "multifree",
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr3, "6apple,111cherry"),
+				s.eventCommitmentReleased(s.addr3, 2, "6apple,111cherry", "multifree"),
+				s.eventHoldReleased(s.addr5, "180cherry"),
+				s.eventCommitmentReleased(s.addr5, 2, "180cherry", "multifree"),
+				s.eventHoldReleased(s.addr1, "75apple"),
+				s.eventCommitmentReleased(s.addr1, 2, "75apple", "multifree"),
+				s.eventHoldReleased(s.addr4, "100apple,20cherry"),
+				s.eventCommitmentReleased(s.addr4, 2, "100apple,20cherry", "multifree"),
+				s.eventHoldReleased(s.addr2, "200cherry"),
+				s.eventCommitmentReleased(s.addr2, 2, "200cherry", "multifree"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr1,
+					expBal:   s.coins("100apple,200cherry"),
+					expHold:  []sdk.Coin{s.coin("25apple"), s.zeroCoin("cherry")},
+					expSpend: s.coins("75apple,200cherry"),
+				},
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple,200cherry"),
+					expHold:  s.zeroCoins("apple", "cherry"),
+					expSpend: s.coins("100apple,200cherry"),
+				},
+				{
+					addr:     s.addr3,
+					expBal:   s.coins("100apple,200cherry"),
+					expHold:  s.coins("4apple,89cherry"),
+					expSpend: s.coins("96apple,111cherry"),
+				},
+				{
+					addr:     s.addr4,
+					expBal:   s.coins("100apple,200cherry"),
+					expHold:  s.zeroCoins("apple", "cherry"),
+					expSpend: s.coins("100apple,200cherry"),
+				},
+				{
+					addr:     s.addr5,
+					expBal:   s.coins("100apple,200cherry"),
+					expHold:  []sdk.Coin{s.coin("90apple"), s.zeroCoin("cherry")},
+					expSpend: s.coins("10apple,200cherry"),
+				},
+			},
+		},
+		{
+			name: "authority: error in release",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     1,
+					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+				})
+				s.requireFundAccount(s.addr2, "100apple,100cherry")
+				s.requireSetCommitmentAmount(1, s.addr2, "50apple")
+			},
+			msg: exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin:     s.k.GetAuthority(),
+				MarketId:  1,
+				ToRelease: []exchange.AccountAmount{{Account: "badbadaddr", Amount: s.coins("50apple")}},
+			},
+			expInErr: []string{invReqErr, "invalid account \"badbadaddr\""},
+			fArgs: []expBalances{{
+				addr:     s.addr2,
+				expBal:   s.coins("100apple,100cherry"),
+				expHold:  s.coins("50apple"),
+				expSpend: s.coins("50apple,100cherry"),
+			}},
+		},
+		{
+			name: "authority: multiple okay",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:     2,
+					AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr1, exchange.Permission_cancel)},
+				})
+				bal := "100apple,200cherry"
+				s.requireFundAccount(s.addr1, bal)
+				s.requireFundAccount(s.addr2, bal)
+				s.requireFundAccount(s.addr3, bal)
+				s.requireFundAccount(s.addr4, bal)
+				s.requireFundAccount(s.addr5, bal)
+				s.requireSetCommitmentAmount(2, s.addr1, "100apple")
+				s.requireSetCommitmentAmount(2, s.addr2, "200cherry")
+				s.requireSetCommitmentAmount(2, s.addr3, "10apple,200cherry")
+				s.requireSetCommitmentAmount(2, s.addr4, "100apple,20cherry")
+				s.requireSetCommitmentAmount(2, s.addr5, "90apple,180cherry")
+			},
+			msg: exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin:    s.addr1.String(),
+				MarketId: 2,
+				ToRelease: []exchange.AccountAmount{
+					{Account: s.addr3.String(), Amount: s.coins("6apple,111cherry")},
+					{Account: s.addr5.String(), Amount: s.coins("180cherry")},
+					{Account: s.addr1.String(), Amount: s.coins("75apple")},
+					{Account: s.addr4.String()},
+					{Account: s.addr2.String(), Amount: s.coins("200cherry")},
+				},
+				EventTag: "multifree",
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr3, "6apple,111cherry"),
+				s.eventCommitmentReleased(s.addr3, 2, "6apple,111cherry", "multifree"),
+				s.eventHoldReleased(s.addr5, "180cherry"),
+				s.eventCommitmentReleased(s.addr5, 2, "180cherry", "multifree"),
+				s.eventHoldReleased(s.addr1, "75apple"),
+				s.eventCommitmentReleased(s.addr1, 2, "75apple", "multifree"),
+				s.eventHoldReleased(s.addr4, "100apple,20cherry"),
+				s.eventCommitmentReleased(s.addr4, 2, "100apple,20cherry", "multifree"),
+				s.eventHoldReleased(s.addr2, "200cherry"),
+				s.eventCommitmentReleased(s.addr2, 2, "200cherry", "multifree"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr1,
+					expBal:   s.coins("100apple,200cherry"),
+					expHold:  []sdk.Coin{s.coin("25apple"), s.zeroCoin("cherry")},
+					expSpend: s.coins("75apple,200cherry"),
+				},
+				{
+					addr:     s.addr2,
+					expBal:   s.coins("100apple,200cherry"),
+					expHold:  s.zeroCoins("apple", "cherry"),
+					expSpend: s.coins("100apple,200cherry"),
+				},
+				{
+					addr:     s.addr3,
+					expBal:   s.coins("100apple,200cherry"),
+					expHold:  s.coins("4apple,89cherry"),
+					expSpend: s.coins("96apple,111cherry"),
+				},
+				{
+					addr:     s.addr4,
+					expBal:   s.coins("100apple,200cherry"),
+					expHold:  s.zeroCoins("apple", "cherry"),
+					expSpend: s.coins("100apple,200cherry"),
+				},
+				{
+					addr:     s.addr5,
+					expBal:   s.coins("100apple,200cherry"),
+					expHold:  []sdk.Coin{s.coin("90apple"), s.zeroCoin("cherry")},
+					expSpend: s.coins("10apple,200cherry"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 func (s *TestSuite) TestMsgServer_MarketSetOrderExternalID() {
 	type followupArgs struct{}
@@ -3728,15 +4067,13 @@ func (s *TestSuite) TestMsgServer_GovCloseMarket() {
 				bidOrder := exchange.NewOrder(19).WithBid(&exchange.BidOrder{
 					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("20peach"),
 				})
-				s.requireSetOrdersInStore(s.getStore(), askOrder, bidOrder)
-				err := s.app.HoldKeeper.AddHold(s.ctx, s.addr1, s.coins("10apple"), "testing")
-				s.Require().NoError(err, "AddHold addr1 10apple")
-				err = s.app.HoldKeeper.AddHold(s.ctx, s.addr2, s.coins("20peach"), "testing")
-				s.Require().NoError(err, "AddHold addr2 20peach")
+				store := s.getStore()
+				s.requireSetOrdersInStore(store, askOrder, bidOrder)
+				s.requireAddHold(s.addr1, "10apple", askOrder.OrderId)
+				s.requireAddHold(s.addr2, "20peach", bidOrder.OrderId)
 
 				s.requireFundAccount(s.addr3, "30banana")
-				err = s.k.AddCommitment(s.ctx, 2, s.addr3, s.coins("30banana"), "testing")
-				s.Require().NoError(err, "AddCommitment addr3")
+				s.requireSetCommitmentAmount(2, s.addr3, "30banana")
 			},
 			msg: exchange.MsgGovCloseMarketRequest{
 				Authority: s.k.GetAuthority(),
@@ -3752,12 +4089,12 @@ func (s *TestSuite) TestMsgServer_GovCloseMarket() {
 			expEvents: sdk.Events{
 				s.untypeEvent(exchange.NewEventMarketOrdersDisabled(2, s.k.GetAuthority())),
 				s.untypeEvent(exchange.NewEventMarketCommitmentsDisabled(2, s.k.GetAuthority())),
-				s.untypeEvent(hold.NewEventHoldReleased(s.addr1, s.coins("10apple"))),
+				s.eventHoldReleased(s.addr1, "10apple"),
 				s.untypeEvent(&exchange.EventOrderCancelled{OrderId: 18, MarketId: 2, CancelledBy: s.k.GetAuthority()}),
-				s.untypeEvent(hold.NewEventHoldReleased(s.addr2, s.coins("20peach"))),
+				s.eventHoldReleased(s.addr2, "20peach"),
 				s.untypeEvent(&exchange.EventOrderCancelled{OrderId: 19, MarketId: 2, CancelledBy: s.k.GetAuthority()}),
-				s.untypeEvent(hold.NewEventHoldReleased(s.addr3, s.coins("30banana"))),
-				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr3.String(), 2, s.coins("30banana"), "GovCloseMarket")),
+				s.eventHoldReleased(s.addr3, "30banana"),
+				s.eventCommitmentReleased(s.addr3, 2, "30banana", "GovCloseMarket"),
 			},
 		},
 	}
