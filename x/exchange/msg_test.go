@@ -995,7 +995,7 @@ func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
 				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
 				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
 			},
-			expErrAlways: []string{"invalid administrator \"\": " + emptyAddrErr},
+			expErrInReq: []string{"invalid administrator \"\": " + emptyAddrErr},
 		},
 		{
 			name: "bad admin",
@@ -1005,7 +1005,7 @@ func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
 				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
 				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
 			},
-			expErrAlways: []string{"invalid administrator \"badbadadmin\": " + bech32Err},
+			expErrInReq: []string{"invalid administrator \"badbadadmin\": " + bech32Err},
 		},
 		{
 			name: "market zero",
@@ -1145,8 +1145,10 @@ func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
 				Navs:     []NetAssetPrice{{Assets: coin(-2, "cherry"), Price: coin(87, "nhash")}},
 				EventTag: "p" + strings.Repeat("b", 99) + "f",
 			},
-			expErrAlways: []string{
+			expErrInReq: []string{
 				"invalid administrator \"\": " + emptyAddrErr,
+			},
+			expErrAlways: []string{
 				"invalid market id: cannot be zero",
 				"inputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
 				"outputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",

@@ -1202,7 +1202,7 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 		},
 		{
 			name:   "invalid req",
-			req:    &exchange.MsgMarketCommitmentSettleRequest{Admin: s.addr1.String(), MarketId: 0},
+			req:    &exchange.MsgMarketCommitmentSettleRequest{MarketId: 0},
 			expErr: "invalid market id: cannot be zero",
 		},
 		{
@@ -1215,7 +1215,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 				})
 			},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 3,
 				Inputs:   []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
 				Outputs:  []exchange.AccountAmount{{Account: s.addr3.String(), Amount: s.coins("10apple")}},
@@ -1232,7 +1231,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 				})
 			},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 3,
 				Inputs:   []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
 				Outputs:  []exchange.AccountAmount{{Account: s.addr3.String(), Amount: s.coins("10apple")}},
@@ -1251,7 +1249,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 			},
 			expGetNav: []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 3,
 				Inputs:   []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("10apple")}},
 				Outputs:  []exchange.AccountAmount{{Account: s.addr3.String(), Amount: s.coins("10apple")}},
@@ -1268,7 +1265,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 				})
 			},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 3,
 				Navs:     []exchange.NetAssetPrice{{Assets: s.coin("10cherry"), Price: s.coin("30nhash")}},
 			},
@@ -1292,7 +1288,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 				{markerDenom: "banana", priceDenom: "cherry"},
 			},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 3,
 				Inputs: []exchange.AccountAmount{
 					{Account: s.addr2.String(), Amount: s.coins("10apple,3banana")},
@@ -1317,7 +1312,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
 			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 3,
 				Inputs: []exchange.AccountAmount{
 					{Account: s.addr2.String(), Amount: s.coins("2200nhash")},
@@ -1346,7 +1340,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
 			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 3,
 				Inputs: []exchange.AccountAmount{
 					{Account: s.addr2.String(), Amount: s.coins("2200nhash")},
@@ -1375,7 +1368,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
 			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 3,
 				Inputs: []exchange.AccountAmount{
 					{Account: s.addr2.String(), Amount: s.coins("358cherry")},
@@ -1405,7 +1397,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("31nhash")),
 			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 2,
 				Inputs: []exchange.AccountAmount{
 					{Account: s.addr2.String(), Amount: s.coins("35cherry")},
@@ -1435,7 +1426,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
 			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 2,
 				Inputs: []exchange.AccountAmount{
 					{Account: s.addr2.String(), Amount: s.coins("25apple")},
@@ -1467,7 +1457,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueResult(s.coin("10cherry"), s.coin("30nhash")),
 			expGetNav:    []*GetNetAssetValueArgs{{markerDenom: "cherry", priceDenom: "nhash"}},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 2,
 				Inputs: []exchange.AccountAmount{
 					{Account: s.addr2.String(), Amount: s.coins("25apple")},
@@ -1504,7 +1493,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 				{markerDenom: "apple", priceDenom: "cherry"},
 			},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 2,
 				Inputs: []exchange.AccountAmount{
 					{Account: s.addr2.String(), Amount: s.coins("25apple")},
@@ -1541,7 +1529,6 @@ func (s *TestSuite) TestKeeper_CalculateCommitmentSettlementFee() {
 				{markerDenom: "apple", priceDenom: "cherry"},
 			},
 			req: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:    s.addr1.String(),
 				MarketId: 2,
 				Inputs: []exchange.AccountAmount{
 					{Account: s.addr2.String(), Amount: s.coins("12apple")},

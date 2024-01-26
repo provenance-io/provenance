@@ -242,8 +242,10 @@ func (m MsgMarketSettleRequest) GetSigners() []sdk.AccAddress {
 func (m MsgMarketCommitmentSettleRequest) Validate(requireInputs bool) error {
 	var errs []error
 
-	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
-		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	if requireInputs {
+		if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+			errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+		}
 	}
 
 	if m.MarketId == 0 {
