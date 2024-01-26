@@ -3547,7 +3547,105 @@ func (s *TestSuite) TestMsgServer_GovManageFees() {
 	}
 }
 
-// TODO[1789]: func (s *TestSuite) TestMsgServer_GovCloseMarket()
+func (s *TestSuite) TestMsgServer_GovCloseMarket() {
+	testDef := msgServerTestDef[exchange.MsgGovCloseMarketRequest, exchange.MsgGovCloseMarketResponse, exchange.Market]{
+		endpointName: "GovCloseMarket",
+		endpoint:     keeper.NewMsgServer(s.k).GovCloseMarket,
+		expResp:      &exchange.MsgGovCloseMarketResponse{},
+		followup: func(msg *exchange.MsgGovCloseMarketRequest, expMarket exchange.Market) {
+			actMarket := s.k.GetMarket(s.ctx, msg.MarketId)
+			s.Assert().Equal(expMarket, *actMarket, "GetMarket(%d)", msg.MarketId)
+
+			var marketOrders []*exchange.Order
+			s.k.IterateMarketOrders(s.ctx, expMarket.MarketId, func(orderID uint64, _ byte) bool {
+				order, err := s.k.GetOrder(s.ctx, orderID)
+				s.Require().NoError(err, "GetOrder(%d)", orderID)
+				marketOrders = append(marketOrders, order)
+				return false
+			})
+			s.Assert().Empty(marketOrders, "orders in market %d", msg.MarketId)
+
+			var marketCommitments []exchange.Commitment
+			s.k.IterateCommitments(s.ctx, func(commitment exchange.Commitment) bool {
+				if commitment.MarketId == msg.MarketId {
+					marketCommitments = append(marketCommitments, commitment)
+				}
+				return false
+			})
+			s.Assert().Empty(marketCommitments, "commitments in market %d", msg.MarketId)
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgGovCloseMarketRequest, exchange.Market]{
+		{
+			name: "wrong authority",
+			msg: exchange.MsgGovCloseMarketRequest{
+				Authority: s.addr5.String(),
+				MarketId:  3,
+			},
+			expInErr: []string{
+				"expected \"" + s.k.GetAuthority() + "\" got \"" + s.addr5.String() + "\"",
+				"expected gov account as only signer for proposal message"},
+		},
+		{
+			name: "okay",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                 2,
+					AcceptingOrders:          true,
+					AcceptingCommitments:     true,
+					CommitmentSettlementBips: 51,
+					IntermediaryDenom:        "cherry",
+				})
+
+				s.requireFundAccount(s.addr1, "10apple")
+				s.requireFundAccount(s.addr2, "20peach")
+				askOrder := exchange.NewOrder(18).WithAsk(&exchange.AskOrder{
+					MarketId: 2, Seller: s.addr1.String(), Assets: s.coin("10apple"), Price: s.coin("20peach"),
+				})
+				bidOrder := exchange.NewOrder(19).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("20peach"),
+				})
+				s.requireSetOrdersInStore(s.getStore(), askOrder, bidOrder)
+				err := s.app.HoldKeeper.AddHold(s.ctx, s.addr1, s.coins("10apple"), "testing")
+				s.Require().NoError(err, "AddHold addr1 10apple")
+				err = s.app.HoldKeeper.AddHold(s.ctx, s.addr2, s.coins("20peach"), "testing")
+				s.Require().NoError(err, "AddHold addr2 20peach")
+
+				s.requireFundAccount(s.addr3, "30banana")
+				err = s.k.AddCommitment(s.ctx, 2, s.addr3, s.coins("30banana"), "testing")
+				s.Require().NoError(err, "AddCommitment addr3")
+			},
+			msg: exchange.MsgGovCloseMarketRequest{
+				Authority: s.k.GetAuthority(),
+				MarketId:  2,
+			},
+			fArgs: exchange.Market{
+				MarketId:                 2,
+				AcceptingOrders:          false,
+				AcceptingCommitments:     false,
+				CommitmentSettlementBips: 51,
+				IntermediaryDenom:        "cherry",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(exchange.NewEventMarketOrdersDisabled(2, s.k.GetAuthority())),
+				s.untypeEvent(exchange.NewEventMarketCommitmentsDisabled(2, s.k.GetAuthority())),
+				s.untypeEvent(hold.NewEventHoldReleased(s.addr1, s.coins("10apple"))),
+				s.untypeEvent(&exchange.EventOrderCancelled{OrderId: 18, MarketId: 2, CancelledBy: s.k.GetAuthority()}),
+				s.untypeEvent(hold.NewEventHoldReleased(s.addr2, s.coins("20peach"))),
+				s.untypeEvent(&exchange.EventOrderCancelled{OrderId: 19, MarketId: 2, CancelledBy: s.k.GetAuthority()}),
+				s.untypeEvent(hold.NewEventHoldReleased(s.addr3, s.coins("30banana"))),
+				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr3.String(), 2, s.coins("30banana"), "GovCloseMarket")),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
 
 func (s *TestSuite) TestMsgServer_GovUpdateParams() {
 	testDef := msgServerTestDef[exchange.MsgGovUpdateParamsRequest, exchange.MsgGovUpdateParamsResponse, struct{}]{
