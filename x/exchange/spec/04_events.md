@@ -11,8 +11,8 @@ The exchange module emits several events for various actions.
   - [EventOrderExternalIDUpdated](#eventorderexternalidupdated)
   - [EventMarketWithdraw](#eventmarketwithdraw)
   - [EventMarketDetailsUpdated](#eventmarketdetailsupdated)
-  - [EventMarketEnabled](#eventmarketenabled)
-  - [EventMarketDisabled](#eventmarketdisabled)
+  - [EventMarketOrdersEnabled](#eventmarketordersenabled)
+  - [EventMarketOrdersDisabled](#eventmarketordersdisabled)
   - [EventMarketUserSettleEnabled](#eventmarketusersettleenabled)
   - [EventMarketUserSettleDisabled](#eventmarketusersettledisabled)
   - [EventMarketPermissionsUpdated](#eventmarketpermissionsupdated)
@@ -135,11 +135,11 @@ Event Type: `provenance.exchange.v1.EventMarketDetailsUpdated`
 | updated_by    | The bech32 address string of the admin account that made the change.  |
 
 
-## EventMarketEnabled
+## EventMarketOrdersEnabled
 
-When a market's `accepting_orders` changes from `false` to `true`, an `EventMarketEnabled` is emitted.
+When a market's `accepting_orders` changes from `false` to `true`, an `EventMarketOrdersEnabled` is emitted.
 
-Event Type: `provenance.exchange.v1.EventMarketEnabled`
+Event Type: `provenance.exchange.v1.EventMarketOrdersEnabled`
 
 | Attribute Key | Attribute Value                                                      |
 |---------------|----------------------------------------------------------------------|
@@ -147,11 +147,11 @@ Event Type: `provenance.exchange.v1.EventMarketEnabled`
 | updated_by    | The bech32 address string of the admin account that made the change. |
 
 
-## EventMarketDisabled
+## EventMarketOrdersDisabled
 
-When a market's `accepting_orders` changes from `true` to `false`, an `EventMarketDisabled` is emitted.
+When a market's `accepting_orders` changes from `true` to `false`, an `EventMarketOrdersDisabled` is emitted.
 
-Event Type: `provenance.exchange.v1.EventMarketDisabled`
+Event Type: `provenance.exchange.v1.EventMarketOrdersDisabled`
 
 | Attribute Key | Attribute Value                                                      |
 |---------------|----------------------------------------------------------------------|

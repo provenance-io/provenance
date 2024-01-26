@@ -15,7 +15,7 @@ The exchange module has `Msg` endpoints for users, markets, and governance propo
     - [MarketSetOrderExternalID](#marketsetorderexternalid)
     - [MarketWithdraw](#marketwithdraw)
     - [MarketUpdateDetails](#marketupdatedetails)
-    - [MarketUpdateEnabled](#marketupdateenabled)
+    - [MarketUpdateAcceptingOrders](#marketupdateacceptingorders)
     - [MarketUpdateUserSettle](#marketupdateusersettle)
     - [MarketManagePermissions](#marketmanagepermissions)
     - [MarketManageReqAttrs](#marketmanagereqattrs)
@@ -291,9 +291,9 @@ See also: [MarketDetails](#marketdetails).
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L239-L240
 
 
-### MarketUpdateEnabled
+### MarketUpdateAcceptingOrders
 
-A market can enable or disable order creation using the `MarketUpdateEnabled` endpoint.
+A market can enable or disable order creation using the `MarketUpdateAcceptingOrders` endpoint.
 The `admin` must have the `PERMISSION_UPDATE` permission in the market (or be the `authority`).
 
 With `accepting_orders` = `false`, no one can create any new orders in the market, but existing orders can still be settled or cancelled.
@@ -303,11 +303,11 @@ It is expected to fail if:
 * The `admin` does not have `PERMISSION_UPDATE` in the market, and is not the `authority`.
 * The provided `accepting_orders` value equals the market's current setting.
 
-#### MsgMarketUpdateEnabledRequest
+#### MsgMarketUpdateAcceptingOrdersRequest
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L242-L253
 
-#### MsgMarketUpdateEnabledResponse
+#### MsgMarketUpdateAcceptingOrdersResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L255-L256
 

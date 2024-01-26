@@ -16,7 +16,7 @@ Big-endian ordering is used for all conversions between numbers and byte arrays.
     - [Market Seller Settlement Ratio Fee](#market-seller-settlement-ratio-fee)
     - [Market Buyer Settlement Flat Fee](#market-buyer-settlement-flat-fee)
     - [Market Buyer Settlement Ratio Fee](#market-buyer-settlement-ratio-fee)
-    - [Market Inactive Indicator](#market-inactive-indicator)
+    - [Market Not-Accepting-Orders Indicator](#market-not-accepting-orders-indicator)
     - [Market User-Settle Indicator](#market-user-settle-indicator)
     - [Market Permissions](#market-permissions)
     - [Market Create-Ask Required Attributes](#market-create-ask-required-attributes)
@@ -128,7 +128,7 @@ One entry per configured price:fee denom pair.
 See also: [FeeRatio](03_messages.md#feeratio).
 
 
-### Market Inactive Indicator
+### Market Not-Accepting-Orders Indicator
 
 When a market has `accepting_orders = false`, this state entry will exist.
 When it has `accepting_orders = true`, this entry will not exist.
