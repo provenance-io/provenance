@@ -3948,6 +3948,7 @@ func (s *TestSuite) TestQueryServer_CommitmentSettlementFeeCalc() {
 						{Assets: s.coin("1cherry"), Price: s.coin("20nhash")},
 					},
 				},
+				IncludeBreakdownFields: true,
 			},
 			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
 				InputTotal:     s.coins("15apple"),
@@ -3956,6 +3957,28 @@ func (s *TestSuite) TestQueryServer_CommitmentSettlementFeeCalc() {
 				ConversionNavs: []exchange.NetAssetPrice{{Assets: s.coin("1apple"), Price: s.coin("4cherry")}},
 				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("1cherry"), Price: s.coin("20nhash")},
 			},
+		},
+		{
+			name: "some inputs and navs: just exchange fees",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			req: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					MarketId: 2,
+					Inputs:   []exchange.AccountAmount{{Account: s.addr1.String(), Amount: s.coins("15apple")}},
+					Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("15apple")}},
+					Navs: []exchange.NetAssetPrice{
+						{Assets: s.coin("1apple"), Price: s.coin("4cherry")},
+						{Assets: s.coin("1cherry"), Price: s.coin("20nhash")},
+					},
+				},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{ExchangeFees: s.coins("3nhash")},
 		},
 		{
 			name: "some inputs, navs from state",
@@ -3980,6 +4003,7 @@ func (s *TestSuite) TestQueryServer_CommitmentSettlementFeeCalc() {
 					Inputs:   []exchange.AccountAmount{{Account: s.addr1.String(), Amount: s.coins("15apple")}},
 					Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("15apple")}},
 				},
+				IncludeBreakdownFields: true,
 			},
 			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
 				InputTotal:     s.coins("15apple"),
@@ -3988,6 +4012,32 @@ func (s *TestSuite) TestQueryServer_CommitmentSettlementFeeCalc() {
 				ConversionNavs: []exchange.NetAssetPrice{{Assets: s.coin("1apple"), Price: s.coin("4cherry")}},
 				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("1cherry"), Price: s.coin("20nhash")},
 			},
+		},
+		{
+			name: "some inputs, navs from state: just exchange fees",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "cherry",
+				})
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000apple"), s.addr5)
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000cherry"), s.addr5)
+
+				appleMarker := s.requireGetMarker("apple")
+				cherryMarker := s.requireGetMarker("cherry")
+
+				s.requireSetNav(appleMarker, 1, "4cherry")
+				s.requireSetNav(cherryMarker, 1, "20nhash")
+			},
+			req: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					MarketId: 2,
+					Inputs:   []exchange.AccountAmount{{Account: s.addr1.String(), Amount: s.coins("15apple")}},
+					Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("15apple")}},
+				},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{ExchangeFees: s.coins("3nhash")},
 		},
 	}
 

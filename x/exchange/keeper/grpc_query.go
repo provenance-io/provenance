@@ -392,6 +392,10 @@ func (k QueryServer) CommitmentSettlementFeeCalc(goCtx context.Context, req *exc
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
+	if !req.IncludeBreakdownFields && len(req.Settlement.Inputs) > 0 {
+		resp = &exchange.QueryCommitmentSettlementFeeCalcResponse{ExchangeFees: resp.ExchangeFees}
+	}
+
 	return resp, nil
 }
 

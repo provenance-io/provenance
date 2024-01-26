@@ -2943,6 +2943,7 @@ QueryCommitmentSettlementFeeCalcRequest is a request message for the CommitmentS
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `settlement` | [MsgMarketCommitmentSettleRequest](#provenance.exchange.v1.MsgMarketCommitmentSettleRequest) |  | settlement is a market's commitment settlement request message. If no inputs are provided, only the to_fee_nav field will be populated in the response. |
+| `include_breakdown_fields` | [bool](#bool) |  | include_breakdown_fields controls the fields that are populated in the response. If false, only the exchange_fees field is populated. If true, all of the fields are populated as possible. If the settlement does not have any inputs, this field defaults to true. |
 
 
 
