@@ -54,6 +54,11 @@ func (k Keeper) GetOrderStoreKeyValue(order exchange.Order) ([]byte, []byte, err
 	return k.getOrderStoreKeyValue(order)
 }
 
+// AddCommitmentsUnsafe is a test-only exposure of addCommitmentsUnsafe.
+func (k Keeper) AddCommitmentsUnsafe(ctx sdk.Context, marketID uint32, toAdd []exchange.AccountAmount, eventTag string) error {
+	return k.addCommitmentsUnsafe(ctx, marketID, toAdd, eventTag)
+}
+
 var (
 	// DeleteAll is a test-only exposure of deleteAll.
 	DeleteAll = deleteAll

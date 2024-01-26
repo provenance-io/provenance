@@ -67,20 +67,51 @@ func addCommitmentAmount(store sdk.KVStore, marketID uint32, addr sdk.AccAddress
 	setCommitmentAmount(store, marketID, addr, cur.Add(amount...))
 }
 
+// validateMarketIsAcceptingCommitments makes sure the market exists and is accepting commitments.
+func validateMarketIsAcceptingCommitments(store sdk.KVStore, marketID uint32) error {
+	if err := validateMarketExists(store, marketID); err != nil {
+		return err
+	}
+	if !isMarketAcceptingCommitments(store, marketID) {
+		return fmt.Errorf("market %d is not accepting commitments", marketID)
+	}
+	return nil
+}
+
+// validateUserCanCreateCommitment makes sure the user can create a commitment in the given market.
+func (k Keeper) validateUserCanCreateCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) error {
+	if !k.CanCreateCommitment(ctx, marketID, addr) {
+		return fmt.Errorf("account %s is not allowed to create commitments in market %d", addr, marketID)
+	}
+	return nil
+}
+
 // GetCommitmentAmount gets the amount the given address has committed to the provided market.
 func (k Keeper) GetCommitmentAmount(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) sdk.Coins {
 	return getCommitmentAmount(k.getStore(ctx), marketID, addr)
 }
 
-// AddCommitment commits the provided amount by the addr to the given market, and places a hold on them.
+// addCommitment commits the provided amount by the addr to the given market, and places a hold on them.
 // If the addr already has funds committed to the market, the provided amount is added to that.
 // Otherwise a new commitment record is created.
-func (k Keeper) AddCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, amount sdk.Coins, eventTag string) error {
+//
+// If doMarketChecks = true, the market must be accepting commitments and the addr must have the required attributes.
+func (k Keeper) addCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, amount sdk.Coins, eventTag string, doMarketChecks bool) error {
 	if amount.IsZero() {
 		return nil
 	}
 	if amount.IsAnyNegative() {
 		return fmt.Errorf("cannot add negative commitment amount %q for %s in market %d", amount, addr, marketID)
+	}
+
+	store := k.getStore(ctx)
+	if doMarketChecks {
+		if err := validateMarketIsAcceptingCommitments(store, marketID); err != nil {
+			return err
+		}
+		if err := k.validateUserCanCreateCommitment(ctx, marketID, addr); err != nil {
+			return err
+		}
 	}
 
 	err := k.holdKeeper.AddHold(ctx, addr, amount, fmt.Sprintf("x/exchange: commitment to %d", marketID))
@@ -93,8 +124,16 @@ func (k Keeper) AddCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddr
 	return nil
 }
 
-// AddCommitments calls AddCommitment for several entries.
-func (k Keeper) AddCommitments(ctx sdk.Context, marketID uint32, toAdd []exchange.AccountAmount, eventTag string) error {
+// AddCommitment commits the provided amount by the addr to the given market, and places a hold on them.
+// If the addr already has funds committed to the market, the provided amount is added to that.
+// Otherwise a new commitment record is created.
+func (k Keeper) AddCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress, amount sdk.Coins, eventTag string) error {
+	return k.addCommitment(ctx, marketID, addr, amount, eventTag, true)
+}
+
+// addCommitmentsUnsafe adds several commitments without checking that the market is accepting
+// commitments and without checking that the address has the required attributes.
+func (k Keeper) addCommitmentsUnsafe(ctx sdk.Context, marketID uint32, toAdd []exchange.AccountAmount, eventTag string) error {
 	var errs []error
 	for _, entry := range toAdd {
 		addr, err := sdk.AccAddressFromBech32(entry.Account)
@@ -102,7 +141,7 @@ func (k Keeper) AddCommitments(ctx sdk.Context, marketID uint32, toAdd []exchang
 			errs = append(errs, fmt.Errorf("invalid account %q: %w", entry.Account, err))
 			continue
 		}
-		err = k.AddCommitment(ctx, marketID, addr, entry.Amount, eventTag)
+		err = k.addCommitment(ctx, marketID, addr, entry.Amount, eventTag, false)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -359,7 +398,7 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	}
 
 	// Commit the funds in the outputs.
-	err = k.AddCommitments(ctx, marketID, outputs, req.EventTag)
+	err = k.addCommitmentsUnsafe(ctx, marketID, outputs, req.EventTag)
 	if err != nil {
 		return fmt.Errorf("failed to re-commit funds after transfer: %w", err)
 	}

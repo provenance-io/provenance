@@ -121,45 +121,118 @@ func (s *TestSuite) TestKeeper_GetCommitmentAmount() {
 }
 
 func (s *TestSuite) TestKeeper_AddCommitment() {
-	existingSetup := func() {
-		store := s.getStore()
-		keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
-		keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
-		keeper.SetCommitmentAmount(store, 1, s.addr4, s.coins("14apple"))
-		keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
-		keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple"))
-		keeper.SetCommitmentAmount(store, 2, s.addr4, s.coins("24apple"))
-		keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
-		keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
-		keeper.SetCommitmentAmount(store, 3, s.addr4, s.coins("34apple"))
+	existingSetup := func(reqAttr ...string) func() {
+		return func() {
+			s.requireCreateMarket(exchange.Market{
+				MarketId:                 1,
+				AcceptingCommitments:     true,
+				CommitmentSettlementBips: 51,
+				IntermediaryDenom:        "cherry",
+				ReqAttrCreateCommitment:  reqAttr,
+			})
+			s.requireCreateMarket(exchange.Market{
+				MarketId:                 2,
+				AcceptingCommitments:     true,
+				CommitmentSettlementBips: 52,
+				IntermediaryDenom:        "cherry",
+				ReqAttrCreateCommitment:  reqAttr,
+			})
+			s.requireCreateMarket(exchange.Market{
+				MarketId:                 3,
+				AcceptingCommitments:     true,
+				CommitmentSettlementBips: 53,
+				IntermediaryDenom:        "cherry",
+				ReqAttrCreateCommitment:  reqAttr,
+			})
+			store := s.getStore()
+			keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+			keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+			keeper.SetCommitmentAmount(store, 1, s.addr4, s.coins("14apple"))
+			keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+			keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple"))
+			keeper.SetCommitmentAmount(store, 2, s.addr4, s.coins("24apple"))
+			keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+			keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+			keeper.SetCommitmentAmount(store, 3, s.addr4, s.coins("34apple"))
+		}
 	}
+
 	tests := []struct {
 		name        string
 		setup       func()
 		holdKeeper  *MockHoldKeeper
+		attrKeeper  *MockAttributeKeeper
 		marketID    uint32
 		addr        sdk.AccAddress
 		amount      sdk.Coins
 		expErr      string
 		expHoldCall bool
+		expAttrCall bool
 		expEvent    bool
 		expAmount   sdk.Coins
 	}{
 		{
-			name:     "empty state: zero amount",
+			name:     "zero amount",
 			marketID: 2,
 			addr:     s.addr3,
 			amount:   nil,
 		},
 		{
-			name:     "empty state: negative amount",
+			name:     "negative amount",
 			marketID: 2,
 			addr:     s.addr3,
 			amount:   sdk.Coins{sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(-23)}},
 			expErr:   "cannot add negative commitment amount \"-23apple\" for " + s.addr3.String() + " in market 2",
 		},
 		{
-			name:        "empty state: error adding hold",
+			name:     "market does not exist",
+			marketID: 2,
+			addr:     s.addr3,
+			amount:   s.coins("23apple"),
+			expErr:   "market 2 does not exist",
+		},
+		{
+			name: "market is not accepting commitments",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 8,
+					AcceptingCommitments:     false,
+					CommitmentSettlementBips: 52,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			marketID: 8,
+			addr:     s.addr4,
+			amount:   s.coins("34apple"),
+			expErr:   "market 8 is not accepting commitments",
+		},
+		{
+			name: "user does not have req attr",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 7,
+					AcceptingCommitments:     true,
+					CommitmentSettlementBips: 52,
+					IntermediaryDenom:        "cherry",
+					ReqAttrCreateCommitment:  []string{"com.can.do"},
+				})
+			},
+			marketID:    7,
+			addr:        s.addr1,
+			amount:      s.coins("71banana"),
+			expErr:      "account " + s.addr1.String() + " is not allowed to create commitments in market 7",
+			expAttrCall: true,
+		},
+		{
+			name: "empty state: error adding hold",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					AcceptingCommitments:     true,
+					CommitmentSettlementBips: 52,
+					IntermediaryDenom:        "cherry",
+				})
+			},
 			holdKeeper:  NewMockHoldKeeper().WithAddHoldResults("injected testing error"),
 			marketID:    2,
 			addr:        s.addr3,
@@ -168,7 +241,15 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			expHoldCall: true,
 		},
 		{
-			name:        "empty state: new commitment",
+			name: "empty state: new commitment",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					AcceptingCommitments:     true,
+					CommitmentSettlementBips: 52,
+					IntermediaryDenom:        "cherry",
+				})
+			},
 			marketID:    2,
 			addr:        s.addr3,
 			amount:      s.coins("23apple"),
@@ -177,8 +258,34 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			expAmount:   s.coins("23apple"),
 		},
 		{
+			name: "empty state: new commitment with req attr",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 4,
+					AcceptingCommitments:     true,
+					CommitmentSettlementBips: 52,
+					IntermediaryDenom:        "cherry",
+					ReqAttrCreateCommitment:  []string{"com.can.do"},
+				})
+			},
+			attrKeeper:  NewMockAttributeKeeper().WithGetAllAttributesAddrResult(s.addr4, []string{"com.can.do"}, ""),
+			marketID:    4,
+			addr:        s.addr4,
+			amount:      s.coins("15peach"),
+			expHoldCall: true,
+			expAttrCall: true,
+			expEvent:    true,
+			expAmount:   s.coins("15peach"),
+		},
+		{
 			name: "almost empty state: additional commitment",
 			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					AcceptingCommitments:     true,
+					CommitmentSettlementBips: 52,
+					IntermediaryDenom:        "cherry",
+				})
 				store := s.getStore()
 				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("23apple"))
 			},
@@ -190,25 +297,50 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			expAmount:   s.coins("123apple"),
 		},
 		{
-			name:      "other existing commitments: zero amount",
-			setup:     existingSetup,
+			name: "existing commitments: market is not accepting commitments",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					AcceptingCommitments:     false,
+					CommitmentSettlementBips: 52,
+					IntermediaryDenom:        "cherry",
+				})
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr4, s.coins("24apple"))
+			},
 			marketID:  2,
-			addr:      s.addr2,
-			amount:    nil,
-			expAmount: s.coins("22apple"),
+			addr:      s.addr1,
+			amount:    s.coins("79apple"),
+			expErr:    "market 2 is not accepting commitments",
+			expAmount: s.coins("21apple"),
 		},
 		{
-			name:      "other existing commitments: negative amount",
-			setup:     existingSetup,
-			marketID:  2,
-			addr:      s.addr2,
-			amount:    sdk.Coins{sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(-2)}},
-			expErr:    "cannot add negative commitment amount \"-2apple\" for " + s.addr2.String() + " in market 2",
-			expAmount: s.coins("22apple"),
+			name: "existing commitments: user does not have required attribute",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					AcceptingCommitments:     true,
+					CommitmentSettlementBips: 52,
+					IntermediaryDenom:        "cherry",
+					ReqAttrCreateCommitment:  []string{"just.some.com.okay"},
+				})
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr4, s.coins("24apple"))
+			},
+			marketID:    2,
+			addr:        s.addr4,
+			amount:      s.coins("77banana"),
+			expErr:      "account " + s.addr4.String() + " is not allowed to create commitments in market 2",
+			expAttrCall: true,
+			expAmount:   s.coins("24apple"),
 		},
 		{
-			name:        "other existing commitments: error adding hold",
-			setup:       existingSetup,
+			name:        "existing commitments: error adding hold",
+			setup:       existingSetup(),
 			holdKeeper:  NewMockHoldKeeper().WithAddHoldResults("injected testing error"),
 			marketID:    2,
 			addr:        s.addr2,
@@ -218,8 +350,8 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			expAmount:   s.coins("22apple"),
 		},
 		{
-			name:        "other existing commitments: new commitment",
-			setup:       existingSetup,
+			name:        "existing commitments: new commitment",
+			setup:       existingSetup(),
 			marketID:    2,
 			addr:        s.addr3,
 			amount:      s.coins("23apple"),
@@ -228,12 +360,24 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			expAmount:   s.coins("23apple"),
 		},
 		{
-			name:        "other existing commitments: additional commitment",
-			setup:       existingSetup,
+			name:        "existing commitments: additional commitment",
+			setup:       existingSetup(),
 			marketID:    2,
 			addr:        s.addr2,
 			amount:      s.coins("100apple"),
 			expHoldCall: true,
+			expEvent:    true,
+			expAmount:   s.coins("122apple"),
+		},
+		{
+			name:        "existing commitments: additional commitment with req attr",
+			setup:       existingSetup("magic.com.creator"),
+			attrKeeper:  NewMockAttributeKeeper().WithGetAllAttributesAddrResult(s.addr2, []string{"magic.com.creator"}, ""),
+			marketID:    2,
+			addr:        s.addr2,
+			amount:      s.coins("100apple"),
+			expHoldCall: true,
+			expAttrCall: true,
 			expEvent:    true,
 			expAmount:   s.coins("122apple"),
 		},
@@ -244,6 +388,10 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			var expHoldCalls HoldCalls
 			if tc.expHoldCall {
 				expHoldCalls.AddHold = append(expHoldCalls.AddHold, NewAddHoldArgs(tc.addr, tc.amount, fmt.Sprintf("x/exchange: commitment to %d", tc.marketID)))
+			}
+			var expAttrCalls AttributeCalls
+			if tc.expAttrCall {
+				expAttrCalls.GetAllAttributesAddr = append(expAttrCalls.GetAllAttributesAddr, tc.addr)
 			}
 
 			var expEvents sdk.Events
@@ -259,7 +407,10 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 			if tc.holdKeeper == nil {
 				tc.holdKeeper = NewMockHoldKeeper()
 			}
-			kpr := s.k.WithHoldKeeper(tc.holdKeeper)
+			if tc.attrKeeper == nil {
+				tc.attrKeeper = NewMockAttributeKeeper()
+			}
+			kpr := s.k.WithHoldKeeper(tc.holdKeeper).WithAttributeKeeper(tc.attrKeeper)
 			em := sdk.NewEventManager()
 			ctx := s.ctx.WithEventManager(em)
 			var err error
@@ -273,6 +424,8 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 
 			s.assertHoldKeeperCalls(tc.holdKeeper, expHoldCalls, "AddCommitment(%d, %s, %q)",
 				tc.marketID, s.getAddrName(tc.addr), tc.amount)
+			s.assertAttributeKeeperCalls(tc.attrKeeper, expAttrCalls, "AddCommitment(%d, %s, %q)",
+				tc.marketID, s.getAddrName(tc.addr), tc.amount)
 
 			actEvents := em.Events()
 			s.assertEqualEvents(expEvents, actEvents, "events emitted during AddCommitment(%d, %s, %q)",
@@ -285,7 +438,7 @@ func (s *TestSuite) TestKeeper_AddCommitment() {
 	}
 }
 
-func (s *TestSuite) TestKeeper_AddCommitments() {
+func (s *TestSuite) TestKeeper_AddCommitmentsUnsafe() {
 	existingSetup := func() {
 		store := s.getStore()
 		keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
@@ -475,15 +628,15 @@ func (s *TestSuite) TestKeeper_AddCommitments() {
 			ctx := s.ctx.WithEventManager(em)
 			var err error
 			testFunc := func() {
-				err = kpr.AddCommitments(ctx, tc.marketID, tc.toAdd, eventTag)
+				err = kpr.AddCommitmentsUnsafe(ctx, tc.marketID, tc.toAdd, eventTag)
 			}
-			s.Require().NotPanics(testFunc, "AddCommitments(%d)", tc.marketID)
-			s.assertErrorValue(err, tc.expErr, "AddCommitments(%d) error", tc.marketID)
+			s.Require().NotPanics(testFunc, "addCommitmentsUnsafe(%d)", tc.marketID)
+			s.assertErrorValue(err, tc.expErr, "addCommitmentsUnsafe(%d) error", tc.marketID)
 
-			s.assertHoldKeeperCalls(tc.holdKeeper, expHoldCalls, "AddCommitments(%d)", tc.marketID)
+			s.assertHoldKeeperCalls(tc.holdKeeper, expHoldCalls, "addCommitmentsUnsafe(%d)", tc.marketID)
 
 			actEvents := em.Events()
-			s.assertEqualEvents(tc.expEvents, actEvents, "events emitted during AddCommitments(%d)", tc.marketID)
+			s.assertEqualEvents(tc.expEvents, actEvents, "events emitted during addCommitmentsUnsafe(%d)", tc.marketID)
 
 			var addr sdk.AccAddress
 			for i, exp := range tc.expAmounts {
