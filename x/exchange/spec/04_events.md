@@ -9,12 +9,17 @@ The exchange module emits several events for various actions.
   - [EventOrderFilled](#eventorderfilled)
   - [EventOrderPartiallyFilled](#eventorderpartiallyfilled)
   - [EventOrderExternalIDUpdated](#eventorderexternalidupdated)
+  - [EventFundsCommitted](#eventfundscommitted)
+  - [EventCommitmentReleased](#eventcommitmentreleased)
   - [EventMarketWithdraw](#eventmarketwithdraw)
   - [EventMarketDetailsUpdated](#eventmarketdetailsupdated)
   - [EventMarketOrdersEnabled](#eventmarketordersenabled)
   - [EventMarketOrdersDisabled](#eventmarketordersdisabled)
   - [EventMarketUserSettleEnabled](#eventmarketusersettleenabled)
   - [EventMarketUserSettleDisabled](#eventmarketusersettledisabled)
+  - [EventMarketCommitmentsEnabled](#eventmarketcommitmentsenabled)
+  - [EventMarketCommitmentsDisabled](#eventmarketcommitmentsdisabled)
+  - [EventMarketIntermediaryDenomUpdated](#eventmarketintermediarydenomupdated)
   - [EventMarketPermissionsUpdated](#eventmarketpermissionsupdated)
   - [EventMarketReqAttrUpdated](#eventmarketreqattrupdated)
   - [EventMarketCreated](#eventmarketcreated)
@@ -109,6 +114,34 @@ Event Type: `provenance.exchange.v1.EventOrderExternalIDUpdated`
 | external_id    | The new external id of the order.          |
 
 
+## EventFundsCommitted
+
+When funds are committed to a market by an account, an `EventFundsCommitted` is emitted.
+
+Event Type: `provenance.exchange.v1.EventFundsCommitted`
+
+| Attribute Key | Attribute Value                                             |
+|---------------|-------------------------------------------------------------|
+| account       | The bech32 address of the account that committed the funds. |
+| market_id     | The id of the market that funds were committed to.          |
+| amount        | The funds committed (`Coins` string).                       |
+| tag           | The `event_tag` provided in the msg.                        |
+
+
+## EventCommitmentReleased
+
+When funds are released by a market, an `EventCommitmentReleased` is emitted.
+
+Event Type: `provenance.exchange.v1.EventCommitmentReleased`
+
+| Attribute Key | Attribute Value                                             |
+|---------------|-------------------------------------------------------------|
+| account       | The bech32 address of the account that committed the funds. |
+| market_id     | The id of the market that funds were committed to.          |
+| amount        | The funds committed (`Coins` string).                       |
+| tag           | The `event_tag` provided in the msg.                        |
+
+
 ## EventMarketWithdraw
 
 Any time a market's funds are withdrawn, an `EventMarketWithdraw` is emitted.
@@ -176,6 +209,42 @@ Event Type: `provenance.exchange.v1.EventMarketUserSettleEnabled`
 When a market's `allow_user_settlement` changes from `true` to `false`, an `EventMarketUserSettleDisabled` is emitted.
 
 Event Type: `provenance.exchange.v1.EventMarketUserSettleDisabled`
+
+| Attribute Key | Attribute Value                                                      |
+|---------------|----------------------------------------------------------------------|
+| market_id     | The id of the updated market.                                        |
+| updated_by    | The bech32 address string of the admin account that made the change. |
+
+
+## EventMarketCommitmentsEnabled
+
+When a market's `accepting_commitments` changes from `false` to `true`, an `EventMarketCommitmentsEnabled` is emitted.
+
+Event Type: `provenance.exchange.v1.EventMarketCommitmentsEnabled`
+
+| Attribute Key | Attribute Value                                                      |
+|---------------|----------------------------------------------------------------------|
+| market_id     | The id of the updated market.                                        |
+| updated_by    | The bech32 address string of the admin account that made the change. |
+
+
+## EventMarketCommitmentsDisabled
+
+When a market's `accepting_commitments` changes from `true` to `false`, an `EventMarketCommitmentsDisabled` is emitted.
+
+Event Type: `provenance.exchange.v1.EventMarketCommitmentsDisabled`
+
+| Attribute Key | Attribute Value                                                      |
+|---------------|----------------------------------------------------------------------|
+| market_id     | The id of the updated market.                                        |
+| updated_by    | The bech32 address string of the admin account that made the change. |
+
+
+## EventMarketIntermediaryDenomUpdated
+
+When a market's `intermediary_denom` is updated, an `EventMarketIntermediaryDenomUpdated` is emitted.
+
+Event Type: `provenance.exchange.v1.EventMarketIntermediaryDenomUpdated`
 
 | Attribute Key | Attribute Value                                                      |
 |---------------|----------------------------------------------------------------------|
