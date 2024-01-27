@@ -11,9 +11,14 @@ There are several queries for getting information about things in the exchange m
   - [GetOwnerOrders](#getownerorders)
   - [GetAssetOrders](#getassetorders)
   - [GetAllOrders](#getallorders)
+  - [GetCommitment](#getcommitment)
+  - [GetAccountCommitments](#getaccountcommitments)
+  - [GetMarketCommitments](#getmarketcommitments)
+  - [GetAllCommitments](#getallcommitments)
   - [GetMarket](#getmarket)
   - [GetAllMarkets](#getallmarkets)
   - [Params](#params)
+  - [CommitmentSettlementFeeCalc](#commitmentsettlementfeecalc)
   - [ValidateCreateMarket](#validatecreatemarket)
   - [ValidateMarket](#validatemarket)
   - [ValidateManageFees](#validatemanagefees)
@@ -152,6 +157,58 @@ This query is paginated.
 See also: [Order](#order).
 
 
+## GetCommitment
+
+To find out how much an account has committed to a market, use the `GetCommitment` query.
+
+### QueryGetCommitmentRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L263-L269
+
+### QueryGetCommitmentResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L271-L276
+
+
+## GetAccountCommitments
+
+To look up the amounts an account has committed to any market, use the `GetAccountCommitments` query.
+
+### QueryGetAccountCommitmentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L278-L282
+
+### QueryGetAccountCommitmentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L284-L288
+
+
+## GetMarketCommitments
+
+To get the amounts committed to a market by any account, use the `GetMarketCommitments` query.
+
+### QueryGetMarketCommitmentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L290-L297
+
+### QueryGetMarketCommitmentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L299-L306
+
+
+## GetAllCommitments
+
+To get all funds committed by any account to any market, use the `GetAllCommitments` query.
+
+### QueryGetAllCommitmentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L308-L321
+
+### QueryGetAllCommitmentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L323-L327
+
+
 ## GetMarket
 
 All the information and setup for a market can be looked up using the `GetMarket` query.
@@ -197,6 +254,21 @@ The exchange module params can be looked up using the `Params` query.
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/query.proto#L265-L269
 
 See also: [Params](06_params.md#params).
+
+
+## CommitmentSettlementFeeCalc
+
+To find out the additional tx fee required for a commitment settlement, use the `CommitmentSettlementFeeCalc` query.
+
+### QueryCommitmentSettlementFeeCalcRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L361-L370
+
+See also: [MsgMarketCommitmentSettleRequest](03_messages.md#msgmarketcommitmentsettlerequest).
+
+### QueryCommitmentSettlementFeeCalcResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L373-L388
 
 
 ## ValidateCreateMarket
