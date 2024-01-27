@@ -7,21 +7,27 @@ The exchange module has `Msg` endpoints for users, markets, and governance propo
   - [User Endpoints](#user-endpoints)
     - [CreateAsk](#createask)
     - [CreateBid](#createbid)
+    - [CommitFunds](#commitfunds)
     - [CancelOrder](#cancelorder)
     - [FillBids](#fillbids)
     - [FillAsks](#fillasks)
   - [Market Endpoints](#market-endpoints)
     - [MarketSettle](#marketsettle)
+    - [MarketCommitmentSettle](#marketcommitmentsettle)
+    - [MarketReleaseCommitments](#marketreleasecommitments)
     - [MarketSetOrderExternalID](#marketsetorderexternalid)
     - [MarketWithdraw](#marketwithdraw)
     - [MarketUpdateDetails](#marketupdatedetails)
     - [MarketUpdateAcceptingOrders](#marketupdateacceptingorders)
     - [MarketUpdateUserSettle](#marketupdateusersettle)
+    - [MarketUpdateAcceptingCommitments](#marketupdateacceptingcommitments)
+    - [MarketUpdateIntermediaryDenom](#marketupdateintermediarydenom)
     - [MarketManagePermissions](#marketmanagepermissions)
     - [MarketManageReqAttrs](#marketmanagereqattrs)
   - [Governance Proposals](#governance-proposals)
     - [GovCreateMarket](#govcreatemarket)
     - [GovManageFees](#govmanagefees)
+    - [GovCloseMarket](#govclosemarket)
     - [GovUpdateParams](#govupdateparams)
 
 
@@ -94,6 +100,27 @@ It is expected to fail if:
 #### MsgCreateBidResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L94-L98
+
+
+### CommitFunds
+
+Funds can be committed to a market using the `CommitFunds` endpoint.
+If the account already has funds committed to the market, the provided funds are added to that commitment amount.
+
+It is expected to fail if:
+* The market does not exist.
+* The market is not accepting commitments.
+* The market requires attributes in order to create commitments and the `account` is missing one or more.
+* The `creation_fee` is insufficient (as dictated by the market).
+* The `amount` is not spendable in the account (after paying the creation fee).
+
+#### MsgCommitFundsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L129-L144
+
+#### MsgCommitFundsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L146-L147
 
 
 ### CancelOrder
@@ -223,6 +250,48 @@ It is expected to fail if:
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L185-L186
 
 
+### MarketCommitmentSettle
+
+A market can move committed funds using the `MarketCommitmentSettle` endpoint.
+The `admin` must have the `PERMISSION_SETTLE` permission in the market (or be the `authority`).
+
+It is expected to fail if:
+* The market does not exist.
+* The `admin` does not have `PERMISSION_SETTLE` in the market, and is not the `authority`.
+* The sum of the `inputs` does not equal the sum of the `outputs`.
+* Not enough funds have been committed by one or more accounts to the market.
+* A NAV is needed (for fee calculation) that does not exist and was not provided.
+
+#### MsgMarketCommitmentSettleRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L237-L257
+
+#### MsgMarketCommitmentSettleResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L259-L260
+
+
+### MarketReleaseCommitments
+
+A market can release committed funds using the `MarketReleaseCommitments` endpoint.
+The `admin` must have the `PERMISSION_CANCEL` permission in the market (or be the `authority`).
+
+Providing an empty amount indicates that all funds currently committed in that account (to the market) should be released.
+
+It is expected to fail if:
+* The market does not exist.
+* The `admin` does not have `PERMISSION_CANCEL` in the market, and is not the `authority`.
+* One or more of the amounts is more than what is currently committed by the associated `account`.
+
+#### MsgMarketReleaseCommitmentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L262-L275
+
+#### MsgMarketReleaseCommitmentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L277-L278
+
+
 ### MarketSetOrderExternalID
 
 Some markets might want to attach their own identifiers to orders.
@@ -334,6 +403,48 @@ It is expected to fail if:
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L273-L274
 
 
+### MarketUpdateAcceptingCommitments
+
+Using the `MarketUpdateAcceptingCommitments` endpoint, a market can control whether it is accepting commitments.
+The `admin` must have the `PERMISSION_UPDATE` permission in the market (or be the `authority`).
+
+The [CommitFunds](#CommitFunds) endpoint is only available for markets where `accepting_orders` = `true`.
+
+It is expected to fail if:
+* The market does not exist.
+* The `admin` does not have `PERMISSION_UPDATE` in the market, and is not the `authority`.
+* The provided `accepting_orders` value equals the market's current setting.
+* The provided `accepting_orders` is `true` but no commitment-related fees are defined.
+* The provided `accepting_orders` is `true` and bips are set, but either no intermediary denom is defined or there is no NAV associating the intermediary denom with the chain's fee denom.
+
+#### MsgMarketUpdateAcceptingCommitmentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L392-L404
+
+#### MsgMarketUpdateAcceptingCommitmentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L407-L408
+
+
+### MarketUpdateIntermediaryDenom
+
+The `MarketUpdateIntermediaryDenom` endpoint allows a market to change its intermediary denom (used for commitment settlement fee calculation).
+The `admin` must have the `PERMISSION_UPDATE` permission in the market (or be the `authority`).
+
+It is expected to fail if:
+* The market does not exist.
+* The `admin` does not have `PERMISSION_UPDATE` in the market, and is not the `authority`.
+* The provided `intermediary_denom` is not a valid denom string.
+
+#### MsgMarketUpdateIntermediaryDenomRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L410-L421
+
+#### MsgMarketUpdateIntermediaryDenomResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L423-L424
+
+
 ### MarketManagePermissions
 
 Permissions in a market are managed using the `MarketManagePermissions` endpoint.
@@ -362,7 +473,7 @@ See also: [AccessGrant](#accessgrant) and [Permission](#permission).
 The attributes required to create orders in a market can be managed using the `MarketManageReqAttrs` endpoint.
 The `admin` must have the `PERMISSION_ATTRIBUTES` permission in the market (or be the `authority`).
 
-See also: [Required Attributes](#required-attributes).
+See also: [Required Attributes](01_concepts.md#required-attributes).
 
 It is expected to fail if:
 * The market does not exist.
@@ -452,6 +563,24 @@ See also: [FeeRatio](#feeratio).
 #### MsgGovManageFeesResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L374-L375
+
+
+### GovCloseMarket
+
+A market can be closed via governance proposal with a `MsgGovCloseMarketRequest`.
+
+When a market is closed, it stops accepting orders and commitments, all orders are cancelled, and all commitments are released.
+
+It is expected to fail if:
+* The provided `authority` is not the governance module's account.
+
+#### MsgGovCloseMarketRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L543-L551
+
+#### MsgGovCloseMarketResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L553-L554
 
 
 ### GovUpdateParams
