@@ -4,6 +4,7 @@ import (
 	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TelemetryCategory is an enum for metadata telemetry categories.
@@ -272,5 +273,14 @@ func NewEventOSLocatorUpdated(owner string) *EventOSLocatorUpdated {
 func NewEventOSLocatorDeleted(owner string) *EventOSLocatorDeleted {
 	return &EventOSLocatorDeleted{
 		Owner: owner,
+	}
+}
+
+// NewEventSetNetAssetValue returns a new instance of EventSetNetAssetValue
+func NewEventSetNetAssetValue(scopeID MetadataAddress, price sdk.Coin, source string) *EventSetNetAssetValue {
+	return &EventSetNetAssetValue{
+		ScopeId: scopeID.String(),
+		Price:   price.String(),
+		Source:  source,
 	}
 }

@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // AuthKeeper is an interface with functions that the auth.Keeper has that are needed in this module.
@@ -24,4 +26,9 @@ type AuthzKeeper interface {
 type AttrKeeper interface {
 	GetAccountData(ctx sdk.Context, addr string) (string, error)
 	SetAccountData(ctx sdk.Context, addr string, value string) error
+}
+
+// MarkerKeeper defines the attribute functionality needed by the metadata module.
+type MarkerKeeper interface {
+	GetMarkerByDenom(ctx sdk.Context, denom string) (markertypes.MarkerAccountI, error)
 }

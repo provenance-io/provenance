@@ -97,3 +97,8 @@ type GovKeeper interface {
 type IbcTransferMsgServer interface {
 	Transfer(goCtx context.Context, msg *transfertypes.MsgTransfer) (*transfertypes.MsgTransferResponse, error)
 }
+
+// GroupChecker defines the functionality for checking if an account is part of a group.
+type GroupChecker interface {
+	IsGroupAddress(sdk.Context, sdk.AccAddress) bool
+}

@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add the ibcratelimit module [#1498](https://github.com/provenance-io/provenance/issues/1498).
+* Add NAV support for metadata scopes [#1749](https://github.com/provenance-io/provenance/issues/1749).
 * Add fix for NAV units to tourmaline upgrade handler [#1815](https://github.com/provenance-io/provenance/issues/1815).
 
 ### Improvements
@@ -53,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Remove deleted marker send deny entries [#1666](https://github.com/provenance-io/provenance/issues/1666).
 * Update protos, naming, and documentation to use mills [#1813](https://github.com/provenance-io/provenance/issues/1813).
+* Update marker transfer to work with groups [#1818](https://github.com/provenance-io/provenance/issues/1818).
 
 ### Dependencies
 

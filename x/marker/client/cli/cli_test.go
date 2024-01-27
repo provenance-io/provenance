@@ -1907,7 +1907,7 @@ func (s *IntegrationTestSuite) TestParseNetAssertValueString() {
 		{
 			name:           "invalid coin",
 			netAssetValues: "notacoin,1",
-			expErr:         "invalid coin notacoin",
+			expErr:         "invalid net asset value coin : notacoin",
 			expResult:      []types.NetAssetValue{},
 		},
 		{
