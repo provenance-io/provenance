@@ -91,7 +91,7 @@ func SimplifyAccountAmounts(entries []AccountAmount) []AccountAmount {
 	return rv
 }
 
-// AccountAmountsToBankInputs converts some AccountAmount entries, each to a banktypes.Input.
+// AccountAmountsToBankInputs converts each AccountAmount entry to a banktypes.Input.
 func AccountAmountsToBankInputs(entries ...AccountAmount) []banktypes.Input {
 	rv := make([]banktypes.Input, len(entries))
 	for i, entry := range entries {
@@ -100,7 +100,7 @@ func AccountAmountsToBankInputs(entries ...AccountAmount) []banktypes.Input {
 	return rv
 }
 
-// AccountAmountsToBankOutputs converts some AccountAmount entries, each to a banktypes.Output.
+// AccountAmountsToBankOutputs converts each AccountAmount entry to a banktypes.Output.
 func AccountAmountsToBankOutputs(entries ...AccountAmount) []banktypes.Output {
 	rv := make([]banktypes.Output, len(entries))
 	for i, entry := range entries {
