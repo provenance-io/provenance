@@ -62,7 +62,7 @@ See also: [Market](03_messages.md#market).
 ### Required Attributes
 
 There is a separate list of attributes required to create each order type and commitments.
-If one or more attributes are required to create something, creator (buyer, seller, or committer) must have all of them on their account.
+If one or more attributes are required for an action, the associated account (e.g. buyer, seller, or committer) must have all of them on their account.
 
 Required attributes can have a wildcard at the start to indicate that any attribute with the designated base and one (or more) level(s) is applicable.
 The only place a wildcard `*` is allowed is at the start of the string and must be immediately followed by a period.
@@ -125,11 +125,11 @@ A market can move funds committed to it by using the [MarketCommitmentSettle](03
 During commitment settlement:
 
 1. Holds are released on the funds to be transferred.
-2. The funds are transferred
+2. The funds are transferred.
 3. The funds are re-committed in the destination accounts.
 
 The market can collect fees as part of this settlement, but is also charged extra fees for the tx.
-gSee also: [Commitment Fees](#commitment-fees).
+See also: [Commitment Fees](#commitment-fees).
 
 The funds are re-committed regardless of the market's `accepting_commitments` value.
 The accounts these funds are being re-committed to also are not required to have the create-commitment required attributes.
@@ -239,10 +239,10 @@ External ids are limited to 100 characters.
 
 A Commitment allows an account to give control of some of its funds to a market.
 
-When funds are committed to a market, they remain in the source account and a hold is placed on them.
+When funds are committed to a market, they remain in the source account and a [hold](../../hold/spec/01_concepts.md#holds) is placed on them.
+Committed funds are not usable by the account they are in, only the market can move them.
 The funds stay in the account until the market either moves them using the [MarketCommitmentSettle](03_messages.md#marketcommitmentsettle) endpoint or cancels the commitment in part or full.
 Commitments can only be cancelled by the market (or a governance proposal).
-Committed funds are not usable by the account they are in, only the market can move them.
 
 For a market to start accepting commitments, it must have either a settlement bips, or a commitment creation flat fee defined.
 If a settlement bips is defined, an intermediary denom must also be defined and a NAV must exist from the intermediary denom to the chain's fee denom.
@@ -368,7 +368,7 @@ The commitment's `creation_fee` must be at least one of the available `fee_creat
 
 #### Commitment Settlement Fee Collection
 
-During a commitment settlement, a market can collect fees by populating the `fees` field in the settlement msg.
+During a commitment settlement, a market can collect fees by populating the `fees` field in the [MsgMarketCommitmentSettleRequest](03_messages.md#msgmarketcommitmentsettlerequest).
 The exchange does **NOT** keep any portion of these fees.
 Only fees that have been committed to the market can be collected in this way.
 
