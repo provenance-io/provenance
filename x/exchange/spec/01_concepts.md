@@ -240,7 +240,7 @@ External ids are limited to 100 characters.
 A Commitment allows an account to give control of some of its funds to a market.
 
 When funds are committed to a market, they remain in the source account and a [hold](../../hold/spec/01_concepts.md#holds) is placed on them.
-Committed funds are not usable by the account they are in, only the market can move them.
+Committed funds are not usable by the account they are in; only the market can move them.
 The funds stay in the account until the market either moves them using the [MarketCommitmentSettle](03_messages.md#marketcommitmentsettle) endpoint or cancels the commitment in part or full.
 Commitments can only be cancelled by the market (or a governance proposal).
 
