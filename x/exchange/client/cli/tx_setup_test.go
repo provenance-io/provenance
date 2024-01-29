@@ -1125,12 +1125,13 @@ func TestMakeMsgMarketManagePermissions(t *testing.T) {
 }
 
 func TestSetupCmdTxMarketManageReqAttrs(t *testing.T) {
-	runSetupTestCase(t, setupTestCase{
+	tc := setupTestCase{
 		name:  "SetupCmdTxMarketManageReqAttrs",
 		setup: cli.SetupCmdTxMarketManageReqAttrs,
 		expFlags: []string{
 			cli.FlagAdmin, cli.FlagAuthority, cli.FlagMarket,
 			cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
+			cli.FlagCommitmentAdd, cli.FlagCommitmentRemove,
 			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
 		},
 		expAnnotations: map[string]map[string][]string{
@@ -1143,19 +1144,33 @@ func TestSetupCmdTxMarketManageReqAttrs(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket:    {required: {"true"}},
-			cli.FlagAskAdd:    {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
-			cli.FlagAskRemove: {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
-			cli.FlagBidAdd:    {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
-			cli.FlagBidRemove: {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
+			cli.FlagMarket: {required: {"true"}},
 		},
 		expInUse: []string{
 			cli.ReqAdminUse, "--market <market id>",
 			"[--ask-add <attrs>]", "[--ask-remove <attrs>]",
 			"[--bid-add <attrs>]", "[--bid-remove <attrs>]",
+			"[--commitment-add <attrs>]", "[--commitment-remove <attrs>]",
 			cli.ReqAdminDesc, cli.RepeatableDesc,
 		},
-	})
+	}
+
+	oneReqFlags := []string{
+		cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
+		cli.FlagCommitmentAdd, cli.FlagCommitmentRemove,
+	}
+	oneReqVal := strings.Join(oneReqFlags, " ")
+	if tc.expAnnotations == nil {
+		tc.expAnnotations = make(map[string]map[string][]string)
+	}
+	for _, name := range oneReqFlags {
+		if tc.expAnnotations[name] == nil {
+			tc.expAnnotations[name] = make(map[string][]string)
+		}
+		tc.expAnnotations[name][oneReq] = []string{oneReqVal}
+	}
+
+	runSetupTestCase(t, tc)
 }
 
 func TestMakeMsgMarketManageReqAttrs(t *testing.T) {
@@ -1170,11 +1185,13 @@ func TestMakeMsgMarketManageReqAttrs(t *testing.T) {
 			name:  "no admin",
 			flags: []string{"--market", "41", "--bid-add", "*.kyc"},
 			expMsg: &exchange.MsgMarketManageReqAttrsRequest{
-				MarketId:          41,
-				CreateAskToAdd:    []string{},
-				CreateAskToRemove: []string{},
-				CreateBidToAdd:    []string{"*.kyc"},
-				CreateBidToRemove: []string{},
+				MarketId:                 41,
+				CreateAskToAdd:           []string{},
+				CreateAskToRemove:        []string{},
+				CreateBidToAdd:           []string{"*.kyc"},
+				CreateBidToRemove:        []string{},
+				CreateCommitmentToAdd:    []string{},
+				CreateCommitmentToRemove: []string{},
 			},
 			expErr: "no <admin> provided",
 		},
@@ -1185,14 +1202,17 @@ func TestMakeMsgMarketManageReqAttrs(t *testing.T) {
 				"--market", "44444",
 				"--ask-add", "def.abc,*.xyz", "--ask-remove", "uvw.xyz",
 				"--bid-add", "ghi.abc,*.xyz", "--bid-remove", "rst.xyz",
+				"--commitment-add", "jkl.abc,*.xyz", "--commitment-remove", "opq.xyz",
 			},
 			expMsg: &exchange.MsgMarketManageReqAttrsRequest{
-				Admin:             sdk.AccAddress("FromAddress_________").String(),
-				MarketId:          44444,
-				CreateAskToAdd:    []string{"def.abc", "*.xyz"},
-				CreateAskToRemove: []string{"uvw.xyz"},
-				CreateBidToAdd:    []string{"ghi.abc", "*.xyz"},
-				CreateBidToRemove: []string{"rst.xyz"},
+				Admin:                    sdk.AccAddress("FromAddress_________").String(),
+				MarketId:                 44444,
+				CreateAskToAdd:           []string{"def.abc", "*.xyz"},
+				CreateAskToRemove:        []string{"uvw.xyz"},
+				CreateBidToAdd:           []string{"ghi.abc", "*.xyz"},
+				CreateBidToRemove:        []string{"rst.xyz"},
+				CreateCommitmentToAdd:    []string{"jkl.abc", "*.xyz"},
+				CreateCommitmentToRemove: []string{"opq.xyz"},
 			},
 		},
 	}
@@ -1211,21 +1231,23 @@ func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 		expFlags: []string{
 			cli.FlagAuthority,
 			cli.FlagMarket, cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon,
-			cli.FlagCreateAsk, cli.FlagCreateBid,
+			cli.FlagCreateAsk, cli.FlagCreateBid, cli.FlagCreateCommitment,
 			cli.FlagSellerFlat, cli.FlagSellerRatios, cli.FlagBuyerFlat, cli.FlagBuyerRatios,
-			cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAccessGrants,
-			cli.FlagReqAttrAsk, cli.FlagReqAttrBid,
+			cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAcceptingCommitments, cli.FlagAccessGrants,
+			cli.FlagReqAttrAsk, cli.FlagReqAttrBid, cli.FlagReqAttrCommitment,
+			cli.FlagBips, cli.FlagDenom,
 			cli.FlagProposal,
 		},
 		expInUse: []string{
 			"[--authority <authority>]", "[--market <market id>]",
 			"[--name <name>]", "[--description <description>]", "[--url <website url>]", "[--icon <icon uri>]",
-			"[--create-ask <coins>]", "[--create-bid <coins>]",
+			"[--create-ask <coins>]", "[--create-bid <coins>]", "[--create-commitment <coins>]",
 			"[--seller-flat <coins>]", "[--seller-ratios <fee ratios>]",
 			"[--buyer-flat <coins>]", "[--buyer-ratios <fee ratios>]",
-			"[--accepting-orders]", "[--allow-user-settle]",
+			"[--accepting-orders]", "[--allow-user-settle]", "[--accepting-commitments]",
 			"[--access-grants <access grants>]",
-			"[--req-attr-ask <attrs>]", "[--req-attr-bid <attrs>]",
+			"[--req-attr-ask <attrs>]", "[--req-attr-bid <attrs>]", "[--req-attr-commitment <attrs>]",
+			"[--bips <bips>]", "[--denom <denom>]",
 			"[--proposal <json filename>",
 			cli.AuthorityDesc, cli.RepeatableDesc, cli.AccessGrantsDesc, cli.FeeRatioDesc,
 			cli.ProposalFileDesc(&exchange.MsgGovCreateMarketRequest{}),
@@ -1234,10 +1256,11 @@ func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 
 	oneReqFlags := []string{
 		cli.FlagMarket, cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon,
-		cli.FlagCreateAsk, cli.FlagCreateBid,
+		cli.FlagCreateAsk, cli.FlagCreateBid, cli.FlagCreateCommitment,
 		cli.FlagSellerFlat, cli.FlagSellerRatios, cli.FlagBuyerFlat, cli.FlagBuyerRatios,
-		cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAccessGrants,
-		cli.FlagReqAttrAsk, cli.FlagReqAttrBid,
+		cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAcceptingCommitments, cli.FlagAccessGrants,
+		cli.FlagReqAttrAsk, cli.FlagReqAttrBid, cli.FlagReqAttrCommitment,
+		cli.FlagBips, cli.FlagDenom,
 		cli.FlagProposal,
 	}
 	oneReqVal := strings.Join(oneReqFlags, " ")
@@ -1293,6 +1316,12 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 			},
 			ReqAttrCreateAsk: []string{"ask.create"},
 			ReqAttrCreateBid: []string{"bid.create"},
+
+			AcceptingCommitments:     true,
+			FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("elderberry", 5)},
+			CommitmentSettlementBips: 84,
+			IntermediaryDenom:        "fig",
+			ReqAttrCreateCommitment:  []string{"commitment.create"},
 		},
 	}
 	prop := newGovProp(t, fileMsg)
@@ -1326,15 +1355,16 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
 			flags: []string{
 				"--market", "18",
-				"--create-ask", "10fig", "--create-bid", "5grape",
+				"--create-ask", "10fig", "--create-bid", "5grape", "--create-commitment", "7honeydew",
 				"--seller-flat", "12fig", "--seller-ratios", "100prune:1prune",
 				"--buyer-flat", "17fig", "--buyer-ratios", "88plum:3plum",
-				"--accepting-orders", "--allow-user-settle",
+				"--accepting-orders", "--allow-user-settle", "--accepting-commitments",
 				"--access-grants", "addr1:settle+cancel", "--access-grants", "addr2:update+permissions",
-				"--req-attr-ask", "seller.kyc", "--req-attr-bid", "buyer.kyc",
+				"--req-attr-ask", "seller.kyc", "--req-attr-bid", "buyer.kyc", "--req-attr-commitment", "com.kyc",
 				"--name", "Special market", "--description", "This market is special.",
 				"--url", "https://example.com", "--icon", "https://example.com/icon",
 				"--access-grants", "addr3:all",
+				"--bips", "47", "--denom", "raisin",
 			},
 			expMsg: &exchange.MsgGovCreateMarketRequest{
 				Authority: cli.AuthorityAddr.String(),
@@ -1374,6 +1404,12 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 					},
 					ReqAttrCreateAsk: []string{"seller.kyc"},
 					ReqAttrCreateBid: []string{"buyer.kyc"},
+
+					AcceptingCommitments:     true,
+					FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("honeydew", 7)},
+					CommitmentSettlementBips: 47,
+					IntermediaryDenom:        "raisin",
+					ReqAttrCreateCommitment:  []string{"com.kyc"},
 				},
 			},
 		},
@@ -1403,6 +1439,11 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 					AccessGrants:              fileMsg.Market.AccessGrants,
 					ReqAttrCreateAsk:          fileMsg.Market.ReqAttrCreateAsk,
 					ReqAttrCreateBid:          fileMsg.Market.ReqAttrCreateBid,
+					AcceptingCommitments:      fileMsg.Market.AcceptingCommitments,
+					FeeCreateCommitmentFlat:   fileMsg.Market.FeeCreateCommitmentFlat,
+					CommitmentSettlementBips:  fileMsg.Market.CommitmentSettlementBips,
+					IntermediaryDenom:         fileMsg.Market.IntermediaryDenom,
+					ReqAttrCreateCommitment:   fileMsg.Market.ReqAttrCreateCommitment,
 				},
 			},
 		},
@@ -1424,6 +1465,7 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 			cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
 			cli.FlagSellerFlatAdd, cli.FlagSellerFlatRemove, cli.FlagSellerRatiosAdd, cli.FlagSellerRatiosRemove,
 			cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
+			cli.FlagCommitmentAdd, cli.FlagCommitmentRemove, cli.FlagBips, cli.FlagUnsetBips,
 			cli.FlagProposal,
 		},
 		expAnnotations: map[string]map[string][]string{
@@ -1433,10 +1475,12 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 			"--market <market id>", "[--authority <authority>]",
 			"[--ask-add <coins>]", "[--ask-remove <coins>]",
 			"[--bid-add <coins>]", "[--bid-remove <coins>]",
+			"[--commitment-add <coins>]", "[--commitment-remove <coins>]",
 			"[--seller-flat-add <coins>]", "[--seller-flat-remove <coins>]",
 			"[--seller-ratios-add <fee ratios>]", "[--seller-ratios-remove <fee ratios>]",
 			"[--buyer-flat-add <coins>]", "[--buyer-flat-remove <coins>]",
 			"[--buyer-ratios-add <fee ratios>]", "[--buyer-ratios-remove <fee ratios>]",
+			"[--bips <bips>]", "[--unset-bips]",
 			"[--proposal <json filename>",
 			cli.AuthorityDesc, cli.RepeatableDesc, cli.FeeRatioDesc,
 			cli.ProposalFileDesc(&exchange.MsgGovManageFeesRequest{}),
@@ -1447,6 +1491,7 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 		cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
 		cli.FlagSellerFlatAdd, cli.FlagSellerFlatRemove, cli.FlagSellerRatiosAdd, cli.FlagSellerRatiosRemove,
 		cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
+		cli.FlagCommitmentAdd, cli.FlagCommitmentRemove, cli.FlagBips, cli.FlagUnsetBips,
 		cli.FlagProposal,
 	}
 	oneReqVal := strings.Join(oneReqFlags, " ")
@@ -1495,6 +1540,9 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 		RemoveFeeBuyerSettlementRatios: []exchange.FeeRatio{
 			{Price: sdk.NewInt64Coin("keylime", 104), Fee: sdk.NewInt64Coin("keylime", 4)},
 		},
+		AddFeeCreateCommitmentFlat:     []sdk.Coin{sdk.NewInt64Coin("lemon", 13)},
+		RemoveFeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("lime", 14)},
+		SetFeeCommitmentSettlementBips: 15,
 	}
 	prop := newGovProp(t, fileMsg)
 	tx := newTx(t, prop)
@@ -1527,6 +1575,8 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 				"--seller-ratios-add", "101prune:7prune", "--seller-ratios-remove", "101prune:3prune",
 				"--buyer-flat-add", "59prune", "--buyer-flat-remove", "57prune",
 				"--buyer-ratios-add", "107prune:1prune", "--buyer-ratios-remove", "43prune:2prune",
+				"--commitment-add", "20lychee", "--commitment-remove", "21lingonberry",
+				"--bips", "87", "--unset-bips",
 			},
 			expMsg: &exchange.MsgGovManageFeesRequest{
 				Authority:                     cli.AuthorityAddr.String(),
@@ -1551,6 +1601,10 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 				RemoveFeeBuyerSettlementRatios: []exchange.FeeRatio{
 					{Price: sdk.NewInt64Coin("prune", 43), Fee: sdk.NewInt64Coin("prune", 2)},
 				},
+				AddFeeCreateCommitmentFlat:       []sdk.Coin{sdk.NewInt64Coin("lychee", 20)},
+				RemoveFeeCreateCommitmentFlat:    []sdk.Coin{sdk.NewInt64Coin("lingonberry", 21)},
+				SetFeeCommitmentSettlementBips:   87,
+				UnsetFeeCommitmentSettlementBips: true,
 			},
 		},
 		{
@@ -1564,20 +1618,24 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
 			flags:     []string{"--market", "5", "--proposal", propFN},
 			expMsg: &exchange.MsgGovManageFeesRequest{
-				Authority:                       fileMsg.Authority,
-				MarketId:                        5,
-				AddFeeCreateAskFlat:             fileMsg.AddFeeCreateAskFlat,
-				RemoveFeeCreateAskFlat:          fileMsg.RemoveFeeCreateAskFlat,
-				AddFeeCreateBidFlat:             fileMsg.AddFeeCreateBidFlat,
-				RemoveFeeCreateBidFlat:          fileMsg.RemoveFeeCreateBidFlat,
-				AddFeeSellerSettlementFlat:      fileMsg.AddFeeSellerSettlementFlat,
-				RemoveFeeSellerSettlementFlat:   fileMsg.RemoveFeeSellerSettlementFlat,
-				AddFeeSellerSettlementRatios:    fileMsg.AddFeeSellerSettlementRatios,
-				RemoveFeeSellerSettlementRatios: fileMsg.RemoveFeeSellerSettlementRatios,
-				AddFeeBuyerSettlementFlat:       fileMsg.AddFeeBuyerSettlementFlat,
-				RemoveFeeBuyerSettlementFlat:    fileMsg.RemoveFeeBuyerSettlementFlat,
-				AddFeeBuyerSettlementRatios:     fileMsg.AddFeeBuyerSettlementRatios,
-				RemoveFeeBuyerSettlementRatios:  fileMsg.RemoveFeeBuyerSettlementRatios,
+				Authority:                        fileMsg.Authority,
+				MarketId:                         5,
+				AddFeeCreateAskFlat:              fileMsg.AddFeeCreateAskFlat,
+				RemoveFeeCreateAskFlat:           fileMsg.RemoveFeeCreateAskFlat,
+				AddFeeCreateBidFlat:              fileMsg.AddFeeCreateBidFlat,
+				RemoveFeeCreateBidFlat:           fileMsg.RemoveFeeCreateBidFlat,
+				AddFeeSellerSettlementFlat:       fileMsg.AddFeeSellerSettlementFlat,
+				RemoveFeeSellerSettlementFlat:    fileMsg.RemoveFeeSellerSettlementFlat,
+				AddFeeSellerSettlementRatios:     fileMsg.AddFeeSellerSettlementRatios,
+				RemoveFeeSellerSettlementRatios:  fileMsg.RemoveFeeSellerSettlementRatios,
+				AddFeeBuyerSettlementFlat:        fileMsg.AddFeeBuyerSettlementFlat,
+				RemoveFeeBuyerSettlementFlat:     fileMsg.RemoveFeeBuyerSettlementFlat,
+				AddFeeBuyerSettlementRatios:      fileMsg.AddFeeBuyerSettlementRatios,
+				RemoveFeeBuyerSettlementRatios:   fileMsg.RemoveFeeBuyerSettlementRatios,
+				AddFeeCreateCommitmentFlat:       fileMsg.AddFeeCreateCommitmentFlat,
+				RemoveFeeCreateCommitmentFlat:    fileMsg.RemoveFeeCreateCommitmentFlat,
+				SetFeeCommitmentSettlementBips:   fileMsg.SetFeeCommitmentSettlementBips,
+				UnsetFeeCommitmentSettlementBips: fileMsg.UnsetFeeCommitmentSettlementBips,
 			},
 			expErr: "",
 		},
