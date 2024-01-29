@@ -232,6 +232,10 @@ func TestMakeMsgCreateBid(t *testing.T) {
 	}
 }
 
+// TODO[1789]: func TestSetupCmdTxCommitFunds(t *testing.T)
+
+// TODO[1789]: func TestMakeMsgCommitFunds(t *testing.T)
+
 func TestSetupCmdTxCancelOrder(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdTxCancelOrder",

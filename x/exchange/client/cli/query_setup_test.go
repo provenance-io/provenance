@@ -873,21 +873,23 @@ func TestSetupCmdQueryValidateCreateMarket(t *testing.T) {
 		expFlags: []string{
 			cli.FlagAuthority,
 			cli.FlagMarket, cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon,
-			cli.FlagCreateAsk, cli.FlagCreateBid,
+			cli.FlagCreateAsk, cli.FlagCreateBid, cli.FlagCreateCommitment,
 			cli.FlagSellerFlat, cli.FlagSellerRatios, cli.FlagBuyerFlat, cli.FlagBuyerRatios,
-			cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAccessGrants,
-			cli.FlagReqAttrAsk, cli.FlagReqAttrBid,
+			cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAcceptingCommitments, cli.FlagAccessGrants,
+			cli.FlagReqAttrAsk, cli.FlagReqAttrBid, cli.FlagReqAttrCommitment,
+			cli.FlagBips, cli.FlagDenom,
 			cli.FlagProposal,
 		},
 		expInUse: []string{
 			"[--authority <authority>]", "[--market <market id>]",
 			"[--name <name>]", "[--description <description>]", "[--url <website url>]", "[--icon <icon uri>]",
-			"[--create-ask <coins>]", "[--create-bid <coins>]",
+			"[--create-ask <coins>]", "[--create-bid <coins>]", "[--create-commitment <coins>]",
 			"[--seller-flat <coins>]", "[--seller-ratios <fee ratios>]",
 			"[--buyer-flat <coins>]", "[--buyer-ratios <fee ratios>]",
-			"[--accepting-orders]", "[--allow-user-settle]",
+			"[--accepting-orders]", "[--allow-user-settle]", "[--accepting-commitments]",
 			"[--access-grants <access grants>]",
-			"[--req-attr-ask <attrs>]", "[--req-attr-bid <attrs>]",
+			"[--req-attr-ask <attrs>]", "[--req-attr-bid <attrs>]", "[--req-attr-commitment <attrs>]",
+			"[--bips <bips>]", "[--denom <denom>]",
 			"[--proposal <json filename>",
 			cli.AuthorityDesc, cli.RepeatableDesc, cli.AccessGrantsDesc, cli.FeeRatioDesc,
 			cli.ProposalFileDesc(&exchange.MsgGovCreateMarketRequest{}),
@@ -896,10 +898,11 @@ func TestSetupCmdQueryValidateCreateMarket(t *testing.T) {
 
 	oneReqFlags := []string{
 		cli.FlagMarket, cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon,
-		cli.FlagCreateAsk, cli.FlagCreateBid,
+		cli.FlagCreateAsk, cli.FlagCreateBid, cli.FlagCreateCommitment,
 		cli.FlagSellerFlat, cli.FlagSellerRatios, cli.FlagBuyerFlat, cli.FlagBuyerRatios,
-		cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAccessGrants,
-		cli.FlagReqAttrAsk, cli.FlagReqAttrBid,
+		cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAcceptingCommitments, cli.FlagAccessGrants,
+		cli.FlagReqAttrAsk, cli.FlagReqAttrBid, cli.FlagReqAttrCommitment,
+		cli.FlagBips, cli.FlagDenom,
 		cli.FlagProposal,
 	}
 	oneReqVal := strings.Join(oneReqFlags, " ")
@@ -1122,6 +1125,7 @@ func TestSetupCmdQueryValidateManageFees(t *testing.T) {
 			cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
 			cli.FlagSellerFlatAdd, cli.FlagSellerFlatRemove, cli.FlagSellerRatiosAdd, cli.FlagSellerRatiosRemove,
 			cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
+			cli.FlagCommitmentAdd, cli.FlagCommitmentRemove, cli.FlagBips, cli.FlagUnsetBips,
 			cli.FlagProposal,
 		},
 		expAnnotations: map[string]map[string][]string{
@@ -1131,10 +1135,12 @@ func TestSetupCmdQueryValidateManageFees(t *testing.T) {
 			"--market <market id>", "[--authority <authority>]",
 			"[--ask-add <coins>]", "[--ask-remove <coins>]",
 			"[--bid-add <coins>]", "[--bid-remove <coins>]",
+			"[--commitment-add <coins>]", "[--commitment-remove <coins>]",
 			"[--seller-flat-add <coins>]", "[--seller-flat-remove <coins>]",
 			"[--seller-ratios-add <fee ratios>]", "[--seller-ratios-remove <fee ratios>]",
 			"[--buyer-flat-add <coins>]", "[--buyer-flat-remove <coins>]",
 			"[--buyer-ratios-add <fee ratios>]", "[--buyer-ratios-remove <fee ratios>]",
+			"[--bips <bips>]", "[--unset-bips]",
 			"[--proposal <json filename>",
 			cli.AuthorityDesc, cli.RepeatableDesc, cli.FeeRatioDesc,
 			cli.ProposalFileDesc(&exchange.MsgGovManageFeesRequest{}),
@@ -1145,6 +1151,7 @@ func TestSetupCmdQueryValidateManageFees(t *testing.T) {
 		cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
 		cli.FlagSellerFlatAdd, cli.FlagSellerFlatRemove, cli.FlagSellerRatiosAdd, cli.FlagSellerRatiosRemove,
 		cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
+		cli.FlagCommitmentAdd, cli.FlagCommitmentRemove, cli.FlagBips, cli.FlagUnsetBips,
 		cli.FlagProposal,
 	}
 	oneReqVal := strings.Join(oneReqFlags, " ")

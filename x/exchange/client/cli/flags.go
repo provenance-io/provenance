@@ -25,6 +25,7 @@ const (
 	FlagAcceptingOrders      = "accepting-orders"
 	FlagAcceptingCommitments = "accepting-commitments"
 	FlagAccessGrants         = "access-grants"
+	FlagAccount              = "account"
 	FlagAdmin                = "admin"
 	FlagAfter                = "after"
 	FlagAllowUserSettle      = "allow-user-settle"
@@ -83,6 +84,7 @@ const (
 	FlagSettlementFee        = "settlement-fee"
 	FlagSigner               = "signer"
 	FlagSplit                = "split"
+	FlagTag                  = "tag"
 	FlagTo                   = "to"
 	FlagUnsetBips            = "unset-bips"
 	FlagURL                  = "url"
@@ -299,6 +301,21 @@ func ReadCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
 	rv, err := ParseCoins(value)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing --%s as coins: %w", name, err)
+	}
+	return rv, nil
+}
+
+// ReadReqCoinsFlag reads a string flag and converts it into sdk.Coins.
+// If the flag wasn't provided, this returns an error.
+//
+// If the flag is a StringSlice, use ReadFlatFeeFlag.
+func ReadReqCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
+	rv, err := ReadCoinsFlag(flagSet, name)
+	if err != nil {
+		return nil, err
+	}
+	if rv.IsZero() {
+		return nil, fmt.Errorf("missing required --%s flag", name)
 	}
 	return rv, nil
 }
@@ -697,4 +714,112 @@ func ReadFlagStringOrDefault(flagSet *pflag.FlagSet, name string, def string) (s
 		return def, err
 	}
 	return rv, nil
+}
+
+// ParseAccountAmount parses an AccountAmount from the provided string with the format "<account>:<amount>".
+func ParseAccountAmount(val string) (*exchange.AccountAmount, error) {
+	parts := strings.Split(val, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid account-amount %q: expected format <account>:<amount>", val)
+	}
+
+	acct := strings.TrimSpace(parts[0])
+	amountStr := strings.TrimSpace(parts[1])
+	if len(acct) == 0 || len(amountStr) == 0 {
+		return nil, fmt.Errorf("invalid account-amount %q: both an <account> and <amount> are required", val)
+	}
+
+	amount, err := ParseCoins(amountStr)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse %q amount: %w", val, err)
+	}
+
+	return &exchange.AccountAmount{Account: acct, Amount: amount}, nil
+}
+
+// ParseAccountAmounts parses an AccountAmount from each of the provided strings.
+func ParseAccountAmounts(vals []string) ([]exchange.AccountAmount, error) {
+	var errs []error
+	rv := make([]exchange.AccountAmount, 0, len(vals))
+	for _, val := range vals {
+		entry, err := ParseAccountAmount(val)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			rv = append(rv, *entry)
+		}
+	}
+	return rv, errors.Join(errs...)
+}
+
+// ReadFlagAccountAmounts reads a StringSlice flag and converts it into a slice of exchange.AccountAmount.
+// This assumes that the flag was defined with a default of nil or []string{}.
+func ReadFlagAccountAmounts(flagSet *pflag.FlagSet, name string) ([]exchange.AccountAmount, error) {
+	rawVals, err := flagSet.GetStringSlice(name)
+	if len(rawVals) == 0 || err != nil {
+		return nil, err
+	}
+
+	// Slice flags are automatically split on commas. But here, we need commas for separating coin
+	// entries in a coins string. So, add any entries without a colon to the previous entry.
+	vals := make([]string, 0, len(rawVals))
+	for i, val := range rawVals {
+		if i == 0 || strings.Contains(val, ":") {
+			vals = append(vals, val)
+		} else {
+			vals[len(vals)-1] += "," + val
+		}
+	}
+
+	return ParseAccountAmounts(vals)
+}
+
+// ParseNetAssetPrice parses a NetAssetPrice from the provided string with the format "<assets>:<price>".
+func ParseNetAssetPrice(val string) (*exchange.NetAssetPrice, error) {
+	parts := strings.Split(val, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid net-asset-price %q: expected format <assets>:<price>", val)
+	}
+
+	assetsStr := strings.TrimSpace(parts[0])
+	priceStr := strings.TrimSpace(parts[1])
+	if len(assetsStr) == 0 || len(priceStr) == 0 {
+		return nil, fmt.Errorf("invalid net-asset-price %q: both an <assets> and <price> are required", val)
+	}
+
+	assets, err := exchange.ParseCoin(assetsStr)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse %q assets: %w", val, err)
+	}
+	price, err := exchange.ParseCoin(priceStr)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse %q price: %w", val, err)
+	}
+
+	return &exchange.NetAssetPrice{Assets: assets, Price: price}, nil
+}
+
+// ParseNetAssetPrices parses a NetAssetPrice from each of the provided strings.
+func ParseNetAssetPrices(vals []string) ([]exchange.NetAssetPrice, error) {
+	var errs []error
+	rv := make([]exchange.NetAssetPrice, 0, len(vals))
+	for _, val := range vals {
+		entry, err := ParseNetAssetPrice(val)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			rv = append(rv, *entry)
+		}
+	}
+	return rv, errors.Join(errs...)
+}
+
+// ReadFlagNetAssetPrices reads a StringSlice flag and converts it into a slice of exchange.NetAssetPrice.
+// This assumes that the flag was defined with a default of nil or []string{}.
+func ReadFlagNetAssetPrices(flagSet *pflag.FlagSet, name string) ([]exchange.NetAssetPrice, error) {
+	vals, err := flagSet.GetStringSlice(name)
+	if len(vals) == 0 || err != nil {
+		return nil, err
+	}
+	return ParseNetAssetPrices(vals)
 }

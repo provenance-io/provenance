@@ -877,6 +877,70 @@ func TestReadCoinsFlag(t *testing.T) {
 	}
 }
 
+func TestReadReqCoinsFlag(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		expCoins sdk.Coins
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			expErr:   "trying to get string value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagString,
+			expErr:   "missing required --" + flagString + " flag",
+		},
+		{
+			testName: "invalid coins",
+			flags:    []string{"--" + flagString, "2yupcoin,nopecoin"},
+			name:     flagString,
+			expErr:   "error parsing --" + flagString + " as coins: invalid coin expression: \"nopecoin\"",
+		},
+		{
+			testName: "one coin",
+			flags:    []string{"--" + flagString, "2grape"},
+			name:     flagString,
+			expCoins: sdk.NewCoins(sdk.NewInt64Coin("grape", 2)),
+		},
+		{
+			testName: "three coins",
+			flags:    []string{"--" + flagString, "8banana,5apple,14cherry"},
+			name:     flagString,
+			expCoins: sdk.NewCoins(
+				sdk.NewInt64Coin("apple", 5), sdk.NewInt64Coin("banana", 8), sdk.NewInt64Coin("cherry", 14),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(flagString, "", "A string")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var coins sdk.Coins
+			testFunc := func() {
+				coins, err = cli.ReadReqCoinsFlag(flagSet, tc.name)
+			}
+			require.NotPanics(t, testFunc, "ReadReqCoinsFlag(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadReqCoinsFlag(%q) error", tc.name)
+			assert.Equal(t, tc.expCoins.String(), coins.String(), "ReadReqCoinsFlag(%q) coins", tc.name)
+		})
+	}
+}
+
 func TestParseCoins(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -2714,6 +2778,433 @@ func TestReadFlagStringOrDefault(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadFlagStringOrDefault")
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagStringOrDefault error")
 			assert.Equal(t, tc.exp, act, "ReadFlagStringOrDefault result")
+		})
+	}
+}
+
+func TestParseAccountAmount(t *testing.T) {
+	tests := []struct {
+		name   string
+		val    string
+		exp    *exchange.AccountAmount
+		expErr string
+	}{
+		{
+			name:   "empty",
+			val:    "",
+			expErr: "invalid account-amount \"\": expected format <account>:<amount>",
+		},
+		{
+			name:   "no colons",
+			val:    "banana",
+			expErr: "invalid account-amount \"banana\": expected format <account>:<amount>",
+		},
+		{
+			name:   "two colons",
+			val:    "plum:8:123",
+			expErr: "invalid account-amount \"plum:8:123\": expected format <account>:<amount>",
+		},
+		{
+			name:   "empty account",
+			val:    ":444",
+			expErr: "invalid account-amount \":444\": both an <account> and <amount> are required",
+		},
+		{
+			name:   "empty amount",
+			val:    "apple:",
+			expErr: "invalid account-amount \"apple:\": both an <account> and <amount> are required",
+		},
+		{
+			name:   "invalid amount",
+			val:    "apple:banana",
+			expErr: "could not parse \"apple:banana\" amount: invalid coin expression: \"banana\"",
+		},
+		{
+			name: "good, one coin",
+			val:  "cherry:1apple",
+			exp:  &exchange.AccountAmount{Account: "cherry", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 1))},
+		},
+		{
+			name: "good, two coins",
+			val:  "pear:1acorn,2beachnut",
+			exp: &exchange.AccountAmount{
+				Account: "pear",
+				Amount:  sdk.NewCoins(sdk.NewInt64Coin("acorn", 1), sdk.NewInt64Coin("beachnut", 2))},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *exchange.AccountAmount
+			var err error
+			testFunc := func() {
+				actual, err = cli.ParseAccountAmount(tc.val)
+			}
+			require.NotPanics(t, testFunc, "ParseAccountAmount(%q)", tc.val)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseAccountAmount(%q) error", tc.val)
+			if !assert.Equal(t, tc.exp, actual, "ParseAccountAmount(%q) result", tc.val) {
+				t.Logf("Expected: %s:%s", tc.exp.Account, tc.exp.Amount)
+				t.Logf("  Actual: %s:%s", actual.Account, actual.Amount)
+			}
+		})
+	}
+}
+
+func TestParseAccountAmounts(t *testing.T) {
+	tests := []struct {
+		name   string
+		vals   []string
+		exp    []exchange.AccountAmount
+		expErr string
+	}{
+		{
+			name:   "nil",
+			vals:   nil,
+			expErr: "",
+		},
+		{
+			name:   "empty",
+			vals:   []string{},
+			expErr: "",
+		},
+		{
+			name:   "one, bad",
+			vals:   []string{"nope"},
+			expErr: "invalid account-amount \"nope\": expected format <account>:<amount>",
+		},
+		{
+			name: "one, good",
+			vals: []string{"yup:5cherry"},
+			exp:  []exchange.AccountAmount{{Account: "yup", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 5))}},
+		},
+		{
+			name: "three, all good",
+			vals: []string{"first:1apple", "second:2banana", "third:3cherry"},
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 1))},
+				{Account: "second", Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 2))},
+				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 3))},
+			},
+		},
+		{
+			name: "three, first bad",
+			vals: []string{"first", "second:2banana", "third:3cherry"},
+			exp: []exchange.AccountAmount{
+				{Account: "second", Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 2))},
+				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 3))},
+			},
+			expErr: "invalid account-amount \"first\": expected format <account>:<amount>",
+		},
+		{
+			name: "three, second bad",
+			vals: []string{"first:1apple", ":22", "third:3cherry"},
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 1))},
+				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 3))},
+			},
+			expErr: "invalid account-amount \":22\": both an <account> and <amount> are required",
+		},
+		{
+			name: "three, third bad",
+			vals: []string{"first:1apple", "second:2banana", "third:333x"},
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 1))},
+				{Account: "second", Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 2))},
+			},
+			expErr: "could not parse \"third:333x\" amount: invalid coin expression: \"333x\"",
+		},
+		{
+			name: "three, all bad",
+			vals: []string{"first", ":22", "third:333x"},
+			expErr: joinErrs(
+				"invalid account-amount \"first\": expected format <account>:<amount>",
+				"invalid account-amount \":22\": both an <account> and <amount> are required",
+				"could not parse \"third:333x\" amount: invalid coin expression: \"333x\"",
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.exp == nil {
+				tc.exp = []exchange.AccountAmount{}
+			}
+
+			var actual []exchange.AccountAmount
+			var err error
+			testFunc := func() {
+				actual, err = cli.ParseAccountAmounts(tc.vals)
+			}
+			require.NotPanics(t, testFunc, "ParseAccountAmounts(%q)", tc.vals)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseAccountAmounts(%q) error", tc.vals)
+			assertEqualSlices(t, tc.exp, actual, exchange.AccountAmount.String, "ParseAccountAmounts(%q) result", tc.vals)
+		})
+	}
+}
+
+func TestReadFlagAccountAmounts(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		exp      []exchange.AccountAmount
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagStringSlice,
+			expErr:   "",
+		},
+		{
+			testName: "three vals, one bad",
+			flags:    []string{"--" + flagStringSlice, "first:3apple,second:80", "--" + flagStringSlice, "third:777cherry,123durian"},
+			name:     flagStringSlice,
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 3))},
+				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 777), sdk.NewInt64Coin("durian", 123))},
+			},
+			expErr: "could not parse \"second:80\" amount: invalid coin expression: \"80\"",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "A string slice")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actual []exchange.AccountAmount
+			testFunc := func() {
+				actual, err = cli.ReadFlagAccountAmounts(flagSet, tc.name)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagAccountAmounts(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagAccountAmounts(%q) error", tc.name)
+			assertEqualSlices(t, tc.exp, actual, exchange.AccountAmount.String, "ReadFlagAccountAmounts(%q) result", tc.name)
+		})
+	}
+
+}
+
+func TestParseNetAssetPrice(t *testing.T) {
+	tests := []struct {
+		name   string
+		val    string
+		exp    *exchange.NetAssetPrice
+		expErr string
+	}{
+		{
+			name:   "empty",
+			val:    "",
+			expErr: "invalid net-asset-price \"\": expected format <assets>:<price>",
+		},
+		{
+			name:   "no colons",
+			val:    "banana",
+			expErr: "invalid net-asset-price \"banana\": expected format <assets>:<price>",
+		},
+		{
+			name:   "two colons",
+			val:    "plum:8:123",
+			expErr: "invalid net-asset-price \"plum:8:123\": expected format <assets>:<price>",
+		},
+		{
+			name:   "empty assets",
+			val:    ":444plum",
+			expErr: "invalid net-asset-price \":444plum\": both an <assets> and <price> are required",
+		},
+		{
+			name:   "empty price",
+			val:    "2apple:",
+			expErr: "invalid net-asset-price \"2apple:\": both an <assets> and <price> are required",
+		},
+		{
+			name:   "invalid assets",
+			val:    "apple:3plum",
+			expErr: "could not parse \"apple:3plum\" assets: invalid coin expression: \"apple\"",
+		},
+		{
+			name:   "invalid price",
+			val:    "1apple:plum",
+			expErr: "could not parse \"1apple:plum\" price: invalid coin expression: \"plum\"",
+		},
+		{
+			name: "good",
+			val:  "57apple:91plum",
+			exp:  &exchange.NetAssetPrice{Assets: sdk.NewInt64Coin("apple", 57), Price: sdk.NewInt64Coin("plum", 91)},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *exchange.NetAssetPrice
+			var err error
+			testFunc := func() {
+				actual, err = cli.ParseNetAssetPrice(tc.val)
+			}
+			require.NotPanics(t, testFunc, "ParseNetAssetPrice(%q)", tc.val)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseNetAssetPrice(%q) error", tc.val)
+			if !assert.Equal(t, tc.exp, actual, "ParseNetAssetPrice(%q) result", tc.val) {
+				t.Logf("Expected: %s:%s", tc.exp.Assets, tc.exp.Price)
+				t.Logf("  Actual: %s:%s", actual.Assets, actual.Price)
+			}
+		})
+	}
+}
+
+func TestParseNetAssetPrices(t *testing.T) {
+	tests := []struct {
+		name   string
+		vals   []string
+		exp    []exchange.NetAssetPrice
+		expErr string
+	}{
+		{
+			name:   "nil",
+			vals:   nil,
+			expErr: "",
+		},
+		{
+			name:   "empty",
+			vals:   []string{},
+			expErr: "",
+		},
+		{
+			name:   "one, bad",
+			vals:   []string{"nope"},
+			expErr: "invalid net-asset-price \"nope\": expected format <assets>:<price>",
+		},
+		{
+			name: "one, good",
+			vals: []string{"3apple:5plum"},
+			exp:  []exchange.NetAssetPrice{{Assets: sdk.NewInt64Coin("apple", 3), Price: sdk.NewInt64Coin("plum", 5)}},
+		},
+		{
+			name: "three, all good",
+			vals: []string{"1apple:2peach", "3acorn:4plum", "5acai:6pear"},
+			exp: []exchange.NetAssetPrice{
+				{Assets: sdk.NewInt64Coin("apple", 1), Price: sdk.NewInt64Coin("peach", 2)},
+				{Assets: sdk.NewInt64Coin("acorn", 3), Price: sdk.NewInt64Coin("plum", 4)},
+				{Assets: sdk.NewInt64Coin("acai", 5), Price: sdk.NewInt64Coin("pear", 6)},
+			},
+		},
+		{
+			name: "three, first bad",
+			vals: []string{"first", "3acorn:4plum", "5acai:6pear"},
+			exp: []exchange.NetAssetPrice{
+				{Assets: sdk.NewInt64Coin("acorn", 3), Price: sdk.NewInt64Coin("plum", 4)},
+				{Assets: sdk.NewInt64Coin("acai", 5), Price: sdk.NewInt64Coin("pear", 6)},
+			},
+			expErr: "invalid net-asset-price \"first\": expected format <assets>:<price>",
+		},
+		{
+			name: "three, second bad",
+			vals: []string{"1apple:2peach", "second", "5acai:6pear"},
+			exp: []exchange.NetAssetPrice{
+				{Assets: sdk.NewInt64Coin("apple", 1), Price: sdk.NewInt64Coin("peach", 2)},
+				{Assets: sdk.NewInt64Coin("acai", 5), Price: sdk.NewInt64Coin("pear", 6)},
+			},
+			expErr: "invalid net-asset-price \"second\": expected format <assets>:<price>",
+		},
+		{
+			name: "three, third bad",
+			vals: []string{"1apple:2peach", "3acorn:4plum", "third"},
+			exp: []exchange.NetAssetPrice{
+				{Assets: sdk.NewInt64Coin("apple", 1), Price: sdk.NewInt64Coin("peach", 2)},
+				{Assets: sdk.NewInt64Coin("acorn", 3), Price: sdk.NewInt64Coin("plum", 4)},
+			},
+			expErr: "invalid net-asset-price \"third\": expected format <assets>:<price>",
+		},
+		{
+			name: "three, all bad",
+			vals: []string{"first", "second", "third"},
+			expErr: joinErrs(
+				"invalid net-asset-price \"first\": expected format <assets>:<price>",
+				"invalid net-asset-price \"second\": expected format <assets>:<price>",
+				"invalid net-asset-price \"third\": expected format <assets>:<price>",
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.exp == nil {
+				tc.exp = []exchange.NetAssetPrice{}
+			}
+
+			var actual []exchange.NetAssetPrice
+			var err error
+			testFunc := func() {
+				actual, err = cli.ParseNetAssetPrices(tc.vals)
+			}
+			require.NotPanics(t, testFunc, "ParseNetAssetPrices(%q)", tc.vals)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseNetAssetPrices(%q) error", tc.vals)
+			assertEqualSlices(t, tc.exp, actual, exchange.NetAssetPrice.String, "ParseNetAssetPrices(%q) result", tc.vals)
+		})
+	}
+}
+
+func TestReadFlagNetAssetPrices(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		exp      []exchange.NetAssetPrice
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagStringSlice,
+			expErr:   "",
+		},
+		{
+			testName: "three vals, one bad",
+			flags:    []string{"--" + flagStringSlice, "1apple:2peach,3acai", "--" + flagStringSlice, "5acorn:6pear"},
+			name:     flagStringSlice,
+			exp: []exchange.NetAssetPrice{
+				{Assets: sdk.NewInt64Coin("apple", 1), Price: sdk.NewInt64Coin("peach", 2)},
+				{Assets: sdk.NewInt64Coin("acorn", 5), Price: sdk.NewInt64Coin("pear", 6)},
+			},
+			expErr: "invalid net-asset-price \"3acai\": expected format <assets>:<price>",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "A string slice")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actual []exchange.NetAssetPrice
+			testFunc := func() {
+				actual, err = cli.ReadFlagNetAssetPrices(flagSet, tc.name)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagNetAssetPrices(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagNetAssetPrices(%q) error", tc.name)
+			assertEqualSlices(t, tc.exp, actual, exchange.NetAssetPrice.String, "ReadFlagNetAssetPrices(%q) result", tc.name)
 		})
 	}
 }

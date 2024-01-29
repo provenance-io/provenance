@@ -26,6 +26,7 @@ func CmdTx() *cobra.Command {
 	cmd.AddCommand(
 		CmdTxCreateAsk(),
 		CmdTxCreateBid(),
+		CmdTxCommitFunds(),
 		CmdTxCancelOrder(),
 		CmdTxFillBids(),
 		CmdTxFillAsks(),
@@ -70,6 +71,20 @@ func CmdTxCreateBid() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxCreateBid(cmd)
+	return cmd
+}
+
+// CmdTxCommitFunds creates the commit-funds sub-command for the exchange tx command.
+func CmdTxCommitFunds() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "commit",
+		Aliases: []string{"commit-funds"},
+		Short:   "Commit funds to a market",
+		RunE:    genericTxRunE(MakeMsgCommitFunds),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxCommitFunds(cmd)
 	return cmd
 }
 

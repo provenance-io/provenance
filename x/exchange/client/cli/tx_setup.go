@@ -109,6 +109,45 @@ func MakeMsgCreateBid(clientCtx client.Context, flagSet *pflag.FlagSet, _ []stri
 	return msg, errors.Join(errs...)
 }
 
+// SetupCmdTxCommitFunds adds all the flags needed for the MakeMsgCommitFunds.
+func SetupCmdTxCommitFunds(cmd *cobra.Command) {
+	cmd.Flags().String(FlagAccount, "", "The account committing funds (defaults to --from account)")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
+	cmd.Flags().String(FlagAmount, "", "The amount to commit, e.g. 10nhash (required)")
+	cmd.Flags().String(FlagCreationFee, "", "The commitment creation fee, e.g. 10nhash")
+	cmd.Flags().String(FlagTag, "", "The event tag to include in the events with this commitment")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagAccount)
+	MarkFlagsRequired(cmd, FlagMarket, FlagAmount)
+
+	AddUseArgs(cmd,
+		ReqSignerUse(FlagAccount),
+		ReqFlagUse(FlagMarket, "market id"),
+		ReqFlagUse(FlagAmount, "amount"),
+		UseFlagsBreak,
+		OptFlagUse(FlagCreationFee, "creation fee"),
+		OptFlagUse(FlagTo, "event tag"),
+	)
+	AddUseDetails(cmd, ReqSignerDesc(FlagAccount))
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgCommitFunds reads all the SetupCmdTxCommitFunds flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgCommitFunds(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgCommitFundsRequest, error) {
+	msg := &exchange.MsgCommitFundsRequest{}
+
+	errs := make([]error, 5)
+	msg.Account, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagAccount)
+	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
+	msg.Amount, errs[2] = ReadReqCoinsFlag(flagSet, FlagAmount)
+	msg.CreationFee, errs[3] = ReadCoinFlag(flagSet, FlagCreationFee)
+	msg.EventTag, errs[4] = flagSet.GetString(FlagTag)
+
+	return msg, errors.Join(errs...)
+}
+
 // SetupCmdTxCancelOrder adds all the flags needed for the MakeMsgCancelOrder.
 func SetupCmdTxCancelOrder(cmd *cobra.Command) {
 	cmd.Flags().String(FlagSigner, "", "The signer (defaults to --from account)")

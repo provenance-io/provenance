@@ -130,6 +130,8 @@ func (s *CmdTestSuite) TestCmdTxCreateBid() {
 	}
 }
 
+// TODO[1789]: func (s *CmdTestSuite) TestCmdTxCommitFunds()
+
 func (s *CmdTestSuite) TestCmdTxCancelOrder() {
 	tests := []txCmdTestCase{
 		{
