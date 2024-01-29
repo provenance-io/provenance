@@ -10,10 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	simapp "github.com/provenance-io/provenance/app"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
-	"github.com/provenance-io/provenance/x/metadata/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -21,7 +18,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type ScopeKeeperTestSuite struct {
@@ -2545,25 +2547,27 @@ func (s *ScopeKeeperTestSuite) TestSetNetAssetValue() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			ctx := s.FreshCtx()
-			err := s.app.MetadataKeeper.SetNetAssetValue(ctx, tc.scopeID, tc.netAssetValue, tc.source)
-			if tc.expErr == "" {
-				s.Require().NoError(err)
-				s.Assert().Len(ctx.EventManager().Events(), 1, "SetNetAssetValue ")
-				s.Assert().Len(ctx.EventManager().Events()[0].Attributes, 4, "SetNetAssetValue should only have one event")
-				s.Assert().Equal("provenance.metadata.v1.EventSetNetAssetValue", ctx.EventManager().Events()[0].Type, "SetNetAssetValue invalid event type")
-				s.Assert().Equal("price", string(ctx.EventManager().Events()[0].Attributes[0].Key), "SetNetAssetValue invalid event key")
-				s.Assert().Equal("\""+tc.netAssetValue.Price.String()+"\"", string(ctx.EventManager().Events()[0].Attributes[0].Value), "SetNetAssetValue")
-				s.Assert().Equal("scope_id", string(ctx.EventManager().Events()[0].Attributes[1].Key), "SetNetAssetValue invalid event key")
-				s.Assert().Equal("\""+scopeID.String()+"\"", string(ctx.EventManager().Events()[0].Attributes[1].Value), "SetNetAssetValue invalid event value")
-				s.Assert().Equal("source", string(ctx.EventManager().Events()[0].Attributes[2].Key), "SetNetAssetValue invalid event key")
-				s.Assert().Equal("\"test\"", string(ctx.EventManager().Events()[0].Attributes[2].Value), "SetNetAssetValue invalid event value")
-				s.Assert().Equal("volume", string(ctx.EventManager().Events()[0].Attributes[3].Key), "SetNetAssetValue invalid event key")
-
+			var expErrs []string
+			var expEvents sdk.Events
+			if len(tc.expErr) == 0 {
+				event := types.NewEventSetNetAssetValue(scopeID, tc.netAssetValue.Price, "test")
+				eventU, err := sdk.TypedEventToEvent(event)
+				s.Require().NoError(err, "TypedEventToEvent(NewEventSetNetAssetValue)")
+				expEvents = sdk.Events{eventU}
 			} else {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expErr)
+				expErrs = append(expErrs, tc.expErr)
 			}
+
+			em := sdk.NewEventManager()
+			ctx := s.FreshCtx().WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = s.app.MetadataKeeper.SetNetAssetValue(ctx, tc.scopeID, tc.netAssetValue, tc.source)
+			}
+			s.Require().NotPanics(testFunc, "SetNetAssetValue")
+			assertions.AssertErrorContents(s.T(), err, expErrs, "SetNetAssetValue error")
+			actEvents := em.Events()
+			assertions.AssertEqualEvents(s.T(), expEvents, actEvents, "events emitted during SetNetAssetValue")
 		})
 	}
 }
