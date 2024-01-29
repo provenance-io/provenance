@@ -52,7 +52,7 @@ A market can also control whether orders can be created for it.
 When order creation is not allowed, any existing orders can still be settled or cancelled, but no new ones can be made (in that market).
 
 A market can separately control whether funds can be committed to it.
-When commitments are not allowed, any existing commitments can still be settled or cancelled, but no new funds can be committed (to that markert).
+When commitments are not allowed, any existing commitments can still be settled or cancelled, but no new funds can be committed (to that market).
 
 The fees collected by a market are kept in the market's account, and can be accessed using the [MarketWithdraw](03_messages.md#marketwithdraw) endpoint.
 
@@ -82,7 +82,7 @@ Each market manages its own set of [AccessGrants](03_messages.md#accessgrant), w
 * `PERMISSION_SET_IDS`: accounts with this permission can use the [MarketSetOrderExternalID](03_messages.md#marketsetorderexternalid) endpoint for a market.
 * `PERMISSION_CANCEL`: accounts with this permission can use the [CancelOrder](03_messages.md#cancelorder) and [MarketReleaseCommitments](03_messages.md#marketreleasecommitments) endpoints to cancel orders and release commitments in a market.
 * `PERMISSION_WITHDRAW`: accounts with this permission can use the [MarketWithdraw](03_messages.md#marketwithdraw) endpoint for a market.
-* `PERMISSION_UPDATE`: accounts with this permission can use the [MarketUpdateDetails](03_messages.md#marketupdatedetails), [MarketUpdateEnabled](03_messages.md#marketupdateenabled), [MarketUpdateUserSettle](03_messages.md#marketupdateusersettle), [MarketUpdateAcceptingCommitments](03_messages.md#marketupdateacceptingcommitments), and [MarketUpdateIntermediaryDenom](03_messages.md#marketupdateintermediarydenom) endpoints for a market.
+* `PERMISSION_UPDATE`: accounts with this permission can use the [MarketUpdateDetails](03_messages.md#marketupdatedetails), [MarketUpdateAcceptingOrders](03_messages.md#marketupdateacceptingorders), [MarketUpdateUserSettle](03_messages.md#marketupdateusersettle), [MarketUpdateAcceptingCommitments](03_messages.md#marketupdateacceptingcommitments), and [MarketUpdateIntermediaryDenom](03_messages.md#marketupdateintermediarydenom) endpoints for a market.
 * `PERMISSION_PERMISSIONS`: accounts with this permission can use the [MarketManagePermissions](03_messages.md#marketmanagepermissions) endpoint for a market.
 * `PERMISSION_ATTRIBUTES`: accounts with this permission can use the [MarketManageReqAttrs](03_messages.md#marketmanagereqattrs) endpoint for a market.
 
