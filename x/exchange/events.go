@@ -54,6 +54,24 @@ func NewEventOrderExternalIDUpdated(order OrderI) *EventOrderExternalIDUpdated {
 	}
 }
 
+func NewEventFundsCommitted(account string, marketID uint32, amount sdk.Coins, tag string) *EventFundsCommitted {
+	return &EventFundsCommitted{
+		Account:  account,
+		MarketId: marketID,
+		Amount:   amount.String(),
+		Tag:      tag,
+	}
+}
+
+func NewEventCommitmentReleased(account string, marketID uint32, amount sdk.Coins, tag string) *EventCommitmentReleased {
+	return &EventCommitmentReleased{
+		Account:  account,
+		MarketId: marketID,
+		Amount:   amount.String(),
+		Tag:      tag,
+	}
+}
+
 func NewEventMarketWithdraw(marketID uint32, amount sdk.Coins, destination sdk.AccAddress, withdrawnBy string) *EventMarketWithdraw {
 	return &EventMarketWithdraw{
 		MarketId:    marketID,
@@ -70,31 +88,31 @@ func NewEventMarketDetailsUpdated(marketID uint32, updatedBy string) *EventMarke
 	}
 }
 
-// NewEventMarketActiveUpdated returns a new EventMarketEnabled if isActive == true,
-// or a new EventMarketDisabled if isActive == false.
-func NewEventMarketActiveUpdated(marketID uint32, updatedBy string, isActive bool) proto.Message {
-	if isActive {
-		return NewEventMarketEnabled(marketID, updatedBy)
+// NewEventMarketAcceptingOrdersUpdated returns a new EventMarketOrdersEnabled if isAccepting == true,
+// or a new EventMarketOrdersDisabled if isAccepting == false.
+func NewEventMarketAcceptingOrdersUpdated(marketID uint32, updatedBy string, isAccepting bool) proto.Message {
+	if isAccepting {
+		return NewEventMarketOrdersEnabled(marketID, updatedBy)
 	}
-	return NewEventMarketDisabled(marketID, updatedBy)
+	return NewEventMarketOrdersDisabled(marketID, updatedBy)
 }
 
-func NewEventMarketEnabled(marketID uint32, updatedBy string) *EventMarketEnabled {
-	return &EventMarketEnabled{
+func NewEventMarketOrdersEnabled(marketID uint32, updatedBy string) *EventMarketOrdersEnabled {
+	return &EventMarketOrdersEnabled{
 		MarketId:  marketID,
 		UpdatedBy: updatedBy,
 	}
 }
 
-func NewEventMarketDisabled(marketID uint32, updatedBy string) *EventMarketDisabled {
-	return &EventMarketDisabled{
+func NewEventMarketOrdersDisabled(marketID uint32, updatedBy string) *EventMarketOrdersDisabled {
+	return &EventMarketOrdersDisabled{
 		MarketId:  marketID,
 		UpdatedBy: updatedBy,
 	}
 }
 
 // NewEventMarketUserSettleUpdated returns a new EventMarketUserSettleEnabled if isAllowed == true,
-// or a new EventMarketUserSettleDisabled if isActive == false.
+// or a new EventMarketUserSettleDisabled if isAllowed == false.
 func NewEventMarketUserSettleUpdated(marketID uint32, updatedBy string, isAllowed bool) proto.Message {
 	if isAllowed {
 		return NewEventMarketUserSettleEnabled(marketID, updatedBy)
@@ -111,6 +129,36 @@ func NewEventMarketUserSettleEnabled(marketID uint32, updatedBy string) *EventMa
 
 func NewEventMarketUserSettleDisabled(marketID uint32, updatedBy string) *EventMarketUserSettleDisabled {
 	return &EventMarketUserSettleDisabled{
+		MarketId:  marketID,
+		UpdatedBy: updatedBy,
+	}
+}
+
+// NewEventMarketAcceptingCommitmentsUpdated returns a new NewEventMarketCommitmentsEnabled if isAccepting == true,
+// or a new NewEventMarketCommitmentsDisabled if isAccepting == false.
+func NewEventMarketAcceptingCommitmentsUpdated(marketID uint32, updatedBy string, isAccepting bool) proto.Message {
+	if isAccepting {
+		return NewEventMarketCommitmentsEnabled(marketID, updatedBy)
+	}
+	return NewEventMarketCommitmentsDisabled(marketID, updatedBy)
+}
+
+func NewEventMarketCommitmentsEnabled(marketID uint32, updatedBy string) *EventMarketCommitmentsEnabled {
+	return &EventMarketCommitmentsEnabled{
+		MarketId:  marketID,
+		UpdatedBy: updatedBy,
+	}
+}
+
+func NewEventMarketCommitmentsDisabled(marketID uint32, updatedBy string) *EventMarketCommitmentsDisabled {
+	return &EventMarketCommitmentsDisabled{
+		MarketId:  marketID,
+		UpdatedBy: updatedBy,
+	}
+}
+
+func NewEventMarketIntermediaryDenomUpdated(marketID uint32, updatedBy string) *EventMarketIntermediaryDenomUpdated {
+	return &EventMarketIntermediaryDenomUpdated{
 		MarketId:  marketID,
 		UpdatedBy: updatedBy,
 	}

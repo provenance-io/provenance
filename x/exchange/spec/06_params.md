@@ -18,8 +18,8 @@ See also: [Exchange Fees](01_concepts.md#exchange-fees).
 
 ## Params
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/params.proto#L11-L19
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/params.proto#L11-L19
 
 ## DenomSplit
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/params.proto#L21-L28
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/params.proto#L21-L28

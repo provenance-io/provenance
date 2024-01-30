@@ -3,7 +3,10 @@ package keeper_test
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -478,7 +481,7 @@ func (s *TestSuite) TestKeeper_CreateAskOrder() {
 				Assets:   s.coin("35apple"),
 				Price:    s.coin("10peach"),
 			},
-			expErr: "invalid market id: must not be zero",
+			expErr: "invalid market id: cannot be zero",
 		},
 		{
 			name: "market does not exist",
@@ -951,7 +954,7 @@ func (s *TestSuite) TestKeeper_CreateBidOrder() {
 				Assets:   s.coin("35apple"),
 				Price:    s.coin("10peach"),
 			},
-			expErr: "invalid market id: must not be zero",
+			expErr: "invalid market id: cannot be zero",
 		},
 		{
 			name: "market does not exist",
@@ -2949,6 +2952,287 @@ func (s *TestSuite) TestKeeper_IterateAssetOrders() {
 			s.Require().NotPanics(testFunc, "IterateAssetOrders(%q)", tc.assetDenom)
 			s.Assert().Equal(tc.expSeen, seen, "args provided to callback")
 			assertEqualSlice(s, tc.expSeen, seen, orderIterCBArgs.orderIDString, "args provided to callback")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_CancelAllOrdersForMarket() {
+	market3 := exchange.Market{
+		MarketId: 3,
+		AccessGrants: []exchange.AccessGrant{
+			{Address: s.addr1.String(), Permissions: []exchange.Permission{exchange.Permission_cancel}},
+		},
+	}
+	assetDenom, priceDenom := "apple", "prune"
+	bidOrder := func(marketID uint32, orderID uint64) *exchange.Order {
+		return exchange.NewOrder(orderID).WithBid(&exchange.BidOrder{
+			MarketId:   marketID,
+			Buyer:      sdk.AccAddress(fmt.Sprintf("buyer%d_______________", orderID)[:20]).String(),
+			Assets:     sdk.Coin{Denom: assetDenom, Amount: sdkmath.NewInt(500 + int64(orderID))},
+			Price:      sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(1000 + int64(orderID))},
+			ExternalId: fmt.Sprintf("order-%d", orderID),
+		})
+	}
+	bidReleaseHoldArgs := func(orderID uint64) *ReleaseHoldArgs {
+		return &ReleaseHoldArgs{
+			addr:  sdk.AccAddress(fmt.Sprintf("buyer%d_______________", orderID)[:20]),
+			funds: sdk.Coins{sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(1000 + int64(orderID))}},
+		}
+	}
+	askOrder := func(marketID uint32, orderID uint64) *exchange.Order {
+		return exchange.NewOrder(orderID).WithAsk(&exchange.AskOrder{
+			MarketId:   marketID,
+			Seller:     sdk.AccAddress(fmt.Sprintf("seller%d______________", orderID)[:20]).String(),
+			Assets:     sdk.Coin{Denom: assetDenom, Amount: sdkmath.NewInt(500 + int64(orderID))},
+			Price:      sdk.Coin{Denom: priceDenom, Amount: sdkmath.NewInt(1000 + int64(orderID))},
+			ExternalId: fmt.Sprintf("order-%d", orderID),
+		})
+	}
+	askReleaseHoldArgs := func(orderID uint64) *ReleaseHoldArgs {
+		return &ReleaseHoldArgs{
+			addr:  sdk.AccAddress(fmt.Sprintf("seller%d______________", orderID)[:20]),
+			funds: sdk.Coins{sdk.Coin{Denom: assetDenom, Amount: sdkmath.NewInt(500 + int64(orderID))}},
+		}
+	}
+
+	tests := []struct {
+		name         string
+		setup        func() (expKept []*exchange.Order, expDel []*exchange.Order)
+		holdKeeper   *MockHoldKeeper
+		marketID     uint32
+		signer       string
+		expLog       []string
+		expHoldCalls *HoldCalls
+	}{
+		{
+			name:     "no orders in state",
+			marketID: 1,
+			signer:   s.addr1.String(),
+		},
+		{
+			name: "market does not exist",
+			setup: func() ([]*exchange.Order, []*exchange.Order) {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarket(exchange.Market{MarketId: 2})
+				s.requireCreateMarket(exchange.Market{MarketId: 4})
+				store := s.getStore()
+				expKept := s.requireSetOrdersInStore(store,
+					askOrder(1, 1), bidOrder(1, 2),
+					askOrder(2, 3), bidOrder(2, 4),
+					askOrder(4, 5), bidOrder(4, 6),
+				)
+				return expKept, nil
+			},
+			marketID: 3,
+			signer:   s.addr1.String(),
+		},
+		{
+			name: "market does not have any orders",
+			setup: func() ([]*exchange.Order, []*exchange.Order) {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarket(exchange.Market{MarketId: 2})
+				s.requireCreateMarket(market3)
+				s.requireCreateMarket(exchange.Market{MarketId: 4})
+				store := s.getStore()
+				expKept := s.requireSetOrdersInStore(store,
+					askOrder(1, 1), bidOrder(1, 2),
+					askOrder(2, 3), bidOrder(2, 4),
+					askOrder(4, 5), bidOrder(4, 6),
+				)
+				return expKept, nil
+			},
+			marketID: 3,
+			signer:   s.addr1.String(),
+		},
+		{
+			name: "signer does not have permission",
+			setup: func() ([]*exchange.Order, []*exchange.Order) {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarket(exchange.Market{MarketId: 2})
+				s.requireCreateMarket(market3)
+				s.requireCreateMarket(exchange.Market{MarketId: 4})
+				store := s.getStore()
+				expKept := s.requireSetOrdersInStore(store,
+					askOrder(1, 1), bidOrder(1, 2),
+					askOrder(2, 10), bidOrder(2, 20),
+					askOrder(3, 3), bidOrder(3, 33),
+					askOrder(4, 30), bidOrder(4, 35),
+				)
+				return expKept, nil
+			},
+			marketID: 3,
+			signer:   s.addr2.String(),
+			expLog: []string{
+				"ERR 2 error(s) encountered canceling all orders for market 3:",
+				"account " + s.addr2.String() + " does not have permission to cancel order 3",
+				"account " + s.addr2.String() + " does not have permission to cancel order 33 module=x/exchange",
+			},
+		},
+		{
+			name: "market has five orders: signer can cancel",
+			setup: func() ([]*exchange.Order, []*exchange.Order) {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarket(market3)
+				store := s.getStore()
+				expKept := s.requireSetOrdersInStore(store,
+					askOrder(1, 1), bidOrder(1, 2), bidOrder(1, 15), askOrder(1, 25),
+				)
+				expDel := s.requireSetOrdersInStore(store,
+					bidOrder(3, 3), bidOrder(3, 4), askOrder(3, 5), askOrder(3, 16), bidOrder(3, 22),
+				)
+				return expKept, expDel
+			},
+			marketID: 3,
+			signer:   s.addr1.String(),
+		},
+		{
+			name: "market has five orders: signer is authority",
+			setup: func() ([]*exchange.Order, []*exchange.Order) {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarket(market3)
+				store := s.getStore()
+				expKept := s.requireSetOrdersInStore(store,
+					askOrder(1, 1), bidOrder(1, 2), bidOrder(1, 15), askOrder(1, 25),
+				)
+				expDel := s.requireSetOrdersInStore(store,
+					bidOrder(3, 3), bidOrder(3, 4), askOrder(3, 5), askOrder(3, 16), bidOrder(3, 22),
+				)
+				return expKept, expDel
+			},
+			marketID: 3,
+			signer:   s.k.GetAuthority(),
+		},
+		{
+			name: "error cancelling two of five orders",
+			setup: func() ([]*exchange.Order, []*exchange.Order) {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarket(market3)
+				store := s.getStore()
+				expKept := s.requireSetOrdersInStore(store,
+					askOrder(1, 1), bidOrder(1, 2), bidOrder(3, 4),
+					bidOrder(1, 15), askOrder(3, 16), askOrder(1, 25),
+				)
+				expDel := s.requireSetOrdersInStore(store,
+					bidOrder(3, 3), askOrder(3, 5), bidOrder(3, 22),
+				)
+				return expKept, expDel
+			},
+			holdKeeper: NewMockHoldKeeper().WithReleaseHoldResults("", "injected error for 4", "", "injected error for 16"),
+			marketID:   3,
+			signer:     s.k.GetAuthority(),
+			expLog: []string{
+				"ERR 2 error(s) encountered canceling all orders for market 3:",
+				"unable to release hold on order 4 funds: injected error for 4",
+				"unable to release hold on order 16 funds: injected error for 16 module=x/exchange",
+			},
+			expHoldCalls: &HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{
+					bidReleaseHoldArgs(3), bidReleaseHoldArgs(4), askReleaseHoldArgs(5),
+					askReleaseHoldArgs(16), bidReleaseHoldArgs(22),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			var expOrdersLeft, expOrdersCancelled []*exchange.Order
+			if tc.setup != nil {
+				expOrdersLeft, expOrdersCancelled = tc.setup()
+			}
+			sort.Slice(expOrdersLeft, func(i, j int) bool {
+				return expOrdersLeft[i].OrderId < expOrdersLeft[j].OrderId
+			})
+			sort.Slice(expOrdersCancelled, func(i, j int) bool {
+				return expOrdersCancelled[i].OrderId < expOrdersCancelled[j].OrderId
+			})
+			var expKeptMarketOrderIDs []string
+			for _, order := range expOrdersLeft {
+				if order.GetMarketID() == tc.marketID {
+					expKeptMarketOrderIDs = append(expKeptMarketOrderIDs, fmt.Sprintf("%d", order.OrderId))
+				}
+			}
+
+			if tc.expHoldCalls == nil {
+				tc.expHoldCalls = &HoldCalls{}
+				for _, order := range expOrdersCancelled {
+					addr, _ := sdk.AccAddressFromBech32(order.GetOwner())
+					tc.expHoldCalls.ReleaseHold = append(tc.expHoldCalls.ReleaseHold, NewReleaseHoldArgs(addr, order.GetHoldAmount()))
+				}
+			}
+			var expEvents sdk.Events
+			for _, order := range expOrdersCancelled {
+				expEvents = append(expEvents, s.untypeEvent(exchange.NewEventOrderCancelled(order, tc.signer)))
+			}
+
+			if tc.holdKeeper == nil {
+				tc.holdKeeper = NewMockHoldKeeper()
+			}
+			kpr := s.k.WithHoldKeeper(tc.holdKeeper)
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			s.logBuffer.Reset()
+			testFunc := func() {
+				kpr.CancelAllOrdersForMarket(ctx, tc.marketID, tc.signer)
+			}
+			s.Require().NotPanics(testFunc, "CancelAllOrdersForMarket(%d, %q)", tc.marketID, tc.signer)
+
+			outputLog := s.getLogOutput("CancelAllOrdersForMarket(%d, %q)", tc.marketID, tc.signer)
+			actLog := s.splitOutputLog(outputLog)
+			s.Assert().Equal(tc.expLog, actLog, "Lines logged during CancelAllOrdersForMarket(%d, %q)", tc.marketID, tc.signer)
+
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "Events emitted during CancelAllOrdersForMarket(%d, %q)", tc.marketID, tc.signer)
+
+			s.assertHoldKeeperCalls(tc.holdKeeper, *tc.expHoldCalls, "CancelAllOrdersForMarket(%d, %q)", tc.marketID, tc.signer)
+
+			var ordersLeft []*exchange.Order
+			err := s.k.IterateOrders(s.ctx, func(order *exchange.Order) bool {
+				ordersLeft = append(ordersLeft, order)
+				return false
+			})
+			if s.Assert().NoError(err, "IterateOrders") {
+				s.assertEqualOrders(expOrdersLeft, ordersLeft,
+					"orders left in state after CancelAllOrdersForMarket(%d, %q)", tc.marketID, tc.signer)
+			}
+
+			var marketOrderIDs []string
+			s.k.IterateMarketOrders(s.ctx, tc.marketID, func(orderID uint64, _ byte) bool {
+				marketOrderIDs = append(marketOrderIDs, fmt.Sprintf("%d", orderID))
+				return false
+			})
+			s.Assert().Equal(expKeptMarketOrderIDs, marketOrderIDs, "order ids seen during IterateMarketOrders(%d)", tc.marketID)
+
+			cancelledOrderIDs := make([]string, len(expOrdersCancelled))
+			for i, order := range expOrdersCancelled {
+				cancelledOrderIDs[i] = fmt.Sprintf("%d", order.GetOrderID())
+			}
+			for _, unexpOrder := range expOrdersCancelled {
+				extID := unexpOrder.GetExternalID()
+				extIDOrder, _ := s.k.GetOrderByExternalID(s.ctx, tc.marketID, extID)
+				s.Assert().Nil(extIDOrder, "GetOrderByExternalID(%d, %q)", tc.marketID, extID)
+
+				var addr sdk.AccAddress
+				owner := unexpOrder.GetOwner()
+				addr, err = sdk.AccAddressFromBech32(owner)
+				if s.Assert().NoError(err, "AccAddressFromBech32(%q)", owner) {
+					var addrOrderIDs []string
+					s.k.IterateAddressOrders(s.ctx, addr, func(orderID uint64, _ byte) bool {
+						addrOrderIDs = append(addrOrderIDs, fmt.Sprintf("%d", orderID))
+						return false
+					})
+					s.Assert().NotContains(addrOrderIDs, fmt.Sprintf("%d", unexpOrder.OrderId), "IterateAddressOrders results")
+				}
+			}
+
+			var assetOrderIDs []string
+			s.k.IterateAssetOrders(s.ctx, assetDenom, func(orderID uint64, _ byte) bool {
+				assetOrderIDs = append(assetOrderIDs, fmt.Sprintf("%d", orderID))
+				return false
+			})
+			notCancelled := exchange.IntersectionOfAttributes(assetOrderIDs, cancelledOrderIDs)
+			s.Assert().Empty(notCancelled, "IntersectionOfAttributes results that should have been cancelled")
 		})
 	}
 }

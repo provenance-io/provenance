@@ -332,6 +332,7 @@ func (s *CmdTestSuite) TestCmdQueryGetMarket() {
 			args: []string{"market", "420"},
 			expOut: `address: cosmos1dmk5hcws5xfue8rd6pl5lu6uh8jyt9fpqs0kf6
 market:
+  accepting_commitments: true
   accepting_orders: true
   access_grants:
   - address: ` + s.addr1.String() + `
@@ -344,6 +345,7 @@ market:
     - PERMISSION_PERMISSIONS
     - PERMISSION_ATTRIBUTES
   allow_user_settlement: true
+  commitment_settlement_bips: 50
   fee_buyer_settlement_flat:
   - amount: "105"
     denom: peach
@@ -366,6 +368,9 @@ market:
   fee_create_bid_flat:
   - amount: "25"
     denom: peach
+  fee_create_commitment_flat:
+  - amount: "5"
+    denom: peach
   fee_seller_settlement_flat:
   - amount: "100"
     denom: peach
@@ -376,6 +381,7 @@ market:
     price:
       amount: "75"
       denom: peach
+  intermediary_denom: cherry
   market_details:
     description: It's coming; you know it. It has all the fees.
     icon_uri: ""
@@ -386,6 +392,8 @@ market:
   - seller.kyc
   req_attr_create_bid:
   - buyer.kyc
+  req_attr_create_commitment:
+  - committer.kyc
 `,
 		},
 	}

@@ -77,6 +77,30 @@ message EventOrderExternalIDUpdated {
   string external_id = 3;
 }
 
+// EventFundsCommitted is an event emitted when funds are committed to a market.
+message EventFundsCommitted {
+  // account is the bech32 address string of the account.
+  string account = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 2;
+  // amount is the coins string of the newly committed funds.
+  string amount = 3;
+  // tag is the string provided in the message causing this event.
+  string tag = 4;
+}
+
+// EventCommitmentReleased is an event emitted when funds are released from their commitment.
+message EventCommitmentReleased {
+  // account is the bech32 address string of the account.
+  string account = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 2;
+  // amount is the coins string of the funds that were released from commitment.
+  string amount = 3;
+  // tag is the string provided in the message causing this event.
+  string tag = 4;
+}
+
 // EventMarketWithdraw is an event emitted when a withdrawal of a market's collected fees is made.
 message EventMarketWithdraw {
   // market_id is the numerical identifier of the market.
@@ -98,7 +122,9 @@ message EventMarketDetailsUpdated {
 }
 
 // EventMarketEnabled is an event emitted when a market is enabled.
+// Deprecated: This event is no longer used. It is replaced with EventMarketOrdersEnabled.
 message EventMarketEnabled {
+  option deprecated = true;
   // market_id is the numerical identifier of the market.
   uint32 market_id = 1;
   // updated_by is the account that enabled the market.
@@ -106,10 +132,28 @@ message EventMarketEnabled {
 }
 
 // EventMarketDisabled is an event emitted when a market is disabled.
+// Deprecated: This event is no longer used. It is replaced with EventMarketOrdersDisabled.
 message EventMarketDisabled {
+  option deprecated = true;
   // market_id is the numerical identifier of the market.
   uint32 market_id = 1;
   // updated_by is the account that disabled the market.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketOrdersEnabled is an event emitted when a market enables order creation.
+message EventMarketOrdersEnabled {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the accepting_orders option.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketOrdersEnabled is an event emitted when a market disables order creation.
+message EventMarketOrdersDisabled {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the accepting_orders option.
   string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -126,6 +170,31 @@ message EventMarketUserSettleDisabled {
   // market_id is the numerical identifier of the market.
   uint32 market_id = 1;
   // updated_by is the account that updated the user_settle option.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketCommitmentsEnabled is an event emitted when a market's accepting_commitments option is enabled.
+message EventMarketCommitmentsEnabled {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the accepting_commitments option.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketCommitmentsDisabled is an event emitted when a market's accepting_commitments option is disabled.
+message EventMarketCommitmentsDisabled {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the accepting_commitments option.
+  string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventMarketIntermediaryDenomUpdated is an event emitted when a market updates its
+// commitment_settlement_intermediary_denom field.
+message EventMarketIntermediaryDenomUpdated {
+  // market_id is the numerical identifier of the market.
+  uint32 market_id = 1;
+  // updated_by is the account that updated the intermediary denom.
   string updated_by = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 

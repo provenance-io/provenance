@@ -17,6 +17,13 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
+func TestMaxBips(t *testing.T) {
+	// The MaxBips should never be changed.
+	// But if it is changed for some reason, it can never be more than 100%.
+	absoluteMax := uint32(10_000)
+	assert.LessOrEqual(t, MaxBips, absoluteMax)
+}
+
 func TestMarket_Validate(t *testing.T) {
 	coins := func(coins string) sdk.Coins {
 		rv, err := sdk.ParseCoinsNormalized(coins)
@@ -68,6 +75,12 @@ func TestMarket_Validate(t *testing.T) {
 				},
 				ReqAttrCreateAsk: []string{"kyc.ask.path", "*.ask.some.other.path"},
 				ReqAttrCreateBid: []string{"kyc.bid.path", "*.bid.some.other.path"},
+
+				AcceptingCommitments:     true,
+				FeeCreateCommitmentFlat:  coins("27nnibbler,3mfry"),
+				CommitmentSettlementBips: 88,
+				IntermediaryDenom:        "mleela",
+				ReqAttrCreateCommitment:  []string{"kyc.com.path", "*.com.some.other.path"},
 			},
 			expErr: nil,
 		},
@@ -138,6 +151,26 @@ func TestMarket_Validate(t *testing.T) {
 			expErr: []string{`invalid create-bid required attribute "this-attr-grrrr"`},
 		},
 		{
+			name:   "invalid fee create-commitment flat",
+			market: Market{FeeCreateCommitmentFlat: sdk.Coins{coin(-1, "leela")}},
+			expErr: []string{`invalid create-commitment flat fee option "-1leela": negative coin amount: -1`},
+		},
+		{
+			name:   "invalid commitment settlement bips",
+			market: Market{CommitmentSettlementBips: 10_001},
+			expErr: []string{"invalid commitment settlement bips 10001: exceeds max of 10000"},
+		},
+		{
+			name:   "invalid intermediary denom",
+			market: Market{IntermediaryDenom: "123bad"},
+			expErr: []string{"invalid intermediary denom: invalid denom: 123bad"},
+		},
+		{
+			name:   "invalid commitment required attributes",
+			market: Market{ReqAttrCreateCommitment: []string{"this-attr-waaaaaah"}},
+			expErr: []string{`invalid create-commitment required attribute "this-attr-waaaaaah"`},
+		},
+		{
 			name: "multiple errors",
 			market: Market{
 				MarketDetails:             MarketDetails{Name: strings.Repeat("n", MaxName+1)},
@@ -150,6 +183,10 @@ func TestMarket_Validate(t *testing.T) {
 				AccessGrants:              []AccessGrant{{Address: "bad_addr", Permissions: AllPermissions()}},
 				ReqAttrCreateAsk:          []string{"this-attr-is-bad"},
 				ReqAttrCreateBid:          []string{"this-attr-grrrr"},
+				FeeCreateCommitmentFlat:   sdk.Coins{coin(-1, "leela")},
+				CommitmentSettlementBips:  10_001,
+				IntermediaryDenom:         "123bad",
+				ReqAttrCreateCommitment:   []string{"this-attr-waaaaaah"},
 			},
 			expErr: []string{
 				fmt.Sprintf("name length %d exceeds maximum length of %d", MaxName+1, MaxName),
@@ -162,6 +199,9 @@ func TestMarket_Validate(t *testing.T) {
 				`invalid access grant: invalid address "bad_addr": decoding bech32 failed: invalid separator index -1`,
 				`invalid create-ask required attribute "this-attr-is-bad"`,
 				`invalid create-bid required attribute "this-attr-grrrr"`,
+				`invalid create-commitment flat fee option "-1leela": negative coin amount: -1`,
+				"invalid commitment settlement bips 10001: exceeds max of 10000",
+				`invalid create-commitment required attribute "this-attr-waaaaaah"`,
 			},
 		},
 	}
@@ -4418,6 +4458,72 @@ func TestIsReqAttrMatch(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			isMatch := IsReqAttrMatch(tc.reqAttr, tc.accAttr)
 			assert.Equal(t, tc.exp, isMatch, "IsReqAttrMatch(%q, %q)", tc.reqAttr, tc.accAttr)
+		})
+	}
+}
+
+func TestValidateBips(t *testing.T) {
+	tests := []struct {
+		name   string
+		bips   uint32
+		expErr bool
+	}{
+		{name: "zero", bips: 0, expErr: false},
+		{name: "one", bips: 1, expErr: false},
+		{name: "five hundred", bips: 500, expErr: false},
+		{name: "ten thousand", bips: 10_000, expErr: false},
+		{name: "ten thousand one", bips: 10_001, expErr: true},
+		{name: "one million", bips: 1_000_000, expErr: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var exp string
+			if tc.expErr {
+				exp = fmt.Sprintf("invalid %s bips %d: exceeds max of %d", tc.name, tc.bips, MaxBips)
+			}
+
+			var err error
+			testFunc := func() {
+				err = ValidateBips(tc.name, tc.bips)
+			}
+			require.NotPanics(t, testFunc, "ValidateBips(%d)", tc.bips)
+			assertions.AssertErrorValue(t, err, exp, "ValidateBips(%d) result", tc.bips)
+		})
+	}
+}
+
+func TestValidateIntermediaryDenom(t *testing.T) {
+	tests := []struct {
+		name   string
+		denom  string
+		expErr string
+	}{
+		{
+			name:   "empty denom",
+			denom:  "",
+			expErr: "",
+		},
+		{
+			name:   "invalid",
+			denom:  "x",
+			expErr: "invalid intermediary denom: invalid denom: x",
+		},
+		{
+			name:   "okay",
+			denom:  "nhash",
+			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = ValidateIntermediaryDenom(tc.denom)
+			}
+			require.NotPanics(t, testFunc, "ValidateIntermediaryDenom(%q)", tc.denom)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateIntermediaryDenom(%q) result", tc.denom)
 		})
 	}
 }

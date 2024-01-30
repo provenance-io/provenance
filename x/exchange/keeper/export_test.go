@@ -54,6 +54,11 @@ func (k Keeper) GetOrderStoreKeyValue(order exchange.Order) ([]byte, []byte, err
 	return k.getOrderStoreKeyValue(order)
 }
 
+// AddCommitmentsUnsafe is a test-only exposure of addCommitmentsUnsafe.
+func (k Keeper) AddCommitmentsUnsafe(ctx sdk.Context, marketID uint32, toAdd []exchange.AccountAmount, eventTag string) error {
+	return k.addCommitmentsUnsafe(ctx, marketID, toAdd, eventTag)
+}
+
 var (
 	// DeleteAll is a test-only exposure of deleteAll.
 	DeleteAll = deleteAll
@@ -81,6 +86,8 @@ var (
 	SetCreateAskFlatFees = setCreateAskFlatFees
 	// SetCreateBidFlatFees is a test-only exposure of setCreateBidFlatFees.
 	SetCreateBidFlatFees = setCreateBidFlatFees
+	// SetCreateCommitmentFlatFees is a test-only exposure of setCreateCommitmentFlatFees.
+	SetCreateCommitmentFlatFees = setCreateCommitmentFlatFees
 	// SetSellerSettlementFlatFees is a test-only exposure of setSellerSettlementFlatFees.
 	SetSellerSettlementFlatFees = setSellerSettlementFlatFees
 	// SetBuyerSettlementFlatFees is a test-only exposure of setBuyerSettlementFlatFees.
@@ -89,16 +96,24 @@ var (
 	SetSellerSettlementRatios = setSellerSettlementRatios
 	// SetBuyerSettlementRatios is a test-only exposure of setBuyerSettlementRatios.
 	SetBuyerSettlementRatios = setBuyerSettlementRatios
-	// SetMarketActive is a test-only exposure of setMarketActive.
-	SetMarketActive = setMarketActive
+	// SetCommitmentSettlementBips is a test-only exposure of setCommitmentSettlementBips.
+	SetCommitmentSettlementBips = setCommitmentSettlementBips
+	// SetIntermediaryDenom is a test-only exposure of setIntermediaryDenom.
+	SetIntermediaryDenom = setIntermediaryDenom
+	// SetMarketAcceptingOrders is a test-only exposure of setMarketAcceptingOrders.
+	SetMarketAcceptingOrders = setMarketAcceptingOrders
 	// SetUserSettlementAllowed is a test-only exposure of setUserSettlementAllowed.
 	SetUserSettlementAllowed = setUserSettlementAllowed
+	// SetMarketAcceptingCommitments is a test-only exposure of setMarketAcceptingCommitments.
+	SetMarketAcceptingCommitments = setMarketAcceptingCommitments
 	// GrantPermissions is a test-only exposure of grantPermissions.
 	GrantPermissions = grantPermissions
 	// SetReqAttrsAsk is a test-only exposure of setReqAttrsAsk.
 	SetReqAttrsAsk = setReqAttrsAsk
 	// SetReqAttrsBid is a test-only exposure of setReqAttrsBid.
 	SetReqAttrsBid = setReqAttrsBid
+	// SetReqAttrsCommitment is a test-only exposure of setReqAttrsCommitment.
+	SetReqAttrsCommitment = setReqAttrsCommitment
 	// StoreMarket is a test-only exposure of storeMarket.
 	StoreMarket = storeMarket
 
@@ -110,4 +125,7 @@ var (
 	CreateConstantIndexEntries = createConstantIndexEntries
 	// CreateMarketExternalIDToOrderEntry is a test-only exposure of createMarketExternalIDToOrderEntry.
 	CreateMarketExternalIDToOrderEntry = createMarketExternalIDToOrderEntry
+
+	// SetCommitmentAmount is a test-only exposure of setCommitmentAmount.
+	SetCommitmentAmount = setCommitmentAmount
 )

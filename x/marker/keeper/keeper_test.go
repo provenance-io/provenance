@@ -26,6 +26,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
@@ -1604,6 +1605,117 @@ func TestAddRemoveSendDeny(t *testing.T) {
 			for _, pair := range tc.pairs {
 				isSendDeny := app.MarkerKeeper.IsSendDeny(ctx, pair.marker, pair.sendDeny)
 				require.False(t, isSendDeny, "should not have entry for removed pair")
+			}
+		})
+	}
+}
+
+func TestGetNetAssetValue(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.NewContext(false, tmproto.Header{})
+
+	admin := sdk.AccAddress("admin_account_______")
+	makeMarker := func(denom string, navs ...types.NetAssetValue) types.MarkerAccountI {
+		markerAddr := types.MustGetMarkerAddress(denom)
+		markerAcc := types.NewMarkerAccount(
+			authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
+			sdk.NewInt64Coin(denom, 1_000_000_000),
+			admin,
+			[]types.AccessGrant{{
+				Address: admin.String(),
+				Permissions: []types.Access{
+					types.Access_Transfer,
+					types.Access_Mint, types.Access_Burn, types.Access_Deposit,
+					types.Access_Withdraw, types.Access_Delete, types.Access_Admin,
+				},
+			}},
+			types.StatusProposed,
+			types.MarkerType_RestrictedCoin,
+			true,
+			true,
+			true,
+			[]string{},
+		)
+
+		require.NoError(t, app.MarkerKeeper.AddSetNetAssetValues(ctx, markerAcc, navs, "initial"), "AddSetNetAssetValues %s", denom)
+		require.NoError(t, app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, markerAcc), "AddFinalizeAndActivateMarker %s", denom)
+		return markerAcc
+	}
+
+	cherryUsdNav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 25), 1)
+	cherryAcc := makeMarker("cherry", cherryUsdNav)
+
+	appleUsdNav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 50_000), 1_000_000)
+	appleCherryNav := types.NewNetAssetValue(sdk.NewInt64Coin("cherry", 57), 7777)
+	appleAcc := makeMarker("apple", appleUsdNav, appleCherryNav)
+
+	require.NoError(t, app.MarkerKeeper.SetNetAssetValue(ctx, appleAcc, appleCherryNav, "test setup"), "AddSetNetAssetValues apple cherry")
+
+	// Put a bad cherry -> durian entry in state.
+	app.MarkerKeeper.GetStore(ctx).Set(types.NetAssetValueKey(cherryAcc.GetAddress(), "durian"), []byte{255, 255})
+
+	tests := []struct {
+		name        string
+		markerDenom string
+		priceDenom  string
+		expNav      *types.NetAssetValue
+		expErr      string
+	}{
+		{
+			name:        "invalid marker denom",
+			markerDenom: "x",
+			priceDenom:  types.UsdDenom,
+			expNav:      nil,
+			expErr:      "could not get marker \"x\" address: invalid denom: x",
+		},
+		{
+			name:        "no entry: cherry apple",
+			markerDenom: "cherry",
+			priceDenom:  "apple",
+			expNav:      nil,
+			expErr:      "",
+		},
+		{
+			name:        "bad entry: cherry durian",
+			markerDenom: "cherry",
+			priceDenom:  "durian",
+			expNav:      nil,
+			expErr:      "could not read nav for marker \"cherry\" with price denom \"durian\": unexpected EOF",
+		},
+		{
+			name:        "good entry: apple usd",
+			markerDenom: "apple",
+			priceDenom:  types.UsdDenom,
+			expNav:      &appleUsdNav,
+		},
+		{
+			name:        "good entry: apple cherry",
+			markerDenom: "apple",
+			priceDenom:  "cherry",
+			expNav:      &appleCherryNav,
+		},
+		{
+			name:        "good entry: cherry usd",
+			markerDenom: "cherry",
+			priceDenom:  types.UsdDenom,
+			expNav:      &cherryUsdNav,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var nav *types.NetAssetValue
+			var err error
+			testFunc := func() {
+				nav, err = app.MarkerKeeper.GetNetAssetValue(ctx, tc.markerDenom, tc.priceDenom)
+			}
+			require.NotPanics(t, testFunc, "GetNetAssetValue(%q, %q)", tc.markerDenom, tc.priceDenom)
+			assertions.AssertErrorValue(t, err, tc.expErr, "GetNetAssetValue(%q, %q) error", tc.markerDenom, tc.priceDenom)
+			if tc.expNav == nil {
+				assert.Nil(t, nav, "GetNetAssetValue(%q, %q) nav", tc.markerDenom, tc.priceDenom)
+			} else if assert.NotNil(t, nav, "GetNetAssetValue(%q, %q) nav", tc.markerDenom, tc.priceDenom) {
+				assert.Equal(t, tc.expNav.Price.String(), nav.Price.String(), "nav price")
+				assert.Equal(t, tc.expNav.Volume, nav.Volume, "nav volume")
 			}
 		})
 	}

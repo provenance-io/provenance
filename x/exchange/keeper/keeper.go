@@ -21,10 +21,10 @@ import (
 )
 
 var (
-	// OneInt is an sdkmath.Int of 1.
-	OneInt = sdkmath.NewInt(1)
 	// TenKInt is an sdkmath.Int of 10,000.
 	TenKInt = sdkmath.NewInt(10_000)
+	// TwentyKInt is an sdkmath.Int of 20,000.
+	TwentyKInt = sdkmath.NewInt(20_000)
 )
 
 // Keeper provides the exchange module's state store interactions.
@@ -138,9 +138,9 @@ func deleteAll(store sdk.KVStore, pre []byte) {
 // iterate iterates over all the entries in the store with the given prefix.
 // The key provided to the callback will NOT have the provided prefix; it will be everything after it.
 // The callback should return false to continue iteration, or true to stop.
-func iterate(store sdk.KVStore, pre []byte, cb func(key, value []byte) bool) {
+func iterate(store sdk.KVStore, keyPrefix []byte, cb func(keySuffix, value []byte) bool) {
 	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
-	pStore := prefix.NewStore(store, pre)
+	pStore := prefix.NewStore(store, keyPrefix)
 	iter := pStore.Iterator(nil, nil)
 	defer iter.Close()
 
@@ -159,8 +159,8 @@ func (k Keeper) getStore(ctx sdk.Context) sdk.KVStore {
 // iterate iterates over all the entries in the store with the given prefix.
 // The key provided to the callback will NOT have the provided prefix; it will be everything after it.
 // The callback should return false to continue iteration, or true to stop.
-func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) bool) {
-	iterate(k.getStore(ctx), pre, cb)
+func (k Keeper) iterate(ctx sdk.Context, keyPrefix []byte, cb func(keySuffix, value []byte) bool) {
+	iterate(k.getStore(ctx), keyPrefix, cb)
 }
 
 // DoTransfer facilitates a transfer of things using the bank module.
@@ -203,10 +203,7 @@ func (k Keeper) CalculateExchangeSplit(ctx sdk.Context, feeAmt sdk.Coins) sdk.Co
 			continue
 		}
 
-		splitAmt, splitRem := exchange.QuoRemInt(coin.Amount.Mul(sdkmath.NewInt(split)), TenKInt)
-		if !splitRem.IsZero() {
-			splitAmt = splitAmt.Add(OneInt)
-		}
+		splitAmt := exchange.QuoIntRoundUp(coin.Amount.Mul(sdkmath.NewInt(split)), TenKInt)
 		exchangeAmt = append(exchangeAmt, sdk.NewCoin(coin.Denom, splitAmt))
 	}
 	if exchangeAmt.IsZero() {

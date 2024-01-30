@@ -7,6 +7,7 @@ option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
 import "gogoproto/gogo.proto";
+import "provenance/exchange/v1/commitments.proto";
 import "provenance/exchange/v1/market.proto";
 import "provenance/exchange/v1/orders.proto";
 import "provenance/exchange/v1/params.proto";
@@ -30,4 +31,7 @@ message GenesisState {
 
   // last_order_id is the value of the last order id created.
   uint64 last_order_id = 5;
+
+  // commitments are all the of the commitments to create at genesis.
+  repeated Commitment commitments = 6 [(gogoproto.nullable) = false];
 }

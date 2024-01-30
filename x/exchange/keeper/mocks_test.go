@@ -665,17 +665,19 @@ func (s *TestSuite) getHoldCoinArgsString(a *GetHoldCoinArgs) string {
 
 var _ exchange.MarkerKeeper = (*MockMarkerKeeper)(nil)
 
-// MockMarkerKeeper satisfies the exchange.MockMarkerKeeper interface but just records the calls and allows dictation of results.
+// MockMarkerKeeper satisfies the exchange.MarkerKeeper interface but just records the calls and allows dictation of results.
 type MockMarkerKeeper struct {
 	Calls                            MarkerCalls
 	GetMarkerResultsMap              map[string]*GetMarkerResult
 	AddSetNetAssetValuesResultsQueue []string
+	GetNetAssetValueMap              map[string]map[string]*GetNetAssetValueResult
 }
 
 // MarkerCalls contains all the calls that the mock marker keeper makes.
 type MarkerCalls struct {
 	GetMarker            []sdk.AccAddress
 	AddSetNetAssetValues []*AddSetNetAssetValuesArgs
+	GetNetAssetValue     []*GetNetAssetValueArgs
 }
 
 // AddSetNetAssetValuesArgs is a record of a call that is made to AddSetNetAssetValues.
@@ -685,10 +687,22 @@ type AddSetNetAssetValuesArgs struct {
 	source         string
 }
 
+// GetNetAssetValueArgs is a record of a call that is made to GetNetAssetValue.
+type GetNetAssetValueArgs struct {
+	markerDenom string
+	priceDenom  string
+}
+
 // GetMarkerResult contains the result args to return for a GetMarker call.
 type GetMarkerResult struct {
 	account markertypes.MarkerAccountI
 	err     error
+}
+
+// GetNetAssetValueResult contains the result args to return for a GetNetAssetValue call.
+type GetNetAssetValueResult struct {
+	nav *markertypes.NetAssetValue
+	err error
 }
 
 // NewMockMarkerKeeper creates a new empty MockMarkerKeeper.
@@ -697,6 +711,7 @@ type GetMarkerResult struct {
 func NewMockMarkerKeeper() *MockMarkerKeeper {
 	return &MockMarkerKeeper{
 		GetMarkerResultsMap: make(map[string]*GetMarkerResult),
+		GetNetAssetValueMap: make(map[string]map[string]*GetNetAssetValueResult),
 	}
 }
 
@@ -722,6 +737,31 @@ func (k *MockMarkerKeeper) WithAddSetNetAssetValuesResults(errs ...string) *Mock
 	return k
 }
 
+// WithGetNetAssetValueResult sets up this mock keepr to return the provided nav result when GetNetAssetValue is called for the given denoms.
+// This method both updates the receiver and returns it.
+func (k *MockMarkerKeeper) WithGetNetAssetValueResult(markerCoin, priceCoin sdk.Coin) *MockMarkerKeeper {
+	if k.GetNetAssetValueMap[markerCoin.Denom] == nil {
+		k.GetNetAssetValueMap[markerCoin.Denom] = make(map[string]*GetNetAssetValueResult)
+	}
+	k.GetNetAssetValueMap[markerCoin.Denom][priceCoin.Denom] = &GetNetAssetValueResult{
+		nav: &markertypes.NetAssetValue{
+			Price:  priceCoin,
+			Volume: markerCoin.Amount.Uint64(),
+		},
+	}
+	return k
+}
+
+// WithGetNetAssetValueError sets up this mock keepr to return the provided error when GetNetAssetValue is called for the given denoms.
+// This method both updates the receiver and returns it.
+func (k *MockMarkerKeeper) WithGetNetAssetValueError(markerDenom, priceDenom, errMsg string) *MockMarkerKeeper {
+	if k.GetNetAssetValueMap[markerDenom] == nil {
+		k.GetNetAssetValueMap[markerDenom] = make(map[string]*GetNetAssetValueResult)
+	}
+	k.GetNetAssetValueMap[markerDenom][priceDenom] = &GetNetAssetValueResult{err: errors.New(errMsg)}
+	return k
+}
+
 func (k *MockMarkerKeeper) GetMarker(_ sdk.Context, address sdk.AccAddress) (markertypes.MarkerAccountI, error) {
 	k.Calls.GetMarker = append(k.Calls.GetMarker, address)
 	if rv, found := k.GetMarkerResultsMap[string(address)]; found {
@@ -742,6 +782,20 @@ func (k *MockMarkerKeeper) AddSetNetAssetValues(_ sdk.Context, marker markertype
 	return err
 }
 
+func (k *MockMarkerKeeper) GetNetAssetValue(_ sdk.Context, markerDenom, priceDenom string) (*markertypes.NetAssetValue, error) {
+	k.Calls.GetNetAssetValue = append(k.Calls.GetNetAssetValue, &GetNetAssetValueArgs{
+		markerDenom: markerDenom,
+		priceDenom:  priceDenom,
+	})
+	var nav *markertypes.NetAssetValue
+	var err error
+	if k.GetNetAssetValueMap != nil && k.GetNetAssetValueMap[markerDenom] != nil && k.GetNetAssetValueMap[markerDenom][priceDenom] != nil {
+		nav = k.GetNetAssetValueMap[markerDenom][priceDenom].nav
+		err = k.GetNetAssetValueMap[markerDenom][priceDenom].err
+	}
+	return nav, err
+}
+
 // assertGetMarkerCalls asserts that a mock keeper's Calls.GetMarker match the provided expected calls.
 func (s *TestSuite) assertGetMarkerCalls(mk *MockMarkerKeeper, expected []sdk.AccAddress, msg string, args ...interface{}) bool {
 	s.T().Helper()
@@ -756,11 +810,19 @@ func (s *TestSuite) assertAddSetNetAssetValuesCalls(mk *MockMarkerKeeper, expect
 		msg+" AddSetNetAssetValues calls", args...)
 }
 
+// assertGetNetAssetValueCalls asserts that a mock keeper's Calls.GetNetAssetValueArgs match the provided expected calls.
+func (s *TestSuite) assertGetNetAssetValueCalls(mk *MockMarkerKeeper, expected []*GetNetAssetValueArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.GetNetAssetValue, s.getNetAssetValueArgsString,
+		msg+" GetNetAssetValue calls", args...)
+}
+
 // assertMarkerKeeperCalls asserts that all the calls made to a mock marker keeper match the provided expected calls.
 func (s *TestSuite) assertMarkerKeeperCalls(mk *MockMarkerKeeper, expected MarkerCalls, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	rv := s.assertGetMarkerCalls(mk, expected.GetMarker, msg, args...)
-	return s.assertAddSetNetAssetValuesCalls(mk, expected.AddSetNetAssetValues, msg, args...) && rv
+	rv = s.assertAddSetNetAssetValuesCalls(mk, expected.AddSetNetAssetValues, msg, args...) && rv
+	return s.assertGetNetAssetValueCalls(mk, expected.GetNetAssetValue, msg, args...) && rv
 }
 
 // NewAddSetNetAssetValuesArgs creates a new record of args provided to a call to AddSetNetAssetValues.
@@ -778,4 +840,20 @@ func (s *TestSuite) getAddSetNetAssetValuesArgsDenom(args *AddSetNetAssetValuesA
 		return args.marker.GetDenom()
 	}
 	return ""
+}
+
+// getNetAssetValueArgsString returns a string representation of the given GetNetAssetValueArgs.
+func (s *TestSuite) getNetAssetValueArgsString(args *GetNetAssetValueArgs) string {
+	if args == nil {
+		return "<nil>"
+	}
+	md := args.markerDenom
+	if len(md) == 0 {
+		md = `""`
+	}
+	pd := args.priceDenom
+	if len(pd) == 0 {
+		pd = `""`
+	}
+	return fmt.Sprintf("%q->%q", md, pd)
 }

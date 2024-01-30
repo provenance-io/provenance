@@ -5,6 +5,10 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 // This file is available only to unit tests and exposes private things
 // so that they can be used in unit tests.
 
+func (k Keeper) GetStore(ctx sdk.Context) sdk.KVStore {
+	return ctx.KVStore(k.storeKey)
+}
+
 // GetMarkerModuleAddr is a TEST ONLY exposure of the markerModuleAddr value.
 func (k Keeper) GetMarkerModuleAddr() sdk.AccAddress {
 	return k.markerModuleAddr

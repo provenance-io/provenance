@@ -418,6 +418,152 @@ func (m *EventOrderExternalIDUpdated) GetExternalId() string {
 	return ""
 }
 
+// EventFundsCommitted is an event emitted when funds are committed to a market.
+type EventFundsCommitted struct {
+	// account is the bech32 address string of the account.
+	Account string `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	// market_id is the numerical identifier of the market.
+	MarketId uint32 `protobuf:"varint,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// amount is the coins string of the newly committed funds.
+	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	// tag is the string provided in the message causing this event.
+	Tag string `protobuf:"bytes,4,opt,name=tag,proto3" json:"tag,omitempty"`
+}
+
+func (m *EventFundsCommitted) Reset()         { *m = EventFundsCommitted{} }
+func (m *EventFundsCommitted) String() string { return proto.CompactTextString(m) }
+func (*EventFundsCommitted) ProtoMessage()    {}
+func (*EventFundsCommitted) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c1b69385a348cffa, []int{5}
+}
+func (m *EventFundsCommitted) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventFundsCommitted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventFundsCommitted.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventFundsCommitted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventFundsCommitted.Merge(m, src)
+}
+func (m *EventFundsCommitted) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventFundsCommitted) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventFundsCommitted.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventFundsCommitted proto.InternalMessageInfo
+
+func (m *EventFundsCommitted) GetAccount() string {
+	if m != nil {
+		return m.Account
+	}
+	return ""
+}
+
+func (m *EventFundsCommitted) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *EventFundsCommitted) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+func (m *EventFundsCommitted) GetTag() string {
+	if m != nil {
+		return m.Tag
+	}
+	return ""
+}
+
+// EventCommitmentReleased is an event emitted when funds are released from their commitment.
+type EventCommitmentReleased struct {
+	// account is the bech32 address string of the account.
+	Account string `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	// market_id is the numerical identifier of the market.
+	MarketId uint32 `protobuf:"varint,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// amount is the coins string of the funds that were released from commitment.
+	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	// tag is the string provided in the message causing this event.
+	Tag string `protobuf:"bytes,4,opt,name=tag,proto3" json:"tag,omitempty"`
+}
+
+func (m *EventCommitmentReleased) Reset()         { *m = EventCommitmentReleased{} }
+func (m *EventCommitmentReleased) String() string { return proto.CompactTextString(m) }
+func (*EventCommitmentReleased) ProtoMessage()    {}
+func (*EventCommitmentReleased) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c1b69385a348cffa, []int{6}
+}
+func (m *EventCommitmentReleased) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventCommitmentReleased) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventCommitmentReleased.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventCommitmentReleased) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventCommitmentReleased.Merge(m, src)
+}
+func (m *EventCommitmentReleased) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventCommitmentReleased) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventCommitmentReleased.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventCommitmentReleased proto.InternalMessageInfo
+
+func (m *EventCommitmentReleased) GetAccount() string {
+	if m != nil {
+		return m.Account
+	}
+	return ""
+}
+
+func (m *EventCommitmentReleased) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *EventCommitmentReleased) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+func (m *EventCommitmentReleased) GetTag() string {
+	if m != nil {
+		return m.Tag
+	}
+	return ""
+}
+
 // EventMarketWithdraw is an event emitted when a withdrawal of a market's collected fees is made.
 type EventMarketWithdraw struct {
 	// market_id is the numerical identifier of the market.
@@ -434,7 +580,7 @@ func (m *EventMarketWithdraw) Reset()         { *m = EventMarketWithdraw{} }
 func (m *EventMarketWithdraw) String() string { return proto.CompactTextString(m) }
 func (*EventMarketWithdraw) ProtoMessage()    {}
 func (*EventMarketWithdraw) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{5}
+	return fileDescriptor_c1b69385a348cffa, []int{7}
 }
 func (m *EventMarketWithdraw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -503,7 +649,7 @@ func (m *EventMarketDetailsUpdated) Reset()         { *m = EventMarketDetailsUpd
 func (m *EventMarketDetailsUpdated) String() string { return proto.CompactTextString(m) }
 func (*EventMarketDetailsUpdated) ProtoMessage()    {}
 func (*EventMarketDetailsUpdated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{6}
+	return fileDescriptor_c1b69385a348cffa, []int{8}
 }
 func (m *EventMarketDetailsUpdated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -547,6 +693,9 @@ func (m *EventMarketDetailsUpdated) GetUpdatedBy() string {
 }
 
 // EventMarketEnabled is an event emitted when a market is enabled.
+// Deprecated: This event is no longer used. It is replaced with EventMarketOrdersEnabled.
+//
+// Deprecated: Do not use.
 type EventMarketEnabled struct {
 	// market_id is the numerical identifier of the market.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
@@ -558,7 +707,7 @@ func (m *EventMarketEnabled) Reset()         { *m = EventMarketEnabled{} }
 func (m *EventMarketEnabled) String() string { return proto.CompactTextString(m) }
 func (*EventMarketEnabled) ProtoMessage()    {}
 func (*EventMarketEnabled) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{7}
+	return fileDescriptor_c1b69385a348cffa, []int{9}
 }
 func (m *EventMarketEnabled) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -602,6 +751,9 @@ func (m *EventMarketEnabled) GetUpdatedBy() string {
 }
 
 // EventMarketDisabled is an event emitted when a market is disabled.
+// Deprecated: This event is no longer used. It is replaced with EventMarketOrdersDisabled.
+//
+// Deprecated: Do not use.
 type EventMarketDisabled struct {
 	// market_id is the numerical identifier of the market.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
@@ -613,7 +765,7 @@ func (m *EventMarketDisabled) Reset()         { *m = EventMarketDisabled{} }
 func (m *EventMarketDisabled) String() string { return proto.CompactTextString(m) }
 func (*EventMarketDisabled) ProtoMessage()    {}
 func (*EventMarketDisabled) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{8}
+	return fileDescriptor_c1b69385a348cffa, []int{10}
 }
 func (m *EventMarketDisabled) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -656,6 +808,116 @@ func (m *EventMarketDisabled) GetUpdatedBy() string {
 	return ""
 }
 
+// EventMarketOrdersEnabled is an event emitted when a market enables order creation.
+type EventMarketOrdersEnabled struct {
+	// market_id is the numerical identifier of the market.
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// updated_by is the account that updated the accepting_orders option.
+	UpdatedBy string `protobuf:"bytes,2,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
+}
+
+func (m *EventMarketOrdersEnabled) Reset()         { *m = EventMarketOrdersEnabled{} }
+func (m *EventMarketOrdersEnabled) String() string { return proto.CompactTextString(m) }
+func (*EventMarketOrdersEnabled) ProtoMessage()    {}
+func (*EventMarketOrdersEnabled) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c1b69385a348cffa, []int{11}
+}
+func (m *EventMarketOrdersEnabled) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventMarketOrdersEnabled) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventMarketOrdersEnabled.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventMarketOrdersEnabled) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarketOrdersEnabled.Merge(m, src)
+}
+func (m *EventMarketOrdersEnabled) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventMarketOrdersEnabled) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarketOrdersEnabled.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventMarketOrdersEnabled proto.InternalMessageInfo
+
+func (m *EventMarketOrdersEnabled) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *EventMarketOrdersEnabled) GetUpdatedBy() string {
+	if m != nil {
+		return m.UpdatedBy
+	}
+	return ""
+}
+
+// EventMarketOrdersEnabled is an event emitted when a market disables order creation.
+type EventMarketOrdersDisabled struct {
+	// market_id is the numerical identifier of the market.
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// updated_by is the account that updated the accepting_orders option.
+	UpdatedBy string `protobuf:"bytes,2,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
+}
+
+func (m *EventMarketOrdersDisabled) Reset()         { *m = EventMarketOrdersDisabled{} }
+func (m *EventMarketOrdersDisabled) String() string { return proto.CompactTextString(m) }
+func (*EventMarketOrdersDisabled) ProtoMessage()    {}
+func (*EventMarketOrdersDisabled) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c1b69385a348cffa, []int{12}
+}
+func (m *EventMarketOrdersDisabled) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventMarketOrdersDisabled) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventMarketOrdersDisabled.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventMarketOrdersDisabled) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarketOrdersDisabled.Merge(m, src)
+}
+func (m *EventMarketOrdersDisabled) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventMarketOrdersDisabled) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarketOrdersDisabled.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventMarketOrdersDisabled proto.InternalMessageInfo
+
+func (m *EventMarketOrdersDisabled) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *EventMarketOrdersDisabled) GetUpdatedBy() string {
+	if m != nil {
+		return m.UpdatedBy
+	}
+	return ""
+}
+
 // EventMarketUserSettleEnabled is an event emitted when a market's user_settle option is enabled.
 type EventMarketUserSettleEnabled struct {
 	// market_id is the numerical identifier of the market.
@@ -668,7 +930,7 @@ func (m *EventMarketUserSettleEnabled) Reset()         { *m = EventMarketUserSet
 func (m *EventMarketUserSettleEnabled) String() string { return proto.CompactTextString(m) }
 func (*EventMarketUserSettleEnabled) ProtoMessage()    {}
 func (*EventMarketUserSettleEnabled) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{9}
+	return fileDescriptor_c1b69385a348cffa, []int{13}
 }
 func (m *EventMarketUserSettleEnabled) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -723,7 +985,7 @@ func (m *EventMarketUserSettleDisabled) Reset()         { *m = EventMarketUserSe
 func (m *EventMarketUserSettleDisabled) String() string { return proto.CompactTextString(m) }
 func (*EventMarketUserSettleDisabled) ProtoMessage()    {}
 func (*EventMarketUserSettleDisabled) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{10}
+	return fileDescriptor_c1b69385a348cffa, []int{14}
 }
 func (m *EventMarketUserSettleDisabled) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -766,6 +1028,172 @@ func (m *EventMarketUserSettleDisabled) GetUpdatedBy() string {
 	return ""
 }
 
+// EventMarketCommitmentsEnabled is an event emitted when a market's accepting_commitments option is enabled.
+type EventMarketCommitmentsEnabled struct {
+	// market_id is the numerical identifier of the market.
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// updated_by is the account that updated the accepting_commitments option.
+	UpdatedBy string `protobuf:"bytes,2,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
+}
+
+func (m *EventMarketCommitmentsEnabled) Reset()         { *m = EventMarketCommitmentsEnabled{} }
+func (m *EventMarketCommitmentsEnabled) String() string { return proto.CompactTextString(m) }
+func (*EventMarketCommitmentsEnabled) ProtoMessage()    {}
+func (*EventMarketCommitmentsEnabled) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c1b69385a348cffa, []int{15}
+}
+func (m *EventMarketCommitmentsEnabled) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventMarketCommitmentsEnabled) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventMarketCommitmentsEnabled.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventMarketCommitmentsEnabled) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarketCommitmentsEnabled.Merge(m, src)
+}
+func (m *EventMarketCommitmentsEnabled) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventMarketCommitmentsEnabled) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarketCommitmentsEnabled.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventMarketCommitmentsEnabled proto.InternalMessageInfo
+
+func (m *EventMarketCommitmentsEnabled) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *EventMarketCommitmentsEnabled) GetUpdatedBy() string {
+	if m != nil {
+		return m.UpdatedBy
+	}
+	return ""
+}
+
+// EventMarketCommitmentsDisabled is an event emitted when a market's accepting_commitments option is disabled.
+type EventMarketCommitmentsDisabled struct {
+	// market_id is the numerical identifier of the market.
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// updated_by is the account that updated the accepting_commitments option.
+	UpdatedBy string `protobuf:"bytes,2,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
+}
+
+func (m *EventMarketCommitmentsDisabled) Reset()         { *m = EventMarketCommitmentsDisabled{} }
+func (m *EventMarketCommitmentsDisabled) String() string { return proto.CompactTextString(m) }
+func (*EventMarketCommitmentsDisabled) ProtoMessage()    {}
+func (*EventMarketCommitmentsDisabled) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c1b69385a348cffa, []int{16}
+}
+func (m *EventMarketCommitmentsDisabled) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventMarketCommitmentsDisabled) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventMarketCommitmentsDisabled.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventMarketCommitmentsDisabled) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarketCommitmentsDisabled.Merge(m, src)
+}
+func (m *EventMarketCommitmentsDisabled) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventMarketCommitmentsDisabled) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarketCommitmentsDisabled.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventMarketCommitmentsDisabled proto.InternalMessageInfo
+
+func (m *EventMarketCommitmentsDisabled) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *EventMarketCommitmentsDisabled) GetUpdatedBy() string {
+	if m != nil {
+		return m.UpdatedBy
+	}
+	return ""
+}
+
+// EventMarketIntermediaryDenomUpdated is an event emitted when a market updates its
+// commitment_settlement_intermediary_denom field.
+type EventMarketIntermediaryDenomUpdated struct {
+	// market_id is the numerical identifier of the market.
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// updated_by is the account that updated the intermediary denom.
+	UpdatedBy string `protobuf:"bytes,2,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
+}
+
+func (m *EventMarketIntermediaryDenomUpdated) Reset()         { *m = EventMarketIntermediaryDenomUpdated{} }
+func (m *EventMarketIntermediaryDenomUpdated) String() string { return proto.CompactTextString(m) }
+func (*EventMarketIntermediaryDenomUpdated) ProtoMessage()    {}
+func (*EventMarketIntermediaryDenomUpdated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_c1b69385a348cffa, []int{17}
+}
+func (m *EventMarketIntermediaryDenomUpdated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventMarketIntermediaryDenomUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventMarketIntermediaryDenomUpdated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventMarketIntermediaryDenomUpdated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMarketIntermediaryDenomUpdated.Merge(m, src)
+}
+func (m *EventMarketIntermediaryDenomUpdated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventMarketIntermediaryDenomUpdated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMarketIntermediaryDenomUpdated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventMarketIntermediaryDenomUpdated proto.InternalMessageInfo
+
+func (m *EventMarketIntermediaryDenomUpdated) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *EventMarketIntermediaryDenomUpdated) GetUpdatedBy() string {
+	if m != nil {
+		return m.UpdatedBy
+	}
+	return ""
+}
+
 // EventMarketPermissionsUpdated is an event emitted when a market's permissions are updated.
 type EventMarketPermissionsUpdated struct {
 	// market_id is the numerical identifier of the market.
@@ -778,7 +1206,7 @@ func (m *EventMarketPermissionsUpdated) Reset()         { *m = EventMarketPermis
 func (m *EventMarketPermissionsUpdated) String() string { return proto.CompactTextString(m) }
 func (*EventMarketPermissionsUpdated) ProtoMessage()    {}
 func (*EventMarketPermissionsUpdated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{11}
+	return fileDescriptor_c1b69385a348cffa, []int{18}
 }
 func (m *EventMarketPermissionsUpdated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -833,7 +1261,7 @@ func (m *EventMarketReqAttrUpdated) Reset()         { *m = EventMarketReqAttrUpd
 func (m *EventMarketReqAttrUpdated) String() string { return proto.CompactTextString(m) }
 func (*EventMarketReqAttrUpdated) ProtoMessage()    {}
 func (*EventMarketReqAttrUpdated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{12}
+	return fileDescriptor_c1b69385a348cffa, []int{19}
 }
 func (m *EventMarketReqAttrUpdated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -886,7 +1314,7 @@ func (m *EventMarketCreated) Reset()         { *m = EventMarketCreated{} }
 func (m *EventMarketCreated) String() string { return proto.CompactTextString(m) }
 func (*EventMarketCreated) ProtoMessage()    {}
 func (*EventMarketCreated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{13}
+	return fileDescriptor_c1b69385a348cffa, []int{20}
 }
 func (m *EventMarketCreated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -932,7 +1360,7 @@ func (m *EventMarketFeesUpdated) Reset()         { *m = EventMarketFeesUpdated{}
 func (m *EventMarketFeesUpdated) String() string { return proto.CompactTextString(m) }
 func (*EventMarketFeesUpdated) ProtoMessage()    {}
 func (*EventMarketFeesUpdated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{14}
+	return fileDescriptor_c1b69385a348cffa, []int{21}
 }
 func (m *EventMarketFeesUpdated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -976,7 +1404,7 @@ func (m *EventParamsUpdated) Reset()         { *m = EventParamsUpdated{} }
 func (m *EventParamsUpdated) String() string { return proto.CompactTextString(m) }
 func (*EventParamsUpdated) ProtoMessage()    {}
 func (*EventParamsUpdated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c1b69385a348cffa, []int{15}
+	return fileDescriptor_c1b69385a348cffa, []int{22}
 }
 func (m *EventParamsUpdated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1011,12 +1439,19 @@ func init() {
 	proto.RegisterType((*EventOrderFilled)(nil), "provenance.exchange.v1.EventOrderFilled")
 	proto.RegisterType((*EventOrderPartiallyFilled)(nil), "provenance.exchange.v1.EventOrderPartiallyFilled")
 	proto.RegisterType((*EventOrderExternalIDUpdated)(nil), "provenance.exchange.v1.EventOrderExternalIDUpdated")
+	proto.RegisterType((*EventFundsCommitted)(nil), "provenance.exchange.v1.EventFundsCommitted")
+	proto.RegisterType((*EventCommitmentReleased)(nil), "provenance.exchange.v1.EventCommitmentReleased")
 	proto.RegisterType((*EventMarketWithdraw)(nil), "provenance.exchange.v1.EventMarketWithdraw")
 	proto.RegisterType((*EventMarketDetailsUpdated)(nil), "provenance.exchange.v1.EventMarketDetailsUpdated")
 	proto.RegisterType((*EventMarketEnabled)(nil), "provenance.exchange.v1.EventMarketEnabled")
 	proto.RegisterType((*EventMarketDisabled)(nil), "provenance.exchange.v1.EventMarketDisabled")
+	proto.RegisterType((*EventMarketOrdersEnabled)(nil), "provenance.exchange.v1.EventMarketOrdersEnabled")
+	proto.RegisterType((*EventMarketOrdersDisabled)(nil), "provenance.exchange.v1.EventMarketOrdersDisabled")
 	proto.RegisterType((*EventMarketUserSettleEnabled)(nil), "provenance.exchange.v1.EventMarketUserSettleEnabled")
 	proto.RegisterType((*EventMarketUserSettleDisabled)(nil), "provenance.exchange.v1.EventMarketUserSettleDisabled")
+	proto.RegisterType((*EventMarketCommitmentsEnabled)(nil), "provenance.exchange.v1.EventMarketCommitmentsEnabled")
+	proto.RegisterType((*EventMarketCommitmentsDisabled)(nil), "provenance.exchange.v1.EventMarketCommitmentsDisabled")
+	proto.RegisterType((*EventMarketIntermediaryDenomUpdated)(nil), "provenance.exchange.v1.EventMarketIntermediaryDenomUpdated")
 	proto.RegisterType((*EventMarketPermissionsUpdated)(nil), "provenance.exchange.v1.EventMarketPermissionsUpdated")
 	proto.RegisterType((*EventMarketReqAttrUpdated)(nil), "provenance.exchange.v1.EventMarketReqAttrUpdated")
 	proto.RegisterType((*EventMarketCreated)(nil), "provenance.exchange.v1.EventMarketCreated")
@@ -1029,45 +1464,52 @@ func init() {
 }
 
 var fileDescriptor_c1b69385a348cffa = []byte{
-	// 601 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0xcf, 0x4f, 0xd4, 0x40,
-	0x14, 0xc7, 0x19, 0x58, 0x90, 0x7d, 0x68, 0xa2, 0x95, 0x10, 0x56, 0xa4, 0x92, 0x7a, 0xe1, 0x42,
-	0x1b, 0x62, 0x8c, 0x89, 0x9e, 0x58, 0x81, 0x84, 0x83, 0x71, 0x53, 0x24, 0x26, 0x5e, 0xc8, 0x6c,
-	0xfb, 0x84, 0x91, 0x76, 0xa6, 0xcc, 0xcc, 0x2e, 0xf4, 0x6f, 0xf0, 0xe2, 0xff, 0x61, 0xbc, 0x19,
-	0xff, 0x01, 0x2f, 0x1e, 0x89, 0x27, 0x8f, 0x06, 0xfe, 0x11, 0xd3, 0x5f, 0xbb, 0xad, 0x90, 0x42,
-	0x62, 0x9a, 0x78, 0xdb, 0xf7, 0xfa, 0x7d, 0xf3, 0xf9, 0xbe, 0xd7, 0xb7, 0x99, 0xc2, 0xe3, 0x48,
-	0x8a, 0x21, 0x72, 0xca, 0x3d, 0x74, 0xf0, 0xd4, 0x3b, 0xa4, 0xfc, 0x00, 0x9d, 0xe1, 0xba, 0x83,
-	0x43, 0xe4, 0x5a, 0xd9, 0x91, 0x14, 0x5a, 0x18, 0x0b, 0x63, 0x91, 0x5d, 0x88, 0xec, 0xe1, 0xfa,
-	0x83, 0x8e, 0x27, 0x54, 0x28, 0xd4, 0x7e, 0xaa, 0x72, 0xb2, 0x20, 0x2b, 0xb1, 0x3e, 0x12, 0xb8,
-	0xb7, 0x95, 0x9c, 0xf1, 0x5a, 0xfa, 0x28, 0x5f, 0x4a, 0xa4, 0x1a, 0x7d, 0xa3, 0x03, 0xb3, 0x22,
-	0x89, 0xf7, 0x99, 0xbf, 0x48, 0x56, 0xc8, 0x6a, 0xcb, 0xbd, 0x95, 0xc6, 0x3b, 0xbe, 0xb1, 0x0c,
-	0x90, 0x3d, 0xd2, 0x71, 0x84, 0x8b, 0x93, 0x2b, 0x64, 0xb5, 0xed, 0xb6, 0xd3, 0xcc, 0x9b, 0x38,
-	0x42, 0x63, 0x09, 0xda, 0x21, 0x95, 0x47, 0xa8, 0x93, 0xd2, 0xa9, 0x15, 0xb2, 0x7a, 0xc7, 0x9d,
-	0xcd, 0x12, 0x3b, 0xbe, 0xf1, 0x08, 0xe6, 0xf0, 0x54, 0xa3, 0xe4, 0x34, 0x48, 0x1e, 0xb7, 0xd2,
-	0x62, 0x28, 0x52, 0x3b, 0xbe, 0xf5, 0x99, 0xc0, 0xfd, 0x92, 0x9b, 0xa4, 0x91, 0x20, 0xa8, 0xf7,
-	0xf3, 0x02, 0x6e, 0x7b, 0x85, 0x6e, 0xbf, 0x1f, 0x67, 0x8e, 0xba, 0x8b, 0x3f, 0xbf, 0xae, 0xcd,
-	0xe7, 0x8d, 0x6e, 0xf8, 0xbe, 0x44, 0xa5, 0x76, 0xb5, 0x64, 0xfc, 0xc0, 0x9d, 0x1b, 0xa9, 0xbb,
-	0xf1, 0x3f, 0xba, 0xfd, 0x42, 0xe0, 0xee, 0xd8, 0xed, 0x36, 0xbb, 0xce, 0xea, 0x02, 0xcc, 0x50,
-	0xa5, 0x50, 0xab, 0x7c, 0x6c, 0x79, 0x64, 0xcc, 0xc3, 0x74, 0x24, 0x99, 0x87, 0xa9, 0x83, 0xb6,
-	0x9b, 0x05, 0x86, 0x01, 0xad, 0xf7, 0x88, 0x2a, 0xe7, 0xa6, 0xbf, 0xab, 0x7e, 0xa7, 0xeb, 0xfd,
-	0xce, 0x5c, 0xf2, 0xfb, 0x8d, 0x40, 0x67, 0xec, 0xb7, 0x47, 0xa5, 0x66, 0x34, 0x08, 0xe2, 0xff,
-	0xdf, 0xf8, 0x10, 0x96, 0xc6, 0xbe, 0xb7, 0x8a, 0xfc, 0xe6, 0x5e, 0xe4, 0x5f, 0xb7, 0xad, 0x15,
-	0xee, 0x64, 0x3d, 0x77, 0xea, 0x12, 0xf7, 0x7b, 0xb1, 0x8e, 0xaf, 0xd2, 0x92, 0xb7, 0x4c, 0x1f,
-	0xfa, 0x92, 0x9e, 0x54, 0x4f, 0x25, 0x7f, 0x9d, 0x9a, 0x0c, 0x2b, 0x14, 0x03, 0xae, 0x47, 0xc3,
-	0x4a, 0x23, 0xe3, 0x39, 0xcc, 0xf9, 0xa8, 0x34, 0xe3, 0x54, 0x33, 0xc1, 0x33, 0x5a, 0xdd, 0x9e,
-	0x96, 0xc4, 0xc9, 0x92, 0x9f, 0xe4, 0x70, 0x9e, 0x2c, 0x79, 0xeb, 0xba, 0xe2, 0x91, 0xba, 0x1b,
-	0x5b, 0xc7, 0xf9, 0x5b, 0xcf, 0x9a, 0xd8, 0x44, 0x4d, 0x59, 0xa0, 0x8a, 0xd9, 0xd5, 0xb6, 0xf2,
-	0x0c, 0x60, 0x90, 0xe9, 0x6e, 0xf2, 0xcf, 0x6a, 0xe7, 0xda, 0x6e, 0x6c, 0x7d, 0x00, 0xa3, 0x84,
-	0xdc, 0xe2, 0xb4, 0x1f, 0x34, 0xc6, 0x3a, 0xaa, 0xbc, 0xa3, 0x4d, 0xa6, 0x9a, 0x84, 0x69, 0x78,
-	0x58, 0x82, 0xed, 0x29, 0x94, 0xbb, 0xa8, 0x75, 0x80, 0xcd, 0xb6, 0x38, 0x80, 0xe5, 0x2b, 0xa9,
-	0x0d, 0x37, 0x5b, 0xc5, 0xf6, 0x50, 0x86, 0x4c, 0x29, 0x26, 0x78, 0xc3, 0xcb, 0x53, 0xdd, 0x57,
-	0x17, 0x8f, 0x37, 0xb4, 0x96, 0xcd, 0x22, 0xd7, 0x2b, 0xfb, 0x5a, 0xdc, 0x82, 0x75, 0x2c, 0xeb,
-	0x29, 0x2c, 0x94, 0x4a, 0xb6, 0x11, 0x6f, 0x34, 0x15, 0x6b, 0x3e, 0x27, 0xf5, 0xa8, 0xa4, 0x61,
-	0x51, 0xd2, 0xc5, 0x1f, 0xe7, 0x26, 0x39, 0x3b, 0x37, 0xc9, 0xef, 0x73, 0x93, 0x7c, 0xba, 0x30,
-	0x27, 0xce, 0x2e, 0xcc, 0x89, 0x5f, 0x17, 0xe6, 0x04, 0x74, 0x98, 0xb0, 0xaf, 0xbe, 0xd5, 0x7b,
-	0xe4, 0x9d, 0x7d, 0xc0, 0xf4, 0xe1, 0xa0, 0x6f, 0x7b, 0x22, 0x74, 0xc6, 0xa2, 0x35, 0x26, 0x4a,
-	0x91, 0x73, 0x3a, 0xfa, 0x5e, 0xe8, 0xcf, 0xa4, 0x77, 0xfe, 0x93, 0x3f, 0x01, 0x00, 0x00, 0xff,
-	0xff, 0x63, 0xb9, 0x7f, 0xd7, 0x4d, 0x08, 0x00, 0x00,
+	// 718 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0xcf, 0x4f, 0x13, 0x41,
+	0x14, 0xc7, 0x99, 0xb6, 0xfc, 0xe8, 0x43, 0x13, 0x5c, 0x09, 0xb6, 0x22, 0x95, 0x2c, 0x17, 0x2e,
+	0xb4, 0x41, 0x63, 0x4c, 0xf0, 0x44, 0x29, 0x24, 0x3d, 0x18, 0x9b, 0x22, 0x31, 0xf1, 0x42, 0xa6,
+	0xbb, 0xcf, 0x32, 0x71, 0x77, 0xa6, 0xcc, 0x4c, 0x0b, 0x1b, 0xff, 0x04, 0x2f, 0x1c, 0xfc, 0x2f,
+	0x8c, 0x37, 0xe3, 0x3f, 0xe0, 0xc5, 0x23, 0xf1, 0xe4, 0xd1, 0xc0, 0x3f, 0x62, 0xf6, 0x17, 0xdd,
+	0x15, 0x5c, 0x48, 0xcc, 0x46, 0x6f, 0xfb, 0x66, 0xdf, 0x7b, 0x9f, 0xef, 0x7b, 0x33, 0xf3, 0x32,
+	0xb0, 0x32, 0x90, 0x62, 0x84, 0x9c, 0x72, 0x0b, 0x1b, 0x78, 0x6c, 0x1d, 0x50, 0xde, 0xc7, 0xc6,
+	0x68, 0xbd, 0x81, 0x23, 0xe4, 0x5a, 0xd5, 0x07, 0x52, 0x68, 0x61, 0x2c, 0x8c, 0x9d, 0xea, 0xb1,
+	0x53, 0x7d, 0xb4, 0x7e, 0xbf, 0x6a, 0x09, 0xe5, 0x0a, 0xb5, 0x1f, 0x78, 0x35, 0x42, 0x23, 0x0c,
+	0x31, 0xdf, 0x13, 0xb8, 0xb3, 0xed, 0xe7, 0x78, 0x21, 0x6d, 0x94, 0x5b, 0x12, 0xa9, 0x46, 0xdb,
+	0xa8, 0xc2, 0x8c, 0xf0, 0xed, 0x7d, 0x66, 0x57, 0xc8, 0x32, 0x59, 0x2d, 0x75, 0xa7, 0x03, 0xbb,
+	0x6d, 0x1b, 0x4b, 0x00, 0xe1, 0x2f, 0xed, 0x0d, 0xb0, 0x52, 0x58, 0x26, 0xab, 0xe5, 0x6e, 0x39,
+	0x58, 0x79, 0xe9, 0x0d, 0xd0, 0x58, 0x84, 0xb2, 0x4b, 0xe5, 0x5b, 0xd4, 0x7e, 0x68, 0x71, 0x99,
+	0xac, 0xde, 0xee, 0xce, 0x84, 0x0b, 0x6d, 0xdb, 0x78, 0x08, 0xb3, 0x78, 0xac, 0x51, 0x72, 0xea,
+	0xf8, 0xbf, 0x4b, 0x41, 0x30, 0xc4, 0x4b, 0x6d, 0xdb, 0xfc, 0x48, 0xe0, 0x6e, 0x42, 0x8d, 0x5f,
+	0x88, 0xe3, 0x64, 0xeb, 0x79, 0x06, 0xb7, 0xac, 0xd8, 0x6f, 0xbf, 0xe7, 0x85, 0x8a, 0x9a, 0x95,
+	0xef, 0x9f, 0xd7, 0xe6, 0xa3, 0x42, 0x37, 0x6d, 0x5b, 0xa2, 0x52, 0xbb, 0x5a, 0x32, 0xde, 0xef,
+	0xce, 0x5e, 0x78, 0x37, 0xbd, 0xbf, 0x54, 0xfb, 0x89, 0xc0, 0xdc, 0x58, 0xed, 0x0e, 0xbb, 0x4e,
+	0xea, 0x02, 0x4c, 0x51, 0xa5, 0x50, 0xab, 0xa8, 0x6d, 0x91, 0x65, 0xcc, 0xc3, 0xe4, 0x40, 0x32,
+	0x0b, 0x03, 0x05, 0xe5, 0x6e, 0x68, 0x18, 0x06, 0x94, 0xde, 0x20, 0xaa, 0x88, 0x1b, 0x7c, 0xa7,
+	0xf5, 0x4e, 0x66, 0xeb, 0x9d, 0xba, 0xa4, 0xf7, 0x0b, 0x81, 0xea, 0x58, 0x6f, 0x87, 0x4a, 0xcd,
+	0xa8, 0xe3, 0x78, 0xff, 0xbf, 0xf0, 0x11, 0x2c, 0x8e, 0x75, 0x6f, 0xc7, 0xeb, 0xad, 0xbd, 0x81,
+	0x7d, 0xdd, 0x69, 0x4d, 0x71, 0x0b, 0xd9, 0xdc, 0xe2, 0x25, 0xee, 0x49, 0x7c, 0x1c, 0x77, 0x86,
+	0xdc, 0x56, 0x5b, 0xc2, 0x75, 0x99, 0xf6, 0x81, 0x8f, 0x60, 0x9a, 0x5a, 0x96, 0x18, 0x72, 0x1d,
+	0xf0, 0xb2, 0x8e, 0x5b, 0xec, 0x98, 0xad, 0xc4, 0x6f, 0xb0, 0x1b, 0xe4, 0x2b, 0x46, 0x0d, 0x0e,
+	0x2c, 0x63, 0x0e, 0x8a, 0x9a, 0xf6, 0xa3, 0x4e, 0xfa, 0x9f, 0xe6, 0x07, 0x02, 0xf7, 0x02, 0x49,
+	0xa1, 0x1a, 0x17, 0xb9, 0xee, 0xa2, 0x83, 0x54, 0xfd, 0x5b, 0x59, 0x5f, 0xe3, 0x4e, 0x3d, 0x0f,
+	0x62, 0x5f, 0x31, 0x7d, 0x60, 0x4b, 0x7a, 0x94, 0x4e, 0x4f, 0xfe, 0x98, 0xbe, 0x90, 0x4a, 0xbf,
+	0x01, 0xb3, 0x36, 0x2a, 0xcd, 0x38, 0xd5, 0x4c, 0xf0, 0x90, 0x9d, 0x75, 0xa3, 0x13, 0xce, 0xfe,
+	0x38, 0x38, 0x8a, 0xe0, 0xdc, 0x1f, 0x07, 0xa5, 0xeb, 0x82, 0x2f, 0xbc, 0x9b, 0x9e, 0x79, 0x18,
+	0xdd, 0x8f, 0xb0, 0x88, 0x16, 0x6a, 0xca, 0x1c, 0x15, 0x9f, 0xb2, 0xcc, 0x52, 0x9e, 0x02, 0x0c,
+	0x43, 0xbf, 0x9b, 0xcc, 0xa0, 0x72, 0xe4, 0xdb, 0xf4, 0x4c, 0x0e, 0x46, 0x02, 0xb9, 0xcd, 0x69,
+	0xcf, 0xc9, 0x8b, 0xb5, 0x51, 0xa8, 0x10, 0x53, 0xa4, 0xf6, 0xa9, 0xc5, 0x54, 0xde, 0xc0, 0x01,
+	0x54, 0x12, 0xc0, 0xe0, 0x06, 0xab, 0x5c, 0xcb, 0xfc, 0x6d, 0x17, 0x43, 0x62, 0xbe, 0x85, 0x9a,
+	0x1a, 0x1e, 0x24, 0x90, 0x7b, 0x0a, 0xe5, 0x2e, 0x6a, 0xed, 0x60, 0xbe, 0x85, 0x0e, 0x61, 0xe9,
+	0x4a, 0x6a, 0xce, 0xc5, 0xa6, 0xb1, 0xe3, 0x39, 0x94, 0xf3, 0xb6, 0x8e, 0xa0, 0x76, 0x35, 0x36,
+	0xe7, 0x72, 0xdf, 0xc1, 0x4a, 0x82, 0xdb, 0xe6, 0x1a, 0xa5, 0x8b, 0x36, 0xa3, 0xd2, 0x6b, 0x21,
+	0x17, 0x6e, 0xbe, 0xe3, 0x21, 0xdd, 0xeb, 0x0e, 0x4a, 0x97, 0x29, 0xc5, 0x04, 0xcf, 0x79, 0x2a,
+	0xa5, 0xaf, 0x50, 0x17, 0x0f, 0x37, 0xb5, 0x96, 0xf9, 0x22, 0xd7, 0x53, 0x83, 0x30, 0x7e, 0x88,
+	0x66, 0xb1, 0xcc, 0x27, 0xb0, 0x90, 0x08, 0xd9, 0x41, 0xbc, 0x51, 0x57, 0xcc, 0xf9, 0x88, 0xd4,
+	0xa1, 0x92, 0xba, 0x71, 0x48, 0x13, 0xbf, 0x9d, 0xd5, 0xc8, 0xe9, 0x59, 0x8d, 0xfc, 0x3c, 0xab,
+	0x91, 0x93, 0xf3, 0xda, 0xc4, 0xe9, 0x79, 0x6d, 0xe2, 0xc7, 0x79, 0x6d, 0x02, 0xaa, 0x4c, 0xd4,
+	0xaf, 0x7e, 0x58, 0x77, 0xc8, 0xeb, 0x7a, 0x9f, 0xe9, 0x83, 0x61, 0xaf, 0x6e, 0x09, 0xb7, 0x31,
+	0x76, 0x5a, 0x63, 0x22, 0x61, 0x35, 0x8e, 0x2f, 0x9e, 0xec, 0xbd, 0xa9, 0xe0, 0xd9, 0xfd, 0xf8,
+	0x57, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd4, 0xbb, 0x83, 0xc0, 0xd0, 0x0b, 0x00, 0x00,
 }
 
 func (m *EventOrderCreated) Marshal() (dAtA []byte, err error) {
@@ -1326,6 +1768,104 @@ func (m *EventOrderExternalIDUpdated) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
+func (m *EventFundsCommitted) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventFundsCommitted) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventFundsCommitted) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Tag) > 0 {
+		i -= len(m.Tag)
+		copy(dAtA[i:], m.Tag)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Tag)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Account) > 0 {
+		i -= len(m.Account)
+		copy(dAtA[i:], m.Account)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Account)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventCommitmentReleased) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventCommitmentReleased) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventCommitmentReleased) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Tag) > 0 {
+		i -= len(m.Tag)
+		copy(dAtA[i:], m.Tag)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Tag)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Account) > 0 {
+		i -= len(m.Account)
+		copy(dAtA[i:], m.Account)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Account)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *EventMarketWithdraw) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1480,6 +2020,76 @@ func (m *EventMarketDisabled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *EventMarketOrdersEnabled) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventMarketOrdersEnabled) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventMarketOrdersEnabled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.UpdatedBy) > 0 {
+		i -= len(m.UpdatedBy)
+		copy(dAtA[i:], m.UpdatedBy)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.UpdatedBy)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventMarketOrdersDisabled) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventMarketOrdersDisabled) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventMarketOrdersDisabled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.UpdatedBy) > 0 {
+		i -= len(m.UpdatedBy)
+		copy(dAtA[i:], m.UpdatedBy)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.UpdatedBy)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *EventMarketUserSettleEnabled) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1531,6 +2141,111 @@ func (m *EventMarketUserSettleDisabled) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *EventMarketUserSettleDisabled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.UpdatedBy) > 0 {
+		i -= len(m.UpdatedBy)
+		copy(dAtA[i:], m.UpdatedBy)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.UpdatedBy)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventMarketCommitmentsEnabled) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventMarketCommitmentsEnabled) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventMarketCommitmentsEnabled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.UpdatedBy) > 0 {
+		i -= len(m.UpdatedBy)
+		copy(dAtA[i:], m.UpdatedBy)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.UpdatedBy)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventMarketCommitmentsDisabled) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventMarketCommitmentsDisabled) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventMarketCommitmentsDisabled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.UpdatedBy) > 0 {
+		i -= len(m.UpdatedBy)
+		copy(dAtA[i:], m.UpdatedBy)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.UpdatedBy)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventMarketIntermediaryDenomUpdated) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventMarketIntermediaryDenomUpdated) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventMarketIntermediaryDenomUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1837,6 +2552,54 @@ func (m *EventOrderExternalIDUpdated) Size() (n int) {
 	return n
 }
 
+func (m *EventFundsCommitted) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Account)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.MarketId != 0 {
+		n += 1 + sovEvents(uint64(m.MarketId))
+	}
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Tag)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventCommitmentReleased) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Account)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.MarketId != 0 {
+		n += 1 + sovEvents(uint64(m.MarketId))
+	}
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Tag)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
 func (m *EventMarketWithdraw) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1909,6 +2672,38 @@ func (m *EventMarketDisabled) Size() (n int) {
 	return n
 }
 
+func (m *EventMarketOrdersEnabled) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovEvents(uint64(m.MarketId))
+	}
+	l = len(m.UpdatedBy)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventMarketOrdersDisabled) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovEvents(uint64(m.MarketId))
+	}
+	l = len(m.UpdatedBy)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
 func (m *EventMarketUserSettleEnabled) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1926,6 +2721,54 @@ func (m *EventMarketUserSettleEnabled) Size() (n int) {
 }
 
 func (m *EventMarketUserSettleDisabled) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovEvents(uint64(m.MarketId))
+	}
+	l = len(m.UpdatedBy)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventMarketCommitmentsEnabled) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovEvents(uint64(m.MarketId))
+	}
+	l = len(m.UpdatedBy)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventMarketCommitmentsDisabled) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovEvents(uint64(m.MarketId))
+	}
+	l = len(m.UpdatedBy)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventMarketIntermediaryDenomUpdated) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2868,6 +3711,336 @@ func (m *EventOrderExternalIDUpdated) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *EventFundsCommitted) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventFundsCommitted: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventFundsCommitted: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Account", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Account = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tag", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tag = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventCommitmentReleased) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventCommitmentReleased: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventCommitmentReleased: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Account", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Account = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tag", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tag = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *EventMarketWithdraw) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3336,6 +4509,208 @@ func (m *EventMarketDisabled) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *EventMarketOrdersEnabled) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventMarketOrdersEnabled: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventMarketOrdersEnabled: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedBy", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UpdatedBy = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventMarketOrdersDisabled) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventMarketOrdersDisabled: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventMarketOrdersDisabled: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedBy", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UpdatedBy = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *EventMarketUserSettleEnabled) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3464,6 +4839,309 @@ func (m *EventMarketUserSettleDisabled) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: EventMarketUserSettleDisabled: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedBy", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UpdatedBy = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventMarketCommitmentsEnabled) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventMarketCommitmentsEnabled: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventMarketCommitmentsEnabled: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedBy", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UpdatedBy = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventMarketCommitmentsDisabled) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventMarketCommitmentsDisabled: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventMarketCommitmentsDisabled: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedBy", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UpdatedBy = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventMarketIntermediaryDenomUpdated) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventMarketIntermediaryDenomUpdated: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventMarketIntermediaryDenomUpdated: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

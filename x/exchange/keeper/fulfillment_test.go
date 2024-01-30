@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -2502,6 +2503,60 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 				order, oerr := s.k.GetOrder(s.ctx, tc.expPartialLeft.OrderId)
 				s.Assert().NoError(oerr, "GetOrder(%d) (partial) after SettleOrders", tc.expPartialLeft.OrderId)
 				s.Assert().Equal(tc.expPartialLeft, order, "GetOrder(%d) (partial) after SettleOrders", tc.expPartialLeft.OrderId)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_GetNav() {
+	tests := []struct {
+		name         string
+		markerKeeper *MockMarkerKeeper
+		assetsDenom  string
+		priceDenom   string
+		expNav       *exchange.NetAssetPrice
+	}{
+		{
+			name:         "error getting nav",
+			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueError("apple", "pear", "injected test error"),
+			assetsDenom:  "apple",
+			priceDenom:   "pear",
+			expNav:       nil,
+		},
+		{
+			name:        "no nav found",
+			assetsDenom: "apple",
+			priceDenom:  "pear",
+			expNav:      nil,
+		},
+		{
+			name: "nav exists",
+			markerKeeper: NewMockMarkerKeeper().
+				WithGetNetAssetValueResult(sdk.NewInt64Coin("apple", 500), sdk.NewInt64Coin("pear", 12)),
+			assetsDenom: "apple",
+			priceDenom:  "pear",
+			expNav: &exchange.NetAssetPrice{
+				Assets: sdk.NewInt64Coin("apple", 500),
+				Price:  sdk.NewInt64Coin("pear", 12),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.markerKeeper == nil {
+				tc.markerKeeper = NewMockMarkerKeeper()
+			}
+
+			kpr := s.k.WithMarkerKeeper(tc.markerKeeper)
+			var actNav *exchange.NetAssetPrice
+			testFunc := func() {
+				actNav = kpr.GetNav(s.ctx, tc.assetsDenom, tc.priceDenom)
+			}
+			s.Require().NotPanics(testFunc, "GetNav(%q, %q)", tc.assetsDenom, tc.priceDenom)
+			if !s.Assert().Equal(tc.expNav, actNav, "GetNav(%q, %q) result", tc.assetsDenom, tc.priceDenom) && tc.expNav != nil && actNav != nil {
+				s.Assert().Equal(tc.expNav.Assets.String(), actNav.Assets.String(), "assets (string)")
+				s.Assert().Equal(tc.expNav.Price.String(), actNav.Price.String(), "price (string)")
 			}
 		})
 	}

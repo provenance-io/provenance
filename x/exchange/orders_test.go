@@ -1170,7 +1170,7 @@ func TestOrder_Validate(t *testing.T) {
 		{
 			name:  "order id is zero",
 			Order: NewOrder(0),
-			exp:   []string{"invalid order id", "must not be zero"},
+			exp:   []string{"invalid order id", "cannot be zero"},
 		},
 		{
 			name:  "nil sub-order",
@@ -1185,12 +1185,12 @@ func TestOrder_Validate(t *testing.T) {
 		{
 			name:  "ask order error",
 			Order: NewOrder(1).WithAsk(&AskOrder{MarketId: 0, Price: zeroCoin}),
-			exp:   []string{"invalid market id", "must not be zero"},
+			exp:   []string{"invalid market id", "cannot be zero"},
 		},
 		{
 			name:  "bid order error",
 			Order: NewOrder(1).WithBid(&BidOrder{MarketId: 0, Price: zeroCoin}),
-			exp:   []string{"invalid market id", "must not be zero"},
+			exp:   []string{"invalid market id", "cannot be zero"},
 		},
 	}
 
@@ -1709,7 +1709,7 @@ func TestAskOrder_Validate(t *testing.T) {
 				Assets:   *coin(99, "bender"),
 				Price:    *coin(42, "farnsworth"),
 			},
-			exp: []string{"invalid market id", "must not be zero"},
+			exp: []string{"invalid market id", "cannot be zero"},
 		},
 		{
 			name: "invalid seller",
@@ -2339,7 +2339,7 @@ func TestBidOrder_Validate(t *testing.T) {
 				Assets:   coin(99, "bender"),
 				Price:    coin(42, "farnsworth"),
 			},
-			exp: []string{"invalid market id: must not be zero"},
+			exp: []string{"invalid market id: cannot be zero"},
 		},
 		{
 			name: "invalid buyer",
