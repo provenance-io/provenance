@@ -270,4 +270,15 @@ Example <fee ratio>: 100nhash:1nhash`
 
 	// OptAsksBidsDesc is a description of the --asks and --bids flags when they're optional.
 	OptAsksBidsDesc = fmt.Sprintf("At most one of --%s or --%s can be provided.", FlagAsks, FlagBids)
+
+	AccountAmountDesc = `An <account-amount> has the format "<account>:<amount>".
+The <account> should be a bech32 address string.
+The <amount> should be a coins string with the format <amount><denom>[,<amount><denom> ...]
+
+Example <account-amount>: ` + ExampleAddr + `:10nhash,3orange`
+
+	NAVDesc = `A <nav> (net-asset-value) has the format "<assets coin>:<price coin>".
+Both <assets coin> and <price coin> have the format "<amount><denom>".
+
+Example <nav>: 1cherry:10nhash`
 )

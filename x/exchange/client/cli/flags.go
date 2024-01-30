@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	FlagAcceptingOrders      = "accepting-orders"
 	FlagAcceptingCommitments = "accepting-commitments"
+	FlagAcceptingOrders      = "accepting-orders"
 	FlagAccessGrants         = "access-grants"
 	FlagAccount              = "account"
 	FlagAdmin                = "admin"
@@ -60,11 +60,15 @@ const (
 	FlagDisable              = "disable"
 	FlagEnable               = "enable"
 	FlagExternalID           = "external-id"
+	FlagFee                  = "fee"
 	FlagGrant                = "grant"
 	FlagIcon                 = "icon"
+	FlagInput                = "input"
 	FlagMarket               = "market"
 	FlagName                 = "name"
+	FlagNav                  = "nav"
 	FlagOrder                = "order"
+	FlagOutput               = "output"
 	FlagOwner                = "owner"
 	FlagPartial              = "partial"
 	FlagPrice                = "price"

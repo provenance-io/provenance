@@ -126,7 +126,7 @@ func SetupCmdTxCommitFunds(cmd *cobra.Command) {
 		ReqFlagUse(FlagAmount, "amount"),
 		UseFlagsBreak,
 		OptFlagUse(FlagCreationFee, "creation fee"),
-		OptFlagUse(FlagTo, "event tag"),
+		OptFlagUse(FlagTag, "event tag"),
 	)
 	AddUseDetails(cmd, ReqSignerDesc(FlagAccount))
 
@@ -296,6 +296,52 @@ func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []s
 	msg.AskOrderIds, errs[2] = ReadOrderIDsFlag(flagSet, FlagAsks)
 	msg.BidOrderIds, errs[3] = ReadOrderIDsFlag(flagSet, FlagBids)
 	msg.ExpectPartial, errs[4] = flagSet.GetBool(FlagPartial)
+
+	return msg, errors.Join(errs...)
+}
+
+// SetupCmdTxMarketCommitmentSettle adds all the flags needed for MakeMsgMarketCommitmentSettle.
+func SetupCmdTxMarketCommitmentSettle(cmd *cobra.Command) {
+	AddFlagsAdmin(cmd)
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
+	cmd.Flags().StringSlice(FlagInput, nil, "The inputs for this commitment settlement (repeatable)")
+	cmd.Flags().StringSlice(FlagOutput, nil, "The outputs for this commitment settlement (repeatable)")
+	cmd.Flags().StringSlice(FlagFee, nil, "The fees to collect during this commitment settlement (repeatable)")
+	cmd.Flags().StringSlice(FlagNav, nil, "The net-asset-values to update during this commitment settlement (repeatable)")
+	cmd.Flags().String(FlagTag, "", "The tag to include in the events emitted as part of this commitment settlement")
+
+	MarkFlagsRequired(cmd, FlagMarket)
+	cmd.MarkFlagsOneRequired(FlagInput, FlagOutput)
+
+	AddUseArgs(cmd,
+		ReqAdminUse,
+		ReqFlagUse(FlagMarket, "market id"),
+		UseFlagsBreak,
+		OptFlagUse(FlagInput, "account-amount"),
+		OptFlagUse(FlagOutput, "account-amount"),
+		OptFlagUse(FlagFee, "account-amount"),
+		UseFlagsBreak,
+		OptFlagUse(FlagNav, "nav"),
+		OptFlagUse(FlagTag, "event tag"),
+	)
+	AddUseDetails(cmd, ReqAdminDesc, RepeatableDesc, AccountAmountDesc, NAVDesc)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgMarketCommitmentSettle reads all the SetupCmdTxMarketCommitmentSettle flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgMarketCommitmentSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketCommitmentSettleRequest, error) {
+	msg := &exchange.MsgMarketCommitmentSettleRequest{}
+
+	errs := make([]error, 7)
+	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
+	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
+	msg.Inputs, errs[2] = ReadFlagAccountAmounts(flagSet, FlagInput)
+	msg.Outputs, errs[3] = ReadFlagAccountAmounts(flagSet, FlagOutput)
+	msg.Fees, errs[4] = ReadFlagAccountAmounts(flagSet, FlagFee)
+	msg.Navs, errs[5] = ReadFlagNetAssetPrices(flagSet, FlagNav)
+	msg.EventTag, errs[6] = flagSet.GetString(FlagTag)
 
 	return msg, errors.Join(errs...)
 }

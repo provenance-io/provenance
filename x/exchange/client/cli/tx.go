@@ -31,6 +31,7 @@ func CmdTx() *cobra.Command {
 		CmdTxFillBids(),
 		CmdTxFillAsks(),
 		CmdTxMarketSettle(),
+		CmdTxMarketCommitmentSettle(),
 		CmdTxMarketSetOrderExternalID(),
 		CmdTxMarketWithdraw(),
 		CmdTxMarketUpdateDetails(),
@@ -139,6 +140,20 @@ func CmdTxMarketSettle() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxMarketSettle(cmd)
+	return cmd
+}
+
+// CmdTxMarketCommitmentSettle creates the market-commitment-settle sub-command for the exchange tx command.
+func CmdTxMarketCommitmentSettle() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "market-commitment-settle",
+		Aliases: []string{"commitment-settle", "market-settle-commitments", "settle-commitments"},
+		Short:   "Move some committed funds",
+		RunE:    genericTxRunE(MakeMsgMarketCommitmentSettle),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxMarketCommitmentSettle(cmd)
 	return cmd
 }
 
