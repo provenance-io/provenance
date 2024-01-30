@@ -1664,6 +1664,10 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 	}
 }
 
+// TODO[1789]: func TestSetupCmdTxGovUpdateParams(t *testing.T)
+
+// TODO[1789]: func TestMakeMsgGovUpdateParams(t *testing.T)
+
 func TestSetupCmdTxGovUpdateParams(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdTxGovUpdateParams",

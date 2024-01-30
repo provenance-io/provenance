@@ -904,6 +904,8 @@ func (s *CmdTestSuite) TestCmdTxGovManageFees() {
 	}
 }
 
+// TODO[1789]: func (s *CmdTestSuite) TestCmdTxGovCloseMarket()
+
 func (s *CmdTestSuite) TestCmdTxGovUpdateParams() {
 	tests := []txCmdTestCase{
 		{

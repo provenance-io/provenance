@@ -43,6 +43,7 @@ func CmdTx() *cobra.Command {
 		CmdTxMarketManageReqAttrs(),
 		CmdTxGovCreateMarket(),
 		CmdTxGovManageFees(),
+		CmdTxGovCloseMarket(),
 		CmdTxGovUpdateParams(),
 	)
 
@@ -319,6 +320,21 @@ func CmdTxGovManageFees() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 	govcli.AddGovPropFlagsToCmd(cmd)
 	SetupCmdTxGovManageFees(cmd)
+	return cmd
+}
+
+// CmdTxGovCloseMarket creates the gov-close-market sub-command for the exchange tx command.
+func CmdTxGovCloseMarket() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "gov-close-market",
+		Aliases: []string{"close-market"},
+		Short:   "Submit a governance proposal to close a market",
+		RunE:    govTxRunE(MakeMsgGovCloseMarket),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	SetupCmdTxGovCloseMarket(cmd)
 	return cmd
 }
 

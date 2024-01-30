@@ -903,6 +903,37 @@ func MakeMsgGovManageFees(clientCtx client.Context, flagSet *pflag.FlagSet, _ []
 	return msg, errors.Join(errs...)
 }
 
+// SetupCmdTxGovCloseMarket adds all the flags needed for MakeMsgGovCloseMarket.
+func SetupCmdTxGovCloseMarket(cmd *cobra.Command) {
+	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
+
+	MarkFlagsRequired(cmd, FlagMarket)
+
+	AddUseArgs(cmd,
+		ReqFlagUse(FlagMarket, "market id"),
+		OptFlagUse(FlagAuthority, "authority"),
+	)
+	AddUseDetails(cmd, AuthorityDesc)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgGovCloseMarket reads all the SetupCmdTxGovCloseMarket flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgGovCloseMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgGovCloseMarketRequest, error) {
+	msg := &exchange.MsgGovCloseMarketRequest{
+		Authority: "",
+		MarketId:  0,
+	}
+
+	errs := make([]error, 2)
+	msg.Authority, errs[0] = ReadFlagAuthority(flagSet)
+	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
+
+	return msg, errors.Join(errs...)
+}
+
 // SetupCmdTxGovUpdateParams adds all the flags needed for MakeMsgGovUpdateParams.
 func SetupCmdTxGovUpdateParams(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
