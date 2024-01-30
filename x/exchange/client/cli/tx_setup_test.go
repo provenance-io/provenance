@@ -1033,6 +1033,10 @@ func TestMakeMsgMarketUpdateUserSettle(t *testing.T) {
 
 // TODO[1789]: func TestMakeMsgMarketUpdateAcceptingCommitments(t *testing.T)
 
+// TODO[1789]: func TestSetupCmdTxMarketUpdateIntermediaryDenom(t *testing.T)
+
+// TODO[1789]: func TestMakeMsgMarketUpdateIntermediaryDenomRequest(t *testing.T)
+
 func TestSetupCmdTxMarketManagePermissions(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdTxMarketManagePermissions",

@@ -39,6 +39,7 @@ func CmdTx() *cobra.Command {
 		CmdTxMarketUpdateAcceptingOrders(),
 		CmdTxMarketUpdateUserSettle(),
 		CmdTxMarketUpdateAcceptingCommitments(),
+		CmdTxMarketUpdateIntermediaryDenom(),
 		CmdTxMarketManagePermissions(),
 		CmdTxMarketManageReqAttrs(),
 		CmdTxGovCreateMarket(),
@@ -255,6 +256,20 @@ func CmdTxMarketUpdateAcceptingCommitments() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxMarketUpdateAcceptingCommitments(cmd)
+	return cmd
+}
+
+// CmdTxMarketUpdateIntermediaryDenom creates the market-intermediary-denom sub-command for the exchange tx command.
+func CmdTxMarketUpdateIntermediaryDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "market-intermediary-denom",
+		Aliases: []string{"market-update-intermediary-denom", "update-market-intermediary-denom", "update-intermediary-denom"},
+		Short:   "Change a market's intermediary denom",
+		RunE:    genericTxRunE(MakeMsgMarketUpdateIntermediaryDenomRequest),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxMarketUpdateIntermediaryDenom(cmd)
 	return cmd
 }
 

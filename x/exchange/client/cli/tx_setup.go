@@ -611,6 +611,37 @@ func MakeMsgMarketUpdateAcceptingCommitments(clientCtx client.Context, flagSet *
 	return msg, errors.Join(errs...)
 }
 
+// SetupCmdTxMarketUpdateIntermediaryDenom adds all the flags needed for MakeMsgMarketUpdateIntermediaryDenomRequest.
+func SetupCmdTxMarketUpdateIntermediaryDenom(cmd *cobra.Command) {
+	AddFlagsAdmin(cmd)
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
+	cmd.Flags().String(FlagDenom, "", "The new intermediary denomination (required)")
+
+	MarkFlagsRequired(cmd, FlagMarket, FlagDenom)
+
+	AddUseArgs(cmd,
+		ReqAdminUse,
+		ReqFlagUse(FlagMarket, "market id"),
+		ReqFlagUse(FlagDenom, "denom"),
+	)
+	AddUseDetails(cmd, ReqAdminDesc)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgMarketUpdateIntermediaryDenomRequest reads all the SetupCmdTxMarketUpdateIntermediaryDenom flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgMarketUpdateIntermediaryDenomRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketUpdateIntermediaryDenomRequest, error) {
+	msg := &exchange.MsgMarketUpdateIntermediaryDenomRequest{}
+
+	errs := make([]error, 3)
+	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
+	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
+	msg.IntermediaryDenom, errs[2] = flagSet.GetString(FlagDenom)
+
+	return msg, errors.Join(errs...)
+}
+
 // SetupCmdTxMarketManagePermissions adds all the flags needed for MakeMsgMarketManagePermissions.
 func SetupCmdTxMarketManagePermissions(cmd *cobra.Command) {
 	AddFlagsAdmin(cmd)
