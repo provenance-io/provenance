@@ -36,7 +36,8 @@ func CmdTx() *cobra.Command {
 		CmdTxMarketSetOrderExternalID(),
 		CmdTxMarketWithdraw(),
 		CmdTxMarketUpdateDetails(),
-		CmdTxMarketUpdateEnabled(),
+		CmdTxMarketUpdateAcceptingOrders(),
+		CmdTxMarketUpdateAcceptingCommitments(),
 		CmdTxMarketUpdateUserSettle(),
 		CmdTxMarketManagePermissions(),
 		CmdTxMarketManageReqAttrs(),
@@ -214,8 +215,8 @@ func CmdTxMarketUpdateDetails() *cobra.Command {
 	return cmd
 }
 
-// CmdTxMarketUpdateEnabled creates the market-accepting-orders sub-command for the exchange tx command.
-func CmdTxMarketUpdateEnabled() *cobra.Command {
+// CmdTxMarketUpdateAcceptingOrders creates the market-accepting-orders sub-command for the exchange tx command.
+func CmdTxMarketUpdateAcceptingOrders() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "market-accepting-orders",
 		Aliases: []string{"market-update-accepting-orders", "update-market-accepting-orders", "update-accepting-orders"},
@@ -239,6 +240,20 @@ func CmdTxMarketUpdateUserSettle() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxMarketUpdateUserSettle(cmd)
+	return cmd
+}
+
+// CmdTxMarketUpdateAcceptingCommitments creates the market-accepting-commitments sub-command for the exchange tx command.
+func CmdTxMarketUpdateAcceptingCommitments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "market-accepting-commitments",
+		Aliases: []string{"market-update-accepting-commitments", "update-market-accepting-commitments", "update-accepting-commitments"},
+		Short:   "Change whether a market is accepting commitments",
+		RunE:    genericTxRunE(MakeMsgMarketUpdateAcceptingCommitments),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxMarketUpdateAcceptingCommitments(cmd)
 	return cmd
 }
 

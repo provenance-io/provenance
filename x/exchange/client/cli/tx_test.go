@@ -615,6 +615,8 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled() {
 	}
 }
 
+// TODO[1789]: func (s *CmdTestSuite) TestCmdTxMarketUpdateAcceptingCommitments()
+
 func (s *CmdTestSuite) TestCmdTxMarketUpdateUserSettle() {
 	tests := []txCmdTestCase{
 		{
