@@ -2994,7 +2994,60 @@ func TestReadFlagAccountAmounts(t *testing.T) {
 			assertEqualSlices(t, tc.exp, actual, exchange.AccountAmount.String, "ReadFlagAccountAmounts(%q) result", tc.name)
 		})
 	}
+}
 
+func TestReadFlagAccountsWithoutAmounts(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		exp      []exchange.AccountAmount
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagStringSlice,
+			expErr:   "",
+		},
+		{
+			testName: "three vals",
+			flags:    []string{"--" + flagStringSlice, "first,second", "--" + flagStringSlice, "third"},
+			name:     flagStringSlice,
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: nil},
+				{Account: "second", Amount: nil},
+				{Account: "third", Amount: nil},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "A string slice")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actual []exchange.AccountAmount
+			testFunc := func() {
+				actual, err = cli.ReadFlagAccountsWithoutAmounts(flagSet, tc.name)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagAccountsWithoutAmounts(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagAccountsWithoutAmounts(%q) error", tc.name)
+			assertEqualSlices(t, tc.exp, actual, exchange.AccountAmount.String, "ReadFlagAccountsWithoutAmounts(%q) result", tc.name)
+		})
+	}
 }
 
 func TestParseNetAssetPrice(t *testing.T) {

@@ -399,6 +399,8 @@ func (s *CmdTestSuite) TestCmdTxMarketSettle() {
 
 // TODO[1789]: func (s *CmdTestSuite) TestCmdTxMarketCommitmentSettle()
 
+// TODO[1789]: func (s *CmdTestSuite) TestCmdTxMarketReleaseCommitments()
+
 func (s *CmdTestSuite) TestCmdTxMarketSetOrderExternalID() {
 	tests := []txCmdTestCase{
 		{

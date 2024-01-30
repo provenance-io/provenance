@@ -304,23 +304,22 @@ func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []s
 func SetupCmdTxMarketCommitmentSettle(cmd *cobra.Command) {
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
-	cmd.Flags().StringSlice(FlagInput, nil, "The inputs for this commitment settlement (repeatable)")
-	cmd.Flags().StringSlice(FlagOutput, nil, "The outputs for this commitment settlement (repeatable)")
+	cmd.Flags().StringSlice(FlagInput, nil, "The inputs for this commitment settlement (repeatable, required)")
+	cmd.Flags().StringSlice(FlagOutput, nil, "The outputs for this commitment settlement (repeatable, required)")
 	cmd.Flags().StringSlice(FlagFee, nil, "The fees to collect during this commitment settlement (repeatable)")
 	cmd.Flags().StringSlice(FlagNav, nil, "The net-asset-values to update during this commitment settlement (repeatable)")
 	cmd.Flags().String(FlagTag, "", "The tag to include in the events emitted as part of this commitment settlement")
 
-	MarkFlagsRequired(cmd, FlagMarket)
-	cmd.MarkFlagsOneRequired(FlagInput, FlagOutput)
+	MarkFlagsRequired(cmd, FlagMarket, FlagInput, FlagOutput)
 
 	AddUseArgs(cmd,
 		ReqAdminUse,
 		ReqFlagUse(FlagMarket, "market id"),
 		UseFlagsBreak,
-		OptFlagUse(FlagInput, "account-amount"),
-		OptFlagUse(FlagOutput, "account-amount"),
-		OptFlagUse(FlagFee, "account-amount"),
+		ReqFlagUse(FlagInput, "account-amount"),
+		ReqFlagUse(FlagOutput, "account-amount"),
 		UseFlagsBreak,
+		OptFlagUse(FlagFee, "account-amount"),
 		OptFlagUse(FlagNav, "nav"),
 		OptFlagUse(FlagTag, "event tag"),
 	)
@@ -342,6 +341,51 @@ func MakeMsgMarketCommitmentSettle(clientCtx client.Context, flagSet *pflag.Flag
 	msg.Fees, errs[4] = ReadFlagAccountAmounts(flagSet, FlagFee)
 	msg.Navs, errs[5] = ReadFlagNetAssetPrices(flagSet, FlagNav)
 	msg.EventTag, errs[6] = flagSet.GetString(FlagTag)
+
+	return msg, errors.Join(errs...)
+}
+
+// SetupCmdTxMarketReleaseCommitments adds all the flags needed for MakeMsgMarketReleaseCommitments.
+func SetupCmdTxMarketReleaseCommitments(cmd *cobra.Command) {
+	AddFlagsAdmin(cmd)
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
+	cmd.Flags().StringSlice(FlagRelease, nil, "The accounts and amounts to release (repeatable)")
+	cmd.Flags().StringSlice(FlagReleaseAll, nil, "The accounts that should have all funds released (repeatable)")
+	cmd.Flags().String(FlagTag, "", "The tag to include in the events emitted as part of these releases")
+
+	MarkFlagsRequired(cmd, FlagMarket)
+	cmd.MarkFlagsOneRequired(FlagRelease, FlagReleaseAll)
+
+	AddUseArgs(cmd,
+		ReqAdminUse,
+		ReqFlagUse(FlagMarket, "market id"),
+		UseFlagsBreak,
+		OptFlagUse(FlagRelease, "account-amount"),
+		OptFlagUse(FlagReleaseAll, "account"),
+		OptFlagUse(FlagTag, "event tag"),
+	)
+	AddUseDetails(cmd,
+		ReqAdminDesc,
+		fmt.Sprintf("At least one of --%s and/or --%s must be provided", FlagRelease, FlagReleaseAll),
+		RepeatableDesc, AccountAmountDesc,
+	)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgMarketReleaseCommitments reads all the SetupCmdTxMarketReleaseCommitments flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgMarketReleaseCommitments(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketReleaseCommitmentsRequest, error) {
+	msg := &exchange.MsgMarketReleaseCommitmentsRequest{}
+
+	var releaseAll []exchange.AccountAmount
+	errs := make([]error, 0, 5)
+	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
+	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
+	msg.ToRelease, errs[2] = ReadFlagAccountAmounts(flagSet, FlagRelease)
+	releaseAll, errs[3] = ReadFlagAccountsWithoutAmounts(flagSet, FlagReleaseAll)
+	msg.ToRelease = append(msg.ToRelease, releaseAll...)
+	msg.EventTag, errs[4] = flagSet.GetString(FlagTag)
 
 	return msg, errors.Join(errs...)
 }

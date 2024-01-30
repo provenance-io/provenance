@@ -529,6 +529,10 @@ func TestMakeMsgMarketSettle(t *testing.T) {
 
 // TODO[1789]: func TestMakeMsgMarketCommitmentSettle(t *testing.T)
 
+// TODO[1789]: func TestSetupCmdTxMarketReleaseCommitments(t *testing.T)
+
+// TODO[1789]: func TestMakeMsgMarketReleaseCommitments(t *testing.T)
+
 func TestSetupCmdTxMarketSetOrderExternalID(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdTxMarketSetOrderExternalID",

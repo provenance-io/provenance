@@ -73,6 +73,8 @@ const (
 	FlagPartial              = "partial"
 	FlagPrice                = "price"
 	FlagProposal             = "proposal"
+	FlagRelease              = "release"
+	FlagReleaseAll           = "release-all"
 	FlagReqAttrAsk           = "req-attr-ask"
 	FlagReqAttrBid           = "req-attr-bid"
 	FlagReqAttrCommitment    = "req-attr-commitment"
@@ -776,6 +778,22 @@ func ReadFlagAccountAmounts(flagSet *pflag.FlagSet, name string) ([]exchange.Acc
 	}
 
 	return ParseAccountAmounts(vals)
+}
+
+// ReadFlagAccountsWithoutAmounts reads a StringSlice flag and converts it into a slice of exchange.AccountAmount
+// with only the Account field populated using the values provided with the flag.
+// This assumes that the flag was defined with a default of nil or []string{}.
+func ReadFlagAccountsWithoutAmounts(flagSet *pflag.FlagSet, name string) ([]exchange.AccountAmount, error) {
+	vals, err := flagSet.GetStringSlice(name)
+	if len(vals) == 0 || err != nil {
+		return nil, err
+	}
+
+	rv := make([]exchange.AccountAmount, len(vals))
+	for i, val := range vals {
+		rv[i].Account = val
+	}
+	return rv, nil
 }
 
 // ParseNetAssetPrice parses a NetAssetPrice from the provided string with the format "<assets>:<price>".

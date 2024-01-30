@@ -32,6 +32,7 @@ func CmdTx() *cobra.Command {
 		CmdTxFillAsks(),
 		CmdTxMarketSettle(),
 		CmdTxMarketCommitmentSettle(),
+		CmdTxMarketReleaseCommitments(),
 		CmdTxMarketSetOrderExternalID(),
 		CmdTxMarketWithdraw(),
 		CmdTxMarketUpdateDetails(),
@@ -154,6 +155,20 @@ func CmdTxMarketCommitmentSettle() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxMarketCommitmentSettle(cmd)
+	return cmd
+}
+
+// CmdTxMarketReleaseCommitments creates the market-release-commitments sub-command for the exchange tx command.
+func CmdTxMarketReleaseCommitments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "market-release-commitments",
+		Aliases: []string{"release-commitments"},
+		Short:   "Release funds that have been committed to a market",
+		RunE:    genericTxRunE(MakeMsgMarketReleaseCommitments),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxMarketReleaseCommitments(cmd)
 	return cmd
 }
 
