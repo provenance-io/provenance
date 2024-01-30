@@ -549,37 +549,6 @@ func MakeMsgMarketUpdateAcceptingOrders(clientCtx client.Context, flagSet *pflag
 	return msg, errors.Join(errs...)
 }
 
-// SetupCmdTxMarketUpdateAcceptingCommitments adds all the flags needed for MakeMarketUpdateAcceptingCommitmentsOrders.
-func SetupCmdTxMarketUpdateAcceptingCommitments(cmd *cobra.Command) {
-	AddFlagsAdmin(cmd)
-	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
-	AddFlagsEnableDisable(cmd, "accepting_commitments")
-
-	MarkFlagsRequired(cmd, FlagMarket)
-
-	AddUseArgs(cmd,
-		ReqAdminUse,
-		ReqFlagUse(FlagMarket, "market id"),
-		ReqEnableDisableUse,
-	)
-	AddUseDetails(cmd, ReqAdminDesc, ReqEnableDisableDesc)
-
-	cmd.Args = cobra.NoArgs
-}
-
-// MakeMsgMarketUpdateAcceptingCommitments reads all the SetupCmdTxMarketUpdateAcceptingCommitments flags and creates the desired Msg.
-// Satisfies the msgMaker type.
-func MakeMsgMarketUpdateAcceptingCommitments(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketUpdateAcceptingCommitmentsRequest, error) {
-	msg := &exchange.MsgMarketUpdateAcceptingCommitmentsRequest{}
-
-	errs := make([]error, 3)
-	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
-	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
-	msg.AcceptingCommitments, errs[2] = ReadFlagsEnableDisable(flagSet)
-
-	return msg, errors.Join(errs...)
-}
-
 // SetupCmdTxMarketUpdateUserSettle adds all the flags needed for MakeMsgMarketUpdateUserSettle.
 func SetupCmdTxMarketUpdateUserSettle(cmd *cobra.Command) {
 	AddFlagsAdmin(cmd)
@@ -607,6 +576,37 @@ func MakeMsgMarketUpdateUserSettle(clientCtx client.Context, flagSet *pflag.Flag
 	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
 	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
 	msg.AllowUserSettlement, errs[2] = ReadFlagsEnableDisable(flagSet)
+
+	return msg, errors.Join(errs...)
+}
+
+// SetupCmdTxMarketUpdateAcceptingCommitments adds all the flags needed for MakeMarketUpdateAcceptingCommitmentsOrders.
+func SetupCmdTxMarketUpdateAcceptingCommitments(cmd *cobra.Command) {
+	AddFlagsAdmin(cmd)
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
+	AddFlagsEnableDisable(cmd, "accepting_commitments")
+
+	MarkFlagsRequired(cmd, FlagMarket)
+
+	AddUseArgs(cmd,
+		ReqAdminUse,
+		ReqFlagUse(FlagMarket, "market id"),
+		ReqEnableDisableUse,
+	)
+	AddUseDetails(cmd, ReqAdminDesc, ReqEnableDisableDesc)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgMarketUpdateAcceptingCommitments reads all the SetupCmdTxMarketUpdateAcceptingCommitments flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgMarketUpdateAcceptingCommitments(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketUpdateAcceptingCommitmentsRequest, error) {
+	msg := &exchange.MsgMarketUpdateAcceptingCommitmentsRequest{}
+
+	errs := make([]error, 3)
+	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
+	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
+	msg.AcceptingCommitments, errs[2] = ReadFlagsEnableDisable(flagSet)
 
 	return msg, errors.Join(errs...)
 }

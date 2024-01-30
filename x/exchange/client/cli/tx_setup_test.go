@@ -947,10 +947,6 @@ func TestMakeMsgMarketUpdateAcceptingOrders(t *testing.T) {
 	}
 }
 
-// TODO[1789]: func TestSetupCmdTxMarketUpdateAcceptingCommitments(t *testing.T)
-
-// TODO[1789]: func TestMakeMsgMarketUpdateAcceptingCommitments(t *testing.T)
-
 func TestSetupCmdTxMarketUpdateUserSettle(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdTxMarketUpdateUserSettle",
@@ -1032,6 +1028,10 @@ func TestMakeMsgMarketUpdateUserSettle(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1789]: func TestSetupCmdTxMarketUpdateAcceptingCommitments(t *testing.T)
+
+// TODO[1789]: func TestMakeMsgMarketUpdateAcceptingCommitments(t *testing.T)
 
 func TestSetupCmdTxMarketManagePermissions(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{

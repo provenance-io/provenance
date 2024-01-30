@@ -570,7 +570,7 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateDetails() {
 	}
 }
 
-func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled() {
+func (s *CmdTestSuite) TestCmdTxMarketUpdateAcceptingOrders() {
 	tests := []txCmdTestCase{
 		{
 			name:     "no market",
@@ -614,8 +614,6 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled() {
 		})
 	}
 }
-
-// TODO[1789]: func (s *CmdTestSuite) TestCmdTxMarketUpdateAcceptingCommitments()
 
 func (s *CmdTestSuite) TestCmdTxMarketUpdateUserSettle() {
 	tests := []txCmdTestCase{
@@ -661,6 +659,8 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateUserSettle() {
 		})
 	}
 }
+
+// TODO[1789]: func (s *CmdTestSuite) TestCmdTxMarketUpdateAcceptingCommitments()
 
 func (s *CmdTestSuite) TestCmdTxMarketManagePermissions() {
 	tests := []txCmdTestCase{
