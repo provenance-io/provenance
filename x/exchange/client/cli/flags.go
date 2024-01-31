@@ -57,6 +57,7 @@ const (
 	FlagDefault              = "default"
 	FlagDenom                = "denom"
 	FlagDescription          = "description"
+	FlagDetails              = "details"
 	FlagDisable              = "disable"
 	FlagEnable               = "enable"
 	FlagExternalID           = "external-id"
