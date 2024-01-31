@@ -304,22 +304,22 @@ func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []s
 func SetupCmdTxMarketCommitmentSettle(cmd *cobra.Command) {
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
-	cmd.Flags().StringSlice(FlagInput, nil, "The inputs for this commitment settlement (repeatable, required)")
-	cmd.Flags().StringSlice(FlagOutput, nil, "The outputs for this commitment settlement (repeatable, required)")
-	cmd.Flags().StringSlice(FlagFee, nil, "The fees to collect during this commitment settlement (repeatable)")
+	cmd.Flags().StringSlice(FlagInputs, nil, "The inputs for this commitment settlement (repeatable, required)")
+	cmd.Flags().StringSlice(FlagOutputs, nil, "The outputs for this commitment settlement (repeatable, required)")
+	cmd.Flags().StringSlice(FlagSettlementFees, nil, "The fees to collect during this commitment settlement (repeatable)")
 	cmd.Flags().StringSlice(FlagNav, nil, "The net-asset-values to update during this commitment settlement (repeatable)")
 	cmd.Flags().String(FlagTag, "", "The tag to include in the events emitted as part of this commitment settlement")
 
-	MarkFlagsRequired(cmd, FlagMarket, FlagInput, FlagOutput)
+	MarkFlagsRequired(cmd, FlagMarket, FlagInputs, FlagOutputs)
 
 	AddUseArgs(cmd,
 		ReqAdminUse,
 		ReqFlagUse(FlagMarket, "market id"),
 		UseFlagsBreak,
-		ReqFlagUse(FlagInput, "account-amount"),
-		ReqFlagUse(FlagOutput, "account-amount"),
+		ReqFlagUse(FlagInputs, "account-amount"),
+		ReqFlagUse(FlagOutputs, "account-amount"),
 		UseFlagsBreak,
-		OptFlagUse(FlagFee, "account-amount"),
+		OptFlagUse(FlagSettlementFees, "account-amount"),
 		OptFlagUse(FlagNav, "nav"),
 		OptFlagUse(FlagTag, "event tag"),
 	)
@@ -336,9 +336,9 @@ func MakeMsgMarketCommitmentSettle(clientCtx client.Context, flagSet *pflag.Flag
 	errs := make([]error, 7)
 	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
 	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
-	msg.Inputs, errs[2] = ReadFlagAccountAmounts(flagSet, FlagInput)
-	msg.Outputs, errs[3] = ReadFlagAccountAmounts(flagSet, FlagOutput)
-	msg.Fees, errs[4] = ReadFlagAccountAmounts(flagSet, FlagFee)
+	msg.Inputs, errs[2] = ReadFlagAccountAmounts(flagSet, FlagInputs)
+	msg.Outputs, errs[3] = ReadFlagAccountAmounts(flagSet, FlagOutputs)
+	msg.Fees, errs[4] = ReadFlagAccountAmounts(flagSet, FlagSettlementFees)
 	msg.Navs, errs[5] = ReadFlagNetAssetPrices(flagSet, FlagNav)
 	msg.EventTag, errs[6] = flagSet.GetString(FlagTag)
 

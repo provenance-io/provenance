@@ -232,9 +232,70 @@ func TestMakeMsgCreateBid(t *testing.T) {
 	}
 }
 
-// TODO[1789]: func TestSetupCmdTxCommitFunds(t *testing.T)
+func TestSetupCmdTxCommitFunds(t *testing.T) {
+	runSetupTestCase(t, setupTestCase{
+		name:  "SetupCmdTxCommitFunds",
+		setup: cli.SetupCmdTxCommitFunds,
+		expFlags: []string{
+			cli.FlagAccount, cli.FlagMarket, cli.FlagAmount, cli.FlagCreationFee, cli.FlagTag,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			flags.FlagFrom:  {oneReq: {flags.FlagFrom + " " + cli.FlagAccount}},
+			cli.FlagAccount: {oneReq: {flags.FlagFrom + " " + cli.FlagAccount}},
+			cli.FlagMarket:  {required: {"true"}},
+			cli.FlagAmount:  {required: {"true"}},
+		},
+		expInUse: []string{
+			"--account", "--market <market id>", "--amount <amount>",
+			"[--creation-fee <creation fee>]", "[--tag <event tag>]",
+			cli.ReqSignerDesc(cli.FlagAccount),
+		},
+	})
+}
 
-// TODO[1789]: func TestMakeMsgCommitFunds(t *testing.T)
+func TestMakeMsgCommitFunds(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgCommitFundsRequest]{
+		makerName: "MakeMsgCommitFunds",
+		maker:     cli.MakeMsgCommitFunds,
+		setup:     cli.SetupCmdTxCommitFunds,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgCommitFundsRequest]{
+		{
+			name:      "a couple errors",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--amount", "nope", "--creation-fee", "123"},
+			expMsg: &exchange.MsgCommitFundsRequest{
+				Account: sdk.AccAddress("FromAddress_________").String(),
+			},
+			expErr: joinErrs(
+				"error parsing --amount as coins: invalid coin expression: \"nope\"",
+				"error parsing --creation-fee as a coin: invalid coin expression: \"123\"",
+			),
+		},
+		{
+			name: "all fields",
+			flags: []string{
+				"--account", "someaddr", "--market", "4", "--amount", "10apple",
+				"--tag", "atagofsomesort", "--creation-fee", "6grape",
+			},
+			expMsg: &exchange.MsgCommitFundsRequest{
+				Account:     "someaddr",
+				MarketId:    4,
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("apple", 10)),
+				CreationFee: &sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(6)},
+				EventTag:    "atagofsomesort",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxCancelOrder(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{

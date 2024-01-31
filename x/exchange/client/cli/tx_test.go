@@ -130,7 +130,65 @@ func (s *CmdTestSuite) TestCmdTxCreateBid() {
 	}
 }
 
-// TODO[1789]: func (s *CmdTestSuite) TestCmdTxCommitFunds()
+func (s *CmdTestSuite) TestCmdTxCommitFunds() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"commit", "--market", "5", "--amount", "10apple"},
+			expInErr: []string{"at least one of the flags in the group [from account] is required"},
+		},
+		{
+			name: "insufficient creation fee",
+			args: []string{"commit-funds", "--market", "5",
+				"--amount", "1000apple", "--creation-fee", "14peach",
+				"--from", s.addr2.String(),
+			},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"insufficient commitment creation fee: \"14peach\" is less than required amount \"15peach\""},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "okay",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				toCommit := sdk.NewCoins(sdk.NewInt64Coin("apple", 1000))
+				fee := sdk.NewInt64Coin("peach", 15)
+				tag := "committal-0EE2A6EC"
+				args := []string{"--amount", toCommit.String(), "--creation-fee", fee.String(), "--tag", tag}
+
+				addr2Bals := s.queryBankBalances(s.addr2.String())
+				expBals := []banktypes.Balance{{
+					Address: s.addr2.String(),
+					Coins:   addr2Bals.Sub(fee, s.bondCoin(10)),
+				}}
+
+				addr2Spendable := s.queryBankSpendableBalances(s.addr2.String())
+				expSpend := []banktypes.Balance{{
+					Address: s.addr2.String(),
+					Coins:   addr2Spendable.Sub(fee, s.bondCoin(10)).Sub(toCommit...),
+				}}
+
+				expEvent := exchange.NewEventFundsCommitted(s.addr2.String(), 5, toCommit, tag)
+				expEvents := sdk.Events{s.untypeEvent(expEvent)}
+				s.markAttrsIndexed(expEvents)
+
+				fup := s.composeFollowups(
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+					s.assertEventsContains(expEvents),
+				)
+				return args, fup
+			},
+			args:         []string{"commit", "--market", "5", "--from", s.addr2.String()},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
 func (s *CmdTestSuite) TestCmdTxCancelOrder() {
 	tests := []txCmdTestCase{

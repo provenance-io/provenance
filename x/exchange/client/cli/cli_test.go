@@ -105,27 +105,38 @@ func (s *CmdTestSuite) SetupSuite() {
 		cli.AuthorityAddr.String(): "authorityAddr",
 	}
 
-	cherryMarker := &markertypes.MarkerAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address: markertypes.MustGetMarkerAddress("cherry").String(),
-		},
-		Status:                 markertypes.StatusActive,
-		Denom:                  "cherry",
-		Supply:                 sdkmath.NewInt(0),
-		MarkerType:             markertypes.MarkerType_Coin,
-		SupplyFixed:            false,
-		AllowGovernanceControl: true,
+	newMarker := func(denom string) *markertypes.MarkerAccount {
+		return &markertypes.MarkerAccount{
+			BaseAccount: &authtypes.BaseAccount{
+				Address: markertypes.MustGetMarkerAddress("cherry").String(),
+			},
+			Status:                 markertypes.StatusActive,
+			Denom:                  "cherry",
+			Supply:                 sdkmath.NewInt(0),
+			MarkerType:             markertypes.MarkerType_Coin,
+			SupplyFixed:            false,
+			AllowGovernanceControl: true,
+		}
 	}
+	appleMarker := newMarker("apple")
+	acornMarker := newMarker("acorn")
+	peachMarker := newMarker("peach")
+	cherryMarker := newMarker("cherry")
+
+	allMarkers := []*markertypes.MarkerAccount{appleMarker, acornMarker, peachMarker, cherryMarker}
 
 	// Add accounts to auth gen state.
 	var authGen authtypes.GenesisState
 	err := s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[authtypes.ModuleName], &authGen)
 	s.Require().NoError(err, "UnmarshalJSON auth gen state")
-	genAccs := make(authtypes.GenesisAccounts, len(s.accountAddrs), len(s.accountAddrs)+1)
-	for i, addr := range s.accountAddrs {
-		genAccs[i] = authtypes.NewBaseAccount(addr, nil, 0, 1)
+	genAccs := make(authtypes.GenesisAccounts, 0, len(s.accountAddrs)+len(allMarkers))
+	for _, addr := range s.accountAddrs {
+		genAccs = append(genAccs, authtypes.NewBaseAccount(addr, nil, 0, 1))
 	}
-	genAccs = append(genAccs, cherryMarker)
+	for _, marker := range allMarkers {
+		genAccs = append(genAccs, marker)
+	}
+
 	newAccounts, err := authtypes.PackAccounts(genAccs)
 	s.Require().NoError(err, "PackAccounts")
 	authGen.Accounts = append(authGen.Accounts, newAccounts...)
@@ -159,6 +170,7 @@ func (s *CmdTestSuite) SetupSuite() {
 			AcceptingCommitments:     true,
 			CommitmentSettlementBips: 50,
 			IntermediaryDenom:        "cherry",
+			FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("peach", 15)},
 		},
 		exchange.Market{
 			MarketId: 5,
@@ -180,6 +192,7 @@ func (s *CmdTestSuite) SetupSuite() {
 			AcceptingCommitments:     true,
 			CommitmentSettlementBips: 50,
 			IntermediaryDenom:        "cherry",
+			FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("peach", 15)},
 		},
 		// Do not make a market 419, lots of tests expect it to not exist.
 		exchange.Market{
@@ -255,14 +268,24 @@ func (s *CmdTestSuite) SetupSuite() {
 	var markerGen markertypes.GenesisState
 	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[markertypes.ModuleName], &markerGen)
 	s.Require().NoError(err, "UnmarshalJSON marker gen state")
-	markerGen.NetAssetValues = append(markerGen.NetAssetValues,
-		markertypes.MarkerNetAssetValues{
-			Address: cherryMarker.Address,
-			NetAssetValues: []markertypes.NetAssetValue{
-				{Price: sdk.NewInt64Coin("nhash", 100), Volume: 1},
-			},
+	markerGen.NetAssetValues = append(markerGen.NetAssetValues, []markertypes.MarkerNetAssetValues{
+		{
+			Address:        cherryMarker.Address,
+			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("nhash", 100), Volume: 1}},
 		},
-	)
+		{
+			Address:        appleMarker.Address,
+			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 8), Volume: 1}},
+		},
+		{
+			Address:        acornMarker.Address,
+			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 3), Volume: 17}},
+		},
+		{
+			Address:        peachMarker.Address,
+			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 778), Volume: 3}},
+		},
+	}...)
 	s.cfg.GenesisState[markertypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&markerGen)
 	s.Require().NoError(err, "MarshalJSON marker gen state")
 
@@ -519,6 +542,14 @@ func (s *CmdTestSuite) runQueryCmdTestCase(tc queryCmdTestCase) {
 	}
 }
 
+func (s *CmdTestSuite) composeFollowups(followups ...func(*sdk.TxResponse)) func(*sdk.TxResponse) {
+	return func(resp *sdk.TxResponse) {
+		for _, followup := range followups {
+			followup(resp)
+		}
+	}
+}
+
 // getEventAttribute finds the value of an attribute in an event.
 // Returns an error if the value is empty, the attribute doesn't exist, or the event doesn't exist.
 func (s *CmdTestSuite) getEventAttribute(events []abci.Event, eventType, attribute string) (string, error) {
@@ -542,6 +573,35 @@ func (s *CmdTestSuite) getEventAttribute(events []abci.Event, eventType, attribu
 // findNewOrderID gets the order id from the EventOrderCreated event.
 func (s *CmdTestSuite) findNewOrderID(resp *sdk.TxResponse) (string, error) {
 	return s.getEventAttribute(resp.Events, "provenance.exchange.v1.EventOrderCreated", "order_id")
+}
+
+// assertEventTagFollowup asserts that the "tag" attribute of an event with the given name is
+func (s *CmdTestSuite) assertEventsContains(expected sdk.Events) func(*sdk.TxResponse) {
+	return func(resp *sdk.TxResponse) {
+		actual := s.abciEventsToSDKEvents(resp.Events)
+		assertions.AssertEventsContains(s.T(), expected, actual, "TxResponse.Events")
+	}
+}
+
+// abciEventsToSDKEvents converts the provided events into sdk.Events.
+func (s *CmdTestSuite) abciEventsToSDKEvents(fromResp []abci.Event) sdk.Events {
+	if fromResp == nil {
+		return nil
+	}
+	events := make(sdk.Events, len(fromResp))
+	for i, v := range fromResp {
+		events[i] = sdk.Event(v)
+	}
+	return events
+}
+
+// markAttrsIndexed sets Index = true on all attributes in the provided events.
+func (s *CmdTestSuite) markAttrsIndexed(events sdk.Events) {
+	for e, event := range events {
+		for a := range event.Attributes {
+			events[e].Attributes[a].Index = true
+		}
+	}
 }
 
 // assertOrder uses the GetOrder query to look up an order and make sure it equals the one provided.
@@ -703,6 +763,11 @@ func (s *CmdTestSuite) assertErrorContents(theError error, contains []string, ms
 	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
+// bondCoin returns a Coin with the bond denom and the provided amount.
+func (s *CmdTestSuite) bondCoin(amt int64) sdk.Coin {
+	return sdk.NewInt64Coin(s.cfg.BondDenom, amt)
+}
+
 // bondCoins returns a Coins with just an entry with the bond denom and the provided amount.
 func (s *CmdTestSuite) bondCoins(amt int64) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, amt))
@@ -749,6 +814,16 @@ func (s *CmdTestSuite) assertBalancesFollowup(expBals []banktypes.Balance) func(
 		for _, expBal := range expBals {
 			actBal := s.queryBankBalances(expBal.Address)
 			s.Assert().Equal(expBal.Coins.String(), actBal.String(), "%s balances", s.getAddrName(expBal.Address))
+		}
+	}
+}
+
+// assertBalancesFollowup returns a follow-up function that asserts that the spendable balances are now as expected.
+func (s *CmdTestSuite) assertSpendableBalancesFollowup(expSpendable []banktypes.Balance) func(*sdk.TxResponse) {
+	return func(_ *sdk.TxResponse) {
+		for _, expBal := range expSpendable {
+			actBal := s.queryBankSpendableBalances(expBal.Address)
+			s.Assert().Equal(expBal.Coins.String(), actBal.String(), "%s spendable balances", s.getAddrName(expBal.Address))
 		}
 	}
 }
@@ -820,6 +895,21 @@ func (s *CmdTestSuite) queryBankBalances(addr string) sdk.Coins {
 	return resp.Balances
 }
 
+// queryBankSpendableBalances executes a bank query to get an account's spendable balances.
+func (s *CmdTestSuite) queryBankSpendableBalances(addr string) sdk.Coins {
+	clientCtx := s.getClientCtx()
+	cmd := bankcli.GetSpendableBalancesCmd()
+	args := []string{addr, "--output", "json"}
+	outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
+	outBz := outBW.Bytes()
+
+	var resp banktypes.QuerySpendableBalancesResponse
+	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+	s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
+	return resp.Balances
+}
+
 // execBankSend executes a bank send command.
 func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 	clientCtx := s.getClientCtx()
@@ -843,6 +933,12 @@ func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 	outStr = outBW.String()
 	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmdName, args)
 	failed = false
+}
+
+func (s *CmdTestSuite) untypeEvent(tev proto.Message) sdk.Event {
+	rv, err := sdk.TypedEventToEvent(tev)
+	s.Require().NoError(err, "TypedEventToEvent(%T)", tev)
+	return rv
 }
 
 // joinErrs joins the provided error strings matching to how errors.Join does.
