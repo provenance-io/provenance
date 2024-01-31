@@ -307,7 +307,7 @@ func SetupCmdTxMarketCommitmentSettle(cmd *cobra.Command) {
 	cmd.Flags().StringSlice(FlagInputs, nil, "The inputs for this commitment settlement (repeatable, required)")
 	cmd.Flags().StringSlice(FlagOutputs, nil, "The outputs for this commitment settlement (repeatable, required)")
 	cmd.Flags().StringSlice(FlagSettlementFees, nil, "The fees to collect during this commitment settlement (repeatable)")
-	cmd.Flags().StringSlice(FlagNav, nil, "The net-asset-values to update during this commitment settlement (repeatable)")
+	cmd.Flags().StringSlice(FlagNavs, nil, "The net-asset-values to update during this commitment settlement (repeatable)")
 	cmd.Flags().String(FlagTag, "", "The tag to include in the events emitted as part of this commitment settlement")
 
 	MarkFlagsRequired(cmd, FlagMarket, FlagInputs, FlagOutputs)
@@ -320,7 +320,7 @@ func SetupCmdTxMarketCommitmentSettle(cmd *cobra.Command) {
 		ReqFlagUse(FlagOutputs, "account-amount"),
 		UseFlagsBreak,
 		OptFlagUse(FlagSettlementFees, "account-amount"),
-		OptFlagUse(FlagNav, "nav"),
+		OptFlagUse(FlagNavs, "nav"),
 		OptFlagUse(FlagTag, "event tag"),
 	)
 	AddUseDetails(cmd, ReqAdminDesc, RepeatableDesc, AccountAmountDesc, NAVDesc)
@@ -339,7 +339,7 @@ func MakeMsgMarketCommitmentSettle(clientCtx client.Context, flagSet *pflag.Flag
 	msg.Inputs, errs[2] = ReadFlagAccountAmounts(flagSet, FlagInputs)
 	msg.Outputs, errs[3] = ReadFlagAccountAmounts(flagSet, FlagOutputs)
 	msg.Fees, errs[4] = ReadFlagAccountAmounts(flagSet, FlagSettlementFees)
-	msg.Navs, errs[5] = ReadFlagNetAssetPrices(flagSet, FlagNav)
+	msg.Navs, errs[5] = ReadFlagNetAssetPrices(flagSet, FlagNavs)
 	msg.EventTag, errs[6] = flagSet.GetString(FlagTag)
 
 	return msg, errors.Join(errs...)
@@ -379,7 +379,7 @@ func MakeMsgMarketReleaseCommitments(clientCtx client.Context, flagSet *pflag.Fl
 	msg := &exchange.MsgMarketReleaseCommitmentsRequest{}
 
 	var releaseAll []exchange.AccountAmount
-	errs := make([]error, 0, 5)
+	errs := make([]error, 5)
 	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
 	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
 	msg.ToRelease, errs[2] = ReadFlagAccountAmounts(flagSet, FlagRelease)
@@ -611,7 +611,7 @@ func MakeMsgMarketUpdateAcceptingCommitments(clientCtx client.Context, flagSet *
 	return msg, errors.Join(errs...)
 }
 
-// SetupCmdTxMarketUpdateIntermediaryDenom adds all the flags needed for MakeMsgMarketUpdateIntermediaryDenomRequest.
+// SetupCmdTxMarketUpdateIntermediaryDenom adds all the flags needed for MakeMsgMarketUpdateIntermediaryDenom.
 func SetupCmdTxMarketUpdateIntermediaryDenom(cmd *cobra.Command) {
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
@@ -629,9 +629,9 @@ func SetupCmdTxMarketUpdateIntermediaryDenom(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketUpdateIntermediaryDenomRequest reads all the SetupCmdTxMarketUpdateIntermediaryDenom flags and creates the desired Msg.
+// MakeMsgMarketUpdateIntermediaryDenom reads all the SetupCmdTxMarketUpdateIntermediaryDenom flags and creates the desired Msg.
 // Satisfies the msgMaker type.
-func MakeMsgMarketUpdateIntermediaryDenomRequest(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketUpdateIntermediaryDenomRequest, error) {
+func MakeMsgMarketUpdateIntermediaryDenom(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketUpdateIntermediaryDenomRequest, error) {
 	msg := &exchange.MsgMarketUpdateIntermediaryDenomRequest{}
 
 	errs := make([]error, 3)
@@ -953,10 +953,7 @@ func SetupCmdTxGovCloseMarket(cmd *cobra.Command) {
 // MakeMsgGovCloseMarket reads all the SetupCmdTxGovCloseMarket flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgGovCloseMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgGovCloseMarketRequest, error) {
-	msg := &exchange.MsgGovCloseMarketRequest{
-		Authority: "",
-		MarketId:  0,
-	}
+	msg := &exchange.MsgGovCloseMarketRequest{}
 
 	errs := make([]error, 2)
 	msg.Authority, errs[0] = ReadFlagAuthority(flagSet)

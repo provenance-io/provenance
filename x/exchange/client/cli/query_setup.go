@@ -356,7 +356,7 @@ func SetupCmdQueryGetMarketCommitments(cmd *cobra.Command) {
 	)
 	AddUseDetails(cmd, "A <market id> is required as either an arg or flag, but not both.")
 	AddQueryExample(cmd, "3")
-	AddQueryExample(cmd, "--"+FlagMarket, "1")
+	AddQueryExample(cmd, "--"+FlagMarket, "1", "--limit", "10")
 
 	cmd.Args = cobra.MaximumNArgs(1)
 }

@@ -1035,6 +1035,8 @@ type setupTestCase struct {
 	expExamples []string
 	// skipArgsCheck true causes the runner to skip the check ensuring that the command's Args func has been set.
 	skipArgsCheck bool
+	// skipAddingFromFlag true causes the runner to not add the from flag to the dummy command.
+	skipAddingFromFlag bool
 }
 
 // runSetupTestCase runs the provided setup func and checks that everything is set up as expected.
@@ -1048,7 +1050,9 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 			return errors.New("the dummy command should not have been executed")
 		},
 	}
-	cmd.Flags().String(flags.FlagFrom, "", "The from flag")
+	if !tc.skipAddingFromFlag {
+		cmd.Flags().String(flags.FlagFrom, "", "The from flag")
+	}
 
 	testFunc := func() {
 		tc.setup(cmd)

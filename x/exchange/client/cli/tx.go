@@ -265,7 +265,7 @@ func CmdTxMarketUpdateIntermediaryDenom() *cobra.Command {
 		Use:     "market-intermediary-denom",
 		Aliases: []string{"market-update-intermediary-denom", "update-market-intermediary-denom", "update-intermediary-denom"},
 		Short:   "Change a market's intermediary denom",
-		RunE:    genericTxRunE(MakeMsgMarketUpdateIntermediaryDenomRequest),
+		RunE:    genericTxRunE(MakeMsgMarketUpdateIntermediaryDenom),
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
