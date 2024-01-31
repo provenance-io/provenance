@@ -729,6 +729,22 @@ func TestMakeQueryGetAllOrders(t *testing.T) {
 	}
 }
 
+// TODO[1789]: func TestSetupCmdQueryGetCommitment(t *testing.T)
+
+// TODO[1789]: func TestMakeQueryGetCommitment(t *testing.T)
+
+// TODO[1789]: func TestSetupCmdQueryGetAccountCommitments(t *testing.T)
+
+// TODO[1789]: func TestMakeQueryGetAccountCommitments(t *testing.T)
+
+// TODO[1789]: func TestSetupCmdQueryGetMarketCommitments(t *testing.T)
+
+// TODO[1789]: func TestMakeQueryGetMarketCommitments(t *testing.T)
+
+// TODO[1789]: func TestSetupCmdQueryGetAllCommitments(t *testing.T)
+
+// TODO[1789]: func TestMakeQueryGetAllCommitments(t *testing.T)
+
 func TestSetupCmdQueryGetMarket(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
 		name:     "SetupCmdQueryGetMarket",
@@ -865,6 +881,10 @@ func TestMakeQueryParams(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1789]: func TestSetupCmdQueryCommitmentSettlementFeeCalc(t *testing.T)
+
+// TODO[1789]: func TestMakeQueryCommitmentSettlementFeeCalc(t *testing.T)
 
 func TestSetupCmdQueryValidateCreateMarket(t *testing.T) {
 	tc := setupTestCase{

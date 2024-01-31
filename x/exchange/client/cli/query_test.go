@@ -315,6 +315,14 @@ func (s *CmdTestSuite) TestCmdQueryGetAllOrders() {
 	}
 }
 
+// TODO[1789]: func (s *CmdTestSuite) TestCmdQueryGetCommitment()
+
+// TODO[1789]: func (s *CmdTestSuite) TestCmdQueryGetAccountCommitments()
+
+// TODO[1789]: func (s *CmdTestSuite) TestCmdQueryGetMarketCommitments()
+
+// TODO[1789]: func (s *CmdTestSuite) TestCmdQueryGetAllCommitments()
+
 func (s *CmdTestSuite) TestCmdQueryGetMarket() {
 	tests := []queryCmdTestCase{
 		{
@@ -461,6 +469,8 @@ func (s *CmdTestSuite) TestCmdQueryParams() {
 		})
 	}
 }
+
+// TODO[1789]: func (s *CmdTestSuite) TestCmdQueryCommitmentSettlementFeeCalc()
 
 func (s *CmdTestSuite) TestCmdQueryValidateCreateMarket() {
 	tests := []queryCmdTestCase{

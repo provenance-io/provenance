@@ -289,6 +289,22 @@ func MakeQueryGetAllOrders(_ client.Context, flagSet *pflag.FlagSet, _ []string)
 	return req, err
 }
 
+// TODO[1789]: func SetupCmdQueryGetCommitment(cmd *cobra.Command)
+
+// TODO[1789]: func MakeQueryGetCommitment(clientCtx client.Context, flagSet *pflag.FlagSet, args []string)
+
+// TODO[1789]: func SetupCmdQueryGetAccountCommitments(cmd *cobra.Command)
+
+// TODO[1789]: func MakeQueryGetAccountCommitments(clientCtx client.Context, flagSet *pflag.FlagSet, args []string)
+
+// TODO[1789]: func SetupCmdQueryGetMarketCommitments(cmd *cobra.Command)
+
+// TODO[1789]: func MakeQueryGetMarketCommitments(clientCtx client.Context, flagSet *pflag.FlagSet, args []string)
+
+// TODO[1789]: func SetupCmdQueryGetAllCommitments(cmd *cobra.Command)
+
+// TODO[1789]: func MakeQueryGetAllCommitments(clientCtx client.Context, flagSet *pflag.FlagSet, args []string)
+
 // SetupCmdQueryGetMarket adds all the flags needed for MakeQueryGetMarket.
 func SetupCmdQueryGetMarket(cmd *cobra.Command) {
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
@@ -350,6 +366,10 @@ func SetupCmdQueryParams(cmd *cobra.Command) {
 func MakeQueryParams(_ client.Context, _ *pflag.FlagSet, _ []string) (*exchange.QueryParamsRequest, error) {
 	return &exchange.QueryParamsRequest{}, nil
 }
+
+// TODO[1789]: func SetupCmdQueryCommitmentSettlementFeeCalc(cmd *cobra.Command)
+
+// TODO[1789]: func MakeQueryCommitmentSettlementFeeCalc(clientCtx client.Context, flagSet *pflag.FlagSet, args []string)
 
 // SetupCmdQueryValidateCreateMarket adds all the flags needed for MakeQueryValidateCreateMarket.
 func SetupCmdQueryValidateCreateMarket(cmd *cobra.Command) {

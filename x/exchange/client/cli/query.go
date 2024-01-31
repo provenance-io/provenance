@@ -27,9 +27,14 @@ func CmdQuery() *cobra.Command {
 		CmdQueryGetOwnerOrders(),
 		CmdQueryGetAssetOrders(),
 		CmdQueryGetAllOrders(),
+		// CmdQueryGetCommitment(),
+		// CmdQueryGetAccountCommitments(),
+		// CmdQueryGetMarketCommitments(),
+		// CmdQueryGetAllCommitments(),
 		CmdQueryGetMarket(),
 		CmdQueryGetAllMarkets(),
 		CmdQueryParams(),
+		// CmdQueryCommitmentSettlementFeeCalc(),
 		CmdQueryValidateCreateMarket(),
 		CmdQueryValidateMarket(),
 		CmdQueryValidateManageFees(),
@@ -136,6 +141,14 @@ func CmdQueryGetAllOrders() *cobra.Command {
 	return cmd
 }
 
+// TODO[1789]: func CmdQueryGetCommitment()
+
+// TODO[1789]: func CmdQueryGetAccountCommitments()
+
+// TODO[1789]: func CmdQueryGetMarketCommitments()
+
+// TODO[1789]: func CmdQueryGetAllCommitments()
+
 // CmdQueryGetMarket creates the market sub-command for the exchange query command.
 func CmdQueryGetMarket() *cobra.Command {
 	cmd := &cobra.Command{
@@ -177,6 +190,8 @@ func CmdQueryParams() *cobra.Command {
 	SetupCmdQueryParams(cmd)
 	return cmd
 }
+
+// TODO[1789]: func CmdQueryCommitmentSettlementFeeCalc()
 
 // CmdQueryValidateCreateMarket creates the validate-create-market sub-command for the exchange query command.
 func CmdQueryValidateCreateMarket() *cobra.Command {
