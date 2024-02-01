@@ -108,7 +108,7 @@ func (s *CmdTestSuite) SetupSuite() {
 	newMarker := func(denom string) *markertypes.MarkerAccount {
 		return &markertypes.MarkerAccount{
 			BaseAccount: &authtypes.BaseAccount{
-				Address: markertypes.MustGetMarkerAddress("cherry").String(),
+				Address: markertypes.MustGetMarkerAddress(denom).String(),
 			},
 			Status:                 markertypes.StatusActive,
 			Denom:                  "cherry",
@@ -196,7 +196,7 @@ func (s *CmdTestSuite) SetupSuite() {
 		},
 		// Do not make a market 419, lots of tests expect it to not exist.
 		exchange.Market{
-			// The orders in this market are for the orders queries.
+			// The stuff in this market is for the query tests.
 			// Don't use it in other unit tests (e.g. order creation or settlement).
 			MarketId: 420,
 			MarketDetails: exchange.MarketDetails{
@@ -241,14 +241,35 @@ func (s *CmdTestSuite) SetupSuite() {
 			},
 		},
 	)
-	toHold := make(map[string]sdk.Coins)
+
 	exchangeGen.Orders = make([]exchange.Order, 60)
 	for i := range exchangeGen.Orders {
 		order := s.makeInitialOrder(uint64(i + 1))
 		exchangeGen.Orders[i] = *order
-		toHold[order.GetOwner()] = toHold[order.GetOwner()].Add(order.GetHoldAmount()...)
 	}
 	exchangeGen.LastOrderId = uint64(100)
+
+	for i := range s.accountAddrs {
+		com := s.makeInitialCommitment(i)
+		if !com.Amount.IsZero() {
+			exchangeGen.Commitments = append(exchangeGen.Commitments, *com)
+		}
+	}
+
+	exchangeGen.Commitments = append(exchangeGen.Commitments, exchange.Commitment{
+		Account:  s.addr1.String(),
+		MarketId: 421,
+		Amount:   sdk.NewCoins(sdk.NewInt64Coin("apple", 4210), sdk.NewInt64Coin("peach", 421)),
+	})
+
+	toHold := make(map[string]sdk.Coins)
+	for _, order := range exchangeGen.Orders {
+		toHold[order.GetOwner()] = toHold[order.GetOwner()].Add(order.GetHoldAmount()...)
+	}
+	for _, com := range exchangeGen.Commitments {
+		toHold[com.Account] = toHold[com.Account].Add(com.Amount...)
+	}
+
 	s.cfg.GenesisState[exchange.ModuleName], err = s.cfg.Codec.MarshalJSON(&exchangeGen)
 	s.Require().NoError(err, "MarshalJSON exchange gen state")
 
@@ -271,7 +292,7 @@ func (s *CmdTestSuite) SetupSuite() {
 	markerGen.NetAssetValues = append(markerGen.NetAssetValues, []markertypes.MarkerNetAssetValues{
 		{
 			Address:        cherryMarker.Address,
-			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("nhash", 100), Volume: 1}},
+			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 100), Volume: 1}},
 		},
 		{
 			Address:        appleMarker.Address,
@@ -374,6 +395,48 @@ func (s *CmdTestSuite) makeInitialOrder(orderID uint64) *exchange.Order {
 		})
 	}
 	return order
+}
+
+// makeInitialCommitment makes a commitment for the s.accountAddrs with the provided addrI.
+// The amount is based off the addrI and might be zero.
+func (s *CmdTestSuite) makeInitialCommitment(addrI int) *exchange.Commitment {
+	var addr sdk.AccAddress
+	s.Require().NotPanics(func() {
+		addr = s.accountAddrs[addrI]
+	}, "s.accountAddrs[%d]", addrI)
+	rv := &exchange.Commitment{
+		Account:  addr.String(),
+		MarketId: 420,
+	}
+
+	i := addrI % 10 // in case the number of addresses changes later.
+	// One denom  (3): 0 = apple, 1 = acorn, 2 = peach
+	// Two denoms (3): 3 = apple+acorn, 4 = apple+peach, 5 = acorn+peach
+	// All denoms (2): 6, 7
+	// Nothing    (2): 8, 9
+	// apple <= 0, 3, 4, 6, 7
+	// acorn <= 1, 3, 5, 6, 7
+	// peach <= 2, 4, 5, 6, 7
+	if contains([]int{0, 3, 4, 6, 7}, i) {
+		rv.Amount = rv.Amount.Add(sdk.NewInt64Coin("apple", int64(1000+addrI*200)))
+	}
+	if contains([]int{1, 3, 5, 6, 7}, i) {
+		rv.Amount = rv.Amount.Add(sdk.NewInt64Coin("acorn", int64(10_000+addrI*100)))
+	}
+	if contains([]int{2, 4, 5, 6, 7}, i) {
+		rv.Amount = rv.Amount.Add(sdk.NewInt64Coin("peach", int64(500+addrI*addrI*100)))
+	}
+	return rv
+}
+
+// contains reports whether v is present in s.
+func contains[S ~[]E, E comparable](s S, v E) bool {
+	for i := range s {
+		if v == s[i] {
+			return true
+		}
+	}
+	return false
 }
 
 // getClientCtx get a client context that knows about the suite's keyring.

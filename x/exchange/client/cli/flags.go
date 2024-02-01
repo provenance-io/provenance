@@ -112,11 +112,18 @@ func MarkFlagsRequired(cmd *cobra.Command, names ...string) {
 //
 // Use ReadFlagsAdminOrFrom to read these flags.
 func AddFlagsAdmin(cmd *cobra.Command) {
+	AddFlagsAdminOpt(cmd)
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagAdmin, FlagAuthority)
+}
+
+// AddFlagsAdminOpt adds the --admin and --authority flags to a command and makes them mutually exclusive.
+//
+// Use ReadFlagsAdminOrFrom to read these flags.
+func AddFlagsAdminOpt(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAdmin, "", "The admin (defaults to --from account)")
 	cmd.Flags().Bool(FlagAuthority, false, "Use the governance module account for the admin")
 
 	cmd.MarkFlagsMutuallyExclusive(FlagAdmin, FlagAuthority)
-	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagAdmin, FlagAuthority)
 }
 
 // ReadFlagsAdminOrFrom reads the --admin flag if provided.

@@ -302,7 +302,7 @@ func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []s
 
 // SetupCmdTxMarketCommitmentSettle adds all the flags needed for MakeMsgMarketCommitmentSettle.
 func SetupCmdTxMarketCommitmentSettle(cmd *cobra.Command) {
-	AddFlagsAdmin(cmd)
+	AddFlagsAdminOpt(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	cmd.Flags().StringSlice(FlagInputs, nil, "The inputs for this commitment settlement (repeatable, required)")
 	cmd.Flags().StringSlice(FlagOutputs, nil, "The outputs for this commitment settlement (repeatable, required)")
@@ -311,7 +311,8 @@ func SetupCmdTxMarketCommitmentSettle(cmd *cobra.Command) {
 	cmd.Flags().String(FlagTag, "", "The tag to include in the events emitted as part of this commitment settlement")
 	cmd.Flags().String(FlagFile, "", "a json file of a Tx with a MsgMarketCommitmentSettleRequest")
 
-	cmd.MarkFlagsOneRequired(FlagMarket, FlagInputs, FlagOutputs, FlagFile)
+	cmd.MarkFlagsOneRequired(FlagFile, flags.FlagFrom, FlagAdmin, FlagAuthority)
+	cmd.MarkFlagsOneRequired(FlagFile, FlagMarket)
 
 	AddUseArgs(cmd,
 		ReqAdminUse,

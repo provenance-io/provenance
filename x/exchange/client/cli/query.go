@@ -242,9 +242,10 @@ func CmdQueryParams() *cobra.Command {
 // CmdQueryCommitmentSettlementFeeCalc creates the commitment-settlement-fee-calc sub-command for the exchange query command.
 func CmdQueryCommitmentSettlementFeeCalc() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "commitment-settlement-fee-calc",
-		Short: "Calculate the fee required for a commitment settlement",
-		RunE:  genericQueryRunE(MakeQueryCommitmentSettlementFeeCalc, exchange.QueryClient.CommitmentSettlementFeeCalc),
+		Use:     "commitment-settlement-fee-calc",
+		Aliases: []string{"settle-commitments-fee-calc", "fee-calc-commitment-settlement", "fee-calc-settle-commitments"},
+		Short:   "Calculate the fee required for a commitment settlement",
+		RunE:    genericQueryRunE(MakeQueryCommitmentSettlementFeeCalc, exchange.QueryClient.CommitmentSettlementFeeCalc),
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)

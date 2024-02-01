@@ -1111,7 +1111,7 @@ func TestMakeQueryParams(t *testing.T) {
 }
 
 func TestSetupCmdQueryCommitmentSettlementFeeCalc(t *testing.T) {
-	tc := setupTestCase{
+	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdQueryCommitmentSettlementFeeCalc",
 		setup: cli.SetupCmdQueryCommitmentSettlementFeeCalc,
 		expFlags: []string{
@@ -1121,15 +1121,20 @@ func TestSetupCmdQueryCommitmentSettlementFeeCalc(t *testing.T) {
 			cli.FlagSettlementFees, cli.FlagNavs, cli.FlagTag, cli.FlagFile,
 		},
 		expAnnotations: map[string]map[string][]string{
-			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
+			flags.FlagFrom: {oneReq: {cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
 			cli.FlagAdmin: {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
-				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
 			cli.FlagAuthority: {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
-				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
+			cli.FlagFile: {oneReq: {
+				cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority,
+				cli.FlagFile + " " + cli.FlagMarket,
+			}},
+			cli.FlagMarket: {oneReq: {cli.FlagFile + " " + cli.FlagMarket}},
 		},
 		expInUse: []string{
 			"[--details]",
@@ -1141,23 +1146,7 @@ func TestSetupCmdQueryCommitmentSettlementFeeCalc(t *testing.T) {
 			cli.MsgFileDesc(&exchange.MsgMarketCommitmentSettleRequest{}),
 		},
 		skipAddingFromFlag: true,
-	}
-
-	oneReqFlags := []string{
-		cli.FlagMarket, cli.FlagInputs, cli.FlagOutputs, cli.FlagFile,
-	}
-	oneReqVal := strings.Join(oneReqFlags, " ")
-	if tc.expAnnotations == nil {
-		tc.expAnnotations = make(map[string]map[string][]string)
-	}
-	for _, name := range oneReqFlags {
-		if tc.expAnnotations[name] == nil {
-			tc.expAnnotations[name] = make(map[string][]string)
-		}
-		tc.expAnnotations[name][oneReq] = []string{oneReqVal}
-	}
-
-	runSetupTestCase(t, tc)
+	})
 }
 
 func TestMakeQueryCommitmentSettlementFeeCalc(t *testing.T) {

@@ -596,7 +596,7 @@ func TestMakeMsgMarketSettle(t *testing.T) {
 }
 
 func TestSetupCmdTxMarketCommitmentSettle(t *testing.T) {
-	tc := setupTestCase{
+	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdTxMarketCommitmentSettle",
 		setup: cli.SetupCmdTxMarketCommitmentSettle,
 		expFlags: []string{
@@ -606,15 +606,20 @@ func TestSetupCmdTxMarketCommitmentSettle(t *testing.T) {
 			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
 		},
 		expAnnotations: map[string]map[string][]string{
-			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
+			flags.FlagFrom: {oneReq: {cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
 			cli.FlagAdmin: {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
-				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
 			cli.FlagAuthority: {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
-				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
+			cli.FlagFile: {oneReq: {
+				cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority,
+				cli.FlagFile + " " + cli.FlagMarket,
+			}},
+			cli.FlagMarket: {oneReq: {cli.FlagFile + " " + cli.FlagMarket}},
 		},
 		expInUse: []string{
 			cli.ReqAdminUse, "[--market <market id>]",
@@ -624,23 +629,7 @@ func TestSetupCmdTxMarketCommitmentSettle(t *testing.T) {
 			cli.ReqAdminDesc, cli.RepeatableDesc, cli.AccountAmountDesc, cli.NAVDesc,
 			cli.MsgFileDesc(&exchange.MsgMarketCommitmentSettleRequest{}),
 		},
-	}
-
-	oneReqFlags := []string{
-		cli.FlagMarket, cli.FlagInputs, cli.FlagOutputs, cli.FlagFile,
-	}
-	oneReqVal := strings.Join(oneReqFlags, " ")
-	if tc.expAnnotations == nil {
-		tc.expAnnotations = make(map[string]map[string][]string)
-	}
-	for _, name := range oneReqFlags {
-		if tc.expAnnotations[name] == nil {
-			tc.expAnnotations[name] = make(map[string][]string)
-		}
-		tc.expAnnotations[name][oneReq] = []string{oneReqVal}
-	}
-
-	runSetupTestCase(t, tc)
+	})
 }
 
 func TestMakeMsgMarketCommitmentSettle(t *testing.T) {
