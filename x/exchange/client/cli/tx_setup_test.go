@@ -596,13 +596,13 @@ func TestMakeMsgMarketSettle(t *testing.T) {
 }
 
 func TestSetupCmdTxMarketCommitmentSettle(t *testing.T) {
-	runSetupTestCase(t, setupTestCase{
+	tc := setupTestCase{
 		name:  "SetupCmdTxMarketCommitmentSettle",
 		setup: cli.SetupCmdTxMarketCommitmentSettle,
 		expFlags: []string{
 			cli.FlagAdmin, cli.FlagAuthority,
 			cli.FlagMarket, cli.FlagInputs, cli.FlagOutputs,
-			cli.FlagSettlementFees, cli.FlagNavs, cli.FlagTag,
+			cli.FlagSettlementFees, cli.FlagNavs, cli.FlagTag, cli.FlagFile,
 			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
 		},
 		expAnnotations: map[string]map[string][]string{
@@ -615,18 +615,32 @@ func TestSetupCmdTxMarketCommitmentSettle(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket:  {required: {"true"}},
-			cli.FlagInputs:  {required: {"true"}},
-			cli.FlagOutputs: {required: {"true"}},
 		},
 		expInUse: []string{
-			cli.ReqAdminUse, "--market <market id>",
-			"--inputs <account-amount>", "--outputs <account-amount>",
+			cli.ReqAdminUse, "[--market <market id>]",
+			"[--inputs <account-amount>]", "[--outputs <account-amount>]",
 			"[--settlement-fees <account-amount>]", "[--navs <nav>]", "[--tag <event tag>]",
-			cli.ReqAdminDesc, cli.RepeatableDesc,
+			"[--file <filename>]",
 			cli.ReqAdminDesc, cli.RepeatableDesc, cli.AccountAmountDesc, cli.NAVDesc,
+			cli.MsgFileDesc(&exchange.MsgMarketCommitmentSettleRequest{}),
 		},
-	})
+	}
+
+	oneReqFlags := []string{
+		cli.FlagMarket, cli.FlagInputs, cli.FlagOutputs, cli.FlagFile,
+	}
+	oneReqVal := strings.Join(oneReqFlags, " ")
+	if tc.expAnnotations == nil {
+		tc.expAnnotations = make(map[string]map[string][]string)
+	}
+	for _, name := range oneReqFlags {
+		if tc.expAnnotations[name] == nil {
+			tc.expAnnotations[name] = make(map[string][]string)
+		}
+		tc.expAnnotations[name][oneReq] = []string{oneReqVal}
+	}
+
+	runSetupTestCase(t, tc)
 }
 
 func TestMakeMsgMarketCommitmentSettle(t *testing.T) {
@@ -635,6 +649,20 @@ func TestMakeMsgMarketCommitmentSettle(t *testing.T) {
 		maker:     cli.MakeMsgMarketCommitmentSettle,
 		setup:     cli.SetupCmdTxMarketCommitmentSettle,
 	}
+
+	tdir := t.TempDir()
+	filename := filepath.Join(tdir, "commitment-settle.json")
+	fileMsg := &exchange.MsgMarketCommitmentSettleRequest{
+		Admin:    sdk.AccAddress("msg_admin___________").String(),
+		MarketId: 4,
+		Inputs:   []exchange.AccountAmount{{Account: "devin", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 10))}},
+		Outputs:  []exchange.AccountAmount{{Account: "parker", Amount: sdk.NewCoins(sdk.NewInt64Coin("peach", 11))}},
+		Fees:     []exchange.AccountAmount{{Account: "tracey", Amount: sdk.NewCoins(sdk.NewInt64Coin("fig", 4))}},
+		Navs:     []exchange.NetAssetPrice{{Assets: sdk.NewInt64Coin("acorn", 44), Price: sdk.NewInt64Coin("pear", 7)}},
+		EventTag: "the-msg-event-tag",
+	}
+	tx := newTx(t, fileMsg)
+	writeFileAsJson(t, filename, tx)
 
 	tests := []txMakerTestCase[*exchange.MsgMarketCommitmentSettleRequest]{
 		{
@@ -668,13 +696,7 @@ func TestMakeMsgMarketCommitmentSettle(t *testing.T) {
 				"--inputs", "10nhash", "--outputs", "addr3",
 				"--settlement-fees", "42cherry", "--navs", "18banana",
 			},
-			expMsg: &exchange.MsgMarketCommitmentSettleRequest{
-				Admin:   "sam",
-				Inputs:  []exchange.AccountAmount{},
-				Outputs: []exchange.AccountAmount{},
-				Fees:    []exchange.AccountAmount{},
-				Navs:    []exchange.NetAssetPrice{},
-			},
+			expMsg: &exchange.MsgMarketCommitmentSettleRequest{Admin: "sam"},
 			expErr: joinErrs(
 				"invalid account-amount \"10nhash\": expected format <account>:<amount>",
 				"invalid account-amount \"addr3\": expected format <account>:<amount>",
@@ -716,6 +738,29 @@ func TestMakeMsgMarketCommitmentSettle(t *testing.T) {
 					{Assets: sdk.NewInt64Coin("cherry", 4), Price: sdk.NewInt64Coin("nhash", 15)},
 				},
 				EventTag: "thing-4DE17436",
+			},
+		},
+		{
+			name:      "from file",
+			clientCtx: newClientContextWithCodec(),
+			flags:     []string{"--file", filename},
+			expMsg:    fileMsg,
+		},
+		{
+			name: "file with overrides",
+			flags: []string{
+				"--file", filename, "--tag", "new-thang", "--authority",
+				"--outputs", "monroe:87plum",
+			},
+			clientCtx: newClientContextWithCodec(),
+			expMsg: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    cli.AuthorityAddr.String(),
+				MarketId: 4,
+				Inputs:   []exchange.AccountAmount{{Account: "devin", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 10))}},
+				Outputs:  []exchange.AccountAmount{{Account: "monroe", Amount: sdk.NewCoins(sdk.NewInt64Coin("plum", 87))}},
+				Fees:     []exchange.AccountAmount{{Account: "tracey", Amount: sdk.NewCoins(sdk.NewInt64Coin("fig", 4))}},
+				Navs:     []exchange.NetAssetPrice{{Assets: sdk.NewInt64Coin("acorn", 44), Price: sdk.NewInt64Coin("pear", 7)}},
+				EventTag: "new-thang",
 			},
 		},
 	}

@@ -1111,14 +1111,14 @@ func TestMakeQueryParams(t *testing.T) {
 }
 
 func TestSetupCmdQueryCommitmentSettlementFeeCalc(t *testing.T) {
-	runSetupTestCase(t, setupTestCase{
+	tc := setupTestCase{
 		name:  "SetupCmdQueryCommitmentSettlementFeeCalc",
 		setup: cli.SetupCmdQueryCommitmentSettlementFeeCalc,
 		expFlags: []string{
 			cli.FlagDetails, flags.FlagFrom,
 			cli.FlagAdmin, cli.FlagAuthority,
 			cli.FlagMarket, cli.FlagInputs, cli.FlagOutputs,
-			cli.FlagSettlementFees, cli.FlagNavs, cli.FlagTag,
+			cli.FlagSettlementFees, cli.FlagNavs, cli.FlagTag, cli.FlagFile,
 		},
 		expAnnotations: map[string]map[string][]string{
 			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
@@ -1130,20 +1130,34 @@ func TestSetupCmdQueryCommitmentSettlementFeeCalc(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket:  {required: {"true"}},
-			cli.FlagInputs:  {required: {"true"}},
-			cli.FlagOutputs: {required: {"true"}},
 		},
 		expInUse: []string{
 			"[--details]",
-			cli.ReqAdminUse, "--market <market id>",
-			"--inputs <account-amount>", "--outputs <account-amount>",
+			cli.ReqAdminUse, "[--market <market id>]",
+			"[--inputs <account-amount>]", "[--outputs <account-amount>]",
 			"[--settlement-fees <account-amount>]", "[--navs <nav>]", "[--tag <event tag>]",
-			cli.ReqAdminDesc, cli.RepeatableDesc,
+			"[--file <filename>]",
 			cli.ReqAdminDesc, cli.RepeatableDesc, cli.AccountAmountDesc, cli.NAVDesc,
+			cli.MsgFileDesc(&exchange.MsgMarketCommitmentSettleRequest{}),
 		},
 		skipAddingFromFlag: true,
-	})
+	}
+
+	oneReqFlags := []string{
+		cli.FlagMarket, cli.FlagInputs, cli.FlagOutputs, cli.FlagFile,
+	}
+	oneReqVal := strings.Join(oneReqFlags, " ")
+	if tc.expAnnotations == nil {
+		tc.expAnnotations = make(map[string]map[string][]string)
+	}
+	for _, name := range oneReqFlags {
+		if tc.expAnnotations[name] == nil {
+			tc.expAnnotations[name] = make(map[string][]string)
+		}
+		tc.expAnnotations[name][oneReq] = []string{oneReqVal}
+	}
+
+	runSetupTestCase(t, tc)
 }
 
 func TestMakeQueryCommitmentSettlementFeeCalc(t *testing.T) {
@@ -1152,6 +1166,20 @@ func TestMakeQueryCommitmentSettlementFeeCalc(t *testing.T) {
 		maker:     cli.MakeQueryCommitmentSettlementFeeCalc,
 		setup:     cli.SetupCmdQueryCommitmentSettlementFeeCalc,
 	}
+
+	tdir := t.TempDir()
+	filename := filepath.Join(tdir, "commitment-settle.json")
+	fileMsg := &exchange.MsgMarketCommitmentSettleRequest{
+		Admin:    sdk.AccAddress("msg_admin___________").String(),
+		MarketId: 4,
+		Inputs:   []exchange.AccountAmount{{Account: "devin", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 10))}},
+		Outputs:  []exchange.AccountAmount{{Account: "parker", Amount: sdk.NewCoins(sdk.NewInt64Coin("peach", 11))}},
+		Fees:     []exchange.AccountAmount{{Account: "tracey", Amount: sdk.NewCoins(sdk.NewInt64Coin("fig", 4))}},
+		Navs:     []exchange.NetAssetPrice{{Assets: sdk.NewInt64Coin("acorn", 44), Price: sdk.NewInt64Coin("pear", 7)}},
+		EventTag: "the-msg-event-tag",
+	}
+	tx := newTx(t, fileMsg)
+	writeFileAsJson(t, filename, tx)
 
 	tests := []queryMakerTestCase[exchange.QueryCommitmentSettlementFeeCalcRequest]{
 		{
@@ -1196,13 +1224,7 @@ func TestMakeQueryCommitmentSettlementFeeCalc(t *testing.T) {
 				"--settlement-fees", "42cherry", "--navs", "18banana",
 			},
 			expReq: &exchange.QueryCommitmentSettlementFeeCalcRequest{
-				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
-					Admin:   "sam",
-					Inputs:  []exchange.AccountAmount{},
-					Outputs: []exchange.AccountAmount{},
-					Fees:    []exchange.AccountAmount{},
-					Navs:    []exchange.NetAssetPrice{},
-				},
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{Admin: "sam"},
 			},
 			expErr: joinErrs(
 				"invalid account-amount \"10nhash\": expected format <account>:<amount>",
@@ -1247,6 +1269,32 @@ func TestMakeQueryCommitmentSettlementFeeCalc(t *testing.T) {
 						{Assets: sdk.NewInt64Coin("cherry", 4), Price: sdk.NewInt64Coin("nhash", 15)},
 					},
 					EventTag: "thing-4DE17436",
+				},
+				IncludeBreakdownFields: true,
+			},
+		},
+		{
+			name:  "from file",
+			flags: []string{"--file", filename},
+			expReq: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: fileMsg,
+			},
+		},
+		{
+			name: "file with overrides",
+			flags: []string{
+				"--file", filename, "--tag", "new-thang", "--authority",
+				"--outputs", "monroe:87plum", "--details",
+			},
+			expReq: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					Admin:    cli.AuthorityAddr.String(),
+					MarketId: 4,
+					Inputs:   []exchange.AccountAmount{{Account: "devin", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 10))}},
+					Outputs:  []exchange.AccountAmount{{Account: "monroe", Amount: sdk.NewCoins(sdk.NewInt64Coin("plum", 87))}},
+					Fees:     []exchange.AccountAmount{{Account: "tracey", Amount: sdk.NewCoins(sdk.NewInt64Coin("fig", 4))}},
+					Navs:     []exchange.NetAssetPrice{{Assets: sdk.NewInt64Coin("acorn", 44), Price: sdk.NewInt64Coin("pear", 7)}},
+					EventTag: "new-thang",
 				},
 				IncludeBreakdownFields: true,
 			},

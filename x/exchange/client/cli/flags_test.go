@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -230,6 +231,97 @@ func TestReadFlagsAdminOrFrom(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadFlagsAdminOrFrom")
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagsAdminOrFrom error")
 			assert.Equal(t, tc.expAddr, addr, "ReadFlagsAdminOrFrom address")
+		})
+	}
+}
+
+func TestReadFlagsAdminOrFromOrDefault(t *testing.T) {
+	goodFlagSet := func() *pflag.FlagSet {
+		flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+		flagSet.String(cli.FlagAdmin, "", "The admin")
+		flagSet.Bool(cli.FlagAuthority, false, "Use authority")
+		return flagSet
+	}
+
+	tests := []struct {
+		name      string
+		flagSet   func() *pflag.FlagSet
+		flags     []string
+		clientCtx client.Context
+		def       string
+		expAddr   string
+		expErr    string
+	}{
+		{
+			name: "wrong admin flag type",
+			flagSet: func() *pflag.FlagSet {
+				flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+				flagSet.Int(cli.FlagAdmin, 0, "The admin")
+				flagSet.Bool(cli.FlagAuthority, false, "Use authority")
+				return flagSet
+			},
+			def:     "robin",
+			expAddr: "robin",
+			expErr:  "trying to get string value of flag of type int",
+		},
+		{
+			name: "wrong authority flag type",
+			flagSet: func() *pflag.FlagSet {
+				flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+				flagSet.String(cli.FlagAdmin, "", "The admin")
+				flagSet.Int(cli.FlagAuthority, 0, "Use authority")
+				return flagSet
+
+			},
+			def:     "scout",
+			expAddr: "scout",
+			expErr:  "trying to get bool value of flag of type int",
+		},
+		{
+			name:    "admin flag given",
+			flags:   []string{"--" + cli.FlagAdmin, "theadmin"},
+			def:     "kerry",
+			expAddr: "theadmin",
+		},
+		{
+			name:    "authority flag given",
+			flags:   []string{"--" + cli.FlagAuthority},
+			def:     "logan",
+			expAddr: cli.AuthorityAddr.String(),
+		},
+		{
+			name:      "from address given",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			def:       "ezra",
+			expAddr:   sdk.AccAddress("FromAddress_________").String(),
+		},
+		{
+			name:    "only a default",
+			def:     "drew",
+			expAddr: "drew",
+		},
+		{
+			name:   "nothing given",
+			expErr: "no <admin> provided",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.flagSet == nil {
+				tc.flagSet = goodFlagSet
+			}
+			flagSet := tc.flagSet()
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var addr string
+			testFunc := func() {
+				addr, err = cli.ReadFlagsAdminOrFromOrDefault(tc.clientCtx, flagSet, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagsAdminOrFromOrDefault")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagsAdminOrFromOrDefault error")
+			assert.Equal(t, tc.expAddr, addr, "ReadFlagsAdminOrFromOrDefault address")
 		})
 	}
 }
@@ -2068,6 +2160,164 @@ func TestReadStringFlagOrArg(t *testing.T) {
 	}
 }
 
+func TestReadTxFileFlag(t *testing.T) {
+	tests := []struct {
+		name string
+		// setup should return the filename and the expected Tx.
+		setup    func(t *testing.T) (string, *txtypes.Tx)
+		flagSet  *pflag.FlagSet
+		fileFlag string
+		expInErr []string
+	}{
+		{
+			name: "flag not defined",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				return "", nil
+			},
+			flagSet:  pflag.NewFlagSet("", pflag.ContinueOnError),
+			fileFlag: "fruits",
+			expInErr: []string{"flag accessed but not defined: fruits"},
+		},
+		{
+			name: "flag not provided",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				return "", nil
+			},
+			fileFlag: "fruits",
+		},
+		{
+			name: "file does not exist",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				tdir := t.TempDir()
+				noSuchFile := filepath.Join(tdir, "no-such-file.json")
+				return noSuchFile, nil
+			},
+			fileFlag: "fruits",
+			expInErr: []string{"open ", "no-such-file.json", "no such file or directory"},
+		},
+		{
+			name: "error unmarshalling file",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				tdir := t.TempDir()
+				notJSON := filepath.Join(tdir, "not-json.json")
+				contents := []byte("This is not\na JSON file.\n")
+				writeFile(t, notJSON, contents)
+				return notJSON, nil
+			},
+			fileFlag: "nuts",
+			expInErr: []string{
+				"failed to unmarshal --nuts \"", "\" contents as Tx",
+				"invalid character 'T' looking for beginning of value",
+			},
+		},
+		{
+			name: "okay: one message",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				msg := &exchange.MsgMarketWithdrawRequest{
+					Admin:     sdk.AccAddress("Admin_______________").String(),
+					MarketId:  3,
+					ToAddress: sdk.AccAddress("ToAddress___________").String(),
+					Amount:    sdk.NewCoins(sdk.NewInt64Coin("apple", 15)),
+				}
+				tx := newTx(t, msg)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "one-message.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, tx
+
+			},
+			fileFlag: "legumes",
+		},
+		{
+			name: "okay: three messages",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				msg1 := &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market:    exchange.Market{MarketId: 88},
+				}
+				msg2 := &exchange.MsgGovManageFeesRequest{
+					Authority:           cli.AuthorityAddr.String(),
+					MarketId:            42,
+					AddFeeCreateAskFlat: []sdk.Coin{sdk.NewInt64Coin("plum", 5)},
+				}
+				msg3 := &exchange.MsgCancelOrderRequest{
+					Signer:  cli.AuthorityAddr.String(),
+					OrderId: 5555,
+				}
+				tx := newTx(t, msg1, msg2, msg3)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "three-messages.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, tx
+			},
+			fileFlag: "berries",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			expFilename, expTx := tc.setup(t)
+
+			if tc.flagSet == nil {
+				tc.flagSet = pflag.NewFlagSet("", pflag.ContinueOnError)
+				tc.flagSet.String(tc.fileFlag, "", "The file")
+			}
+
+			if len(expFilename) > 0 && len(tc.expInErr) > 0 {
+				tc.expInErr = append(tc.expInErr, expFilename)
+			}
+
+			args := make([]string, 0, 2)
+			if len(expFilename) > 0 {
+				args = append(args, "--"+tc.fileFlag, expFilename)
+			}
+
+			err := tc.flagSet.Parse(args)
+			require.NoError(t, err, "flagSet.Parse(%q)", args)
+
+			clientCtx := newClientContextWithCodec()
+
+			var actFilename string
+			var actTx *txtypes.Tx
+			testFunc := func() {
+				actFilename, actTx, err = cli.ReadTxFileFlag(clientCtx, tc.flagSet, tc.fileFlag)
+			}
+			require.NotPanics(t, testFunc, "ReadTxFileFlag")
+
+			assertions.AssertErrorContents(t, err, tc.expInErr, "ReadTxFileFlag error")
+			assert.Equal(t, expFilename, actFilename, "ReadTxFileFlag filename")
+
+			// We can't just assert that two []Any lists are equal due to some internal differences.
+			// All we really care about is that they have the same types and msg contents.
+			if expTx == nil {
+				assert.Nil(t, actTx, "ReadTxFileFlag tx")
+				return
+			}
+			if !assert.NotNil(t, actTx, "ReadTxFileFlag tx") {
+				return
+			}
+
+			if expTx.Body == nil {
+				assert.Nil(t, actTx.Body, "ReadTxFileFlag Tx.Body")
+				return
+			}
+			if !assert.NotNil(t, actTx.Body, "ReadTxFileFlag Tx.Body") {
+				return
+			}
+
+			expTypes := getAnyTypes(expTx.Body.Messages)
+			actTypes := getAnyTypes(actTx.Body.Messages)
+			if assert.Equal(t, expTypes, actTypes, "ReadTxFileFlag Tx.Body.Messages types") {
+				for i := range expTx.Body.Messages {
+					expMsg := expTx.Body.Messages[i].GetCachedValue()
+					actMsg := actTx.Body.Messages[i].GetCachedValue()
+					assert.Equal(t, expMsg, actMsg, "ReadTxFileFlag Tx.Body.Messages[%d] cached value", i)
+				}
+			}
+		})
+	}
+}
+
 func TestReadProposalFlag(t *testing.T) {
 	tests := []struct {
 		name string
@@ -2503,6 +2753,170 @@ func TestReadMsgGovManageFeesRequestFromProposalFlag(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadMsgGovManageFeesRequestFromProposalFlag")
 			assertions.AssertErrorContents(t, err, tc.expInErr, "ReadMsgGovManageFeesRequestFromProposalFlag error")
 			assert.Equal(t, expected, actual, "ReadMsgGovManageFeesRequestFromProposalFlag result")
+		})
+	}
+}
+
+func TestReadMsgMarketCommitmentSettleFromFileFlag(t *testing.T) {
+	// addr pads the provided bz out to 20 chars, uses those as an AccAddress and gets the bech32 string of that.
+	coins := func(t *testing.T, str string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+
+	tests := []struct {
+		name string
+		// setup should return the filename and the expected Msg.
+		setup    func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest)
+		expInErr []string
+	}{
+		{
+			name: "error reading file",
+			setup: func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest) {
+				tx := newTx(t)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-body-messages.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"the contents of \"", "\" does not have any body messages"},
+		},
+		{
+			name: "no flag given",
+			setup: func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest) {
+				return "", nil
+			},
+			expInErr: nil,
+		},
+		{
+			name: "no msgs of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest) {
+				msg := &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market:    exchange.Market{MarketDetails: exchange.MarketDetails{Name: "Some Name"}},
+				}
+				tx := newTx(t, msg)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"no *exchange.MsgMarketCommitmentSettleRequest messages found in \""},
+		},
+		{
+			name: "two msgs of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest) {
+				msg1 := &exchange.MsgMarketCommitmentSettleRequest{
+					Admin:    "msg1_admin_addr",
+					MarketId: 1,
+					Inputs: []exchange.AccountAmount{
+						{Account: "msg1_input1_addr", Amount: coins(t, "10cherry")},
+					},
+					Outputs: []exchange.AccountAmount{
+						{Account: "msg1_output1_addr", Amount: coins(t, "11cherry")},
+					},
+					Fees: []exchange.AccountAmount{
+						{Account: "msg1_fee1_addr", Amount: coins(t, "3orange")},
+					},
+					Navs: []exchange.NetAssetPrice{
+						{Assets: coins(t, "1apple")[0], Price: coins(t, "2banana")[0]},
+					},
+					EventTag: "msg1_event_tag",
+				}
+				msg2 := &exchange.MsgMarketCommitmentSettleRequest{
+					Admin:    "msg2_admin_addr",
+					MarketId: 2,
+					Inputs: []exchange.AccountAmount{
+						{Account: "msg2_input1_addr", Amount: coins(t, "10cherry,5plum")},
+						{Account: "msg2_input2_addr", Amount: coins(t, "1apple,12orange")},
+						{Account: "msg2_input3_addr", Amount: coins(t, "4apple,4cherry,4orange,4plum")},
+					},
+					Outputs: []exchange.AccountAmount{
+						{Account: "msg2_output1_addr", Amount: coins(t, "5apple")},
+						{Account: "msg2_output2_addr", Amount: coins(t, "14cherry")},
+						{Account: "msg2_output3_addr", Amount: coins(t, "16orange")},
+						{Account: "msg2_output5_addr", Amount: coins(t, "9plum")},
+					},
+					EventTag: "msg2_event_tag",
+				}
+				tx := newTx(t, msg1, msg2)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"2 *exchange.MsgMarketCommitmentSettleRequest found in \""},
+		},
+		{
+			name: "one msg of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest) {
+				msg := &exchange.MsgMarketCommitmentSettleRequest{
+					Admin:    "msg_admin",
+					MarketId: 1,
+					Inputs: []exchange.AccountAmount{
+						{Account: "msg_input1_addr", Amount: coins(t, "10cherry,5plum")},
+						{Account: "msg_input2_addr", Amount: coins(t, "1apple,12orange")},
+						{Account: "msg_input3_addr", Amount: coins(t, "4apple,4cherry,4orange,4plum")},
+					},
+					Outputs: []exchange.AccountAmount{
+						{Account: "msg_output1_addr", Amount: coins(t, "5apple")},
+						{Account: "msg_output2_addr", Amount: coins(t, "14cherry")},
+						{Account: "msg_output3_addr", Amount: coins(t, "16orange")},
+						{Account: "msg_output4_addr", Amount: coins(t, "9plum")},
+					},
+					Fees: []exchange.AccountAmount{
+						{Account: "msg_fee1_addr", Amount: coins(t, "12fig")},
+						{Account: "msg_fee2_addr", Amount: coins(t, "88fig")},
+					},
+					Navs: []exchange.NetAssetPrice{
+						{Assets: coins(t, "1apple")[0], Price: coins(t, "2banana")[0]},
+						{Assets: coins(t, "1apple")[0], Price: coins(t, "3fig")[0]},
+						{Assets: coins(t, "10apple")[0], Price: coins(t, "1cherry")[0]},
+					},
+					EventTag: "just_some_event_tag",
+				}
+				tx := newTx(t, msg)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, msg
+			},
+			expInErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			filename, expected := tc.setup(t)
+
+			if expected == nil {
+				expected = &exchange.MsgMarketCommitmentSettleRequest{}
+			}
+
+			if len(filename) > 0 && len(tc.expInErr) > 0 {
+				tc.expInErr = append(tc.expInErr, filename)
+			}
+
+			args := make([]string, 0, 2)
+			if len(filename) > 0 {
+				args = append(args, "--"+cli.FlagFile, filename)
+			}
+
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(cli.FlagFile, "", "The File")
+			err := flagSet.Parse(args)
+			require.NoError(t, err, "flagSet.Parse(%q)", args)
+
+			clientCtx := newClientContextWithCodec()
+
+			var actual *exchange.MsgMarketCommitmentSettleRequest
+			testFunc := func() {
+				actual, err = cli.ReadMsgMarketCommitmentSettleFromFileFlag(clientCtx, flagSet)
+			}
+			require.NotPanics(t, testFunc, "ReadMsgMarketCommitmentSettleFromFileFlag")
+			assertions.AssertErrorContents(t, err, tc.expInErr, "ReadMsgMarketCommitmentSettleFromFileFlag error")
+			assert.Equal(t, expected, actual, "ReadMsgMarketCommitmentSettleFromFileFlag result")
 		})
 	}
 }
@@ -2969,11 +3383,17 @@ func TestReadFlagAccountAmounts(t *testing.T) {
 			testName: "three vals, one bad",
 			flags:    []string{"--" + flagStringSlice, "first:3apple,second:80", "--" + flagStringSlice, "third:777cherry,123durian"},
 			name:     flagStringSlice,
+			expErr:   "could not parse \"second:80\" amount: invalid coin expression: \"80\"",
+		},
+		{
+			testName: "three vals, all good",
+			flags:    []string{"--" + flagStringSlice, "first:3apple,second:80pear", "--" + flagStringSlice, "third:777cherry,123durian"},
+			name:     flagStringSlice,
 			exp: []exchange.AccountAmount{
 				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 3))},
+				{Account: "second", Amount: sdk.NewCoins(sdk.NewInt64Coin("pear", 80))},
 				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 777), sdk.NewInt64Coin("durian", 123))},
 			},
-			expErr: "could not parse \"second:80\" amount: invalid coin expression: \"80\"",
 		},
 	}
 
@@ -2992,6 +3412,76 @@ func TestReadFlagAccountAmounts(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadFlagAccountAmounts(%q)", tc.name)
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagAccountAmounts(%q) error", tc.name)
 			assertEqualSlices(t, tc.exp, actual, exchange.AccountAmount.String, "ReadFlagAccountAmounts(%q) result", tc.name)
+		})
+	}
+}
+
+func TestReadFlagAccountAmountsOrDefault(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		def      []exchange.AccountAmount
+		exp      []exchange.AccountAmount
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			def:      []exchange.AccountAmount{{Account: "alex", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 4))}},
+			exp:      []exchange.AccountAmount{{Account: "alex", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 4))}},
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			def:      []exchange.AccountAmount{{Account: "blake", Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 99))}},
+			exp:      []exchange.AccountAmount{{Account: "blake", Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 99))}},
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagStringSlice,
+			def:      []exchange.AccountAmount{{Account: "carter", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 21))}},
+			exp:      []exchange.AccountAmount{{Account: "carter", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 21))}},
+			expErr:   "",
+		},
+		{
+			testName: "three vals, one bad",
+			flags:    []string{"--" + flagStringSlice, "first:3apple,second:80", "--" + flagStringSlice, "third:777cherry,123durian"},
+			name:     flagStringSlice,
+			def:      []exchange.AccountAmount{},
+			exp:      []exchange.AccountAmount{},
+			expErr:   "could not parse \"second:80\" amount: invalid coin expression: \"80\"",
+		},
+		{
+			testName: "three vals, all good",
+			flags:    []string{"--" + flagStringSlice, "first:3apple,second:80pear", "--" + flagStringSlice, "third:777cherry,123durian"},
+			name:     flagStringSlice,
+			def:      []exchange.AccountAmount{{Account: "ellis", Amount: sdk.NewCoins(sdk.NewInt64Coin("elderberry", 5))}},
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 3))},
+				{Account: "second", Amount: sdk.NewCoins(sdk.NewInt64Coin("pear", 80))},
+				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 777), sdk.NewInt64Coin("durian", 123))},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "A string slice")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actual []exchange.AccountAmount
+			testFunc := func() {
+				actual, err = cli.ReadFlagAccountAmountsOrDefault(flagSet, tc.name, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagAccountAmountsOrDefault(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagAccountAmountsOrDefault(%q) error", tc.name)
+			assertEqualSlices(t, tc.exp, actual, exchange.AccountAmount.String, "ReadFlagAccountAmountsOrDefault(%q) result", tc.name)
 		})
 	}
 }
@@ -3235,11 +3725,17 @@ func TestReadFlagNetAssetPrices(t *testing.T) {
 			testName: "three vals, one bad",
 			flags:    []string{"--" + flagStringSlice, "1apple:2peach,3acai", "--" + flagStringSlice, "5acorn:6pear"},
 			name:     flagStringSlice,
+			expErr:   "invalid net-asset-price \"3acai\": expected format <assets>:<price>",
+		},
+		{
+			testName: "three vals, all good",
+			flags:    []string{"--" + flagStringSlice, "1apple:2peach,3acai:4plum", "--" + flagStringSlice, "5acorn:6pear"},
+			name:     flagStringSlice,
 			exp: []exchange.NetAssetPrice{
 				{Assets: sdk.NewInt64Coin("apple", 1), Price: sdk.NewInt64Coin("peach", 2)},
+				{Assets: sdk.NewInt64Coin("acai", 3), Price: sdk.NewInt64Coin("plum", 4)},
 				{Assets: sdk.NewInt64Coin("acorn", 5), Price: sdk.NewInt64Coin("pear", 6)},
 			},
-			expErr: "invalid net-asset-price \"3acai\": expected format <assets>:<price>",
 		},
 	}
 
@@ -3258,6 +3754,81 @@ func TestReadFlagNetAssetPrices(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadFlagNetAssetPrices(%q)", tc.name)
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagNetAssetPrices(%q) error", tc.name)
 			assertEqualSlices(t, tc.exp, actual, exchange.NetAssetPrice.String, "ReadFlagNetAssetPrices(%q) result", tc.name)
+		})
+	}
+}
+
+func TestReadFlagNetAssetPricesOrDefault(t *testing.T) {
+	coin := func(str string) sdk.Coin {
+		rv, err := sdk.ParseCoinNormalized(str)
+		require.NoError(t, err, "ParseCoinNormalized(%q)", str)
+		return rv
+	}
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		def      []exchange.NetAssetPrice
+		exp      []exchange.NetAssetPrice
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			def:      []exchange.NetAssetPrice{{Assets: coin("10apple"), Price: coin("11banana")}},
+			exp:      []exchange.NetAssetPrice{{Assets: coin("10apple"), Price: coin("11banana")}},
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			def:      []exchange.NetAssetPrice{{Assets: coin("3apple"), Price: coin("4banana")}},
+			exp:      []exchange.NetAssetPrice{{Assets: coin("3apple"), Price: coin("4banana")}},
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagStringSlice,
+			def:      []exchange.NetAssetPrice{{Assets: coin("12fig"), Price: coin("3date")}},
+			exp:      []exchange.NetAssetPrice{{Assets: coin("12fig"), Price: coin("3date")}},
+			expErr:   "",
+		},
+		{
+			testName: "three vals, one bad",
+			flags:    []string{"--" + flagStringSlice, "1apple:2peach,3acai", "--" + flagStringSlice, "5acorn:6pear"},
+			name:     flagStringSlice,
+			def:      []exchange.NetAssetPrice{{Assets: coin("8fig"), Price: coin("7date")}},
+			exp:      []exchange.NetAssetPrice{{Assets: coin("8fig"), Price: coin("7date")}},
+			expErr:   "invalid net-asset-price \"3acai\": expected format <assets>:<price>",
+		},
+		{
+			testName: "three vals, all good",
+			flags:    []string{"--" + flagStringSlice, "1apple:2peach,3acai:4plum", "--" + flagStringSlice, "5acorn:6pear"},
+			name:     flagStringSlice,
+			def:      []exchange.NetAssetPrice{{Assets: coin("8fig"), Price: coin("7date")}},
+			exp: []exchange.NetAssetPrice{
+				{Assets: coin("1apple"), Price: coin("2peach")},
+				{Assets: coin("3acai"), Price: coin("4plum")},
+				{Assets: coin("5acorn"), Price: coin("6pear")},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "A string slice")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actual []exchange.NetAssetPrice
+			testFunc := func() {
+				actual, err = cli.ReadFlagNetAssetPricesOrDefault(flagSet, tc.name, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagNetAssetPricesOrDefault(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagNetAssetPricesOrDefault(%q) error", tc.name)
+			assertEqualSlices(t, tc.exp, actual, exchange.NetAssetPrice.String, "ReadFlagNetAssetPricesOrDefault(%q) result", tc.name)
 		})
 	}
 }

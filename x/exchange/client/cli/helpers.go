@@ -187,7 +187,7 @@ func OptFlagUse(name string, opt string) string {
 func ProposalFileDesc(msgType sdk.Msg) string {
 	return fmt.Sprintf(`The file provided with the --%[1]s flag should be a json-encoded Tx.
 The Tx should have a message with a %[2]s that contains a %[3]s.
-Such a message can be generated using the --generate-only flag on the tx endpoint.
+Such a message can be generated using the --generate-only flag on the tx command for the endpoint.
 
 Example (with just the important bits):
 {
@@ -210,6 +210,31 @@ Example (with just the important bits):
 If other message flags are provided with --%[1]s, they will overwrite just that field.
 `,
 		FlagProposal, sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}), sdk.MsgTypeURL(msgType), msgType,
+	)
+}
+
+// MsgFileDesc is a description of the --file flag and expected file.
+func MsgFileDesc(msgType sdk.Msg) string {
+	return fmt.Sprintf(`The file provided with the --%[1]s flag should be a json-encoded Tx.
+The Tx should have a %[2]s message in it.
+Such a message can be generated using the --generate-only flag on the tx command for the endpoint.
+
+Example (with just the important bits):
+{
+  "body": {
+    "messages": [
+      {
+		"@type": "%[2]s",
+		"authority": "...",
+		<other %[3]T fields>
+      }
+    ],
+  },
+}
+
+If other message flags are provided with --%[1]s, they will overwrite just that field.
+`,
+		FlagFile, sdk.MsgTypeURL(msgType), msgType,
 	)
 }
 

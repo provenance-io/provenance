@@ -309,21 +309,27 @@ func SetupCmdTxMarketCommitmentSettle(cmd *cobra.Command) {
 	cmd.Flags().StringSlice(FlagSettlementFees, nil, "The fees to collect during this commitment settlement (repeatable)")
 	cmd.Flags().StringSlice(FlagNavs, nil, "The net-asset-values to update during this commitment settlement (repeatable)")
 	cmd.Flags().String(FlagTag, "", "The tag to include in the events emitted as part of this commitment settlement")
+	cmd.Flags().String(FlagFile, "", "a json file of a Tx with a MsgMarketCommitmentSettleRequest")
 
-	MarkFlagsRequired(cmd, FlagMarket, FlagInputs, FlagOutputs)
+	cmd.MarkFlagsOneRequired(FlagMarket, FlagInputs, FlagOutputs, FlagFile)
 
 	AddUseArgs(cmd,
 		ReqAdminUse,
-		ReqFlagUse(FlagMarket, "market id"),
+		OptFlagUse(FlagMarket, "market id"),
 		UseFlagsBreak,
-		ReqFlagUse(FlagInputs, "account-amount"),
-		ReqFlagUse(FlagOutputs, "account-amount"),
+		OptFlagUse(FlagInputs, "account-amount"),
+		OptFlagUse(FlagOutputs, "account-amount"),
 		UseFlagsBreak,
 		OptFlagUse(FlagSettlementFees, "account-amount"),
 		OptFlagUse(FlagNavs, "nav"),
 		OptFlagUse(FlagTag, "event tag"),
+		UseFlagsBreak,
+		OptFlagUse(FlagFile, "filename"),
 	)
-	AddUseDetails(cmd, ReqAdminDesc, RepeatableDesc, AccountAmountDesc, NAVDesc)
+	AddUseDetails(cmd,
+		ReqAdminDesc, RepeatableDesc, AccountAmountDesc, NAVDesc,
+		MsgFileDesc(&exchange.MsgMarketCommitmentSettleRequest{}),
+	)
 
 	cmd.Args = cobra.NoArgs
 }
@@ -331,16 +337,17 @@ func SetupCmdTxMarketCommitmentSettle(cmd *cobra.Command) {
 // MakeMsgMarketCommitmentSettle reads all the SetupCmdTxMarketCommitmentSettle flags and creates the desired Msg.
 // Satisfies the msgMaker type.
 func MakeMsgMarketCommitmentSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketCommitmentSettleRequest, error) {
-	msg := &exchange.MsgMarketCommitmentSettleRequest{}
+	var msg *exchange.MsgMarketCommitmentSettleRequest
 
-	errs := make([]error, 7)
-	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)
-	msg.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
-	msg.Inputs, errs[2] = ReadFlagAccountAmounts(flagSet, FlagInputs)
-	msg.Outputs, errs[3] = ReadFlagAccountAmounts(flagSet, FlagOutputs)
-	msg.Fees, errs[4] = ReadFlagAccountAmounts(flagSet, FlagSettlementFees)
-	msg.Navs, errs[5] = ReadFlagNetAssetPrices(flagSet, FlagNavs)
-	msg.EventTag, errs[6] = flagSet.GetString(FlagTag)
+	errs := make([]error, 8)
+	msg, errs[0] = ReadMsgMarketCommitmentSettleFromFileFlag(clientCtx, flagSet)
+	msg.Admin, errs[1] = ReadFlagsAdminOrFromOrDefault(clientCtx, flagSet, msg.Admin)
+	msg.MarketId, errs[2] = ReadFlagUint32OrDefault(flagSet, FlagMarket, msg.MarketId)
+	msg.Inputs, errs[3] = ReadFlagAccountAmountsOrDefault(flagSet, FlagInputs, msg.Inputs)
+	msg.Outputs, errs[4] = ReadFlagAccountAmountsOrDefault(flagSet, FlagOutputs, msg.Outputs)
+	msg.Fees, errs[5] = ReadFlagAccountAmountsOrDefault(flagSet, FlagSettlementFees, msg.Fees)
+	msg.Navs, errs[6] = ReadFlagNetAssetPricesOrDefault(flagSet, FlagNavs, msg.Navs)
+	msg.EventTag, errs[7] = ReadFlagStringOrDefault(flagSet, FlagTag, msg.EventTag)
 
 	return msg, errors.Join(errs...)
 }

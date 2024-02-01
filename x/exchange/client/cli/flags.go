@@ -61,6 +61,7 @@ const (
 	FlagDisable              = "disable"
 	FlagEnable               = "enable"
 	FlagExternalID           = "external-id"
+	FlagFile                 = "file"
 	FlagGrant                = "grant"
 	FlagIcon                 = "icon"
 	FlagInputs               = "inputs"
@@ -120,27 +121,45 @@ func AddFlagsAdmin(cmd *cobra.Command) {
 
 // ReadFlagsAdminOrFrom reads the --admin flag if provided.
 // If not, but the --authority flag was provided, the gov module account address is returned.
-// If no -admin or --authority flag was provided, returns the --from address.
+// If no --admin or --authority flag was provided, returns the --from address.
 // Returns an error if none of those flags were provided or there was an error reading one.
 //
 // This assumes AddFlagsAdmin was used to define the flags, and that the context comes from client.GetClientTxContext.
 func ReadFlagsAdminOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
-	rv, err := flagSet.GetString(FlagAdmin)
-	if len(rv) > 0 || err != nil {
-		return rv, err
+	return ReadFlagsAdminOrFromOrDefault(clientCtx, flagSet, "")
+}
+
+// ReadFlagsAdminOrFromOrDefault reads the --admin flag if provided.
+// If not, but the --authority flag was provided, the gov module account address is returned.
+// If no --admin or --authority flag was provided, the --from address is returned.
+// If none of that was provided, but a default was provided, the default is returned.
+// Returns an error if none of those flags nor a default were provided or there was an error reading one.
+//
+// This assumes AddFlagsAdmin was used to define the flags, and that the context comes from client.GetClientTxContext.
+func ReadFlagsAdminOrFromOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, def string) (string, error) {
+	admin, err := flagSet.GetString(FlagAdmin)
+	if err != nil {
+		return def, err
+	}
+	if len(admin) > 0 {
+		return admin, nil
 	}
 
 	useAuth, err := flagSet.GetBool(FlagAuthority)
 	if err != nil {
-		return "", err
+		return def, err
 	}
 	if useAuth {
 		return AuthorityAddr.String(), nil
 	}
 
-	rv = clientCtx.GetFromAddress().String()
-	if len(rv) > 0 {
-		return rv, nil
+	from := clientCtx.GetFromAddress().String()
+	if len(from) > 0 {
+		return from, nil
+	}
+
+	if len(def) > 0 {
+		return def, nil
 	}
 
 	return "", errors.New("no <admin> provided")
@@ -575,50 +594,107 @@ func ReadStringFlagOrArg(flagSet *pflag.FlagSet, args []string, flagName, varNam
 	return rv, nil
 }
 
-// ReadProposalFlag gets the --proposal string value and attempts to read the file in as a Tx in json.
-// It then attempts to extract any messages contained in any govv1.MsgSubmitProposal messages in that Tx.
-// An error is returned if anything goes wrong.
-// This assumes that the flag was defined with a default of "".
-func ReadProposalFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (string, []*codectypes.Any, error) {
-	propFN, err := flagSet.GetString(FlagProposal)
-	if len(propFN) == 0 || err != nil {
+// ReadTxFileFlag gets a filename from the flag with the provided fileFlag and tries to read that file as a Tx.
+// Then it gets all the messages out of it.
+func ReadTxFileFlag(clientCtx client.Context, flagSet *pflag.FlagSet, fileFlag string) (string, *txtypes.Tx, error) {
+	filename, err := flagSet.GetString(fileFlag)
+	if len(filename) == 0 || err != nil {
 		return "", nil, err
 	}
 
-	propFileContents, err := os.ReadFile(propFN)
+	propFileContents, err := os.ReadFile(filename)
 	if err != nil {
-		return propFN, nil, err
+		return filename, nil, err
 	}
 
 	var tx txtypes.Tx
 	err = clientCtx.Codec.UnmarshalJSON(propFileContents, &tx)
 	if err != nil {
-		return propFN, nil, fmt.Errorf("failed to unmarshal --%s %q contents as Tx: %w", FlagProposal, propFN, err)
+		return filename, nil, fmt.Errorf("failed to unmarshal --%s %q contents as Tx: %w", fileFlag, filename, err)
+	}
+
+	return filename, &tx, nil
+}
+
+// getMsgsFromTx gets all the messages in the provided tx that have the same type as the provided emptyMsg.
+func getMsgsFromTx[T sdk.Msg](filename string, tx *txtypes.Tx, emptyMsg T) ([]T, error) {
+	if len(filename) == 0 || tx == nil {
+		return nil, nil
 	}
 
 	if tx.Body == nil {
-		return propFN, nil, fmt.Errorf("the contents of %q does not have a \"body\"", propFN)
+		return nil, fmt.Errorf("the contents of %q does not have a \"body\"", filename)
 	}
 
 	if len(tx.Body.Messages) == 0 {
-		return propFN, nil, fmt.Errorf("the contents of %q does not have any body messages", propFN)
+		return nil, fmt.Errorf("the contents of %q does not have any body messages", filename)
 	}
 
-	hadProp := false
-	var rv []*codectypes.Any
+	var rv []T
 	for _, msgAny := range tx.Body.Messages {
-		prop, isProp := msgAny.GetCachedValue().(*govv1.MsgSubmitProposal)
-		if isProp {
-			hadProp = true
-			rv = append(rv, prop.Messages...)
+		msg, isMsg := msgAny.GetCachedValue().(T)
+		if isMsg {
+			rv = append(rv, msg)
 		}
 	}
 
-	if !hadProp {
-		return propFN, nil, fmt.Errorf("no %T messages found in %q", &govv1.MsgSubmitProposal{}, propFN)
-	}
 	if len(rv) == 0 {
-		return propFN, nil, fmt.Errorf("no messages found in any %T messages in %q", &govv1.MsgSubmitProposal{}, propFN)
+		return nil, fmt.Errorf("no %T messages found in %q", emptyMsg, filename)
+	}
+
+	return rv, nil
+}
+
+// getSingleMsgFromFileFlag reads the flag with the provide name and extracts a Msg of a specific type from the file it points to.
+// If the flag wasn't provided, the emptyMsg is returned without error.
+// An error is returned if anything goes wrong or the file doesn't have exactly one T.
+// The emptyMsg is returned even if an error is returned.
+//
+// T is the specific type of Msg to look for.
+func getSingleMsgFromFileFlag[T sdk.Msg](clientCtx client.Context, flagSet *pflag.FlagSet, fileFlag string, emptyMsg T) (T, error) {
+	filename, tx, err := ReadTxFileFlag(clientCtx, flagSet, fileFlag)
+	if len(filename) == 0 || tx == nil || err != nil {
+		return emptyMsg, err
+	}
+
+	msgs, err := getMsgsFromTx(filename, tx, emptyMsg)
+	if err != nil {
+		return emptyMsg, err
+	}
+
+	if len(msgs) == 0 {
+		return emptyMsg, fmt.Errorf("no %T found in %q", emptyMsg, filename)
+	}
+	if len(msgs) != 1 {
+		return emptyMsg, fmt.Errorf("%d %T found in %q", len(msgs), emptyMsg, filename)
+	}
+
+	return msgs[0], nil
+}
+
+// ReadProposalFlag gets the --proposal string value and attempts to read the file in as a Tx in json.
+// It then attempts to extract any messages contained in any govv1.MsgSubmitProposal messages in that Tx.
+// An error is returned if anything goes wrong.
+// This assumes that the flag was defined with a default of "".
+func ReadProposalFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (string, []*codectypes.Any, error) {
+	propFN, tx, err := ReadTxFileFlag(clientCtx, flagSet, FlagProposal)
+	if len(propFN) == 0 || tx == nil || err != nil {
+		return propFN, nil, err
+	}
+
+	emptyPropMsg := &govv1.MsgSubmitProposal{}
+	props, err := getMsgsFromTx(propFN, tx, emptyPropMsg)
+	if len(props) == 0 || err != nil {
+		return propFN, nil, err
+	}
+
+	var rv []*codectypes.Any
+	for _, prop := range props {
+		rv = append(rv, prop.Messages...)
+	}
+
+	if len(rv) == 0 {
+		return propFN, nil, fmt.Errorf("no messages found in any %T messages in %q", emptyPropMsg, propFN)
 	}
 
 	return propFN, rv, nil
@@ -668,6 +744,14 @@ func ReadMsgGovCreateMarketRequestFromProposalFlag(clientCtx client.Context, fla
 // This assumes that the flag was defined with a default of "".
 func ReadMsgGovManageFeesRequestFromProposalFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (*exchange.MsgGovManageFeesRequest, error) {
 	return getSingleMsgFromPropFlag(clientCtx, flagSet, &exchange.MsgGovManageFeesRequest{})
+}
+
+// ReadMsgMarketCommitmentSettleFromFileFlag reads the --file flag and extracts the MsgMarketCommitmentSettleRequest from the file points to.
+// An error is returned if anything goes wrong or the file doesn't have exactly one MsgMarketCommitmentSettleRequest.
+// A MsgMarketCommitmentSettleRequest is returned even if an error is returned.
+// This assumes that the flag was defined with a default of "".
+func ReadMsgMarketCommitmentSettleFromFileFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (*exchange.MsgMarketCommitmentSettleRequest, error) {
+	return getSingleMsgFromFileFlag(clientCtx, flagSet, FlagFile, &exchange.MsgMarketCommitmentSettleRequest{})
 }
 
 // ReadFlagUint32OrDefault gets a uit32 flag or returns the provided default.
@@ -762,9 +846,13 @@ func ParseAccountAmounts(vals []string) ([]exchange.AccountAmount, error) {
 // ReadFlagAccountAmounts reads a StringSlice flag and converts it into a slice of exchange.AccountAmount.
 // This assumes that the flag was defined with a default of nil or []string{}.
 func ReadFlagAccountAmounts(flagSet *pflag.FlagSet, name string) ([]exchange.AccountAmount, error) {
+	return ReadFlagAccountAmountsOrDefault(flagSet, name, nil)
+}
+
+func ReadFlagAccountAmountsOrDefault(flagSet *pflag.FlagSet, name string, def []exchange.AccountAmount) ([]exchange.AccountAmount, error) {
 	rawVals, err := flagSet.GetStringSlice(name)
 	if len(rawVals) == 0 || err != nil {
-		return nil, err
+		return def, err
 	}
 
 	// Slice flags are automatically split on commas. But here, we need commas for separating coin
@@ -778,7 +866,12 @@ func ReadFlagAccountAmounts(flagSet *pflag.FlagSet, name string) ([]exchange.Acc
 		}
 	}
 
-	return ParseAccountAmounts(vals)
+	rv, err := ParseAccountAmounts(vals)
+	if err != nil {
+		return def, err
+	}
+
+	return rv, nil
 }
 
 // ReadFlagAccountsWithoutAmounts reads a StringSlice flag and converts it into a slice of exchange.AccountAmount
@@ -840,9 +933,21 @@ func ParseNetAssetPrices(vals []string) ([]exchange.NetAssetPrice, error) {
 // ReadFlagNetAssetPrices reads a StringSlice flag and converts it into a slice of exchange.NetAssetPrice.
 // This assumes that the flag was defined with a default of nil or []string{}.
 func ReadFlagNetAssetPrices(flagSet *pflag.FlagSet, name string) ([]exchange.NetAssetPrice, error) {
+	return ReadFlagNetAssetPricesOrDefault(flagSet, name, nil)
+}
+
+// ReadFlagNetAssetPricesOrDefault reads a StringSlice flag and converts it into a slice of exchange.NetAssetPrice.
+// If none are provided or there's an error, the default is returned (along with the error).
+// This assumes that the flag was defined with a default of nil or []string{}.
+func ReadFlagNetAssetPricesOrDefault(flagSet *pflag.FlagSet, name string, def []exchange.NetAssetPrice) ([]exchange.NetAssetPrice, error) {
 	vals, err := flagSet.GetStringSlice(name)
 	if len(vals) == 0 || err != nil {
-		return nil, err
+		return def, err
 	}
-	return ParseNetAssetPrices(vals)
+	rv, err := ParseNetAssetPrices(vals)
+	if err != nil {
+		return def, err
+	}
+
+	return rv, nil
 }
