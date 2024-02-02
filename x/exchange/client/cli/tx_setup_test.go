@@ -853,10 +853,10 @@ func TestMakeMsgMarketUpdateDetails(t *testing.T) {
 	}
 }
 
-func TestSetupCmdTxMarketUpdateEnabled(t *testing.T) {
+func TestSetupCmdTxMarketUpdateAcceptingOrders(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
-		name:  "SetupCmdTxMarketUpdateEnabled",
-		setup: cli.SetupCmdTxMarketUpdateEnabled,
+		name:  "SetupCmdTxMarketUpdateAcceptingOrders",
+		setup: cli.SetupCmdTxMarketUpdateAcceptingOrders,
 		expFlags: []string{
 			cli.FlagAdmin, cli.FlagAuthority,
 			cli.FlagMarket, cli.FlagEnable, cli.FlagDisable,
@@ -889,18 +889,18 @@ func TestSetupCmdTxMarketUpdateEnabled(t *testing.T) {
 	})
 }
 
-func TestMakeMsgMarketUpdateEnabled(t *testing.T) {
-	td := txMakerTestDef[*exchange.MsgMarketUpdateEnabledRequest]{
-		makerName: "MakeMsgMarketUpdateEnabled",
-		maker:     cli.MakeMsgMarketUpdateEnabled,
-		setup:     cli.SetupCmdTxMarketUpdateEnabled,
+func TestMakeMsgMarketUpdateAcceptingOrders(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketUpdateAcceptingOrdersRequest]{
+		makerName: "MakeMsgMarketUpdateAcceptingOrders",
+		maker:     cli.MakeMsgMarketUpdateAcceptingOrders,
+		setup:     cli.SetupCmdTxMarketUpdateAcceptingOrders,
 	}
 
-	tests := []txMakerTestCase[*exchange.MsgMarketUpdateEnabledRequest]{
+	tests := []txMakerTestCase[*exchange.MsgMarketUpdateAcceptingOrdersRequest]{
 		{
 			name:   "some errors",
 			flags:  []string{"--market", "56"},
-			expMsg: &exchange.MsgMarketUpdateEnabledRequest{MarketId: 56},
+			expMsg: &exchange.MsgMarketUpdateAcceptingOrdersRequest{MarketId: 56},
 			expErr: joinErrs(
 				"no <admin> provided",
 				"exactly one of --enable or --disable must be provided",
@@ -910,7 +910,7 @@ func TestMakeMsgMarketUpdateEnabled(t *testing.T) {
 			name:      "enable",
 			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
 			flags:     []string{"--enable", "--market", "4"},
-			expMsg: &exchange.MsgMarketUpdateEnabledRequest{
+			expMsg: &exchange.MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           sdk.AccAddress("FromAddress_________").String(),
 				MarketId:        4,
 				AcceptingOrders: true,
@@ -920,7 +920,7 @@ func TestMakeMsgMarketUpdateEnabled(t *testing.T) {
 			name:      "disable",
 			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
 			flags:     []string{"--admin", "Blake", "--market", "94", "--disable"},
-			expMsg: &exchange.MsgMarketUpdateEnabledRequest{
+			expMsg: &exchange.MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           "Blake",
 				MarketId:        94,
 				AcceptingOrders: false,

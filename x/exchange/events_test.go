@@ -368,6 +368,42 @@ func TestNewEventOrderExternalIDUpdated(t *testing.T) {
 	}
 }
 
+func TestNewEventFundsCommitted(t *testing.T) {
+	account := sdk.AccAddress("account_____________").String()
+	marketID := uint32(4444)
+	amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 57), sdk.NewInt64Coin("banana", 99))
+	tag := "help-help-i-have-been-committed"
+
+	var event *EventFundsCommitted
+	testFunc := func() {
+		event = NewEventFundsCommitted(account, marketID, amount, tag)
+	}
+	require.NotPanics(t, testFunc, "NewEventFundsCommitted(%q, %d, %q, %q)", account, marketID, amount, tag)
+	assert.Equal(t, account, event.Account, "Account")
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, amount.String(), event.Amount, "Amount")
+	assert.Equal(t, tag, event.Tag, "Tag")
+	assertEverythingSet(t, event, "EventFundsCommitted")
+}
+
+func TestNewEventCommitmentReleased(t *testing.T) {
+	account := sdk.AccAddress("account_____________").String()
+	marketID := uint32(4444)
+	amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 57), sdk.NewInt64Coin("banana", 99))
+	tag := "i-have-been-released"
+
+	var event *EventCommitmentReleased
+	testFunc := func() {
+		event = NewEventCommitmentReleased(account, marketID, amount, tag)
+	}
+	require.NotPanics(t, testFunc, "NewEventCommitmentReleased(%q, %d, %q, %q)", account, marketID, amount, tag)
+	assert.Equal(t, account, event.Account, "Account")
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, amount.String(), event.Amount, "Amount")
+	assert.Equal(t, tag, event.Tag, "Tag")
+	assertEverythingSet(t, event, "EventCommitmentReleased")
+}
+
 func TestNewEventMarketWithdraw(t *testing.T) {
 	marketID := uint32(55)
 	amountWithdrawn := sdk.NewCoins(sdk.NewInt64Coin("mine", 188382), sdk.NewInt64Coin("yours", 3))
@@ -401,7 +437,7 @@ func TestNewEventMarketDetailsUpdated(t *testing.T) {
 	assertEverythingSet(t, event, "EventMarketDetailsUpdated")
 }
 
-func TestNewEventMarketActiveUpdated(t *testing.T) {
+func TestNewEventMarketAcceptingOrdersUpdated(t *testing.T) {
 	someAddr := sdk.AccAddress("some_address________").String()
 
 	tests := []struct {
@@ -416,14 +452,14 @@ func TestNewEventMarketActiveUpdated(t *testing.T) {
 			marketID:  33,
 			updatedBy: someAddr,
 			isActive:  true,
-			expected:  NewEventMarketEnabled(33, someAddr),
+			expected:  NewEventMarketOrdersEnabled(33, someAddr),
 		},
 		{
 			name:      "disabled",
 			marketID:  556,
 			updatedBy: someAddr,
 			isActive:  false,
-			expected:  NewEventMarketDisabled(556, someAddr),
+			expected:  NewEventMarketOrdersDisabled(556, someAddr),
 		},
 	}
 
@@ -431,42 +467,42 @@ func TestNewEventMarketActiveUpdated(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var event proto.Message
 			testFunc := func() {
-				event = NewEventMarketActiveUpdated(tc.marketID, tc.updatedBy, tc.isActive)
+				event = NewEventMarketAcceptingOrdersUpdated(tc.marketID, tc.updatedBy, tc.isActive)
 			}
-			require.NotPanics(t, testFunc, "NewEventMarketActiveUpdated(%d, %q, %t) result",
+			require.NotPanics(t, testFunc, "NewEventMarketAcceptingOrdersUpdated(%d, %q, %t) result",
 				tc.marketID, tc.updatedBy, tc.isActive)
-			assert.Equal(t, tc.expected, event, "NewEventMarketActiveUpdated(%d, %q, %t) result",
+			assert.Equal(t, tc.expected, event, "NewEventMarketAcceptingOrdersUpdated(%d, %q, %t) result",
 				tc.marketID, tc.updatedBy, tc.isActive)
 		})
 	}
 }
 
-func TestNewEventMarketEnabled(t *testing.T) {
+func TestNewEventMarketOrdersEnabled(t *testing.T) {
 	marketID := uint32(919)
 	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
-	var event *EventMarketEnabled
+	var event *EventMarketOrdersEnabled
 	testFunc := func() {
-		event = NewEventMarketEnabled(marketID, updatedBy)
+		event = NewEventMarketOrdersEnabled(marketID, updatedBy)
 	}
-	require.NotPanics(t, testFunc, "NewEventMarketEnabled(%d, %q)", marketID, updatedBy)
+	require.NotPanics(t, testFunc, "NewEventMarketOrdersEnabled(%d, %q)", marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
-	assertEverythingSet(t, event, "EventMarketEnabled")
+	assertEverythingSet(t, event, "EventMarketOrdersEnabled")
 }
 
-func TestNewEventMarketDisabled(t *testing.T) {
+func TestNewEventMarketOrdersDisabled(t *testing.T) {
 	marketID := uint32(5555)
 	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
-	var event *EventMarketDisabled
+	var event *EventMarketOrdersDisabled
 	testFunc := func() {
-		event = NewEventMarketDisabled(marketID, updatedBy)
+		event = NewEventMarketOrdersDisabled(marketID, updatedBy)
 	}
-	require.NotPanics(t, testFunc, "NewEventMarketDisabled(%d, %q)", marketID, updatedBy)
+	require.NotPanics(t, testFunc, "NewEventMarketOrdersDisabled(%d, %q)", marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
-	assertEverythingSet(t, event, "EventMarketDisabled")
+	assertEverythingSet(t, event, "EventMarketOrdersDisabled")
 }
 
 func TestNewEventMarketUserSettleUpdated(t *testing.T) {
@@ -537,6 +573,88 @@ func TestNewEventMarketUserSettleDisabled(t *testing.T) {
 	assertEverythingSet(t, event, "EventMarketUserSettleDisabled")
 }
 
+func TestNewEventMarketAcceptingCommitmentsUpdated(t *testing.T) {
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	tests := []struct {
+		name      string
+		marketID  uint32
+		updatedBy string
+		isAllowed bool
+		expected  proto.Message
+	}{
+		{
+			name:      "enabled",
+			marketID:  575,
+			updatedBy: updatedBy,
+			isAllowed: true,
+			expected:  NewEventMarketCommitmentsEnabled(575, updatedBy),
+		},
+		{
+			name:      "disabled",
+			marketID:  406,
+			updatedBy: updatedBy,
+			isAllowed: false,
+			expected:  NewEventMarketCommitmentsDisabled(406, updatedBy),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event proto.Message
+			testFunc := func() {
+				event = NewEventMarketAcceptingCommitmentsUpdated(tc.marketID, tc.updatedBy, tc.isAllowed)
+			}
+			require.NotPanics(t, testFunc, "NewEventMarketAcceptingCommitmentsUpdated(%d, %q, %t) result",
+				tc.marketID, tc.updatedBy, tc.isAllowed)
+			assert.Equal(t, tc.expected, event, "NewEventMarketAcceptingCommitmentsUpdated(%d, %q, %t) result",
+				tc.marketID, tc.updatedBy, tc.isAllowed)
+		})
+	}
+}
+
+func TestNewEventMarketCommitmentsEnabled(t *testing.T) {
+	marketID := uint32(4541)
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	var event *EventMarketCommitmentsEnabled
+	testFunc := func() {
+		event = NewEventMarketCommitmentsEnabled(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketCommitmentsEnabled(%d, %q)", marketID, updatedBy)
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
+	assertEverythingSet(t, event, "EventMarketCommitmentsEnabled")
+}
+
+func TestNewEventMarketCommitmentsDisabled(t *testing.T) {
+	marketID := uint32(4541)
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	var event *EventMarketCommitmentsDisabled
+	testFunc := func() {
+		event = NewEventMarketCommitmentsDisabled(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketCommitmentsDisabled(%d, %q)", marketID, updatedBy)
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
+	assertEverythingSet(t, event, "EventMarketCommitmentsDisabled")
+}
+
+func TestNewEventMarketIntermediaryDenomUpdated(t *testing.T) {
+	marketID := uint32(4541)
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	var event *EventMarketIntermediaryDenomUpdated
+	testFunc := func() {
+		event = NewEventMarketIntermediaryDenomUpdated(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketIntermediaryDenomUpdated(%d, %q)", marketID, updatedBy)
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
+	assertEverythingSet(t, event, "EventMarketIntermediaryDenomUpdated")
+}
+
 func TestNewEventMarketPermissionsUpdated(t *testing.T) {
 	marketID := uint32(5432)
 	updatedBy := sdk.AccAddress("updatedBy___________").String()
@@ -602,6 +720,8 @@ func TestTypedEventToEvent(t *testing.T) {
 	quoteBz := func(str string) []byte {
 		return []byte(fmt.Sprintf("%q", str))
 	}
+	account := "account_____________"
+	accountQ := quoteBz(account)
 	cancelledBy := "cancelledBy_________"
 	cancelledByQ := quoteBz(cancelledBy)
 	destination := sdk.AccAddress("destination_________")
@@ -785,6 +905,32 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
+			name: "EventFundsCommitted",
+			tev:  NewEventFundsCommitted(account, 44, coins1, "tagTagTAG"),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventFundsCommitted",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("account"), Value: accountQ},
+					{Key: []byte("amount"), Value: coins1Q},
+					{Key: []byte("market_id"), Value: []byte("44")},
+					{Key: []byte("tag"), Value: quoteBz("tagTagTAG")},
+				},
+			},
+		},
+		{
+			name: "EventCommitmentReleased",
+			tev:  NewEventCommitmentReleased(account, 15, coins1, "something"),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventCommitmentReleased",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("account"), Value: accountQ},
+					{Key: []byte("amount"), Value: coins1Q},
+					{Key: []byte("market_id"), Value: []byte("15")},
+					{Key: []byte("tag"), Value: quoteBz("something")},
+				},
+			},
+		},
+		{
 			name: "EventMarketWithdraw",
 			tev:  NewEventMarketWithdraw(6, coins1, destination, withdrawnBy.String()),
 			expEvent: sdk.Event{
@@ -809,10 +955,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "EventMarketEnabled",
-			tev:  NewEventMarketEnabled(8, updatedBy),
+			name: "EventMarketOrdersEnabled",
+			tev:  NewEventMarketOrdersEnabled(8, updatedBy),
 			expEvent: sdk.Event{
-				Type: "provenance.exchange.v1.EventMarketEnabled",
+				Type: "provenance.exchange.v1.EventMarketOrdersEnabled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("market_id"), Value: []byte("8")},
 					{Key: []byte("updated_by"), Value: updatedByQ},
@@ -820,10 +966,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "EventMarketDisabled",
-			tev:  NewEventMarketDisabled(9, updatedBy),
+			name: "EventMarketOrdersDisabled",
+			tev:  NewEventMarketOrdersDisabled(9, updatedBy),
 			expEvent: sdk.Event{
-				Type: "provenance.exchange.v1.EventMarketDisabled",
+				Type: "provenance.exchange.v1.EventMarketOrdersDisabled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("market_id"), Value: []byte("9")},
 					{Key: []byte("updated_by"), Value: updatedByQ},
@@ -848,6 +994,39 @@ func TestTypedEventToEvent(t *testing.T) {
 				Type: "provenance.exchange.v1.EventMarketUserSettleDisabled",
 				Attributes: []abci.EventAttribute{
 					{Key: []byte("market_id"), Value: []byte("11")},
+					{Key: []byte("updated_by"), Value: updatedByQ},
+				},
+			},
+		},
+		{
+			name: "EventMarketCommitmentsEnabled",
+			tev:  NewEventMarketCommitmentsEnabled(52, updatedBy),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventMarketCommitmentsEnabled",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("market_id"), Value: []byte("52")},
+					{Key: []byte("updated_by"), Value: updatedByQ},
+				},
+			},
+		},
+		{
+			name: "EventMarketCommitmentsDisabled",
+			tev:  NewEventMarketCommitmentsDisabled(25, updatedBy),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventMarketCommitmentsDisabled",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("market_id"), Value: []byte("25")},
+					{Key: []byte("updated_by"), Value: updatedByQ},
+				},
+			},
+		},
+		{
+			name: "EventMarketIntermediaryDenomUpdated",
+			tev:  NewEventMarketIntermediaryDenomUpdated(18, updatedBy),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventMarketIntermediaryDenomUpdated",
+				Attributes: []abci.EventAttribute{
+					{Key: []byte("market_id"), Value: []byte("18")},
 					{Key: []byte("updated_by"), Value: updatedByQ},
 				},
 			},

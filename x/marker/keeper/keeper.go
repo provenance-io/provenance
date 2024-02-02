@@ -86,6 +86,9 @@ type Keeper struct {
 	// When sending from one of these, if there are required attributes, the destination must have them;
 	// if there aren't required attributes, it behaves as if the sender has transfer permission.
 	reqAttrBypassAddrs types.ImmutableAccAddresses
+
+	// groupChecker provides a way to check if an account is in a group.
+	groupChecker types.GroupChecker
 }
 
 // NewKeeper returns a marker keeper. It handles:
@@ -105,6 +108,7 @@ func NewKeeper(
 	nameKeeper types.NameKeeper,
 	ibcTransferServer types.IbcTransferMsgServer,
 	reqAttrBypassAddrs []sdk.AccAddress,
+	checker types.GroupChecker,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -125,6 +129,7 @@ func NewKeeper(
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
 		ibcTransferServer:     ibcTransferServer,
 		reqAttrBypassAddrs:    types.NewImmutableAccAddresses(reqAttrBypassAddrs),
+		groupChecker:          checker,
 	}
 	bankKeeper.AppendSendRestriction(rv.SendRestrictionFn)
 	return rv
@@ -305,6 +310,29 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 	store.Set(key, bz)
 
 	return nil
+}
+
+// GetNetAssetValue gets the NetAssetValue for a marker denom with a specific price denom.
+func (k Keeper) GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error) {
+	store := ctx.KVStore(k.storeKey)
+	markerAddr, err := types.MarkerAddress(markerDenom)
+	if err != nil {
+		return nil, fmt.Errorf("could not get marker %q address: %w", markerDenom, err)
+	}
+
+	key := types.NetAssetValueKey(markerAddr, priceDenom)
+	value := store.Get(key)
+	if len(value) == 0 {
+		return nil, nil
+	}
+
+	var markerNav types.NetAssetValue
+	err = k.cdc.Unmarshal(value, &markerNav)
+	if err != nil {
+		return nil, fmt.Errorf("could not read nav for marker %q with price denom %q: %w", markerDenom, priceDenom, err)
+	}
+
+	return &markerNav, nil
 }
 
 // IterateNetAssetValues iterates net asset values for marker

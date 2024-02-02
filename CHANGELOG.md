@@ -37,10 +37,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* nothing
+
+## [v1.18.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc1) - 2024-01-30
+
 ### Features
 
 * Add the ibcratelimit module [#1498](https://github.com/provenance-io/provenance/issues/1498).
+* Add NAV support for metadata scopes [#1749](https://github.com/provenance-io/provenance/issues/1749).
 * Add fix for NAV units to tourmaline upgrade handler [#1815](https://github.com/provenance-io/provenance/issues/1815).
+* Support commitments in the exchange module [#1789](https://github.com/provenance-io/provenance/issues/1789).
 
 ### Improvements
 
@@ -49,10 +55,29 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Allow bypassing the config warning wait using an environment variable [PR 1810](https://github.com/provenance-io/provenance/pull/1810).
 * Filter out empty distribution events from begin blocker [#1822](https://github.com/provenance-io/provenance/pull/1822).
 
+### Deprecated
+
+* The concept of an "active" market (in the exchange module) has been removed in favor of specifying whether it accepts orders [#1789](https://github.com/provenance-io/provenance/issues/1789).
+  * The `MarketUpdateEnabled` endpoint has been deprecated and is no longer usable. It is replaced with the `MarketUpdateAcceptingOrders` endpoint.
+  * `MsgMarketUpdateEnabledRequest` is replaced with `MsgMarketUpdateAcceptingOrdersRequest`.
+  * `MsgMarketUpdateEnabledResponse` is replaced with `MsgMarketUpdateAcceptingOrdersResponse`.
+  * `EventMarketEnabled` is replaced with `EventMarketOrdersEnabled`.
+  * `EventMarketDisabled` is replaced with `EventMarketOrdersDisabled`.
+
 ### Bug Fixes
 
 * Remove deleted marker send deny entries [#1666](https://github.com/provenance-io/provenance/issues/1666).
 * Update protos, naming, and documentation to use mills [#1813](https://github.com/provenance-io/provenance/issues/1813).
+* Update marker transfer to work with groups [#1818](https://github.com/provenance-io/provenance/issues/1818).
+
+### Client Breaking
+
+* The `provenanced tx exchange market-enabled` command has been changed to `provenanced tx exchange market-accepting-orders` [#1789](https://github.com/provenance-io/provenance/issues/1789).
+
+### API Breaking
+
+* The `MarketUpdateEnabled` has been deprecated and replaced with `MarketUpdateAcceptingOrders` along with its request, response, and events [#1789](https://github.com/provenance-io/provenance/issues/1789).
+  The old endpoint is no longer usable. See the Deprecated section for more details.
 
 ### Dependencies
 
@@ -75,6 +100,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `golang.org/x/crypto` from 0.14.0 to 0.17.0 ([#1788](https://github.com/provenance-io/provenance/pull/1788))
 - Bump `cosmossdk.io/errors` from 1.0.0 to 1.0.1 ([#1806](https://github.com/provenance-io/provenance/pull/1806))
 - Bump `actions/cache` from 3 to 4 ([#1817](https://github.com/provenance-io/provenance/pull/1817))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.17.1...v1.18.0-rc1
 
 ---
 

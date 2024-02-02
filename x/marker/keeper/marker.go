@@ -680,6 +680,11 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 // canForceTransferFrom returns true if funds can be forcefully transferred out of the provided address.
 func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool {
 	acc := k.authKeeper.GetAccount(ctx, from)
+	// If the account is a group address, then it will allow the transfer.
+	if k.groupChecker != nil && k.groupChecker.IsGroupAddress(ctx, from) {
+		return true
+	}
+
 	// If acc is nil, there's no funds in it, so the transfer will fail anyway.
 	// In that case, return true from here so it can fail later with a more accurate message.
 	// If there is an account, only allow force transfers if the sequence number isn't zero.

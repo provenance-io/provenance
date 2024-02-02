@@ -389,8 +389,8 @@ func MakeMsgMarketUpdateDetails(clientCtx client.Context, flagSet *pflag.FlagSet
 	return msg, errors.Join(errs...)
 }
 
-// SetupCmdTxMarketUpdateEnabled adds all the flags needed for MakeMsgMarketUpdateEnabled.
-func SetupCmdTxMarketUpdateEnabled(cmd *cobra.Command) {
+// SetupCmdTxMarketUpdateAcceptingOrders adds all the flags needed for MakeMsgMarketUpdateAcceptingOrders.
+func SetupCmdTxMarketUpdateAcceptingOrders(cmd *cobra.Command) {
 	AddFlagsAdmin(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
 	AddFlagsEnableDisable(cmd, "accepting_orders")
@@ -407,10 +407,10 @@ func SetupCmdTxMarketUpdateEnabled(cmd *cobra.Command) {
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgMarketUpdateEnabled reads all the SetupCmdTxMarketUpdateEnabled flags and creates the desired Msg.
+// MakeMsgMarketUpdateAcceptingOrders reads all the SetupCmdTxMarketUpdateAcceptingOrders flags and creates the desired Msg.
 // Satisfies the msgMaker type.
-func MakeMsgMarketUpdateEnabled(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketUpdateEnabledRequest, error) {
-	msg := &exchange.MsgMarketUpdateEnabledRequest{}
+func MakeMsgMarketUpdateAcceptingOrders(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgMarketUpdateAcceptingOrdersRequest, error) {
+	msg := &exchange.MsgMarketUpdateAcceptingOrdersRequest{}
 
 	errs := make([]error, 3)
 	msg.Admin, errs[0] = ReadFlagsAdminOrFrom(clientCtx, flagSet)

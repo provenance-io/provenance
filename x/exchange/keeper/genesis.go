@@ -47,6 +47,19 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 	}
 	setLastOrderID(store, genState.LastOrderId)
 
+	for i, com := range genState.Commitments {
+		addr, err := sdk.AccAddressFromBech32(com.Account)
+		if err != nil {
+			panic(fmt.Errorf("failed to convert commitments[%d].Account=%q to AccAddress: %w", i, com.Account, err))
+		}
+		addCommitmentAmount(store, com.MarketId, addr, com.Amount)
+		if _, known := amounts[com.Account]; !known {
+			addrs = append(addrs, com.Account)
+			amounts[com.Account] = nil
+		}
+		amounts[com.Account] = amounts[com.Account].Add(com.Amount...)
+	}
+
 	// Make sure all the needed funds have holds on them. These should have been placed during initialization of the hold module.
 	for _, addr := range addrs {
 		for _, reqAmt := range amounts[addr] {
@@ -55,7 +68,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *exchange.GenesisState) {
 				panic(fmt.Errorf("failed to look up amount of %q on hold for %s: %w", reqAmt.Denom, addr, err))
 			}
 			if holdAmt.Amount.LT(reqAmt.Amount) {
-				panic(fmt.Errorf("account %s should have at least %q on hold (due to exchange orders), but only has %q", addr, reqAmt, holdAmt))
+				panic(fmt.Errorf("account %s should have at least %q on hold (due to the exchange module), but only has %q", addr, reqAmt, holdAmt))
 			}
 		}
 	}
@@ -82,6 +95,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *exchange.GenesisState {
 	if err != nil {
 		k.logErrorf(ctx, "error (ignored) while reading orders: %v", err)
 	}
+
+	k.IterateCommitments(ctx, func(commitment exchange.Commitment) bool {
+		genState.Commitments = append(genState.Commitments, commitment)
+		return false
+	})
 
 	return genState
 }

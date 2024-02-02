@@ -169,17 +169,17 @@ func CmdTxMarketUpdateDetails() *cobra.Command {
 	return cmd
 }
 
-// CmdTxMarketUpdateEnabled creates the market-enabled sub-command for the exchange tx command.
+// CmdTxMarketUpdateEnabled creates the market-accepting-orders sub-command for the exchange tx command.
 func CmdTxMarketUpdateEnabled() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "market-enabled",
-		Aliases: []string{"market-update-enabled", "update-market-enabled", "update-enabled"},
+		Use:     "market-accepting-orders",
+		Aliases: []string{"market-update-accepting-orders", "update-market-accepting-orders", "update-accepting-orders"},
 		Short:   "Change whether a market is accepting orders",
-		RunE:    genericTxRunE(MakeMsgMarketUpdateEnabled),
+		RunE:    genericTxRunE(MakeMsgMarketUpdateAcceptingOrders),
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-	SetupCmdTxMarketUpdateEnabled(cmd)
+	SetupCmdTxMarketUpdateAcceptingOrders(cmd)
 	return cmd
 }
 

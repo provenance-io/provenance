@@ -12,15 +12,20 @@ Big-endian ordering is used for all conversions between numbers and byte arrays.
   - [Markets](#markets)
     - [Market Create-Ask Flat Fee](#market-create-ask-flat-fee)
     - [Market Create-Bid Flat Fee](#market-create-bid-flat-fee)
+    - [Market Create-Commitment Flat Fee](#market-create-commitment-flat-fee)
     - [Market Seller Settlement Flat Fee](#market-seller-settlement-flat-fee)
     - [Market Seller Settlement Ratio Fee](#market-seller-settlement-ratio-fee)
     - [Market Buyer Settlement Flat Fee](#market-buyer-settlement-flat-fee)
     - [Market Buyer Settlement Ratio Fee](#market-buyer-settlement-ratio-fee)
-    - [Market Inactive Indicator](#market-inactive-indicator)
+    - [Market Not-Accepting-Orders Indicator](#market-not-accepting-orders-indicator)
     - [Market User-Settle Indicator](#market-user-settle-indicator)
+    - [Market Accepting Commitments Indicator](#market-accepting-commitments-indicator)
     - [Market Permissions](#market-permissions)
     - [Market Create-Ask Required Attributes](#market-create-ask-required-attributes)
     - [Market Create-Bid Required Attributes](#market-create-bid-required-attributes)
+    - [Market Create-Commitment Required Attributes](#market-create-commitment-required-attributes)
+    - [Market Commitment Settlement Bips](#market-commitment-settlement-bips)
+    - [Market Intermediary Denom](#market-intermediary-denom)
     - [Market Account](#market-account)
     - [Market Details](#market-details)
     - [Known Market ID](#known-market-id)
@@ -29,6 +34,7 @@ Big-endian ordering is used for all conversions between numbers and byte arrays.
     - [Ask Orders](#ask-orders)
     - [Bid Orders](#bid-orders)
     - [Last Order ID](#last-order-id)
+    - [Commitments](#commitments)
   - [Indexes](#indexes)
     - [Market to Order](#market-to-order)
     - [Owner Address to Order](#owner-address-to-order)
@@ -92,6 +98,14 @@ One entry per configured denom.
 * Value: `<amount (string)>`
 
 
+### Market Create-Commitment Flat Fee
+
+One entry per configured denom.
+
+* Key: `0x01 | <market id (4 bytes)> | 0x11 | <denom (string)>`
+* Value: `<amount (string)>`
+
+
 ### Market Seller Settlement Flat Fee
 
 One entry per configured denom.
@@ -128,7 +142,7 @@ One entry per configured price:fee denom pair.
 See also: [FeeRatio](03_messages.md#feeratio).
 
 
-### Market Inactive Indicator
+### Market Not-Accepting-Orders Indicator
 
 When a market has `accepting_orders = false`, this state entry will exist.
 When it has `accepting_orders = true`, this entry will not exist.
@@ -143,6 +157,15 @@ When a market has `allow_user_settlement = true`, this state entry will exist.
 When it has `allow_user_settlement = false`, this entry will not exist.
 
 * Key: `0x01 | <market id (4 bytes)> | 0x07`
+* Value: `<nil (0 bytes)>`
+
+
+### Market Accepting Commitments Indicator
+
+When a market has `accepting_commitments = true`, this state entry will exist.
+When it has `accepting_commitments = false`, this entry will not exist.
+
+* Key: `0x01 | <market id (4 bytes)> | 0x10`
 * Value: `<nil (0 bytes)>`
 
 
@@ -170,12 +193,32 @@ See also: [AccessGrant](03_messages.md#accessgrant) and [Permission](03_messages
 * Value: `<list of strings separated by 0x1E>`
 
 
+### Market Create-Commitment Required Attributes
+
+* Key: `0x01 | <market id (4 bytes)> | 0x09 | 0x63`
+* Value: `<list of strings separated by 0x1E>`
+
+
+### Market Commitment Settlement Bips
+
+Commitment Settlement Bips is stored as a uint16.
+
+* Key: `0x01 | <market id (4 bytes)> | 0x12`
+* Value: `<bips (2 bytes)>`
+
+
+### Market Intermediary Denom
+
+* Key: `0x01 | <market id (4 bytes)> | 0x13`
+* Value: `<denom>`
+
+
 ### Market Account
 
 Each market has an associated `MarketAccount` with an address derived from the `market_id`.
 Each `MarketAccount` is stored using the `Accounts` module.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L14-L26
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/market.proto#L14-L26
 
 
 ### Market Details
@@ -243,6 +286,11 @@ Then this entry is updated to reflect the new order.
 * Key: `0x08`
 * Value: `<order id (8 bytes)>`
 
+
+### Commitments
+
+* Key: `0x63 | <market_id> (4 bytes) | <addr len (1 byte)> | <addr>`
+* Value: `<coins string>`
 
 ## Indexes
 

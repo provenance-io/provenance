@@ -17,6 +17,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -40,6 +42,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/client/cli"
 	"github.com/provenance-io/provenance/x/hold"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 type CmdTestSuite struct {
@@ -102,14 +105,27 @@ func (s *CmdTestSuite) SetupSuite() {
 		cli.AuthorityAddr.String(): "authorityAddr",
 	}
 
+	cherryMarker := &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address: markertypes.MustGetMarkerAddress("cherry").String(),
+		},
+		Status:                 markertypes.StatusActive,
+		Denom:                  "cherry",
+		Supply:                 sdkmath.NewInt(0),
+		MarkerType:             markertypes.MarkerType_Coin,
+		SupplyFixed:            false,
+		AllowGovernanceControl: true,
+	}
+
 	// Add accounts to auth gen state.
 	var authGen authtypes.GenesisState
 	err := s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[authtypes.ModuleName], &authGen)
 	s.Require().NoError(err, "UnmarshalJSON auth gen state")
-	genAccs := make(authtypes.GenesisAccounts, len(s.accountAddrs))
+	genAccs := make(authtypes.GenesisAccounts, len(s.accountAddrs), len(s.accountAddrs)+1)
 	for i, addr := range s.accountAddrs {
 		genAccs[i] = authtypes.NewBaseAccount(addr, nil, 0, 1)
 	}
+	genAccs = append(genAccs, cherryMarker)
 	newAccounts, err := authtypes.PackAccounts(genAccs)
 	s.Require().NoError(err, "PackAccounts")
 	authGen.Accounts = append(authGen.Accounts, newAccounts...)
@@ -140,6 +156,9 @@ func (s *CmdTestSuite) SetupSuite() {
 				{Address: s.addr2.String(), Permissions: exchange.AllPermissions()},
 				{Address: s.addr3.String(), Permissions: []exchange.Permission{exchange.Permission_cancel, exchange.Permission_attributes}},
 			},
+			AcceptingCommitments:     true,
+			CommitmentSettlementBips: 50,
+			IntermediaryDenom:        "cherry",
 		},
 		exchange.Market{
 			MarketId: 5,
@@ -158,6 +177,9 @@ func (s *CmdTestSuite) SetupSuite() {
 			AccessGrants: []exchange.AccessGrant{
 				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
 			},
+			AcceptingCommitments:     true,
+			CommitmentSettlementBips: 50,
+			IntermediaryDenom:        "cherry",
 		},
 		// Do not make a market 419, lots of tests expect it to not exist.
 		exchange.Market{
@@ -186,6 +208,12 @@ func (s *CmdTestSuite) SetupSuite() {
 			},
 			ReqAttrCreateAsk: []string{"seller.kyc"},
 			ReqAttrCreateBid: []string{"buyer.kyc"},
+
+			AcceptingCommitments:     true,
+			FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("peach", 5)},
+			CommitmentSettlementBips: 50,
+			IntermediaryDenom:        "cherry",
+			ReqAttrCreateCommitment:  []string{"committer.kyc"},
 		},
 		exchange.Market{
 			// This market has an invalid setup. Don't mess with it.
@@ -223,6 +251,20 @@ func (s *CmdTestSuite) SetupSuite() {
 	}
 	s.cfg.GenesisState[hold.ModuleName], err = s.cfg.Codec.MarshalJSON(&holdGen)
 	s.Require().NoError(err, "MarshalJSON hold gen state")
+
+	var markerGen markertypes.GenesisState
+	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[markertypes.ModuleName], &markerGen)
+	s.Require().NoError(err, "UnmarshalJSON marker gen state")
+	markerGen.NetAssetValues = append(markerGen.NetAssetValues,
+		markertypes.MarkerNetAssetValues{
+			Address: cherryMarker.Address,
+			NetAssetValues: []markertypes.NetAssetValue{
+				{Price: sdk.NewInt64Coin("nhash", 100), Volume: 1},
+			},
+		},
+	)
+	s.cfg.GenesisState[markertypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&markerGen)
+	s.Require().NoError(err, "MarshalJSON marker gen state")
 
 	// Add balances to bank gen state.
 	// Any initial holds for an account are added to this so that

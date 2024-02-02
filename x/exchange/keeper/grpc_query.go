@@ -218,6 +218,104 @@ func (k QueryServer) GetAllOrders(goCtx context.Context, req *exchange.QueryGetA
 	return resp, nil
 }
 
+// GetCommitment gets the funds in an account that are committed to the market.
+func (k QueryServer) GetCommitment(goCtx context.Context, req *exchange.QueryGetCommitmentRequest) (*exchange.QueryGetCommitmentResponse, error) {
+	if req == nil || len(req.Account) == 0 || req.MarketId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := sdk.AccAddressFromBech32(req.Account)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid account %q: %v", req.Account, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := &exchange.QueryGetCommitmentResponse{
+		Amount: k.GetCommitmentAmount(ctx, req.MarketId, addr),
+	}
+	return resp, nil
+}
+
+// GetAccountCommitments gets all the funds in an account that are committed to any market.
+func (k QueryServer) GetAccountCommitments(goCtx context.Context, req *exchange.QueryGetAccountCommitmentsRequest) (*exchange.QueryGetAccountCommitmentsResponse, error) {
+	if req == nil || len(req.Account) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := sdk.AccAddressFromBech32(req.Account)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid account %q: %v", req.Account, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	store := k.getStore(ctx)
+	resp := &exchange.QueryGetAccountCommitmentsResponse{}
+	k.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
+		amount := getCommitmentAmount(store, marketID, addr)
+		if !amount.IsZero() {
+			resp.Commitments = append(resp.Commitments, &exchange.MarketAmount{MarketId: marketID, Amount: amount})
+		}
+		return false
+	})
+
+	return resp, nil
+}
+
+// GetMarketCommitments gets all the funds committed to a market from any account.
+func (k QueryServer) GetMarketCommitments(goCtx context.Context, req *exchange.QueryGetMarketCommitmentsRequest) (*exchange.QueryGetMarketCommitmentsResponse, error) {
+	if req == nil || req.MarketId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetKeyPrefixCommitmentsToMarket(req.MarketId)
+	store := prefix.NewStore(k.getStore(ctx), keyPrefix)
+
+	resp := &exchange.QueryGetMarketCommitmentsResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(store, req.Pagination, func(keySuffix []byte, value []byte) error {
+		com, _ := parseCommitmentKeyValue(keyPrefix, keySuffix, value)
+		if com != nil && !com.Amount.IsZero() {
+			resp.Commitments = append(resp.Commitments, &exchange.AccountAmount{Account: com.Account, Amount: com.Amount})
+		}
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating commitments for market %d: %v", req.MarketId, pageErr)
+	}
+
+	return resp, nil
+}
+
+// GetAllCommitments gets all fund committed to any market from any account.
+func (k QueryServer) GetAllCommitments(goCtx context.Context, req *exchange.QueryGetAllCommitmentsRequest) (*exchange.QueryGetAllCommitmentsResponse, error) {
+	var pageReq *query.PageRequest
+	if req != nil {
+		pageReq = req.Pagination
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetKeyPrefixCommitments()
+	store := prefix.NewStore(k.getStore(ctx), keyPrefix)
+
+	resp := &exchange.QueryGetAllCommitmentsResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(store, pageReq, func(keySuffix []byte, value []byte) error {
+		com, _ := parseCommitmentKeyValue(keyPrefix, keySuffix, value)
+		if com != nil && !com.Amount.IsZero() {
+			resp.Commitments = append(resp.Commitments, com)
+		}
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating all commitments: %v", pageErr)
+	}
+
+	return resp, nil
+}
+
 // GetMarket returns all the information and details about a market.
 func (k QueryServer) GetMarket(goCtx context.Context, req *exchange.QueryGetMarketRequest) (*exchange.QueryGetMarketResponse, error) {
 	if req == nil || req.MarketId == 0 {
@@ -279,6 +377,25 @@ func (k QueryServer) GetAllMarkets(goCtx context.Context, req *exchange.QueryGet
 func (k QueryServer) Params(goCtx context.Context, _ *exchange.QueryParamsRequest) (*exchange.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	resp := &exchange.QueryParamsResponse{Params: k.GetParamsOrDefaults(ctx)}
+	return resp, nil
+}
+
+// CommitmentSettlementFeeCalc calculates the fees a market will pay for a commitment settlement using current NAVs.
+func (k QueryServer) CommitmentSettlementFeeCalc(goCtx context.Context, req *exchange.QueryCommitmentSettlementFeeCalcRequest) (*exchange.QueryCommitmentSettlementFeeCalcResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp, err := k.CalculateCommitmentSettlementFee(ctx, req.Settlement)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	if !req.IncludeBreakdownFields && len(req.Settlement.Inputs) > 0 {
+		resp = &exchange.QueryCommitmentSettlementFeeCalcResponse{ExchangeFees: resp.ExchangeFees}
+	}
+
 	return resp, nil
 }
 
@@ -385,6 +502,12 @@ func (k QueryServer) ValidateManageFees(goCtx context.Context, req *exchange.Que
 		createBidFlats := getCreateBidFlatFees(store, msg.MarketId)
 		errs = append(errs, exchange.ValidateAddRemoveFeeOptionsWithExisting("create-bid",
 			createBidFlats, msg.AddFeeCreateBidFlat, msg.RemoveFeeCreateBidFlat)...)
+	}
+
+	if len(msg.AddFeeCreateCommitmentFlat) > 0 || len(msg.RemoveFeeCreateCommitmentFlat) > 0 {
+		createCommitmentFlatKeyMakers := getCreateCommitmentFlatFees(store, msg.MarketId)
+		errs = append(errs, exchange.ValidateAddRemoveFeeOptionsWithExisting("create-commitment",
+			createCommitmentFlatKeyMakers, msg.AddFeeCreateCommitmentFlat, msg.RemoveFeeCreateCommitmentFlat)...)
 	}
 
 	if len(msg.AddFeeSellerSettlementFlat) > 0 || len(msg.RemoveFeeSellerSettlementFlat) > 0 {

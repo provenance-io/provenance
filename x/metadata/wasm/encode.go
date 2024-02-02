@@ -23,6 +23,8 @@ type WriteScope struct {
 	Scope Scope `json:"scope"`
 	// The signers' addresses.
 	Signers []string `json:"signers"`
+	// UsdCents used to initialize the net asset value of scope
+	UsdMills uint64 `json:"usd_mills,omitempty"`
 }
 
 // Encoder returns a smart contract message encoder for the metadata module.
@@ -59,7 +61,7 @@ func (params *WriteScope) Encode() ([]sdk.Msg, error) {
 		return nil, err
 	}
 
-	msg := types.NewMsgWriteScopeRequest(*scope, params.Signers)
+	msg := types.NewMsgWriteScopeRequest(*scope, params.Signers, params.UsdMills)
 
 	return []sdk.Msg{msg}, nil
 }

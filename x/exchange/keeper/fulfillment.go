@@ -23,7 +23,7 @@ func sumAssetsAndPrice(orders []*exchange.Order) (sdk.Coins, sdk.Coins) {
 	return totalAssets, totalPrice
 }
 
-// validateAcceptingOrdersAndCanUserSettle returns an error if the market isn't active or doesn't allow user settlement.
+// validateAcceptingOrdersAndCanUserSettle returns an error if the market isn't accepting orders or doesn't allow user settlement.
 func validateAcceptingOrdersAndCanUserSettle(store sdk.KVStore, marketID uint32) error {
 	if err := validateMarketIsAcceptingOrders(store, marketID); err != nil {
 		return err
@@ -320,7 +320,7 @@ func (k Keeper) closeSettlement(ctx sdk.Context, store sdk.KVStore, marketID uin
 // recordNAVs attempts to record the provided NAVs in the marker module.
 // If a problem is encountered for one (or more), the error is logged and the rest are still processed.
 // Events should still be emitted even for the ones that have a problem.
-func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []*exchange.NetAssetValue) {
+func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.NetAssetPrice) {
 	source := fmt.Sprintf("x/exchange market %d", marketID)
 
 	// convert them to what the marker module needs.
@@ -385,4 +385,16 @@ func (k Keeper) emitNAVEvents(ctx sdk.Context, denom string, navs []markertypes.
 		events[i] = markertypes.NewEventSetNetAssetValue(denom, nav.Price, nav.Volume, source)
 	}
 	k.emitEvents(ctx, events)
+}
+
+// GetNav looks up a NAV from the marker module and returns it as a NetAssetPrice.
+func (k Keeper) GetNav(ctx sdk.Context, assetsDenom, priceDenom string) *exchange.NetAssetPrice {
+	nav, _ := k.markerKeeper.GetNetAssetValue(ctx, assetsDenom, priceDenom)
+	if nav == nil {
+		return nil
+	}
+	return &exchange.NetAssetPrice{
+		Assets: sdk.Coin{Denom: assetsDenom, Amount: sdk.NewIntFromUint64(nav.Volume)},
+		Price:  nav.Price,
+	}
 }

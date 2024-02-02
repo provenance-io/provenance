@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -3124,6 +3125,366 @@ func (s *TestSuite) TestQueryServer_GetAllOrders() {
 	}
 }
 
+func (s *TestSuite) TestQueryServer_GetCommitment() {
+	testDef := queryTestDef[exchange.QueryGetCommitmentRequest, exchange.QueryGetCommitmentResponse]{
+		queryName: "GetCommitment",
+		query:     keeper.NewQueryServer(s.k).GetCommitment,
+	}
+
+	tests := []queryTestCase[exchange.QueryGetCommitmentRequest, exchange.QueryGetCommitmentResponse]{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "no account",
+			req:      &exchange.QueryGetCommitmentRequest{MarketId: 1},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "no market",
+			req:      &exchange.QueryGetCommitmentRequest{Account: s.addr1.String()},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "invalid account",
+			req:      &exchange.QueryGetCommitmentRequest{Account: "badbadaddr", MarketId: 1},
+			expInErr: []string{invalidArgErr, "invalid account \"badbadaddr\""},
+		},
+		{
+			name:    "nothing committed",
+			req:     &exchange.QueryGetCommitmentRequest{Account: s.addr1.String(), MarketId: 1},
+			expResp: &exchange.QueryGetCommitmentResponse{},
+		},
+		{
+			name: "funds committed",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr3, s.coins("13apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("23apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr3, s.coins("33apple"))
+			},
+			req:     &exchange.QueryGetCommitmentRequest{Account: s.addr2.String(), MarketId: 2},
+			expResp: &exchange.QueryGetCommitmentResponse{Amount: s.coins("22apple,157banana,386cherry")},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestQueryServer_GetAccountCommitments() {
+	testDef := queryTestDef[exchange.QueryGetAccountCommitmentsRequest, exchange.QueryGetAccountCommitmentsResponse]{
+		queryName: "GetAccountCommitments",
+		query:     keeper.NewQueryServer(s.k).GetAccountCommitments,
+	}
+
+	tests := []queryTestCase[exchange.QueryGetAccountCommitmentsRequest, exchange.QueryGetAccountCommitmentsResponse]{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "no account",
+			req:      &exchange.QueryGetAccountCommitmentsRequest{},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "invalid account",
+			req:      &exchange.QueryGetAccountCommitmentsRequest{Account: "badbadaddr"},
+			expInErr: []string{invalidArgErr, "invalid account \"badbadaddr\""},
+		},
+		{
+			name: "nothing committed",
+			setup: func() {
+				store := s.getStore()
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarket(exchange.Market{MarketId: 2})
+				s.requireCreateMarket(exchange.Market{MarketId: 3})
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr3, s.coins("13apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("23apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr3, s.coins("33apple"))
+			},
+			req:     &exchange.QueryGetAccountCommitmentsRequest{Account: s.addr2.String()},
+			expResp: &exchange.QueryGetAccountCommitmentsResponse{},
+		},
+		{
+			name: "funds committed",
+			setup: func() {
+				store := s.getStore()
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				s.requireCreateMarket(exchange.Market{MarketId: 2})
+				s.requireCreateMarket(exchange.Market{MarketId: 3})
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr3, s.coins("13apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("23apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr3, s.coins("33apple"))
+			},
+			req: &exchange.QueryGetAccountCommitmentsRequest{Account: s.addr2.String()},
+			expResp: &exchange.QueryGetAccountCommitmentsResponse{
+				Commitments: []*exchange.MarketAmount{
+					{MarketId: 1, Amount: s.coins("12apple")},
+					{MarketId: 2, Amount: s.coins("22apple,157banana,386cherry")},
+					{MarketId: 3, Amount: s.coins("32apple")},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestQueryServer_GetMarketCommitments() {
+	testDef := queryTestDef[exchange.QueryGetMarketCommitmentsRequest, exchange.QueryGetMarketCommitmentsResponse]{
+		queryName: "GetMarketCommitments",
+		query:     keeper.NewQueryServer(s.k).GetMarketCommitments,
+	}
+	makeKey := func(addr sdk.AccAddress) []byte {
+		rv, err := address.LengthPrefix(addr)
+		s.Require().NoError(err, "address.LengthPrefix(%s)", s.getAddrName(addr))
+		return rv
+	}
+
+	tests := []queryTestCase[exchange.QueryGetMarketCommitmentsRequest, exchange.QueryGetMarketCommitmentsResponse]{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:     "no market",
+			req:      &exchange.QueryGetMarketCommitmentsRequest{},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "nothing committed",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr3, s.coins("13apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr3, s.coins("33apple"))
+			},
+			req:     &exchange.QueryGetMarketCommitmentsRequest{MarketId: 2},
+			expResp: &exchange.QueryGetMarketCommitmentsResponse{Pagination: &query.PageResponse{}},
+		},
+		{
+			name: "funds committed",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr3, s.coins("13apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("23apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr3, s.coins("33apple"))
+			},
+			req: &exchange.QueryGetMarketCommitmentsRequest{MarketId: 2},
+			expResp: &exchange.QueryGetMarketCommitmentsResponse{
+				Commitments: []*exchange.AccountAmount{
+					{Account: s.addr1.String(), Amount: s.coins("21apple")},
+					{Account: s.addr2.String(), Amount: s.coins("22apple,157banana,386cherry")},
+					{Account: s.addr3.String(), Amount: s.coins("23apple")},
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			name: "limit 1 offset 1",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr3, s.coins("13apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("23apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr3, s.coins("33apple"))
+			},
+			req: &exchange.QueryGetMarketCommitmentsRequest{
+				MarketId:   2,
+				Pagination: &query.PageRequest{Offset: 1, Limit: 1},
+			},
+			expResp: &exchange.QueryGetMarketCommitmentsResponse{
+				Commitments: []*exchange.AccountAmount{
+					{Account: s.addr2.String(), Amount: s.coins("22apple,157banana,386cherry")},
+				},
+				Pagination: &query.PageResponse{NextKey: makeKey(s.addr3)},
+			},
+		},
+		{
+			name: "reversed",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr3, s.coins("13apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("23apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr3, s.coins("33apple"))
+			},
+			req: &exchange.QueryGetMarketCommitmentsRequest{
+				MarketId:   2,
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &exchange.QueryGetMarketCommitmentsResponse{
+				Commitments: []*exchange.AccountAmount{
+					{Account: s.addr3.String(), Amount: s.coins("23apple")},
+					{Account: s.addr2.String(), Amount: s.coins("22apple,157banana,386cherry")},
+					{Account: s.addr1.String(), Amount: s.coins("21apple")},
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestQueryServer_GetAllCommitments() {
+	testDef := queryTestDef[exchange.QueryGetAllCommitmentsRequest, exchange.QueryGetAllCommitmentsResponse]{
+		queryName: "GetAllCommitments",
+		query:     keeper.NewQueryServer(s.k).GetAllCommitments,
+	}
+	makeKey := func(marketID uint32, addr sdk.AccAddress) []byte {
+		rv := keeper.MakeKeyCommitment(marketID, addr)
+		return rv[1:]
+	}
+
+	tests := []queryTestCase[exchange.QueryGetAllCommitmentsRequest, exchange.QueryGetAllCommitmentsResponse]{
+		{
+			name:    "nil req",
+			req:     nil,
+			expResp: &exchange.QueryGetAllCommitmentsResponse{Pagination: &query.PageResponse{}},
+		},
+		{
+			name:    "nothing committed",
+			req:     &exchange.QueryGetAllCommitmentsRequest{},
+			expResp: &exchange.QueryGetAllCommitmentsResponse{Pagination: &query.PageResponse{}},
+		},
+		{
+			name: "funds committed",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr3, s.coins("13apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("23apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr3, s.coins("33apple"))
+			},
+			req: &exchange.QueryGetAllCommitmentsRequest{},
+			expResp: &exchange.QueryGetAllCommitmentsResponse{
+				Commitments: []*exchange.Commitment{
+					{MarketId: 1, Account: s.addr1.String(), Amount: s.coins("11apple")},
+					{MarketId: 1, Account: s.addr2.String(), Amount: s.coins("12apple")},
+					{MarketId: 1, Account: s.addr3.String(), Amount: s.coins("13apple")},
+					{MarketId: 2, Account: s.addr1.String(), Amount: s.coins("21apple")},
+					{MarketId: 2, Account: s.addr2.String(), Amount: s.coins("22apple,157banana,386cherry")},
+					{MarketId: 2, Account: s.addr3.String(), Amount: s.coins("23apple")},
+					{MarketId: 3, Account: s.addr1.String(), Amount: s.coins("31apple")},
+					{MarketId: 3, Account: s.addr2.String(), Amount: s.coins("32apple")},
+					{MarketId: 3, Account: s.addr3.String(), Amount: s.coins("33apple")},
+				},
+				Pagination: &query.PageResponse{Total: 9},
+			},
+		},
+		{
+			name: "limit 3 offset 2 reversed",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr3, s.coins("13apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("23apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr3, s.coins("33apple"))
+			},
+			req: &exchange.QueryGetAllCommitmentsRequest{Pagination: &query.PageRequest{Limit: 3, Offset: 2, Reverse: true}},
+			expResp: &exchange.QueryGetAllCommitmentsResponse{
+				Commitments: []*exchange.Commitment{
+					{MarketId: 3, Account: s.addr1.String(), Amount: s.coins("31apple")},
+					{MarketId: 2, Account: s.addr3.String(), Amount: s.coins("23apple")},
+					{MarketId: 2, Account: s.addr2.String(), Amount: s.coins("22apple,157banana,386cherry")},
+				},
+				Pagination: &query.PageResponse{NextKey: makeKey(2, s.addr1)},
+			},
+		},
+		{
+			name: "using next key",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentAmount(store, 1, s.addr1, s.coins("11apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr2, s.coins("12apple"))
+				keeper.SetCommitmentAmount(store, 1, s.addr3, s.coins("13apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr1, s.coins("21apple"))
+				keeper.SetCommitmentAmount(store, 2, s.addr2, s.coins("22apple,157banana,386cherry"))
+				keeper.SetCommitmentAmount(store, 2, s.addr3, s.coins("23apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr1, s.coins("31apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr2, s.coins("32apple"))
+				keeper.SetCommitmentAmount(store, 3, s.addr3, s.coins("33apple"))
+			},
+			req: &exchange.QueryGetAllCommitmentsRequest{Pagination: &query.PageRequest{Key: makeKey(3, s.addr2)}},
+			expResp: &exchange.QueryGetAllCommitmentsResponse{
+				Commitments: []*exchange.Commitment{
+					{MarketId: 3, Account: s.addr2.String(), Amount: s.coins("32apple")},
+					{MarketId: 3, Account: s.addr3.String(), Amount: s.coins("33apple")},
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
+
 func (s *TestSuite) TestQueryServer_GetMarket() {
 	testDef := queryTestDef[exchange.QueryGetMarketRequest, exchange.QueryGetMarketResponse]{
 		queryName: "GetMarket",
@@ -3187,6 +3548,12 @@ func (s *TestSuite) TestQueryServer_GetMarket() {
 					},
 					ReqAttrCreateAsk: []string{"ask.good.kyc", "*.my.custom"},
 					ReqAttrCreateBid: []string{"bid.good.kyc", "*.my.custom"},
+
+					AcceptingCommitments:     true,
+					FeeCreateCommitmentFlat:  s.coins("30fig,300grape"),
+					CommitmentSettlementBips: 23,
+					IntermediaryDenom:        "cherry",
+					ReqAttrCreateCommitment:  []string{"commitment.good.kyc", "*.my.custom"},
 				})
 				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 4})
 				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 5})
@@ -3219,6 +3586,12 @@ func (s *TestSuite) TestQueryServer_GetMarket() {
 					},
 					ReqAttrCreateAsk: []string{"ask.good.kyc", "*.my.custom"},
 					ReqAttrCreateBid: []string{"bid.good.kyc", "*.my.custom"},
+
+					AcceptingCommitments:     true,
+					FeeCreateCommitmentFlat:  s.coins("30fig,300grape"),
+					CommitmentSettlementBips: 23,
+					IntermediaryDenom:        "cherry",
+					ReqAttrCreateCommitment:  []string{"commitment.good.kyc", "*.my.custom"},
 				},
 			},
 		},
@@ -3507,6 +3880,174 @@ func (s *TestSuite) TestQueryServer_Params() {
 	}
 }
 
+func (s *TestSuite) TestQueryServer_CommitmentSettlementFeeCalc() {
+	testDef := queryTestDef[exchange.QueryCommitmentSettlementFeeCalcRequest, exchange.QueryCommitmentSettlementFeeCalcResponse]{
+		queryName: "CommitmentSettlementFeeCalc",
+		query:     keeper.NewQueryServer(s.k).CommitmentSettlementFeeCalc,
+	}
+
+	tests := []queryTestCase[exchange.QueryCommitmentSettlementFeeCalcRequest, exchange.QueryCommitmentSettlementFeeCalcResponse]{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "invalid request",
+			req: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{},
+			},
+			expInErr: []string{invalidArgErr, "invalid market id: cannot be zero"},
+		},
+		{
+			name: "no bips",
+			req: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					MarketId: 1,
+					Inputs:   []exchange.AccountAmount{{Account: s.addr1.String(), Amount: s.coins("15apple")}},
+					Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("15apple")}},
+				},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{},
+		},
+		{
+			name: "no inputs",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			req: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					MarketId: 2,
+					Navs:     []exchange.NetAssetPrice{{Assets: s.coin("1cherry"), Price: s.coin("20nhash")}},
+				},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				ToFeeNav: &exchange.NetAssetPrice{Assets: s.coin("1cherry"), Price: s.coin("20nhash")},
+			},
+		},
+		{
+			name: "some inputs and navs",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			req: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					MarketId: 2,
+					Inputs:   []exchange.AccountAmount{{Account: s.addr1.String(), Amount: s.coins("15apple")}},
+					Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("15apple")}},
+					Navs: []exchange.NetAssetPrice{
+						{Assets: s.coin("1apple"), Price: s.coin("4cherry")},
+						{Assets: s.coin("1cherry"), Price: s.coin("20nhash")},
+					},
+				},
+				IncludeBreakdownFields: true,
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal:     s.coins("15apple"),
+				ConvertedTotal: s.coins("60cherry"),
+				ExchangeFees:   s.coins("3nhash"),
+				ConversionNavs: []exchange.NetAssetPrice{{Assets: s.coin("1apple"), Price: s.coin("4cherry")}},
+				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("1cherry"), Price: s.coin("20nhash")},
+			},
+		},
+		{
+			name: "some inputs and navs: just exchange fees",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			req: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					MarketId: 2,
+					Inputs:   []exchange.AccountAmount{{Account: s.addr1.String(), Amount: s.coins("15apple")}},
+					Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("15apple")}},
+					Navs: []exchange.NetAssetPrice{
+						{Assets: s.coin("1apple"), Price: s.coin("4cherry")},
+						{Assets: s.coin("1cherry"), Price: s.coin("20nhash")},
+					},
+				},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{ExchangeFees: s.coins("3nhash")},
+		},
+		{
+			name: "some inputs, navs from state",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "cherry",
+				})
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000apple"), s.addr5)
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000cherry"), s.addr5)
+
+				appleMarker := s.requireGetMarker("apple")
+				cherryMarker := s.requireGetMarker("cherry")
+
+				s.requireSetNav(appleMarker, 1, "4cherry")
+				s.requireSetNav(cherryMarker, 1, "20nhash")
+			},
+			req: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					MarketId: 2,
+					Inputs:   []exchange.AccountAmount{{Account: s.addr1.String(), Amount: s.coins("15apple")}},
+					Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("15apple")}},
+				},
+				IncludeBreakdownFields: true,
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{
+				InputTotal:     s.coins("15apple"),
+				ConvertedTotal: s.coins("60cherry"),
+				ExchangeFees:   s.coins("3nhash"),
+				ConversionNavs: []exchange.NetAssetPrice{{Assets: s.coin("1apple"), Price: s.coin("4cherry")}},
+				ToFeeNav:       &exchange.NetAssetPrice{Assets: s.coin("1cherry"), Price: s.coin("20nhash")},
+			},
+		},
+		{
+			name: "some inputs, navs from state: just exchange fees",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 50,
+					IntermediaryDenom:        "cherry",
+				})
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000apple"), s.addr5)
+				s.requireAddFinalizeAndActivateMarker(s.coin("1000000cherry"), s.addr5)
+
+				appleMarker := s.requireGetMarker("apple")
+				cherryMarker := s.requireGetMarker("cherry")
+
+				s.requireSetNav(appleMarker, 1, "4cherry")
+				s.requireSetNav(cherryMarker, 1, "20nhash")
+			},
+			req: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					MarketId: 2,
+					Inputs:   []exchange.AccountAmount{{Account: s.addr1.String(), Amount: s.coins("15apple")}},
+					Outputs:  []exchange.AccountAmount{{Account: s.addr2.String(), Amount: s.coins("15apple")}},
+				},
+			},
+			expResp: &exchange.QueryCommitmentSettlementFeeCalcResponse{ExchangeFees: s.coins("3nhash")},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
+
 func (s *TestSuite) TestQueryServer_ValidateCreateMarket() {
 	testDef := queryTestDef[exchange.QueryValidateCreateMarketRequest, exchange.QueryValidateCreateMarketResponse]{
 		queryName: "ValidateCreateMarket",
@@ -3655,6 +4196,20 @@ func (s *TestSuite) TestQueryServer_ValidateMarket() {
 			)},
 		},
 		{
+			name: "bad commitment setup",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                 2,
+					CommitmentSettlementBips: 3,
+					IntermediaryDenom:        "",
+				})
+			},
+			req: &exchange.QueryValidateMarketRequest{MarketId: 2},
+			expResp: &exchange.QueryValidateMarketResponse{
+				Error: "no intermediary denom defined, but commitment settlement bips 3 is not zero",
+			},
+		},
+		{
 			name: "all good",
 			setup: func() {
 				s.requireCreateMarketUnmocked(exchange.Market{
@@ -3764,6 +4319,27 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 				Error: s.joinErrs(
 					"cannot remove create-bid flat fee \"100acorn\": no such fee exists",
 					"cannot add create-bid flat fee \"90apple\": fee with that denom already exists",
+				),
+			},
+		},
+		{
+			name: "add/rem create-commitment errors",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId:                7,
+					FeeCreateCommitmentFlat: s.coins("100orange"),
+				})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 7,
+				RemoveFeeCreateCommitmentFlat: s.coins("100olive"),
+				AddFeeCreateCommitmentFlat:    s.coins("90orange"),
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error: s.joinErrs(
+					"cannot remove create-commitment flat fee \"100olive\": no such fee exists",
+					"cannot add create-commitment flat fee \"90orange\": fee with that denom already exists",
 				),
 			},
 		},
@@ -3928,12 +4504,27 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 			},
 		},
 		{
+			name: "setting commitment bips without intermediary denom",
+			setup: func() {
+				s.requireCreateMarketUnmocked(exchange.Market{MarketId: 4})
+			},
+			req: &exchange.QueryValidateManageFeesRequest{ManageFeesRequest: &exchange.MsgGovManageFeesRequest{
+				Authority: s.k.GetAuthority(), MarketId: 4,
+				SetFeeCommitmentSettlementBips: 35,
+			}},
+			expResp: &exchange.QueryValidateManageFeesResponse{
+				GovPropWillPass: true,
+				Error:           "no intermediary denom defined, but commitment settlement bips 35 is not zero",
+			},
+		},
+		{
 			name: "all the problems",
 			setup: func() {
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                  7,
 					FeeCreateAskFlat:          s.coins("100peach"),
 					FeeCreateBidFlat:          s.coins("100apple"),
+					FeeCreateCommitmentFlat:   s.coins("100orange"),
 					FeeSellerSettlementFlat:   s.coins("100cherry"),
 					FeeSellerSettlementRatios: s.ratios("100pear:1pear"),
 					FeeBuyerSettlementFlat:    s.coins("100date"),
@@ -3954,6 +4545,9 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 				AddFeeBuyerSettlementFlat:       s.coins("90date"),
 				RemoveFeeBuyerSettlementRatios:  s.ratios("100blueberry:1blueberry"),
 				AddFeeBuyerSettlementRatios:     s.ratios("90banana:1banana"),
+				RemoveFeeCreateCommitmentFlat:   s.coins("100olive"),
+				AddFeeCreateCommitmentFlat:      s.coins("90orange"),
+				SetFeeCommitmentSettlementBips:  35,
 			}},
 			expResp: &exchange.QueryValidateManageFeesResponse{
 				GovPropWillPass: true,
@@ -3962,6 +4556,8 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 					"cannot add create-ask flat fee \"90peach\": fee with that denom already exists",
 					"cannot remove create-bid flat fee \"100acorn\": no such fee exists",
 					"cannot add create-bid flat fee \"90apple\": fee with that denom already exists",
+					"cannot remove create-commitment flat fee \"100olive\": no such fee exists",
+					"cannot add create-commitment flat fee \"90orange\": fee with that denom already exists",
 					"cannot remove seller settlement flat fee \"100cactus\": no such fee exists",
 					"cannot add seller settlement flat fee \"90cherry\": fee with that denom already exists",
 					"cannot remove seller settlement ratio fee \"100prune:1prune\": no such ratio exists",
@@ -3974,6 +4570,7 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 						"buyer settlement fee ratios with that price denom",
 					"buyer settlement fee ratios have price denom \"banana\" but there is not a "+
 						"seller settlement fee ratio with that price denom",
+					"no intermediary denom defined, but commitment settlement bips 35 is not zero",
 				),
 			},
 		},
@@ -3984,6 +4581,7 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 					MarketId:                  7,
 					FeeCreateAskFlat:          s.coins("100peach"),
 					FeeCreateBidFlat:          s.coins("100apple"),
+					FeeCreateCommitmentFlat:   s.coins("100orange"),
 					FeeSellerSettlementFlat:   s.coins("100cherry"),
 					FeeSellerSettlementRatios: s.ratios("100pear:1pear"),
 					FeeBuyerSettlementFlat:    s.coins("100date"),

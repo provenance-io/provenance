@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -87,6 +88,11 @@ var (
 	createBidFlatKeyMakers = flatFeeKeyMakers{
 		key:    MakeKeyMarketCreateBidFlatFee,
 		prefix: GetKeyPrefixMarketCreateBidFlatFee,
+	}
+	// createCommitmentFlatKeyMakers are the key and prefix makers for the create-commitment flat fees.
+	createCommitmentFlatKeyMakers = flatFeeKeyMakers{
+		key:    MakeKeyMarketCreateCommitmentFlatFee,
+		prefix: GetKeyPrefixMarketCreateCommitmentFlatFee,
 	}
 	// sellerSettlementFlatKeyMakers are the key and prefix makers for the seller settlement flat fees.
 	sellerSettlementFlatKeyMakers = flatFeeKeyMakers{
@@ -205,7 +211,7 @@ func updateCreateAskFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd
 	updateFlatFees(store, marketID, toDelete, toAdd, createAskFlatKeyMakers)
 }
 
-// validateCreateBidFlatFee returns an error if the provided fee is not a sufficient create -bid flat fee.
+// validateCreateBidFlatFee returns an error if the provided fee is not a sufficient create-bid flat fee.
 func validateCreateBidFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin) error {
 	return validateFlatFee(store, marketID, fee, "bid order creation", createBidFlatKeyMakers)
 }
@@ -223,6 +229,26 @@ func setCreateBidFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin
 // updateCreateBidFlatFees deletes all create-bid flat fees to delete then adds the ones to add.
 func updateCreateBidFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
 	updateFlatFees(store, marketID, toDelete, toAdd, createBidFlatKeyMakers)
+}
+
+// validateCreateCommitmentFlatFee returns an error if the provided fee is not a sufficient create-commitment flat fee.
+func validateCreateCommitmentFlatFee(store sdk.KVStore, marketID uint32, fee *sdk.Coin) error {
+	return validateFlatFee(store, marketID, fee, "commitment creation", createCommitmentFlatKeyMakers)
+}
+
+// getCreateCommitmentFlatFees gets the create-commitment flat fee options for a market.
+func getCreateCommitmentFlatFees(store sdk.KVStore, marketID uint32) []sdk.Coin {
+	return getAllFlatFees(store, marketID, createCommitmentFlatKeyMakers)
+}
+
+// setCreateCommitmentFlatFees sets the create-commitment flat fees for a market.
+func setCreateCommitmentFlatFees(store sdk.KVStore, marketID uint32, options []sdk.Coin) {
+	setAllFlatFees(store, marketID, options, createCommitmentFlatKeyMakers)
+}
+
+// updateCreateCommitmentFlatFees deletes all create-commitment flat fees to delete then adds the ones to add.
+func updateCreateCommitmentFlatFees(store sdk.KVStore, marketID uint32, toDelete, toAdd []sdk.Coin) {
+	updateFlatFees(store, marketID, toDelete, toAdd, createCommitmentFlatKeyMakers)
 }
 
 // validateSellerSettlementFlatFee returns an error if the provided fee is not a sufficient seller settlement flat fee.
@@ -623,6 +649,58 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 	return errors.Join(errs...)
 }
 
+// getCommitmentSettlementBips gets the commitment settlement bips for the given market.
+func getCommitmentSettlementBips(store sdk.KVStore, marketID uint32) uint32 {
+	key := MakeKeyMarketCommitmentSettlementBips(marketID)
+	value := store.Get(key)
+	if len(value) == 0 {
+		return 0
+	}
+	rv, _ := uint32FromBz(value)
+	return rv
+}
+
+// setCommitmentSettlementBips sets the commitment settlement bips for a market.
+func setCommitmentSettlementBips(store sdk.KVStore, marketID uint32, bips uint32) {
+	key := MakeKeyMarketCommitmentSettlementBips(marketID)
+	if bips != 0 {
+		value := uint32Bz(bips)
+		store.Set(key, value)
+	} else {
+		store.Delete(key)
+	}
+}
+
+// updateCommitmentSettlementBips updates the commitment settlement bips for a market.
+// If unsetBips is true, the bips entry for the market will be deleted.
+// If bips is not zero, the entry will be set to that value.
+// If bips is zero and unsetBips is false, this does nothing.
+func updateCommitmentSettlementBips(store sdk.KVStore, marketID uint32, bips uint32, unsetBips bool) {
+	if unsetBips {
+		setCommitmentSettlementBips(store, marketID, 0)
+	}
+	if bips > 0 {
+		setCommitmentSettlementBips(store, marketID, bips)
+	}
+}
+
+// getIntermediaryDenom gets a market's intermediary denom.
+func getIntermediaryDenom(store sdk.KVStore, marketID uint32) string {
+	key := MakeKeyMarketIntermediaryDenom(marketID)
+	rv := store.Get(key)
+	return string(rv)
+}
+
+// setIntermediaryDenom sets the market's intermediary denom to the provided value.
+func setIntermediaryDenom(store sdk.KVStore, marketID uint32, denom string) {
+	key := MakeKeyMarketIntermediaryDenom(marketID)
+	if len(denom) > 0 {
+		store.Set(key, []byte(denom))
+	} else {
+		store.Delete(key)
+	}
+}
+
 // GetCreateAskFlatFees gets the create-ask flat fee options for a market.
 func (k Keeper) GetCreateAskFlatFees(ctx sdk.Context, marketID uint32) []sdk.Coin {
 	return getCreateAskFlatFees(k.getStore(ctx), marketID)
@@ -631,6 +709,11 @@ func (k Keeper) GetCreateAskFlatFees(ctx sdk.Context, marketID uint32) []sdk.Coi
 // GetCreateBidFlatFees gets the create-bid flat fee options for a market.
 func (k Keeper) GetCreateBidFlatFees(ctx sdk.Context, marketID uint32) []sdk.Coin {
 	return getCreateBidFlatFees(k.getStore(ctx), marketID)
+}
+
+// GetCreateCommitmentFlatFees gets the create-commitment flat fee options for a market.
+func (k Keeper) GetCreateCommitmentFlatFees(ctx sdk.Context, marketID uint32) []sdk.Coin {
+	return getCreateCommitmentFlatFees(k.getStore(ctx), marketID)
 }
 
 // GetSellerSettlementFlatFees gets the seller settlement flat fee options for a market.
@@ -653,6 +736,16 @@ func (k Keeper) GetBuyerSettlementRatios(ctx sdk.Context, marketID uint32) []exc
 	return getBuyerSettlementRatios(k.getStore(ctx), marketID)
 }
 
+// GetCommitmentSettlementBips gets the commitment settlement bips for the given market.
+func (k Keeper) GetCommitmentSettlementBips(ctx sdk.Context, marketID uint32) uint32 {
+	return getCommitmentSettlementBips(k.getStore(ctx), marketID)
+}
+
+// GetIntermediaryDenom gets a market's intermediary denom.
+func (k Keeper) GetIntermediaryDenom(ctx sdk.Context, marketID uint32) string {
+	return getIntermediaryDenom(k.getStore(ctx), marketID)
+}
+
 // CalculateSellerSettlementRatioFee calculates the seller settlement fee required for the given price.
 func (k Keeper) CalculateSellerSettlementRatioFee(ctx sdk.Context, marketID uint32, price sdk.Coin) (*sdk.Coin, error) {
 	return calculateSellerSettlementRatioFee(k.getStore(ctx), marketID, price)
@@ -671,6 +764,11 @@ func (k Keeper) ValidateCreateAskFlatFee(ctx sdk.Context, marketID uint32, fee *
 // ValidateCreateBidFlatFee returns an error if the provided fee is not a sufficient create-bid flat fee.
 func (k Keeper) ValidateCreateBidFlatFee(ctx sdk.Context, marketID uint32, fee *sdk.Coin) error {
 	return validateCreateBidFlatFee(k.getStore(ctx), marketID, fee)
+}
+
+// ValidateCreateCommitmentFlatFee returns an error if the provided fee is not a sufficient create-commitment flat fee.
+func (k Keeper) ValidateCreateCommitmentFlatFee(ctx sdk.Context, marketID uint32, fee *sdk.Coin) error {
+	return validateCreateCommitmentFlatFee(k.getStore(ctx), marketID, fee)
 }
 
 // ValidateSellerSettlementFlatFee returns an error if the provided fee is not a sufficient seller settlement flat fee.
@@ -694,25 +792,52 @@ func (k Keeper) UpdateFees(ctx sdk.Context, msg *exchange.MsgGovManageFeesReques
 	store := k.getStore(ctx)
 	updateCreateAskFlatFees(store, msg.MarketId, msg.RemoveFeeCreateAskFlat, msg.AddFeeCreateAskFlat)
 	updateCreateBidFlatFees(store, msg.MarketId, msg.RemoveFeeCreateBidFlat, msg.AddFeeCreateBidFlat)
+	updateCreateCommitmentFlatFees(store, msg.MarketId, msg.RemoveFeeCreateCommitmentFlat, msg.AddFeeCreateCommitmentFlat)
 	updateSellerSettlementFlatFees(store, msg.MarketId, msg.RemoveFeeSellerSettlementFlat, msg.AddFeeSellerSettlementFlat)
 	updateSellerSettlementRatios(store, msg.MarketId, msg.RemoveFeeSellerSettlementRatios, msg.AddFeeSellerSettlementRatios)
 	updateBuyerSettlementFlatFees(store, msg.MarketId, msg.RemoveFeeBuyerSettlementFlat, msg.AddFeeBuyerSettlementFlat)
 	updateBuyerSettlementRatios(store, msg.MarketId, msg.RemoveFeeBuyerSettlementRatios, msg.AddFeeBuyerSettlementRatios)
+	updateCommitmentSettlementBips(store, msg.MarketId, msg.SetFeeCommitmentSettlementBips, msg.UnsetFeeCommitmentSettlementBips)
 
 	k.emitEvent(ctx, exchange.NewEventMarketFeesUpdated(msg.MarketId))
 }
 
-// isMarketActive returns true if the provided market's inactive flag does not exist.
+// UpdateIntermediaryDenom sets the market's intermediary denom to the one provided.
+func (k Keeper) UpdateIntermediaryDenom(ctx sdk.Context, marketID uint32, denom string, updatedBy string) {
+	setIntermediaryDenom(k.getStore(ctx), marketID, denom)
+	k.emitEvent(ctx, exchange.NewEventMarketIntermediaryDenomUpdated(marketID, updatedBy))
+}
+
+// validateMarketUpdateAcceptingCommitments checks that the market has things set up
+// to change the accepting-commitments flag to the provided value.
+func validateMarketUpdateAcceptingCommitments(store sdk.KVStore, marketID uint32, newAllow bool) error {
+	curAllow := isMarketAcceptingCommitments(store, marketID)
+	if curAllow == newAllow {
+		return fmt.Errorf("market %d already has accepting-commitments %t", marketID, curAllow)
+	}
+
+	if newAllow {
+		bips := getCommitmentSettlementBips(store, marketID)
+		cFee := getCreateCommitmentFlatFees(store, marketID)
+		if bips == 0 && len(cFee) == 0 {
+			return fmt.Errorf("market %d does not have any commitment fees defined", marketID)
+		}
+	}
+
+	return nil
+}
+
+// isMarketAcceptingOrders returns true if the provided market's not-accepting-orders flag does not exist.
 // See also isMarketKnown.
-func isMarketActive(store sdk.KVStore, marketID uint32) bool {
-	key := MakeKeyMarketInactive(marketID)
+func isMarketAcceptingOrders(store sdk.KVStore, marketID uint32) bool {
+	key := MakeKeyMarketNotAcceptingOrders(marketID)
 	return !store.Has(key)
 }
 
-// setMarketActive sets whether the provided market is accepting orders.
-func setMarketActive(store sdk.KVStore, marketID uint32, active bool) {
-	key := MakeKeyMarketInactive(marketID)
-	if active {
+// setMarketAcceptingOrders sets whether the provided market is accepting orders.
+func setMarketAcceptingOrders(store sdk.KVStore, marketID uint32, accepting bool) {
+	key := MakeKeyMarketNotAcceptingOrders(marketID)
+	if accepting {
 		store.Delete(key)
 	} else {
 		store.Set(key, []byte{})
@@ -725,9 +850,25 @@ func isUserSettlementAllowed(store sdk.KVStore, marketID uint32) bool {
 	return store.Has(key)
 }
 
-// SetUserSettlementAllowed sets whether user-settlement is allowed for a market.
+// setUserSettlementAllowed sets whether user-settlement is allowed for a market.
 func setUserSettlementAllowed(store sdk.KVStore, marketID uint32, allowed bool) {
 	key := MakeKeyMarketUserSettle(marketID)
+	if allowed {
+		store.Set(key, []byte{})
+	} else {
+		store.Delete(key)
+	}
+}
+
+// isMarketAcceptingCommitments gets whether commitments are allowed for a market.
+func isMarketAcceptingCommitments(store sdk.KVStore, marketID uint32) bool {
+	key := MakeKeyMarketAcceptingCommitments(marketID)
+	return store.Has(key)
+}
+
+// setMarketAcceptingCommitments sets whether commitments are allowed for a market.
+func setMarketAcceptingCommitments(store sdk.KVStore, marketID uint32, allowed bool) {
+	key := MakeKeyMarketAcceptingCommitments(marketID)
 	if allowed {
 		store.Set(key, []byte{})
 	} else {
@@ -740,25 +881,25 @@ func (k Keeper) IsMarketKnown(ctx sdk.Context, marketID uint32) bool {
 	return isMarketKnown(k.getStore(ctx), marketID)
 }
 
-// IsMarketActive returns true if the provided market is active.
-func (k Keeper) IsMarketActive(ctx sdk.Context, marketID uint32) bool {
+// IsMarketAcceptingOrders returns true if the provided market is accepting orders.
+func (k Keeper) IsMarketAcceptingOrders(ctx sdk.Context, marketID uint32) bool {
 	store := k.getStore(ctx)
-	if !isMarketActive(store, marketID) {
+	if !isMarketAcceptingOrders(store, marketID) {
 		return false
 	}
 	return isMarketKnown(store, marketID)
 }
 
-// UpdateMarketActive updates the active flag for a market.
+// UpdateMarketAcceptingOrders updates the accepting orders flag for a market.
 // An error is returned if the setting is already what is provided.
-func (k Keeper) UpdateMarketActive(ctx sdk.Context, marketID uint32, active bool, updatedBy string) error {
+func (k Keeper) UpdateMarketAcceptingOrders(ctx sdk.Context, marketID uint32, accepting bool, updatedBy string) error {
 	store := k.getStore(ctx)
-	current := isMarketActive(store, marketID)
-	if current == active {
-		return fmt.Errorf("market %d already has accepting-orders %t", marketID, active)
+	current := isMarketAcceptingOrders(store, marketID)
+	if current == accepting {
+		return fmt.Errorf("market %d already has accepting-orders %t", marketID, accepting)
 	}
-	setMarketActive(store, marketID, active)
-	k.emitEvent(ctx, exchange.NewEventMarketActiveUpdated(marketID, updatedBy, active))
+	setMarketAcceptingOrders(store, marketID, accepting)
+	k.emitEvent(ctx, exchange.NewEventMarketAcceptingOrdersUpdated(marketID, updatedBy, accepting))
 	return nil
 }
 
@@ -777,6 +918,24 @@ func (k Keeper) UpdateUserSettlementAllowed(ctx sdk.Context, marketID uint32, al
 	}
 	setUserSettlementAllowed(store, marketID, allow)
 	k.emitEvent(ctx, exchange.NewEventMarketUserSettleUpdated(marketID, updatedBy, allow))
+	return nil
+}
+
+// IsMarketAcceptingCommitments gets whether commitments are allowed for a market.
+func (k Keeper) IsMarketAcceptingCommitments(ctx sdk.Context, marketID uint32) bool {
+	return isMarketAcceptingCommitments(k.getStore(ctx), marketID)
+}
+
+// UpdateMarketAcceptingCommitments updates the accepting-commitments flag for a market.
+// An error is returned if the setting is already what is provided.
+func (k Keeper) UpdateMarketAcceptingCommitments(ctx sdk.Context, marketID uint32, accepting bool, updatedBy string) error {
+	store := k.getStore(ctx)
+	current := isMarketAcceptingCommitments(store, marketID)
+	if current == accepting {
+		return fmt.Errorf("market %d already has accepting-commitments %t", marketID, accepting)
+	}
+	setMarketAcceptingCommitments(store, marketID, accepting)
+	k.emitEvent(ctx, exchange.NewEventMarketAcceptingCommitmentsUpdated(marketID, updatedBy, accepting))
 	return nil
 }
 
@@ -869,6 +1028,12 @@ func (k Keeper) CanSettleOrders(ctx sdk.Context, marketID uint32, admin string) 
 	return k.HasPermission(ctx, marketID, admin, exchange.Permission_settle)
 }
 
+// CanSettleCommitments returns true if the provided admin bech32 address has permission to
+// settle commitments for a market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanSettleCommitments(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_settle)
+}
+
 // CanSetIDs returns true if the provided admin bech32 address has permission to
 // set UUIDs on orders for a market. Also returns true if the provided address is the authority address.
 func (k Keeper) CanSetIDs(ctx sdk.Context, marketID uint32, admin string) bool {
@@ -878,6 +1043,12 @@ func (k Keeper) CanSetIDs(ctx sdk.Context, marketID uint32, admin string) bool {
 // CanCancelOrdersForMarket returns true if the provided admin bech32 address has permission to
 // cancel orders for a market. Also returns true if the provided address is the authority address.
 func (k Keeper) CanCancelOrdersForMarket(ctx sdk.Context, marketID uint32, admin string) bool {
+	return k.HasPermission(ctx, marketID, admin, exchange.Permission_cancel)
+}
+
+// CanReleaseCommitmentsForMarket returns true if the provided admin bech32 address has permission to
+// release commitments for a market. Also returns true if the provided address is the authority address.
+func (k Keeper) CanReleaseCommitmentsForMarket(ctx sdk.Context, marketID uint32, admin string) bool {
 	return k.HasPermission(ctx, marketID, admin, exchange.Permission_cancel)
 }
 
@@ -1055,6 +1226,23 @@ func updateReqAttrsBid(store sdk.KVStore, marketID uint32, toRemove, toAdd []str
 	return updateReqAttrs(store, marketID, toRemove, toAdd, "create-bid", MakeKeyMarketReqAttrBid)
 }
 
+// getReqAttrsCommitment gets the attributes required to create a commitment.
+func getReqAttrsCommitment(store sdk.KVStore, marketID uint32) []string {
+	return getReqAttrs(store, marketID, MakeKeyMarketReqAttrCommitment)
+}
+
+// setReqAttrsCommitment sets the attributes required to create a commitment.
+func setReqAttrsCommitment(store sdk.KVStore, marketID uint32, reqAttrs []string) {
+	setReqAttrs(store, marketID, reqAttrs, MakeKeyMarketReqAttrCommitment)
+}
+
+// updateReqAttrsCommitment updates the attributes required to create a commitment in the store by removing and adding
+// the provided entries to the existing entries.
+// It is assumed that the attributes have been normalized prior to calling this.
+func updateReqAttrsCommitment(store sdk.KVStore, marketID uint32, toRemove, toAdd []string) error {
+	return updateReqAttrs(store, marketID, toRemove, toAdd, "create-commitment", MakeKeyMarketReqAttrCommitment)
+}
+
 // acctHasReqAttrs returns true if either reqAttrs is empty or the provide address has all of them on their account.
 func (k Keeper) acctHasReqAttrs(ctx sdk.Context, addr sdk.AccAddress, reqAttrs []string) bool {
 	if len(reqAttrs) == 0 {
@@ -1082,6 +1270,11 @@ func (k Keeper) GetReqAttrsBid(ctx sdk.Context, marketID uint32) []string {
 	return getReqAttrsBid(k.getStore(ctx), marketID)
 }
 
+// GetReqAttrsCommitment gets the attributes required to create a commitment.
+func (k Keeper) GetReqAttrsCommitment(ctx sdk.Context, marketID uint32) []string {
+	return getReqAttrsCommitment(k.getStore(ctx), marketID)
+}
+
 // CanCreateAsk returns true if the provided address is allowed to create an ask order in the given market.
 func (k Keeper) CanCreateAsk(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) bool {
 	reqAttrs := k.GetReqAttrsAsk(ctx, marketID)
@@ -1091,6 +1284,12 @@ func (k Keeper) CanCreateAsk(ctx sdk.Context, marketID uint32, addr sdk.AccAddre
 // CanCreateBid returns true if the provided address is allowed to create a bid order in the given market.
 func (k Keeper) CanCreateBid(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) bool {
 	reqAttrs := k.GetReqAttrsBid(ctx, marketID)
+	return k.acctHasReqAttrs(ctx, addr, reqAttrs)
+}
+
+// CanCreateCommitment returns true if the provided address is allowed to create a commitment in the given market.
+func (k Keeper) CanCreateCommitment(ctx sdk.Context, marketID uint32, addr sdk.AccAddress) bool {
+	reqAttrs := k.GetReqAttrsCommitment(ctx, marketID)
 	return k.acctHasReqAttrs(ctx, addr, reqAttrs)
 }
 
@@ -1110,6 +1309,12 @@ func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReq
 	if err != nil {
 		errs = append(errs, err)
 	}
+	commitToRemove, _ := exchange.NormalizeReqAttrs(msg.CreateCommitmentToRemove)
+	commitToAdd, err := exchange.NormalizeReqAttrs(msg.CreateCommitmentToAdd)
+	if err != nil {
+		errs = append(errs, err)
+	}
+
 	if len(errs) > 0 {
 		return errors.Join(errs...)
 	}
@@ -1121,6 +1326,9 @@ func (k Keeper) UpdateReqAttrs(ctx sdk.Context, msg *exchange.MsgMarketManageReq
 		errs = append(errs, err)
 	}
 	if err = updateReqAttrsBid(store, marketID, bidToRemove, bidToAdd); err != nil {
+		errs = append(errs, err)
+	}
+	if err = updateReqAttrsCommitment(store, marketID, commitToRemove, commitToAdd); err != nil {
 		errs = append(errs, err)
 	}
 	if len(errs) > 0 {
@@ -1189,15 +1397,20 @@ func storeMarket(store sdk.KVStore, market exchange.Market) {
 	setMarketKnown(store, marketID)
 	setCreateAskFlatFees(store, marketID, market.FeeCreateAskFlat)
 	setCreateBidFlatFees(store, marketID, market.FeeCreateBidFlat)
+	setCreateCommitmentFlatFees(store, marketID, market.FeeCreateCommitmentFlat)
 	setSellerSettlementFlatFees(store, marketID, market.FeeSellerSettlementFlat)
 	setSellerSettlementRatios(store, marketID, market.FeeSellerSettlementRatios)
 	setBuyerSettlementFlatFees(store, marketID, market.FeeBuyerSettlementFlat)
 	setBuyerSettlementRatios(store, marketID, market.FeeBuyerSettlementRatios)
-	setMarketActive(store, marketID, market.AcceptingOrders)
+	setMarketAcceptingOrders(store, marketID, market.AcceptingOrders)
 	setUserSettlementAllowed(store, marketID, market.AllowUserSettlement)
 	setAccessGrants(store, marketID, market.AccessGrants)
 	setReqAttrsAsk(store, marketID, market.ReqAttrCreateAsk)
 	setReqAttrsBid(store, marketID, market.ReqAttrCreateBid)
+	setReqAttrsCommitment(store, marketID, market.ReqAttrCreateCommitment)
+	setMarketAcceptingCommitments(store, marketID, market.AcceptingCommitments)
+	setCommitmentSettlementBips(store, marketID, market.CommitmentSettlementBips)
+	setIntermediaryDenom(store, marketID, market.IntermediaryDenom)
 }
 
 // initMarket is similar to CreateMarket but assumes the market has already been
@@ -1276,15 +1489,20 @@ func (k Keeper) GetMarket(ctx sdk.Context, marketID uint32) *exchange.Market {
 	market := &exchange.Market{MarketId: marketID}
 	market.FeeCreateAskFlat = getCreateAskFlatFees(store, marketID)
 	market.FeeCreateBidFlat = getCreateBidFlatFees(store, marketID)
+	market.FeeCreateCommitmentFlat = getCreateCommitmentFlatFees(store, marketID)
 	market.FeeSellerSettlementFlat = getSellerSettlementFlatFees(store, marketID)
 	market.FeeSellerSettlementRatios = getSellerSettlementRatios(store, marketID)
 	market.FeeBuyerSettlementFlat = getBuyerSettlementFlatFees(store, marketID)
 	market.FeeBuyerSettlementRatios = getBuyerSettlementRatios(store, marketID)
-	market.AcceptingOrders = isMarketActive(store, marketID)
+	market.AcceptingOrders = isMarketAcceptingOrders(store, marketID)
 	market.AllowUserSettlement = isUserSettlementAllowed(store, marketID)
 	market.AccessGrants = getAccessGrants(store, marketID)
 	market.ReqAttrCreateAsk = getReqAttrsAsk(store, marketID)
 	market.ReqAttrCreateBid = getReqAttrsBid(store, marketID)
+	market.ReqAttrCreateCommitment = getReqAttrsCommitment(store, marketID)
+	market.AcceptingCommitments = isMarketAcceptingCommitments(store, marketID)
+	market.CommitmentSettlementBips = getCommitmentSettlementBips(store, marketID)
+	market.IntermediaryDenom = getIntermediaryDenom(store, marketID)
 
 	if marketAcc := k.GetMarketAccount(ctx, marketID); marketAcc != nil {
 		market.MarketDetails = marketAcc.MarketDetails
@@ -1338,5 +1556,37 @@ func (k Keeper) ValidateMarket(ctx sdk.Context, marketID uint32) error {
 	sellerRatios := getSellerSettlementRatios(store, marketID)
 	buyerRatios := getBuyerSettlementRatios(store, marketID)
 	errs := exchange.ValidateRatioDenoms(sellerRatios, buyerRatios)
+
+	bips := getCommitmentSettlementBips(store, marketID)
+	convDenom := getIntermediaryDenom(store, marketID)
+	if bips > 0 && len(convDenom) == 0 {
+		errs = append(errs, fmt.Errorf("no intermediary denom defined, but commitment settlement bips %d is not zero", bips))
+	}
+
+	if len(convDenom) > 0 {
+		feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
+		feeNav := k.GetNav(ctx, convDenom, feeDenom)
+		if feeNav == nil {
+			errs = append(errs, fmt.Errorf("no nav exists from intermediary denom %q to fee denom %q", convDenom, feeDenom))
+		}
+	}
+
+	allowComs := isMarketAcceptingCommitments(store, marketID)
+	if allowComs {
+		createComFee := getCreateCommitmentFlatFees(store, marketID)
+		if bips == 0 && len(createComFee) == 0 {
+			errs = append(errs, errors.New("commitments are allowed but no commitment-related fees are defined"))
+		}
+	}
+
 	return errors.Join(errs...)
+}
+
+// CloseMarket disables order and commitment creation in a market,
+// cancels all its existing orders, and releases all its commitments.
+func (k Keeper) CloseMarket(ctx sdk.Context, marketID uint32, signer string) {
+	_ = k.UpdateMarketAcceptingOrders(ctx, marketID, false, signer)
+	_ = k.UpdateMarketAcceptingCommitments(ctx, marketID, false, signer)
+	k.CancelAllOrdersForMarket(ctx, marketID, signer)
+	k.ReleaseAllCommitmentsForMarket(ctx, marketID)
 }

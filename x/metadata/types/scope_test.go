@@ -1637,3 +1637,47 @@ func (s *ScopeTestSuite) TestEquivalentDataAssessors() {
 		})
 	}
 }
+
+func TestNetAssetValueValidate(t *testing.T) {
+	tests := []struct {
+		name   string
+		nav    NetAssetValue
+		expErr string
+	}{
+		{
+			name: "price validation fails",
+			nav: NetAssetValue{
+				Price: sdk.Coin{Denom: "invalidDenom", Amount: sdk.NewInt(-100)},
+			},
+			expErr: "negative coin amount: -100", // Replace with the actual error message from Price.Validate()
+		},
+		{
+			name:   "invalid denom",
+			nav:    NetAssetValue{},
+			expErr: "invalid denom: ",
+		},
+		{
+			name: "successful with 0 volume and coin",
+			nav: NetAssetValue{
+				Price: sdk.NewInt64Coin("usdcents", 0),
+			},
+		},
+		{
+			name: "successful",
+			nav: NetAssetValue{
+				Price: sdk.NewInt64Coin("jackthecat", 420),
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.nav.Validate()
+			if len(tt.expErr) > 0 {
+				assert.EqualErrorf(t, err, tt.expErr, "NetAssetValue validate expected error")
+			} else {
+				assert.NoError(t, err, "NetAssetValue validate should have passed")
+			}
+		})
+	}
+}

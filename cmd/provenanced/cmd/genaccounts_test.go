@@ -197,6 +197,9 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 		if market.FeeCreateBidFlat == nil {
 			exGenState.Markets[i].FeeCreateBidFlat = make([]sdk.Coin, 0)
 		}
+		if market.FeeCreateCommitmentFlat == nil {
+			exGenState.Markets[i].FeeCreateCommitmentFlat = make([]sdk.Coin, 0)
+		}
 		if market.FeeSellerSettlementFlat == nil {
 			exGenState.Markets[i].FeeSellerSettlementFlat = make([]sdk.Coin, 0)
 		}
@@ -215,6 +218,9 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 		if market.ReqAttrCreateBid == nil {
 			exGenState.Markets[i].ReqAttrCreateBid = make([]string, 0)
 		}
+		if market.ReqAttrCreateCommitment == nil {
+			exGenState.Markets[i].ReqAttrCreateCommitment = make([]string, 0)
+		}
 		if market.AccessGrants == nil {
 			exGenState.Markets[i].AccessGrants = make([]exchange.AccessGrant, 0)
 		}
@@ -223,6 +229,9 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 				exGenState.Markets[i].AccessGrants[j].Permissions = make([]exchange.Permission, 0)
 			}
 		}
+	}
+	if exGenState.Commitments == nil {
+		exGenState.Commitments = make([]exchange.Commitment, 0)
 	}
 
 	if exGenState.Orders == nil {
@@ -450,9 +459,10 @@ func TestMakeDefaultMarket(t *testing.T) {
 			feeDenom: "",
 			addrs:    nil,
 			expMarket: exchange.Market{
-				MarketDetails:       exchange.MarketDetails{Name: "Default Market"},
-				AcceptingOrders:     true,
-				AllowUserSettlement: true,
+				MarketDetails:        exchange.MarketDetails{Name: "Default Market"},
+				AcceptingOrders:      true,
+				AllowUserSettlement:  true,
+				AcceptingCommitments: true,
 			},
 		},
 		{
@@ -460,10 +470,11 @@ func TestMakeDefaultMarket(t *testing.T) {
 			feeDenom: "",
 			addrs:    addrs[0:1],
 			expMarket: exchange.Market{
-				MarketDetails:       exchange.MarketDetails{Name: "Default Market"},
-				AcceptingOrders:     true,
-				AllowUserSettlement: true,
-				AccessGrants:        []exchange.AccessGrant{{Address: addrs[0], Permissions: exchange.AllPermissions()}},
+				MarketDetails:        exchange.MarketDetails{Name: "Default Market"},
+				AcceptingOrders:      true,
+				AllowUserSettlement:  true,
+				AcceptingCommitments: true,
+				AccessGrants:         []exchange.AccessGrant{{Address: addrs[0], Permissions: exchange.AllPermissions()}},
 			},
 		},
 		{
@@ -471,9 +482,10 @@ func TestMakeDefaultMarket(t *testing.T) {
 			feeDenom: "",
 			addrs:    addrs,
 			expMarket: exchange.Market{
-				MarketDetails:       exchange.MarketDetails{Name: "Default Market"},
-				AcceptingOrders:     true,
-				AllowUserSettlement: true,
+				MarketDetails:        exchange.MarketDetails{Name: "Default Market"},
+				AcceptingOrders:      true,
+				AllowUserSettlement:  true,
+				AcceptingCommitments: true,
 				AccessGrants: []exchange.AccessGrant{
 					{Address: addrs[0], Permissions: exchange.AllPermissions()},
 					{Address: addrs[1], Permissions: exchange.AllPermissions()},
@@ -495,6 +507,10 @@ func TestMakeDefaultMarket(t *testing.T) {
 				FeeBuyerSettlementRatios:  ratios("else", 20, 1),
 				AcceptingOrders:           true,
 				AllowUserSettlement:       true,
+				AcceptingCommitments:      true,
+				FeeCreateCommitmentFlat:   coins(100, "else"),
+				CommitmentSettlementBips:  50,
+				IntermediaryDenom:         "else",
 			},
 		},
 		{
@@ -511,7 +527,11 @@ func TestMakeDefaultMarket(t *testing.T) {
 				FeeBuyerSettlementRatios:  ratios("vspn", 20, 1),
 				AcceptingOrders:           true,
 				AllowUserSettlement:       true,
+				AcceptingCommitments:      true,
 				AccessGrants:              []exchange.AccessGrant{{Address: addrs[0], Permissions: exchange.AllPermissions()}},
+				FeeCreateCommitmentFlat:   coins(100, "vspn"),
+				CommitmentSettlementBips:  50,
+				IntermediaryDenom:         "vspn",
 			},
 		},
 		{
@@ -528,11 +548,15 @@ func TestMakeDefaultMarket(t *testing.T) {
 				FeeBuyerSettlementRatios:  ratios("nhash", 20, 1),
 				AcceptingOrders:           true,
 				AllowUserSettlement:       true,
+				AcceptingCommitments:      true,
 				AccessGrants: []exchange.AccessGrant{
 					{Address: addrs[0], Permissions: exchange.AllPermissions()},
 					{Address: addrs[1], Permissions: exchange.AllPermissions()},
 					{Address: addrs[2], Permissions: exchange.AllPermissions()},
 				},
+				FeeCreateCommitmentFlat:  coins(100, "nhash"),
+				CommitmentSettlementBips: 50,
+				IntermediaryDenom:        "nhash",
 			},
 		},
 	}
