@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Dependencies
 
+- Bump `codecov/codecov-action` from 3 to 4 ([#1828](https://github.com/provenance-io/provenance/pull/1828))
 - Bump `peter-evans/create-pull-request` from 5.0.2 to 6.0.0 ([#1827](https://github.com/provenance-io/provenance/pull/1827))
 
 ---
