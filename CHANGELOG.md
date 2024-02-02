@@ -37,7 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Dependencies
+
+- Bump `codecov/codecov-action` from 3 to 4 ([#1828](https://github.com/provenance-io/provenance/pull/1828))
+
+---
 
 ## [v1.18.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc1) - 2024-01-30
 

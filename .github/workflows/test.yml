@@ -155,7 +155,7 @@ jobs:
             echo "Excluding ${filename} from coverage report..."
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         if: needs.setup-tests.outputs.should-run
         with:
           file: ./coverage.txt
