@@ -4132,6 +4132,7 @@ Access defines the different types of permissions that a marker supports grantin
 | ACCESS_DELETE | 5 | ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state. This access also allows cancelled markers to be marked for deletion |
 | ACCESS_ADMIN | 6 | ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions. |
 | ACCESS_TRANSFER | 7 | ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange. This access right is only supported on RESTRICTED markers. |
+| ACCESS_FORCE_TRANSFER | 8 | ACCESS_FORCE_TRANSFER is the ability to transfer restricted coins from a 3rd-party account without their signature. This access right is only supported on RESTRICTED markers with allow_forced_transfer true. |
 
 
  <!-- end enums -->

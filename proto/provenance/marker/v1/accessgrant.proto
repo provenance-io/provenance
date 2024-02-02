@@ -43,4 +43,7 @@ enum Access {
   // ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
   // This access right is only supported on RESTRICTED markers.
   ACCESS_TRANSFER = 7 [(gogoproto.enumvalue_customname) = "Transfer"];
+  // ACCESS_FORCE_TRANSFER is the ability to transfer restricted coins from a 3rd-party account without their signature.
+  // This access right is only supported on RESTRICTED markers with allow_forced_transfer true.
+  ACCESS_FORCE_TRANSFER = 8 [(gogoproto.enumvalue_customname) = "ForceTransfer"];
 }
