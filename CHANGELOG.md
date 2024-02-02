@@ -37,7 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Improvements
+
+* Add exchange commitment stuff to CLI [PR 1830](https://github.com/provenance-io/provenance/pull/1830).
+
+---
 
 ## [v1.18.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc1) - 2024-01-30
 
