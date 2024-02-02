@@ -304,8 +304,8 @@ func MakeMsgMarketSettle(clientCtx client.Context, flagSet *pflag.FlagSet, _ []s
 func SetupCmdTxMarketCommitmentSettle(cmd *cobra.Command) {
 	AddFlagsAdminOpt(cmd)
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id (required)")
-	cmd.Flags().StringSlice(FlagInputs, nil, "The inputs for this commitment settlement (repeatable, required)")
-	cmd.Flags().StringSlice(FlagOutputs, nil, "The outputs for this commitment settlement (repeatable, required)")
+	cmd.Flags().StringSlice(FlagInputs, nil, "The inputs for this commitment settlement (repeatable)")
+	cmd.Flags().StringSlice(FlagOutputs, nil, "The outputs for this commitment settlement (repeatable)")
 	cmd.Flags().StringSlice(FlagSettlementFees, nil, "The fees to collect during this commitment settlement (repeatable)")
 	cmd.Flags().StringSlice(FlagNavs, nil, "The net-asset-values to update during this commitment settlement (repeatable)")
 	cmd.Flags().String(FlagTag, "", "The tag to include in the events emitted as part of this commitment settlement")
