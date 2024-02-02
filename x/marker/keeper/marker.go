@@ -643,7 +643,7 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
 	}
-	if !m.AddressHasAccess(admin, types.Access_Transfer) {
+	if !m.AddressHasAccess(admin, types.Access_Transfer) && !m.AddressHasAccess(admin, types.Access_ForceTransfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
 	if !admin.Equals(from) {
@@ -653,6 +653,8 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 			if err != nil {
 				return err
 			}
+		case !m.AddressHasAccess(admin, types.Access_ForceTransfer):
+			return fmt.Errorf("%s is not allowed to force-transfer", admin)
 		case !k.canForceTransferFrom(ctx, from):
 			return fmt.Errorf("funds are not allowed to be removed from %s", from)
 		}
