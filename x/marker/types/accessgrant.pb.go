@@ -30,25 +30,30 @@ type Access int32
 const (
 	// ACCESS_UNSPECIFIED defines a no-op vote option.
 	Access_Unknown Access = 0
-	// ACCESS_MINT is the ability to increase the supply of a marker
+	// ACCESS_MINT is the ability to increase the supply of a marker.
 	Access_Mint Access = 1
 	// ACCESS_BURN is the ability to decrease the supply of the marker using coin held by the marker.
 	Access_Burn Access = 2
-	// ACCESS_DEPOSIT is the ability to set a marker reference to this marker in the metadata/scopes module
+	// ACCESS_DEPOSIT is the ability to set a marker reference to this marker in the metadata/scopes module.
 	Access_Deposit Access = 3
 	// ACCESS_WITHDRAW is the ability to remove marker references to this marker in from metadata/scopes or
 	// transfer coin from this marker account to another account.
 	Access_Withdraw Access = 4
-	// ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state. This
-	// access also allows cancelled markers to be marked for deletion
+	// ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state.
+	// This access also allows cancelled markers to be marked for deletion.
 	Access_Delete Access = 5
 	// ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions.
+	// This access also gives the ability to update the marker's denom metadata.
 	Access_Admin Access = 6
-	// ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
+	// ACCESS_TRANSFER is the ability to manage transfer settings and broker transfers of the marker.
+	// Accounts with this access can:
+	//  - Update the marker's required attributes.
+	//  - Update the send-deny list.
+	//  - Use the transfer or bank send endpoints to move marker funds out of their own account.
 	// This access right is only supported on RESTRICTED markers.
 	Access_Transfer Access = 7
 	// ACCESS_FORCE_TRANSFER is the ability to transfer restricted coins from a 3rd-party account without their signature.
-	// This access right is only supported on RESTRICTED markers with allow_forced_transfer true.
+	// This access right is only supported on RESTRICTED markers and only has meaning when allow_forced_transfer is true.
 	Access_ForceTransfer Access = 8
 )
 
