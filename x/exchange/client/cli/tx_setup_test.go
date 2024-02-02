@@ -509,7 +509,9 @@ func TestSetupCmdTxMarketSettle(t *testing.T) {
 		name:  "SetupCmdTxMarketSettle",
 		setup: cli.SetupCmdTxMarketSettle,
 		expFlags: []string{
+			cli.FlagAdmin, cli.FlagAuthority,
 			cli.FlagMarket, cli.FlagAsks, cli.FlagBids, cli.FlagPartial,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
 		},
 		expAnnotations: map[string]map[string][]string{
 			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
