@@ -37,10 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
-
 ### Dependencies
+
 - Bump `peter-evans/create-pull-request` from 5.0.2 to 6.0.0 ([#1827](https://github.com/provenance-io/provenance/pull/1827))
+
+---
 
 ## [v1.18.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc1) - 2024-01-30
 
