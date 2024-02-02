@@ -386,7 +386,7 @@ func (s *CmdTestSuite) TestCmdTxMarketSettle() {
 			expInErr: []string{"required flag(s) \"asks\" not set"},
 		},
 		{
-			name: "no permission",
+			name: "endpoint error",
 			args: []string{"market-settle", "--from", s.addr9.String(), "--market", "419", "--bids", "18446744073709551614", "--asks", "18446744073709551615"},
 			expInRawLog: []string{"failed to execute message", "invalid request",
 				"account " + s.addr9.String() + " does not have permission to settle orders for market 419",
