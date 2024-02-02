@@ -34,10 +34,11 @@ const (
 	Access_Mint Access = 1
 	// ACCESS_BURN is the ability to decrease the supply of the marker using coin held by the marker.
 	Access_Burn Access = 2
-	// ACCESS_DEPOSIT is the ability to set a marker reference to this marker in the metadata/scopes module.
+	// ACCESS_DEPOSIT is the ability to transfer funds from another account to this marker account
+	// or to set a reference to this marker in the metadata/scopes module.
 	Access_Deposit Access = 3
-	// ACCESS_WITHDRAW is the ability to remove marker references to this marker in from metadata/scopes or
-	// transfer coin from this marker account to another account.
+	// ACCESS_WITHDRAW is the ability to transfer funds from this marker account to another account
+	// or to remove a reference to this marker in the metadata/scopes module.
 	Access_Withdraw Access = 4
 	// ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state.
 	// This access also allows cancelled markers to be marked for deletion.
