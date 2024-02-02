@@ -53,6 +53,7 @@ type CmdTestSuite struct {
 	keyring      keyring.Keyring
 	keyringDir   string
 	accountAddrs []sdk.AccAddress
+	feeDenom     string
 
 	addr0 sdk.AccAddress
 	addr1 sdk.AccAddress
@@ -79,6 +80,7 @@ func (s *CmdTestSuite) SetupSuite() {
 	s.cfg.NumValidators = 1
 	s.cfg.ChainID = antewrapper.SimAppChainID
 	s.cfg.TimeoutCommit = 500 * time.Millisecond
+	s.feeDenom = pioconfig.GetProvenanceConfig().FeeDenom
 
 	s.generateAccountsWithKeyring(10)
 	s.addr0 = s.accountAddrs[0]
@@ -170,7 +172,6 @@ func (s *CmdTestSuite) SetupSuite() {
 			AcceptingCommitments:     true,
 			CommitmentSettlementBips: 50,
 			IntermediaryDenom:        "cherry",
-			FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("peach", 15)},
 		},
 		exchange.Market{
 			MarketId: 5,
@@ -229,7 +230,7 @@ func (s *CmdTestSuite) SetupSuite() {
 			ReqAttrCreateCommitment:  []string{"committer.kyc"},
 		},
 		exchange.Market{
-			// This market has an invalid setup. Don't mess with it.
+			// This market has an invalid setup. Don't use it for anything else.
 			MarketId:      421,
 			MarketDetails: exchange.MarketDetails{Name: "Broken"},
 			FeeSellerSettlementRatios: []exchange.FeeRatio{
@@ -238,6 +239,9 @@ func (s *CmdTestSuite) SetupSuite() {
 			FeeBuyerSettlementRatios: []exchange.FeeRatio{
 				{Price: sdk.NewInt64Coin("peach", 56), Fee: sdk.NewInt64Coin("peach", 1)},
 				{Price: sdk.NewInt64Coin("plum", 57), Fee: sdk.NewInt64Coin("plum", 1)},
+			},
+			AccessGrants: []exchange.AccessGrant{
+				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
 			},
 		},
 	)
@@ -255,7 +259,6 @@ func (s *CmdTestSuite) SetupSuite() {
 			exchangeGen.Commitments = append(exchangeGen.Commitments, *com)
 		}
 	}
-
 	exchangeGen.Commitments = append(exchangeGen.Commitments, exchange.Commitment{
 		Account:  s.addr1.String(),
 		MarketId: 421,
@@ -292,7 +295,7 @@ func (s *CmdTestSuite) SetupSuite() {
 	markerGen.NetAssetValues = append(markerGen.NetAssetValues, []markertypes.MarkerNetAssetValues{
 		{
 			Address:        cherryMarker.Address,
-			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 100), Volume: 1}},
+			NetAssetValues: []markertypes.NetAssetValue{{Price: s.feeCoin(100), Volume: 1}},
 		},
 		{
 			Address:        appleMarker.Address,
@@ -314,7 +317,8 @@ func (s *CmdTestSuite) SetupSuite() {
 	// Any initial holds for an account are added to this so that
 	// this is what's available to each at the start of the unit tests.
 	balance := sdk.NewCoins(
-		sdk.NewInt64Coin(s.cfg.BondDenom, 1_000_000_000),
+		s.bondCoin(1_000_000_000),
+		s.feeCoin(1_000_000_000),
 		sdk.NewInt64Coin("acorn", 1_000_000_000),
 		sdk.NewInt64Coin("apple", 1_000_000_000),
 		sdk.NewInt64Coin("peach", 1_000_000_000),
@@ -464,6 +468,8 @@ type txCmdTestCase struct {
 	preRun func() ([]string, func(*sdk.TxResponse))
 	// args are the arguments to provide to the command.
 	args []string
+	// addedFees is any fees to add to the default 10<bond> amount.
+	addedFees sdk.Coins
 	// expInErr are strings to expect in an error from the cmd.
 	// Errors that come from the endpoint will not be here; use expInRawLog for those.
 	expInErr []string
@@ -489,10 +495,15 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 
 	cmd := cli.CmdTx()
 
+	fees := s.bondCoins(10)
+	if !tc.addedFees.IsZero() {
+		fees = fees.Add(tc.addedFees...)
+	}
+
 	args := append(tc.args, extraArgs...)
 	args = append(args,
 		"--"+flags.FlagGas, "250000",
-		"--"+flags.FlagFees, s.bondCoins(10).String(),
+		"--"+flags.FlagFees, fees.String(),
 		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
 		"--"+flags.FlagSkipConfirmation,
 	)
@@ -836,6 +847,16 @@ func (s *CmdTestSuite) bondCoins(amt int64) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, amt))
 }
 
+// feeCoin returns a Coin with the fee denom and the provided amount.
+func (s *CmdTestSuite) feeCoin(amt int64) sdk.Coin {
+	return sdk.NewInt64Coin(s.feeDenom, amt)
+}
+
+// feeCoins returns a Coins with just an entry with the fee denom and the provided amount.
+func (s *CmdTestSuite) feeCoins(amt int64) sdk.Coins {
+	return sdk.NewCoins(sdk.NewInt64Coin(s.feeDenom, amt))
+}
+
 // adjustBalance creates a new Balance with the order owner's Address and a Coins that's
 // the result of the order and fees applied to the provided current balance.
 func (s *CmdTestSuite) adjustBalance(curBal sdk.Coins, order *exchange.Order, creationFees ...sdk.Coin) banktypes.Balance {
@@ -941,6 +962,45 @@ func (s *CmdTestSuite) createOrder(order *exchange.Order, creationFee *sdk.Coin)
 	orderIDStr, err := s.findNewOrderID(&resp)
 	s.Require().NoError(err, "findNewOrderID")
 	return s.asOrderID(orderIDStr)
+}
+
+// commitFunds issues a command to commit funds.
+func (s *CmdTestSuite) commitFunds(addr sdk.AccAddress, marketID uint32, amount sdk.Coins, creationFee sdk.Coins) {
+	cmd := cli.CmdTx()
+	args := []string{
+		"commit",
+		"--from", addr.String(),
+		"--market", fmt.Sprintf("%d", marketID),
+		"--amount", amount.String(),
+	}
+	if !creationFee.IsZero() {
+		args = append(args, "--creation-fee", creationFee.String())
+	}
+
+	args = append(args,
+		"--"+flags.FlagFees, s.bondCoins(10).String(),
+		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--"+flags.FlagSkipConfirmation,
+	)
+
+	cmdName := cmd.Name()
+	var outBz []byte
+	defer func() {
+		if s.T().Failed() {
+			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
+		}
+	}()
+
+	clientCtx := s.getClientCtx()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	outBz = out.Bytes()
+
+	s.Require().NoError(err, "ExecTestCLICmd error")
+
+	var resp sdk.TxResponse
+	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+	s.Require().NoError(err, "UnmarshalJSON(command output) error")
+	s.Require().Equal(int(0), int(resp.Code), "response code:\n%v", resp)
 }
 
 // queryBankBalances executes a bank query to get an account's balances.

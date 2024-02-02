@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"bytes"
+	"fmt"
 	"sort"
 
 	"golang.org/x/exp/maps"
@@ -22,6 +23,8 @@ var (
 	invReqCode = sdkerrors.ErrInvalidRequest.ABCICode()
 	// invSigCode is the TxResponse code for an ErrInvalidSigner.
 	invSigCode = govtypes.ErrInvalidSigner.ABCICode()
+	// insFeeCode is the TxResponse code for an ErrInsufficientFunds.
+	insFeeCode = sdkerrors.ErrInsufficientFunds.ABCICode()
 )
 
 func (s *CmdTestSuite) TestCmdTxCreateAsk() {
@@ -383,7 +386,7 @@ func (s *CmdTestSuite) TestCmdTxMarketSettle() {
 			expInErr: []string{"required flag(s) \"asks\" not set"},
 		},
 		{
-			name: "endpoint error",
+			name: "no permission",
 			args: []string{"market-settle", "--from", s.addr9.String(), "--market", "419", "--bids", "18446744073709551614", "--asks", "18446744073709551615"},
 			expInRawLog: []string{"failed to execute message", "invalid request",
 				"account " + s.addr9.String() + " does not have permission to settle orders for market 419",
@@ -455,9 +458,188 @@ func (s *CmdTestSuite) TestCmdTxMarketSettle() {
 	}
 }
 
-// TODO[1789]: func (s *CmdTestSuite) TestCmdTxMarketCommitmentSettle()
+func (s *CmdTestSuite) TestCmdTxMarketCommitmentSettle() {
+	tests := []txCmdTestCase{
+		{
+			name: "cmd error",
+			args: []string{"market-commitment-settle",
+				"--from", s.addr1.String(),
+				"--inputs", s.addr8.String() + ":10apple",
+				"--outputs", s.addr9.String() + ":10apple",
+			},
+			expInErr: []string{"at least one of the flags in the group [file market] is required"},
+		},
+		{
+			name: "market does not exist",
+			args: []string{"commitment-settle",
+				"--from", s.addr9.String(),
+				"--market", "419",
+				"--inputs", s.addr8.String() + ":10apple",
+				"--outputs", s.addr9.String() + ":10apple",
+			},
+			expInErr: nil,
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr9.String() + " does not have permission to settle commitments for market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "insufficient fees",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				var marketID uint32 = 3
+				amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 41))
+				// 41apple * 8cherry/1apple = 328cherry
+				// 328cherry * 100<fee> = 32800<fee>
+				// 32800<fee> * 50/20000 = 82<fee>
+				tag := "iliketomoveitmoveit"
+				args := []string{
+					"--market", fmt.Sprintf("%d", marketID),
+					"--inputs", fmt.Sprintf("%s:%s", s.addr5, amount),
+					"--outputs", fmt.Sprintf("%s:%s", s.addr6, amount),
+					"--tag", tag,
+				}
 
-// TODO[1789]: func (s *CmdTestSuite) TestCmdTxMarketReleaseCommitments()
+				s.commitFunds(s.addr5, marketID, amount, nil)
+
+				balsAddr5 := s.queryBankBalances(s.addr5.String())
+				balsAddr6 := s.queryBankBalances(s.addr6.String())
+				spendBalsAddr5 := s.queryBankSpendableBalances(s.addr5.String())
+				spendBalsAddr6 := s.queryBankSpendableBalances(s.addr6.String())
+
+				expBals := []banktypes.Balance{
+					{Address: s.addr5.String(), Coins: balsAddr5},
+					{Address: s.addr6.String(), Coins: balsAddr6},
+				}
+				expSpendBals := []banktypes.Balance{
+					{Address: s.addr5.String(), Coins: spendBalsAddr5},
+					{Address: s.addr6.String(), Coins: spendBalsAddr6},
+				}
+
+				fups := s.composeFollowups(
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpendBals),
+				)
+				return args, fups
+			},
+			args: []string{"market-settle-commitments", "--from", s.addr1.String()},
+			expInRawLog: []string{"insufficient funds",
+				"negative balance after sending coins to accounts and fee collector",
+				"remainingFees: \"10stake\", sentCoins: \"82nhash\"",
+			},
+			expectedCode: insFeeCode,
+		},
+		{
+			name: "settlement done",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				var marketID uint32 = 3
+				amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 41))
+				// 41apple * 8cherry/1apple = 328cherry
+				// 328cherry * 100<fee> = 32800<fee>
+				// 32800<fee> * 50/20000 = 82<fee>
+				tag := "iliketomoveitmoveit"
+				args := []string{
+					"--market", fmt.Sprintf("%d", marketID),
+					"--inputs", fmt.Sprintf("%s:%s", s.addr5, amount),
+					"--outputs", fmt.Sprintf("%s:%s", s.addr6, amount),
+					"--tag", tag,
+				}
+
+				s.commitFunds(s.addr5, marketID, amount, nil)
+
+				balsAddr5 := s.queryBankBalances(s.addr5.String())
+				balsAddr6 := s.queryBankBalances(s.addr6.String())
+				spendBalsAddr5 := s.queryBankSpendableBalances(s.addr5.String())
+				spendBalsAddr6 := s.queryBankSpendableBalances(s.addr6.String())
+
+				expBals := []banktypes.Balance{
+					{Address: s.addr5.String(), Coins: balsAddr5.Sub(amount...)},
+					{Address: s.addr6.String(), Coins: balsAddr6.Add(amount...)},
+				}
+				expSpendBals := []banktypes.Balance{
+					{Address: s.addr5.String(), Coins: spendBalsAddr5},
+					{Address: s.addr6.String(), Coins: spendBalsAddr6},
+				}
+				expEvents := sdk.Events{
+					s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr5.String(), marketID, amount, tag)),
+					s.untypeEvent(exchange.NewEventFundsCommitted(s.addr6.String(), marketID, amount, tag)),
+				}
+				s.markAttrsIndexed(expEvents)
+
+				fups := s.composeFollowups(
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpendBals),
+					s.assertEventsContains(expEvents),
+				)
+				return args, fups
+			},
+			args:         []string{"settle-commitments", "--from", s.addr1.String()},
+			addedFees:    s.feeCoins(82),
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxMarketReleaseCommitments() {
+	tests := []txCmdTestCase{
+		{
+			name: "cmd error",
+			args: []string{"market-release-commitments", "--from", s.addr1.String(),
+				"--release", s.addr9.String() + ":10apple"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "no permission",
+			args: []string{"release-commitments", "--from", s.addr9.String(), "--market", "419",
+				"--release-all", s.addr9.String()},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr9.String() + " does not have permission to release commitments for market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "funds released",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				var marketID uint32 = 3
+				toRelease := sdk.NewCoins(sdk.NewInt64Coin("apple", 44), sdk.NewInt64Coin("peach", 76))
+				tag := "letitgo"
+				addr := s.addr2
+				args := []string{
+					"--market", fmt.Sprintf("%d", marketID),
+					"--release", fmt.Sprintf("%s:%s", addr, toRelease),
+					"--tag", tag,
+				}
+
+				curSpend := s.queryBankSpendableBalances(addr.String())
+				s.commitFunds(addr, marketID, toRelease, nil)
+				expSpendBals := []banktypes.Balance{{Address: addr.String(), Coins: curSpend.Sub(s.bondCoin(10))}}
+
+				expEvent := exchange.NewEventCommitmentReleased(addr.String(), marketID, toRelease, tag)
+				expEvents := sdk.Events{s.untypeEvent(expEvent)}
+				s.markAttrsIndexed(expEvents)
+
+				fup := s.composeFollowups(
+					s.assertSpendableBalancesFollowup(expSpendBals),
+					s.assertEventsContains(expEvents),
+				)
+				return args, fup
+			},
+			args:         []string{"market-release-commitments", "--from", s.addr3.String()},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
 func (s *CmdTestSuite) TestCmdTxMarketSetOrderExternalID() {
 	tests := []txCmdTestCase{
@@ -718,9 +900,86 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateUserSettle() {
 	}
 }
 
-// TODO[1789]: func (s *CmdTestSuite) TestCmdTxMarketUpdateAcceptingCommitments()
+func (s *CmdTestSuite) TestCmdTxMarketUpdateAcceptingCommitments() {
+	tests := []txCmdTestCase{
+		{
+			name:     "no market",
+			args:     []string{"market-accepting-commitments", "--from", s.addr1.String(), "--enable"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "market does not exist",
+			args: []string{"market-update-accepting-commitments", "--market", "419",
+				"--from", s.addr4.String(), "--enable"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr4.String() + " does not have permission to update market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "disable market",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				market420 := s.getMarket("420")
+				market420.AcceptingCommitments = false
+				return nil, s.getMarketFollowup("420", market420)
+			},
+			args:         []string{"update-market-accepting-commitments", "--disable", "--market", "420", "--from", s.addr1.String()},
+			expectedCode: 0,
+		},
+		{
+			name: "enable market",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				market420 := s.getMarket("420")
+				market420.AcceptingCommitments = true
+				return nil, s.getMarketFollowup("420", market420)
+			},
+			args:         []string{"update-accepting-commitments", "--enable", "--market", "420", "--from", s.addr1.String()},
+			expectedCode: 0,
+		},
+	}
 
-// TODO[1789]: func (s *CmdTestSuite) TestCmdTxMarketUpdateIntermediaryDenom()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxMarketUpdateIntermediaryDenom() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"market-intermediary-denom", "--from", s.addr2.String(), "--denom", "banana"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "no permission",
+			args: []string{"update-intermediary-denom", "--from", s.addr2.String(),
+				"--denom", "banana", "--market", "421"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr2.String() + " does not have permission to update market 421",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "updated",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				expMarket := s.getMarket("421")
+				expMarket.IntermediaryDenom = "orange"
+				return nil, s.getMarketFollowup("421", expMarket)
+			},
+			args: []string{"update-market-intermediary-denom", "--from", s.addr1.String(),
+				"--denom", "orange", "--market", "421"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
 func (s *CmdTestSuite) TestCmdTxMarketManagePermissions() {
 	tests := []txCmdTestCase{
@@ -964,7 +1223,42 @@ func (s *CmdTestSuite) TestCmdTxGovManageFees() {
 	}
 }
 
-// TODO[1789]: func (s *CmdTestSuite) TestCmdTxGovCloseMarket()
+func (s *CmdTestSuite) TestCmdTxGovCloseMarket() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"gov-close-market"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "wrong authority",
+			args: []string{"close-market", "--market", "419",
+				"--from", s.addr2.String(), "--authority", s.addr2.String()},
+			expInRawLog: []string{"failed to execute message",
+				s.addr2.String(), "expected gov account as only signer for proposal message",
+			},
+			expectedCode: invSigCode,
+		},
+		{
+			name: "prop created",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				expMsg := &exchange.MsgGovCloseMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					MarketId:  419,
+				}
+				return nil, s.govPropFollowup(expMsg)
+			},
+			args:         []string{"close-market", "--market", "419", "--from", s.addr2.String()},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
 func (s *CmdTestSuite) TestCmdTxGovUpdateParams() {
 	tests := []txCmdTestCase{

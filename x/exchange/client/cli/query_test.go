@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -717,10 +716,8 @@ func (s *CmdTestSuite) TestCmdQueryCommitmentSettlementFeeCalc() {
 	tx := newTx(s.T(), fileMsg)
 	writeFileAsJson(s.T(), filename, tx)
 
-	feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
-
 	// existing navs:
-	// 1cherry => 100<bond denom>
+	// 1cherry => 100<fee denom>
 	// 1apple => 8cherry
 	// 17acorn => 3cherry
 	// 3peach => 778cherry
@@ -757,13 +754,13 @@ func (s *CmdTestSuite) TestCmdQueryCommitmentSettlementFeeCalc() {
 			// 30peach * 778cherry/3peach = 7780cherry
 			// 1945apple * 4cherry/1apple = 7780cherry
 			// total = 15560cherry
-			// 15560cherry * 100nhash / 1 cherry = 1556000nhash
-			// 1556000nhash * 50 / 20000 = 3890nhash
+			// 15560cherry * 100<fee> / 1 cherry = 1556000<fee>
+			// 1556000<fee> * 50 / 20000 = 3890<fee>
 			expOut: `conversion_navs: []
 converted_total: []
 exchange_fees:
 - amount: "3890"
-  denom: ` + feeDenom + `
+  denom: ` + s.feeDenom + `
 input_total: []
 to_fee_nav: null
 `,
@@ -775,17 +772,17 @@ to_fee_nav: null
 			// 15banana * 35cherry/15banana = 35cherry
 			// 50peach * 778cherry/3peach = 12966.67cherry
 			// sum = 13081.67 => 13082cherry
-			// 13082cherry * 100nhash/1cherry = 1308200cherry
-			// 1308200 * 50 / 20000 = 3270.5 => 3271nhash
+			// 13082cherry * 100<fee>/1cherry = 1308200cherry
+			// 1308200 * 50 / 20000 = 3270.5 => 3271<fee>
 			expInOut: []string{
-				`"exchange_fees":[{"denom":"nhash","amount":"3271"}]`,
+				`"exchange_fees":[{"denom":"` + s.feeDenom + `","amount":"3271"}]`,
 				`"input_total":[{"denom":"apple","amount":"10"},{"denom":"banana","amount":"15"},{"denom":"peach","amount":"50"}]`,
 				`"converted_total":[{"denom":"cherry","amount":"13082"}]`,
 				`"conversion_navs":[`,
 				`{"assets":{"denom":"apple","amount":"1"},"price":{"denom":"cherry","amount":"8"}}`,
 				`{"assets":{"denom":"banana","amount":"15"},"price":{"denom":"cherry","amount":"35"}}`,
 				`{"assets":{"denom":"peach","amount":"3"},"price":{"denom":"cherry","amount":"778"}}`,
-				`"to_fee_nav":{"assets":{"denom":"cherry","amount":"1"},"price":{"denom":"nhash","amount":"100"}}`,
+				`"to_fee_nav":{"assets":{"denom":"cherry","amount":"1"},"price":{"denom":"` + s.feeDenom + `","amount":"100"}}`,
 			},
 		},
 	}
