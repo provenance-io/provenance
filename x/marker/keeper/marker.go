@@ -648,13 +648,11 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	}
 	if !admin.Equals(from) {
 		switch {
-		case !m.AllowsForcedTransfer():
+		case !m.AllowsForcedTransfer() || !m.AddressHasAccess(admin, types.Access_ForceTransfer):
 			err = k.authzHandler(ctx, admin, from, to, amount)
 			if err != nil {
 				return err
 			}
-		case !m.AddressHasAccess(admin, types.Access_ForceTransfer):
-			return fmt.Errorf("%s is not allowed to force-transfer", admin)
 		case !k.canForceTransferFrom(ctx, from):
 			return fmt.Errorf("funds are not allowed to be removed from %s", from)
 		}
