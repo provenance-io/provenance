@@ -438,6 +438,8 @@ func (s *UpgradeTestSuite) TestTourmalineRC1() {
 
 func (s *UpgradeTestSuite) TestTourmaline() {
 	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF removing all delegations from validators that have been inactive (unbonded) for %d days",
 		"INF Converting NAV units",
 		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
 	}
