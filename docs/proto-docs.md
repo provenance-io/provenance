@@ -9149,9 +9149,13 @@ Params defines the set of params for the msgfees module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
-| `nhash_per_usd_mil` | [uint64](#uint64) |  | total nhash per usd mil for converting usd to nhash |
-| `conversion_fee_denom` | [string](#string) |  | conversion fee denom is the denom usd is converted to |
+| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.
+
+Conversions: - x nhash/usd-mil = 1,000,000/x usd/hash - y usd/hash = 1,000,000/y nhash/usd-mil
+
+Examples: - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash, - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash. |
+| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom usd is converted to. |
 
 
 
