@@ -237,25 +237,25 @@ var _ = runModuleMigrations
 // This should be applied in most upgrades.
 func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 	unbondingTimeParam := app.StakingKeeper.GetParams(ctx).UnbondingTime
-	ctx.Logger().Info(fmt.Sprintf("removing all delegations from validators that have been inactive (unbonded) for %d days", int64(unbondingTimeParam.Hours()/24)))
+	ctx.Logger().Info(fmt.Sprintf("Removing all delegations from validators that have been inactive (unbonded) for %d days.", int64(unbondingTimeParam.Hours()/24)))
 	removalCount := 0
 	validators := app.StakingKeeper.GetAllValidators(ctx)
 	for _, validator := range validators {
 		if validator.IsUnbonded() {
 			inactiveDuration := ctx.BlockTime().Sub(validator.UnbondingTime)
 			if inactiveDuration >= unbondingTimeParam {
-				ctx.Logger().Info(fmt.Sprintf("validator %v has been inactive (unbonded) for %d days and will be removed", validator.OperatorAddress, int64(inactiveDuration.Hours()/24)))
+				ctx.Logger().Info(fmt.Sprintf("Validator %v has been inactive (unbonded) for %d days and will be removed.", validator.OperatorAddress, int64(inactiveDuration.Hours()/24)))
 				valAddress, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 				if err != nil {
-					ctx.Logger().Error(fmt.Sprintf("invalid operator address: %s: %v", validator.OperatorAddress, err))
+					ctx.Logger().Error(fmt.Sprintf("Invalid operator address: %s: %v.", validator.OperatorAddress, err))
 					continue
 				}
 				delegations := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
 				for _, delegation := range delegations {
-					ctx.Logger().Info(fmt.Sprintf("undelegate delegator %v from validator %v of all shares (%v)", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
+					ctx.Logger().Info(fmt.Sprintf("Undelegate delegator %v from validator %v of all shares (%v).", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
 					_, err = app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
 					if err != nil {
-						ctx.Logger().Error(fmt.Sprintf("failed to undelegate delegator %s from validator %s: %v", delegation.GetDelegatorAddr().String(), valAddress.String(), err))
+						ctx.Logger().Error(fmt.Sprintf("Failed to undelegate delegator %s from validator %s: %v.", delegation.GetDelegatorAddr().String(), valAddress.String(), err))
 						continue
 					}
 				}
@@ -263,7 +263,7 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 			}
 		}
 	}
-	ctx.Logger().Info(fmt.Sprintf("a total of %d inactive (unbonded) validators have had all their delegators removed", removalCount))
+	ctx.Logger().Info(fmt.Sprintf("A total of %d inactive (unbonded) validators have had all their delegators removed.", removalCount))
 }
 
 // setupICQ sets the correct default values for ICQKeeper.
