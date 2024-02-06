@@ -144,6 +144,9 @@ var upgrades = map[string]appUpgrade{
 			removeInactiveValidatorDelegations(ctx, app)
 			convertNavUnits(ctx, app)
 
+			// This isn't in an rc because it was handled via gov prop for testnet.
+			updateMsgFeesNhashPerMil(ctx, app)
+
 			return vm, nil
 		},
 	},
@@ -374,4 +377,14 @@ func convertNavUnits(ctx sdk.Context, app *App) {
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Unable to iterate all net asset values error: %s", err))
 	}
+}
+
+// updateMsgFeesNhashPerMil updates the MsgFees Params to set the NhashPerUsdMil to 40,000,000.
+func updateMsgFeesNhashPerMil(ctx sdk.Context, app *App) {
+	var newVal uint64 = 40_000_000
+	ctx.Logger().Info(fmt.Sprintf("Setting MsgFees Params NhashPerUsdMil to %d.", newVal))
+	params := app.MsgFeesKeeper.GetParams(ctx)
+	params.NhashPerUsdMil = newVal
+	app.MsgFeesKeeper.SetParams(ctx, params)
+	ctx.Logger().Info("Done setting MsgFees Params NhashPerUsdMil.")
 }

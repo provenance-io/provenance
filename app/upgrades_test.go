@@ -22,6 +22,7 @@ import (
 
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type UpgradeTestSuite struct {
@@ -428,13 +429,17 @@ func (s *UpgradeTestSuite) TestTourmalineRC1() {
 	expInLog := []string{
 		"INF Converting NAV units",
 	}
+	expNotInLog := []string{
+		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
+	}
 
-	s.AssertUpgradeHandlerLogs("tourmaline-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("tourmaline-rc1", expInLog, expNotInLog)
 }
 
 func (s *UpgradeTestSuite) TestTourmaline() {
 	expInLog := []string{
 		"INF Converting NAV units",
+		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
 	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline", expInLog, nil)
@@ -888,6 +893,76 @@ func (s *UpgradeTestSuite) TestConvertNAVUnits() {
 					}
 				}
 			}
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestUpdateMsgFeesNhashPerMil() {
+	origParams := s.app.MsgFeesKeeper.GetParams(s.ctx)
+	defer s.app.MsgFeesKeeper.SetParams(s.ctx, origParams)
+
+	tests := []struct {
+		name           string
+		existingParams msgfeestypes.Params
+	}{
+		{
+			name: "from 0",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("cat", 50),
+				NhashPerUsdMil:     0,
+				ConversionFeeDenom: "horse",
+			},
+		},
+		{
+			name: "from 25,000,000",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("dog", 12),
+				NhashPerUsdMil:     25_000_000,
+				ConversionFeeDenom: "pig",
+			},
+		},
+		{
+			name: "from 40,000,000",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("fish", 83),
+				NhashPerUsdMil:     40_000_000,
+				ConversionFeeDenom: "cow",
+			},
+		},
+		{
+			name: "from 123,456,789",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("hamster", 83),
+				NhashPerUsdMil:     123_456_789,
+				ConversionFeeDenom: "llama",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.app.MsgFeesKeeper.SetParams(s.ctx, tc.existingParams)
+			expParams := tc.existingParams
+			expParams.NhashPerUsdMil = 40_000_000
+			expInLog := []string{
+				"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
+				"INF Done setting MsgFees Params NhashPerUsdMil.",
+			}
+
+			// Reset the log buffer and call the func. Relog the output if it panics.
+			s.logBuffer.Reset()
+			testFunc := func() {
+				updateMsgFeesNhashPerMil(s.ctx, s.app)
+			}
+			didNotPanic := s.Assert().NotPanics(testFunc, "updateMsgFeesNhashPerMil")
+			logOutput := s.GetLogOutput("updateMsgFeesNhashPerMil")
+			if !didNotPanic {
+				return
+			}
+			s.AssertLogContents(logOutput, expInLog, nil, true, "updateMsgFeesNhashPerMil")
+
+			actParams := s.app.MsgFeesKeeper.GetParams(s.ctx)
+			s.Assert().Equal(expParams, actParams, "MsgFeesKeeper Params after updateMsgFeesNhashPerMil")
 		})
 	}
 }
