@@ -659,6 +659,10 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if !admin.Equals(from) {
 		switch {
 		case !m.AllowsForcedTransfer():
+			fromMarker, _ := k.GetMarker(ctx, from)
+			if fromMarker != nil && !fromMarker.AddressHasAccess(admin, types.Access_Withdraw) {
+				return fmt.Errorf("%s does not have withdraw permission on %s (%s)", admin, from, fromMarker.GetDenom())
+			}
 			err = k.authzHandler(ctx, admin, from, to, amount)
 			if err != nil {
 				return err
