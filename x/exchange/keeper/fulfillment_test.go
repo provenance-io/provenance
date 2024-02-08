@@ -2458,6 +2458,18 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 				expEvents = append(expEvents, tc.adlEvents...)
 			}
 
+			for _, args := range tc.expBankCalls.SendCoins {
+				args.ctxTransferAgent = s.adminAddr
+			}
+
+			msg := &exchange.MsgMarketSettleRequest{
+				Admin:         s.adminAddr.String(),
+				MarketId:      tc.marketID,
+				AskOrderIds:   tc.askOrderIDs,
+				BidOrderIds:   tc.bidOrderIDs,
+				ExpectPartial: tc.expectPartial,
+			}
+
 			em := sdk.NewEventManager()
 			ctx := s.ctx.WithEventManager(em)
 			kpr := s.k.WithAccountKeeper(s.accKeeper).
@@ -2467,7 +2479,7 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			s.logBuffer.Reset()
 			var err error
 			testFunc := func() {
-				err = kpr.SettleOrders(ctx, tc.marketID, tc.askOrderIDs, tc.bidOrderIDs, tc.expectPartial)
+				err = kpr.SettleOrders(ctx, msg)
 			}
 			s.Require().NotPanics(testFunc, "SettleOrders")
 			s.assertErrorValue(err, tc.expErr, "SettleOrders error")
