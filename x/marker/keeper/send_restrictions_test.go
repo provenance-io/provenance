@@ -162,7 +162,7 @@ func TestSendRestrictionFn(t *testing.T) {
 			from:   owner,
 			to:     addrWithAttrs,
 			amt:    cz(c(1, rDenomNoAttr)),
-			expErr: fmt.Sprintf("%s does not have transfer permissions", owner.String()),
+			expErr: fmt.Sprintf("%s does not have transfer permissions for %s", owner.String(), rDenomNoAttr),
 		},
 		{
 			name: "restricted marker with required attributes but none match",
@@ -284,7 +284,7 @@ func TestSendRestrictionFn(t *testing.T) {
 			from:   addrWithDeposit,
 			to:     rMarkerNoAttr.GetAddress(),
 			amt:    cz(c(1, rDenomNoAttr)),
-			expErr: addrWithDeposit.String() + " does not have transfer permissions",
+			expErr: addrWithDeposit.String() + " does not have transfer access for " + rDenomNoAttr,
 		},
 		{
 			name: "send to another marker with transfer on denom but no deposit on to",
@@ -299,7 +299,7 @@ func TestSendRestrictionFn(t *testing.T) {
 			from:   addrWithDeposit,
 			to:     rMarker1Attr.GetAddress(),
 			amt:    cz(c(1, rDenomNoAttr)),
-			expErr: addrWithDeposit.String() + " does not have transfer permissions",
+			expErr: addrWithDeposit.String() + " does not have transfer access for " + rDenomNoAttr,
 		},
 		{
 			name:   "send to another marker with transfer on denom and deposit on to",
@@ -328,14 +328,14 @@ func TestSendRestrictionFn(t *testing.T) {
 			from:   addrWithBypass,
 			to:     rMarker1Attr.GetAddress(),
 			amt:    cz(c(1, rDenom1Attr)),
-			expErr: addrWithBypass.String() + " does not have transfer permissions",
+			expErr: addrWithBypass.String() + " does not have transfer access for " + rDenom1Attr,
 		},
 		{
 			name:   "to marker without req attrs from addr with bypass",
 			from:   addrWithBypass,
 			to:     rMarkerNoAttr.GetAddress(),
 			amt:    cz(c(1, rDenomNoAttr)),
-			expErr: addrWithBypass.String() + " does not have transfer permissions",
+			expErr: addrWithBypass.String() + " does not have transfer access for " + rDenomNoAttr,
 		},
 		{
 			name:   "no req attrs from addr with bypass",
@@ -357,7 +357,7 @@ func TestSendRestrictionFn(t *testing.T) {
 			from:   addrOther,
 			to:     addrWithBypass,
 			amt:    cz(c(1, rDenomNoAttr)),
-			expErr: addrOther.String() + " does not have transfer permissions",
+			expErr: addrOther.String() + " does not have transfer permissions for " + rDenomNoAttr,
 		},
 		{
 			name:   "no req attrs to addr with bypass from with transfer",
@@ -892,7 +892,7 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 	}
 	setAttr(t, addrQWithAttr)
 
-	noTransErr := addrWithoutTransfer.String() + " does not have transfer permissions"
+	noTransErr := addrWithoutTransfer.String() + " does not have transfer permissions for " + denomNoReqAttr
 	noAttrErr := func(addr sdk.AccAddress) string {
 		return fmt.Sprintf("address %s does not contain the %q required attribute: %q", addr, denom1ReqAttr, reqAttr)
 	}

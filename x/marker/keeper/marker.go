@@ -640,12 +640,22 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", amount.Denom, err)
 	}
+
 	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
 	}
+
 	if !m.AddressHasAccess(admin, types.Access_Transfer) {
 		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
 	}
+
+	// If going to a restricted marker, the admin must have deposit access on that marker too.
+	if toMarker, _ := k.GetMarker(ctx, to); toMarker != nil && toMarker.GetMarkerType() == types.MarkerType_RestrictedCoin {
+		if !toMarker.AddressHasAccess(admin, types.Access_Deposit) {
+			return fmt.Errorf("%s does not have deposit access on %s (%s)", admin, to, toMarker.GetDenom())
+		}
+	}
+
 	if !admin.Equals(from) {
 		switch {
 		case !m.AllowsForcedTransfer():
@@ -657,9 +667,11 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 			return fmt.Errorf("funds are not allowed to be removed from %s", from)
 		}
 	}
+
 	if k.bankKeeper.BlockedAddr(to) {
 		return fmt.Errorf("%s is not allowed to receive funds", to)
 	}
+
 	// set context to having access to bypass attribute restriction test
 	// send the coins between accounts (does not check send_enabled on coin denom)
 	if err = k.bankKeeper.SendCoins(types.WithBypass(ctx), from, to, sdk.NewCoins(amount)); err != nil {
