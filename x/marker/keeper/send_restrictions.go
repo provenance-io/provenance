@@ -108,7 +108,11 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr, admin sdk.A
 	// intermediary account and deposit them from there, or give the bypass account deposit and transfer permissions.
 	// It's assumed that a marker address cannot be in the bypass list.
 	if toMarker != nil {
-		return fmt.Errorf("%s does not have transfer access for %s", fromAddr.String(), denom)
+		addr := admin
+		if len(addr) == 0 {
+			addr = fromAddr
+		}
+		return fmt.Errorf("%s does not have transfer access for %s", addr.String(), denom)
 	}
 
 	// If there aren't any required attributes, transfer permission is required unless coming from a bypass account.
@@ -119,7 +123,11 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr, admin sdk.A
 		if k.IsReqAttrBypassAddr(fromAddr) {
 			return nil
 		}
-		return fmt.Errorf("%s does not have transfer permissions for %s", fromAddr.String(), denom)
+		addr := admin
+		if len(addr) == 0 {
+			addr = fromAddr
+		}
+		return fmt.Errorf("%s does not have transfer permissions for %s", addr.String(), denom)
 	}
 
 	// At this point, we know there are required attributes and that fromAddr does not have transfer permission.

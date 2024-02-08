@@ -29,7 +29,10 @@ func TestSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctxWithBypass := types.WithBypass(ctx)
+	// ctxP returns a pointer to the provided context.
+	ctxP := func(ctx sdk.Context) *sdk.Context {
+		return &ctx
+	}
 	owner := sdk.AccAddress("owner_address_______")
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, owner))
 	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", owner, false), "SetNameRecord kyc.provenance.io")
@@ -59,7 +62,11 @@ func TestSendRestrictionFn(t *testing.T) {
 	addrWithoutAttrs := sdk.AccAddress("addr_without_attribs")
 	addrWithTransfer := sdk.AccAddress("addr_with_transfer__")
 	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
+	addrWithWithdraw := sdk.AccAddress("addrWithWithdraw____")
 	addrWithTranDep := sdk.AccAddress("addrWithTranDep_____")
+	addrWithTranWithdraw := sdk.AccAddress("addrWithTranWithdraw")
+	addrWithTranDepWithdraw := sdk.AccAddress("addrWithTranDepWithd")
+	addrWithDepWithdraw := sdk.AccAddress("addrWithDepWithdraw_")
 	addrWithDenySend := sdk.AccAddress("addrWithDenySend_____")
 	addrOther := sdk.AccAddress("addrOther___________")
 
@@ -70,34 +77,56 @@ func TestSendRestrictionFn(t *testing.T) {
 	coin := types.MarkerType_Coin
 	restricted := types.MarkerType_RestrictedCoin
 
-	acctNum := uint64(0)
-	newMarker := func(denom string, markerType types.MarkerType, reqAttrs []string) *types.MarkerAccount {
-		baseAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(denom), nil, acctNum, 0)
-		acctNum++
-		var access []types.AccessGrant
+	newMarkerAcc := func(denom string, markerType types.MarkerType, reqAttrs []string) *types.MarkerAccount {
+		addr, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+
+		rv := &types.MarkerAccount{
+			BaseAccount:            authtypes.NewBaseAccountWithAddress(addr),
+			Manager:                owner.String(),
+			Status:                 types.StatusProposed,
+			Denom:                  denom,
+			Supply:                 sdk.NewInt(1000),
+			MarkerType:             markerType,
+			SupplyFixed:            true,
+			AllowGovernanceControl: true,
+			AllowForcedTransfer:    false,
+			RequiredAttributes:     reqAttrs,
+		}
+
 		if markerType == restricted {
-			access = []types.AccessGrant{
+			rv.AccessControl = []types.AccessGrant{
 				{Address: addrWithTransfer.String(), Permissions: types.AccessList{types.Access_Transfer}},
 				{Address: addrWithDeposit.String(), Permissions: types.AccessList{types.Access_Deposit}},
+				{Address: addrWithWithdraw.String(), Permissions: types.AccessList{types.Access_Withdraw}},
 				{Address: addrWithTranDep.String(), Permissions: types.AccessList{types.Access_Deposit, types.Access_Transfer}},
+				{Address: addrWithTranWithdraw.String(), Permissions: types.AccessList{types.Access_Withdraw, types.Access_Transfer}},
+				{Address: addrWithDepWithdraw.String(), Permissions: types.AccessList{types.Access_Deposit, types.Access_Withdraw}},
+				{Address: addrWithTranDepWithdraw.String(), Permissions: types.AccessList{types.Access_Deposit, types.Access_Withdraw, types.Access_Transfer}},
 				// It's silly to give any permissions to a bypass address, but I do so in here to hit some test cases.
 				{Address: addrWithBypass.String(), Permissions: types.AccessList{types.Access_Deposit}},
 			}
 		}
-		rv := types.NewMarkerAccount(
-			baseAcct,
-			sdk.NewInt64Coin(denom, 1000),
-			owner,
-			access,
-			types.StatusFinalized,
-			markerType,
-			true,  // supply fixed
-			true,  // allow gov
-			false, // no force transfer
-			reqAttrs,
-		)
-		app.MarkerKeeper.SetMarker(ctx, rv)
+
 		return rv
+	}
+	createActiveMarker := func(marker *types.MarkerAccount) *types.MarkerAccount {
+		nav := []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(1)), 1)}
+		err := app.MarkerKeeper.AddSetNetAssetValues(ctx, marker, nav, t.Name())
+		require.NoError(t, err, "AddSetNetAssetValues(%v, %v, %v)", marker.Denom, nav, t.Name())
+		err = app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
+		require.NoError(t, err, "AddFinalizeAndActivateMarker(%s)", marker.Denom)
+		return marker
+	}
+	newMarker := func(denom string, markerType types.MarkerType, reqAttrs []string) *types.MarkerAccount {
+		return createActiveMarker(newMarkerAcc(denom, markerType, reqAttrs))
+	}
+	newPendingMarker := func(denom string, markerType types.MarkerType, reqAttrs []string) *types.MarkerAccount {
+		rv := newMarkerAcc(denom, markerType, reqAttrs)
+		err := app.MarkerKeeper.AddMarkerAccount(ctx, rv)
+		require.NoError(t, err, "AddMarkerAccount(%s)", denom)
+		return rv
+
 	}
 
 	nrDenom := "nonrestrictedmarker"
@@ -105,20 +134,31 @@ func TestSendRestrictionFn(t *testing.T) {
 
 	rDenomNoAttr := "restrictedmarkernoreqattributes"
 	rMarkerNoAttr := newMarker(rDenomNoAttr, restricted, nil)
+	app.MarkerKeeper.AddSendDeny(ctx, rMarkerNoAttr.GetAddress(), addrWithDenySend)
 
 	rDenom1AttrNoOneHas := "restrictedmarkerreqattributes2"
 	newMarker(rDenom1AttrNoOneHas, restricted, []string{"some.attribute.that.i.require"})
 
 	rDenom1Attr := "restrictedmarkerreqattributes3"
 	rMarker1Attr := newMarker(rDenom1Attr, restricted, []string{"kyc.provenance.io"})
+	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx,
+		attrTypes.Attribute{
+			Name:          "kyc.provenance.io",
+			Value:         []byte("string value"),
+			Address:       rMarker1Attr.GetAddress().String(),
+			AttributeType: attrTypes.AttributeType_String,
+		},
+		owner,
+	), "SetAttribute kyc.provenance.io")
 
 	rDenom2Attrs := "restrictedmarkerreqattributes4"
-	newMarker(rDenom2Attrs, restricted, []string{"kyc.provenance.io", "not-kyc.provenance.io"})
+	rMarker2Attrs := newMarker(rDenom2Attrs, restricted, []string{"kyc.provenance.io", "not-kyc.provenance.io"})
 
 	rDenom3Attrs := "restrictedmarkerreqattributes5"
 	newMarker(rDenom3Attrs, restricted, []string{"kyc.provenance.io", "not-kyc.provenance.io", "foo.provenance.io"})
 
-	app.MarkerKeeper.AddSendDeny(ctx, rMarkerNoAttr.GetAddress(), addrWithDenySend)
+	rDenomPending := "stillpending"
+	rMarkerPending := newPendingMarker(rDenomPending, restricted, nil)
 
 	testCases := []struct {
 		name   string
@@ -176,7 +216,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		{
 			// This should be the exact same test as the above one, but with a bypass context, so no error is expected.
 			name:   "with bypass, restricted marker with required attributes but none match",
-			ctx:    &ctxWithBypass,
+			ctx:    ctxP(types.WithBypass(ctx)),
 			from:   owner,
 			to:     addrWithAttrs,
 			amt:    cz(c(1, rDenom1AttrNoOneHas)),
@@ -393,6 +433,124 @@ func TestSendRestrictionFn(t *testing.T) {
 			to:     addrWithBypassNoDep,
 			amt:    cz(c(1, rDenomNoAttr)),
 			expErr: "",
+		},
+		{
+			name:   "from marker: no admin",
+			from:   rMarkerNoAttr.GetAddress(),
+			to:     addrWithAttrs,
+			amt:    cz(c(2, rDenomNoAttr)),
+			expErr: "cannot withdraw from marker account " + rMarkerNoAttr.GetAddress().String() + " (" + rDenomNoAttr + ")",
+		},
+		{
+			name:   "from marker: admin without withdraw permission",
+			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			from:   rMarkerNoAttr.GetAddress(),
+			to:     addrWithAttrs,
+			amt:    cz(c(2, rDenomNoAttr)),
+			expErr: addrWithTransfer.String() + " does not have withdraw access for " + rMarkerNoAttr.GetAddress().String() + " (" + rDenomNoAttr + ")",
+		},
+		{
+			name: "from marker: withdraw marker funds from inactive marker",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			from: rMarkerPending.GetAddress(),
+			to:   addrWithAttrs,
+			amt:  cz(c(2, rDenomNoAttr), c(1, rDenomPending), c(5, rDenom3Attrs)),
+			expErr: fmt.Sprintf("cannot withdraw marker created coins (%s) from marker %s (%s) that is not in active status (proposed)",
+				cz(c(2, rDenomNoAttr), c(1, rDenomPending), c(5, rDenom3Attrs)), rMarkerPending.GetAddress().String(), rDenomPending,
+			),
+		},
+		{
+			name: "from marker: withdraw non-marker funds from inactive marker",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			from: rMarkerPending.GetAddress(),
+			to:   addrWithAttrs,
+			amt:  cz(c(2, rDenomNoAttr), c(5, rDenom3Attrs)),
+		},
+		{
+			name: "from marker: withdraw from active marker",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			from: rMarkerNoAttr.GetAddress(),
+			to:   addrWithAttrs,
+			amt:  cz(c(3, rDenomNoAttr)),
+		},
+		{
+			name: "with admin: does not have transfer: okay otherwise",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrOther)),
+			from: owner,
+			to:   addrWithAttrs,
+			amt:  cz(c(1, rDenom1Attr), c(1, nrDenom)),
+		},
+		{
+			name: "with admin: has transfer: would otherwise fail",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			from: addrWithDenySend,
+			to:   addrWithAttrs,
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: admin only has transfer",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			from: rMarkerNoAttr.GetAddress(),
+			to:   rMarker1Attr.GetAddress(),
+			amt:  cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: addrWithTransfer.String() + " does not have withdraw access for " +
+				rMarkerNoAttr.GetAddress().String() +
+				" (" + rDenomNoAttr + ")",
+		},
+		{
+			name: "from marker to marker: admin only has deposit",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithDeposit)),
+			from: rMarkerNoAttr.GetAddress(),
+			to:   rMarker1Attr.GetAddress(),
+			amt:  cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: addrWithDeposit.String() + " does not have withdraw access for " +
+				rMarkerNoAttr.GetAddress().String() +
+				" (" + rDenomNoAttr + ")",
+		},
+		{
+			name: "from marker to marker: admin only has withdraw",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithWithdraw)),
+			from: rMarkerNoAttr.GetAddress(),
+			to:   rMarker1Attr.GetAddress(),
+			amt:  cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: addrWithWithdraw.String() + " does not have deposit access for " +
+				rMarker1Attr.GetAddress().String() +
+				" (" + rDenom1Attr + ")",
+		},
+		{
+			name: "from marker to marker: admin only has transfer and deposit",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranDep)),
+			from: rMarkerNoAttr.GetAddress(),
+			to:   rMarker1Attr.GetAddress(),
+			amt:  cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: addrWithTranDep.String() + " does not have withdraw access for " +
+				rMarkerNoAttr.GetAddress().String() +
+				" (" + rDenomNoAttr + ")",
+		},
+		{
+			name: "from marker to marker: admin only has transfer and withdraw",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			from: rMarkerNoAttr.GetAddress(),
+			to:   rMarker1Attr.GetAddress(),
+			amt:  cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: addrWithTranWithdraw.String() + " does not have deposit access for " +
+				rMarker1Attr.GetAddress().String() +
+				" (" + rDenom1Attr + ")",
+		},
+		{
+			name:   "from marker to marker: admin only has deposit and withdraw",
+			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithDepWithdraw)),
+			from:   rMarker1Attr.GetAddress(),
+			to:     rMarker2Attrs.GetAddress(),
+			amt:    cz(c(1, rDenom1Attr)),
+			expErr: addrWithDepWithdraw.String() + " does not have transfer access for " + rDenom1Attr,
+		},
+		{
+			name: "from marker to marker: admin has transfer and deposit and withdraw",
+			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranDepWithdraw)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
 		},
 	}
 
