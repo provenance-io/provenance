@@ -2266,7 +2266,8 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 					OrderId: 4444, Assets: "8apple", Price: "85pear", MarketId: 1,
 				}),
 
-				// No NAV event because the pear marker does not exist.
+				// The net-asset-value event (28).
+				s.navSetEvent("18apple", "185pear", 1),
 			},
 		},
 		{

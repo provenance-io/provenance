@@ -274,6 +274,8 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccount
 		if nav.Price.Denom != types.UsdDenom {
 			_, err := k.GetMarkerByDenom(ctx, nav.Price.Denom)
 			if err != nil {
+				navEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), nav.Price, nav.Volume, source)
+				_ = ctx.EventManager().EmitTypedEvent(navEvent)
 				return fmt.Errorf("net asset value denom does not exist: %v", err.Error())
 			}
 		}
