@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/quarantine"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -1543,7 +1544,11 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 		return fmt.Errorf("invalid admin %q: %w", withdrawnBy, err)
 	}
 	marketAddr := exchange.GetMarketAddress(marketID)
-	err = k.bankKeeper.SendCoins(markertypes.WithTransferAgent(ctx, admin), marketAddr, toAddr, amount)
+	xferCtx := markertypes.WithTransferAgent(ctx, admin)
+	if toAddr.Equals(admin) {
+		xferCtx = quarantine.WithBypass(xferCtx)
+	}
+	err = k.bankKeeper.SendCoins(xferCtx, marketAddr, toAddr, amount)
 	if err != nil {
 		return fmt.Errorf("failed to withdraw %s from market %d: %w", amount, marketID, err)
 	}

@@ -7886,15 +7886,27 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 		amount      sdk.Coins
 		withdrawnBy string
 		expErr      string
+		expQBypass  bool
+		expXferAddr sdk.AccAddress
 	}{
+		{
+			name:        "invalid admin",
+			marketID:    1,
+			toAddr:      s.addr1,
+			amount:      sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+			withdrawnBy: "ohno",
+			expErr:      "invalid admin \"ohno\": decoding bech32 failed: invalid bech32 string length 4",
+		},
 		{
 			name:        "market 1: error from SendCoins",
 			bankKeeper:  NewMockBankKeeper().WithSendCoinsResults("woopsie-daisy: an error story"),
 			marketID:    1,
 			toAddr:      s.addr1,
 			amount:      sdk.NewCoins(sdk.NewInt64Coin("oops", 55)),
-			withdrawnBy: "noone",
+			withdrawnBy: s.adminAddr.String(),
 			expErr:      "failed to withdraw 55oops from market 1: woopsie-daisy: an error story",
+			expQBypass:  false,
+			expXferAddr: s.adminAddr,
 		},
 		{
 			name:        "market 8: error from SendCoins",
@@ -7902,35 +7914,42 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 			marketID:    8,
 			toAddr:      s.addr1,
 			amount:      sdk.NewCoins(sdk.NewInt64Coin("awwww", 77), sdk.NewInt64Coin("hurts", 3)),
-			withdrawnBy: "stillnoone",
+			withdrawnBy: s.adminAddr.String(),
 			expErr:      "failed to withdraw 77awwww,3hurts from market 8: ouch-ouch-ouch: a sequel error story",
+			expQBypass:  false,
+			expXferAddr: s.adminAddr,
 		},
 		{
-			name:        "market 1: okay",
+			name:        "market 1: okay to other",
 			marketID:    1,
 			toAddr:      s.addr3,
 			amount:      sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
-			withdrawnBy: "thatoneguy",
+			withdrawnBy: s.adminAddr.String(),
+			expQBypass:  false,
+			expXferAddr: s.adminAddr,
 		},
 		{
-			name:        "market 8: okay",
+			name:        "market 8: okay to self",
 			marketID:    8,
 			toAddr:      s.addr5,
 			amount:      sdk.NewCoins(sdk.NewInt64Coin("kaching", 500_000_001)),
-			withdrawnBy: "itwasallme",
+			withdrawnBy: s.addr5.String(),
+			expQBypass:  true,
+			expXferAddr: s.addr5,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			expCalls := BankCalls{
-				SendCoins: []*SendCoinsArgs{
-					{
-						fromAddr: exchange.GetMarketAddress(tc.marketID),
-						toAddr:   tc.toAddr,
-						amt:      tc.amount,
-					},
-				},
+			expCalls := BankCalls{}
+			if len(tc.expXferAddr) > 0 {
+				expCalls.SendCoins = []*SendCoinsArgs{{
+					ctxHasQuarantineBypass: tc.expQBypass,
+					ctxTransferAgent:       tc.expXferAddr,
+					fromAddr:               exchange.GetMarketAddress(tc.marketID),
+					toAddr:                 tc.toAddr,
+					amt:                    tc.amount,
+				}}
 			}
 
 			var expEvents sdk.Events

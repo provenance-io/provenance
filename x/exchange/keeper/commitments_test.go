@@ -2155,9 +2155,15 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 
 			for _, exp := range tc.expBankCalls.SendCoins {
 				exp.ctxHasQuarantineBypass = true
+				addr, err := sdk.AccAddressFromBech32(tc.req.Admin)
+				s.Require().NoError(err, "AccAddressFromBech32(tc.req.Admin)")
+				exp.ctxTransferAgent = addr
 			}
 			for _, exp := range tc.expBankCalls.InputOutputCoins {
 				exp.ctxHasQuarantineBypass = true
+				addr, err := sdk.AccAddressFromBech32(tc.req.Admin)
+				s.Require().NoError(err, "AccAddressFromBech32(tc.req.Admin)")
+				exp.ctxTransferAgent = addr
 			}
 
 			kpr := s.k.

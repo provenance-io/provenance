@@ -2461,6 +2461,12 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			for _, args := range tc.expBankCalls.SendCoins {
 				args.ctxTransferAgent = s.adminAddr
 			}
+			for _, args := range tc.expBankCalls.InputOutputCoins {
+				args.ctxTransferAgent = s.adminAddr
+			}
+			for _, args := range tc.expBankCalls.SendCoinsFromAccountToModule {
+				args.ctxTransferAgent = s.adminAddr
+			}
 
 			msg := &exchange.MsgMarketSettleRequest{
 				Admin:         s.adminAddr.String(),
