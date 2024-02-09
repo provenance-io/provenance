@@ -37,6 +37,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* Add new force_transfer access that is required for an account to do a forced transfer ([#1829](https://github.com/provenance-io/provenance/issues/1829)).
+
+### API Breaking
+
+* Accounts that have transfer access in a marker are no longer allowed to do forced transfers ([#1829](https://github.com/provenance-io/provenance/issues/1829)).
+  Accounts must now have the force_transfer access for that.
+
 ### Dependencies
 
 - Bump `codecov/codecov-action` from 3 to 4 ([#1828](https://github.com/provenance-io/provenance/pull/1828))
