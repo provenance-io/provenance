@@ -4125,13 +4125,14 @@ Access defines the different types of permissions that a marker supports grantin
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | ACCESS_UNSPECIFIED | 0 | ACCESS_UNSPECIFIED defines a no-op vote option. |
-| ACCESS_MINT | 1 | ACCESS_MINT is the ability to increase the supply of a marker |
+| ACCESS_MINT | 1 | ACCESS_MINT is the ability to increase the supply of a marker. |
 | ACCESS_BURN | 2 | ACCESS_BURN is the ability to decrease the supply of the marker using coin held by the marker. |
-| ACCESS_DEPOSIT | 3 | ACCESS_DEPOSIT is the ability to set a marker reference to this marker in the metadata/scopes module |
-| ACCESS_WITHDRAW | 4 | ACCESS_WITHDRAW is the ability to remove marker references to this marker in from metadata/scopes or transfer coin from this marker account to another account. |
-| ACCESS_DELETE | 5 | ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state. This access also allows cancelled markers to be marked for deletion |
-| ACCESS_ADMIN | 6 | ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions. |
-| ACCESS_TRANSFER | 7 | ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange. This access right is only supported on RESTRICTED markers. |
+| ACCESS_DEPOSIT | 3 | ACCESS_DEPOSIT is the ability to transfer funds from another account to this marker account or to set a reference to this marker in the metadata/scopes module. |
+| ACCESS_WITHDRAW | 4 | ACCESS_WITHDRAW is the ability to transfer funds from this marker account to another account or to remove a reference to this marker in the metadata/scopes module. |
+| ACCESS_DELETE | 5 | ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state. This access also allows cancelled markers to be marked for deletion. |
+| ACCESS_ADMIN | 6 | ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions. This access also gives the ability to update the marker's denom metadata. |
+| ACCESS_TRANSFER | 7 | ACCESS_TRANSFER is the ability to manage transfer settings and broker transfers of the marker. Accounts with this access can: - Update the marker's required attributes. - Update the send-deny list. - Use the transfer or bank send endpoints to move marker funds out of their own account. This access right is only supported on RESTRICTED markers. |
+| ACCESS_FORCE_TRANSFER | 8 | ACCESS_FORCE_TRANSFER is the ability to transfer restricted coins from a 3rd-party account without their signature. This access right is only supported on RESTRICTED markers and only has meaning when allow_forced_transfer is true. |
 
 
  <!-- end enums -->
@@ -9149,9 +9150,13 @@ Params defines the set of params for the msgfees module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
-| `nhash_per_usd_mil` | [uint64](#uint64) |  | total nhash per usd mil for converting usd to nhash |
-| `conversion_fee_denom` | [string](#string) |  | conversion fee denom is the denom usd is converted to |
+| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.
+
+Conversions: - x nhash/usd-mil = 1,000,000/x usd/hash - y usd/hash = 1,000,000/y nhash/usd-mil
+
+Examples: - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash, - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash. |
+| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom usd is converted to. |
 
 
 

@@ -1144,6 +1144,17 @@ func TestForceTransfer(t *testing.T) {
 		"transfer of non-force-transfer coin from other account back to admin")
 	requireBalances(t, "after failed transfer")
 
+	// Have the admin try a transfer of the force-transfer, but without the force-transfer permission.
+	assert.EqualError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, wForceCoin(7)),
+		fmt.Sprintf("%s account has not been granted authority to withdraw from %s account", admin, other),
+		"transfer of force-transfer coin by account without force-transfer access")
+	requireBalances(t, "after failed force-transfer")
+
+	// Give the admin force transfer permission now.
+	addFTGrant := &types.AccessGrant{Address: admin.String(), Permissions: types.AccessList{types.Access_ForceTransfer}}
+	require.NoError(t, app.MarkerKeeper.AddAccess(ctx, admin, wForceDenom, addFTGrant),
+		"AddAccess to grant admin force-transfer access")
+
 	// Have the admin try a transfer of the w/force transfer from that other account to itself. It should go through.
 	transferCoin := wForceCoin(22)
 	assert.NoError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, transferCoin),
