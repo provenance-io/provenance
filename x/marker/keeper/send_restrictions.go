@@ -109,7 +109,6 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr, admin sdk.A
 		return nil
 	}
 
-	// TODO[1834]: Move this out of here once unit tests are passing again.
 	// If going to a marker, transfer permission is required regardless of whether it's coming from a bypass.
 	// If someone wants to deposit funds from a bypass account, they can either send the funds to a valid
 	// intermediary account and deposit them from there, or give the bypass account deposit and transfer permissions.
@@ -120,7 +119,7 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr, admin sdk.A
 			addr = fromAddr
 		}
 		return fmt.Errorf("%s does not have %s on %s marker (%s)",
-			addr, types.Access_Transfer, toMarker.GetDenom(), toMarker.GetAddress())
+			addr, types.Access_Transfer, denom, marker.GetAddress())
 	}
 
 	// If there aren't any required attributes, transfer permission is required unless coming from a bypass account.
