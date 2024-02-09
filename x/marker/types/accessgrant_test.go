@@ -1,12 +1,16 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
 func testAddress() sdk.AccAddress {
@@ -57,7 +61,65 @@ func TestHasPermission(t *testing.T) {
 	}
 }
 
-func TestAccessByString(t *testing.T) {
+func TestAccessByName(t *testing.T) {
+	tests := []struct {
+		name string
+		exp  Access
+	}{
+		{name: "unspecified", exp: Access_Unknown},
+		{name: "mint", exp: Access_Mint},
+		{name: "burn", exp: Access_Burn},
+		{name: "deposit", exp: Access_Deposit},
+		{name: "withdraw", exp: Access_Withdraw},
+		{name: "delete", exp: Access_Delete},
+		{name: "admin", exp: Access_Admin},
+		{name: "transfer", exp: Access_Transfer},
+		{name: "force_transfer", exp: Access_ForceTransfer},
+		{name: "forcetransfer", exp: Access_ForceTransfer},
+		{name: "bur", exp: Access_Unknown},
+	}
+
+	capFirst := func(str string) string {
+		return strings.ToUpper(str[0:1]) + strings.ToLower(str[1:])
+	}
+	capEveryOther := func(str string) string {
+		var rv strings.Builder
+		for i, c := range []byte(str) {
+			if i%2 == 0 {
+				rv.Write(bytes.ToLower([]byte{c}))
+			} else {
+				rv.Write(bytes.ToUpper([]byte{c}))
+			}
+		}
+		return rv.String()
+	}
+
+	for _, tc := range tests {
+		opts := []string{
+			strings.ToLower(tc.name),
+			strings.ToUpper(tc.name),
+			capFirst(tc.name),
+			capEveryOther(tc.name),
+			"access_" + strings.ToLower(tc.name),
+			"ACCESS_" + strings.ToUpper(tc.name),
+			"Access_" + capFirst(tc.name),
+			capEveryOther("access_" + tc.name),
+		}
+		var names []string
+		for _, opt := range opts {
+			names = append(names, opt, " "+opt, opt+" ")
+		}
+
+		for _, name := range names {
+			t.Run(name, func(t *testing.T) {
+				act := AccessByName(name)
+				assert.Equal(t, tc.exp.String(), act.String(), "AccessByName(%q)", name)
+			})
+		}
+	}
+}
+
+func TestAccessListByNames(t *testing.T) {
 	cases := []struct {
 		name        string
 		accessNames string
