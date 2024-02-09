@@ -7887,7 +7887,7 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 		withdrawnBy string
 		expErr      string
 		expQBypass  bool
-		expXferAddr sdk.AccAddress
+		expAdmin    sdk.AccAddress
 	}{
 		{
 			name:        "invalid admin",
@@ -7906,7 +7906,7 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 			withdrawnBy: s.adminAddr.String(),
 			expErr:      "failed to withdraw 55oops from market 1: woopsie-daisy: an error story",
 			expQBypass:  false,
-			expXferAddr: s.adminAddr,
+			expAdmin:    s.adminAddr,
 		},
 		{
 			name:        "market 8: error from SendCoins",
@@ -7917,7 +7917,7 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 			withdrawnBy: s.adminAddr.String(),
 			expErr:      "failed to withdraw 77awwww,3hurts from market 8: ouch-ouch-ouch: a sequel error story",
 			expQBypass:  false,
-			expXferAddr: s.adminAddr,
+			expAdmin:    s.adminAddr,
 		},
 		{
 			name:        "market 1: okay to other",
@@ -7926,7 +7926,7 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 			amount:      sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
 			withdrawnBy: s.adminAddr.String(),
 			expQBypass:  false,
-			expXferAddr: s.adminAddr,
+			expAdmin:    s.adminAddr,
 		},
 		{
 			name:        "market 8: okay to self",
@@ -7935,17 +7935,17 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 			amount:      sdk.NewCoins(sdk.NewInt64Coin("kaching", 500_000_001)),
 			withdrawnBy: s.addr5.String(),
 			expQBypass:  true,
-			expXferAddr: s.addr5,
+			expAdmin:    s.addr5,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			expCalls := BankCalls{}
-			if len(tc.expXferAddr) > 0 {
+			if len(tc.expAdmin) > 0 {
 				expCalls.SendCoins = []*SendCoinsArgs{{
 					ctxHasQuarantineBypass: tc.expQBypass,
-					ctxTransferAgent:       tc.expXferAddr,
+					ctxTransferAgent:       tc.expAdmin,
 					fromAddr:               exchange.GetMarketAddress(tc.marketID),
 					toAddr:                 tc.toAddr,
 					amt:                    tc.amount,
