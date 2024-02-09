@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `codecov/codecov-action` from 3 to 4 ([#1828](https://github.com/provenance-io/provenance/pull/1828))
 - Bump `peter-evans/create-pull-request` from 5.0.2 to 6.0.0 ([#1827](https://github.com/provenance-io/provenance/pull/1827))
 - Bump `bufbuild/buf-setup-action` from 1.28.1 to 1.29.0 ([#1825](https://github.com/provenance-io/provenance/pull/1825))
+- Bump `serde-json-wasm` from 0.5.1 to 0.5.2 ([#1837](https://github.com/provenance-io/provenance/pull/1837))
 
 ---
 
