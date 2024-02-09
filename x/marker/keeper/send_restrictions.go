@@ -33,17 +33,19 @@ func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 				fromAddr.String(), fromMarker.GetDenom())
 		}
 
-		// That transfer agent must have withdraw access.
-		if !fromMarker.AddressHasAccess(admin, types.Access_Withdraw) {
-			return nil, fmt.Errorf("%s does not have withdraw access for %s (%s)",
-				admin.String(), fromAddr.String(), fromMarker.GetDenom())
+		// That transfer agent must have withdraw access on the marker we're taking from.
+		if err := fromMarker.ValidateAddressHasAccess(admin, types.Access_Withdraw); err != nil {
+			return nil, err
 		}
 
 		// Check to see if marker is active; the coins created by a marker can only be withdrawn when it is active.
 		// Any other coins that may be present (collateralized assets?) can be transferred.
-		if fromMarker.GetStatus() != types.StatusActive && !amt.AmountOf(fromMarker.GetDenom()).IsZero() {
-			return nil, fmt.Errorf("cannot withdraw marker created coins (%s) from marker %s (%s) that is not in active status (%s)",
-				amt, fromAddr, fromMarker.GetDenom(), fromMarker.GetStatus().String())
+		if fromMarker.GetStatus() != types.StatusActive {
+			hasFromCoin, fromAmt := amt.Find(fromMarker.GetDenom())
+			if hasFromCoin && !fromAmt.IsZero() {
+				return nil, fmt.Errorf("cannot withdraw %s from %s marker (%s): marker status (%s) is not %s",
+					fromAmt, fromMarker.GetDenom(), fromAddr, fromMarker.GetStatus(), types.StatusActive)
+			}
 		}
 	}
 
@@ -55,9 +57,8 @@ func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 		if len(addr) == 0 {
 			addr = fromAddr
 		}
-		if !toMarker.AddressHasAccess(addr, types.Access_Deposit) {
-			return nil, fmt.Errorf("%s does not have deposit access for %s (%s)",
-				addr.String(), toAddr.String(), toMarker.GetDenom())
+		if err := toMarker.ValidateAddressHasAccess(addr, types.Access_Deposit); err != nil {
+			return nil, err
 		}
 	}
 
@@ -78,6 +79,11 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr, admin sdk.A
 	marker, err := k.GetMarker(ctx, markerAddr)
 	if err != nil {
 		return err
+	}
+
+	// If there's a marker, it must be active.
+	if marker != nil && marker.GetStatus() != types.StatusActive {
+		return fmt.Errorf("cannot send %s coins: marker status (%s) is not %s", denom, marker.GetStatus(), types.StatusActive)
 	}
 
 	// If there's no marker for the denom, or it's not a restricted marker, there's nothing more to do here.
@@ -103,6 +109,7 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr, admin sdk.A
 		return nil
 	}
 
+	// TODO[1834]: Move this out of here once unit tests are passing again.
 	// If going to a marker, transfer permission is required regardless of whether it's coming from a bypass.
 	// If someone wants to deposit funds from a bypass account, they can either send the funds to a valid
 	// intermediary account and deposit them from there, or give the bypass account deposit and transfer permissions.
@@ -112,7 +119,8 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr, admin sdk.A
 		if len(addr) == 0 {
 			addr = fromAddr
 		}
-		return fmt.Errorf("%s does not have transfer access for %s", addr.String(), denom)
+		return fmt.Errorf("%s does not have %s on %s marker (%s)",
+			addr, types.Access_Transfer, toMarker.GetDenom(), toMarker.GetAddress())
 	}
 
 	// If there aren't any required attributes, transfer permission is required unless coming from a bypass account.
