@@ -44,7 +44,9 @@ type MarkerAccountI interface {
 	GetAccessList() []AccessGrant
 
 	HasAccess(string, Access) bool
+	ValidateHasAccess(string, Access) error
 	AddressHasAccess(sdk.AccAddress, Access) bool
+	ValidateAddressHasAccess(sdk.AccAddress, Access) error
 	AddressListForPermission(Access) []sdk.AccAddress
 
 	HasGovernanceEnabled() bool
@@ -138,10 +140,23 @@ func (ma *MarkerAccount) HasAccess(addr string, role Access) bool {
 	return false
 }
 
+// ValidateHasAccess returns an error if the provided address does not have the given role in this marker.
+func (ma *MarkerAccount) ValidateHasAccess(addr string, role Access) error {
+	if !ma.HasAccess(addr, role) {
+		return fmt.Errorf("%s does not have %s access on %s marker (%s)", addr, role, ma.GetDenom(), ma.GetAddress())
+	}
+	return nil
+}
+
 // AddressHasAccess returns true if the provided address has been assigned the provided
 // role within the current MarkerAccount AccessControl
 func (ma *MarkerAccount) AddressHasAccess(addr sdk.AccAddress, role Access) bool {
 	return ma.HasAccess(addr.String(), role)
+}
+
+// ValidateAddressHasAccess returns an error if the provided address does not have the given role in this marker.
+func (ma *MarkerAccount) ValidateAddressHasAccess(addr sdk.AccAddress, role Access) error {
+	return ma.ValidateHasAccess(addr.String(), role)
 }
 
 // AddressListForPermission returns a list of all addresses with the provided rule within the
