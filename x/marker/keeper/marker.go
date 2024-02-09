@@ -650,7 +650,8 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
 	}
 
-	if err = m.ValidateAddressHasAccess(admin, types.Access_Transfer); err != nil && !m.AddressHasAccess(admin, types.Access_ForceTransfer) {
+	adminCanForceTransfer := m.AddressHasAccess(admin, types.Access_ForceTransfer)
+	if err = m.ValidateAddressHasAccess(admin, types.Access_Transfer); err != nil && !adminCanForceTransfer {
 		return err
 	}
 
@@ -661,10 +662,12 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 
 	if !admin.Equals(from) {
 		switch {
-		case !m.AllowsForcedTransfer() || !m.AddressHasAccess(admin, types.Access_ForceTransfer):
-			if err = k.validateSendFromMarker(ctx, from, admin); err != nil {
-				return err
-			}
+		case !m.AllowsForcedTransfer() || !adminCanForceTransfer:
+			// Either force transfers of this denom aren't allowed, or the admin does not have
+			// permission to do forced transfers. Only allow this if there's an authz grant.
+			// We assume that a marker account cannot issue an authz grant.
+			// That means we don't need to check for withdraw access on any from marker account here.
+			// If the from is a marker account this authz check will fail and return an error.
 			err = k.authzHandler(ctx, admin, from, to, amount)
 			if err != nil {
 				return err
@@ -872,13 +875,4 @@ func (k Keeper) validateSendToMarker(ctx sdk.Context, toAddr, admin sdk.AccAddre
 		return nil
 	}
 	return marker.ValidateAddressHasAccess(admin, types.Access_Deposit)
-}
-
-// validateSendFromMarker returns an error if the fromAddr is a marker but the admin doesn't have withdraw access on it.
-func (k Keeper) validateSendFromMarker(ctx sdk.Context, fromAddr, admin sdk.AccAddress) error {
-	marker, _ := k.GetMarker(ctx, fromAddr)
-	if marker == nil {
-		return nil
-	}
-	return marker.ValidateAddressHasAccess(admin, types.Access_Withdraw)
 }
