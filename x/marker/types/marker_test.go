@@ -536,7 +536,7 @@ func TestHasAccess(t *testing.T) {
 	for _, tc := range tests {
 		var expErr string
 		if !tc.expHas {
-			expErr = fmt.Sprintf("%s does not have %s access on %s marker (%s)", tc.addr, tc.role, marker.Denom, marker.Address)
+			expErr = fmt.Sprintf("%s does not have %s on %s marker (%s)", tc.addr, tc.role, marker.Denom, marker.Address)
 		}
 
 		t.Run(tc.name+": HasAccess", func(t *testing.T) {

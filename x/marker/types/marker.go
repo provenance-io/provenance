@@ -143,7 +143,7 @@ func (ma *MarkerAccount) HasAccess(addr string, role Access) bool {
 // ValidateHasAccess returns an error if the provided address does not have the given role in this marker.
 func (ma *MarkerAccount) ValidateHasAccess(addr string, role Access) error {
 	if !ma.HasAccess(addr, role) {
-		return fmt.Errorf("%s does not have %s access on %s marker (%s)", addr, role, ma.GetDenom(), ma.GetAddress())
+		return fmt.Errorf("%s does not have %s on %s marker (%s)", addr, role, ma.GetDenom(), ma.GetAddress())
 	}
 	return nil
 }
