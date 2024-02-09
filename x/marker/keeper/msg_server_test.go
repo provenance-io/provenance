@@ -551,7 +551,7 @@ func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 		{
 			name:   "should fail, signer does not have admin access",
 			msg:    types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: notAuthUser.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{}},
-			expErr: "cosmos1ku2jzvpkt4ffxxaajyk2r88axk9cr5jqlthcm4 does not have transfer authority for restricted-marker marker",
+			expErr: fmt.Sprintf("%s does not have %s on %s marker (%s)", notAuthUser, types.Access_Transfer, rMarkerDenom, rMarkerAcct.Address),
 		},
 		{
 			name:   "should fail, gov not enabled for restricted marker",

@@ -621,6 +621,8 @@ func TestTransferCoin(t *testing.T) {
 
 	addrManager := sdk.AccAddress("manager_____________")
 	addrTransOnly := sdk.AccAddress("transfer_only_______")
+	addrForceTransOnly := sdk.AccAddress("force_transfer_only_")
+	addrTransAndForce := sdk.AccAddress("transfer_and_force__")
 	addrTransDepWithdraw := sdk.AccAddress("xfer_dep_withdraw___")
 	addrNoTrans := sdk.AccAddress("all_but_transfer____")
 	addrSeq0 := sdk.AccAddress("addr_w_sequence_zero")
@@ -640,11 +642,11 @@ func TestTransferCoin(t *testing.T) {
 		addr1, addr2, addr3, addr4,
 	}
 
-	coinDenom := "normalcoin"
-	restrictedDenom := "restrictedcoin"
-	onlyDepositDenom := "onlydepositcoin"
-	onlyWithdrawDenom := "onlywithdrawcoin"
-	forceTransDenom := "jedicoin"
+	denomCoin := "normalcoin"
+	denomRestricted := "restrictedcoin"
+	denomOnlyDeposit := "onlydepositcoin"
+	denomOnlyWithdraw := "onlywithdrawcoin"
+	denomForceTrans := "jedicoin"
 
 	allAccessExcept := func(addr sdk.AccAddress, perms ...types.Access) types.AccessGrant {
 		rv := types.AccessGrant{
@@ -683,7 +685,7 @@ func TestTransferCoin(t *testing.T) {
 		require.NoError(t, err, "MarkerAddress(%q)", denom)
 		return rv
 	}
-	fundAcct := func(denom string, addr sdk.AccAddress) {
+	fundAcct := func(addr sdk.AccAddress, denom string) {
 		fundAmt := sdk.NewCoins(sdk.NewInt64Coin(denom, 1_000_000))
 		err := app.MarkerKeeper.WithdrawCoins(ctx, addrManager, addr, denom, fundAmt)
 		require.NoError(t, err, "WithdrawCoins %s to %q", fundAmt, string(addr))
@@ -722,7 +724,7 @@ func TestTransferCoin(t *testing.T) {
 		require.NoError(t, err, "AddFinalizeAndActivateMarker %q", denom)
 
 		for _, fundAddr := range addrsToFund {
-			fundAcct(denom, fundAddr)
+			fundAcct(fundAddr, denom)
 		}
 
 		return addr
@@ -750,6 +752,11 @@ func TestTransferCoin(t *testing.T) {
 			res.GroupPolicyAddress, string(admin))
 		return rv
 	}
+	noAccessErr := func(addr sdk.AccAddress, role types.Access, denom string) string {
+		mAddr, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+		return fmt.Sprintf("%s does not have %s on %s marker (%s)", addr, role, denom, mAddr)
+	}
 
 	for _, addr := range seq1Addrs {
 		setAcc(addr, 1)
@@ -759,53 +766,61 @@ func TestTransferCoin(t *testing.T) {
 	addrGroup := createGroup(addrManager)
 	addrsToFund = append(addrsToFund, addrGroup)
 
-	coinMarker := &types.MarkerAccount{
-		AccessControl:          []types.AccessGrant{allAccessExcept(addrManager, types.Access_Transfer)},
+	markerCoin := &types.MarkerAccount{
+		AccessControl:          []types.AccessGrant{allAccessExcept(addrManager, types.Access_Transfer, types.Access_ForceTransfer)},
 		MarkerType:             types.MarkerType_Coin,
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
 	}
-	coinAddr := setupMarker(coinDenom, coinMarker)
+	markerAddrCoin := setupMarker(denomCoin, markerCoin)
 
-	restrictedMarker := &types.MarkerAccount{
+	markerRestricted := &types.MarkerAccount{
 		AccessControl: []types.AccessGrant{
 			accessOnly(addrTransOnly, types.Access_Transfer),
+			accessOnly(addrForceTransOnly, types.Access_ForceTransfer),
+			accessOnly(addrTransAndForce, types.Access_Transfer, types.Access_ForceTransfer),
 			accessOnly(addrTransDepWithdraw, types.Access_Transfer),
-			allAccessExcept(addrNoTrans, types.Access_Transfer),
+			allAccessExcept(addrNoTrans, types.Access_Transfer, types.Access_ForceTransfer),
 		},
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
 	}
-	setupMarker(restrictedDenom, restrictedMarker)
+	setupMarker(denomRestricted, markerRestricted)
 
-	onlyDepositMarker := &types.MarkerAccount{
+	markerOnlyDep := &types.MarkerAccount{
 		AccessControl:          []types.AccessGrant{accessOnly(addrTransDepWithdraw, types.Access_Deposit)},
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
 	}
-	onlyDepositAddr := setupMarker(onlyDepositDenom, onlyDepositMarker)
+	markerAddrOnlyDep := setupMarker(denomOnlyDeposit, markerOnlyDep)
 
-	onlyWithdrawMarker := &types.MarkerAccount{
+	markerOnlyWithdraw := &types.MarkerAccount{
 		AccessControl:          []types.AccessGrant{accessOnly(addrTransDepWithdraw, types.Access_Withdraw)},
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
 	}
-	onlyWithdrawAddr := setupMarker(onlyWithdrawDenom, onlyWithdrawMarker)
+	markerAddrOnlyWithdraw := setupMarker(denomOnlyWithdraw, markerOnlyWithdraw)
 
-	forceTransMarker := &types.MarkerAccount{
-		AccessControl:          []types.AccessGrant{accessOnly(addrTransOnly, types.Access_Transfer)},
+	markerForceTrans := &types.MarkerAccount{
+		AccessControl: []types.AccessGrant{
+			accessOnly(addrTransDepWithdraw, types.Access_Transfer),
+			accessOnly(addrTransOnly, types.Access_Transfer),
+			accessOnly(addrForceTransOnly, types.Access_ForceTransfer),
+			accessOnly(addrTransAndForce, types.Access_Transfer, types.Access_ForceTransfer),
+		},
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    true,
 	}
-	forceTransAddr := setupMarker(forceTransDenom, forceTransMarker)
+	setupMarker(denomForceTrans, markerForceTrans)
 
-	// The only-withdraw marker needs to have some restricted coin, because, reasons.
-	fundAcct(restrictedDenom, onlyWithdrawAddr)
+	// The only-withdraw marker needs to have some coins, because, reasons (needed for test cases).
+	fundAcct(markerAddrOnlyWithdraw, denomRestricted)
+	fundAcct(markerAddrOnlyWithdraw, denomForceTrans)
 
 	tests := []struct {
 		name        string
@@ -830,47 +845,47 @@ func TestTransferCoin(t *testing.T) {
 			from:   addr1,
 			to:     addr2,
 			admin:  addr3,
-			amount: sdk.NewInt64Coin(coinDenom, 12),
+			amount: sdk.NewInt64Coin(denomCoin, 12),
 			expErr: "marker type is not restricted_coin, brokered transfer not supported",
 		},
 		{
-			name:   "admin does not have transfer",
+			name:   "admin does not have transfer or force transfer",
 			from:   addr1,
 			to:     addr2,
 			admin:  addrNoTrans,
-			amount: sdk.NewInt64Coin(restrictedDenom, 8),
-			expErr: addrNoTrans.String() + " is not allowed to broker transfers",
+			amount: sdk.NewInt64Coin(denomRestricted, 8),
+			expErr: noAccessErr(addrNoTrans, types.Access_Transfer, denomRestricted),
 		},
 		{
 			name:   "going to restricted: admin does not have deposit",
 			from:   addrTransOnly,
-			to:     onlyDepositAddr,
+			to:     markerAddrOnlyDep,
 			admin:  addrTransOnly,
-			amount: sdk.NewInt64Coin(restrictedDenom, 14),
-			expErr: addrTransOnly.String() + " does not have deposit access on " + onlyDepositAddr.String() + " (" + onlyDepositDenom + ")",
+			amount: sdk.NewInt64Coin(denomRestricted, 14),
+			expErr: noAccessErr(addrTransOnly, types.Access_Deposit, denomOnlyDeposit),
 		},
 		{
 			name:   "going to restricted: admin has deposit",
 			from:   addrTransDepWithdraw,
-			to:     onlyDepositAddr,
+			to:     markerAddrOnlyDep,
 			admin:  addrTransDepWithdraw,
-			amount: sdk.NewInt64Coin(restrictedDenom, 9),
+			amount: sdk.NewInt64Coin(denomRestricted, 9),
 		},
 		{
 			name:   "going to unrestricted",
 			from:   addrTransOnly,
-			to:     coinAddr,
+			to:     markerAddrCoin,
 			admin:  addrTransOnly,
-			amount: sdk.NewInt64Coin(restrictedDenom, 17),
+			amount: sdk.NewInt64Coin(denomRestricted, 17),
 		},
 		{
 			name:        "admin not from: no force transfer: no authz",
 			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerNoAuth(),
 			from:        addr4,
 			to:          addr3,
-			admin:       addrTransOnly,
-			amount:      sdk.NewInt64Coin(restrictedDenom, 11),
-			expErr:      addrTransOnly.String() + " account has not been granted authority to withdraw from " + addr4.String() + " account",
+			admin:       addrTransAndForce,
+			amount:      sdk.NewInt64Coin(denomRestricted, 11),
+			expErr:      addrTransAndForce.String() + " account has not been granted authority to withdraw from " + addr4.String() + " account",
 		},
 		{
 			name:        "admin not from: no force transfer: with authz",
@@ -878,46 +893,78 @@ func TestTransferCoin(t *testing.T) {
 			from:        addr3,
 			to:          addr1,
 			admin:       addrTransOnly,
-			amount:      sdk.NewInt64Coin(restrictedDenom, 23),
-		},
-		{
-			name:        "admin not from: no force transfer: from marker: no withdraw",
-			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerSuccess(),
-			from:        forceTransAddr,
-			to:          addr2,
-			admin:       addrTransOnly,
-			amount:      sdk.NewInt64Coin(restrictedDenom, 33),
-			expErr:      addrTransOnly.String() + " does not have withdraw permission on " + forceTransAddr.String() + " (" + forceTransDenom + ")",
+			amount:      sdk.NewInt64Coin(denomRestricted, 23),
 		},
 		{
 			name:        "admin not from: no force transfer: from marker: with withdraw",
 			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerSuccess(),
-			from:        onlyWithdrawAddr,
+			from:        markerAddrOnlyWithdraw,
 			to:          addr2,
 			admin:       addrTransDepWithdraw,
-			amount:      sdk.NewInt64Coin(restrictedDenom, 2),
+			amount:      sdk.NewInt64Coin(denomRestricted, 2),
+		},
+		{
+			name:        "admin not from: no force transfer access: no authz",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerNoAuth(),
+			from:        addr4,
+			to:          addr3,
+			admin:       addrTransOnly,
+			amount:      sdk.NewInt64Coin(denomForceTrans, 11),
+			expErr:      addrTransOnly.String() + " account has not been granted authority to withdraw from " + addr4.String() + " account",
+		},
+		{
+			name:        "admin not from: no force transfer access: with authz",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerSuccess(),
+			from:        addr3,
+			to:          addr1,
+			admin:       addrTransOnly,
+			amount:      sdk.NewInt64Coin(denomForceTrans, 23),
+		},
+		{
+			name:        "admin not from: no force transfer access: from marker: with withdraw",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerSuccess(),
+			from:        markerAddrOnlyWithdraw,
+			to:          addr2,
+			admin:       addrTransDepWithdraw,
+			amount:      sdk.NewInt64Coin(denomForceTrans, 2),
+		},
+		{
+			name:        "admin not from: force transfer okay: no force transfer access",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerNoAuth(),
+			from:        addr4,
+			to:          addr1,
+			admin:       addrTransOnly,
+			amount:      sdk.NewInt64Coin(denomForceTrans, 19),
+			expErr:      addrTransOnly.String() + " account has not been granted authority to withdraw from " + addr4.String() + " account",
+		},
+		{
+			name:   "admin not from: force transfer okay: only force access",
+			from:   addr4,
+			to:     addr1,
+			admin:  addrForceTransOnly,
+			amount: sdk.NewInt64Coin(denomForceTrans, 20),
 		},
 		{
 			name:   "admin not from: force transfer: from is a group account",
 			from:   addrGroup,
 			to:     addr3,
-			admin:  addrTransOnly,
-			amount: sdk.NewInt64Coin(forceTransDenom, 15),
+			admin:  addrTransAndForce,
+			amount: sdk.NewInt64Coin(denomForceTrans, 15),
 		},
 		{
 			name:   "admin not from: force transfer: from account has sequence zero",
 			from:   addrSeq0,
 			to:     addr1,
-			admin:  addrTransOnly,
-			amount: sdk.NewInt64Coin(forceTransDenom, 7),
+			admin:  addrTransAndForce,
+			amount: sdk.NewInt64Coin(denomForceTrans, 7),
 			expErr: "funds are not allowed to be removed from " + addrSeq0.String(),
 		},
 		{
 			name:   "admin not from: force transfer: from okay account",
 			from:   addr1,
 			to:     addr2,
-			admin:  addrTransOnly,
-			amount: sdk.NewInt64Coin(forceTransDenom, 41),
+			admin:  addrTransAndForce,
+			amount: sdk.NewInt64Coin(denomForceTrans, 41),
 		},
 		{
 			name:       "to blocked account",
@@ -925,7 +972,7 @@ func TestTransferCoin(t *testing.T) {
 			from:       addrTransOnly,
 			to:         addr3,
 			admin:      addrTransOnly,
-			amount:     sdk.NewInt64Coin(restrictedDenom, 57),
+			amount:     sdk.NewInt64Coin(denomRestricted, 57),
 			expErr:     addr3.String() + " is not allowed to receive funds",
 		},
 		{
@@ -933,8 +980,8 @@ func TestTransferCoin(t *testing.T) {
 			bankKeeper: NewWrappedBankKeeper().WithSendCoinsErrs("nope, not gonna allow that"),
 			from:       addr1,
 			to:         addr2,
-			admin:      addrTransOnly,
-			amount:     sdk.NewInt64Coin(forceTransDenom, 48),
+			admin:      addrForceTransOnly,
+			amount:     sdk.NewInt64Coin(denomForceTrans, 48),
 			expErr:     "nope, not gonna allow that",
 		},
 	}
@@ -970,34 +1017,6 @@ func TestTransferCoin(t *testing.T) {
 			if len(tc.expErr) == 0 {
 				expEvents = sdk.Events{
 					{
-						Type: "coin_spent",
-						Attributes: []abci.EventAttribute{
-							{Key: []byte("spender"), Value: []byte(tc.from.String())},
-							{Key: []byte("amount"), Value: []byte(tc.amount.String())},
-						},
-					},
-					{
-						Type: "coin_received",
-						Attributes: []abci.EventAttribute{
-							{Key: []byte("receiver"), Value: []byte(tc.to.String())},
-							{Key: []byte("amount"), Value: []byte(tc.amount.String())},
-						},
-					},
-					{
-						Type: "transfer",
-						Attributes: []abci.EventAttribute{
-							{Key: []byte("recipient"), Value: []byte(tc.to.String())},
-							{Key: []byte("sender"), Value: []byte(tc.from.String())},
-							{Key: []byte("amount"), Value: []byte(tc.amount.String())},
-						},
-					},
-					{
-						Type: "message",
-						Attributes: []abci.EventAttribute{
-							{Key: []byte("sender"), Value: []byte(tc.from.String())},
-						},
-					},
-					{
 						Type: "provenance.marker.v1.EventMarkerTransfer",
 						Attributes: []abci.EventAttribute{
 							{Key: []byte("administrator"), Value: []byte(`"` + tc.admin.String() + `"`)},
@@ -1019,7 +1038,7 @@ func TestTransferCoin(t *testing.T) {
 			require.NotPanics(t, testFunc, "TransferCoin")
 			assertions.AssertErrorValue(t, err, tc.expErr, "TransferCoin error")
 			actEvents := em.Events()
-			assertions.AssertEqualEvents(t, expEvents, actEvents, "events emitted during TransferCoin")
+			assertions.AssertEventsContains(t, expEvents, actEvents, "events emitted during TransferCoin")
 
 			actFromBal := app.BankKeeper.GetAllBalances(ctx, tc.from)
 			actToBal := app.BankKeeper.GetAllBalances(ctx, tc.to)
@@ -1259,7 +1278,7 @@ func TestMarkerFeeGrant(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, mac)
 
 	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding accont")
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, types.WithBypass(ctx), user, sdk.NewCoins(existingSupply)), "funding accont")
 
 	allowance, err := types.NewMsgGrantAllowance(
 		"testcoin",

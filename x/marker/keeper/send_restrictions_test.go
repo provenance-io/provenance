@@ -121,7 +121,7 @@ func TestSendRestrictionFn(t *testing.T) {
 	newMarker := func(denom string, markerType types.MarkerType, reqAttrs []string) *types.MarkerAccount {
 		return createActiveMarker(newMarkerAcc(denom, markerType, reqAttrs))
 	}
-	newPendingMarker := func(denom string, markerType types.MarkerType, reqAttrs []string) *types.MarkerAccount {
+	newProposedMarker := func(denom string, markerType types.MarkerType, reqAttrs []string) *types.MarkerAccount {
 		rv := newMarkerAcc(denom, markerType, reqAttrs)
 		err := app.MarkerKeeper.AddMarkerAccount(ctx, rv)
 		require.NoError(t, err, "AddMarkerAccount(%s)", denom)
@@ -157,8 +157,14 @@ func TestSendRestrictionFn(t *testing.T) {
 	rDenom3Attrs := "restrictedmarkerreqattributes5"
 	newMarker(rDenom3Attrs, restricted, []string{"kyc.provenance.io", "not-kyc.provenance.io", "foo.provenance.io"})
 
-	rDenomPending := "stillpending"
-	rMarkerPending := newPendingMarker(rDenomPending, restricted, nil)
+	rDenomProposed := "stillproposed"
+	rMarkerProposed := newProposedMarker(rDenomProposed, restricted, nil)
+
+	noAccessErr := func(addr sdk.AccAddress, role types.Access, denom string) string {
+		mAddr, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+		return fmt.Sprintf("%s does not have %s on %s marker (%s)", addr, role, denom, mAddr)
+	}
 
 	testCases := []struct {
 		name   string
@@ -312,34 +318,32 @@ func TestSendRestrictionFn(t *testing.T) {
 				addrWithAttrsStr, rDenom1AttrNoOneHas),
 		},
 		{
-			name: "send to marker from account without deposit",
-			from: addrWithAttrs,
-			to:   rMarkerNoAttr.GetAddress(),
-			amt:  cz(c(1, rDenomNoAttr)),
-			expErr: fmt.Sprintf("%s does not have deposit access for %s (%s)",
-				addrWithAttrsStr, rMarkerNoAttr.GetAddress().String(), rDenomNoAttr),
+			name:   "send to marker from account without deposit",
+			from:   addrWithAttrs,
+			to:     rMarkerNoAttr.GetAddress(),
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: noAccessErr(addrWithAttrs, types.Access_Deposit, rDenomNoAttr),
 		},
 		{
 			name:   "send to marker from account with deposit but no transfer",
 			from:   addrWithDeposit,
 			to:     rMarkerNoAttr.GetAddress(),
 			amt:    cz(c(1, rDenomNoAttr)),
-			expErr: addrWithDeposit.String() + " does not have transfer access for " + rDenomNoAttr,
+			expErr: noAccessErr(addrWithDeposit, types.Access_Transfer, rDenomNoAttr),
 		},
 		{
-			name: "send to another marker with transfer on denom but no deposit on to",
-			from: addrWithTransfer,
-			to:   rMarker1Attr.GetAddress(),
-			amt:  cz(c(1, rDenomNoAttr)),
-			expErr: fmt.Sprintf("%s does not have deposit access for %s (%s)",
-				addrWithTransfer, rMarker1Attr.GetAddress().String(), rDenom1Attr),
+			name:   "send to another marker with transfer on denom but no deposit on to",
+			from:   addrWithTransfer,
+			to:     rMarker1Attr.GetAddress(),
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: noAccessErr(addrWithTransfer, types.Access_Deposit, rDenom1Attr),
 		},
 		{
 			name:   "send to another marker without transfer on denom but with deposit on to",
 			from:   addrWithDeposit,
 			to:     rMarker1Attr.GetAddress(),
 			amt:    cz(c(1, rDenomNoAttr)),
-			expErr: addrWithDeposit.String() + " does not have transfer access for " + rDenomNoAttr,
+			expErr: noAccessErr(addrWithDeposit, types.Access_Transfer, rDenomNoAttr),
 		},
 		{
 			name:   "send to another marker with transfer on denom and deposit on to",
@@ -356,26 +360,25 @@ func TestSendRestrictionFn(t *testing.T) {
 			expErr: "",
 		},
 		{
-			name: "to a marker from addr with bypass but no deposit",
-			from: addrWithBypassNoDep,
-			to:   rMarkerNoAttr.GetAddress(),
-			amt:  cz(c(1, rDenomNoAttr)),
-			expErr: fmt.Sprintf("%s does not have deposit access for %s (%s)",
-				addrWithBypassNoDep, rMarkerNoAttr.GetAddress().String(), rDenomNoAttr),
+			name:   "to a marker from addr with bypass but no deposit",
+			from:   addrWithBypassNoDep,
+			to:     rMarkerNoAttr.GetAddress(),
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: noAccessErr(addrWithBypassNoDep, types.Access_Deposit, rDenomNoAttr),
 		},
 		{
 			name:   "to a marker with req attrs from an addr with bypass",
 			from:   addrWithBypass,
 			to:     rMarker1Attr.GetAddress(),
 			amt:    cz(c(1, rDenom1Attr)),
-			expErr: addrWithBypass.String() + " does not have transfer access for " + rDenom1Attr,
+			expErr: noAccessErr(addrWithBypass, types.Access_Transfer, rDenom1Attr),
 		},
 		{
 			name:   "to marker without req attrs from addr with bypass",
 			from:   addrWithBypass,
 			to:     rMarkerNoAttr.GetAddress(),
 			amt:    cz(c(1, rDenomNoAttr)),
-			expErr: addrWithBypass.String() + " does not have transfer access for " + rDenomNoAttr,
+			expErr: noAccessErr(addrWithBypass, types.Access_Transfer, rDenomNoAttr),
 		},
 		{
 			name:   "no req attrs from addr with bypass",
@@ -447,22 +450,22 @@ func TestSendRestrictionFn(t *testing.T) {
 			from:   rMarkerNoAttr.GetAddress(),
 			to:     addrWithAttrs,
 			amt:    cz(c(2, rDenomNoAttr)),
-			expErr: addrWithTransfer.String() + " does not have withdraw access for " + rMarkerNoAttr.GetAddress().String() + " (" + rDenomNoAttr + ")",
+			expErr: noAccessErr(addrWithTransfer, types.Access_Withdraw, rDenomNoAttr),
 		},
 		{
 			name: "from marker: withdraw marker funds from inactive marker",
 			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
-			from: rMarkerPending.GetAddress(),
+			from: rMarkerProposed.GetAddress(),
 			to:   addrWithAttrs,
-			amt:  cz(c(2, rDenomNoAttr), c(1, rDenomPending), c(5, rDenom3Attrs)),
-			expErr: fmt.Sprintf("cannot withdraw marker created coins (%s) from marker %s (%s) that is not in active status (proposed)",
-				cz(c(2, rDenomNoAttr), c(1, rDenomPending), c(5, rDenom3Attrs)), rMarkerPending.GetAddress().String(), rDenomPending,
+			amt:  cz(c(2, rDenomNoAttr), c(1, rDenomProposed), c(5, rDenom3Attrs)),
+			expErr: fmt.Sprintf("cannot withdraw %s from %s marker (%s): marker status (proposed) is not active",
+				c(1, rDenomProposed), rDenomProposed, rMarkerProposed.GetAddress(),
 			),
 		},
 		{
 			name: "from marker: withdraw non-marker funds from inactive marker",
 			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
-			from: rMarkerPending.GetAddress(),
+			from: rMarkerProposed.GetAddress(),
 			to:   addrWithAttrs,
 			amt:  cz(c(2, rDenomNoAttr), c(5, rDenom3Attrs)),
 		},
@@ -488,54 +491,44 @@ func TestSendRestrictionFn(t *testing.T) {
 			amt:  cz(c(1, rDenomNoAttr)),
 		},
 		{
-			name: "from marker to marker: admin only has transfer",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
-			from: rMarkerNoAttr.GetAddress(),
-			to:   rMarker1Attr.GetAddress(),
-			amt:  cz(c(1, rDenom1AttrNoOneHas)),
-			expErr: addrWithTransfer.String() + " does not have withdraw access for " +
-				rMarkerNoAttr.GetAddress().String() +
-				" (" + rDenomNoAttr + ")",
+			name:   "from marker to marker: admin only has transfer",
+			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			from:   rMarkerNoAttr.GetAddress(),
+			to:     rMarker1Attr.GetAddress(),
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: noAccessErr(addrWithTransfer, types.Access_Withdraw, rDenomNoAttr),
 		},
 		{
-			name: "from marker to marker: admin only has deposit",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithDeposit)),
-			from: rMarkerNoAttr.GetAddress(),
-			to:   rMarker1Attr.GetAddress(),
-			amt:  cz(c(1, rDenom1AttrNoOneHas)),
-			expErr: addrWithDeposit.String() + " does not have withdraw access for " +
-				rMarkerNoAttr.GetAddress().String() +
-				" (" + rDenomNoAttr + ")",
+			name:   "from marker to marker: admin only has deposit",
+			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithDeposit)),
+			from:   rMarkerNoAttr.GetAddress(),
+			to:     rMarker1Attr.GetAddress(),
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: noAccessErr(addrWithDeposit, types.Access_Withdraw, rDenomNoAttr),
 		},
 		{
-			name: "from marker to marker: admin only has withdraw",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithWithdraw)),
-			from: rMarkerNoAttr.GetAddress(),
-			to:   rMarker1Attr.GetAddress(),
-			amt:  cz(c(1, rDenom1AttrNoOneHas)),
-			expErr: addrWithWithdraw.String() + " does not have deposit access for " +
-				rMarker1Attr.GetAddress().String() +
-				" (" + rDenom1Attr + ")",
+			name:   "from marker to marker: admin only has withdraw",
+			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithWithdraw)),
+			from:   rMarkerNoAttr.GetAddress(),
+			to:     rMarker1Attr.GetAddress(),
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: noAccessErr(addrWithWithdraw, types.Access_Deposit, rDenom1Attr),
 		},
 		{
-			name: "from marker to marker: admin only has transfer and deposit",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranDep)),
-			from: rMarkerNoAttr.GetAddress(),
-			to:   rMarker1Attr.GetAddress(),
-			amt:  cz(c(1, rDenom1AttrNoOneHas)),
-			expErr: addrWithTranDep.String() + " does not have withdraw access for " +
-				rMarkerNoAttr.GetAddress().String() +
-				" (" + rDenomNoAttr + ")",
+			name:   "from marker to marker: admin only has transfer and deposit",
+			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTranDep)),
+			from:   rMarkerNoAttr.GetAddress(),
+			to:     rMarker1Attr.GetAddress(),
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: noAccessErr(addrWithTranDep, types.Access_Withdraw, rDenomNoAttr),
 		},
 		{
-			name: "from marker to marker: admin only has transfer and withdraw",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
-			from: rMarkerNoAttr.GetAddress(),
-			to:   rMarker1Attr.GetAddress(),
-			amt:  cz(c(1, rDenom1AttrNoOneHas)),
-			expErr: addrWithTranWithdraw.String() + " does not have deposit access for " +
-				rMarker1Attr.GetAddress().String() +
-				" (" + rDenom1Attr + ")",
+			name:   "from marker to marker: admin only has transfer and withdraw",
+			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			from:   rMarkerNoAttr.GetAddress(),
+			to:     rMarker1Attr.GetAddress(),
+			amt:    cz(c(1, rDenom1AttrNoOneHas)),
+			expErr: noAccessErr(addrWithTranWithdraw, types.Access_Deposit, rDenom1Attr),
 		},
 		{
 			name:   "from marker to marker: admin only has deposit and withdraw",
@@ -543,7 +536,7 @@ func TestSendRestrictionFn(t *testing.T) {
 			from:   rMarker1Attr.GetAddress(),
 			to:     rMarker2Attrs.GetAddress(),
 			amt:    cz(c(1, rDenom1Attr)),
-			expErr: addrWithDepWithdraw.String() + " does not have transfer access for " + rDenom1Attr,
+			expErr: noAccessErr(addrWithDepWithdraw, types.Access_Transfer, rDenom1Attr),
 		},
 		{
 			name: "from marker to marker: admin has transfer and deposit and withdraw",
