@@ -22,6 +22,7 @@ import (
 
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type UpgradeTestSuite struct {
@@ -371,7 +372,7 @@ func (s *UpgradeTestSuite) TestSaffronRC1() {
 
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
+		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
 		"INF Updating ICQ params",
 		"INF Done updating ICQ params",
 		"INF Updating MaxSupply marker param",
@@ -409,7 +410,7 @@ func (s *UpgradeTestSuite) TestSaffron() {
 
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
+		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
 		"INF Updating ICQ params",
 		"INF Done updating ICQ params",
 		"INF Updating MaxSupply marker param",
@@ -426,15 +427,21 @@ func (s *UpgradeTestSuite) TestSaffron() {
 
 func (s *UpgradeTestSuite) TestTourmalineRC1() {
 	expInLog := []string{
-		"INF Converting NAV units",
+		"INF Converting NAV units.",
+	}
+	expNotInLog := []string{
+		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
 	}
 
-	s.AssertUpgradeHandlerLogs("tourmaline-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("tourmaline-rc1", expInLog, expNotInLog)
 }
 
 func (s *UpgradeTestSuite) TestTourmaline() {
 	expInLog := []string{
-		"INF Converting NAV units",
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+		"INF Converting NAV units.",
+		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
 	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline", expInLog, nil)
@@ -457,8 +464,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 1, "GetAllValidators after setup")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			"INF a total of 0 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
@@ -476,10 +483,10 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			"INF a total of 1 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
@@ -509,11 +516,11 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			"INF a total of 1 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, false, runnerName)
 
@@ -551,14 +558,14 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 2 unbonded")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal2.OperatorAddress, 29),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
-			"INF a total of 2 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal2.OperatorAddress, 29),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
+			"INF A total of 2 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, false, runnerName)
 
@@ -595,16 +602,16 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 old unbonded")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			"INF a total of 1 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		notExpectedLogLines := []string{
-			fmt.Sprintf("validator %v has been inactive (unbonded)", unbondedVal2.OperatorAddress),
-			fmt.Sprintf("undelegate delegator %v from validator %v", addr1.String(), unbondedVal2.OperatorAddress),
-			fmt.Sprintf("undelegate delegator %v from validator %v", addr2.String(), unbondedVal2.OperatorAddress),
+			fmt.Sprintf("Validator %v has been inactive (unbonded).", unbondedVal2.OperatorAddress),
+			fmt.Sprintf("Undelegate delegator %v from validator %v", addr1.String(), unbondedVal2.OperatorAddress),
+			fmt.Sprintf("Undelegate delegator %v from validator %v", addr2.String(), unbondedVal2.OperatorAddress),
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, notExpectedLogLines, false, runnerName)
 
@@ -629,9 +636,9 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 empty unbonded")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
-			"INF a total of 1 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
@@ -888,6 +895,76 @@ func (s *UpgradeTestSuite) TestConvertNAVUnits() {
 					}
 				}
 			}
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestUpdateMsgFeesNhashPerMil() {
+	origParams := s.app.MsgFeesKeeper.GetParams(s.ctx)
+	defer s.app.MsgFeesKeeper.SetParams(s.ctx, origParams)
+
+	tests := []struct {
+		name           string
+		existingParams msgfeestypes.Params
+	}{
+		{
+			name: "from 0",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("cat", 50),
+				NhashPerUsdMil:     0,
+				ConversionFeeDenom: "horse",
+			},
+		},
+		{
+			name: "from 25,000,000",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("dog", 12),
+				NhashPerUsdMil:     25_000_000,
+				ConversionFeeDenom: "pig",
+			},
+		},
+		{
+			name: "from 40,000,000",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("fish", 83),
+				NhashPerUsdMil:     40_000_000,
+				ConversionFeeDenom: "cow",
+			},
+		},
+		{
+			name: "from 123,456,789",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("hamster", 83),
+				NhashPerUsdMil:     123_456_789,
+				ConversionFeeDenom: "llama",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.app.MsgFeesKeeper.SetParams(s.ctx, tc.existingParams)
+			expParams := tc.existingParams
+			expParams.NhashPerUsdMil = 40_000_000
+			expInLog := []string{
+				"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
+				"INF Done setting MsgFees Params NhashPerUsdMil.",
+			}
+
+			// Reset the log buffer and call the func. Relog the output if it panics.
+			s.logBuffer.Reset()
+			testFunc := func() {
+				updateMsgFeesNhashPerMil(s.ctx, s.app)
+			}
+			didNotPanic := s.Assert().NotPanics(testFunc, "updateMsgFeesNhashPerMil")
+			logOutput := s.GetLogOutput("updateMsgFeesNhashPerMil")
+			if !didNotPanic {
+				return
+			}
+			s.AssertLogContents(logOutput, expInLog, nil, true, "updateMsgFeesNhashPerMil")
+
+			actParams := s.app.MsgFeesKeeper.GetParams(s.ctx)
+			s.Assert().Equal(expParams, actParams, "MsgFeesKeeper Params after updateMsgFeesNhashPerMil")
 		})
 	}
 }
