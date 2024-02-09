@@ -39,7 +39,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* Add new force_transfer access that is required for an account to do a forced transfer ([#1829](https://github.com/provenance-io/provenance/issues/1829)).
 * Update the MsgFees Params to set the nhash per usd-mil to 40,000,000 ($0.025/hash) [#1833](https://github.com/provenance-io/provenance/pull/1833).
+
+### API Breaking
+
+* Accounts that have transfer access in a marker are no longer allowed to do forced transfers ([#1829](https://github.com/provenance-io/provenance/issues/1829)).
+  Accounts must now have the force_transfer access for that.
 
 ### Dependencies
 
