@@ -646,6 +646,11 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return fmt.Errorf("marker not found for %s: %w", amount.Denom, err)
 	}
 
+	// TODO[1834]: Unit tests on transfer of non-active coins.
+	if m.GetStatus() != types.StatusActive {
+		return fmt.Errorf("marker status (%s) is not active, funds cannot be moved", m.GetStatus())
+	}
+
 	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
 	}
