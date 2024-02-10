@@ -143,7 +143,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 				UsdMills:               1,
 				Volume:                 0,
 			},
-			expErr: `cannot set net asset value : marker net asset value volume must be positive value: invalid request`,
+			expErr: `cannot set net asset value: marker net asset value volume must be positive value: invalid request`,
 		},
 		{
 			name: "successfully Add marker with nav",

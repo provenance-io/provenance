@@ -2059,6 +2059,240 @@ func TestAddRemoveSendDeny(t *testing.T) {
 	}
 }
 
+func TestAddSetNetAssetValues(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.NewContext(false, tmproto.Header{})
+
+	admin := sdk.AccAddress("admin_______________")
+
+	markerAddr := func(denom string) sdk.AccAddress {
+		rv, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+		return rv
+	}
+	makeMarker := func(denom string) types.MarkerAccountI {
+		markerAcc := &types.MarkerAccount{
+			BaseAccount:            authtypes.NewBaseAccountWithAddress(markerAddr(denom)),
+			Manager:                admin.String(),
+			Status:                 types.StatusProposed,
+			Denom:                  denom,
+			Supply:                 sdk.NewInt(1000),
+			MarkerType:             types.MarkerType_RestrictedCoin,
+			SupplyFixed:            true,
+			AllowGovernanceControl: true,
+		}
+		testFunc := func() error {
+			return app.MarkerKeeper.AddMarkerAccount(ctx, markerAcc)
+		}
+		assertions.RequireNotPanicsNoError(t, testFunc, "AddMarkerAccount %q", denom)
+		return markerAcc
+	}
+	coin := func(str string) sdk.Coin {
+		rv, err := sdk.ParseCoinNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+	navEvent := func(denom string, price string, volume uint64, source string) sdk.Event {
+		tev := types.NewEventSetNetAssetValue(denom, coin(price), volume, source)
+		rv, err := sdk.TypedEventToEvent(tev)
+		require.NoError(t, err, "TypedEventToEvent %q, %s, %d %q", denom, price, volume, source)
+		return rv
+	}
+	newNav := func(price string, volume uint64) types.NetAssetValue {
+		return types.NetAssetValue{Price: coin(price), Volume: volume}
+	}
+
+	blueMarker := makeMarker("blue")
+	redMarker := makeMarker("red")
+	yellowMarker := makeMarker("yellow")
+	whiteMarker := makeMarker("white")
+
+	tests := []struct {
+		name      string
+		marker    types.MarkerAccountI
+		navs      []types.NetAssetValue
+		source    string
+		expErr    string
+		expEvents sdk.Events
+		expNavs   []types.NetAssetValue
+	}{
+		{
+			name:   "nil navs",
+			marker: blueMarker,
+			navs:   nil,
+			source: "billie",
+		},
+		{
+			name:   "empty navs",
+			marker: yellowMarker,
+			navs:   nil,
+			source: "billie",
+		},
+		{
+			name:   "price denom equals marker denom",
+			marker: blueMarker,
+			navs:   []types.NetAssetValue{newNav("3blue", 3)},
+			source: "devin",
+			expErr: "net asset value denom cannot match marker denom \"blue\"",
+		},
+		{
+			name:   "price marker does not exist: invalid nav",
+			marker: redMarker,
+			navs:   []types.NetAssetValue{newNav("4purple", 0)},
+			source: "jesse",
+			expErr: "net asset value denom does not exist: marker purple not found for address: " + markerAddr("purple").String(),
+		},
+		{
+			name:      "price marker does not exist: valid nav",
+			marker:    blueMarker,
+			navs:      []types.NetAssetValue{newNav("4purple", 1)},
+			source:    "lennon",
+			expErr:    "net asset value denom does not exist: marker purple not found for address: " + markerAddr("purple").String(),
+			expEvents: sdk.Events{navEvent("blue", "4purple", 1, "lennon")},
+		},
+		{
+			name:   "price marker exists: invalid nav",
+			marker: yellowMarker,
+			navs:   []types.NetAssetValue{newNav("4red", 0)},
+			source: "remy",
+			expErr: "cannot set net asset value: marker net asset value volume must be positive value",
+		},
+		{
+			name:      "volume greater than supply",
+			marker:    redMarker,
+			navs:      []types.NetAssetValue{newNav("3blue", 1001)},
+			source:    "val",
+			expErr:    "cannot set net asset value: volume (1001) cannot exceed \"red\" marker supply (1000red)",
+			expEvents: sdk.Events{navEvent("red", "3blue", 1001, "val")},
+		},
+		{
+			name:      "one nav: success",
+			marker:    yellowMarker,
+			navs:      []types.NetAssetValue{newNav("3blue", 17)},
+			source:    "harper",
+			expEvents: sdk.Events{navEvent("yellow", "3blue", 17, "harper")},
+			expNavs:   []types.NetAssetValue{newNav("3blue", 17)},
+		},
+		{
+			name:   "usd nav: zero volume",
+			marker: blueMarker,
+			navs:   []types.NetAssetValue{newNav("5"+types.UsdDenom, 0)},
+			source: "tony",
+			expErr: "cannot set net asset value: marker net asset value volume must be positive value",
+		},
+		{
+			name:      "usd nav: too much volume",
+			marker:    blueMarker,
+			navs:      []types.NetAssetValue{newNav("55"+types.UsdDenom, 1005)},
+			source:    "wynne",
+			expEvents: sdk.Events{navEvent("blue", "55"+types.UsdDenom, 1005, "wynne")},
+			expErr:    "cannot set net asset value: volume (1005) cannot exceed \"blue\" marker supply (1000blue)",
+		},
+		{
+			name:      "usd nav: success",
+			marker:    blueMarker,
+			navs:      []types.NetAssetValue{newNav("55"+types.UsdDenom, 1000)},
+			source:    "cody",
+			expEvents: sdk.Events{navEvent("blue", "55"+types.UsdDenom, 1000, "cody")},
+			expNavs:   []types.NetAssetValue{newNav("55"+types.UsdDenom, 1000)},
+		},
+		{
+			name:   "three navs: no errors",
+			marker: whiteMarker,
+			navs:   []types.NetAssetValue{newNav("7blue", 2), newNav("15red", 66), newNav("400yellow", 89)},
+			source: "jordan",
+			expEvents: sdk.Events{
+				navEvent("white", "7blue", 2, "jordan"),
+				navEvent("white", "15red", 66, "jordan"),
+				navEvent("white", "400yellow", 89, "jordan"),
+			},
+			expNavs: []types.NetAssetValue{newNav("7blue", 2), newNav("15red", 66), newNav("400yellow", 89)},
+		},
+		{
+			name:   "three navs: error on first",
+			marker: whiteMarker,
+			navs:   []types.NetAssetValue{newNav("7blue", 1001), newNav("167red", 66), newNav("377yellow", 89)},
+			source: "knox",
+			expErr: "cannot set net asset value: volume (1001) cannot exceed \"white\" marker supply (1000white)",
+			expEvents: sdk.Events{
+				navEvent("white", "7blue", 1001, "knox"),
+				navEvent("white", "167red", 66, "knox"),
+				navEvent("white", "377yellow", 89, "knox"),
+			},
+			expNavs: []types.NetAssetValue{newNav("167red", 66), newNav("377yellow", 89)},
+		},
+		{
+			name:   "three navs: error on second",
+			marker: whiteMarker,
+			navs:   []types.NetAssetValue{newNav("14blue", 2), newNav("15red", 0), newNav("403yellow", 89)},
+			source: "max",
+			expErr: "cannot set net asset value: marker net asset value volume must be positive value",
+			expEvents: sdk.Events{
+				navEvent("white", "14blue", 2, "max"),
+				// no red event because the nav is invalid.
+				navEvent("white", "403yellow", 89, "max"),
+			},
+			expNavs: []types.NetAssetValue{newNav("14blue", 2), newNav("403yellow", 89)},
+		},
+		{
+			name:   "three navs: error on third",
+			marker: whiteMarker,
+			navs:   []types.NetAssetValue{newNav("788blue", 14), newNav("215red", 3), newNav("470white", 14)},
+			source: "palmer",
+			expErr: "net asset value denom cannot match marker denom \"white\"",
+			expEvents: sdk.Events{
+				navEvent("white", "788blue", 14, "palmer"),
+				navEvent("white", "215red", 3, "palmer"),
+				// no white event because it's the same denom as the marker.
+			},
+			expNavs: []types.NetAssetValue{newNav("788blue", 14), newNav("215red", 3)},
+		},
+		{
+			name:   "three navs: error on all",
+			marker: whiteMarker,
+			navs:   []types.NetAssetValue{newNav("44blue", 1001), newNav("55red", 0), newNav("66yellow", 1002)},
+			source: "lynn",
+			expErr: "cannot set net asset value: volume (1001) cannot exceed \"white\" marker supply (1000white)" + "\n" +
+				"cannot set net asset value: marker net asset value volume must be positive value" + "\n" +
+				"cannot set net asset value: volume (1002) cannot exceed \"white\" marker supply (1000white)",
+			expEvents: sdk.Events{
+				navEvent("white", "44blue", 1001, "lynn"),
+				// nav 2 is invalid, so no event from it.
+				navEvent("white", "66yellow", 1002, "lynn"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			em := sdk.NewEventManager()
+			ctx = ctx.WithEventManager(em)
+			expHeight := ctx.BlockHeight()
+			var err error
+			testFunc := func() {
+				err = app.MarkerKeeper.AddSetNetAssetValues(ctx, tc.marker, tc.navs, tc.source)
+			}
+
+			require.NotPanics(t, testFunc, "AddSetNetAssetValues")
+			assertions.AssertErrorValue(t, err, tc.expErr, "AddSetNetAssetValues error")
+			actEvents := em.Events()
+			assertions.AssertEqualEvents(t, tc.expEvents, actEvents, "events emitted during AddSetNetAssetValues")
+
+			for i, expNav := range tc.expNavs {
+				actNav, navErr := app.MarkerKeeper.GetNetAssetValue(ctx, tc.marker.GetDenom(), expNav.Price.Denom)
+				if assert.NoError(t, navErr, "[%d]: GetNetAssetValue(%q, %q)", i, tc.marker.GetDenom(), expNav.Price.Denom) {
+					assert.Equal(t, expNav.Price.String(), actNav.Price.String(),
+						"[%d]: %s:%s nav Price", i, tc.marker.GetDenom(), expNav.Price.Denom)
+					assert.Equal(t, fmt.Sprintf("%d", expNav.Volume), fmt.Sprintf("%d", actNav.Volume),
+						"[%d]: %s:%s nav Volume", i, tc.marker.GetDenom(), expNav.Price.Denom)
+					assert.Equal(t, fmt.Sprintf("%d", expHeight), fmt.Sprintf("%d", actNav.UpdatedBlockHeight),
+						"[%d]: %s:%s nav UpdatedBlockHeight", i, tc.marker.GetDenom(), expNav.Price.Denom)
+				}
+			}
+		})
+	}
+}
+
 func TestGetNetAssetValue(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.NewContext(false, tmproto.Header{})
