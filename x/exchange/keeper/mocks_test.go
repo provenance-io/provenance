@@ -251,6 +251,7 @@ type MockBankKeeper struct {
 	SendCoinsResultsQueue                    []string
 	SendCoinsFromAccountToModuleResultsQueue []string
 	InputOutputCoinsResultsQueue             []string
+	BlockedAddrQueue                         []bool
 }
 
 // BankCalls contains all the calls that the mock bank keeper makes.
@@ -258,6 +259,7 @@ type BankCalls struct {
 	SendCoins                    []*SendCoinsArgs
 	SendCoinsFromAccountToModule []*SendCoinsFromAccountToModuleArgs
 	InputOutputCoins             []*InputOutputCoinsArgs
+	BlockedAddr                  []sdk.AccAddress
 }
 
 // SendCoinsArgs is a record of a call that is made to SendCoins.
@@ -317,6 +319,14 @@ func (k *MockBankKeeper) WithInputOutputCoinsResults(errs ...string) *MockBankKe
 	return k
 }
 
+// WithBlockedAddrResults queues up the provided bools to be returned from BlockedAddr.
+// Each entry is used only once. If entries run out, false is returned.
+// This method both updates the receiver and returns it.
+func (k *MockBankKeeper) WithBlockedAddrResults(results ...bool) *MockBankKeeper {
+	k.BlockedAddrQueue = append(k.BlockedAddrQueue, results...)
+	return k
+}
+
 func (k *MockBankKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	k.Calls.SendCoins = append(k.Calls.SendCoins, NewSendCoinsArgs(ctx, fromAddr, toAddr, amt))
 	var err error
@@ -354,6 +364,16 @@ func (k *MockBankKeeper) InputOutputCoins(ctx sdk.Context, inputs []banktypes.In
 	return err
 }
 
+func (k *MockBankKeeper) BlockedAddr(addr sdk.AccAddress) bool {
+	k.Calls.BlockedAddr = append(k.Calls.BlockedAddr, addr)
+	rv := false
+	if len(k.BlockedAddrQueue) > 0 {
+		rv = k.BlockedAddrQueue[0]
+		k.BlockedAddrQueue = k.BlockedAddrQueue[1:]
+	}
+	return rv
+}
+
 // assertSendCoinsCalls asserts that a mock keeper's Calls.SendCoins match the provided expected calls.
 func (s *TestSuite) assertSendCoinsCalls(mk *MockBankKeeper, expected []*SendCoinsArgs, msg string, args ...interface{}) bool {
 	s.T().Helper()
@@ -376,12 +396,20 @@ func (s *TestSuite) assertInputOutputCoinsCalls(mk *MockBankKeeper, expected []*
 		msg+" InputOutputCoins calls", args...)
 }
 
+// assertBlockedAddrCalls asserts that a mock keeper's Calls.BlockedAddr match the provided expected calls.
+func (s *TestSuite) assertBlockedAddrCalls(mk *MockBankKeeper, expected []sdk.AccAddress, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.BlockedAddr, s.getAddrName,
+		msg+" BlockedAddr calls", args...)
+}
+
 // assertBankKeeperCalls asserts that all the calls made to a mock bank keeper match the provided expected calls.
 func (s *TestSuite) assertBankKeeperCalls(mk *MockBankKeeper, expected BankCalls, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	rv := s.assertSendCoinsCalls(mk, expected.SendCoins, msg, args...)
 	rv = s.assertInputOutputCoinsCalls(mk, expected.InputOutputCoins, msg, args...) && rv
-	return s.assertSendCoinsFromAccountToModuleCalls(mk, expected.SendCoinsFromAccountToModule, msg, args...) && rv
+	rv = s.assertSendCoinsFromAccountToModuleCalls(mk, expected.SendCoinsFromAccountToModule, msg, args...) && rv
+	return s.assertBlockedAddrCalls(mk, expected.BlockedAddr, msg, args...) && rv
 }
 
 // NewSendCoinsArgs creates a new record of args provided to a call to SendCoins.

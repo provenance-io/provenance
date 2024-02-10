@@ -182,8 +182,20 @@ func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs 
 		if err != nil {
 			return fmt.Errorf("invalid outputs[0] address %q: %w", outputs[0].Address, err)
 		}
+		if k.bankKeeper.BlockedAddr(toAddr) {
+			return fmt.Errorf("%s is not allowed to receive funds", toAddr)
+		}
 		return k.bankKeeper.SendCoins(ctx, fromAddr, toAddr, inputs[0].Coins)
 	}
+
+	// TODO[1834]: Unit tests on transfers to blocked addresses.
+	for _, output := range outputs {
+		toAddr, err := sdk.AccAddressFromBech32(output.Address)
+		if err == nil && k.bankKeeper.BlockedAddr(toAddr) {
+			return fmt.Errorf("%s is not allowed to receive funds", toAddr)
+		}
+	}
+
 	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }
 
