@@ -8,10 +8,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-// wrappedBankKeeper wraps a BankKeeper such that some functions can be set up to return specific things instead
+// WrappedBankKeeper wraps a BankKeeper such that some functions can be set up to return specific things instead.
 type WrappedBankKeeper struct {
 	types.BankKeeper
 	SendCoinsErrs     []string
@@ -33,7 +34,7 @@ func (w *WrappedBankKeeper) WithParent(bankKeeper types.BankKeeper) *WrappedBank
 }
 
 // WithSendCoinsErrs adds the provided error strings to the list of errors that will be returned by SendCoins.
-// An non-empty entry will be returned as an error (when its time comes).
+// A non-empty entry will be returned as an error (when its time comes).
 // An empty entry (or if there aren't any entries left when SendCoins is called) will
 // result in the parent's SendCoins function being called and returned.
 func (w *WrappedBankKeeper) WithSendCoinsErrs(errs ...string) *WrappedBankKeeper {
@@ -246,3 +247,44 @@ func (a *mockAuthorization) String() string {
 
 // ProtoMessage does nothing. Satisfies the authz.Authorization interface.
 func (a *mockAuthorization) ProtoMessage() {}
+
+// WrappedAttrKeeper wraps an AttrKeeper such that some functions can be set up to return specific things instead.
+type WrappedAttrKeeper struct {
+	types.AttrKeeper
+	GetAllAttributesAddrErrs []string
+}
+
+var _ types.AttrKeeper = (*WrappedAttrKeeper)(nil)
+
+// NewWrappedBankKeeper creates a new WrappedBankKeeper.
+// You'll need to call WithParent on the result before anything will work in here.
+func NewWrappedAttrKeeper() *WrappedAttrKeeper {
+	return &WrappedAttrKeeper{}
+}
+
+// WithParent sets the parent bank keeper for this wrapping.
+func (w *WrappedAttrKeeper) WithParent(attrKeeper types.AttrKeeper) *WrappedAttrKeeper {
+	w.AttrKeeper = attrKeeper
+	return w
+}
+
+// WithGetAllAttributesAddrErrs adds the provided error strings to the list of errors that will be
+// returned by GetAllAttributesAddr. A non-empty entry will be returned as an error (when its time comes).
+// An empty entry (or if there aren't any entries left when SendCoins is called) will
+// result in the parent's SendCoins function being called and returned.
+func (w *WrappedAttrKeeper) WithGetAllAttributesAddrErrs(errs ...string) *WrappedAttrKeeper {
+	w.GetAllAttributesAddrErrs = append(w.GetAllAttributesAddrErrs, errs...)
+	return w
+}
+
+// GetAllAttributesAddr either returns a pre-defined error, or, if there isn't one, calls GetAllAttributesAddr on the parent.
+func (w *WrappedAttrKeeper) GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]attrtypes.Attribute, error) {
+	if len(w.GetAllAttributesAddrErrs) > 0 {
+		rv := w.GetAllAttributesAddrErrs[0]
+		w.GetAllAttributesAddrErrs = w.GetAllAttributesAddrErrs[1:]
+		if len(rv) > 0 {
+			return nil, errors.New(rv)
+		}
+	}
+	return w.AttrKeeper.GetAllAttributesAddr(ctx, addr)
+}

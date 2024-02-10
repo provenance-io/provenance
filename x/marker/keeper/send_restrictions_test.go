@@ -167,12 +167,13 @@ func TestSendRestrictionFn(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name   string
-		ctx    *sdk.Context
-		from   sdk.AccAddress
-		to     sdk.AccAddress
-		amt    sdk.Coins
-		expErr string
+		name       string
+		attrKeeper *WrappedAttrKeeper
+		ctx        *sdk.Context
+		from       sdk.AccAddress
+		to         sdk.AccAddress
+		amt        sdk.Coins
+		expErr     string
 	}{
 		{
 			name:   "unknown denom",
@@ -202,7 +203,14 @@ func TestSendRestrictionFn(t *testing.T) {
 			amt:    cz(c(1, rDenom3Attrs)),
 			expErr: "",
 		},
-		// Untested: GetAllAttributesAddr returns an error. Only happens when store data can't be unmarshalled. Can't do that from here.
+		{
+			name:       "error getting attrs",
+			attrKeeper: NewWrappedAttrKeeper().WithGetAllAttributesAddrErrs("crazy injected attr error"),
+			from:       addrOther,
+			to:         addrWithAttrs,
+			amt:        cz(c(1, rDenom3Attrs)),
+			expErr:     "could not get attributes for " + addrWithAttrsStr + ": crazy injected attr error",
+		},
 		{
 			name:   "restricted marker with empty required attributes and no transfer rights",
 			from:   owner,
@@ -553,7 +561,11 @@ func TestSendRestrictionFn(t *testing.T) {
 			if tc.ctx != nil {
 				tCtx = *tc.ctx
 			}
-			newTo, err := app.MarkerKeeper.SendRestrictionFn(tCtx, tc.from, tc.to, tc.amt)
+			kpr := app.MarkerKeeper
+			if tc.attrKeeper != nil {
+				kpr = kpr.WithAttrKeeper(tc.attrKeeper.WithParent(app.AttributeKeeper))
+			}
+			newTo, err := kpr.SendRestrictionFn(tCtx, tc.from, tc.to, tc.amt)
 			if len(tc.expErr) > 0 {
 				assert.EqualError(t, err, tc.expErr, "SendRestrictionFn error")
 			} else {

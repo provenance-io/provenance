@@ -39,3 +39,9 @@ func (k Keeper) WithAuthzKeeper(authzKeeper types.AuthzKeeper) Keeper {
 	k.authzKeeper = authzKeeper
 	return k
 }
+
+// WithAttrKeeper is a TEST ONLY func that returns a copy of this marker keeper but with the provided attr keeper instead.
+func (k Keeper) WithAttrKeeper(attrKeeper types.AttrKeeper) Keeper {
+	k.attrKeeper = attrKeeper
+	return k
+}
