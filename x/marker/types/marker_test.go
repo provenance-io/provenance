@@ -489,7 +489,7 @@ func TestHasAccess(t *testing.T) {
 				Address: addrAll.String(),
 				Permissions: []Access{
 					Access_Mint, Access_Burn, Access_Deposit, Access_Withdraw,
-					Access_Delete, Access_Admin, Access_Transfer,
+					Access_Delete, Access_Admin, Access_Transfer, Access_ForceTransfer,
 				},
 			},
 			{Address: addrDup.String(), Permissions: []Access{Access_Admin}},
@@ -497,7 +497,7 @@ func TestHasAccess(t *testing.T) {
 				Address: addrAllButWithdraw.String(),
 				Permissions: []Access{
 					Access_Mint, Access_Burn, Access_Deposit,
-					Access_Delete, Access_Admin, Access_Transfer,
+					Access_Delete, Access_Admin, Access_Transfer, Access_ForceTransfer,
 				},
 			},
 			{Address: addrOnlyTransfer.String(), Permissions: []Access{Access_Transfer}},
@@ -531,6 +531,7 @@ func TestHasAccess(t *testing.T) {
 		{name: "address has all: delete", addr: addrAll, role: Access_Delete, expHas: true},
 		{name: "address has all: admin", addr: addrAll, role: Access_Admin, expHas: true},
 		{name: "address has all: transfer", addr: addrAll, role: Access_Transfer, expHas: true},
+		{name: "address has all: force transfer", addr: addrAll, role: Access_ForceTransfer, expHas: true},
 	}
 
 	for _, tc := range tests {

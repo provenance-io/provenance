@@ -61,6 +61,7 @@ func TestSendRestrictionFn(t *testing.T) {
 
 	addrWithoutAttrs := sdk.AccAddress("addr_without_attribs")
 	addrWithTransfer := sdk.AccAddress("addr_with_transfer__")
+	addrWithForceTransfer := sdk.AccAddress("addr_with_force_tran")
 	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
 	addrWithWithdraw := sdk.AccAddress("addrWithWithdraw____")
 	addrWithTranDep := sdk.AccAddress("addrWithTranDep_____")
@@ -97,6 +98,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		if markerType == restricted {
 			rv.AccessControl = []types.AccessGrant{
 				{Address: addrWithTransfer.String(), Permissions: types.AccessList{types.Access_Transfer}},
+				{Address: addrWithForceTransfer.String(), Permissions: types.AccessList{types.Access_ForceTransfer}},
 				{Address: addrWithDeposit.String(), Permissions: types.AccessList{types.Access_Deposit}},
 				{Address: addrWithWithdraw.String(), Permissions: types.AccessList{types.Access_Withdraw}},
 				{Address: addrWithTranDep.String(), Permissions: types.AccessList{types.Access_Deposit, types.Access_Transfer}},
@@ -195,6 +197,13 @@ func TestSendRestrictionFn(t *testing.T) {
 			to:     addrWithoutAttrs,
 			amt:    cz(c(1, rDenomNoAttr)),
 			expErr: "",
+		},
+		{
+			name:   "addr has force transfer, denom without attrs",
+			from:   addrWithForceTransfer,
+			to:     addrWithoutAttrs,
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: fmt.Sprintf("%s does not have transfer permissions for %s", addrWithForceTransfer.String(), rDenomNoAttr),
 		},
 		{
 			name:   "addr has transfer, denom with 3 attrs, to has none",

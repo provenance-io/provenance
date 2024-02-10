@@ -262,7 +262,7 @@ func NewWrappedAttrKeeper() *WrappedAttrKeeper {
 	return &WrappedAttrKeeper{}
 }
 
-// WithParent sets the parent bank keeper for this wrapping.
+// WithParent sets the parent attr keeper for this wrapping.
 func (w *WrappedAttrKeeper) WithParent(attrKeeper types.AttrKeeper) *WrappedAttrKeeper {
 	w.AttrKeeper = attrKeeper
 	return w
@@ -270,8 +270,8 @@ func (w *WrappedAttrKeeper) WithParent(attrKeeper types.AttrKeeper) *WrappedAttr
 
 // WithGetAllAttributesAddrErrs adds the provided error strings to the list of errors that will be
 // returned by GetAllAttributesAddr. A non-empty entry will be returned as an error (when its time comes).
-// An empty entry (or if there aren't any entries left when SendCoins is called) will
-// result in the parent's SendCoins function being called and returned.
+// An empty entry (or if there aren't any entries left when GetAllAttributesAddr is called) will
+// result in the parent's GetAllAttributesAddr function being called and returned.
 func (w *WrappedAttrKeeper) WithGetAllAttributesAddrErrs(errs ...string) *WrappedAttrKeeper {
 	w.GetAllAttributesAddrErrs = append(w.GetAllAttributesAddrErrs, errs...)
 	return w
