@@ -123,7 +123,7 @@ func TestExistingAccounts(t *testing.T) {
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 }
 
-func TestAccountUnrestrictedDenoms(t *testing.T) {
+func TestUnrestrictedDenoms(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
@@ -181,7 +181,7 @@ func TestAccountKeeperReader(t *testing.T) {
 	require.EqualValues(t, count, 1)
 }
 
-func TestAccountKeeperManageAccess(t *testing.T) {
+func TestManageAccess(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -288,7 +288,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 	require.EqualValues(t, 0, len(m.AddressListForPermission(types.Access_Withdraw)))
 }
 
-func TestAccountKeeperCancelProposedByManager(t *testing.T) {
+func TestCancelProposedByManager(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -330,7 +330,7 @@ func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user1, "testcoin"))
 }
 
-func TestAccountKeeperMintBurnCoins(t *testing.T) {
+func TestMintBurnCoins(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.MarkerKeeper.SetParams(ctx, types.DefaultParams())
@@ -450,7 +450,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.EqualValues(t, app.BankKeeper.GetSupply(ctx, "testcoin").Amount, sdk.ZeroInt())
 }
 
-func TestAccountKeeperGetAll(t *testing.T) {
+func TestMarkerGetters(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -487,7 +487,7 @@ func TestAccountKeeperGetAll(t *testing.T) {
 	// Could do more in-depth checking, but if both markers are returned that is the expected behavior
 }
 
-func TestAccountInsufficientExisting(t *testing.T) {
+func TestInsufficientExisting(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -533,7 +533,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.EqualValues(t, 10001, m.GetSupply().Amount.Int64())
 }
 
-func TestAccountImplictControl(t *testing.T) {
+func TestImplictControl(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
