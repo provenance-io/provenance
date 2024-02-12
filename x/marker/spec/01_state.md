@@ -132,7 +132,7 @@ admin with `Access_ForceTransfer`, but without `Access_Transfer`, cannot move ma
 
 A marker can be configured to have a fixed supply or one that is allowed to float.  A marker will always mint an amount
 of coin indicated in its `supply` field when it is activated.  For markers that have a fixed supply an invariant check
-is enforced that ensures the supply of the marker alway matches the configured value.  For a floating supply no
+is enforced that ensures the supply of the marker always matches the configured value.  For a floating supply no
 additional checks or adjustments are performed and the supply value is set to zero when activated.
 
 #### When a Marker has a Fixed Supply that does not match target

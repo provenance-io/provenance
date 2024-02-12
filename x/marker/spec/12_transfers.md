@@ -64,7 +64,7 @@ Whenever funds are being deposited into a marker, the sender (or transfer author
 
 A withdrawal is when any funds are being sent out of a marker's account. The funds being sent do not have to be in the denom of the source marker.
 
-Withdraws can be made using the `Withdraw` endpoint, or another endpoint (e.g. an exchange `MarketCommitmentSettle`) that utilizes a transfer agent.
+Withdraws can be made using the `Withdraw` endpoint, or another endpoint that utilizes a transfer agent (e.g. the exchange module's `MarketCommitmentSettle`).
 
 Whenever funds are being withdrawn, the transfer agent must have `withdraw` permission on the source marker. If the funds to withdraw are of the source marker's denom, the source marker must be active. The transfer agent must also have `transfer` permission on any restricted coins being moved.
 
@@ -94,24 +94,24 @@ Bypass accounts are not considered during a `MsgTransferRequest`.
 
 ## Send Restrictions
 
-The marker module injects a `SendRestrictionFn` into the bank module. This function is responsible for deciding whether any given transfer is allowed from the marker module's point of view. However, it is bypassed during a `Transfer` or a `Withdraw`.
+The marker module injects a `SendRestrictionFn` into the bank module. This function is responsible for deciding whether any given movement of funds (e.g. a `MsgSend`) is allowed from the marker module's point of view. However, it is bypassed for movements initiated within the marker module (e.g. during a `Transfer`).
 
 ### Flowcharts
 
 #### The SendRestrictionFn
 
-The `SendRestrictionFn` uses the following flow to decide whether a send is allowed.
+The `SendRestrictionFn` uses the following flow to decide whether a send is allowed. It utilizes the [checkSenderMarker](#checkSenderMarker), [checkReceiverMarker](#checkReceiverMarker), and [validateSendDenom](#validateSendDenom) flows.
 
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
     start[["SendRestrictionFn(Sender, Receiver, Amount)"]]
     qhasbp{{"Does context have bypass?"}}
-    gta[["Get the transfer agent\nfrom the context if possible."]]
+    gta["Get Transfer Agent from the context if possible."]
     csm[["checkSenderMarker(Sender, Transfer Agent)"]]
-    issmbad{{"Proceed?"}}
+    issmok{{"Proceed?"}}
     crm[["checkReceiverMarker(Receiver, Sender, Transfer Agent)"]]
-    isrmbad{{"Proceed?"}}
+    isrmok{{"Proceed?"}}
     nextd["Get next Denom from Amount."]
     vsd[["validateSendDenom(Sender, Receiver, Denom)"]]
     isdok{{"Is Denom transfer allowed?"}}
@@ -124,12 +124,12 @@ flowchart TD
     qhasbp ------>|yes| ok
     qhasbp -.->|no| gta
     gta --> csm
-    csm --> issmbad
-    issmbad -->|yes| denied
-    issmbad -.->|no| crm
-    crm --> isrmbad
-    isrmbad --->|yes| denied
-    isrmbad -.->|no| denomloop
+    csm --> issmok
+    issmok -->|yes| crm
+    issmok -.->|no| denied
+    crm --> isrmok
+    isrmok -->|yes| denomloop
+    isrmok -.->|no| denied
     subgraph denomloop ["Denom Loop"]
     isdok -->|yes| mored
     vsd --> isdok
@@ -140,7 +140,7 @@ flowchart TD
     isdok -.->|no| denied
 
     style denomloop fill:#bbffff
-    linkStyle 5,8,15 stroke:#b30000,color:#b30000
+    linkStyle 6,9,15 stroke:#b30000,color:#b30000
     linkStyle 1,7,14 stroke:#1b8500,color:#1b8500
 ```
 
@@ -151,7 +151,7 @@ This flow checks that, if this is a withdrawal, nothing (yet) prevents the send.
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
-    start["checkSenderMarker(Sender, Transfer Agent)"]
+    start[["checkSenderMarker(Sender, Transfer Agent)"]]
     issm{{"Is Sender a marker?"}}
     haveta{{"Is there a Transfer Agent?"}}
     istaw{{"Does the Transfer Agent\nhave withdraw access?"}}
@@ -183,11 +183,11 @@ This flow checks that, if this is a deposit, nothing (yet) prevents the send.
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
-    start["checkReceiverMarker(Receiver, Sender, Transfer Agent)"]
+    start[["checkReceiverMarker(Receiver, Sender, Transfer Agent)"]]
     issm{{"Is Receiver a restricted marker?"}}
     haveta{{"Is there a Transfer Agent?"}}
     istad{{"Does Transfer Agent\nhave deposit access?"}}
-    isrd{{"Does the Receiver\nhave deposit access?"}}
+    isrd{{"Does Sender\nhave deposit access?"}}
     ok(["Proceed."])
     style ok fill:#bbffaa,stroke:#1b8500,stroke-width:3px
     denied(["Send denied."])

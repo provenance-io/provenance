@@ -206,7 +206,7 @@ Type: `provenance.marker.v1.EventDenomUnit`
 ---
 ## Set Net Asset Value
 
-Fires when a new NetAssetValue is add or updated for a marker.
+Fires when a `NetAssetValue` is added or updated for a marker.
 
 Type: `provenance.marker.v1.EventSetNetAssetValue`
 
