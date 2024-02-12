@@ -1543,7 +1543,6 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 	if err != nil {
 		return fmt.Errorf("invalid admin %q: %w", withdrawnBy, err)
 	}
-	// TODO[1834]: Unit tests on withdrawals to blocked addresses.
 	if k.bankKeeper.BlockedAddr(toAddr) {
 		return fmt.Errorf("%s is not allowed to receive funds", toAddr)
 	}

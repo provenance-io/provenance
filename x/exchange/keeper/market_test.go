@@ -7879,15 +7879,16 @@ func (s *TestSuite) TestKeeper_GetMarketBrief() {
 
 func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 	tests := []struct {
-		name        string
-		bankKeeper  *MockBankKeeper
-		marketID    uint32
-		toAddr      sdk.AccAddress
-		amount      sdk.Coins
-		withdrawnBy string
-		expErr      string
-		expSendCall bool
-		expQBypass  bool
+		name         string
+		bankKeeper   *MockBankKeeper
+		marketID     uint32
+		toAddr       sdk.AccAddress
+		amount       sdk.Coins
+		withdrawnBy  string
+		expErr       string
+		expBlockCall bool
+		expSendCall  bool
+		expQBypass   bool
 	}{
 		{
 			name:        "invalid admin",
@@ -7898,50 +7899,67 @@ func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 			expErr:      "invalid admin \"ohno\": decoding bech32 failed: invalid bech32 string length 4",
 		},
 		{
-			name:        "market 1: error from SendCoins",
-			bankKeeper:  NewMockBankKeeper().WithSendCoinsResults("woopsie-daisy: an error story"),
-			marketID:    1,
-			toAddr:      s.addr1,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("oops", 55)),
-			withdrawnBy: s.adminAddr.String(),
-			expErr:      "failed to withdraw 55oops from market 1: woopsie-daisy: an error story",
-			expSendCall: true,
-			expQBypass:  false,
+			name:         "to blocked address",
+			bankKeeper:   NewMockBankKeeper().WithBlockedAddrResults(true),
+			marketID:     1,
+			toAddr:       s.addr3,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
+			withdrawnBy:  s.adminAddr.String(),
+			expErr:       s.addr3.String() + " is not allowed to receive funds",
+			expBlockCall: true,
 		},
 		{
-			name:        "market 8: error from SendCoins",
-			bankKeeper:  NewMockBankKeeper().WithSendCoinsResults("ouch-ouch-ouch: a sequel error story"),
-			marketID:    8,
-			toAddr:      s.addr1,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("awwww", 77), sdk.NewInt64Coin("hurts", 3)),
-			withdrawnBy: s.adminAddr.String(),
-			expErr:      "failed to withdraw 77awwww,3hurts from market 8: ouch-ouch-ouch: a sequel error story",
-			expSendCall: true,
-			expQBypass:  false,
+			name:         "market 1: error from SendCoins",
+			bankKeeper:   NewMockBankKeeper().WithSendCoinsResults("woopsie-daisy: an error story"),
+			marketID:     1,
+			toAddr:       s.addr1,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("oops", 55)),
+			withdrawnBy:  s.adminAddr.String(),
+			expErr:       "failed to withdraw 55oops from market 1: woopsie-daisy: an error story",
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   false,
 		},
 		{
-			name:        "market 1: okay to other",
-			marketID:    1,
-			toAddr:      s.addr3,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
-			withdrawnBy: s.adminAddr.String(),
-			expSendCall: true,
-			expQBypass:  false,
+			name:         "market 8: error from SendCoins",
+			bankKeeper:   NewMockBankKeeper().WithSendCoinsResults("ouch-ouch-ouch: a sequel error story"),
+			marketID:     8,
+			toAddr:       s.addr1,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("awwww", 77), sdk.NewInt64Coin("hurts", 3)),
+			withdrawnBy:  s.adminAddr.String(),
+			expErr:       "failed to withdraw 77awwww,3hurts from market 8: ouch-ouch-ouch: a sequel error story",
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   false,
 		},
 		{
-			name:        "market 8: okay to self",
-			marketID:    8,
-			toAddr:      s.addr5,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("kaching", 500_000_001)),
-			withdrawnBy: s.addr5.String(),
-			expSendCall: true,
-			expQBypass:  true,
+			name:         "market 1: okay to other",
+			marketID:     1,
+			toAddr:       s.addr3,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
+			withdrawnBy:  s.adminAddr.String(),
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   false,
+		},
+		{
+			name:         "market 8: okay to self",
+			marketID:     8,
+			toAddr:       s.addr5,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("kaching", 500_000_001)),
+			withdrawnBy:  s.addr5.String(),
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   true,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			expCalls := BankCalls{}
+			if tc.expBlockCall {
+				expCalls.BlockedAddr = append(expCalls.BlockedAddr, tc.toAddr)
+			}
 			if tc.expSendCall {
 				admin, err := sdk.AccAddressFromBech32(tc.withdrawnBy)
 				s.Require().NoError(err, "AccAddressFromBech32(%q)", tc.withdrawnBy)
