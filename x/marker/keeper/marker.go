@@ -213,7 +213,6 @@ func (k Keeper) WithdrawCoins(
 		recipient = caller
 	}
 
-	// TODO[1834]: Unit tests on withdraw to blocked address.
 	if k.bankKeeper.BlockedAddr(recipient) {
 		return fmt.Errorf("%s is not allowed to receive funds", recipient)
 	}
@@ -651,7 +650,6 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 		return fmt.Errorf("marker not found for %s: %w", amount.Denom, err)
 	}
 
-	// TODO[1834]: Unit tests on transfer of non-active coins.
 	if m.GetStatus() != types.StatusActive {
 		return fmt.Errorf("marker status (%s) is not active, funds cannot be moved", m.GetStatus())
 	}
