@@ -121,7 +121,6 @@ flowchart TD
     denied(["Send denied."])
     style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
     start --> qhasbp
-    qhasbp ------>|yes| ok
     qhasbp -.->|no| gta
     gta --> csm
     csm --> issmok
@@ -137,16 +136,17 @@ flowchart TD
     nextd --> vsd
     end
     mored -....->|no| ok
+    qhasbp ------>|yes| ok
     isdok -.->|no| denied
 
     style denomloop fill:#bbffff
-    linkStyle 6,9,15 stroke:#b30000,color:#b30000
-    linkStyle 1,7,14 stroke:#1b8500,color:#1b8500
+    linkStyle 5,8,15 stroke:#b30000,color:#b30000
+    linkStyle 13,14 stroke:#1b8500,color:#1b8500
 ```
 
 #### checkSenderMarker
 
-This flow checks that, if this is a withdrawal, nothing (yet) prevents the send.
+This flow checks that, if this is a withdrawal, nothing (yet) prevents the send. It is used in the [SendRestrictionFn](#SendRestrictionFn) flow.
 
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
@@ -178,7 +178,7 @@ flowchart TD
 
 #### checkReceiverMarker
 
-This flow checks that, if this is a deposit, nothing (yet) prevents the send.
+This flow checks that, if this is a deposit, nothing (yet) prevents the send. It is used in the [SendRestrictionFn](#SendRestrictionFn) and  [MsgTransferRequest](#MsgTransferRequest) flows.
 
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
@@ -186,28 +186,28 @@ flowchart TD
     start[["checkReceiverMarker(Receiver, Sender, Transfer Agent)"]]
     issm{{"Is Receiver a restricted marker?"}}
     haveta{{"Is there a Transfer Agent?"}}
-    istad{{"Does Transfer Agent\nhave deposit access?"}}
     isrd{{"Does Sender\nhave deposit access?"}}
+    istad{{"Does Transfer Agent\nhave deposit access?"}}
     ok(["Proceed."])
     style ok fill:#bbffaa,stroke:#1b8500,stroke-width:3px
     denied(["Send denied."])
     style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
     start --> issm
     issm -->|yes| haveta
-    issm -.->|no| ok
-    haveta -->|yes| istad
     haveta -.->|no| isrd
-    istad -->|yes| ok
-    istad -.->|no| denied
-    isrd -->|yes| ok
+    haveta -->|yes| istad
     isrd -.->|no| denied
-    linkStyle 6,8 stroke:#b30000,color:#b30000
-    linkStyle 2,5,7 stroke:#1b8500,color:#1b8500
+    isrd -->|yes| ok
+    istad -.->|no| denied
+    istad -->|yes| ok
+    issm -.->|no| ok
+    linkStyle 4,6 stroke:#b30000,color:#b30000
+    linkStyle 5,7,8 stroke:#1b8500,color:#1b8500
 ```
 
 #### validateSendDenom
 
-Each `Denom` is checked using `validateSendDenom`, which has this flow:
+Each `Denom` is checked using `validateSendDenom`, which has this flow. It is used in the [SendRestrictionFn](#SendRestrictionFn) flow.
 
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
@@ -261,7 +261,7 @@ Only a `MsgTransferRequest` can be used to force a transfer.
 
 #### MsgTransferRequest
 
-A `MsgTransferRequest` bypasses the `SendRestrictionFn` and applies its own logic. A `MsgTransferRequest` only allows for a single coin amount, i.e. there's only one `Denom` to consider.
+A `MsgTransferRequest` bypasses the `SendRestrictionFn` and applies its own logic. A `MsgTransferRequest` only allows for a single coin amount, i.e. there's only one `Denom` to consider. It makes use of the [checkReceiverMarker](#checkReceiverMarker) flow.
 
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
@@ -282,28 +282,28 @@ flowchart TD
     denied(["Transfer denied."])
     style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
     start --> qisrc
-    qisrc -->|yes| qhast
     qisrc -.->|no| denied
-    qhast -->|yes| crm
+    qisrc -->|yes| qhast
     qhast -.->|no| denied
+    qhast -->|yes| crm
     crm --> iscrmbad
-    iscrmbad -->|yes| qadminfrom
     iscrmbad -.->|no| denied
-    qadminfrom -->|yes| qblocked
+    iscrmbad -->|yes| qadminfrom
     qadminfrom -.->|no| qallowft
-    qallowft -->|yes| qhasft
+    qadminfrom -->|yes| qblocked
     qallowft -.->|no| qauthz
-    qhasft -->|yes| qmodacc
+    qallowft -->|yes| qhasft
     qhasft -.->|no| qauthz
-    qmodacc -.->|no| qblocked
+    qhasft -->|yes| qmodacc
     qmodacc -->|yes| denied
-    qauthz -->|yes| qblocked
+    qmodacc -.->|no| qblocked
     qauthz -.->|no| denied
-    qblocked -.->|no| ok
+    qauthz -->|yes| qblocked
     qblocked -->|yes| denied
+    qblocked -.->|no| ok
 
-    linkStyle 2,4,7,15,17,19 stroke:#b30000,color:#b30000
-    linkStyle 18 stroke:#1b8500,color:#1b8500
+    linkStyle 1,3,6,14,16,18 stroke:#b30000,color:#b30000
+    linkStyle 19 stroke:#1b8500,color:#1b8500
 ```
 
 ### Quarantine Complexities
