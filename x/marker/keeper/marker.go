@@ -213,6 +213,11 @@ func (k Keeper) WithdrawCoins(
 		recipient = caller
 	}
 
+	// TODO[1834]: Unit tests on withdraw to blocked address.
+	if k.bankKeeper.BlockedAddr(recipient) {
+		return fmt.Errorf("%s is not allowed to receive funds", recipient)
+	}
+
 	if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), m.GetAddress(), recipient, coins); err != nil {
 		return err
 	}
