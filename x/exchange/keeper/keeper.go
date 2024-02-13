@@ -188,7 +188,6 @@ func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs 
 		return k.bankKeeper.SendCoins(ctx, fromAddr, toAddr, inputs[0].Coins)
 	}
 
-	// TODO[1834]: Unit tests on transfers to blocked addresses.
 	for _, output := range outputs {
 		toAddr, err := sdk.AccAddressFromBech32(output.Address)
 		if err == nil && k.bankKeeper.BlockedAddr(toAddr) {
