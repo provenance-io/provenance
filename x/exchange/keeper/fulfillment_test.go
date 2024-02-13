@@ -358,10 +358,13 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			},
 			expErr:       "first transfer error",
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("6plum")}}},
-			expBankCalls: BankCalls{SendCoins: []*SendCoinsArgs{
-				{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
-				{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
-			}},
+			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
+				},
+			},
 		},
 		{
 			name:       "error transferring price",
@@ -381,10 +384,13 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			},
 			expErr:       "second transfer error",
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("6plum")}}},
-			expBankCalls: BankCalls{SendCoins: []*SendCoinsArgs{
-				{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
-				{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
-			}},
+			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
+				},
+			},
 		},
 		{
 			name:       "error collecting settlement fees",
@@ -410,6 +416,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expErr:       "error collecting fees for market 2: first fake error",
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("2fig,6plum")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
@@ -451,6 +458,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("6plum")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr4},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("1apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("6plum")},
@@ -490,6 +498,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
@@ -527,6 +536,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
@@ -557,6 +567,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
@@ -588,6 +599,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			adlEvents:    sdk.Events{s.navSetEvent("184467440737095516150apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("184467440737095516150apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
@@ -620,6 +632,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
@@ -668,6 +681,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("10fig,60plum")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("12apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("60plum")},
@@ -735,6 +749,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 				{addr: s.addr2, funds: s.coins("60plum")},
 			}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr3, s.addr1},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
 						ctxHasQuarantineBypass: true,
@@ -1205,10 +1220,13 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			},
 			expErr:       "first transfer error",
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("1apple")}}},
-			expBankCalls: BankCalls{SendCoins: []*SendCoinsArgs{
-				{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
-				{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
-			}},
+			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
+				},
+			},
 		},
 		{
 			name:       "error transferring price",
@@ -1228,10 +1246,13 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			},
 			expErr:       "second transfer error",
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("1apple")}}},
-			expBankCalls: BankCalls{SendCoins: []*SendCoinsArgs{
-				{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
-				{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
-			}},
+			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
+				},
+			},
 		},
 		{
 			name:       "error collecting settlement fees",
@@ -1258,6 +1279,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expErr:       "error collecting fees for market 2: first fake error",
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("2fig,1apple")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
@@ -1299,6 +1321,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr1, funds: s.coins("1apple")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr1},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr4, amt: s.coins("1apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr1, amt: s.coins("6plum")},
@@ -1338,6 +1361,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
@@ -1375,6 +1399,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
@@ -1405,6 +1430,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
@@ -1435,6 +1461,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			adlEvents:    sdk.Events{s.navSetEvent("184467440737095516150apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("184467440737095516150apple")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("184467440737095516150apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
@@ -1467,6 +1494,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
@@ -1515,6 +1543,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple,8fig")}}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
 				SendCoins: []*SendCoinsArgs{
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr5, amt: s.coins("12apple")},
 					{ctxHasQuarantineBypass: true, fromAddr: s.addr5, toAddr: s.addr2, amt: s.coins("60plum")},
@@ -1582,6 +1611,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 				{addr: s.addr2, funds: s.coins("12apple")},
 			}},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr2, s.addr3},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
 						ctxHasQuarantineBypass: true,
