@@ -346,8 +346,7 @@ It can also have multiple entries with the same `price` denom or `fee` denom, bu
 E.g. a market can have `100chicken:1cow` and also `100chicken:7chicken`, `500cow:1cow`, and `5cow:1chicken`, but it couldn't also have `105chicken:2cow`.
 
 To calculate the buyer settlement ratio fee, the following formula is used: `<bid price> * <ratio fee> / <ratio price>`.
-If that is not a whole number, the chosen ratio is not applicable to the bid order's price and cannot be used.
-The user will need to either use a different ratio or change their bid price.
+If that is not a whole number, it is rounded up to the next whole number.
 
 The buyer settlement ratio fee should be added to the buyer settlement flat fee and provided in the `buyer_settlement_fees` in the bid order.
 The ratio and flat fees can be in any denoms allowed by the market, and do not have to be the same.
