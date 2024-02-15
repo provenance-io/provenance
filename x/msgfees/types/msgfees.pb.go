@@ -26,11 +26,19 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params defines the set of params for the msgfees module.
 type Params struct {
-	// constant used to calculate fees when gas fees shares denom with msg fee
+	// floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.
+	//
+	// Conversions:
+	//   - x nhash/usd-mil = 1,000,000/x usd/hash
+	//   - y usd/hash = 1,000,000/y nhash/usd-mil
+	//
+	// Examples:
+	//   - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash,
+	//   - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil
 	FloorGasPrice types.Coin `protobuf:"bytes,2,opt,name=floor_gas_price,json=floorGasPrice,proto3" json:"floor_gas_price"`
-	// total nhash per usd mil for converting usd to nhash
+	// nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash.
 	NhashPerUsdMil uint64 `protobuf:"varint,3,opt,name=nhash_per_usd_mil,json=nhashPerUsdMil,proto3" json:"nhash_per_usd_mil,omitempty"`
-	// conversion fee denom is the denom usd is converted to
+	// conversion_fee_denom is the denom usd is converted to.
 	ConversionFeeDenom string `protobuf:"bytes,4,opt,name=conversion_fee_denom,json=conversionFeeDenom,proto3" json:"conversion_fee_denom,omitempty"`
 }
 
