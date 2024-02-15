@@ -58,4 +58,4 @@ hex = "0.4.3"
 [dev-dependencies]
 cw-multi-test = "0.17.0"
 provwasm-mocks = { version = "2.0.0" }
-serde-json-wasm = "1.0.0"
+serde-json-wasm = "1.0.1"

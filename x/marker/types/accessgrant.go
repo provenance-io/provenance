@@ -44,8 +44,12 @@ func NewAccessGrant(address sdk.AccAddress, access AccessList) *AccessGrant {
 // proper ACCESS_ prefix and case of name.
 func AccessByName(name string) Access {
 	name = strings.ToUpper(strings.TrimSpace(name))
-	name = strings.TrimPrefix(name, "ACCESS_")
-	name = "ACCESS_" + name
+	if !strings.HasPrefix(name, "ACCESS_") {
+		name = "ACCESS_" + name
+	}
+	if name == "ACCESS_FORCETRANSFER" {
+		return Access_ForceTransfer
+	}
 	result := Access_value[name]
 	return Access(result)
 }
