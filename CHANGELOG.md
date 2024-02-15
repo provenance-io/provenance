@@ -37,6 +37,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* Add new force_transfer access that is required for an account to do a forced transfer ([#1829](https://github.com/provenance-io/provenance/issues/1829)).
+* Add exchange commitment stuff to CLI [PR 1830](https://github.com/provenance-io/provenance/pull/1830).
+* Update the MsgFees Params to set the nhash per usd-mil to 40,000,000 ($0.025/hash) [#1833](https://github.com/provenance-io/provenance/pull/1833).
+* Bid order prices are no longer restricted to amounts that can be evenly applied to a buyer settlement fee ratio [1834](https://github.com/provenance-io/provenance/pull/1843).
+
+### API Breaking
+
+* Accounts that have transfer access in a marker are no longer allowed to do forced transfers ([#1829](https://github.com/provenance-io/provenance/issues/1829)).
+  Accounts must now have the force_transfer access for that.
+
 ### Dependencies
 
 - Bump `codecov/codecov-action` from 3 to 4 ([#1828](https://github.com/provenance-io/provenance/pull/1828))

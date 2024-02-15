@@ -27,9 +27,14 @@ func CmdQuery() *cobra.Command {
 		CmdQueryGetOwnerOrders(),
 		CmdQueryGetAssetOrders(),
 		CmdQueryGetAllOrders(),
+		CmdQueryGetCommitment(),
+		CmdQueryGetAccountCommitments(),
+		CmdQueryGetMarketCommitments(),
+		CmdQueryGetAllCommitments(),
 		CmdQueryGetMarket(),
 		CmdQueryGetAllMarkets(),
 		CmdQueryParams(),
+		CmdQueryCommitmentSettlementFeeCalc(),
 		CmdQueryValidateCreateMarket(),
 		CmdQueryValidateMarket(),
 		CmdQueryValidateManageFees(),
@@ -136,6 +141,62 @@ func CmdQueryGetAllOrders() *cobra.Command {
 	return cmd
 }
 
+// CmdQueryGetCommitment creates the commitment sub-command for the exchange query command.
+func CmdQueryGetCommitment() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "commitment",
+		Aliases: []string{"get-commitment"},
+		Short:   "Get the amount committed by a specific account to a specific market",
+		RunE:    genericQueryRunE(MakeQueryGetCommitment, exchange.QueryClient.GetCommitment),
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryGetCommitment(cmd)
+	return cmd
+}
+
+// CmdQueryGetAccountCommitments creates the account-commitments sub-command for the exchange query command.
+func CmdQueryGetAccountCommitments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "account-commitments",
+		Aliases: []string{"get-account-commitments"},
+		Short:   "Get the amounts committed by a specific account to any market",
+		RunE:    genericQueryRunE(MakeQueryGetAccountCommitments, exchange.QueryClient.GetAccountCommitments),
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryGetAccountCommitments(cmd)
+	return cmd
+}
+
+// CmdQueryGetMarketCommitments creates the market-commitments sub-command for the exchange query command.
+func CmdQueryGetMarketCommitments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "market-commitments",
+		Aliases: []string{"get-market-commitments"},
+		Short:   "Get the amounts committed by any account to a specific market",
+		RunE:    genericQueryRunE(MakeQueryGetMarketCommitments, exchange.QueryClient.GetMarketCommitments),
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryGetMarketCommitments(cmd)
+	return cmd
+}
+
+// CmdQueryGetAllCommitments creates the all-commitments sub-command for the exchange query command.
+func CmdQueryGetAllCommitments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "all-commitments",
+		Aliases: []string{"get-all-commitments"},
+		Short:   "Get the amounts committed by any account to any market",
+		RunE:    genericQueryRunE(MakeQueryGetAllCommitments, exchange.QueryClient.GetAllCommitments),
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryGetAllCommitments(cmd)
+	return cmd
+}
+
 // CmdQueryGetMarket creates the market sub-command for the exchange query command.
 func CmdQueryGetMarket() *cobra.Command {
 	cmd := &cobra.Command{
@@ -175,6 +236,20 @@ func CmdQueryParams() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	SetupCmdQueryParams(cmd)
+	return cmd
+}
+
+// CmdQueryCommitmentSettlementFeeCalc creates the commitment-settlement-fee-calc sub-command for the exchange query command.
+func CmdQueryCommitmentSettlementFeeCalc() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "commitment-settlement-fee-calc",
+		Aliases: []string{"settle-commitments-fee-calc", "fee-calc-commitment-settlement", "fee-calc-settle-commitments"},
+		Short:   "Calculate the fee required for a commitment settlement",
+		RunE:    genericQueryRunE(MakeQueryCommitmentSettlementFeeCalc, exchange.QueryClient.CommitmentSettlementFeeCalc),
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryCommitmentSettlementFeeCalc(cmd)
 	return cmd
 }
 
