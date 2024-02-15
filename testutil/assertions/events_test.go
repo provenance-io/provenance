@@ -572,3 +572,353 @@ func TestRequireEqualEventsf(t *testing.T) {
 		})
 	}
 }
+
+// equalEventsTestCase is a test case for the [Assert|Require]EqualEvents[f]? functions.
+type eventsContainsTestCase struct {
+	name      string
+	expected  sdk.Events
+	actual    sdk.Events
+	expOutput []string
+}
+
+// getEventsContainsTestCases returns all the tests cases for the [Assert|Require]EventsContains[f]? functions.
+func getEventsContainsTestCases() []eventsContainsTestCase {
+	attr := func(key, value string) abci.EventAttribute {
+		return abci.EventAttribute{Key: []byte(key), Value: []byte(value)}
+	}
+	attrWIndex := func(key, value string) abci.EventAttribute {
+		return abci.EventAttribute{Key: []byte(key), Value: []byte(value), Index: true}
+	}
+	newEvent := func(eventType string, attrs ...abci.EventAttribute) sdk.Event {
+		return sdk.Event{Type: eventType, Attributes: attrs}
+	}
+
+	return []eventsContainsTestCase{
+		{
+			name:      "nil exp nil act",
+			expected:  nil,
+			actual:    nil,
+			expOutput: nil,
+		},
+		{
+			name:      "empty exp nil act",
+			expected:  sdk.Events{},
+			actual:    nil,
+			expOutput: nil,
+		},
+		{
+			name:      "nil exp empty act",
+			expected:  nil,
+			actual:    sdk.Events{},
+			expOutput: nil,
+		},
+		{
+			name:      "empty exp empty act",
+			expected:  sdk.Events{},
+			actual:    sdk.Events{},
+			expOutput: nil,
+		},
+		{
+			name:     "nil exp three act",
+			expected: nil,
+			actual: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			expOutput: nil,
+		},
+		{
+			name: "one exp three act not found",
+			expected: sdk.Events{
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"101banana"`)),
+			},
+			actual: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			expOutput: []string{
+				"1 (of 1) expected events missing from 3 actual events",
+				"Actual:",
+				"\t[0]event0[0]: \"something\" = \"\\\"quotedval\\\"\"",
+				"\t[0]event0[1]: \"crazy\" = \"indexedval\" (indexed)",
+				"\t[1]eventblank: (no attributes)",
+				"\t[2]event2[0]: \"name\" = \"kelly\"",
+				"\t[2]event2[1]: \"amount\" = \"\\\"100banana\\\"\"",
+				"Missing:",
+				"\t0: event2[0]: \"name\" = \"kelly\"",
+				"\t0: event2[1]: \"amount\" = \"\\\"101banana\\\"\"",
+			},
+		},
+		{
+			name: "one exp three act first",
+			expected: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+			},
+			actual: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			expOutput: nil,
+		},
+		{
+			name: "one exp three act second",
+			expected: sdk.Events{
+				newEvent("eventblank"),
+			},
+			actual: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			expOutput: nil,
+		}, {
+			name: "one exp three act third",
+			expected: sdk.Events{
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			actual: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			expOutput: nil,
+		},
+		{
+			name: "three exp nil act",
+			expected: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			actual: nil,
+			expOutput: []string{
+				"3 (of 3) expected events missing from 0 actual events",
+				"Actual: <nil>",
+				"Missing:",
+				"\t0: event0[0]: \"something\" = \"\\\"quotedval\\\"\"",
+				"\t0: event0[1]: \"crazy\" = \"indexedval\" (indexed)",
+				"\t1: eventblank: (no attributes)",
+				"\t2: event2[0]: \"name\" = \"kelly\"",
+				"\t2: event2[1]: \"amount\" = \"\\\"100banana\\\"\"",
+			},
+		},
+		{
+			name: "three exp empty act",
+			expected: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			actual: sdk.Events{},
+			expOutput: []string{
+				"3 (of 3) expected events missing from 0 actual events",
+				"Actual: sdk.Events{}",
+				"Missing:",
+				"\t0: event0[0]: \"something\" = \"\\\"quotedval\\\"\"",
+				"\t0: event0[1]: \"crazy\" = \"indexedval\" (indexed)",
+				"\t1: eventblank: (no attributes)",
+				"\t2: event2[0]: \"name\" = \"kelly\"",
+				"\t2: event2[1]: \"amount\" = \"\\\"100banana\\\"\"",
+			},
+		},
+		{
+			name: "three exp three act all found",
+			expected: sdk.Events{
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+			},
+			actual: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			expOutput: nil,
+		},
+		{
+			name: "three exp three act first not found",
+			expected: sdk.Events{
+				newEvent("event0", attrWIndex("crazy", "indexedval")),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+				newEvent("eventblank"),
+			},
+			actual: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			expOutput: []string{
+				"1 (of 3) expected events missing from 3 actual events",
+				"Actual:",
+				"\t[0]event0[0]: \"something\" = \"\\\"quotedval\\\"\"",
+				"\t[0]event0[1]: \"crazy\" = \"indexedval\" (indexed)",
+				"\t[1]eventblank: (no attributes)",
+				"\t[2]event2[0]: \"name\" = \"kelly\"",
+				"\t[2]event2[1]: \"amount\" = \"\\\"100banana\\\"\"",
+				"Missing:",
+				"\t0: event0[0]: \"crazy\" = \"indexedval\" (indexed)",
+			},
+		},
+		{
+			name: "three exp three act second not found",
+			expected: sdk.Events{
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+				newEvent("eventblank", attr("oops", "toomuch")),
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+			},
+			actual: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			expOutput: []string{
+				"1 (of 3) expected events missing from 3 actual events",
+				"Actual:",
+				"\t[0]event0[0]: \"something\" = \"\\\"quotedval\\\"\"",
+				"\t[0]event0[1]: \"crazy\" = \"indexedval\" (indexed)",
+				"\t[1]eventblank: (no attributes)",
+				"\t[2]event2[0]: \"name\" = \"kelly\"",
+				"\t[2]event2[1]: \"amount\" = \"\\\"100banana\\\"\"",
+				"Missing:",
+				"\t0: eventblank[0]: \"oops\" = \"toomuch\"",
+			},
+		},
+		{
+			name: "three exp three act third not found",
+			expected: sdk.Events{
+				newEvent("eventblank"),
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("event3", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			actual: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			expOutput: []string{
+				"1 (of 3) expected events missing from 3 actual events",
+				"Actual:",
+				"\t[0]event0[0]: \"something\" = \"\\\"quotedval\\\"\"",
+				"\t[0]event0[1]: \"crazy\" = \"indexedval\" (indexed)",
+				"\t[1]eventblank: (no attributes)",
+				"\t[2]event2[0]: \"name\" = \"kelly\"",
+				"\t[2]event2[1]: \"amount\" = \"\\\"100banana\\\"\"",
+				"Missing:",
+				"\t0: event3[0]: \"name\" = \"kelly\"",
+				"\t0: event3[1]: \"amount\" = \"\\\"100banana\\\"\"",
+			},
+		},
+		{
+			name: "three exp three act none found",
+			expected: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attr("crazy", "indexedval")),
+				newEvent("eventempty"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`), attr("oops", "toomuch")),
+			},
+			actual: sdk.Events{
+				newEvent("event0", attr("something", `"quotedval"`), attrWIndex("crazy", "indexedval")),
+				newEvent("eventblank"),
+				newEvent("event2", attr("name", "kelly"), attr("amount", `"100banana"`)),
+			},
+			expOutput: []string{
+				"3 (of 3) expected events missing from 3 actual events",
+				"Actual:",
+				"\t[0]event0[0]: \"something\" = \"\\\"quotedval\\\"\"",
+				"\t[0]event0[1]: \"crazy\" = \"indexedval\" (indexed)",
+				"\t[1]eventblank: (no attributes)",
+				"\t[2]event2[0]: \"name\" = \"kelly\"",
+				"\t[2]event2[1]: \"amount\" = \"\\\"100banana\\\"\"",
+				"Missing:",
+				"\t0: event0[0]: \"something\" = \"\\\"quotedval\\\"\"",
+				"\t0: event0[1]: \"crazy\" = \"indexedval\"",
+				"\t1: eventempty: (no attributes)",
+				"\t2: event2[0]: \"name\" = \"kelly\"",
+				"\t2: event2[1]: \"amount\" = \"\\\"100banana\\\"\"",
+				"\t2: event2[2]: \"oops\" = \"toomuch\"",
+			},
+		},
+	}
+}
+
+func TestAssertEventsContains(t *testing.T) {
+	funcName := "AssertEventsContains"
+	for _, tc := range getEventsContainsTestCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := "msg with %d args: %q %q"
+			args := []interface{}{2, "msg arg 1", "msg arg 2"}
+			msgAndArgs := append([]interface{}{msg}, args...)
+			expMsgAndArgs := "Messages:   \t" + fmt.Sprintf(msg, args...)
+
+			var success bool
+			testFunc := func(testTB TB) {
+				success = AssertEventsContains(testTB, tc.expected, tc.actual, msgAndArgs...)
+			}
+			tb := mockRun(t, testFunc)
+
+			assertMockRunAssertResult(t, funcName, tb, success, tc.expOutput, expMsgAndArgs)
+		})
+	}
+}
+
+func TestRequireEventsContains(t *testing.T) {
+	funcName := "RequireEventsContains"
+	for _, tc := range getEventsContainsTestCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := "msg with %d args: %q %q"
+			args := []interface{}{2, "msg arg 1", "msg arg 2"}
+			msgAndArgs := append([]interface{}{msg}, args...)
+			expMsgAndArgs := "Messages:   \t" + fmt.Sprintf(msg, args...)
+
+			exited := true
+			testFunc := func(testTB TB) {
+				RequireEventsContains(testTB, tc.expected, tc.actual, msgAndArgs...)
+				exited = false
+			}
+			tb := mockRun(t, testFunc)
+
+			assertMockRunRequireResult(t, funcName, tb, exited, tc.expOutput, expMsgAndArgs)
+		})
+	}
+}
+
+func TestAssertEventsContainsf(t *testing.T) {
+	funcName := "AssertEventsContainsf"
+	for _, tc := range getEventsContainsTestCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := "msg with %d args: %q %q"
+			args := []interface{}{2, "msg arg 1", "msg arg 2"}
+			expMsgAndArgs := "Messages:   \t" + fmt.Sprintf(msg, args...)
+
+			var success bool
+			testFunc := func(testTB TB) {
+				success = AssertEventsContainsf(testTB, tc.expected, tc.actual, msg, args...)
+			}
+			tb := mockRun(t, testFunc)
+
+			assertMockRunAssertResult(t, funcName, tb, success, tc.expOutput, expMsgAndArgs)
+		})
+	}
+}
+
+func TestRequireEventsContainsf(t *testing.T) {
+	funcName := "RequireEventsContainsf"
+	for _, tc := range getEventsContainsTestCases() {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := "msg with %d args: %q %q"
+			args := []interface{}{2, "msg arg 1", "msg arg 2"}
+			expMsgAndArgs := "Messages:   \t" + fmt.Sprintf(msg, args...)
+
+			exited := true
+			testFunc := func(testTB TB) {
+				RequireEventsContainsf(testTB, tc.expected, tc.actual, msg, args...)
+				exited = false
+			}
+			tb := mockRun(t, testFunc)
+
+			assertMockRunRequireResult(t, funcName, tb, exited, tc.expOutput, expMsgAndArgs)
+		})
+	}
+}

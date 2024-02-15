@@ -289,6 +289,113 @@ func MakeQueryGetAllOrders(_ client.Context, flagSet *pflag.FlagSet, _ []string)
 	return req, err
 }
 
+// SetupCmdQueryGetCommitment adds all the flags needed for MakeQueryGetCommitment.
+func SetupCmdQueryGetCommitment(cmd *cobra.Command) {
+	cmd.Flags().String(FlagAccount, "", "The account's address")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
+
+	MarkFlagsRequired(cmd, FlagAccount, FlagMarket)
+
+	AddUseArgs(cmd,
+		ReqFlagUse(FlagAccount, "account"),
+		ReqFlagUse(FlagMarket, "market id"),
+	)
+	AddUseDetails(cmd)
+	AddQueryExample(cmd, "--"+FlagAccount, ExampleAddr, "--"+FlagMarket, "3")
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeQueryGetCommitment reads all the SetupCmdQueryGetCommitment flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryGetCommitment(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetCommitmentRequest, error) {
+	rv := &exchange.QueryGetCommitmentRequest{}
+
+	errs := make([]error, 2)
+	rv.Account, errs[0] = flagSet.GetString(FlagAccount)
+	rv.MarketId, errs[1] = flagSet.GetUint32(FlagMarket)
+
+	return rv, errors.Join(errs...)
+}
+
+// SetupCmdQueryGetAccountCommitments adds all the flags needed for MakeQueryGetAccountCommitments.
+func SetupCmdQueryGetAccountCommitments(cmd *cobra.Command) {
+	cmd.Flags().String(FlagAccount, "", "The account's address")
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<account>|--%s <account>}", FlagAccount),
+	)
+	AddUseDetails(cmd,
+		"An <account> is required as either an arg or flag, but not both.",
+	)
+	AddQueryExample(cmd, ExampleAddr)
+	AddQueryExample(cmd, "--"+FlagAccount, ExampleAddr)
+
+	cmd.Args = cobra.MaximumNArgs(1)
+}
+
+// MakeQueryGetAccountCommitments reads all the SetupCmdQueryGetAccountCommitments flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryGetAccountCommitments(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetAccountCommitmentsRequest, error) {
+	rv := &exchange.QueryGetAccountCommitmentsRequest{}
+
+	var err error
+	rv.Account, err = ReadStringFlagOrArg(flagSet, args, FlagAccount, "account")
+
+	return rv, err
+}
+
+// SetupCmdQueryGetMarketCommitments adds all the flags needed for MakeQueryGetMarketCommitments.
+func SetupCmdQueryGetMarketCommitments(cmd *cobra.Command) {
+	flags.AddPaginationFlagsToCmd(cmd, "commitments")
+	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<market id>|--%s <market id>}", FlagMarket),
+		"[pagination flags]",
+	)
+	AddUseDetails(cmd, "A <market id> is required as either an arg or flag, but not both.")
+	AddQueryExample(cmd, "3")
+	AddQueryExample(cmd, "--"+FlagMarket, "1", "--limit", "10")
+
+	cmd.Args = cobra.MaximumNArgs(1)
+}
+
+// MakeQueryGetMarketCommitments reads all the SetupCmdQueryGetMarketCommitments flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryGetMarketCommitments(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetMarketCommitmentsRequest, error) {
+	rv := &exchange.QueryGetMarketCommitmentsRequest{}
+
+	errs := make([]error, 2)
+	rv.MarketId, errs[0] = ReadFlagMarketOrArg(flagSet, args)
+	rv.Pagination, errs[1] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+
+	return rv, errors.Join(errs...)
+}
+
+// SetupCmdQueryGetAllCommitments adds all the flags needed for MakeQueryGetAllCommitments.
+func SetupCmdQueryGetAllCommitments(cmd *cobra.Command) {
+	flags.AddPaginationFlagsToCmd(cmd, "commitments")
+
+	AddUseArgs(cmd, "[pagination flags]")
+	AddUseDetails(cmd)
+	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
+	AddQueryExample(cmd, "--"+flags.FlagReverse)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeQueryGetAllCommitments reads all the SetupCmdQueryGetAllCommitments flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryGetAllCommitments(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllCommitmentsRequest, error) {
+	req := &exchange.QueryGetAllCommitmentsRequest{}
+
+	var err error
+	req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+
+	return req, err
+}
+
 // SetupCmdQueryGetMarket adds all the flags needed for MakeQueryGetMarket.
 func SetupCmdQueryGetMarket(cmd *cobra.Command) {
 	cmd.Flags().Uint32(FlagMarket, 0, "The market id")
@@ -349,6 +456,30 @@ func SetupCmdQueryParams(cmd *cobra.Command) {
 // Satisfies the queryReqMaker type.
 func MakeQueryParams(_ client.Context, _ *pflag.FlagSet, _ []string) (*exchange.QueryParamsRequest, error) {
 	return &exchange.QueryParamsRequest{}, nil
+}
+
+// SetupCmdQueryCommitmentSettlementFeeCalc adds all the flags needed for MakeQueryCommitmentSettlementFeeCalc.
+func SetupCmdQueryCommitmentSettlementFeeCalc(cmd *cobra.Command) {
+	cmd.Flags().Bool(FlagDetails, false, "Include breakdown fields")
+	cmd.Flags().String(flags.FlagFrom, "", "The from address")
+	AddUseArgs(cmd, OptFlagUse(FlagDetails, ""))
+	SetupCmdTxMarketCommitmentSettle(cmd)
+}
+
+// MakeQueryCommitmentSettlementFeeCalc reads all the SetupCmdQueryCommitmentSettlementFeeCalc flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryCommitmentSettlementFeeCalc(clientCtx client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryCommitmentSettlementFeeCalcRequest, error) {
+	rv := &exchange.QueryCommitmentSettlementFeeCalcRequest{}
+
+	errs := make([]error, 4)
+	clientCtx.From, errs[0] = flagSet.GetString(flags.FlagFrom)
+	if len(clientCtx.From) > 0 {
+		clientCtx.FromAddress, errs[1] = sdk.AccAddressFromBech32(clientCtx.From)
+	}
+	rv.Settlement, errs[2] = MakeMsgMarketCommitmentSettle(clientCtx, flagSet, args)
+	rv.IncludeBreakdownFields, errs[3] = flagSet.GetBool(FlagDetails)
+
+	return rv, errors.Join(errs...)
 }
 
 // SetupCmdQueryValidateCreateMarket adds all the flags needed for MakeQueryValidateCreateMarket.

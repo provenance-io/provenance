@@ -37,12 +37,26 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* Add new force_transfer access that is required for an account to do a forced transfer ([#1829](https://github.com/provenance-io/provenance/issues/1829)).
+* Add exchange commitment stuff to CLI [PR 1830](https://github.com/provenance-io/provenance/pull/1830).
+* Update the MsgFees Params to set the nhash per usd-mil to 40,000,000 ($0.025/hash) [#1833](https://github.com/provenance-io/provenance/pull/1833).
+* Bid order prices are no longer restricted to amounts that can be evenly applied to a buyer settlement fee ratio [1834](https://github.com/provenance-io/provenance/pull/1843).
+
+### API Breaking
+
+* Accounts that have transfer access in a marker are no longer allowed to do forced transfers ([#1829](https://github.com/provenance-io/provenance/issues/1829)).
+  Accounts must now have the force_transfer access for that.
+
 ### Dependencies
 
 - Bump `codecov/codecov-action` from 3 to 4 ([#1828](https://github.com/provenance-io/provenance/pull/1828))
 - Bump `peter-evans/create-pull-request` from 5.0.2 to 6.0.0 ([#1827](https://github.com/provenance-io/provenance/pull/1827))
 - Bump `bufbuild/buf-setup-action` from 1.28.1 to 1.29.0 ([#1825](https://github.com/provenance-io/provenance/pull/1825))
-- Bump `serde-json-wasm` from 1.0.0 to 1.0.1 ([#1836](https://github.com/provenance-io/provenance/pull/1836))
+- Bump `serde-json-wasm` from 1.0.0 to 1.0.1 in /testutil/contracts/rate-limiter ([#1836](https://github.com/provenance-io/provenance/pull/1836))
+- Bump `serde-json-wasm` from 0.5.1 to 0.5.2 in /testutil/contracts/counter ([#1837](https://github.com/provenance-io/provenance/pull/1837))
+- Bump `serde-json-wasm` from 0.5.1 to 0.5.2 in /testutil/contracts/echo ([#1838](https://github.com/provenance-io/provenance/pull/1838))
 
 ---
 
