@@ -6,7 +6,7 @@ Param module and available for control via Governance proposal to change paramet
 ## Params
 
 | Key                    | Type       | Example                           |
-| ---------------------- | ---------- | --------------------------------- |
+|------------------------|------------|-----------------------------------|
 | MaxTotalSupply         | `uint64`   | `"259200000000000"`               |
 | MaxSupply              | `math.Int` | `"259200000000000"`               |
 | EnableGovernance       | `bool`     | `true`                            |
@@ -17,6 +17,8 @@ Param module and available for control via Governance proposal to change paramet
 
 - **Max Total Supply** (uint64) - A value indicating the maximum supply level allowed for any added marker. This is now deprecated and should not be used.
 
+- **Max Supply** (math.Int) - A value indicating the maximum supply level allowed for any added marker.
+
 - **Enable Governance** (boolean) - A flag indicating if `allow_governance_control` setting on added markers must
   be set to `true`.
 
@@ -24,4 +26,3 @@ Param module and available for control via Governance proposal to change paramet
   by calling AddMarker.  This is intended to further restrict what may be used for a denom when a generic marker is
   created.
 
-- **Max Supply** (math.Int) - A value indicating the maximum supply level allowed for any added marker

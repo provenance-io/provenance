@@ -9,9 +9,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/quarantine"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // getLastAutoMarketID gets the last auto-selected market id.
@@ -1537,8 +1539,19 @@ func (k Keeper) GetMarketBrief(ctx sdk.Context, marketID uint32) *exchange.Marke
 // WithdrawMarketFunds transfers funds from a market account to another account.
 // The caller is responsible for making sure this withdrawal should be allowed (e.g. by calling CanWithdrawMarketFunds first).
 func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk.AccAddress, amount sdk.Coins, withdrawnBy string) error {
+	admin, err := sdk.AccAddressFromBech32(withdrawnBy)
+	if err != nil {
+		return fmt.Errorf("invalid admin %q: %w", withdrawnBy, err)
+	}
+	if k.bankKeeper.BlockedAddr(toAddr) {
+		return fmt.Errorf("%s is not allowed to receive funds", toAddr)
+	}
 	marketAddr := exchange.GetMarketAddress(marketID)
-	err := k.bankKeeper.SendCoins(ctx, marketAddr, toAddr, amount)
+	xferCtx := markertypes.WithTransferAgent(ctx, admin)
+	if toAddr.Equals(admin) {
+		xferCtx = quarantine.WithBypass(xferCtx)
+	}
+	err = k.bankKeeper.SendCoins(xferCtx, marketAddr, toAddr, amount)
 	if err != nil {
 		return fmt.Errorf("failed to withdraw %s from market %d: %w", amount, marketID, err)
 	}

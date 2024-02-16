@@ -11,6 +11,7 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // getCommitmentAmount gets the amount that the given address has committed to the provided market.
@@ -367,15 +368,19 @@ func (k Keeper) CalculateCommitmentSettlementFee(ctx sdk.Context, req *exchange.
 
 // SettleCommitments orchestrates the transfer of committed funds and collection of fees by the market.
 func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
-	marketID := req.MarketId
+	admin, adminErr := sdk.AccAddressFromBech32(req.Admin)
+	if adminErr != nil {
+		return fmt.Errorf("invalid admin %q: %w", req.Admin, adminErr)
+	}
+
 	// Record all the navs.
-	k.recordNAVs(ctx, marketID, req.Navs)
+	k.recordNAVs(ctx, req.MarketId, req.Navs)
 
 	// Build the transfers
 	inputs := exchange.SimplifyAccountAmounts(req.Inputs)
 	outputs := exchange.SimplifyAccountAmounts(req.Outputs)
 	fees := exchange.SimplifyAccountAmounts(req.Fees)
-	transfers, err := exchange.BuildCommitmentTransfers(marketID, inputs, outputs, fees)
+	transfers, err := exchange.BuildCommitmentTransfers(req.MarketId, inputs, outputs, fees)
 	if err != nil {
 		return fmt.Errorf("failed to build transfers: %w", err)
 	}
@@ -384,15 +389,16 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	inputsAndFees := make([]exchange.AccountAmount, 0, len(inputs)+len(fees))
 	inputsAndFees = append(inputsAndFees, inputs...)
 	inputsAndFees = append(inputsAndFees, fees...)
-	err = k.ReleaseCommitments(ctx, marketID, exchange.SimplifyAccountAmounts(inputsAndFees), req.EventTag)
+	err = k.ReleaseCommitments(ctx, req.MarketId, exchange.SimplifyAccountAmounts(inputsAndFees), req.EventTag)
 	if err != nil {
 		return fmt.Errorf("failed to release commitments on inputs and fees: %w", err)
 	}
 
 	// Do the transfers
+	xFerCtx := markertypes.WithTransferAgent(ctx, admin)
 	var xferErrs []error
 	for _, transfer := range transfers {
-		err = k.DoTransfer(ctx, transfer.Inputs, transfer.Outputs)
+		err = k.DoTransfer(xFerCtx, transfer.Inputs, transfer.Outputs)
 		if err != nil {
 			xferErrs = append(xferErrs, err)
 		}
@@ -402,7 +408,7 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	}
 
 	// Commit the funds in the outputs.
-	err = k.addCommitmentsUnsafe(ctx, marketID, outputs, req.EventTag)
+	err = k.addCommitmentsUnsafe(ctx, req.MarketId, outputs, req.EventTag)
 	if err != nil {
 		return fmt.Errorf("failed to re-commit funds after transfer: %w", err)
 	}

@@ -132,6 +132,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	"tourmaline-rc2": {}, // upgrade for v1.18.0-rc2
 	"tourmaline": { // upgrade for v1.18.0
 		Added: []string{ibcratelimit.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {

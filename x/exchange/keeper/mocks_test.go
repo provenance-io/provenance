@@ -251,6 +251,7 @@ type MockBankKeeper struct {
 	SendCoinsResultsQueue                    []string
 	SendCoinsFromAccountToModuleResultsQueue []string
 	InputOutputCoinsResultsQueue             []string
+	BlockedAddrQueue                         []bool
 }
 
 // BankCalls contains all the calls that the mock bank keeper makes.
@@ -258,11 +259,13 @@ type BankCalls struct {
 	SendCoins                    []*SendCoinsArgs
 	SendCoinsFromAccountToModule []*SendCoinsFromAccountToModuleArgs
 	InputOutputCoins             []*InputOutputCoinsArgs
+	BlockedAddr                  []sdk.AccAddress
 }
 
 // SendCoinsArgs is a record of a call that is made to SendCoins.
 type SendCoinsArgs struct {
 	ctxHasQuarantineBypass bool
+	ctxTransferAgent       sdk.AccAddress
 	fromAddr               sdk.AccAddress
 	toAddr                 sdk.AccAddress
 	amt                    sdk.Coins
@@ -271,6 +274,7 @@ type SendCoinsArgs struct {
 // SendCoinsFromAccountToModuleArgs is a record of a call that is made to SendCoinsFromAccountToModule.
 type SendCoinsFromAccountToModuleArgs struct {
 	ctxHasQuarantineBypass bool
+	ctxTransferAgent       sdk.AccAddress
 	senderAddr             sdk.AccAddress
 	recipientModule        string
 	amt                    sdk.Coins
@@ -279,6 +283,7 @@ type SendCoinsFromAccountToModuleArgs struct {
 // InputOutputCoinsArgs is a record of a call that is made to InputOutputCoins.
 type InputOutputCoinsArgs struct {
 	ctxHasQuarantineBypass bool
+	ctxTransferAgent       sdk.AccAddress
 	inputs                 []banktypes.Input
 	outputs                []banktypes.Output
 }
@@ -311,6 +316,14 @@ func (k *MockBankKeeper) WithSendCoinsFromAccountToModuleResults(errs ...string)
 // This method both updates the receiver and returns it.
 func (k *MockBankKeeper) WithInputOutputCoinsResults(errs ...string) *MockBankKeeper {
 	k.InputOutputCoinsResultsQueue = append(k.InputOutputCoinsResultsQueue, errs...)
+	return k
+}
+
+// WithBlockedAddrResults queues up the provided bools to be returned from BlockedAddr.
+// Each entry is used only once. If entries run out, false is returned.
+// This method both updates the receiver and returns it.
+func (k *MockBankKeeper) WithBlockedAddrResults(results ...bool) *MockBankKeeper {
+	k.BlockedAddrQueue = append(k.BlockedAddrQueue, results...)
 	return k
 }
 
@@ -351,6 +364,16 @@ func (k *MockBankKeeper) InputOutputCoins(ctx sdk.Context, inputs []banktypes.In
 	return err
 }
 
+func (k *MockBankKeeper) BlockedAddr(addr sdk.AccAddress) bool {
+	k.Calls.BlockedAddr = append(k.Calls.BlockedAddr, addr)
+	rv := false
+	if len(k.BlockedAddrQueue) > 0 {
+		rv = k.BlockedAddrQueue[0]
+		k.BlockedAddrQueue = k.BlockedAddrQueue[1:]
+	}
+	return rv
+}
+
 // assertSendCoinsCalls asserts that a mock keeper's Calls.SendCoins match the provided expected calls.
 func (s *TestSuite) assertSendCoinsCalls(mk *MockBankKeeper, expected []*SendCoinsArgs, msg string, args ...interface{}) bool {
 	s.T().Helper()
@@ -373,18 +396,27 @@ func (s *TestSuite) assertInputOutputCoinsCalls(mk *MockBankKeeper, expected []*
 		msg+" InputOutputCoins calls", args...)
 }
 
+// assertBlockedAddrCalls asserts that a mock keeper's Calls.BlockedAddr match the provided expected calls.
+func (s *TestSuite) assertBlockedAddrCalls(mk *MockBankKeeper, expected []sdk.AccAddress, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.BlockedAddr, s.getAddrName,
+		msg+" BlockedAddr calls", args...)
+}
+
 // assertBankKeeperCalls asserts that all the calls made to a mock bank keeper match the provided expected calls.
 func (s *TestSuite) assertBankKeeperCalls(mk *MockBankKeeper, expected BankCalls, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	rv := s.assertSendCoinsCalls(mk, expected.SendCoins, msg, args...)
 	rv = s.assertInputOutputCoinsCalls(mk, expected.InputOutputCoins, msg, args...) && rv
-	return s.assertSendCoinsFromAccountToModuleCalls(mk, expected.SendCoinsFromAccountToModule, msg, args...) && rv
+	rv = s.assertSendCoinsFromAccountToModuleCalls(mk, expected.SendCoinsFromAccountToModule, msg, args...) && rv
+	return s.assertBlockedAddrCalls(mk, expected.BlockedAddr, msg, args...) && rv
 }
 
 // NewSendCoinsArgs creates a new record of args provided to a call to SendCoins.
 func NewSendCoinsArgs(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) *SendCoinsArgs {
 	return &SendCoinsArgs{
 		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		fromAddr:               fromAddr,
 		toAddr:                 toAddr,
 		amt:                    amt,
@@ -394,14 +426,15 @@ func NewSendCoinsArgs(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.
 // sendCoinsArgsString creates a string of a SendCoinsArgs
 // substituting the address names as possible.
 func (s *TestSuite) sendCoinsArgsString(a *SendCoinsArgs) string {
-	return fmt.Sprintf("{q-bypass:%t, from:%s, to:%s, amt:%s}",
-		a.ctxHasQuarantineBypass, s.getAddrName(a.fromAddr), s.getAddrName(a.toAddr), a.amt)
+	return fmt.Sprintf("{q-bypass:%t, xfer-agent:%q, from:%s, to:%s, amt:%s}",
+		a.ctxHasQuarantineBypass, s.getAddrName(a.ctxTransferAgent), s.getAddrName(a.fromAddr), s.getAddrName(a.toAddr), a.amt)
 }
 
 // NewSendCoinsFromAccountToModuleArgs creates a new record of args provided to a call to SendCoinsFromAccountToModule.
 func NewSendCoinsFromAccountToModuleArgs(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) *SendCoinsFromAccountToModuleArgs {
 	return &SendCoinsFromAccountToModuleArgs{
 		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		senderAddr:             senderAddr,
 		recipientModule:        recipientModule,
 		amt:                    amt,
@@ -411,14 +444,15 @@ func NewSendCoinsFromAccountToModuleArgs(ctx sdk.Context, senderAddr sdk.AccAddr
 // sendCoinsFromAccountToModuleArgsString creates a string of a SendCoinsFromAccountToModuleArgs
 // substituting the address names as possible.
 func (s *TestSuite) sendCoinsFromAccountToModuleArgsString(a *SendCoinsFromAccountToModuleArgs) string {
-	return fmt.Sprintf("{q-bypass:%t, from:%s, to:%s, amt:%s}",
-		a.ctxHasQuarantineBypass, s.getAddrName(a.senderAddr), a.recipientModule, a.amt)
+	return fmt.Sprintf("{q-bypass:%t, xfer-agent:%q, from:%s, to:%s, amt:%s}",
+		a.ctxHasQuarantineBypass, s.getAddrName(a.ctxTransferAgent), s.getAddrName(a.senderAddr), a.recipientModule, a.amt)
 }
 
 // NewInputOutputCoinsArgs creates a new record of args provided to a call to InputOutputCoins.
 func NewInputOutputCoinsArgs(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) *InputOutputCoinsArgs {
 	return &InputOutputCoinsArgs{
 		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
+		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		inputs:                 inputs,
 		outputs:                outputs,
 	}
@@ -426,8 +460,8 @@ func NewInputOutputCoinsArgs(ctx sdk.Context, inputs []banktypes.Input, outputs 
 
 // inputOutputCoinsArgsString creates a string of a InputOutputCoinsArgs substituting the address names as possible.
 func (s *TestSuite) inputOutputCoinsArgsString(a *InputOutputCoinsArgs) string {
-	return fmt.Sprintf("{q-bypass:%t, inputs:%s, outputs:%s}",
-		a.ctxHasQuarantineBypass, s.inputsString(a.inputs), s.outputsString(a.outputs))
+	return fmt.Sprintf("{q-bypass:%t, xfer-agent:%q, inputs:%s, outputs:%s}",
+		a.ctxHasQuarantineBypass, s.getAddrName(a.ctxTransferAgent), s.inputsString(a.inputs), s.outputsString(a.outputs))
 }
 
 // inputString creates a string of a banktypes.Input substituting the address names as possible.
