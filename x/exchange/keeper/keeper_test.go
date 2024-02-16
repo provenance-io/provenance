@@ -92,13 +92,14 @@ func (s *TestSuite) TestKeeper_GetFeeCollectorName() {
 
 func (s *TestSuite) TestKeeper_DoTransfer() {
 	tests := []struct {
-		name     string
-		bk       *MockBankKeeper
-		inputs   []banktypes.Input
-		outputs  []banktypes.Output
-		expErr   string
-		expSends []*SendCoinsArgs
-		expIO    bool
+		name            string
+		bk              *MockBankKeeper
+		inputs          []banktypes.Input
+		outputs         []banktypes.Output
+		expErr          string
+		expSends        []*SendCoinsArgs
+		expBlockedAddrs []sdk.AccAddress
+		expIO           bool
 	}{
 		{
 			name:    "1 in, 1 out: different denoms",
@@ -133,6 +134,7 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 			expSends: []*SendCoinsArgs{
 				{ctxHasQuarantineBypass: true, fromAddr: s.addr1, toAddr: s.addr2, amt: s.coins("10apple")},
 			},
+			expBlockedAddrs: []sdk.AccAddress{s.addr2},
 		},
 		{
 			name:    "1 in, 1 out: okay",
@@ -141,6 +143,7 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 			expSends: []*SendCoinsArgs{
 				{ctxHasQuarantineBypass: true, fromAddr: s.addr2, toAddr: s.addr3, amt: s.coins("15banana")},
 			},
+			expBlockedAddrs: []sdk.AccAddress{s.addr3},
 		},
 		{
 			name:   "1 in, 3 out: err from InputOutputCoins",
@@ -151,8 +154,21 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 				{Address: s.addr3.String(), Coins: s.coins("5cactus")},
 				{Address: s.addr2.String(), Coins: s.coins("37cactus")},
 			},
-			expErr: "test error V from InputOutputCoins",
-			expIO:  true,
+			expBlockedAddrs: []sdk.AccAddress{s.addr4, s.addr3, s.addr2},
+			expErr:          "test error V from InputOutputCoins",
+			expIO:           true,
+		},
+		{
+			name:   "1 in, 3 out: 2nd blocked",
+			bk:     NewMockBankKeeper().WithBlockedAddrResults(false, true),
+			inputs: []banktypes.Input{{Address: s.addr5.String(), Coins: s.coins("57cherry")}},
+			outputs: []banktypes.Output{
+				{Address: s.addr4.String(), Coins: s.coins("17cherry")},
+				{Address: s.addr3.String(), Coins: s.coins("4cherry")},
+				{Address: s.addr2.String(), Coins: s.coins("36cherry")},
+			},
+			expBlockedAddrs: []sdk.AccAddress{s.addr4, s.addr3},
+			expErr:          s.addr3.String() + " is not allowed to receive funds",
 		},
 		{
 			name:   "1 in, 3 out: okay",
@@ -162,7 +178,8 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 				{Address: s.addr3.String(), Coins: s.coins("5cactus")},
 				{Address: s.addr2.String(), Coins: s.coins("37cactus")},
 			},
-			expIO: true,
+			expBlockedAddrs: []sdk.AccAddress{s.addr4, s.addr3, s.addr2},
+			expIO:           true,
 		},
 		{
 			name: "3 in, 1 out: err from InputOutputCoins",
@@ -175,8 +192,9 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 			outputs: []banktypes.Output{
 				{Address: s.addr4.String(), Coins: s.coins("70apple")},
 			},
-			expErr: "test error P from InputOutputCoins",
-			expIO:  true,
+			expBlockedAddrs: []sdk.AccAddress{s.addr4},
+			expErr:          "test error P from InputOutputCoins",
+			expIO:           true,
 		},
 		{
 			name: "3 in, 1 out: okay",
@@ -185,8 +203,11 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 				{Address: s.addr2.String(), Coins: s.coins("3date")},
 				{Address: s.addr3.String(), Coins: s.coins("16date")},
 			},
-			outputs: []banktypes.Output{{Address: s.addr4.String(), Coins: s.coins("70apple")}},
-			expIO:   true,
+			outputs: []banktypes.Output{
+				{Address: s.addr4.String(), Coins: s.coins("70apple")},
+			},
+			expBlockedAddrs: []sdk.AccAddress{s.addr4},
+			expIO:           true,
 		},
 	}
 
@@ -196,6 +217,7 @@ func (s *TestSuite) TestKeeper_DoTransfer() {
 				tc.bk = NewMockBankKeeper()
 			}
 			expCalls := BankCalls{
+				BlockedAddr:                  tc.expBlockedAddrs,
 				SendCoins:                    tc.expSends,
 				SendCoinsFromAccountToModule: nil,
 				InputOutputCoins:             nil,

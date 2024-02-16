@@ -77,7 +77,7 @@ func (s *UpgradeTestSuite) LogIfError(err error, format string, args ...interfac
 func (s *UpgradeTestSuite) AssertUpgradeHandlerLogs(key string, expInLog, expNotInLog []string) (string, bool) {
 	s.T().Helper()
 
-	if !s.Assert().Contains(upgrades, key, "defined upgrades map") {
+	if !s.Assert().Contains(upgrades, key, "%q defined upgrades map", key) {
 		return "", false // If the upgrades map doesn't have that key, there's nothing more to do in here.
 	}
 	handler := upgrades[key].Handler
@@ -434,6 +434,12 @@ func (s *UpgradeTestSuite) TestTourmalineRC1() {
 	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline-rc1", expInLog, expNotInLog)
+}
+
+func (s *UpgradeTestSuite) TestTourmalineRC2() {
+	key := "tourmaline-rc2"
+	s.Require().Contains(upgrades, key, "%q defined upgrades map", key)
+	s.Require().Empty(upgrades[key], "upgrades[%q]", key)
 }
 
 func (s *UpgradeTestSuite) TestTourmaline() {

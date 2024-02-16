@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -267,22 +268,30 @@ func (k Keeper) GetSendDenyList(ctx sdk.Context, markerAddr sdk.AccAddress) []sd
 
 // AddSetNetAssetValues adds a set of net asset values to a marker
 func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, marker types.MarkerAccountI, netAssetValues []types.NetAssetValue, source string) error {
+	var errs []error
 	for _, nav := range netAssetValues {
 		if nav.Price.Denom == marker.GetDenom() {
-			return fmt.Errorf("net asset value denom cannot match marker denom %q", marker.GetDenom())
+			errs = append(errs, fmt.Errorf("net asset value denom cannot match marker denom %q", marker.GetDenom()))
+			continue
 		}
+
 		if nav.Price.Denom != types.UsdDenom {
 			_, err := k.GetMarkerByDenom(ctx, nav.Price.Denom)
 			if err != nil {
-				return fmt.Errorf("net asset value denom does not exist: %v", err.Error())
+				if err2 := nav.Validate(); err2 == nil {
+					navEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), nav.Price, nav.Volume, source)
+					_ = ctx.EventManager().EmitTypedEvent(navEvent)
+				}
+				errs = append(errs, fmt.Errorf("net asset value denom does not exist: %w", err))
+				continue
 			}
 		}
 
 		if err := k.SetNetAssetValue(ctx, marker, nav, source); err != nil {
-			return fmt.Errorf("cannot set net asset value : %v", err.Error())
+			errs = append(errs, fmt.Errorf("cannot set net asset value: %w", err))
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 // SetNetAssetValue adds/updates a net asset value to marker
@@ -300,7 +309,7 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
 	store := ctx.KVStore(k.storeKey)
 	if math.NewIntFromUint64(netAssetValue.Volume).GT(marker.GetSupply().Amount) {
-		return fmt.Errorf("volume(%v) cannot exceed marker %q supply(%v) ", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
+		return fmt.Errorf("volume (%v) cannot exceed %q marker supply (%v)", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
 	}
 
 	bz, err := k.cdc.Marshal(&netAssetValue)
