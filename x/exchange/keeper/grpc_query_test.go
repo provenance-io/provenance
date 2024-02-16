@@ -380,7 +380,7 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 				"no buyer settlement fee ratios found for denom \"plum\""},
 		},
 		{
-			name: "bid: no applicable ratios for price amount",
+			name: "bid: no evenly applicable ratios for price amount",
 			setup: func() {
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId:                 7,
@@ -390,11 +390,11 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 			req: &exchange.QueryOrderFeeCalcRequest{BidOrder: &exchange.BidOrder{
 				Assets: s.coin("1apple"), Price: s.coin("5737plum"), MarketId: 7,
 			}},
-			expInErr: []string{invalidArgErr, "failed to calculate buyer ratio fee options",
-				"cannot apply ratio 1000plum:3fig to price 5737plum",
-				"cannot apply ratio 750plum:66grape to price 5737plum",
-				"cannot apply ratio 500plum:1honeydew to price 5737plum",
-				"no applicable buyer settlement fee ratios found for price 5737plum",
+			expResp: &exchange.QueryOrderFeeCalcResponse{
+				// 5737plum * 3fig/1000plum = 17.211 => 18fig
+				// 5737plum * 66grape/750plum = 504.856 => 505grape
+				// 5737plum * 1honeydew/500plum = 11.474 => 12honeydew
+				SettlementRatioFeeOptions: []sdk.Coin{s.coin("18fig"), s.coin("505grape"), s.coin("12honeydew")},
 			},
 		},
 		{
@@ -413,13 +413,13 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 			},
 		},
 		{
-			name: "bid: only settlement ratio: three options",
+			name: "bid: only settlement ratio: four options",
 			setup: func() {
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1,
 					FeeBuyerSettlementRatios: []exchange.FeeRatio{
 						s.ratio("1000plum:3fig"),
-						s.ratio("751plum:33grape"),   // cannot be applied to given price.
+						s.ratio("751plum:33grape"),   // not evenly applicable to given price.
 						s.ratio("1apple:10honeydew"), // cannot be applied to given price.
 						s.ratio("2000plum:5peach"),
 						s.ratio("500plum:1plum"),
@@ -430,7 +430,11 @@ func (s *TestSuite) TestQueryServer_OrderFeeCalc() {
 				Assets: s.coin("1apple"), Price: s.coin("2000plum"), MarketId: 1,
 			}},
 			expResp: &exchange.QueryOrderFeeCalcResponse{
-				SettlementRatioFeeOptions: s.coins("6fig,5peach,4plum"),
+				// 2000plum * 3fig/1000plum = 6fig
+				// 2000plum * 33grape/751plum = 87.88 => 88grape
+				// 2000plum * 5peach/2000plum = 5peach
+				// 2000plum * 1plum/500plum = 4plum
+				SettlementRatioFeeOptions: s.coins("6fig,88grape,5peach,4plum"),
 			},
 		},
 		{

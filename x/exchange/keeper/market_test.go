@@ -823,13 +823,6 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 
 func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 	setter := keeper.SetBuyerSettlementRatios
-	noDivErr := func(ratio, price string) string {
-		return fmt.Sprintf("buyer settlement fees: cannot apply ratio %s to price %s: price amount cannot be evenly divided by ratio price",
-			ratio, price)
-	}
-	noRatiosErr := func(price string) string {
-		return "no applicable buyer settlement fee ratios found for price " + price
-	}
 
 	tests := []struct {
 		name     string
@@ -907,10 +900,8 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 15,
 			price:    s.coin("7503pineapple"),
-			expErr: s.joinErrs(
-				noDivErr("500pineapple:1fig", "7503pineapple"),
-				noRatiosErr("7503pineapple"),
-			),
+			// 7503pineapple * 1fig/500pineapple = 15.006 => 16fig
+			expOpts: s.coins("16fig"),
 		},
 		{
 			name: "three ratios for denom: none divisible",
@@ -926,60 +917,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 21,
 			price:    s.coin("3000plum"),
-			expErr: s.joinErrs(
-				noDivErr("123plum:1fig", "3000plum"),
-				noDivErr("234plum:5grape", "3000plum"),
-				noDivErr("345plum:7honeydew", "3000plum"),
-				noRatiosErr("3000plum"),
-			),
-		},
-		{
-			name: "three ratios for denom: only first divisible",
-			setup: func() {
-				setter(s.getStore(), 21, []exchange.FeeRatio{
-					s.ratio("123plum:1fig"),
-					s.ratio("234plum:5grape"),
-					s.ratio("345plum:7honeydew"),
-					s.ratio("100peach:3fig"),
-					s.ratio("200peach:11grape"),
-					s.ratio("300peach:13honeydew"),
-				})
-			},
-			marketID: 21,
-			price:    s.coin("615plum"),
-			expOpts:  []sdk.Coin{s.coin("5fig")},
-		},
-		{
-			name: "three ratios for denom: only second divisible",
-			setup: func() {
-				setter(s.getStore(), 99, []exchange.FeeRatio{
-					s.ratio("123plum:1fig"),
-					s.ratio("234plum:5grape"),
-					s.ratio("345plum:7honeydew"),
-					s.ratio("100peach:3fig"),
-					s.ratio("200peach:11grape"),
-					s.ratio("300peach:13honeydew"),
-				})
-			},
-			marketID: 99,
-			price:    s.coin("1170plum"),
-			expOpts:  []sdk.Coin{s.coin("25grape")},
-		},
-		{
-			name: "three ratios for denom: only third divisible",
-			setup: func() {
-				setter(s.getStore(), 3, []exchange.FeeRatio{
-					s.ratio("123plum:1fig"),
-					s.ratio("234plum:5grape"),
-					s.ratio("345plum:7honeydew"),
-					s.ratio("100peach:3fig"),
-					s.ratio("200peach:11grape"),
-					s.ratio("300peach:13honeydew"),
-				})
-			},
-			marketID: 3,
-			price:    s.coin("1725plum"),
-			expOpts:  []sdk.Coin{s.coin("35honeydew")},
+			// 3000plum * 1fig/123plum = 24.39 => 25fig
+			// 3000plum * 5grape/234plum = 64.10 => 65grape
+			// 3000plum * 7honeydew/345plum = 60.86 => 61honeydew
+			expOpts: s.coins("25fig,65grape,61honeydew"),
 		},
 		{
 			name: "three ratios for denom: first not divisible",
@@ -995,7 +936,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 1,
 			price:    s.coin("26910plum"),
-			expOpts:  []sdk.Coin{s.coin("575grape"), s.coin("546honeydew")},
+			// 26910plum * 1fig/123plum = 218.78 => 219fig
+			// 26910plum * 5grape/234plum = 575grape
+			// 26910plum * 7honeydew/345plum = 546honeydew
+			expOpts: []sdk.Coin{s.coin("219fig"), s.coin("575grape"), s.coin("546honeydew")},
 		},
 		{
 			name: "three ratios for denom: second not divisible",
@@ -1011,7 +955,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 1,
 			price:    s.coin("50100peach"),
-			expOpts:  []sdk.Coin{s.coin("1503fig"), s.coin("2171honeydew")},
+			// 50100peach * 3fig/100peach = 1503fig
+			// 50100peach * 11grape/200peach = 2755.5 => 2756grape
+			// 50100peach * 13honeydew/300peach = 2171honeydew
+			expOpts: []sdk.Coin{s.coin("1503fig"), s.coin("2756grape"), s.coin("2171honeydew")},
 		},
 		{
 			name: "three ratios for denom: third not divisible",
@@ -1027,7 +974,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 1,
 			price:    s.coin("50200peach"),
-			expOpts:  []sdk.Coin{s.coin("1506fig"), s.coin("2761grape")},
+			// 50200peach * 3fig/100peach = 1506fig
+			// 50200peach * 11grape/200peach = 2761grape
+			// 50200peach * 13honeydew/300peach = 2175.33 => 2176honeydew
+			expOpts: []sdk.Coin{s.coin("1506fig"), s.coin("2761grape"), s.coin("2176honeydew")},
 		},
 		{
 			name: "three ratios for denom: all divisible",

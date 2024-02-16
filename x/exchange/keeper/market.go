@@ -517,7 +517,7 @@ func calcBuyerSettlementRatioFeeOptions(store sdk.KVStore, marketID uint32, pric
 	var errs []error
 	rv := make([]sdk.Coin, 0, len(ratios))
 	for _, ratio := range ratios {
-		fee, ferr := ratio.ApplyTo(price)
+		fee, ferr := ratio.ApplyToLoosely(price)
 		if ferr != nil {
 			errs = append(errs, fmt.Errorf("buyer settlement fees: %w", ferr))
 		} else {
@@ -578,7 +578,7 @@ func validateBuyerSettlementFee(store sdk.KVStore, marketID uint32, price sdk.Co
 				ratioErrs = append(ratioErrs, fmt.Errorf("no ratio from price denom %s to fee denom %s",
 					price.Denom, feeCoin.Denom))
 			} else {
-				ratioFee, err := ratio.ApplyTo(price)
+				ratioFee, err := ratio.ApplyToLoosely(price)
 				switch {
 				case err != nil:
 					ratioErrs = append(ratioErrs, err)
