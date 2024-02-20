@@ -105,15 +105,26 @@
 - [provenance/exchange/v1/genesis.proto](#provenance/exchange/v1/genesis.proto)
     - [GenesisState](#provenance.exchange.v1.GenesisState)
   
+- [provenance/exchange/v1/payments.proto](#provenance/exchange/v1/payments.proto)
+    - [Payment](#provenance.exchange.v1.Payment)
+  
 - [provenance/exchange/v1/tx.proto](#provenance/exchange/v1/tx.proto)
+    - [MsgAcceptPaymentRequest](#provenance.exchange.v1.MsgAcceptPaymentRequest)
+    - [MsgAcceptPaymentResponse](#provenance.exchange.v1.MsgAcceptPaymentResponse)
     - [MsgCancelOrderRequest](#provenance.exchange.v1.MsgCancelOrderRequest)
     - [MsgCancelOrderResponse](#provenance.exchange.v1.MsgCancelOrderResponse)
+    - [MsgCancelPaymentsRequest](#provenance.exchange.v1.MsgCancelPaymentsRequest)
+    - [MsgCancelPaymentsResponse](#provenance.exchange.v1.MsgCancelPaymentsResponse)
+    - [MsgChangePaymentTargetRequest](#provenance.exchange.v1.MsgChangePaymentTargetRequest)
+    - [MsgChangePaymentTargetResponse](#provenance.exchange.v1.MsgChangePaymentTargetResponse)
     - [MsgCommitFundsRequest](#provenance.exchange.v1.MsgCommitFundsRequest)
     - [MsgCommitFundsResponse](#provenance.exchange.v1.MsgCommitFundsResponse)
     - [MsgCreateAskRequest](#provenance.exchange.v1.MsgCreateAskRequest)
     - [MsgCreateAskResponse](#provenance.exchange.v1.MsgCreateAskResponse)
     - [MsgCreateBidRequest](#provenance.exchange.v1.MsgCreateBidRequest)
     - [MsgCreateBidResponse](#provenance.exchange.v1.MsgCreateBidResponse)
+    - [MsgCreatePaymentRequest](#provenance.exchange.v1.MsgCreatePaymentRequest)
+    - [MsgCreatePaymentResponse](#provenance.exchange.v1.MsgCreatePaymentResponse)
     - [MsgFillAsksRequest](#provenance.exchange.v1.MsgFillAsksRequest)
     - [MsgFillAsksResponse](#provenance.exchange.v1.MsgFillAsksResponse)
     - [MsgFillBidsRequest](#provenance.exchange.v1.MsgFillBidsRequest)
@@ -152,6 +163,10 @@
     - [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse)
     - [MsgMarketWithdrawRequest](#provenance.exchange.v1.MsgMarketWithdrawRequest)
     - [MsgMarketWithdrawResponse](#provenance.exchange.v1.MsgMarketWithdrawResponse)
+    - [MsgRejectPaymentRequest](#provenance.exchange.v1.MsgRejectPaymentRequest)
+    - [MsgRejectPaymentResponse](#provenance.exchange.v1.MsgRejectPaymentResponse)
+    - [MsgRejectPaymentsRequest](#provenance.exchange.v1.MsgRejectPaymentsRequest)
+    - [MsgRejectPaymentsResponse](#provenance.exchange.v1.MsgRejectPaymentsResponse)
   
     - [Msg](#provenance.exchange.v1.Msg)
   
@@ -166,6 +181,8 @@
     - [QueryGetAllMarketsResponse](#provenance.exchange.v1.QueryGetAllMarketsResponse)
     - [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest)
     - [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse)
+    - [QueryGetAllPaymentsRequest](#provenance.exchange.v1.QueryGetAllPaymentsRequest)
+    - [QueryGetAllPaymentsResponse](#provenance.exchange.v1.QueryGetAllPaymentsResponse)
     - [QueryGetAssetOrdersRequest](#provenance.exchange.v1.QueryGetAssetOrdersRequest)
     - [QueryGetAssetOrdersResponse](#provenance.exchange.v1.QueryGetAssetOrdersResponse)
     - [QueryGetCommitmentRequest](#provenance.exchange.v1.QueryGetCommitmentRequest)
@@ -182,10 +199,18 @@
     - [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse)
     - [QueryGetOwnerOrdersRequest](#provenance.exchange.v1.QueryGetOwnerOrdersRequest)
     - [QueryGetOwnerOrdersResponse](#provenance.exchange.v1.QueryGetOwnerOrdersResponse)
+    - [QueryGetPaymentRequest](#provenance.exchange.v1.QueryGetPaymentRequest)
+    - [QueryGetPaymentResponse](#provenance.exchange.v1.QueryGetPaymentResponse)
+    - [QueryGetPaymentsWithSourceRequest](#provenance.exchange.v1.QueryGetPaymentsWithSourceRequest)
+    - [QueryGetPaymentsWithSourceResponse](#provenance.exchange.v1.QueryGetPaymentsWithSourceResponse)
+    - [QueryGetPaymentsWithTargetRequest](#provenance.exchange.v1.QueryGetPaymentsWithTargetRequest)
+    - [QueryGetPaymentsWithTargetResponse](#provenance.exchange.v1.QueryGetPaymentsWithTargetResponse)
     - [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest)
     - [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse)
     - [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse)
+    - [QueryPaymentFeeCalcRequest](#provenance.exchange.v1.QueryPaymentFeeCalcRequest)
+    - [QueryPaymentFeeCalcResponse](#provenance.exchange.v1.QueryPaymentFeeCalcResponse)
     - [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest)
     - [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse)
     - [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest)
@@ -2169,6 +2194,8 @@ Params is a representation of the exchange module parameters.
 | ----- | ---- | ----- | ----------- |
 | `default_split` | [uint32](#uint32) |  | default_split is the default proportion of fees the exchange receives in basis points. It is used if there isn't an applicable denom-specific split defined. E.g. 100 = 1%. Min = 0, Max = 10000. |
 | `denom_splits` | [DenomSplit](#provenance.exchange.v1.DenomSplit) | repeated | denom_splits are the denom-specific amounts the exchange receives. |
+| `fee_create_payment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create_payment_flat is the flat fee options for creating a payment. If the source amount is not zero then one of these fee entries is required to create the payment. This field is currently limited to zero or one entries. |
+| `fee_accept_payment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_accept_payment_flat is the flat fee options for accepting a payment. If the target amount is not zero then one of these fee entries is required to accept the payment. This field is currently limited to zero or one entries. |
 
 
 
@@ -2220,10 +2247,76 @@ GenesisState is the data that should be loaded into the exchange module during g
 
 
 
+<a name="provenance/exchange/v1/payments.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/payments.proto
+
+
+
+<a name="provenance.exchange.v1.Payment"></a>
+
+### Payment
+Payment represents one account's desire to trade funds with another account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that created this Payment. It is considered the owner of the payment. |
+| `source_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | source_amount is the funds that the source is will pay the target in exchange for the target_amount. A hold will be placed on this amount in the source account until this Payment is accepted, rejected or cancelled. If the source_amount is zero, this Payment can be considered a "payment request." |
+| `target` | [string](#string) |  | target is the account that can accept this Payment. The target is the only thing allowed to change in a payment. I.e. it can be empty initially and updated later as needed. |
+| `target_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | target_amount is the funds that the target will pay the source in exchange for the source_amount. If the target_amount is zero, this Payment can be considered a "peer-to-peer (P2P) payment." |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment.
+
+A source can only have one Payment with any given external id. A source can have two payments with two different external ids. Two different sources can each have a payment with the same external id. But a source cannot have two different payments each with the same external id.
+
+An external id can be reused by a source once the payment is accepted, rejected, or cancelled.
+
+The external id is limited to 100 bytes. An empty string is a valid external id. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance/exchange/v1/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/exchange/v1/tx.proto
+
+
+
+<a name="provenance.exchange.v1.MsgAcceptPaymentRequest"></a>
+
+### MsgAcceptPaymentRequest
+MsgAcceptPaymentRequest is a request message for the AcceptPayment endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payment` | [Payment](#provenance.exchange.v1.Payment) |  | payment is the details of the payment to accept. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgAcceptPaymentResponse"></a>
+
+### MsgAcceptPaymentResponse
+MsgAcceptPaymentResponse is a response message for the AcceptPayment endpoint.
+
+
+
 
 
 
@@ -2247,6 +2340,59 @@ MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
 
 ### MsgCancelOrderResponse
 MsgCancelOrderResponse is a response message for the CancelOrder endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCancelPaymentsRequest"></a>
+
+### MsgCancelPaymentsRequest
+MsgCancelPaymentsRequest is a request message for the CancelPayments endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that wishes to cancel some of their payments. |
+| `external_ids` | [string](#string) | repeated | external_ids is all of the external ids of the payments to cancel. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCancelPaymentsResponse"></a>
+
+### MsgCancelPaymentsResponse
+MsgCancelPaymentsResponse is a response message for the CancelPayments endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgChangePaymentTargetRequest"></a>
+
+### MsgChangePaymentTargetRequest
+MsgChangePaymentTargetRequest is a request message for the ChangePaymentTarget endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that wishes to update the target of one of their payments. |
+| `external_id` | [string](#string) |  | external_id is the external id of the payment to update. |
+| `new_target` | [string](#string) |  | new_target is the new target account of the payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgChangePaymentTargetResponse"></a>
+
+### MsgChangePaymentTargetResponse
+MsgChangePaymentTargetResponse is a response message for the ChangePaymentTarget endpoint.
 
 
 
@@ -2338,6 +2484,31 @@ MsgCreateBidResponse is a response message for the CreateBid endpoint.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `order_id` | [uint64](#uint64) |  | order_id is the id of the order created. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCreatePaymentRequest"></a>
+
+### MsgCreatePaymentRequest
+MsgCreatePaymentRequest is a request message for the CreatePayment endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payment` | [Payment](#provenance.exchange.v1.Payment) |  | payment is the details of the payment to create. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCreatePaymentResponse"></a>
+
+### MsgCreatePaymentResponse
+MsgCreatePaymentResponse is a response message for the CreatePayment endpoint.
 
 
 
@@ -2892,6 +3063,59 @@ MsgMarketWithdrawResponse is a response message for the MarketWithdraw endpoint.
 
 
 
+
+<a name="provenance.exchange.v1.MsgRejectPaymentRequest"></a>
+
+### MsgRejectPaymentRequest
+MsgRejectPaymentRequest is a request message for the RejectPayment endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `target` | [string](#string) |  | target is the target account of the payment to reject. |
+| `source` | [string](#string) |  | source is the source account of the payment to reject. |
+| `external_id` | [string](#string) |  | external_id is the external id of the payment to reject. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgRejectPaymentResponse"></a>
+
+### MsgRejectPaymentResponse
+MsgRejectPaymentResponse is a response message for the RejectPayment endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgRejectPaymentsRequest"></a>
+
+### MsgRejectPaymentsRequest
+MsgRejectPaymentsRequest is a request message for the RejectPayments endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `target` | [string](#string) |  | target is the account that wishes to reject some payments. |
+| `sources` | [string](#string) | repeated | sources is the source accounts of the payments to reject. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgRejectPaymentsResponse"></a>
+
+### MsgRejectPaymentsResponse
+MsgRejectPaymentsResponse is a response message for the RejectPayments endpoint.
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -2925,6 +3149,12 @@ Msg is the service for exchange module's tx endpoints.
 | `MarketUpdateIntermediaryDenom` | [MsgMarketUpdateIntermediaryDenomRequest](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest) | [MsgMarketUpdateIntermediaryDenomResponse](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomResponse) | MarketUpdateIntermediaryDenom sets a market's intermediary denom. | |
 | `MarketManagePermissions` | [MsgMarketManagePermissionsRequest](#provenance.exchange.v1.MsgMarketManagePermissionsRequest) | [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse) | MarketManagePermissions is a market endpoint to manage a market's user permissions. | |
 | `MarketManageReqAttrs` | [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest) | [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse) | MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it. | |
+| `CreatePayment` | [MsgCreatePaymentRequest](#provenance.exchange.v1.MsgCreatePaymentRequest) | [MsgCreatePaymentResponse](#provenance.exchange.v1.MsgCreatePaymentResponse) | CreatePayment creates a payment to facilitate a trade between two accounts. | |
+| `AcceptPayment` | [MsgAcceptPaymentRequest](#provenance.exchange.v1.MsgAcceptPaymentRequest) | [MsgAcceptPaymentResponse](#provenance.exchange.v1.MsgAcceptPaymentResponse) | AcceptPayment is used by a target to accept a payment. | |
+| `RejectPayment` | [MsgRejectPaymentRequest](#provenance.exchange.v1.MsgRejectPaymentRequest) | [MsgRejectPaymentResponse](#provenance.exchange.v1.MsgRejectPaymentResponse) | RejectPayment can be used by a target to reject a payment. | |
+| `RejectPayments` | [MsgRejectPaymentsRequest](#provenance.exchange.v1.MsgRejectPaymentsRequest) | [MsgRejectPaymentsResponse](#provenance.exchange.v1.MsgRejectPaymentsResponse) | RejectPayments can be used by a target to reject all payments from one or more sources. | |
+| `CancelPayments` | [MsgCancelPaymentsRequest](#provenance.exchange.v1.MsgCancelPaymentsRequest) | [MsgCancelPaymentsResponse](#provenance.exchange.v1.MsgCancelPaymentsResponse) | CancelPayments can be used by a source to cancel one or more payments. | |
+| `ChangePaymentTarget` | [MsgChangePaymentTargetRequest](#provenance.exchange.v1.MsgChangePaymentTargetRequest) | [MsgChangePaymentTargetResponse](#provenance.exchange.v1.MsgChangePaymentTargetResponse) | ChangePaymentTarget can be used by a source to change the target in one of their payments. | |
 | `GovCreateMarket` | [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest) | [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse) | GovCreateMarket is a governance proposal endpoint for creating a market. | |
 | `GovManageFees` | [MsgGovManageFeesRequest](#provenance.exchange.v1.MsgGovManageFeesRequest) | [MsgGovManageFeesResponse](#provenance.exchange.v1.MsgGovManageFeesResponse) | GovManageFees is a governance proposal endpoint for updating a market's fees. | |
 | `GovCloseMarket` | [MsgGovCloseMarketRequest](#provenance.exchange.v1.MsgGovCloseMarketRequest) | [MsgGovCloseMarketResponse](#provenance.exchange.v1.MsgGovCloseMarketResponse) | GovCloseMarket is a governance proposal endpoint that will disable order and commitment creation, cancel all orders, and release all commitments. | |
@@ -3092,6 +3322,37 @@ QueryGetAllOrdersResponse is a response message for the GetAllOrders query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `orders` | [Order](#provenance.exchange.v1.Order) | repeated | orders are a page of the all orders. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAllPaymentsRequest"></a>
+
+### QueryGetAllPaymentsRequest
+QueryGetAllPaymentsRequest is a request message for the GetAllPayments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAllPaymentsResponse"></a>
+
+### QueryGetAllPaymentsResponse
+QueryGetAllPaymentsResponse is a response message for the GetAllPayments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payments` | [Payment](#provenance.exchange.v1.Payment) | repeated | payments is all the payments on this page of results. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
 
 
@@ -3356,6 +3617,101 @@ QueryGetOwnerOrdersResponse is a response message for the GetOwnerOrders query.
 
 
 
+<a name="provenance.exchange.v1.QueryGetPaymentRequest"></a>
+
+### QueryGetPaymentRequest
+QueryGetPaymentRequest is a request message for the GetPayment query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the source account of the payment to get. |
+| `external_id` | [string](#string) |  | external_id is the external id of the payment to get. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetPaymentResponse"></a>
+
+### QueryGetPaymentResponse
+QueryGetPaymentResponse is a response message for the GetPayment query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payment` | [Payment](#provenance.exchange.v1.Payment) |  | payment is the info on the requested payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetPaymentsWithSourceRequest"></a>
+
+### QueryGetPaymentsWithSourceRequest
+QueryGetPaymentsWithSourceRequest is a request message for the GetPaymentsWithSource query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the source account of the payments to get. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetPaymentsWithSourceResponse"></a>
+
+### QueryGetPaymentsWithSourceResponse
+QueryGetPaymentsWithSourceResponse is a response message for the GetPaymentsWithSource query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payments` | [Payment](#provenance.exchange.v1.Payment) | repeated | payments is all the payments with the requested source. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetPaymentsWithTargetRequest"></a>
+
+### QueryGetPaymentsWithTargetRequest
+QueryGetPaymentsWithTargetRequest is a request message for the GetPaymentsWithTarget query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `target` | [string](#string) |  | target is the target account of the payments to get. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetPaymentsWithTargetResponse"></a>
+
+### QueryGetPaymentsWithTargetResponse
+QueryGetPaymentsWithTargetResponse is a response message for the GetPaymentsWithTarget query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payments` | [Payment](#provenance.exchange.v1.Payment) | repeated | payments is all the payments with the requested target. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
 <a name="provenance.exchange.v1.QueryOrderFeeCalcRequest"></a>
 
 ### QueryOrderFeeCalcRequest
@@ -3413,6 +3769,37 @@ QueryParamsResponse is a response message for the Params query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance.exchange.v1.Params) |  | params are the exchange module parameter values. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryPaymentFeeCalcRequest"></a>
+
+### QueryPaymentFeeCalcRequest
+QueryPaymentFeeCalcRequest is a request message for the PaymentFeeCalc query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payment` | [Payment](#provenance.exchange.v1.Payment) |  | payment is the details of the payment to create or accept. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryPaymentFeeCalcResponse"></a>
+
+### QueryPaymentFeeCalcResponse
+QueryPaymentFeeCalcResponse is a response message for the PaymentFeeCalc query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_create` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create is the fee required to create the provided payment. |
+| `fee_accept` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_accept is the fee required to accept the provided payment. |
 
 
 
@@ -3542,6 +3929,11 @@ Query is the service for exchange module's query endpoints.
 | `ValidateCreateMarket` | [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest) | [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse) | ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have. | GET|/provenance/exchange/v1/validate/create_market|
 | `ValidateMarket` | [QueryValidateMarketRequest](#provenance.exchange.v1.QueryValidateMarketRequest) | [QueryValidateMarketResponse](#provenance.exchange.v1.QueryValidateMarketResponse) | ValidateMarket checks for any problems with a market's setup. | GET|/provenance/exchange/v1/validate/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/validate|
 | `ValidateManageFees` | [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest) | [QueryValidateManageFeesResponse](#provenance.exchange.v1.QueryValidateManageFeesResponse) | ValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have. | GET|/provenance/exchange/v1/validate/manage_fees|
+| `GetPayment` | [QueryGetPaymentRequest](#provenance.exchange.v1.QueryGetPaymentRequest) | [QueryGetPaymentResponse](#provenance.exchange.v1.QueryGetPaymentResponse) | GetPayment gets a single specific payment. | GET|/provenance/exchange/v1/paymentGET|/provenance/exchange/v1/payment/{source}GET|/provenance/exchange/v1/payment/{source}/{external_id}|
+| `GetPaymentsWithSource` | [QueryGetPaymentsWithSourceRequest](#provenance.exchange.v1.QueryGetPaymentsWithSourceRequest) | [QueryGetPaymentsWithSourceResponse](#provenance.exchange.v1.QueryGetPaymentsWithSourceResponse) | GetPaymentsWithSource gets all payments with a specific source account. | GET|/provenance/exchange/v1/payments/source/{source}|
+| `GetPaymentsWithTarget` | [QueryGetPaymentsWithTargetRequest](#provenance.exchange.v1.QueryGetPaymentsWithTargetRequest) | [QueryGetPaymentsWithTargetResponse](#provenance.exchange.v1.QueryGetPaymentsWithTargetResponse) | GetPaymentsWithTarget gets all payments with a specific target account. | GET|/provenance/exchange/v1/payments/target/{target}|
+| `GetAllPayments` | [QueryGetAllPaymentsRequest](#provenance.exchange.v1.QueryGetAllPaymentsRequest) | [QueryGetAllPaymentsResponse](#provenance.exchange.v1.QueryGetAllPaymentsResponse) | GetAllPayments gets all payments. | GET|/provenance/exchange/v1/payments|
+| `PaymentFeeCalc` | [QueryPaymentFeeCalcRequest](#provenance.exchange.v1.QueryPaymentFeeCalcRequest) | [QueryPaymentFeeCalcResponse](#provenance.exchange.v1.QueryPaymentFeeCalcResponse) | PaymentFeeCalc calculates the fees that must be paid for creating or accepting a specific payment. | GET|/provenance/exchange/v1/fees/payment|
 
  <!-- end services -->
 
