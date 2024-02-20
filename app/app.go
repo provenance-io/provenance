@@ -464,36 +464,33 @@ func New(
 		logger,
 	)
 
-	// TODO[1760]: staking: Put back this call to NewKeeper with fixed arguments.
-	// stakingKeeper := stakingkeeper.NewKeeper(
-	// 	appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
-	// )
-	// TODO[1760]: mint: Put back this call to NewKeeper with fixed arguments.
-	// app.MintKeeper = mintkeeper.NewKeeper(
-	// 	appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName), &stakingKeeper,
-	// 	app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
-	// )
+	stakingkeeper := stakingkeeper.NewKeeper(
+		appCodec, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), authcodec.NewBech32Codec(ValidatorAddressPrefix), authcodec.NewBech32Codec(ConsNodeAddressPrefix),
+	)
+
+	app.MintKeeper = mintkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), stakingkeeper, app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
 	// TODO[1760]: distr: Put back this call to NewKeeper with fixed arguments.
 	// app.DistrKeeper = distrkeeper.NewKeeper(
 	// 	appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 	// 	&stakingKeeper, authtypes.FeeCollectorName,
 	// )
+	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, app.StakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
 	// TODO[1760]: slashing: Put back this call to NewKeeper with fixed arguments.
 	// app.SlashingKeeper = slashingkeeper.NewKeeper(
 	// 	appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
 	// )
-	// TODO[1760]: crisis: Put back this call to NewKeeper with fixed arguments.
-	// app.CrisisKeeper = crisiskeeper.NewKeeper(
-	// 	app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
-	// )
+	app.SlashingKeeper = slashingkeeper.NewKeeper(
+		appCodec, legacyAmino, runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), app.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 
-	// TODO[1760]: feegrant: Put back this call to NewKeeper with fixed arguments.
-	// app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
-	// TODO[1760]: upgrade: Put back this call to NewKeeper with fixed arguments.
-	// app.UpgradeKeeper = upgradekeeper.NewKeeper(
-	// 	skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp,
-	// 	authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	// )
+	app.CrisisKeeper = *crisiskeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[crisistypes.StoreKey]), app.invCheckPeriod,
+		app.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AccountKeeper.AddressCodec())
+
+	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[feegrant.StoreKey]), app.AccountKeeper)
+
+	app.UpgradeKeeper = *upgradekeeper.NewKeeper(skipUpgradeHeights, runtime.NewKVStoreService(keys[upgradetypes.StoreKey]), appCodec, homePath, app.BaseApp, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
 		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName),
