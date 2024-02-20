@@ -51,6 +51,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bid order prices are no longer restricted to amounts that can be evenly applied to a buyer settlement fee ratio [1834](https://github.com/provenance-io/provenance/pull/1843).
 * In the marker and exchange modules, help ensure funds don't get sent to blocked addresses [#1834](https://github.com/provenance-io/provenance/issues/1834).
 * Update marker and exchange spec docs to include info about transfer agents [#1834](https://github.com/provenance-io/provenance/issues/1834).
+* Prevent restricted markers from being sent to the fee collector account [#1845](https://github.com/provenance-io/provenance/issues/1845).
 
 ### Bug Fixes
 
