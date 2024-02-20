@@ -71,9 +71,22 @@ func TestSendRestrictionFn(t *testing.T) {
 	addrWithDenySend := sdk.AccAddress("addrWithDenySend_____")
 	addrOther := sdk.AccAddress("addrOther___________")
 
+	addrFeeCollector := app.MarkerKeeper.GetFeeCollectorAddr()
 	bypassAddrs := app.MarkerKeeper.GetReqAttrBypassAddrs()
-	addrWithBypass := bypassAddrs[0]
-	addrWithBypassNoDep := bypassAddrs[1]
+	var addrWithBypass, addrWithBypassNoDep sdk.AccAddress
+	for _, addr := range bypassAddrs {
+		if addr.Equals(addrFeeCollector) {
+			continue
+		}
+		if len(addrWithBypass) == 0 {
+			addrWithBypass = addr
+			continue
+		}
+		addrWithBypassNoDep = addr
+		break
+	}
+	require.NotEmpty(t, addrWithBypass, "addrWithBypass (first bypass address that is not the fee collector)")
+	require.NotEmpty(t, addrWithBypassNoDep, "addrWithBypassNoDep (second bypass address that is not the fee collector)")
 
 	coin := types.MarkerType_Coin
 	restricted := types.MarkerType_RestrictedCoin
@@ -190,6 +203,33 @@ func TestSendRestrictionFn(t *testing.T) {
 			to:     addrWithAttrs,
 			amt:    cz(c(1, nrDenom)),
 			expErr: "",
+		},
+		{
+			name: "restricted to fee collector from normal account",
+			// include a transfer agent just to make sure that doesn't bypass anything.
+			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			from:   addrOther,
+			to:     addrFeeCollector,
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: "restricted denom " + rDenomNoAttr + " cannot be sent to the fee collector",
+		},
+		{
+			name: "restricted to fee collector from marker module account",
+			// include a transfer agent just to make sure that doesn't bypass anything.
+			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			from:   app.MarkerKeeper.GetMarkerModuleAddr(),
+			to:     addrFeeCollector,
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: "cannot send restricted denom " + rDenomNoAttr + " to the fee collector",
+		},
+		{
+			name: "restricted to fee collector from ibc transfer module account",
+			// include a transfer agent just to make sure that doesn't bypass anything.
+			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			from:   app.MarkerKeeper.GetIbcTransferModuleAddr(),
+			to:     addrFeeCollector,
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: "cannot send restricted denom " + rDenomNoAttr + " to the fee collector",
 		},
 		{
 			name:   "addr has transfer, denom without attrs",

@@ -19,6 +19,19 @@ func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	// In some cases, it might not be possible to add a bypass to the context.
 	// If it's from either the Marker or IBC Transfer module accounts, assume proper validation has been done elsewhere.
 	if types.HasBypass(ctx) || fromAddr.Equals(k.markerModuleAddr) || fromAddr.Equals(k.ibcTransferModuleAddr) {
+		// But still don't let restricted denoms get sent to the fee collector.
+		if toAddr.Equals(k.feeCollectorAddr) {
+			for _, coin := range amt {
+				markerAddr := types.MustGetMarkerAddress(coin.Denom)
+				marker, err := k.GetMarker(ctx, markerAddr)
+				if err != nil {
+					return nil, err
+				}
+				if marker != nil && marker.GetMarkerType() == types.MarkerType_RestrictedCoin {
+					return nil, fmt.Errorf("cannot send restricted denom %s to the fee collector", coin.Denom)
+				}
+			}
+		}
 		return toAddr, nil
 	}
 
@@ -89,6 +102,11 @@ func (k Keeper) validateSendDenom(ctx sdk.Context, fromAddr, toAddr, admin sdk.A
 	// If there's no marker for the denom, or it's not a restricted marker, there's nothing more to do here.
 	if marker == nil || marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return nil
+	}
+
+	// We can't allow restricted coins to end up with the fee collector.
+	if toAddr.Equals(k.feeCollectorAddr) {
+		return fmt.Errorf("restricted denom %s cannot be sent to the fee collector", denom)
 	}
 
 	// If there's an admin that has transfer access, it's not a normal bank send and there's nothing more to do here.
