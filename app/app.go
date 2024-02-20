@@ -60,6 +60,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -452,11 +453,7 @@ func New(
 	app.CapabilityKeeper.Seal()
 
 	// add keepers
-	// TODO[1760]: account: Put back this call to NewAccountKeeper with fixed arguments.
-	// app.AccountKeeper = authkeeper.NewAccountKeeper(
-	// 	appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName),
-	// 	authtypes.ProtoBaseAccount, maccPerms, AccountAddressPrefix,
-	// )
+	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(AccountAddressPrefix), AccountAddressPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	// TODO[1760]: bank: Put back this call to NewBaseKeeper with fixed arguments.
 	// app.BankKeeper = bankkeeper.NewBaseKeeper(
