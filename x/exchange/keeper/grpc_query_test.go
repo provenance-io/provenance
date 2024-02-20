@@ -4617,3 +4617,13 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 		})
 	}
 }
+
+// TODO[1703]: func (s *TestSuite) TestQueryServer_GetPayment()
+
+// TODO[1703]: func (s *TestSuite) TestQueryServer_GetPaymentsWithSource()
+
+// TODO[1703]: func (s *TestSuite) TestQueryServer_GetPaymentsWithTarget()
+
+// TODO[1703]: func (s *TestSuite) TestQueryServer_GetAllPayments()
+
+// TODO[1703]: func (s *TestSuite) TestQueryServer_PaymentFeeCalc()

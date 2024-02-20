@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -265,6 +266,42 @@ func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.Msg
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgMarketManageReqAttrsResponse{}, nil
+}
+
+// CreatePayment creates a payment to facilitate a trade between two accounts.
+func (k MsgServer) CreatePayment(goCtx context.Context, msg *exchange.MsgCreatePaymentRequest) (*exchange.MsgCreatePaymentResponse, error) {
+	//TODO[1703]: CreatePayment
+	return nil, errors.New("not implemented yet")
+}
+
+// AcceptPayment is used by a target to accept a payment.
+func (k MsgServer) AcceptPayment(goCtx context.Context, msg *exchange.MsgAcceptPaymentRequest) (*exchange.MsgAcceptPaymentResponse, error) {
+	//TODO[1703]: AcceptPayment
+	return nil, errors.New("not implemented yet")
+}
+
+// RejectPayment can be used by a target to reject a payment.
+func (k MsgServer) RejectPayment(goCtx context.Context, msg *exchange.MsgRejectPaymentRequest) (*exchange.MsgRejectPaymentResponse, error) {
+	//TODO[1703]: RejectPayment
+	return nil, errors.New("not implemented yet")
+}
+
+// RejectPayments can be used by a target to reject all payments from one or more sources.
+func (k MsgServer) RejectPayments(goCtx context.Context, msg *exchange.MsgRejectPaymentsRequest) (*exchange.MsgRejectPaymentsResponse, error) {
+	//TODO[1703]: RejectPayments
+	return nil, errors.New("not implemented yet")
+}
+
+// CancelPayments can be used by a source to cancel one or more payments.
+func (k MsgServer) CancelPayments(goCtx context.Context, msg *exchange.MsgCancelPaymentsRequest) (*exchange.MsgCancelPaymentsResponse, error) {
+	//TODO[1703]: CancelPayments
+	return nil, errors.New("not implemented yet")
+}
+
+// ChangePaymentTarget can be used by a source to change the target in one of their payments.
+func (k MsgServer) ChangePaymentTarget(goCtx context.Context, msg *exchange.MsgChangePaymentTargetRequest) (*exchange.MsgChangePaymentTargetResponse, error) {
+	//TODO[1703]: ChangePaymentTarget
+	return nil, errors.New("not implemented yet")
 }
 
 // GovCreateMarket is a governance proposal endpoint for creating a market.

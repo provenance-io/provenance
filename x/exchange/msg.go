@@ -27,6 +27,12 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgMarketUpdateIntermediaryDenomRequest)(nil),
 	(*MsgMarketManagePermissionsRequest)(nil),
 	(*MsgMarketManageReqAttrsRequest)(nil),
+	(*MsgCreatePaymentRequest)(nil),
+	(*MsgAcceptPaymentRequest)(nil),
+	(*MsgRejectPaymentRequest)(nil),
+	(*MsgRejectPaymentsRequest)(nil),
+	(*MsgCancelPaymentsRequest)(nil),
+	(*MsgChangePaymentTargetRequest)(nil),
 	(*MsgGovCreateMarketRequest)(nil),
 	(*MsgGovManageFeesRequest)(nil),
 	(*MsgGovCloseMarketRequest)(nil),
@@ -609,6 +615,90 @@ func (m MsgMarketManageReqAttrsRequest) HasUpdates() bool {
 
 func (m MsgMarketManageReqAttrsRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgCreatePaymentRequest) ValidateBasic() error {
+	_ = MsgCreatePaymentRequest{ // TODO[1703]: Delete this line.
+		Payment: Payment{},
+	}
+	// TODO[1703]: MsgCreatePaymentRequest.ValidateBasic
+	return nil
+}
+
+func (m MsgCreatePaymentRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Payment.Source)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgAcceptPaymentRequest) ValidateBasic() error {
+	_ = MsgAcceptPaymentRequest{ // TODO[1703]: Delete this line.
+		Payment: Payment{},
+	}
+	// TODO[1703]: MsgAcceptPaymentRequest.ValidateBasic
+	return nil
+}
+
+func (m MsgAcceptPaymentRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Payment.Target)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgRejectPaymentRequest) ValidateBasic() error {
+	_ = MsgRejectPaymentRequest{ // TODO[1703]: Delete this line.
+		Target:     "",
+		Source:     "",
+		ExternalId: "",
+	}
+	// TODO[1703]: MsgRejectPaymentRequest.ValidateBasic
+	return nil
+}
+
+func (m MsgRejectPaymentRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Target)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgRejectPaymentsRequest) ValidateBasic() error {
+	_ = MsgRejectPaymentsRequest{ // TODO[1703]: Delete this line.
+		Target:  "",
+		Sources: nil,
+	}
+	// TODO[1703]: MsgRejectPaymentsRequest.ValidateBasic
+	return nil
+}
+
+func (m MsgRejectPaymentsRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Target)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgCancelPaymentsRequest) ValidateBasic() error {
+	_ = MsgCancelPaymentsRequest{ // TODO[1703]: Delete this line.
+		Source:      "",
+		ExternalIds: nil,
+	}
+	// TODO[1703]: MsgCancelPaymentsRequest.ValidateBasic
+	return nil
+}
+
+func (m MsgCancelPaymentsRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Source)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgChangePaymentTargetRequest) ValidateBasic() error {
+	_ = MsgChangePaymentTargetRequest{ // TODO[1703]: Delete this line.
+		Source:     "",
+		ExternalId: "",
+		NewTarget:  "",
+	}
+	// TODO[1703]: MsgChangePaymentTargetRequest.ValidateBasic
+	return nil
+}
+
+func (m MsgChangePaymentTargetRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Source)
 	return []sdk.AccAddress{addr}
 }
 

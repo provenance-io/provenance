@@ -4334,6 +4334,18 @@ func (s *TestSuite) TestMsgServer_MarketManageReqAttrs() {
 	}
 }
 
+// TODO[1703]: func (s *TestSuite) TestMsgServer_CreatePayment()
+
+// TODO[1703]: func (s *TestSuite) TestMsgServer_AcceptPayment()
+
+// TODO[1703]: func (s *TestSuite) TestMsgServer_RejectPayment()
+
+// TODO[1703]: func (s *TestSuite) TestMsgServer_RejectPayments()
+
+// TODO[1703]: func (s *TestSuite) TestMsgServer_CancelPayments()
+
+// TODO[1703]: func (s *TestSuite) TestMsgServer_ChangePaymentTarget()
+
 func (s *TestSuite) TestMsgServer_GovCreateMarket() {
 	testDef := msgServerTestDef[exchange.MsgGovCreateMarketRequest, exchange.MsgGovCreateMarketResponse, uint32]{
 		endpointName: "GovCreateMarket",

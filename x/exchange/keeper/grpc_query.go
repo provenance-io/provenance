@@ -545,3 +545,33 @@ func (k QueryServer) ValidateManageFees(goCtx context.Context, req *exchange.Que
 
 	return resp, nil
 }
+
+// GetPayment gets a single specific payment.
+func (k QueryServer) GetPayment(goCtx context.Context, req *exchange.QueryGetPaymentRequest) (*exchange.QueryGetPaymentResponse, error) {
+	//TODO[1703]: GetPayment
+	return nil, errors.New("not implemented yet")
+}
+
+// GetPaymentsWithSource gets all payments with a specific source account.
+func (k QueryServer) GetPaymentsWithSource(goCtx context.Context, req *exchange.QueryGetPaymentsWithSourceRequest) (*exchange.QueryGetPaymentsWithSourceResponse, error) {
+	//TODO[1703]: GetPaymentsWithSource
+	return nil, errors.New("not implemented yet")
+}
+
+// GetPaymentsWithTarget gets all payments with a specific target account.
+func (k QueryServer) GetPaymentsWithTarget(goCtx context.Context, req *exchange.QueryGetPaymentsWithTargetRequest) (*exchange.QueryGetPaymentsWithTargetResponse, error) {
+	//TODO[1703]: GetPaymentsWithTarget
+	return nil, errors.New("not implemented yet")
+}
+
+// GetAllPayments gets all payments.
+func (k QueryServer) GetAllPayments(goCtx context.Context, req *exchange.QueryGetAllPaymentsRequest) (*exchange.QueryGetAllPaymentsResponse, error) {
+	//TODO[1703]: GetAllPayments
+	return nil, errors.New("not implemented yet")
+}
+
+// PaymentFeeCalc calculates the fees that must be paid for creating or accepting a specific payment.
+func (k QueryServer) PaymentFeeCalc(goCtx context.Context, req *exchange.QueryPaymentFeeCalcRequest) (*exchange.QueryPaymentFeeCalcResponse, error) {
+	//TODO[1703]: PaymentFeeCalc
+	return nil, errors.New("not implemented yet")
+}

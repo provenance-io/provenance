@@ -93,6 +93,24 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			return &MsgMarketManageReqAttrsRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
+			return &MsgCreatePaymentRequest{Payment: Payment{Source: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgAcceptPaymentRequest{Payment: Payment{Target: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgRejectPaymentRequest{Target: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgRejectPaymentsRequest{Target: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCancelPaymentsRequest{Source: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgChangePaymentTargetRequest{Source: signer}
+		},
+		func(signer string) sdk.Msg {
 			return &MsgGovCreateMarketRequest{Authority: signer}
 		},
 		func(signer string) sdk.Msg {
@@ -2490,6 +2508,18 @@ func TestMsgMarketManageReqAttrsRequest_HasUpdates(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1703]: func TestMsgCreatePaymentRequest_ValidateBasic(t *testing.T)
+
+// TODO[1703]: func TestMsgAcceptPaymentRequest_ValidateBasic(t *testing.T)
+
+// TODO[1703]: func TestMsgRejectPaymentRequest_ValidateBasic(t *testing.T)
+
+// TODO[1703]: func TestMsgRejectPaymentsRequest_ValidateBasic(t *testing.T)
+
+// TODO[1703]: func TestMsgCancelPaymentsRequest_ValidateBasic(t *testing.T)
+
+// TODO[1703]: func TestMsgChangePaymentTargetRequest_ValidateBasic(t *testing.T)
 
 func TestMsgGovCreateMarketRequest_ValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("authority___________").String()
