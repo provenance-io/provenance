@@ -62,6 +62,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
@@ -749,25 +750,23 @@ func New(
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
-	_ = skipGenesisInvariants // TODO[1760]: crisis
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
-
 	app.mm = module.NewManager(
 		genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app.BaseApp, encodingConfig.TxConfig),
-		// auth.NewAppModule(appCodec, app.AccountKeeper, nil), // TODO[1760]: auth
+		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		// bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper), // TODO[1760]: bank
-		// capability.NewAppModule(appCodec, *app.CapabilityKeeper), // TODO[1760]: capability
-		// crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants), // TODO[1760]: crisis
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
+		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
+		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		// gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper), // TODO[1760]: gov
-		// mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil), // TODO[1760]: mint
-		// slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper), // TODO[1760]: slashing
-		// distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper), // TODO[1760]: distr
-		// staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper), // TODO[1760]: staking
-		// upgrade.NewAppModule(app.UpgradeKeeper), // TODO[1760]: upgrade
+		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
+		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil, app.GetSubspace(minttypes.ModuleName)),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -998,15 +997,15 @@ func New(
 	app.mm.RegisterServices(app.configurator)
 
 	app.sm = module.NewSimulationManager(
-		// auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts), // TODO[1760]: auth
-		// bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper), // TODO[1760]: bank
-		// capability.NewAppModule(appCodec, *app.CapabilityKeeper), // TODO[1760]: capability
+		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
+		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		// gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper), // TODO[1760]: gov
-		// mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil), // TODO[1760]: mint
-		// staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper), // TODO[1760]: staking
-		// distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper), // TODO[1760]: distr
-		// slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper), // TODO[1760]: slashing
+		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
+		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil, app.GetSubspace(minttypes.ModuleName)),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
 		params.NewAppModule(app.ParamsKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
