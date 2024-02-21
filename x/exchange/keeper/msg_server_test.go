@@ -241,7 +241,7 @@ func (s *TestSuite) requireSanctionAddress(addr sdk.AccAddress) {
 	s.Require().NoError(err, "SanctionAddresses(%s)", s.getAddrName(addr))
 }
 
-// requireAddFinalizeAndActivateMarker creates a marker, requiring it to not error.
+// requireAddFinalizeAndActivateMarker creates a restricted marker, requiring it to not error.
 func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager sdk.AccAddress, reqAttrs ...string) {
 	markerAddr := s.markerAddr(coin.Denom)
 	marker := &markertypes.MarkerAccount{
@@ -265,6 +265,36 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    true,
 		RequiredAttributes:     reqAttrs,
+	}
+	nav := markertypes.NewNetAssetValue(s.coin("5navcoin"), 1)
+	err := s.app.MarkerKeeper.SetNetAssetValue(s.ctx, marker, nav, "testing")
+	s.Require().NoError(err, "SetNetAssetValue(%d)", coin.Denom)
+	err = s.app.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
+	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
+}
+
+// requireAddFinalizeAndActivateCoinMarker creates a coin marker, requiring it to not error.
+func (s *TestSuite) requireAddFinalizeAndActivateCoinMarker(coin sdk.Coin, manager sdk.AccAddress) {
+	markerAddr := s.markerAddr(coin.Denom)
+	marker := &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
+		Manager:     manager.String(),
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address: manager.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Mint, markertypes.Access_Burn,
+					markertypes.Access_Deposit, markertypes.Access_Withdraw, markertypes.Access_Delete,
+					markertypes.Access_Admin,
+				},
+			},
+		},
+		Status:                 markertypes.StatusProposed,
+		Denom:                  coin.Denom,
+		Supply:                 coin.Amount,
+		MarkerType:             markertypes.MarkerType_Coin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
 	}
 	nav := markertypes.NewNetAssetValue(s.coin("5navcoin"), 1)
 	err := s.app.MarkerKeeper.SetNetAssetValue(s.ctx, marker, nav, "testing")
@@ -1425,11 +1455,63 @@ func (s *TestSuite) TestMsgServer_FillBids() {
 			},
 		},
 		{
-			name: "okay: two bids, all req attrs and fees",
+			name: "fee in restricted denom",
 			setup: func() {
 				s.requireAddFinalizeAndActivateMarker(s.coin("13apple"), s.addr5, "*.gonna.have.it")
 				s.requireAddFinalizeAndActivateMarker(s.coin("70pear"), s.addr5, "*.gonna.have.it")
 				s.requireAddFinalizeAndActivateMarker(s.coin("300fig"), s.addr5, "*.gonna.have.it")
+				s.requireSetNameRecord("buyer.gonna.have.it", s.addr5)
+				s.requireSetNameRecord("seller.gonna.have.it", s.addr5)
+				s.requireSetNameRecord("market.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "seller.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr2, "buyer.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr3, "buyer.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.marketAddr1, "market.gonna.have.it", s.addr5)
+				s.requireFundAccount(s.addr1, "13apple,100fig")
+				s.requireFundAccount(s.addr2, "50pear,100fig")
+				s.requireFundAccount(s.addr3, "20pear,100fig")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
+					FeeCreateAskFlat:          s.coins("10fig"),
+					FeeCreateBidFlat:          s.coins("200fig"),
+					FeeSellerSettlementFlat:   s.coins("5pear"),
+					FeeSellerSettlementRatios: s.ratios("35pear:2pear"),
+					FeeBuyerSettlementFlat:    s.coins("30fig"),
+					FeeBuyerSettlementRatios:  s.ratios("10pear:1fig"),
+					ReqAttrCreateAsk:          []string{"*.gonna.have.it"},
+					ReqAttrCreateBid:          []string{"not.gonna.have.it"},
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(12345).WithBid(&exchange.BidOrder{
+					MarketId: 1, Buyer: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+					BuyerSettlementFees: s.coins("35fig"), ExternalId: "first order",
+				}))
+				s.requireAddHold(s.addr2, "50pear,35fig", 12345)
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(98765).WithBid(&exchange.BidOrder{
+					MarketId: 1, Buyer: s.addr3.String(), Assets: s.coin("3apple"), Price: s.coin("20pear"),
+					BuyerSettlementFees: s.coins("32fig"), ExternalId: "second order",
+				}))
+				s.requireAddHold(s.addr3, "20pear,32fig", 98765)
+			},
+			msg: exchange.MsgFillBidsRequest{
+				Seller:                  s.addr1.String(),
+				MarketId:                1,
+				TotalAssets:             s.coins("13apple"),
+				BidOrderIds:             []uint64{12345, 98765},
+				SellerSettlementFlatFee: s.coinP("5pear"),
+				AskOrderCreationFee:     s.coinP("10fig"),
+			},
+			expInErr: []string{invReqErr,
+				"error collecting exchange fee 4fig,1pear (based off 67fig,9pear) from market 1",
+				"restricted denom fig cannot be sent to the fee collector",
+			},
+		},
+		{
+			name: "okay: two bids, all req attrs and fees",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(s.coin("13apple"), s.addr5, "*.gonna.have.it")
+				s.requireAddFinalizeAndActivateCoinMarker(s.coin("70pear"), s.addr5)
+				s.requireAddFinalizeAndActivateCoinMarker(s.coin("300fig"), s.addr5)
 				s.requireSetNameRecord("buyer.gonna.have.it", s.addr5)
 				s.requireSetNameRecord("seller.gonna.have.it", s.addr5)
 				s.requireSetNameRecord("market.gonna.have.it", s.addr5)
@@ -1859,7 +1941,7 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 			},
 		},
 		{
-			name: "okay: two asks, all req attrs and fees",
+			name: "fee in restricted denom",
 			setup: func() {
 				s.requireSetNameRecord("buyer.gonna.have.it", s.addr5)
 				s.requireSetNameRecord("seller.gonna.have.it", s.addr5)
@@ -1874,6 +1956,58 @@ func (s *TestSuite) TestMsgServer_FillAsks() {
 				s.requireAddFinalizeAndActivateMarker(s.coin("13apple"), s.addr5, "*.gonna.have.it")
 				s.requireAddFinalizeAndActivateMarker(s.coin("70pear"), s.addr5, "*.gonna.have.it")
 				s.requireAddFinalizeAndActivateMarker(s.coin("300fig"), s.addr5, "*.gonna.have.it")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
+					FeeCreateAskFlat:          s.coins("200fig"),
+					FeeCreateBidFlat:          s.coins("10fig"),
+					FeeSellerSettlementFlat:   s.coins("5pear,12fig"),
+					FeeSellerSettlementRatios: s.ratios("35pear:2pear"),
+					FeeBuyerSettlementFlat:    s.coins("30fig"),
+					FeeBuyerSettlementRatios:  s.ratios("10pear:1fig"),
+					ReqAttrCreateAsk:          []string{"not.gonna.have.it"},
+					ReqAttrCreateBid:          []string{"*.gonna.have.it"},
+				})
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(12345).WithAsk(&exchange.AskOrder{
+					MarketId: 1, Seller: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("50pear"),
+					SellerSettlementFlatFee: s.coinP("5pear"), ExternalId: "first order",
+				}))
+				s.requireAddHold(s.addr2, "10apple", 12345)
+				s.requireSetOrderInStore(s.getStore(), exchange.NewOrder(98765).WithAsk(&exchange.AskOrder{
+					MarketId: 1, Seller: s.addr3.String(), Assets: s.coin("3apple"), Price: s.coin("20pear"),
+					SellerSettlementFlatFee: s.coinP("12fig"), ExternalId: "second order",
+				}))
+				s.requireAddHold(s.addr3, "3apple,12fig", 98765)
+			},
+			msg: exchange.MsgFillAsksRequest{
+				Buyer:               s.addr1.String(),
+				MarketId:            1,
+				TotalPrice:          s.coin("70pear"),
+				AskOrderIds:         []uint64{12345, 98765},
+				BuyerSettlementFees: s.coins("37fig"),
+				BidOrderCreationFee: s.coinP("10fig"),
+			},
+			expInErr: []string{invReqErr,
+				"error collecting exchange fee 3fig,1pear (based off 49fig,10pear) from market 1",
+				"restricted denom fig cannot be sent to the fee collector",
+			},
+		},
+		{
+			name: "okay: two asks, all req attrs and fees",
+			setup: func() {
+				s.requireSetNameRecord("buyer.gonna.have.it", s.addr5)
+				s.requireSetNameRecord("seller.gonna.have.it", s.addr5)
+				s.requireSetNameRecord("market.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "buyer.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr2, "seller.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.addr3, "seller.gonna.have.it", s.addr5)
+				s.requireSetAttr(s.marketAddr1, "market.gonna.have.it", s.addr5)
+				s.requireFundAccount(s.addr1, "70pear,100fig")
+				s.requireFundAccount(s.addr2, "10apple,100fig")
+				s.requireFundAccount(s.addr3, "3apple,100fig")
+				s.requireAddFinalizeAndActivateMarker(s.coin("13apple"), s.addr5, "*.gonna.have.it")
+				s.requireAddFinalizeAndActivateCoinMarker(s.coin("70pear"), s.addr5)
+				s.requireAddFinalizeAndActivateCoinMarker(s.coin("300fig"), s.addr5)
 
 				s.requireCreateMarketUnmocked(exchange.Market{
 					MarketId: 1, AcceptingOrders: true, AllowUserSettlement: true,
@@ -2714,9 +2848,65 @@ func (s *TestSuite) TestMsgServer_MarketSettle() {
 			},
 		},
 		{
-			name: "two of each with fees and req attrs",
+			name: "fee in restricted denom",
 			setup: func() {
 				s.requireAddFinalizeAndActivateMarker(s.coin("185pear"), s.addr5, "*.have.it")
+				s.requireAddFinalizeAndActivateMarker(s.coin("18apple"), s.addr5, "*.have.it")
+				s.requireSetNameRecord("buyer.have.it", s.addr5)
+				s.requireSetNameRecord("seller.have.it", s.addr5)
+				s.requireSetNameRecord("market.have.it", s.addr5)
+				s.requireSetAttr(s.addr1, "seller.have.it", s.addr5)
+				s.requireSetAttr(s.addr2, "buyer.have.it", s.addr5)
+				s.requireSetAttr(s.addr3, "seller.have.it", s.addr5)
+				s.requireSetAttr(s.addr4, "buyer.have.it", s.addr5)
+				s.requireSetAttr(s.marketAddr2, "market.have.it", s.addr5)
+				s.requireFundAccount(s.addr1, "20apple,100pear,100fig")
+				s.requireFundAccount(s.addr2, "20apple,100pear,100fig")
+				s.requireFundAccount(s.addr3, "20apple,100pear,100fig")
+				s.requireFundAccount(s.addr4, "20apple,100pear,100fig")
+
+				s.requireCreateMarketUnmocked(exchange.Market{
+					MarketId: 2, AccessGrants: []exchange.AccessGrant{s.agCanOnly(s.addr5, exchange.Permission_settle)},
+					FeeSellerSettlementRatios: s.ratios("10pear:1pear"),
+				})
+
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					MarketId: 2, Seller: s.addr1.String(), Assets: s.coin("7apple"), Price: s.coin("75pear"),
+					SellerSettlementFlatFee: s.coinP("10fig"),
+				}))
+				s.requireAddHold(s.addr1, "7apple,10fig", 1)
+				s.requireSetOrderInStore(store, exchange.NewOrder(22).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr2.String(), Assets: s.coin("10apple"), Price: s.coin("100pear"),
+					BuyerSettlementFees: s.coins("20fig"),
+				}))
+				s.requireAddHold(s.addr2, "100pear,20fig", 22)
+				s.requireSetOrderInStore(store, exchange.NewOrder(333).WithAsk(&exchange.AskOrder{
+					MarketId: 2, Seller: s.addr3.String(), Assets: s.coin("11apple"), Price: s.coin("105pear"),
+					SellerSettlementFlatFee: s.coinP("5pear"),
+				}))
+				s.requireAddHold(s.addr3, "11apple", 333)
+				s.requireSetOrderInStore(store, exchange.NewOrder(4444).WithBid(&exchange.BidOrder{
+					MarketId: 2, Buyer: s.addr4.String(), Assets: s.coin("8apple"), Price: s.coin("85pear"),
+					BuyerSettlementFees: s.coins("10pear"),
+				}))
+				s.requireAddHold(s.addr4, "95pear", 4444)
+			},
+			msg: exchange.MsgMarketSettleRequest{
+				Admin:       s.addr5.String(),
+				MarketId:    2,
+				AskOrderIds: []uint64{1, 333},
+				BidOrderIds: []uint64{22, 4444},
+			},
+			expInErr: []string{invReqErr,
+				"error collecting exchange fee 2fig,2pear (based off 30fig,34pear) from market 2",
+				"restricted denom pear cannot be sent to the fee collector",
+			},
+		},
+		{
+			name: "two of each with fees and req attrs",
+			setup: func() {
+				s.requireAddFinalizeAndActivateCoinMarker(s.coin("185pear"), s.addr5)
 				s.requireAddFinalizeAndActivateMarker(s.coin("18apple"), s.addr5, "*.have.it")
 				s.requireSetNameRecord("buyer.have.it", s.addr5)
 				s.requireSetNameRecord("seller.have.it", s.addr5)
