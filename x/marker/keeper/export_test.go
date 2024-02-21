@@ -23,6 +23,11 @@ func (k Keeper) GetIbcTransferModuleAddr() sdk.AccAddress {
 	return k.ibcTransferModuleAddr
 }
 
+// GetFeeCollectorAddr is a TEST ONLY exposure of the feeCollectorAddr value.
+func (k Keeper) GetFeeCollectorAddr() sdk.AccAddress {
+	return k.feeCollectorAddr
+}
+
 // CanForceTransferFrom is a TEST ONLY exposure of the canForceTransferFrom value.
 func (k Keeper) CanForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool {
 	return k.canForceTransferFrom(ctx, from)

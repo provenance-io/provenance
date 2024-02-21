@@ -78,6 +78,8 @@ type Keeper struct {
 
 	ibcTransferModuleAddr sdk.AccAddress
 
+	feeCollectorAddr sdk.AccAddress
+
 	// Used to transfer the ibc marker
 	ibcTransferServer types.IbcTransferMsgServer
 
@@ -128,6 +130,7 @@ func NewKeeper(
 		authority:             authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		markerModuleAddr:      authtypes.NewModuleAddress(types.CoinPoolName),
 		ibcTransferModuleAddr: authtypes.NewModuleAddress(ibctypes.ModuleName),
+		feeCollectorAddr:      authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 		ibcTransferServer:     ibcTransferServer,
 		reqAttrBypassAddrs:    types.NewImmutableAccAddresses(reqAttrBypassAddrs),
 		groupChecker:          checker,
