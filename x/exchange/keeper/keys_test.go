@@ -4182,8 +4182,8 @@ func TestMakeIndexKeyMarketExternalIDToOrder(t *testing.T) {
 			name:       "external id too long",
 			marketID:   2,
 			externalID: strings.Repeat("H", exchange.MaxExternalIDLength+1),
-			expPanic: fmt.Sprintf("cannot create market external id to order index: invalid external id %q: max length %d",
-				strings.Repeat("H", exchange.MaxExternalIDLength+1), exchange.MaxExternalIDLength),
+			expPanic: fmt.Sprintf("cannot create market external id to order index: invalid external id %q (length %d): max length %d",
+				"HHHHH...HHHHH", exchange.MaxExternalIDLength+1, exchange.MaxExternalIDLength),
 		},
 		{
 			name:       "market 0, a zeroed uuid",

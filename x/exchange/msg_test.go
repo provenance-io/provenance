@@ -1396,8 +1396,8 @@ func TestMsgMarketSetOrderExternalIDRequest_ValidateBasic(t *testing.T) {
 				ExternalId: strings.Repeat("r", MaxExternalIDLength+1),
 			},
 			expErr: []string{
-				fmt.Sprintf("invalid external id %q: max length %d",
-					strings.Repeat("r", MaxExternalIDLength+1), MaxExternalIDLength),
+				fmt.Sprintf("invalid external id %q (length %d): max length %d",
+					"rrrrr...rrrrr", MaxExternalIDLength+1, MaxExternalIDLength),
 			},
 		},
 		{
@@ -1421,8 +1421,8 @@ func TestMsgMarketSetOrderExternalIDRequest_ValidateBasic(t *testing.T) {
 			expErr: []string{
 				"invalid administrator \"\"", emptyAddrErr,
 				"invalid market id: cannot be zero",
-				fmt.Sprintf("invalid external id %q: max length %d",
-					strings.Repeat("V", MaxExternalIDLength+1), MaxExternalIDLength),
+				fmt.Sprintf("invalid external id %q (length %d): max length %d",
+					"VVVVV...VVVVV", MaxExternalIDLength+1, MaxExternalIDLength),
 				"invalid order id: cannot be zero",
 			},
 		},
