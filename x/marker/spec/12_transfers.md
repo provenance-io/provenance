@@ -106,7 +106,9 @@ The `SendRestrictionFn` uses the following flow to decide whether a send is allo
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
     start[["SendRestrictionFn(Sender, Receiver, Amount)"]]
-    qhasbp{{"Does context have bypass?"}}
+    qhasbp{{"Does context have bypass, or is the Sender either\nthe marker module or ibc transfer account?"}}
+    qfc{{"Is the Receiver the fee collector?"}}
+    qrc{{"Is there a restricted coin in the Amount?"}}
     gta["Get Transfer Agent from the context if possible."]
     csm[["checkSenderMarker(Sender, Transfer Agent)"]]
     issmok{{"Proceed?"}}
@@ -122,6 +124,11 @@ flowchart TD
     style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
     start --> qhasbp
     qhasbp -.->|no| gta
+    qhasbp -->|yes| qfc
+    qfc -->|yes| qrc
+    qfc -.->|no| ok
+    qrc -------->|yes| denied
+    qrc -.->|no| ok
     gta --> csm
     csm --> issmok
     issmok -->|yes| crm
@@ -136,12 +143,11 @@ flowchart TD
     nextd --> vsd
     end
     mored -....->|no| ok
-    qhasbp ------>|yes| ok
     isdok -.->|no| denied
 
     style denomloop fill:#bbffff
-    linkStyle 5,8,15 stroke:#b30000,color:#b30000
-    linkStyle 13,14 stroke:#1b8500,color:#1b8500
+    linkStyle 5,10,13,19 stroke:#b30000,color:#b30000
+    linkStyle 4,6,18 stroke:#1b8500,color:#1b8500
 ```
 
 #### checkSenderMarker
@@ -216,6 +222,7 @@ flowchart TD
     isdm{{"Is there a marker for Denom?"}}
     isma{{"Is the marker active?"}}
     qisrc{{"Is Denom a restricted coin?"}}
+    qistofc{{"Is Receiver the fee collector?"}}
     ista{{"Is there a Transfer Agent\nwith transfer access?"}}
     qisdeny{{"Is Sender on marker's deny list?"}}
     qhastrans{{"Does Sender have\ntransfer for Denom?"}}
@@ -233,8 +240,10 @@ flowchart TD
     isdm -.->|no| ok
     isma -.->|no| denied
     isma -->|yes| qisrc
-    qisrc -->|yes| ista
+    qisrc -->|yes| qistofc
     qisrc -.->|no| ok
+    qistofc -->|yes| denied
+    qistofc -.->|no| ista
     ista -.->|no| qisdeny
     ista -->|yes| ok
     qisdeny -->|yes| denied
@@ -252,8 +261,8 @@ flowchart TD
     qrhasattr -.->|no| denied
     qrhasattr -->|yes| ok
 
-    linkStyle 3,9,13,17,21 stroke:#b30000,color:#b30000
-    linkStyle 2,6,8,12,18,20,22 stroke:#1b8500,color:#1b8500
+    linkStyle 3,7,11,15,19,23 stroke:#b30000,color:#b30000
+    linkStyle 2,6,10,14,20,22,24 stroke:#1b8500,color:#1b8500
 ```
 
 Note that `force_transfer` access is not considered at all in the `SendRestrictionFn`.
