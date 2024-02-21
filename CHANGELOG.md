@@ -46,6 +46,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `serde-json-wasm` from 1.0.0 to 1.0.1 in /testutil/contracts/rate-limiter ([#1836](https://github.com/provenance-io/provenance/pull/1836))
 - Bump `serde-json-wasm` from 0.5.1 to 0.5.2 in /testutil/contracts/counter ([#1837](https://github.com/provenance-io/provenance/pull/1837))
 - Bump `serde-json-wasm` from 0.5.1 to 0.5.2 in /testutil/contracts/echo ([#1838](https://github.com/provenance-io/provenance/pull/1838))
+- Bump `golangci/golangci-lint-action` from 3 to 4 ([#1840](https://github.com/provenance-io/provenance/pull/1840))
+- Bump `google.golang.org/grpc` from 1.61.0 to 1.61.1 ([#1842](https://github.com/provenance-io/provenance/pull/1842))
 
 ---
 
