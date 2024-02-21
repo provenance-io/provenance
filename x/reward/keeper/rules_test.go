@@ -508,7 +508,7 @@ func (s *KeeperTestSuite) createTestValidators(amount int) {
 		validator := teststaking.NewValidator(s.T(), valAddrs[i], PKs[i])
 		tokens := s.app.StakingKeeper.TokensFromConsensusPower(s.ctx, int64(1+amount-i))
 		validator, _ = validator.AddTokensFromDel(tokens)
-		validator = keeper.TestingUpdateValidator(&s.app.StakingKeeper, s.ctx, validator, true)
+		validator = keeper.TestingUpdateValidator(s.app.StakingKeeper, s.ctx, validator, true)
 		validators = append(validators, validator)
 
 		// Create the delegations
