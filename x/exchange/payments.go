@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Validate returns an error if any of this Payment's info is invalid.
 func (p Payment) Validate() error {
 	var errs []error
 	if _, err := sdk.AccAddressFromBech32(p.Source); err != nil {
@@ -36,4 +37,9 @@ func (p Payment) Validate() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+// String returns a string representing this Payment.
+func (p Payment) String() string {
+	return fmt.Sprintf("%q;%s:%q<->%s:%q", p.ExternalId, p.Source, p.SourceAmount, p.Target, p.TargetAmount)
 }
