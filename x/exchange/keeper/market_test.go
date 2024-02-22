@@ -823,13 +823,6 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 
 func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 	setter := keeper.SetBuyerSettlementRatios
-	noDivErr := func(ratio, price string) string {
-		return fmt.Sprintf("buyer settlement fees: cannot apply ratio %s to price %s: price amount cannot be evenly divided by ratio price",
-			ratio, price)
-	}
-	noRatiosErr := func(price string) string {
-		return "no applicable buyer settlement fee ratios found for price " + price
-	}
 
 	tests := []struct {
 		name     string
@@ -907,10 +900,8 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 15,
 			price:    s.coin("7503pineapple"),
-			expErr: s.joinErrs(
-				noDivErr("500pineapple:1fig", "7503pineapple"),
-				noRatiosErr("7503pineapple"),
-			),
+			// 7503pineapple * 1fig/500pineapple = 15.006 => 16fig
+			expOpts: s.coins("16fig"),
 		},
 		{
 			name: "three ratios for denom: none divisible",
@@ -926,60 +917,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 21,
 			price:    s.coin("3000plum"),
-			expErr: s.joinErrs(
-				noDivErr("123plum:1fig", "3000plum"),
-				noDivErr("234plum:5grape", "3000plum"),
-				noDivErr("345plum:7honeydew", "3000plum"),
-				noRatiosErr("3000plum"),
-			),
-		},
-		{
-			name: "three ratios for denom: only first divisible",
-			setup: func() {
-				setter(s.getStore(), 21, []exchange.FeeRatio{
-					s.ratio("123plum:1fig"),
-					s.ratio("234plum:5grape"),
-					s.ratio("345plum:7honeydew"),
-					s.ratio("100peach:3fig"),
-					s.ratio("200peach:11grape"),
-					s.ratio("300peach:13honeydew"),
-				})
-			},
-			marketID: 21,
-			price:    s.coin("615plum"),
-			expOpts:  []sdk.Coin{s.coin("5fig")},
-		},
-		{
-			name: "three ratios for denom: only second divisible",
-			setup: func() {
-				setter(s.getStore(), 99, []exchange.FeeRatio{
-					s.ratio("123plum:1fig"),
-					s.ratio("234plum:5grape"),
-					s.ratio("345plum:7honeydew"),
-					s.ratio("100peach:3fig"),
-					s.ratio("200peach:11grape"),
-					s.ratio("300peach:13honeydew"),
-				})
-			},
-			marketID: 99,
-			price:    s.coin("1170plum"),
-			expOpts:  []sdk.Coin{s.coin("25grape")},
-		},
-		{
-			name: "three ratios for denom: only third divisible",
-			setup: func() {
-				setter(s.getStore(), 3, []exchange.FeeRatio{
-					s.ratio("123plum:1fig"),
-					s.ratio("234plum:5grape"),
-					s.ratio("345plum:7honeydew"),
-					s.ratio("100peach:3fig"),
-					s.ratio("200peach:11grape"),
-					s.ratio("300peach:13honeydew"),
-				})
-			},
-			marketID: 3,
-			price:    s.coin("1725plum"),
-			expOpts:  []sdk.Coin{s.coin("35honeydew")},
+			// 3000plum * 1fig/123plum = 24.39 => 25fig
+			// 3000plum * 5grape/234plum = 64.10 => 65grape
+			// 3000plum * 7honeydew/345plum = 60.86 => 61honeydew
+			expOpts: s.coins("25fig,65grape,61honeydew"),
 		},
 		{
 			name: "three ratios for denom: first not divisible",
@@ -995,7 +936,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 1,
 			price:    s.coin("26910plum"),
-			expOpts:  []sdk.Coin{s.coin("575grape"), s.coin("546honeydew")},
+			// 26910plum * 1fig/123plum = 218.78 => 219fig
+			// 26910plum * 5grape/234plum = 575grape
+			// 26910plum * 7honeydew/345plum = 546honeydew
+			expOpts: []sdk.Coin{s.coin("219fig"), s.coin("575grape"), s.coin("546honeydew")},
 		},
 		{
 			name: "three ratios for denom: second not divisible",
@@ -1011,7 +955,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 1,
 			price:    s.coin("50100peach"),
-			expOpts:  []sdk.Coin{s.coin("1503fig"), s.coin("2171honeydew")},
+			// 50100peach * 3fig/100peach = 1503fig
+			// 50100peach * 11grape/200peach = 2755.5 => 2756grape
+			// 50100peach * 13honeydew/300peach = 2171honeydew
+			expOpts: []sdk.Coin{s.coin("1503fig"), s.coin("2756grape"), s.coin("2171honeydew")},
 		},
 		{
 			name: "three ratios for denom: third not divisible",
@@ -1027,7 +974,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 1,
 			price:    s.coin("50200peach"),
-			expOpts:  []sdk.Coin{s.coin("1506fig"), s.coin("2761grape")},
+			// 50200peach * 3fig/100peach = 1506fig
+			// 50200peach * 11grape/200peach = 2761grape
+			// 50200peach * 13honeydew/300peach = 2175.33 => 2176honeydew
+			expOpts: []sdk.Coin{s.coin("1506fig"), s.coin("2761grape"), s.coin("2176honeydew")},
 		},
 		{
 			name: "three ratios for denom: all divisible",
@@ -7879,58 +7829,97 @@ func (s *TestSuite) TestKeeper_GetMarketBrief() {
 
 func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 	tests := []struct {
-		name        string
-		bankKeeper  *MockBankKeeper
-		marketID    uint32
-		toAddr      sdk.AccAddress
-		amount      sdk.Coins
-		withdrawnBy string
-		expErr      string
+		name         string
+		bankKeeper   *MockBankKeeper
+		marketID     uint32
+		toAddr       sdk.AccAddress
+		amount       sdk.Coins
+		withdrawnBy  string
+		expErr       string
+		expBlockCall bool
+		expSendCall  bool
+		expQBypass   bool
 	}{
 		{
-			name:        "market 1: error from SendCoins",
-			bankKeeper:  NewMockBankKeeper().WithSendCoinsResults("woopsie-daisy: an error story"),
+			name:        "invalid admin",
 			marketID:    1,
 			toAddr:      s.addr1,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("oops", 55)),
-			withdrawnBy: "noone",
-			expErr:      "failed to withdraw 55oops from market 1: woopsie-daisy: an error story",
+			amount:      sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+			withdrawnBy: "ohno",
+			expErr:      "invalid admin \"ohno\": decoding bech32 failed: invalid bech32 string length 4",
 		},
 		{
-			name:        "market 8: error from SendCoins",
-			bankKeeper:  NewMockBankKeeper().WithSendCoinsResults("ouch-ouch-ouch: a sequel error story"),
-			marketID:    8,
-			toAddr:      s.addr1,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("awwww", 77), sdk.NewInt64Coin("hurts", 3)),
-			withdrawnBy: "stillnoone",
-			expErr:      "failed to withdraw 77awwww,3hurts from market 8: ouch-ouch-ouch: a sequel error story",
+			name:         "to blocked address",
+			bankKeeper:   NewMockBankKeeper().WithBlockedAddrResults(true),
+			marketID:     1,
+			toAddr:       s.addr3,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
+			withdrawnBy:  s.adminAddr.String(),
+			expErr:       s.addr3.String() + " is not allowed to receive funds",
+			expBlockCall: true,
 		},
 		{
-			name:        "market 1: okay",
-			marketID:    1,
-			toAddr:      s.addr3,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
-			withdrawnBy: "thatoneguy",
+			name:         "market 1: error from SendCoins",
+			bankKeeper:   NewMockBankKeeper().WithSendCoinsResults("woopsie-daisy: an error story"),
+			marketID:     1,
+			toAddr:       s.addr1,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("oops", 55)),
+			withdrawnBy:  s.adminAddr.String(),
+			expErr:       "failed to withdraw 55oops from market 1: woopsie-daisy: an error story",
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   false,
 		},
 		{
-			name:        "market 8: okay",
-			marketID:    8,
-			toAddr:      s.addr5,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("kaching", 500_000_001)),
-			withdrawnBy: "itwasallme",
+			name:         "market 8: error from SendCoins",
+			bankKeeper:   NewMockBankKeeper().WithSendCoinsResults("ouch-ouch-ouch: a sequel error story"),
+			marketID:     8,
+			toAddr:       s.addr1,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("awwww", 77), sdk.NewInt64Coin("hurts", 3)),
+			withdrawnBy:  s.adminAddr.String(),
+			expErr:       "failed to withdraw 77awwww,3hurts from market 8: ouch-ouch-ouch: a sequel error story",
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   false,
+		},
+		{
+			name:         "market 1: okay to other",
+			marketID:     1,
+			toAddr:       s.addr3,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
+			withdrawnBy:  s.adminAddr.String(),
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   false,
+		},
+		{
+			name:         "market 8: okay to self",
+			marketID:     8,
+			toAddr:       s.addr5,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("kaching", 500_000_001)),
+			withdrawnBy:  s.addr5.String(),
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   true,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			expCalls := BankCalls{
-				SendCoins: []*SendCoinsArgs{
-					{
-						fromAddr: exchange.GetMarketAddress(tc.marketID),
-						toAddr:   tc.toAddr,
-						amt:      tc.amount,
-					},
-				},
+			expCalls := BankCalls{}
+			if tc.expBlockCall {
+				expCalls.BlockedAddr = append(expCalls.BlockedAddr, tc.toAddr)
+			}
+			if tc.expSendCall {
+				admin, err := sdk.AccAddressFromBech32(tc.withdrawnBy)
+				s.Require().NoError(err, "AccAddressFromBech32(%q)", tc.withdrawnBy)
+				expCalls.SendCoins = []*SendCoinsArgs{{
+					ctxHasQuarantineBypass: tc.expQBypass,
+					ctxTransferAgent:       admin,
+					fromAddr:               exchange.GetMarketAddress(tc.marketID),
+					toAddr:                 tc.toAddr,
+					amt:                    tc.amount,
+				}}
 			}
 
 			var expEvents sdk.Events

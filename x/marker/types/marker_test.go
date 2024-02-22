@@ -9,6 +9,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func init() {
@@ -469,6 +471,109 @@ func TestNetAssetValueValidate(t *testing.T) {
 			} else {
 				assert.NoError(t, err, "NetAssetValue validate should have passed")
 			}
+		})
+	}
+}
+
+func TestHasAccess(t *testing.T) {
+	addrAll := sdk.AccAddress("addrAll_____________")
+	addrAllButWithdraw := sdk.AccAddress("addrAllButWithdraw__")
+	addrOnlyTransfer := sdk.AccAddress("addrOnlyTransfer____")
+	addrMintBurn := sdk.AccAddress("addrMintBurn________")
+	addrDup := sdk.AccAddress("addrDup_____________")
+	marker := MarkerAccount{
+		BaseAccount: authtypes.NewBaseAccountWithAddress(MustGetMarkerAddress("mycooltestcoin")),
+		Denom:       "mycooltestcoin",
+		AccessControl: []AccessGrant{
+			{
+				Address: addrAll.String(),
+				Permissions: []Access{
+					Access_Mint, Access_Burn, Access_Deposit, Access_Withdraw,
+					Access_Delete, Access_Admin, Access_Transfer, Access_ForceTransfer,
+				},
+			},
+			{Address: addrDup.String(), Permissions: []Access{Access_Admin}},
+			{
+				Address: addrAllButWithdraw.String(),
+				Permissions: []Access{
+					Access_Mint, Access_Burn, Access_Deposit,
+					Access_Delete, Access_Admin, Access_Transfer, Access_ForceTransfer,
+				},
+			},
+			{Address: addrOnlyTransfer.String(), Permissions: []Access{Access_Transfer}},
+			{Address: addrMintBurn.String(), Permissions: []Access{Access_Mint, Access_Burn}},
+			{Address: addrDup.String(), Permissions: []Access{Access_Delete}},
+		},
+	}
+
+	tests := []struct {
+		name   string
+		addr   sdk.AccAddress
+		role   Access
+		expHas bool
+	}{
+		{name: "address not known", addr: sdk.AccAddress("addrUnknown_________"), role: Access_Admin, expHas: false},
+		{name: "address has all other roles", addr: addrAllButWithdraw, role: Access_Withdraw, expHas: false},
+		{name: "address only has that role", addr: addrOnlyTransfer, role: Access_Transfer, expHas: true},
+		{name: "address only has one role but not that one", addr: addrOnlyTransfer, role: Access_Delete, expHas: false},
+		{name: "address has other roles too", addr: addrAllButWithdraw, role: Access_Deposit, expHas: true},
+		{name: "address has two roles: first", addr: addrMintBurn, role: Access_Mint, expHas: true},
+		{name: "address has two roles: second", addr: addrMintBurn, role: Access_Burn, expHas: true},
+		{name: "address has two roles: neither", addr: addrMintBurn, role: Access_Deposit, expHas: false},
+		{name: "address in list twice: first has role", addr: addrDup, role: Access_Admin, expHas: true},
+		{name: "address in list twice: second has role", addr: addrDup, role: Access_Delete, expHas: true},
+		{name: "address in list twice: neither has role", addr: addrDup, role: Access_Mint, expHas: false},
+		{name: "address has all: unknown", addr: addrAll, role: Access_Unknown, expHas: false},
+		{name: "address has all: mint", addr: addrAll, role: Access_Mint, expHas: true},
+		{name: "address has all: burn", addr: addrAll, role: Access_Burn, expHas: true},
+		{name: "address has all: deposit", addr: addrAll, role: Access_Deposit, expHas: true},
+		{name: "address has all: withdraw", addr: addrAll, role: Access_Withdraw, expHas: true},
+		{name: "address has all: delete", addr: addrAll, role: Access_Delete, expHas: true},
+		{name: "address has all: admin", addr: addrAll, role: Access_Admin, expHas: true},
+		{name: "address has all: transfer", addr: addrAll, role: Access_Transfer, expHas: true},
+		{name: "address has all: force transfer", addr: addrAll, role: Access_ForceTransfer, expHas: true},
+	}
+
+	for _, tc := range tests {
+		var expErr string
+		if !tc.expHas {
+			expErr = fmt.Sprintf("%s does not have %s on %s marker (%s)", tc.addr, tc.role, marker.Denom, marker.Address)
+		}
+
+		t.Run(tc.name+": HasAccess", func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = marker.HasAccess(tc.addr.String(), tc.role)
+			}
+			require.NotPanics(t, testFunc, "HasAccess(%s, %s)", string(tc.addr), tc.role)
+			assert.Equal(t, tc.expHas, actual, "HasAccess(%s, %s) result", string(tc.addr), tc.role)
+		})
+
+		t.Run(tc.name+": ValidateHasAccess", func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = marker.ValidateHasAccess(tc.addr.String(), tc.role)
+			}
+			require.NotPanics(t, testFunc, "ValidateHasAccess(%s, %s)", string(tc.addr), tc.role)
+			assertions.AssertErrorValue(t, err, expErr, "ValidateHasAccess(%s, %s) error", string(tc.addr), tc.role)
+		})
+
+		t.Run(tc.name+": AddressHasAccess", func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = marker.AddressHasAccess(tc.addr, tc.role)
+			}
+			require.NotPanics(t, testFunc, "AddressHasAccess(%s, %s)", string(tc.addr), tc.role)
+			assert.Equal(t, tc.expHas, actual, "AddressHasAccess(%s, %s) result", string(tc.addr), tc.role)
+		})
+
+		t.Run(tc.name+": ValidateAddressHasAccess", func(t *testing.T) {
+			var err error
+			testFunc := func() {
+				err = marker.ValidateAddressHasAccess(tc.addr, tc.role)
+			}
+			require.NotPanics(t, testFunc, "ValidateAddressHasAccess(%s, %s)", string(tc.addr), tc.role)
+			assertions.AssertErrorValue(t, err, expErr, "ValidateAddressHasAccess(%s, %s) error", string(tc.addr), tc.role)
 		})
 	}
 }

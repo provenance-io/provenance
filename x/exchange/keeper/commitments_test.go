@@ -1900,6 +1900,7 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				AddHold:     []*AddHoldArgs{NewAddHoldArgs(s.addr2, s.coins("10apple"), holdReason(4))},
 			},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr2},
 				SendCoins: []*SendCoinsArgs{
 					{fromAddr: s.addr3, toAddr: s.addr2, amt: s.coins("10apple")},
 				},
@@ -1958,6 +1959,7 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				AddHold:     []*AddHoldArgs{NewAddHoldArgs(s.addr5, s.coins("10apple,10banana"), holdReason(4))},
 			},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr5},
 				SendCoins: []*SendCoinsArgs{
 					{fromAddr: s.addr3, toAddr: s.addr5, amt: s.coins("10apple,10banana")},
 				},
@@ -2006,6 +2008,7 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				AddHold: []*AddHoldArgs{NewAddHoldArgs(s.addr2, s.coins("10apple"), holdReason(2))},
 			},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr2, s.marketAddr2},
 				SendCoins: []*SendCoinsArgs{
 					{fromAddr: s.addr4, toAddr: s.addr2, amt: s.coins("10apple")},
 				},
@@ -2088,6 +2091,7 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				},
 			},
 			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr1, s.addr2, s.addr4, s.addr5, s.marketAddr2},
 				InputOutputCoins: []*InputOutputCoinsArgs{
 					{
 						inputs: []banktypes.Input{
@@ -2153,11 +2157,15 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				tc.holdKeeper = NewMockHoldKeeper()
 			}
 
+			admin, aErr := sdk.AccAddressFromBech32(tc.req.Admin)
+			s.Require().NoError(aErr, "AccAddressFromBech32(tc.req.Admin)")
 			for _, exp := range tc.expBankCalls.SendCoins {
 				exp.ctxHasQuarantineBypass = true
+				exp.ctxTransferAgent = admin
 			}
 			for _, exp := range tc.expBankCalls.InputOutputCoins {
 				exp.ctxHasQuarantineBypass = true
+				exp.ctxTransferAgent = admin
 			}
 
 			kpr := s.k.

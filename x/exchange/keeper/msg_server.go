@@ -101,7 +101,7 @@ func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSe
 	if !k.CanSettleOrders(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("settle orders for", msg.Admin, msg.MarketId)
 	}
-	err := k.SettleOrders(ctx, msg.MarketId, msg.AskOrderIds, msg.BidOrderIds, msg.ExpectPartial)
+	err := k.SettleOrders(ctx, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

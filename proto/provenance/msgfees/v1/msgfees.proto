@@ -12,11 +12,19 @@ option java_multiple_files = true;
 message Params {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
-  // constant used to calculate fees when gas fees shares denom with msg fee
+  // floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.
+  //
+  // Conversions:
+  //   - x nhash/usd-mil = 1,000,000/x usd/hash
+  //   - y usd/hash = 1,000,000/y nhash/usd-mil
+  //
+  // Examples:
+  //   - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash,
+  //   - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil
   cosmos.base.v1beta1.Coin floor_gas_price = 2 [(gogoproto.nullable) = false];
-  // total nhash per usd mil for converting usd to nhash
+  // nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash.
   uint64 nhash_per_usd_mil = 3;
-  // conversion fee denom is the denom usd is converted to
+  // conversion_fee_denom is the denom usd is converted to.
   string conversion_fee_denom = 4;
 }
 

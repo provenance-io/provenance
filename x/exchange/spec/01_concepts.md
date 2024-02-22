@@ -13,6 +13,7 @@ The exchange module defines a portion of market fees to be paid to the chain (di
     - [Market Permissions](#market-permissions)
     - [Settlement](#settlement)
     - [Commitment Settlement](#commitment-settlement)
+    - [Transfer Agent](#transfer-agent)
   - [Orders](#orders)
     - [Ask Orders](#ask-orders)
     - [Bid Orders](#bid-orders)
@@ -24,7 +25,8 @@ The exchange module defines a portion of market fees to be paid to the chain (di
     - [Settlement Flat Fees](#settlement-flat-fees)
     - [Settlement Ratio Fees](#settlement-ratio-fees)
     - [Commitment Fees](#commitment-fees)
-    - [Exchange Fees](#exchange-fees)
+    - [Exchange Fees for Orders](#exchange-fees-for-orders)
+    - [Exchange Fees for Commitments](#exchange-fees-for-commitments)
 
 
 ## Markets
@@ -112,10 +114,8 @@ During settlement:
 With complex settlements, it's possible that an ask order's `assets` go to a different account than the `price` funds come from, and vice versa for bid orders.
 
 Transfers of the `assets` and `price` bypass the quarantine module since order creation can be viewed as acceptance of those funds.
-
-Transfers do not bypass any other send-restrictions (e.g. `x/marker` or `x/sanction` module restrictions).
+No other send-restrictions are bypassed (e.g. `x/marker` or `x/sanction` module restrictions).
 E.g. If an order's funds are in a sanctioned account, settlement of that order will fail since those funds cannot be removed from that account.
-Or, if a marker has required attributes, but the recipient does not have those attributes, settlement will fail.
 
 
 ### Commitment Settlement
@@ -134,6 +134,12 @@ See also: [Commitment Fees](#commitment-fees).
 The funds are re-committed regardless of the market's `accepting_commitments` value.
 The accounts these funds are being re-committed to also are not required to have the create-commitment required attributes.
 
+### Transfer Agent
+
+During a settlement, commitment settlement, or market withdrawal, the `admin` is also used as the transfer agent.
+A transfer agent is used by the `x/marker` module's [Send Restrictions](../../marker/spec/12_transfers.md#send-restrictions) to help facilitate movement of restricted coins.
+E.g. an `admin` with `transfer` access for a denom and `settle` permission for a market can use a settlement to transfer restricted funds to a recipient, regardless of required attributes on that denom or the attributes of the recipient.
+If an `admin` does **not** have `transfer` access for a restricted denom, settlements can still succeed if the recipient has the required attributes for that denom.
 
 ## Orders
 
@@ -346,8 +352,7 @@ It can also have multiple entries with the same `price` denom or `fee` denom, bu
 E.g. a market can have `100chicken:1cow` and also `100chicken:7chicken`, `500cow:1cow`, and `5cow:1chicken`, but it couldn't also have `105chicken:2cow`.
 
 To calculate the buyer settlement ratio fee, the following formula is used: `<bid price> * <ratio fee> / <ratio price>`.
-If that is not a whole number, the chosen ratio is not applicable to the bid order's price and cannot be used.
-The user will need to either use a different ratio or change their bid price.
+If that is not a whole number, it is rounded up to the next whole number.
 
 The buyer settlement ratio fee should be added to the buyer settlement flat fee and provided in the `buyer_settlement_fees` in the bid order.
 The ratio and flat fees can be in any denoms allowed by the market, and do not have to be the same.
@@ -400,10 +405,36 @@ The total is divided by two because the sum of the inputs is effectively double 
 E.g. If buying  `1candybar` for `99cusd`, we think of the value of that trade as $0.99.
 Without the halving, though, we might have ended up with a total of $1.98 by converting the `1candybar` into `cusd` (hopefully `99cusd`) and adding that to the other `99cusd`.
 
+##### Commitment Settlement Fee Charge Example
 
-### Exchange Fees
+A commitment settlement is requested with the following data and market setup:
 
-A portion of the fees collected by a market, are given to the exchange.
+| name               | value                                                        |
+|--------------------|--------------------------------------------------------------|
+| Input Total        | `30apple,93banana,87cherry,300nhash`                         |
+| NAVs               | `21apple:500cherry`, `44banana:77cherry`, `10cherry:31nhash` |
+| Intermediary Denom | `cherry`                                                     |
+| Bips               | 25                                                           |
+| Fee Denom          | `nhash`                                                      |
+
+1. Convert the input total to the intermediary denom:
+   * `30apple` * `500cherry`/`21apple` = `714.285714285714cherry`
+   * `93banana` * `77cherry`/`44banana` = `162.75cherry`
+   * `87cherry` => `87cherry` (already intermediary denom, do not convert yet)
+   * `300nhash` => `300nhash` (already in fee denom, do not convert)
+   * Sum: `964.035714285714cherry` => `965cherry` (and `300nhash`).
+2. Convert that to the fee denom:
+   * `965cherry` * `31nhash`/`10cherry` = `2991.5nhash` => `2992nhash`
+   * `300nhash` => `300nhash` (already in fee denom, do not convert)
+   * Sum: `3292nhash`
+3. Apply Bips:
+   * `3292nhash` * `25`/`20000` = `4.115nhash` => `5nhash`
+
+The market will need to provide an extra `5nhash` with the `Tx` fees in order to do this commitment settlement.
+
+### Exchange Fees for Orders
+
+A portion of the fees collected by a market for order creation and settlement, are given to the exchange.
 The amount is defined using basis points in the exchange module's [Params](06_params.md#params) and can be configured differently for specific denoms.
 
 When the market collects fees, the applicable basis points are looked up and applied to the amount being collected.
@@ -426,3 +457,11 @@ During order creation, the exchange's portion of the order creation fee is calcu
 During [FillBids](03_messages.md#fillbids) or [FillAsks](03_messages.md#fillasks), the settlement fees are summed and collected separately from the order creation fee.
 That means the math and rounding is done twice, once for the total settlement fees and again for the order creation fee.
 This is done so that the fees are collected the same as if an order were created and later settled by the market.
+
+### Exchange Fees for Commitments
+
+When a commitment is created, a portion of the fee collected by the market is given to the exchange in the same manner that order creation fees are handled.
+
+During a commitment settlement, the exchange collects a fee proportional to the funds being settled.
+This fee must be included in the `Tx` fees provided with a `MsgMarketCommitmentSettleRequest`.
+See [Commitment Settlement Fee Charge](#commitment-settlement-fee-charge) for details.

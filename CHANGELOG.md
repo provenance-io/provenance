@@ -37,6 +37,31 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* In the marker module's `SendRestrictionFn`, allow a transfer agent to be identified through the context [#1834](https://github.com/provenance-io/provenance/issues/1834).
+* In the exchange module, provide the admin as the transfer agent when attepting to move funds [#1834](https://github.com/provenance-io/provenance/issues/1834).
+
+### Improvements
+
+* Add an empty `tourmaline-rc2` upgrade handler [#1834](https://github.com/provenance-io/provenance/issues/1834).
+* Add new force_transfer access that is required for an account to do a forced transfer ([#1829](https://github.com/provenance-io/provenance/issues/1829)).
+* Add exchange commitment stuff to CLI [PR 1830](https://github.com/provenance-io/provenance/pull/1830).
+* Update the MsgFees Params to set the nhash per usd-mil to 40,000,000 ($0.025/hash) [#1833](https://github.com/provenance-io/provenance/pull/1833).
+* Bid order prices are no longer restricted to amounts that can be evenly applied to a buyer settlement fee ratio [1834](https://github.com/provenance-io/provenance/pull/1843).
+* In the marker and exchange modules, help ensure funds don't get sent to blocked addresses [#1834](https://github.com/provenance-io/provenance/issues/1834).
+* Update marker and exchange spec docs to include info about transfer agents [#1834](https://github.com/provenance-io/provenance/issues/1834).
+* Prevent restricted markers from being sent to the fee collector account [#1845](https://github.com/provenance-io/provenance/issues/1845).
+
+### Bug Fixes
+
+* Prevent funds from going to or from a marker without the transfer agent having deposit or withdraw access (respectively) [#1834](https://github.com/provenance-io/provenance/issues/1834).
+
+### API Breaking
+
+* Accounts that have transfer access in a marker are no longer allowed to do forced transfers ([#1829](https://github.com/provenance-io/provenance/issues/1829)).
+  Accounts must now have the force_transfer access for that.
+
 ### Dependencies
 
 - Bump `codecov/codecov-action` from 3 to 4 ([#1828](https://github.com/provenance-io/provenance/pull/1828))
@@ -48,6 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `serde-json-wasm` from 0.5.1 to 0.5.2 in /testutil/contracts/echo ([#1838](https://github.com/provenance-io/provenance/pull/1838))
 - Bump `golangci/golangci-lint-action` from 3 to 4 ([#1840](https://github.com/provenance-io/provenance/pull/1840))
 - Bump `google.golang.org/grpc` from 1.61.0 to 1.61.1 ([#1842](https://github.com/provenance-io/provenance/pull/1842))
+- Bump `cosmos-sdk` from v0.46.13-pio-2 to v0.46.13-pio-3 ([#1848](https://github.com/provenance-io/provenance/pull/1848))
 
 ---
 

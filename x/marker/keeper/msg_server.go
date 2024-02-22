@@ -44,8 +44,8 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if !m.AddressHasAccess(admin, types.Access_Admin) {
-		return nil, sdkerrors.ErrUnauthorized.Wrap("administrator must have admin grant on marker")
+	if err = m.ValidateAddressHasAccess(admin, types.Access_Admin); err != nil {
+		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
 	allowance, err := msg.GetFeeAllowanceI()
 	if err != nil {
@@ -750,8 +750,8 @@ func (k msgServer) SetAccountData(goCtx context.Context, msg *types.MsgSetAccoun
 			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
 		}
 	} else {
-		if !marker.HasAccess(msg.Signer, types.Access_Deposit) {
-			return nil, fmt.Errorf("%s does not have deposit access for %s marker", msg.Signer, msg.Denom)
+		if err = marker.ValidateHasAccess(msg.Signer, types.Access_Deposit); err != nil {
+			return nil, err
 		}
 	}
 
@@ -780,10 +780,8 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 		if !marker.HasGovernanceEnabled() {
 			return nil, fmt.Errorf("%s marker does not allow governance control", msg.Denom)
 		}
-	} else {
-		if !marker.HasAccess(msg.Authority, types.Access_Transfer) {
-			return nil, fmt.Errorf("%s does not have transfer authority for %s marker", msg.Authority, msg.Denom)
-		}
+	} else if err = marker.ValidateHasAccess(msg.Authority, types.Access_Transfer); err != nil {
+		return nil, err
 	}
 
 	markerAddr := marker.GetAddress()

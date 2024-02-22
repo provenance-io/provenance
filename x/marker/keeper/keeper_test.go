@@ -3,13 +3,18 @@ package keeper_test
 import (
 	"context"
 	"fmt"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -22,8 +27,6 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/quarantine"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
@@ -120,7 +123,7 @@ func TestExistingAccounts(t *testing.T) {
 	require.Error(t, err, "should not allow creation over and existing account with a positive sequence number.")
 }
 
-func TestAccountUnrestrictedDenoms(t *testing.T) {
+func TestUnrestrictedDenoms(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	server := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
@@ -178,7 +181,7 @@ func TestAccountKeeperReader(t *testing.T) {
 	require.EqualValues(t, count, 1)
 }
 
-func TestAccountKeeperManageAccess(t *testing.T) {
+func TestManageAccess(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -285,7 +288,7 @@ func TestAccountKeeperManageAccess(t *testing.T) {
 	require.EqualValues(t, 0, len(m.AddressListForPermission(types.Access_Withdraw)))
 }
 
-func TestAccountKeeperCancelProposedByManager(t *testing.T) {
+func TestCancelProposedByManager(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -327,7 +330,7 @@ func TestAccountKeeperCancelProposedByManager(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user1, "testcoin"))
 }
 
-func TestAccountKeeperMintBurnCoins(t *testing.T) {
+func TestMintBurnCoins(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.MarkerKeeper.SetParams(ctx, types.DefaultParams())
@@ -429,7 +432,7 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
 
 	// Remove escrow balance from account
-	require.NoError(t, app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr, "mint", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))), "sending coins to module")
+	require.NoError(t, app.BankKeeper.SendCoinsFromAccountToModule(types.WithTransferAgent(ctx, user), addr, "mint", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()))), "sending coins to module")
 
 	// Succeeds because the bond denom coin was removed.
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
@@ -447,7 +450,341 @@ func TestAccountKeeperMintBurnCoins(t *testing.T) {
 	require.EqualValues(t, app.BankKeeper.GetSupply(ctx, "testcoin").Amount, sdk.ZeroInt())
 }
 
-func TestAccountKeeperGetAll(t *testing.T) {
+func TestWithdrawCoins(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.NewContext(false, tmproto.Header{})
+
+	addrManager := sdk.AccAddress("addrManager_________")
+	addrNoWithdraw := sdk.AccAddress("addrNoWithdraw______")
+	addrOnlyWithdraw := sdk.AccAddress("addrOnlyWithdraw____")
+	addrWithDep := sdk.AccAddress("addrWithDep_________")
+	addr1 := sdk.AccAddress("addr1_______________")
+	addr2 := sdk.AccAddress("addr2_______________")
+	addr3 := sdk.AccAddress("addr3_______________")
+
+	denomMain := "mackenzie"
+	denomCoin := "norman"
+	denomToDeposit := "dana"
+	denomInactive := "indigo"
+	denomNoMarker := "noah"
+
+	allAccessExcept := func(addr sdk.AccAddress, perms ...types.Access) types.AccessGrant {
+		rv := types.AccessGrant{
+			Address:     addr.String(),
+			Permissions: nil,
+		}
+		for permVal := range types.Access_name {
+			if permVal == 0 {
+				continue
+			}
+			perm := types.Access(permVal)
+			keep := true
+			for _, ignore := range perms {
+				if perm == ignore {
+					keep = false
+					break
+				}
+			}
+			if keep {
+				rv.Permissions = append(rv.Permissions, perm)
+			}
+		}
+		sort.Slice(rv.Permissions, func(i, j int) bool {
+			return rv.Permissions[i] < rv.Permissions[j]
+		})
+		return rv
+	}
+	allAccess := func(addr sdk.AccAddress) types.AccessGrant {
+		return allAccessExcept(addr)
+	}
+	accessOnly := func(addr sdk.AccAddress, perms ...types.Access) types.AccessGrant {
+		return *types.NewAccessGrant(addr, perms)
+	}
+	markerAddr := func(denom string) sdk.AccAddress {
+		rv, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+		return rv
+	}
+	fundAcct := func(addr sdk.AccAddress, amount sdk.Coins) {
+		err := testutil.FundAccount(app.BankKeeper, types.WithBypass(ctx), addr, amount)
+		require.NoError(t, err, "FundAccount(%q, %q)", string(addr), amount)
+	}
+	setupMarker := func(denom string, marker *types.MarkerAccount) sdk.AccAddress {
+		addr := markerAddr(denom)
+		marker.BaseAccount = authtypes.NewBaseAccountWithAddress(addr)
+		marker.Denom = denom
+		if marker.Supply.IsNil() {
+			marker.Supply = sdk.NewInt(1_000_000_000)
+		}
+		if marker.Status == 0 {
+			marker.Status = types.StatusProposed
+		}
+		if marker.MarkerType == 0 {
+			marker.MarkerType = types.MarkerType_RestrictedCoin
+		}
+		if len(marker.Manager) == 0 {
+			marker.Manager = addrManager.String()
+		}
+		managerHasAccess := false
+		for _, grant := range marker.AccessControl {
+			if grant.Address == marker.Manager {
+				managerHasAccess = true
+				break
+			}
+		}
+		if !managerHasAccess {
+			marker.AccessControl = append([]types.AccessGrant{allAccess(addrManager)}, marker.AccessControl...)
+		}
+
+		return addr
+	}
+	createMarker := func(denom string, marker *types.MarkerAccount) sdk.AccAddress {
+		addr := setupMarker(denom, marker)
+		err := app.MarkerKeeper.SetNetAssetValue(ctx, marker, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test")
+		require.NoError(t, err, "SetNetAssetValue %q", denom)
+		err = app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
+		require.NoError(t, err, "AddFinalizeAndActivateMarker %q", denom)
+		return addr
+	}
+	createProposedMarker := func(denom string, marker *types.MarkerAccount) sdk.AccAddress {
+		addr := setupMarker(denom, marker)
+		err := app.MarkerKeeper.AddMarkerAccount(ctx, marker)
+		require.NoError(t, err, "AddMarkerAccount %q", denom)
+		return addr
+	}
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.NewInt64Coin(denom, amount)
+	}
+	noAccessErr := func(addr sdk.AccAddress, role types.Access, denom string) string {
+		mAddr, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+		return fmt.Sprintf("%s does not have %s on %s marker (%s)", addr, role, denom, mAddr)
+	}
+
+	markerMain := &types.MarkerAccount{
+		AccessControl: []types.AccessGrant{
+			allAccessExcept(addrNoWithdraw, types.Access_Withdraw),
+			accessOnly(addrOnlyWithdraw, types.Access_Withdraw),
+			accessOnly(addrWithDep, types.Access_Withdraw),
+		},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+	}
+	addrMarkerMain := createMarker(denomMain, markerMain)
+	fundAcct(addrMarkerMain, sdk.NewCoins(coin(1_000_000, denomCoin), coin(1_000_000, denomNoMarker)))
+
+	markerCoin := &types.MarkerAccount{
+		AccessControl:          []types.AccessGrant{allAccessExcept(addrManager, types.Access_Transfer, types.Access_ForceTransfer)},
+		MarkerType:             types.MarkerType_Coin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+	}
+	addrMarkerCoin := createMarker(denomCoin, markerCoin)
+
+	markerToDeposit := &types.MarkerAccount{
+		AccessControl: []types.AccessGrant{
+			accessOnly(addrOnlyWithdraw, types.Access_Withdraw),
+			accessOnly(addrWithDep, types.Access_Deposit),
+		},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+	}
+	addrMarkerToDeposit := createMarker(denomToDeposit, markerToDeposit)
+
+	markerInactive := &types.MarkerAccount{
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+	}
+	createProposedMarker(denomInactive, markerInactive)
+
+	// Marker needs:
+	// a non-restricted marker
+	// a restricted marker with funds to withdraw
+	// 		Need admin without withdraw
+	//      Need admin with withdraw but not deposit on another.
+	//      Need admin with withdraw and deposit on another.
+	// a restricted marker to send funds to.
+	//      Need admin with deposit and also withdraw on main.
+	//      Need admin with withdraw on both, but not deposit on this one.
+
+	tests := []struct {
+		name                  string
+		bankKeeper            *WrappedBankKeeper
+		caller                sdk.AccAddress
+		recipient             sdk.AccAddress
+		denom                 string
+		coins                 sdk.Coins
+		expErr                string
+		expEventTo            sdk.AccAddress
+		expCallerGetsCoins    bool
+		expRecipientGetsCoins bool
+	}{
+		{
+			name:      "no marker",
+			caller:    addrManager,
+			recipient: addr1,
+			denom:     denomNoMarker,
+			coins:     sdk.NewCoins(coin(5, denomNoMarker)),
+			expErr:    "marker not found for " + denomNoMarker + ": marker " + denomNoMarker + " not found for address: " + markerAddr(denomNoMarker).String(),
+		},
+		{
+			name:      "no withdraw access",
+			caller:    addrNoWithdraw,
+			recipient: addr2,
+			denom:     denomMain,
+			coins:     sdk.NewCoins(coin(5, denomMain)),
+			expErr:    noAccessErr(addrNoWithdraw, types.Access_Withdraw, denomMain),
+		},
+		{
+			name:                  "to a coin marker",
+			caller:                addrManager,
+			recipient:             addrMarkerCoin,
+			denom:                 denomMain,
+			coins:                 sdk.NewCoins(coin(3, denomMain)),
+			expEventTo:            addrMarkerCoin,
+			expRecipientGetsCoins: true,
+		},
+		{
+			name:      "to a restricted marker: admin does not have deposit on it",
+			caller:    addrOnlyWithdraw,
+			recipient: addrMarkerToDeposit,
+			denom:     denomMain,
+			coins:     sdk.NewCoins(coin(6, denomMain)),
+			expErr:    noAccessErr(addrOnlyWithdraw, types.Access_Deposit, denomToDeposit),
+		},
+		{
+			name:                  "to a restricted marker: admin has deposit on it",
+			caller:                addrWithDep,
+			recipient:             addrMarkerToDeposit,
+			denom:                 denomMain,
+			coins:                 sdk.NewCoins(coin(7, denomMain)),
+			expEventTo:            addrMarkerToDeposit,
+			expRecipientGetsCoins: true,
+		},
+		{
+			name:      "marker is not active",
+			caller:    addrManager,
+			recipient: addr3,
+			denom:     denomInactive,
+			coins:     sdk.NewCoins(coin(4, denomInactive)),
+			expErr:    "cannot withdraw marker created coins from a marker that is not in Active status",
+		},
+		{
+			name:       "to addr blocked by bank module",
+			bankKeeper: NewWrappedBankKeeper().WithExtraBlockedAddrs(addr2),
+			caller:     addrManager,
+			recipient:  addr2,
+			denom:      denomMain,
+			coins:      sdk.NewCoins(coin(14, denomMain)),
+			expErr:     addr2.String() + " is not allowed to receive funds",
+		},
+		{
+			name:       "error from send",
+			bankKeeper: NewWrappedBankKeeper().WithSendCoinsErrs("some random error"),
+			caller:     addrOnlyWithdraw,
+			recipient:  addr1,
+			denom:      denomMain,
+			coins:      sdk.NewCoins(coin(12, denomMain)),
+			expErr:     "some random error",
+		},
+		{
+			name:               "no recipient provided",
+			caller:             addrOnlyWithdraw,
+			recipient:          nil,
+			denom:              denomMain,
+			coins:              sdk.NewCoins(coin(12, denomMain), coin(3, denomCoin), coin(77, denomNoMarker)),
+			expEventTo:         addrOnlyWithdraw,
+			expCallerGetsCoins: true,
+		},
+		{
+			name:                  "recipient is caller",
+			caller:                addrOnlyWithdraw,
+			recipient:             addrOnlyWithdraw,
+			denom:                 denomMain,
+			coins:                 sdk.NewCoins(coin(33, denomMain)),
+			expEventTo:            addrOnlyWithdraw,
+			expCallerGetsCoins:    true,
+			expRecipientGetsCoins: true,
+		},
+		{
+			name:                  "recipient is not caller",
+			caller:                addrOnlyWithdraw,
+			recipient:             addr3,
+			denom:                 denomMain,
+			coins:                 sdk.NewCoins(coin(27, denomNoMarker)),
+			expEventTo:            addr3,
+			expRecipientGetsCoins: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var expEvents sdk.Events
+			if len(tc.expEventTo) > 0 {
+				tev := &types.EventMarkerWithdraw{
+					Coins:         tc.coins.String(),
+					Denom:         tc.denom,
+					Administrator: tc.caller.String(),
+					ToAddress:     tc.expEventTo.String(),
+				}
+				event, err := sdk.TypedEventToEvent(tev)
+				require.NoError(t, err, "TypedEventToEvent(%#v)", tev)
+				expEvents = append(expEvents, event)
+			}
+
+			ctx = app.NewContext(false, tmproto.Header{})
+			var callerOrigBals, recipientOrigBals sdk.Coins
+			var callerExpBals, recipientExpBals sdk.Coins
+			if len(tc.caller) > 0 {
+				callerOrigBals = app.BankKeeper.GetAllBalances(ctx, tc.caller)
+				callerExpBals = callerOrigBals
+				if tc.expCallerGetsCoins {
+					callerExpBals = callerExpBals.Add(tc.coins...)
+				}
+			}
+			if len(tc.recipient) > 0 {
+				recipientOrigBals = app.BankKeeper.GetAllBalances(ctx, tc.recipient)
+				recipientExpBals = recipientOrigBals
+				if tc.expRecipientGetsCoins {
+					recipientExpBals = recipientExpBals.Add(tc.coins...)
+				}
+			}
+
+			kpr := app.MarkerKeeper
+			if tc.bankKeeper != nil {
+				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(app.BankKeeper))
+			}
+
+			em := sdk.NewEventManager()
+			ctx = ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = kpr.WithdrawCoins(ctx, tc.caller, tc.recipient, tc.denom, tc.coins)
+			}
+			require.NotPanics(t, testFunc, "WithdrawCoins(%q, %q, %q, %q)",
+				string(tc.caller), string(tc.recipient), tc.denom, tc.coins)
+			assertions.AssertErrorValue(t, err, tc.expErr, "WithdrawCoins(%q, %q, %q, %q) error",
+				string(tc.caller), string(tc.recipient), tc.denom, tc.coins)
+			actEvents := em.Events()
+			assertions.AssertEventsContains(t, expEvents, actEvents, "WithdrawCoins(%q, %q, %q, %q) events",
+				string(tc.caller), string(tc.recipient), tc.denom, tc.coins)
+
+			var callerActBals, recipientActBals sdk.Coins
+			if len(tc.caller) > 0 {
+				callerActBals = app.BankKeeper.GetAllBalances(ctx, tc.caller)
+			}
+			if len(tc.recipient) > 0 {
+				recipientActBals = app.BankKeeper.GetAllBalances(ctx, tc.recipient)
+			}
+			assert.Equal(t, callerExpBals.String(), callerActBals.String(), "caller balances after WithdrawCoins(%q, %q, %q, %q)",
+				string(tc.caller), string(tc.recipient), tc.denom, tc.coins)
+			assert.Equal(t, recipientExpBals.String(), recipientActBals.String(), "recipient balances after WithdrawCoins(%q, %q, %q, %q)",
+				string(tc.caller), string(tc.recipient), tc.denom, tc.coins)
+		})
+	}
+}
+
+func TestMarkerGetters(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -484,7 +821,7 @@ func TestAccountKeeperGetAll(t *testing.T) {
 	// Could do more in-depth checking, but if both markers are returned that is the expected behavior
 }
 
-func TestAccountInsufficientExisting(t *testing.T) {
+func TestInsufficientExisting(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -530,7 +867,7 @@ func TestAccountInsufficientExisting(t *testing.T) {
 	require.EqualValues(t, 10001, m.GetSupply().Amount.Int64())
 }
 
-func TestAccountImplictControl(t *testing.T) {
+func TestImplictControl(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -610,6 +947,473 @@ func TestAccountImplictControl(t *testing.T) {
 	require.Error(t, app.MarkerKeeper.TransferCoin(ctx, granter, user2, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
 	// succeeds when admin user (grantee with authz permissions) has transfer authority with receiver is on allowed list
 	require.NoError(t, app.MarkerKeeper.TransferCoin(ctx, granter, user, grantee, sdk.NewCoin("testcoin", sdk.NewInt(5))))
+}
+
+func TestTransferCoin(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.NewContext(false, tmproto.Header{})
+
+	addrManager := sdk.AccAddress("manager_____________")
+	addrTransOnly := sdk.AccAddress("transfer_only_______")
+	addrForceTransOnly := sdk.AccAddress("force_transfer_only_")
+	addrTransAndForce := sdk.AccAddress("transfer_and_force__")
+	addrTransDepWithdraw := sdk.AccAddress("xfer_dep_withdraw___")
+	addrNoTrans := sdk.AccAddress("all_but_transfer____")
+	addrSeq0 := sdk.AccAddress("addr_w_sequence_zero")
+	addr1 := sdk.AccAddress("addr_one____________")
+	addr2 := sdk.AccAddress("addr_two____________")
+	addr3 := sdk.AccAddress("addr_three__________")
+	addr4 := sdk.AccAddress("addr_four___________")
+
+	addrsToFund := []sdk.AccAddress{
+		addrTransOnly, addrTransDepWithdraw, addrNoTrans,
+		addrSeq0,
+		addr1, addr2, addr3, addr4,
+	}
+	seq1Addrs := []sdk.AccAddress{
+		addrManager,
+		addrTransOnly, addrTransDepWithdraw, addrNoTrans,
+		addr1, addr2, addr3, addr4,
+	}
+
+	denomCoin := "normalcoin"
+	denomRestricted := "restrictedcoin"
+	denomOnlyDeposit := "onlydepositcoin"
+	denomOnlyWithdraw := "onlywithdrawcoin"
+	denomForceTrans := "jedicoin"
+	denomProposed := "propcoin"
+
+	allAccessExcept := func(addr sdk.AccAddress, perms ...types.Access) types.AccessGrant {
+		rv := types.AccessGrant{
+			Address:     addr.String(),
+			Permissions: nil,
+		}
+		for permVal := range types.Access_name {
+			if permVal == 0 {
+				continue
+			}
+			perm := types.Access(permVal)
+			keep := true
+			for _, ignore := range perms {
+				if perm == ignore {
+					keep = false
+					break
+				}
+			}
+			if keep {
+				rv.Permissions = append(rv.Permissions, perm)
+			}
+		}
+		sort.Slice(rv.Permissions, func(i, j int) bool {
+			return rv.Permissions[i] < rv.Permissions[j]
+		})
+		return rv
+	}
+	allAccess := func(addr sdk.AccAddress) types.AccessGrant {
+		return allAccessExcept(addr)
+	}
+	accessOnly := func(addr sdk.AccAddress, perms ...types.Access) types.AccessGrant {
+		return *types.NewAccessGrant(addr, perms)
+	}
+	markerAddr := func(denom string) sdk.AccAddress {
+		rv, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+		return rv
+	}
+	fundAcct := func(addr sdk.AccAddress, denom string) {
+		fundAmt := sdk.NewCoins(sdk.NewInt64Coin(denom, 1_000_000))
+		err := app.MarkerKeeper.WithdrawCoins(ctx, addrManager, addr, denom, fundAmt)
+		require.NoError(t, err, "WithdrawCoins %s to %q", fundAmt, string(addr))
+	}
+	setupMarker := func(denom string, marker *types.MarkerAccount) sdk.AccAddress {
+		addr := markerAddr(denom)
+		marker.BaseAccount = authtypes.NewBaseAccountWithAddress(addr)
+		marker.Denom = denom
+		if marker.Supply.IsNil() {
+			marker.Supply = sdk.NewInt(1_000_000_000)
+		}
+		if marker.Status == 0 {
+			marker.Status = types.StatusProposed
+		}
+		if marker.MarkerType == 0 {
+			marker.MarkerType = types.MarkerType_RestrictedCoin
+		}
+		if len(marker.Manager) == 0 {
+			marker.Manager = addrManager.String()
+		}
+		managerHasAccess := false
+		for _, grant := range marker.AccessControl {
+			if grant.Address == marker.Manager {
+				managerHasAccess = true
+				break
+			}
+		}
+		if !managerHasAccess {
+			marker.AccessControl = append([]types.AccessGrant{allAccess(addrManager)}, marker.AccessControl...)
+		}
+
+		return addr
+	}
+	createMarker := func(denom string, marker *types.MarkerAccount) sdk.AccAddress {
+		addr := setupMarker(denom, marker)
+
+		err := app.MarkerKeeper.SetNetAssetValue(ctx, marker, types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1), "test")
+		require.NoError(t, err, "SetNetAssetValue %q", denom)
+		err = app.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, marker)
+		require.NoError(t, err, "AddFinalizeAndActivateMarker %q", denom)
+
+		for _, fundAddr := range addrsToFund {
+			fundAcct(fundAddr, denom)
+		}
+		return addr
+	}
+	createProposedMarker := func(denom string, marker *types.MarkerAccount) sdk.AccAddress {
+		addr := setupMarker(denom, marker)
+
+		fundAmt := sdk.NewCoins(sdk.NewInt64Coin(denom, 1_000_000))
+		for _, fundAddr := range addrsToFund {
+			err := testutil.FundAccount(app.BankKeeper, types.WithBypass(ctx), fundAddr, fundAmt)
+			require.NoError(t, err, "FundAccount(%q, %q)", string(fundAddr), fundAmt)
+		}
+
+		err := app.MarkerKeeper.AddMarkerAccount(ctx, marker)
+		require.NoError(t, err, "AddMarkerAccount %q", denom)
+
+		return addr
+	}
+	setAcc := func(addr sdk.AccAddress, sequence uint64) {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
+		app.AccountKeeper.SetAccount(ctx, acc)
+	}
+	createGroup := func(admin sdk.AccAddress) sdk.AccAddress {
+		msg := &group.MsgCreateGroupWithPolicy{
+			Admin:              admin.String(),
+			Members:            []group.MemberRequest{{Address: admin.String(), Weight: "1"}},
+			GroupPolicyAsAdmin: true,
+		}
+		err := msg.SetDecisionPolicy(group.NewPercentageDecisionPolicy("0.5", time.Second, time.Second))
+		require.NoError(t, err, "SetDecisionPolicy %q", string(admin))
+
+		goCtx := sdk.WrapSDKContext(ctx)
+		res, err := app.GroupKeeper.CreateGroupWithPolicy(goCtx, msg)
+		require.NoError(t, err, "CreateGroupWithPolicy %q", string(admin))
+
+		rv, err := sdk.AccAddressFromBech32(res.GroupPolicyAddress)
+		require.NoError(t, err, "AccAddressFromBech32(%q) (GroupPolicyAddress for %q)",
+			res.GroupPolicyAddress, string(admin))
+		return rv
+	}
+	noAccessErr := func(addr sdk.AccAddress, role types.Access, denom string) string {
+		mAddr, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+		return fmt.Sprintf("%s does not have %s on %s marker (%s)", addr, role, denom, mAddr)
+	}
+
+	for _, addr := range seq1Addrs {
+		setAcc(addr, 1)
+	}
+	setAcc(addrSeq0, 0)
+
+	addrGroup := createGroup(addrManager)
+	addrsToFund = append(addrsToFund, addrGroup)
+
+	markerCoin := &types.MarkerAccount{
+		AccessControl:          []types.AccessGrant{allAccessExcept(addrManager, types.Access_Transfer, types.Access_ForceTransfer)},
+		MarkerType:             types.MarkerType_Coin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
+	}
+	markerAddrCoin := createMarker(denomCoin, markerCoin)
+
+	markerRestricted := &types.MarkerAccount{
+		AccessControl: []types.AccessGrant{
+			accessOnly(addrTransOnly, types.Access_Transfer),
+			accessOnly(addrForceTransOnly, types.Access_ForceTransfer),
+			accessOnly(addrTransAndForce, types.Access_Transfer, types.Access_ForceTransfer),
+			accessOnly(addrTransDepWithdraw, types.Access_Transfer),
+			allAccessExcept(addrNoTrans, types.Access_Transfer, types.Access_ForceTransfer),
+		},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
+	}
+	createMarker(denomRestricted, markerRestricted)
+
+	markerOnlyDep := &types.MarkerAccount{
+		AccessControl:          []types.AccessGrant{accessOnly(addrTransDepWithdraw, types.Access_Deposit)},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
+	}
+	markerAddrOnlyDep := createMarker(denomOnlyDeposit, markerOnlyDep)
+
+	markerOnlyWithdraw := &types.MarkerAccount{
+		AccessControl:          []types.AccessGrant{accessOnly(addrTransDepWithdraw, types.Access_Withdraw)},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
+	}
+	markerAddrOnlyWithdraw := createMarker(denomOnlyWithdraw, markerOnlyWithdraw)
+
+	markerForceTrans := &types.MarkerAccount{
+		AccessControl: []types.AccessGrant{
+			accessOnly(addrTransDepWithdraw, types.Access_Transfer),
+			accessOnly(addrTransOnly, types.Access_Transfer),
+			accessOnly(addrForceTransOnly, types.Access_ForceTransfer),
+			accessOnly(addrTransAndForce, types.Access_Transfer, types.Access_ForceTransfer),
+		},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    true,
+	}
+	createMarker(denomForceTrans, markerForceTrans)
+
+	markerProposed := &types.MarkerAccount{
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+	}
+	createProposedMarker(denomProposed, markerProposed)
+
+	// The only-withdraw marker needs to have some coins, because, reasons (needed for test cases).
+	fundAcct(markerAddrOnlyWithdraw, denomRestricted)
+	fundAcct(markerAddrOnlyWithdraw, denomForceTrans)
+
+	tests := []struct {
+		name        string
+		authzKeeper *MockAuthzKeeper
+		bankKeeper  *WrappedBankKeeper
+		from        sdk.AccAddress
+		to          sdk.AccAddress
+		admin       sdk.AccAddress
+		amount      sdk.Coin
+		expErr      string
+	}{
+		{
+			name:   "marker not found",
+			from:   addr1,
+			to:     addr2,
+			admin:  addr3,
+			amount: sdk.NewInt64Coin("nosuchmarker", 5),
+			expErr: "marker not found for nosuchmarker: marker nosuchmarker not found for address: " + markerAddr("nosuchmarker").String(),
+		},
+		{
+			name:   "marker not active",
+			from:   addr1,
+			to:     addr2,
+			admin:  addrManager,
+			amount: sdk.NewInt64Coin(denomProposed, 78),
+			expErr: "marker status (proposed) is not active, funds cannot be moved",
+		},
+		{
+			name:   "marker not restricted",
+			from:   addr1,
+			to:     addr2,
+			admin:  addr3,
+			amount: sdk.NewInt64Coin(denomCoin, 12),
+			expErr: "marker type is not restricted_coin, brokered transfer not supported",
+		},
+		{
+			name:   "admin does not have transfer or force transfer",
+			from:   addr1,
+			to:     addr2,
+			admin:  addrNoTrans,
+			amount: sdk.NewInt64Coin(denomRestricted, 8),
+			expErr: noAccessErr(addrNoTrans, types.Access_Transfer, denomRestricted),
+		},
+		{
+			name:   "going to restricted: admin does not have deposit",
+			from:   addrTransOnly,
+			to:     markerAddrOnlyDep,
+			admin:  addrTransOnly,
+			amount: sdk.NewInt64Coin(denomRestricted, 14),
+			expErr: noAccessErr(addrTransOnly, types.Access_Deposit, denomOnlyDeposit),
+		},
+		{
+			name:   "going to restricted: admin has deposit",
+			from:   addrTransDepWithdraw,
+			to:     markerAddrOnlyDep,
+			admin:  addrTransDepWithdraw,
+			amount: sdk.NewInt64Coin(denomRestricted, 9),
+		},
+		{
+			name:   "going to unrestricted",
+			from:   addrTransOnly,
+			to:     markerAddrCoin,
+			admin:  addrTransOnly,
+			amount: sdk.NewInt64Coin(denomRestricted, 17),
+		},
+		{
+			name:        "admin not from: no force transfer: no authz",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerNoAuth(),
+			from:        addr4,
+			to:          addr3,
+			admin:       addrTransAndForce,
+			amount:      sdk.NewInt64Coin(denomRestricted, 11),
+			expErr:      addrTransAndForce.String() + " account has not been granted authority to withdraw from " + addr4.String() + " account",
+		},
+		{
+			name:        "admin not from: no force transfer: with authz",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerSuccess(),
+			from:        addr3,
+			to:          addr1,
+			admin:       addrTransOnly,
+			amount:      sdk.NewInt64Coin(denomRestricted, 23),
+		},
+		{
+			name:        "admin not from: no force transfer: from marker: with withdraw",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerSuccess(),
+			from:        markerAddrOnlyWithdraw,
+			to:          addr2,
+			admin:       addrTransDepWithdraw,
+			amount:      sdk.NewInt64Coin(denomRestricted, 2),
+		},
+		{
+			name:        "admin not from: no force transfer access: no authz",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerNoAuth(),
+			from:        addr4,
+			to:          addr3,
+			admin:       addrTransOnly,
+			amount:      sdk.NewInt64Coin(denomForceTrans, 11),
+			expErr:      addrTransOnly.String() + " account has not been granted authority to withdraw from " + addr4.String() + " account",
+		},
+		{
+			name:        "admin not from: no force transfer access: with authz",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerSuccess(),
+			from:        addr3,
+			to:          addr1,
+			admin:       addrTransOnly,
+			amount:      sdk.NewInt64Coin(denomForceTrans, 23),
+		},
+		{
+			name:        "admin not from: no force transfer access: from marker: with withdraw",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerSuccess(),
+			from:        markerAddrOnlyWithdraw,
+			to:          addr2,
+			admin:       addrTransDepWithdraw,
+			amount:      sdk.NewInt64Coin(denomForceTrans, 2),
+		},
+		{
+			name:        "admin not from: force transfer okay: no force transfer access",
+			authzKeeper: NewMockAuthzKeeper().WithAuthzHandlerNoAuth(),
+			from:        addr4,
+			to:          addr1,
+			admin:       addrTransOnly,
+			amount:      sdk.NewInt64Coin(denomForceTrans, 19),
+			expErr:      addrTransOnly.String() + " account has not been granted authority to withdraw from " + addr4.String() + " account",
+		},
+		{
+			name:   "admin not from: force transfer okay: only force access",
+			from:   addr4,
+			to:     addr1,
+			admin:  addrForceTransOnly,
+			amount: sdk.NewInt64Coin(denomForceTrans, 20),
+		},
+		{
+			name:   "admin not from: force transfer: from is a group account",
+			from:   addrGroup,
+			to:     addr3,
+			admin:  addrTransAndForce,
+			amount: sdk.NewInt64Coin(denomForceTrans, 15),
+		},
+		{
+			name:   "admin not from: force transfer: from account has sequence zero",
+			from:   addrSeq0,
+			to:     addr1,
+			admin:  addrTransAndForce,
+			amount: sdk.NewInt64Coin(denomForceTrans, 7),
+			expErr: "funds are not allowed to be removed from " + addrSeq0.String(),
+		},
+		{
+			name:   "admin not from: force transfer: from okay account",
+			from:   addr1,
+			to:     addr2,
+			admin:  addrTransAndForce,
+			amount: sdk.NewInt64Coin(denomForceTrans, 41),
+		},
+		{
+			name:       "to blocked account",
+			bankKeeper: NewWrappedBankKeeper().WithExtraBlockedAddrs(addr3),
+			from:       addrTransOnly,
+			to:         addr3,
+			admin:      addrTransOnly,
+			amount:     sdk.NewInt64Coin(denomRestricted, 57),
+			expErr:     addr3.String() + " is not allowed to receive funds",
+		},
+		{
+			name:       "send error",
+			bankKeeper: NewWrappedBankKeeper().WithSendCoinsErrs("nope, not gonna allow that"),
+			from:       addr1,
+			to:         addr2,
+			admin:      addrForceTransOnly,
+			amount:     sdk.NewInt64Coin(denomForceTrans, 48),
+			expErr:     "nope, not gonna allow that",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.authzKeeper == nil {
+				tc.authzKeeper = NewMockAuthzKeeper().WithAuthzHandlerAcceptError("injected authorization.Accept error")
+			}
+			kpr := app.MarkerKeeper.WithAuthzKeeper(tc.authzKeeper)
+			if tc.bankKeeper != nil {
+				kpr = kpr.WithBankKeeper(tc.bankKeeper.WithParent(app.BankKeeper))
+			}
+
+			origFromBal := app.BankKeeper.GetAllBalances(ctx, tc.from)
+			origToBal := app.BankKeeper.GetAllBalances(ctx, tc.to)
+			origAdminBal := app.BankKeeper.GetAllBalances(ctx, tc.admin)
+			expFromBal, expToBal, expAdminBal := origFromBal, origToBal, origAdminBal
+			if len(tc.expErr) == 0 {
+				var hasNeg bool
+				expFromBal, hasNeg = origFromBal.SafeSub(tc.amount)
+				require.False(t, hasNeg, "%q.SafeSub(%q) has negative result", origFromBal, tc.amount)
+				expToBal = origToBal.Add(tc.amount)
+				switch {
+				case tc.admin.Equals(tc.to):
+					expAdminBal = expToBal
+				case tc.admin.Equals(tc.from):
+					expAdminBal = expFromBal
+				}
+			}
+
+			var expEvents sdk.Events
+			if len(tc.expErr) == 0 {
+				expEvents = sdk.Events{
+					{
+						Type: "provenance.marker.v1.EventMarkerTransfer",
+						Attributes: []abci.EventAttribute{
+							{Key: []byte("administrator"), Value: []byte(`"` + tc.admin.String() + `"`)},
+							{Key: []byte("amount"), Value: []byte(`"` + tc.amount.Amount.String() + `"`)},
+							{Key: []byte("denom"), Value: []byte(`"` + tc.amount.Denom + `"`)},
+							{Key: []byte("from_address"), Value: []byte(`"` + tc.from.String() + `"`)},
+							{Key: []byte("to_address"), Value: []byte(`"` + tc.to.String() + `"`)},
+						},
+					},
+				}
+			}
+
+			em := sdk.NewEventManager()
+			ctx = app.NewContext(false, tmproto.Header{}).WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = kpr.TransferCoin(ctx, tc.from, tc.to, tc.admin, tc.amount)
+			}
+			require.NotPanics(t, testFunc, "TransferCoin")
+			assertions.AssertErrorValue(t, err, tc.expErr, "TransferCoin error")
+			actEvents := em.Events()
+			assertions.AssertEventsContains(t, expEvents, actEvents, "events emitted during TransferCoin")
+
+			actFromBal := app.BankKeeper.GetAllBalances(ctx, tc.from)
+			actToBal := app.BankKeeper.GetAllBalances(ctx, tc.to)
+			actAdminBal := app.BankKeeper.GetAllBalances(ctx, tc.admin)
+			assert.Equal(t, expFromBal.String(), actFromBal.String(), "from balance after TransferCoin")
+			assert.Equal(t, expToBal.String(), actToBal.String(), "to balance after TransferCoin")
+			assert.Equal(t, expAdminBal.String(), actAdminBal.String(), "admin balance after TransferCoin")
+		})
+	}
 }
 
 func TestForceTransfer(t *testing.T) {
@@ -725,6 +1529,17 @@ func TestForceTransfer(t *testing.T) {
 		"transfer of non-force-transfer coin from other account back to admin")
 	requireBalances(t, "after failed transfer")
 
+	// Have the admin try a transfer of the force-transfer, but without the force-transfer permission.
+	assert.EqualError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, wForceCoin(7)),
+		fmt.Sprintf("%s account has not been granted authority to withdraw from %s account", admin, other),
+		"transfer of force-transfer coin by account without force-transfer access")
+	requireBalances(t, "after failed force-transfer")
+
+	// Give the admin force transfer permission now.
+	addFTGrant := &types.AccessGrant{Address: admin.String(), Permissions: types.AccessList{types.Access_ForceTransfer}}
+	require.NoError(t, app.MarkerKeeper.AddAccess(ctx, admin, wForceDenom, addFTGrant),
+		"AddAccess to grant admin force-transfer access")
+
 	// Have the admin try a transfer of the w/force transfer from that other account to itself. It should go through.
 	transferCoin := wForceCoin(22)
 	assert.NoError(t, app.MarkerKeeper.TransferCoin(ctx, other, admin, admin, transferCoin),
@@ -829,7 +1644,7 @@ func TestMarkerFeeGrant(t *testing.T) {
 	app.AccountKeeper.SetAccount(ctx, mac)
 
 	existingSupply := sdk.NewCoin("testcoin", sdk.NewInt(10000))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, user, sdk.NewCoins(existingSupply)), "funding accont")
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, types.WithBypass(ctx), user, sdk.NewCoins(existingSupply)), "funding accont")
 
 	allowance, err := types.NewMsgGrantAllowance(
 		"testcoin",
@@ -1605,6 +2420,240 @@ func TestAddRemoveSendDeny(t *testing.T) {
 			for _, pair := range tc.pairs {
 				isSendDeny := app.MarkerKeeper.IsSendDeny(ctx, pair.marker, pair.sendDeny)
 				require.False(t, isSendDeny, "should not have entry for removed pair")
+			}
+		})
+	}
+}
+
+func TestAddSetNetAssetValues(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.NewContext(false, tmproto.Header{})
+
+	admin := sdk.AccAddress("admin_______________")
+
+	markerAddr := func(denom string) sdk.AccAddress {
+		rv, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+		return rv
+	}
+	makeMarker := func(denom string) types.MarkerAccountI {
+		markerAcc := &types.MarkerAccount{
+			BaseAccount:            authtypes.NewBaseAccountWithAddress(markerAddr(denom)),
+			Manager:                admin.String(),
+			Status:                 types.StatusProposed,
+			Denom:                  denom,
+			Supply:                 sdk.NewInt(1000),
+			MarkerType:             types.MarkerType_RestrictedCoin,
+			SupplyFixed:            true,
+			AllowGovernanceControl: true,
+		}
+		testFunc := func() error {
+			return app.MarkerKeeper.AddMarkerAccount(ctx, markerAcc)
+		}
+		assertions.RequireNotPanicsNoError(t, testFunc, "AddMarkerAccount %q", denom)
+		return markerAcc
+	}
+	coin := func(str string) sdk.Coin {
+		rv, err := sdk.ParseCoinNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+	navEvent := func(denom string, price string, volume uint64, source string) sdk.Event {
+		tev := types.NewEventSetNetAssetValue(denom, coin(price), volume, source)
+		rv, err := sdk.TypedEventToEvent(tev)
+		require.NoError(t, err, "TypedEventToEvent %q, %s, %d %q", denom, price, volume, source)
+		return rv
+	}
+	newNav := func(price string, volume uint64) types.NetAssetValue {
+		return types.NetAssetValue{Price: coin(price), Volume: volume}
+	}
+
+	blueMarker := makeMarker("blue")
+	redMarker := makeMarker("red")
+	yellowMarker := makeMarker("yellow")
+	whiteMarker := makeMarker("white")
+
+	tests := []struct {
+		name      string
+		marker    types.MarkerAccountI
+		navs      []types.NetAssetValue
+		source    string
+		expErr    string
+		expEvents sdk.Events
+		expNavs   []types.NetAssetValue
+	}{
+		{
+			name:   "nil navs",
+			marker: blueMarker,
+			navs:   nil,
+			source: "billie",
+		},
+		{
+			name:   "empty navs",
+			marker: yellowMarker,
+			navs:   nil,
+			source: "billie",
+		},
+		{
+			name:   "price denom equals marker denom",
+			marker: blueMarker,
+			navs:   []types.NetAssetValue{newNav("3blue", 3)},
+			source: "devin",
+			expErr: "net asset value denom cannot match marker denom \"blue\"",
+		},
+		{
+			name:   "price marker does not exist: invalid nav",
+			marker: redMarker,
+			navs:   []types.NetAssetValue{newNav("4purple", 0)},
+			source: "jesse",
+			expErr: "net asset value denom does not exist: marker purple not found for address: " + markerAddr("purple").String(),
+		},
+		{
+			name:      "price marker does not exist: valid nav",
+			marker:    blueMarker,
+			navs:      []types.NetAssetValue{newNav("4purple", 1)},
+			source:    "lennon",
+			expErr:    "net asset value denom does not exist: marker purple not found for address: " + markerAddr("purple").String(),
+			expEvents: sdk.Events{navEvent("blue", "4purple", 1, "lennon")},
+		},
+		{
+			name:   "price marker exists: invalid nav",
+			marker: yellowMarker,
+			navs:   []types.NetAssetValue{newNav("4red", 0)},
+			source: "remy",
+			expErr: "cannot set net asset value: marker net asset value volume must be positive value",
+		},
+		{
+			name:      "volume greater than supply",
+			marker:    redMarker,
+			navs:      []types.NetAssetValue{newNav("3blue", 1001)},
+			source:    "val",
+			expErr:    "cannot set net asset value: volume (1001) cannot exceed \"red\" marker supply (1000red)",
+			expEvents: sdk.Events{navEvent("red", "3blue", 1001, "val")},
+		},
+		{
+			name:      "one nav: success",
+			marker:    yellowMarker,
+			navs:      []types.NetAssetValue{newNav("3blue", 17)},
+			source:    "harper",
+			expEvents: sdk.Events{navEvent("yellow", "3blue", 17, "harper")},
+			expNavs:   []types.NetAssetValue{newNav("3blue", 17)},
+		},
+		{
+			name:   "usd nav: zero volume",
+			marker: blueMarker,
+			navs:   []types.NetAssetValue{newNav("5"+types.UsdDenom, 0)},
+			source: "tony",
+			expErr: "cannot set net asset value: marker net asset value volume must be positive value",
+		},
+		{
+			name:      "usd nav: too much volume",
+			marker:    blueMarker,
+			navs:      []types.NetAssetValue{newNav("55"+types.UsdDenom, 1005)},
+			source:    "wynne",
+			expEvents: sdk.Events{navEvent("blue", "55"+types.UsdDenom, 1005, "wynne")},
+			expErr:    "cannot set net asset value: volume (1005) cannot exceed \"blue\" marker supply (1000blue)",
+		},
+		{
+			name:      "usd nav: success",
+			marker:    blueMarker,
+			navs:      []types.NetAssetValue{newNav("55"+types.UsdDenom, 1000)},
+			source:    "cody",
+			expEvents: sdk.Events{navEvent("blue", "55"+types.UsdDenom, 1000, "cody")},
+			expNavs:   []types.NetAssetValue{newNav("55"+types.UsdDenom, 1000)},
+		},
+		{
+			name:   "three navs: no errors",
+			marker: whiteMarker,
+			navs:   []types.NetAssetValue{newNav("7blue", 2), newNav("15red", 66), newNav("400yellow", 89)},
+			source: "jordan",
+			expEvents: sdk.Events{
+				navEvent("white", "7blue", 2, "jordan"),
+				navEvent("white", "15red", 66, "jordan"),
+				navEvent("white", "400yellow", 89, "jordan"),
+			},
+			expNavs: []types.NetAssetValue{newNav("7blue", 2), newNav("15red", 66), newNav("400yellow", 89)},
+		},
+		{
+			name:   "three navs: error on first",
+			marker: whiteMarker,
+			navs:   []types.NetAssetValue{newNav("7blue", 1001), newNav("167red", 66), newNav("377yellow", 89)},
+			source: "knox",
+			expErr: "cannot set net asset value: volume (1001) cannot exceed \"white\" marker supply (1000white)",
+			expEvents: sdk.Events{
+				navEvent("white", "7blue", 1001, "knox"),
+				navEvent("white", "167red", 66, "knox"),
+				navEvent("white", "377yellow", 89, "knox"),
+			},
+			expNavs: []types.NetAssetValue{newNav("167red", 66), newNav("377yellow", 89)},
+		},
+		{
+			name:   "three navs: error on second",
+			marker: whiteMarker,
+			navs:   []types.NetAssetValue{newNav("14blue", 2), newNav("15red", 0), newNav("403yellow", 89)},
+			source: "max",
+			expErr: "cannot set net asset value: marker net asset value volume must be positive value",
+			expEvents: sdk.Events{
+				navEvent("white", "14blue", 2, "max"),
+				// no red event because the nav is invalid.
+				navEvent("white", "403yellow", 89, "max"),
+			},
+			expNavs: []types.NetAssetValue{newNav("14blue", 2), newNav("403yellow", 89)},
+		},
+		{
+			name:   "three navs: error on third",
+			marker: whiteMarker,
+			navs:   []types.NetAssetValue{newNav("788blue", 14), newNav("215red", 3), newNav("470white", 14)},
+			source: "palmer",
+			expErr: "net asset value denom cannot match marker denom \"white\"",
+			expEvents: sdk.Events{
+				navEvent("white", "788blue", 14, "palmer"),
+				navEvent("white", "215red", 3, "palmer"),
+				// no white event because it's the same denom as the marker.
+			},
+			expNavs: []types.NetAssetValue{newNav("788blue", 14), newNav("215red", 3)},
+		},
+		{
+			name:   "three navs: error on all",
+			marker: whiteMarker,
+			navs:   []types.NetAssetValue{newNav("44blue", 1001), newNav("55red", 0), newNav("66yellow", 1002)},
+			source: "lynn",
+			expErr: "cannot set net asset value: volume (1001) cannot exceed \"white\" marker supply (1000white)" + "\n" +
+				"cannot set net asset value: marker net asset value volume must be positive value" + "\n" +
+				"cannot set net asset value: volume (1002) cannot exceed \"white\" marker supply (1000white)",
+			expEvents: sdk.Events{
+				navEvent("white", "44blue", 1001, "lynn"),
+				// nav 2 is invalid, so no event from it.
+				navEvent("white", "66yellow", 1002, "lynn"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			em := sdk.NewEventManager()
+			ctx = ctx.WithEventManager(em)
+			expHeight := ctx.BlockHeight()
+			var err error
+			testFunc := func() {
+				err = app.MarkerKeeper.AddSetNetAssetValues(ctx, tc.marker, tc.navs, tc.source)
+			}
+
+			require.NotPanics(t, testFunc, "AddSetNetAssetValues")
+			assertions.AssertErrorValue(t, err, tc.expErr, "AddSetNetAssetValues error")
+			actEvents := em.Events()
+			assertions.AssertEqualEvents(t, tc.expEvents, actEvents, "events emitted during AddSetNetAssetValues")
+
+			for i, expNav := range tc.expNavs {
+				actNav, navErr := app.MarkerKeeper.GetNetAssetValue(ctx, tc.marker.GetDenom(), expNav.Price.Denom)
+				if assert.NoError(t, navErr, "[%d]: GetNetAssetValue(%q, %q)", i, tc.marker.GetDenom(), expNav.Price.Denom) {
+					assert.Equal(t, expNav.Price.String(), actNav.Price.String(),
+						"[%d]: %s:%s nav Price", i, tc.marker.GetDenom(), expNav.Price.Denom)
+					assert.Equal(t, fmt.Sprintf("%d", expNav.Volume), fmt.Sprintf("%d", actNav.Volume),
+						"[%d]: %s:%s nav Volume", i, tc.marker.GetDenom(), expNav.Price.Denom)
+					assert.Equal(t, fmt.Sprintf("%d", expHeight), fmt.Sprintf("%d", actNav.UpdatedBlockHeight),
+						"[%d]: %s:%s nav UpdatedBlockHeight", i, tc.marker.GetDenom(), expNav.Price.Denom)
+				}
 			}
 		})
 	}

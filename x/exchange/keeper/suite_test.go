@@ -40,6 +40,8 @@ type TestSuite struct {
 	marketAddr2 sdk.AccAddress
 	marketAddr3 sdk.AccAddress
 
+	adminAddr sdk.AccAddress
+
 	feeCollector     string
 	feeCollectorAddr sdk.AccAddress
 
@@ -81,6 +83,9 @@ func (s *TestSuite) SetupTest() {
 	s.addAddrLookup(s.marketAddr1, "marketAddr1")
 	s.addAddrLookup(s.marketAddr2, "marketAddr2")
 	s.addAddrLookup(s.marketAddr3, "marketAddr3")
+
+	s.adminAddr = sdk.AccAddress("adminAddr___________")
+	s.addAddrLookup(s.adminAddr, "adminAddr")
 
 	s.feeCollector = s.k.GetFeeCollectorName()
 	s.feeCollectorAddr = authtypes.NewModuleAddress(s.feeCollector)
