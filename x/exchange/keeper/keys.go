@@ -107,6 +107,13 @@ const (
 	// KeyTypeCommitment is the type byte for commitments.
 	KeyTypeCommitment = byte(0x63)
 
+	// ParamsKeyTypeSplit is the type string used in the keys for params.DefaultSplit and params.DenomSplits.
+	ParamsKeyTypeSplit = "split"
+	// ParamsKeyTypeFeeCreatePaymentFlat is the type string used in the keys for params.FeeCreatePaymentFlat.
+	ParamsKeyTypeFeeCreatePaymentFlat = "fee_create_payment_flat"
+	// ParamsKeyTypeFeeAcceptPaymentFlat is the type string used in the keys for params.FeeAcceptPaymentFlat.
+	ParamsKeyTypeFeeAcceptPaymentFlat = "fee_accept_payment_flat"
+
 	// MarketKeyTypeCreateAskFlat is the market-specific type byte for the create-ask flat fees.
 	MarketKeyTypeCreateAskFlat = byte(0x00)
 	// MarketKeyTypeCreateBidFlat is the market-specific type byte for the create-bid flat fees.
@@ -221,7 +228,7 @@ func parseLengthPrefixedAddr(key []byte) (sdk.AccAddress, []byte, error) {
 
 // keyPrefixParamsSplit creates the key prefix for a params "split" entry.
 func keyPrefixParamsSplit(extraCap int) []byte {
-	return prepKey(KeyTypeParams, []byte("split"), extraCap)
+	return prepKey(KeyTypeParams, []byte(ParamsKeyTypeSplit), extraCap)
 }
 
 // GetKeyPrefixParamsSplit creates the key prefix for all params splits entries.
@@ -239,12 +246,12 @@ func MakeKeyParamsSplit(denom string) []byte {
 
 // MakeKeyParamsFeeCreatePaymentFlat creates the key to use for the params FeeCreatePaymentFlat entry.
 func MakeKeyParamsFeeCreatePaymentFlat() []byte {
-	return prepKey(KeyTypeParams, []byte("fee_create_payment_flat"), 0)
+	return prepKey(KeyTypeParams, []byte(ParamsKeyTypeFeeCreatePaymentFlat), 0)
 }
 
 // MakeKeyParamsFeeAcceptPaymentFlat creates the key to use for the params FeeAcceptPaymentFlat entry.
 func MakeKeyParamsFeeAcceptPaymentFlat() []byte {
-	return prepKey(KeyTypeParams, []byte("fee_accept_payment_flat"), 0)
+	return prepKey(KeyTypeParams, []byte(ParamsKeyTypeFeeAcceptPaymentFlat), 0)
 }
 
 // MakeKeyLastMarketID creates the key for the last auto-selected market id.

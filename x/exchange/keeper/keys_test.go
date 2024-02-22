@@ -81,8 +81,12 @@ func TestKeyTypeUniqueness(t *testing.T) {
 		name  string
 		value byte
 	}
+	type stringEntry struct {
+		name  string
+		value string
+	}
 
-	tests := []struct {
+	byteTests := []struct {
 		name  string
 		types []byteEntry
 	}{
@@ -138,12 +142,37 @@ func TestKeyTypeUniqueness(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	stringTests := []struct {
+		name  string
+		types []stringEntry
+	}{
+		{
+			name: "params types",
+			types: []stringEntry{
+				{name: "ParamsKeyTypeSplit", value: keeper.ParamsKeyTypeSplit},
+				{name: "ParamsKeyTypeFeeCreatePaymentFlat", value: keeper.ParamsKeyTypeFeeCreatePaymentFlat},
+				{name: "ParamsKeyTypeFeeAcceptPaymentFlat", value: keeper.ParamsKeyTypeFeeAcceptPaymentFlat},
+			},
+		},
+	}
+
+	for _, tc := range byteTests {
 		t.Run(tc.name, func(t *testing.T) {
 			seen := make(map[byte]string)
 			for _, entry := range tc.types {
 				prev, found := seen[entry.value]
-				assert.False(t, found, "byte %#x used for both %s and %s", prev, entry.name)
+				assert.False(t, found, "byte %#x used for both %s and %s", entry.value, prev, entry.name)
+				seen[entry.value] = entry.name
+			}
+		})
+	}
+
+	for _, tc := range stringTests {
+		t.Run(tc.name, func(t *testing.T) {
+			seen := make(map[string]string)
+			for _, entry := range tc.types {
+				prev, found := seen[entry.value]
+				assert.False(t, found, "string %q used for both %s and %s", entry.value, prev, entry.name)
 				seen[entry.value] = entry.name
 			}
 		})

@@ -7,9 +7,13 @@ import (
 
 func (s *TestSuite) TestKeeper_SetParams() {
 	expEntry := func(denom string, value uint16) string {
-		keyBz := append([]byte{0}, []byte("split"+denom)...)
+		keyBz := append([]byte{0}, []byte(keeper.ParamsKeyTypeSplit+denom)...)
 		valueBz := keeper.Uint16Bz(value)
 		return s.stateEntryString(keyBz, valueBz)
+	}
+	expFeeEntry := func(typeKey string, value string) string {
+		keyBz := append([]byte{0}, []byte(typeKey)...)
+		return s.stateEntryString(keyBz, []byte(value))
 	}
 
 	tests := []struct {
@@ -23,9 +27,13 @@ func (s *TestSuite) TestKeeper_SetParams() {
 			expState: nil,
 		},
 		{
-			name:     "default params",
-			params:   exchange.DefaultParams(),
-			expState: []string{expEntry("", uint16(exchange.DefaultDefaultSplit))},
+			name:   "default params",
+			params: exchange.DefaultParams(),
+			expState: []string{
+				expFeeEntry(keeper.ParamsKeyTypeFeeAcceptPaymentFlat, "100000000nhash"),
+				expFeeEntry(keeper.ParamsKeyTypeFeeCreatePaymentFlat, "100000000nhash"),
+				expEntry("", uint16(exchange.DefaultDefaultSplit)),
+			},
 		},
 		{
 			name: "zero default and two specifics",

@@ -9,14 +9,18 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestDefaultGenesisState(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	expected := &GenesisState{
 		Params: &Params{
-			DefaultSplit: DefaultDefaultSplit,
-			DenomSplits:  nil,
+			DefaultSplit:         DefaultDefaultSplit,
+			DenomSplits:          nil,
+			FeeCreatePaymentFlat: []sdk.Coin{{Denom: "nhash", Amount: sdkmath.NewInt(DefaultFeeCreatePaymentFlatAmount)}},
+			FeeAcceptPaymentFlat: []sdk.Coin{{Denom: "nhash", Amount: sdkmath.NewInt(DefaultFeeAcceptPaymentFlatAmount)}},
 		},
 		Markets:      nil,
 		Orders:       nil,

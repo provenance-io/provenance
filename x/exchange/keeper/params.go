@@ -63,6 +63,7 @@ func getParamsSplits(store sdk.KVStore) (uint32, []exchange.DenomSplit, bool) {
 func setParamsFeePaymentFlat(store sdk.KVStore, key []byte, opts []sdk.Coin) {
 	if len(opts) == 0 || sdk.Coins(opts).IsZero() {
 		store.Delete(key)
+		return
 	}
 	val := sdk.Coins(opts).String()
 	store.Set(key, []byte(val))
@@ -107,16 +108,19 @@ func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
 	store := k.getStore(ctx)
 
 	deleteAllParamsSplits(store)
+	var feeCreate, feeAccept []sdk.Coin
 	if params != nil {
 		setParamsSplit(store, "", uint16(params.DefaultSplit))
 		for _, split := range params.DenomSplits {
 			setParamsSplit(store, split.Denom, uint16(split.Split))
 		}
+		feeCreate = params.FeeCreatePaymentFlat
+		feeAccept = params.FeeAcceptPaymentFlat
 	}
 
 	// TODO[1703]: In an upgrade handler, update the exchange params to include the new fields.
-	setParamsFeeCreatePaymentFlat(store, params.FeeCreatePaymentFlat)
-	setParamsFeeAcceptPaymentFlat(store, params.FeeAcceptPaymentFlat)
+	setParamsFeeCreatePaymentFlat(store, feeCreate)
+	setParamsFeeAcceptPaymentFlat(store, feeAccept)
 }
 
 // GetParams gets the exchange module params.
