@@ -430,8 +430,10 @@ func (s *TestSuite) copyParams(orig *exchange.Params) *exchange.Params {
 		return nil
 	}
 	return &exchange.Params{
-		DefaultSplit: orig.DefaultSplit,
-		DenomSplits:  s.copyDenomSplits(orig.DenomSplits),
+		DefaultSplit:         orig.DefaultSplit,
+		DenomSplits:          s.copyDenomSplits(orig.DenomSplits),
+		FeeCreatePaymentFlat: s.copyCoins(orig.FeeCreatePaymentFlat),
+		FeeAcceptPaymentFlat: s.copyCoins(orig.FeeAcceptPaymentFlat),
 	}
 }
 

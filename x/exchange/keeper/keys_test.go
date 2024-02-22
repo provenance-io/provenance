@@ -273,6 +273,26 @@ func TestMakeKeyParamsSplit(t *testing.T) {
 	}
 }
 
+func TestMakeKeyParamsFeeCreatePaymentFlat(t *testing.T) {
+	ktc := keyTestCase{
+		maker: func() []byte {
+			return keeper.MakeKeyParamsFeeCreatePaymentFlat()
+		},
+		expected: append([]byte{keeper.KeyTypeParams}, []byte("fee_create_payment_flat")...),
+	}
+	checkKey(t, ktc, "MakeKeyParamsFeeCreatePaymentFlat")
+}
+
+func TestMakeKeyParamsFeeAcceptPaymentFlat(t *testing.T) {
+	ktc := keyTestCase{
+		maker: func() []byte {
+			return keeper.MakeKeyParamsFeeAcceptPaymentFlat()
+		},
+		expected: append([]byte{keeper.KeyTypeParams}, []byte("fee_accept_payment_flat")...),
+	}
+	checkKey(t, ktc, "MakeKeyParamsFeeAcceptPaymentFlat")
+}
+
 func TestMakeKeyLastMarketID(t *testing.T) {
 	ktc := keyTestCase{
 		maker: func() []byte {

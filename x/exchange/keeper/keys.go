@@ -22,6 +22,9 @@ import (
 //   The splits are stored as uint16 in big-endian order.
 //   Default split: 0x00 | "split" => uint16
 //   Specific splits: 0x00 | "split" | <denom> => uint16
+//   The payment flat fees are stored as string versions of the coins.
+//   Create Payment Flat: 0x00 | "fee_create_payment_flat" => string(coins)
+//   Accept Payment Flat: 0x00 | "fee_accept_payment_flat" => string(coins)
 //
 // Last Market ID: 0x06 => uint32
 //   This stores the last auto-selected market id.
@@ -232,6 +235,16 @@ func MakeKeyParamsSplit(denom string) []byte {
 	rv := keyPrefixParamsSplit(len(denom))
 	rv = append(rv, denom...)
 	return rv
+}
+
+// MakeKeyParamsFeeCreatePaymentFlat creates the key to use for the params FeeCreatePaymentFlat entry.
+func MakeKeyParamsFeeCreatePaymentFlat() []byte {
+	return prepKey(KeyTypeParams, []byte("fee_create_payment_flat"), 0)
+}
+
+// MakeKeyParamsFeeAcceptPaymentFlat creates the key to use for the params FeeAcceptPaymentFlat entry.
+func MakeKeyParamsFeeAcceptPaymentFlat() []byte {
+	return prepKey(KeyTypeParams, []byte("fee_accept_payment_flat"), 0)
 }
 
 // MakeKeyLastMarketID creates the key for the last auto-selected market id.

@@ -79,6 +79,7 @@ func (s *TestSuite) TestKeeper_SetParams() {
 			params:   nil,
 			expState: nil,
 		},
+		// TODO[1703]: Add tests cases for new fields.
 	}
 
 	s.clearExchangeState()
@@ -127,6 +128,7 @@ func (s *TestSuite) TestKeeper_GetParams() {
 				},
 			},
 		},
+		// TODO[1703]: Add tests cases for new fields.
 	}
 
 	for _, tc := range tests {
@@ -204,6 +206,7 @@ func (s *TestSuite) TestKeeper_GetParamsOrDefaults() {
 				},
 			},
 		},
+		// TODO[1703]: Add tests cases for new fields.
 	}
 
 	for _, tc := range tests {

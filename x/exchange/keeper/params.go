@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -31,10 +33,85 @@ func getParamsSplit(store sdk.KVStore, denom string) (uint16, bool) {
 	return 0, false
 }
 
+// getParamsSplits gets the default split and all denom splits from state.
+// Returns the default split amount, the specific denom splits, and whether there were any entries in state.
+// If there are no splits entries in state (default or specific), returns 0, nil, false.
+func getParamsSplits(store sdk.KVStore) (uint32, []exchange.DenomSplit, bool) {
+	var defaultSplit uint32
+	var denomSplits []exchange.DenomSplit
+	var haveVals bool
+
+	iterate(store, GetKeyPrefixParamsSplit(), func(key, value []byte) bool {
+		split, ok := uint16FromBz(value)
+		if !ok {
+			return false
+		}
+
+		haveVals = true
+		denom := string(key)
+		if len(denom) == 0 {
+			defaultSplit = uint32(split)
+		} else {
+			denomSplits = append(denomSplits, exchange.DenomSplit{Denom: denom, Split: uint32(split)})
+		}
+
+		return false
+	})
+
+	return defaultSplit, denomSplits, haveVals
+}
+
+// setParamsFeePaymentFlat sets a payment flat fee params entry.
+func setParamsFeePaymentFlat(store sdk.KVStore, key []byte, opts []sdk.Coin) {
+	if len(opts) == 0 || sdk.Coins(opts).IsZero() {
+		store.Delete(key)
+	}
+	val := sdk.Coins(opts).String()
+	store.Set(key, []byte(val))
+}
+
+// getParamsPaymentFlatFee gets a payment flat fee params entry.
+func getParamsPaymentFlatFee(store sdk.KVStore, key []byte) ([]sdk.Coin, error) {
+	val := store.Get(key)
+	if len(val) == 0 {
+		return nil, nil
+	}
+	return sdk.ParseCoinsNormalized(string(val))
+}
+
+// setParamsFeeCreatePaymentFlat sets the params entry for the create-payment flat fee.
+func setParamsFeeCreatePaymentFlat(store sdk.KVStore, opts []sdk.Coin) {
+	setParamsFeePaymentFlat(store, MakeKeyParamsFeeCreatePaymentFlat(), opts)
+}
+
+// setParamsFeeCreatePaymentFlat sets the params entry for the accept-payment flat fee.
+func setParamsFeeAcceptPaymentFlat(store sdk.KVStore, opts []sdk.Coin) {
+	setParamsFeePaymentFlat(store, MakeKeyParamsFeeAcceptPaymentFlat(), opts)
+}
+
+// getParamsFeeCreatePaymentFlat gets the params entry for the create-payment flat fee.
+func getParamsFeeCreatePaymentFlat(store sdk.KVStore) ([]sdk.Coin, error) {
+	rv, err := getParamsPaymentFlatFee(store, MakeKeyParamsFeeCreatePaymentFlat())
+	if err != nil {
+		return nil, fmt.Errorf("could not read fee-create-payment-flat value: %w", err)
+	}
+	return rv, nil
+}
+
+// getParamsFeeAcceptPaymentFlat gets the params entry for the accept-payment flat fee.
+func getParamsFeeAcceptPaymentFlat(store sdk.KVStore) ([]sdk.Coin, error) {
+	rv, err := getParamsPaymentFlatFee(store, MakeKeyParamsFeeAcceptPaymentFlat())
+	if err != nil {
+		return nil, fmt.Errorf("could not read fee-accept-payment-flat value: %w", err)
+	}
+	return rv, nil
+}
+
 // SetParams updates the params to match those provided.
 // If nil is provided, all params are deleted.
 func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
 	store := k.getStore(ctx)
+
 	deleteAllParamsSplits(store)
 	if params != nil {
 		setParamsSplit(store, "", uint16(params.DefaultSplit))
@@ -42,28 +119,38 @@ func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
 			setParamsSplit(store, split.Denom, uint16(split.Split))
 		}
 	}
+
+	setParamsFeeCreatePaymentFlat(store, params.FeeCreatePaymentFlat)
+	setParamsFeeAcceptPaymentFlat(store, params.FeeAcceptPaymentFlat)
 }
 
 // GetParams gets the exchange module params.
 // If there aren't any params in state, nil is returned.
 func (k Keeper) GetParams(ctx sdk.Context) *exchange.Params {
+	store := k.getStore(ctx)
+
 	var rv *exchange.Params
-	k.iterate(ctx, GetKeyPrefixParamsSplit(), func(key, value []byte) bool {
-		split, ok := uint16FromBz(value)
-		if !ok {
-			return false
+	if defaultSplit, denomSplits, haveSplits := getParamsSplits(store); haveSplits {
+		rv = &exchange.Params{
+			DefaultSplit: defaultSplit,
+			DenomSplits:  denomSplits,
 		}
+	}
+
+	if opts, err := getParamsFeeCreatePaymentFlat(store); err == nil && len(opts) > 0 {
 		if rv == nil {
 			rv = &exchange.Params{}
 		}
-		denom := string(key)
-		if len(denom) == 0 {
-			rv.DefaultSplit = uint32(split)
-		} else {
-			rv.DenomSplits = append(rv.DenomSplits, exchange.DenomSplit{Denom: denom, Split: uint32(split)})
+		rv.FeeCreatePaymentFlat = opts
+	}
+
+	if opts, err := getParamsFeeAcceptPaymentFlat(store); err == nil && len(opts) > 0 {
+		if rv == nil {
+			rv = &exchange.Params{}
 		}
-		return false
-	})
+		rv.FeeAcceptPaymentFlat = opts
+	}
+
 	return rv
 }
 
