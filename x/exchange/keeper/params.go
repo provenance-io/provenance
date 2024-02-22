@@ -1,10 +1,8 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -71,12 +69,16 @@ func setParamsFeePaymentFlat(store sdk.KVStore, key []byte, opts []sdk.Coin) {
 }
 
 // getParamsPaymentFlatFee gets a payment flat fee params entry.
-func getParamsPaymentFlatFee(store sdk.KVStore, key []byte) ([]sdk.Coin, error) {
+func getParamsPaymentFlatFee(store sdk.KVStore, key []byte) []sdk.Coin {
 	val := store.Get(key)
 	if len(val) == 0 {
-		return nil, nil
+		return nil
 	}
-	return sdk.ParseCoinsNormalized(string(val))
+	rv, err := sdk.ParseCoinsNormalized(string(val))
+	if err != nil || rv.IsZero() {
+		return nil
+	}
+	return rv
 }
 
 // setParamsFeeCreatePaymentFlat sets the params entry for the create-payment flat fee.
@@ -90,21 +92,13 @@ func setParamsFeeAcceptPaymentFlat(store sdk.KVStore, opts []sdk.Coin) {
 }
 
 // getParamsFeeCreatePaymentFlat gets the params entry for the create-payment flat fee.
-func getParamsFeeCreatePaymentFlat(store sdk.KVStore) ([]sdk.Coin, error) {
-	rv, err := getParamsPaymentFlatFee(store, MakeKeyParamsFeeCreatePaymentFlat())
-	if err != nil {
-		return nil, fmt.Errorf("could not read fee-create-payment-flat value: %w", err)
-	}
-	return rv, nil
+func getParamsFeeCreatePaymentFlat(store sdk.KVStore) []sdk.Coin {
+	return getParamsPaymentFlatFee(store, MakeKeyParamsFeeCreatePaymentFlat())
 }
 
 // getParamsFeeAcceptPaymentFlat gets the params entry for the accept-payment flat fee.
-func getParamsFeeAcceptPaymentFlat(store sdk.KVStore) ([]sdk.Coin, error) {
-	rv, err := getParamsPaymentFlatFee(store, MakeKeyParamsFeeAcceptPaymentFlat())
-	if err != nil {
-		return nil, fmt.Errorf("could not read fee-accept-payment-flat value: %w", err)
-	}
-	return rv, nil
+func getParamsFeeAcceptPaymentFlat(store sdk.KVStore) []sdk.Coin {
+	return getParamsPaymentFlatFee(store, MakeKeyParamsFeeAcceptPaymentFlat())
 }
 
 // SetParams updates the params to match those provided.
@@ -120,6 +114,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
 		}
 	}
 
+	// TODO[1703]: In an upgrade handler, update the exchange params to include the new fields.
 	setParamsFeeCreatePaymentFlat(store, params.FeeCreatePaymentFlat)
 	setParamsFeeAcceptPaymentFlat(store, params.FeeAcceptPaymentFlat)
 }
@@ -137,14 +132,14 @@ func (k Keeper) GetParams(ctx sdk.Context) *exchange.Params {
 		}
 	}
 
-	if opts, err := getParamsFeeCreatePaymentFlat(store); err == nil && len(opts) > 0 {
+	if opts := getParamsFeeCreatePaymentFlat(store); len(opts) > 0 {
 		if rv == nil {
 			rv = &exchange.Params{}
 		}
 		rv.FeeCreatePaymentFlat = opts
 	}
 
-	if opts, err := getParamsFeeAcceptPaymentFlat(store); err == nil && len(opts) > 0 {
+	if opts := getParamsFeeAcceptPaymentFlat(store); len(opts) > 0 {
 		if rv == nil {
 			rv = &exchange.Params{}
 		}
@@ -193,4 +188,22 @@ func (k Keeper) GetExchangeSplit(ctx sdk.Context, denom string) uint16 {
 
 	// Lastly, use the default from the defaults.
 	return uint16(defaults.DefaultSplit)
+}
+
+// consumePaymentFee consumes the first entry in opts (if there is one) as a msg fee.
+func consumePaymentFee(ctx sdk.Context, opts []sdk.Coin, msg sdk.Msg) {
+	if len(opts) == 0 || opts[0].IsZero() {
+		return
+	}
+	antewrapper.ConsumeMsgFee(ctx, sdk.Coins{opts[0]}, msg, "")
+}
+
+// consumeCreatePaymentFee looks up and consumes the create-payment fee.
+func (k Keeper) consumeCreatePaymentFee(ctx sdk.Context, msg sdk.Msg) {
+	consumePaymentFee(ctx, getParamsFeeCreatePaymentFlat(k.getStore(ctx)), msg)
+}
+
+// consumeAcceptPaymentFee looks up and consumes the accept-payment fee.
+func (k Keeper) consumeAcceptPaymentFee(ctx sdk.Context, msg sdk.Msg) {
+	consumePaymentFee(ctx, getParamsFeeAcceptPaymentFlat(k.getStore(ctx)), msg)
 }
