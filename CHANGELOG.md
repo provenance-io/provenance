@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* nothing
+
+---
+
+## [v1.18.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc2) - 2024-02-22
+
 ### Features
 
 * In the marker module's `SendRestrictionFn`, allow a transfer agent to be identified through the context [#1834](https://github.com/provenance-io/provenance/issues/1834).
@@ -74,6 +80,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `golangci/golangci-lint-action` from 3 to 4 ([#1840](https://github.com/provenance-io/provenance/pull/1840))
 - Bump `google.golang.org/grpc` from 1.61.0 to 1.61.1 ([#1842](https://github.com/provenance-io/provenance/pull/1842))
 - Bump `cosmos-sdk` from v0.46.13-pio-2 to v0.46.13-pio-3 ([#1848](https://github.com/provenance-io/provenance/pull/1848))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.18.0-rc1...v1.18.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.17.1...v1.18.0-rc2
 
 ---
 
