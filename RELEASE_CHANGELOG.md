@@ -19,6 +19,7 @@
 ### Bug Fixes
 
 * Prevent funds from going to or from a marker without the transfer agent having deposit or withdraw access (respectively) [#1834](https://github.com/provenance-io/provenance/issues/1834).
+* Ensure the store loader isn't nil when the handling an upgrade [1852](https://github.com/provenance-io/provenance/pull/1852).
 
 ### API Breaking
 
