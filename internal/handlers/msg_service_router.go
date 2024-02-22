@@ -9,6 +9,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"golang.org/x/exp/constraints"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/runtime/protoiface"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -24,6 +25,7 @@ import (
 type PioMsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
+	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
 	msgFeesKeeper     msgfeeskeeper.Keeper
 	decoder           sdk.TxDecoder
 	circuitBreaker    baseapp.CircuitBreaker
@@ -31,14 +33,14 @@ type PioMsgServiceRouter struct {
 
 var _ gogogrpc.Server = &PioMsgServiceRouter{}
 
-// TODO[1760]: msg-service-router: Make sure any fixes in the SDK's MsgServiceRouter are also considered with our PioMsgServiceRouter.
-// var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{} // TODO[1760]: msg-service-router
+var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{}
 
 // NewPioMsgServiceRouter creates a new PioMsgServiceRouter.
 func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {
 	return &PioMsgServiceRouter{
-		routes:  map[string]MsgServiceHandler{},
-		decoder: decoder,
+		routes:         map[string]MsgServiceHandler{},
+		hybridHandlers: map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
+		decoder:        decoder,
 	}
 }
 
@@ -176,6 +178,11 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 			return sdk.WrapServiceResult(ctx, resMsg, err)
 		}
 	}
+}
+
+// TODO[1760]: msg-service-router: Do we need to add the registration of this?
+func (msr *PioMsgServiceRouter) HybridHandlerByMsgName(msgName string) func(ctx context.Context, req, resp protoiface.MessageV1) error {
+	return msr.hybridHandlers[msgName]
 }
 
 // SetInterfaceRegistry sets the interface registry for the router.
