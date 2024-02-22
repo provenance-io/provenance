@@ -1059,7 +1059,7 @@ func New(
 	}
 
 	// Currently in an upgrade hold for this block.
-	storeLoader := baseapp.DefaultStoreLoader
+	var storeLoader baseapp.StoreLoader
 	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight()+1 {
 		if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 			app.Logger().Info("Skipping upgrade based on height",
@@ -1076,6 +1076,9 @@ func New(
 			// See if we have a custom store loader to use for upgrades.
 			storeLoader = GetUpgradeStoreLoader(app, upgradeInfo)
 		}
+	}
+	if storeLoader == nil {
+		storeLoader = baseapp.DefaultStoreLoader
 	}
 
 	// Verify configuration settings
