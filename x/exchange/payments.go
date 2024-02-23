@@ -41,5 +41,28 @@ func (p Payment) Validate() error {
 
 // String returns a string representing this Payment.
 func (p Payment) String() string {
-	return fmt.Sprintf("%q;%s:%q<->%s:%q", p.ExternalId, p.Source, p.SourceAmount, p.Target, p.TargetAmount)
+	source := p.Source
+	if len(source) == 0 {
+		source = "?"
+	}
+	source += fmt.Sprintf("+%q", p.ExternalId)
+
+	target := p.Target
+	if len(target) == 0 {
+		target = "?"
+	}
+
+	l, m, r := "-", "x", "-"
+	if !p.SourceAmount.IsZero() {
+		source += ":" + p.SourceAmount.String()
+		r = ">"
+		m = "-"
+	}
+	if !p.TargetAmount.IsZero() {
+		target += ":" + p.TargetAmount.String()
+		l = "<"
+		m = "-"
+	}
+
+	return source + l + m + r + target
 }
