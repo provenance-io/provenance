@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -1566,7 +1567,12 @@ func TestCanForceTransferFrom(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	setAcc := func(addr sdk.AccAddress, sequence uint64) sdk.AccAddress {
+	testAddr := func(prefix string) sdk.AccAddress {
+		return sdk.AccAddress(prefix + strings.Repeat("_", 20-len(prefix)))
+	}
+
+	setAcc := func(addrPrefix string, sequence uint64) sdk.AccAddress {
+		addr := testAddr(addrPrefix)
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
 		app.AccountKeeper.SetAccount(ctx, acc)
@@ -1591,7 +1597,8 @@ func TestCanForceTransferFrom(t *testing.T) {
 		return sdk.MustAccAddressFromBech32(res.GroupPolicyAddress)
 	}
 
-	createMarkerAcc := func(addr sdk.AccAddress) sdk.AccAddress {
+	createMarkerAcc := func(addrPrefix string) sdk.AccAddress {
+		addr := testAddr(addrPrefix)
 		acc := &types.MarkerAccount{
 			BaseAccount: authtypes.NewBaseAccountWithAddress(addr),
 			Status:      types.StatusActive,
@@ -1603,7 +1610,8 @@ func TestCanForceTransferFrom(t *testing.T) {
 		return addr
 	}
 
-	createMarketAcc := func(addr sdk.AccAddress) sdk.AccAddress {
+	createMarketAcc := func(addrPrefix string) sdk.AccAddress {
+		addr := testAddr(addrPrefix)
 		acc := &exchange.MarketAccount{
 			BaseAccount:   authtypes.NewBaseAccountWithAddress(addr),
 			MarketId:      97531,
@@ -1613,12 +1621,12 @@ func TestCanForceTransferFrom(t *testing.T) {
 		return addr
 	}
 
-	addrNoAcc := sdk.AccAddress("addrNoAcc___________")
-	addrSeq0 := setAcc(sdk.AccAddress("addrSeq0____________"), 0)
-	addrSeq1 := setAcc(sdk.AccAddress("addrSeq1____________"), 1)
+	addrNoAcc := testAddr("addrNoAcc")
+	addrSeq0 := setAcc("addrSeq0", 0)
+	addrSeq1 := setAcc("addrSeq1", 1)
 	addrGroup := createGroup()
-	addrMarker := createMarkerAcc(sdk.AccAddress("addrMarker__________"))
-	addrMarket := createMarketAcc(sdk.AccAddress("addrMarket__________"))
+	addrMarker := createMarkerAcc("addrMarker")
+	addrMarket := createMarketAcc("addrMarket")
 
 	tests := []struct {
 		name string
