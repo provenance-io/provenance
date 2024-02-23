@@ -30,6 +30,7 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/x/exchange"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
@@ -1565,10 +1566,11 @@ func TestCanForceTransferFrom(t *testing.T) {
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	setAcc := func(addr sdk.AccAddress, sequence uint64) {
+	setAcc := func(addr sdk.AccAddress, sequence uint64) sdk.AccAddress {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		require.NoError(t, acc.SetSequence(sequence), "%s.SetSequence(%d)", string(addr), sequence)
 		app.AccountKeeper.SetAccount(ctx, acc)
+		return addr
 	}
 
 	createGroup := func() sdk.AccAddress {
@@ -1589,12 +1591,34 @@ func TestCanForceTransferFrom(t *testing.T) {
 		return sdk.MustAccAddressFromBech32(res.GroupPolicyAddress)
 	}
 
+	createMarkerAcc := func(addr sdk.AccAddress) sdk.AccAddress {
+		acc := &types.MarkerAccount{
+			BaseAccount: authtypes.NewBaseAccountWithAddress(addr),
+			Status:      types.StatusActive,
+			Denom:       "whatever",
+			Supply:      math.NewInt(0),
+			MarkerType:  types.MarkerType_RestrictedCoin,
+		}
+		app.AccountKeeper.SetAccount(ctx, acc)
+		return addr
+	}
+
+	createMarketAcc := func(addr sdk.AccAddress) sdk.AccAddress {
+		acc := &exchange.MarketAccount{
+			BaseAccount:   authtypes.NewBaseAccountWithAddress(addr),
+			MarketId:      97531,
+			MarketDetails: exchange.MarketDetails{},
+		}
+		app.AccountKeeper.SetAccount(ctx, acc)
+		return addr
+	}
+
 	addrNoAcc := sdk.AccAddress("addrNoAcc___________")
-	addrSeq0 := sdk.AccAddress("addrSeq0____________")
-	addrSeq1 := sdk.AccAddress("addrSeq1____________")
+	addrSeq0 := setAcc(sdk.AccAddress("addrSeq0____________"), 0)
+	addrSeq1 := setAcc(sdk.AccAddress("addrSeq1____________"), 1)
 	addrGroup := createGroup()
-	setAcc(addrSeq0, 0)
-	setAcc(addrSeq1, 1)
+	addrMarker := createMarkerAcc(sdk.AccAddress("addrMarker__________"))
+	addrMarket := createMarketAcc(sdk.AccAddress("addrMarket__________"))
 
 	tests := []struct {
 		name string
@@ -1605,6 +1629,8 @@ func TestCanForceTransferFrom(t *testing.T) {
 		{name: "address with sequence 0", from: addrSeq0, exp: false},
 		{name: "address with sequence 1", from: addrSeq1, exp: true},
 		{name: "group address", from: addrGroup, exp: true},
+		{name: "marker address", from: addrMarker, exp: true},
+		{name: "market address", from: addrMarket, exp: true},
 	}
 
 	for _, tc := range tests {
