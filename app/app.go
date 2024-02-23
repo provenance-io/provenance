@@ -590,8 +590,6 @@ func New(
 		app.AccountKeeper, app.AttributeKeeper, app.BankKeeper, app.HoldKeeper, app.MarkerKeeper,
 	)
 
-	// TODO[1760]: msg-service-router: Put the pioMessageRouter back into use (and the ica host module back in).
-
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {
 		return pioMsgFeesRouter.Handler(msg)
 	})
