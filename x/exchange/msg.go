@@ -619,11 +619,7 @@ func (m MsgMarketManageReqAttrsRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgCreatePaymentRequest) ValidateBasic() error {
-	_ = MsgCreatePaymentRequest{ // TODO[1703]: Delete this line.
-		Payment: Payment{},
-	}
-	// TODO[1703]: MsgCreatePaymentRequest.ValidateBasic
-	return nil
+	return m.Payment.Validate()
 }
 
 func (m MsgCreatePaymentRequest) GetSigners() []sdk.AccAddress {
@@ -632,11 +628,14 @@ func (m MsgCreatePaymentRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgAcceptPaymentRequest) ValidateBasic() error {
-	_ = MsgAcceptPaymentRequest{ // TODO[1703]: Delete this line.
-		Payment: Payment{},
+	var errs []error
+	if err := m.Payment.Validate(); err != nil {
+		errs = append(errs, err)
 	}
-	// TODO[1703]: MsgAcceptPaymentRequest.ValidateBasic
-	return nil
+	if len(m.Payment.Target) == 0 {
+		errs = append(errs, fmt.Errorf("invalid target: empty address string is not allowed"))
+	}
+	return errors.Join(errs...)
 }
 
 func (m MsgAcceptPaymentRequest) GetSigners() []sdk.AccAddress {
@@ -645,13 +644,17 @@ func (m MsgAcceptPaymentRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgRejectPaymentRequest) ValidateBasic() error {
-	_ = MsgRejectPaymentRequest{ // TODO[1703]: Delete this line.
-		Target:     "",
-		Source:     "",
-		ExternalId: "",
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Target); err != nil {
+		errs = append(errs, fmt.Errorf("invalid target %q: %w", m.Target, err))
 	}
-	// TODO[1703]: MsgRejectPaymentRequest.ValidateBasic
-	return nil
+	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
+		errs = append(errs, fmt.Errorf("invalid source %q: %w", m.Source, err))
+	}
+	if err := ValidateExternalID(m.ExternalId); err != nil {
+		errs = append(errs, err)
+	}
+	return errors.Join(errs...)
 }
 
 func (m MsgRejectPaymentRequest) GetSigners() []sdk.AccAddress {
@@ -660,12 +663,31 @@ func (m MsgRejectPaymentRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgRejectPaymentsRequest) ValidateBasic() error {
-	_ = MsgRejectPaymentsRequest{ // TODO[1703]: Delete this line.
-		Target:  "",
-		Sources: nil,
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Target); err != nil {
+		errs = append(errs, fmt.Errorf("invalid target %q: %w", m.Target, err))
 	}
-	// TODO[1703]: MsgRejectPaymentsRequest.ValidateBasic
-	return nil
+	if len(m.Sources) == 0 {
+		errs = append(errs, errors.New("at least one source is required"))
+	}
+	known := make(map[string]bool)
+	bad := make(map[string]bool)
+	for i, source := range m.Sources {
+		if bad[source] {
+			continue
+		}
+		if known[source] {
+			errs = append(errs, fmt.Errorf("invalid sources: duplicate entry %s", source))
+			bad[source] = true
+			continue
+		}
+		known[source] = true
+		if _, err := sdk.AccAddressFromBech32(source); err != nil {
+			errs = append(errs, fmt.Errorf("invalid sources[%d] %q: %w", i, source, err))
+			bad[source] = true
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func (m MsgRejectPaymentsRequest) GetSigners() []sdk.AccAddress {
@@ -674,12 +696,31 @@ func (m MsgRejectPaymentsRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgCancelPaymentsRequest) ValidateBasic() error {
-	_ = MsgCancelPaymentsRequest{ // TODO[1703]: Delete this line.
-		Source:      "",
-		ExternalIds: nil,
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
+		errs = append(errs, fmt.Errorf("invalid source %q: %w", m.Source, err))
 	}
-	// TODO[1703]: MsgCancelPaymentsRequest.ValidateBasic
-	return nil
+	if len(m.ExternalIds) == 0 {
+		errs = append(errs, errors.New("at least one external id is required"))
+	}
+	known := make(map[string]bool)
+	bad := make(map[string]bool)
+	for i, externalID := range m.ExternalIds {
+		if bad[externalID] {
+			continue
+		}
+		if known[externalID] {
+			errs = append(errs, fmt.Errorf("invalid external ids: duplicate entry %q", externalID))
+			bad[externalID] = true
+			continue
+		}
+		known[externalID] = true
+		if err := ValidateExternalID(externalID); err != nil {
+			errs = append(errs, fmt.Errorf("invalid external ids[%d]: %w", i, err))
+			bad[externalID] = true
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func (m MsgCancelPaymentsRequest) GetSigners() []sdk.AccAddress {
@@ -688,13 +729,19 @@ func (m MsgCancelPaymentsRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgChangePaymentTargetRequest) ValidateBasic() error {
-	_ = MsgChangePaymentTargetRequest{ // TODO[1703]: Delete this line.
-		Source:     "",
-		ExternalId: "",
-		NewTarget:  "",
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
+		errs = append(errs, fmt.Errorf("invalid source %q: %w", m.Source, err))
 	}
-	// TODO[1703]: MsgChangePaymentTargetRequest.ValidateBasic
-	return nil
+	if err := ValidateExternalID(m.ExternalId); err != nil {
+		errs = append(errs, err)
+	}
+	if len(m.NewTarget) > 0 {
+		if _, err := sdk.AccAddressFromBech32(m.NewTarget); err != nil {
+			errs = append(errs, fmt.Errorf("invalid new target %q: %w", m.NewTarget, err))
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func (m MsgChangePaymentTargetRequest) GetSigners() []sdk.AccAddress {
