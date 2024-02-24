@@ -75,6 +75,10 @@ var (
 
 	// SetParamsSplit is a test-only exposure of setParamsSplit.
 	SetParamsSplit = setParamsSplit
+	// SetParamsFeeCreatePaymentFlat is a test-only exposure of setParamsFeeCreatePaymentFlat.
+	SetParamsFeeCreatePaymentFlat = setParamsFeeCreatePaymentFlat
+	// SetParamsFeeAcceptPaymentFlat is a test-only exposure of setParamsFeeAcceptPaymentFlat.
+	SetParamsFeeAcceptPaymentFlat = setParamsFeeAcceptPaymentFlat
 
 	// GetLastAutoMarketID is a test-only exposure of getLastAutoMarketID.
 	GetLastAutoMarketID = getLastAutoMarketID

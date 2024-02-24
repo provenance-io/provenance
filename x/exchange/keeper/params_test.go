@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
@@ -11,8 +13,12 @@ func (s *TestSuite) TestKeeper_SetParams() {
 		valueBz := keeper.Uint16Bz(value)
 		return s.stateEntryString(keyBz, valueBz)
 	}
-	expFeeEntry := func(typeKey string, value string) string {
-		keyBz := append([]byte{0}, []byte(typeKey)...)
+	expAcceptEntry := func(value string) string {
+		keyBz := keeper.MakeKeyParamsFeeAcceptPaymentFlat()
+		return s.stateEntryString(keyBz, []byte(value))
+	}
+	expCreateEntry := func(value string) string {
+		keyBz := keeper.MakeKeyParamsFeeCreatePaymentFlat()
 		return s.stateEntryString(keyBz, []byte(value))
 	}
 
@@ -30,8 +36,8 @@ func (s *TestSuite) TestKeeper_SetParams() {
 			name:   "default params",
 			params: exchange.DefaultParams(),
 			expState: []string{
-				expFeeEntry(keeper.ParamsKeyTypeFeeAcceptPaymentFlat, "100000000nhash"),
-				expFeeEntry(keeper.ParamsKeyTypeFeeCreatePaymentFlat, "100000000nhash"),
+				expAcceptEntry("100000000nhash"),
+				expCreateEntry("100000000nhash"),
 				expEntry("", uint16(exchange.DefaultDefaultSplit)),
 			},
 		},
@@ -70,7 +76,38 @@ func (s *TestSuite) TestKeeper_SetParams() {
 			},
 		},
 		{
-			// This one also tests that previously set entries are deleted.
+			name: "just create payment",
+			params: &exchange.Params{
+				FeeCreatePaymentFlat: []sdk.Coin{sdk.NewInt64Coin("cherry", 5), sdk.NewInt64Coin("cranberry", 8)},
+			},
+			expState: []string{
+				expCreateEntry("5cherry,8cranberry"),
+				expEntry("", 0),
+			},
+		},
+		{
+			name: "just accept payment",
+			params: &exchange.Params{
+				FeeAcceptPaymentFlat: []sdk.Coin{sdk.NewInt64Coin("apple", 2), sdk.NewInt64Coin("apricot", 7)},
+			},
+			expState: []string{
+				expAcceptEntry("2apple,7apricot"),
+				expEntry("", 0),
+			},
+		},
+		{
+			name: "just payment fees",
+			params: &exchange.Params{
+				FeeCreatePaymentFlat: []sdk.Coin{sdk.NewInt64Coin("cherry", 22)},
+				FeeAcceptPaymentFlat: []sdk.Coin{sdk.NewInt64Coin("apple", 31)},
+			},
+			expState: []string{
+				expAcceptEntry("31apple"),
+				expCreateEntry("22cherry"),
+				expEntry("", 0),
+			},
+		},
+		{
 			name: "one split",
 			params: &exchange.Params{
 				DefaultSplit: 406,
@@ -87,7 +124,6 @@ func (s *TestSuite) TestKeeper_SetParams() {
 			params:   nil,
 			expState: nil,
 		},
-		// TODO[1703]: Add tests cases for new fields.
 	}
 
 	s.clearExchangeState()
@@ -104,29 +140,53 @@ func (s *TestSuite) TestKeeper_SetParams() {
 }
 
 func (s *TestSuite) TestKeeper_GetParams() {
+	coins := func(coinStr string) []sdk.Coin {
+		rv, err := sdk.ParseCoinsNormalized(coinStr)
+		s.Require().NoError(err, "ParseCoinsNormalized(%q)", coinStr)
+		return rv
+	}
+
 	tests := []struct {
-		name   string
-		splits []exchange.DenomSplit
-		exp    *exchange.Params
+		name              string
+		splits            []exchange.DenomSplit
+		createPaymentFlat []sdk.Coin
+		acceptPaymentFlat []sdk.Coin
+		exp               *exchange.Params
 	}{
 		{
-			name:   "empty state",
-			splits: nil,
-			exp:    nil,
+			name: "empty state",
+			exp:  nil,
 		},
 		{
-			name:   "just a default",
+			name:   "just a default split",
 			splits: []exchange.DenomSplit{{Denom: "", Split: 444}},
 			exp:    &exchange.Params{DefaultSplit: 444},
 		},
 		{
-			name: "default and three splits",
+			name:   "one specific split",
+			splits: []exchange.DenomSplit{{Denom: "strawberry", Split: 444}},
+			exp:    &exchange.Params{DenomSplits: []exchange.DenomSplit{{Denom: "strawberry", Split: 444}}},
+		},
+		{
+			name:              "just create payment flat",
+			createPaymentFlat: coins("5000cherry"),
+			exp:               &exchange.Params{FeeCreatePaymentFlat: coins("5000cherry")},
+		},
+		{
+			name:              "just accept payment flat",
+			acceptPaymentFlat: coins("57apple"),
+			exp:               &exchange.Params{FeeAcceptPaymentFlat: coins("57apple")},
+		},
+		{
+			name: "a little of everything",
 			splits: []exchange.DenomSplit{
 				{Denom: "", Split: 432},
 				{Denom: "pigs", Split: 550},
 				{Denom: "chickens", Split: 2000},
 				{Denom: "cows", Split: 98},
 			},
+			createPaymentFlat: coins("72cactus"),
+			acceptPaymentFlat: coins("21apricot"),
 			exp: &exchange.Params{
 				DefaultSplit: 432,
 				DenomSplits: []exchange.DenomSplit{
@@ -134,20 +194,21 @@ func (s *TestSuite) TestKeeper_GetParams() {
 					{Denom: "cows", Split: 98},
 					{Denom: "pigs", Split: 550},
 				},
+				FeeCreatePaymentFlat: coins("72cactus"),
+				FeeAcceptPaymentFlat: coins("21apricot"),
 			},
 		},
-		// TODO[1703]: Add tests cases for new fields.
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.clearExchangeState()
-			if len(tc.splits) > 0 {
-				store := s.getStore()
-				for _, split := range tc.splits {
-					keeper.SetParamsSplit(store, split.Denom, uint16(split.Split))
-				}
+			store := s.getStore()
+			for _, split := range tc.splits {
+				keeper.SetParamsSplit(store, split.Denom, uint16(split.Split))
 			}
+			keeper.SetParamsFeeCreatePaymentFlat(store, tc.createPaymentFlat)
+			keeper.SetParamsFeeAcceptPaymentFlat(store, tc.acceptPaymentFlat)
 
 			var actual *exchange.Params
 			testFunc := func() {
@@ -160,10 +221,16 @@ func (s *TestSuite) TestKeeper_GetParams() {
 }
 
 func (s *TestSuite) TestKeeper_GetParamsOrDefaults() {
+	coins := func(coinStr string) []sdk.Coin {
+		rv, err := sdk.ParseCoinsNormalized(coinStr)
+		s.Require().NoError(err, "ParseCoinsNormalized(%q)", coinStr)
+		return rv
+	}
+
 	tests := []struct {
 		name   string
 		params *exchange.Params
-		exp    *exchange.Params
+		exp    *exchange.Params // if nil, params is used.
 	}{
 		{
 			name:   "no params",
@@ -173,7 +240,6 @@ func (s *TestSuite) TestKeeper_GetParamsOrDefaults() {
 		{
 			name:   "zero default no splits",
 			params: &exchange.Params{DefaultSplit: 0},
-			exp:    &exchange.Params{DefaultSplit: 0},
 		},
 		{
 			name: "zero default two splits",
@@ -195,30 +261,45 @@ func (s *TestSuite) TestKeeper_GetParamsOrDefaults() {
 		{
 			name:   "non-zero default and no splits",
 			params: &exchange.Params{DefaultSplit: 510},
-			exp:    &exchange.Params{DefaultSplit: 510},
 		},
 		{
-			name: "non-zero default and two splits",
+			name: "just create payment flat",
+			params: &exchange.Params{
+				FeeCreatePaymentFlat: coins("12cherry"),
+			},
+		},
+		{
+			name: "just accept payment flat",
+			params: &exchange.Params{
+				FeeAcceptPaymentFlat: coins("74apple"),
+			},
+		},
+		{
+			name: "both payment flats",
+			params: &exchange.Params{
+				FeeCreatePaymentFlat: coins("11cherry"),
+				FeeAcceptPaymentFlat: coins("73apple"),
+			},
+		},
+		{
+			name: "a little bit of everything",
 			params: &exchange.Params{
 				DefaultSplit: 3333,
 				DenomSplits: []exchange.DenomSplit{
-					{Denom: "pigs", Split: 111},
-					{Denom: "chickens", Split: 72},
-				},
-			},
-			exp: &exchange.Params{
-				DefaultSplit: 3333,
-				DenomSplits: []exchange.DenomSplit{
 					{Denom: "chickens", Split: 72},
 					{Denom: "pigs", Split: 111},
 				},
+				FeeCreatePaymentFlat: coins("91cactus"),
+				FeeAcceptPaymentFlat: coins("5acai"),
 			},
 		},
-		// TODO[1703]: Add tests cases for new fields.
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			if tc.exp == nil {
+				tc.exp = tc.params
+			}
 			s.k.SetParams(s.ctx, tc.params)
 
 			var actual *exchange.Params
