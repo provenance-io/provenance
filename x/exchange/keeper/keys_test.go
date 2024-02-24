@@ -104,6 +104,8 @@ func TestKeyTypeUniqueness(t *testing.T) {
 				{name: "KeyTypeAssetToOrderIndex", value: keeper.KeyTypeAssetToOrderIndex},
 				{name: "KeyTypeMarketExternalIDToOrderIndex", value: keeper.KeyTypeMarketExternalIDToOrderIndex},
 				{name: "KeyTypeCommitment", value: keeper.KeyTypeCommitment},
+				{name: "KeyTypePayment", value: keeper.KeyTypePayment},
+				{name: "KeyTypeTargetToPaymentIndex", value: keeper.KeyTypeTargetToPaymentIndex},
 			},
 		},
 		{
@@ -142,20 +144,6 @@ func TestKeyTypeUniqueness(t *testing.T) {
 		},
 	}
 
-	stringTests := []struct {
-		name  string
-		types []stringEntry
-	}{
-		{
-			name: "params types",
-			types: []stringEntry{
-				{name: "ParamsKeyTypeSplit", value: keeper.ParamsKeyTypeSplit},
-				{name: "ParamsKeyTypeFeeCreatePaymentFlat", value: keeper.ParamsKeyTypeFeeCreatePaymentFlat},
-				{name: "ParamsKeyTypeFeeAcceptPaymentFlat", value: keeper.ParamsKeyTypeFeeAcceptPaymentFlat},
-			},
-		},
-	}
-
 	for _, tc := range byteTests {
 		t.Run(tc.name, func(t *testing.T) {
 			seen := make(map[byte]string)
@@ -167,16 +155,27 @@ func TestKeyTypeUniqueness(t *testing.T) {
 		})
 	}
 
-	for _, tc := range stringTests {
-		t.Run(tc.name, func(t *testing.T) {
-			seen := make(map[string]string)
-			for _, entry := range tc.types {
-				prev, found := seen[entry.value]
-				assert.False(t, found, "string %q used for both %s and %s", entry.value, prev, entry.name)
-				seen[entry.value] = entry.name
-			}
-		})
+	paramsKeys := []stringEntry{
+		{name: "ParamsKeyTypeSplit", value: keeper.ParamsKeyTypeSplit},
+		{name: "ParamsKeyTypeFeeCreatePaymentFlat", value: keeper.ParamsKeyTypeFeeCreatePaymentFlat},
+		{name: "ParamsKeyTypeFeeAcceptPaymentFlat", value: keeper.ParamsKeyTypeFeeAcceptPaymentFlat},
 	}
+
+	t.Run("params keys", func(t *testing.T) {
+		seen := make(map[string]string)
+		for _, entry := range paramsKeys {
+			prev, found := seen[entry.value]
+			assert.False(t, found, "string %q used for both %s and %s", entry.value, prev, entry.name)
+			seen[entry.value] = entry.name
+			for _, other := range paramsKeys {
+				if entry.name == other.name {
+					continue
+				}
+				hasPrefix := strings.HasPrefix(entry.value, other.value)
+				assert.False(t, hasPrefix, "%s=%q must not start with %s=%q", entry.name, entry.value, other.name, other.value)
+			}
+		}
+	})
 }
 
 func TestParseLengthPrefixedAddr(t *testing.T) {
@@ -4606,3 +4605,294 @@ func TestParseKeySuffixCommitment(t *testing.T) {
 		})
 	}
 }
+
+func TestGetKeyPrefixAllPayments(t *testing.T) {
+	ktc := keyTestCase{
+		maker:    keeper.GetKeyPrefixAllPayments,
+		expected: []byte{keeper.KeyTypePayment},
+	}
+	checkKey(t, ktc, "GetKeyPrefixAllPayments()")
+}
+
+func TestGetKeyPrefixPaymentsForSource(t *testing.T) {
+	tests := []struct {
+		name     string
+		source   sdk.AccAddress
+		expected []byte
+		expPanic string
+	}{
+		{
+			name:     "nil source",
+			source:   nil,
+			expPanic: "empty source address not allowed",
+		},
+		{
+			name:     "empty source",
+			source:   sdk.AccAddress{},
+			expPanic: "empty source address not allowed",
+		},
+		{
+			name: "20 byte source",
+			source: sdk.AccAddress{
+				0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+				10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+			},
+			expected: []byte{keeper.KeyTypePayment, 20,
+				0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+				10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+			},
+		},
+		{
+			name: "32 byte source",
+			source: sdk.AccAddress{
+				51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
+				67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+			},
+			expected: []byte{keeper.KeyTypePayment, 32,
+				51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
+				67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.GetKeyPrefixPaymentsForSource(tc.source)
+				},
+				expected: tc.expected,
+				expPanic: tc.expPanic,
+				expPrefixes: []expectedPrefix{
+					{name: "GetKeyPrefixAllPayments", value: keeper.GetKeyPrefixAllPayments()},
+				},
+			}
+			checkKey(t, ktc, "GetKeyPrefixPaymentsForSource(%s)", tc.source)
+		})
+	}
+}
+
+func TestMakeKeyPayment(t *testing.T) {
+	tests := []struct {
+		name       string
+		source     sdk.AccAddress
+		externalID string
+		expected   []byte
+		expPanic   string
+	}{
+		{
+			name:     "nil source",
+			source:   nil,
+			expPanic: "empty source address not allowed",
+		},
+		{
+			name:     "empty source",
+			source:   sdk.AccAddress{},
+			expPanic: "empty source address not allowed",
+		},
+		{
+			name: "20 byte source, empty external id",
+			source: sdk.AccAddress{
+				0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+				10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+			},
+			externalID: "",
+			expected: []byte{keeper.KeyTypePayment, 20,
+				0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+				10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+			},
+		},
+		{
+			name: "20 byte source, empty external id",
+			source: sdk.AccAddress{
+				0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+				10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+			},
+			externalID: "",
+			expected: []byte{keeper.KeyTypePayment, 20,
+				0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+				10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+			},
+		},
+		{
+			name: "32 byte source, empty external id",
+			source: sdk.AccAddress{
+				51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
+				67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+			},
+			externalID: "my-eid",
+			expected: concatBz(
+				[]byte{keeper.KeyTypePayment, 32,
+					51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
+					67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+				},
+				[]byte("my-eid"),
+			),
+		},
+		{
+			name: "32 byte source, with external id",
+			source: sdk.AccAddress{
+				51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
+				67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+			},
+			externalID: "just-some-6f584be7-debd-479b-ae5b-779f36a0bc20-id",
+			expected: concatBz(
+				[]byte{keeper.KeyTypePayment, 32,
+					51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
+					67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+				},
+				[]byte("just-some-6f584be7-debd-479b-ae5b-779f36a0bc20-id"),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ktc := keyTestCase{
+				maker: func() []byte {
+					return keeper.MakeKeyPayment(tc.source, tc.externalID)
+				},
+				expected: tc.expected,
+				expPanic: tc.expPanic,
+			}
+			if len(tc.expPanic) == 0 {
+				ktc.expPrefixes = []expectedPrefix{
+					{name: "GetKeyPrefixAllPayments", value: keeper.GetKeyPrefixAllPayments()},
+					{name: "GetKeyPrefixPaymentsForSource", value: keeper.GetKeyPrefixPaymentsForSource(tc.source)},
+				}
+			}
+			checkKey(t, ktc, "MakeKeyPayment(%s, %q)", tc.source, tc.externalID)
+		})
+	}
+}
+
+func TestParseKeyPayment(t *testing.T) {
+	tests := []struct {
+		name          string
+		key           []byte
+		expSource     sdk.AccAddress
+		expExternalID string
+		expErr        string
+	}{
+		{
+			name:   "nil key",
+			key:    nil,
+			expErr: "cannot parse payment key: only has 0 bytes, expected at least 3",
+		},
+		{
+			name:   "empty key",
+			key:    []byte{},
+			expErr: "cannot parse payment key: only has 0 bytes, expected at least 3",
+		},
+		{
+			name:   "1 byte key",
+			key:    []byte{1},
+			expErr: "cannot parse payment key: only has 1 bytes, expected at least 3",
+		},
+		{
+			name:   "2 byte key",
+			key:    []byte{1, 2},
+			expErr: "cannot parse payment key: only has 2 bytes, expected at least 3",
+		},
+		{
+			name:   "wrong type byte",
+			key:    []byte{0xaa, 5, 0, 1, 2, 3, 4},
+			expErr: "cannot parse payment key: incorrect type byte 0xaa, expected 0x70",
+		},
+		{
+			name:   "wrong source length",
+			key:    []byte{keeper.KeyTypePayment, 5, 0, 1, 2, 3},
+			expErr: "cannot parse payment key: invalid source: length byte is 5, but slice only has 4 left",
+		},
+		{
+			name:          "okay: with external id",
+			key:           concatBz([]byte{keeper.KeyTypePayment, 5, 0, 1, 2, 3, 4}, []byte("my id")),
+			expSource:     sdk.AccAddress{0, 1, 2, 3, 4},
+			expExternalID: "my id",
+		},
+		{
+			name:          "okay: empty external id",
+			key:           []byte{keeper.KeyTypePayment, 5, 0, 1, 2, 3, 4},
+			expSource:     sdk.AccAddress{0, 1, 2, 3, 4},
+			expExternalID: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var source sdk.AccAddress
+			var externalID string
+			var err error
+			testFunc := func() {
+				source, externalID, err = keeper.ParseKeyPayment(tc.key)
+			}
+			require.NotPanics(t, testFunc, "ParseKeyPayment(%q)", tc.key)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseKeyPayment(%q) error", tc.key)
+			assert.Equal(t, tc.expSource, source, "ParseKeyPayment(%q) source", tc.key)
+			assert.Equal(t, tc.expExternalID, externalID, "ParseKeyPayment(%q) externalID", tc.key)
+		})
+	}
+}
+
+func TestParseKeySuffixPayment(t *testing.T) {
+	tests := []struct {
+		name          string
+		key           []byte
+		expSource     sdk.AccAddress
+		expExternalID string
+		expErr        string
+	}{
+		{
+			name:   "nil suffix",
+			key:    nil,
+			expErr: "cannot parse payment key: invalid source: slice is empty",
+		},
+		{
+			name:   "empty suffix",
+			key:    []byte{},
+			expErr: "cannot parse payment key: invalid source: slice is empty",
+		},
+		{
+			name:   "wrong source length",
+			key:    []byte{5, 0, 1, 2, 3},
+			expErr: "cannot parse payment key: invalid source: length byte is 5, but slice only has 4 left",
+		},
+		{
+			name:          "okay: with external id",
+			key:           concatBz([]byte{5, 0, 1, 2, 3, 4}, []byte("my id")),
+			expSource:     sdk.AccAddress{0, 1, 2, 3, 4},
+			expExternalID: "my id",
+		},
+		{
+			name:          "okay: empty external id",
+			key:           []byte{5, 0, 1, 2, 3, 4},
+			expSource:     sdk.AccAddress{0, 1, 2, 3, 4},
+			expExternalID: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var source sdk.AccAddress
+			var externalID string
+			var err error
+			testFunc := func() {
+				source, externalID, err = keeper.ParseKeySuffixPayment(tc.key)
+			}
+			require.NotPanics(t, testFunc, "ParseKeySuffixPayment(%q)", tc.key)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseKeySuffixPayment(%q) error", tc.key)
+			assert.Equal(t, tc.expSource, source, "ParseKeySuffixPayment(%q) source", tc.key)
+			assert.Equal(t, tc.expExternalID, externalID, "ParseKeySuffixPayment(%q) externalID", tc.key)
+		})
+	}
+}
+
+// TODO[1703]: func TestGetIndexPrefixTargetToPayments(t *testing.T)
+
+// TODO[1703]: func TestGetIndexPrefixTargetToPaymentsForSource(t *testing.T)
+
+// TODO[1703]: func TestMakeIndexKeyTargetToPayment(t *testing.T)
+
+// TODO[1703]: func TestParseIndexKeyTargetToPayment(t *testing.T)
+
+// TODO[1703]: func TestParseIndexKeySuffixTargetToPayment(t *testing.T)

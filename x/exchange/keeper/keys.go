@@ -71,17 +71,15 @@ import (
 // Commitments:
 //   0x63 | <market_id> (4 bytes) | <address> => <coins> (string)
 //
-// A market to order index is maintained with the following format:
-//    0x03 | <market_id> (4 bytes) | <order_id> (8 bytes) => <order type byte>
+// Payments:
+//    0x70 | len(<source>) (1 byte) | <source> | <external id>
 //
-// An address to order index is maintained with the following format:
-//    0x04 | len(<address>) (1 byte) | <address> | <order_id> (8 bytes) => <order type byte>
-//
-// An asset type to order index is maintained with the following format:
-//    0x05 | <asset_denom> | <order_id> (8 bytes) => <order type byte>
-//
-// A market external id to order index is maintained with the following format:
-//    0x09 | <market id> (4 bytes) | <external_id> => <order id> (8 bytes)
+// Indexes:
+//    Market to order: 0x03 | <market_id> (4 bytes) | <order_id> (8 bytes) => <order type byte>
+//    Address to order: 0x04 | len(<address>) (1 byte) | <address> | <order_id> (8 bytes) => <order type byte>
+//    Asset denom to order: 0x05 | <asset_denom> | <order_id> (8 bytes) => <order type byte>
+//    Market + external id to order: 0x09 | <market id> (4 bytes) | <external_id> => <order id> (8 bytes)
+//    Target to payment: 0x10 | len(<target>) (1 byte) | <target> | len(<source>) (1 byte) | <source> | <external id>
 
 const (
 	// KeyTypeParams is the type byte for params entries.
@@ -106,6 +104,10 @@ const (
 	KeyTypeMarketExternalIDToOrderIndex = byte(0x09)
 	// KeyTypeCommitment is the type byte for commitments.
 	KeyTypeCommitment = byte(0x63)
+	// KeyTypePayment is the type byte for payments.
+	KeyTypePayment = byte(0x70)
+	// KeyTypeTargetToPaymentIndex is the type byte for entries in the target to payment index.
+	KeyTypeTargetToPaymentIndex = byte(0x10)
 
 	// ParamsKeyTypeSplit is the type string used in the keys for params.DefaultSplit and params.DenomSplits.
 	ParamsKeyTypeSplit = "split"
@@ -879,4 +881,133 @@ func ParseKeySuffixCommitment(suffix []byte) (sdk.AccAddress, error) {
 		return nil, fmt.Errorf("cannot parse address from commitment key: found %d bytes after address, expected 0", len(left))
 	}
 	return addr, nil
+}
+
+// keyPrefixPayment creates the key prefix for payments with the provided extra capacity for additional elements.
+func keyPrefixPayment(extraCap int) []byte {
+	rv := make([]byte, 1, 1+extraCap)
+	rv[0] = KeyTypePayment
+	return rv
+}
+
+// keyPrefixPaymentsForSource creates the key prefix for payments for a source with the provided extra capacity for additional elements.
+func keyPrefixPaymentsForSource(source sdk.AccAddress, extraCap int) []byte {
+	if len(source) == 0 {
+		panic(errors.New("empty source address not allowed"))
+	}
+	sourceBz := address.MustLengthPrefix(source)
+	rv := keyPrefixPayment(len(sourceBz) + extraCap)
+	rv = append(rv, sourceBz...)
+	return rv
+}
+
+// GetKeyPrefixAllPayments gets the key prefix for all payments.
+func GetKeyPrefixAllPayments() []byte {
+	return keyPrefixPayment(0)
+}
+
+// GetKeyPrefixPaymentsForSource gets the key prefix for payments with a given source.
+func GetKeyPrefixPaymentsForSource(source sdk.AccAddress) []byte {
+	return keyPrefixPaymentsForSource(source, 0)
+}
+
+// MakeKeyPayment creates the key for a payment.
+func MakeKeyPayment(source sdk.AccAddress, externalID string) []byte {
+	suffix := []byte(externalID)
+	rv := keyPrefixPaymentsForSource(source, len(suffix))
+	rv = append(rv, suffix...)
+	return rv
+}
+
+// ParseKeyPayment parses the full key that identifies a payment.
+// The input must have the format: <type byte> | <source length byte> | <source> | <external id>.
+func ParseKeyPayment(key []byte) (sdk.AccAddress, string, error) {
+	if len(key) < 3 {
+		return nil, "", fmt.Errorf("cannot parse payment key: only has %d bytes, expected at least 3", len(key))
+	}
+	if key[0] != KeyTypePayment {
+		return nil, "", fmt.Errorf("cannot parse payment key: incorrect type byte %#x, expected %#x", key[0], KeyTypePayment)
+	}
+	return ParseKeySuffixPayment(key[1:])
+}
+
+// ParseKeySuffixPayment parses a payment key that does not have its type byte.
+// The input must have the format: <source length byte> | <source> | <external id>.
+func ParseKeySuffixPayment(suffix []byte) (sdk.AccAddress, string, error) {
+	addr, left, err := parseLengthPrefixedAddr(suffix)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot parse payment key: invalid source: %w", err)
+	}
+	return addr, string(left), nil
+}
+
+// indexPrefixTargetToPayments creates the prefix for the target to payments index entries with some extra space for the rest.
+func indexPrefixTargetToPayments(target sdk.AccAddress, extraCap int) []byte {
+	if len(target) == 0 {
+		panic(errors.New("empty target address not allowed"))
+	}
+	return prepKey(KeyTypeTargetToPaymentIndex, address.MustLengthPrefix(target), extraCap)
+}
+
+// indexPrefixTargetToPayments creates the prefix for the target to payments index entries, specific to a source, with some extra space for the rest.
+func indexPrefixTargetToPaymentsForSource(target, source sdk.AccAddress, extraCap int) []byte {
+	if len(source) == 0 {
+		panic(errors.New("empty source address not allowed"))
+	}
+	suffix := address.MustLengthPrefix(source)
+	rv := indexPrefixTargetToPayments(target, len(suffix)+extraCap)
+	rv = append(rv, suffix...)
+	return rv
+}
+
+// GetIndexPrefixTargetToPayments creates a key prefix for the target to payments index.
+func GetIndexPrefixTargetToPayments(target sdk.AccAddress) []byte {
+	return indexPrefixTargetToPayments(target, 0)
+}
+
+// GetIndexPrefixTargetToPaymentsForSource creates a key prefix for the target to payments index, specific to a source.
+func GetIndexPrefixTargetToPaymentsForSource(target, source sdk.AccAddress) []byte {
+	return indexPrefixTargetToPaymentsForSource(target, source, 0)
+}
+
+// MakeIndexKeyTargetToPayment creates the key for the target to payment index.
+func MakeIndexKeyTargetToPayment(target, source sdk.AccAddress, externalID string) []byte {
+	suffix := []byte(externalID)
+	rv := indexPrefixTargetToPaymentsForSource(target, source, len(suffix))
+	rv = append(rv, suffix...)
+	return rv
+}
+
+// ParseIndexKeyTargetToPayment parses a target to payment key.
+// The input must have the format: <type byte> | <target length byte> | <target> | <source length byte> | <source> | <external id>.
+func ParseIndexKeyTargetToPayment(key []byte) (target, source sdk.AccAddress, externalID string, err error) {
+	if len(key) < 5 {
+		return nil, nil, "", fmt.Errorf("cannot parse target to payment index key: only has %d bytes, expected at least 5", len(key))
+	}
+	if key[0] != KeyTypeTargetToPaymentIndex {
+		return nil, nil, "", fmt.Errorf("cannot parse target to payment index key: incorrect type byte %#x, expected %#x", key[0], KeyTypeTargetToPaymentIndex)
+	}
+
+	var left []byte
+	target, left, err = parseLengthPrefixedAddr(key[1:])
+	if err != nil {
+		return nil, nil, "", fmt.Errorf("cannot parse target to payment index key: invalid target: %w", err)
+	}
+
+	source, externalID, err = ParseIndexKeySuffixTargetToPayment(left)
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	return target, source, externalID, nil
+}
+
+// ParseIndexKeySuffixTargetToPayment parses the source and external id out of the suffix of a target to payment index key.
+// The input must have the format: <source length byte> | <source> | <external id>.
+func ParseIndexKeySuffixTargetToPayment(suffix []byte) (sdk.AccAddress, string, error) {
+	source, left, err := parseLengthPrefixedAddr(suffix)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot parse target to payment index key: invalid source: %w", err)
+	}
+	return source, string(left), nil
 }
