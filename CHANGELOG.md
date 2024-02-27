@@ -37,7 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Improvements
+
+* Allow force transfers from marker and market accounts [#1855](https://github.com/provenance-io/provenance/pull/1855).
 
 ---
 
