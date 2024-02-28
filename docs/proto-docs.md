@@ -82,6 +82,11 @@
     - [EventOrderFilled](#provenance.exchange.v1.EventOrderFilled)
     - [EventOrderPartiallyFilled](#provenance.exchange.v1.EventOrderPartiallyFilled)
     - [EventParamsUpdated](#provenance.exchange.v1.EventParamsUpdated)
+    - [EventPaymentAccepted](#provenance.exchange.v1.EventPaymentAccepted)
+    - [EventPaymentCancelled](#provenance.exchange.v1.EventPaymentCancelled)
+    - [EventPaymentCreated](#provenance.exchange.v1.EventPaymentCreated)
+    - [EventPaymentRejected](#provenance.exchange.v1.EventPaymentRejected)
+    - [EventPaymentUpdated](#provenance.exchange.v1.EventPaymentUpdated)
   
 - [provenance/exchange/v1/market.proto](#provenance/exchange/v1/market.proto)
     - [AccessGrant](#provenance.exchange.v1.AccessGrant)
@@ -1912,6 +1917,98 @@ EventOrderPartiallyFilled is an event emitted when an order filled in part and s
 
 ### EventParamsUpdated
 EventParamsUpdated is an event emitted when the exchange module's params have been updated.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventPaymentAccepted"></a>
+
+### EventPaymentAccepted
+EventPaymentAccepted is an event emitted when a payment is accepted.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that created the Payment. |
+| `source_amount` | [string](#string) |  | source_amount is the coins amount string of the funds that the source will pay (to the target). |
+| `target` | [string](#string) |  | target is the account that accepted the Payment. |
+| `target_amount` | [string](#string) |  | target_amount is the coins amount string of the funds that the target will pay (to the source). |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventPaymentCancelled"></a>
+
+### EventPaymentCancelled
+EventPaymentCancelled is an event emitted when a payment is cancelled (by the source).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that cancelled (and created) the Payment. |
+| `target` | [string](#string) |  | target is the account that could have accepted the Payment. |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventPaymentCreated"></a>
+
+### EventPaymentCreated
+EventPaymentCreated is an event emitted when a payment is created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that created the Payment. |
+| `source_amount` | [string](#string) |  | source_amount is the coins amount string of the funds that the source will pay (to the target). |
+| `target` | [string](#string) |  | target is the account that can accept the Payment. |
+| `target_amount` | [string](#string) |  | target_amount is the coins amount string of the funds that the target will pay (to the source). |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventPaymentRejected"></a>
+
+### EventPaymentRejected
+EventPaymentRejected is an event emitted when a payment is rejected (by the target).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that created the Payment. |
+| `target` | [string](#string) |  | target is the account that rejected the Payment. |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventPaymentUpdated"></a>
+
+### EventPaymentUpdated
+EventPaymentUpdated is an event emitted when a payment is updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that updated (and previously created) the Payment. |
+| `source_amount` | [string](#string) |  | source_amount is the coins amount string of the funds that the source will pay (to the target). |
+| `old_target` | [string](#string) |  | old_target is the account that used to be able to accept the Payment (but not any more). |
+| `new_target` | [string](#string) |  | new_target is the account that is now able to accept the Payment. |
+| `target_amount` | [string](#string) |  | target_amount is the coins amount string of the funds that the target will pay (to the source). |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment. |
 
 
 
