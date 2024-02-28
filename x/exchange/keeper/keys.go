@@ -960,13 +960,13 @@ func indexPrefixTargetToPaymentsForSource(target, source sdk.AccAddress, extraCa
 	return rv
 }
 
-// GetIndexPrefixTargetToPayments creates a key prefix for the target to payments index.
-func GetIndexPrefixTargetToPayments(target sdk.AccAddress) []byte {
+// GetIndexKeyPrefixTargetToPayments creates a key prefix for the target to payments index.
+func GetIndexKeyPrefixTargetToPayments(target sdk.AccAddress) []byte {
 	return indexPrefixTargetToPayments(target, 0)
 }
 
-// GetIndexPrefixTargetToPaymentsForSource creates a key prefix for the target to payments index, specific to a source.
-func GetIndexPrefixTargetToPaymentsForSource(target, source sdk.AccAddress) []byte {
+// GetIndexKeyPrefixTargetToPaymentsForSource creates a key prefix for the target to payments index, specific to a source.
+func GetIndexKeyPrefixTargetToPaymentsForSource(target, source sdk.AccAddress) []byte {
 	return indexPrefixTargetToPaymentsForSource(target, source, 0)
 }
 

@@ -4887,7 +4887,7 @@ func TestParseKeySuffixPayment(t *testing.T) {
 	}
 }
 
-func TestGetIndexPrefixTargetToPayments(t *testing.T) {
+func TestGetIndexKeyPrefixTargetToPayments(t *testing.T) {
 	tests := []struct {
 		name     string
 		target   sdk.AccAddress
@@ -4937,17 +4937,17 @@ func TestGetIndexPrefixTargetToPayments(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.GetIndexPrefixTargetToPayments(tc.target)
+					return keeper.GetIndexKeyPrefixTargetToPayments(tc.target)
 				},
 				expected: tc.expected,
 				expPanic: tc.expPanic,
 			}
-			checkKey(t, ktc, "GetIndexPrefixTargetToPayments(%v)", tc.target)
+			checkKey(t, ktc, "GetIndexKeyPrefixTargetToPayments(%v)", tc.target)
 		})
 	}
 }
 
-func TestGetIndexPrefixTargetToPaymentsForSource(t *testing.T) {
+func TestGetIndexKeyPrefixTargetToPaymentsForSource(t *testing.T) {
 	tests := []struct {
 		name     string
 		target   sdk.AccAddress
@@ -5049,17 +5049,17 @@ func TestGetIndexPrefixTargetToPaymentsForSource(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ktc := keyTestCase{
 				maker: func() []byte {
-					return keeper.GetIndexPrefixTargetToPaymentsForSource(tc.target, tc.source)
+					return keeper.GetIndexKeyPrefixTargetToPaymentsForSource(tc.target, tc.source)
 				},
 				expected: tc.expected,
 				expPanic: tc.expPanic,
 			}
 			if len(tc.expPanic) == 0 {
 				ktc.expPrefixes = []expectedPrefix{
-					{name: "GetIndexPrefixTargetToPayments", value: keeper.GetIndexPrefixTargetToPayments(tc.target)},
+					{name: "GetIndexKeyPrefixTargetToPayments", value: keeper.GetIndexKeyPrefixTargetToPayments(tc.target)},
 				}
 			}
-			checkKey(t, ktc, "GetIndexPrefixTargetToPaymentsForSource(%v, %v)", tc.target, tc.source)
+			checkKey(t, ktc, "GetIndexKeyPrefixTargetToPaymentsForSource(%v, %v)", tc.target, tc.source)
 		})
 	}
 }
@@ -5216,12 +5216,12 @@ func TestMakeIndexKeyTargetToPayment(t *testing.T) {
 			if len(tc.expPanic) == 0 {
 				ktc.expPrefixes = []expectedPrefix{
 					{
-						name:  "GetIndexPrefixTargetToPayments",
-						value: keeper.GetIndexPrefixTargetToPayments(tc.target),
+						name:  "GetIndexKeyPrefixTargetToPayments",
+						value: keeper.GetIndexKeyPrefixTargetToPayments(tc.target),
 					},
 					{
-						name:  "GetIndexPrefixTargetToPaymentsForSource",
-						value: keeper.GetIndexPrefixTargetToPaymentsForSource(tc.target, tc.source),
+						name:  "GetIndexKeyPrefixTargetToPaymentsForSource",
+						value: keeper.GetIndexKeyPrefixTargetToPaymentsForSource(tc.target, tc.source),
 					},
 				}
 			}
