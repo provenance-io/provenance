@@ -393,6 +393,22 @@ func (s *TestSuite) copyCommitments(orig []exchange.Commitment) []exchange.Commi
 	return copySlice(orig, s.copyCommitment)
 }
 
+// copyPayment creates a copy of a payment.
+func (s *TestSuite) copyPayment(orig exchange.Payment) exchange.Payment {
+	return exchange.Payment{
+		Source:       orig.Source,
+		SourceAmount: s.copyCoins(orig.SourceAmount),
+		Target:       orig.Target,
+		TargetAmount: s.copyCoins(orig.TargetAmount),
+		ExternalId:   orig.ExternalId,
+	}
+}
+
+// copyPayments creates a coy of a slice of payments.
+func (s *TestSuite) copyPayments(orig []exchange.Payment) []exchange.Payment {
+	return copySlice(orig, s.copyPayment)
+}
+
 // untypeEvent applies sdk.TypedEventToEvent(tev) requiring it to not error.
 func (s *TestSuite) untypeEvent(tev proto.Message) sdk.Event {
 	rv, err := sdk.TypedEventToEvent(tev)
@@ -449,6 +465,7 @@ func (s *TestSuite) copyGenState(genState *exchange.GenesisState) *exchange.Gene
 		LastMarketId: genState.LastMarketId,
 		LastOrderId:  genState.LastOrderId,
 		Commitments:  s.copyCommitments(genState.Commitments),
+		Payments:     s.copyPayments(genState.Payments),
 	}
 }
 
@@ -499,11 +516,13 @@ func (s *TestSuite) sortGenState(genState *exchange.GenesisState) *exchange.Gene
 	if genState == nil {
 		return nil
 	}
+
 	if genState.Params != nil && len(genState.Params.DenomSplits) > 0 {
 		sort.Slice(genState.Params.DenomSplits, func(i, j int) bool {
 			return genState.Params.DenomSplits[i].Denom < genState.Params.DenomSplits[j].Denom
 		})
 	}
+
 	if len(genState.Markets) > 0 {
 		sort.Slice(genState.Markets, func(i, j int) bool {
 			return genState.Markets[i].MarketId < genState.Markets[j].MarketId
@@ -512,11 +531,13 @@ func (s *TestSuite) sortGenState(genState *exchange.GenesisState) *exchange.Gene
 			s.sortMarket(&market)
 		}
 	}
+
 	if len(genState.Orders) > 0 {
 		sort.Slice(genState.Orders, func(i, j int) bool {
 			return genState.Orders[i].OrderId < genState.Orders[j].OrderId
 		})
 	}
+
 	if len(genState.Commitments) > 0 {
 		sort.Slice(genState.Commitments, func(i, j int) bool {
 			// compare market ids first
@@ -533,6 +554,25 @@ func (s *TestSuite) sortGenState(genState *exchange.GenesisState) *exchange.Gene
 			return false
 		})
 	}
+
+	if len(genState.Payments) > 0 {
+		sort.Slice(genState.Payments, func(i, j int) bool {
+			// Compare the sources first (using their byte representations).
+			dSource := s.compareAddrs(genState.Payments[i].Source, genState.Payments[j].Source)
+			if dSource != 0 {
+				return dSource < 0
+			}
+			// Compare the external ids now.
+			dEid := strings.Compare(genState.Payments[i].ExternalId, genState.Payments[j].ExternalId)
+			if dEid != 0 {
+				return dEid < 0
+			}
+			// Since the source and external id are the only things used in payment keys,
+			// there's nothing else we should compare here, so just keep the existing ordering.
+			return false
+		})
+	}
+
 	return genState
 }
 
@@ -579,6 +619,15 @@ func (s *TestSuite) getOrderIDStr(order *exchange.Order) string {
 // getCommitmentString gets a simplified string for a commitment.
 func (s *TestSuite) getCommitmentString(com exchange.Commitment) string {
 	return fmt.Sprintf("%d: %s %s", com.MarketId, com.Account, com.Amount)
+}
+
+// getPaymentString subs in the name strings for the source and target
+// and returns a Payment.String() of that.
+func (s *TestSuite) getPaymentString(payment exchange.Payment) string {
+	p2 := s.copyPayment(payment)
+	p2.Source = s.getAddrStrName(p2.Source)
+	p2.Target = s.getAddrStrName(p2.Target)
+	return p2.String()
 }
 
 // agCanOnly creates an AccessGrant for the given address with only the provided permission.

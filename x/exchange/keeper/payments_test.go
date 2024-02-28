@@ -15,3 +15,7 @@ package keeper_test
 // TODO[1703]: func (s *TestSuite) TestUpdatePaymentTarget()
 
 // TODO[1703]: func (s *TestSuite) TestGetPaymentsForTargetAndSource()
+
+// TODO[1703]: func (s *TestSuite) TestIteratePayments()
+
+// TODO[1703]: func (s *TestSuite) TestCalculatePaymentFeess()

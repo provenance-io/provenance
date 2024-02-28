@@ -44,8 +44,8 @@ func (k Keeper) getPaymentFromStore(store sdk.KVStore, source sdk.AccAddress, ex
 // getPaymentsForTargetAndSourceFromStore gets all the payments with the given target and source from the state store.
 func (k Keeper) getPaymentsForTargetAndSourceFromStore(store sdk.KVStore, target, source sdk.AccAddress) []*exchange.Payment {
 	var rv []*exchange.Payment
-	pre := GetIndexKeyPrefixTargetToPaymentsForSource(target, source)
-	iterate(store, pre, func(keySuffix, _ []byte) bool {
+	keyPrefix := GetIndexKeyPrefixTargetToPaymentsForSource(target, source)
+	iterate(store, keyPrefix, func(keySuffix, _ []byte) bool {
 		externalID := string(keySuffix)
 		payment, err := k.getPaymentFromStore(store, source, externalID)
 		if err == nil && payment != nil {
@@ -282,7 +282,8 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 }
 
 // RejectPayment deletes a payment and releases the hold on it.
-// The payment must have the provided source, external id, and target.
+// An error is returned if a payment can't be found for the source + external id,
+// or if that payment has a different target than the one provided.
 func (k Keeper) RejectPayment(ctx sdk.Context, target, source sdk.AccAddress, externalID string) error {
 	store := k.getStore(ctx)
 	payment, err := k.requirePaymentFromStore(store, source, externalID)
@@ -297,7 +298,7 @@ func (k Keeper) RejectPayment(ctx sdk.Context, target, source sdk.AccAddress, ex
 	return k.deletePaymentAndReleaseHold(ctx, store, payment)
 }
 
-// RejectPayments deletes the payments (and releases their holds) with the provided target and sources.
+// RejectPayments deletes some payments and releases their holds.
 // Each source must have at least one payment for the target.
 func (k Keeper) RejectPayments(ctx sdk.Context, target sdk.AccAddress, sources []sdk.AccAddress) error {
 	var payments []*exchange.Payment
@@ -364,6 +365,19 @@ func (k Keeper) GetPaymentsForTargetAndSource(ctx sdk.Context, target, source sd
 	return k.getPaymentsForTargetAndSourceFromStore(k.getStore(ctx), target, source)
 }
 
+// IteratePayments iterates over all payments.
+// The callback takes in the payment and should return whether to stop iterating.
+func (k Keeper) IteratePayments(ctx sdk.Context, cb func(payment *exchange.Payment) bool) {
+	k.iterate(ctx, GetKeyPrefixAllPayments(), func(_, value []byte) bool {
+		payment, err := k.parsePaymentStoreValue(value)
+		if err != nil || payment == nil {
+			return false
+		}
+		return cb(payment)
+	})
+}
+
+// CalculatePaymentFees calculates the fees required for the provided payment.
 func (k Keeper) CalculatePaymentFees(ctx sdk.Context, payment *exchange.Payment) *exchange.QueryPaymentFeeCalcResponse {
 	resp := &exchange.QueryPaymentFeeCalcResponse{}
 	if payment == nil {
