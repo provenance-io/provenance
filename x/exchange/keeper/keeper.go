@@ -73,7 +73,7 @@ func (k Keeper) logInfof(ctx sdk.Context, msg string, args ...interface{}) {
 }
 
 // emitEvent emits the provided event and writes any error to the error log.
-// See Also emitEvents.
+// If you have multiple events to emit, consider using emitEvents.
 func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
 	err := ctx.EventManager().EmitTypedEvent(event)
 	if err != nil {
@@ -82,12 +82,27 @@ func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
 }
 
 // emitEvents emits the provided events and writes any error to the error log.
-// See Also emitEvent.
+// If you only have one event to emit, consider using emitEvent.
+// If your events slice is typed to a specific event type (or something other than exactly []proto.Message),
+// use the non-keeper emitEvents(k, ctx, events) function instead.
 func (k Keeper) emitEvents(ctx sdk.Context, events []proto.Message) {
 	err := ctx.EventManager().EmitTypedEvents(events...)
 	if err != nil {
 		k.logErrorf(ctx, "error emitting events %#v: %v", events, err)
 	}
+}
+
+// emitEvents emits the provided events and writes any error to the error log.
+// If you only have one event to emit, consider using k.emitEvent.
+// The difference between this and k.emitEvents is that this will accept a slice of
+// specifically typed events instead of needing to be exactly a []proto.Message slice.
+// E.g. events can be provided here as a []*exchange.EventPaymentRejected.
+func emitEvents[S ~[]E, E proto.Message](k Keeper, ctx sdk.Context, events S) {
+	e2 := make([]proto.Message, len(events))
+	for i, event := range events {
+		e2[i] = event
+	}
+	k.emitEvents(ctx, e2)
 }
 
 // GetAuthority gets the address (as bech32) that has governance authority.

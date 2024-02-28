@@ -716,6 +716,20 @@ func TestNewEventParamsUpdated(t *testing.T) {
 	assertEverythingSet(t, event, "EventParamsUpdated")
 }
 
+// TODO[1703]: func TestEventPaymentCreated(t *testing.T)
+
+// TODO[1703]: func TestEventPaymentUpdated(t *testing.T)
+
+// TODO[1703]: func TestEventPaymentAccepted(t *testing.T)
+
+// TODO[1703]: func TestEventPaymentRejected(t *testing.T)
+
+// TODO[1703]: func TestEventsPaymentsRejected(t *testing.T)
+
+// TODO[1703]: func TestEventPaymentCancelled(t *testing.T)
+
+// TODO[1703]: func TestEventsPaymentsCancelled(t *testing.T)
+
 func TestTypedEventToEvent(t *testing.T) {
 	quoteBz := func(str string) []byte {
 		return []byte(fmt.Sprintf("%q", str))
@@ -1081,6 +1095,7 @@ func TestTypedEventToEvent(t *testing.T) {
 				Attributes: nil,
 			},
 		},
+		// TODO[1703]: Add new events to TestTypedEventToEvent.
 	}
 
 	for _, tc := range tests {

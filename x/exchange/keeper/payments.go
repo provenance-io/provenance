@@ -212,6 +212,7 @@ func (k Keeper) CreatePayment(ctx sdk.Context, payment *exchange.Payment) error 
 		return fmt.Errorf("error placing hold on payment source: %w", err)
 	}
 
+	k.emitEvent(ctx, exchange.NewEventPaymentCreated(payment))
 	return nil
 }
 
@@ -278,6 +279,7 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 		}
 	}
 
+	k.emitEvent(ctx, exchange.NewEventPaymentAccepted(payment))
 	return nil
 }
 
@@ -295,7 +297,13 @@ func (k Keeper) RejectPayment(ctx sdk.Context, target, source sdk.AccAddress, ex
 		return fmt.Errorf("target %s cannot reject payment with target %s", target, payment.Target)
 	}
 
-	return k.deletePaymentAndReleaseHold(ctx, store, payment)
+	err = k.deletePaymentAndReleaseHold(ctx, store, payment)
+	if err != nil {
+		return err
+	}
+
+	k.emitEvent(ctx, exchange.NewEventPaymentRejected(payment))
+	return nil
 }
 
 // RejectPayments deletes some payments and releases their holds.
@@ -315,7 +323,13 @@ func (k Keeper) RejectPayments(ctx sdk.Context, target sdk.AccAddress, sources [
 		return errors.New("no payments found to reject")
 	}
 
-	return k.deletePaymentsAndReleaseHolds(ctx, store, payments)
+	err := k.deletePaymentsAndReleaseHolds(ctx, store, payments)
+	if err != nil {
+		return err
+	}
+
+	emitEvents(k, ctx, exchange.NewEventsPaymentsRejected(payments))
+	return nil
 }
 
 // CancelPayments deletes the payments (and releases their holds) for a source and set of external ids.
@@ -335,7 +349,13 @@ func (k Keeper) CancelPayments(ctx sdk.Context, source sdk.AccAddress, externalI
 		payments = append(payments, payment)
 	}
 
-	return k.deletePaymentsAndReleaseHolds(ctx, store, payments)
+	err := k.deletePaymentsAndReleaseHolds(ctx, store, payments)
+	if err != nil {
+		return err
+	}
+
+	emitEvents(k, ctx, exchange.NewEventsPaymentsCancelled(payments))
+	return nil
 }
 
 // UpdatePaymentTarget changes the target of a payment.
@@ -350,14 +370,21 @@ func (k Keeper) UpdatePaymentTarget(ctx sdk.Context, source sdk.AccAddress, exte
 		return fmt.Errorf("no payment found with source %s and external id %q", source, externalID)
 	}
 
+	oldTarget := existing.Target
 	newTargetStr := newTarget.String()
-	if existing.Target == newTargetStr {
+	if oldTarget == newTargetStr {
 		return fmt.Errorf("payment with source %s and external id %q already has target %s",
 			source, externalID, newTarget)
 	}
 
 	existing.Target = newTargetStr
-	return k.setPaymentInStore(store, existing)
+	err = k.setPaymentInStore(store, existing)
+	if err != nil {
+		return err
+	}
+
+	k.emitEvent(ctx, exchange.NewEventPaymentUpdated(existing, oldTarget))
+	return nil
 }
 
 // GetPaymentsForTargetAndSource gets all the payments with the given target and source.
