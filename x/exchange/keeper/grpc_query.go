@@ -548,30 +548,129 @@ func (k QueryServer) ValidateManageFees(goCtx context.Context, req *exchange.Que
 
 // GetPayment gets a single specific payment.
 func (k QueryServer) GetPayment(goCtx context.Context, req *exchange.QueryGetPaymentRequest) (*exchange.QueryGetPaymentResponse, error) {
-	//TODO[1703]: GetPayment
-	return nil, errors.New("not implemented yet")
+	if req == nil || len(req.Source) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	source, err := sdk.AccAddressFromBech32(req.Source)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid source %q: %v", req.Source, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := &exchange.QueryGetPaymentResponse{}
+	resp.Payment, err = k.Keeper.GetPayment(ctx, source, req.ExternalId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "payment not found with source %s and external id %q",
+			req.Source, req.ExternalId)
+	}
+
+	return resp, nil
 }
 
 // GetPaymentsWithSource gets all payments with a specific source account.
 func (k QueryServer) GetPaymentsWithSource(goCtx context.Context, req *exchange.QueryGetPaymentsWithSourceRequest) (*exchange.QueryGetPaymentsWithSourceResponse, error) {
-	//TODO[1703]: GetPaymentsWithSource
-	return nil, errors.New("not implemented yet")
+	if req == nil || len(req.Source) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	source, err := sdk.AccAddressFromBech32(req.Source)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid source %q: %v", req.Source, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetKeyPrefixPaymentsForSource(source)
+	preStore := prefix.NewStore(k.getStore(ctx), keyPrefix)
+
+	resp := &exchange.QueryGetPaymentsWithSourceResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(preStore, req.Pagination, func(_, value []byte) error {
+		// Only add it to the result if we can read it. This might result in fewer results than the limit,
+		// but at least one bad entry won't block others by causing the whole thing to return an error.
+		payment, _ := k.parsePaymentStoreValue(value)
+		if payment != nil {
+			resp.Payments = append(resp.Payments, payment)
+		}
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating payments with source %s: %v", req.Source, pageErr)
+	}
+
+	return resp, nil
 }
 
 // GetPaymentsWithTarget gets all payments with a specific target account.
 func (k QueryServer) GetPaymentsWithTarget(goCtx context.Context, req *exchange.QueryGetPaymentsWithTargetRequest) (*exchange.QueryGetPaymentsWithTargetResponse, error) {
-	//TODO[1703]: GetPaymentsWithTarget
-	return nil, errors.New("not implemented yet")
+	if req == nil || len(req.Target) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	target, err := sdk.AccAddressFromBech32(req.Target)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid target %q: %v", req.Target, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetIndexKeyPrefixTargetToPayments(target)
+	store := k.getStore(ctx)
+	preStore := prefix.NewStore(store, keyPrefix)
+
+	resp := &exchange.QueryGetPaymentsWithTargetResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(preStore, req.Pagination, func(keySuffix, _ []byte) error {
+		// Only add it to the result if we can read it. This might result in fewer results than the limit,
+		// but at least one bad entry won't block others by causing the whole thing to return an error.
+		if source, externalID, pErr := ParseIndexKeySuffixTargetToPayment(keySuffix); pErr == nil {
+			payment, _ := k.getPaymentFromStore(store, source, externalID)
+			if payment != nil {
+				resp.Payments = append(resp.Payments, payment)
+			}
+		}
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating payments with target %s: %v", req.Target, pageErr)
+	}
+
+	return resp, nil
 }
 
 // GetAllPayments gets all payments.
 func (k QueryServer) GetAllPayments(goCtx context.Context, req *exchange.QueryGetAllPaymentsRequest) (*exchange.QueryGetAllPaymentsResponse, error) {
-	//TODO[1703]: GetAllPayments
-	return nil, errors.New("not implemented yet")
+	var pagination *query.PageRequest
+	if req != nil {
+		pagination = req.Pagination
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetKeyPrefixAllPayments()
+	preStore := prefix.NewStore(k.getStore(ctx), keyPrefix)
+
+	resp := &exchange.QueryGetAllPaymentsResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(preStore, pagination, func(_, value []byte) error {
+		payment, _ := k.parsePaymentStoreValue(value)
+		if payment != nil {
+			resp.Payments = append(resp.Payments, payment)
+		}
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating all payments: %v", pageErr)
+	}
+
+	return resp, nil
 }
 
 // PaymentFeeCalc calculates the fees that must be paid for creating or accepting a specific payment.
 func (k QueryServer) PaymentFeeCalc(goCtx context.Context, req *exchange.QueryPaymentFeeCalcRequest) (*exchange.QueryPaymentFeeCalcResponse, error) {
-	//TODO[1703]: PaymentFeeCalc
-	return nil, errors.New("not implemented yet")
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := k.CalculatePaymentFees(ctx, &req.Payment)
+	return resp, nil
 }

@@ -20,10 +20,8 @@ func paymentExists(store sdk.KVStore, source, externalID string) bool {
 	return store.Has(MakeKeyPayment(sourceAddr, externalID))
 }
 
-// getPaymentFromStore gets a Payment from the store.
-func (k Keeper) getPaymentFromStore(store sdk.KVStore, source sdk.AccAddress, externalID string) (*exchange.Payment, error) {
-	key := MakeKeyPayment(source, externalID)
-	value := store.Get(key)
+// parsePaymentStoreValue converts a payment store value into the Payment object.
+func (k Keeper) parsePaymentStoreValue(value []byte) (*exchange.Payment, error) {
 	if len(value) == 0 {
 		return nil, nil
 	}
@@ -34,6 +32,13 @@ func (k Keeper) getPaymentFromStore(store sdk.KVStore, source sdk.AccAddress, ex
 		return nil, fmt.Errorf("failed to unmarshal payment: %w", err)
 	}
 	return &payment, nil
+}
+
+// getPaymentFromStore gets a Payment from the store.
+func (k Keeper) getPaymentFromStore(store sdk.KVStore, source sdk.AccAddress, externalID string) (*exchange.Payment, error) {
+	key := MakeKeyPayment(source, externalID)
+	value := store.Get(key)
+	return k.parsePaymentStoreValue(value)
 }
 
 // getPaymentsForTargetAndSourceFromStore gets all the payments with the given target and source from the state store.
@@ -357,6 +362,29 @@ func (k Keeper) UpdatePaymentTarget(ctx sdk.Context, source sdk.AccAddress, exte
 // GetPaymentsForTargetAndSource gets all the payments with the given target and source.
 func (k Keeper) GetPaymentsForTargetAndSource(ctx sdk.Context, target, source sdk.AccAddress) []*exchange.Payment {
 	return k.getPaymentsForTargetAndSourceFromStore(k.getStore(ctx), target, source)
+}
+
+func (k Keeper) CalculatePaymentFees(ctx sdk.Context, payment *exchange.Payment) *exchange.QueryPaymentFeeCalcResponse {
+	resp := &exchange.QueryPaymentFeeCalcResponse{}
+	if payment == nil {
+		return resp
+	}
+
+	store := k.getStore(ctx)
+	if !payment.SourceAmount.IsZero() {
+		opts := getParamsFeeCreatePaymentFlat(store)
+		if len(opts) > 0 {
+			resp.FeeCreate = sdk.Coins{opts[0]}
+		}
+	}
+	if !payment.TargetAmount.IsZero() {
+		opts := getParamsFeeAcceptPaymentFlat(store)
+		if len(opts) > 0 {
+			resp.FeeAccept = sdk.Coins{opts[0]}
+		}
+	}
+
+	return resp
 }
 
 // consumePaymentFee consumes the first entry in opts (if there is one) as a msg fee.
