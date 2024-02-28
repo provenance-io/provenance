@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -270,38 +269,106 @@ func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.Msg
 
 // CreatePayment creates a payment to facilitate a trade between two accounts.
 func (k MsgServer) CreatePayment(goCtx context.Context, msg *exchange.MsgCreatePaymentRequest) (*exchange.MsgCreatePaymentResponse, error) {
-	//TODO[1703]: CreatePayment
-	return nil, errors.New("not implemented yet")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := k.Keeper.CreatePayment(ctx, &msg.Payment); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	if !msg.Payment.SourceAmount.IsZero() {
+		k.consumeCreatePaymentFee(ctx, msg)
+	}
+	return &exchange.MsgCreatePaymentResponse{}, nil
 }
 
 // AcceptPayment is used by a target to accept a payment.
 func (k MsgServer) AcceptPayment(goCtx context.Context, msg *exchange.MsgAcceptPaymentRequest) (*exchange.MsgAcceptPaymentResponse, error) {
-	//TODO[1703]: AcceptPayment
-	return nil, errors.New("not implemented yet")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := k.Keeper.AcceptPayment(ctx, &msg.Payment); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	if !msg.Payment.TargetAmount.IsZero() {
+		k.consumeAcceptPaymentFee(ctx, msg)
+	}
+	return &exchange.MsgAcceptPaymentResponse{}, nil
 }
 
 // RejectPayment can be used by a target to reject a payment.
 func (k MsgServer) RejectPayment(goCtx context.Context, msg *exchange.MsgRejectPaymentRequest) (*exchange.MsgRejectPaymentResponse, error) {
-	//TODO[1703]: RejectPayment
-	return nil, errors.New("not implemented yet")
+	target, err := sdk.AccAddressFromBech32(msg.Target)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid target %q: %v", msg.Target, err)
+	}
+	source, err := sdk.AccAddressFromBech32(msg.Source)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid source %q: %v", msg.Source, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err = k.Keeper.RejectPayment(ctx, target, source, msg.ExternalId)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgRejectPaymentResponse{}, nil
 }
 
 // RejectPayments can be used by a target to reject all payments from one or more sources.
 func (k MsgServer) RejectPayments(goCtx context.Context, msg *exchange.MsgRejectPaymentsRequest) (*exchange.MsgRejectPaymentsResponse, error) {
-	//TODO[1703]: RejectPayments
-	return nil, errors.New("not implemented yet")
+	target, err := sdk.AccAddressFromBech32(msg.Target)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid target %q: %v", msg.Target, err)
+	}
+	sources := make([]sdk.AccAddress, 0, len(msg.Sources))
+	for _, sourceStr := range msg.Sources {
+		var source sdk.AccAddress
+		source, err = sdk.AccAddressFromBech32(sourceStr)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid source %q: %v", sourceStr, err)
+		}
+		sources = append(sources, source)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err = k.Keeper.RejectPayments(ctx, target, sources)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+	}
+
+	return &exchange.MsgRejectPaymentsResponse{}, nil
 }
 
 // CancelPayments can be used by a source to cancel one or more payments.
 func (k MsgServer) CancelPayments(goCtx context.Context, msg *exchange.MsgCancelPaymentsRequest) (*exchange.MsgCancelPaymentsResponse, error) {
-	//TODO[1703]: CancelPayments
-	return nil, errors.New("not implemented yet")
+	source, err := sdk.AccAddressFromBech32(msg.Source)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid source %q: %w", msg.Source, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err = k.Keeper.CancelPayments(ctx, source, msg.ExternalIds)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	return &exchange.MsgCancelPaymentsResponse{}, nil
 }
 
 // ChangePaymentTarget can be used by a source to change the target in one of their payments.
 func (k MsgServer) ChangePaymentTarget(goCtx context.Context, msg *exchange.MsgChangePaymentTargetRequest) (*exchange.MsgChangePaymentTargetResponse, error) {
-	//TODO[1703]: ChangePaymentTarget
-	return nil, errors.New("not implemented yet")
+	source, err := sdk.AccAddressFromBech32(msg.Source)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid source %q: %w", msg.Source, err)
+	}
+	newTarget, err := sdk.AccAddressFromBech32(msg.NewTarget)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid new target %q: %w", msg.NewTarget, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err = k.UpdatePaymentTarget(ctx, source, msg.ExternalId, newTarget)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	return &exchange.MsgChangePaymentTargetResponse{}, nil
 }
 
 // GovCreateMarket is a governance proposal endpoint for creating a market.

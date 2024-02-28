@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provenance-io/provenance/internal/antewrapper"
+
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
@@ -192,22 +192,4 @@ func (k Keeper) GetExchangeSplit(ctx sdk.Context, denom string) uint16 {
 
 	// Lastly, use the default from the defaults.
 	return uint16(defaults.DefaultSplit)
-}
-
-// consumePaymentFee consumes the first entry in opts (if there is one) as a msg fee.
-func consumePaymentFee(ctx sdk.Context, opts []sdk.Coin, msg sdk.Msg) {
-	if len(opts) == 0 || opts[0].IsZero() {
-		return
-	}
-	antewrapper.ConsumeMsgFee(ctx, sdk.Coins{opts[0]}, msg, "")
-}
-
-// consumeCreatePaymentFee looks up and consumes the create-payment fee.
-func (k Keeper) consumeCreatePaymentFee(ctx sdk.Context, msg sdk.Msg) {
-	consumePaymentFee(ctx, getParamsFeeCreatePaymentFlat(k.getStore(ctx)), msg)
-}
-
-// consumeAcceptPaymentFee looks up and consumes the accept-payment fee.
-func (k Keeper) consumeAcceptPaymentFee(ctx sdk.Context, msg sdk.Msg) {
-	consumePaymentFee(ctx, getParamsFeeAcceptPaymentFlat(k.getStore(ctx)), msg)
 }
