@@ -34,9 +34,10 @@ import (
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	// icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"              // TODO[1760]: async-icq
-	// icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v7/keeper" // TODO[1760]: async-icq
-	// icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"   // TODO[1760]: async-icq
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+
 	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
 	// quarantinekeeper "github.com/cosmos/cosmos-sdk/x/quarantine/keeper" // TODO[1760]: quarantine
 	// quarantinemodule "github.com/cosmos/cosmos-sdk/x/quarantine/module" // TODO[1760]: quarantine
@@ -214,7 +215,7 @@ var (
 		ibc.AppModuleBasic{},
 		ibctransfer.AppModuleBasic{},
 		ica.AppModuleBasic{},
-		// icq.AppModuleBasic{}, // TODO[1760]: async-icq
+		icq.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
 		ibcratelimitmodule.AppModuleBasic{},
 
@@ -309,11 +310,11 @@ type App struct {
 	TriggerKeeper triggerkeeper.Keeper
 	OracleKeeper  oraclekeeper.Keeper
 
-	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	IBCHooksKeeper *ibchookskeeper.Keeper
-	ICAHostKeeper  *icahostkeeper.Keeper
-	TransferKeeper *ibctransferkeeper.Keeper
-	// ICQKeeper          icqkeeper.Keeper // TODO[1760]: async-icq
+	IBCKeeper          *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	IBCHooksKeeper     *ibchookskeeper.Keeper
+	ICAHostKeeper      *icahostkeeper.Keeper
+	TransferKeeper     *ibctransferkeeper.Keeper
+	ICQKeeper          icqkeeper.Keeper
 	RateLimitingKeeper *ibcratelimitkeeper.Keeper
 
 	MarkerKeeper    markerkeeper.Keeper
@@ -391,7 +392,7 @@ func New(
 		// ibchost.StoreKey, // TODO[1760]: ibc-host
 		ibctransfertypes.StoreKey,
 		icahosttypes.StoreKey,
-		// icqtypes.StoreKey, // TODO[1760]: async-icq
+		icqtypes.StoreKey,
 		ibchookstypes.StoreKey,
 		ibcratelimit.StoreKey,
 
@@ -444,7 +445,7 @@ func New(
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	// scopedICQKeeper := app.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName) // TODO[1760]: async-icq
+	scopedICQKeeper := app.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
 	scopedOracleKeeper := app.CapabilityKeeper.ScopeToModule(oracletypes.ModuleName)
 
 	// capability keeper must be sealed after scope to module registrations are completed.
@@ -600,17 +601,17 @@ func New(
 		app.AccountKeeper, scopedICAHostKeeper, pioMessageRouter, govAuthority,
 	)
 	app.ICAHostKeeper = &icaHostKeeper
+	// TODO[1760]: ica-host
 	// icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
 	// icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
 
-	// TODO[1760]: async-icq
-	// app.ICQKeeper = icqkeeper.NewKeeper(
-	// 	appCodec, keys[icqtypes.StoreKey], app.GetSubspace(icqtypes.ModuleName),
-	// 	app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-	// 	scopedICQKeeper, app.BaseApp.GRPCQueryRouter(),
-	//)
-	// icqModule := icq.NewAppModule(app.ICQKeeper)
-	// icqIBCModule := icq.NewIBCModule(app.ICQKeeper)
+	app.ICQKeeper = icqkeeper.NewKeeper(
+		appCodec, keys[icqtypes.StoreKey],
+		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.PortKeeper,
+		scopedICQKeeper, app.BaseApp.GRPCQueryRouter(), govAuthority,
+	)
+	icqModule := icq.NewAppModule(app.ICQKeeper, app.GetSubspace(icqtypes.ModuleName))
+	icqIBCModule := icq.NewIBCModule(app.ICQKeeper)
 
 	// Init CosmWasm module
 	wasmDir := filepath.Join(homePath, "data", "wasm")
@@ -728,7 +729,7 @@ func New(
 		AddRoute(ibctransfertypes.ModuleName, app.TransferStack).
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper)).
 		// AddRoute(icahosttypes.SubModuleName, icaHostIBCModule). // TODO[1760]: ica-host
-		// AddRoute(icqtypes.ModuleName, icqIBCModule). // TODO[1760]: async-icq
+		AddRoute(icqtypes.ModuleName, icqIBCModule).
 		AddRoute(oracletypes.ModuleName, oracleModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -789,7 +790,7 @@ func New(
 		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper, app.AccountKeeper, app.BankKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
-		// icqModule, // TODO[1760]: async-icq
+		icqModule,
 		// icaModule, // TODO[1760]: ica-host
 	)
 
@@ -847,7 +848,7 @@ func New(
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		// icqtypes.ModuleName, // TODO[1760]: async-icq
+		icqtypes.ModuleName,
 		nametypes.ModuleName,
 		vestingtypes.ModuleName,
 		// quarantine.ModuleName, // TODO[1760]: quarantine
@@ -878,7 +879,7 @@ func New(
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		// icqtypes.ModuleName, // TODO[1760]: async-icq
+		icqtypes.ModuleName,
 		msgfeestypes.ModuleName,
 		wasm.ModuleName,
 		slashingtypes.ModuleName,
@@ -930,7 +931,7 @@ func New(
 
 		// ibchost.ModuleName, // TODO[1760]: ibc-host
 		ibctransfertypes.ModuleName,
-		// icqtypes.ModuleName, // TODO[1760]: async-icq
+		icqtypes.ModuleName,
 		icatypes.ModuleName,
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
@@ -973,7 +974,7 @@ func New(
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
-		// icqtypes.ModuleName, // TODO[1760]: async-icq
+		icqtypes.ModuleName,
 		wasm.ModuleName,
 
 		attributetypes.ModuleName,
@@ -1115,7 +1116,7 @@ func New(
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
-	// app.ScopedICQKeeper = scopedICQKeeper // TODO[1760]: async-icq
+	app.ScopedICQKeeper = scopedICQKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
 
 	return app

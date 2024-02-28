@@ -9,7 +9,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	// icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types" // TODO[1760]: async-icq
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -124,7 +124,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{ /* icqtypes.ModuleName, // TODO[1760]: async-icq */ oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
 	"saffron-rc2": { // upgrade for v1.17.0-rc2
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -174,7 +174,7 @@ var upgrades = map[string]appUpgrade{
 
 			return vm, nil
 		},
-		Added: []string{ /* icqtypes.ModuleName, // TODO[1760]: async-icq */ oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
+		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
 	},
 	"tourmaline-rc1": { // upgrade for v1.18.0-rc1
 		Added: []string{ibcratelimit.ModuleName},
@@ -421,7 +421,7 @@ func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKe
 // TODO: Remove with the saffron handlers.
 func setupICQ(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating ICQ params")
-	// app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"})) // TODO[1760]: async-icq
+	app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"}))
 	ctx.Logger().Info("Done updating ICQ params")
 }
 

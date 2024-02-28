@@ -21,8 +21,8 @@ require (
 	github.com/cosmos/cosmos-sdk v0.50.4
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.4.11
+	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
-	// github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.1.1 // TODO[1760]: async-icq: Need a v0.50 compatible version.
 	github.com/cosmos/ibc-go/v8 v8.0.0
 	// github.com/cosmos/rosetta v0.50.2 // TODO[1760]: rosetta
 	github.com/ghodss/yaml v1.0.0
