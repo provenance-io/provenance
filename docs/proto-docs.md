@@ -102,11 +102,11 @@
     - [DenomSplit](#provenance.exchange.v1.DenomSplit)
     - [Params](#provenance.exchange.v1.Params)
   
-- [provenance/exchange/v1/genesis.proto](#provenance/exchange/v1/genesis.proto)
-    - [GenesisState](#provenance.exchange.v1.GenesisState)
-  
 - [provenance/exchange/v1/payments.proto](#provenance/exchange/v1/payments.proto)
     - [Payment](#provenance.exchange.v1.Payment)
+  
+- [provenance/exchange/v1/genesis.proto](#provenance/exchange/v1/genesis.proto)
+    - [GenesisState](#provenance.exchange.v1.GenesisState)
   
 - [provenance/exchange/v1/tx.proto](#provenance/exchange/v1/tx.proto)
     - [MsgAcceptPaymentRequest](#provenance.exchange.v1.MsgAcceptPaymentRequest)
@@ -2211,42 +2211,6 @@ Params is a representation of the exchange module parameters.
 
 
 
-<a name="provenance/exchange/v1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## provenance/exchange/v1/genesis.proto
-
-
-
-<a name="provenance.exchange.v1.GenesisState"></a>
-
-### GenesisState
-GenesisState is the data that should be loaded into the exchange module during genesis.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#provenance.exchange.v1.Params) |  | params defines all the parameters of the exchange module. |
-| `markets` | [Market](#provenance.exchange.v1.Market) | repeated | markets are all of the markets to create at genesis. |
-| `orders` | [Order](#provenance.exchange.v1.Order) | repeated | orders are all the orders to create at genesis. |
-| `last_market_id` | [uint32](#uint32) |  | last_market_id is the value of the last auto-selected market id. |
-| `last_order_id` | [uint64](#uint64) |  | last_order_id is the value of the last order id created. |
-| `commitments` | [Commitment](#provenance.exchange.v1.Commitment) | repeated | commitments are all the of the commitments to create at genesis. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
 <a name="provenance/exchange/v1/payments.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -2273,6 +2237,43 @@ A source can only have one Payment with any given external id. A source can have
 An external id can be reused by a source once the payment is accepted, rejected, or cancelled.
 
 The external id is limited to 100 bytes. An empty string is a valid external id. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/exchange/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/genesis.proto
+
+
+
+<a name="provenance.exchange.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState is the data that should be loaded into the exchange module during genesis.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#provenance.exchange.v1.Params) |  | params defines all the parameters of the exchange module. |
+| `markets` | [Market](#provenance.exchange.v1.Market) | repeated | markets are all of the markets to create at genesis. |
+| `orders` | [Order](#provenance.exchange.v1.Order) | repeated | orders are all the orders to create at genesis. |
+| `last_market_id` | [uint32](#uint32) |  | last_market_id is the value of the last auto-selected market id. |
+| `last_order_id` | [uint64](#uint64) |  | last_order_id is the value of the last order id created. |
+| `commitments` | [Commitment](#provenance.exchange.v1.Commitment) | repeated | commitments are all of the commitments to create at genesis. |
+| `payments` | [Payment](#provenance.exchange.v1.Payment) | repeated | payments are all the payments to create at genesis. |
 
 
 
