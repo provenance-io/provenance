@@ -68,7 +68,6 @@ rm -rf 'proto/tendermint'
 curl -f -sSL "$COMETBFT_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
 
 ICS23_FILE='proto/cosmos/ics23/v1/proofs.proto'
-rm -f "$ICS23_FILE"
 curl -f -sSL "$ICS23_PROTO_URL" -o "$ICS23_FILE" --create-dirs
 
 # TODO[1760]: Do we still need this? since confio moved to cosmos?
