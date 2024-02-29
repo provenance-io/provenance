@@ -41,9 +41,6 @@ cd "$DEST"
 PROTO_EXPR='*/proto/**/*.proto'
 
 # Refresh third_party protos
-ICS23_FILE='proto/proofs.proto'
-rm -f "$ICS23_FILE"
-curl -f -sSL "$ICS23_PROTO_URL" -o "$ICS23_FILE" --create-dirs
 
 GOGO_FILE='proto/gogoproto/gogo.proto'
 rm -f "$GOGO_FILE"
@@ -70,6 +67,9 @@ curl -f -sSL "$COSMOS_TARBALL_URL" | $tar --exclude='*/third_party' --exclude='*
 rm -rf 'proto/tendermint'
 curl -f -sSL "$COMETBFT_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
 
+ICS23_FILE='proto/cosmos/ics23/v1/proofs.proto'
+rm -f "$ICS23_FILE"
+curl -f -sSL "$ICS23_PROTO_URL" -o "$ICS23_FILE" --create-dirs
 
 # TODO[1760]: Do we still need this? since confio moved to cosmos?
 ## insert go, java package option into proofs.proto file
