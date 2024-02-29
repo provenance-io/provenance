@@ -213,7 +213,7 @@ replace (
 	// TODO[1760]: wasm: Put this CosmWasm/wasmd replace back with an updated version (or delete it).
 	// github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
 	// TODO[1760]: sdk: Put this replace back with an updated version of the sdk from our fork.
-	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-0.20240222214016-afb9dceecf36
+	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-nullpointer0x00-msg-router
 	// TODO[1760]: ibc: Put this ibc-go replace back with an updated version (or delete it).
 	// github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
