@@ -5,11 +5,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	. "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -56,40 +59,95 @@ func TestMarkerTransferAuthorization(t *testing.T) {
 }
 
 func TestMarkerTransferAuthorizationValidateBasic(t *testing.T) {
-	addr1, _ := sdk.AccAddressFromBech32("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck")
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	addr1 := sdk.AccAddress("addr1_______________")
+	addr2 := sdk.AccAddress("addr2_______________")
+	addr3 := sdk.AccAddress("addr3_______________")
 
 	cases := []struct {
-		name     string
-		msg      *MarkerTransferAuthorization
-		errorMsg string
+		name   string
+		msg    MarkerTransferAuthorization
+		expErr string
 	}{
 		{
-			"valid msg with empty allow list",
-			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{}),
-			"",
+			name:   "nil allow list",
+			msg:    MarkerTransferAuthorization{TransferLimit: sdk.NewCoins(coin500)},
+			expErr: "",
 		},
 		{
-			"valid msg without non-empty allow list",
-			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1}),
-			"",
+			name: "empty allow list",
+			msg: MarkerTransferAuthorization{
+				TransferLimit: sdk.NewCoins(coin500),
+				AllowList:     []string{},
+			},
+			expErr: "",
 		},
 		{
-			"invalid msg with duplicate allow list",
-			NewMarkerTransferAuthorization(sdk.NewCoins(coin500), []sdk.AccAddress{addr1, addr1}),
-			"all allow list addresses must be unique: duplicate entry",
+			name: "non-empty allow list",
+			msg: MarkerTransferAuthorization{
+				TransferLimit: sdk.NewCoins(coin500),
+				AllowList:     []string{addr1.String(), addr2.String(), addr3.String()},
+			},
+			expErr: "",
+		},
+		{
+			name:   "nil transfer limit",
+			msg:    MarkerTransferAuthorization{TransferLimit: nil},
+			expErr: "invalid transfer limit: cannot be zero: invalid coins",
+		},
+		{
+			name:   "empty transfer limit",
+			msg:    MarkerTransferAuthorization{TransferLimit: sdk.Coins{}},
+			expErr: "invalid transfer limit: cannot be zero: invalid coins",
+		},
+		{
+			name:   "transfer limit with invalid denom",
+			msg:    MarkerTransferAuthorization{TransferLimit: sdk.Coins{coin(3, "x")}},
+			expErr: "invalid transfer limit: invalid denom: x: invalid coins",
+		},
+		{
+			name:   "transfer limit with zero coin",
+			msg:    MarkerTransferAuthorization{TransferLimit: sdk.Coins{coin(0, "catcoin")}},
+			expErr: "invalid transfer limit: coin 0catcoin amount is not positive: invalid coins",
+		},
+		{
+			name:   "transfer limit with negative coin",
+			msg:    MarkerTransferAuthorization{TransferLimit: sdk.Coins{coin(-3, "catcoin")}},
+			expErr: "invalid transfer limit: coin -3catcoin amount is not positive: invalid coins",
+		},
+		{
+			name:   "unsorted transfer limit",
+			msg:    MarkerTransferAuthorization{TransferLimit: sdk.Coins{coin(10, "banana"), coin(3, "apple")}},
+			expErr: "invalid transfer limit: denomination apple is not sorted: invalid coins",
+		},
+		{
+			name: "invalid allow list entry",
+			msg: MarkerTransferAuthorization{
+				TransferLimit: sdk.NewCoins(coin500),
+				AllowList:     []string{addr1.String(), "notgonnawork", addr3.String()},
+			},
+			expErr: "invalid allow list entry [1] \"notgonnawork\": decoding bech32 failed: invalid separator index -1: invalid address",
+		},
+		{
+			name: "duplicate allow list entry",
+			msg: MarkerTransferAuthorization{
+				TransferLimit: sdk.NewCoins(coin500),
+				AllowList:     []string{addr1.String(), addr2.String(), addr1.String()},
+			},
+			expErr: "invalid allow list entry [2] " + addr1.String() + ": duplicate entry",
 		},
 	}
-	for _, tc := range cases {
-		tc := tc
 
+	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
-			if len(tc.errorMsg) > 0 {
-				require.Error(t, err)
-				require.Equal(t, tc.errorMsg, err.Error())
-			} else {
-				require.NoError(t, err)
+			var err error
+			testFunc := func() {
+				err = tc.msg.ValidateBasic()
 			}
+			require.NotPanics(t, testFunc, "ValidateBasic")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ValidateBasic error")
 		})
 	}
 }
