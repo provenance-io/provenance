@@ -42,6 +42,10 @@ type TestSuite struct {
 
 	adminAddr sdk.AccAddress
 
+	longAddr1 sdk.AccAddress
+	longAddr2 sdk.AccAddress
+	longAddr3 sdk.AccAddress
+
 	feeCollector     string
 	feeCollectorAddr sdk.AccAddress
 
@@ -86,6 +90,14 @@ func (s *TestSuite) SetupTest() {
 
 	s.adminAddr = sdk.AccAddress("adminAddr___________")
 	s.addAddrLookup(s.adminAddr, "adminAddr")
+
+	longAddrs := app.AddTestAddrsIncrementalLong(s.app, s.ctx, 3, sdk.NewInt(1_000_000_000))
+	s.longAddr1 = longAddrs[0]
+	s.longAddr2 = longAddrs[1]
+	s.longAddr3 = longAddrs[2]
+	s.addAddrLookup(s.longAddr1, "longAddr1")
+	s.addAddrLookup(s.longAddr2, "longAddr2")
+	s.addAddrLookup(s.longAddr3, "longAddr3")
 
 	s.feeCollector = s.k.GetFeeCollectorName()
 	s.feeCollectorAddr = authtypes.NewModuleAddress(s.feeCollector)
@@ -747,6 +759,23 @@ func (s *TestSuite) requireCreateMarketUnmocked(market exchange.Market) {
 	}, "CreateMarket(%d)", market.MarketId)
 }
 
+// requireSetPaymentsInStore calls setPaymentInStore on each payment, making sure it doesn't panic or return an error.
+func (s *TestSuite) requireSetPaymentsInStore(payments ...*exchange.Payment) {
+	for i, payment := range payments {
+		assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+			return s.k.SetPaymentInStore(s.getStore(), payment)
+		}, "[%d]: SetPaymentInStore(%s)", i, payment)
+	}
+}
+
+// requireAccAddrFromBech32 calls AccAddressFromBech32 making sure it doesn't return an error.
+// Panics can mess up other tests. That's why I'm using this instead of sdk.MustAccAddressFromBech32.
+func (s *TestSuite) requireAccAddressFromBech32(bech32 string, msg string, args ...interface{}) sdk.AccAddress {
+	rv, err := sdk.AccAddressFromBech32(bech32)
+	s.Require().NoError(err, "AccAddressFromBech32(%q): "+msg, append([]interface{}{bech32}, args...))
+	return rv
+}
+
 // assertEqualSlice asserts that expected = actual and returns true if so.
 // If not, returns false and the stringer is applied to each entry and the comparison
 // is redone on the strings in the hopes that it helps identify the problem.
@@ -793,6 +822,35 @@ func (s *TestSuite) assertEqualOrders(expected, actual []*exchange.Order, msg st
 func (s *TestSuite) assertEqualCommitments(expected, actual []exchange.Commitment, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	return assertEqualSlice(s, expected, actual, s.getCommitmentString, msg, args...)
+}
+
+// assertEqualPayment asserts that two payments are equal and helps identify exactly what's different if they're not.
+// Returns true if they're equal, false otherwise.
+func (s *TestSuite) assertEqualPayment(expected, actual *exchange.Payment, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+
+	// If either are nil, that'll be obvious in the above failure, no need to dig further.
+	if expected == nil || actual == nil {
+		return false
+	}
+
+	// compare them as strings for a possible easy way to identify the differences.
+	eStr := s.getPaymentString(*expected)
+	aStr := s.getPaymentString(*actual)
+	if !s.Assert().Equalf(eStr, aStr, "as strings: "+msg, args...) {
+		return false
+	}
+
+	// Check each field individually.
+	s.Assert().Equalf(expected.Source, actual.Source, msg+" Source", args...)
+	s.Assert().Equalf(expected.SourceAmount, actual.SourceAmount, msg+" SourceAmount", args...)
+	s.Assert().Equalf(expected.Target, actual.Target, msg+" Target", args...)
+	s.Assert().Equalf(expected.TargetAmount, actual.TargetAmount, msg+" TargetAmount", args...)
+	s.Assert().Equalf(expected.ExternalId, actual.ExternalId, msg+" ExternalId", args...)
+	return false
 }
 
 // assertErrorValue is a wrapper for assertions.AssertErrorValue for this TestSuite.

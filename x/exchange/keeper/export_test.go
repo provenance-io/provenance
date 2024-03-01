@@ -59,6 +59,11 @@ func (k Keeper) AddCommitmentsUnsafe(ctx sdk.Context, marketID uint32, toAdd []e
 	return k.addCommitmentsUnsafe(ctx, marketID, toAdd, eventTag)
 }
 
+// SetPaymentInStore is a test-only exposure of setPaymentInStore.
+func (k Keeper) SetPaymentInStore(store sdk.KVStore, payment *exchange.Payment) error {
+	return k.setPaymentInStore(store, payment)
+}
+
 var (
 	// DeleteAll is a test-only exposure of deleteAll.
 	DeleteAll = deleteAll
