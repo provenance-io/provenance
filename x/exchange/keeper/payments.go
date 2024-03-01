@@ -309,18 +309,18 @@ func (k Keeper) RejectPayment(ctx sdk.Context, target, source sdk.AccAddress, ex
 // RejectPayments deletes some payments and releases their holds.
 // Each source must have at least one payment for the target.
 func (k Keeper) RejectPayments(ctx sdk.Context, target sdk.AccAddress, sources []sdk.AccAddress) error {
-	var payments []*exchange.Payment
+	if len(sources) == 0 {
+		return errors.New("at least one source is required")
+	}
+
 	store := k.getStore(ctx)
+	var payments []*exchange.Payment
 	for _, source := range sources {
 		sPayments := k.getPaymentsForTargetAndSourceFromStore(store, target, source)
 		if len(sPayments) == 0 {
 			return fmt.Errorf("source %s does not have any payments for target %s", source, target)
 		}
 		payments = append(payments, sPayments...)
-	}
-
-	if len(payments) == 0 {
-		return errors.New("no payments found to reject")
 	}
 
 	err := k.deletePaymentsAndReleaseHolds(ctx, store, payments)
