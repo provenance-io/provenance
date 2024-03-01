@@ -321,13 +321,21 @@ func (k Keeper) RejectPayment(ctx sdk.Context, target, source sdk.AccAddress, ex
 // RejectPayments deletes some payments and releases their holds.
 // Each source must have at least one payment for the target.
 func (k Keeper) RejectPayments(ctx sdk.Context, target sdk.AccAddress, sources []sdk.AccAddress) error {
+	if len(target) == 0 {
+		return errors.New("a target is required in order to reject payments")
+	}
 	if len(sources) == 0 {
 		return errors.New("at least one source is required")
 	}
 
 	store := k.getStore(ctx)
 	var payments []*exchange.Payment
+	seen := make(map[string]bool)
 	for _, source := range sources {
+		if seen[string(source)] {
+			continue
+		}
+		seen[string(source)] = true
 		sPayments := k.getPaymentsForTargetAndSourceFromStore(store, target, source)
 		if len(sPayments) == 0 {
 			return fmt.Errorf("source %s does not have any payments for target %s", source, target)
@@ -347,13 +355,21 @@ func (k Keeper) RejectPayments(ctx sdk.Context, target sdk.AccAddress, sources [
 // CancelPayments deletes the payments (and releases their holds) for a source and set of external ids.
 // There must be at least one external id and there must be a payment for each external id (and source).
 func (k Keeper) CancelPayments(ctx sdk.Context, source sdk.AccAddress, externalIDs []string) error {
+	if len(source) == 0 {
+		return errors.New("a source is required in order to cancel payments")
+	}
 	if len(externalIDs) == 0 {
 		return errors.New("at least one external id is required")
 	}
 
 	store := k.getStore(ctx)
 	payments := make([]*exchange.Payment, 0, len(externalIDs))
+	seen := make(map[string]bool)
 	for _, externalID := range externalIDs {
+		if seen[externalID] {
+			continue
+		}
+		seen[externalID] = true
 		payment, err := k.requirePaymentFromStore(store, source, externalID)
 		if err != nil {
 			return err
