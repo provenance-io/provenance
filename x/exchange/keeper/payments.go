@@ -258,7 +258,7 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 			payment.Source, existing.Source)
 	}
 
-	err = deletePaymentFromStore(store, existing)
+	err = k.deletePaymentAndReleaseHold(ctx, store, existing)
 	if err != nil {
 		return fmt.Errorf("error removing payment from store: %w", err)
 	}
