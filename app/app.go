@@ -110,6 +110,7 @@ import (
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 
+	icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
@@ -601,9 +602,8 @@ func New(
 		app.AccountKeeper, scopedICAHostKeeper, pioMessageRouter, govAuthority,
 	)
 	app.ICAHostKeeper = &icaHostKeeper
-	// TODO[1760]: ica-host
-	// icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
-	// icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
+	icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
+	icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
 
 	app.ICQKeeper = icqkeeper.NewKeeper(
 		appCodec, keys[icqtypes.StoreKey],
@@ -728,7 +728,7 @@ func New(
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, app.TransferStack).
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper)).
-		// AddRoute(icahosttypes.SubModuleName, icaHostIBCModule). // TODO[1760]: ica-host
+		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		AddRoute(icqtypes.ModuleName, icqIBCModule).
 		AddRoute(oracletypes.ModuleName, oracleModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
@@ -791,7 +791,7 @@ func New(
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icqModule,
-		// icaModule, // TODO[1760]: ica-host
+		icaModule,
 	)
 
 	// TODO[1760]: app-module: BasicModuleManager: Make sure that this setup has everything we need (it was just copied from the SDK).
@@ -1028,7 +1028,7 @@ func New(
 		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper, app.AccountKeeper, app.BankKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
-		// icaModule, // TODO[1760]: ica-host
+		icaModule,
 	)
 
 	app.sm.RegisterStoreDecoders()
