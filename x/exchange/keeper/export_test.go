@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -62,6 +63,11 @@ func (k Keeper) AddCommitmentsUnsafe(ctx sdk.Context, marketID uint32, toAdd []e
 // SetPaymentInStore is a test-only exposure of setPaymentInStore.
 func (k Keeper) SetPaymentInStore(store sdk.KVStore, payment *exchange.Payment) error {
 	return k.setPaymentInStore(store, payment)
+}
+
+// GetCodec is a test-only exposure of this keeper's cdc.
+func (k Keeper) GetCodec() codec.BinaryCodec {
+	return k.cdc
 }
 
 var (
