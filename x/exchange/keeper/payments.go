@@ -163,7 +163,10 @@ func deletePaymentFromStore(store sdk.KVStore, payment *exchange.Payment) error 
 func (k Keeper) deletePaymentAndReleaseHold(ctx sdk.Context, store sdk.KVStore, payment *exchange.Payment) error {
 	err := deletePaymentFromStore(store, payment)
 	if err != nil {
-		return err
+		if payment != nil {
+			return fmt.Errorf("error deleting payment with source %s and external id %q: %w", payment.Source, payment.ExternalId, err)
+		}
+		return fmt.Errorf("error deleting payment: %w", err)
 	}
 
 	source, _ := sdk.AccAddressFromBech32(payment.Source)
@@ -175,15 +178,14 @@ func (k Keeper) deletePaymentAndReleaseHold(ctx sdk.Context, store sdk.KVStore, 
 	return nil
 }
 
+// deletePaymentsAndReleaseHolds deletes several payments and releases their holds.
 func (k Keeper) deletePaymentsAndReleaseHolds(ctx sdk.Context, store sdk.KVStore, payments []*exchange.Payment) error {
 	for _, payment := range payments {
 		err := k.deletePaymentAndReleaseHold(ctx, store, payment)
 		if err != nil {
-			return fmt.Errorf("failed to delete payment with source %s and external id %q: %w",
-				payment.Source, payment.ExternalId, err)
+			return err
 		}
 	}
-
 	return nil
 }
 
@@ -238,7 +240,7 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 	}
 
 	if payment.Source != existing.Source {
-		return fmt.Errorf("provided source %q does not equal existing source %q",
+		return fmt.Errorf("provided source %s does not equal existing source %s",
 			payment.Source, existing.Source)
 	}
 	if !exchange.CoinsEquals(payment.SourceAmount, existing.SourceAmount) {
@@ -246,7 +248,7 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 			payment.SourceAmount, existing.SourceAmount)
 	}
 	if payment.Target != existing.Target {
-		return fmt.Errorf("provided target %q does not equal existing target %q",
+		return fmt.Errorf("provided target %s does not equal existing target %s",
 			payment.Target, existing.Target)
 	}
 	if !exchange.CoinsEquals(payment.TargetAmount, existing.TargetAmount) {
@@ -255,27 +257,27 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 	}
 	if payment.ExternalId != existing.ExternalId {
 		return fmt.Errorf("provided external id %q does not equal existing external id %q",
-			payment.Source, existing.Source)
+			payment.ExternalId, existing.ExternalId)
 	}
 
 	err = k.deletePaymentAndReleaseHold(ctx, store, existing)
 	if err != nil {
-		return fmt.Errorf("error removing payment from store: %w", err)
+		return err
 	}
 
 	ctx = quarantine.WithBypass(ctx)
-	if !payment.SourceAmount.IsZero() {
-		err = k.bankKeeper.SendCoins(ctx, source, target, payment.SourceAmount)
+	if !existing.SourceAmount.IsZero() {
+		err = k.bankKeeper.SendCoins(ctx, source, target, existing.SourceAmount)
 		if err != nil {
 			return fmt.Errorf("error sending %q from source %s to target %s: %w",
-				payment.SourceAmount, source, target, err)
+				existing.SourceAmount, source, target, err)
 		}
 	}
-	if !payment.TargetAmount.IsZero() {
-		err = k.bankKeeper.SendCoins(ctx, target, source, payment.TargetAmount)
+	if !existing.TargetAmount.IsZero() {
+		err = k.bankKeeper.SendCoins(ctx, target, source, existing.TargetAmount)
 		if err != nil {
 			return fmt.Errorf("error sending %q from target %s to source %s: %w",
-				payment.TargetAmount, target, source, err)
+				existing.TargetAmount, target, source, err)
 		}
 	}
 
@@ -288,11 +290,21 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 // or if that payment has a different target than the one provided.
 func (k Keeper) RejectPayment(ctx sdk.Context, target, source sdk.AccAddress, externalID string) error {
 	store := k.getStore(ctx)
+	if len(target) == 0 {
+		return errors.New("a target is required in order to reject payment")
+	}
+	if len(source) == 0 {
+		return errors.New("a source is required in order to reject payment")
+	}
+
 	payment, err := k.requirePaymentFromStore(store, source, externalID)
 	if err != nil {
 		return err
 	}
 
+	if len(payment.Target) == 0 {
+		return errors.New("cannot reject a payment that does not have a target")
+	}
 	if payment.Target != target.String() {
 		return fmt.Errorf("target %s cannot reject payment with target %s", target, payment.Target)
 	}
