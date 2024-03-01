@@ -41,6 +41,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Allow force transfers from marker and market accounts [#1855](https://github.com/provenance-io/provenance/pull/1855).
 
+### Bug Fixes
+
+* Fix `MarkerTransferAuthorization` validation to ensure the coins and addresses are all valid [1856](https://github.com/provenance-io/provenance/pull/1856).
+
 ---
 
 ## [v1.18.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc2) - 2024-02-22
