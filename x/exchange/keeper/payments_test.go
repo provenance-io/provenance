@@ -22,6 +22,16 @@ func (s *TestSuite) newTestPayment(source sdk.AccAddress, sourceAmount string, t
 	}
 }
 
+// getAllPayments gets all the payments currently in state.
+func (s *TestSuite) getAllPayments() []*exchange.Payment {
+	var rv []*exchange.Payment
+	s.k.IteratePayments(s.ctx, func(payment *exchange.Payment) bool {
+		rv = append(rv, payment)
+		return false
+	})
+	return rv
+}
+
 func (s *TestSuite) TestGetPayment() {
 	sourceHasTwoPayments1 := s.newTestPayment(s.longAddr2, "22strawberry", s.addr3, "12tomato", "l2-3-2")
 	sourceHasTwoPayments2 := s.newTestPayment(s.longAddr2, "44strawberry", s.addr3, "14tomato", "l2-3-4")
@@ -837,9 +847,538 @@ func (s *TestSuite) TestRejectPayment() {
 	}
 }
 
-// TODO[1703]: func (s *TestSuite) TestRejectPayments()
+func (s *TestSuite) TestRejectPayments() {
+	type paymentKey struct {
+		source     sdk.AccAddress
+		externalID string
+	}
+	newPKey := func(source sdk.AccAddress, externalID string) paymentKey {
+		return paymentKey{source: source, externalID: externalID}
+	}
 
-// TODO[1703]: func (s *TestSuite) TestCancelPayments()
+	tests := []struct {
+		name         string
+		setup        func()
+		holdKeeper   *MockHoldKeeper
+		target       sdk.AccAddress
+		sources      []sdk.AccAddress
+		expErr       string
+		expHoldCalls HoldCalls
+		expEvents    []*exchange.EventPaymentRejected
+		expDeleted   []paymentKey
+		expRemain    []paymentKey
+	}{
+		{
+			name:    "nil target",
+			target:  nil,
+			sources: []sdk.AccAddress{s.addr1},
+			expErr:  "a target is required in order to reject payments",
+		},
+		{
+			name:    "empty target",
+			target:  sdk.AccAddress{},
+			sources: []sdk.AccAddress{s.addr1},
+			expErr:  "a target is required in order to reject payments",
+		},
+		{
+			name:    "nil sources",
+			target:  s.addr4,
+			sources: nil,
+			expErr:  "at least one source is required",
+		},
+		{
+			name:    "empty sources",
+			target:  s.addr3,
+			sources: []sdk.AccAddress{},
+			expErr:  "at least one source is required",
+		},
+		{
+			name: "one source: zero payments",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "", s.addr1, "2tomato", "a"),
+					s.newTestPayment(s.addr4, "", s.addr1, "4tomato", "c"),
+				)
+			},
+			holdKeeper: nil,
+			target:     s.addr1,
+			sources:    []sdk.AccAddress{s.addr3},
+			expErr:     "source " + s.addr3.String() + " does not have any payments for target " + s.addr1.String(),
+			expRemain:  []paymentKey{newPKey(s.addr2, "a"), newPKey(s.addr4, "c")},
+		},
+		{
+			name: "error releasing a hold",
+			setup: func() {
+				s.requireSetPaymentsInStore(s.newTestPayment(s.addr4, "13strawberry", s.longAddr1, "8tangerine", "anid"))
+			},
+			holdKeeper:   NewMockHoldKeeper().WithReleaseHoldResults("stop right there"),
+			target:       s.longAddr1,
+			sources:      []sdk.AccAddress{s.addr4},
+			expErr:       "error releasing hold on payment source: stop right there",
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr4, funds: s.coins("13strawberry")}}},
+			expDeleted:   []paymentKey{newPKey(s.addr4, "anid")},
+		},
+		{
+			name: "one source: one payment",
+			setup: func() {
+				s.requireSetPaymentsInStore(s.newTestPayment(s.longAddr1, "1starfruit", s.longAddr3, "3tangerine", ""))
+			},
+			target:       s.longAddr3,
+			sources:      []sdk.AccAddress{s.longAddr1},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.longAddr1, funds: s.coins("1starfruit")}}},
+			expEvents: []*exchange.EventPaymentRejected{
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.longAddr1, "1starfruit", s.longAddr3, "3tangerine", "")),
+			},
+			expDeleted: []paymentKey{newPKey(s.longAddr1, "")},
+		},
+		{
+			name: "one source: three payments",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr3, "18strawberry", s.addr2, "81tomato", "one"),
+					s.newTestPayment(s.addr3, "28strawberry", s.addr2, "82tangerine", "two"),
+					s.newTestPayment(s.addr3, "38starfruit", s.addr2, "83tangerine", "three"),
+					s.newTestPayment(s.addr4, "500strawberry", s.addr2, "", "one"),
+					s.newTestPayment(s.addr3, "6starfruit", s.addr4, "10tomato", "four"),
+				)
+			},
+			target:  s.addr2,
+			sources: []sdk.AccAddress{s.addr3},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{
+				{addr: s.addr3, funds: s.coins("18strawberry")},
+				{addr: s.addr3, funds: s.coins("38starfruit")},
+				{addr: s.addr3, funds: s.coins("28strawberry")},
+			}},
+			expEvents: []*exchange.EventPaymentRejected{
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.addr3, "18strawberry", s.addr2, "81tomato", "one")),
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.addr3, "38starfruit", s.addr2, "83tangerine", "three")),
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.addr3, "28strawberry", s.addr2, "82tangerine", "two")),
+			},
+			expDeleted: []paymentKey{newPKey(s.addr3, "one"), newPKey(s.addr3, "two"), newPKey(s.addr3, "three")},
+			expRemain:  []paymentKey{newPKey(s.addr3, "four"), newPKey(s.addr4, "one")},
+		},
+		{
+			name: "duplicated source",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr3, "", s.longAddr1, "8tangerine", "abc"),
+					s.newTestPayment(s.addr2, "7strawberry", s.longAddr1, "", "abc"),
+				)
+			},
+			target:  s.longAddr1,
+			sources: []sdk.AccAddress{s.addr3, s.addr3, s.addr2},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{
+				{addr: s.addr3, funds: nil}, {addr: s.addr2, funds: s.coins("7strawberry")},
+			}},
+			expEvents: []*exchange.EventPaymentRejected{
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.addr3, "", s.longAddr1, "8tangerine", "abc")),
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.addr2, "7strawberry", s.longAddr1, "", "abc")),
+			},
+			expDeleted: []paymentKey{newPKey(s.addr3, "abc"), newPKey(s.addr2, "abc")},
+		},
+		{
+			name: "three sources: third does not have any payments",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr1, "", s.longAddr2, "1tomato", "gimmie1"),
+					s.newTestPayment(s.addr2, "", s.longAddr2, "2tomato", "gimmie2"),
+					s.newTestPayment(s.addr2, "", s.longAddr2, "3tomato", "gimmie3"),
+					s.newTestPayment(s.addr2, "", s.longAddr2, "4tomato", "gimmie4"),
+				)
+			},
+			target:  s.longAddr2,
+			sources: []sdk.AccAddress{s.addr1, s.addr2, s.addr3},
+			expErr:  "source " + s.addr3.String() + " does not have any payments for target " + s.longAddr2.String(),
+			expRemain: []paymentKey{
+				newPKey(s.addr1, "gimmie1"),
+				newPKey(s.addr2, "gimmie2"), newPKey(s.addr2, "gimmie3"), newPKey(s.addr2, "gimmie4"),
+			},
+		},
+		{
+			name: "three sources: multiple payments",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr1, "151strawberry,3starfruit", s.addr5, "", ""),
+					s.newTestPayment(s.addr1, "", s.addr4, "14tomato", "222"),
+					s.newTestPayment(s.addr2, "251strawberry", s.addr5, "12tomato", "111"),
+					s.newTestPayment(s.addr2, "252strawberry", s.addr5, "8tangerine", "222"),
+					s.newTestPayment(s.addr2, "24strawberry", s.addr4, "33tomato", "333"),
+					s.newTestPayment(s.longAddr3, "3351strawberry", s.addr5, "53tomato", "111"),
+					s.newTestPayment(s.longAddr3, "3352strawberry", s.addr5, "35tangerine", "222"),
+					s.newTestPayment(s.longAddr3, "", s.addr4, "43tangerine", "333"),
+					s.newTestPayment(s.longAddr3, "3353strawberry", s.addr5, "10tomato,8tangerine", "444"),
+					s.newTestPayment(s.addr5, "51strawberry", s.addr1, "15tomato", "111"),
+					s.newTestPayment(s.addr5, "52strawberry", s.addr2, "25tomato", "222"),
+					s.newTestPayment(s.addr5, "533strawberry", s.longAddr3, "335tangerine", "333"),
+				)
+			},
+			target:  s.addr5,
+			sources: []sdk.AccAddress{s.addr2, s.longAddr3, s.addr1},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{
+				{addr: s.addr2, funds: s.coins("251strawberry")},
+				{addr: s.addr2, funds: s.coins("252strawberry")},
+				{addr: s.longAddr3, funds: s.coins("3351strawberry")},
+				{addr: s.longAddr3, funds: s.coins("3352strawberry")},
+				{addr: s.longAddr3, funds: s.coins("3353strawberry")},
+				{addr: s.addr1, funds: s.coins("151strawberry,3starfruit")},
+			}},
+			expEvents: []*exchange.EventPaymentRejected{
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.addr2, "251strawberry", s.addr5, "12tomato", "111")),
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.addr2, "252strawberry", s.addr5, "8tangerine", "222")),
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.longAddr3, "3351strawberry", s.addr5, "53tomato", "111")),
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.longAddr3, "3352strawberry", s.addr5, "35tangerine", "222")),
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.longAddr3, "3353strawberry", s.addr5, "10tomato,8tangerine", "444")),
+				exchange.NewEventPaymentRejected(s.newTestPayment(s.addr1, "151strawberry,3starfruit", s.addr5, "", "")),
+			},
+			expDeleted: []paymentKey{
+				newPKey(s.addr2, "111"), newPKey(s.addr2, "222"),
+				newPKey(s.longAddr3, "111"), newPKey(s.longAddr3, "222"), newPKey(s.longAddr3, "444"),
+				newPKey(s.addr1, ""),
+			},
+			expRemain: []paymentKey{
+				newPKey(s.addr1, "222"), newPKey(s.addr2, "333"), newPKey(s.longAddr3, "333"),
+				newPKey(s.addr5, "111"), newPKey(s.addr5, "222"), newPKey(s.addr5, "333"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+
+			if tc.holdKeeper == nil {
+				tc.holdKeeper = NewMockHoldKeeper()
+			}
+
+			var expEvents sdk.Events
+			if len(tc.expEvents) > 0 {
+				expEvents = make(sdk.Events, len(tc.expEvents))
+				for i, event := range tc.expEvents {
+					expEvents[i] = s.untypeEvent(event)
+				}
+			}
+
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			targetName := s.getAddrName(tc.target)
+			sourceNames := make([]string, len(tc.sources))
+			for i, source := range tc.sources {
+				sourceNames[i] = s.getAddrName(source)
+			}
+
+			kpr := s.k.WithHoldKeeper(tc.holdKeeper)
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = kpr.RejectPayments(ctx, tc.target, tc.sources)
+			}
+			s.Require().NotPanics(testFunc, "RejectPayments(%s, %v)", targetName, sourceNames)
+			s.assertErrorValue(err, tc.expErr, "RejectPayments(%s, %v) error", targetName, sourceNames)
+			s.assertHoldKeeperCalls(tc.holdKeeper, tc.expHoldCalls, "RejectPayments(%s, %v) hold calls", targetName, sourceNames)
+
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "RejectPayments(%s, %v) events", targetName, sourceNames)
+
+			for i, pKey := range tc.expDeleted {
+				payment, _ := s.k.GetPayment(s.ctx, pKey.source, pKey.externalID)
+				s.Assert().Nil(payment, "tc.expDeleted[%d]: GetPayment(%s, %q)", i, s.getAddrName(pKey.source), pKey.externalID)
+			}
+
+			// Check that all the tc.expRemain entries still remain.
+			for i, pKey := range tc.expRemain {
+				payment, _ := s.k.GetPayment(s.ctx, pKey.source, pKey.externalID)
+				s.Assert().NotNil(payment, "tc.expRemain[%d]: GetPayment(%s, %q)", i, s.getAddrName(pKey.source), pKey.externalID)
+			}
+
+			// Check that no other payments remain that aren't in tc.expRemain
+			payments := s.getAllPayments()
+			for _, payment := range payments {
+				wasExp := false
+				for _, pKey := range tc.expRemain {
+					if pKey.source.String() == payment.Source && pKey.externalID == payment.ExternalId {
+						wasExp = true
+						break
+					}
+				}
+				s.Assert().True(wasExp, "payment with source %s and external id %q still exists but was not expected to",
+					payment.Source, payment.ExternalId)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestCancelPayments() {
+	type paymentKey struct {
+		source     sdk.AccAddress
+		externalID string
+	}
+	newPKey := func(source sdk.AccAddress, externalID string) paymentKey {
+		return paymentKey{source: source, externalID: externalID}
+	}
+
+	tests := []struct {
+		name         string
+		setup        func()
+		holdKeeper   *MockHoldKeeper
+		source       sdk.AccAddress
+		externalIDs  []string
+		expErr       string
+		expHoldCalls HoldCalls
+		expEvents    []*exchange.EventPaymentCancelled
+		expDeleted   []paymentKey
+		expRemain    []paymentKey
+	}{
+		{
+			name:        "nil source",
+			source:      nil,
+			externalIDs: []string{"x"},
+			expErr:      "a source is required in order to cancel payments",
+		},
+		{
+			name:        "empty source",
+			source:      sdk.AccAddress{},
+			externalIDs: []string{"x"},
+			expErr:      "a source is required in order to cancel payments",
+		},
+		{
+			name:        "nil external ids",
+			source:      s.addr3,
+			externalIDs: nil,
+			expErr:      "at least one external id is required",
+		},
+		{
+			name:        "empty external ids",
+			source:      s.addr3,
+			externalIDs: []string{},
+			expErr:      "at least one external id is required",
+		},
+		{
+			name:        "one external id: no such payment",
+			source:      s.addr2,
+			externalIDs: []string{"noexisty"},
+			expErr:      "no payment found with source " + s.addr2.String() + " and external id \"noexisty\"",
+		},
+		{
+			name: "one external id: error releasing hold",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.longAddr1, "", s.addr1, "6tangerine", "abc"),
+				)
+			},
+			holdKeeper:   NewMockHoldKeeper().WithReleaseHoldResults("let it go"),
+			source:       s.longAddr1,
+			externalIDs:  []string{"abc"},
+			expErr:       "error releasing hold on payment source: let it go",
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.longAddr1, funds: nil}}},
+			expDeleted:   []paymentKey{newPKey(s.longAddr1, "abc")},
+		},
+		{
+			name: "one external id: all good",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.longAddr2, "8starfruit", s.addr4, "", "whatever"),
+				)
+			},
+			source:       s.longAddr2,
+			externalIDs:  []string{"whatever"},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.longAddr2, funds: s.coins("8starfruit")}}},
+			expEvents: []*exchange.EventPaymentCancelled{
+				exchange.NewEventPaymentCancelled(s.newTestPayment(s.longAddr2, "8starfruit", s.addr4, "", "whatever")),
+			},
+			expDeleted: []paymentKey{newPKey(s.longAddr2, "whatever")},
+		},
+		{
+			name: "one empty external id: no such payment",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr4, "8starfruit", s.addr1, "", "something"),
+				)
+			},
+			source:      s.addr4,
+			externalIDs: []string{""},
+			expErr:      "no payment found with source " + s.addr4.String() + " and external id \"\"",
+			expRemain:   []paymentKey{newPKey(s.addr4, "something")},
+		},
+		{
+			name: "one empty external id: all good",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr3, "3strawberry", s.longAddr1, "", ""),
+					s.newTestPayment(s.addr3, "4strawberry", s.longAddr2, "", "123"),
+					s.newTestPayment(s.addr2, "2starfruit", s.longAddr1, "", ""),
+				)
+			},
+			source:       s.addr3,
+			externalIDs:  []string{""},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr3, funds: s.coins("3strawberry")}}},
+			expEvents: []*exchange.EventPaymentCancelled{
+				exchange.NewEventPaymentCancelled(s.newTestPayment(s.addr3, "3strawberry", s.longAddr1, "", "")),
+			},
+			expDeleted: []paymentKey{newPKey(s.addr3, "")},
+			expRemain:  []paymentKey{newPKey(s.addr3, "123"), newPKey(s.addr2, "")},
+		},
+		{
+			name: "duplicate external id",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.longAddr3, "3strawberry", s.addr1, "", ""),
+					s.newTestPayment(s.longAddr3, "4strawberry", s.longAddr2, "", "123"),
+					s.newTestPayment(s.longAddr3, "5starfruit", s.longAddr1, "", "456"),
+				)
+			},
+			source:      s.longAddr3,
+			externalIDs: []string{"456", "", "456"},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{
+				{addr: s.longAddr3, funds: s.coins("5starfruit")},
+				{addr: s.longAddr3, funds: s.coins("3strawberry")},
+			}},
+			expEvents: []*exchange.EventPaymentCancelled{
+				exchange.NewEventPaymentCancelled(s.newTestPayment(s.longAddr3, "5starfruit", s.longAddr1, "", "456")),
+				exchange.NewEventPaymentCancelled(s.newTestPayment(s.longAddr3, "3strawberry", s.addr1, "", "")),
+			},
+			expDeleted: []paymentKey{newPKey(s.longAddr3, "456"), newPKey(s.longAddr3, "")},
+			expRemain:  []paymentKey{newPKey(s.longAddr3, "123")},
+		},
+		{
+			name: "three external ids: third does not exist",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "3strawberry", s.addr5, "", ""),
+					s.newTestPayment(s.addr2, "4strawberry", s.longAddr3, "", "123"),
+					s.newTestPayment(s.addr2, "", s.longAddr3, "8tomato", "456"),
+				)
+			},
+			source:      s.addr2,
+			externalIDs: []string{"123", "456", " "},
+			expErr:      "no payment found with source " + s.addr2.String() + " and external id \" \"",
+			expRemain:   []paymentKey{newPKey(s.addr2, ""), newPKey(s.addr2, "123"), newPKey(s.addr2, "456")},
+		},
+		{
+			name: "three external ids: error releasing hold on third",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "3strawberry", s.addr5, "", ""),
+					s.newTestPayment(s.addr2, "4strawberry", s.longAddr3, "", "123"),
+					s.newTestPayment(s.addr2, "", s.longAddr3, "8tomato", "456"),
+				)
+			},
+			holdKeeper:  NewMockHoldKeeper().WithReleaseHoldResults("", "", "third time fails"),
+			source:      s.addr2,
+			externalIDs: []string{"123", "456", ""},
+			expErr:      "error releasing hold on payment source: third time fails",
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{
+				{addr: s.addr2, funds: s.coins("4strawberry")},
+				{addr: s.addr2, funds: nil},
+				{addr: s.addr2, funds: s.coins("3strawberry")},
+			}},
+			expDeleted: []paymentKey{newPKey(s.addr2, ""), newPKey(s.addr2, "123"), newPKey(s.addr2, "456")},
+		},
+		{
+			name: "three external ids: all good",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "", s.addr3, "10tomato", "BB"),
+					s.newTestPayment(s.addr2, "11strawberry", s.longAddr3, "", "CC"),
+					s.newTestPayment(s.addr2, "12strawberry", s.addr4, "", "DD"),
+					s.newTestPayment(s.addr3, "13strawberry", s.addr1, "", "AA"),
+					s.newTestPayment(s.addr3, "14strawberry", s.addr2, "", "BB"),
+					s.newTestPayment(s.addr3, "15strawberry", s.longAddr3, "", "CC"),
+					s.newTestPayment(s.addr3, "16strawberry", s.addr4, "", "DD"),
+					s.newTestPayment(s.addr3, "17strawberry", s.addr5, "", "EE"),
+					s.newTestPayment(s.addr4, "18strawberry", s.addr2, "", "BB"),
+					s.newTestPayment(s.addr4, "19strawberry", s.longAddr3, "", "CC"),
+					s.newTestPayment(s.addr4, "", s.addr3, "20tomato", "DD"),
+					s.newTestPayment(s.longAddr3, "", s.addr3, "21tomato", "CC"),
+				)
+			},
+			source:      s.addr3,
+			externalIDs: []string{"DD", "BB", "CC"},
+			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{
+				{addr: s.addr3, funds: s.coins("16strawberry")},
+				{addr: s.addr3, funds: s.coins("14strawberry")},
+				{addr: s.addr3, funds: s.coins("15strawberry")},
+			}},
+			expEvents: []*exchange.EventPaymentCancelled{
+				exchange.NewEventPaymentCancelled(s.newTestPayment(s.addr3, "16strawberry", s.addr4, "", "DD")),
+				exchange.NewEventPaymentCancelled(s.newTestPayment(s.addr3, "14strawberry", s.addr2, "", "BB")),
+				exchange.NewEventPaymentCancelled(s.newTestPayment(s.addr3, "15strawberry", s.longAddr3, "", "CC")),
+			},
+			expDeleted: []paymentKey{newPKey(s.addr3, "BB"), newPKey(s.addr3, "CC"), newPKey(s.addr3, "DD")},
+			expRemain: []paymentKey{
+				newPKey(s.addr2, "BB"), newPKey(s.addr2, "CC"), newPKey(s.addr2, "DD"),
+				newPKey(s.addr3, "AA"), newPKey(s.addr3, "EE"),
+				newPKey(s.addr4, "BB"), newPKey(s.addr4, "CC"), newPKey(s.addr4, "DD"),
+				newPKey(s.longAddr3, "CC"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+
+			if tc.holdKeeper == nil {
+				tc.holdKeeper = NewMockHoldKeeper()
+			}
+
+			var expEvents sdk.Events
+			if len(tc.expEvents) > 0 {
+				expEvents = make(sdk.Events, len(tc.expEvents))
+				for i, event := range tc.expEvents {
+					expEvents[i] = s.untypeEvent(event)
+				}
+			}
+
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			sourceName := s.getAddrName(tc.source)
+			kpr := s.k.WithHoldKeeper(tc.holdKeeper)
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = kpr.CancelPayments(ctx, tc.source, tc.externalIDs)
+			}
+			s.Require().NotPanics(testFunc, "CancelPayments(%s, %q)", sourceName, tc.externalIDs)
+			s.assertErrorValue(err, tc.expErr, "CancelPayments(%s, %q) error", sourceName, tc.externalIDs)
+			s.assertHoldKeeperCalls(tc.holdKeeper, tc.expHoldCalls, "CancelPayments(%s, %q) hold calls", sourceName, tc.externalIDs)
+
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "CancelPayments(%s, %q) events", sourceName, tc.externalIDs)
+
+			// check that none of the tc.expDeleted entries still exist.
+			for i, pKey := range tc.expDeleted {
+				payment, _ := s.k.GetPayment(s.ctx, pKey.source, pKey.externalID)
+				s.Assert().Nil(payment, "tc.expDeleted[%d]: GetPayment(%s, %q)", i, s.getAddrName(pKey.source), pKey.externalID)
+			}
+
+			// Check that all the tc.expRemain entries still remain.
+			for i, pKey := range tc.expRemain {
+				payment, _ := s.k.GetPayment(s.ctx, pKey.source, pKey.externalID)
+				s.Assert().NotNil(payment, "tc.expRemain[%d]: GetPayment(%s, %q)", i, s.getAddrName(pKey.source), pKey.externalID)
+			}
+
+			// Check that no other payments remain that aren't in tc.expRemain
+			payments := s.getAllPayments()
+			for _, payment := range payments {
+				wasExp := false
+				for _, pKey := range tc.expRemain {
+					if pKey.source.String() == payment.Source && pKey.externalID == payment.ExternalId {
+						wasExp = true
+						break
+					}
+				}
+				s.Assert().True(wasExp, "payment with source %s and external id %q still exists but was not expected to",
+					payment.Source, payment.ExternalId)
+			}
+		})
+	}
+}
 
 // TODO[1703]: func (s *TestSuite) TestUpdatePaymentTarget()
 
