@@ -642,6 +642,14 @@ func (s *TestSuite) getPaymentString(payment exchange.Payment) string {
 	return p2.String()
 }
 
+// getPaymentPString is like getPaymentString but takes in a pointer to a payment.
+func (s *TestSuite) getPaymentPString(payment *exchange.Payment) string {
+	if payment == nil {
+		return "<nil>"
+	}
+	return s.getPaymentString(*payment)
+}
+
 // agCanOnly creates an AccessGrant for the given address with only the provided permission.
 func (s *TestSuite) agCanOnly(addr sdk.AccAddress, perm exchange.Permission) exchange.AccessGrant {
 	return exchange.AccessGrant{
@@ -859,6 +867,30 @@ func (s *TestSuite) assertEqualPayment(expected, actual *exchange.Payment, msg s
 	s.Assert().Equalf(expected.Target, actual.Target, msg+" Target", args...)
 	s.Assert().Equalf(expected.TargetAmount, actual.TargetAmount, msg+" TargetAmount", args...)
 	s.Assert().Equalf(expected.ExternalId, actual.ExternalId, msg+" ExternalId", args...)
+	return false
+}
+
+// assertEqualPayments asserts that two slices of payments are equal and helps identify exactly what's different if they're not.
+// Returns true if they're equal, false otherwise.
+func (s *TestSuite) assertEqualPayments(expected, actual []*exchange.Payment, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+
+	// compare each as strings in the hopes that makes it easier to identify the problem.
+	expStrs := sliceStrings(expected, s.getPaymentPString)
+	actStrs := sliceStrings(actual, s.getPaymentPString)
+	if !s.Assert().Equalf(expStrs, actStrs, "strings: "+msg, args...) {
+		return false
+	}
+
+	// They're the same as strings, compare each individually.
+	args2 := make([]interface{}, len(args)+1)
+	copy(args2, args)
+	for i := range expected {
+		args2[len(args2)-1] = i
+		s.assertEqualPayment(expected[i], actual[i], msg+" [%d]", args2)
+	}
 	return false
 }
 

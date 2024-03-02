@@ -1623,8 +1623,300 @@ func (s *TestSuite) TestUpdatePaymentTarget() {
 	}
 }
 
-// TODO[1703]: func (s *TestSuite) TestGetPaymentsForTargetAndSource()
+func (s *TestSuite) TestGetPaymentsForTargetAndSource() {
+	s.clearExchangeState()
+	paymentsAddr2FromAddr1 := []*exchange.Payment{
+		s.newTestPayment(s.addr1, "18strawberry", s.addr2, "", "a"),
+	}
+	paymentsLongAddr1FromAddr4 := []*exchange.Payment{
+		s.newTestPayment(s.addr4, "5starfruit", s.longAddr1, "3tangerine", "a"),
+		s.newTestPayment(s.addr4, "6strawberry", s.longAddr1, "", "b"),
+		s.newTestPayment(s.addr4, "", s.longAddr1, "5tangerine", "c"),
+	}
+	standardSetup := func() {
+		s.requireSetPaymentsInStore(
+			// s.addr1 should not be the target of any payments.
+			// s.addr2 should be the target of exactly one payment.
+			paymentsAddr2FromAddr1[0],
+			// s.longAddr1 should be the target of many payments, several of which will be from s.addr4.
+			s.newTestPayment(s.addr1, "1strawberry", s.longAddr1, "", "b"),
+			s.newTestPayment(s.addr2, "2strawberry", s.longAddr1, "1tomato", ""),
+			s.newTestPayment(s.addr3, "", s.longAddr1, "2tomato", ""),
+			paymentsLongAddr1FromAddr4[0],
+			paymentsLongAddr1FromAddr4[1],
+			paymentsLongAddr1FromAddr4[2],
+			s.newTestPayment(s.addr5, "5starfruit,2strawberry", s.longAddr1, "4tangerine", ""),
+			s.newTestPayment(s.longAddr2, "", s.longAddr1, "4tangerine,8tomato", ""),
+			s.newTestPayment(s.longAddr3, "8starfruit,18strawberry", s.longAddr1, "", ""),
+			// An entry with target s.addr4 and source s.longAddr1 to make sure things aren't crossed.
+			s.newTestPayment(s.longAddr1, "99strawberry", s.addr4, "", ""),
+			// An entry with source s.addr4 and a different target.
+			s.newTestPayment(s.addr4, "", s.longAddr2, "1tomato", "e"),
+			// And an entry with source s.addr4 that doesn't have a target.
+			s.newTestPayment(s.addr4, "55strawberry", nil, "66tomato", "f"),
+			// I'm going to overwite this one with a bad entry, but want the index entry there still.
+			s.newTestPayment(s.addr4, "999strawberry", s.longAddr1, "", "g"),
+		)
 
-// TODO[1703]: func (s *TestSuite) TestIteratePayments()
+		// Bad payment entry with target s.longAddr1 and source s.addr4
+		store := s.getStore()
+		badKey := keeper.MakeKeyPayment(s.addr4, "g")
+		store.Set(badKey, []byte{'x'})
 
-// TODO[1703]: func (s *TestSuite) TestCalculatePaymentFeess()
+		// Add an index entry to a payment that does not exist between those two.
+		badInd := keeper.MakeIndexKeyTargetToPayment(s.longAddr1, s.addr4, "nope")
+		store.Set(badInd, []byte{})
+	}
+	standardSetup()
+
+	tests := []struct {
+		name     string
+		target   sdk.AccAddress
+		source   sdk.AccAddress
+		expected []*exchange.Payment
+	}{
+		{name: "nil target", target: nil, source: s.addr4, expected: nil},
+		{name: "empty target", target: sdk.AccAddress{}, source: s.addr4, expected: nil},
+		{name: "nil source", target: s.longAddr1, source: nil, expected: nil},
+		{name: "empty source", target: s.longAddr1, source: sdk.AccAddress{}, expected: nil},
+		{name: "no payments at all for target", target: s.addr1, source: s.addr2, expected: nil},
+		{name: "no payments for target and source", target: s.addr2, source: s.addr3, expected: nil},
+		{
+			name:     "one payment",
+			target:   s.addr2,
+			source:   s.addr1,
+			expected: paymentsAddr2FromAddr1,
+		},
+		{
+			name:     "three payments",
+			target:   s.longAddr1,
+			source:   s.addr4,
+			expected: paymentsLongAddr1FromAddr4,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			targetName := s.getAddrName(tc.target)
+			sourceName := s.getAddrName(tc.source)
+			var actPayments []*exchange.Payment
+			testFunc := func() {
+				actPayments = s.k.GetPaymentsForTargetAndSource(s.ctx, tc.target, tc.source)
+			}
+			s.Require().NotPanics(testFunc, "GetPaymentsForTargetAndSource(%s, %s)", targetName, sourceName)
+			s.assertEqualPayments(tc.expected, actPayments, "GetPaymentsForTargetAndSource(%s, %s) result", targetName, sourceName)
+		})
+	}
+}
+
+func (s *TestSuite) TestIteratePayments() {
+	var payments []*exchange.Payment
+	stopAfter := func(count int) func(*exchange.Payment) bool {
+		return func(payment *exchange.Payment) bool {
+			payments = append(payments, payment)
+			return len(payments) >= count
+		}
+	}
+	getAll := func(payment *exchange.Payment) bool {
+		payments = append(payments, payment)
+		return false
+	}
+
+	threePayments := []*exchange.Payment{
+		s.newTestPayment(s.addr1, "", s.addr2, "3tomato", "p"),
+		s.newTestPayment(s.addr1, "55tangerine", s.addr3, "", "r"),
+		s.newTestPayment(s.addr2, "1starfruit", s.addr1, "4tomato", "p"),
+	}
+	threePaymentSetup := func() {
+		s.requireSetPaymentsInStore(threePayments...)
+		// Create an empty entry and invalid entry that, when sorted, aren't last.
+		// The callback should not be called for these entries.
+		// So stopAfter(3) should still return the three good entries.
+		keyEmpty := keeper.MakeKeyPayment(s.addr1, "o")
+		keyBad := keeper.MakeKeyPayment(s.addr1, "v")
+		store := s.getStore()
+		store.Set(keyEmpty, []byte{})
+		store.Set(keyBad, []byte{'x'})
+	}
+
+	tests := []struct {
+		name  string
+		setup func()
+		cb    func(payment *exchange.Payment) bool
+		exp   []*exchange.Payment
+	}{
+		{
+			name: "no payments",
+			cb:   getAll,
+			exp:  nil,
+		},
+		{
+			name: "one payment",
+			setup: func() {
+				s.requireSetPaymentsInStore(threePayments[1])
+			},
+			cb:  getAll,
+			exp: threePayments[1:2],
+		},
+		{
+			name:  "three payments: get all",
+			setup: threePaymentSetup,
+			cb:    getAll,
+			exp:   threePayments,
+		},
+		{
+			name:  "three payments: get one",
+			setup: threePaymentSetup,
+			cb:    stopAfter(1),
+			exp:   threePayments[0:1],
+		},
+		{
+			name:  "three payments: get two",
+			setup: threePaymentSetup,
+			cb:    stopAfter(2),
+			exp:   threePayments[0:2],
+		},
+		{
+			name:  "empty and bad entries are ignored",
+			setup: threePaymentSetup,
+			cb:    stopAfter(3),
+			// If they're not ignored, the actual result will have a nil 3rd entry.
+			exp: threePayments,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			payments = nil
+			testFunc := func() {
+				s.k.IteratePayments(s.ctx, tc.cb)
+			}
+			s.Require().NotPanics(testFunc, "IteratePayments")
+			s.assertEqualPayments(tc.exp, payments, "IteratePayments payments")
+		})
+	}
+}
+
+func (s *TestSuite) TestCalculatePaymentFees() {
+	tests := []struct {
+		name     string
+		params   *exchange.Params
+		payment  *exchange.Payment
+		expected *exchange.QueryPaymentFeeCalcResponse
+	}{
+		{
+			name:     "nil payment",
+			params:   exchange.DefaultParams(),
+			payment:  nil,
+			expected: &exchange.QueryPaymentFeeCalcResponse{},
+		},
+		{
+			name:     "payment without amounts",
+			params:   exchange.DefaultParams(),
+			payment:  s.newTestPayment(nil, "", nil, "", "what"),
+			expected: &exchange.QueryPaymentFeeCalcResponse{},
+		},
+		{
+			name: "payment only has source amount: no create fee options in params",
+			params: &exchange.Params{
+				FeeCreatePaymentFlat: nil,
+				FeeAcceptPaymentFlat: s.coins("3apricot"),
+			},
+			payment:  s.newTestPayment(nil, "1strawberry", nil, "", ""),
+			expected: &exchange.QueryPaymentFeeCalcResponse{},
+		},
+		{
+			name: "payment only has source amount: one create fee option in params",
+			params: &exchange.Params{
+				FeeCreatePaymentFlat: s.coins("5cherry"),
+				FeeAcceptPaymentFlat: s.coins("3apricot"),
+			},
+			payment:  s.newTestPayment(nil, "1strawberry", nil, "", ""),
+			expected: &exchange.QueryPaymentFeeCalcResponse{FeeCreate: s.coins("5cherry")},
+		},
+		{
+			name: "payment only has source amount: two create fee options in params",
+			params: &exchange.Params{
+				FeeCreatePaymentFlat: []sdk.Coin{s.coin("2cucumber"), s.coin("1cactus")},
+				FeeAcceptPaymentFlat: s.coins("3apricot"),
+			},
+			payment:  s.newTestPayment(nil, "1strawberry", nil, "", ""),
+			expected: &exchange.QueryPaymentFeeCalcResponse{FeeCreate: s.coins("2cucumber")},
+		},
+		{
+			name: "payment only has target amount: no accept fee options in params",
+			params: &exchange.Params{
+				FeeCreatePaymentFlat: s.coins("1cherry"),
+				FeeAcceptPaymentFlat: nil,
+			},
+			payment:  s.newTestPayment(nil, "", nil, "1tomato", ""),
+			expected: &exchange.QueryPaymentFeeCalcResponse{},
+		},
+		{
+			name: "payment only has target amount: one accept fee option in params",
+			params: &exchange.Params{
+				FeeCreatePaymentFlat: s.coins("1cherry"),
+				FeeAcceptPaymentFlat: s.coins("1apple"),
+			},
+			payment:  s.newTestPayment(nil, "", nil, "1tomato", ""),
+			expected: &exchange.QueryPaymentFeeCalcResponse{FeeAccept: s.coins("1apple")},
+		},
+		{
+			name: "payment only has target amount: two accept fee options in params",
+			params: &exchange.Params{
+				FeeCreatePaymentFlat: s.coins("1cherry"),
+				FeeAcceptPaymentFlat: []sdk.Coin{s.coin("12avocado"), s.coin("5acorn")},
+			},
+			payment:  s.newTestPayment(nil, "", nil, "1tomato", ""),
+			expected: &exchange.QueryPaymentFeeCalcResponse{FeeAccept: s.coins("12avocado")},
+		},
+		{
+			name:     "both amounts: empty params",
+			params:   nil,
+			payment:  s.newTestPayment(nil, "1strawberry", nil, "1tomato", ""),
+			expected: &exchange.QueryPaymentFeeCalcResponse{},
+		},
+		{
+			name:     "both amounts: only create options in params",
+			params:   &exchange.Params{FeeCreatePaymentFlat: []sdk.Coin{s.coin("3cucumber"), s.coin("2cactus")}},
+			payment:  s.newTestPayment(nil, "1strawberry", nil, "1tomato", ""),
+			expected: &exchange.QueryPaymentFeeCalcResponse{FeeCreate: s.coins("3cucumber")},
+		},
+		{
+			name:     "both amounts: only accept options in params",
+			params:   &exchange.Params{FeeAcceptPaymentFlat: []sdk.Coin{s.coin("3avocado"), s.coin("8acorn")}},
+			payment:  s.newTestPayment(nil, "1strawberry", nil, "1tomato", ""),
+			expected: &exchange.QueryPaymentFeeCalcResponse{FeeAccept: s.coins("3avocado")},
+		},
+		{
+			name:     "both amounts: both options in params",
+			params:   &exchange.Params{FeeCreatePaymentFlat: s.coins("9cherry"), FeeAcceptPaymentFlat: s.coins("2apple")},
+			payment:  s.newTestPayment(nil, "1strawberry", nil, "1tomato", ""),
+			expected: &exchange.QueryPaymentFeeCalcResponse{FeeCreate: s.coins("9cherry"), FeeAccept: s.coins("2apple")},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.params != nil {
+				s.k.SetParams(s.ctx, tc.params)
+			}
+
+			var actual *exchange.QueryPaymentFeeCalcResponse
+			testFunc := func() {
+				actual = s.k.CalculatePaymentFees(s.ctx, tc.payment)
+			}
+			s.Require().NotPanics(testFunc, "CalculatePaymentFees(%s)", tc.payment)
+			if !s.Assert().Equal(tc.expected, actual, "CalculatePaymentFees(%s) response", tc.payment) && tc.expected != nil && actual != nil {
+				s.Assert().Equal(tc.expected.FeeCreate.String(), tc.expected.FeeAccept.String(), "CalculatePaymentFees(%s) response FeeAccept", tc.payment)
+				s.Assert().Equal(tc.expected.FeeCreate.String(), tc.expected.FeeCreate.String(), "CalculatePaymentFees(%s) response FeeCreate", tc.payment)
+			}
+		})
+	}
+}

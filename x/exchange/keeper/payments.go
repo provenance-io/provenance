@@ -43,6 +43,9 @@ func (k Keeper) getPaymentFromStore(store sdk.KVStore, source sdk.AccAddress, ex
 
 // getPaymentsForTargetAndSourceFromStore gets all the payments with the given target and source from the state store.
 func (k Keeper) getPaymentsForTargetAndSourceFromStore(store sdk.KVStore, target, source sdk.AccAddress) []*exchange.Payment {
+	if len(target) == 0 || len(source) == 0 {
+		return nil
+	}
 	var rv []*exchange.Payment
 	keyPrefix := GetIndexKeyPrefixTargetToPaymentsForSource(target, source)
 	iterate(store, keyPrefix, func(keySuffix, _ []byte) bool {
@@ -417,6 +420,8 @@ func (k Keeper) UpdatePaymentTarget(ctx sdk.Context, source sdk.AccAddress, exte
 }
 
 // GetPaymentsForTargetAndSource gets all the payments with the given target and source.
+// Returns nil if either the target or source is empty.
+// I.e. this can't be used to find payments from a source that don't have a target.
 func (k Keeper) GetPaymentsForTargetAndSource(ctx sdk.Context, target, source sdk.AccAddress) []*exchange.Payment {
 	return k.getPaymentsForTargetAndSourceFromStore(k.getStore(ctx), target, source)
 }
