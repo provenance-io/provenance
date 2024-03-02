@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -75,9 +77,15 @@ func getParamsPaymentFlatFee(store sdk.KVStore, key []byte) []sdk.Coin {
 	if len(val) == 0 {
 		return nil
 	}
-	rv, err := sdk.ParseCoinsNormalized(string(val))
-	if err != nil || rv.IsZero() {
-		return nil
+	// If we used sdk.ParseCoinsNormalized() here, they'd be sorted by denom in the result.
+	// But we want to maintain the order of the entries, so do it a little differently.
+	entries := strings.Split(string(val), ",")
+	rv := make([]sdk.Coin, 0, len(entries))
+	for _, entry := range entries {
+		coin, err := exchange.ParseCoin(entry)
+		if err == nil && !coin.IsZero() {
+			rv = append(rv, coin)
+		}
 	}
 	return rv
 }
