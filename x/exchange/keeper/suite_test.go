@@ -678,6 +678,12 @@ func (s *TestSuite) addAddrLookup(addr sdk.AccAddress, name string) {
 
 // getAddrName returns the name of the variable in this TestSuite holding the provided address.
 func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
+	if addr == nil {
+		return "<nil>"
+	}
+	if addr.Empty() {
+		return "<empty>"
+	}
 	if s.addrLookupMap != nil {
 		rv, found := s.addrLookupMap[string(addr)]
 		if found {
@@ -689,6 +695,9 @@ func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
 
 // getAddrStrName returns the name of the variable in this TestSuite holding the provided address.
 func (s *TestSuite) getAddrStrName(addrStr string) string {
+	if addrStr == "" {
+		return "<empty>"
+	}
 	addr, err := sdk.AccAddressFromBech32(addrStr)
 	if err != nil {
 		return addrStr

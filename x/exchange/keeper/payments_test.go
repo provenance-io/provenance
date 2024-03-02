@@ -1,7 +1,9 @@
 package keeper_test
 
 import (
+	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,6 +32,52 @@ func (s *TestSuite) getAllPayments() []*exchange.Payment {
 		return false
 	})
 	return rv
+}
+
+// getAllTargetToPaymentIndexEntries gets all the target to payment index keys currently in state.
+func (s *TestSuite) getAllTargetToPaymentIndexEntries() [][]byte {
+	var rv [][]byte
+	keyPrefix := []byte{keeper.KeyTypeTargetToPaymentIndex}
+	store := s.getStore()
+	keeper.Iterate(store, keyPrefix, func(keySuffix, _ []byte) bool {
+		key := concatBz(keyPrefix, keySuffix)
+		rv = append(rv, key)
+		return false
+	})
+	return rv
+}
+
+// assertTargetToPaymentIndexEntriesMatchPayments gets all the payments and target to payment index entries from state
+// and makes sure that they're all as they should be.
+func (s *TestSuite) assertTargetToPaymentIndexEntriesMatchPayments() bool {
+	s.T().Helper()
+	payments := s.getAllPayments()
+	var expKeys [][]byte
+	if len(payments) > 0 {
+		for _, payment := range payments {
+			target, _ := sdk.AccAddressFromBech32(payment.Target)
+			source, _ := sdk.AccAddressFromBech32(payment.Source)
+			if len(target) > 0 && len(source) > 0 {
+				key := keeper.MakeIndexKeyTargetToPayment(target, source, payment.ExternalId)
+				expKeys = append(expKeys, key)
+			}
+		}
+	}
+	sort.Slice(expKeys, func(i, j int) bool {
+		return bytes.Compare(expKeys[i], expKeys[j]) < 0
+	})
+
+	actKeys := s.getAllTargetToPaymentIndexEntries()
+
+	keyStringer := func(key []byte) string {
+		target, source, externalID, err := keeper.ParseIndexKeyTargetToPayment(key)
+		if err == nil {
+			return fmt.Sprintf("%v", key)
+		}
+		return fmt.Sprintf("%s %s %q", s.getAddrName(target), s.getAddrName(source), externalID)
+	}
+
+	return assertEqualSlice(s, expKeys, actKeys, keyStringer, "target to payment index entries")
 }
 
 func (s *TestSuite) TestGetPayment() {
@@ -321,6 +369,8 @@ func (s *TestSuite) TestCreatePayment() {
 					s.Assert().Empty(indexValue, "the target to payment index value")
 				}
 			}
+
+			s.assertTargetToPaymentIndexEntriesMatchPayments()
 		})
 	}
 }
@@ -355,6 +405,7 @@ func (s *TestSuite) TestAcceptPayment() {
 		expReleaseHold bool
 		expBankCalls   BankCalls
 		expEvent       bool
+		skipIndCheck   bool
 	}{
 		{
 			name:    "nil payment",
@@ -397,8 +448,9 @@ func (s *TestSuite) TestAcceptPayment() {
 					},
 				)
 			},
-			payment: fullPayment,
-			expErr:  "provided source " + fullPayment.Source + " does not equal existing source " + s.addr5.String(),
+			payment:      fullPayment,
+			expErr:       "provided source " + fullPayment.Source + " does not equal existing source " + s.addr5.String(),
+			skipIndCheck: true,
 		},
 		{
 			name: "wrong source amount",
@@ -471,8 +523,9 @@ func (s *TestSuite) TestAcceptPayment() {
 					},
 				)
 			},
-			payment: fullPayment,
-			expErr:  "provided external id \"" + fullPayment.ExternalId + "\" does not equal existing external id \"noway\"",
+			payment:      fullPayment,
+			expErr:       "provided external id \"" + fullPayment.ExternalId + "\" does not equal existing external id \"noway\"",
+			skipIndCheck: true,
 		},
 		{
 			name: "error releasing hold",
@@ -645,6 +698,10 @@ func (s *TestSuite) TestAcceptPayment() {
 				s.Assert().Nil(actPayment, "GetPayment after AcceptPayment(%s)", tc.payment)
 				hasIndex := s.getStore().Has(indexKey)
 				s.Assert().False(hasIndex, "store.Has(target to payment index key) after AcceptPayment(%s)", tc.payment)
+			}
+
+			if !tc.skipIndCheck {
+				s.assertTargetToPaymentIndexEntriesMatchPayments()
 			}
 		})
 	}
@@ -843,6 +900,8 @@ func (s *TestSuite) TestRejectPayment() {
 				s.Assert().False(hasIndex, "store.Has(target to payment index key) after RejectPayment(%s, %s, %q)",
 					targetName, sourceName, tc.externalID)
 			}
+
+			s.assertTargetToPaymentIndexEntriesMatchPayments()
 		})
 	}
 }
@@ -1106,6 +1165,8 @@ func (s *TestSuite) TestRejectPayments() {
 				s.Assert().True(wasExp, "payment with source %s and external id %q still exists but was not expected to",
 					payment.Source, payment.ExternalId)
 			}
+
+			s.assertTargetToPaymentIndexEntriesMatchPayments()
 		})
 	}
 }
@@ -1376,11 +1437,191 @@ func (s *TestSuite) TestCancelPayments() {
 				s.Assert().True(wasExp, "payment with source %s and external id %q still exists but was not expected to",
 					payment.Source, payment.ExternalId)
 			}
+
+			s.assertTargetToPaymentIndexEntriesMatchPayments()
 		})
 	}
 }
 
-// TODO[1703]: func (s *TestSuite) TestUpdatePaymentTarget()
+func (s *TestSuite) TestUpdatePaymentTarget() {
+	tests := []struct {
+		name         string
+		setup        func()
+		source       sdk.AccAddress
+		externalID   string
+		newTarget    sdk.AccAddress
+		expErr       string
+		expOldTarget sdk.AccAddress
+		expPayment   *exchange.Payment
+	}{
+		{
+			name: "error getting payment",
+			setup: func() {
+				key := keeper.MakeKeyPayment(s.addr1, "boom")
+				s.getStore().Set(key, []byte{'x'})
+			},
+			source:     s.addr1,
+			externalID: "boom",
+			newTarget:  s.addr2,
+			expErr: "error getting existing payment with source " + s.addr1.String() +
+				" and external id \"boom\": failed to unmarshal payment: unexpected EOF",
+		},
+		{
+			name:       "no such payment",
+			source:     s.addr3,
+			externalID: "what",
+			newTarget:  s.addr1,
+			expErr:     "no payment found with source " + s.addr3.String() + " and external id \"what\"",
+		},
+		{
+			name: "no change in target",
+			setup: func() {
+				s.requireSetPaymentsInStore(s.newTestPayment(s.longAddr2, "51strawberry", s.addr3, "", "aBc"))
+			},
+			source:     s.longAddr2,
+			externalID: "aBc",
+			newTarget:  s.addr3,
+			expErr: "payment with source " + s.longAddr2.String() +
+				" and external id \"aBc\" already has target " + s.addr3.String(),
+			expPayment: s.newTestPayment(s.longAddr2, "51strawberry", s.addr3, "", "aBc"),
+		},
+		{
+			name: "empty to nil",
+			setup: func() {
+				s.requireSetPaymentsInStore(s.newTestPayment(s.longAddr1, "73strawberry", nil, "1tomato", "badtrade"))
+			},
+			source:     s.longAddr1,
+			externalID: "badtrade",
+			newTarget:  nil,
+			expErr: "payment with source " + s.longAddr1.String() +
+				" and external id \"badtrade\" already has target <empty>",
+			expPayment: s.newTestPayment(s.longAddr1, "73strawberry", nil, "1tomato", "badtrade"),
+		},
+		{
+			name: "empty to empty",
+			setup: func() {
+				s.requireSetPaymentsInStore(s.newTestPayment(s.longAddr3, "1strawberry", nil, "17tangerine", "goodtrade"))
+			},
+			source:     s.longAddr3,
+			externalID: "goodtrade",
+			newTarget:  sdk.AccAddress{},
+			expErr: "payment with source " + s.longAddr3.String() +
+				" and external id \"goodtrade\" already has target <empty>",
+			expPayment: s.newTestPayment(s.longAddr3, "1strawberry", nil, "17tangerine", "goodtrade"),
+		},
+		{
+			name: "empty to something",
+			setup: func() {
+				s.requireSetPaymentsInStore(s.newTestPayment(s.addr4, "18starfruit", nil, "", "partyparty"))
+			},
+			source:       s.addr4,
+			externalID:   "partyparty",
+			newTarget:    s.longAddr1,
+			expOldTarget: nil,
+			expPayment:   s.newTestPayment(s.addr4, "18starfruit", s.longAddr1, "", "partyparty"),
+		},
+		{
+			name: "something to nil",
+			setup: func() {
+				s.requireSetPaymentsInStore(s.newTestPayment(s.longAddr3, "14starfruit", s.longAddr2, "77tomato", "another"))
+			},
+			source:       s.longAddr3,
+			externalID:   "another",
+			newTarget:    nil,
+			expOldTarget: s.longAddr2,
+			expPayment:   s.newTestPayment(s.longAddr3, "14starfruit", nil, "77tomato", "another"),
+		},
+		{
+			name: "something to empty",
+			setup: func() {
+				s.requireSetPaymentsInStore(s.newTestPayment(s.longAddr2, "333strawberry", s.addr5, "100tangerine", "wooo"))
+			},
+			source:       s.longAddr2,
+			externalID:   "wooo",
+			newTarget:    sdk.AccAddress{},
+			expOldTarget: s.addr5,
+			expPayment:   s.newTestPayment(s.longAddr2, "333strawberry", nil, "100tangerine", "wooo"),
+		},
+		{
+			name: "something to something else",
+			setup: func() {
+				s.requireSetPaymentsInStore(s.newTestPayment(s.addr5, "18starfruit", s.addr1, "", "QrsT"))
+			},
+			source:       s.addr5,
+			externalID:   "QrsT",
+			newTarget:    s.addr2,
+			expOldTarget: s.addr1,
+			expPayment:   s.newTestPayment(s.addr5, "18starfruit", s.addr2, "", "QrsT"),
+		},
+		{
+			name: "changed to equal the source",
+			setup: func() {
+				s.requireSetPaymentsInStore(s.newTestPayment(s.addr2, "6strawberry", s.longAddr1, "2tangerine", ""))
+			},
+			source:       s.addr2,
+			externalID:   "",
+			newTarget:    s.addr2,
+			expOldTarget: s.longAddr1,
+			expPayment:   s.newTestPayment(s.addr2, "6strawberry", s.addr2, "2tangerine", ""),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+
+			var expEvents sdk.Events
+			var expOldIndex, expNewIndex []byte
+			if len(tc.expErr) == 0 {
+				s.Require().NotNil(tc.expPayment, "tc.expPayment cannot be nil when tc.expErr is empty")
+				event := exchange.NewEventPaymentUpdated(tc.expPayment, tc.expOldTarget.String())
+				expEvents = sdk.Events{s.untypeEvent(event)}
+
+				source := s.requireAccAddressFromBech32(tc.expPayment.Source, "valid tc.expPayment.Source required when tc.expErr is empty")
+				if len(tc.expOldTarget) > 0 {
+					expOldIndex = keeper.MakeIndexKeyTargetToPayment(tc.expOldTarget, source, tc.expPayment.ExternalId)
+				}
+				if len(tc.expPayment.Target) > 0 {
+					target := s.requireAccAddressFromBech32(tc.expPayment.Target, "valid (or empty) tc.expPayment.Target required when tc.expErr is empty")
+					expNewIndex = keeper.MakeIndexKeyTargetToPayment(target, source, tc.expPayment.ExternalId)
+				}
+			}
+
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			sourceName := s.getAddrName(tc.source)
+			newTargetName := s.getAddrName(tc.newTarget)
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = s.k.UpdatePaymentTarget(ctx, tc.source, tc.externalID, tc.newTarget)
+			}
+			s.Require().NotPanics(testFunc, "UpdatePaymentTarget(%s, %q, %s)", sourceName, tc.externalID, newTargetName)
+			s.assertErrorValue(err, tc.expErr, "UpdatePaymentTarget(%s, %q, %s) error", sourceName, tc.externalID, newTargetName)
+
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "UpdatePaymentTarget(%s, %q, %s) events", sourceName, tc.externalID, newTargetName)
+
+			actPayment, _ := s.k.GetPayment(s.ctx, tc.source, tc.externalID)
+			s.assertEqualPayment(tc.expPayment, actPayment, "payment after UpdatePaymentTarget(%s, %q, %s)", sourceName, tc.externalID, newTargetName)
+
+			store := s.getStore()
+			if len(expOldIndex) > 0 {
+				has := store.Has(expOldIndex)
+				s.Assert().False(has, "The old target to payment index entry should not exist, but does.")
+			}
+			if len(expNewIndex) > 0 {
+				has := store.Has(expNewIndex)
+				s.Assert().True(has, "The new target to payment index entry does not exist, but should.")
+			}
+
+			s.assertTargetToPaymentIndexEntriesMatchPayments()
+		})
+	}
+}
 
 // TODO[1703]: func (s *TestSuite) TestGetPaymentsForTargetAndSource()
 
