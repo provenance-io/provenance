@@ -57,6 +57,7 @@ func (k Keeper) getPaymentsForTargetAndSourceFromStore(store sdk.KVStore, target
 }
 
 // requirePaymentFromStore is like getPaymentFromStore but returns with an error if the payment does not exist.
+// This will always return either a payment or error. It will never return both or nil, nil.
 func (k Keeper) requirePaymentFromStore(store sdk.KVStore, source sdk.AccAddress, externalID string) (*exchange.Payment, error) {
 	payment, err := k.getPaymentFromStore(store, source, externalID)
 	if err != nil {
@@ -389,20 +390,20 @@ func (k Keeper) CancelPayments(ctx sdk.Context, source sdk.AccAddress, externalI
 // UpdatePaymentTarget changes the target of a payment.
 func (k Keeper) UpdatePaymentTarget(ctx sdk.Context, source sdk.AccAddress, externalID string, newTarget sdk.AccAddress) error {
 	store := k.getStore(ctx)
-	existing, err := k.getPaymentFromStore(store, source, externalID)
+	existing, err := k.requirePaymentFromStore(store, source, externalID)
 	if err != nil {
-		return fmt.Errorf("error getting existing payment with source %s and external id %q: %w",
-			source, externalID, err)
-	}
-	if existing == nil {
-		return fmt.Errorf("no payment found with source %s and external id %q", source, externalID)
+		return err
 	}
 
 	oldTarget := existing.Target
 	newTargetStr := newTarget.String()
 	if oldTarget == newTargetStr {
+		t := newTargetStr
+		if len(t) == 0 {
+			t = "<empty>"
+		}
 		return fmt.Errorf("payment with source %s and external id %q already has target %s",
-			source, externalID, newTarget)
+			source, externalID, t)
 	}
 
 	existing.Target = newTargetStr
