@@ -114,11 +114,11 @@ func (k MsgServer) MarketCommitmentSettle(goCtx context.Context, msg *exchange.M
 	if !k.CanSettleCommitments(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("settle commitments for", msg.Admin, msg.MarketId)
 	}
-	err := k.consumeCommitmentSettlementFee(ctx, msg)
+	err := k.SettleCommitments(ctx, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	err = k.SettleCommitments(ctx, msg)
+	err = k.consumeCommitmentSettlementFee(ctx, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
