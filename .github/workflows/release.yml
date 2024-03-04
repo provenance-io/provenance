@@ -137,8 +137,6 @@ jobs:
       - name: Build dbmigrate binary
         run: |
           export VERSION=${{ needs.build_init.outputs.version }}
-          export WITH_ROCKSDB=false
-          export WITH_BADGERDB=false
           make build-dbmigrate-zip
       - name: dbmigrate --help
         run: build/dbmigrate --help
