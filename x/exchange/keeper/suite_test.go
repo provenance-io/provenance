@@ -785,6 +785,22 @@ func (s *TestSuite) requireSetPaymentsInStore(payments ...*exchange.Payment) {
 	}
 }
 
+// requireCreatePayments calls CreatePayment on each payment, making sure it doesn't panic or return an error.
+func (s *TestSuite) requireCreatePayments(payments ...*exchange.Payment) {
+	for i, payment := range payments {
+		assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+			return s.k.CreatePayment(s.ctx, payment)
+		}, "[%d]: CreatePayment(%s)", i, payment)
+	}
+}
+
+// assertAccAddressFromBech32 calls AccAddressFromBech32 asserting that it doesn't return an error.
+func (s *TestSuite) assertAccAddressFromBech32(bech32 string, msg string, args ...interface{}) (sdk.AccAddress, bool) {
+	rv, err := sdk.AccAddressFromBech32(bech32)
+	ok := s.Assert().NoError(err, "AccAddressFromBech32(%q): "+msg, append([]interface{}{bech32}, args...))
+	return rv, ok
+}
+
 // requireAccAddrFromBech32 calls AccAddressFromBech32 making sure it doesn't return an error.
 // Panics can mess up other tests. That's why I'm using this instead of sdk.MustAccAddressFromBech32.
 func (s *TestSuite) requireAccAddressFromBech32(bech32 string, msg string, args ...interface{}) sdk.AccAddress {
