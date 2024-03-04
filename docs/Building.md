@@ -6,7 +6,6 @@
     - [Go](#go)
   - [Building or Installing `provenanced`](#building-or-installing-provenanced)
   - [Build Options](#build-options)
-  - [Building `dbmigrate`](#building-dbmigrate)
 
 
 
@@ -65,28 +64,3 @@ A few aspects of `make build` and `make install` can be controlled through envir
   These are appended to a list constructed by the Makefile.
 * `BUILD_FLAGS`: Any extra flags to include when invoking `go build` or `go install.`.
   These are appended to a list constructed by the Makefile.
-
-## Building `dbmigrate`
-
-The `dbmigrate` utility can be used to migrate a node's data directory to a use a different db backend.
-
-To build the `dbmigrate` executable and place it in the `build/` directory:
-```console
-$ make build-dbmigrate
-```
-
-To build the `dbmigrate` executable and place it in your system's default Go `bin/` directory.
-```console
-$ make install-dbmigrate
-```
-
-Building `dbmigrate` uses the same [Build Options](#build-options) as `provenanced`.
-
-The dbmigrate program will:
-1. Create a new `data/` directory, and copy the contents of the existing `data/` directory into it, converting the database files appropriately.
-2. Back up the existing `data/` directory to `${home}/data-dbmigrate-backup-{timestamp}-{dbtypes}/`.
-3. Move the newly created `data/` directory into place.
-4. Update the config's `db_backend` value to the new db backend type.
-
-The `dbmigrate` utility uses the same configs, environment variables, and flags as `provenanced`.
-For example, if you have the environment variable PIO_HOME defined, then `dbmigrate` will use that as the `--home` directory (unless a `--home` is provided in the command line arguments).
