@@ -317,11 +317,11 @@ func (k MsgServer) RejectPayments(goCtx context.Context, msg *exchange.MsgReject
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid target %q: %v", msg.Target, err)
 	}
 	sources := make([]sdk.AccAddress, 0, len(msg.Sources))
-	for _, sourceStr := range msg.Sources {
+	for i, sourceStr := range msg.Sources {
 		var source sdk.AccAddress
 		source, err = sdk.AccAddressFromBech32(sourceStr)
 		if err != nil {
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid source %q: %v", sourceStr, err)
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid sources[%d] %q: %v", i, sourceStr, err)
 		}
 		sources = append(sources, source)
 	}
@@ -357,9 +357,12 @@ func (k MsgServer) ChangePaymentTarget(goCtx context.Context, msg *exchange.MsgC
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid source %q: %v", msg.Source, err)
 	}
-	newTarget, err := sdk.AccAddressFromBech32(msg.NewTarget)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid new target %q: %v", msg.NewTarget, err)
+	var newTarget sdk.AccAddress
+	if len(msg.NewTarget) > 0 {
+		newTarget, err = sdk.AccAddressFromBech32(msg.NewTarget)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid new target %q: %v", msg.NewTarget, err)
+		}
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
