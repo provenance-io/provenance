@@ -1055,25 +1055,24 @@ func New(
 	}
 
 	app.SetAnteHandler(anteHandler)
-	// TODO[1760]: fee-handler: Add the msgfeehandler back to the app.
-	/*
-		msgFeeHandler, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
-			AccountKeeper:  app.AccountKeeper,
-			BankKeeper:     app.BankKeeper,
-			FeegrantKeeper: app.FeeGrantKeeper,
-			MsgFeesKeeper:  app.MsgFeesKeeper,
-			Decoder:        encodingConfig.TxConfig.TxDecoder(),
-		})
 
-		if err != nil {
-			panic(err)
-		}
-		app.SetFeeHandler(msgFeeHandler)
-	*/
+	msgFeeHandler, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
+		AccountKeeper:  app.AccountKeeper,
+		BankKeeper:     app.BankKeeper,
+		FeegrantKeeper: app.FeeGrantKeeper,
+		MsgFeesKeeper:  app.MsgFeesKeeper,
+		Decoder:        encodingConfig.TxConfig.TxDecoder(),
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetFeeHandler(msgFeeHandler)
 
 	app.SetEndBlocker(app.EndBlocker)
 
-	// app.SetAggregateEventsFunc(piohandlers.AggregateEvents) // TODO[1760]: event-history
+	app.SetAggregateEventsFunc(piohandlers.AggregateEvents) // TODO[1760]: event-history
 
 	// Add upgrade plans for each release. This must be done before the baseapp seals via LoadLatestVersion() down below.
 	InstallCustomUpgradeHandlers(app)
