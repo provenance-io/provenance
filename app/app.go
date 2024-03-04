@@ -824,7 +824,7 @@ func New(
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
-		ibcexported.ModuleName, // TODO[1760]: ibc-host
+		ibcexported.ModuleName,
 		markertypes.ModuleName,
 		icatypes.ModuleName,
 		attributetypes.ModuleName,
@@ -958,7 +958,7 @@ func New(
 		feegrant.ModuleName,
 		genutiltypes.ModuleName,
 		govtypes.ModuleName,
-		ibcexported.ModuleName, // TODO[1760]: ibc-host
+		ibcexported.ModuleName,
 		minttypes.ModuleName,
 		paramstypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -1357,8 +1357,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName) // TODO[1760]: params: Migrate ibc-transfer params.
 	paramsKeeper.Subspace(ibcexported.ModuleName)      // TODO[1760]: params: Migrate ibc-host params.
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)  // TODO[1760]: params: Migrate ica-host params.
-	// paramsKeeper.Subspace(icqtypes.ModuleName) // TODO[1760]: params: Migrate icq params.
-	paramsKeeper.Subspace(ibchookstypes.ModuleName) // TODO[1760]: params: Migrate ibc-hooks params.
+	paramsKeeper.Subspace(icqtypes.ModuleName)         // TODO[1760]: params: Migrate icq params.
+	paramsKeeper.Subspace(ibchookstypes.ModuleName)    // TODO[1760]: params: Migrate ibc-hooks params.
 
 	return paramsKeeper
 }
