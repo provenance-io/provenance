@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
@@ -190,6 +191,30 @@ var upgrades = map[string]appUpgrade{
 	},
 	"tourmaline": { // upgrade for v1.18.0
 		Added: []string{ibcratelimit.ModuleName},
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			return vm, nil
+		},
+	},
+	"umber-rc1": { // upgrade for v1.19.0-rc1
+		Added: []string{crisistypes.ModuleName},
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			return vm, nil
+		},
+	},
+	"umber": { // upgrade for v1.19.0
+		Added: []string{crisistypes.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 			vm, err = runModuleMigrations(ctx, app, vm)
