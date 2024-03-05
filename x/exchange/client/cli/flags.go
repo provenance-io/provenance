@@ -610,6 +610,19 @@ func ParseSplits(vals []string) ([]exchange.DenomSplit, error) {
 // ReadStringFlagOrArg gets a required string from either a flag or the first provided arg.
 // This assumes that the flag was defined with a default of "".
 func ReadStringFlagOrArg(flagSet *pflag.FlagSet, args []string, flagName, varName string) (string, error) {
+	rv, err := ReadOptStringFlagOrArg(flagSet, args, flagName, varName)
+	if err != nil {
+		return "", err
+	}
+	if len(rv) == 0 {
+		return "", fmt.Errorf("no <%s> provided", varName)
+	}
+	return rv, nil
+}
+
+// ReadOptStringFlagOrArg gets an optional string from either a flag or the first provided arg.
+// This assumes that the flag was defined with a default of "".
+func ReadOptStringFlagOrArg(flagSet *pflag.FlagSet, args []string, flagName, varName string) (string, error) {
 	rv, err := flagSet.GetString(flagName)
 	if err != nil {
 		return "", err
@@ -619,12 +632,7 @@ func ReadStringFlagOrArg(flagSet *pflag.FlagSet, args []string, flagName, varNam
 		if len(rv) > 0 {
 			return "", fmt.Errorf("cannot provide <%s> as both an arg (%q) and flag (--%s %q)", varName, args[0], flagName, rv)
 		}
-
 		return args[0], nil
-	}
-
-	if len(rv) == 0 {
-		return "", fmt.Errorf("no <%s> provided", varName)
 	}
 
 	return rv, nil

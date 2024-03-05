@@ -2355,6 +2355,77 @@ func TestReadStringFlagOrArg(t *testing.T) {
 	}
 }
 
+func TestReadOptStringFlagOrArg(t *testing.T) {
+	tests := []struct {
+		name     string
+		flags    []string
+		args     []string
+		flagName string
+		varName  string
+		expStr   string
+		expErr   string
+	}{
+		{
+			name:     "unknown flag name",
+			flagName: "other",
+			varName:  "nope",
+			expErr:   "flag accessed but not defined: other",
+		},
+		{
+			name:     "wrong flag type",
+			flagName: flagInt,
+			varName:  "number",
+			expErr:   "trying to get string value of flag of type int",
+		},
+		{
+			name:     "both flag and arg",
+			flags:    []string{"--" + flagString, "flagval"},
+			args:     []string{"argval"},
+			flagName: flagString,
+			varName:  "value",
+			expErr:   "cannot provide <value> as both an arg (\"argval\") and flag (--" + flagString + " \"flagval\")",
+		},
+		{
+			name:     "only flag",
+			flags:    []string{"--" + flagString, "flagval"},
+			flagName: flagString,
+			varName:  "value",
+			expStr:   "flagval",
+		},
+		{
+			name:     "only arg",
+			args:     []string{"argval"},
+			flagName: flagString,
+			varName:  "value",
+			expStr:   "argval",
+		},
+		{
+			name:     "neither flag nor arg",
+			flagName: flagString,
+			varName:  "value",
+			expErr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(flagString, "", "A string")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var str string
+			testFunc := func() {
+				str, err = cli.ReadOptStringFlagOrArg(flagSet, tc.args, tc.flagName, tc.varName)
+			}
+			require.NotPanics(t, testFunc, "ReadOptStringFlagOrArg")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadOptStringFlagOrArg error")
+			assert.Equal(t, tc.expStr, str, "ReadOptStringFlagOrArg string")
+		})
+	}
+}
+
 func TestReadTxFileFlag(t *testing.T) {
 	tests := []struct {
 		name string

@@ -1198,7 +1198,7 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 				if !tc.skipFlagInUseCheck {
 					expInUse := "--" + flagName
 					if exchange.ContainsString(pageFlags, flagName) {
-						expInUse = "[pagination flags]"
+						expInUse = cli.PageFlagsUse
 					}
 					assert.Contains(t, cmd.Use, expInUse, "cmd.Use should have something about the %s flag", flagName)
 				}

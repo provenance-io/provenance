@@ -164,7 +164,7 @@ func SetupCmdQueryGetMarketOrders(cmd *cobra.Command) {
 		fmt.Sprintf("{<market id>|--%s <market id>}", FlagMarket),
 		OptAsksBidsUse,
 		OptFlagUse(FlagAfter, "after order id"),
-		"[pagination flags]",
+		PageFlagsUse,
 	)
 	AddUseDetails(cmd,
 		"A <market id> is required as either an arg or flag, but not both.",
@@ -202,7 +202,7 @@ func SetupCmdQueryGetOwnerOrders(cmd *cobra.Command) {
 		fmt.Sprintf("{<owner>|--%s <owner>}", FlagOwner),
 		OptAsksBidsUse,
 		OptFlagUse(FlagAfter, "after order id"),
-		"[pagination flags]",
+		PageFlagsUse,
 	)
 	AddUseDetails(cmd,
 		"An <owner> is required as either an arg or flag, but not both.",
@@ -240,7 +240,7 @@ func SetupCmdQueryGetAssetOrders(cmd *cobra.Command) {
 		fmt.Sprintf("{<asset>|--%s <asset>}", FlagDenom),
 		OptAsksBidsUse,
 		OptFlagUse(FlagAfter, "after order id"),
-		"[pagination flags]",
+		PageFlagsUse,
 	)
 	AddUseDetails(cmd,
 		"An <asset> is required as either an arg or flag, but not both.",
@@ -270,7 +270,7 @@ func MakeQueryGetAssetOrders(_ client.Context, flagSet *pflag.FlagSet, args []st
 func SetupCmdQueryGetAllOrders(cmd *cobra.Command) {
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
-	AddUseArgs(cmd, "[pagination flags]")
+	AddUseArgs(cmd, PageFlagsUse)
 	AddUseDetails(cmd)
 	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
 	AddQueryExample(cmd, "--"+flags.FlagReverse)
@@ -352,7 +352,7 @@ func SetupCmdQueryGetMarketCommitments(cmd *cobra.Command) {
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<market id>|--%s <market id>}", FlagMarket),
-		"[pagination flags]",
+		PageFlagsUse,
 	)
 	AddUseDetails(cmd, "A <market id> is required as either an arg or flag, but not both.")
 	AddQueryExample(cmd, "3")
@@ -377,7 +377,7 @@ func MakeQueryGetMarketCommitments(_ client.Context, flagSet *pflag.FlagSet, arg
 func SetupCmdQueryGetAllCommitments(cmd *cobra.Command) {
 	flags.AddPaginationFlagsToCmd(cmd, "commitments")
 
-	AddUseArgs(cmd, "[pagination flags]")
+	AddUseArgs(cmd, PageFlagsUse)
 	AddUseDetails(cmd)
 	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
 	AddQueryExample(cmd, "--"+flags.FlagReverse)
@@ -425,7 +425,7 @@ func MakeQueryGetMarket(_ client.Context, flagSet *pflag.FlagSet, args []string)
 func SetupCmdQueryGetAllMarkets(cmd *cobra.Command) {
 	flags.AddPaginationFlagsToCmd(cmd, "markets")
 
-	AddUseArgs(cmd, "[pagination flags]")
+	AddUseArgs(cmd, PageFlagsUse)
 	AddUseDetails(cmd)
 	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
 	AddQueryExample(cmd, "--"+flags.FlagReverse)
@@ -553,7 +553,7 @@ func SetupCmdQueryGetPayment(cmd *cobra.Command) {
 		"The <external id> can be provided as either the second arg or a flag, but not both.",
 	)
 	AddQueryExample(cmd, ExampleAddr, "myid")
-	AddQueryExample(cmd, ExampleAddr, "--"+FlagSource, "myid")
+	AddQueryExample(cmd, ExampleAddr, "--"+FlagExternalID, "myid")
 	AddQueryExample(cmd, "--"+FlagSource, ExampleAddr, "--"+FlagExternalID, "myid")
 
 	cmd.Args = cobra.MaximumNArgs(2)
@@ -569,7 +569,7 @@ func MakeQueryGetPayment(_ client.Context, flagSet *pflag.FlagSet, args []string
 	if len(args) > 0 {
 		args = args[1:]
 	}
-	req.ExternalId, errs[1] = ReadStringFlagOrArg(flagSet, args, FlagExternalID, "external id")
+	req.ExternalId, errs[1] = ReadOptStringFlagOrArg(flagSet, args, FlagExternalID, "external id")
 
 	return req, errors.Join(errs...)
 }
@@ -581,6 +581,7 @@ func SetupCmdQueryGetPaymentsWithSource(cmd *cobra.Command) {
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<source>|--%s <source>}", FlagSource),
+		PageFlagsUse,
 	)
 	AddUseDetails(cmd,
 		"A <source> is required as either an arg or a flag, but not both.",
@@ -610,6 +611,7 @@ func SetupCmdQueryGetPaymentsWithTarget(cmd *cobra.Command) {
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<target>|--%s <target>}", FlagTarget),
+		PageFlagsUse,
 	)
 	AddUseDetails(cmd,
 		"A <target> is required as either an arg or a flag, but not both.",
@@ -636,7 +638,7 @@ func MakeQueryGetPaymentsWithTarget(_ client.Context, flagSet *pflag.FlagSet, ar
 func SetupCmdQueryGetAllPayments(cmd *cobra.Command) {
 	flags.AddPaginationFlagsToCmd(cmd, "payments")
 
-	AddUseArgs(cmd, "[pagination flags]")
+	AddUseArgs(cmd, PageFlagsUse)
 	AddUseDetails(cmd)
 	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
 	AddQueryExample(cmd, "--"+flags.FlagReverse)
