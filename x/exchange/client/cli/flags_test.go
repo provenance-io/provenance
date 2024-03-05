@@ -513,6 +513,8 @@ func TestReadAddrFlagOrFrom(t *testing.T) {
 	}
 }
 
+// TODO[1703]: func TestReadAddrFlagOrFromOrDefault(t *testing.T)
+
 func TestAddFlagsEnableDisable(t *testing.T) {
 	expAnnotations := map[string][]string{
 		mutExc: {cli.FlagEnable + " " + cli.FlagDisable},
@@ -968,6 +970,8 @@ func TestReadCoinsFlag(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1703]: func TestReadCoinsFlagOrDefault(t *testing.T)
 
 func TestReadReqCoinsFlag(t *testing.T) {
 	tests := []struct {
@@ -2920,6 +2924,8 @@ func TestReadMsgMarketCommitmentSettleFromFileFlag(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1703]: func TestReadPaymentFromFileFlag(t *testing.T)
 
 func TestReadFlagUint32OrDefault(t *testing.T) {
 	tests := []struct {

@@ -61,6 +61,7 @@ const (
 	FlagDisable              = "disable"
 	FlagEnable               = "enable"
 	FlagExternalID           = "external-id"
+	FlagExternalIDs          = "external-ids"
 	FlagFile                 = "file"
 	FlagGrant                = "grant"
 	FlagIcon                 = "icon"
@@ -68,6 +69,7 @@ const (
 	FlagMarket               = "market"
 	FlagName                 = "name"
 	FlagNavs                 = "navs"
+	FlagNewTarget            = "new-target"
 	FlagOrder                = "order"
 	FlagOutputs              = "outputs"
 	FlagOwner                = "owner"
@@ -92,6 +94,7 @@ const (
 	FlagSettlementFees       = "settlement-fees"
 	FlagSigner               = "signer"
 	FlagSource               = "source"
+	FlagSources              = "sources"
 	FlagSourceAmount         = "source-amount"
 	FlagSplit                = "split"
 	FlagTag                  = "tag"
@@ -200,14 +203,29 @@ func ReadFlagAuthorityOrDefault(flagSet *pflag.FlagSet, def string) (string, err
 // Returns an error if neither the flag nor --from were provided.
 // This assumes that the flag was defined with a default of "".
 func ReadAddrFlagOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet, name string) (string, error) {
+	return ReadAddrFlagOrFromOrDefault(clientCtx, flagSet, name, "")
+}
+
+// ReadAddrFlagOrFromOrDefault gets the requested flag or, if it wasn't provided, gets the --from address.
+// If neither are provided, the default is returned.
+// Returns an error if neither the flag, --from, or a default were provided.
+// This assumes that the flag was defined with a default of "".
+func ReadAddrFlagOrFromOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, name string, def string) (string, error) {
 	rv, err := flagSet.GetString(name)
-	if len(rv) > 0 || err != nil {
-		return rv, err
+	if err != nil {
+		return def, err
+	}
+	if len(rv) > 0 {
+		return rv, nil
 	}
 
 	rv = clientCtx.GetFromAddress().String()
 	if len(rv) > 0 {
 		return rv, nil
+	}
+
+	if len(def) > 0 {
+		return def, nil
 	}
 
 	return "", fmt.Errorf("no <%s> provided", name)
@@ -331,13 +349,19 @@ func ReadFlagMarketOrArg(flagSet *pflag.FlagSet, args []string) (uint32, error) 
 //
 // If the flag is a StringSlice, use ReadFlatFeeFlag.
 func ReadCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
+	return ReadCoinsFlagOrDefault(flagSet, name, nil)
+}
+
+// ReadCoinsFlagOrDefault reads a string flag and converts it into sdk.Coins.
+// If the flag wasn't provided, or an error was encountered, the default is returned.
+func ReadCoinsFlagOrDefault(flagSet *pflag.FlagSet, name string, def sdk.Coins) (sdk.Coins, error) {
 	value, err := flagSet.GetString(name)
 	if len(value) == 0 || err != nil {
-		return nil, err
+		return def, err
 	}
 	rv, err := ParseCoins(value)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing --%s as coins: %w", name, err)
+		return def, fmt.Errorf("error parsing --%s as coins: %w", name, err)
 	}
 	return rv, nil
 }
@@ -763,6 +787,48 @@ func ReadMsgGovManageFeesRequestFromProposalFlag(clientCtx client.Context, flagS
 // This assumes that the flag was defined with a default of "".
 func ReadMsgMarketCommitmentSettleFromFileFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (*exchange.MsgMarketCommitmentSettleRequest, error) {
 	return getSingleMsgFromFileFlag(clientCtx, flagSet, FlagFile, &exchange.MsgMarketCommitmentSettleRequest{})
+}
+
+// hasPayment is an interface that a Msg will satisfy if it has a GetPayment() method.
+type hasPayment interface {
+	GetPayment() exchange.Payment
+}
+
+// ReadPaymentFromFileFlag reads the --file flag and extracts a Payment from either a MsgCreatePaymentRequest or MsgAcceptPaymentRequest contained in the file.
+// An error is returned if anything goes wrong, or the file doesn't have exactly one Payment.
+// A Payment is returned even if an error is returned.
+// This assumes that the flag was defined with a default of "".
+func ReadPaymentFromFileFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (exchange.Payment, error) {
+	rv := exchange.Payment{}
+	filename, tx, err := ReadTxFileFlag(clientCtx, flagSet, FlagFile)
+	if len(filename) == 0 || tx == nil || err != nil {
+		return rv, err
+	}
+
+	if tx.Body == nil {
+		return rv, fmt.Errorf("the contents of %q does not have a \"body\"", filename)
+	}
+
+	if len(tx.Body.Messages) == 0 {
+		return rv, fmt.Errorf("the contents of %q does not have any body messages", filename)
+	}
+
+	var msgs []hasPayment
+	for _, msgAny := range tx.Body.Messages {
+		msg, isMsg := msgAny.GetCachedValue().(hasPayment)
+		if isMsg {
+			msgs = append(msgs, msg)
+		}
+	}
+
+	if len(msgs) == 0 {
+		return rv, fmt.Errorf("no messages with a Payment found in %q", filename)
+	}
+	if len(msgs) != 1 {
+		return rv, fmt.Errorf("%d messages with a Payment found in %q", len(msgs), filename)
+	}
+
+	return msgs[0].GetPayment(), nil
 }
 
 // ReadFlagUint32OrDefault gets a uit32 flag or returns the provided default.
