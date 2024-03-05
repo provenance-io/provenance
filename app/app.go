@@ -734,12 +734,16 @@ func New(
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// Create evidence Keeper for to register the IBC light client misbehavior evidence route
-	// TODO[1760]: evidence: Put back this call to NewKeeper with fixed arguments.
-	// evidenceKeeper := evidencekeeper.NewKeeper(
-	// 	appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
-	// )
+	evidenceKeeper := evidencekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),
+		app.StakingKeeper,
+		app.SlashingKeeper,
+		app.AccountKeeper.AddressCodec(),
+		runtime.ProvideCometInfoService(),
+	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
-	// app.EvidenceKeeper = *evidenceKeeper // TODO[1760]: evidence
+	app.EvidenceKeeper = *evidenceKeeper
 
 	// app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName)) // TODO[1760]: quarantine
 
