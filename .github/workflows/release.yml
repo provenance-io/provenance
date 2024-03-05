@@ -116,35 +116,6 @@ jobs:
           name: linux-zip
           path: build/provenance*.zip
 
-  build_dbmigrate:
-    runs-on: ubuntu-20.04
-    needs:
-      - build_init
-    name: Build dbmigrate
-    env:
-      LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup go
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{ needs.build_init.outputs.go_version }}
-      - name: Install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
-      - name: Build dbmigrate binary
-        run: |
-          export VERSION=${{ needs.build_init.outputs.version }}
-          make build-dbmigrate-zip
-      - name: dbmigrate --help
-        run: build/dbmigrate --help
-      - uses: actions/upload-artifact@v3
-        with:
-          name: dbmigrate-zip
-          path: build/dbmigrate*.zip
-
   buf_push:
     needs:
       - build_init
@@ -166,7 +137,6 @@ jobs:
     needs:
       - build_init
       - build_linux
-      - build_dbmigrate
     if: needs.build_init.outputs.is_release == 'true'
     runs-on: ubuntu-latest
     name: Create Release
@@ -206,11 +176,6 @@ jobs:
         with:
           name: linux-zip
           path: build/
-      - name: Download dbmigrate zip artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: dbmigrate-zip
-          path: build/
       - name: Create release items
         id: create-items
         run: |
@@ -224,16 +189,6 @@ jobs:
           upload_url: ${{ needs.create_release.outputs.release_url }}
           asset_path: ./build/provenance-linux-amd64-${{ needs.build_init.outputs.version }}.zip
           asset_name: provenance-linux-amd64-${{ needs.build_init.outputs.version }}.zip
-          asset_content_type: application/octet-stream
-      - name: Upload dbmigrate zip artifact
-        if: always() && steps.create-items.outcome == 'success'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create_release.outputs.release_url }}
-          asset_path: ./build/dbmigrate-linux-amd64-${{ needs.build_init.outputs.version }}.zip
-          asset_name: dbmigrate-linux-amd64-${{ needs.build_init.outputs.version }}.zip
           asset_content_type: application/octet-stream
       - name: Upload release checksum
         if: always() && steps.create-items.outcome == 'success'

@@ -92,8 +92,6 @@ filters+=( '^x/marker/client/cli/tx\.go:' )
 #     Since it's setting a variable more specifically named than 'now',
 #     we can ignore the specific line, but let it be on any line number.
 filters+=( '^cmd/provenanced/cmd/testnet\.go:[[:digit:]]+:[[:space:]]+genTime := [[:alnum:]]+\.Now\(\)$' )
-# The dbmigrate migrator has several legitimate uses, and there's nothing in there that affects block processing.
-filters+=( '^cmd/dbmigrate/utils/migrator\.go:' )
 
 for filters in "${filters[@]}"; do
     now_uses="$( grep -vE "$filters" <<< "$now_uses" )"

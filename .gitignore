@@ -8,7 +8,6 @@ data/
 .idea/
 *.swp
 utils/
-!cmd/dbmigrate/utils
 .blockade
 blockade.yaml
 *.sock
