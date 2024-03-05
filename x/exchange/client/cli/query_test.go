@@ -896,3 +896,13 @@ gov_prop_will_pass: true
 		})
 	}
 }
+
+// TODO[1703]: func (s *CmdTestSuite) TestCmdQueryGetPayment()
+
+// TODO[1703]: func (s *CmdTestSuite) TestCmdQueryGetPaymentsWithSource()
+
+// TODO[1703]: func (s *CmdTestSuite) TestCmdQueryGetPaymentsWithTarget()
+
+// TODO[1703]: func (s *CmdTestSuite) TestCmdQueryGetAllPayments()
+
+// TODO[1703]: func (s *CmdTestSuite) TestCmdQueryPaymentFeeCalc()

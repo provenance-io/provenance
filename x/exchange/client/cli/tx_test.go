@@ -1124,6 +1124,18 @@ func (s *CmdTestSuite) TestCmdTxMarketManageReqAttrs() {
 	}
 }
 
+// TODO[1703]: func (s *CmdTestSuite) TestCmdTxCreatePayment()
+
+// TODO[1703]: func (s *CmdTestSuite) TestCmdTxAcceptPayment()
+
+// TODO[1703]: func (s *CmdTestSuite) TestCmdTxRejectPayment()
+
+// TODO[1703]: func (s *CmdTestSuite) TestCmdTxRejectPayments()
+
+// TODO[1703]: func (s *CmdTestSuite) TestCmdTxCancelPayments()
+
+// TODO[1703]: func (s *CmdTestSuite) TestCmdTxChangePaymentTarget()
+
 func (s *CmdTestSuite) TestCmdTxGovCreateMarket() {
 	tests := []txCmdTestCase{
 		{

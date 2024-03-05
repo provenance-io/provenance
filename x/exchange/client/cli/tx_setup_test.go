@@ -1751,6 +1751,30 @@ func TestMakeMsgMarketManageReqAttrs(t *testing.T) {
 	}
 }
 
+// TODO[1703]: func TestSetupCmdTxCreatePayment(t *testing.T)
+
+// TODO[1703]: func TestMakeMsgCreatePayment(t *testing.T)
+
+// TODO[1703]: func TestSetupCmdTxAcceptPayment(t *testing.T)
+
+// TODO[1703]: func TestMakeMsgAcceptPayment(t *testing.T)
+
+// TODO[1703]: func TestSetupCmdTxRejectPayment(t *testing.T)
+
+// TODO[1703]: func TestMakeMsgRejectPayment(t *testing.T)
+
+// TODO[1703]: func TestSetupCmdTxRejectPayments(t *testing.T)
+
+// TODO[1703]: func TestMakeMsgRejectPayments(t *testing.T)
+
+// TODO[1703]: func TestSetupCmdTxCancelPayments(t *testing.T)
+
+// TODO[1703]: func TestMakeMsgCancelPayments(t *testing.T)
+
+// TODO[1703]: func TestSetupCmdTxChangePaymentTarget(t *testing.T)
+
+// TODO[1703]: func TestMakeMsgChangePaymentTarget(t *testing.T)
+
 func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 	tc := setupTestCase{
 		name:  "SetupCmdTxGovCreateMarket",

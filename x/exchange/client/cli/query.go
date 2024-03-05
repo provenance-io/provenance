@@ -299,3 +299,13 @@ func CmdQueryValidateManageFees() *cobra.Command {
 	SetupCmdQueryValidateManageFees(cmd)
 	return cmd
 }
+
+// TODO[1703]: func CmdQueryGetPayment() *cobra.Command
+
+// TODO[1703]: func CmdQueryGetPaymentsWithSource() *cobra.Command
+
+// TODO[1703]: func CmdQueryGetPaymentsWithTarget() *cobra.Command
+
+// TODO[1703]: func CmdQueryGetAllPayments() *cobra.Command
+
+// TODO[1703]: func CmdQueryPaymentFeeCalc() *cobra.Command

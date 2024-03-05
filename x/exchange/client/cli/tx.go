@@ -314,6 +314,18 @@ func CmdTxMarketManageReqAttrs() *cobra.Command {
 	return cmd
 }
 
+// TODO[1703]: func CmdTxCreatePayment() *cobra.Command
+
+// TODO[1703]: func CmdTxAcceptPayment() *cobra.Command
+
+// TODO[1703]: func CmdTxRejectPayment() *cobra.Command
+
+// TODO[1703]: func CmdTxRejectPayments() *cobra.Command
+
+// TODO[1703]: func CmdTxCancelPayments() *cobra.Command
+
+// TODO[1703]: func CmdTxChangePaymentTarget() *cobra.Command
+
 // CmdTxGovCreateMarket creates the gov-create-market sub-command for the exchange tx command.
 func CmdTxGovCreateMarket() *cobra.Command {
 	cmd := &cobra.Command{

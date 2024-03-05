@@ -739,6 +739,30 @@ func MakeMsgMarketManageReqAttrs(clientCtx client.Context, flagSet *pflag.FlagSe
 	return msg, errors.Join(errs...)
 }
 
+// TODO[1703]: func SetupCmdTxCreatePayment(cmd *cobra.Command)
+
+// TODO[1703]: func MakeMsgCreatePayment(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgCreatePaymentRequest, error)
+
+// TODO[1703]: func SetupCmdTxAcceptPayment(cmd *cobra.Command)
+
+// TODO[1703]: func MakeMsgAcceptPayment(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgAcceptPaymentRequest, error)
+
+// TODO[1703]: func SetupCmdTxRejectPayment(cmd *cobra.Command)
+
+// TODO[1703]: func MakeMsgRejectPayment(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgRejectPaymentRequest, error)
+
+// TODO[1703]: func SetupCmdTxRejectPayments(cmd *cobra.Command)
+
+// TODO[1703]: func MakeMsgRejectPayments(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgRejectPaymentsRequest, error)
+
+// TODO[1703]: func SetupCmdTxCancelPayments(cmd *cobra.Command)
+
+// TODO[1703]: func MakeMsgCancelPayments(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgCancelPaymentsRequest, error)
+
+// TODO[1703]: func SetupCmdTxChangePaymentTarget(cmd *cobra.Command)
+
+// TODO[1703]: func MakeMsgChangePaymentTarget(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgChangePaymentTargetRequest, error)
+
 // SetupCmdTxGovCreateMarket adds all the flags needed for MakeMsgGovCreateMarket.
 func SetupCmdTxGovCreateMarket(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")

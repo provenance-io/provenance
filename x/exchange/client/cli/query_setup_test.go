@@ -1707,3 +1707,23 @@ func TestMakeQueryValidateManageFees(t *testing.T) {
 		})
 	}
 }
+
+// TODO[1703]: func TestSetupCmdQueryGetPayment(t *testing.T)
+
+// TODO[1703]: func TestMakeQueryGetPayment(t *testing.T)
+
+// TODO[1703]: func TestSetupCmdQueryGetPaymentsWithSource(t *testing.T)
+
+// TODO[1703]: func TestMakeQueryGetPaymentsWithSource(t *testing.T)
+
+// TODO[1703]: func TestSetupCmdQueryGetPaymentsWithTarget(t *testing.T)
+
+// TODO[1703]: func TestMakeQueryGetPaymentsWithTarget(t *testing.T)
+
+// TODO[1703]: func TestSetupCmdQueryGetAllPayments(t *testing.T)
+
+// TODO[1703]: func TestMakeQueryGetAllPayments(t *testing.T)
+
+// TODO[1703]: func TestSetupCmdQueryPaymentFeeCalc(t *testing.T)
+
+// TODO[1703]: func TestMakeQueryPaymentFeeCalc(t *testing.T)

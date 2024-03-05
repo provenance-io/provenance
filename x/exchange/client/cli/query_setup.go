@@ -538,3 +538,23 @@ func MakeQueryValidateManageFees(clientCtx client.Context, flags *pflag.FlagSet,
 
 	return req, err
 }
+
+// TODO[1703]: func SetupCmdQueryGetPayment(cmd *cobra.Command)
+
+// TODO[1703]: func MakeQueryGetPayment(_ client.Context, flags *pflag.FlagSet, args []string) (*exchange.QueryGetPaymentRequest, error)
+
+// TODO[1703]: func SetupCmdQueryGetPaymentsWithSource(cmd *cobra.Command)
+
+// TODO[1703]: func MakeQueryGetPaymentsWithSource(_ client.Context, flags *pflag.FlagSet, args []string) (*exchange.QueryGetPaymentsWithSourceRequest, error)
+
+// TODO[1703]: func SetupCmdQueryGetPaymentsWithTarget(cmd *cobra.Command)
+
+// TODO[1703]: func MakeQueryGetPaymentsWithTarget(_ client.Context, flags *pflag.FlagSet, args []string) (*exchange.QueryGetPaymentsWithTargetRequest, error)
+
+// TODO[1703]: func SetupCmdQueryGetAllPayments(cmd *cobra.Command)
+
+// TODO[1703]: func MakeQueryGetAllPayments(_ client.Context, flags *pflag.FlagSet, _ []string) (*exchange.QueryGetAllPaymentsRequest, error)
+
+// TODO[1703]: func SetupCmdQueryPaymentFeeCalc(cmd *cobra.Command)
+
+// TODO[1703]: func MakeQueryPaymentFeeCalc(clientCtx client.Context, flags *pflag.FlagSet, args []string) (*exchange.QueryPaymentFeeCalcRequest, error)
