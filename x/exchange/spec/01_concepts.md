@@ -256,6 +256,8 @@ If a settlement bips is defined, an intermediary denom must also be defined and 
 Management of the settlement bips and commitment creation fee options is part of the fee-management governance proposal.
 The `accepting_commitments` flag and intermediary denom are managed using the [MarketUpdateAcceptingCommitments](03_messages.md#marketupdateacceptingcommitments) and [MarketUpdateIntermediaryDenom](03_messages.md#marketupdateintermediarydenom) endpoints.
 
+<!-- TODO[1703]: Add spec docs about payments. -->
+
 
 ## Fees
 

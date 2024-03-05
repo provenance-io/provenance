@@ -38,6 +38,11 @@ func CmdQuery() *cobra.Command {
 		CmdQueryValidateCreateMarket(),
 		CmdQueryValidateMarket(),
 		CmdQueryValidateManageFees(),
+		// TODO[1703]: CmdQueryGetPayment()
+		// TODO[1703]: CmdQueryGetPaymentsWithSource()
+		// TODO[1703]: CmdQueryGetPaymentsWithTarget()
+		// TODO[1703]: CmdQueryGetAllPayments()
+		// TODO[1703]: CmdQueryPaymentFeeCalc()
 	)
 
 	return cmd
