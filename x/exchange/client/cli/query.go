@@ -38,11 +38,11 @@ func CmdQuery() *cobra.Command {
 		CmdQueryValidateCreateMarket(),
 		CmdQueryValidateMarket(),
 		CmdQueryValidateManageFees(),
-		// TODO[1703]: CmdQueryGetPayment()
-		// TODO[1703]: CmdQueryGetPaymentsWithSource()
-		// TODO[1703]: CmdQueryGetPaymentsWithTarget()
-		// TODO[1703]: CmdQueryGetAllPayments()
-		// TODO[1703]: CmdQueryPaymentFeeCalc()
+		CmdQueryGetPayment(),
+		CmdQueryGetPaymentsWithSource(),
+		CmdQueryGetPaymentsWithTarget(),
+		CmdQueryGetAllPayments(),
+		CmdQueryPaymentFeeCalc(),
 	)
 
 	return cmd
@@ -300,12 +300,71 @@ func CmdQueryValidateManageFees() *cobra.Command {
 	return cmd
 }
 
-// TODO[1703]: func CmdQueryGetPayment() *cobra.Command
+// CmdQueryGetPayment creates the payment sub-command for the exchange query command.
+func CmdQueryGetPayment() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "payment",
+		Aliases: []string{"get-payment"},
+		Short:   "Get a payments",
+		RunE:    genericQueryRunE(MakeQueryGetPayment, exchange.QueryClient.GetPayment),
+	}
 
-// TODO[1703]: func CmdQueryGetPaymentsWithSource() *cobra.Command
+	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryGetPayment(cmd)
+	return cmd
+}
 
-// TODO[1703]: func CmdQueryGetPaymentsWithTarget() *cobra.Command
+// CmdQueryGetPaymentsWithSource creates the payments-with-source sub-command for the exchange query command.
+func CmdQueryGetPaymentsWithSource() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "payments-with-source",
+		Aliases: []string{"get-payments-with-source"},
+		Short:   "Get payments with a specific source account",
+		RunE:    genericQueryRunE(MakeQueryGetPaymentsWithSource, exchange.QueryClient.GetPaymentsWithSource),
+	}
 
-// TODO[1703]: func CmdQueryGetAllPayments() *cobra.Command
+	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryGetPaymentsWithSource(cmd)
+	return cmd
+}
 
-// TODO[1703]: func CmdQueryPaymentFeeCalc() *cobra.Command
+// CmdQueryGetPaymentsWithTarget creates the payments-with-target sub-command for the exchange query command.
+func CmdQueryGetPaymentsWithTarget() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "payments-with-target",
+		Aliases: []string{"get-payments-with-target"},
+		Short:   "Get payments with a specific target account",
+		RunE:    genericQueryRunE(MakeQueryGetPaymentsWithTarget, exchange.QueryClient.GetPaymentsWithTarget),
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryGetPaymentsWithTarget(cmd)
+	return cmd
+}
+
+// CmdQueryGetAllPayments creates the all-payments sub-command for the exchange query command.
+func CmdQueryGetAllPayments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "all-payments",
+		Aliases: []string{"get-all-payments"},
+		Short:   "Get all payments",
+		RunE:    genericQueryRunE(MakeQueryGetAllPayments, exchange.QueryClient.GetAllPayments),
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryGetAllPayments(cmd)
+	return cmd
+}
+
+// CmdQueryPaymentFeeCalc creates the payment-fee-calc sub-command for the exchange query command.
+func CmdQueryPaymentFeeCalc() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "payment-fee-calc",
+		Short: "Calculate the fees for a payment",
+		RunE:  genericQueryRunE(MakeQueryPaymentFeeCalc, exchange.QueryClient.PaymentFeeCalc),
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	SetupCmdQueryPaymentFeeCalc(cmd)
+	return cmd
+}
