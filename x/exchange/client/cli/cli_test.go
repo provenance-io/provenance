@@ -1216,6 +1216,21 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 	}
 }
 
+// addOneReqAnnotations adds the expected annotations to a setupTestCase that indicate that one of a set of flags is required.
+// The flags should be provided in the same order that they're provided to cmd.MarkFlagsOneRequired.
+func addOneReqAnnotations(tc *setupTestCase, oneReqFlags ...string) {
+	oneReqVal := strings.Join(oneReqFlags, " ")
+	if tc.expAnnotations == nil {
+		tc.expAnnotations = make(map[string]map[string][]string)
+	}
+	for _, name := range oneReqFlags {
+		if tc.expAnnotations[name] == nil {
+			tc.expAnnotations[name] = make(map[string][]string)
+		}
+		tc.expAnnotations[name][oneReq] = []string{oneReqVal}
+	}
+}
+
 // newClientContextWithCodec returns a new client.Context that has a useful Codec.
 func newClientContextWithCodec() client.Context {
 	return clientContextWithCodec(client.Context{})

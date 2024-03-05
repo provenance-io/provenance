@@ -1751,29 +1751,515 @@ func TestMakeMsgMarketManageReqAttrs(t *testing.T) {
 	}
 }
 
-// TODO[1703]: func TestSetupCmdTxCreatePayment(t *testing.T)
+func TestSetupCmdTxCreatePayment(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxCreatePayment",
+		setup: cli.SetupCmdTxCreatePayment,
+		expFlags: []string{
+			cli.FlagSource, cli.FlagSourceAmount,
+			cli.FlagTarget, cli.FlagTargetAmount,
+			cli.FlagExternalID, cli.FlagFile,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expInUse: []string{
+			"{--from|--source} <source>", "[--source-amount <source amount>]",
+			"[--target <target>]", "[--target-amount <target amount>]",
+			"[--external-id <external id>]", "[--file <filename>]",
+			cli.ReqSignerDesc(cli.FlagSource),
+			cli.MsgFileDesc(&exchange.MsgCreatePaymentRequest{}),
+		},
+	}
+	addOneReqAnnotations(&tc, cli.FlagFile, flags.FlagFrom, cli.FlagSource)
 
-// TODO[1703]: func TestMakeMsgCreatePayment(t *testing.T)
+	runSetupTestCase(t, tc)
+}
 
-// TODO[1703]: func TestSetupCmdTxAcceptPayment(t *testing.T)
+func TestMakeMsgCreatePayment(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgCreatePaymentRequest]{
+		makerName: "MakeMsgCreatePayment",
+		maker:     cli.MakeMsgCreatePayment,
+		setup:     cli.SetupCmdTxCreatePayment,
+	}
 
-// TODO[1703]: func TestMakeMsgAcceptPayment(t *testing.T)
+	coins := func(str string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+	testAddr := func(prefix string) string {
+		return sdk.AccAddress(prefix + strings.Repeat("_", 20-len(prefix))).String()
+	}
+	newPayment := func(sourceAddrPrefix, sourceAmount, targetAddrPrefix, targetAmount, externalID string) exchange.Payment {
+		return exchange.Payment{
+			Source:       testAddr(sourceAddrPrefix),
+			SourceAmount: coins(sourceAmount),
+			Target:       testAddr(targetAddrPrefix),
+			TargetAmount: coins(targetAmount),
+			ExternalId:   externalID,
+		}
+	}
 
-// TODO[1703]: func TestSetupCmdTxRejectPayment(t *testing.T)
+	filePayment := newPayment("file_source", "88strawberry", "file_target", "44tangerine", "some-file-id")
+	fileMsg := &exchange.MsgCreatePaymentRequest{Payment: filePayment}
+	tx := newTx(t, fileMsg)
+	tdir := t.TempDir()
+	txFN := filepath.Join(tdir, "create-payment.json")
+	writeFileAsJson(t, txFN, tx)
 
-// TODO[1703]: func TestMakeMsgRejectPayment(t *testing.T)
+	tests := []txMakerTestCase[*exchange.MsgCreatePaymentRequest]{
+		{
+			name: "no source",
+			flags: []string{
+				"--source-amount", "3starfruit",
+				"--target", testAddr("some-target"),
+			},
+			expMsg: &exchange.MsgCreatePaymentRequest{Payment: exchange.Payment{
+				Source:       "",
+				SourceAmount: coins("3starfruit"),
+				Target:       testAddr("some-target"),
+				TargetAmount: nil,
+				ExternalId:   "",
+			}},
+			expErr: "no <source> provided",
+		},
+		{
+			name:      "all fields",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("source_from_from____")},
+			flags: []string{
+				"--external-id", "random-dcic",
+				"--target", testAddr("my-target"),
+				"--source-amount", "13strawberry",
+				"--target-amount", "31tangerine",
+			},
+			expMsg: &exchange.MsgCreatePaymentRequest{Payment: exchange.Payment{
+				Source:       sdk.AccAddress("source_from_from____").String(),
+				SourceAmount: coins("13strawberry"),
+				Target:       testAddr("my-target"),
+				TargetAmount: coins("31tangerine"),
+				ExternalId:   "random-dcic",
+			}},
+		},
+		{
+			name:      "from file",
+			clientCtx: clientContextWithCodec(client.Context{}),
+			flags:     []string{"--file", txFN},
+			expMsg:    &exchange.MsgCreatePaymentRequest{Payment: filePayment},
+		},
+		{
+			name:      "from file with override",
+			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("another_from________")}),
+			flags:     []string{"--external-id", "something-else", "--file", txFN},
+			expMsg: &exchange.MsgCreatePaymentRequest{Payment: exchange.Payment{
+				Source:       sdk.AccAddress("another_from________").String(),
+				SourceAmount: filePayment.SourceAmount,
+				Target:       filePayment.Target,
+				TargetAmount: filePayment.TargetAmount,
+				ExternalId:   "something-else",
+			}},
+		},
+	}
 
-// TODO[1703]: func TestSetupCmdTxRejectPayments(t *testing.T)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
-// TODO[1703]: func TestMakeMsgRejectPayments(t *testing.T)
+func TestSetupCmdTxAcceptPayment(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxAcceptPayment",
+		setup: cli.SetupCmdTxAcceptPayment,
+		expFlags: []string{
+			cli.FlagSource, cli.FlagSourceAmount,
+			cli.FlagTarget, cli.FlagTargetAmount,
+			cli.FlagExternalID, cli.FlagFile,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expInUse: []string{
+			"[--source <source>]", "[--source-amount <source amount>]",
+			"{--from|--target} <target>", "[--target-amount <target amount>]",
+			"[--external-id <external id>]", "[--file <filename>]",
+			cli.ReqSignerDesc(cli.FlagTarget),
+			cli.MsgFileDesc(&exchange.MsgAcceptPaymentRequest{}),
+		},
+	}
+	addOneReqAnnotations(&tc, cli.FlagFile, flags.FlagFrom, cli.FlagTarget)
 
-// TODO[1703]: func TestSetupCmdTxCancelPayments(t *testing.T)
+	runSetupTestCase(t, tc)
+}
 
-// TODO[1703]: func TestMakeMsgCancelPayments(t *testing.T)
+func TestMakeMsgAcceptPayment(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgAcceptPaymentRequest]{
+		makerName: "MakeMsgAcceptPayment",
+		maker:     cli.MakeMsgAcceptPayment,
+		setup:     cli.SetupCmdTxAcceptPayment,
+	}
 
-// TODO[1703]: func TestSetupCmdTxChangePaymentTarget(t *testing.T)
+	coins := func(str string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+	testAddr := func(prefix string) string {
+		return sdk.AccAddress(prefix + strings.Repeat("_", 20-len(prefix))).String()
+	}
+	newPayment := func(sourceAddrPrefix, sourceAmount, targetAddrPrefix, targetAmount, externalID string) exchange.Payment {
+		return exchange.Payment{
+			Source:       testAddr(sourceAddrPrefix),
+			SourceAmount: coins(sourceAmount),
+			Target:       testAddr(targetAddrPrefix),
+			TargetAmount: coins(targetAmount),
+			ExternalId:   externalID,
+		}
+	}
 
-// TODO[1703]: func TestMakeMsgChangePaymentTarget(t *testing.T)
+	filePayment := newPayment("file_source", "9strawberry", "file_target", "5tangerine", "some-other-file-id")
+	fileMsg := &exchange.MsgAcceptPaymentRequest{Payment: filePayment}
+	tx := newTx(t, fileMsg)
+	tdir := t.TempDir()
+	txFN := filepath.Join(tdir, "accept-payment.json")
+	writeFileAsJson(t, txFN, tx)
+
+	tests := []txMakerTestCase[*exchange.MsgAcceptPaymentRequest]{
+		{
+			name: "no target",
+			flags: []string{
+				"--source-amount", "4starfruit",
+				"--source", testAddr("some-source"),
+			},
+			expMsg: &exchange.MsgAcceptPaymentRequest{Payment: exchange.Payment{
+				Source:       testAddr("some-source"),
+				SourceAmount: coins("4starfruit"),
+				Target:       "",
+				TargetAmount: nil,
+				ExternalId:   "",
+			}},
+			expErr: "no <target> provided",
+		},
+		{
+			name:      "all fields",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("target_from_from____")},
+			flags: []string{
+				"--external-id", "random-9scik2",
+				"--source", testAddr("my-source"),
+				"--source-amount", "130strawberry",
+				"--target-amount", "310tangerine",
+			},
+			expMsg: &exchange.MsgAcceptPaymentRequest{Payment: exchange.Payment{
+				Source:       testAddr("my-source"),
+				SourceAmount: coins("130strawberry"),
+				Target:       sdk.AccAddress("target_from_from____").String(),
+				TargetAmount: coins("310tangerine"),
+				ExternalId:   "random-9scik2",
+			}},
+		},
+		{
+			name:      "from file",
+			clientCtx: clientContextWithCodec(client.Context{}),
+			flags:     []string{"--file", txFN},
+			expMsg:    &exchange.MsgAcceptPaymentRequest{Payment: filePayment},
+		},
+		{
+			name:      "from file with override",
+			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("another_from________")}),
+			flags:     []string{"--external-id", "something-else", "--file", txFN},
+			expMsg: &exchange.MsgAcceptPaymentRequest{Payment: exchange.Payment{
+				Source:       filePayment.Source,
+				SourceAmount: filePayment.SourceAmount,
+				Target:       sdk.AccAddress("another_from________").String(),
+				TargetAmount: filePayment.TargetAmount,
+				ExternalId:   "something-else",
+			}},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxRejectPayment(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxRejectPayment",
+		setup: cli.SetupCmdTxRejectPayment,
+		expFlags: []string{
+			cli.FlagTarget, cli.FlagSource, cli.FlagExternalID,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			cli.FlagSource: {required: {"true"}},
+		},
+		expInUse: []string{
+			"{--from|--target} <target>", "--source <source>", "[--external-id <external id>",
+			cli.ReqSignerDesc(cli.FlagTarget),
+		},
+	}
+	addOneReqAnnotations(&tc, flags.FlagFrom, cli.FlagTarget)
+
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeMsgRejectPayment(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgRejectPaymentRequest]{
+		makerName: "MakeMsgRejectPayment",
+		maker:     cli.MakeMsgRejectPayment,
+		setup:     cli.SetupCmdTxRejectPayment,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgRejectPaymentRequest]{
+		{
+			name:  "no target",
+			flags: []string{"--source", "the-source"},
+			expMsg: &exchange.MsgRejectPaymentRequest{
+				Target:     "",
+				Source:     "the-source",
+				ExternalId: "",
+			},
+			expErr: "no <target> provided",
+		},
+		{
+			name:      "no external id",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("this-is-me")},
+			flags:     []string{"--source", "this-is-you"},
+			expMsg: &exchange.MsgRejectPaymentRequest{
+				Target:     sdk.AccAddress("this-is-me").String(),
+				Source:     "this-is-you",
+				ExternalId: "",
+			},
+		},
+		{
+			name: "all given",
+			flags: []string{
+				"--target", "jake",
+				"--source", "elroy",
+				"--external-id", "one-two-aone two three four",
+			},
+			expMsg: &exchange.MsgRejectPaymentRequest{
+				Target:     "jake",
+				Source:     "elroy",
+				ExternalId: "one-two-aone two three four",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxRejectPayments(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxRejectPayments",
+		setup: cli.SetupCmdTxRejectPayments,
+		expFlags: []string{
+			cli.FlagTarget, cli.FlagSources,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			cli.FlagSources: {required: {"true"}},
+		},
+		expInUse: []string{
+			"{--from|--target} <target>", "--sources <sources>",
+			cli.ReqSignerDesc(cli.FlagTarget),
+			cli.RepeatableDesc,
+		},
+	}
+	addOneReqAnnotations(&tc, flags.FlagFrom, cli.FlagTarget)
+
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeMsgRejectPayments(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgRejectPaymentsRequest]{
+		makerName: "MakeMsgRejectPayments",
+		maker:     cli.MakeMsgRejectPayments,
+		setup:     cli.SetupCmdTxRejectPayments,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgRejectPaymentsRequest]{
+		{
+			name:  "no target",
+			flags: []string{"--sources", "source1,source2"},
+			expMsg: &exchange.MsgRejectPaymentsRequest{
+				Target:  "",
+				Sources: []string{"source1", "source2"},
+			},
+			expErr: "no <target> provided",
+		},
+		{
+			name:      "target from from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("this-is-me")},
+			flags:     []string{"--sources", "this-is-you"},
+			expMsg: &exchange.MsgRejectPaymentsRequest{
+				Target:  sdk.AccAddress("this-is-me").String(),
+				Sources: []string{"this-is-you"},
+			},
+		},
+		{
+			name: "all given",
+			flags: []string{
+				"--sources", "anthony,chad",
+				"--target", "flea",
+				"--sources", "john",
+			},
+			expMsg: &exchange.MsgRejectPaymentsRequest{
+				Target:  "flea",
+				Sources: []string{"anthony", "chad", "john"},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxCancelPayments(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxCancelPayments",
+		setup: cli.SetupCmdTxCancelPayments,
+		expFlags: []string{
+			cli.FlagSource, cli.FlagExternalIDs, cli.FlagEmptyExternalID,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			cli.FlagExternalIDs: {required: {"true"}},
+		},
+		expInUse: []string{
+			"{--from|--source} <source>", "--external-ids <external ids>",
+			"[--empty-external-id]",
+			cli.ReqSignerDesc(cli.FlagSource),
+			cli.RepeatableDesc,
+		},
+	}
+	addOneReqAnnotations(&tc, flags.FlagFrom, cli.FlagSource)
+
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeMsgCancelPayments(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgCancelPaymentsRequest]{
+		makerName: "MakeMsgCancelPayments",
+		maker:     cli.MakeMsgCancelPayments,
+		setup:     cli.SetupCmdTxCancelPayments,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgCancelPaymentsRequest]{
+		{
+			name:  "no source",
+			flags: []string{"--external-ids", "id1,id2"},
+			expMsg: &exchange.MsgCancelPaymentsRequest{
+				Source:      "",
+				ExternalIds: []string{"id1", "id2"},
+			},
+			expErr: "no <source> provided",
+		},
+		{
+			name:      "source from from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("the_from_address____")},
+			flags:     []string{"--external-ids", "the-id"},
+			expMsg: &exchange.MsgCancelPaymentsRequest{
+				Source:      sdk.AccAddress("the_from_address____").String(),
+				ExternalIds: []string{"the-id"},
+			},
+		},
+		{
+			name: "all given",
+			flags: []string{
+				"--external-ids", "a,b,c",
+				"--source", "myself",
+				"--empty-external-id",
+				"--external-ids", "def,ghi",
+			},
+			expMsg: &exchange.MsgCancelPaymentsRequest{
+				Source:      "myself",
+				ExternalIds: []string{"a", "b", "c", "def", "ghi", ""},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxChangePaymentTarget(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxChangePaymentTarget",
+		setup: cli.SetupCmdTxChangePaymentTarget,
+		expFlags: []string{
+			cli.FlagSource, cli.FlagExternalID, cli.FlagNewTarget,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expInUse: []string{
+			"{--from|--source} <source>",
+			"[--external-id <external id>]", "[--new-target <new target>]",
+			cli.ReqSignerDesc(cli.FlagSource),
+		},
+	}
+	addOneReqAnnotations(&tc, flags.FlagFrom, cli.FlagSource)
+
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeMsgChangePaymentTarget(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgChangePaymentTargetRequest]{
+		makerName: "MakeMsgChangePaymentTarget",
+		maker:     cli.MakeMsgChangePaymentTarget,
+		setup:     cli.SetupCmdTxChangePaymentTarget,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgChangePaymentTargetRequest]{
+		{
+			name:  "no source",
+			flags: []string{},
+			expMsg: &exchange.MsgChangePaymentTargetRequest{
+				Source:     "",
+				ExternalId: "",
+				NewTarget:  "",
+			},
+			expErr: "no <source> provided",
+		},
+		{
+			name:      "source from from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("the_from_address____")},
+			flags:     []string{},
+			expMsg: &exchange.MsgChangePaymentTargetRequest{
+				Source:     sdk.AccAddress("the_from_address____").String(),
+				ExternalId: "",
+				NewTarget:  "",
+			},
+		},
+		{
+			name: "all given",
+			flags: []string{
+				"--source", "thesource",
+				"--new-target", "thenewtarget",
+				"--external-id", "theexternalidentifier",
+			},
+			expMsg: &exchange.MsgChangePaymentTargetRequest{
+				Source:     "thesource",
+				ExternalId: "theexternalidentifier",
+				NewTarget:  "thenewtarget",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
 
 func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 	tc := setupTestCase{

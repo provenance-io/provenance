@@ -830,10 +830,11 @@ func SetupCmdTxRejectPayment(cmd *cobra.Command) {
 	cmd.Flags().String(FlagExternalID, "", "The external id")
 
 	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagTarget)
+	MarkFlagsRequired(cmd, FlagSource)
 
 	AddUseArgs(cmd,
 		ReqSignerUse(FlagTarget),
-		OptFlagUse(FlagSource, "source"),
+		ReqFlagUse(FlagSource, "source"),
 		OptFlagUse(FlagExternalID, "external id"),
 	)
 	AddUseDetails(cmd, ReqSignerDesc(FlagTarget))
@@ -887,6 +888,7 @@ func MakeMsgRejectPayments(clientCtx client.Context, flagSet *pflag.FlagSet, _ [
 func SetupCmdTxCancelPayments(cmd *cobra.Command) {
 	cmd.Flags().String(FlagSource, "", "The source account (defaults to --from account)")
 	cmd.Flags().StringSlice(FlagExternalIDs, nil, "The external ids (repeatable, required)")
+	cmd.Flags().Bool(FlagEmptyExternalID, false, "Include an empty string in the external ids")
 
 	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagSource)
 	MarkFlagsRequired(cmd, FlagExternalIDs)
@@ -894,8 +896,9 @@ func SetupCmdTxCancelPayments(cmd *cobra.Command) {
 	AddUseArgs(cmd,
 		ReqSignerUse(FlagSource),
 		ReqFlagUse(FlagExternalIDs, "external ids"),
+		OptFlagUse(FlagEmptyExternalID, ""),
 	)
-	AddUseDetails(cmd, ReqSignerDesc(FlagTarget), RepeatableDesc)
+	AddUseDetails(cmd, ReqSignerDesc(FlagSource), RepeatableDesc)
 
 	cmd.Args = cobra.NoArgs
 }
@@ -905,9 +908,14 @@ func SetupCmdTxCancelPayments(cmd *cobra.Command) {
 func MakeMsgCancelPayments(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgCancelPaymentsRequest, error) {
 	msg := &exchange.MsgCancelPaymentsRequest{}
 
-	errs := make([]error, 2)
+	errs := make([]error, 3)
 	msg.Source, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagSource)
 	msg.ExternalIds, errs[1] = flagSet.GetStringSlice(FlagExternalIDs)
+	var incEmpty bool
+	incEmpty, errs[2] = flagSet.GetBool(FlagEmptyExternalID)
+	if incEmpty {
+		msg.ExternalIds = append(msg.ExternalIds, "")
+	}
 
 	return msg, errors.Join(errs...)
 }
@@ -917,6 +925,8 @@ func SetupCmdTxChangePaymentTarget(cmd *cobra.Command) {
 	cmd.Flags().String(FlagSource, "", "The source account (defaults to --from account)")
 	cmd.Flags().String(FlagExternalID, "", "The external id")
 	cmd.Flags().String(FlagNewTarget, "", "The new target account")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagSource)
 
 	AddUseArgs(cmd,
 		ReqSignerUse(FlagSource),

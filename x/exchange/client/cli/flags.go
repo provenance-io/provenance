@@ -60,6 +60,7 @@ const (
 	FlagDetails              = "details"
 	FlagDisable              = "disable"
 	FlagEnable               = "enable"
+	FlagEmptyExternalID      = "empty-external-id"
 	FlagExternalID           = "external-id"
 	FlagExternalIDs          = "external-ids"
 	FlagFile                 = "file"
