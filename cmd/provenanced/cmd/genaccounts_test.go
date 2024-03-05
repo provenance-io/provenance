@@ -250,6 +250,18 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 			bid.BuyerSettlementFees = make(sdk.Coins, 0)
 		}
 	}
+
+	if exGenState.Payments == nil {
+		exGenState.Payments = make([]exchange.Payment, 0)
+	}
+	for i, payment := range exGenState.Payments {
+		if payment.SourceAmount == nil {
+			exGenState.Payments[i].SourceAmount = make([]sdk.Coin, 0)
+		}
+		if payment.TargetAmount == nil {
+			exGenState.Payments[i].TargetAmount = make([]sdk.Coin, 0)
+		}
+	}
 }
 
 func TestAddGenesisDefaultMarketCmd(t *testing.T) {
