@@ -1028,10 +1028,11 @@ func TestMakeMsgMarketWithdraw(t *testing.T) {
 
 func TestAddFlagsMarketDetails(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
-		name:          "AddFlagsMarketDetails",
-		setup:         cli.AddFlagsMarketDetails,
-		expFlags:      []string{cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon},
-		skipArgsCheck: true,
+		name:               "AddFlagsMarketDetails",
+		setup:              cli.AddFlagsMarketDetails,
+		expFlags:           []string{cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon},
+		skipArgsCheck:      true,
+		skipFlagInUseCheck: true,
 	})
 }
 

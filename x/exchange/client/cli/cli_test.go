@@ -1160,6 +1160,8 @@ type setupTestCase struct {
 	skipArgsCheck bool
 	// skipAddingFromFlag true causes the runner to not add the from flag to the dummy command.
 	skipAddingFromFlag bool
+	// skipFlagInUseCheck true causes the runner to skip checking that each entry in expFlags also appears in the cmd.Use.
+	skipFlagInUseCheck bool
 }
 
 // runSetupTestCase runs the provided setup func and checks that everything is set up as expected.
@@ -1182,6 +1184,10 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 	}
 	require.NotPanics(t, testFunc, tc.name)
 
+	pageFlags := []string{
+		flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
+		flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
+	}
 	for i, flagName := range tc.expFlags {
 		t.Run(fmt.Sprintf("flag[%d]: --%s", i, flagName), func(t *testing.T) {
 			flag := cmd.Flags().Lookup(flagName)
@@ -1189,6 +1195,13 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 				expAnnotations, _ := tc.expAnnotations[flagName]
 				actAnnotations := flag.Annotations
 				assert.Equal(t, expAnnotations, actAnnotations, "--%s annotations", flagName)
+				if !tc.skipFlagInUseCheck {
+					expInUse := "--" + flagName
+					if exchange.ContainsString(pageFlags, flagName) {
+						expInUse = "[pagination flags]"
+					}
+					assert.Contains(t, cmd.Use, expInUse, "cmd.Use should have something about the %s flag", flagName)
+				}
 			}
 		})
 	}
@@ -1227,7 +1240,7 @@ func addOneReqAnnotations(tc *setupTestCase, oneReqFlags ...string) {
 		if tc.expAnnotations[name] == nil {
 			tc.expAnnotations[name] = make(map[string][]string)
 		}
-		tc.expAnnotations[name][oneReq] = []string{oneReqVal}
+		tc.expAnnotations[name][oneReq] = append(tc.expAnnotations[name][oneReq], oneReqVal)
 	}
 }
 

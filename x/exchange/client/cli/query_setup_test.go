@@ -111,6 +111,7 @@ func TestSetupCmdQueryOrderFeeCalc(t *testing.T) {
 			exampleStart + " --ask --market 3 --price 10nhash",
 			exampleStart + " --bid --market 3 --price 10nhash",
 		},
+		skipFlagInUseCheck: true,
 	})
 }
 
