@@ -805,11 +805,7 @@ func ReadPaymentFromFileFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (
 		return rv, err
 	}
 
-	if tx.Body == nil {
-		return rv, fmt.Errorf("the contents of %q does not have a \"body\"", filename)
-	}
-
-	if len(tx.Body.Messages) == 0 {
+	if tx.Body == nil || len(tx.Body.Messages) == 0 {
 		return rv, fmt.Errorf("the contents of %q does not have any body messages", filename)
 	}
 
