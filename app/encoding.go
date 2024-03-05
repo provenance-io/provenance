@@ -15,6 +15,8 @@ func MakeEncodingConfig() params.EncodingConfig {
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	// TODO[1760]: proto-register: issues registering provenance protos, not finding type url even though init() has been called in
+	// generated proto file for each module.
 	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	return encodingConfig
 }
