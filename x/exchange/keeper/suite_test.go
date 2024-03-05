@@ -910,6 +910,59 @@ func (s *TestSuite) assertEqualPayments(expected, actual []*exchange.Payment, ms
 	return false
 }
 
+// assertEqualCoins asserts that two Coins are equal and helps identify the differences if they're not.
+// Returns true if they're equal, false otherwise.
+func (s *TestSuite) assertEqualCoins(expected, actual sdk.Coins, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+	s.Assert().Equalf(s.coinsString(expected), s.coinsString(actual), msg+" (as strings)", args...)
+	return false
+}
+
+// assertEqualNAVs asserts that two slices of NetAssetPrice are equal and helps identify the differences if they're not.
+// Returns true if they're equal, false otherwise.
+func (s *TestSuite) assertEqualNAVs(expected, actual []exchange.NetAssetPrice, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+
+	expStrs := sliceStrings(expected, exchange.NetAssetPrice.String)
+	actStrs := sliceStrings(actual, exchange.NetAssetPrice.String)
+	if !s.Assert().Equalf(expStrs, actStrs, msg+" (as strings)", args...) {
+		return false
+	}
+
+	args2 := make([]interface{}, len(args)+1)
+	copy(args2, args)
+	for i := range expected {
+		args2[len(args2)-1] = i
+		s.assertEqualNAV(&expected[i], &actual[i], msg+" [%d]", args2...)
+	}
+
+	return false
+}
+
+// assertEqualNAV asserts that two NetAssetPrice entries are equal and helps identify the differences if they're not.
+// Returns true if they're equal, false otherwise.
+func (s *TestSuite) assertEqualNAV(expected, actual *exchange.NetAssetPrice, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+
+	if expected == nil || actual == nil {
+		return false
+	}
+
+	if !s.Assert().Equalf(expected.String(), actual.String(), msg+" (as strings)", args...) {
+		return false
+	}
+
+	s.Assert().Equalf(expected.Assets, actual.Assets, msg+" Assets", args...)
+	s.Assert().Equalf(expected.Price, actual.Price, msg+" Price", args...)
+	return false
+}
+
 // assertErrorValue is a wrapper for assertions.AssertErrorValue for this TestSuite.
 func (s *TestSuite) assertErrorValue(theError error, expected string, msgAndArgs ...interface{}) bool {
 	s.T().Helper()

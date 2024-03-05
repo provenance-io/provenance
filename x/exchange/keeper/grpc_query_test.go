@@ -3888,6 +3888,13 @@ func (s *TestSuite) TestQueryServer_CommitmentSettlementFeeCalc() {
 	testDef := queryTestDef[exchange.QueryCommitmentSettlementFeeCalcRequest, exchange.QueryCommitmentSettlementFeeCalcResponse]{
 		queryName: "CommitmentSettlementFeeCalc",
 		query:     keeper.NewQueryServer(s.k).CommitmentSettlementFeeCalc,
+		followup: func(expected, actual *exchange.QueryCommitmentSettlementFeeCalcResponse) {
+			s.assertEqualCoins(expected.ExchangeFees, actual.ExchangeFees, "ExchangeFees")
+			s.assertEqualCoins(expected.InputTotal, actual.InputTotal, "InputTotal")
+			s.assertEqualCoins(expected.ConvertedTotal, actual.ConvertedTotal, "ConvertedTotal")
+			s.assertEqualNAVs(expected.ConversionNavs, actual.ConversionNavs, "ConversionNavs")
+			s.assertEqualNAV(expected.ToFeeNav, actual.ToFeeNav, "ToFeeNav")
+		},
 	}
 
 	tests := []queryTestCase[exchange.QueryCommitmentSettlementFeeCalcRequest, exchange.QueryCommitmentSettlementFeeCalcResponse]{
@@ -4618,12 +4625,421 @@ func (s *TestSuite) TestQueryServer_ValidateManageFees() {
 	}
 }
 
-// TODO[1703]: func (s *TestSuite) TestQueryServer_GetPayment()
+func (s *TestSuite) TestQueryServer_GetPayment() {
+	testDef := queryTestDef[exchange.QueryGetPaymentRequest, exchange.QueryGetPaymentResponse]{
+		queryName: "GetPayment",
+		query:     keeper.NewQueryServer(s.k).GetPayment,
+		followup: func(expected, actual *exchange.QueryGetPaymentResponse) {
+			s.assertEqualPayment(expected.Payment, actual.Payment, "resulting payment")
+		},
+	}
 
-// TODO[1703]: func (s *TestSuite) TestQueryServer_GetPaymentsWithSource()
+	tests := []queryTestCase[exchange.QueryGetPaymentRequest, exchange.QueryGetPaymentResponse]{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "no source",
+			req: &exchange.QueryGetPaymentRequest{
+				Source:     "",
+				ExternalId: "whatever",
+			},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "bad source",
+			req: &exchange.QueryGetPaymentRequest{
+				Source:     "gonnanotwork",
+				ExternalId: "",
+			},
+			expInErr: []string{invalidArgErr, "invalid source \"gonnanotwork\"", "decoding bech32 failed"},
+		},
+		{
+			name: "no such payment",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "8strawberry", s.addr3, "", "one"),
+					s.newTestPayment(s.addr2, "", s.addr4, "16tomato", ""),
+					s.newTestPayment(s.addr2, "16strawberry", s.addr3, "3tangerine", "two"),
+					s.newTestPayment(s.addr3, "5starfruit", s.addr2, "12tomato", "three"),
+				)
+			},
+			req: &exchange.QueryGetPaymentRequest{
+				Source:     s.addr2.String(),
+				ExternalId: "three",
+			},
+			expResp: &exchange.QueryGetPaymentResponse{Payment: nil},
+		},
+		{
+			name: "payment exists: no external id",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "8strawberry", s.addr3, "", "one"),
+					s.newTestPayment(s.addr2, "", s.addr4, "16tomato", ""),
+					s.newTestPayment(s.addr2, "16strawberry", s.addr3, "3tangerine", "two"),
+					s.newTestPayment(s.addr3, "5starfruit", s.addr2, "12tomato", "three"),
+				)
+			},
+			req: &exchange.QueryGetPaymentRequest{
+				Source:     s.addr2.String(),
+				ExternalId: "",
+			},
+			expResp: &exchange.QueryGetPaymentResponse{Payment: s.newTestPayment(s.addr2, "", s.addr4, "16tomato", "")},
+		},
+		{
+			name: "payment exists: with external id",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "8strawberry", s.addr3, "", "one"),
+					s.newTestPayment(s.addr2, "", s.addr4, "16tomato", ""),
+					s.newTestPayment(s.addr2, "16strawberry", s.addr3, "3tangerine", "two"),
+					s.newTestPayment(s.addr3, "5starfruit", s.addr2, "12tomato", "three"),
+				)
+			},
+			req: &exchange.QueryGetPaymentRequest{
+				Source:     s.addr2.String(),
+				ExternalId: "one",
+			},
+			expResp: &exchange.QueryGetPaymentResponse{Payment: s.newTestPayment(s.addr2, "8strawberry", s.addr3, "", "one")},
+		},
+	}
 
-// TODO[1703]: func (s *TestSuite) TestQueryServer_GetPaymentsWithTarget()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
 
-// TODO[1703]: func (s *TestSuite) TestQueryServer_GetAllPayments()
+func (s *TestSuite) TestQueryServer_GetPaymentsWithSource() {
+	testDef := queryTestDef[exchange.QueryGetPaymentsWithSourceRequest, exchange.QueryGetPaymentsWithSourceResponse]{
+		queryName: "GetPaymentsWithSource",
+		query:     keeper.NewQueryServer(s.k).GetPaymentsWithSource,
+		followup: func(expected, actual *exchange.QueryGetPaymentsWithSourceResponse) {
+			s.assertEqualPayments(expected.Payments, actual.Payments, "resulting payments")
+			s.assertEqualPageResponse(expected.Pagination, actual.Pagination, "Pagination")
+		},
+	}
 
-// TODO[1703]: func (s *TestSuite) TestQueryServer_PaymentFeeCalc()
+	tests := []queryTestCase[exchange.QueryGetPaymentsWithSourceRequest, exchange.QueryGetPaymentsWithSourceResponse]{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "no source",
+			req: &exchange.QueryGetPaymentsWithSourceRequest{
+				Source:     "",
+				Pagination: &query.PageRequest{},
+			},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "invalid source",
+			req: &exchange.QueryGetPaymentsWithSourceRequest{
+				Source: "noworky",
+			},
+			expInErr: []string{invalidArgErr, "invalid source \"noworky\"", "decoding bech32 failed"},
+		},
+		{
+			name: "one result",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "3strawberry", s.addr3, "", ""),
+					s.newTestPayment(s.addr3, "4strawberry", s.addr4, "1tomato", "moveit"),
+					s.newTestPayment(s.addr4, "5strawberry", s.addr3, "", ""),
+				)
+			},
+			req: &exchange.QueryGetPaymentsWithSourceRequest{
+				Source: s.addr3.String(),
+			},
+			expResp: &exchange.QueryGetPaymentsWithSourceResponse{
+				Payments: []*exchange.Payment{
+					s.newTestPayment(s.addr3, "4strawberry", s.addr4, "1tomato", "moveit"),
+				},
+				Pagination: &query.PageResponse{Total: 1},
+			},
+		},
+		{
+			name: "three results: no page request",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "3strawberry", s.addr1, "", ""),
+					s.newTestPayment(s.addr2, "4strawberry", nil, "1tomato", "moveit"),
+					s.newTestPayment(s.addr2, "5strawberry", s.addr3, "", "zlastone"),
+				)
+
+			},
+			req: &exchange.QueryGetPaymentsWithSourceRequest{
+				Source: s.addr2.String(),
+			},
+			expResp: &exchange.QueryGetPaymentsWithSourceResponse{
+				Payments: []*exchange.Payment{
+					s.newTestPayment(s.addr2, "3strawberry", s.addr1, "", ""),
+					s.newTestPayment(s.addr2, "4strawberry", nil, "1tomato", "moveit"),
+					s.newTestPayment(s.addr2, "5strawberry", s.addr3, "", "zlastone"),
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			name: "three payments: limit 2 reverse",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "3strawberry", s.addr1, "", ""),
+					s.newTestPayment(s.addr2, "4strawberry", s.addr3, "1tomato", "moveit"),
+					s.newTestPayment(s.addr2, "5strawberry", s.addr3, "", "zlastone"),
+				)
+
+			},
+			req: &exchange.QueryGetPaymentsWithSourceRequest{
+				Source:     s.addr2.String(),
+				Pagination: &query.PageRequest{Limit: 2, Reverse: true},
+			},
+			expResp: &exchange.QueryGetPaymentsWithSourceResponse{
+				Payments: []*exchange.Payment{
+					s.newTestPayment(s.addr2, "5strawberry", s.addr3, "", "zlastone"),
+					s.newTestPayment(s.addr2, "4strawberry", s.addr3, "1tomato", "moveit"),
+				},
+				Pagination: &query.PageResponse{
+					NextKey: []byte{},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestQueryServer_GetPaymentsWithTarget() {
+	testDef := queryTestDef[exchange.QueryGetPaymentsWithTargetRequest, exchange.QueryGetPaymentsWithTargetResponse]{
+		queryName: "GetPaymentsWithTarget",
+		query:     keeper.NewQueryServer(s.k).GetPaymentsWithTarget,
+		followup: func(expected, actual *exchange.QueryGetPaymentsWithTargetResponse) {
+			s.assertEqualPayments(expected.Payments, actual.Payments, "resulting payments")
+			s.assertEqualPageResponse(expected.Pagination, actual.Pagination, "Pagination")
+		},
+	}
+
+	tests := []queryTestCase[exchange.QueryGetPaymentsWithTargetRequest, exchange.QueryGetPaymentsWithTargetResponse]{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "no target",
+			req: &exchange.QueryGetPaymentsWithTargetRequest{
+				Target:     "",
+				Pagination: &query.PageRequest{},
+			},
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name: "invalid target",
+			req: &exchange.QueryGetPaymentsWithTargetRequest{
+				Target: "noworky",
+			},
+			expInErr: []string{invalidArgErr, "invalid target \"noworky\"", "decoding bech32 failed"},
+		},
+		{
+			name: "one result",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr2, "3strawberry", s.addr1, "", ""),
+					s.newTestPayment(s.addr3, "4strawberry", s.addr2, "1tomato", "moveit"),
+					s.newTestPayment(s.addr2, "5strawberry", s.addr4, "", "other"),
+				)
+			},
+			req: &exchange.QueryGetPaymentsWithTargetRequest{
+				Target: s.addr2.String(),
+			},
+			expResp: &exchange.QueryGetPaymentsWithTargetResponse{
+				Payments: []*exchange.Payment{
+					s.newTestPayment(s.addr3, "4strawberry", s.addr2, "1tomato", "moveit"),
+				},
+				Pagination: &query.PageResponse{Total: 1},
+			},
+		},
+		{
+			name: "three results: no page request",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr1, "3strawberry", s.addr3, "", ""),
+					s.newTestPayment(s.addr2, "4strawberry", s.addr3, "1tomato", "moveit"),
+					s.newTestPayment(s.addr2, "5strawberry", s.addr3, "", "zlastone"),
+				)
+
+			},
+			req: &exchange.QueryGetPaymentsWithTargetRequest{
+				Target: s.addr3.String(),
+			},
+			expResp: &exchange.QueryGetPaymentsWithTargetResponse{
+				Payments: []*exchange.Payment{
+					s.newTestPayment(s.addr1, "3strawberry", s.addr3, "", ""),
+					s.newTestPayment(s.addr2, "4strawberry", s.addr3, "1tomato", "moveit"),
+					s.newTestPayment(s.addr2, "5strawberry", s.addr3, "", "zlastone"),
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			name: "three payments: limit 2 reverse",
+			setup: func() {
+				s.requireSetPaymentsInStore(
+					s.newTestPayment(s.addr1, "3strawberry", s.addr3, "", ""),
+					s.newTestPayment(s.addr2, "4strawberry", s.addr3, "1tomato", "moveit"),
+					s.newTestPayment(s.addr2, "5strawberry", s.addr3, "", "zlastone"),
+				)
+
+			},
+			req: &exchange.QueryGetPaymentsWithTargetRequest{
+				Target:     s.addr3.String(),
+				Pagination: &query.PageRequest{Limit: 2, Reverse: true},
+			},
+			expResp: &exchange.QueryGetPaymentsWithTargetResponse{
+				Payments: []*exchange.Payment{
+					s.newTestPayment(s.addr2, "5strawberry", s.addr3, "", "zlastone"),
+					s.newTestPayment(s.addr2, "4strawberry", s.addr3, "1tomato", "moveit"),
+				},
+				Pagination: &query.PageResponse{
+					NextKey: keeper.MakeKeyPayment(s.addr1, "")[1:],
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestQueryServer_GetAllPayments() {
+	testDef := queryTestDef[exchange.QueryGetAllPaymentsRequest, exchange.QueryGetAllPaymentsResponse]{
+		queryName: "GetAllPayments",
+		query:     keeper.NewQueryServer(s.k).GetAllPayments,
+		followup: func(expected, actual *exchange.QueryGetAllPaymentsResponse) {
+			s.assertEqualPayments(expected.Payments, actual.Payments, "resulting payments")
+			s.assertEqualPageResponse(expected.Pagination, actual.Pagination, "Pagination")
+		},
+	}
+
+	expPayments := []*exchange.Payment{
+		s.newTestPayment(s.addr1, "1strawberry", s.longAddr1, "", "a"),
+		s.newTestPayment(s.addr1, "2starfruit", s.longAddr2, "2tomato", "b"),
+		s.newTestPayment(s.addr2, "3starfruit", s.addr4, "", ""),
+		s.newTestPayment(s.addr3, "4strawberry,1starfruit", nil, "44tangerine", "justsomeid"),
+		s.newTestPayment(s.addr5, "", s.addr1, "5tangerine", "anotherid"),
+	}
+	setup := func() {
+		s.requireSetPaymentsInStore(expPayments...)
+	}
+
+	tests := []queryTestCase[exchange.QueryGetAllPaymentsRequest, exchange.QueryGetAllPaymentsResponse]{
+		{
+			name:    "no payments",
+			req:     &exchange.QueryGetAllPaymentsRequest{},
+			expResp: &exchange.QueryGetAllPaymentsResponse{Pagination: &query.PageResponse{}},
+		},
+		{
+			name:  "5 payments: nil request",
+			setup: setup,
+			req:   nil,
+			expResp: &exchange.QueryGetAllPaymentsResponse{
+				Payments:   expPayments,
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name:  "5 payments: no page request",
+			setup: setup,
+			req:   &exchange.QueryGetAllPaymentsRequest{Pagination: nil},
+			expResp: &exchange.QueryGetAllPaymentsResponse{
+				Payments:   expPayments,
+				Pagination: &query.PageResponse{Total: 5},
+			},
+		},
+		{
+			name:  "5 payments: limit 2 offset 1",
+			setup: setup,
+			req: &exchange.QueryGetAllPaymentsRequest{
+				Pagination: &query.PageRequest{Offset: 1, Limit: 2},
+			},
+			expResp: &exchange.QueryGetAllPaymentsResponse{
+				Payments:   expPayments[1:3],
+				Pagination: &query.PageResponse{NextKey: keeper.MakeKeyPayment(s.addr3, "justsomeid")[1:]},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestQueryServer_PaymentFeeCalc() {
+	testDef := queryTestDef[exchange.QueryPaymentFeeCalcRequest, exchange.QueryPaymentFeeCalcResponse]{
+		queryName: "PaymentFeeCalc",
+		query:     keeper.NewQueryServer(s.k).PaymentFeeCalc,
+		followup: func(expected, actual *exchange.QueryPaymentFeeCalcResponse) {
+			s.assertEqualCoins(expected.FeeCreate, actual.FeeCreate, "FeeCreate")
+			s.assertEqualCoins(expected.FeeAccept, actual.FeeAccept, "FeeAccept")
+		},
+	}
+
+	tests := []queryTestCase[exchange.QueryPaymentFeeCalcRequest, exchange.QueryPaymentFeeCalcResponse]{
+		{
+			name:     "nil req",
+			req:      nil,
+			expInErr: []string{invalidArgErr, "empty request"},
+		},
+		{
+			name:    "empty payment",
+			req:     &exchange.QueryPaymentFeeCalcRequest{},
+			expResp: &exchange.QueryPaymentFeeCalcResponse{},
+		},
+		{
+			name: "payment with funds: default params",
+			req: &exchange.QueryPaymentFeeCalcRequest{
+				Payment: exchange.Payment{
+					SourceAmount: s.coins("10strawberry"),
+					TargetAmount: s.coins("111222333444555tomato"),
+				},
+			},
+			expResp: &exchange.QueryPaymentFeeCalcResponse{
+				FeeCreate: exchange.DefaultParams().FeeCreatePaymentFlat,
+				FeeAccept: exchange.DefaultParams().FeeAcceptPaymentFlat,
+			},
+		},
+		{
+			name: "payment with funds: nothing set in params",
+			setup: func() {
+				s.k.SetParams(s.ctx, nil)
+			},
+			req: &exchange.QueryPaymentFeeCalcRequest{
+				Payment: exchange.Payment{
+					SourceAmount: s.coins("10strawberry"),
+					TargetAmount: s.coins("111222333444555tomato"),
+				},
+			},
+			expResp: &exchange.QueryPaymentFeeCalcResponse{},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
