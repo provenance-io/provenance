@@ -676,12 +676,22 @@ func (s *CmdTestSuite) TestCmdQueryParams() {
 			expOut: `params:
   default_split: 500
   denom_splits: []
+  fee_accept_payment_flat:
+  - amount: "100000000"
+    denom: nhash
+  fee_create_payment_flat:
+  - amount: "100000000"
+    denom: nhash
 `,
 		},
 		{
-			name:   "as json",
-			args:   []string{"get-params", "--output", "json"},
-			expOut: `{"params":{"default_split":500,"denom_splits":[]}}` + "\n",
+			name: "as json",
+			args: []string{"get-params", "--output", "json"},
+			expInOut: []string{
+				`{"params":{`, `"default_split":500`, `"denom_splits":[]`,
+				`"fee_create_payment_flat":[{"denom":"nhash","amount":"100000000"}]`,
+				`"fee_accept_payment_flat":[{"denom":"nhash","amount":"100000000"}]`,
+			},
 		},
 	}
 
