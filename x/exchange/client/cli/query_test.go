@@ -897,12 +897,212 @@ gov_prop_will_pass: true
 	}
 }
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdQueryGetPayment()
+func (s *CmdTestSuite) TestCmdQueryGetPayment() {
+	expPmt := s.makeInitialPayment(5, 3)
+	tests := []queryCmdTestCase{
+		{
+			name:     "no source",
+			args:     []string{"payment", "--external-id", "whatever"},
+			expInErr: []string{"no <source> provided"},
+		},
+		{
+			name: "no such payment",
+			args: []string{"get-payment", "--source", s.addr0.String(), "--external-id", "nothing_to_see_here"},
+			expInErr: []string{"invalid request", "InvalidArgument",
+				"no payment found with source " + s.addr0.String() + " and external id \"nothing_to_see_here\""},
+		},
+		{
+			name: "payment exists: yaml",
+			args: []string{"payment", expPmt.Source, expPmt.ExternalId, "--output", "text"},
+			expOut: `payment:
+  external_id: initial-payment-05-03
+  source: ` + expPmt.Source + `
+  source_amount:
+  - amount: "460"
+    denom: peach
+  - amount: "800"
+    denom: strawberry
+  target: ` + expPmt.Target + `
+  target_amount: []
+`,
+		},
+		{
+			name: "payment exists: json",
+			args: []string{"get-payment", "--output", "json",
+				"--external-id", expPmt.ExternalId, "--source", expPmt.Source},
+			expInErr: nil,
+			expInOut: []string{
+				`{"payment":{`,
+				`"source":"` + expPmt.Source + `"`,
+				`"source_amount":[{"denom":"peach","amount":"460"},{"denom":"strawberry","amount":"800"}]`,
+				`"target":"` + expPmt.Target + `"`,
+				`"target_amount":[]`,
+				`"external_id":"initial-payment-05-03"`,
+			},
+		},
+	}
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdQueryGetPaymentsWithSource()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdQueryGetPaymentsWithTarget()
+func (s *CmdTestSuite) TestCmdQueryGetPaymentsWithSource() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"payments-with-source"},
+			expInErr: []string{"no <source> provided"},
+		},
+		{
+			name: "no payments",
+			args: []string{"get-payments-with-source", "--output", "text",
+				"--source", sdk.AccAddress("no_such_address_____").String()},
+			expOut: `pagination:
+  next_key: null
+  total: "0"
+payments: []
+`,
+		},
+		{
+			name:     "some payments",
+			args:     []string{"payments-with-source", s.addr2.String(), "--output", "json"},
+			expInOut: []string{`{"payments":[{`, `"source":"` + s.addr2.String() + `"`},
+		},
+	}
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdQueryGetAllPayments()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdQueryPaymentFeeCalc()
+func (s *CmdTestSuite) TestCmdQueryGetPaymentsWithTarget() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"payments-with-target"},
+			expInErr: []string{"no <target> provided"},
+		},
+		{
+			name: "no payments",
+			args: []string{"get-payments-with-target", "--output", "text",
+				"--target", sdk.AccAddress("no_such_address_____").String()},
+			expOut: `pagination:
+  next_key: null
+  total: "0"
+payments: []
+`,
+		},
+		{
+			name:     "some payments",
+			args:     []string{"payments-with-target", s.addr2.String(), "--output", "json"},
+			expInOut: []string{`{"payments":[{`, `"target":"` + s.addr2.String() + `"`},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdQueryGetAllPayments() {
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"all-payments", "--source", s.addr2.String()},
+			expInErr: []string{"unknown flag: --source"},
+		},
+		{
+			name: "some payments",
+			args: []string{"all-payments", "--output", "json"},
+			expInOut: []string{
+				`{"payments":[{`,
+				`"source":"` + s.addr2.String() + `"`,
+				`"target":"` + s.addr2.String() + `"`,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdQueryPaymentFeeCalc() {
+	tdir := s.T().TempDir()
+	msgCreate := &exchange.MsgCreatePaymentRequest{
+		Payment: exchange.Payment{
+			Source:       s.addr0.String(),
+			SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 500_000)),
+			Target:       s.addr1.String(),
+			TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 100_000)),
+			ExternalId:   "just_playing",
+		},
+	}
+	txCreate := newTx(s.T(), msgCreate)
+	fnCreate := filepath.Join(tdir, "create-payment.json")
+	writeFileAsJson(s.T(), fnCreate, txCreate)
+
+	msgAccept := &exchange.MsgAcceptPaymentRequest{
+		Payment: exchange.Payment{
+			Source:       s.addr1.String(),
+			SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 200_000)),
+			Target:       s.addr0.String(),
+			TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 600_000)),
+			ExternalId:   "also_playing",
+		},
+	}
+	txAccept := newTx(s.T(), msgAccept)
+	fnAccept := filepath.Join(tdir, "accept-payment.json")
+	writeFileAsJson(s.T(), fnAccept, txAccept)
+
+	tests := []queryCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"payment-fee-calc", "--sources", s.addr1.String(), "--source-amount", "11strawberry"},
+			expInErr: []string{"unknown flag: --sources"},
+		},
+		{
+			name: "using flags",
+			args: []string{"payment-fee-calc", "--source-amount", "1strawberry", "--output", "text"},
+			expOut: `fee_accept: []
+fee_create:
+- amount: "100000000"
+  denom: nhash
+`,
+		},
+		{
+			name: "from create file",
+			args: []string{"payment-fee-calc", "--file", fnCreate, "--output", "text"},
+			expOut: `fee_accept:
+- amount: "100000000"
+  denom: nhash
+fee_create:
+- amount: "100000000"
+  denom: nhash
+`,
+		},
+		{
+			name: "from accept file",
+			args: []string{"payment-fee-calc", "--file", fnAccept, "--output", "json"},
+			expInOut: []string{
+				`"fee_create":[{"denom":"nhash","amount":"100000000"}]`,
+				`"fee_accept":[{"denom":"nhash","amount":"100000000"}]`,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runQueryCmdTestCase(tc)
+		})
+	}
+}
