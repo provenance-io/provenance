@@ -124,8 +124,13 @@ func (s *CmdTestSuite) SetupSuite() {
 	acornMarker := newMarker("acorn")
 	peachMarker := newMarker("peach")
 	cherryMarker := newMarker("cherry")
+	strawberryMarker := newMarker("strawberry")
+	tangerineMarker := newMarker("tangerine")
 
-	allMarkers := []*markertypes.MarkerAccount{appleMarker, acornMarker, peachMarker, cherryMarker}
+	allMarkers := []*markertypes.MarkerAccount{
+		appleMarker, acornMarker, peachMarker,
+		cherryMarker, strawberryMarker, tangerineMarker,
+	}
 
 	// Add accounts to auth gen state.
 	var authGen authtypes.GenesisState
@@ -265,12 +270,26 @@ func (s *CmdTestSuite) SetupSuite() {
 		Amount:   sdk.NewCoins(sdk.NewInt64Coin("apple", 4210), sdk.NewInt64Coin("peach", 421)),
 	})
 
+	for sourceI := range s.accountAddrs {
+		for targetI := range s.accountAddrs {
+			payment := s.makeInitialPayment(sourceI, targetI)
+			exchangeGen.Payments = append(exchangeGen.Payments, *payment)
+		}
+		payment := s.makeInitialPayment(sourceI, len(s.accountAddrs))
+		exchangeGen.Payments = append(exchangeGen.Payments, *payment)
+	}
+
 	toHold := make(map[string]sdk.Coins)
 	for _, order := range exchangeGen.Orders {
 		toHold[order.GetOwner()] = toHold[order.GetOwner()].Add(order.GetHoldAmount()...)
 	}
 	for _, com := range exchangeGen.Commitments {
 		toHold[com.Account] = toHold[com.Account].Add(com.Amount...)
+	}
+	for _, payment := range exchangeGen.Payments {
+		if !payment.SourceAmount.IsZero() {
+			toHold[payment.Source] = toHold[payment.Source].Add(payment.SourceAmount...)
+		}
 	}
 
 	s.cfg.GenesisState[exchange.ModuleName], err = s.cfg.Codec.MarshalJSON(&exchangeGen)
@@ -315,13 +334,15 @@ func (s *CmdTestSuite) SetupSuite() {
 
 	// Add balances to bank gen state.
 	// Any initial holds for an account are added to this so that
-	// this is what's available to each at the start of the unit tests.
+	// this is what's spendable to each at the start of the unit tests.
 	balance := sdk.NewCoins(
 		s.bondCoin(1_000_000_000),
 		s.feeCoin(1_000_000_000),
 		sdk.NewInt64Coin("acorn", 1_000_000_000),
 		sdk.NewInt64Coin("apple", 1_000_000_000),
 		sdk.NewInt64Coin("peach", 1_000_000_000),
+		sdk.NewInt64Coin("strawberry", 1_000_000_000),
+		sdk.NewInt64Coin("tangerine", 1_000_000_000),
 	)
 	var bankGen banktypes.GenesisState
 	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[banktypes.ModuleName], &bankGen)
@@ -433,6 +454,45 @@ func (s *CmdTestSuite) makeInitialCommitment(addrI int) *exchange.Commitment {
 	return rv
 }
 
+// makeInitialPayment makes a payment with the source and target having the s.accountAddrs with the given indexes.
+// If sourceI or targetI is not in s.accountAddrs, the payment won't have a source or target (respectively).
+// The amounts are based off of the sourceI and targetI, and might each be zero (but not both).
+func (s *CmdTestSuite) makeInitialPayment(sourceI, targetI int) *exchange.Payment {
+	rv := &exchange.Payment{
+		ExternalId: fmt.Sprintf("initial-payment-%02d-%02d", sourceI, targetI),
+	}
+	if sourceI < len(s.accountAddrs) {
+		rv.Source = s.accountAddrs[sourceI].String()
+	}
+	if targetI < len(s.accountAddrs) {
+		rv.Target = s.accountAddrs[targetI].String()
+	}
+
+	switch sourceI % 3 {
+	case 1:
+		rv.SourceAmount = sdk.NewCoins(sdk.NewInt64Coin("strawberry", int64(300+50*targetI)))
+	case 2:
+		rv.SourceAmount = sdk.NewCoins(sdk.NewInt64Coin("strawberry", int64(500+100*targetI)),
+			sdk.NewInt64Coin("peach", int64(10+50*targetI*targetI)))
+	}
+
+	switch targetI % 3 {
+	case 1:
+		rv.TargetAmount = sdk.NewCoins(sdk.NewInt64Coin("tangerine", int64(100+200*sourceI)))
+	case 2:
+		rv.TargetAmount = sdk.NewCoins(sdk.NewInt64Coin("tangerine", int64(1000+50*sourceI)),
+			sdk.NewInt64Coin("acorn", int64(10_000+10*sourceI*sourceI)))
+	}
+
+	// Don't allow both the amounts to be zero
+	if rv.SourceAmount.IsZero() && rv.TargetAmount.IsZero() {
+		rv.SourceAmount = sdk.NewCoins(sdk.NewInt64Coin("peach", int64(targetI+1)))
+		rv.TargetAmount = sdk.NewCoins(sdk.NewInt64Coin("acorn", int64(sourceI+1)))
+	}
+
+	return rv
+}
+
 // contains reports whether v is present in s.
 func contains[S ~[]E, E comparable](s S, v E) bool {
 	for i := range s {
@@ -452,6 +512,9 @@ func (s *CmdTestSuite) getClientCtx() client.Context {
 
 // getAddrName tries to get the variable name (in this suite) of the provided address.
 func (s *CmdTestSuite) getAddrName(addr string) string {
+	if len(addr) == 0 {
+		return "<empty>"
+	}
 	if rv, found := s.addrNameLookup[addr]; found {
 		return rv
 	}
