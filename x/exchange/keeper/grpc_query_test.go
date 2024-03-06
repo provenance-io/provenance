@@ -4745,6 +4745,13 @@ func (s *TestSuite) TestQueryServer_GetPaymentsWithSource() {
 			expInErr: []string{invalidArgErr, "invalid source \"noworky\"", "decoding bech32 failed"},
 		},
 		{
+			name: "no results",
+			req: &exchange.QueryGetPaymentsWithSourceRequest{
+				Source: sdk.AccAddress("random_address______").String(),
+			},
+			expResp: &exchange.QueryGetPaymentsWithSourceResponse{Pagination: &query.PageResponse{}},
+		},
+		{
 			name: "one result",
 			setup: func() {
 				s.requireSetPaymentsInStore(
@@ -4848,6 +4855,13 @@ func (s *TestSuite) TestQueryServer_GetPaymentsWithTarget() {
 				Target: "noworky",
 			},
 			expInErr: []string{invalidArgErr, "invalid target \"noworky\"", "decoding bech32 failed"},
+		},
+		{
+			name: "no results",
+			req: &exchange.QueryGetPaymentsWithTargetRequest{
+				Target: sdk.AccAddress("random_address______").String(),
+			},
+			expResp: &exchange.QueryGetPaymentsWithTargetResponse{Pagination: &query.PageResponse{}},
 		},
 		{
 			name: "one result",
