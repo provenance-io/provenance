@@ -80,7 +80,7 @@ func (s *TestSuite) assertTargetToPaymentIndexEntriesMatchPayments() bool {
 	return assertEqualSlice(s, expKeys, actKeys, keyStringer, "target to payment index entries")
 }
 
-func (s *TestSuite) TestGetPayment() {
+func (s *TestSuite) TestKeeper_GetPayment() {
 	sourceHasTwoPayments1 := s.newTestPayment(s.longAddr2, "22strawberry", s.addr3, "12tomato", "l2-3-2")
 	sourceHasTwoPayments2 := s.newTestPayment(s.longAddr2, "44strawberry", s.addr3, "14tomato", "l2-3-4")
 	sourceHasTwoPaymentsSetup := func() {
@@ -225,7 +225,7 @@ func (s *TestSuite) TestGetPayment() {
 	}
 }
 
-func (s *TestSuite) TestCreatePayment() {
+func (s *TestSuite) TestKeeper_CreatePayment() {
 	tests := []struct {
 		name       string
 		setup      func()
@@ -375,7 +375,7 @@ func (s *TestSuite) TestCreatePayment() {
 	}
 }
 
-func (s *TestSuite) TestAcceptPayment() {
+func (s *TestSuite) TestKeeper_AcceptPayment() {
 	getPaymentStoreValue := func(payment *exchange.Payment) []byte {
 		s.Require().NotNil(payment, "cannot create payment store value from nil payment")
 		rv, err := s.k.GetCodec().Marshal(payment)
@@ -707,7 +707,7 @@ func (s *TestSuite) TestAcceptPayment() {
 	}
 }
 
-func (s *TestSuite) TestRejectPayment() {
+func (s *TestSuite) TestKeeper_RejectPayment() {
 	tests := []struct {
 		name         string
 		setup        func()
@@ -906,7 +906,7 @@ func (s *TestSuite) TestRejectPayment() {
 	}
 }
 
-func (s *TestSuite) TestRejectPayments() {
+func (s *TestSuite) TestKeeper_RejectPayments() {
 	type paymentKey struct {
 		source     sdk.AccAddress
 		externalID string
@@ -1171,7 +1171,7 @@ func (s *TestSuite) TestRejectPayments() {
 	}
 }
 
-func (s *TestSuite) TestCancelPayments() {
+func (s *TestSuite) TestKeeper_CancelPayments() {
 	type paymentKey struct {
 		source     sdk.AccAddress
 		externalID string
@@ -1443,7 +1443,7 @@ func (s *TestSuite) TestCancelPayments() {
 	}
 }
 
-func (s *TestSuite) TestUpdatePaymentTarget() {
+func (s *TestSuite) TestKeeper_UpdatePaymentTarget() {
 	tests := []struct {
 		name         string
 		setup        func()
@@ -1623,7 +1623,7 @@ func (s *TestSuite) TestUpdatePaymentTarget() {
 	}
 }
 
-func (s *TestSuite) TestGetPaymentsForTargetAndSource() {
+func (s *TestSuite) TestKeeper_GetPaymentsForTargetAndSource() {
 	s.clearExchangeState()
 	paymentsAddr2FromAddr1 := []*exchange.Payment{
 		s.newTestPayment(s.addr1, "18strawberry", s.addr2, "", "a"),
@@ -1709,7 +1709,7 @@ func (s *TestSuite) TestGetPaymentsForTargetAndSource() {
 	}
 }
 
-func (s *TestSuite) TestIteratePayments() {
+func (s *TestSuite) TestKeeper_IteratePayments() {
 	var payments []*exchange.Payment
 	stopAfter := func(count int) func(*exchange.Payment) bool {
 		return func(payment *exchange.Payment) bool {
@@ -1802,7 +1802,7 @@ func (s *TestSuite) TestIteratePayments() {
 	}
 }
 
-func (s *TestSuite) TestCalculatePaymentFees() {
+func (s *TestSuite) TestKeeper_CalculatePaymentFees() {
 	tests := []struct {
 		name     string
 		params   *exchange.Params
