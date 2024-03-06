@@ -559,6 +559,10 @@ func (k QueryServer) GetPayment(goCtx context.Context, req *exchange.QueryGetPay
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	resp := &exchange.QueryGetPaymentResponse{}
 	resp.Payment, _ = k.Keeper.GetPayment(ctx, source, req.ExternalId)
+	if resp.Payment == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "no payment found with source %s and external id %q",
+			req.Source, req.ExternalId)
+	}
 
 	return resp, nil
 }

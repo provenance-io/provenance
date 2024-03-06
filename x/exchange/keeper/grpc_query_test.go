@@ -4670,7 +4670,7 @@ func (s *TestSuite) TestQueryServer_GetPayment() {
 				Source:     s.addr2.String(),
 				ExternalId: "three",
 			},
-			expResp: &exchange.QueryGetPaymentResponse{Payment: nil},
+			expInErr: []string{"no payment found with source " + s.addr2.String() + " and external id \"three\""},
 		},
 		{
 			name: "payment exists: no external id",
