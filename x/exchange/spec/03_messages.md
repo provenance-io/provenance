@@ -24,6 +24,13 @@ The exchange module has `Msg` endpoints for users, markets, and governance propo
     - [MarketUpdateIntermediaryDenom](#marketupdateintermediarydenom)
     - [MarketManagePermissions](#marketmanagepermissions)
     - [MarketManageReqAttrs](#marketmanagereqattrs)
+  - [Payment Endpoints](#payment-endpoints)
+    - [CreatePayment](#createpayment)
+    - [AcceptPayment](#acceptpayment)
+    - [RejectPayment](#rejectpayment)
+    - [RejectPayments](#rejectpayments)
+    - [CancelPayments](#cancelpayments)
+    - [ChangePaymentTarget](#changepaymenttarget)
   - [Governance Proposals](#governance-proposals)
     - [GovCreateMarket](#govcreatemarket)
     - [GovManageFees](#govmanagefees)
@@ -483,11 +490,158 @@ It is expected to fail if:
 
 #### MsgMarketManageReqAttrsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#446-L467
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L446-L467
 
 #### MsgMarketManageReqAttrsResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L469-L470
+
+
+## Payment Endpoints
+
+There are several endpoints for using `Payment`s to facilitate transfers of funds between two accounts.
+These are available to any account, and are not associated with any markets.
+
+
+### CreatePayment
+
+A `Payment` can be created using the `CreatePayment` endpoint.
+The `source` is the account creating the payment. As part of payment creation, a hold is placed on the `source_amount` funds in the `source` account.
+
+A payment is uniquely identified using a combination of its `source` and `external_id`.
+The `source` is responsible for choosing the `external_id` of the payment, so it is up to them to choose one that they aren't currently using.
+Once a payment is accepted, rejected, or cancelled, its `external_id` can be re-used on a new payment.
+
+A payment can be created without a `target`, but one cannot be accepted until a target has been set for it.
+
+A `Tx` with a `MsgCreatePaymentRequest` requires an additional amount in the fee if the `source_amount` is not zero.
+That amount is defined in the exchange module [Params](06_params.md).
+The [OrderFeeCalc](05_queries.md#orderfeecalc) query can be used to identify how much extra fee to include.
+
+It is expected to fail if:
+* The `source` is not a valid bech32 string.
+* The `target` isn't empty and is not a valid bech32 string.
+* The `source_amount` funds are not available in the `source` account.
+* The `external_id` is longer than 100 characters.
+* A payment already exists with the given `source` and `external_id`.
+
+#### MsgCreatePaymentRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L491-L497
+
+#### Payment
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/payments.proto#L13-L43
+
+#### MsgCreatePaymentResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L499-L500
+
+
+### AcceptPayment
+
+A `target` can accept a previously created `Payment` using the `AcceptPayment` endpoint.
+
+When a payment is accepted, the hold on the `source_amount` funds is released, and they are sent to the `target`; then the `target_amount` funds are sent to the `source`. Lastly, the `Payment` record is deleted.
+
+A `Tx` with a `MsgAcceptPaymentRequest` requires an additional amount in the fee if the `target_amount` is not zero.
+That amount is defined in the exchange module [Params](06_params.md).
+The [OrderFeeCalc](05_queries.md#orderfeecalc) query can be used to identify how much extra fee to include.
+
+It is expected to fail if:
+* Any part of the provided `Payment` info does not match the payment's current state.
+* The `target` account does not have the `target_amount` funds in it.
+
+#### MsgAcceptPaymentRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L502-L508
+
+See also: [Payment](#payment).
+
+#### MsgAcceptPaymentResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L510-L511
+
+
+### RejectPayment
+
+A `target` can reject a `Payment` using the `RejectPayment` endpoint.
+
+When a payment is rejected, the hold on the `source_amount` is released and the payment record is deleted.
+
+It is expected to fail if:
+* A payment does not exist with the provided `source` and `external_id`.
+* The existing payment has a `target` different from the one provided (that signed the msg).
+
+#### MsgRejectPaymentRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L513-L523
+
+#### MsgRejectPaymentResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L525-L526
+
+
+### RejectPayments
+
+A `target` can reject all payments from one or more `source` accounts using the `RejectPayments` endpoint.
+
+For each applicable payment, the hold on the `source_amount` funds is released, and the payment record is deleted.
+
+It is expected to fail if:
+* No `source` accounts are provided.
+* One of the provided `source` accounts does not have any payments for the `target`.
+
+#### MsgRejectPaymentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L528-L536
+
+#### MsgRejectPaymentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L538-L539
+
+
+### CancelPayments
+
+A `source` can cancel their payments with one or more `external_id`s using the `CancelPayments` endpoint.
+
+For each applicable payment, the hold on the `source_amount` funds is released, and the payment record is deleted.
+
+It is expected to fail if:
+* No `external_id`s are provided.
+* The `source` does not have a payment with one of the provided external ids.
+
+#### MsgCancelPaymentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L541-L549
+
+#### MsgCancelPaymentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L551-L552
+
+
+### ChangePaymentTarget
+
+A `source` can change the `target` of a `Payment` using the `ChangePaymentTarget` endpoint.
+
+This can be used to:
+* Set a target on a payment that previously didn't have one.
+* Change the target from one account to another.
+* Unset the payment's target.
+
+A payment's target can be changed multiple times (until it's accepted, rejected, or cancelled).
+
+It is expected to fail if:
+* No payment exists with the given `source` and `external_id`.
+* The provided `new_target` equals the payment's current `target`.
+
+#### MsgChangePaymentTargetRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L554-L564
+
+#### MsgChangePaymentTargetResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L566-L567
 
 
 ## Governance Proposals

@@ -22,6 +22,11 @@ There are several queries for getting information about things in the exchange m
   - [ValidateCreateMarket](#validatecreatemarket)
   - [ValidateMarket](#validatemarket)
   - [ValidateManageFees](#validatemanagefees)
+  - [GetPayment](#getpayment)
+  - [GetPaymentsWithSource](#getpaymentswithsource)
+  - [GetPaymentsWithTarget](#getpaymentswithtarget)
+  - [GetAllPayments](#getallpayments)
+  - [PaymentFeeCalc](#paymentfeecalc)
 
 
 ## OrderFeeCalc
@@ -326,3 +331,84 @@ See also: [MsgGovManageFeesRequest](03_messages.md#msggovmanagefeesrequest).
 ### QueryValidateManageFeesResponse
 
 +++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L426-L436
+
+
+## GetPayment
+
+Use the `GetPayment` query to look up a payment by `source` and `external_id`.
+
+### QueryGetPaymentRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L468-L474
+
+### QueryGetPaymentResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L476-L480
+
+See also: [Payment](03_messages.md#payment).
+
+
+## GetPaymentsWithSource
+
+To get all payments with a specific `source`, use the `GetPaymentsWithSource` query.
+
+This query is paginated.
+
+### QueryGetPaymentsWithSourceRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L482-L489
+
+### QueryGetPaymentsWithSourceResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L491-L498
+
+See also: [Payment](03_messages.md#payment).
+
+
+## GetPaymentsWithTarget
+
+To get all payments with a specific `target`, use the `GetPaymentsWithTarget` query.
+
+This query is paginated.
+
+### QueryGetPaymentsWithTargetRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L500-L507
+
+### QueryGetPaymentsWithTargetResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L509-L516
+
+See also: [Payment](03_messages.md#payment).
+
+
+## GetAllPayments
+
+A listing of all existing payments can be found using the `GetAllPayments` query.
+
+This query is paginated.
+
+### QueryGetAllPaymentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L518-L522
+
+### QueryGetAllPaymentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L524-L531
+
+See also: [Payment](03_messages.md#payment).
+
+
+## PaymentFeeCalc
+
+The `PaymentFeeCalc` query can be used to calculate the fees for creating or accepting a payment.
+
+### QueryPaymentFeeCalcRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L533-L537
+
+See also: [Payment](03_messages.md#payment).
+
+### QueryPaymentFeeCalcResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/query.proto#L539-L547
