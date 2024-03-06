@@ -1114,6 +1114,51 @@ func (s *CmdTestSuite) commitFunds(addr sdk.AccAddress, marketID uint32, amount 
 	s.Require().Equal(int(0), int(resp.Code), "response code:\n%v", resp)
 }
 
+func (s *CmdTestSuite) createPayment(payment *exchange.Payment) {
+	cmd := cli.CmdTx()
+	args := []string{
+		"create-payment", "--from", payment.Source,
+	}
+	if !payment.SourceAmount.IsZero() {
+		args = append(args, "--source-amount", payment.SourceAmount.String())
+	}
+	if len(payment.Target) > 0 {
+		args = append(args, "--target", payment.Target)
+	}
+	if !payment.TargetAmount.IsZero() {
+		args = append(args, "--target-amount", payment.TargetAmount.String())
+	}
+	if len(payment.ExternalId) > 0 {
+		args = append(args, "--external-id", payment.ExternalId)
+	}
+
+	fees := s.bondCoins(10).Add(s.feeCoin(exchange.DefaultFeeCreatePaymentFlatAmount))
+	args = append(args,
+		"--"+flags.FlagFees, fees.String(),
+		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--"+flags.FlagSkipConfirmation,
+	)
+
+	cmdName := cmd.Name()
+	var outBz []byte
+	defer func() {
+		if s.T().Failed() {
+			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
+		}
+	}()
+
+	clientCtx := s.getClientCtx()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	outBz = out.Bytes()
+
+	s.Require().NoError(err, "ExecTestCLICmd error")
+
+	var resp sdk.TxResponse
+	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+	s.Require().NoError(err, "UnmarshalJSON(command output) error")
+	s.Require().Equal(int(0), int(resp.Code), "response code:\n%v", resp)
+}
+
 // queryBankBalances executes a bank query to get an account's balances.
 func (s *CmdTestSuite) queryBankBalances(addr string) sdk.Coins {
 	clientCtx := s.getClientCtx()

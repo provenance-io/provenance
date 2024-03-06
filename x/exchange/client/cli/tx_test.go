@@ -1139,14 +1139,15 @@ func (s *CmdTestSuite) TestCmdTxCreatePayment() {
 				"--from", s.addr1.String(), "--source-amount", "3strawberry",
 				"--target", s.addr2.String(), "--external-id", "also_oopsies",
 			},
-			addedFees:    s.feeCoins(exchange.DefaultFeeCreatePaymentFlatAmount / 2),
-			expInRawLog:  []string{"negative balance after sending coins to accounts and fee collector"},
-			expectedCode: 5,
+			addedFees: s.feeCoins(exchange.DefaultFeeCreatePaymentFlatAmount / 2),
+			expInRawLog: []string{"insufficient funds",
+				"negative balance after sending coins to accounts and fee collector"},
+			expectedCode: insFeeCode,
 		},
 		{
 			name: "okay",
 			preRun: func() ([]string, func(*sdk.TxResponse)) {
-				payment := &exchange.Payment{
+				pmt := &exchange.Payment{
 					Source:       s.addr4.String(),
 					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 55)),
 					Target:       s.addr3.String(),
@@ -1154,33 +1155,32 @@ func (s *CmdTestSuite) TestCmdTxCreatePayment() {
 					ExternalId:   "payment-created-by-command",
 				}
 				fees := sdk.NewCoins(s.bondCoin(10), s.feeCoin(exchange.DefaultFeeCreatePaymentFlatAmount))
-				sourceBals := s.queryBankBalances(payment.Source).Sub(fees...)
-				sourceSpendable := s.queryBankSpendableBalances(payment.Source).Sub(fees...)
-				targetBals := s.queryBankBalances(payment.Target)
-				targetSpendable := s.queryBankSpendableBalances(payment.Target)
+				sBals := s.queryBankBalances(pmt.Source).Sub(fees...)
+				sSpend := s.queryBankSpendableBalances(pmt.Source).Sub(fees...)
+				tBals := s.queryBankBalances(pmt.Target)
+				tSpend := s.queryBankSpendableBalances(pmt.Target)
 
 				expBals := []banktypes.Balance{
-					{Address: payment.Source, Coins: sourceBals},
-					{Address: payment.Target, Coins: targetBals},
+					{Address: pmt.Source, Coins: sBals},
+					{Address: pmt.Target, Coins: tBals},
 				}
-				expSpendable := []banktypes.Balance{
-					{Address: payment.Source, Coins: sourceSpendable.Sub(payment.SourceAmount...)},
-					{Address: payment.Target, Coins: targetSpendable},
+				expSpend := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sSpend.Sub(pmt.SourceAmount...)},
+					{Address: pmt.Target, Coins: tSpend},
 				}
 
 				args := []string{
-					"--from", payment.Source,
-					"--target", payment.Target,
-					"--target-amount", payment.TargetAmount.String(),
-					"--source-amount", payment.SourceAmount.String(),
-					"--external-id", payment.ExternalId,
+					"--from", pmt.Source,
+					"--target", pmt.Target,
+					"--target-amount", pmt.TargetAmount.String(),
+					"--source-amount", pmt.SourceAmount.String(),
+					"--external-id", pmt.ExternalId,
 				}
 				fup := s.composeFollowups(
-					s.getPaymentFollowup(payment.Source, payment.ExternalId, payment),
+					s.getPaymentFollowup(pmt.Source, pmt.ExternalId, pmt),
 					s.assertBalancesFollowup(expBals),
-					s.assertSpendableBalancesFollowup(expSpendable),
+					s.assertSpendableBalancesFollowup(expSpend),
 				)
-
 				return args, fup
 			},
 			args:         []string{"create-payment"},
@@ -1196,15 +1196,422 @@ func (s *CmdTestSuite) TestCmdTxCreatePayment() {
 	}
 }
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdTxAcceptPayment()
+func (s *CmdTestSuite) TestCmdTxAcceptPayment() {
+	tests := []txCmdTestCase{
+		{
+			name: "cmd error",
+			args: []string{"accept-payment",
+				"--from", s.addr1.String(), "--source-amount", "seventytwo",
+				"--target", s.addr2.String(), "--external-id", "elbow",
+			},
+			expInErr: []string{"error parsing --source-amount as coins"},
+		},
+		{
+			name: "no such payment",
+			args: []string{"accept-payment",
+				"--from", s.addr1.String(), "--source", s.addr2.String(),
+				"--target-amount", "500000tangerine", "--external-id", "gimmie",
+			},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"no payment found with source " + s.addr2.String() + " and external id \"gimmie\""},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "payment accepted",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt := exchange.Payment{
+					Source:       s.addr3.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 358)),
+					Target:       s.addr7.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 217)),
+					ExternalId:   "lets swap",
+				}
+				s.createPayment(&pmt)
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdTxRejectPayment()
+				fees := sdk.NewCoins(s.bondCoin(10), s.feeCoin(exchange.DefaultFeeCreatePaymentFlatAmount))
+				sBals := s.queryBankBalances(pmt.Source)
+				sSpend := s.queryBankSpendableBalances(pmt.Source)
+				tBals := s.queryBankBalances(pmt.Target).Sub(fees...)
+				tSpend := s.queryBankSpendableBalances(pmt.Target).Sub(fees...)
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdTxRejectPayments()
+				expBals := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sBals.Add(pmt.TargetAmount...).Sub(pmt.SourceAmount...)},
+					{Address: pmt.Target, Coins: tBals.Add(pmt.SourceAmount...).Sub(pmt.TargetAmount...)},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sSpend.Add(pmt.TargetAmount...)},
+					{Address: pmt.Target, Coins: tSpend.Add(pmt.SourceAmount...).Sub(pmt.TargetAmount...)},
+				}
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdTxCancelPayments()
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt.Source, pmt.ExternalId, nil),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				args := []string{
+					"--source", pmt.Source,
+					"--source-amount", pmt.SourceAmount.String(),
+					"--from", pmt.Target,
+					"--target-amount", pmt.TargetAmount.String(),
+					"--external-id", pmt.ExternalId,
+				}
+				return args, fup
+			},
+			args:         []string{"accept-payment"},
+			addedFees:    s.feeCoins(exchange.DefaultFeeCreatePaymentFlatAmount),
+			expectedCode: 0,
+		},
+	}
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdTxChangePaymentTarget()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxRejectPayment() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"reject-payment", "--source", s.addr1.String()},
+			expInErr: []string{"at least one of the flags in the group [from target] is required"},
+		},
+		{
+			name: "wrong target",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt := exchange.Payment{
+					Source:       s.addr1.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 50)),
+					Target:       s.addr4.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 7)),
+					ExternalId:   "insert_evil_laugh",
+				}
+				s.createPayment(&pmt)
+				args := []string{"--source", pmt.Source, "--external-id", pmt.ExternalId, "--from", s.addr3.String()}
+				return args, nil
+			},
+			args: []string{"reject-payment"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"target " + s.addr3.String() + " cannot reject payment with target " + s.addr4.String()},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "payment rejected",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt := exchange.Payment{
+					Source:       s.addr9.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 3)),
+					Target:       s.addr2.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 5000)),
+					ExternalId:   "insert_evil_laugh",
+				}
+				s.createPayment(&pmt)
+
+				fees := sdk.NewCoins(s.bondCoin(10))
+				sBals := s.queryBankBalances(pmt.Source)
+				sSpend := s.queryBankSpendableBalances(pmt.Source)
+				tBals := s.queryBankBalances(pmt.Target).Sub(fees...)
+				tSpend := s.queryBankSpendableBalances(pmt.Target).Sub(fees...)
+
+				expBals := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sBals},
+					{Address: pmt.Target, Coins: tBals},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sSpend.Add(pmt.SourceAmount...)},
+					{Address: pmt.Target, Coins: tSpend},
+				}
+
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt.Source, pmt.ExternalId, nil),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				args := []string{
+					"--source", pmt.Source,
+					"--from", pmt.Target,
+					"--external-id", pmt.ExternalId,
+				}
+				return args, fup
+			},
+			args:         []string{"reject-payment"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxRejectPayments() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"reject-payments", "--sources", s.addr1.String()},
+			expInErr: []string{"at least one of the flags in the group [from target] is required"},
+		},
+		{
+			name: "no such payment",
+			args: []string{"reject-payments", "--from", s.addr2.String(),
+				"--sources", sdk.AccAddress("addr_does_not_exist_").String()},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"source " + sdk.AccAddress("addr_does_not_exist_").String() + " does not have any payments for target " + s.addr2.String()},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "payments rejected",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt8a := exchange.Payment{
+					Source:       s.addr8.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 3)),
+					Target:       s.addr5.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 5000)),
+					ExternalId:   "insert_evil_laugh",
+				}
+				pmt8b := exchange.Payment{
+					Source:       pmt8a.Source,
+					SourceAmount: nil,
+					Target:       pmt8a.Target,
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 7777)),
+					ExternalId:   "more_evil_laugh",
+				}
+				pmt7 := exchange.Payment{
+					Source:       s.addr7.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 357)),
+					Target:       pmt8a.Target,
+					TargetAmount: nil,
+					ExternalId:   "this_is_fine",
+				}
+				pmt3 := exchange.Payment{
+					Source:       s.addr3.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 4567)),
+					Target:       pmt8a.Target,
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 12)),
+					ExternalId:   "gonna keep this one",
+				}
+				s.createPayment(&pmt8a)
+				s.createPayment(&pmt8b)
+				s.createPayment(&pmt7)
+				s.createPayment(&pmt3)
+
+				// This will reject a some initial payments (created at genesis) too.
+				pmt8i := s.makeInitialPayment(8, 5)
+				pmt7i := s.makeInitialPayment(7, 5)
+
+				fees := sdk.NewCoins(s.bondCoin(10))
+				sBals8 := s.queryBankBalances(pmt8a.Source)
+				sBals7 := s.queryBankBalances(pmt7.Source)
+				sBals3 := s.queryBankBalances(pmt3.Source)
+				tBals := s.queryBankBalances(pmt8a.Target).Sub(fees...)
+				sSpend8 := s.queryBankSpendableBalances(pmt8a.Source)
+				sSpend7 := s.queryBankSpendableBalances(pmt7.Source)
+				sSpend3 := s.queryBankSpendableBalances(pmt3.Source)
+				tSpend := s.queryBankSpendableBalances(pmt8a.Target).Sub(fees...)
+
+				expBals := []banktypes.Balance{
+					{Address: pmt8a.Source, Coins: sBals8},
+					{Address: pmt7.Source, Coins: sBals7},
+					{Address: pmt3.Source, Coins: sBals3},
+					{Address: pmt8a.Target, Coins: tBals},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt8a.Source, Coins: sSpend8.Add(pmt8a.SourceAmount...).Add(pmt8b.SourceAmount...).Add(pmt8i.SourceAmount...)},
+					{Address: pmt7.Source, Coins: sSpend7.Add(pmt7.SourceAmount...).Add(pmt7i.SourceAmount...)},
+					{Address: pmt3.Source, Coins: sSpend3},
+					{Address: pmt8a.Target, Coins: tSpend},
+				}
+
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt8a.Source, pmt8a.ExternalId, nil),
+					s.getPaymentFollowup(pmt8b.Source, pmt8b.ExternalId, nil),
+					s.getPaymentFollowup(pmt7.Source, pmt7.ExternalId, nil),
+					s.getPaymentFollowup(pmt3.Source, pmt3.ExternalId, &pmt3),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				args := []string{"--sources", pmt8a.Source + "," + pmt7.Source, "--from", pmt8a.Target}
+				return args, fup
+			},
+			args:         []string{"reject-payments"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxCancelPayments() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"cancel-payments", "--external-ids", "nope"},
+			expInErr: []string{"at least one of the flags in the group [from source] is required"},
+		},
+		{
+			name: "no such payment",
+			args: []string{"cancel-payments", "--from", s.addr2.String(), "--external-ids", "also_nope"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"no payment found with source " + s.addr2.String() + " and external id \"also_nope\""},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "payments cancelled",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt1 := exchange.Payment{
+					Source:       s.addr3.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 3)),
+					Target:       s.addr4.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 5000)),
+					ExternalId:   "insert_evil_laugh",
+				}
+				pmt2 := exchange.Payment{
+					Source:       pmt1.Source,
+					SourceAmount: nil,
+					Target:       s.addr5.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 7777)),
+					ExternalId:   "more_evil_laugh",
+				}
+				pmt3Kept := exchange.Payment{
+					Source:       pmt1.Source,
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 357)),
+					Target:       pmt1.Target,
+					TargetAmount: sdk.Coins{},
+					ExternalId:   "this_is_fine",
+				}
+				pmt4Kept := exchange.Payment{
+					Source:       s.addr9.String(),
+					SourceAmount: sdk.Coins{},
+					Target:       s.addr5.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 9999)),
+					ExternalId:   "more_evil_laugh",
+				}
+				s.createPayment(&pmt1)
+				s.createPayment(&pmt2)
+				s.createPayment(&pmt3Kept)
+				s.createPayment(&pmt4Kept)
+
+				fees := sdk.NewCoins(s.bondCoin(10))
+				sBals := s.queryBankBalances(pmt1.Source).Sub(fees...)
+				tBals4 := s.queryBankBalances(pmt1.Target)
+				tBals5 := s.queryBankBalances(pmt2.Target)
+				sSpend := s.queryBankSpendableBalances(pmt1.Source).Sub(fees...)
+				tSpend4 := s.queryBankSpendableBalances(pmt1.Target)
+				tSpend5 := s.queryBankSpendableBalances(pmt2.Target)
+
+				expBals := []banktypes.Balance{
+					{Address: pmt1.Source, Coins: sBals},
+					{Address: pmt1.Target, Coins: tBals4},
+					{Address: pmt2.Target, Coins: tBals5},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt1.Source, Coins: sSpend.Add(pmt1.SourceAmount...).Add(pmt2.SourceAmount...)},
+					{Address: pmt1.Target, Coins: tSpend4},
+					{Address: pmt2.Target, Coins: tSpend5},
+				}
+
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt1.Source, pmt1.ExternalId, nil),
+					s.getPaymentFollowup(pmt2.Source, pmt2.ExternalId, nil),
+					s.getPaymentFollowup(pmt3Kept.Source, pmt3Kept.ExternalId, &pmt3Kept),
+					s.getPaymentFollowup(pmt4Kept.Source, pmt4Kept.ExternalId, &pmt4Kept),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				args := []string{
+					"--from", pmt1.Source,
+					"--external-ids", pmt1.ExternalId,
+					"--external-ids", pmt2.ExternalId,
+				}
+				return args, fup
+			},
+			args:         []string{"cancel-payments"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxChangePaymentTarget() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"change-payment-target", "--new-target", s.addr4.String()},
+			expInErr: []string{"at least one of the flags in the group [from source] is required"},
+		},
+		{
+			name: "no such payment",
+			args: []string{"change-payment-target", "--from", s.addr2.String(),
+				"--external-id", "also_nope", "--new-target", s.addr4.String()},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"no payment found with source " + s.addr2.String() + " and external id \"also_nope\""},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "payment updated",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt := exchange.Payment{
+					Source:       s.addr3.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 546)),
+					Target:       s.addr4.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 30)),
+					ExternalId:   "just_some_payment",
+				}
+				s.createPayment(&pmt)
+
+				fees := sdk.NewCoins(s.bondCoin(10))
+				sBals := s.queryBankBalances(pmt.Source).Sub(fees...)
+				tBals := s.queryBankBalances(pmt.Target)
+				sSpend := s.queryBankSpendableBalances(pmt.Source).Sub(fees...)
+				tSpend := s.queryBankSpendableBalances(pmt.Target)
+
+				expBals := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sBals},
+					{Address: pmt.Target, Coins: tBals},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sSpend},
+					{Address: pmt.Target, Coins: tSpend},
+				}
+
+				expPmt := pmt
+				expPmt.Target = s.addr0.String()
+
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt.Source, pmt.ExternalId, &expPmt),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				args := []string{
+					"--from", pmt.Source,
+					"--external-id", pmt.ExternalId,
+					"--new-target", expPmt.Target,
+				}
+				return args, fup
+			},
+			args:         []string{"change-payment-target"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
 func (s *CmdTestSuite) TestCmdTxGovCreateMarket() {
 	tests := []txCmdTestCase{
