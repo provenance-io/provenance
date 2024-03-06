@@ -1124,7 +1124,77 @@ func (s *CmdTestSuite) TestCmdTxMarketManageReqAttrs() {
 	}
 }
 
-// TODO[1703]: func (s *CmdTestSuite) TestCmdTxCreatePayment()
+func (s *CmdTestSuite) TestCmdTxCreatePayment() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			preRun:   nil,
+			args:     []string{"create-payment", "--from", s.addr1.String(), "--target", s.addr2.String(), "--external-id", "oopsies"},
+			expInErr: []string{"source amount and target amount cannot both be zero"},
+		},
+		{
+			name:   "insufficient creation fee",
+			preRun: nil,
+			args: []string{"create-payment",
+				"--from", s.addr1.String(), "--source-amount", "3strawberry",
+				"--target", s.addr2.String(), "--external-id", "also_oopsies",
+			},
+			addedFees:    s.feeCoins(exchange.DefaultFeeCreatePaymentFlatAmount / 2),
+			expInRawLog:  []string{"negative balance after sending coins to accounts and fee collector"},
+			expectedCode: 5,
+		},
+		{
+			name: "okay",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				payment := &exchange.Payment{
+					Source:       s.addr4.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 55)),
+					Target:       s.addr3.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 7)),
+					ExternalId:   "payment-created-by-command",
+				}
+				fees := sdk.NewCoins(s.bondCoin(10), s.feeCoin(exchange.DefaultFeeCreatePaymentFlatAmount))
+				sourceBals := s.queryBankBalances(payment.Source).Sub(fees...)
+				sourceSpendable := s.queryBankSpendableBalances(payment.Source).Sub(fees...)
+				targetBals := s.queryBankBalances(payment.Target)
+				targetSpendable := s.queryBankSpendableBalances(payment.Target)
+
+				expBals := []banktypes.Balance{
+					{Address: payment.Source, Coins: sourceBals},
+					{Address: payment.Target, Coins: targetBals},
+				}
+				expSpendable := []banktypes.Balance{
+					{Address: payment.Source, Coins: sourceSpendable.Sub(payment.SourceAmount...)},
+					{Address: payment.Target, Coins: targetSpendable},
+				}
+
+				args := []string{
+					"--from", payment.Source,
+					"--target", payment.Target,
+					"--target-amount", payment.TargetAmount.String(),
+					"--source-amount", payment.SourceAmount.String(),
+					"--external-id", payment.ExternalId,
+				}
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(payment.Source, payment.ExternalId, payment),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpendable),
+				)
+
+				return args, fup
+			},
+			args:         []string{"create-payment"},
+			addedFees:    s.feeCoins(exchange.DefaultFeeCreatePaymentFlatAmount),
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
 
 // TODO[1703]: func (s *CmdTestSuite) TestCmdTxAcceptPayment()
 

@@ -337,7 +337,7 @@ func (s *CmdTestSuite) SetupSuite() {
 	// this is what's spendable to each at the start of the unit tests.
 	balance := sdk.NewCoins(
 		s.bondCoin(1_000_000_000),
-		s.feeCoin(1_000_000_000),
+		s.feeCoin(1_000_000_000_000),
 		sdk.NewInt64Coin("acorn", 1_000_000_000),
 		sdk.NewInt64Coin("apple", 1_000_000_000),
 		sdk.NewInt64Coin("peach", 1_000_000_000),
@@ -801,6 +801,54 @@ func (s *CmdTestSuite) createOrderFollowup(order *exchange.Order) func(*sdk.TxRe
 			order.OrderId = s.asOrderID(orderID)
 			s.assertGetOrder(orderID, order)
 		}
+	}
+}
+
+// assertGetPayment uses the GetPayment query to look up a payment and make sure it equals the one provided.
+// If the provided payment is nil, ensures the query returns a payment not found error.
+func (s *CmdTestSuite) assertGetPayment(source, externalID string, payment *exchange.Payment) (okay bool) {
+	s.T().Helper()
+	if !s.Assert().NotEmpty(source, "source") {
+		return false
+	}
+
+	var expInErr []string
+	if payment == nil {
+		expInErr = append(expInErr, fmt.Sprintf("no payment found with source %s and external id %q", source, externalID))
+	}
+
+	var getPaymentOutBz []byte
+	getPaymentArgs := []string{source, externalID, "--output", "json"}
+	defer func() {
+		if !okay {
+			s.T().Logf("Query GetPayment %q output:\n%s", getPaymentArgs, string(getPaymentOutBz))
+		}
+	}()
+
+	clientCtx := s.getClientCtx()
+	getPaymentCmd := cli.CmdQueryGetPayment()
+	getPaymentOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getPaymentCmd, getPaymentArgs)
+	getPaymentOutBz = getPaymentOutBW.Bytes()
+	if !s.assertErrorContents(err, expInErr, "ExecTestCLICmd GetPayment %q error", getPaymentArgs) {
+		return false
+	}
+
+	if payment == nil {
+		return true
+	}
+
+	var resp exchange.QueryGetPaymentResponse
+	err = clientCtx.Codec.UnmarshalJSON(getPaymentOutBz, &resp)
+	if !s.Assert().NoError(err, "UnmarshalJSON on GetPayment %q response", getPaymentArgs) {
+		return false
+	}
+	return s.Assert().Equal(payment, resp.Payment, "payment %s %q", source, externalID)
+}
+
+// getOrderFollowup returns a follow-up function that looks up an order and makes sure it's the one provided.
+func (s *CmdTestSuite) getPaymentFollowup(source, externalID string, payment *exchange.Payment) func(*sdk.TxResponse) {
+	return func(*sdk.TxResponse) {
+		s.assertGetPayment(source, externalID, payment)
 	}
 }
 
