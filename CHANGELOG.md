@@ -52,6 +52,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump peter-evans/create-pull-request from 6.0.0 to 6.0.1 ([#1858](https://github.com/provenance-io/provenance/pull/1858))
 - Bump github.com/golang/protobuf from 1.5.3 to 1.5.4 ([#1863](https://github.com/provenance-io/provenance/pull/1863))
 
+### Dependencies
+
+- Bump `github.com/stretchr/testify` from 1.8.4 to 1.9.0 ([#1860](https://github.com/provenance-io/provenance/pull/1860))
+
 ---
 
 ## [v1.18.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc2) - 2024-02-22
