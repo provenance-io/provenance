@@ -134,12 +134,14 @@ See also: [Commitment Fees](#commitment-fees).
 The funds are re-committed regardless of the market's `accepting_commitments` value.
 The accounts these funds are being re-committed to also are not required to have the create-commitment required attributes.
 
+
 ### Transfer Agent
 
 During a settlement, commitment settlement, or market withdrawal, the `admin` is also used as the transfer agent.
 A transfer agent is used by the `x/marker` module's [Send Restrictions](../../marker/spec/12_transfers.md#send-restrictions) to help facilitate movement of restricted coins.
 E.g. an `admin` with `transfer` access for a denom and `settle` permission for a market can use a settlement to transfer restricted funds to a recipient, regardless of required attributes on that denom or the attributes of the recipient.
 If an `admin` does **not** have `transfer` access for a restricted denom, settlements can still succeed if the recipient has the required attributes for that denom.
+
 
 ## Orders
 
@@ -240,7 +242,6 @@ Orders with external ids can be looked up using the [GetOrderByExternalID](05_qu
 External ids are limited to 100 characters.
 
 
-
 ## Commitments
 
 A Commitment allows an account to give control of some of its funds to a market.
@@ -329,7 +330,6 @@ This allows a market to not charge a ratio fee for a specific `price` denom.
 
 A `FeeRatio` with the same `price` and `fee` denoms must have a larger price amount than fee amount.
 
-
 #### Seller Settlement Ratio Fee
 
 A market's `fee_seller_settlement_ratios` are limited to `FeeRatio`s that have the same `price` and `fee` denom.
@@ -345,7 +345,6 @@ E.g. A market has `1000chicken:3chicken` in `fee_seller_settlement_ratios`.
 
 The actual amount isn't known until settlement, but a minimum can be calculated by applying the applicable ratio to an ask order's `price`.
 The seller settlement ratio fee will be at least that amount, but since it gets larger slower than the price, `<ask order price> - <ratio fee based on ask order price> - <flat fee>` is the least amount the seller will end up with.
-
 
 #### Buyer Settlement Ratio Fee
 
@@ -434,6 +433,7 @@ A commitment settlement is requested with the following data and market setup:
 
 The market will need to provide an extra `5nhash` with the `Tx` fees in order to do this commitment settlement.
 
+
 ### Exchange Fees for Orders
 
 A portion of the fees collected by a market for order creation and settlement, are given to the exchange.
@@ -459,6 +459,7 @@ During order creation, the exchange's portion of the order creation fee is calcu
 During [FillBids](03_messages.md#fillbids) or [FillAsks](03_messages.md#fillasks), the settlement fees are summed and collected separately from the order creation fee.
 That means the math and rounding is done twice, once for the total settlement fees and again for the order creation fee.
 This is done so that the fees are collected the same as if an order were created and later settled by the market.
+
 
 ### Exchange Fees for Commitments
 
