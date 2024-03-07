@@ -20,6 +20,7 @@ The exchange module defines a portion of market fees to be paid to the chain (di
     - [Partial Orders](#partial-orders)
     - [External IDs](#external-ids)
   - [Commitments](#commitments)
+  - [Payments](#payments)
   - [Fees](#fees)
     - [Order Creation Fees](#order-creation-fees)
     - [Settlement Flat Fees](#settlement-flat-fees)
@@ -27,6 +28,7 @@ The exchange module defines a portion of market fees to be paid to the chain (di
     - [Commitment Fees](#commitment-fees)
     - [Exchange Fees for Orders](#exchange-fees-for-orders)
     - [Exchange Fees for Commitments](#exchange-fees-for-commitments)
+    - [Exchange Fees for Payments](#exchange-fees-for-payments)
 
 
 ## Markets
@@ -257,7 +259,33 @@ If a settlement bips is defined, an intermediary denom must also be defined and 
 Management of the settlement bips and commitment creation fee options is part of the fee-management governance proposal.
 The `accepting_commitments` flag and intermediary denom are managed using the [MarketUpdateAcceptingCommitments](03_messages.md#marketupdateacceptingcommitments) and [MarketUpdateIntermediaryDenom](03_messages.md#marketupdateintermediarydenom) endpoints.
 
-<!-- TODO[1703]: Add spec docs about payments. -->
+
+## Payments
+
+A payment is used to trade fund between two accounts.
+
+The account that created the payment is the `source`.
+The account that can accept (or reject) the payment is the `target`.
+A target does not need to be identified when a payment is created, and a payment's target can be changed until it has been accepted, rejected, or cancelled.
+
+The amount that the `source` is providing is the `source_amount`.
+The amount that the `target` is providing is the `target_amount`.
+Both the `source_amount` and `target_amount` are optional, but at least one must be provided.
+
+When a payment is created, a hold is placed the `source_amount` funds (in the `source` account).
+When a payment is accepted, that hold is released. Then the `source_amount` is sent from the `source` to the `target`, and the `target_amount` is sent from the `target` to the `source`.
+
+A payment is uniquely identified by its `source` and `external_id`.
+It is up to the `source` to choose an `external_id` that they are not already using in another payment.
+Two different sources can use the same external id.
+Once a payment has been accepted, rejected, or cancelled, its external id can be reused.
+
+In order to accept a payment, all the details of the payment must be provided in the request.
+This ensures that the `target` accepts the terms of the payment.
+
+Creating or accepting a payment may require an extra amount to be included in the tx fees.
+This amount is defined in the exchange module [Params](06_params.md).
+The amount required for a specific payment can be calculated using the [PaymentFeeCalc](05_queries.md#paymentfeecalc) query.
 
 
 ## Fees
@@ -468,3 +496,12 @@ When a commitment is created, a portion of the fee collected by the market is gi
 During a commitment settlement, the exchange collects a fee proportional to the funds being settled.
 This fee must be included in the `Tx` fees provided with a `MsgMarketCommitmentSettleRequest`.
 See [Commitment Settlement Fee Charge](#commitment-settlement-fee-charge) for details.
+
+
+### Exchange Fees for Payments
+
+When a payment is created with a non-zero `source_amount`, an extra amount is required to be included in the tx fees.
+When a payment is accepted with a non-zero `target_amount`, an extra amount is required to be included in the tx fees.
+
+The amounts are flat and defined in the exchange module [Params](06_params.md) with separate entries for creating and accepting payments.
+The [PaymentFeeCalc](05_queries.md#paymentfeecalc) query can be used to identify the extra required tx fee amounts.
