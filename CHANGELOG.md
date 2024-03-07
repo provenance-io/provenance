@@ -47,6 +47,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `github.com/stretchr/testify` from 1.8.4 to 1.9.0 ([#1860](https://github.com/provenance-io/provenance/pull/1860))
+
 ## [v1.18.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc2) - 2024-02-22
 
 ### Features
