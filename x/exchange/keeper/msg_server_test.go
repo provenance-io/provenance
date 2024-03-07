@@ -111,7 +111,6 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 	s.assertEqualEvents(tc.expEvents, actEvents, "%s events", td.endpointName)
 
 	td.followup(&tc.msg, tc.fArgs)
-	gm.FeeConsumed()
 }
 
 // newAttr creates a new EventAttribute with the provided key and value.
