@@ -305,7 +305,7 @@ func CmdQueryGetPayment() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "payment",
 		Aliases: []string{"get-payment"},
-		Short:   "Get a payments",
+		Short:   "Get a payment",
 		RunE:    genericQueryRunE(MakeQueryGetPayment, exchange.QueryClient.GetPayment),
 	}
 
