@@ -26,7 +26,6 @@ require (
 	github.com/cosmos/ibc-go/v8 v8.0.0
 	// github.com/cosmos/rosetta v0.50.2 // TODO[1760]: rosetta
 	github.com/ghodss/yaml v1.0.0
-	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.4.0
 	github.com/gorilla/mux v1.8.1
@@ -34,7 +33,6 @@ require (
 	github.com/hashicorp/go-metrics v0.5.2
 	github.com/otiai10/copy v1.14.0
 	github.com/rakyll/statik v0.1.7
-	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
@@ -48,6 +46,8 @@ require (
 	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+require github.com/regen-network/cosmos-proto v0.3.1
 
 require (
 	cloud.google.com/go v0.110.10 // indirect
@@ -109,6 +109,7 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
@@ -214,6 +215,10 @@ replace (
 	// github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
 	// TODO[1760]: sdk: Put this replace back with an updated version of the sdk from our fork.
 	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-nullpointer0x00-msg-based-fee-support
+
+	// TODO: Push changes to ibc-apps async-icq/v8
+	github.com/cosmos/ibc-apps/modules/async-icq/v8 => github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1
+
 	// TODO[1760]: ibc: Put this ibc-go replace back with an updated version (or delete it).
 	// github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
@@ -222,8 +227,7 @@ replace (
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
-	// TODO[1760]: proto: Check if we can get rid of this gogo/protobuf replace.
-	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1

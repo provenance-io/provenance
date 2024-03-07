@@ -3,7 +3,7 @@ package keeper
 import (
 	"net/url"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"

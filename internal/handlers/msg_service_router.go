@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sort"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
-	"github.com/gogo/protobuf/proto"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/constraints"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/runtime/protoiface"

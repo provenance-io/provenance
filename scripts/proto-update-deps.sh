@@ -21,7 +21,7 @@ DEST="${1:-$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )/third_party}"
 
 # Retrieve versions from go.mod (single source of truth)
 ICS23_PROTO_URL="https://raw.githubusercontent.com/cosmos/ics23/go/$( go list -m github.com/cosmos/ics23/go | sed 's:.* ::' )/proto/cosmos/ics23/v1/proofs.proto"
-GOGO_PROTO_URL="https://raw.githubusercontent.com/regen-network/protobuf/$( go list -m github.com/gogo/protobuf | sed 's:.* ::' )/gogoproto/gogo.proto"
+GOGO_PROTO_URL="https://raw.githubusercontent.com/cosmos/gogoproto/$( go list -m github.com/cosmos/gogoproto | sed 's:.* ::' )/gogoproto/gogo.proto"
 COSMOS_PROTO_URL="raw.githubusercontent.com/cosmos/cosmos-proto/$( go list -m github.com/cosmos/cosmos-proto | sed 's:.* ::' )/proto/cosmos_proto/cosmos.proto"
 COSMWASM_V1BETA1_TARBALL_URL='github.com/CosmWasm/wasmd/tarball/v0.17.0'  # Backwards compatibility. Needed to serialize/deserialize older wasmd protos.
 COSMWASM_CUR_TARBALL_URL="$( go list -m github.com/CosmWasm/wasmd | sed 's:.* => ::; s: :/tarball/:;' )"

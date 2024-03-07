@@ -8,10 +8,10 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
-	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -983,7 +983,7 @@ func (m *MsgAddAttributeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	var l int
 	_ = l
 	if m.ExpirationDate != nil {
-		n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.ExpirationDate, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.ExpirationDate):])
+		n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.ExpirationDate, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.ExpirationDate):])
 		if err1 != nil {
 			return 0, err1
 		}
@@ -1177,7 +1177,7 @@ func (m *MsgUpdateAttributeExpirationRequest) MarshalToSizedBuffer(dAtA []byte) 
 		dAtA[i] = 0x22
 	}
 	if m.ExpirationDate != nil {
-		n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.ExpirationDate, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.ExpirationDate):])
+		n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.ExpirationDate, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.ExpirationDate):])
 		if err2 != nil {
 			return 0, err2
 		}
@@ -1464,7 +1464,7 @@ func (m *MsgAddAttributeRequest) Size() (n int) {
 		n += 1 + l + sovTx(uint64(l))
 	}
 	if m.ExpirationDate != nil {
-		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.ExpirationDate)
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.ExpirationDate)
 		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
@@ -1538,7 +1538,7 @@ func (m *MsgUpdateAttributeExpirationRequest) Size() (n int) {
 		n += 1 + l + sovTx(uint64(l))
 	}
 	if m.ExpirationDate != nil {
-		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.ExpirationDate)
+		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.ExpirationDate)
 		n += 1 + l + sovTx(uint64(l))
 	}
 	l = len(m.Account)
@@ -1889,7 +1889,7 @@ func (m *MsgAddAttributeRequest) Unmarshal(dAtA []byte) error {
 			if m.ExpirationDate == nil {
 				m.ExpirationDate = new(time.Time)
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.ExpirationDate, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.ExpirationDate, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2393,7 +2393,7 @@ func (m *MsgUpdateAttributeExpirationRequest) Unmarshal(dAtA []byte) error {
 			if m.ExpirationDate == nil {
 				m.ExpirationDate = new(time.Time)
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.ExpirationDate, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.ExpirationDate, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

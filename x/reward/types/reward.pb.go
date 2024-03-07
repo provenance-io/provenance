@@ -8,9 +8,9 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
@@ -524,6 +524,7 @@ type QualifyingAction struct {
 	// type of action to process
 	//
 	// Types that are valid to be assigned to Type:
+	//
 	//	*QualifyingAction_Delegate
 	//	*QualifyingAction_Transfer
 	//	*QualifyingAction_Vote
@@ -1525,7 +1526,7 @@ func (m *RewardProgram) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x80
 	}
-	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.ActualProgramEndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.ActualProgramEndTime):])
+	n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.ActualProgramEndTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.ActualProgramEndTime):])
 	if err1 != nil {
 		return 0, err1
 	}
@@ -1533,7 +1534,7 @@ func (m *RewardProgram) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i = encodeVarintReward(dAtA, i, uint64(n1))
 	i--
 	dAtA[i] = 0x7a
-	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.ClaimPeriodEndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.ClaimPeriodEndTime):])
+	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.ClaimPeriodEndTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.ClaimPeriodEndTime):])
 	if err2 != nil {
 		return 0, err2
 	}
@@ -1541,7 +1542,7 @@ func (m *RewardProgram) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i = encodeVarintReward(dAtA, i, uint64(n2))
 	i--
 	dAtA[i] = 0x72
-	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.ProgramEndTimeMax, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.ProgramEndTimeMax):])
+	n3, err3 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.ProgramEndTimeMax, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.ProgramEndTimeMax):])
 	if err3 != nil {
 		return 0, err3
 	}
@@ -1549,7 +1550,7 @@ func (m *RewardProgram) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i = encodeVarintReward(dAtA, i, uint64(n3))
 	i--
 	dAtA[i] = 0x6a
-	n4, err4 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.ExpectedProgramEndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.ExpectedProgramEndTime):])
+	n4, err4 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.ExpectedProgramEndTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.ExpectedProgramEndTime):])
 	if err4 != nil {
 		return 0, err4
 	}
@@ -1557,7 +1558,7 @@ func (m *RewardProgram) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i = encodeVarintReward(dAtA, i, uint64(n4))
 	i--
 	dAtA[i] = 0x62
-	n5, err5 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.ProgramStartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.ProgramStartTime):])
+	n5, err5 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.ProgramStartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.ProgramStartTime):])
 	if err5 != nil {
 		return 0, err5
 	}
@@ -2161,15 +2162,15 @@ func (m *RewardProgram) Size() (n int) {
 	if m.ClaimPeriodSeconds != 0 {
 		n += 1 + sovReward(uint64(m.ClaimPeriodSeconds))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.ProgramStartTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.ProgramStartTime)
 	n += 1 + l + sovReward(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.ExpectedProgramEndTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.ExpectedProgramEndTime)
 	n += 1 + l + sovReward(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.ProgramEndTimeMax)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.ProgramEndTimeMax)
 	n += 1 + l + sovReward(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.ClaimPeriodEndTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.ClaimPeriodEndTime)
 	n += 1 + l + sovReward(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.ActualProgramEndTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.ActualProgramEndTime)
 	n += 1 + l + sovReward(uint64(l))
 	if m.ClaimPeriods != 0 {
 		n += 2 + sovReward(uint64(m.ClaimPeriods))
@@ -2757,7 +2758,7 @@ func (m *RewardProgram) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.ProgramStartTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.ProgramStartTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2790,7 +2791,7 @@ func (m *RewardProgram) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.ExpectedProgramEndTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.ExpectedProgramEndTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2823,7 +2824,7 @@ func (m *RewardProgram) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.ProgramEndTimeMax, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.ProgramEndTimeMax, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2856,7 +2857,7 @@ func (m *RewardProgram) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.ClaimPeriodEndTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.ClaimPeriodEndTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2889,7 +2890,7 @@ func (m *RewardProgram) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.ActualProgramEndTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.ActualProgramEndTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

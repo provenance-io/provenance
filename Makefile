@@ -545,8 +545,8 @@ proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-
 proto-checks: proto-update-deps proto-lint proto-check-breaking proto-check-breaking-third-party
 proto-regen: proto-format proto-gen update-swagger-docs
 
-containerProtoVer=v0.2
-containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
+containerProtoVer=0.14.0
+containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
 containerProtoGen=prov-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=prov-proto-gen-swagger-$(containerProtoVer)
 containerProtoFmt=prov-proto-fmt-$(containerProtoVer)

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/ghodss/yaml"
-	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
