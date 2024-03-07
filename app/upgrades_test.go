@@ -457,6 +457,7 @@ func (s *UpgradeTestSuite) TestTourmaline() {
 		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
 		"INF Converting NAV units.",
 		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
+		"INF Setting default exchange module payment params.",
 	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline", expInLog, nil)
