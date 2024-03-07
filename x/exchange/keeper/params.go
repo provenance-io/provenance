@@ -126,7 +126,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
 		feeAccept = params.FeeAcceptPaymentFlat
 	}
 
-	// TODO[1703]: In an upgrade handler, update the exchange params to include the new fields.
 	setParamsFeeCreatePaymentFlat(store, feeCreate)
 	setParamsFeeAcceptPaymentFlat(store, feeAccept)
 }

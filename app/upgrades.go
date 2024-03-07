@@ -133,6 +133,12 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"tourmaline-rc2": {}, // upgrade for v1.18.0-rc2
+	"tourmaline-rc3": { // upgrade for v1.18.0-rc3
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			updateExchangePaymentParams(ctx, app)
+			return vm, nil
+		},
+	},
 	"tourmaline": { // upgrade for v1.18.0
 		Added: []string{ibcratelimit.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -147,6 +153,8 @@ var upgrades = map[string]appUpgrade{
 
 			// This isn't in an rc because it was handled via gov prop for testnet.
 			updateMsgFeesNhashPerMil(ctx, app)
+
+			updateExchangePaymentParams(ctx, app)
 
 			return vm, nil
 		},
@@ -357,6 +365,7 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 }
 
 // convertNavUnits iterates all the net asset values and updates their units if they are using usd.
+// TODO: Remove with the tourmaline handlers.
 func convertNavUnits(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Converting NAV units.")
 	err := app.MarkerKeeper.IterateAllNetAssetValues(ctx, func(markerAddr sdk.AccAddress, nav markertypes.NetAssetValue) (stop bool) {
@@ -382,6 +391,7 @@ func convertNavUnits(ctx sdk.Context, app *App) {
 }
 
 // updateMsgFeesNhashPerMil updates the MsgFees Params to set the NhashPerUsdMil to 40,000,000.
+// TODO: Remove with the tourmaline handlers.
 func updateMsgFeesNhashPerMil(ctx sdk.Context, app *App) {
 	var newVal uint64 = 40_000_000
 	ctx.Logger().Info(fmt.Sprintf("Setting MsgFees Params NhashPerUsdMil to %d.", newVal))
@@ -389,4 +399,20 @@ func updateMsgFeesNhashPerMil(ctx sdk.Context, app *App) {
 	params.NhashPerUsdMil = newVal
 	app.MsgFeesKeeper.SetParams(ctx, params)
 	ctx.Logger().Info("Done setting MsgFees Params NhashPerUsdMil.")
+}
+
+// updateExchangePaymentParams updates the exchange module params to have the default create payment and accept payment values.
+// TODO: Remove with the tourmaline handlers.
+func updateExchangePaymentParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Setting default exchange module payment params.")
+	defaultParams := exchange.DefaultParams()
+	curParams := app.ExchangeKeeper.GetParams(ctx)
+	if curParams == nil {
+		curParams = defaultParams
+	} else {
+		curParams.FeeCreatePaymentFlat = defaultParams.FeeCreatePaymentFlat
+		curParams.FeeAcceptPaymentFlat = defaultParams.FeeAcceptPaymentFlat
+	}
+	app.ExchangeKeeper.SetParams(ctx, curParams)
+	ctx.Logger().Info("Done setting default exchange module payment params.")
 }
