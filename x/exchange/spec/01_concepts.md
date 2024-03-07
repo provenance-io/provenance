@@ -264,21 +264,23 @@ The `accepting_commitments` flag and intermediary denom are managed using the [M
 
 A payment is used to trade fund between two accounts.
 
-The account that created the payment is the `source`.
+The account that creates the payment is the `source`.
 The account that can accept (or reject) the payment is the `target`.
-A target does not need to be identified when a payment is created, and a payment's target can be changed until it has been accepted, rejected, or cancelled.
+A target does not need to be declared when a payment is created.
+A payment's target can be changed (by the source) until it has been accepted, rejected, or cancelled.
 
 The amount that the `source` is providing is the `source_amount`.
 The amount that the `target` is providing is the `target_amount`.
 Both the `source_amount` and `target_amount` are optional, but at least one must be provided.
 
 When a payment is created, a hold is placed the `source_amount` funds (in the `source` account).
-When a payment is accepted, that hold is released. Then the `source_amount` is sent from the `source` to the `target`, and the `target_amount` is sent from the `target` to the `source`.
+When a payment is accepted, that hold is released.
+Then the `source_amount` is sent from the `source` to the `target`, and the `target_amount` is sent from the `target` to the `source`.
 
 A payment is uniquely identified by its `source` and `external_id`.
 It is up to the `source` to choose an `external_id` that they are not already using in another payment.
+Once a payment has been accepted, rejected, or cancelled, its external id can be reused by the source.
 Two different sources can use the same external id.
-Once a payment has been accepted, rejected, or cancelled, its external id can be reused.
 
 In order to accept a payment, all the details of the payment must be provided in the request.
 This ensures that the `target` accepts the terms of the payment.
