@@ -545,7 +545,7 @@ message MsgCancelPaymentsRequest {
   // source is the account that wishes to cancel some of their payments.
   string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // external_ids is all of the external ids of the payments to cancel.
-  repeated string external_ids = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated string external_ids = 2;
 }
 
 // MsgCancelPaymentsResponse is a response message for the CancelPayments endpoint.
@@ -558,7 +558,7 @@ message MsgChangePaymentTargetRequest {
   // source is the account that wishes to update the target of one of their payments.
   string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // external_id is the external id of the payment to update.
-  string external_id = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string external_id = 2;
   // new_target is the new target account of the payment.
   string new_target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
