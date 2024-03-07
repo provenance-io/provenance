@@ -21,6 +21,7 @@ func paymentExists(store sdk.KVStore, source, externalID string) bool {
 }
 
 // parsePaymentStoreValue converts a payment store value into the Payment object.
+// If the value is empty then nil, nil is returned.
 func (k Keeper) parsePaymentStoreValue(value []byte) (*exchange.Payment, error) {
 	if len(value) == 0 {
 		return nil, nil
