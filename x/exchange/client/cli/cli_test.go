@@ -1114,6 +1114,7 @@ func (s *CmdTestSuite) commitFunds(addr sdk.AccAddress, marketID uint32, amount 
 	s.Require().Equal(int(0), int(resp.Code), "response code:\n%v", resp)
 }
 
+// createPayment issues a command to create a payment.
 func (s *CmdTestSuite) createPayment(payment *exchange.Payment) {
 	cmd := cli.CmdTx()
 	args := []string{
@@ -1214,6 +1215,7 @@ func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 	failed = false
 }
 
+// untypeEvent calls untypeEvent and requires it to not return an error.
 func (s *CmdTestSuite) untypeEvent(tev proto.Message) sdk.Event {
 	rv, err := sdk.TypedEventToEvent(tev)
 	s.Require().NoError(err, "TypedEventToEvent(%T)", tev)
