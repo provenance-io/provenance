@@ -43,7 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* Fix `MarkerTransferAuthorization` validation to ensure the coins and addresses are all valid [1856](https://github.com/provenance-io/provenance/pull/1856).
+* Fix `MarkerTransferAuthorization` validation to ensure the coins and addresses are all valid [#1856](https://github.com/provenance-io/provenance/pull/1856).
 
 ### Dependencies
 
