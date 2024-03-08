@@ -13,9 +13,9 @@ const (
 	// DefaultDefaultSplit is the default value used for the DefaultSplit parameter.
 	DefaultDefaultSplit = uint32(500)
 	// DefaultFeeCreatePaymentFlatAmount is the default amount for creating a payment. The denom is the chain's FeeDenom.
-	DefaultFeeCreatePaymentFlatAmount = int64(100_000_000)
+	DefaultFeeCreatePaymentFlatAmount = int64(10_000_000_000)
 	// DefaultFeeAcceptPaymentFlatAmount is the default amount for accepting a payment. The denom is the chain's FeeDenom.
-	DefaultFeeAcceptPaymentFlatAmount = int64(100_000_000)
+	DefaultFeeAcceptPaymentFlatAmount = int64(8_000_000_000)
 
 	// MaxSplit is the maximum split value. 10,000 basis points = 100%.
 	MaxSplit = uint32(10_000)

@@ -444,8 +444,8 @@ func (s *UpgradeTestSuite) TestTourmalineRC2() {
 
 func (s *UpgradeTestSuite) TestTourmalineRC3() {
 	expInLog := []string{
-		"INF Setting default exchange module payment params.",
-		"INF Done setting default exchange module payment params.",
+		"INF Setting exchange module payment params to defaults.",
+		"INF Done setting exchange module payment params to defaults.",
 	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline-rc3", expInLog, nil)
@@ -457,7 +457,7 @@ func (s *UpgradeTestSuite) TestTourmaline() {
 		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
 		"INF Converting NAV units.",
 		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
-		"INF Setting default exchange module payment params.",
+		"INF Setting exchange module payment params to defaults.",
 	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline", expInLog, nil)
@@ -985,7 +985,7 @@ func (s *UpgradeTestSuite) TestUpdateMsgFeesNhashPerMil() {
 	}
 }
 
-func (s *UpgradeTestSuite) TestUpdateExchangePaymentParams() {
+func (s *UpgradeTestSuite) TestSetExchangePaymentParamsToDefaults() {
 	origParams := s.app.ExchangeKeeper.GetParams(s.ctx)
 	defer s.app.ExchangeKeeper.SetParams(s.ctx, origParams)
 
@@ -1022,24 +1022,24 @@ func (s *UpgradeTestSuite) TestUpdateExchangePaymentParams() {
 		s.Run(tc.name, func() {
 			s.app.ExchangeKeeper.SetParams(s.ctx, tc.existingParams)
 			expInLog := []string{
-				"INF Setting default exchange module payment params.",
-				"INF Done setting default exchange module payment params.",
+				"INF Setting exchange module payment params to defaults.",
+				"INF Done setting exchange module payment params to defaults.",
 			}
 
 			// Reset the log buffer and call the func. Relog the output if it panics.
 			s.logBuffer.Reset()
 			testFunc := func() {
-				updateExchangePaymentParams(s.ctx, s.app)
+				setExchangePaymentParamsToDefaults(s.ctx, s.app)
 			}
-			didNotPanic := s.Assert().NotPanics(testFunc, "updateExchangePaymentParams")
-			logOutput := s.GetLogOutput("updateExchangePaymentParams")
+			didNotPanic := s.Assert().NotPanics(testFunc, "setExchangePaymentParamsToDefaults")
+			logOutput := s.GetLogOutput("setExchangePaymentParamsToDefaults")
 			if !didNotPanic {
 				return
 			}
-			s.AssertLogContents(logOutput, expInLog, nil, true, "updateExchangePaymentParams")
+			s.AssertLogContents(logOutput, expInLog, nil, true, "setExchangePaymentParamsToDefaults")
 
 			actParams := s.app.ExchangeKeeper.GetParams(s.ctx)
-			s.Assert().Equal(tc.expectedParams, actParams, "Exchange Params after updateExchangePaymentParams")
+			s.Assert().Equal(tc.expectedParams, actParams, "Exchange Params after setExchangePaymentParamsToDefaults")
 		})
 	}
 }

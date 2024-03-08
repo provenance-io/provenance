@@ -36,8 +36,8 @@ func (s *TestSuite) TestKeeper_SetParams() {
 			name:   "default params",
 			params: exchange.DefaultParams(),
 			expState: []string{
-				expAcceptEntry("100000000nhash"),
-				expCreateEntry("100000000nhash"),
+				expAcceptEntry("8000000000nhash"),
+				expCreateEntry("10000000000nhash"),
 				expEntry("", uint16(exchange.DefaultDefaultSplit)),
 			},
 		},

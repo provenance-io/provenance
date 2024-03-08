@@ -677,10 +677,10 @@ func (s *CmdTestSuite) TestCmdQueryParams() {
   default_split: 500
   denom_splits: []
   fee_accept_payment_flat:
-  - amount: "100000000"
+  - amount: "8000000000"
     denom: nhash
   fee_create_payment_flat:
-  - amount: "100000000"
+  - amount: "10000000000"
     denom: nhash
 `,
 		},
@@ -689,8 +689,8 @@ func (s *CmdTestSuite) TestCmdQueryParams() {
 			args: []string{"get-params", "--output", "json"},
 			expInOut: []string{
 				`{"params":{`, `"default_split":500`, `"denom_splits":[]`,
-				`"fee_create_payment_flat":[{"denom":"nhash","amount":"100000000"}]`,
-				`"fee_accept_payment_flat":[{"denom":"nhash","amount":"100000000"}]`,
+				`"fee_create_payment_flat":[{"denom":"nhash","amount":"10000000000"}]`,
+				`"fee_accept_payment_flat":[{"denom":"nhash","amount":"8000000000"}]`,
 			},
 		},
 	}
@@ -1075,7 +1075,7 @@ func (s *CmdTestSuite) TestCmdQueryPaymentFeeCalc() {
 			args: []string{"payment-fee-calc", "--source-amount", "1strawberry", "--output", "text"},
 			expOut: `fee_accept: []
 fee_create:
-- amount: "100000000"
+- amount: "10000000000"
   denom: nhash
 `,
 		},
@@ -1083,10 +1083,10 @@ fee_create:
 			name: "from create file",
 			args: []string{"payment-fee-calc", "--file", fnCreate, "--output", "text"},
 			expOut: `fee_accept:
-- amount: "100000000"
+- amount: "8000000000"
   denom: nhash
 fee_create:
-- amount: "100000000"
+- amount: "10000000000"
   denom: nhash
 `,
 		},
@@ -1094,8 +1094,8 @@ fee_create:
 			name: "from accept file",
 			args: []string{"payment-fee-calc", "--file", fnAccept, "--output", "json"},
 			expInOut: []string{
-				`"fee_create":[{"denom":"nhash","amount":"100000000"}]`,
-				`"fee_accept":[{"denom":"nhash","amount":"100000000"}]`,
+				`"fee_create":[{"denom":"nhash","amount":"10000000000"}]`,
+				`"fee_accept":[{"denom":"nhash","amount":"8000000000"}]`,
 			},
 		},
 	}

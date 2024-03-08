@@ -135,7 +135,7 @@ var upgrades = map[string]appUpgrade{
 	"tourmaline-rc2": {}, // upgrade for v1.18.0-rc2
 	"tourmaline-rc3": { // upgrade for v1.18.0-rc3
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			updateExchangePaymentParams(ctx, app)
+			setExchangePaymentParamsToDefaults(ctx, app)
 			return vm, nil
 		},
 	},
@@ -154,7 +154,7 @@ var upgrades = map[string]appUpgrade{
 			// This isn't in an rc because it was handled via gov prop for testnet.
 			updateMsgFeesNhashPerMil(ctx, app)
 
-			updateExchangePaymentParams(ctx, app)
+			setExchangePaymentParamsToDefaults(ctx, app)
 
 			return vm, nil
 		},
@@ -401,10 +401,10 @@ func updateMsgFeesNhashPerMil(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done setting MsgFees Params NhashPerUsdMil.")
 }
 
-// updateExchangePaymentParams updates the exchange module params to have the default create payment and accept payment values.
+// setExchangePaymentParamsToDefaults updates the exchange module params to have the default create payment and accept payment values.
 // TODO: Remove with the tourmaline handlers.
-func updateExchangePaymentParams(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Setting default exchange module payment params.")
+func setExchangePaymentParamsToDefaults(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Setting exchange module payment params to defaults.")
 	defaultParams := exchange.DefaultParams()
 	curParams := app.ExchangeKeeper.GetParams(ctx)
 	if curParams == nil {
@@ -414,5 +414,5 @@ func updateExchangePaymentParams(ctx sdk.Context, app *App) {
 		curParams.FeeAcceptPaymentFlat = defaultParams.FeeAcceptPaymentFlat
 	}
 	app.ExchangeKeeper.SetParams(ctx, curParams)
-	ctx.Logger().Info("Done setting default exchange module payment params.")
+	ctx.Logger().Info("Done setting exchange module payment params to defaults.")
 }
