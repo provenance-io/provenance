@@ -6,6 +6,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -60,16 +62,27 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 	return rv
 }
 
+// getLogger gets a logger for the exchange module.
+func (k Keeper) getLogger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", "x/"+exchange.ModuleName)
+}
+
+// logEndpointError logs an error for an endpoint.
+// This uses the standard key+val logging argument pattern instead of the fmt.Sprintf format.
+func (k Keeper) logEndpointError(ctx sdk.Context, endpoint, msg string, keyVals ...interface{}) {
+	k.getLogger(ctx).With("endpoint", endpoint).Error(msg, keyVals...)
+}
+
 // logErrorf uses fmt.Sprintf to combine the msg and args, and logs the result as an error from this module.
 // Note that this is different from the logging .Error(msg string, keyvals ...interface{}) syntax.
 func (k Keeper) logErrorf(ctx sdk.Context, msg string, args ...interface{}) {
-	ctx.Logger().Error(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
+	k.getLogger(ctx).Error(fmt.Sprintf(msg, args...))
 }
 
 // logInfof uses fmt.Sprintf to combine the msg and args, and logs the result as info from this module.
 // Note that this is different from the logging .Info(msg string, keyvals ...interface{}) syntax.
 func (k Keeper) logInfof(ctx sdk.Context, msg string, args ...interface{}) {
-	ctx.Logger().Info(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
+	k.getLogger(ctx).Info(fmt.Sprintf(msg, args...))
 }
 
 // emitEvent emits the provided event and writes any error to the error log.

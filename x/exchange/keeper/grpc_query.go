@@ -558,7 +558,11 @@ func (k QueryServer) GetPayment(goCtx context.Context, req *exchange.QueryGetPay
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	resp := &exchange.QueryGetPaymentResponse{}
-	resp.Payment, _ = k.Keeper.GetPayment(ctx, source, req.ExternalId)
+	resp.Payment, err = k.Keeper.GetPayment(ctx, source, req.ExternalId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error reading payment from state with source %s and external id %q: %v",
+			req.Source, req.ExternalId, err)
+	}
 	if resp.Payment == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "no payment found with source %s and external id %q",
 			req.Source, req.ExternalId)
@@ -583,13 +587,23 @@ func (k QueryServer) GetPaymentsWithSource(goCtx context.Context, req *exchange.
 
 	resp := &exchange.QueryGetPaymentsWithSourceResponse{}
 	var pageErr error
-	resp.Pagination, pageErr = query.Paginate(preStore, req.Pagination, func(_, value []byte) error {
+	resp.Pagination, pageErr = query.Paginate(preStore, req.Pagination, func(keySuffix, value []byte) error {
 		// Only add it to the result if we can read it. This might result in fewer results than the limit,
 		// but at least one bad entry won't block others by causing the whole thing to return an error.
-		payment, _ := k.parsePaymentStoreValue(value)
-		if payment != nil {
-			resp.Payments = append(resp.Payments, payment)
+		payment, pErr := k.parsePaymentStoreValue(value)
+		if pErr != nil {
+			k.logEndpointError(ctx, "GetPaymentsWithSource", "Error reading payment from state.", "error", pErr,
+				"source", source.String(), "value", fmt.Sprintf("%v", value),
+				"keyPrefix", fmt.Sprintf("%v", keyPrefix), "keySuffix", fmt.Sprintf("%v", keySuffix))
+			return nil
 		}
+		if payment == nil {
+			k.logEndpointError(ctx, "GetPaymentsWithSource", "Empty payment entry.",
+				"source", source.String(), "value", fmt.Sprintf("%v", value),
+				"keyPrefix", fmt.Sprintf("%v", keyPrefix), "keySuffix", fmt.Sprintf("%v", keySuffix))
+			return nil
+		}
+		resp.Payments = append(resp.Payments, payment)
 		return nil
 	})
 
@@ -620,12 +634,28 @@ func (k QueryServer) GetPaymentsWithTarget(goCtx context.Context, req *exchange.
 	resp.Pagination, pageErr = query.Paginate(preStore, req.Pagination, func(keySuffix, _ []byte) error {
 		// Only add it to the result if we can read it. This might result in fewer results than the limit,
 		// but at least one bad entry won't block others by causing the whole thing to return an error.
-		if source, externalID, pErr := ParseIndexKeySuffixTargetToPayment(keySuffix); pErr == nil {
-			payment, _ := k.getPaymentFromStore(store, source, externalID)
-			if payment != nil {
-				resp.Payments = append(resp.Payments, payment)
-			}
+		source, externalID, pErr := ParseIndexKeySuffixTargetToPayment(keySuffix)
+		if pErr != nil {
+			k.logEndpointError(ctx, "GetPaymentsWithTarget", "Error reading target to payment index entry.",
+				"error", pErr, "target", target.String(),
+				"keyPrefix", fmt.Sprintf("%v", keyPrefix), "keySuffix", fmt.Sprintf("%v", keySuffix))
+			return nil
 		}
+
+		payment, pErr := k.getPaymentFromStore(store, source, externalID)
+		if pErr != nil {
+			k.logEndpointError(ctx, "GetPaymentsWithTarget", "Error reading payment from store.", "error", pErr,
+				"target", target.String(), "source", source.String(), "externalID", externalID,
+			)
+			return nil
+		}
+		if payment == nil {
+			k.logEndpointError(ctx, "GetPaymentsWithTarget", "No payment found from target to payment index entry.",
+				"target", target.String(), "source", source.String(), "externalID", externalID)
+			return nil
+		}
+
+		resp.Payments = append(resp.Payments, payment)
 		return nil
 	})
 
@@ -649,11 +679,21 @@ func (k QueryServer) GetAllPayments(goCtx context.Context, req *exchange.QueryGe
 
 	resp := &exchange.QueryGetAllPaymentsResponse{}
 	var pageErr error
-	resp.Pagination, pageErr = query.Paginate(preStore, pagination, func(_, value []byte) error {
-		payment, _ := k.parsePaymentStoreValue(value)
-		if payment != nil {
-			resp.Payments = append(resp.Payments, payment)
+	resp.Pagination, pageErr = query.Paginate(preStore, pagination, func(keySuffix, value []byte) error {
+		payment, pErr := k.parsePaymentStoreValue(value)
+		if pErr != nil {
+			k.logEndpointError(ctx, "GetAllPayments", "Error reading payment from store.",
+				"error", pErr, "value", fmt.Sprintf("%v", value),
+				"keyPrefix", fmt.Sprintf("%v", keyPrefix), "keySuffix", fmt.Sprintf("%v", keySuffix))
+			return nil
 		}
+		if payment == nil {
+			k.logEndpointError(ctx, "GetAllPayments", "Empty payment entry.",
+				"value", fmt.Sprintf("%v", value),
+				"keyPrefix", fmt.Sprintf("%v", keyPrefix), "keySuffix", fmt.Sprintf("%v", keySuffix))
+			return nil
+		}
+		resp.Payments = append(resp.Payments, payment)
 		return nil
 	})
 

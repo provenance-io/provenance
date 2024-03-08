@@ -4657,6 +4657,20 @@ func (s *TestSuite) TestQueryServer_GetPayment() {
 			expInErr: []string{invalidArgErr, "invalid source \"gonnanotwork\"", "decoding bech32 failed"},
 		},
 		{
+			name: "bad entry in state",
+			setup: func() {
+				key := keeper.MakeKeyPayment(s.addr2, "bad-payment-entry")
+				value := []byte{'x'}
+				s.getStore().Set(key, value)
+			},
+			req: &exchange.QueryGetPaymentRequest{
+				Source:     s.addr2.String(),
+				ExternalId: "bad-payment-entry",
+			},
+			expInErr: []string{invalidArgErr, "error reading payment from state",
+				"source " + s.addr2.String(), "external id \"bad-payment-entry\""},
+		},
+		{
 			name: "no such payment",
 			setup: func() {
 				s.requireSetPaymentsInStore(
@@ -4670,7 +4684,7 @@ func (s *TestSuite) TestQueryServer_GetPayment() {
 				Source:     s.addr2.String(),
 				ExternalId: "three",
 			},
-			expInErr: []string{"no payment found with source " + s.addr2.String() + " and external id \"three\""},
+			expInErr: []string{invalidArgErr, "no payment found with source " + s.addr2.String() + " and external id \"three\""},
 		},
 		{
 			name: "payment exists: no external id",
