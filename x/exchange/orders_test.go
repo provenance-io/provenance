@@ -281,8 +281,8 @@ func TestValidateExternalID(t *testing.T) {
 		{
 			name:       "max length + 1",
 			externalID: strings.Repeat("n", MaxExternalIDLength+1),
-			expErr: fmt.Sprintf("invalid external id %q: max length %d",
-				strings.Repeat("n", MaxExternalIDLength+1), MaxExternalIDLength),
+			expErr: fmt.Sprintf("invalid external id %q (length %d): max length %d",
+				"nnnnn...nnnnn", MaxExternalIDLength+1, MaxExternalIDLength),
 		},
 	}
 

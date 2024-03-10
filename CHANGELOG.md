@@ -37,7 +37,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Features
+
+* Add [Payments](x/exchange/spec/01_concepts.md#payments) to the exchange module [#1703](https://github.com/provenance-io/provenance/issues/1703).
+  Payments allow two parties to trade assets securely and asynchronously.
+
+### Improvements
+
+* Add a `tourmaline-rc3` upgrade handler to set some new exchange module params related to payments [#1703](https://github.com/provenance-io/provenance/issues/1703).
+
+### Bug Fixes
+
+* In `MarketCommitmentSettle`, only consume the settlement fee if the settlement succeeds [#1703](https://github.com/provenance-io/provenance/issues/1703).
 
 ---
 

@@ -418,20 +418,10 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 
 // consumeCommitmentSettlementFee calculates and consumes the commitment settlement fee for the given request.
 func (k Keeper) consumeCommitmentSettlementFee(ctx sdk.Context, req *exchange.MsgMarketCommitmentSettleRequest) error {
-	feeGasMeter, err := antewrapper.GetFeeGasMeter(ctx)
-	if err != nil || feeGasMeter == nil {
-		// There are some legitimate reasons why we might not get a fee gas meter here
-		// (e.g. during a gov prop). In those cases, we just skip consuming this fee and move on.
-		return nil
-	}
-
 	exchangeFees, err := k.CalculateCommitmentSettlementFee(ctx, req)
 	if err != nil {
 		return fmt.Errorf("could not calculate commitment settlement fees: %w", err)
 	}
-	if !exchangeFees.ExchangeFees.IsZero() {
-		feeGasMeter.ConsumeFee(exchangeFees.ExchangeFees, sdk.MsgTypeURL(req), "")
-	}
-
+	antewrapper.ConsumeMsgFee(ctx, exchangeFees.ExchangeFees, req, "")
 	return nil
 }

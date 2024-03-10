@@ -14,6 +14,7 @@ import "provenance/exchange/v1/commitments.proto";
 import "provenance/exchange/v1/market.proto";
 import "provenance/exchange/v1/orders.proto";
 import "provenance/exchange/v1/params.proto";
+import "provenance/exchange/v1/payments.proto";
 
 // Msg is the service for exchange module's tx endpoints.
 service Msg {
@@ -79,6 +80,24 @@ service Msg {
 
   // MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it.
   rpc MarketManageReqAttrs(MsgMarketManageReqAttrsRequest) returns (MsgMarketManageReqAttrsResponse);
+
+  // CreatePayment creates a payment to facilitate a trade between two accounts.
+  rpc CreatePayment(MsgCreatePaymentRequest) returns (MsgCreatePaymentResponse);
+
+  // AcceptPayment is used by a target to accept a payment.
+  rpc AcceptPayment(MsgAcceptPaymentRequest) returns (MsgAcceptPaymentResponse);
+
+  // RejectPayment can be used by a target to reject a payment.
+  rpc RejectPayment(MsgRejectPaymentRequest) returns (MsgRejectPaymentResponse);
+
+  // RejectPayments can be used by a target to reject all payments from one or more sources.
+  rpc RejectPayments(MsgRejectPaymentsRequest) returns (MsgRejectPaymentsResponse);
+
+  // CancelPayments can be used by a source to cancel one or more payments.
+  rpc CancelPayments(MsgCancelPaymentsRequest) returns (MsgCancelPaymentsResponse);
+
+  // ChangePaymentTarget can be used by a source to change the target in one of their payments.
+  rpc ChangePaymentTarget(MsgChangePaymentTargetRequest) returns (MsgChangePaymentTargetResponse);
 
   // GovCreateMarket is a governance proposal endpoint for creating a market.
   rpc GovCreateMarket(MsgGovCreateMarketRequest) returns (MsgGovCreateMarketResponse);
@@ -468,6 +487,84 @@ message MsgMarketManageReqAttrsRequest {
 
 // MsgMarketManageReqAttrsResponse is a response message for the MarketManageReqAttrs endpoint.
 message MsgMarketManageReqAttrsResponse {}
+
+// MsgCreatePaymentRequest is a request message for the CreatePayment endpoint.
+message MsgCreatePaymentRequest {
+  option (cosmos.msg.v1.signer) = "payment.source";
+
+  // payment is the details of the payment to create.
+  Payment payment = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgCreatePaymentResponse is a response message for the CreatePayment endpoint.
+message MsgCreatePaymentResponse {}
+
+// MsgAcceptPaymentRequest is a request message for the AcceptPayment endpoint.
+message MsgAcceptPaymentRequest {
+  option (cosmos.msg.v1.signer) = "payment.target";
+
+  // payment is the details of the payment to accept.
+  Payment payment = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgAcceptPaymentResponse is a response message for the AcceptPayment endpoint.
+message MsgAcceptPaymentResponse {}
+
+// MsgRejectPaymentRequest is a request message for the RejectPayment endpoint.
+message MsgRejectPaymentRequest {
+  option (cosmos.msg.v1.signer) = "target";
+
+  // target is the target account of the payment to reject.
+  string target = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source is the source account of the payment to reject.
+  string source = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id is the external id of the payment to reject.
+  string external_id = 3;
+}
+
+// MsgRejectPaymentResponse is a response message for the RejectPayment endpoint.
+message MsgRejectPaymentResponse {}
+
+// MsgRejectPaymentsRequest is a request message for the RejectPayments endpoint.
+message MsgRejectPaymentsRequest {
+  option (cosmos.msg.v1.signer) = "target";
+
+  // target is the account that wishes to reject some payments.
+  string target = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // sources is the source accounts of the payments to reject.
+  repeated string sources = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgRejectPaymentsResponse is a response message for the RejectPayments endpoint.
+message MsgRejectPaymentsResponse {}
+
+// MsgCancelPaymentsRequest is a request message for the CancelPayments endpoint.
+message MsgCancelPaymentsRequest {
+  option (cosmos.msg.v1.signer) = "source";
+
+  // source is the account that wishes to cancel some of their payments.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_ids is all of the external ids of the payments to cancel.
+  repeated string external_ids = 2;
+}
+
+// MsgCancelPaymentsResponse is a response message for the CancelPayments endpoint.
+message MsgCancelPaymentsResponse {}
+
+// MsgChangePaymentTargetRequest is a request message for the ChangePaymentTarget endpoint.
+message MsgChangePaymentTargetRequest {
+  option (cosmos.msg.v1.signer) = "source";
+
+  // source is the account that wishes to update the target of one of their payments.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id is the external id of the payment to update.
+  string external_id = 2;
+  // new_target is the new target account of the payment.
+  string new_target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgChangePaymentTargetResponse is a response message for the ChangePaymentTarget endpoint.
+message MsgChangePaymentTargetResponse {}
 
 // MsgGovCreateMarketRequest is a request message for the GovCreateMarket endpoint.
 message MsgGovCreateMarketRequest {
