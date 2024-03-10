@@ -193,3 +193,68 @@ func NewEventMarketFeesUpdated(marketID uint32) *EventMarketFeesUpdated {
 func NewEventParamsUpdated() *EventParamsUpdated {
 	return &EventParamsUpdated{}
 }
+
+func NewEventPaymentCreated(payment *Payment) *EventPaymentCreated {
+	return &EventPaymentCreated{
+		Source:       payment.Source,
+		SourceAmount: payment.SourceAmount.String(),
+		Target:       payment.Target,
+		TargetAmount: payment.TargetAmount.String(),
+		ExternalId:   payment.ExternalId,
+	}
+}
+
+func NewEventPaymentUpdated(payment *Payment, oldTarget string) *EventPaymentUpdated {
+	return &EventPaymentUpdated{
+		Source:       payment.Source,
+		SourceAmount: payment.SourceAmount.String(),
+		OldTarget:    oldTarget,
+		NewTarget:    payment.Target,
+		TargetAmount: payment.TargetAmount.String(),
+		ExternalId:   payment.ExternalId,
+	}
+}
+
+func NewEventPaymentAccepted(payment *Payment) *EventPaymentAccepted {
+	return &EventPaymentAccepted{
+		Source:       payment.Source,
+		SourceAmount: payment.SourceAmount.String(),
+		Target:       payment.Target,
+		TargetAmount: payment.TargetAmount.String(),
+		ExternalId:   payment.ExternalId,
+	}
+}
+
+func NewEventPaymentRejected(payment *Payment) *EventPaymentRejected {
+	return &EventPaymentRejected{
+		Source:     payment.Source,
+		Target:     payment.Target,
+		ExternalId: payment.ExternalId,
+	}
+}
+
+// NewEventsPaymentsRejected creates a payment-rejected event for each payment provided.
+func NewEventsPaymentsRejected(payments []*Payment) []*EventPaymentRejected {
+	rv := make([]*EventPaymentRejected, len(payments))
+	for i, payment := range payments {
+		rv[i] = NewEventPaymentRejected(payment)
+	}
+	return rv
+}
+
+func NewEventPaymentCancelled(payment *Payment) *EventPaymentCancelled {
+	return &EventPaymentCancelled{
+		Source:     payment.Source,
+		Target:     payment.Target,
+		ExternalId: payment.ExternalId,
+	}
+}
+
+// NewEventsPaymentsCancelled creates a payment-cancelled event for each payment provided.
+func NewEventsPaymentsCancelled(payments []*Payment) []*EventPaymentCancelled {
+	rv := make([]*EventPaymentCancelled, len(payments))
+	for i, payment := range payments {
+		rv[i] = NewEventPaymentCancelled(payment)
+	}
+	return rv
+}

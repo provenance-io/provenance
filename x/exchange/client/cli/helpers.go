@@ -306,4 +306,6 @@ Example <account-amount>: ` + ExampleAddr + `:10nhash,3orange`
 Both <assets coin> and <price coin> have the format "<amount><denom>".
 
 Example <nav>: 1cherry:10nhash`
+
+	PageFlagsUse = "[pagination flags]"
 )

@@ -442,12 +442,22 @@ func (s *UpgradeTestSuite) TestTourmalineRC2() {
 	s.Require().Empty(upgrades[key], "upgrades[%q]", key)
 }
 
+func (s *UpgradeTestSuite) TestTourmalineRC3() {
+	expInLog := []string{
+		"INF Setting exchange module payment params to defaults.",
+		"INF Done setting exchange module payment params to defaults.",
+	}
+
+	s.AssertUpgradeHandlerLogs("tourmaline-rc3", expInLog, nil)
+}
+
 func (s *UpgradeTestSuite) TestTourmaline() {
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
 		"INF Converting NAV units.",
 		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
+		"INF Setting exchange module payment params to defaults.",
 	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline", expInLog, nil)
@@ -971,6 +981,65 @@ func (s *UpgradeTestSuite) TestUpdateMsgFeesNhashPerMil() {
 
 			actParams := s.app.MsgFeesKeeper.GetParams(s.ctx)
 			s.Assert().Equal(expParams, actParams, "MsgFeesKeeper Params after updateMsgFeesNhashPerMil")
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestSetExchangePaymentParamsToDefaults() {
+	origParams := s.app.ExchangeKeeper.GetParams(s.ctx)
+	defer s.app.ExchangeKeeper.SetParams(s.ctx, origParams)
+
+	defaultParams := exchange.DefaultParams()
+
+	tests := []struct {
+		name           string
+		existingParams *exchange.Params
+		expectedParams *exchange.Params
+	}{
+		{
+			name:           "no params set yet",
+			existingParams: nil,
+			expectedParams: defaultParams,
+		},
+		{
+			name: "params set previously",
+			existingParams: &exchange.Params{
+				DefaultSplit:         333,
+				DenomSplits:          []exchange.DenomSplit{{Denom: "date", Split: 99}},
+				FeeCreatePaymentFlat: nil,
+				FeeAcceptPaymentFlat: nil,
+			},
+			expectedParams: &exchange.Params{
+				DefaultSplit:         333,
+				DenomSplits:          []exchange.DenomSplit{{Denom: "date", Split: 99}},
+				FeeCreatePaymentFlat: defaultParams.FeeCreatePaymentFlat,
+				FeeAcceptPaymentFlat: defaultParams.FeeAcceptPaymentFlat,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.app.ExchangeKeeper.SetParams(s.ctx, tc.existingParams)
+			expInLog := []string{
+				"INF Setting exchange module payment params to defaults.",
+				"INF Done setting exchange module payment params to defaults.",
+			}
+
+			// Reset the log buffer and call the func. Relog the output if it panics.
+			s.logBuffer.Reset()
+			testFunc := func() {
+				setExchangePaymentParamsToDefaults(s.ctx, s.app)
+			}
+			didNotPanic := s.Assert().NotPanics(testFunc, "setExchangePaymentParamsToDefaults")
+			logOutput := s.GetLogOutput("setExchangePaymentParamsToDefaults")
+			if !didNotPanic {
+				return
+			}
+			s.AssertLogContents(logOutput, expInLog, nil, true, "setExchangePaymentParamsToDefaults")
+
+			actParams := s.app.ExchangeKeeper.GetParams(s.ctx)
+			s.Assert().Equal(tc.expectedParams, actParams, "Exchange Params after setExchangePaymentParamsToDefaults")
 		})
 	}
 }

@@ -11,6 +11,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
@@ -91,6 +92,24 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		},
 		func(signer string) sdk.Msg {
 			return &MsgMarketManageReqAttrsRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCreatePaymentRequest{Payment: Payment{Source: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgAcceptPaymentRequest{Payment: Payment{Target: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgRejectPaymentRequest{Target: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgRejectPaymentsRequest{Target: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCancelPaymentsRequest{Source: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgChangePaymentTargetRequest{Source: signer}
 		},
 		func(signer string) sdk.Msg {
 			return &MsgGovCreateMarketRequest{Authority: signer}
@@ -1378,8 +1397,8 @@ func TestMsgMarketSetOrderExternalIDRequest_ValidateBasic(t *testing.T) {
 				ExternalId: strings.Repeat("r", MaxExternalIDLength+1),
 			},
 			expErr: []string{
-				fmt.Sprintf("invalid external id %q: max length %d",
-					strings.Repeat("r", MaxExternalIDLength+1), MaxExternalIDLength),
+				fmt.Sprintf("invalid external id %q (length %d): max length %d",
+					"rrrrr...rrrrr", MaxExternalIDLength+1, MaxExternalIDLength),
 			},
 		},
 		{
@@ -1403,8 +1422,8 @@ func TestMsgMarketSetOrderExternalIDRequest_ValidateBasic(t *testing.T) {
 			expErr: []string{
 				"invalid administrator \"\"", emptyAddrErr,
 				"invalid market id: cannot be zero",
-				fmt.Sprintf("invalid external id %q: max length %d",
-					strings.Repeat("V", MaxExternalIDLength+1), MaxExternalIDLength),
+				fmt.Sprintf("invalid external id %q (length %d): max length %d",
+					"VVVVV...VVVVV", MaxExternalIDLength+1, MaxExternalIDLength),
 				"invalid order id: cannot be zero",
 			},
 		},
@@ -2491,6 +2510,637 @@ func TestMsgMarketManageReqAttrsRequest_HasUpdates(t *testing.T) {
 	}
 }
 
+func TestMsgCreatePaymentRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgCreatePaymentRequest
+		expErr []string
+	}{
+		{
+			name:   "valid payment",
+			msg:    MsgCreatePaymentRequest{Payment: ValidPayment},
+			expErr: nil,
+		},
+		{
+			name: "no target",
+			msg: MsgCreatePaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       "",
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: nil,
+		},
+		{
+			name: "no source amount",
+			msg: MsgCreatePaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: nil,
+				Target:       ValidPayment.Target,
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: nil,
+		},
+		{
+			name: "no target amount",
+			msg: MsgCreatePaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       ValidPayment.Target,
+				TargetAmount: nil,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: nil,
+		},
+		{
+			name: "no external id",
+			msg: MsgCreatePaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       ValidPayment.Target,
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   "",
+			}},
+			expErr: nil,
+		},
+		{
+			name: "invalid payment",
+			msg: MsgCreatePaymentRequest{Payment: Payment{
+				Source:       "",
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       "notgoodeither",
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: []string{
+				"invalid source \"\": empty address string is not allowed",
+				"invalid target \"notgoodeither\": decoding bech32 failed: invalid separator index -1",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgAcceptPaymentRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgAcceptPaymentRequest
+		expErr []string
+	}{
+		{
+			name:   "valid payment",
+			msg:    MsgAcceptPaymentRequest{Payment: ValidPayment},
+			expErr: nil,
+		},
+		{
+			name: "invalid payment",
+			msg: MsgAcceptPaymentRequest{Payment: Payment{
+				Source:       "",
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       "notgoodeither",
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: []string{
+				"invalid source \"\": empty address string is not allowed",
+				"invalid target \"notgoodeither\": decoding bech32 failed: invalid separator index -1",
+			},
+		},
+		{
+			name: "no target",
+			msg: MsgAcceptPaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       "",
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: []string{"invalid target: empty address string is not allowed"},
+		},
+		{
+			name: "no source amount",
+			msg: MsgAcceptPaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: nil,
+				Target:       ValidPayment.Target,
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: nil,
+		},
+		{
+			name: "no target amount",
+			msg: MsgAcceptPaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       ValidPayment.Target,
+				TargetAmount: nil,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: nil,
+		},
+		{
+			name: "no external id",
+			msg: MsgAcceptPaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       ValidPayment.Target,
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   "",
+			}},
+			expErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgRejectPaymentRequest_ValidateBasic(t *testing.T) {
+	validMsg := MsgRejectPaymentRequest{
+		Target:     sdk.AccAddress("Target______________").String(),
+		Source:     sdk.AccAddress("Source______________").String(),
+		ExternalId: "just-some-id:1D250135-D735-42E7-9DC3-FDB374DE2604",
+	}
+
+	tests := []struct {
+		name   string
+		msg    MsgRejectPaymentRequest
+		expErr []string
+	}{
+		{
+			name:   "valid message",
+			msg:    validMsg,
+			expErr: nil,
+		},
+		{
+			name: "no target",
+			msg: MsgRejectPaymentRequest{
+				Target:     "",
+				Source:     validMsg.Source,
+				ExternalId: validMsg.ExternalId,
+			},
+			expErr: []string{"invalid target \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid target",
+			msg: MsgRejectPaymentRequest{
+				Target:     "reallybad",
+				Source:     validMsg.Source,
+				ExternalId: validMsg.ExternalId,
+			},
+			expErr: []string{"invalid target \"reallybad\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "no source",
+			msg: MsgRejectPaymentRequest{
+				Target:     validMsg.Target,
+				Source:     "",
+				ExternalId: validMsg.ExternalId,
+			},
+			expErr: []string{"invalid source \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid source",
+			msg: MsgRejectPaymentRequest{
+				Target:     validMsg.Target,
+				Source:     "alsoverybad",
+				ExternalId: validMsg.ExternalId,
+			},
+			expErr: []string{"invalid source \"alsoverybad\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "no external id",
+			msg: MsgRejectPaymentRequest{
+				Target:     validMsg.Target,
+				Source:     validMsg.Source,
+				ExternalId: "",
+			},
+			expErr: nil,
+		},
+		{
+			name: "invalid external id",
+			msg: MsgRejectPaymentRequest{
+				Target:     validMsg.Target,
+				Source:     validMsg.Source,
+				ExternalId: "w" + strings.Repeat("o", MaxExternalIDLength) + "w",
+			},
+			expErr: []string{fmt.Sprintf("invalid external id %q (length %d): max length %d",
+				"woooo...oooow", MaxExternalIDLength+2, MaxExternalIDLength)},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgRejectPaymentRequest{
+				Target:     "reallybad",
+				Source:     "",
+				ExternalId: "w" + strings.Repeat("o", MaxExternalIDLength) + "w",
+			},
+			expErr: []string{
+				"invalid target \"reallybad\": decoding bech32 failed: invalid separator index -1",
+				"invalid source \"\": empty address string is not allowed",
+				fmt.Sprintf("invalid external id %q (length %d): max length %d",
+					"woooo...oooow", MaxExternalIDLength+2, MaxExternalIDLength),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgRejectPaymentsRequest_ValidateBasic(t *testing.T) {
+	target := sdk.AccAddress("target______________").String()
+	source0 := sdk.AccAddress("source0_____________").String()
+	source1 := sdk.AccAddress("source1_____________").String()
+	source2 := sdk.AccAddress("source2_____________").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgRejectPaymentsRequest
+		expErr []string
+	}{
+		{
+			name: "valid: one source",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source0},
+			},
+			expErr: nil,
+		},
+		{
+			name: "valid: three sources",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source0, source1, source2},
+			},
+			expErr: nil,
+		},
+		{
+			name: "no target",
+			msg: MsgRejectPaymentsRequest{
+				Target:  "",
+				Sources: []string{source0},
+			},
+			expErr: []string{"invalid target \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid target",
+			msg: MsgRejectPaymentsRequest{
+				Target:  "oopsnotgonnawork",
+				Sources: []string{source0},
+			},
+			expErr: []string{"invalid target \"oopsnotgonnawork\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "nil sources",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: nil,
+			},
+			expErr: []string{"at least one source is required"},
+		},
+		{
+			name: "empty sources",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{},
+			},
+			expErr: []string{"at least one source is required"},
+		},
+		{
+			name: "one source: empty string",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{""},
+			},
+			expErr: []string{"invalid sources[0] \"\": empty address string is not allowed"},
+		},
+		{
+			name: "one source: invalid",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{"diditagain"},
+			},
+			expErr: []string{"invalid sources[0] \"diditagain\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "three sources: all same",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source1, source1, source1},
+			},
+			expErr: []string{"invalid sources: duplicate entry " + source1},
+		},
+		{
+			name: "three sources: same first and third",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source0, source1, source0},
+			},
+			expErr: []string{"invalid sources: duplicate entry " + source0},
+		},
+		{
+			name: "three sources: invalid first",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{"thebadzero", source1, source2},
+			},
+			expErr: []string{"invalid sources[0] \"thebadzero\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "three sources: invalid second",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source0, "thebadone", source2},
+			},
+			expErr: []string{"invalid sources[1] \"thebadone\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "three sources: invalid third",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source0, source1, "thebadtwo"},
+			},
+			expErr: []string{"invalid sources[2] \"thebadtwo\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgRejectPaymentsRequest{
+				Target:  "",
+				Sources: []string{"thebadzero", source1, "thebadtwo"},
+			},
+			expErr: []string{
+				"invalid target \"\": empty address string is not allowed",
+				"invalid sources[0] \"thebadzero\": decoding bech32 failed: invalid separator index -1",
+				"invalid sources[2] \"thebadtwo\": decoding bech32 failed: invalid separator index -1",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgCancelPaymentsRequest_ValidateBasic(t *testing.T) {
+	source := sdk.AccAddress("source______________").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgCancelPaymentsRequest
+		expErr []string
+	}{
+		{
+			name: "valid",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{"valideid"},
+			},
+			expErr: nil,
+		},
+		{
+			name: "no source",
+			msg: MsgCancelPaymentsRequest{
+				Source:      "",
+				ExternalIds: []string{"eid"},
+			},
+			expErr: []string{"invalid source \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid source",
+			msg: MsgCancelPaymentsRequest{
+				Source:      "notanaddr",
+				ExternalIds: []string{"eid"},
+			},
+			expErr: []string{"invalid source \"notanaddr\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "nil external ids",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: nil,
+			},
+			expErr: []string{"at least one external id is required"},
+		},
+		{
+			name: "empty external ids",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{},
+			},
+			expErr: []string{"at least one external id is required"},
+		},
+		{
+			name: "one external id: empty",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{""},
+			},
+			expErr: nil,
+		},
+		{
+			name: "one external id: invalid",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{strings.Repeat("w", MaxExternalIDLength+1)},
+			},
+			expErr: []string{fmt.Sprintf("invalid external id %q (length %d): max length %d",
+				"wwwww...wwwww", MaxExternalIDLength+1, MaxExternalIDLength)},
+		},
+		{
+			name: "three external ids: all same",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{"same", "same", "same"},
+			},
+			expErr: []string{"invalid external ids: duplicate entry \"same\""},
+		},
+		{
+			name: "three external ids: same first and third",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{"twin", "other", "twin"},
+			},
+			expErr: []string{"invalid external ids: duplicate entry \"twin\""},
+		},
+		{
+			name: "three external ids: invalid first",
+			msg: MsgCancelPaymentsRequest{
+				Source: source,
+				ExternalIds: []string{
+					strings.Repeat("0", MaxExternalIDLength+1),
+					strings.Repeat("1", MaxExternalIDLength),
+					strings.Repeat("2", MaxExternalIDLength),
+				},
+			},
+			expErr: []string{fmt.Sprintf("invalid external ids[0]: invalid external id %q (length %d): max length %d",
+				"00000...00000", MaxExternalIDLength+1, MaxExternalIDLength)},
+		},
+		{
+			name: "three external ids: invalid second",
+			msg: MsgCancelPaymentsRequest{
+				Source: source,
+				ExternalIds: []string{
+					strings.Repeat("0", MaxExternalIDLength),
+					strings.Repeat("1", MaxExternalIDLength+1),
+					strings.Repeat("2", MaxExternalIDLength),
+				},
+			},
+			expErr: []string{fmt.Sprintf("invalid external ids[1]: invalid external id %q (length %d): max length %d",
+				"11111...11111", MaxExternalIDLength+1, MaxExternalIDLength)},
+		},
+		{
+			name: "three external ids: invalid third",
+			msg: MsgCancelPaymentsRequest{
+				Source: source,
+				ExternalIds: []string{
+					strings.Repeat("0", MaxExternalIDLength),
+					strings.Repeat("1", MaxExternalIDLength),
+					strings.Repeat("2", MaxExternalIDLength+1),
+				},
+			},
+			expErr: []string{fmt.Sprintf("invalid external ids[2]: invalid external id %q (length %d): max length %d",
+				"22222...22222", MaxExternalIDLength+1, MaxExternalIDLength)},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgCancelPaymentsRequest{
+				Source: "",
+				ExternalIds: []string{
+					"eid0",
+					"(^=~" + strings.Repeat("-", MaxExternalIDLength-7) + "~=^)",
+					"eid1",
+					"eid0",
+				},
+			},
+			expErr: []string{
+				"invalid source \"\": empty address string is not allowed",
+				fmt.Sprintf("invalid external ids[1]: invalid external id %q (length %d): max length %d",
+					"(^=~-...-~=^)", MaxExternalIDLength+1, MaxExternalIDLength),
+				"invalid external ids: duplicate entry \"eid0\"",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgChangePaymentTargetRequest_ValidateBasic(t *testing.T) {
+	source := sdk.AccAddress("source______________").String()
+	newTarget := sdk.AccAddress("newTarget___________").String()
+	eid := "my|1932DA1E-5469-4E47-BCBA-2589877A4860"
+
+	tests := []struct {
+		name   string
+		msg    MsgChangePaymentTargetRequest
+		expErr []string
+	}{
+		{
+			name: "valid",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     source,
+				ExternalId: eid,
+				NewTarget:  newTarget,
+			},
+			expErr: nil,
+		},
+		{
+			name: "no source",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     "",
+				ExternalId: eid,
+				NewTarget:  newTarget,
+			},
+			expErr: []string{"invalid source \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid source",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     "justkidding",
+				ExternalId: eid,
+				NewTarget:  newTarget,
+			},
+			expErr: []string{"invalid source \"justkidding\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "empty external id",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     source,
+				ExternalId: "",
+				NewTarget:  newTarget,
+			},
+			expErr: nil,
+		},
+		{
+			name: "invalid external id",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     source,
+				ExternalId: strings.Repeat("e", MaxExternalIDLength+1),
+				NewTarget:  newTarget,
+			},
+			expErr: []string{fmt.Sprintf("invalid external id %q (length %d): max length %d",
+				"eeeee...eeeee", MaxExternalIDLength+1, MaxExternalIDLength)},
+		},
+		{
+			name: "empty new target",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     source,
+				ExternalId: eid,
+				NewTarget:  "",
+			},
+			expErr: nil,
+		},
+		{
+			name: "invalid new target",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     source,
+				ExternalId: eid,
+				NewTarget:  "mistakenaddr",
+			},
+			expErr: []string{"invalid new target \"mistakenaddr\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     "",
+				ExternalId: strings.Repeat("e", MaxExternalIDLength+1),
+				NewTarget:  "mistakenaddr",
+			},
+			expErr: []string{
+				"invalid source \"\": empty address string is not allowed",
+				fmt.Sprintf("invalid external id %q (length %d): max length %d",
+					"eeeee...eeeee", MaxExternalIDLength+1, MaxExternalIDLength),
+				"invalid new target \"mistakenaddr\": decoding bech32 failed: invalid separator index -1",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
 func TestMsgGovCreateMarketRequest_ValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("authority___________").String()
 
@@ -2991,6 +3641,7 @@ func TestMsgGovCloseMarketRequest_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	authority := sdk.AccAddress("authority___________").String()
 
 	tests := []struct {

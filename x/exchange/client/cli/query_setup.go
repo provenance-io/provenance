@@ -164,7 +164,7 @@ func SetupCmdQueryGetMarketOrders(cmd *cobra.Command) {
 		fmt.Sprintf("{<market id>|--%s <market id>}", FlagMarket),
 		OptAsksBidsUse,
 		OptFlagUse(FlagAfter, "after order id"),
-		"[pagination flags]",
+		PageFlagsUse,
 	)
 	AddUseDetails(cmd,
 		"A <market id> is required as either an arg or flag, but not both.",
@@ -202,7 +202,7 @@ func SetupCmdQueryGetOwnerOrders(cmd *cobra.Command) {
 		fmt.Sprintf("{<owner>|--%s <owner>}", FlagOwner),
 		OptAsksBidsUse,
 		OptFlagUse(FlagAfter, "after order id"),
-		"[pagination flags]",
+		PageFlagsUse,
 	)
 	AddUseDetails(cmd,
 		"An <owner> is required as either an arg or flag, but not both.",
@@ -240,7 +240,7 @@ func SetupCmdQueryGetAssetOrders(cmd *cobra.Command) {
 		fmt.Sprintf("{<asset>|--%s <asset>}", FlagDenom),
 		OptAsksBidsUse,
 		OptFlagUse(FlagAfter, "after order id"),
-		"[pagination flags]",
+		PageFlagsUse,
 	)
 	AddUseDetails(cmd,
 		"An <asset> is required as either an arg or flag, but not both.",
@@ -270,7 +270,7 @@ func MakeQueryGetAssetOrders(_ client.Context, flagSet *pflag.FlagSet, args []st
 func SetupCmdQueryGetAllOrders(cmd *cobra.Command) {
 	flags.AddPaginationFlagsToCmd(cmd, "orders")
 
-	AddUseArgs(cmd, "[pagination flags]")
+	AddUseArgs(cmd, PageFlagsUse)
 	AddUseDetails(cmd)
 	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
 	AddQueryExample(cmd, "--"+flags.FlagReverse)
@@ -352,7 +352,7 @@ func SetupCmdQueryGetMarketCommitments(cmd *cobra.Command) {
 
 	AddUseArgs(cmd,
 		fmt.Sprintf("{<market id>|--%s <market id>}", FlagMarket),
-		"[pagination flags]",
+		PageFlagsUse,
 	)
 	AddUseDetails(cmd, "A <market id> is required as either an arg or flag, but not both.")
 	AddQueryExample(cmd, "3")
@@ -377,7 +377,7 @@ func MakeQueryGetMarketCommitments(_ client.Context, flagSet *pflag.FlagSet, arg
 func SetupCmdQueryGetAllCommitments(cmd *cobra.Command) {
 	flags.AddPaginationFlagsToCmd(cmd, "commitments")
 
-	AddUseArgs(cmd, "[pagination flags]")
+	AddUseArgs(cmd, PageFlagsUse)
 	AddUseDetails(cmd)
 	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
 	AddQueryExample(cmd, "--"+flags.FlagReverse)
@@ -425,7 +425,7 @@ func MakeQueryGetMarket(_ client.Context, flagSet *pflag.FlagSet, args []string)
 func SetupCmdQueryGetAllMarkets(cmd *cobra.Command) {
 	flags.AddPaginationFlagsToCmd(cmd, "markets")
 
-	AddUseArgs(cmd, "[pagination flags]")
+	AddUseArgs(cmd, PageFlagsUse)
 	AddUseDetails(cmd)
 	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
 	AddQueryExample(cmd, "--"+flags.FlagReverse)
@@ -537,4 +537,165 @@ func MakeQueryValidateManageFees(clientCtx client.Context, flags *pflag.FlagSet,
 	req.ManageFeesRequest, err = MakeMsgGovManageFees(clientCtx, flags, args)
 
 	return req, err
+}
+
+// SetupCmdQueryGetPayment adds all the flags needed for MakeQueryGetPayment.
+func SetupCmdQueryGetPayment(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSource, "", "The payment's source account")
+	cmd.Flags().String(FlagExternalID, "", "The payment's external id")
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<source>|--%s <source>}", FlagSource),
+		fmt.Sprintf("[<external id>|--%s <external id>]", FlagExternalID),
+	)
+	AddUseDetails(cmd,
+		"A <source> is required as either the first arg or a flag, but not both.",
+		"The <external id> can be provided as either the second arg or a flag, but not both.",
+	)
+	AddQueryExample(cmd, ExampleAddr, "myid")
+	AddQueryExample(cmd, ExampleAddr, "--"+FlagExternalID, "myid")
+	AddQueryExample(cmd, "--"+FlagSource, ExampleAddr, "--"+FlagExternalID, "myid")
+
+	cmd.Args = cobra.MaximumNArgs(2)
+}
+
+// MakeQueryGetPayment reads all the SetupCmdQueryGetPayment flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryGetPayment(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetPaymentRequest, error) {
+	req := &exchange.QueryGetPaymentRequest{}
+
+	errs := make([]error, 2)
+	req.Source, errs[0] = ReadStringFlagOrArg(flagSet, args, FlagSource, "source")
+	if len(args) > 0 {
+		args = args[1:]
+	}
+	req.ExternalId, errs[1] = ReadOptStringFlagOrArg(flagSet, args, FlagExternalID, "external id")
+
+	return req, errors.Join(errs...)
+}
+
+// SetupCmdQueryGetPaymentsWithSource adds all the flags needed for MakeQueryGetPaymentsWithSource.
+func SetupCmdQueryGetPaymentsWithSource(cmd *cobra.Command) {
+	flags.AddPaginationFlagsToCmd(cmd, "payments")
+	cmd.Flags().String(FlagSource, "", "The source account of the payments")
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<source>|--%s <source>}", FlagSource),
+		PageFlagsUse,
+	)
+	AddUseDetails(cmd,
+		"A <source> is required as either an arg or a flag, but not both.",
+	)
+	AddQueryExample(cmd, ExampleAddr)
+	AddQueryExample(cmd, "--"+FlagSource, ExampleAddr)
+
+	cmd.Args = cobra.MaximumNArgs(1)
+}
+
+// MakeQueryGetPaymentsWithSource reads all the SetupCmdQueryGetPaymentsWithSource flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryGetPaymentsWithSource(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetPaymentsWithSourceRequest, error) {
+	req := &exchange.QueryGetPaymentsWithSourceRequest{}
+
+	errs := make([]error, 2)
+	req.Source, errs[0] = ReadStringFlagOrArg(flagSet, args, FlagSource, "source")
+	req.Pagination, errs[1] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+
+	return req, errors.Join(errs...)
+}
+
+// SetupCmdQueryGetPaymentsWithTarget adds all the flags needed for MakeQueryGetPaymentsWithTarget.
+func SetupCmdQueryGetPaymentsWithTarget(cmd *cobra.Command) {
+	flags.AddPaginationFlagsToCmd(cmd, "payments")
+	cmd.Flags().String(FlagTarget, "", "The target account of the payments")
+
+	AddUseArgs(cmd,
+		fmt.Sprintf("{<target>|--%s <target>}", FlagTarget),
+		PageFlagsUse,
+	)
+	AddUseDetails(cmd,
+		"A <target> is required as either an arg or a flag, but not both.",
+	)
+	AddQueryExample(cmd, ExampleAddr)
+	AddQueryExample(cmd, "--"+FlagTarget, ExampleAddr)
+
+	cmd.Args = cobra.MaximumNArgs(1)
+}
+
+// MakeQueryGetPaymentsWithTarget reads all the SetupCmdQueryGetPaymentsWithTarget flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryGetPaymentsWithTarget(_ client.Context, flagSet *pflag.FlagSet, args []string) (*exchange.QueryGetPaymentsWithTargetRequest, error) {
+	req := &exchange.QueryGetPaymentsWithTargetRequest{}
+
+	errs := make([]error, 2)
+	req.Target, errs[0] = ReadStringFlagOrArg(flagSet, args, FlagTarget, "target")
+	req.Pagination, errs[1] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+
+	return req, errors.Join(errs...)
+}
+
+// SetupCmdQueryGetAllPayments adds all the flags needed for MakeQueryGetAllPayments.
+func SetupCmdQueryGetAllPayments(cmd *cobra.Command) {
+	flags.AddPaginationFlagsToCmd(cmd, "payments")
+
+	AddUseArgs(cmd, PageFlagsUse)
+	AddUseDetails(cmd)
+	AddQueryExample(cmd, "--"+flags.FlagLimit, "10")
+	AddQueryExample(cmd, "--"+flags.FlagReverse)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeQueryGetAllPayments reads all the SetupCmdQueryGetAllPayments flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryGetAllPayments(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.QueryGetAllPaymentsRequest, error) {
+	req := &exchange.QueryGetAllPaymentsRequest{}
+
+	var err error
+	req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+
+	return req, err
+}
+
+// SetupCmdQueryPaymentFeeCalc adds all the flags needed for MakeQueryPaymentFeeCalc.
+func SetupCmdQueryPaymentFeeCalc(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSource, "", "The source account")
+	cmd.Flags().String(FlagSourceAmount, "", "The source funds, e.g. 10nhash")
+	cmd.Flags().String(FlagTarget, "", "The target account")
+	cmd.Flags().String(FlagTargetAmount, "", "The target funds, e.g. 10nhash")
+	cmd.Flags().String(FlagExternalID, "", "The external id")
+	cmd.Flags().String(FlagFile, "", "a json file of a Tx with a MsgCreatePaymentRequest or MsgAcceptPaymentRequest")
+
+	AddUseArgs(cmd,
+		OptFlagUse(FlagSource, "source"),
+		OptFlagUse(FlagSourceAmount, "source amount"),
+		UseFlagsBreak,
+		OptFlagUse(FlagTarget, "target"),
+		OptFlagUse(FlagTargetAmount, "target amount"),
+		OptFlagUse(FlagExternalID, "external id"),
+		UseFlagsBreak,
+		OptFlagUse(FlagFile, "filename"),
+	)
+	AddUseDetails(cmd,
+		MsgFileDesc(&exchange.MsgCreatePaymentRequest{}),
+		fmt.Sprintf("Alternatively, the file can have a %s in it.", sdk.MsgTypeURL(&exchange.MsgAcceptPaymentRequest{})),
+	)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeQueryPaymentFeeCalc reads all the SetupCmdQueryPaymentFeeCalc flags and creates the desired request.
+// Satisfies the queryReqMaker type.
+func MakeQueryPaymentFeeCalc(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.QueryPaymentFeeCalcRequest, error) {
+	req := &exchange.QueryPaymentFeeCalcRequest{}
+
+	errs := make([]error, 6)
+	req.Payment, errs[0] = ReadPaymentFromFileFlag(clientCtx, flagSet)
+	req.Payment.Source, errs[1] = ReadFlagStringOrDefault(flagSet, FlagSource, req.Payment.Source)
+	req.Payment.SourceAmount, errs[2] = ReadCoinsFlagOrDefault(flagSet, FlagSourceAmount, req.Payment.SourceAmount)
+	req.Payment.Target, errs[3] = ReadFlagStringOrDefault(flagSet, FlagTarget, req.Payment.Target)
+	req.Payment.TargetAmount, errs[4] = ReadCoinsFlagOrDefault(flagSet, FlagTargetAmount, req.Payment.TargetAmount)
+	req.Payment.ExternalId, errs[5] = ReadFlagStringOrDefault(flagSet, FlagExternalID, req.Payment.ExternalId)
+
+	return req, errors.Join(errs...)
 }
