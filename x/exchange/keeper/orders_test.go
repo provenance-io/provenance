@@ -1716,8 +1716,8 @@ func (s *TestSuite) TestKeeper_SetOrderExternalID() {
 			marketID:      1,
 			orderID:       1,
 			newExternalID: strings.Repeat("I", exchange.MaxExternalIDLength+1),
-			expErr: fmt.Sprintf("invalid external id %q: max length %d",
-				strings.Repeat("I", exchange.MaxExternalIDLength+1), exchange.MaxExternalIDLength),
+			expErr: fmt.Sprintf("invalid external id %q (length %d): max length %d",
+				"IIIII...IIIII", exchange.MaxExternalIDLength+1, exchange.MaxExternalIDLength),
 		},
 		{
 			name: "error getting order",

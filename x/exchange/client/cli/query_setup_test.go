@@ -111,6 +111,7 @@ func TestSetupCmdQueryOrderFeeCalc(t *testing.T) {
 			exampleStart + " --ask --market 3 --price 10nhash",
 			exampleStart + " --bid --market 3 --price 10nhash",
 		},
+		skipFlagInUseCheck: true,
 	})
 }
 
@@ -346,7 +347,7 @@ func TestSetupCmdQueryGetMarketOrders(t *testing.T) {
 		},
 		expInUse: []string{
 			"{<market id>|--market <market id>}", cli.OptAsksBidsUse,
-			"[--after <after order id>", "[pagination flags]",
+			"[--after <after order id>", cli.PageFlagsUse,
 			"A <market id> is required as either an arg or flag, but not both.",
 			cli.OptAsksBidsDesc,
 		},
@@ -461,7 +462,7 @@ func TestSetupCmdQueryGetOwnerOrders(t *testing.T) {
 		},
 		expInUse: []string{
 			"{<owner>|--owner <owner>}", cli.OptAsksBidsUse,
-			"[--after <after order id>", "[pagination flags]",
+			"[--after <after order id>", cli.PageFlagsUse,
 			"An <owner> is required as either an arg or flag, but not both.",
 			cli.OptAsksBidsDesc,
 		},
@@ -576,7 +577,7 @@ func TestSetupCmdQueryGetAssetOrders(t *testing.T) {
 		},
 		expInUse: []string{
 			"{<asset>|--denom <asset>}", cli.OptAsksBidsUse,
-			"[--after <after order id>", "[pagination flags]",
+			"[--after <after order id>", cli.PageFlagsUse,
 			"An <asset> is required as either an arg or flag, but not both.",
 			cli.OptAsksBidsDesc,
 		},
@@ -684,7 +685,7 @@ func TestSetupCmdQueryGetAllOrders(t *testing.T) {
 			flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
 			flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
 		},
-		expInUse: []string{"[pagination flags]"},
+		expInUse: []string{cli.PageFlagsUse},
 		expExamples: []string{
 			exampleStart + " --limit 10",
 			exampleStart + " --reverse",
@@ -851,7 +852,7 @@ func TestSetupCmdQueryGetMarketCommitments(t *testing.T) {
 		},
 		expInUse: []string{
 			"{<market id>|--market <market id>}",
-			"[pagination flags]",
+			cli.PageFlagsUse,
 			"A <market id> is required as either an arg or flag, but not both.",
 		},
 		expExamples: []string{
@@ -928,7 +929,7 @@ func TestSetupCmdQueryGetAllCommitments(t *testing.T) {
 			flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
 			flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
 		},
-		expInUse: []string{"[pagination flags]"},
+		expInUse: []string{cli.PageFlagsUse},
 		expExamples: []string{
 			exampleStart + " --limit 10",
 			exampleStart + " --reverse",
@@ -1036,7 +1037,7 @@ func TestSetupCmdQueryGetAllMarkets(t *testing.T) {
 			flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
 			flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
 		},
-		expInUse: []string{"[pagination flags]"},
+		expInUse: []string{cli.PageFlagsUse},
 		expExamples: []string{
 			exampleStart + " --limit 10",
 			exampleStart + " --reverse",
@@ -1698,6 +1699,399 @@ func TestMakeQueryValidateManageFees(t *testing.T) {
 			expReq: &exchange.QueryValidateManageFeesRequest{
 				ManageFeesRequest: fileMsg,
 			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdQueryGetPayment(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdQueryGetPayment",
+		setup: cli.SetupCmdQueryGetPayment,
+		expFlags: []string{
+			cli.FlagSource, cli.FlagExternalID,
+		},
+		expInUse: []string{
+			"{<source>|--source <source>}",
+			"[<external id>|--external-id <external id>]",
+			"A <source> is required as either the first arg or a flag, but not both.",
+			"The <external id> can be provided as either the second arg or a flag, but not both.",
+		},
+		expExamples: []string{
+			exampleStart + " " + cli.ExampleAddr + " myid",
+			exampleStart + " " + cli.ExampleAddr + " --external-id myid",
+			exampleStart + " --source " + cli.ExampleAddr + " --external-id myid",
+		},
+	}
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeQueryGetPayment(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetPaymentRequest]{
+		makerName: "MakeQueryGetPayment",
+		maker:     cli.MakeQueryGetPayment,
+		setup:     cli.SetupCmdQueryGetPayment,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryGetPaymentRequest]{
+		{
+			name:   "nothing given",
+			expReq: &exchange.QueryGetPaymentRequest{},
+			expErr: "no <source> provided",
+		},
+		{
+			name:   "source as both arg and flag",
+			flags:  []string{"--source", "flag_source"},
+			args:   []string{"arg_source"},
+			expReq: &exchange.QueryGetPaymentRequest{},
+			expErr: "cannot provide <source> as both an arg (\"arg_source\") and flag (--source \"flag_source\")",
+		},
+		{
+			name:   "external id as both arg and flag",
+			flags:  []string{"--external-id", "flag_eid"},
+			args:   []string{"arg_source", "arg_eid"},
+			expReq: &exchange.QueryGetPaymentRequest{Source: "arg_source"},
+			expErr: "cannot provide <external id> as both an arg (\"arg_eid\") and flag (--external-id \"flag_eid\")",
+		},
+		{
+			name:   "only source: as arg",
+			args:   []string{"first_arg"},
+			expReq: &exchange.QueryGetPaymentRequest{Source: "first_arg"},
+		},
+		{
+			name:   "only source: as flag",
+			flags:  []string{"--source", "source_as_a_flag"},
+			expReq: &exchange.QueryGetPaymentRequest{Source: "source_as_a_flag"},
+		},
+		{
+			name:   "only external id",
+			flags:  []string{"--external-id", "THE eid"},
+			expReq: &exchange.QueryGetPaymentRequest{ExternalId: "THE eid"},
+			expErr: "no <source> provided",
+		},
+		{
+			name:   "source and external id: both args",
+			args:   []string{"arg_one", "the_second_arg"},
+			expReq: &exchange.QueryGetPaymentRequest{Source: "arg_one", ExternalId: "the_second_arg"},
+		},
+		{
+			name:   "source and external id: arg, flag",
+			flags:  []string{"--external-id", "eid_flag_value"},
+			args:   []string{"source_as_arg_value"},
+			expReq: &exchange.QueryGetPaymentRequest{Source: "source_as_arg_value", ExternalId: "eid_flag_value"},
+		},
+		{
+			name:   "source and external id: both flags",
+			flags:  []string{"--external-id", "one_more", "--source", "wizard"},
+			expReq: &exchange.QueryGetPaymentRequest{Source: "wizard", ExternalId: "one_more"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdQueryGetPaymentsWithSource(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdQueryGetPaymentsWithSource",
+		setup: cli.SetupCmdQueryGetPaymentsWithSource,
+		expFlags: []string{
+			flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
+			flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
+			cli.FlagSource,
+		},
+		expInUse: []string{
+			"{<source>|--source <source>}", cli.PageFlagsUse,
+			"A <source> is required as either an arg or a flag, but not both.",
+		},
+		expExamples: []string{
+			exampleStart + " " + cli.ExampleAddr,
+			exampleStart + " --source " + cli.ExampleAddr,
+		},
+	}
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeQueryGetPaymentsWithSource(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetPaymentsWithSourceRequest]{
+		makerName: "MakeQueryGetPaymentsWithSource",
+		maker:     cli.MakeQueryGetPaymentsWithSource,
+		setup:     cli.SetupCmdQueryGetPaymentsWithSource,
+	}
+
+	defaultPageReq := &query.PageRequest{
+		Key:   []byte{},
+		Limit: 100,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryGetPaymentsWithSourceRequest]{
+		{
+			name:   "nothing given",
+			expReq: &exchange.QueryGetPaymentsWithSourceRequest{Pagination: defaultPageReq},
+			expErr: "no <source> provided",
+		},
+		{
+			name:  "no source",
+			flags: []string{"--limit", "3", "--reverse"},
+			expReq: &exchange.QueryGetPaymentsWithSourceRequest{
+				Pagination: &query.PageRequest{Limit: 3, Reverse: true, Key: []byte{}},
+			},
+			expErr: "no <source> provided",
+		},
+		{
+			name: "source as arg",
+			args: []string{"just_some_source"},
+			expReq: &exchange.QueryGetPaymentsWithSourceRequest{
+				Source:     "just_some_source",
+				Pagination: defaultPageReq,
+			},
+		},
+		{
+			name:  "source as flag",
+			flags: []string{"--source", "alf", "--offset", "11"},
+			expReq: &exchange.QueryGetPaymentsWithSourceRequest{
+				Source:     "alf",
+				Pagination: &query.PageRequest{Offset: 11, Limit: 100, Key: []byte{}},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdQueryGetPaymentsWithTarget(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdQueryGetPaymentsWithTarget",
+		setup: cli.SetupCmdQueryGetPaymentsWithTarget,
+		expFlags: []string{
+			flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
+			flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
+			cli.FlagTarget,
+		},
+		expInUse: []string{
+			"{<target>|--target <target>}", cli.PageFlagsUse,
+			"A <target> is required as either an arg or a flag, but not both.",
+		},
+		expExamples: []string{
+			exampleStart + " " + cli.ExampleAddr,
+			exampleStart + " --target " + cli.ExampleAddr,
+		},
+	}
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeQueryGetPaymentsWithTarget(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetPaymentsWithTargetRequest]{
+		makerName: "MakeQueryGetPaymentsWithTarget",
+		maker:     cli.MakeQueryGetPaymentsWithTarget,
+		setup:     cli.SetupCmdQueryGetPaymentsWithTarget,
+	}
+
+	defaultPageReq := &query.PageRequest{
+		Key:   []byte{},
+		Limit: 100,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryGetPaymentsWithTargetRequest]{
+		{
+			name:   "nothing given",
+			expReq: &exchange.QueryGetPaymentsWithTargetRequest{Pagination: defaultPageReq},
+			expErr: "no <target> provided",
+		},
+		{
+			name:  "no target",
+			flags: []string{"--limit", "3", "--reverse"},
+			expReq: &exchange.QueryGetPaymentsWithTargetRequest{
+				Pagination: &query.PageRequest{Limit: 3, Reverse: true, Key: []byte{}},
+			},
+			expErr: "no <target> provided",
+		},
+		{
+			name: "target as arg",
+			args: []string{"just_some_target"},
+			expReq: &exchange.QueryGetPaymentsWithTargetRequest{
+				Target:     "just_some_target",
+				Pagination: defaultPageReq,
+			},
+		},
+		{
+			name:  "target as flag",
+			flags: []string{"--target", "gandalf", "--offset", "11"},
+			expReq: &exchange.QueryGetPaymentsWithTargetRequest{
+				Target:     "gandalf",
+				Pagination: &query.PageRequest{Offset: 11, Limit: 100, Key: []byte{}},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdQueryGetAllPayments(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdQueryGetAllPayments",
+		setup: cli.SetupCmdQueryGetAllPayments,
+		expFlags: []string{
+			flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
+			flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
+		},
+		expInUse: []string{cli.PageFlagsUse},
+		expExamples: []string{
+			exampleStart + " --limit 10",
+			exampleStart + " --reverse",
+		},
+	}
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeQueryGetAllPayments(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryGetAllPaymentsRequest]{
+		makerName: "MakeQueryGetAllPayments",
+		maker:     cli.MakeQueryGetAllPayments,
+		setup:     cli.SetupCmdQueryGetAllPayments,
+	}
+
+	defaultPageReq := &query.PageRequest{
+		Key:   []byte{},
+		Limit: 100,
+	}
+
+	tests := []queryMakerTestCase[exchange.QueryGetAllPaymentsRequest]{
+		{
+			name:   "nothing given",
+			expReq: &exchange.QueryGetAllPaymentsRequest{Pagination: defaultPageReq},
+		},
+		{
+			name:  "a few flags",
+			flags: []string{"--limit", "3", "--reverse"},
+			expReq: &exchange.QueryGetAllPaymentsRequest{
+				Pagination: &query.PageRequest{Limit: 3, Reverse: true, Key: []byte{}},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runQueryMakerTest(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdQueryPaymentFeeCalc(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdQueryPaymentFeeCalc",
+		setup: cli.SetupCmdQueryPaymentFeeCalc,
+		expFlags: []string{
+			cli.FlagSource, cli.FlagSourceAmount,
+			cli.FlagTarget, cli.FlagTargetAmount,
+			cli.FlagExternalID, cli.FlagFile,
+		},
+		expInUse: []string{
+			"[--source <source>]", "[--source-amount <source amount>]",
+			"[--target <target>]", "[--target-amount <target amount>]",
+			"[--external-id <external id>]", "[--file <filename>]",
+			cli.MsgFileDesc(&exchange.MsgCreatePaymentRequest{}),
+			"Alternatively, the file can have a /provenance.exchange.v1.MsgAcceptPaymentRequest in it.",
+		},
+	}
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeQueryPaymentFeeCalc(t *testing.T) {
+	td := queryMakerTestDef[exchange.QueryPaymentFeeCalcRequest]{
+		makerName: "MakeQueryPaymentFeeCalc",
+		maker:     cli.MakeQueryPaymentFeeCalc,
+		setup:     cli.SetupCmdQueryPaymentFeeCalc,
+	}
+
+	tdir := t.TempDir()
+
+	paymentCreate := exchange.Payment{
+		Source:       sdk.AccAddress("create_source_______").String(),
+		SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 13)),
+		Target:       sdk.AccAddress("target_source_______").String(),
+		TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 4)),
+		ExternalId:   "eid-create",
+	}
+	fileMsgCreate := &exchange.MsgCreatePaymentRequest{Payment: paymentCreate}
+	txCreate := newTx(t, fileMsgCreate)
+	txCreateFN := filepath.Join(tdir, "create-payment.json")
+	writeFileAsJson(t, txCreateFN, txCreate)
+
+	paymentAccept := exchange.Payment{
+		Source:       sdk.AccAddress("create_source_______").String(),
+		SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 13)),
+		Target:       sdk.AccAddress("target_source_______").String(),
+		TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 4)),
+		ExternalId:   "eid-create",
+	}
+	fileMsgAccept := &exchange.MsgAcceptPaymentRequest{Payment: paymentAccept}
+	txAccept := newTx(t, fileMsgAccept)
+	txAcceptFN := filepath.Join(tdir, "accept-payment.json")
+	writeFileAsJson(t, txAcceptFN, txAccept)
+
+	tests := []queryMakerTestCase[exchange.QueryPaymentFeeCalcRequest]{
+		{
+			name:   "nothing given",
+			expReq: &exchange.QueryPaymentFeeCalcRequest{Payment: exchange.Payment{}},
+		},
+		{
+			name:   "multiple errors",
+			flags:  []string{"--file", "this-file-does-not-exist.json", "--source-amount", "eleven"},
+			expReq: &exchange.QueryPaymentFeeCalcRequest{Payment: exchange.Payment{}},
+			expErr: "open this-file-does-not-exist.json: no such file or directory\n" +
+				"error parsing --source-amount as coins: invalid coin expression: \"eleven\"",
+		},
+		{
+			name:   "from file: create",
+			flags:  []string{"--file", txCreateFN},
+			expReq: &exchange.QueryPaymentFeeCalcRequest{Payment: paymentCreate},
+		},
+		{
+			name:   "from file: accept",
+			flags:  []string{"--file", txAcceptFN},
+			expReq: &exchange.QueryPaymentFeeCalcRequest{Payment: paymentAccept},
+		},
+		{
+			name:  "from file: with overrides",
+			flags: []string{"--file", txAcceptFN, "--target", "the_other_target"},
+			expReq: &exchange.QueryPaymentFeeCalcRequest{Payment: exchange.Payment{
+				Source:       paymentAccept.Source,
+				SourceAmount: paymentAccept.SourceAmount,
+				Target:       "the_other_target",
+				TargetAmount: paymentAccept.TargetAmount,
+				ExternalId:   paymentAccept.ExternalId,
+			}},
+		},
+		{
+			name: "all flags given",
+			flags: []string{
+				"--external-id", "eureka", "--source", "seaquest", "--target", "total_recall",
+				"--source-amount", "13starfruit", "--target-amount", "1tomato",
+			},
+			expReq: &exchange.QueryPaymentFeeCalcRequest{Payment: exchange.Payment{
+				Source:       "seaquest",
+				SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("starfruit", 13)),
+				Target:       "total_recall",
+				TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tomato", 1)),
+				ExternalId:   "eureka",
+			}},
 		},
 	}
 
