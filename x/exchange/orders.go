@@ -101,7 +101,8 @@ func ValidateOrderIDs(field string, orderIDs []uint64) error {
 // ValidateExternalID makes sure an external id is okay.
 func ValidateExternalID(externalID string) error {
 	if len(externalID) > MaxExternalIDLength {
-		return fmt.Errorf("invalid external id %q: max length %d", externalID, MaxExternalIDLength)
+		return fmt.Errorf("invalid external id %q (length %d): max length %d",
+			externalID[:5]+"..."+externalID[len(externalID)-5:], len(externalID), MaxExternalIDLength)
 	}
 	return nil
 }

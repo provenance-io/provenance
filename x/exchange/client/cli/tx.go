@@ -42,6 +42,12 @@ func CmdTx() *cobra.Command {
 		CmdTxMarketUpdateIntermediaryDenom(),
 		CmdTxMarketManagePermissions(),
 		CmdTxMarketManageReqAttrs(),
+		CmdTxCreatePayment(),
+		CmdTxAcceptPayment(),
+		CmdTxRejectPayment(),
+		CmdTxRejectPayments(),
+		CmdTxCancelPayments(),
+		CmdTxChangePaymentTarget(),
 		CmdTxGovCreateMarket(),
 		CmdTxGovManageFees(),
 		CmdTxGovCloseMarket(),
@@ -305,6 +311,84 @@ func CmdTxMarketManageReqAttrs() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxMarketManageReqAttrs(cmd)
+	return cmd
+}
+
+// CmdTxCreatePayment creates the create-payment sub-command for the exchange tx command.
+func CmdTxCreatePayment() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-payment",
+		Short: "Create a payment",
+		RunE:  genericTxRunE(MakeMsgCreatePayment),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxCreatePayment(cmd)
+	return cmd
+}
+
+// CmdTxAcceptPayment creates the accept-payment sub-command for the exchange tx command.
+func CmdTxAcceptPayment() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "accept-payment",
+		Short: "Accept a payment",
+		RunE:  genericTxRunE(MakeMsgAcceptPayment),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxAcceptPayment(cmd)
+	return cmd
+}
+
+// CmdTxRejectPayment creates the reject-payment sub-command for the exchange tx command.
+func CmdTxRejectPayment() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "reject-payment",
+		Short: "Reject a payment",
+		RunE:  genericTxRunE(MakeMsgRejectPayment),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxRejectPayment(cmd)
+	return cmd
+}
+
+// CmdTxRejectPayments creates the reject-payments sub-command for the exchange tx command.
+func CmdTxRejectPayments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "reject-payments",
+		Short: "Reject multiple payments",
+		RunE:  genericTxRunE(MakeMsgRejectPayments),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxRejectPayments(cmd)
+	return cmd
+}
+
+// CmdTxCancelPayments creates the cancel-payments sub-command for the exchange tx command.
+func CmdTxCancelPayments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-payments",
+		Short: "Cancel multiple payments",
+		RunE:  genericTxRunE(MakeMsgCancelPayments),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxCancelPayments(cmd)
+	return cmd
+}
+
+// CmdTxChangePaymentTarget creates the change-payment-target sub-command for the exchange tx command.
+func CmdTxChangePaymentTarget() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "change-payment-target",
+		Short: "Change a payment's target",
+		RunE:  genericTxRunE(MakeMsgChangePaymentTarget),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxChangePaymentTarget(cmd)
 	return cmd
 }
 
