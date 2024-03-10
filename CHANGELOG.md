@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Dependencies
 
 - Bump `github.com/stretchr/testify` from 1.8.4 to 1.9.0 ([#1860](https://github.com/provenance-io/provenance/pull/1860))
+- Bump `bufbuild/buf-setup-action` from 1.29.0 to 1.30.0 ([#1871](https://github.com/provenance-io/provenance/pull/1871))
 
 ---
 
