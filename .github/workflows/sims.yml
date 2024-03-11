@@ -48,13 +48,6 @@ jobs:
       go-version: '1.21'
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
-      db-cache-key-suffix: sims-db3-${{ steps.def-vars.outputs.db-cache-key-hash }}
-      # In Order:
-      # * The leveldb repo tarball
-      # * The directory extracted from the leveldb tarball
-      db-cache-path: |
-        leveldb*.tar.gz
-        leveldb-*
       go-cache-key-suffix: sims-go3-${{ steps.def-vars.outputs.go-cache-key-hash }}
       # In Order:
       # * Go binary directory
@@ -76,16 +69,8 @@ jobs:
           echo "         go-version: [${{ needs.setup.outputs.go-version }}]"
           echo "         should-run: [${{ needs.setup.outputs.should-run }}]"
           echo "        file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
-          echo "db-cache-key-suffix: [${{ needs.setup.outputs.db-cache-key-suffix }}]"
-          echo "      db-cache-path: [${{ needs.setup.outputs.db-cache-path }}]"
           echo "go-cache-key-suffix: [${{ needs.setup.outputs.go-cache-key-suffix }}]"
           echo "      go-cache-path: [${{ needs.setup.outputs.go-cache-path }}]"
-      - uses: actions/cache@v3
-        name: Load db cache
-        id: db-cache-setup
-        with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
-          path: ${{ needs.setup.outputs.db-cache-path }}
       - uses: actions/cache@v3
         name: Load go cache
         id: go-cache-setup
@@ -185,11 +170,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
-        name: Load db cache
-        with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
-          path: ${{ needs.setup.outputs.db-cache-path }}
       - uses: actions/cache@v3
         name: Load go cache
         with:
