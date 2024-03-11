@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `peter-evans/create-pull-request` from 6.0.0 to 6.0.1 ([#1858](https://github.com/provenance-io/provenance/pull/1858))
 - Bump `github.com/golang/protobuf` from 1.5.3 to 1.5.4 ([#1863](https://github.com/provenance-io/provenance/pull/1863))
 - Bump `github.com/stretchr/testify` from 1.8.4 to 1.9.0 ([#1860](https://github.com/provenance-io/provenance/pull/1860))
+- Bump `bufbuild/buf-setup-action` from 1.29.0 to 1.30.0 ([#1871](https://github.com/provenance-io/provenance/pull/1871))
 
 ---
 
