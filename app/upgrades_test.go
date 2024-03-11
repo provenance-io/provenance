@@ -497,7 +497,10 @@ func (s *UpgradeTestSuite) TestTourmaline() {
 }
 
 func (s *UpgradeTestSuite) TestUmberRC1() {
-	expInLog := []string{}
+	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
+	}
 
 	s.AssertUpgradeHandlerLogs("umber-rc1", expInLog, nil)
 }
