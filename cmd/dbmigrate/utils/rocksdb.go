@@ -4,7 +4,7 @@
 package utils
 
 import (
-	tmdb "github.com/tendermint/tm-db"
+	tmdb "github.com/cometbft/cometbft-db"
 )
 
 // This file is included when built with the rocksdb tag (which matches the tag Tendermint looks for).

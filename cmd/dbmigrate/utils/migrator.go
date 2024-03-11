@@ -13,8 +13,9 @@ import (
 
 	copier "github.com/otiai10/copy"
 
+	tmdb "github.com/cometbft/cometbft-db"
+
 	tmlog "github.com/tendermint/tendermint/libs/log"
-	tmdb "github.com/tendermint/tm-db"
 )
 
 const (

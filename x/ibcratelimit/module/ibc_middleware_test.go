@@ -9,26 +9,27 @@ import (
 	"testing"
 	"time"
 
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/stretchr/testify/suite"
 	"golang.org/x/exp/slices"
 
+	dbm "github.com/cometbft/cometbft-db"
+
+	"github.com/tendermint/tendermint/libs/log"
+
+	sdkmath "cosmossdk.io/math"
+
+	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v6/testing"
-	"github.com/stretchr/testify/suite"
-
-	sdkmath "cosmossdk.io/math"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	testutil "github.com/provenance-io/provenance/testutil/ibc"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
-
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 )
 
 type MiddlewareTestSuite struct {

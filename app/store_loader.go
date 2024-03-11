@@ -9,8 +9,9 @@ import (
 
 	"github.com/spf13/cast"
 
+	dbm "github.com/cometbft/cometbft-db"
+
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/server"

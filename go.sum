@@ -371,9 +371,8 @@ github.com/cosmos/gogoproto v1.4.11/go.mod h1:/g39Mh8m17X8Q/GDEs5zYTSNaNnInBSoht
 github.com/cosmos/gorocksdb v1.1.1 h1:N0OqpEKXgsi2qtDm8T1+AlNMXkTm6s1jowYf7/4pH5I=
 github.com/cosmos/gorocksdb v1.1.1/go.mod h1:b/U29r/CtguX3TF7mKG1Jjn4APDqh4wECshxXdiWHpA=
 github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4Y=
-github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
-github.com/cosmos/iavl v0.19.6 h1:XY78yEeNPrEYyNCKlqr9chrwoeSDJ0bV2VjocTk//OU=
-github.com/cosmos/iavl v0.19.6/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
+github.com/cosmos/iavl v0.20.1 h1:rM1kqeG3/HBT85vsZdoSNsehciqUQPWrR4BYmqE2+zg=
+github.com/cosmos/iavl v0.20.1/go.mod h1:WO7FyvaZJoH65+HFOsDir7xU9FWk2w9cHXNW1XHcl7A=
 github.com/cosmos/ibc-apps/modules/async-icq/v6 v6.1.0 h1:4+qVTP35moRUv9vZoJ/eLt86JltdGkRPkb9Fn3jpakU=
 github.com/cosmos/ibc-apps/modules/async-icq/v6 v6.1.0/go.mod h1:5ZoCEfvABWqmmWuZw5GW8+wKz59wD1xsMa3b/cn7uEc=
 github.com/cosmos/interchain-accounts v0.4.2 h1:BxdzY22uouwe9wGK7h/HbzPNIH89JJ/4+V6n02l3cG4=
@@ -1010,12 +1009,6 @@ github.com/prometheus/procfs v0.3.0/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4O
 github.com/prometheus/procfs v0.9.0 h1:wzCHvIvM5SxWqYvwgVL7yJY8Lz3PKn49KQtpgMYJfhI=
 github.com/prometheus/procfs v0.9.0/go.mod h1:+pB4zwohETzFnmlpe6yd2lSc+0/46IYZRB/chUwxUZY=
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
-github.com/provenance-io/cosmos-sdk v0.46.13-pio-3 h1:3Nr5FCjzGNCqoo08/ebPzed61EAn92XIAlUW/lgtHrk=
-github.com/provenance-io/cosmos-sdk v0.46.13-pio-3/go.mod h1:H7JTxq/UEPvM/LSs5bNYvMwmZlVl2NBT5UlqNe8tjEU=
-github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1 h1:IQ+H6+PiRJhGmSjNxA+5VmX34M3sWG5iQI99WbKgbeA=
-github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1/go.mod h1:ZxvTNnra+3aTGaKeg0GR0C8do06lAVdSGmMJHe2fkOM=
-github.com/provenance-io/wasmd v0.30.0-pio-6 h1:pqlN1kE2nwYEXTcbN1LodaRaeKg+SG/cSMC+9vtEnRY=
-github.com/provenance-io/wasmd v0.30.0-pio-6/go.mod h1:wDkm/LVnwFR/5lOCLrv05tBJ/2cAKNPY0gdl5WIvUrQ=
 github.com/rakyll/statik v0.1.7 h1:OF3QCZUuyPxuGEP7B4ypUa7sB/iHtqOTDYZXGM8KOdQ=
 github.com/rakyll/statik v0.1.7/go.mod h1:AlZONWzMtEnMs7W4e/1LURLiI49pIMmp6V9Unghqrcc=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
@@ -1118,7 +1111,6 @@ github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7/go.mod h1:q4W45
 github.com/tendermint/go-amino v0.16.0 h1:GyhmgQKvqF82e2oZeuMSp9JTN0N09emoSZlb2lyGa2E=
 github.com/tendermint/go-amino v0.16.0/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoMC9Sphe2ZwGME=
 github.com/tendermint/tm-db v0.6.7 h1:fE00Cbl0jayAoqlExN6oyQJ7fR/ZtoVOmvPJ//+shu8=
-github.com/tendermint/tm-db v0.6.7/go.mod h1:byQDzFkZV1syXr/ReXS808NxA2xvyuuVgXOJ/088L6I=
 github.com/tidwall/btree v1.5.0 h1:iV0yVY/frd7r6qGBXfEYs7DH0gTDgrKTrDjS7xt/IyQ=
 github.com/tidwall/btree v1.5.0/go.mod h1:LGm8L/DZjPLmeWGjv5kFrY8dL4uVhMmzmmLYmsObdKE=
 github.com/tidwall/gjson v1.12.1/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
