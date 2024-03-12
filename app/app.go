@@ -454,7 +454,8 @@ func New(
 	app.CapabilityKeeper.Seal()
 
 	// add keepers
-	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(AccountAddressPrefix), AccountAddressPrefix, govAuthority)
+	addrPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix() // We use this approach so running tests which use "cosmos" will work while we use "pb"
+	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(addrPrefix), addrPrefix, govAuthority)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
@@ -520,7 +521,6 @@ func New(
 	app.IBCHooksKeeper = &hooksKeeper
 
 	// Setup the ICS4Wrapper used by the hooks middleware
-	addrPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()        // We use this approach so running tests which use "cosmos" will work while we use "pb"
 	wasmHooks := ibchooks.NewWasmHooks(&hooksKeeper, nil, addrPrefix) // The contract keeper needs to be set later
 	app.Ics20WasmHooks = &wasmHooks
 	markerHooks := ibchooks.NewMarkerHooks(nil)
