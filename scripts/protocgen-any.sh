@@ -8,7 +8,10 @@ set -eo pipefail
 
 go install github.com/cosmos/gogoproto/protoc-gen-gogotypes
 
-buf protoc -I "third_party/proto" --gogotypes_out=./codec/types third_party/proto/google/protobuf/any.proto
+buf generate --template third_party/proto/buf.gen.gogo.yaml third_party/proto/google/protobuf/any.proto
+
+exit 0
+
 mv codec/types/google/protobuf/any.pb.go codec/types
 rm -rf codec/types/third_party
 
