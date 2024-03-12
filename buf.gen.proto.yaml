@@ -11,6 +11,3 @@ plugins:
     out: .
     opt:
       - logtostderr=true
-
-  - name: gogotypes
-    out: ./codec/types
