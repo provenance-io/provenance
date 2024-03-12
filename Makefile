@@ -566,12 +566,6 @@ proto-gen:
 	mv .go.mod.bak go.mod
 	go mod tidy
 
-# This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
-proto-gen-any:
-	@echo "Generating Protobuf Any"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen-any.sh
-	go mod tidy
-
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
 	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then \
