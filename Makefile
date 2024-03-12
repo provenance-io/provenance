@@ -610,7 +610,7 @@ proto-update-deps:
 	@echo "Updating Protobuf files"
 	sh ./scripts/proto-update-deps.sh
 
-.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
+.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
 
 
 ##############################
