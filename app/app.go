@@ -249,7 +249,7 @@ var (
 
 		attributetypes.ModuleName: nil,
 		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		wasm.ModuleName:           {authtypes.Burner},
+		wasmtypes.ModuleName:      {authtypes.Burner},
 		rewardtypes.ModuleName:    nil,
 		triggertypes.ModuleName:   nil,
 		oracletypes.ModuleName:    nil,
@@ -722,7 +722,7 @@ func New(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, app.TransferStack).
-		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper)).
+		AddRoute(wasmtypes.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper)).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		AddRoute(icqtypes.ModuleName, icqIBCModule).
 		AddRoute(oracletypes.ModuleName, oracleModule)
@@ -777,7 +777,7 @@ func New(
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
-		// wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper), // TODO[1760]: wasm
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, nil, app.GetSubspace(wasmtypes.ModuleName)), // TODO[1760]: Need to pass message router instead of nil
 		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oracleModule,
@@ -798,18 +798,20 @@ func New(
 	// non-dependant module elements, such as codec registration and genesis verification.
 	// By default it is composed of all the module from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as argument.
-	app.BasicModuleManager = module.NewBasicManagerFromManager(
-		app.mm,
-		map[string]module.AppModuleBasic{
-			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-			govtypes.ModuleName: gov.NewAppModuleBasic(
-				[]govclient.ProposalHandler{
-					paramsclient.ProposalHandler,
-				},
-			),
-		})
-	app.BasicModuleManager.RegisterLegacyAminoCodec(legacyAmino)
-	app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
+	/*
+		app.BasicModuleManager = module.NewBasicManagerFromManager(
+			app.mm,
+			map[string]module.AppModuleBasic{
+				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+				govtypes.ModuleName: gov.NewAppModuleBasic(
+					[]govclient.ProposalHandler{
+						paramsclient.ProposalHandler,
+					},
+				),
+			})
+		app.BasicModuleManager.RegisterLegacyAminoCodec(legacyAmino)
+		app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
+	*/
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -843,7 +845,7 @@ func New(
 		msgfeestypes.ModuleName,
 		metadatatypes.ModuleName,
 		oracletypes.ModuleName,
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -880,7 +882,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		icqtypes.ModuleName,
 		msgfeestypes.ModuleName,
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 		slashingtypes.ModuleName,
 		upgradetypes.ModuleName,
 		attributetypes.ModuleName,
@@ -935,7 +937,7 @@ func New(
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
 		// wasm after ibc transfer
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
@@ -974,7 +976,7 @@ func New(
 		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
 		icqtypes.ModuleName,
-		wasm.ModuleName,
+		wasmtypes.ModuleName,
 
 		attributetypes.ModuleName,
 		markertypes.ModuleName,
@@ -1020,7 +1022,7 @@ func New(
 		oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper),
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
-		provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
+		provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper, nil, app.GetSubspace(wasmtypes.ModuleName)), // TODO[1760]: Need to pass router instead of nil
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -1206,7 +1208,8 @@ func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (a *App) DefaultGenesis() map[string]json.RawMessage {
-	return a.BasicModuleManager.DefaultGenesis(a.appCodec)
+	// TODO[1760] This was changed to ModuleBasics, but it will be removed
+	return ModuleBasics.DefaultGenesis(a.appCodec)
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
@@ -1348,7 +1351,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(nametypes.ModuleName)      // TODO[1760]: params: Migrate name params.
 	paramsKeeper.Subspace(attributetypes.ModuleName) // TODO[1760]: params: Migrate attribute params.
 	paramsKeeper.Subspace(msgfeestypes.ModuleName)   // TODO[1760]: params: Migrate msgFees params.
-	paramsKeeper.Subspace(wasm.ModuleName)
+	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(rewardtypes.ModuleName)  // TODO[1760]: params: Migrate reward params.
 	paramsKeeper.Subspace(triggertypes.ModuleName) // TODO[1760]: params: Migrate trigger params.
 
