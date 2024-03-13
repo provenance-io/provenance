@@ -209,7 +209,7 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
-			
+
 			removeInactiveValidatorDelegations(ctx, app)
 
 			return vm, nil
@@ -223,6 +223,8 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
+
+			removeInactiveValidatorDelegations(ctx, app)
 
 			return vm, nil
 		},
