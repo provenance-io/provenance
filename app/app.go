@@ -465,8 +465,12 @@ func New(
 	// capability keeper must be sealed after scope to module registrations are completed.
 	app.CapabilityKeeper.Seal()
 
+	// Obtain prefixes so running tests can use "cosmos" while we use "pb"
+	addrPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	valAddrPrefix := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+	consAddrPrefix := sdk.GetConfig().GetBech32ConsensusAddrPrefix()
+
 	// add keepers
-	addrPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix() // We use this approach so running tests which use "cosmos" will work while we use "pb"
 	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(addrPrefix), addrPrefix, govAuthority)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
@@ -479,7 +483,7 @@ func New(
 	)
 
 	app.StakingKeeper = stakingkeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, govAuthority, authcodec.NewBech32Codec(ValidatorAddressPrefix), authcodec.NewBech32Codec(ConsNodeAddressPrefix),
+		appCodec, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, govAuthority, authcodec.NewBech32Codec(valAddrPrefix), authcodec.NewBech32Codec(consAddrPrefix),
 	)
 
 	app.MintKeeper = mintkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), app.StakingKeeper, app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, govAuthority)
