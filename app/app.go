@@ -74,6 +74,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/consensus"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -213,6 +216,7 @@ var (
 		vesting.AppModuleBasic{},
 		// quarantinemodule.AppModuleBasic{}, // TODO[1760]: quarantine
 		// sanctionmodule.AppModuleBasic{}, // TODO[1760]: sanction
+		consensus.AppModuleBasic{},
 
 		ibc.AppModuleBasic{},
 		ibctransfer.AppModuleBasic{},
@@ -264,7 +268,7 @@ var (
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/wasm expects WasmConfig
 type WasmWrapper struct {
-	Wasm wasm.Config `mapstructure:"wasm"`
+	Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
 }
 
 // SdkCoinDenomRegex returns a new sdk base denom regex string
@@ -309,8 +313,9 @@ type App struct {
 	RewardKeeper     rewardkeeper.Keeper
 	// QuarantineKeeper quarantinekeeper.Keeper // TODO[1760]: quarantine
 	// SanctionKeeper sanctionkeeper.Keeper // TODO[1760]: sanction
-	TriggerKeeper triggerkeeper.Keeper
-	OracleKeeper  oraclekeeper.Keeper
+	TriggerKeeper         triggerkeeper.Keeper
+	OracleKeeper          oraclekeeper.Keeper
+	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
 	IBCKeeper          *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCHooksKeeper     *ibchookskeeper.Keeper
@@ -387,7 +392,7 @@ func New(
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		govtypes.StoreKey, consensusparamtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
 		authzkeeper.StoreKey, group.StoreKey,
 
@@ -403,7 +408,7 @@ func New(
 		attributetypes.StoreKey,
 		nametypes.StoreKey,
 		msgfeestypes.StoreKey,
-		wasm.StoreKey,
+		wasmtypes.StoreKey,
 		rewardtypes.StoreKey,
 		// quarantine.StoreKey, // TODO[1760]: quarantine
 		// sanction.StoreKey, // TODO[1760]: sanction
@@ -437,7 +442,14 @@ func New(
 	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
 	// set the BaseApp's parameter store
-	// bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())) // TODO[1760]: params
+	// TODO[1760]: Update upgrade handler
+	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
+		govAuthority,
+		runtime.EventService{},
+	)
+	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
 	// add capability keeper and ScopeToModule for ibc module
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
@@ -616,7 +628,7 @@ func New(
 	// Init CosmWasm module
 	wasmDir := filepath.Join(homePath, "data", "wasm")
 
-	wasmWrap := WasmWrapper{Wasm: wasm.DefaultWasmConfig()}
+	wasmWrap := WasmWrapper{Wasm: wasmtypes.DefaultWasmConfig()}
 	err := viper.Unmarshal(&wasmWrap)
 	if err != nil {
 		panic("error while reading wasm config: " + err.Error())
@@ -768,6 +780,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		// quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), // TODO[1760]: quarantine
 		// sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry), // TODO[1760]: sanction
 
@@ -856,6 +869,7 @@ func New(
 		// sanction.ModuleName, // TODO[1760]: sanction
 		hold.ModuleName,
 		exchange.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -897,6 +911,7 @@ func New(
 		// sanction.ModuleName, // TODO[1760]: sanction
 		hold.ModuleName,
 		exchange.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -946,6 +961,7 @@ func New(
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		upgradetypes.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 
 	app.mm.SetOrderMigrations(
@@ -971,6 +987,7 @@ func New(
 		// sanction.ModuleName, // TODO[1760]: sanction
 		hold.ModuleName,
 		exchange.ModuleName,
+		consensusparamtypes.ModuleName, // TODO[1760]: Is this the correct placement?
 
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
