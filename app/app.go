@@ -394,7 +394,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, consensusparamtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
-		authzkeeper.StoreKey, group.StoreKey,
+		authzkeeper.StoreKey, group.StoreKey, crisistypes.StoreKey,
 
 		ibcexported.StoreKey,
 		ibctransfertypes.StoreKey,
