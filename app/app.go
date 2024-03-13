@@ -325,7 +325,7 @@ type App struct {
 	NameKeeper      namekeeper.Keeper
 	HoldKeeper      holdkeeper.Keeper
 	ExchangeKeeper  exchangekeeper.Keeper
-	WasmKeeper      *wasm.Keeper
+	WasmKeeper      *wasmkeeper.Keeper
 	ContractKeeper  *wasmkeeper.PermissionedKeeper
 
 	// make scoped keepers public for test purposes
@@ -445,7 +445,7 @@ func New(
 	// grant capabilities for the ibc and ibc-transfer modules
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
+	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedICQKeeper := app.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
 	scopedOracleKeeper := app.CapabilityKeeper.ScopeToModule(oracletypes.ModuleName)
@@ -644,33 +644,28 @@ func New(
 
 	// The last arguments contain custom message handlers, and custom query handlers,
 	// to allow smart contracts to use provenance modules.
-	// TODO[1760]: wasm: Figure out the replacement for NewKeeper.
-	_, _ = scopedWasmKeeper, supportedFeatures
-	_, _ = wasmDir, wasmConfig
-	/*
-		wasmKeeperInstance := wasm.NewKeeper(
-			appCodec,
-			keys[wasm.StoreKey],
-			app.GetSubspace(wasm.ModuleName),
-			app.AccountKeeper,
-			app.BankKeeper,
-			app.StakingKeeper,
-			app.DistrKeeper,
-			app.IBCKeeper.ChannelKeeper,
-			&app.IBCKeeper.PortKeeper,
-			scopedWasmKeeper,
-			app.TransferKeeper,
-			// pioMessageRouter, // TODO[1760]: msg-service-router
-			app.GRPCQueryRouter(),
-			wasmDir,
-			wasmConfig,
-			supportedFeatures,
-			govAuthority,
-			wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(querierRegistry, *app.GRPCQueryRouter(), appCodec)),
-			wasmkeeper.WithMessageEncoders(provwasm.MessageEncoders(encoderRegistry, logger)),
-		)
-		app.WasmKeeper = &wasmKeeperInstance
-	*/
+	wasmKeeperInstance := wasmkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[wasmtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		distrkeeper.NewQuerier(app.DistrKeeper),
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		scopedWasmKeeper,
+		app.TransferKeeper,
+		pioMessageRouter,
+		app.GRPCQueryRouter(),
+		wasmDir,
+		wasmConfig,
+		supportedFeatures,
+		govAuthority,
+		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(querierRegistry, *app.GRPCQueryRouter(), appCodec)),
+		wasmkeeper.WithMessageEncoders(provwasm.MessageEncoders(encoderRegistry, logger)),
+	)
+	app.WasmKeeper = &wasmKeeperInstance
 
 	// Pass the wasm keeper to all the wrappers that need it
 	app.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
