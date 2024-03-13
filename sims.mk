@@ -8,7 +8,7 @@
 ###
 ### Environment Variables:
 ###   GO:             The command to use to execute go. Default: go
-###   DB_BACKEND:     Dictates which db backend to use: goleveldb, cleveldb, rocksdb, badgerdb.
+###   DB_BACKEND:     Dictates which db backend to use: goleveldb.
 ###                   The test-sim-nondeterminism is hard-coded to use memdb though.
 ###   BINDIR:         The Go bin directory, defaults to $GOPATH/bin
 ###   SIM_GENESIS:    Defines the path to the custom genesis file used by
@@ -22,14 +22,8 @@ GO ?= go
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
 DB_BACKEND ?= goleveldb
-ifeq ($(DB_BACKEND),cleveldb)
-  db_tag = cleveldb
-else ifeq ($(DB_BACKEND),rocksdb)
-  db_tag = rocksdb
-else ifeq ($(DB_BACKEND),badgerdb)
-  db_tag = badgerdb
-else ifneq ($(DB_BACKEND),goleveldb)
-  $(error unknown DB_BACKEND value [$(DB_BACKEND)]. Must be one of goleveldb, cleveldb, rocksdb, badgerdb)
+ifneq ($(DB_BACKEND),goleveldb)
+  $(error unknown DB_BACKEND value [$(DB_BACKEND)]. Must be goleveldb)
 endif
 
 # We have to use a hack to provide -tags with the runsim stuff, but it only allows us to provide one tag.
