@@ -105,8 +105,6 @@ linters-settings:
 
           - github.com/grpc-ecosystem/grpc-gateway
 
-          - github.com/otiai10/copy  # Used by the dbmigrate only
-
           - github.com/provenance-io/provenance
 
           - github.com/rakyll/statik/fs 
