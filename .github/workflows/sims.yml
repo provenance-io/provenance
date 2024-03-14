@@ -41,9 +41,6 @@ jobs:
           file_prefix="sim-test-${GITHUB_SHA:0:7}-${GITHUB_RUN_ATTEMPT}"
           echo "Setting output: file-prefix=$file_prefix"
           echo "file-prefix=$file_prefix" >> "$GITHUB_OUTPUT"
-          db_cache_key_hash="${{ hashFiles('scripts/cleveldb_build_and_install.sh') }}"
-          echo "Setting output: db-cache-key-hash=$db_cache_key_hash"
-          echo "db-cache-key-hash=$db_cache_key_hash" >> "$GITHUB_OUTPUT"
           go_cache_key_hash="${{ hashFiles('go.sum') }}"
           echo "Setting output: go-cache-key-hash=$go_cache_key_hash"
           echo "go-cache-key-hash=$go_cache_key_hash" >> "$GITHUB_OUTPUT"
@@ -51,13 +48,6 @@ jobs:
       go-version: '1.21'
       should-run: ${{ env.GIT_DIFF }}
       file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
-      db-cache-key-suffix: sims-db3-${{ steps.def-vars.outputs.db-cache-key-hash }}
-      # In Order:
-      # * The leveldb repo tarball
-      # * The directory extracted from the leveldb tarball
-      db-cache-path: |
-        leveldb*.tar.gz
-        leveldb-*
       go-cache-key-suffix: sims-go3-${{ steps.def-vars.outputs.go-cache-key-hash }}
       # In Order:
       # * Go binary directory
@@ -79,16 +69,8 @@ jobs:
           echo "         go-version: [${{ needs.setup.outputs.go-version }}]"
           echo "         should-run: [${{ needs.setup.outputs.should-run }}]"
           echo "        file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
-          echo "db-cache-key-suffix: [${{ needs.setup.outputs.db-cache-key-suffix }}]"
-          echo "      db-cache-path: [${{ needs.setup.outputs.db-cache-path }}]"
           echo "go-cache-key-suffix: [${{ needs.setup.outputs.go-cache-key-suffix }}]"
           echo "      go-cache-path: [${{ needs.setup.outputs.go-cache-path }}]"
-      - uses: actions/cache@v3
-        name: Load db cache
-        id: db-cache-setup
-        with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
-          path: ${{ needs.setup.outputs.db-cache-path }}
       - uses: actions/cache@v3
         name: Load go cache
         id: go-cache-setup
@@ -101,21 +83,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev wget curl build-essential cmake gcc sqlite3
-      - name: Build cleveldb
-        if: steps.db-cache-setup.outputs.cache-hit != 'true'
-        run: |
-          export CLEVELDB_DO_BUILD='true'
-          export CLEVELDB_DO_INSTALL='false'
-          export CLEVELDB_DO_CLEANUP='false'
-          make cleveldb
-      - name: Install cleveldb
-        run: |
-          export CLEVELDB_DO_BUILD='false'
-          export CLEVELDB_DO_INSTALL='true'
-          export CLEVELDB_SUDO='true'
-          export CLEVELDB_DO_CLEANUP='false'
-          make cleveldb
-          echo 'WITH_CLEVELDB=true' >> "$GITHUB_ENV"
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
@@ -198,16 +165,11 @@ jobs:
         # The test-sim-simple test is pretty quick and should be able to identify glaring problems.
         # The test-sim-benchmark is handy to have for each db type.
         test: ["simple", "benchmark"]
-        db-backend: ["goleveldb", "cleveldb"]
+        db-backend: ["goleveldb"]
         os: ["ubuntu-latest"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
-        name: Load db cache
-        with:
-          key: ${{ runner.os }}-${{ needs.setup.outputs.db-cache-key-suffix }}
-          path: ${{ needs.setup.outputs.db-cache-path }}
       - uses: actions/cache@v3
         name: Load go cache
         with:
@@ -219,15 +181,6 @@ jobs:
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - name: Install cleveldb
-        if: matrix.db-backend == 'cleveldb'
-        run: |
-          export CLEVELDB_DO_BUILD='false'
-          export CLEVELDB_DO_INSTALL='true'
-          export CLEVELDB_SUDO='true'
-          export CLEVELDB_DO_CLEANUP='false'
-          make cleveldb
-          echo 'WITH_CLEVELDB=true' >> "$GITHUB_ENV"
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ needs.setup.outputs.go-version }}

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # This script will run some sim tests: simple, import-export, multi-seed-short, nondeterminism
-# using each of the db backends: goleveldb, cleveldb, rocksdb, badgerdb.
+# using each of the db backends: goleveldb
 
 default_sims='simple import-export multi-seed-short nondeterminism'
-default_db_types='goleveldb cleveldb rocksdb badgerdb'
+default_db_types='goleveldb'
 default_output_dir='build/sim-times'
 
 if [[ "$#" -ne '0' ]]; then
