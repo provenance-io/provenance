@@ -16,7 +16,7 @@ import (
 
 var (
 	// ensure the MarkerAccount correctly extends the following interfaces
-	_ authtypes.AccountI       = (*MarkerAccount)(nil)
+	_ sdk.AccountI             = (*MarkerAccount)(nil)
 	_ authtypes.GenesisAccount = (*MarkerAccount)(nil)
 	_ MarkerAccountI           = (*MarkerAccount)(nil)
 )
@@ -25,7 +25,7 @@ var (
 type MarkerAccountI interface {
 	proto.Message
 
-	authtypes.AccountI
+	sdk.AccountI
 	Clone() *MarkerAccount
 
 	Validate() error

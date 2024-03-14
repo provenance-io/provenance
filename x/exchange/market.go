@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	_ authtypes.AccountI       = (*MarketAccount)(nil)
+	_ sdk.AccountI             = (*MarketAccount)(nil)
 	_ authtypes.GenesisAccount = (*MarketAccount)(nil)
 )
 

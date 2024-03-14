@@ -171,7 +171,7 @@ func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee
 // DeductFeesDistributions deducts fees from the given account.  The fees map contains a key of bech32 addresses to distribute funds to.
 // If the key in the map is an empty string, those will go to the fee collector.  After all the accounts in fees map are paid out,
 // the remainder of remainingFees will be swept to the fee collector account.
-func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error {
+func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc sdk.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error {
 	sentCoins := sdk.NewCoins()
 	for _, key := range sortedKeys(fees) {
 		coins := fees[key]

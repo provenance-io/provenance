@@ -16,7 +16,6 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -201,7 +200,7 @@ func createTestApp(t *testing.T) (*simapp.App, sdk.Context) {
 	return app, ctx
 }
 
-func createTestTx(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
+func createTestTx(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, sdk.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
@@ -221,7 +220,7 @@ func createTestTx(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsig
 	return testTx, acct1
 }
 
-func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
+func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, sdk.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
