@@ -69,16 +69,3 @@ curl -f -sSL "$COMETBFT_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EX
 
 ICS23_FILE='proto/cosmos/ics23/v1/proofs.proto'
 curl -f -sSL "$ICS23_PROTO_URL" -o "$ICS23_FILE" --create-dirs
-
-# TODO[1760]: Do we still need this? since confio moved to cosmos?
-## insert go, java package option into proofs.proto file
-## Issue link: https://github.com/confio/ics23/issues/32 (instead of a simple sed we need 4 lines cause bsd sed -i is incompatible)
-# See: https://github.com/koalaman/shellcheck/wiki/SC2129
-# {
-#   head -n3 "$ICS23_FILE.orig"
-#   printf 'option go_package = "github.com/confio/ics23/go";\n'
-#   printf 'option java_package = "tech.confio.ics23";\n'
-#   printf 'option java_multiple_files = true;\n'
-#   tail -n+4 "$ICS23_FILE.orig"
-# } > "$ICS23_FILE"
-# rm "$ICS23_FILE.orig"
