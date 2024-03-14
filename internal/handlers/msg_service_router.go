@@ -28,7 +28,7 @@ import (
 type PioMsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
-	hybridHandlers    map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error
+	hybridHandlers    map[string]protocompat.Handler
 	msgFeesKeeper     msgfeeskeeper.Keeper
 	decoder           sdk.TxDecoder
 	circuitBreaker    baseapp.CircuitBreaker
@@ -42,7 +42,7 @@ var _ baseapp.IMsgServiceRouter = &PioMsgServiceRouter{}
 func NewPioMsgServiceRouter(decoder sdk.TxDecoder) *PioMsgServiceRouter {
 	return &PioMsgServiceRouter{
 		routes:         map[string]MsgServiceHandler{},
-		hybridHandlers: map[string]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
+		hybridHandlers: map[string]protocompat.Handler{},
 		decoder:        decoder,
 	}
 }
