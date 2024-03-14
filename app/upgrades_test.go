@@ -496,6 +496,21 @@ func (s *UpgradeTestSuite) TestTourmaline() {
 	s.AssertUpgradeHandlerLogs("tourmaline", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestUmberRC1() {
+	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
+	}
+
+	s.AssertUpgradeHandlerLogs("umber-rc1", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestUmber() {
+	expInLog := []string{}
+
+	s.AssertUpgradeHandlerLogs("umber", expInLog, nil)
+}
+
 func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 	addr1 := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000000))
 	addr2 := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000000))
