@@ -18,6 +18,7 @@ import (
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
@@ -206,6 +207,11 @@ var upgrades = map[string]appUpgrade{
 		Added: []string{crisistypes.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
+
+			err = migrateParams(ctx, app)
+			if err != nil {
+				return nil, err
+			}
 
 			err = upgradeIBC(ctx, app)
 			if err != nil {
@@ -573,5 +579,16 @@ func upgradeToIBCv7(ctx sdk.Context, app *App) error {
 // upgradeToIBCv8 upgrades IBC from v7 to v8.
 // TODO: Remove with the umbra handlers.
 func upgradeToIBCv8(ctx sdk.Context, app *App) error {
+	return nil
+}
+
+// Migrate to new ConsensusParamsKeeper
+// TODO: Remove with the umbra handlers.
+func migrateParams(ctx sdk.Context, app *App) error {
+	legacyBaseAppSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
+	err := baseapp.MigrateParams(ctx, legacyBaseAppSubspace, app.ConsensusParamsKeeper.ParamsStore)
+	if err != nil {
+		return err
+	}
 	return nil
 }
