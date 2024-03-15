@@ -211,6 +211,7 @@ var upgrades = map[string]appUpgrade{
 			}
 
 			removeInactiveValidatorDelegations(ctx, app)
+			upgradeIBC(ctx, app)
 
 			return vm, nil
 		},
@@ -225,6 +226,7 @@ var upgrades = map[string]appUpgrade{
 			}
 
 			removeInactiveValidatorDelegations(ctx, app)
+			upgradeIBC(ctx, app)
 
 			return vm, nil
 		},
@@ -532,4 +534,23 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 		return false
 	})
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
+}
+
+// upgradeIBC upgrades IBC to the latest version
+// TODO: Remove with the umbra handlers.
+func upgradeIBC(ctx sdk.Context, app *App) {
+	upgradeToIBCv7(ctx, app)
+	upgradeToIBCv8(ctx, app)
+}
+
+// upgradeToIBCv7 upgrades IBC from v6 to v7.
+// TODO: Remove with the umbra handlers.
+func upgradeToIBCv7(ctx sdk.Context, app *App) {
+
+}
+
+// upgradeToIBCv8 upgrades IBC from v7 to v8.
+// TODO: Remove with the umbra handlers.
+func upgradeToIBCv8(ctx sdk.Context, app *App) {
+
 }
