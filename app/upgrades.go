@@ -20,6 +20,7 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
@@ -232,6 +233,11 @@ var upgrades = map[string]appUpgrade{
 		Added: []string{crisistypes.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
+
+			err = migrateParams(ctx, app)
+			if err != nil {
+				return nil, err
+			}
 
 			err = upgradeIBC(ctx, app)
 			if err != nil {
@@ -553,42 +559,47 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
 }
 
-// upgradeIBC upgrades IBC to the latest version
-// TODO: Remove with the umbra handlers.
+// upgradeIBC handles all IBC upgrade logic for each upgrade.
 func upgradeIBC(ctx sdk.Context, app *App) error {
-	if err := upgradeToIBCv7(ctx, app); err != nil {
+	if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 		return err
 	}
-	if err := upgradeToIBCv8(ctx, app); err != nil {
-		return err
-	}
-	return nil
+	return upgradeToIBCv8(ctx, app)
 }
 
-// upgradeToIBCv7 upgrades IBC from v6 to v7.
-// TODO: Remove with the umbra handlers.
-func upgradeToIBCv7(ctx sdk.Context, app *App) error {
+// pruneIBCExpiredConsensusStates upgrades IBC from v6 to v8.
+func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Pruning expired consensus states for IBC")
 	_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper)
 	if err != nil {
-		// TODO Logging
+		ctx.Logger().Error(fmt.Sprintf("unable to prune expired consensus states, error: %s", err))
 		return err
 	}
+	ctx.Logger().Info("Done pruning expired consensus states for IBC")
 	return nil
 }
 
-// upgradeToIBCv8 upgrades IBC from v7 to v8.
-// TODO: Remove with the umbra handlers.
+// upgradeToIBCv8 upgrades IBC from v6 to v8.
+// TODO: Remove with the umber handlers.
 func upgradeToIBCv8(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Upgrading to IBCv8")
+	params := app.IBCKeeper.ClientKeeper.GetParams(ctx)
+	params.AllowedClients = append(params.AllowedClients, exported.Localhost)
+	app.IBCKeeper.ClientKeeper.SetParams(ctx, params)
+	ctx.Logger().Info("Done upgrading to IBCv8")
 	return nil
 }
 
 // Migrate to new ConsensusParamsKeeper
-// TODO: Remove with the umbra handlers.
+// TODO: Remove with the umber handlers.
 func migrateParams(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Migrating legacy params")
 	legacyBaseAppSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 	err := baseapp.MigrateParams(ctx, legacyBaseAppSubspace, app.ConsensusParamsKeeper.ParamsStore)
 	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("unable to migrate legacy params to ConsensusParamsKeeper, error: %s", err))
 		return err
 	}
+	ctx.Logger().Info("Done migrating legacy params")
 	return nil
 }
