@@ -24,7 +24,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 
-	// icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types" // TODO[1760]: async-icq
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
 	// "github.com/cosmos/cosmos-sdk/x/sanction" // TODO[1760]: sanction
 
@@ -107,16 +107,15 @@ func appStateWithICQ(appState json.RawMessage, cdc codec.JSONCodec) json.RawMess
 	if err != nil {
 		panic(fmt.Sprintf("error unmarshalling appstate: %v", err))
 	}
-	// TODO[1760]: async-icq
-	// icqGenJSON, icqGenFound := rawState[icqtypes.ModuleName]
-	// if !icqGenFound || len(icqGenJSON) == 0 {
-	// icqGenState := icqtypes.DefaultGenesis()
-	// 	rawState[icqtypes.ModuleName] = cdc.MustMarshalJSON(icqGenState)
-	// 	appState, err = json.Marshal(rawState)
-	// 	if err != nil {
-	// 		panic(fmt.Sprintf("error marshalling appstate: %v", err))
-	// 	}
-	// }
+	icqGenJSON, icqGenFound := rawState[icqtypes.ModuleName]
+	if !icqGenFound || len(icqGenJSON) == 0 {
+		icqGenState := icqtypes.DefaultGenesis()
+		rawState[icqtypes.ModuleName] = cdc.MustMarshalJSON(icqGenState)
+		appState, err = json.Marshal(rawState)
+		if err != nil {
+			panic(fmt.Sprintf("error marshalling appstate: %v", err))
+		}
+	}
 	return appState
 }
 

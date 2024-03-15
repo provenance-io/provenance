@@ -97,7 +97,7 @@ linters-settings:
           - github.com/cosmos/ibc-apps/modules/async-icq/v6/types
           - github.com/cosmos/ibc-apps/modules/async-icq/v6/keeper
 
-          - github.com/gogo/protobuf
+          - github.com/cosmos/gogoproto
 
           - github.com/google/uuid
 

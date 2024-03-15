@@ -5,7 +5,7 @@ import (
 	"strings"
 	time "time"
 
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 

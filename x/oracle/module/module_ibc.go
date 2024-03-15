@@ -3,7 +3,7 @@ package oracle
 import (
 	cerrs "cosmossdk.io/errors"
 
-	// icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types" // TODO[1760]: async-icq
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -128,8 +128,7 @@ func (am AppModule) OnRecvPacket(
 	_ channeltypes.Packet,
 	_ sdk.AccAddress,
 ) ibcexported.Acknowledgement {
-	// return channeltypes.NewErrorAcknowledgement(cerrs.Wrapf(icqtypes.ErrInvalidChannelFlow, "oracle module can not receive packets")) // TODO[1760]: async-icq
-	return channeltypes.NewErrorAcknowledgement(cerrs.Wrapf(sdkerrors.ErrNotSupported, "not yet updated"))
+	return channeltypes.NewErrorAcknowledgement(cerrs.Wrapf(icqtypes.ErrInvalidChannelFlow, "oracle module can not receive packets"))
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface

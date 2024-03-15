@@ -466,8 +466,8 @@ proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-
 proto-checks: proto-update-deps proto-lint proto-check-breaking proto-check-breaking-third-party
 proto-regen: proto-format proto-gen update-swagger-docs
 
-containerProtoVer=v0.2
-containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
+containerProtoVer=0.14.0
+containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
 containerProtoGen=prov-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=prov-proto-gen-swagger-$(containerProtoVer)
 containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
@@ -485,12 +485,6 @@ proto-gen:
 			sh ./scripts/protocgen.sh; \
 	fi
 	mv .go.mod.bak go.mod
-	go mod tidy
-
-# This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
-proto-gen-any:
-	@echo "Generating Protobuf Any"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen-any.sh
 	go mod tidy
 
 proto-swagger-gen:
@@ -537,7 +531,7 @@ proto-update-deps:
 	@echo "Updating Protobuf files"
 	sh ./scripts/proto-update-deps.sh
 
-.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
+.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
 
 
 ##############################

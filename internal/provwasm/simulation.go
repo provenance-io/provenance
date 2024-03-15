@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
 	sdkmath "cosmossdk.io/math"
@@ -20,6 +20,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -45,13 +46,13 @@ type Wrapper struct {
 	nk   namekeeper.Keeper
 }
 
-func NewWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) *Wrapper {
+func NewWrapper(cdc codec.Codec, keeper *wasmkeeper.Keeper, validatorSetSource wasmkeeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, router *baseapp.MsgServiceRouter, ss exported.Subspace) *Wrapper {
 	return &Wrapper{
-		cdc: cdc,
-		// wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk), // TODO[1760]: wasm: Extra args needed here.
-		ak: ak,
-		bk: bk,
-		nk: nk,
+		cdc:  cdc,
+		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, ss),
+		ak:   ak,
+		bk:   bk,
+		nk:   nk,
 	}
 }
 

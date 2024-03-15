@@ -1,7 +1,5 @@
 package handlers_test
 
-// TODO[1760]: fee-handler: Uncomment these tests.
-/*
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -69,4 +67,3 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerSetUpIncorrect() {
 	})
 	s.Require().Error(err)
 }
-*/

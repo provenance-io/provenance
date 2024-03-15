@@ -1,6 +1,6 @@
 package types
 
-// import icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types" // TODO[1760]: async-icq
+import icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 const (
 	// ModuleName defines the module name
@@ -13,7 +13,7 @@ const (
 	MemStoreKey = "mem_interquery"
 
 	// Version defines the current version the IBC module supports
-	Version = "icq-1" // icqtypes.Version // TODO[1760]: async-icq
+	Version = icqtypes.Version
 
 	// PortID is the default port id that module binds to
 	PortID = "oracle"

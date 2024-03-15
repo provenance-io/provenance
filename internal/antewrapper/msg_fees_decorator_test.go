@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -138,7 +137,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorWrongDenom() {
 	s.Assert().ErrorContains(err, `insufficient fee`)
 }
 
-func createTestTx(s *AnteTestSuite, feeAmount sdk.Coins) (signing.Tx, types.AccountI) {
+func createTestTx(s *AnteTestSuite, feeAmount sdk.Coins) (signing.Tx, sdk.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)

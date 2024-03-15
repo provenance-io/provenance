@@ -14,13 +14,13 @@ import (
 type Keeper struct {
 	storeKey storetypes.StoreKey
 	cdc      codec.BinaryCodec
-	router   baseapp.MsgServiceRouter // TODO[1760]: msg-service-router
+	router   baseapp.IMsgServiceRouter
 }
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
-	router baseapp.MsgServiceRouter, // TODO[1760]: msg-service-router
+	router baseapp.IMsgServiceRouter,
 ) Keeper {
 	return Keeper{
 		storeKey: key,

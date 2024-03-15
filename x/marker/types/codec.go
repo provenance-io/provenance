@@ -44,7 +44,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 
 	registry.RegisterInterface(
 		"provenance.marker.v1.MarkerAccount",
-		(*authtypes.AccountI)(nil),
+		(*sdk.AccountI)(nil),
 		&MarkerAccount{},
 	)
 

@@ -18,7 +18,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 
 	registry.RegisterInterface(
 		"provenance.exchange.v1.MarketAccount",
-		(*authtypes.AccountI)(nil),
+		(*sdk.AccountI)(nil),
 		&MarketAccount{},
 	)
 

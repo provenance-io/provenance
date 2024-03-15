@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	cerrs "cosmossdk.io/errors"
 
-	// icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types" // TODO[1760]: async-icq
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -152,56 +152,48 @@ func (s *KeeperTestSuite) TestOnTimeoutPacket() {
 }
 
 func createICQResponse(cdc codec.Codec, response string) []byte {
-	// TODO[1760]: async-icq
-	// oracleResponse := types.QueryOracleResponse{
-	// 	Data: []byte("{}"),
-	// }
-	// value, _ := cdc.Marshal(&oracleResponse)
-	// bytes, _ := icqtypes.SerializeCosmosResponse([]abci.ResponseQuery{{
-	// 	Value: value,
-	// }})
-	//
-	// icqPacket := icqtypes.InterchainQueryPacketAck{
-	// 	Data: bytes,
-	// }
-	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
-	// return icqBytes
-	return []byte("not yet updated")
+	oracleResponse := types.QueryOracleResponse{
+		Data: []byte("{}"),
+	}
+	value, _ := cdc.Marshal(&oracleResponse)
+	bytes, _ := icqtypes.SerializeCosmosResponse([]abci.ResponseQuery{{
+		Value: value,
+	}})
+
+	icqPacket := icqtypes.InterchainQueryPacketAck{
+		Data: bytes,
+	}
+	icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
+	return icqBytes
 }
 
 func createInvalidICQPacketAck() []byte {
-	// TODO[1760]: async-icq
-	// icqPacket := icqtypes.InterchainQueryPacketAck{
-	// 	Data: []byte("abc"),
-	// }
-	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
-	// return icqBytes
-	return []byte("not yet updated")
+	icqPacket := icqtypes.InterchainQueryPacketAck{
+		Data: []byte("abc"),
+	}
+	icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
+	return icqBytes
 }
 
 func createEmptyICQPacketAck() []byte {
-	// TODO[1760]: async-icq
-	// bytes, _ := icqtypes.SerializeCosmosResponse([]abci.ResponseQuery{})
-	//
-	// icqPacket := icqtypes.InterchainQueryPacketAck{
-	// 	Data: bytes,
-	// }
-	//
-	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
-	// return icqBytes
-	return []byte("not yet updated")
+	bytes, _ := icqtypes.SerializeCosmosResponse([]abci.ResponseQuery{})
+
+	icqPacket := icqtypes.InterchainQueryPacketAck{
+		Data: bytes,
+	}
+
+	icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
+	return icqBytes
 }
 
 func createInvalidCosmosResponse() []byte {
-	// TODO[1760]: async-icq
-	// bytes, _ := icqtypes.SerializeCosmosResponse([]abci.ResponseQuery{{
-	// 	Value: []byte("baddata"),
-	// }})
-	//
-	// icqPacket := icqtypes.InterchainQueryPacketAck{
-	// 	Data: bytes,
-	// }
-	// icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
-	// return icqBytes
-	return []byte("not yet updated")
+	bytes, _ := icqtypes.SerializeCosmosResponse([]abci.ResponseQuery{{
+		Value: []byte("baddata"),
+	}})
+
+	icqPacket := icqtypes.InterchainQueryPacketAck{
+		Data: bytes,
+	}
+	icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
+	return icqBytes
 }

@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/x/feegrant"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
@@ -22,7 +21,7 @@ type AccountKeeper interface {
 type MsgFeesKeeper interface {
 	GetMsgFee(ctx sdk.Context, msgType string) (*MsgFee, error)
 	GetFeeCollectorName() string
-	DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc authtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error
+	DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc sdk.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error
 	GetFloorGasPrice(ctx sdk.Context) sdk.Coin
 	GetNhashPerUsdMil(ctx sdk.Context) uint64
 	ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, error)
