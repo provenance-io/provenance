@@ -20,6 +20,7 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
+	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -205,13 +206,18 @@ var upgrades = map[string]appUpgrade{
 		Added: []string{crisistypes.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
+
+			err = upgradeIBC(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
 			}
 
 			removeInactiveValidatorDelegations(ctx, app)
-			upgradeIBC(ctx, app)
 
 			return vm, nil
 		},
@@ -220,13 +226,18 @@ var upgrades = map[string]appUpgrade{
 		Added: []string{crisistypes.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
+
+			err = upgradeIBC(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
 			}
 
 			removeInactiveValidatorDelegations(ctx, app)
-			upgradeIBC(ctx, app)
 
 			return vm, nil
 		},
@@ -538,19 +549,29 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 
 // upgradeIBC upgrades IBC to the latest version
 // TODO: Remove with the umbra handlers.
-func upgradeIBC(ctx sdk.Context, app *App) {
-	upgradeToIBCv7(ctx, app)
-	upgradeToIBCv8(ctx, app)
+func upgradeIBC(ctx sdk.Context, app *App) error {
+	if err := upgradeToIBCv7(ctx, app); err != nil {
+		return err
+	}
+	if err := upgradeToIBCv8(ctx, app); err != nil {
+		return err
+	}
+	return nil
 }
 
 // upgradeToIBCv7 upgrades IBC from v6 to v7.
 // TODO: Remove with the umbra handlers.
-func upgradeToIBCv7(ctx sdk.Context, app *App) {
-
+func upgradeToIBCv7(ctx sdk.Context, app *App) error {
+	_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper)
+	if err != nil {
+		// TODO Logging
+		return err
+	}
+	return nil
 }
 
 // upgradeToIBCv8 upgrades IBC from v7 to v8.
 // TODO: Remove with the umbra handlers.
-func upgradeToIBCv8(ctx sdk.Context, app *App) {
-
+func upgradeToIBCv8(ctx sdk.Context, app *App) error {
+	return nil
 }
