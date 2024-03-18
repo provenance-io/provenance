@@ -12,6 +12,7 @@ import (
 	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 
+	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -708,19 +709,40 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 
 // canForceTransferFrom returns true if funds can be forcefully transferred out of the provided address.
 func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool {
-	acc := k.authKeeper.GetAccount(ctx, from)
-	// If the account is a group address, then it will allow the transfer.
+	// If the account is a group address, then allow the force transfer.
 	if k.groupChecker != nil && k.groupChecker.IsGroupAddress(ctx, from) {
 		return true
 	}
 
 	// If acc is nil, there's no funds in it, so the transfer will fail anyway.
-	// In that case, return true from here so it can fail later with a more accurate message.
-	// If there is an account, only allow force transfers if the sequence number isn't zero.
-	// This is to prevent forced transfer from module accounts and smart contracts.
-	// It will also block forced transfers from new or dead accounts, though.
+	// In that case, return true here so it can fail later with a more accurate message.
+	acc := k.authKeeper.GetAccount(ctx, from)
+	if acc == nil {
+		return true
+	}
+
+	// We can't allow forced transfers from module accounts and smart contract accounts.
+	// Doing so can result in a chain halt. Unfortunately, specifically checking if an
+	// account is a smart contract account is expensive. Instead, we only allow the forced
+	// transfers from accounts that have signed at least one Tx and therefore have a non-zero
+	// sequence. This also prevents other force transfers that wouldn't cause problems, though.
+	// For example, some funds got erroneously sent to a new account that no one has a key for.
 	// If the forced transfer is absolutely required, use a governance proposal with a MsgSend.
-	return acc == nil || acc.GetSequence() != 0
+	if acc.GetSequence() != 0 {
+		return true
+	}
+
+	// Allow force transfers out of marker accounts still.
+	if _, isMarker := acc.(types.MarkerAccountI); isMarker {
+		return true
+	}
+
+	// Allow force transfers out of market accounts too.
+	if _, isMarket := acc.(*exchange.MarketAccount); isMarket {
+		return true
+	}
+
+	return false
 }
 
 // IbcTransferCoin transfers restricted coins between two chains when the administrator account holds the transfer

@@ -60,18 +60,22 @@ func (a MarkerTransferAuthorization) Accept(_ sdk.Context, msg sdk.Msg) (authz.A
 
 // ValidateBasic implements Authorization.ValidateBasic.
 func (a MarkerTransferAuthorization) ValidateBasic() error {
-	if a.TransferLimit == nil {
-		return sdkerrors.ErrInvalidCoins.Wrap("spend limit cannot be nil")
+	if err := a.TransferLimit.Validate(); err != nil {
+		return sdkerrors.ErrInvalidCoins.Wrapf("invalid transfer limit: %v", err)
 	}
-	if !a.TransferLimit.IsAllPositive() {
-		return sdkerrors.ErrInvalidCoins.Wrap("spend limit cannot be negitive")
+	if a.TransferLimit.IsZero() {
+		return sdkerrors.ErrInvalidCoins.Wrap("invalid transfer limit: cannot be zero")
 	}
+
 	found := make(map[string]bool, 0)
-	for i := 0; i < len(a.AllowList); i++ {
-		if found[a.AllowList[i]] {
-			return ErrDuplicateEntry.Wrap("all allow list addresses must be unique")
+	for i, addr := range a.AllowList {
+		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+			return sdkerrors.ErrInvalidAddress.Wrapf("invalid allow list entry [%d] %q: %v", i, addr, err)
 		}
-		found[a.AllowList[i]] = true
+		if found[addr] {
+			return ErrDuplicateEntry.Wrapf("invalid allow list entry [%d] %s", i, addr)
+		}
+		found[addr] = true
 	}
 
 	return nil
