@@ -46,6 +46,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Allow force transfers from marker and market accounts [#1855](https://github.com/provenance-io/provenance/pull/1855).
 * Add a `tourmaline-rc3` upgrade handler to set some new exchange module params related to payments [#1703](https://github.com/provenance-io/provenance/issues/1703).
+* Remove the startup warning issued when disable-iavl-fastnode is true (we recommend keeping it as true if you already have it that way) [#1874](https://github.com/provenance-io/provenance/pull/1874).
+* Switch to `github.com/cometbft/cometbft-db` `v0.7.0` (from `github.com/tendermint/tm-db` `v0.6.7`) [#1874](https://github.com/provenance-io/provenance/pull/1874).
 
 ### Bug Fixes
 
@@ -60,6 +62,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/golang/protobuf` from 1.5.3 to 1.5.4 ([#1863](https://github.com/provenance-io/provenance/pull/1863))
 - Bump `github.com/stretchr/testify` from 1.8.4 to 1.9.0 ([#1860](https://github.com/provenance-io/provenance/pull/1860))
 - Bump `bufbuild/buf-setup-action` from 1.29.0 to 1.30.0 ([#1871](https://github.com/provenance-io/provenance/pull/1871))
+- Bump `github.com/cosmos/cosmos-sdk` from v0.46.13-pio-3 to v0.46.13-pio-4 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
+- Bump `github.com/cosmos/ibc-go/v6` from v6.2.0-pio-1 to v6.2.0-pio-2 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
+- Bump `github.com/CosmWasm/wasmd` from v0.30.0-pio-6 to v0.30.0-pio-7 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
+- Bump `github.com/cosmos/iavl` from v0.19.6 to v0.20.1 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
 
 ---
 
