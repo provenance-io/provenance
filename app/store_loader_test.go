@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/internal"
@@ -53,10 +52,9 @@ func (s *MockSleeper) Sleep(d time.Duration) {
 
 // MockAppOptions is a mocked version of AppOpts that allows the developer to provide the pruning attribute.
 type MockAppOptions struct {
-	pruning  string
-	indexer  string
-	db       string
-	fastNode string
+	pruning string
+	indexer string
+	db      string
 }
 
 // Get returns the value for the provided option.
@@ -72,8 +70,6 @@ func (m MockAppOptions) Get(opt string) interface{} {
 		return m.db
 	case "db-backend":
 		return m.db
-	case server.FlagDisableIAVLFastNode:
-		return m.fastNode
 	}
 
 	return nil
@@ -85,10 +81,9 @@ func TestValidateWrapper(t *testing.T) {
 	}()
 
 	recAppOpts := MockAppOptions{
-		pruning:  "10",
-		db:       "goleveldb",
-		fastNode: "false",
-		indexer:  "null",
+		pruning: "10",
+		db:      "goleveldb",
+		indexer: "null",
 	}
 
 	tests := []struct {
@@ -131,7 +126,7 @@ func TestValidateWrapper(t *testing.T) {
 		{
 			name: "bad config and err from store loader",
 			appOpts: MockAppOptions{
-				fastNode: "true",
+				db: "somethingelse",
 			},
 			expErr:     "another injected error for testing",
 			expLogMsgs: true,
@@ -140,7 +135,7 @@ func TestValidateWrapper(t *testing.T) {
 		{
 			name: "bad config and err from store loader no sleep",
 			appOpts: MockAppOptions{
-				fastNode: "true",
+				db: "somethingelse",
 			},
 			pioAckWarn: true,
 			expErr:     "another injected error for testing",
@@ -202,20 +197,18 @@ func TestIssueConfigWarnings(t *testing.T) {
 		{
 			name: "recommended app opts",
 			appOpts: MockAppOptions{
-				pruning:  "10",
-				db:       "goleveldb",
-				fastNode: "false",
-				indexer:  "null",
+				pruning: "10",
+				db:      "goleveldb",
+				indexer: "null",
 			},
 			expLogLines: nil,
 		},
 		{
 			name: "bad pruning interval",
 			appOpts: MockAppOptions{
-				pruning:  "1000",
-				db:       "goleveldb",
-				fastNode: "false",
-				indexer:  "null",
+				pruning: "1000",
+				db:      "goleveldb",
+				indexer: "null",
 			},
 			expLogLines: []string{
 				"ERR pruning-interval 1000 EXCEEDS 999 AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS.",
@@ -227,10 +220,9 @@ func TestIssueConfigWarnings(t *testing.T) {
 		{
 			name: "bad indexer",
 			appOpts: MockAppOptions{
-				pruning:  "10",
-				db:       "goleveldb",
-				fastNode: "false",
-				indexer:  "kv",
+				pruning: "10",
+				db:      "goleveldb",
+				indexer: "kv",
 			},
 			expLogLines: []string{
 				"ERR indexer \"kv\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"null\".",
@@ -240,27 +232,11 @@ func TestIssueConfigWarnings(t *testing.T) {
 			expSleep: true,
 		},
 		{
-			name: "bad fastnode",
-			appOpts: MockAppOptions{
-				pruning:  "10",
-				db:       "goleveldb",
-				fastNode: "true",
-				indexer:  "null",
-			},
-			expLogLines: []string{
-				"ERR iavl-disable-fastnode \"true\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"false\".",
-				sleepErr1,
-				sleepErr2,
-			},
-			expSleep: true,
-		},
-		{
 			name: "bad db",
 			appOpts: MockAppOptions{
-				pruning:  "10",
-				db:       "cleveldb",
-				fastNode: "false",
-				indexer:  "null",
+				pruning: "10",
+				db:      "cleveldb",
+				indexer: "null",
 			},
 			expLogLines: []string{
 				"ERR cleveldb IS NO LONGER SUPPORTED. MIGRATE TO goleveldb.",
@@ -272,15 +248,13 @@ func TestIssueConfigWarnings(t *testing.T) {
 		{
 			name: "all bad with sleep",
 			appOpts: MockAppOptions{
-				pruning:  "1001",
-				db:       "badgerdb",
-				fastNode: "true",
-				indexer:  "psql",
+				pruning: "1001",
+				db:      "badgerdb",
+				indexer: "psql",
 			},
 			expLogLines: []string{
 				"ERR pruning-interval 1001 EXCEEDS 999 AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS.",
 				"ERR indexer \"psql\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"null\".",
-				"ERR iavl-disable-fastnode \"true\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"false\".",
 				"ERR badgerdb IS NO LONGER SUPPORTED. MIGRATE TO goleveldb.",
 				sleepErr1,
 				sleepErr2,
@@ -290,16 +264,14 @@ func TestIssueConfigWarnings(t *testing.T) {
 		{
 			name: "all bad no sleep",
 			appOpts: MockAppOptions{
-				pruning:  "1001",
-				db:       "badgerdb",
-				fastNode: "true",
-				indexer:  "psql",
+				pruning: "1001",
+				db:      "badgerdb",
+				indexer: "psql",
 			},
 			pioAckWarn: "1",
 			expLogLines: []string{
 				"ERR pruning-interval 1001 EXCEEDS 999 AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS.",
 				"ERR indexer \"psql\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"null\".",
-				"ERR iavl-disable-fastnode \"true\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"false\".",
 				"ERR badgerdb IS NO LONGER SUPPORTED. MIGRATE TO goleveldb.",
 			},
 			expSleep: false,
