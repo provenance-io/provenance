@@ -50,6 +50,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * In `MarketCommitmentSettle`, only consume the settlement fee if the settlement succeeds [#1703](https://github.com/provenance-io/provenance/issues/1703).
 
+### Dependencies
+
+- Bump `google.golang.org/grpc` from 1.61.1 to 1.62.1 ([#1850](https://github.com/provenance-io/provenance/pull/1850), [#1864](https://github.com/provenance-io/provenance/pull/1864))
+- Bump `cosmossdk.io/math` from 1.2.0 to 1.3.0 ([#1857](https://github.com/provenance-io/provenance/pull/1857))
+- Bump `peter-evans/create-pull-request` from 6.0.0 to 6.0.2 ([#1858](https://github.com/provenance-io/provenance/pull/1858), [#1872](https://github.com/provenance-io/provenance/pull/1872))
+- Bump `github.com/golang/protobuf` from 1.5.3 to 1.5.4 ([#1863](https://github.com/provenance-io/provenance/pull/1863))
+- Bump `github.com/stretchr/testify` from 1.8.4 to 1.9.0 ([#1860](https://github.com/provenance-io/provenance/pull/1860))
+- Bump `bufbuild/buf-setup-action` from 1.29.0 to 1.30.0 ([#1871](https://github.com/provenance-io/provenance/pull/1871))
+
 ---
 
 ## [v1.18.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc2) - 2024-02-22
