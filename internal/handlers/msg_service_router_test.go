@@ -19,13 +19,16 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -248,17 +251,18 @@ func TestFailedTx(tt *testing.T) {
 	stopIfFailed(tt)
 
 	tt.Run("no msg-based fee", func(t *testing.T) {
-		// TODO[1760]: finalize-block: Uncomment these lines.
-		_ = encCfg
-		/*
-			msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2)))
-			fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
-			txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			t.Logf("Events:\n%s\n", eventsString(res.Events, true))
-			assert.Equal(t, 5, int(res.Code), "res=%+v", res)
-		*/
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2)))
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
+		txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		assert.Error(t, err, "FinalizeBlock() error")
 
 		// Check both account balances after transaction
 		// the 150000stake should have been deducted from account 1, and the send should have failed.
@@ -279,7 +283,7 @@ func TestFailedTx(tt *testing.T) {
 		}
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000)))...)
 
-		// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
 	})
 
 	// Give acct1 150000stake back.
@@ -292,15 +296,17 @@ func TestFailedTx(tt *testing.T) {
 		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10), "", 0)
 		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 10stake")
 		acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-		// TODO[1760]: finalize-block: Uncomment these lines.
-		/*
-			fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+10))
-			txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			t.Logf("Events:\n%s\n", eventsString(res.Events, true))
-			assert.Equal(t, 5, int(res.Code), "res=%+v", res)
-		*/
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+10))
+		txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		assert.Error(t, err, "FinalizeBlock() error")
 
 		// Check both account balances after transaction
 		// the 150000 should have been deducted from account 1, and the send should have failed.
@@ -321,7 +327,7 @@ func TestFailedTx(tt *testing.T) {
 		}
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit()))))...)
 
-		// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
 	})
 }
 
@@ -352,18 +358,18 @@ func TestMsgService(tt *testing.T) {
 		// Sending 100hotdog with fees of 150000stake.
 		// account 1 will lose 100hotdog,150000stake
 		// account 2 will gain 100hotdog
-
-		// TODO[1760]: finalize-block: Uncomment these lines.
-		_ = encCfg
-		/*
-			msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
-			fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000))
-			txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			t.Logf("Events:\n%s\n", eventsString(res.Events, true))
-			require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-		*/
+		msg := banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000))
+		txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		assert.NoError(t, err, "FinalizeBlock() error")
 
 		// Check both account balances after transaction
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -383,7 +389,7 @@ func TestMsgService(tt *testing.T) {
 		// fee charge in antehandler
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit()))))...)
 
-		// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.Events, expEvents)
 	})
 
 	tt.Run("800hotdog fee associated with msg type", func(t *testing.T) {
@@ -395,15 +401,17 @@ func TestMsgService(tt *testing.T) {
 		msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("hotdog", 800), "", 0)
 		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog")
 		acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-		// TODO[1760]: finalize-block: Uncomment these lines.
-		/*
-			fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+100), sdk.NewInt64Coin("hotdog", 800))
-			txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			t.Logf("Events:\n%s\n", eventsString(res.Events, true))
-			require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-		*/
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+100), sdk.NewInt64Coin("hotdog", 800))
+		txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		assert.NoError(t, err, "FinalizeBlock() error")
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
@@ -431,7 +439,7 @@ func TestMsgService(tt *testing.T) {
 		// swept fee amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)))...)
 
-		// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
 	})
 
 	tt.Run("10stake fee associated with msg type", func(t *testing.T) {
@@ -440,15 +448,17 @@ func TestMsgService(tt *testing.T) {
 		require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 10stake")
 
 		acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-		// TODO[1760]: finalize-block: Uncomment these lines.
-		/*
-			fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+111))
-			txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			t.Logf("Events:\n%s\n", eventsString(res.Events, true))
-			require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-		*/
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())+111))
+		txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		assert.NoError(t, err, "FinalizeBlock() error")
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
@@ -476,7 +486,7 @@ func TestMsgService(tt *testing.T) {
 		// swept fee amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 101)))...)
 
-		// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.Events, expEvents)
 	})
 }
 
@@ -509,15 +519,16 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 	msgbasedFee := msgfeestypes.NewMsgFee(sdk.MsgTypeURL(msg), sdk.NewInt64Coin("hotdog", 800), addr2.String(), 7_500)
 	require.NoError(t, app.MsgFeesKeeper.SetMsgFee(ctx, msgbasedFee), "setting fee 800hotdog addr2 75%")
 
-	// TODO[1760]: finalize-block: Uncomment these lines.
-	_ = encCfg
-	/*
-		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt)), sdk.NewInt64Coin("hotdog", 800))
-		txBytes, err := SignTxAndGetBytes(gasAmt, fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err, "SignTxAndGetBytes")
-		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-		require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-	*/
+	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt)), sdk.NewInt64Coin("hotdog", 800))
+	txBytes, err := SignTxAndGetBytes(ctx, gasAmt, fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	require.NoError(t, err, "SignTxAndGetBytes")
+	blockRes, err := app.FinalizeBlock(
+		&abci.RequestFinalizeBlock{
+			Height: ctx.BlockHeight() + 1,
+			Txs:    [][]byte{txBytes},
+		},
+	)
+	assert.NoError(t, err, "FinalizeBlock() error")
 
 	// Check both account balances after transaction
 	addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -546,7 +557,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 	// fee charged for msg based fee
 	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 600)))...)
 
-	// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+	assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
 }
 
 func TestMsgServiceAuthz(tt *testing.T) {
@@ -590,17 +601,19 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		// tx authz send message with correct amount of fees associated
 		gasAmt := NewTestGasLimit() + 20_000
 		acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-		// TODO[1760]: finalize-block: Uncomment these lines.
-		_ = encCfg
-		/*
-			msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
-			msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
-			fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt)), sdk.NewInt64Coin("hotdog", 800))
-			txBytes, err := SignTxAndGetBytes(gasAmt, fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-		*/
+
+		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
+		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt)), sdk.NewInt64Coin("hotdog", 800))
+		txBytes, err := SignTxAndGetBytes(ctx, gasAmt, fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		assert.NoError(t, err, "FinalizeBlock() error")
 
 		// acct1 sent 100hotdog to acct3 with acct2 paying fees 100000stake in gas, 800hotdog msgfees
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -627,22 +640,24 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt))))...)
 		// fee charged for msg based fee
 		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
-		// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.Events, expEvents)
 	})
 
 	tt.Run("exec two sends", func(t *testing.T) {
 		// send 2 successful authz messages
 		acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-		// TODO[1760]: finalize-block: Uncomment these lines.
-		/*
-			msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 80)))
-			msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
-			fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 300000), sdk.NewInt64Coin("hotdog", 1600))
-			txBytes, err := SignTxAndGetBytes(NewTestGasLimit()*2, fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-		*/
+		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 80)))
+		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg, msg})
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 300000), sdk.NewInt64Coin("hotdog", 1600))
+		txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit()*2, fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		assert.NoError(t, err, "FinalizeBlock() error")
 
 		// acct1 2x sent 100hotdog to acct3 with acct2 paying fees 200000stake in gas, 1600hotdog msgfees
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -670,21 +685,26 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		// fee charged for msg based fee
 		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1600)))...)
 
-		// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
 	})
 
 	tt.Run("not enough fees", func(t *testing.T) {
 		acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
 		// TODO[1760]: finalize-block: Uncomment these lines.
-		/*
-			msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
-			msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
-			fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin("hotdog", 799))
-			txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			require.Equal(t, 13, int(res.Code), "res=%+v", res)
-		*/
+
+		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
+		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
+		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin("hotdog", 799))
+		txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), &msgExec)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		assert.Error(t, err, "FinalizeBlock() error")
 
 		// addr2 pays the base fee, but nothing else is changes.
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -724,20 +744,23 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 	assert.Equal(tt, "", addr2beforeBalance, "addr2beforeBalance")
 	stopIfFailed(tt)
 	tt.Run("assess custom msg fee", func(t *testing.T) {
-		// TODO[1760]: finalize-block: Uncomment these lines.
-		_ = encCfg
-		/*
-			msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
-			msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, addr2.String(), addr1.String(), "")
-			fees := sdk.NewCoins(
-				sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000),
-				sdk.NewInt64Coin(NHash, 1_190_500_001),
-			)
-			txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-		*/
+
+		msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
+		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, addr2.String(), addr1.String(), "")
+		fees := sdk.NewCoins(
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000),
+			sdk.NewInt64Coin(NHash, 1_190_500_001),
+		)
+		txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		assert.NoError(t, err, "FinalizeBlock() error")
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
@@ -777,7 +800,7 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 		// swept amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
-		// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.Events, expEvents)
 	})
 }
 
@@ -809,20 +832,22 @@ func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
 	assert.Equal(tt, "", addr2beforeBalance, "addr2beforeBalance")
 	stopIfFailed(tt)
 	tt.Run("assess custom msg fee", func(t *testing.T) {
-		// TODO[1760]: finalize-block: Uncomment these lines.
-		_ = encCfg
-		/*
-			msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
-			msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, addr2.String(), addr1.String(), "2500")
-			fees := sdk.NewCoins(
-				sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000),
-				sdk.NewInt64Coin(NHash, 1_190_500_001),
-			)
-			txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-		*/
+		msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
+		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, addr2.String(), addr1.String(), "2500")
+		fees := sdk.NewCoins(
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000),
+			sdk.NewInt64Coin(NHash, 1_190_500_001),
+		)
+		txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		assert.NoError(t, err, "FinalizeBlock() error")
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		addr2AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr2).String()
@@ -863,7 +888,7 @@ func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
 		// swept amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
-		// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
 	})
 }
 
@@ -896,20 +921,23 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 	assert.Equal(tt, "", addr2beforeBalance, "addr2beforeBalance")
 	stopIfFailed(tt)
 	tt.Run("assess custom msg fee", func(t *testing.T) {
-		// TODO[1760]: finalize-block: Uncomment these lines.
-		_ = encCfg
-		/*
-			msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
-			msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, "", addr1.String(), "")
-			fees := sdk.NewCoins(
-				sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())),
-				sdk.NewInt64Coin(NHash, 1_190_500_001),
-			)
-			txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
-			require.NoError(t, err, "SignTxAndGetBytes")
-			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-			require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
-		*/
+
+		msgFeeCoin := sdk.NewInt64Coin(msgfeestypes.UsdDenom, 7)
+		msg := msgfeestypes.NewMsgAssessCustomMsgFeeRequest("test", msgFeeCoin, "", addr1.String(), "")
+		fees := sdk.NewCoins(
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())),
+			sdk.NewInt64Coin(NHash, 1_190_500_001),
+		)
+		txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), &msg)
+		require.NoError(t, err, "SignTxAndGetBytes")
+		blockRes, err := app.FinalizeBlock(
+			&abci.RequestFinalizeBlock{
+				Height: ctx.BlockHeight() + 1,
+				Txs:    [][]byte{txBytes},
+			},
+		)
+		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		assert.NoError(t, err, "FinalizeBlock() error")
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
 		assert.Equal(t, "1000hotdog,1000stake", addr1AfterBalance, "addr1AfterBalance")
@@ -945,7 +973,7 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 		// swept amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
-		// assertEventsContains(t, res.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
 	})
 }
 
@@ -993,19 +1021,20 @@ func TestRewardsProgramStartError(t *testing.T) {
 		},
 	)
 
-	// TODO[1760]: finalize-block: Uncomment these lines.
-	_, _ = encCfg, rewardProgram
-	/*
-		txBytes, err := SignTxAndGetBytes(
-			NewTestRewardsGasLimit(),
-			sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
-			encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
-			&rewardProgram,
-		)
-		require.NoError(t, err, "SignTxAndGetBytes")
-		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-		require.True(t, res.IsErr(), "Should return an error: res=%+v", res)
-	*/
+	txBytes, err := SignTxAndGetBytes(ctx,
+		NewTestRewardsGasLimit(),
+		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		&rewardProgram,
+	)
+	require.NoError(t, err, "SignTxAndGetBytes")
+	_, err = app.FinalizeBlock(
+		&abci.RequestFinalizeBlock{
+			Height: ctx.BlockHeight() + 1,
+			Txs:    [][]byte{txBytes},
+		},
+	)
+	assert.Error(t, err, "FinalizeBlock() error")
 }
 
 func TestRewardsProgramStart(t *testing.T) {
@@ -1053,6 +1082,7 @@ func TestRewardsProgramStart(t *testing.T) {
 	)
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 	txReward, err := SignTx(
+		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
@@ -1120,6 +1150,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	)
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 	txReward, err := SignTx(
+		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
@@ -1141,7 +1172,7 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 	for height := int64(3); height <= int64(100); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -1263,7 +1294,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	for height := int64(2); height < int64(22); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -1401,7 +1432,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	for height := int64(2); height < int64(7); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -1563,7 +1594,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	for height := int64(2); height < int64(7); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -1759,7 +1790,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	for height := int64(2); height < int64(7); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -1935,7 +1966,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	for height := int64(2); height < int64(7); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -2076,7 +2107,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	for height := int64(2); height < int64(7); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -2164,7 +2195,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	for height := int64(2); height < int64(7); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -2268,7 +2299,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	for height := int64(2); height < int64(7); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -2356,6 +2387,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 	txGov, err := SignTx(
+		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
@@ -2379,7 +2411,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	for height := int64(3); height < int64(23); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -2466,6 +2498,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 	txGov, err := SignTx(
+		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv1.PubKey(), priv1, *acct1, ctx.ChainID(),
@@ -2490,7 +2523,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	for height := int64(3); height < int64(5); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct2.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), vote2)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), vote2)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -2595,6 +2628,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 	txGov, err := SignTx(
+		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
@@ -2619,7 +2653,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	for height := int64(3); height < int64(23); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -2716,7 +2750,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	time.Sleep(200 * time.Millisecond)
 
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	txGov, err := SignTx(ctx, NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err)
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
@@ -2737,7 +2771,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	for height := int64(3); height < int64(23); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq))
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
@@ -2830,7 +2864,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	time.Sleep(200 * time.Millisecond)
 
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txGov, err := SignTx(NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), msg)
+	txGov, err := SignTx(ctx, NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), msg)
 	require.NoError(t, err)
 
 	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
@@ -2851,7 +2885,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	for height := int64(3); height < int64(23); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct3.SetSequence(seq))
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), vote)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), vote)
 		require.NoError(t, err1)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx)
@@ -2946,6 +2980,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 	txGov, err := SignTx(
+		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
@@ -2969,7 +3004,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	for height := int64(3); height < int64(15); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -3072,7 +3107,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	time.Sleep(200 * time.Millisecond)
 
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txGov, err := SignTx(
+	txGov, err := SignTx(ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
@@ -3097,7 +3132,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	for height := int64(3); height < int64(23); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), delegation)
+		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), delegation)
 		require.NoError(t, err1, "[%d]: SignTx", height)
 		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
 		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
@@ -3160,6 +3195,7 @@ func createValSet(t *testing.T, pubKeys ...cryptotypes.PubKey) *cmttypes.Validat
 }
 
 func signAndGenTx(
+	ctx sdk.Context,
 	gaslimit uint64,
 	fees sdk.Coins,
 	encCfg moduletestutil.TestEncodingConfig,
@@ -3177,12 +3213,13 @@ func signAndGenTx(
 		return nil, err
 	}
 
+	signingMode := signing.SignMode(encCfg.TxConfig.SignModeHandler().DefaultMode())
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	sigV2 := signing.SignatureV2{
 		PubKey: pubKey,
 		Data: &signing.SingleSignatureData{
-			// SignMode:  encCfg.TxConfig.SignModeHandler().DefaultMode(), // TODO[1760]: signing: same type name diff packages.
+			SignMode:  signingMode,
 			Signature: nil,
 		},
 		Sequence: acct.Sequence,
@@ -3194,28 +3231,27 @@ func signAndGenTx(
 	}
 
 	// Second round: all signer infos are set, so each signer can sign.
-	// TODO[1760]: signing: SignWithPrivKey: Uncomment these lines.
-	/*
-		signerData := authsigning.SignerData{
-			ChainID:       chainId,
-			AccountNumber: acct.AccountNumber,
-			Sequence:      acct.Sequence,
-		}
-		sigV2, err = tx.SignWithPrivKey(
-			encCfg.TxConfig.SignModeHandler().DefaultMode(), signerData,
-			txBuilder, privKey, encCfg.TxConfig, acct.Sequence)
-		if err != nil {
-			return nil, err
-		}
-		err = txBuilder.SetSignatures(sigV2)
-		if err != nil {
-			return nil, err
-		}
-	*/
+	signerData := authsigning.SignerData{
+		ChainID:       chainId,
+		AccountNumber: acct.AccountNumber,
+		Sequence:      acct.Sequence,
+	}
+	sigV2, err = tx.SignWithPrivKey(
+		ctx, signingMode, signerData,
+		txBuilder, privKey, encCfg.TxConfig, acct.Sequence)
+	if err != nil {
+		return nil, err
+	}
+	err = txBuilder.SetSignatures(sigV2)
+	if err != nil {
+		return nil, err
+	}
+
 	return txBuilder, nil
 }
 
 func SignTxAndGetBytes(
+	ctx sdk.Context,
 	gaslimit uint64,
 	fees sdk.Coins,
 	encCfg moduletestutil.TestEncodingConfig,
@@ -3225,7 +3261,7 @@ func SignTxAndGetBytes(
 	chainId string,
 	msg ...sdk.Msg,
 ) ([]byte, error) {
-	txBuilder, err := signAndGenTx(gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
+	txBuilder, err := signAndGenTx(ctx, gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -3238,6 +3274,7 @@ func SignTxAndGetBytes(
 }
 
 func SignTx(
+	ctx sdk.Context,
 	gaslimit uint64,
 	fees sdk.Coins,
 	encCfg moduletestutil.TestEncodingConfig,
@@ -3247,7 +3284,7 @@ func SignTx(
 	chainId string,
 	msg ...sdk.Msg,
 ) (sdk.Tx, error) {
-	txBuilder, err := signAndGenTx(gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
+	txBuilder, err := signAndGenTx(ctx, gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
 	if err != nil {
 		return nil, err
 	}
