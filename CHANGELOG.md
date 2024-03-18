@@ -39,8 +39,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* Allow force transfers from marker and market accounts [#1855](https://github.com/provenance-io/provenance/pull/1855).
 * Remove the startup warning issued when disable-iavl-fastnode is true (we recommend keeping it as true if you already have it that way) [#1874](https://github.com/provenance-io/provenance/pull/1874).
 * Switch to `github.com/cometbft/cometbft-db` `v0.7.0` (from `github.com/tendermint/tm-db` `v0.6.7`) [#1874](https://github.com/provenance-io/provenance/pull/1874).
+
+### Bug Fixes
+
+* Fix `MarkerTransferAuthorization` validation to ensure the coins and addresses are all valid [#1856](https://github.com/provenance-io/provenance/pull/1856).
 
 ### Dependencies
 
