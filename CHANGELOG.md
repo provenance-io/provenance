@@ -37,21 +37,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Features
-
-* Add [Payments](x/exchange/spec/01_concepts.md#payments) to the exchange module [#1703](https://github.com/provenance-io/provenance/issues/1703).
-  Payments allow two parties to trade assets securely and asynchronously.
-
-### Improvements
-
-* Allow force transfers from marker and market accounts [#1855](https://github.com/provenance-io/provenance/pull/1855).
-* Add a `tourmaline-rc3` upgrade handler to set some new exchange module params related to payments [#1703](https://github.com/provenance-io/provenance/issues/1703).
-
-### Bug Fixes
-
-* Fix `MarkerTransferAuthorization` validation to ensure the coins and addresses are all valid [#1856](https://github.com/provenance-io/provenance/pull/1856).
-* In `MarketCommitmentSettle`, only consume the settlement fee if the settlement succeeds [#1703](https://github.com/provenance-io/provenance/issues/1703).
-
 ### Dependencies
 
 - Bump `google.golang.org/grpc` from 1.61.1 to 1.62.1 ([#1850](https://github.com/provenance-io/provenance/pull/1850), [#1864](https://github.com/provenance-io/provenance/pull/1864))
