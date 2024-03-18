@@ -187,11 +187,9 @@ require (
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-// replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-3
-replace github.com/cosmos/cosmos-sdk => ../prov-cosmos-sdk
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.46.13-pio-4
 
-// replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-1
-replace github.com/cosmos/ibc-go/v6 => ../ibc-go
+replace github.com/cosmos/ibc-go/v6 => github.com/provenance-io/ibc-go/v6 v6.2.0-pio-2
 
 // Use cometbft as requied by the SDK at v0.46.13
 replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
@@ -208,5 +206,4 @@ replace github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
 
 // TODO: This is also required for https://github.com/provenance-io/provenance/issues/1414
-// replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-6
-replace github.com/CosmWasm/wasmd => ../wasmd
+replace github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-7
