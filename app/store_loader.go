@@ -7,9 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cast"
-
 	dbm "github.com/cometbft/cometbft-db"
+	"github.com/spf13/cast"
 
 	"github.com/tendermint/tendermint/libs/log"
 

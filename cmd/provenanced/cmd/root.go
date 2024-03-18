@@ -9,12 +9,11 @@ import (
 	"path/filepath"
 	"time"
 
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	dbm "github.com/cometbft/cometbft-db"
 
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmcli "github.com/tendermint/tendermint/libs/cli"

@@ -12,10 +12,9 @@ import (
 	"testing"
 	"time"
 
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-
-	dbm "github.com/cometbft/cometbft-db"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"

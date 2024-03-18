@@ -11,9 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	copier "github.com/otiai10/copy"
-
 	tmdb "github.com/cometbft/cometbft-db"
+	copier "github.com/otiai10/copy"
 
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
