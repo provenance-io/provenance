@@ -5,12 +5,16 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 
 	sdkmath "cosmossdk.io/math"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
+	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -37,7 +41,7 @@ type msgServerTestDef[R any, S any, F any] struct {
 	// expResp is the expected response from the endpoint. It's only used if an error is not expected.
 	expResp *S
 	// followup is a function that runs any needed followup checks.
-	// This is only executed if an error neither expected, nor received.
+	// This is only executed if an error is neither expected, nor received.
 	// The TestSuite's ctx will be the cached context with the results of the setup and endpoint applied.
 	followup func(msg *R, fArgs F)
 }
@@ -84,8 +88,9 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 		tc.setup()
 	}
 
+	gm := antewrapper.NewFeeGasMeterWrapper(log.NewNopLogger(), storetypes.NewInfiniteGasMeter(), false).(*antewrapper.FeeGasMeter)
 	em := sdk.NewEventManager()
-	s.ctx = s.ctx.WithEventManager(em)
+	s.ctx = s.ctx.WithEventManager(em).WithGasMeter(gm)
 	goCtx := sdk.WrapSDKContext(s.ctx)
 	s.logBuffer.Reset()
 	var resp *S
@@ -167,6 +172,13 @@ func (s *TestSuite) eventHoldAddedOrder(addr sdk.AccAddress, amount string, orde
 func (s *TestSuite) eventHoldAddedCommitment(addr sdk.AccAddress, amount string, marketID uint32) sdk.Event {
 	return s.untypeEvent(&hold.EventHoldAdded{
 		Address: addr.String(), Amount: amount, Reason: fmt.Sprintf("x/exchange: commitment to %d", marketID),
+	})
+}
+
+// eventHoldAddedPayment creates a new event emitted when a hold is added for a payment (emitted by the hold module).
+func (s *TestSuite) eventHoldAddedPayment(addr sdk.AccAddress, amount string, externalID string) sdk.Event {
+	return s.untypeEvent(&hold.EventHoldAdded{
+		Address: addr.String(), Amount: amount, Reason: fmt.Sprintf("x/exchange: payment %q", externalID),
 	})
 }
 
@@ -368,6 +380,28 @@ func (s *TestSuite) zeroCoins(denoms ...string) []sdk.Coin {
 		rv[i] = s.zeroCoin(denom)
 	}
 	return rv
+}
+
+// assertNonZeroMsgFeeConsumed checks that a msg fee was consumed for the given msg type.
+func (s *TestSuite) assertNonZeroMsgFeeConsumed(msg sdk.Msg) bool {
+	feeGm, err := antewrapper.GetFeeGasMeter(s.ctx)
+	if !s.Assert().NoError(err, "GetFeeGasMeter") {
+		return false
+	}
+
+	msgFeesConsumed := feeGm.FeeConsumedByMsg()
+	if !s.Assert().NotEmpty(msgFeesConsumed, "FeeConsumedByMsg()") {
+		return false
+	}
+
+	msgType := sdk.MsgTypeURL(msg)
+	feeForMsg := msgFeesConsumed[msgType]
+	if !s.Assert().False(feeForMsg.IsZero(), "FeeConsumedByMsg()[%q].IsZero()", msgType) {
+		s.T().Logf("FeeConsumedByMsg() = %#v", msgFeesConsumed)
+		return false
+	}
+
+	return true
 }
 
 func (s *TestSuite) TestMsgServer_CreateAsk() {
@@ -4513,6 +4547,600 @@ func (s *TestSuite) TestMsgServer_MarketManageReqAttrs() {
 			},
 			expEvents: sdk.Events{
 				s.untypeEvent(&exchange.EventMarketReqAttrUpdated{MarketId: 1, UpdatedBy: s.addr5.String()}),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_CreatePayment() {
+	testDef := msgServerTestDef[exchange.MsgCreatePaymentRequest, exchange.MsgCreatePaymentResponse, []expBalances]{
+		endpointName: "CreatePayment",
+		endpoint:     keeper.NewMsgServer(s.k).CreatePayment,
+		expResp:      &exchange.MsgCreatePaymentResponse{},
+		followup: func(msg *exchange.MsgCreatePaymentRequest, expBals []expBalances) {
+			if source, ok := s.assertAccAddressFromBech32(msg.Payment.Source, "msg.Payment.Source"); ok {
+				payment, err := s.k.GetPayment(s.ctx, source, msg.Payment.ExternalId)
+				if s.Assert().NoError(err, "GetPayment(%s, %q): The payment that was just created", msg.Payment.Source, msg.Payment.ExternalId) {
+					s.assertEqualPayment(&msg.Payment, payment, "the payment that was just created")
+				}
+			}
+
+			for _, eb := range expBals {
+				s.checkBalances(eb)
+			}
+
+			s.assertNonZeroMsgFeeConsumed(msg)
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgCreatePaymentRequest, []expBalances]{
+		{
+			name: "error creating payment",
+			msg: exchange.MsgCreatePaymentRequest{
+				Payment: *s.newTestPayment(s.addr1, "", s.addr2, "", "one-two-three"),
+			},
+			expInErr: []string{"source amount and target amount cannot both be zero"},
+		},
+		{
+			name: "payment created",
+			setup: func() {
+				s.requireFundAccount(s.addr1, "100apple,25strawberry")
+			},
+			msg: exchange.MsgCreatePaymentRequest{
+				Payment: *s.newTestPayment(s.addr1, "23strawberry", s.addr2, "12tangerine", "four-five-six"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:    s.addr1,
+					expBal:  []sdk.Coin{s.coin("100apple"), s.coin("25strawberry"), s.zeroCoin("tangerine")},
+					expHold: s.coins("23strawberry"),
+				},
+				{
+					addr:   s.addr2,
+					expBal: s.zeroCoins("apple", "strawberry", "tangerine"),
+				},
+			},
+			expEvents: sdk.Events{
+				s.eventHoldAddedPayment(s.addr1, "23strawberry", "four-five-six"),
+				s.untypeEvent(exchange.NewEventPaymentCreated(
+					s.newTestPayment(s.addr1, "23strawberry", s.addr2, "12tangerine", "four-five-six"))),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_AcceptPayment() {
+	testDef := msgServerTestDef[exchange.MsgAcceptPaymentRequest, exchange.MsgAcceptPaymentResponse, []expBalances]{
+		endpointName: "AcceptPayment",
+		endpoint:     keeper.NewMsgServer(s.k).AcceptPayment,
+		expResp:      &exchange.MsgAcceptPaymentResponse{},
+		followup: func(msg *exchange.MsgAcceptPaymentRequest, expBals []expBalances) {
+			if source, ok := s.assertAccAddressFromBech32(msg.Payment.Source, "msg.Payment.Source"); ok {
+				payment, err := s.k.GetPayment(s.ctx, source, msg.Payment.ExternalId)
+				if s.Assert().NoError(err, "GetPayment(%s, %q): The payment that was just accepted", msg.Payment.Source, msg.Payment.ExternalId) {
+					s.Assert().Nil(payment, "the payment that was (supposedly) just accepted")
+				}
+			}
+
+			for _, eb := range expBals {
+				s.checkBalances(eb)
+			}
+
+			s.assertNonZeroMsgFeeConsumed(msg)
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgAcceptPaymentRequest, []expBalances]{
+		{
+			name: "no such payment",
+			msg: exchange.MsgAcceptPaymentRequest{
+				Payment: *s.newTestPayment(s.longAddr1, "5starfruit", s.addr4, "", "ex-why-zee"),
+			},
+			expInErr: []string{"no payment found with source " + s.longAddr1.String() + " and external id \"ex-why-zee\""},
+		},
+		{
+			name: "payment accepted",
+			setup: func() {
+				s.requireFundAccount(s.longAddr1, "100apple,50starfruit")
+				s.requireFundAccount(s.addr4, "100apple,20tangerine")
+				s.requireCreatePayments(s.newTestPayment(s.longAddr1, "5starfruit", s.addr4, "6tangerine", "ex-why-zee"))
+			},
+			msg: exchange.MsgAcceptPaymentRequest{
+				Payment: *s.newTestPayment(s.longAddr1, "5starfruit", s.addr4, "6tangerine", "ex-why-zee"),
+			},
+			fArgs: []expBalances{
+				{
+					addr:    s.longAddr1,
+					expBal:  s.coins("100apple,45starfruit,6tangerine"),
+					expHold: s.zeroCoins("apple", "starfruit", "tangerine"),
+				},
+				{
+					addr:    s.addr4,
+					expBal:  s.coins("100apple,5starfruit,14tangerine"),
+					expHold: s.zeroCoins("apple", "starfruit", "tangerine"),
+				},
+			},
+			expEvents: sdk.Events{
+				// Hold released.
+				s.eventHoldReleased(s.longAddr1, "5starfruit"),
+				// Send from source to target.
+				s.eventCoinSpent(s.longAddr1, "5starfruit"),
+				s.eventCoinReceived(s.addr4, "5starfruit"),
+				s.eventTransfer(s.addr4, s.longAddr1, "5starfruit"),
+				s.eventMessageSender(s.longAddr1),
+				// Send from target to source.
+				s.eventCoinSpent(s.addr4, "6tangerine"),
+				s.eventCoinReceived(s.longAddr1, "6tangerine"),
+				s.eventTransfer(s.longAddr1, s.addr4, "6tangerine"),
+				s.eventMessageSender(s.addr4),
+				// Payment accepted.
+				s.untypeEvent(exchange.NewEventPaymentAccepted(
+					s.newTestPayment(s.longAddr1, "5starfruit", s.addr4, "6tangerine", "ex-why-zee"))),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_RejectPayment() {
+	testDef := msgServerTestDef[exchange.MsgRejectPaymentRequest, exchange.MsgRejectPaymentResponse, []expBalances]{
+		endpointName: "RejectPayment",
+		endpoint:     keeper.NewMsgServer(s.k).RejectPayment,
+		expResp:      &exchange.MsgRejectPaymentResponse{},
+		followup: func(msg *exchange.MsgRejectPaymentRequest, expBals []expBalances) {
+			if source, ok := s.assertAccAddressFromBech32(msg.Source, "msg.Source"); ok {
+				payment, err := s.k.GetPayment(s.ctx, source, msg.ExternalId)
+				if s.Assert().NoError(err, "GetPayment(%s, %q): The payment that was just rejected", msg.Source, msg.ExternalId) {
+					s.Assert().Nil(payment, "the payment that was (supposedly) just rejected")
+				}
+			}
+
+			for _, eb := range expBals {
+				s.checkBalances(eb)
+			}
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgRejectPaymentRequest, []expBalances]{
+		{
+			name: "no target",
+			msg: exchange.MsgRejectPaymentRequest{
+				Target:     "",
+				Source:     s.addr3.String(),
+				ExternalId: "a",
+			},
+			expInErr: []string{invReqErr, "invalid target \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid target",
+			msg: exchange.MsgRejectPaymentRequest{
+				Target:     "nopenopenope",
+				Source:     s.addr3.String(),
+				ExternalId: "a",
+			},
+			expInErr: []string{invReqErr,
+				"invalid target \"nopenopenope\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "no source",
+			msg: exchange.MsgRejectPaymentRequest{
+				Target:     s.addr2.String(),
+				Source:     "",
+				ExternalId: "b",
+			},
+			expInErr: []string{invReqErr, "invalid source \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid source",
+			msg: exchange.MsgRejectPaymentRequest{
+				Target:     s.addr2.String(),
+				Source:     "thricenope",
+				ExternalId: "a",
+			},
+			expInErr: []string{invReqErr,
+				"invalid source \"thricenope\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "no such payment",
+			msg: exchange.MsgRejectPaymentRequest{
+				Target:     s.addr2.String(),
+				Source:     s.addr3.String(),
+				ExternalId: "oops",
+			},
+			expInErr: []string{invReqErr,
+				"no payment found with source " + s.addr3.String() + " and external id \"oops\""},
+		},
+		{
+			name: "wrong target",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "10strawberry")
+				s.requireCreatePayments(s.newTestPayment(s.addr2, "10strawberry", s.addr3, "11tangerine", "four-oh-four"))
+			},
+			msg: exchange.MsgRejectPaymentRequest{
+				Target:     s.addr1.String(),
+				Source:     s.addr2.String(),
+				ExternalId: "four-oh-four",
+			},
+			expInErr: []string{invReqErr,
+				"target " + s.addr1.String() + " cannot reject payment with target " + s.addr3.String()},
+		},
+		{
+			name: "payment rejected",
+			setup: func() {
+				s.requireFundAccount(s.addr2, "100acorn,10starfruit,50strawberry,25tangerine")
+				s.requireCreatePayments(s.newTestPayment(s.addr2, "1starfruit,49strawberry", s.addr3, "100tangerine", "four-oh-six"))
+			},
+			msg: exchange.MsgRejectPaymentRequest{
+				Target:     s.addr3.String(),
+				Source:     s.addr2.String(),
+				ExternalId: "four-oh-six",
+			},
+			fArgs: []expBalances{
+				{
+					addr:    s.addr2,
+					expBal:  s.coins("100acorn,10starfruit,50strawberry,25tangerine"),
+					expHold: s.zeroCoins("acorn", "starfruit", "strawberry", "tangerine"),
+				},
+				{
+					addr:    s.addr3,
+					expBal:  s.zeroCoins("acorn", "starfruit", "strawberry", "tangerine"),
+					expHold: s.zeroCoins("acorn", "starfruit", "strawberry", "tangerine"),
+				},
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.addr2, "1starfruit,49strawberry"),
+				s.untypeEvent(exchange.NewEventPaymentRejected(
+					s.newTestPayment(s.addr2, "1starfruit,49strawberry", s.addr3, "100tangerine", "four-oh-six"))),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_RejectPayments() {
+	testDef := msgServerTestDef[exchange.MsgRejectPaymentsRequest, exchange.MsgRejectPaymentsResponse, []expBalances]{
+		endpointName: "RejectPayments",
+		endpoint:     keeper.NewMsgServer(s.k).RejectPayments,
+		expResp:      &exchange.MsgRejectPaymentsResponse{},
+		followup: func(msg *exchange.MsgRejectPaymentsRequest, expBals []expBalances) {
+			var expDeleted []*exchange.Payment
+			allPayments := s.getAllPayments()
+			for _, payment := range allPayments {
+				if payment.Target == msg.Target && exchange.ContainsString(msg.Sources, payment.Source) {
+					expDeleted = append(expDeleted, payment)
+				}
+			}
+			s.Assert().Empty(expDeleted, "payments still in state with the msg target and one of the msg sources")
+
+			for _, eb := range expBals {
+				s.checkBalances(eb)
+			}
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgRejectPaymentsRequest, []expBalances]{
+		{
+			name: "no target",
+			msg: exchange.MsgRejectPaymentsRequest{
+				Target:  "",
+				Sources: []string{s.addr1.String()},
+			},
+			expInErr: []string{invReqErr, "invalid target \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid target",
+			msg: exchange.MsgRejectPaymentsRequest{
+				Target:  "oopsiedaisy",
+				Sources: []string{s.addr1.String()},
+			},
+			expInErr: []string{invReqErr,
+				"invalid target \"oopsiedaisy\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "empty string in sources",
+			msg: exchange.MsgRejectPaymentsRequest{
+				Target:  s.addr1.String(),
+				Sources: []string{s.addr2.String(), "", s.addr3.String()},
+			},
+			expInErr: []string{invReqErr, "invalid sources[1] \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid source",
+			msg: exchange.MsgRejectPaymentsRequest{
+				Target:  s.addr1.String(),
+				Sources: []string{s.addr2.String(), s.addr3.String(), "ouchnogood"},
+			},
+			expInErr: []string{invReqErr,
+				"invalid sources[2] \"ouchnogood\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "no payments from source",
+			msg: exchange.MsgRejectPaymentsRequest{
+				Target:  s.addr1.String(),
+				Sources: []string{s.addr2.String()},
+			},
+			expInErr: []string{invReqErr,
+				"source " + s.addr2.String() + " does not have any payments for target " + s.addr1.String()},
+		},
+		{
+			name: "payments rejected",
+			setup: func() {
+				amt := "100apple,100starfruit,100strawberry,100tangerine,100tomato"
+				s.requireFundAccount(s.addr1, amt)
+				s.requireFundAccount(s.addr2, amt)
+				s.requireFundAccount(s.longAddr3, amt)
+				s.requireCreatePayments(
+					s.newTestPayment(s.addr1, "13strawberry", s.longAddr1, "5tomato", "z"),
+					s.newTestPayment(s.addr2, "7starfruit", s.longAddr1, "16tangerine", "a"),
+					s.newTestPayment(s.addr2, "33strawberry", s.longAddr1, "54tomato", "b"),
+					s.newTestPayment(s.longAddr3, "", s.longAddr1, "100tangerine,100tomato", ""),
+					s.newTestPayment(s.addr1, "3starfruit,2strawberry", s.longAddr3, "", "y"),
+				)
+			},
+			msg: exchange.MsgRejectPaymentsRequest{
+				Target:  s.longAddr1.String(),
+				Sources: []string{s.longAddr3.String(), s.addr2.String(), s.addr1.String()},
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.addr1,
+					expBal:   s.coins("100apple,100starfruit,100strawberry,100tangerine,100tomato"),
+					expHold:  s.coins("3starfruit,2strawberry"),
+					expSpend: s.coins("100apple,97starfruit,98strawberry,100tangerine,100tomato"),
+				},
+				{
+					addr:    s.addr2,
+					expBal:  s.coins("100apple,100starfruit,100strawberry,100tangerine,100tomato"),
+					expHold: s.zeroCoins("apple", "starfruit", "strawberry", "tangerine", "tomato"),
+				},
+				{
+					addr:    s.longAddr3,
+					expBal:  s.coins("100apple,100starfruit,100strawberry,100tangerine,100tomato"),
+					expHold: s.zeroCoins("apple", "starfruit", "strawberry", "tangerine", "tomato"),
+				},
+				{
+					addr:   s.longAddr1,
+					expBal: s.zeroCoins("apple", "starfruit", "strawberry", "tangerine", "tomato"),
+				},
+			},
+			expEvents: sdk.Events{
+				// no hold release event for s.longAddr3 because that payment doesn't have any source funds.
+				s.eventHoldReleased(s.addr2, "7starfruit"),
+				s.eventHoldReleased(s.addr2, "33strawberry"),
+				s.eventHoldReleased(s.addr1, "13strawberry"),
+				s.untypeEvent(exchange.NewEventPaymentRejected(s.newTestPayment(s.longAddr3, "", s.longAddr1, "100tangerine,100tomato", ""))),
+				s.untypeEvent(exchange.NewEventPaymentRejected(s.newTestPayment(s.addr2, "7starfruit", s.longAddr1, "16tangerine", "a"))),
+				s.untypeEvent(exchange.NewEventPaymentRejected(s.newTestPayment(s.addr2, "33strawberry", s.longAddr1, "54tomato", "b"))),
+				s.untypeEvent(exchange.NewEventPaymentRejected(s.newTestPayment(s.addr1, "13strawberry", s.longAddr1, "5tomato", "z"))),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_CancelPayments() {
+	testDef := msgServerTestDef[exchange.MsgCancelPaymentsRequest, exchange.MsgCancelPaymentsResponse, []expBalances]{
+		endpointName: "CancelPayments",
+		endpoint:     keeper.NewMsgServer(s.k).CancelPayments,
+		expResp:      &exchange.MsgCancelPaymentsResponse{},
+		followup: func(msg *exchange.MsgCancelPaymentsRequest, expBals []expBalances) {
+			var expDeleted []*exchange.Payment
+			allPayments := s.getAllPayments()
+			for _, payment := range allPayments {
+				if payment.Source == msg.Source && exchange.ContainsString(msg.ExternalIds, payment.ExternalId) {
+					expDeleted = append(expDeleted, payment)
+				}
+			}
+			s.Assert().Empty(expDeleted, "payments still in state with the msg source and one of the msg external ids")
+
+			for _, eb := range expBals {
+				s.checkBalances(eb)
+			}
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgCancelPaymentsRequest, []expBalances]{
+		{
+			name: "no source",
+			msg: exchange.MsgCancelPaymentsRequest{
+				Source:      "",
+				ExternalIds: []string{""},
+			},
+			expInErr: []string{invReqErr, "invalid source \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid source",
+			msg: exchange.MsgCancelPaymentsRequest{
+				Source:      "notnotbad",
+				ExternalIds: []string{""},
+			},
+			expInErr: []string{invReqErr,
+				"invalid source \"notnotbad\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "payment does not exist",
+			setup: func() {
+				s.requireFundAccount(s.longAddr3, "100apple,100strawberry,100tangerine")
+				s.requireCreatePayments(
+					s.newTestPayment(s.longAddr3, "", s.longAddr2, "10tomato", "abc"),
+					s.newTestPayment(s.longAddr3, "", s.longAddr1, "11tomato", "def"),
+					s.newTestPayment(s.longAddr3, "", s.addr4, "12tomato", "ghi"),
+				)
+			},
+			msg: exchange.MsgCancelPaymentsRequest{
+				Source:      s.longAddr3.String(),
+				ExternalIds: []string{"abc", "def", "ghi", ""},
+			},
+			expInErr: []string{invReqErr, "no payment found with source " + s.longAddr3.String() + " and external id \"\""},
+		},
+		{
+			name: "payments cancelled",
+			setup: func() {
+				s.requireFundAccount(s.longAddr3, "100apple,100strawberry,100tangerine")
+				s.requireCreatePayments(
+					s.newTestPayment(s.longAddr3, "1strawberry", s.longAddr2, "10tangerine", "abc"),
+					s.newTestPayment(s.longAddr3, "2strawberry", s.longAddr1, "11tangerine", "def"),
+					s.newTestPayment(s.longAddr3, "4strawberry", s.addr4, "12tangerine", "ghi"),
+					s.newTestPayment(s.longAddr3, "8strawberry", s.addr1, "13tangerine", ""),
+				)
+			},
+			msg: exchange.MsgCancelPaymentsRequest{
+				Source:      s.longAddr3.String(),
+				ExternalIds: []string{"ghi", "", "abc"},
+			},
+			fArgs: []expBalances{
+				{
+					addr:     s.longAddr3,
+					expBal:   s.coins("100apple,100strawberry,100tangerine"),
+					expHold:  s.coins("2strawberry"),
+					expSpend: s.coins("100apple,98strawberry,100tangerine"),
+				},
+				{
+					addr:   s.longAddr2,
+					expBal: s.zeroCoins("apple", "strawberry", "tangerine"),
+				},
+				{
+					addr:   s.addr4,
+					expBal: s.zeroCoins("apple", "strawberry", "tangerine"),
+				},
+				{
+					addr:   s.addr1,
+					expBal: s.zeroCoins("apple", "strawberry", "tangerine"),
+				},
+			},
+			expEvents: sdk.Events{
+				s.eventHoldReleased(s.longAddr3, "4strawberry"),
+				s.eventHoldReleased(s.longAddr3, "8strawberry"),
+				s.eventHoldReleased(s.longAddr3, "1strawberry"),
+				s.untypeEvent(exchange.NewEventPaymentCancelled(s.newTestPayment(s.longAddr3, "4strawberry", s.addr4, "12tangerine", "ghi"))),
+				s.untypeEvent(exchange.NewEventPaymentCancelled(s.newTestPayment(s.longAddr3, "8strawberry", s.addr1, "13tangerine", ""))),
+				s.untypeEvent(exchange.NewEventPaymentCancelled(s.newTestPayment(s.longAddr3, "1strawberry", s.longAddr2, "10tangerine", "abc"))),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_ChangePaymentTarget() {
+	testDef := msgServerTestDef[exchange.MsgChangePaymentTargetRequest, exchange.MsgChangePaymentTargetResponse, struct{}]{
+		endpointName: "ChangePaymentTarget",
+		endpoint:     keeper.NewMsgServer(s.k).ChangePaymentTarget,
+		expResp:      &exchange.MsgChangePaymentTargetResponse{},
+		followup: func(msg *exchange.MsgChangePaymentTargetRequest, _ struct{}) {
+			source := s.requireAccAddressFromBech32(msg.Source, "msg.Source")
+			payment, err := s.k.GetPayment(s.ctx, source, msg.ExternalId)
+			s.Require().NoError(err, "GetPayment(%s, %q) error", msg.Source, msg.ExternalId)
+			s.Require().NotNil(payment, "GetPayment(%s, %q) result", msg.Source, msg.ExternalId)
+			s.Assert().Equal(msg.NewTarget, payment.Target, "payment.Target")
+		},
+	}
+
+	tests := []msgServerTestCase[exchange.MsgChangePaymentTargetRequest, struct{}]{
+		{
+			name: "no source",
+			msg: exchange.MsgChangePaymentTargetRequest{
+				Source:     "",
+				ExternalId: "whatever",
+				NewTarget:  s.addr3.String(),
+			},
+			expInErr: []string{invReqErr, "invalid source \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid source",
+			msg: exchange.MsgChangePaymentTargetRequest{
+				Source:     "faultysource",
+				ExternalId: "other",
+				NewTarget:  s.addr2.String(),
+			},
+			expInErr: []string{invReqErr,
+				"invalid source \"faultysource\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "invalid new target",
+			msg: exchange.MsgChangePaymentTargetRequest{
+				Source:     s.addr1.String(),
+				ExternalId: "something",
+				NewTarget:  "whatiswrong",
+			},
+			expInErr: []string{invReqErr,
+				"invalid new target \"whatiswrong\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "no such payment",
+			msg: exchange.MsgChangePaymentTargetRequest{
+				Source:     s.addr2.String(),
+				ExternalId: "imaginary",
+				NewTarget:  s.longAddr2.String(),
+			},
+			expInErr: []string{invReqErr,
+				"no payment found with source " + s.addr2.String() + " and external id \"imaginary\""},
+		},
+		{
+			name: "payment updated to no target",
+			setup: func() {
+				s.requireFundAccount(s.addr5, "100apple,100strawberry,100tangerine")
+				s.requireCreatePayments(
+					s.newTestPayment(s.addr5, "3strawberry", s.addr4, "80tangerine", "badtrade"),
+				)
+			},
+			msg: exchange.MsgChangePaymentTargetRequest{
+				Source:     s.addr5.String(),
+				ExternalId: "badtrade",
+				NewTarget:  "",
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(exchange.NewEventPaymentUpdated(
+					s.newTestPayment(s.addr5, "3strawberry", nil, "80tangerine", "badtrade"), s.addr4.String())),
+			},
+		},
+		{
+			name: "payment updated to different target",
+			setup: func() {
+				s.requireFundAccount(s.addr5, "100apple,100strawberry,100tangerine")
+				s.requireCreatePayments(
+					s.newTestPayment(s.addr5, "3strawberry", s.addr4, "80tangerine", "badtrade"),
+				)
+			},
+			msg: exchange.MsgChangePaymentTargetRequest{
+				Source:     s.addr5.String(),
+				ExternalId: "badtrade",
+				NewTarget:  s.longAddr2.String(),
+			},
+			expEvents: sdk.Events{
+				s.untypeEvent(exchange.NewEventPaymentUpdated(
+					s.newTestPayment(s.addr5, "3strawberry", s.longAddr2, "80tangerine", "badtrade"), s.addr4.String())),
 			},
 		},
 	}

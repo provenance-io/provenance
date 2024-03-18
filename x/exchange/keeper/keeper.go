@@ -6,6 +6,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -60,20 +62,31 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 	return rv
 }
 
+// getLogger gets a logger for the exchange module.
+func (k Keeper) getLogger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", "x/"+exchange.ModuleName)
+}
+
+// logEndpointError logs an error for an endpoint.
+// This uses the standard key+val logging argument pattern instead of the fmt.Sprintf format.
+func (k Keeper) logEndpointError(ctx sdk.Context, endpoint, msg string, keyVals ...interface{}) {
+	k.getLogger(ctx).With("endpoint", endpoint).Error(msg, keyVals...)
+}
+
 // logErrorf uses fmt.Sprintf to combine the msg and args, and logs the result as an error from this module.
 // Note that this is different from the logging .Error(msg string, keyvals ...interface{}) syntax.
 func (k Keeper) logErrorf(ctx sdk.Context, msg string, args ...interface{}) {
-	ctx.Logger().Error(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
+	k.getLogger(ctx).Error(fmt.Sprintf(msg, args...))
 }
 
 // logInfof uses fmt.Sprintf to combine the msg and args, and logs the result as info from this module.
 // Note that this is different from the logging .Info(msg string, keyvals ...interface{}) syntax.
 func (k Keeper) logInfof(ctx sdk.Context, msg string, args ...interface{}) {
-	ctx.Logger().Info(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
+	k.getLogger(ctx).Info(fmt.Sprintf(msg, args...))
 }
 
 // emitEvent emits the provided event and writes any error to the error log.
-// See Also emitEvents.
+// If you have multiple events to emit, consider using emitEvents.
 func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
 	err := ctx.EventManager().EmitTypedEvent(event)
 	if err != nil {
@@ -82,12 +95,27 @@ func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
 }
 
 // emitEvents emits the provided events and writes any error to the error log.
-// See Also emitEvent.
+// If you only have one event to emit, consider using emitEvent.
+// If your events slice is typed to a specific event type (or something other than exactly []proto.Message),
+// use the non-keeper emitEvents(k, ctx, events) function instead.
 func (k Keeper) emitEvents(ctx sdk.Context, events []proto.Message) {
 	err := ctx.EventManager().EmitTypedEvents(events...)
 	if err != nil {
 		k.logErrorf(ctx, "error emitting events %#v: %v", events, err)
 	}
+}
+
+// emitEvents emits the provided events and writes any error to the error log.
+// If you only have one event to emit, consider using k.emitEvent.
+// The difference between this and k.emitEvents is that this will accept a slice of
+// specifically typed events instead of needing to be exactly a []proto.Message slice.
+// E.g. events can be provided here as a []*exchange.EventPaymentRejected.
+func emitEvents[S ~[]E, E proto.Message](k Keeper, ctx sdk.Context, events S) {
+	e2 := make([]proto.Message, len(events))
+	for i, event := range events {
+		e2[i] = event
+	}
+	k.emitEvents(ctx, e2)
 }
 
 // GetAuthority gets the address (as bech32) that has governance authority.

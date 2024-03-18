@@ -124,8 +124,13 @@ func (s *CmdTestSuite) SetupSuite() {
 	acornMarker := newMarker("acorn")
 	peachMarker := newMarker("peach")
 	cherryMarker := newMarker("cherry")
+	strawberryMarker := newMarker("strawberry")
+	tangerineMarker := newMarker("tangerine")
 
-	allMarkers := []*markertypes.MarkerAccount{appleMarker, acornMarker, peachMarker, cherryMarker}
+	allMarkers := []*markertypes.MarkerAccount{
+		appleMarker, acornMarker, peachMarker,
+		cherryMarker, strawberryMarker, tangerineMarker,
+	}
 
 	// Add accounts to auth gen state.
 	var authGen authtypes.GenesisState
@@ -265,12 +270,26 @@ func (s *CmdTestSuite) SetupSuite() {
 		Amount:   sdk.NewCoins(sdk.NewInt64Coin("apple", 4210), sdk.NewInt64Coin("peach", 421)),
 	})
 
+	for sourceI := range s.accountAddrs {
+		for targetI := range s.accountAddrs {
+			payment := s.makeInitialPayment(sourceI, targetI)
+			exchangeGen.Payments = append(exchangeGen.Payments, *payment)
+		}
+		payment := s.makeInitialPayment(sourceI, len(s.accountAddrs))
+		exchangeGen.Payments = append(exchangeGen.Payments, *payment)
+	}
+
 	toHold := make(map[string]sdk.Coins)
 	for _, order := range exchangeGen.Orders {
 		toHold[order.GetOwner()] = toHold[order.GetOwner()].Add(order.GetHoldAmount()...)
 	}
 	for _, com := range exchangeGen.Commitments {
 		toHold[com.Account] = toHold[com.Account].Add(com.Amount...)
+	}
+	for _, payment := range exchangeGen.Payments {
+		if !payment.SourceAmount.IsZero() {
+			toHold[payment.Source] = toHold[payment.Source].Add(payment.SourceAmount...)
+		}
 	}
 
 	s.cfg.GenesisState[exchange.ModuleName], err = s.cfg.Codec.MarshalJSON(&exchangeGen)
@@ -315,13 +334,15 @@ func (s *CmdTestSuite) SetupSuite() {
 
 	// Add balances to bank gen state.
 	// Any initial holds for an account are added to this so that
-	// this is what's available to each at the start of the unit tests.
+	// this is what's spendable to each at the start of the unit tests.
 	balance := sdk.NewCoins(
 		s.bondCoin(1_000_000_000),
-		s.feeCoin(1_000_000_000),
+		s.feeCoin(1_000_000_000_000),
 		sdk.NewInt64Coin("acorn", 1_000_000_000),
 		sdk.NewInt64Coin("apple", 1_000_000_000),
 		sdk.NewInt64Coin("peach", 1_000_000_000),
+		sdk.NewInt64Coin("strawberry", 1_000_000_000),
+		sdk.NewInt64Coin("tangerine", 1_000_000_000),
 	)
 	var bankGen banktypes.GenesisState
 	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[banktypes.ModuleName], &bankGen)
@@ -433,6 +454,45 @@ func (s *CmdTestSuite) makeInitialCommitment(addrI int) *exchange.Commitment {
 	return rv
 }
 
+// makeInitialPayment makes a payment with the source and target having the s.accountAddrs with the given indexes.
+// If sourceI or targetI is not in s.accountAddrs, the payment won't have a source or target (respectively).
+// The amounts are based off of the sourceI and targetI, and might each be zero (but not both).
+func (s *CmdTestSuite) makeInitialPayment(sourceI, targetI int) *exchange.Payment {
+	rv := &exchange.Payment{
+		ExternalId: fmt.Sprintf("initial-payment-%02d-%02d", sourceI, targetI),
+	}
+	if sourceI < len(s.accountAddrs) {
+		rv.Source = s.accountAddrs[sourceI].String()
+	}
+	if targetI < len(s.accountAddrs) {
+		rv.Target = s.accountAddrs[targetI].String()
+	}
+
+	switch sourceI % 3 {
+	case 1:
+		rv.SourceAmount = sdk.NewCoins(sdk.NewInt64Coin("strawberry", int64(300+50*targetI)))
+	case 2:
+		rv.SourceAmount = sdk.NewCoins(sdk.NewInt64Coin("strawberry", int64(500+100*targetI)),
+			sdk.NewInt64Coin("peach", int64(10+50*targetI*targetI)))
+	}
+
+	switch targetI % 3 {
+	case 1:
+		rv.TargetAmount = sdk.NewCoins(sdk.NewInt64Coin("tangerine", int64(100+200*sourceI)))
+	case 2:
+		rv.TargetAmount = sdk.NewCoins(sdk.NewInt64Coin("tangerine", int64(1000+50*sourceI)),
+			sdk.NewInt64Coin("acorn", int64(10_000+10*sourceI*sourceI)))
+	}
+
+	// Don't allow both the amounts to be zero
+	if rv.SourceAmount.IsZero() && rv.TargetAmount.IsZero() {
+		rv.SourceAmount = sdk.NewCoins(sdk.NewInt64Coin("peach", int64(targetI+1)))
+		rv.TargetAmount = sdk.NewCoins(sdk.NewInt64Coin("acorn", int64(sourceI+1)))
+	}
+
+	return rv
+}
+
 // contains reports whether v is present in s.
 func contains[S ~[]E, E comparable](s S, v E) bool {
 	for i := range s {
@@ -452,6 +512,9 @@ func (s *CmdTestSuite) getClientCtx() client.Context {
 
 // getAddrName tries to get the variable name (in this suite) of the provided address.
 func (s *CmdTestSuite) getAddrName(addr string) string {
+	if len(addr) == 0 {
+		return "<empty>"
+	}
 	if rv, found := s.addrNameLookup[addr]; found {
 		return rv
 	}
@@ -741,6 +804,54 @@ func (s *CmdTestSuite) createOrderFollowup(order *exchange.Order) func(*sdk.TxRe
 	}
 }
 
+// assertGetPayment uses the GetPayment query to look up a payment and make sure it equals the one provided.
+// If the provided payment is nil, ensures the query returns a payment not found error.
+func (s *CmdTestSuite) assertGetPayment(source, externalID string, payment *exchange.Payment) (okay bool) {
+	s.T().Helper()
+	if !s.Assert().NotEmpty(source, "source") {
+		return false
+	}
+
+	var expInErr []string
+	if payment == nil {
+		expInErr = append(expInErr, fmt.Sprintf("no payment found with source %s and external id %q", source, externalID))
+	}
+
+	var getPaymentOutBz []byte
+	getPaymentArgs := []string{source, externalID, "--output", "json"}
+	defer func() {
+		if !okay {
+			s.T().Logf("Query GetPayment %q output:\n%s", getPaymentArgs, string(getPaymentOutBz))
+		}
+	}()
+
+	clientCtx := s.getClientCtx()
+	getPaymentCmd := cli.CmdQueryGetPayment()
+	getPaymentOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getPaymentCmd, getPaymentArgs)
+	getPaymentOutBz = getPaymentOutBW.Bytes()
+	if !s.assertErrorContents(err, expInErr, "ExecTestCLICmd GetPayment %q error", getPaymentArgs) {
+		return false
+	}
+
+	if payment == nil {
+		return true
+	}
+
+	var resp exchange.QueryGetPaymentResponse
+	err = clientCtx.Codec.UnmarshalJSON(getPaymentOutBz, &resp)
+	if !s.Assert().NoError(err, "UnmarshalJSON on GetPayment %q response", getPaymentArgs) {
+		return false
+	}
+	return s.Assert().Equal(payment, resp.Payment, "payment %s %q", source, externalID)
+}
+
+// getOrderFollowup returns a follow-up function that looks up an order and makes sure it's the one provided.
+func (s *CmdTestSuite) getPaymentFollowup(source, externalID string, payment *exchange.Payment) func(*sdk.TxResponse) {
+	return func(*sdk.TxResponse) {
+		s.assertGetPayment(source, externalID, payment)
+	}
+}
+
 // getMarket executes a query to get the given market.
 func (s *CmdTestSuite) getMarket(marketID string) *exchange.Market {
 	s.T().Helper()
@@ -1003,6 +1114,52 @@ func (s *CmdTestSuite) commitFunds(addr sdk.AccAddress, marketID uint32, amount 
 	s.Require().Equal(int(0), int(resp.Code), "response code:\n%v", resp)
 }
 
+// createPayment issues a command to create a payment.
+func (s *CmdTestSuite) createPayment(payment *exchange.Payment) {
+	cmd := cli.CmdTx()
+	args := []string{
+		"create-payment", "--from", payment.Source,
+	}
+	if !payment.SourceAmount.IsZero() {
+		args = append(args, "--source-amount", payment.SourceAmount.String())
+	}
+	if len(payment.Target) > 0 {
+		args = append(args, "--target", payment.Target)
+	}
+	if !payment.TargetAmount.IsZero() {
+		args = append(args, "--target-amount", payment.TargetAmount.String())
+	}
+	if len(payment.ExternalId) > 0 {
+		args = append(args, "--external-id", payment.ExternalId)
+	}
+
+	fees := s.bondCoins(10).Add(s.feeCoin(exchange.DefaultFeeCreatePaymentFlatAmount))
+	args = append(args,
+		"--"+flags.FlagFees, fees.String(),
+		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--"+flags.FlagSkipConfirmation,
+	)
+
+	cmdName := cmd.Name()
+	var outBz []byte
+	defer func() {
+		if s.T().Failed() {
+			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
+		}
+	}()
+
+	clientCtx := s.getClientCtx()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	outBz = out.Bytes()
+
+	s.Require().NoError(err, "ExecTestCLICmd error")
+
+	var resp sdk.TxResponse
+	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+	s.Require().NoError(err, "UnmarshalJSON(command output) error")
+	s.Require().Equal(int(0), int(resp.Code), "response code:\n%v", resp)
+}
+
 // queryBankBalances executes a bank query to get an account's balances.
 func (s *CmdTestSuite) queryBankBalances(addr string) sdk.Coins {
 	clientCtx := s.getClientCtx()
@@ -1058,6 +1215,7 @@ func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 	failed = false
 }
 
+// untypeEvent calls untypeEvent and requires it to not return an error.
 func (s *CmdTestSuite) untypeEvent(tev proto.Message) sdk.Event {
 	rv, err := sdk.TypedEventToEvent(tev)
 	s.Require().NoError(err, "TypedEventToEvent(%T)", tev)
@@ -1160,6 +1318,8 @@ type setupTestCase struct {
 	skipArgsCheck bool
 	// skipAddingFromFlag true causes the runner to not add the from flag to the dummy command.
 	skipAddingFromFlag bool
+	// skipFlagInUseCheck true causes the runner to skip checking that each entry in expFlags also appears in the cmd.Use.
+	skipFlagInUseCheck bool
 }
 
 // runSetupTestCase runs the provided setup func and checks that everything is set up as expected.
@@ -1182,6 +1342,10 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 	}
 	require.NotPanics(t, testFunc, tc.name)
 
+	pageFlags := []string{
+		flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
+		flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
+	}
 	for i, flagName := range tc.expFlags {
 		t.Run(fmt.Sprintf("flag[%d]: --%s", i, flagName), func(t *testing.T) {
 			flag := cmd.Flags().Lookup(flagName)
@@ -1189,6 +1353,13 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 				expAnnotations, _ := tc.expAnnotations[flagName]
 				actAnnotations := flag.Annotations
 				assert.Equal(t, expAnnotations, actAnnotations, "--%s annotations", flagName)
+				if !tc.skipFlagInUseCheck {
+					expInUse := "--" + flagName
+					if exchange.ContainsString(pageFlags, flagName) {
+						expInUse = cli.PageFlagsUse
+					}
+					assert.Contains(t, cmd.Use, expInUse, "cmd.Use should have something about the %s flag", flagName)
+				}
 			}
 		})
 	}
@@ -1213,6 +1384,21 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 		t.Run("args", func(t *testing.T) {
 			assert.NotNil(t, cmd.Args, "command args after %s", tc.name)
 		})
+	}
+}
+
+// addOneReqAnnotations adds the expected annotations to a setupTestCase that indicate that one of a set of flags is required.
+// The flags should be provided in the same order that they're provided to cmd.MarkFlagsOneRequired.
+func addOneReqAnnotations(tc *setupTestCase, oneReqFlags ...string) {
+	oneReqVal := strings.Join(oneReqFlags, " ")
+	if tc.expAnnotations == nil {
+		tc.expAnnotations = make(map[string]map[string][]string)
+	}
+	for _, name := range oneReqFlags {
+		if tc.expAnnotations[name] == nil {
+			tc.expAnnotations[name] = make(map[string][]string)
+		}
+		tc.expAnnotations[name][oneReq] = append(tc.expAnnotations[name][oneReq], oneReqVal)
 	}
 }
 

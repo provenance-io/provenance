@@ -395,6 +395,23 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 	return addresses
 }
 
+// createIncrementalAccountsLong is a strategy used by addTestAddrs() in order to generate 32-byte addresses in ascending order.
+func createIncrementalAccountsLong(accNum int) []sdk.AccAddress {
+	var addresses []sdk.AccAddress
+
+	// There's nothing special about this base other than it's 30 bytes long (60 hex chars => 30 bytes).
+	// That leaves 2 bytes for the incrementing number = 65536 addrs max.
+	// It's the result of two calls to uuidgen with the last 4 chars removed.
+	base := "9B4006D1F9794F07BEC52279C3C31480CCC9A1EB3FD64F628CC405E4E2E2"
+	for i := 0; i < accNum; i++ {
+		addrHex := fmt.Sprintf("%s%04X", base, i)
+		addr, _ := sdk.AccAddressFromHexUnsafe(addrHex)
+		addresses = append(addresses, addr)
+	}
+
+	return addresses
+}
+
 // AddTestAddrsFromPubKeys adds the addresses into the App providing only the public keys.
 func AddTestAddrsFromPubKeys(app *App, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdkmath.Int) {
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
@@ -404,16 +421,19 @@ func AddTestAddrsFromPubKeys(app *App, ctx sdk.Context, pubKeys []cryptotypes.Pu
 	}
 }
 
-// AddTestAddrs constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
+// AddTestAddrs constructs and returns accNum amount of accounts with an initial balance of accAmt in random order.
 func AddTestAddrs(app *App, ctx sdk.Context, accNum int, accAmt sdkmath.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
 }
 
-// AddTestAddrsIncremental constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
+// AddTestAddrsIncremental creates accNum accounts with 20-byte incrementing addresses and initialBondAmount of bond denom.
 func AddTestAddrsIncremental(app *App, ctx sdk.Context, accNum int, accAmt sdkmath.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createIncrementalAccounts)
+}
+
+// AddTestAddrsIncrementalLong creates accNum accounts with 32-byte incrementing addresses and initialBondAmount of bond denom.
+func AddTestAddrsIncrementalLong(app *App, ctx sdk.Context, accNum int, initialBondAmount sdkmath.Int) []sdk.AccAddress {
+	return addTestAddrs(app, ctx, accNum, initialBondAmount, createIncrementalAccountsLong)
 }
 
 func addTestAddrs(app *App, ctx sdk.Context, accNum int, accAmt sdkmath.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {

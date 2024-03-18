@@ -6,6 +6,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
@@ -16,63 +21,27 @@ func TestMaxSplit(t *testing.T) {
 	assert.LessOrEqual(t, MaxSplit, absoluteMax)
 }
 
-func TestNewParams(t *testing.T) {
-	tests := []struct {
-		name         string
-		defaultSplit uint32
-		denomSplits  []DenomSplit
-		expected     *Params
-	}{
-		{
-			name:         "zero values",
-			defaultSplit: 0,
-			denomSplits:  nil,
-			expected:     &Params{},
-		},
-		{
-			name:         "100 nil",
-			defaultSplit: 100,
-			denomSplits:  nil,
-			expected:     &Params{DefaultSplit: 100},
-		},
-		{
-			name:         "123 with two denom splits",
-			defaultSplit: 123,
-			denomSplits: []DenomSplit{
-				{Denom: "atom", Split: 234},
-				{Denom: "nhash", Split: 56},
-			},
-			expected: &Params{
-				DefaultSplit: 123,
-				DenomSplits: []DenomSplit{
-					{Denom: "atom", Split: 234},
-					{Denom: "nhash", Split: 56},
-				},
-			},
-		},
-		{
-			name:         "defaults",
-			defaultSplit: DefaultDefaultSplit,
-			denomSplits:  nil,
-			expected:     DefaultParams(),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			actual := NewParams(tc.defaultSplit, tc.denomSplits)
-			assert.Equal(t, tc.expected, actual, "NewParams")
-		})
-	}
-}
-
 func TestDefaultParams(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
+
+	feeDenom := pioconfig.GetProvenanceConfig().FeeDenom
+	expCreate := fmt.Sprintf("%d%s", DefaultFeeCreatePaymentFlatAmount, feeDenom)
+	expAccept := fmt.Sprintf("%d%s", DefaultFeeAcceptPaymentFlatAmount, feeDenom)
+
 	actual := DefaultParams()
 	assert.Equal(t, int(DefaultDefaultSplit), int(actual.DefaultSplit), "DefaultSplit")
 	assert.Nil(t, actual.DenomSplits, "DenomSplits")
+	if assert.Len(t, actual.FeeCreatePaymentFlat, 1, "FeeCreatePaymentFlat") {
+		assert.Equal(t, expCreate, actual.FeeCreatePaymentFlat[0].String(), "FeeCreatePaymentFlat[0]")
+	}
+	if assert.Len(t, actual.FeeAcceptPaymentFlat, 1, "FeeAcceptPaymentFlat") {
+		assert.Equal(t, expAccept, actual.FeeAcceptPaymentFlat[0].String(), "FeeAcceptPaymentFlat[0]")
+	}
 }
 
 func TestParams_Validate(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
+
 	tests := []struct {
 		name   string
 		params Params
@@ -99,7 +68,47 @@ func TestParams_Validate(t *testing.T) {
 			expErr: []string{"badcointype split 10001 cannot be greater than 10000"},
 		},
 		{
-			name: "bad default and three bad denom splits",
+			name:   "empty create payment flat fees",
+			params: Params{FeeCreatePaymentFlat: []sdk.Coin{}},
+			expErr: nil,
+		},
+		{
+			name:   "create payment flat fee with zero amount",
+			params: Params{FeeCreatePaymentFlat: []sdk.Coin{{Denom: "blueberry", Amount: sdkmath.ZeroInt()}}},
+			expErr: []string{"invalid create payment flat fee \"0blueberry\": zero amount not allowed"},
+		},
+		{
+			name:   "too many create payment flat fees",
+			params: Params{FeeCreatePaymentFlat: []sdk.Coin{sdk.NewInt64Coin("orange", 3), sdk.NewInt64Coin("cherry", 5)}},
+			expErr: []string{"invalid create payment flat fee \"3orange,5cherry\": max entries is 1"},
+		},
+		{
+			name:   "invalid create payment flat fees",
+			params: Params{FeeCreatePaymentFlat: []sdk.Coin{{Denom: "banana", Amount: sdkmath.NewInt(-1)}}},
+			expErr: []string{"invalid create payment flat fee \"-1banana\": negative coin amount: -1"},
+		},
+		{
+			name:   "empty accept payment flat fees",
+			params: Params{FeeAcceptPaymentFlat: []sdk.Coin{}},
+			expErr: nil,
+		},
+		{
+			name:   "accept payment flat fee with zero amount",
+			params: Params{FeeAcceptPaymentFlat: []sdk.Coin{{Denom: "blueberry", Amount: sdkmath.ZeroInt()}}},
+			expErr: []string{"invalid accept payment flat fee \"0blueberry\": zero amount not allowed"},
+		},
+		{
+			name:   "too many accept payment flat fees",
+			params: Params{FeeAcceptPaymentFlat: []sdk.Coin{sdk.NewInt64Coin("orange", 3), sdk.NewInt64Coin("cherry", 5)}},
+			expErr: []string{"invalid accept payment flat fee \"3orange,5cherry\": max entries is 1"},
+		},
+		{
+			name:   "invalid accept payment flat fees",
+			params: Params{FeeAcceptPaymentFlat: []sdk.Coin{{Denom: "banana", Amount: sdkmath.NewInt(-1)}}},
+			expErr: []string{"invalid accept payment flat fee \"-1banana\": negative coin amount: -1"},
+		},
+		{
+			name: "multiple errors",
 			params: Params{
 				DefaultSplit: 10_001,
 				DenomSplits: []DenomSplit{
@@ -107,12 +116,16 @@ func TestParams_Validate(t *testing.T) {
 					{Denom: "x", Split: 3},
 					{Denom: "thisIsNotGood", Split: 10_003},
 				},
+				FeeCreatePaymentFlat: []sdk.Coin{sdk.NewInt64Coin("orange", 3), sdk.NewInt64Coin("cherry", 5)},
+				FeeAcceptPaymentFlat: []sdk.Coin{{Denom: "banana", Amount: sdkmath.NewInt(-1)}},
 			},
 			expErr: []string{
 				"default split 10001 cannot be greater than 10000",
 				"badcointype split 10002 cannot be greater than 10000",
 				"invalid denom: x",
 				"thisIsNotGood split 10003 cannot be greater than 10000",
+				"invalid create payment flat fee \"3orange,5cherry\": max entries is 1",
+				"invalid accept payment flat fee \"-1banana\": negative coin amount: -1",
 			},
 		},
 	}
