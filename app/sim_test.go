@@ -13,13 +13,15 @@ import (
 	"testing"
 	"time"
 
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
 	"github.com/stretchr/testify/require"
+
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
+
+	dbm "github.com/cometbft/cometbft-db"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

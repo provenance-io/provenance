@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/spf13/cast"
 
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -50,7 +50,6 @@ func IssueConfigWarnings(logger log.Logger, appOpts servertypes.AppOptions, slee
 	interval := cast.ToUint64(appOpts.Get("pruning-interval"))
 	txIndexer := cast.ToStringMap(appOpts.Get("tx_index"))
 	indexer := cast.ToString(txIndexer["indexer"])
-	fastNode := cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))
 	backend := server.GetAppDBBackend(appOpts)
 	var errs []string
 
@@ -60,10 +59,6 @@ func IssueConfigWarnings(logger log.Logger, appOpts servertypes.AppOptions, slee
 
 	if indexer != "" && indexer != "null" {
 		errs = append(errs, fmt.Sprintf("indexer \"%s\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"%s\".", indexer, "null"))
-	}
-
-	if fastNode {
-		errs = append(errs, fmt.Sprintf("%s \"%v\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"%v\".", server.FlagDisableIAVLFastNode, fastNode, !fastNode))
 	}
 
 	if backend != dbm.GoLevelDBBackend {
