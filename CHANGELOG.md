@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add a `tourmaline-rc3` upgrade handler to set some new exchange module params related to payments [#1703](https://github.com/provenance-io/provenance/issues/1703).
 * Remove the startup warning issued when disable-iavl-fastnode is true (we recommend keeping it as true if you already have it that way) [#1874](https://github.com/provenance-io/provenance/pull/1874).
 * Switch to `github.com/cometbft/cometbft-db` `v0.7.0` (from `github.com/tendermint/tm-db` `v0.6.7`) [#1874](https://github.com/provenance-io/provenance/pull/1874).
+* Allow NAV volume to exceed a marker's supply [#1883](https://github.com/provenance-io/provenance/pull/1883).
 
 ### Bug Fixes
 
