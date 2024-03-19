@@ -66,6 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cosmos/ibc-go/v6` from v6.2.0-pio-1 to v6.2.0-pio-2 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
 - Bump `github.com/CosmWasm/wasmd` from v0.30.0-pio-6 to v0.30.0-pio-7 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
 - Bump `github.com/cosmos/iavl` from v0.19.6 to v0.20.1 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
+- Bump `github.com/cometbft/cometbft-db` from 0.7.0 to 0.11.0 ([#1880](https://github.com/provenance-io/provenance/pull/1880))
 
 ---
 
