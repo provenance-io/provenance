@@ -90,7 +90,7 @@ func ExtractAppConfigAndMap(cmd *cobra.Command) (*serverconfig.Config, FieldValu
 func DefaultAppConfig() *serverconfig.Config {
 	rv := serverconfig.DefaultConfig()
 	rv.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
-	rv.IAVLDisableFastNode = false
+	rv.IAVLDisableFastNode = true
 	return rv
 }
 

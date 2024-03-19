@@ -17,10 +17,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	dbm "github.com/cometbft/cometbft-db"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	markermodule "github.com/provenance-io/provenance/x/marker"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
