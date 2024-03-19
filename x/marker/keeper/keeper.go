@@ -6,8 +6,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -310,15 +308,11 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 	}
 
 	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
-	store := ctx.KVStore(k.storeKey)
-	if math.NewIntFromUint64(netAssetValue.Volume).GT(marker.GetSupply().Amount) {
-		return fmt.Errorf("volume (%v) cannot exceed %q marker supply (%v)", netAssetValue.Volume, marker.GetDenom(), marker.GetSupply())
-	}
-
 	bz, err := k.cdc.Marshal(&netAssetValue)
 	if err != nil {
 		return err
 	}
+	store := ctx.KVStore(k.storeKey)
 	store.Set(key, bz)
 
 	return nil

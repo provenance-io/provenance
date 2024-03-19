@@ -2562,8 +2562,8 @@ func TestAddSetNetAssetValues(t *testing.T) {
 			marker:    redMarker,
 			navs:      []types.NetAssetValue{newNav("3blue", 1001)},
 			source:    "val",
-			expErr:    "cannot set net asset value: volume (1001) cannot exceed \"red\" marker supply (1000red)",
 			expEvents: sdk.Events{navEvent("red", "3blue", 1001, "val")},
+			expNavs:   []types.NetAssetValue{newNav("3blue", 1001)},
 		},
 		{
 			name:      "one nav: success",
@@ -2581,12 +2581,12 @@ func TestAddSetNetAssetValues(t *testing.T) {
 			expErr: "cannot set net asset value: marker net asset value volume must be positive value",
 		},
 		{
-			name:      "usd nav: too much volume",
+			name:      "usd nav: volume greater than supply",
 			marker:    blueMarker,
 			navs:      []types.NetAssetValue{newNav("55"+types.UsdDenom, 1005)},
 			source:    "wynne",
 			expEvents: sdk.Events{navEvent("blue", "55"+types.UsdDenom, 1005, "wynne")},
-			expErr:    "cannot set net asset value: volume (1005) cannot exceed \"blue\" marker supply (1000blue)",
+			expNavs:   []types.NetAssetValue{newNav("55"+types.UsdDenom, 1005)},
 		},
 		{
 			name:      "usd nav: success",
@@ -2611,11 +2611,11 @@ func TestAddSetNetAssetValues(t *testing.T) {
 		{
 			name:   "three navs: error on first",
 			marker: whiteMarker,
-			navs:   []types.NetAssetValue{newNav("7blue", 1001), newNav("167red", 66), newNav("377yellow", 89)},
+			navs:   []types.NetAssetValue{newNav("7blue", 0), newNav("167red", 66), newNav("377yellow", 89)},
 			source: "knox",
-			expErr: "cannot set net asset value: volume (1001) cannot exceed \"white\" marker supply (1000white)",
+			expErr: "cannot set net asset value: marker net asset value volume must be positive value",
 			expEvents: sdk.Events{
-				navEvent("white", "7blue", 1001, "knox"),
+				// no blue event because the nav is invalid.
 				navEvent("white", "167red", 66, "knox"),
 				navEvent("white", "377yellow", 89, "knox"),
 			},
@@ -2646,20 +2646,6 @@ func TestAddSetNetAssetValues(t *testing.T) {
 				// no white event because it's the same denom as the marker.
 			},
 			expNavs: []types.NetAssetValue{newNav("788blue", 14), newNav("215red", 3)},
-		},
-		{
-			name:   "three navs: error on all",
-			marker: whiteMarker,
-			navs:   []types.NetAssetValue{newNav("44blue", 1001), newNav("55red", 0), newNav("66yellow", 1002)},
-			source: "lynn",
-			expErr: "cannot set net asset value: volume (1001) cannot exceed \"white\" marker supply (1000white)" + "\n" +
-				"cannot set net asset value: marker net asset value volume must be positive value" + "\n" +
-				"cannot set net asset value: volume (1002) cannot exceed \"white\" marker supply (1000white)",
-			expEvents: sdk.Events{
-				navEvent("white", "44blue", 1001, "lynn"),
-				// nav 2 is invalid, so no event from it.
-				navEvent("white", "66yellow", 1002, "lynn"),
-			},
 		},
 	}
 

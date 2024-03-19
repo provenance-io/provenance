@@ -533,6 +533,8 @@ type txCmdTestCase struct {
 	args []string
 	// addedFees is any fees to add to the default 10<bond> amount.
 	addedFees sdk.Coins
+	// gas is the amount of gas to include. Default is 250,000.
+	gas int
 	// expInErr are strings to expect in an error from the cmd.
 	// Errors that come from the endpoint will not be here; use expInRawLog for those.
 	expInErr []string
@@ -563,9 +565,14 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 		fees = fees.Add(tc.addedFees...)
 	}
 
+	gas := "250000"
+	if tc.gas > 0 {
+		gas = fmt.Sprintf("%d", tc.gas)
+	}
+
 	args := append(tc.args, extraArgs...)
 	args = append(args,
-		"--"+flags.FlagGas, "250000",
+		"--"+flags.FlagGas, gas,
 		"--"+flags.FlagFees, fees.String(),
 		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
 		"--"+flags.FlagSkipConfirmation,

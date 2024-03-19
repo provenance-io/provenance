@@ -447,6 +447,7 @@ func (s *CmdTestSuite) TestCmdTxMarketSettle() {
 				return args, s.assertBalancesFollowup(expBals)
 			},
 			args:         []string{"settle", "--from", s.addr1.String(), "--market", "5"},
+			gas:          300_000,
 			expectedCode: 0,
 		},
 	}
