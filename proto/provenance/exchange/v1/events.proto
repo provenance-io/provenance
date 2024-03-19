@@ -228,3 +228,67 @@ message EventMarketFeesUpdated {
 
 // EventParamsUpdated is an event emitted when the exchange module's params have been updated.
 message EventParamsUpdated {}
+
+// EventPaymentCreated is an event emitted when a payment is created.
+message EventPaymentCreated {
+  // source is the account that created the Payment.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source_amount is the coins amount string of the funds that the source will pay (to the target).
+  string source_amount = 2;
+  // target is the account that can accept the Payment.
+  string target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // target_amount is the coins amount string of the funds that the target will pay (to the source).
+  string target_amount = 4;
+  // external_id is used along with the source to uniquely identify this Payment.
+  string external_id = 5;
+}
+
+// EventPaymentUpdated is an event emitted when a payment is updated.
+message EventPaymentUpdated {
+  // source is the account that updated (and previously created) the Payment.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source_amount is the coins amount string of the funds that the source will pay (to the target).
+  string source_amount = 2;
+  // old_target is the account that used to be able to accept the Payment (but not any more).
+  string old_target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // new_target is the account that is now able to accept the Payment.
+  string new_target = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // target_amount is the coins amount string of the funds that the target will pay (to the source).
+  string target_amount = 5;
+  // external_id is used along with the source to uniquely identify this Payment.
+  string external_id = 6;
+}
+
+// EventPaymentAccepted is an event emitted when a payment is accepted.
+message EventPaymentAccepted {
+  // source is the account that created the Payment.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source_amount is the coins amount string of the funds that the source will pay (to the target).
+  string source_amount = 2;
+  // target is the account that accepted the Payment.
+  string target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // target_amount is the coins amount string of the funds that the target will pay (to the source).
+  string target_amount = 4;
+  // external_id is used along with the source to uniquely identify this Payment.
+  string external_id = 5;
+}
+
+// EventPaymentRejected is an event emitted when a payment is rejected (by the target).
+message EventPaymentRejected {
+  // source is the account that created the Payment.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // target is the account that rejected the Payment.
+  string target = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id is used along with the source to uniquely identify this Payment.
+  string external_id = 3;
+}
+
+// EventPaymentCancelled is an event emitted when a payment is cancelled (by the source).
+message EventPaymentCancelled {
+  // source is the account that cancelled (and created) the Payment.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // target is the account that could have accepted the Payment.
+  string target = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id is used along with the source to uniquely identify this Payment.
+  string external_id = 3;
+}

@@ -9,18 +9,24 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestDefaultGenesisState(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	expected := &GenesisState{
 		Params: &Params{
-			DefaultSplit: DefaultDefaultSplit,
-			DenomSplits:  nil,
+			DefaultSplit:         DefaultDefaultSplit,
+			DenomSplits:          nil,
+			FeeCreatePaymentFlat: []sdk.Coin{{Denom: "nhash", Amount: sdkmath.NewInt(DefaultFeeCreatePaymentFlatAmount)}},
+			FeeAcceptPaymentFlat: []sdk.Coin{{Denom: "nhash", Amount: sdkmath.NewInt(DefaultFeeAcceptPaymentFlatAmount)}},
 		},
 		Markets:      nil,
 		Orders:       nil,
 		LastMarketId: 0,
+		Commitments:  nil,
+		Payments:     nil,
 	}
 	var actual *GenesisState
 	testFunc := func() {
@@ -31,7 +37,11 @@ func TestDefaultGenesisState(t *testing.T) {
 }
 
 func TestGenesisState_Validate(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	addr1 := sdk.AccAddress("addr1_______________").String()
+	addr2 := sdk.AccAddress("addr2_______________").String()
+	addr3 := sdk.AccAddress("addr3_______________").String()
+	addr4 := sdk.AccAddress("addr4_______________").String()
 	coin := func(amount int64, denom string) sdk.Coin {
 		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
 	}
@@ -58,6 +68,23 @@ func TestGenesisState_Validate(t *testing.T) {
 			Assets:   assetsCoin,
 			Price:    priceCoin,
 		})
+	}
+	payment := func(source, sourceAmount, target, targetAmount, externalID string) Payment {
+		rv := Payment{
+			Source:     source,
+			Target:     target,
+			ExternalId: externalID,
+		}
+		var err error
+		if len(sourceAmount) > 0 {
+			rv.SourceAmount, err = sdk.ParseCoinsNormalized(sourceAmount)
+			require.NoError(t, err, "source ParseCoinsNormalized(%q)", sourceAmount)
+		}
+		if len(targetAmount) > 0 {
+			rv.TargetAmount, err = sdk.ParseCoinsNormalized(targetAmount)
+			require.NoError(t, err, "target ParseCoinsNormalized(%q)", targetAmount)
+		}
+		return rv
 	}
 
 	tests := []struct {
@@ -222,6 +249,11 @@ func TestGenesisState_Validate(t *testing.T) {
 					{Account: addr1, MarketId: 4, Amount: sdk.Coins{coin(45, "apple")}},
 					{Account: addr1, MarketId: 3, Amount: sdk.Coins{coin(35, "apple")}},
 				},
+				Payments: []Payment{
+					payment(addr1, "3strawberry", addr2, "5tangerine", ""),
+					payment(addr1, "5strawberry", addr2, "6tangerine", "v2"),
+					payment(addr1, "20strawberry", addr3, "4tangerine", ""),
+				},
 			},
 			expErr: []string{
 				"invalid params: default split 10001 cannot be greater than 10000",
@@ -229,6 +261,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				`invalid order[1]: unknown market id 4`,
 				"last order id 1 is less than the largest id in the provided orders 3",
 				"invalid commitment[1]: unknown market id 4",
+				"invalid payment[2]: duplicate payment, source " + addr1 + " and external id \"\" seen at [0]",
 			},
 		},
 		{
@@ -371,6 +404,36 @@ func TestGenesisState_Validate(t *testing.T) {
 				`invalid commitment[0]: unknown market id 4`,
 				`invalid commitment[1]: invalid account "whatanaddr": decoding bech32 failed: invalid separator index -1`,
 				`invalid commitment[3]: invalid amount "-6banana": coin -6banana amount is not positive`,
+			},
+		},
+		{
+			name:     "one payment: okay",
+			genState: GenesisState{Payments: []Payment{payment(addr4, "8starfruit", addr3, "2tomato", "p-zero")}},
+			expErr:   nil,
+		},
+		{
+			name:     "one payment: no source",
+			genState: GenesisState{Payments: []Payment{payment("", "66strawberry", addr3, "888tomato", "p-zero")}},
+			expErr:   []string{"invalid payment[0]: invalid source \"\": empty address string is not allowed"},
+		},
+		{
+			name:     "one payment: no amounts",
+			genState: GenesisState{Payments: []Payment{payment(addr2, "", addr1, "", "f-zero")}},
+			expErr:   []string{"invalid payment[0]: source amount and target amount cannot both be zero"},
+		},
+		{
+			name: "three payments: all invalid",
+			genState: GenesisState{
+				Payments: []Payment{
+					payment("", "12strawberry", addr1, "", ""),
+					payment(addr3, "", addr4, "", "there's two of me"),
+					payment(addr3, "", addr2, "15tomato", "there's two of me"),
+				},
+			},
+			expErr: []string{
+				"invalid payment[0]: invalid source \"\": empty address string is not allowed",
+				"invalid payment[1]: source amount and target amount cannot both be zero",
+				"invalid payment[2]: duplicate payment, source " + addr3 + " and external id \"there's two of me\" seen at [1]",
 			},
 		},
 	}

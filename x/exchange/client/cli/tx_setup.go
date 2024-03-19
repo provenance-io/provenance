@@ -739,6 +739,218 @@ func MakeMsgMarketManageReqAttrs(clientCtx client.Context, flagSet *pflag.FlagSe
 	return msg, errors.Join(errs...)
 }
 
+// SetupCmdTxCreatePayment adds all the flags needed for MakeMsgCreatePayment.
+func SetupCmdTxCreatePayment(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSource, "", "The source account (defaults to --from account)")
+	cmd.Flags().String(FlagSourceAmount, "", "The source funds, e.g. 10nhash")
+	cmd.Flags().String(FlagTarget, "", "The target account")
+	cmd.Flags().String(FlagTargetAmount, "", "The target funds, e.g. 10nhash")
+	cmd.Flags().String(FlagExternalID, "", "The external id")
+	cmd.Flags().String(FlagFile, "", "a json file of a Tx with a MsgCreatePaymentRequest")
+
+	cmd.MarkFlagsOneRequired(FlagFile, flags.FlagFrom, FlagSource)
+
+	AddUseArgs(cmd,
+		ReqSignerUse(FlagSource),
+		OptFlagUse(FlagSourceAmount, "source amount"),
+		UseFlagsBreak,
+		OptFlagUse(FlagTarget, "target"),
+		OptFlagUse(FlagTargetAmount, "target amount"),
+		OptFlagUse(FlagExternalID, "external id"),
+		UseFlagsBreak,
+		OptFlagUse(FlagFile, "filename"),
+	)
+	AddUseDetails(cmd, ReqSignerDesc(FlagSource), MsgFileDesc(&exchange.MsgCreatePaymentRequest{}))
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgCreatePayment reads all the SetupCmdTxCreatePayment flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgCreatePayment(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgCreatePaymentRequest, error) {
+	msg := &exchange.MsgCreatePaymentRequest{}
+
+	errs := make([]error, 6)
+	msg.Payment, errs[0] = ReadPaymentFromFileFlag(clientCtx, flagSet)
+	msg.Payment.Source, errs[1] = ReadAddrFlagOrFromOrDefault(clientCtx, flagSet, FlagSource, msg.Payment.Source)
+	msg.Payment.SourceAmount, errs[2] = ReadCoinsFlagOrDefault(flagSet, FlagSourceAmount, msg.Payment.SourceAmount)
+	msg.Payment.Target, errs[3] = ReadFlagStringOrDefault(flagSet, FlagTarget, msg.Payment.Target)
+	msg.Payment.TargetAmount, errs[4] = ReadCoinsFlagOrDefault(flagSet, FlagTargetAmount, msg.Payment.TargetAmount)
+	msg.Payment.ExternalId, errs[5] = ReadFlagStringOrDefault(flagSet, FlagExternalID, msg.Payment.ExternalId)
+
+	return msg, errors.Join(errs...)
+}
+
+// SetupCmdTxAcceptPayment adds all the flags needed for MakeMsgAcceptPayment.
+func SetupCmdTxAcceptPayment(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSource, "", "The source account")
+	cmd.Flags().String(FlagSourceAmount, "", "The source funds, e.g. 10nhash")
+	cmd.Flags().String(FlagTarget, "", "The target account (defaults to --from account)")
+	cmd.Flags().String(FlagTargetAmount, "", "The target funds, e.g. 10nhash")
+	cmd.Flags().String(FlagExternalID, "", "The external id")
+	cmd.Flags().String(FlagFile, "", "a json file of a Tx with a MsgAcceptPaymentRequest")
+
+	cmd.MarkFlagsOneRequired(FlagFile, flags.FlagFrom, FlagTarget)
+
+	AddUseArgs(cmd,
+		OptFlagUse(FlagSource, "source"),
+		OptFlagUse(FlagSourceAmount, "source amount"),
+		UseFlagsBreak,
+		ReqSignerUse(FlagTarget),
+		OptFlagUse(FlagTargetAmount, "target amount"),
+		OptFlagUse(FlagExternalID, "external id"),
+		UseFlagsBreak,
+		OptFlagUse(FlagFile, "filename"),
+	)
+	AddUseDetails(cmd, ReqSignerDesc(FlagTarget), MsgFileDesc(&exchange.MsgAcceptPaymentRequest{}))
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgAcceptPayment reads all the SetupCmdTxAcceptPayment flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgAcceptPayment(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgAcceptPaymentRequest, error) {
+	msg := &exchange.MsgAcceptPaymentRequest{}
+
+	errs := make([]error, 6)
+	msg.Payment, errs[0] = ReadPaymentFromFileFlag(clientCtx, flagSet)
+	msg.Payment.Source, errs[1] = ReadFlagStringOrDefault(flagSet, FlagSource, msg.Payment.Source)
+	msg.Payment.SourceAmount, errs[2] = ReadCoinsFlagOrDefault(flagSet, FlagSourceAmount, msg.Payment.SourceAmount)
+	msg.Payment.Target, errs[3] = ReadAddrFlagOrFromOrDefault(clientCtx, flagSet, FlagTarget, msg.Payment.Target)
+	msg.Payment.TargetAmount, errs[4] = ReadCoinsFlagOrDefault(flagSet, FlagTargetAmount, msg.Payment.TargetAmount)
+	msg.Payment.ExternalId, errs[5] = ReadFlagStringOrDefault(flagSet, FlagExternalID, msg.Payment.ExternalId)
+
+	return msg, errors.Join(errs...)
+}
+
+// SetupCmdTxRejectPayment adds all the flags needed for MakeMsgRejectPayment.
+func SetupCmdTxRejectPayment(cmd *cobra.Command) {
+	cmd.Flags().String(FlagTarget, "", "The target account (defaults to --from account)")
+	cmd.Flags().String(FlagSource, "", "The source account")
+	cmd.Flags().String(FlagExternalID, "", "The external id")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagTarget)
+	MarkFlagsRequired(cmd, FlagSource)
+
+	AddUseArgs(cmd,
+		ReqSignerUse(FlagTarget),
+		ReqFlagUse(FlagSource, "source"),
+		OptFlagUse(FlagExternalID, "external id"),
+	)
+	AddUseDetails(cmd, ReqSignerDesc(FlagTarget))
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgRejectPayment reads all the SetupCmdTxRejectPayment flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgRejectPayment(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgRejectPaymentRequest, error) {
+	msg := &exchange.MsgRejectPaymentRequest{}
+
+	errs := make([]error, 3)
+	msg.Target, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagTarget)
+	msg.Source, errs[1] = flagSet.GetString(FlagSource)
+	msg.ExternalId, errs[2] = flagSet.GetString(FlagExternalID)
+
+	return msg, errors.Join(errs...)
+}
+
+// SetupCmdTxRejectPayments adds all the flags needed for MakeMsgRejectPayments.
+func SetupCmdTxRejectPayments(cmd *cobra.Command) {
+	cmd.Flags().String(FlagTarget, "", "The target account (defaults to --from account)")
+	cmd.Flags().StringSlice(FlagSources, nil, "The source accounts (repeatable, required)")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagTarget)
+	MarkFlagsRequired(cmd, FlagSources)
+
+	AddUseArgs(cmd,
+		ReqSignerUse(FlagTarget),
+		ReqFlagUse(FlagSources, "sources"),
+	)
+	AddUseDetails(cmd, ReqSignerDesc(FlagTarget), RepeatableDesc)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgRejectPayments reads all the SetupCmdTxRejectPayments flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgRejectPayments(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgRejectPaymentsRequest, error) {
+	msg := &exchange.MsgRejectPaymentsRequest{}
+
+	errs := make([]error, 2)
+	msg.Target, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagTarget)
+	msg.Sources, errs[1] = flagSet.GetStringSlice(FlagSources)
+
+	return msg, errors.Join(errs...)
+}
+
+// SetupCmdTxCancelPayments adds all the flags needed for MakeMsgCancelPayments.
+func SetupCmdTxCancelPayments(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSource, "", "The source account (defaults to --from account)")
+	cmd.Flags().StringSlice(FlagExternalIDs, nil, "The external ids (repeatable, required)")
+	cmd.Flags().Bool(FlagEmptyExternalID, false, "Include an empty string in the external ids")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagSource)
+	MarkFlagsRequired(cmd, FlagExternalIDs)
+
+	AddUseArgs(cmd,
+		ReqSignerUse(FlagSource),
+		ReqFlagUse(FlagExternalIDs, "external ids"),
+		OptFlagUse(FlagEmptyExternalID, ""),
+	)
+	AddUseDetails(cmd, ReqSignerDesc(FlagSource), RepeatableDesc)
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgCancelPayments reads all the SetupCmdTxCancelPayments flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgCancelPayments(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgCancelPaymentsRequest, error) {
+	msg := &exchange.MsgCancelPaymentsRequest{}
+
+	errs := make([]error, 3)
+	msg.Source, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagSource)
+	msg.ExternalIds, errs[1] = flagSet.GetStringSlice(FlagExternalIDs)
+	var incEmpty bool
+	incEmpty, errs[2] = flagSet.GetBool(FlagEmptyExternalID)
+	if incEmpty {
+		msg.ExternalIds = append(msg.ExternalIds, "")
+	}
+
+	return msg, errors.Join(errs...)
+}
+
+// SetupCmdTxChangePaymentTarget adds all the flags needed for MakeMsgChangePaymentTarget.
+func SetupCmdTxChangePaymentTarget(cmd *cobra.Command) {
+	cmd.Flags().String(FlagSource, "", "The source account (defaults to --from account)")
+	cmd.Flags().String(FlagExternalID, "", "The external id")
+	cmd.Flags().String(FlagNewTarget, "", "The new target account")
+
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagSource)
+
+	AddUseArgs(cmd,
+		ReqSignerUse(FlagSource),
+		OptFlagUse(FlagExternalID, "external id"),
+		OptFlagUse(FlagNewTarget, "new target"),
+	)
+	AddUseDetails(cmd, ReqSignerDesc(FlagSource))
+
+	cmd.Args = cobra.NoArgs
+}
+
+// MakeMsgChangePaymentTarget reads all the SetupCmdTxChangePaymentTarget flags and creates the desired Msg.
+// Satisfies the msgMaker type.
+func MakeMsgChangePaymentTarget(clientCtx client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgChangePaymentTargetRequest, error) {
+	msg := &exchange.MsgChangePaymentTargetRequest{}
+
+	errs := make([]error, 3)
+	msg.Source, errs[0] = ReadAddrFlagOrFrom(clientCtx, flagSet, FlagSource)
+	msg.ExternalId, errs[1] = flagSet.GetString(FlagExternalID)
+	msg.NewTarget, errs[2] = flagSet.GetString(FlagNewTarget)
+
+	return msg, errors.Join(errs...)
+}
+
 // SetupCmdTxGovCreateMarket adds all the flags needed for MakeMsgGovCreateMarket.
 func SetupCmdTxGovCreateMarket(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
