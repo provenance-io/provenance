@@ -1,3 +1,44 @@
+## [v1.18.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc3) - 2024-03-19
+
+### Features
+
+* Add [Payments](x/exchange/spec/01_concepts.md#payments) to the exchange module [#1703](https://github.com/provenance-io/provenance/issues/1703).
+  Payments allow two parties to trade assets securely and asynchronously.
+* Add upgrade handler to set net asset values to markers in pio-testnet-1 [PR 1881](https://github.com/provenance-io/provenance/pull/1881).
+
+### Improvements
+
+* Allow force transfers from marker and market accounts [#1855](https://github.com/provenance-io/provenance/pull/1855).
+* Add a `tourmaline-rc3` upgrade handler to set some new exchange module params related to payments [#1703](https://github.com/provenance-io/provenance/issues/1703).
+* Remove the startup warning issued when disable-iavl-fastnode is true (we recommend keeping it as true if you already have it that way) [#1874](https://github.com/provenance-io/provenance/pull/1874).
+* Switch to `github.com/cometbft/cometbft-db` `v0.7.0` (from `github.com/tendermint/tm-db` `v0.6.7`) [#1874](https://github.com/provenance-io/provenance/pull/1874).
+* Allow NAV volume to exceed a marker's supply [#1883](https://github.com/provenance-io/provenance/pull/1883).
+
+### Bug Fixes
+
+* Fix `MarkerTransferAuthorization` validation to ensure the coins and addresses are all valid [#1856](https://github.com/provenance-io/provenance/pull/1856).
+* In `MarketCommitmentSettle`, only consume the settlement fee if the settlement succeeds [#1703](https://github.com/provenance-io/provenance/issues/1703).
+
+### Dependencies
+
+- Bump `google.golang.org/grpc` from 1.61.1 to 1.62.1 ([#1850](https://github.com/provenance-io/provenance/pull/1850), [#1864](https://github.com/provenance-io/provenance/pull/1864))
+- Bump `cosmossdk.io/math` from 1.2.0 to 1.3.0 ([#1857](https://github.com/provenance-io/provenance/pull/1857))
+- Bump `peter-evans/create-pull-request` from 6.0.0 to 6.0.2 ([#1858](https://github.com/provenance-io/provenance/pull/1858), [#1872](https://github.com/provenance-io/provenance/pull/1872))
+- Bump `github.com/golang/protobuf` from 1.5.3 to 1.5.4 ([#1863](https://github.com/provenance-io/provenance/pull/1863))
+- Bump `github.com/stretchr/testify` from 1.8.4 to 1.9.0 ([#1860](https://github.com/provenance-io/provenance/pull/1860))
+- Bump `bufbuild/buf-setup-action` from 1.29.0 to 1.30.0 ([#1871](https://github.com/provenance-io/provenance/pull/1871))
+- Bump `github.com/cosmos/cosmos-sdk` from v0.46.13-pio-3 to v0.46.13-pio-4 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
+- Bump `github.com/cosmos/ibc-go/v6` from v6.2.0-pio-1 to v6.2.0-pio-2 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
+- Bump `github.com/CosmWasm/wasmd` from v0.30.0-pio-6 to v0.30.0-pio-7 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
+- Bump `github.com/cosmos/iavl` from v0.19.6 to v0.20.1 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.18.0-rc2...v1.18.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.17.1...v1.18.0-rc3
+
+---
+
 ## [v1.18.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc2) - 2024-02-22
 
 ### Features
