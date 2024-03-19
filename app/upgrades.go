@@ -136,6 +136,7 @@ var upgrades = map[string]appUpgrade{
 	"tourmaline-rc3": { // upgrade for v1.18.0-rc3
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			setExchangePaymentParamsToDefaults(ctx, app)
+			addMarkerNavs(ctx, app, GetPioTestnet1DenomToNav())
 			return vm, nil
 		},
 	},
