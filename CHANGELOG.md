@@ -41,6 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add [Payments](x/exchange/spec/01_concepts.md#payments) to the exchange module [#1703](https://github.com/provenance-io/provenance/issues/1703).
   Payments allow two parties to trade assets securely and asynchronously.
+* Add upgrade handler to set net asset values to markers in pio-testnet-1 [PR 1881](https://github.com/provenance-io/provenance/pull/1881).
 
 ### Improvements
 
