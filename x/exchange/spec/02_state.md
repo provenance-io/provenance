@@ -34,12 +34,14 @@ Big-endian ordering is used for all conversions between numbers and byte arrays.
     - [Ask Orders](#ask-orders)
     - [Bid Orders](#bid-orders)
     - [Last Order ID](#last-order-id)
-    - [Commitments](#commitments)
+  - [Commitments](#commitments)
+  - [Payments](#payments)
   - [Indexes](#indexes)
     - [Market to Order](#market-to-order)
     - [Owner Address to Order](#owner-address-to-order)
     - [Asset Denom to Order](#asset-denom-to-order)
     - [Market External ID to Order](#market-external-id-to-order)
+    - [Target Address to Payment](#target-address-to-payment)
 
 
 ## Params
@@ -287,10 +289,15 @@ Then this entry is updated to reflect the new order.
 * Value: `<order id (8 bytes)>`
 
 
-### Commitments
+## Commitments
 
 * Key: `0x63 | <market_id> (4 bytes) | <addr len (1 byte)> | <addr>`
 * Value: `<coins string>`
+
+## Payments
+
+* Key: `0x70 | <source len (1 byte)> | <source> | <external id>`
+* Value: `protobuf(Payment)`
 
 ## Indexes
 
@@ -329,3 +336,10 @@ This index is used to look up orders by their market and external id.
 
 * Key: `0x09 | <market id (4 bytes)> | <external id (string)>`
 * Value: `<order id (8 bytes)>`
+
+### Target Address to Payment
+
+This index is used to look up payments that have a specific target address.
+
+* Key: `0x10 | <target len (1 byte)> | <target> | <source len (1 byte)> | <source> | <external id>`
+* Value: `<nil (0 bytes)>`

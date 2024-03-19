@@ -25,6 +25,11 @@ The exchange module emits several events for various actions.
   - [EventMarketCreated](#eventmarketcreated)
   - [EventMarketFeesUpdated](#eventmarketfeesupdated)
   - [EventParamsUpdated](#eventparamsupdated)
+  - [EventPaymentCreated](#eventpaymentcreated)
+  - [EventPaymentUpdated](#eventpaymentupdated)
+  - [EventPaymentAccepted](#eventpaymentaccepted)
+  - [EventPaymentRejected](#eventpaymentrejected)
+  - [EventPaymentCancelled](#eventpaymentcancelled)
 
 
 ## EventOrderCreated
@@ -307,3 +312,75 @@ Event Type: `provenance.exchange.v1.EventParamsUpdated`
 | Attribute Key | Attribute Value |
 |---------------|-----------------|
 | (none)        |                 |
+
+
+## EventPaymentCreated
+
+When a payment is created, an `EventPaymentCreated` is emitted.
+
+Event Type: `provenance.exchange.v1.EventPaymentCreated`
+
+| Attribute Key | Attribute Value                                                             |
+|---------------|-----------------------------------------------------------------------------|
+| source        | The bech32 address string of the source account (that created the payment). |
+| source_amount | The amount in the source account involved in the payment (`Coins` string).  |
+| target        | The bech32 address string of the target account.                            |
+| target_amount | The amount that the target account will provide (`Coins` string).           |
+| external_id   | The external id of the payment just created.                                |
+
+
+## EventPaymentUpdated
+
+When a payment's target is changed, an `EventPaymentUpdated` is emitted.
+
+Event Type: `provenance.exchange.v1.EventPaymentUpdated`
+
+| Attribute Key | Attribute Value                                                             |
+|---------------|-----------------------------------------------------------------------------|
+| source        | The bech32 address string of the source account (that updated the payment). |
+| source_amount | The amount in the source account involved in the payment (`Coins` string).  |
+| old_target    | The old bech32 address string of the target account.                        |
+| new_target    | The new bech32 address string of the target account.                        |
+| target_amount | The amount that the target account will provide (`Coins` string).           |
+| external_id   | The external id of the payment just updated.                                |
+
+
+## EventPaymentAccepted
+
+When a payment is accepted, an `EventPaymentAccepted` is emitted.
+
+Event Type: `provenance.exchange.v1.EventPaymentAccepted`
+
+| Attribute Key | Attribute Value                                                              |
+|---------------|------------------------------------------------------------------------------|
+| source        | The bech32 address string of the source account (that created the payment).  |
+| source_amount | The amount in the source account involved in the payment (`Coins` string).   |
+| target        | The bech32 address string of the target account (that accepted the payment). |
+| target_amount | The amount that the target account will provide (`Coins` string).            |
+| external_id   | The external id of the payment just accepted.                                |
+
+
+## EventPaymentRejected
+
+When a payment is rejected (by a target), an `EventPaymentRejected` is emitted.
+
+Event Type: `provenance.exchange.v1.EventPaymentRejected`
+
+| Attribute Key | Attribute Value                                                              |
+|---------------|------------------------------------------------------------------------------|
+| source        | The bech32 address string of the source account (that created the payment).  |
+| target        | The bech32 address string of the target account (that rejected the payment). |
+| external_id   | The external id of the payment just accepted.                                |
+
+
+## EventPaymentCancelled
+
+When a payment is cancelled (by a source), an `EventPaymentCancelled` is emitted.
+
+Event Type: `provenance.exchange.v1.EventPaymentCancelled`
+
+| Attribute Key | Attribute Value                                                               |
+|---------------|-------------------------------------------------------------------------------|
+| source        | The bech32 address string of the source account (that cancelled the payment). |
+| target        | The bech32 address string of the target account.                              |
+| external_id   | The external id of the payment just accepted.                                 |

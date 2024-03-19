@@ -42,6 +42,10 @@ type TestSuite struct {
 
 	adminAddr sdk.AccAddress
 
+	longAddr1 sdk.AccAddress
+	longAddr2 sdk.AccAddress
+	longAddr3 sdk.AccAddress
+
 	feeCollector     string
 	feeCollectorAddr sdk.AccAddress
 
@@ -86,6 +90,14 @@ func (s *TestSuite) SetupTest() {
 
 	s.adminAddr = sdk.AccAddress("adminAddr___________")
 	s.addAddrLookup(s.adminAddr, "adminAddr")
+
+	longAddrs := app.AddTestAddrsIncrementalLong(s.app, s.ctx, 3, sdk.NewInt(1_000_000_000))
+	s.longAddr1 = longAddrs[0]
+	s.longAddr2 = longAddrs[1]
+	s.longAddr3 = longAddrs[2]
+	s.addAddrLookup(s.longAddr1, "longAddr1")
+	s.addAddrLookup(s.longAddr2, "longAddr2")
+	s.addAddrLookup(s.longAddr3, "longAddr3")
 
 	s.feeCollector = s.k.GetFeeCollectorName()
 	s.feeCollectorAddr = authtypes.NewModuleAddress(s.feeCollector)
@@ -393,6 +405,22 @@ func (s *TestSuite) copyCommitments(orig []exchange.Commitment) []exchange.Commi
 	return copySlice(orig, s.copyCommitment)
 }
 
+// copyPayment creates a copy of a payment.
+func (s *TestSuite) copyPayment(orig exchange.Payment) exchange.Payment {
+	return exchange.Payment{
+		Source:       orig.Source,
+		SourceAmount: s.copyCoins(orig.SourceAmount),
+		Target:       orig.Target,
+		TargetAmount: s.copyCoins(orig.TargetAmount),
+		ExternalId:   orig.ExternalId,
+	}
+}
+
+// copyPayments creates a coy of a slice of payments.
+func (s *TestSuite) copyPayments(orig []exchange.Payment) []exchange.Payment {
+	return copySlice(orig, s.copyPayment)
+}
+
 // untypeEvent applies sdk.TypedEventToEvent(tev) requiring it to not error.
 func (s *TestSuite) untypeEvent(tev proto.Message) sdk.Event {
 	rv, err := sdk.TypedEventToEvent(tev)
@@ -430,8 +458,10 @@ func (s *TestSuite) copyParams(orig *exchange.Params) *exchange.Params {
 		return nil
 	}
 	return &exchange.Params{
-		DefaultSplit: orig.DefaultSplit,
-		DenomSplits:  s.copyDenomSplits(orig.DenomSplits),
+		DefaultSplit:         orig.DefaultSplit,
+		DenomSplits:          s.copyDenomSplits(orig.DenomSplits),
+		FeeCreatePaymentFlat: s.copyCoins(orig.FeeCreatePaymentFlat),
+		FeeAcceptPaymentFlat: s.copyCoins(orig.FeeAcceptPaymentFlat),
 	}
 }
 
@@ -447,6 +477,7 @@ func (s *TestSuite) copyGenState(genState *exchange.GenesisState) *exchange.Gene
 		LastMarketId: genState.LastMarketId,
 		LastOrderId:  genState.LastOrderId,
 		Commitments:  s.copyCommitments(genState.Commitments),
+		Payments:     s.copyPayments(genState.Payments),
 	}
 }
 
@@ -497,11 +528,13 @@ func (s *TestSuite) sortGenState(genState *exchange.GenesisState) *exchange.Gene
 	if genState == nil {
 		return nil
 	}
+
 	if genState.Params != nil && len(genState.Params.DenomSplits) > 0 {
 		sort.Slice(genState.Params.DenomSplits, func(i, j int) bool {
 			return genState.Params.DenomSplits[i].Denom < genState.Params.DenomSplits[j].Denom
 		})
 	}
+
 	if len(genState.Markets) > 0 {
 		sort.Slice(genState.Markets, func(i, j int) bool {
 			return genState.Markets[i].MarketId < genState.Markets[j].MarketId
@@ -510,11 +543,13 @@ func (s *TestSuite) sortGenState(genState *exchange.GenesisState) *exchange.Gene
 			s.sortMarket(&market)
 		}
 	}
+
 	if len(genState.Orders) > 0 {
 		sort.Slice(genState.Orders, func(i, j int) bool {
 			return genState.Orders[i].OrderId < genState.Orders[j].OrderId
 		})
 	}
+
 	if len(genState.Commitments) > 0 {
 		sort.Slice(genState.Commitments, func(i, j int) bool {
 			// compare market ids first
@@ -531,6 +566,25 @@ func (s *TestSuite) sortGenState(genState *exchange.GenesisState) *exchange.Gene
 			return false
 		})
 	}
+
+	if len(genState.Payments) > 0 {
+		sort.Slice(genState.Payments, func(i, j int) bool {
+			// Compare the sources first (using their byte representations).
+			dSource := s.compareAddrs(genState.Payments[i].Source, genState.Payments[j].Source)
+			if dSource != 0 {
+				return dSource < 0
+			}
+			// Compare the external ids now.
+			dEid := strings.Compare(genState.Payments[i].ExternalId, genState.Payments[j].ExternalId)
+			if dEid != 0 {
+				return dEid < 0
+			}
+			// Since the source and external id are the only things used in payment keys,
+			// there's nothing else we should compare here, so just keep the existing ordering.
+			return false
+		})
+	}
+
 	return genState
 }
 
@@ -579,6 +633,23 @@ func (s *TestSuite) getCommitmentString(com exchange.Commitment) string {
 	return fmt.Sprintf("%d: %s %s", com.MarketId, com.Account, com.Amount)
 }
 
+// getPaymentString subs in the name strings for the source and target
+// and returns a Payment.String() of that.
+func (s *TestSuite) getPaymentString(payment exchange.Payment) string {
+	p2 := s.copyPayment(payment)
+	p2.Source = s.getAddrStrName(p2.Source)
+	p2.Target = s.getAddrStrName(p2.Target)
+	return p2.String()
+}
+
+// getPaymentPString is like getPaymentString but takes in a pointer to a payment.
+func (s *TestSuite) getPaymentPString(payment *exchange.Payment) string {
+	if payment == nil {
+		return "<nil>"
+	}
+	return s.getPaymentString(*payment)
+}
+
 // agCanOnly creates an AccessGrant for the given address with only the provided permission.
 func (s *TestSuite) agCanOnly(addr sdk.AccAddress, perm exchange.Permission) exchange.AccessGrant {
 	return exchange.AccessGrant{
@@ -615,6 +686,12 @@ func (s *TestSuite) addAddrLookup(addr sdk.AccAddress, name string) {
 
 // getAddrName returns the name of the variable in this TestSuite holding the provided address.
 func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
+	if addr == nil {
+		return "<nil>"
+	}
+	if addr.Empty() {
+		return "<empty>"
+	}
 	if s.addrLookupMap != nil {
 		rv, found := s.addrLookupMap[string(addr)]
 		if found {
@@ -626,6 +703,9 @@ func (s *TestSuite) getAddrName(addr sdk.AccAddress) string {
 
 // getAddrStrName returns the name of the variable in this TestSuite holding the provided address.
 func (s *TestSuite) getAddrStrName(addrStr string) string {
+	if addrStr == "" {
+		return "<empty>"
+	}
 	addr, err := sdk.AccAddressFromBech32(addrStr)
 	if err != nil {
 		return addrStr
@@ -696,6 +776,39 @@ func (s *TestSuite) requireCreateMarketUnmocked(market exchange.Market) {
 	}, "CreateMarket(%d)", market.MarketId)
 }
 
+// requireSetPaymentsInStore calls setPaymentInStore on each payment, making sure it doesn't panic or return an error.
+func (s *TestSuite) requireSetPaymentsInStore(payments ...*exchange.Payment) {
+	for i, payment := range payments {
+		assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+			return s.k.SetPaymentInStore(s.getStore(), payment)
+		}, "[%d]: SetPaymentInStore(%s)", i, payment)
+	}
+}
+
+// requireCreatePayments calls CreatePayment on each payment, making sure it doesn't panic or return an error.
+func (s *TestSuite) requireCreatePayments(payments ...*exchange.Payment) {
+	for i, payment := range payments {
+		assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
+			return s.k.CreatePayment(s.ctx, payment)
+		}, "[%d]: CreatePayment(%s)", i, payment)
+	}
+}
+
+// assertAccAddressFromBech32 calls AccAddressFromBech32 asserting that it doesn't return an error.
+func (s *TestSuite) assertAccAddressFromBech32(bech32 string, msg string, args ...interface{}) (sdk.AccAddress, bool) {
+	rv, err := sdk.AccAddressFromBech32(bech32)
+	ok := s.Assert().NoError(err, "AccAddressFromBech32(%q): "+msg, append([]interface{}{bech32}, args...))
+	return rv, ok
+}
+
+// requireAccAddrFromBech32 calls AccAddressFromBech32 making sure it doesn't return an error.
+// Panics can mess up other tests. That's why I'm using this instead of sdk.MustAccAddressFromBech32.
+func (s *TestSuite) requireAccAddressFromBech32(bech32 string, msg string, args ...interface{}) sdk.AccAddress {
+	rv, err := sdk.AccAddressFromBech32(bech32)
+	s.Require().NoError(err, "AccAddressFromBech32(%q): "+msg, append([]interface{}{bech32}, args...))
+	return rv
+}
+
 // assertEqualSlice asserts that expected = actual and returns true if so.
 // If not, returns false and the stringer is applied to each entry and the comparison
 // is redone on the strings in the hopes that it helps identify the problem.
@@ -742,6 +855,112 @@ func (s *TestSuite) assertEqualOrders(expected, actual []*exchange.Order, msg st
 func (s *TestSuite) assertEqualCommitments(expected, actual []exchange.Commitment, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	return assertEqualSlice(s, expected, actual, s.getCommitmentString, msg, args...)
+}
+
+// assertEqualPayment asserts that two payments are equal and helps identify exactly what's different if they're not.
+// Returns true if they're equal, false otherwise.
+func (s *TestSuite) assertEqualPayment(expected, actual *exchange.Payment, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+
+	// If either are nil, that'll be obvious in the above failure, no need to dig further.
+	if expected == nil || actual == nil {
+		return false
+	}
+
+	// compare them as strings for a possible easy way to identify the differences.
+	eStr := s.getPaymentString(*expected)
+	aStr := s.getPaymentString(*actual)
+	if !s.Assert().Equalf(eStr, aStr, "as strings: "+msg, args...) {
+		return false
+	}
+
+	// Check each field individually.
+	s.Assert().Equalf(expected.Source, actual.Source, msg+" Source", args...)
+	s.Assert().Equalf(expected.SourceAmount, actual.SourceAmount, msg+" SourceAmount", args...)
+	s.Assert().Equalf(expected.Target, actual.Target, msg+" Target", args...)
+	s.Assert().Equalf(expected.TargetAmount, actual.TargetAmount, msg+" TargetAmount", args...)
+	s.Assert().Equalf(expected.ExternalId, actual.ExternalId, msg+" ExternalId", args...)
+	return false
+}
+
+// assertEqualPayments asserts that two slices of payments are equal and helps identify exactly what's different if they're not.
+// Returns true if they're equal, false otherwise.
+func (s *TestSuite) assertEqualPayments(expected, actual []*exchange.Payment, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+
+	// compare each as strings in the hopes that makes it easier to identify the problem.
+	expStrs := sliceStrings(expected, s.getPaymentPString)
+	actStrs := sliceStrings(actual, s.getPaymentPString)
+	if !s.Assert().Equalf(expStrs, actStrs, "strings: "+msg, args...) {
+		return false
+	}
+
+	// They're the same as strings, compare each individually.
+	args2 := make([]interface{}, len(args)+1)
+	copy(args2, args)
+	for i := range expected {
+		args2[len(args2)-1] = i
+		s.assertEqualPayment(expected[i], actual[i], msg+" [%d]", args2)
+	}
+	return false
+}
+
+// assertEqualCoins asserts that two Coins are equal and helps identify the differences if they're not.
+// Returns true if they're equal, false otherwise.
+func (s *TestSuite) assertEqualCoins(expected, actual sdk.Coins, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+	s.Assert().Equalf(s.coinsString(expected), s.coinsString(actual), msg+" (as strings)", args...)
+	return false
+}
+
+// assertEqualNAVs asserts that two slices of NetAssetPrice are equal and helps identify the differences if they're not.
+// Returns true if they're equal, false otherwise.
+func (s *TestSuite) assertEqualNAVs(expected, actual []exchange.NetAssetPrice, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+
+	expStrs := sliceStrings(expected, exchange.NetAssetPrice.String)
+	actStrs := sliceStrings(actual, exchange.NetAssetPrice.String)
+	if !s.Assert().Equalf(expStrs, actStrs, msg+" (as strings)", args...) {
+		return false
+	}
+
+	args2 := make([]interface{}, len(args)+1)
+	copy(args2, args)
+	for i := range expected {
+		args2[len(args2)-1] = i
+		s.assertEqualNAV(&expected[i], &actual[i], msg+" [%d]", args2...)
+	}
+
+	return false
+}
+
+// assertEqualNAV asserts that two NetAssetPrice entries are equal and helps identify the differences if they're not.
+// Returns true if they're equal, false otherwise.
+func (s *TestSuite) assertEqualNAV(expected, actual *exchange.NetAssetPrice, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+
+	if expected == nil || actual == nil {
+		return false
+	}
+
+	if !s.Assert().Equalf(expected.String(), actual.String(), msg+" (as strings)", args...) {
+		return false
+	}
+
+	s.Assert().Equalf(expected.Assets, actual.Assets, msg+" Assets", args...)
+	s.Assert().Equalf(expected.Price, actual.Price, msg+" Price", args...)
+	return false
 }
 
 // assertErrorValue is a wrapper for assertions.AssertErrorValue for this TestSuite.

@@ -183,8 +183,16 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 // The UnmarshalJSON function uses empty slices instead of nil, but it's cleaner and
 // easier to define test cases by setting stuff to nil (or omitting the field completely).
 func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
-	if exGenState.Params != nil && exGenState.Params.DenomSplits == nil {
-		exGenState.Params.DenomSplits = make([]exchange.DenomSplit, 0)
+	if exGenState.Params != nil {
+		if exGenState.Params.DenomSplits == nil {
+			exGenState.Params.DenomSplits = make([]exchange.DenomSplit, 0)
+		}
+		if exGenState.Params.FeeCreatePaymentFlat == nil {
+			exGenState.Params.FeeCreatePaymentFlat = make([]sdk.Coin, 0)
+		}
+		if exGenState.Params.FeeAcceptPaymentFlat == nil {
+			exGenState.Params.FeeAcceptPaymentFlat = make([]sdk.Coin, 0)
+		}
 	}
 
 	if exGenState.Markets == nil {
@@ -240,6 +248,18 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 	for _, order := range exGenState.Orders {
 		if bid := order.GetBidOrder(); bid != nil && bid.BuyerSettlementFees == nil {
 			bid.BuyerSettlementFees = make(sdk.Coins, 0)
+		}
+	}
+
+	if exGenState.Payments == nil {
+		exGenState.Payments = make([]exchange.Payment, 0)
+	}
+	for i, payment := range exGenState.Payments {
+		if payment.SourceAmount == nil {
+			exGenState.Payments[i].SourceAmount = make([]sdk.Coin, 0)
+		}
+		if payment.TargetAmount == nil {
+			exGenState.Payments[i].TargetAmount = make([]sdk.Coin, 0)
 		}
 	}
 }
