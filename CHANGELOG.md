@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* nothing
+
+---
+
+## [v1.18.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc3) - 2024-03-19
+
 ### Features
 
 * Add [Payments](x/exchange/spec/01_concepts.md#payments) to the exchange module [#1703](https://github.com/provenance-io/provenance/issues/1703).
@@ -68,6 +74,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cosmos/ibc-go/v6` from v6.2.0-pio-1 to v6.2.0-pio-2 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
 - Bump `github.com/CosmWasm/wasmd` from v0.30.0-pio-6 to v0.30.0-pio-7 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
 - Bump `github.com/cosmos/iavl` from v0.19.6 to v0.20.1 ([#1874](https://github.com/provenance-io/provenance/pull/1874)).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.18.0-rc2...v1.18.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.17.1...v1.18.0-rc3
 
 ---
 
