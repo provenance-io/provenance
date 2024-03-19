@@ -446,6 +446,8 @@ func (s *UpgradeTestSuite) TestTourmalineRC3() {
 	expInLog := []string{
 		"INF Setting exchange module payment params to defaults.",
 		"INF Done setting exchange module payment params to defaults.",
+		"INF Adding marker net asset values",
+		"INF Done adding marker net asset values",
 	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline-rc3", expInLog, nil)
