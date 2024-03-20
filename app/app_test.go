@@ -47,7 +47,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := New(log.NewTestLogger(t), opts.DB, nil, true,
-		map[int64]bool{}, opts.HomePath, 0, opts.EncConfig, simtestutil.EmptyAppOptions{})
+		map[int64]bool{}, opts.HomePath, 0, MakeEncodingConfig(), simtestutil.EmptyAppOptions{})
 	var err error
 	require.NotPanics(t, func() {
 		_, err = app2.ExportAppStateAndValidators(false, nil, nil)

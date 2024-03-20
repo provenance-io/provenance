@@ -54,7 +54,7 @@ func SetupSimApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
 	encCdc := app.MakeEncodingConfig()
 	provenanceApp := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, encCdc, simtestutil.EmptyAppOptions{})
-	genesis := app.NewDefaultGenesisState(encCdc.Marshaler)
+	genesis := provenanceApp.DefaultGenesis()
 	return provenanceApp, genesis
 }
 
