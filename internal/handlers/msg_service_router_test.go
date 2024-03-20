@@ -388,8 +388,8 @@ func TestMsgService(tt *testing.T) {
 		}
 		// fee charge in antehandler
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit()))))...)
-
-		assertEventsContains(t, blockRes.Events, expEvents)
+		txEvents := blockRes.TxResults[0].Events
+		assertEventsContains(t, txEvents, expEvents)
 	})
 
 	tt.Run("800hotdog fee associated with msg type", func(t *testing.T) {
@@ -438,8 +438,8 @@ func TestMsgService(tt *testing.T) {
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
 		// swept fee amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)))...)
-
-		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
+		txEvents := blockRes.TxResults[0].Events
+		assertEventsContains(t, txEvents, expEvents) // TODO[1760]: finalize-block
 	})
 
 	tt.Run("10stake fee associated with msg type", func(t *testing.T) {
@@ -485,8 +485,8 @@ func TestMsgService(tt *testing.T) {
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))...)
 		// swept fee amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 101)))...)
-
-		assertEventsContains(t, blockRes.Events, expEvents)
+		txEvents := blockRes.TxResults[0].Events
+		assertEventsContains(t, txEvents, expEvents)
 	})
 }
 
