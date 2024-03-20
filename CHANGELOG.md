@@ -54,7 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Create a default market in `make run`, `localnet`, `devnet` and the `provenanced testnet` command [#1757](https://github.com/provenance-io/provenance/issues/1757).
 * Remove unsupported database types [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Update ibc and migrate params [#1760](https://github.com/provenance-io/provenance/issues/1760).
-* Replace ModuleBasics with ModuleBasicManager [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Replace ModuleBasics with BasicModuleManager [#1760](https://github.com/provenance-io/provenance/issues/1760).
 
 ### Dependencies
 
