@@ -3235,6 +3235,7 @@ func signAndGenTx(
 		ChainID:       chainId,
 		AccountNumber: acct.AccountNumber,
 		Sequence:      acct.Sequence,
+		PubKey:        pubKey,
 	}
 	sigV2, err = tx.SignWithPrivKey(
 		ctx, signingMode, signerData,
