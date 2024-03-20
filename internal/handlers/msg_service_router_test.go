@@ -3232,6 +3232,7 @@ func signAndGenTx(
 
 	// Second round: all signer infos are set, so each signer can sign.
 	signerData := authsigning.SignerData{
+		Address:       sdk.AccAddress(pubKey.Bytes()).String(),
 		ChainID:       chainId,
 		AccountNumber: acct.AccountNumber,
 		Sequence:      acct.Sequence,
