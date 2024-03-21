@@ -22,7 +22,6 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 
-	// "cosmossdk.io/store/streaming" // TODO[1760]: streaming: See if we can use this directly or if we have needed modifications.
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -435,7 +434,10 @@ func New(
 	}
 
 	// Register State listening services.
-	app.RegisterStreamingServices(appOpts)
+	if err := app.BaseApp.RegisterStreamingServices(appOpts, app.keys); err != nil {
+		app.Logger().Error("failed to register streaming plugin", "error", err)
+		os.Exit(1)
+	}
 
 	// Register helpers for state-sync status.
 	statesync.RegisterSyncStatus()
@@ -1313,36 +1315,6 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 // RegisterNodeService registers the node query server.
 func (app *App) RegisterNodeService(clientCtx client.Context, cfg serverconfig.Config) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
-}
-
-// RegisterStreamingServices registers types.ABCIListener State Listening services with the App.
-func (app *App) RegisterStreamingServices(appOpts servertypes.AppOptions) {
-	// TODO[1760]: streaming: Ensure that this change is correct.
-	if err := app.BaseApp.RegisterStreamingServices(appOpts, app.keys); err != nil {
-		app.Logger().Error("failed to register streaming plugin", "error", err)
-		os.Exit(1)
-	}
-	/*
-		// register streaming services
-		streamingCfg := cast.ToStringMap(appOpts.Get(baseapp.StreamingTomlKey))
-		for service := range streamingCfg {
-			pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingABCIPluginTomlKey)
-			pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
-			if len(pluginName) > 0 {
-				logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
-				plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
-				if err != nil {
-					app.Logger().Error("failed to load streaming plugin", "error", err)
-					os.Exit(1)
-				}
-				if err := app.BaseApp.RegisterStreamingServices(appOpts, app.keys, plugin); err != nil {
-					app.Logger().Error("failed to register streaming plugin", "error", err)
-					os.Exit(1)
-				}
-				app.Logger().Info("streaming service registered", "service", service, "plugin", pluginName)
-			}
-		}
-	*/
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
