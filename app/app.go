@@ -1342,7 +1342,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibcexported.ModuleName).WithKeyTable(keyTable)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
 	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
-	// paramsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable()) // TODO[1760]: Not needed since ICA Controller is not enabled
 
 	paramsKeeper.Subspace(icqtypes.ModuleName)      // TODO[1760]: params: Migrate icq params.
 	paramsKeeper.Subspace(ibchookstypes.ModuleName) // TODO[1760]: params: Migrate ibc-hooks params.
