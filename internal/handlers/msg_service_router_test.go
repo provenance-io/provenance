@@ -388,8 +388,7 @@ func TestMsgService(tt *testing.T) {
 		}
 		// fee charge in antehandler
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit()))))...)
-		txEvents := blockRes.TxResults[0].Events
-		assertEventsContains(t, txEvents, expEvents)
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 	})
 
 	tt.Run("800hotdog fee associated with msg type", func(t *testing.T) {
@@ -438,8 +437,8 @@ func TestMsgService(tt *testing.T) {
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
 		// swept fee amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)))...)
-		txEvents := blockRes.TxResults[0].Events
-		assertEventsContains(t, txEvents, expEvents) // TODO[1760]: finalize-block
+
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents) // TODO[1760]: finalize-block
 	})
 
 	tt.Run("10stake fee associated with msg type", func(t *testing.T) {
@@ -485,8 +484,8 @@ func TestMsgService(tt *testing.T) {
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)))...)
 		// swept fee amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 101)))...)
-		txEvents := blockRes.TxResults[0].Events
-		assertEventsContains(t, txEvents, expEvents)
+
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 	})
 }
 
@@ -685,13 +684,11 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		// fee charged for msg based fee
 		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1600)))...)
 
-		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 	})
 
 	tt.Run("not enough fees", func(t *testing.T) {
 		acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
-		// TODO[1760]: finalize-block: Uncomment these lines.
-
 		msg := banktypes.NewMsgSend(addr1, addr3, sdk.NewCoins(sdk.NewInt64Coin("hotdog", 100)))
 		msgExec := authztypes.NewMsgExec(addr2, []sdk.Msg{msg})
 		fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000), sdk.NewInt64Coin("hotdog", 799))
@@ -888,7 +885,7 @@ func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
 		// swept amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
-		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 	})
 }
 
@@ -973,7 +970,7 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 		// swept amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
-		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 	})
 }
 
