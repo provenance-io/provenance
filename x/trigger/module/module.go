@@ -11,6 +11,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/core/appmodule"
 	cerrs "cosmossdk.io/errors"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -30,10 +31,12 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
-	// TODO[1760]: app-module: Add more assertions for the new types and clean up stuff no longer needed.
+	_ module.AppModuleBasic      = (*AppModule)(nil)
+	_ module.AppModuleSimulation = (*AppModule)(nil)
+
+	_ appmodule.AppModule       = (*AppModule)(nil)
+	_ appmodule.HasBeginBlocker = (*AppModule)(nil)
+	_ appmodule.HasEndBlocker   = (*AppModule)(nil)
 )
 
 // AppModuleBasic defines the basic application module used by the trigger module.
