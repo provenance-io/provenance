@@ -261,8 +261,8 @@ func TestFailedTx(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
-		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
-		assert.Error(t, err, "FinalizeBlock() error")
+		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
+		assert.Equal(t, uint32(0x5), blockRes.TxResults[0].Code, "code 5 insufficient funds error")
 
 		// Check both account balances after transaction
 		// the 150000stake should have been deducted from account 1, and the send should have failed.
@@ -283,7 +283,7 @@ func TestFailedTx(tt *testing.T) {
 		}
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 150000)))...)
 
-		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 	})
 
 	// Give acct1 150000stake back.
@@ -305,7 +305,7 @@ func TestFailedTx(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
-		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
 		assert.Error(t, err, "FinalizeBlock() error")
 
 		// Check both account balances after transaction
@@ -327,7 +327,7 @@ func TestFailedTx(tt *testing.T) {
 		}
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit()))))...)
 
-		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 	})
 }
 
@@ -368,7 +368,7 @@ func TestMsgService(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
-		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
 		assert.NoError(t, err, "FinalizeBlock() error")
 
 		// Check both account balances after transaction
@@ -410,7 +410,7 @@ func TestMsgService(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
-		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
 		assert.NoError(t, err, "FinalizeBlock() error")
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -457,7 +457,7 @@ func TestMsgService(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
-		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
 		assert.NoError(t, err, "FinalizeBlock() error")
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -557,7 +557,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 	// fee charged for msg based fee
 	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 600)))...)
 
-	assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
+	assertEventsContains(t, blockRes.TxResults[0].Events, expEvents) // TODO[1760]: finalize-block
 }
 
 func TestMsgServiceAuthz(tt *testing.T) {
@@ -640,7 +640,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(gasAmt))))...)
 		// fee charged for msg based fee
 		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 800)))...)
-		assertEventsContains(t, blockRes.Events, expEvents)
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 	})
 
 	tt.Run("exec two sends", func(t *testing.T) {
@@ -685,7 +685,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		// fee charged for msg based fee
 		expEvents = append(expEvents, CreateSendCoinEvents(addr2.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 1600)))...)
 
-		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents) // TODO[1760]: finalize-block
 	})
 
 	tt.Run("not enough fees", func(t *testing.T) {
@@ -703,7 +703,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
-		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
 		assert.Error(t, err, "FinalizeBlock() error")
 
 		// addr2 pays the base fee, but nothing else is changes.
@@ -759,7 +759,7 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
-		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
 		assert.NoError(t, err, "FinalizeBlock() error")
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -800,7 +800,7 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 		// swept amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
-		assertEventsContains(t, blockRes.Events, expEvents)
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 	})
 }
 
@@ -846,7 +846,7 @@ func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
-		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
 		assert.NoError(t, err, "FinalizeBlock() error")
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -888,7 +888,7 @@ func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
 		// swept amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
-		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents) // TODO[1760]: finalize-block
 	})
 }
 
@@ -936,7 +936,7 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
-		t.Logf("Events:\n%s\n", eventsString(blockRes.Events, true))
+		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
 		assert.NoError(t, err, "FinalizeBlock() error")
 
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -973,7 +973,7 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 		// swept amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin("nhash", 1015500001)))...)
 
-		assertEventsContains(t, blockRes.Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents) // TODO[1760]: finalize-block
 	})
 }
 
