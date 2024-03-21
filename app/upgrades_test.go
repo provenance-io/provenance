@@ -458,6 +458,8 @@ func (s *UpgradeTestSuite) TestTourmaline() {
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
 		"INF Converting NAV units.",
+		"INF Adding marker net asset values with heights.",
+		"INF Done adding marker net asset values with heights.",
 		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
 		"INF Setting exchange module payment params to defaults.",
 	}

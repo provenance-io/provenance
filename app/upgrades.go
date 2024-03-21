@@ -151,6 +151,7 @@ var upgrades = map[string]appUpgrade{
 
 			removeInactiveValidatorDelegations(ctx, app)
 			convertNavUnits(ctx, app)
+			addMarkerNavsWithHeight(ctx, app, GetPioMainnet1NavsTourmaline())
 
 			// This isn't in an rc because it was handled via gov prop for testnet.
 			updateMsgFeesNhashPerMil(ctx, app)
@@ -314,7 +315,7 @@ func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.
 
 // addMarkerNavsWithHeight sets net asset values with heights for markers
 func addMarkerNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAssetValueWithHeight) {
-	ctx.Logger().Info("Adding marker net asset values with heights")
+	ctx.Logger().Info("Adding marker net asset values with heights.")
 
 	for _, navWithHeight := range navsWithHeight {
 		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, navWithHeight.Denom)
@@ -328,7 +329,7 @@ func addMarkerNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAsse
 		}
 	}
 
-	ctx.Logger().Info("Done adding marker net asset values with heights")
+	ctx.Logger().Info("Done adding marker net asset values with heights.")
 }
 
 // setExchangeParams sets exchange module's params to the defaults.
