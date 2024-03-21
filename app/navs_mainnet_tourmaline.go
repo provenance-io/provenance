@@ -15,6 +15,7 @@ type NetAssetValueWithHeight struct {
 // GetPioMainnet1NavsTourmaline are net asset values for the pio-mainnet-1
 // https://figure.tech/service-pricing-engine/external/api/v1/pricing/marker/new?time=2024-03-21T00:00:00.000000Z
 // NOTE: These should not be ran against any other network but pio-mainnet-1 and Tourmaline v1.18.0 upgrade
+// TODO: Remove with the tourmaline handlers.
 func GetPioMainnet1NavsTourmaline() []NetAssetValueWithHeight {
 	return []NetAssetValueWithHeight{
 		{Denom: "nhash", NetAssetValue: markertypes.NewNetAssetValue(types.NewInt64Coin(markertypes.UsdDenom, 0), 1), Height: 15616885},

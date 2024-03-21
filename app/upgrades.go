@@ -314,6 +314,7 @@ func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.
 }
 
 // addMarkerNavsWithHeight sets net asset values with heights for markers
+// TODO: Remove with the tourmaline handlers.
 func addMarkerNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAssetValueWithHeight) {
 	ctx.Logger().Info("Adding marker net asset values with heights.")
 
