@@ -146,6 +146,12 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	allAccounts := app.AccountKeeper.GetAllAccounts(ctx)
 	logAccounts(t, allAccounts, "allAccounts")
 
+	// finalize block so we have CheckTx state set
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+	})
+	require.NoError(t, err)
+
 	app.Commit()
 
 	// Get an export
