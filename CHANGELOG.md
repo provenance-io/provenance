@@ -37,9 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Features
 
----
+* Add upgrade handler to set net asset values and update block height for pio-mainnet-1 [PR 1888](https://github.com/provenance-io/provenance/pull/1888)
 
 ## [v1.18.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc3) - 2024-03-19
 
