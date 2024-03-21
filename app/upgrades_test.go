@@ -818,10 +818,10 @@ func (s *UpgradeTestSuite) TestAddMarkerNavsWithHeight() {
 		name   string
 		supply int64
 	}{
-		{"testcoin", 1},
-		{"testcoininlist", 1},
-		{"nosupplycoin", 0},
-		{"hasnavcoin", 100},
+		{"testcoin1", 1},
+		{"testcoininlist1", 1},
+		{"nosupplycoin1", 0},
+		{"hasnavcoin1", 100},
 	}
 
 	for _, tm := range testMarkers {
@@ -830,13 +830,13 @@ func (s *UpgradeTestSuite) TestAddMarkerNavsWithHeight() {
 		s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, marker), "AddMarkerAccount() error")
 	}
 
-	hasnavcoin, _ := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "hasnavcoin")
+	hasnavcoin, _ := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "hasnavcoin1")
 	presentnav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 55), 100)
 	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hasnavcoin, []markertypes.NetAssetValue{presentnav}, "test"))
 
 	addMarkerNavsWithHeight(s.ctx, s.app, []NetAssetValueWithHeight{
 		{
-			Denom:         "testcoininlist",
+			Denom:         "testcoininlist1",
 			NetAssetValue: markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 12345), 1),
 			Height:        406,
 		},
@@ -862,7 +862,7 @@ func (s *UpgradeTestSuite) TestAddMarkerNavsWithHeight() {
 		},
 		{
 			name:       "nav add fails for coin",
-			markerAddr: sdk.AccAddress("nosupplycoin"),
+			markerAddr: sdk.AccAddress("nosupplycoin1"),
 			expNav:     nil,
 			expHeight:  0,
 		},
