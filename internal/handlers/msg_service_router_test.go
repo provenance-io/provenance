@@ -306,7 +306,7 @@ func TestFailedTx(tt *testing.T) {
 			},
 		)
 		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
-		assert.Error(t, err, "FinalizeBlock() error")
+		assert.Equal(t, uint32(0x5), blockRes.TxResults[0].Code, "code 5 insufficient funds error")
 
 		// Check both account balances after transaction
 		// the 150000 should have been deducted from account 1, and the send should have failed.
@@ -704,7 +704,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 			},
 		)
 		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
-		assert.Error(t, err, "FinalizeBlock() error")
+		assert.Equal(t, uint32(0xd), blockRes.TxResults[0].Code, "code 13 insufficient fee")
 
 		// addr2 pays the base fee, but nothing else is changes.
 		addr1AfterBalance := app.BankKeeper.GetAllBalances(ctx, addr1).String()
@@ -1028,13 +1028,14 @@ func TestRewardsProgramStartError(t *testing.T) {
 		&rewardProgram,
 	)
 	require.NoError(t, err, "SignTxAndGetBytes")
-	_, err = app.FinalizeBlock(
+	blockRes, err := app.FinalizeBlock(
 		&abci.RequestFinalizeBlock{
 			Height: ctx.BlockHeight() + 1,
 			Txs:    [][]byte{txBytes},
 		},
 	)
-	assert.Error(t, err, "FinalizeBlock() error")
+	assert.Equal(t, uint32(0x1), blockRes.TxResults[0].Code, "claims period error")
+	assert.NoError(t, err, "FinalizeBlock")
 }
 
 func TestRewardsProgramStart(t *testing.T) {
