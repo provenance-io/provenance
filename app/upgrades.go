@@ -312,6 +312,25 @@ func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.
 	ctx.Logger().Info("Done adding marker net asset values")
 }
 
+// addMarkerNavsWithHeight sets net asset values with heights for markers
+func addMarkerNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAssetValueWithHeight) {
+	ctx.Logger().Info("Adding marker net asset values with heights")
+
+	for _, navWithHeight := range navsWithHeight {
+		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, navWithHeight.Denom)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to get marker %v: %v", navWithHeight.Denom, err))
+			continue
+		}
+
+		if err := app.MarkerKeeper.SetNetAssetValueWithBlockHeight(ctx, marker, navWithHeight.NetAssetValue, "upgrade_handler", navWithHeight.Height); err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value with height %v at height %d: %v", navWithHeight.NetAssetValue, navWithHeight.Height, err))
+		}
+	}
+
+	ctx.Logger().Info("Done adding marker net asset values with heights")
+}
+
 // setExchangeParams sets exchange module's params to the defaults.
 // TODO: Remove with the saffron handlers.
 func setExchangeParams(ctx sdk.Context, app *App) {
