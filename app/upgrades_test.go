@@ -856,7 +856,7 @@ func (s *UpgradeTestSuite) TestAddMarkerNavsWithHeight() {
 		},
 		{
 			name:       "nav set from custom config with height",
-			markerAddr: sdk.AccAddress("testcoininlist"),
+			markerAddr: sdk.AccAddress("testcoininlist1"),
 			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, 12345), Volume: 1},
 			expHeight:  406,
 		},
@@ -877,7 +877,7 @@ func (s *UpgradeTestSuite) TestAddMarkerNavsWithHeight() {
 			})
 			s.Require().NoError(err, "IterateNetAssetValues err")
 			if tc.expNav != nil {
-				s.Assert().Len(netAssetValues, 1, "Should be 1 nav set for testcoin")
+				s.Assert().Len(netAssetValues, 1, "Should be 1 nav set for testcoininlist1")
 				s.Assert().Equal(tc.expNav.Price, netAssetValues[0].Price, "Net asset value price should equal default upgraded price")
 				s.Assert().Equal(tc.expNav.Volume, netAssetValues[0].Volume, "Net asset value volume should equal 1")
 				s.Assert().Equal(tc.expHeight, netAssetValues[0].UpdatedBlockHeight, "Net asset value updated block height should equal expected")
