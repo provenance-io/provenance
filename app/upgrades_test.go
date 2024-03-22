@@ -458,6 +458,8 @@ func (s *UpgradeTestSuite) TestTourmaline() {
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
 		"INF Converting NAV units.",
+		"INF Adding marker net asset values with heights.",
+		"INF Done adding marker net asset values with heights.",
 		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
 		"INF Setting exchange module payment params to defaults.",
 	}
@@ -806,6 +808,82 @@ func (s *UpgradeTestSuite) TestSetExchangeParams() {
 			// Make sure the params are as expected now.
 			params := s.app.ExchangeKeeper.GetParams(s.ctx)
 			s.Assert().Equal(tc.expectedParams, params, "params after setExchangeParams")
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestAddMarkerNavsWithHeight() {
+	address1 := sdk.AccAddress("address1")
+	testMarkers := []struct {
+		name   string
+		supply int64
+	}{
+		{"testcoin1", 1},
+		{"testcoininlist1", 1},
+		{"nosupplycoin1", 0},
+		{"hasnavcoin1", 100},
+	}
+
+	for _, tm := range testMarkers {
+		marker := markertypes.NewEmptyMarkerAccount(tm.name, address1.String(), []markertypes.AccessGrant{})
+		marker.Supply = sdk.NewInt(tm.supply)
+		s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, marker), "AddMarkerAccount() error")
+	}
+
+	hasnavcoin, _ := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "hasnavcoin1")
+	presentnav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 55), 100)
+	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hasnavcoin, []markertypes.NetAssetValue{presentnav}, "test"))
+
+	addMarkerNavsWithHeight(s.ctx, s.app, []NetAssetValueWithHeight{
+		{
+			Denom:         "testcoininlist1",
+			NetAssetValue: markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 12345), 1),
+			Height:        406,
+		},
+	})
+
+	tests := []struct {
+		name       string
+		markerAddr sdk.AccAddress
+		expNav     *markertypes.NetAssetValue
+		expHeight  uint64
+	}{
+		{
+			name:       "already has nav",
+			markerAddr: hasnavcoin.GetAddress(),
+			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, 55), Volume: 100},
+			expHeight:  0,
+		},
+		{
+			name:       "nav set from custom config with height",
+			markerAddr: markertypes.MustGetMarkerAddress("testcoininlist1"),
+			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, 12345), Volume: 1},
+			expHeight:  406,
+		},
+		{
+			name:       "nav add fails for coin",
+			markerAddr: markertypes.MustGetMarkerAddress("nosupplycoin1"),
+			expNav:     nil,
+			expHeight:  0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			netAssetValues := []markertypes.NetAssetValue{}
+			err := s.app.MarkerKeeper.IterateNetAssetValues(s.ctx, tc.markerAddr, func(state markertypes.NetAssetValue) (stop bool) {
+				netAssetValues = append(netAssetValues, state)
+				return false
+			})
+			s.Require().NoError(err, "IterateNetAssetValues err")
+			if tc.expNav != nil {
+				s.Assert().Len(netAssetValues, 1, "Should be 1 nav set for coin")
+				s.Assert().Equal(tc.expNav.Price, netAssetValues[0].Price, "Net asset value price should equal default upgraded price")
+				s.Assert().Equal(tc.expNav.Volume, netAssetValues[0].Volume, "Net asset value volume should equal 1")
+				s.Assert().Equal(tc.expHeight, netAssetValues[0].UpdatedBlockHeight, "Net asset value updated block height should equal expected")
+			} else {
+				s.Assert().Len(netAssetValues, 0, "Marker not expected to have nav")
+			}
 		})
 	}
 }
