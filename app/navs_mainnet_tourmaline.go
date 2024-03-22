@@ -18,7 +18,6 @@ type NetAssetValueWithHeight struct {
 // TODO: Remove with the tourmaline handlers.
 func GetPioMainnet1NavsTourmaline() []NetAssetValueWithHeight {
 	return []NetAssetValueWithHeight{
-		{Denom: "nhash", NetAssetValue: markertypes.NewNetAssetValue(types.NewInt64Coin(markertypes.UsdDenom, 0), 1), Height: 15616885},
 		{Denom: "pm.participation.agreement.1bcslgccejhm9v3higsx7c", NetAssetValue: markertypes.NewNetAssetValue(types.NewInt64Coin(markertypes.UsdDenom, 9776106500), 1), Height: 15613887},
 		{Denom: "pm.participation.agreement.1cag7ztnmm4rdbbtwdrodb", NetAssetValue: markertypes.NewNetAssetValue(types.NewInt64Coin(markertypes.UsdDenom, 6778829000), 1), Height: 15613557},
 		{Denom: "pm.participation.agreement.1movu45ofufqv24486bunj", NetAssetValue: markertypes.NewNetAssetValue(types.NewInt64Coin(markertypes.UsdDenom, 0), 1), Height: 15613447},
