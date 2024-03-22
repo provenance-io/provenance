@@ -1,35 +1,14 @@
 ## [v1.18.0](https://github.com/provenance-io/provenance/releases/tag/v1.18.0) - 2024-03-22
 
-Release v1.18.0 expands the exchange capabilities, and includes various other features, improvements, and bug fixes.
+The v1.18.0 release of the Provenance Blockchain protocol is focused on expanded settlement features for off-chain markets, peer-to-peer payments, and expanded asset valuation data on-chain. Some of the notable new features and improvements include:
 
-### Overview
-
-With the release of v1.18.0, the Provenance Blockchain protocol's exchange module adds support for both commitments and payments.
-The metadata module now allows recording Net-Asset-Values (NAVs) on scopes.
-And in the marker module, various enhancements have been made to help facilitate and safeguard movements of funds.
-
-### Exchange Module Updates
-
-The exchange module now has functionality for commitments and payments.
-
-Commitments allow an account to give a specific market the ability to manage a specified amount of funds.
-Committed funds remain in the account (with a hold on them) until the market moves them.
-
-Payments allow two parties to securely exchange funds.
-When a payment is created, a hold is placed on the source funds until the payment is accepted, rejected, or cancelled.
-When a payment is accepted, the source funds are sent to the target and the target funds are sent to the source.
-
-Additionally, improvements have been made that allow a market actor (e.g. with `settle` permission) to act as a transfer agent (with respects to the markers of the funds being moved).
-This allows an account with both `settle` permission in a market, and `transfer` permission on a marker, to use the exchange module to facilitate movements of that marker's funds.
-
-### Marker Module Updates
-
-The marker module received several updates related to the movement of funds.
-
-* There is a new `force_transfer` permission that is required in order to force a transfer of a marker's funds, and the `transfer` permission no longer has the ability to do forced transfers.
-* Safeguards were added to prevent funds from being sent to addresses that are specially used by the blockchain (e.g. the fee collector).
-* Transfers now work for groups accounts.
-* Net-Asset-Values (NAVs) now use mills (instead of cents).
+- Commitments are a new feature of the exchange module, allowing a party to give market access to a specified amount of funds in their account.
+- A New Payments capability has also been added to enable secure and asynchronous peer to peer asset transfers.
+- Pricing information stored on chain has been expanded to support NAV (net asset value) data for Scopes/NFTs.
+- The MsgFees parameter for the base price of the hash token has been adjusted to 40,000,000 nhash per usd-mil ($0.025/hash).  This will be the last release that relies on a governance parameter for this value as the expanded support for settlement includes the ability to provide a continuous stream of pricing updates with each trade that is performed.
+- Restricted markers cannot be sent to the fee collector account, and force transfers are now allowed from marker and market accounts.
+- The startup warning issued when `disable-iavl-fastnode` is `true` has been removed, and the system has been updated to use github.com/cometbft/cometbft-db v0.7.0 and IAVL v0.20 to resolve some node stability issues observed with `v1.18.0-rc2`.
+- A new `force_transfer` permission for markers allows an account to do forced transfers; the `transfer` permission no longer has this ability.
 
 ### Features
 
