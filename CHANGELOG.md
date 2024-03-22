@@ -41,6 +41,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `github.com/cometbft/cometbft-db` from 0.7.0 to 0.10.0 ([#1889](https://github.com/provenance-io/provenance/pull/1889))
+
 ## [v1.18.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc3) - 2024-03-19
 
 ### Features
