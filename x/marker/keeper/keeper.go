@@ -318,6 +318,29 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, n
 	return nil
 }
 
+// SetNetAssetValueWithBlockHeight adds/updates a net asset value to marker with a specific block height
+func (k Keeper) SetNetAssetValueWithBlockHeight(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string, blockHeight uint64) error {
+	netAssetValue.UpdatedBlockHeight = blockHeight
+	if err := netAssetValue.Validate(); err != nil {
+		return err
+	}
+
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(marker.GetDenom(), netAssetValue.Price, netAssetValue.Volume, source)
+	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
+		return err
+	}
+
+	key := types.NetAssetValueKey(marker.GetAddress(), netAssetValue.Price.Denom)
+	bz, err := k.cdc.Marshal(&netAssetValue)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(k.storeKey)
+	store.Set(key, bz)
+
+	return nil
+}
+
 // GetNetAssetValue gets the NetAssetValue for a marker denom with a specific price denom.
 func (k Keeper) GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error) {
 	store := ctx.KVStore(k.storeKey)
