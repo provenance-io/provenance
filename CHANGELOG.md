@@ -53,7 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add NAV support for metadata scopes [#1749](https://github.com/provenance-io/provenance/issues/1749).
 * Add fix for NAV units to tourmaline upgrade handler [#1815](https://github.com/provenance-io/provenance/issues/1815).
 * In the marker module's `SendRestrictionFn`, allow a transfer agent to be identified through the context [#1834](https://github.com/provenance-io/provenance/issues/1834).
-* In the exchange module, provide the admin as the transfer agent when attepting to move funds [#1834](https://github.com/provenance-io/provenance/issues/1834).
+* In the exchange module, provide the admin as the transfer agent when attempting to move funds [#1834](https://github.com/provenance-io/provenance/issues/1834).
 * Add upgrade handler to set net asset values to markers in pio-testnet-1 [PR 1881](https://github.com/provenance-io/provenance/pull/1881).
 * Add upgrade handler to set net asset values and update block height for pio-mainnet-1 [PR 1888](https://github.com/provenance-io/provenance/pull/1888).
 

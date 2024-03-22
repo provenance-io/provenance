@@ -1,5 +1,36 @@
 ## [v1.18.0](https://github.com/provenance-io/provenance/releases/tag/v1.18.0) - 2024-03-22
 
+Release v1.18.0 expands the exchange capabilities, and includes various other features, improvements, and bug fixes.
+
+### Overview
+
+With the release of v1.18.0, the Provenance Blockchain protocol's exchange module adds support for both commitments and payments.
+The metadata module now allows recording Net-Asset-Values (NAVs) on scopes.
+And in the marker module, various enhancements have been made to help facilitate and safeguard movements of funds.
+
+### Exchange Module Updates
+
+The exchange module now has functionality for commitments and payments.
+
+Commitments allow an account to give a specific market the ability to manage a specified amount of funds.
+Committed funds remain in the account (with a hold on them) until the market moves them.
+
+Payments allow two parties to securely exchange funds.
+When a payment is created, a hold is placed on the source funds until the payment is accepted, rejected, or cancelled.
+When a payment is accepted, the source funds are sent to the target and the target funds are sent to the source.
+
+Additionally, improvements have been made that allow a market actor (e.g. with `settle` permission) to act as a transfer agent (with respects to the markers of the funds being moved).
+This allows an account with both `settle` permission in a market, and `transfer` permission on a marker, to use the exchange module to facilitate movements of that marker's funds.
+
+### Marker Module Updates
+
+The marker module received several updates related to the movement of funds.
+
+* There is a new `force_transfer` permission that is required in order to force a transfer of a marker's funds, and the `transfer` permission no longer has the ability to do forced transfers.
+* Safeguards were added to prevent funds from being sent to addresses that are specially used by the blockchain (e.g. the fee collector).
+* Transfers now work for groups accounts.
+* Net-Asset-Values (NAVs) now use mills (instead of cents).
+
 ### Features
 
 * Support commitments in the exchange module [#1789](https://github.com/provenance-io/provenance/issues/1789), [PR 1830](https://github.com/provenance-io/provenance/pull/1830).
@@ -10,7 +41,7 @@
 * Add NAV support for metadata scopes [#1749](https://github.com/provenance-io/provenance/issues/1749).
 * Add fix for NAV units to tourmaline upgrade handler [#1815](https://github.com/provenance-io/provenance/issues/1815).
 * In the marker module's `SendRestrictionFn`, allow a transfer agent to be identified through the context [#1834](https://github.com/provenance-io/provenance/issues/1834).
-* In the exchange module, provide the admin as the transfer agent when attepting to move funds [#1834](https://github.com/provenance-io/provenance/issues/1834).
+* In the exchange module, provide the admin as the transfer agent when attempting to move funds [#1834](https://github.com/provenance-io/provenance/issues/1834).
 * Add upgrade handler to set net asset values to markers in pio-testnet-1 [PR 1881](https://github.com/provenance-io/provenance/pull/1881).
 * Add upgrade handler to set net asset values and update block height for pio-mainnet-1 [PR 1888](https://github.com/provenance-io/provenance/pull/1888).
 
