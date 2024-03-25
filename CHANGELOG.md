@@ -41,6 +41,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add upgrade handler to set net asset values and update block height for pio-mainnet-1 [PR 1888](https://github.com/provenance-io/provenance/pull/1888)
 
+### Dependencies
+- Bump `github.com/cometbft/cometbft-db` from 0.7.0 to 0.9.1 ([#1893](https://github.com/provenance-io/provenance/pull/1893))
+
 ## [v1.18.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.18.0-rc3) - 2024-03-19
 
 ### Features
