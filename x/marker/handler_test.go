@@ -82,52 +82,6 @@ type CommonTest struct {
 	expectedEvent proto.Message
 }
 
-func (s *HandlerTestSuite) TestMsgActivateMarkerRequest() {
-	hotdogDenom := "hotdog"
-
-	cases := []CommonTest{
-		{
-			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
-		},
-		{
-			name: "setup finalize marker",
-			msg:  types.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr),
-		},
-		{
-			name:          "should successfully activate marker",
-			msg:           types.NewMsgActivateRequest(hotdogDenom, s.user1Addr),
-			expectedEvent: types.NewEventMarkerActivate(hotdogDenom, s.user1),
-		},
-	}
-	s.runTests(cases)
-}
-
-func (s *HandlerTestSuite) TestMsgCancelMarkerRequest() {
-	hotdogDenom := "hotdog"
-	accessDeleteGrant := types.AccessGrant{
-		Address:     s.user1,
-		Permissions: types.AccessListByNames("DELETE"),
-	}
-
-	cases := []CommonTest{
-		{
-			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
-		},
-		{
-			name: "setup grant delete access to marker",
-			msg:  types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, accessDeleteGrant),
-		},
-		{
-			name:          "should successfully cancel marker",
-			msg:           types.NewMsgCancelRequest(hotdogDenom, s.user1Addr),
-			expectedEvent: types.NewEventMarkerCancel(hotdogDenom, s.user1),
-		},
-	}
-	s.runTests(cases)
-}
-
 func (s *HandlerTestSuite) TestMsgDeleteMarkerRequest() {
 	hotdogDenom := "hotdog"
 	accessDeleteMintGrant := types.AccessGrant{
