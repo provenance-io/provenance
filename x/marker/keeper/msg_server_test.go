@@ -39,6 +39,12 @@ type MsgServerTestSuite struct {
 	owner1Addr sdk.AccAddress
 	acct1      sdk.AccountI
 
+	privkey2   cryptotypes.PrivKey
+	pubkey2    cryptotypes.PubKey
+	owner2     string
+	owner2Addr sdk.AccAddress
+	acct2      sdk.AccountI
+
 	addresses []sdk.AccAddress
 }
 
@@ -54,6 +60,13 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.owner1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.owner1 = s.owner1Addr.String()
 	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.owner1Addr)
+	s.app.AccountKeeper.SetAccount(s.ctx, acc)
+
+	s.privkey2 = secp256k1.GenPrivKey()
+	s.pubkey2 = s.privkey2.PubKey()
+	s.owner2Addr = sdk.AccAddress(s.pubkey2.Address())
+	s.owner2 = s.owner2Addr.String()
+	acc = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.owner2Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
 }
 func TestMsgServerTestSuite(t *testing.T) {
@@ -714,6 +727,62 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 			} else {
 				s.Assert().NoError(err)
 				s.Assert().Equal(res, &types.MsgAddNetAssetValuesResponse{})
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestMsgAddAccessRequest() {
+	accessMintGrant := types.AccessGrant{
+		Address:     s.owner1,
+		Permissions: types.AccessListByNames("MINT"),
+	}
+
+	accessInvalidGrant := types.AccessGrant{
+		Address:     s.owner1,
+		Permissions: types.AccessListByNames("Invalid"),
+	}
+
+	addMarkerMsg := types.NewMsgAddMarkerRequest("hotdog", sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
+	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
+	s.Assert().NoError(err, "should not throw error")
+
+	testCases := []struct {
+		name          string
+		msg           *types.MsgAddAccessRequest
+		errorMsg      string
+		expectedEvent proto.Message
+	}{
+		{
+			name:          "should successfully grant access to marker",
+			msg:           types.NewMsgAddAccessRequest("hotdog", s.owner1Addr, accessMintGrant),
+			expectedEvent: types.NewEventMarkerAddAccess(&accessMintGrant, "hotdog", s.owner1),
+		},
+		{
+			name:     "should fail to ADD access to marker, validate basic fails",
+			msg:      types.NewMsgAddAccessRequest("hotdog", s.owner1Addr, accessInvalidGrant),
+			errorMsg: "invalid access type: invalid request",
+		},
+		{
+
+			name:     "should fail to ADD access to marker, keeper AddAccess failure",
+			msg:      types.NewMsgAddAccessRequest("hotdog", s.owner2Addr, accessMintGrant),
+			errorMsg: fmt.Sprintf("updates to pending marker hotdog can only be made by %s: unauthorized", s.owner1),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.ctx.WithEventManager(sdk.NewEventManager())
+			response, err := s.msgServer.AddAccess(s.ctx, tc.msg)
+			if len(tc.errorMsg) > 0 {
+				s.Require().EqualError(err, tc.errorMsg, "handler(%T) error", tc.msg)
+			} else {
+				s.Require().NoError(err, "handler(%T) error", tc.msg)
+				if tc.expectedEvent != nil {
+					result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+					s.Assert().True(result, "Expected typed event was not found in response.\n    Expected: %+v\n    Response: %+v", tc.expectedEvent, response)
+				}
 			}
 		})
 	}

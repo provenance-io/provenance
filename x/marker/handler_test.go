@@ -33,9 +33,8 @@ import (
 type HandlerTestSuite struct {
 	suite.Suite
 
-	app     *app.App
-	ctx     sdk.Context
-	handler func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
+	app *app.App
+	ctx sdk.Context
 
 	pubkey1   cryptotypes.PubKey
 	user1     string
@@ -122,43 +121,6 @@ func (s *HandlerTestSuite) runTests(cases []CommonTest) {
 			}
 		})
 	}
-}
-
-func (s *HandlerTestSuite) TestMsgAddAccessRequest() {
-	accessMintGrant := types.AccessGrant{
-		Address:     s.user1,
-		Permissions: types.AccessListByNames("MINT"),
-	}
-
-	accessInvalidGrant := types.AccessGrant{
-		Address:     s.user1,
-		Permissions: types.AccessListByNames("Invalid"),
-	}
-
-	cases := []CommonTest{
-		{
-			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest("hotdog", sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
-		},
-		{
-			name:          "should successfully grant access to marker",
-			msg:           types.NewMsgAddAccessRequest("hotdog", s.user1Addr, accessMintGrant),
-			expectedEvent: types.NewEventMarkerAddAccess(&accessMintGrant, "hotdog", s.user1),
-		},
-		{
-			name:     "should fail to ADD access to marker, validate basic fails",
-			msg:      types.NewMsgAddAccessRequest("hotdog", s.user1Addr, accessInvalidGrant),
-			errorMsg: "invalid access type: invalid request",
-		},
-		{
-
-			name:     "should fail to ADD access to marker, keeper AddAccess failure",
-			msg:      types.NewMsgAddAccessRequest("hotdog", s.user2Addr, accessMintGrant),
-			errorMsg: fmt.Sprintf("updates to pending marker hotdog can only be made by %s: unauthorized", s.user1),
-		},
-	}
-
-	s.runTests(cases)
 }
 
 func (s *HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
