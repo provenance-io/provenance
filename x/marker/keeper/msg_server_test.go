@@ -787,3 +787,42 @@ func (s *MsgServerTestSuite) TestMsgAddAccessRequest() {
 		})
 	}
 }
+
+func (s *MsgServerTestSuite) TestMsgDeleteAccessMarkerRequest() {
+	hotdogDenom := "hotdog"
+	accessMintGrant := types.AccessGrant{
+		Address:     s.owner1,
+		Permissions: types.AccessListByNames("MINT"),
+	}
+
+	addMarkerMsg := types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
+	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
+	s.Assert().NoError(err, "should not throw error")
+
+	addAccessMsg := types.NewMsgAddAccessRequest(hotdogDenom, s.owner1Addr, accessMintGrant)
+	_, err = s.msgServer.AddAccess(s.ctx, addAccessMsg)
+	s.Assert().NoError(err, "should add access")
+
+	testcases := []struct {
+		name          string
+		msg           *types.MsgDeleteAccessRequest
+		expectedEvent proto.Message
+	}{
+		{
+			msg:           types.NewDeleteAccessRequest(hotdogDenom, s.owner1Addr, s.owner1Addr),
+			expectedEvent: types.NewEventMarkerDeleteAccess(s.owner1, hotdogDenom, s.owner1),
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.ctx.WithEventManager(sdk.NewEventManager())
+			response, err := s.msgServer.DeleteAccess(s.ctx, tc.msg)
+			s.Require().NoError(err, "handler(%T) error", tc.msg)
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Assert().True(result, "Expected typed event was not found in response.\n    Expected: %+v\n    Response: %+v", tc.expectedEvent, response)
+			}
+		})
+	}
+}

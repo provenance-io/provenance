@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -69,17 +67,6 @@ func TestHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))
 }
 
-func TestInvalidMsg(t *testing.T) {
-	k := keeper.Keeper{}
-	h := marker.NewHandler(k)
-
-	res, err := h(sdk.NewContext(nil, cmtproto.Header{}, false, nil), testdata.NewTestMsg())
-	require.Error(t, err)
-	require.Nil(t, res)
-	require.Contains(t, err.Error(), "unrecognized marker message type")
-	require.Contains(t, err.Error(), "testdata.TestMsg")
-}
-
 func TestInvalidProposal(t *testing.T) {
 	k := keeper.Keeper{}
 	h := marker.NewProposalHandler(k)
@@ -88,64 +75,11 @@ func TestInvalidProposal(t *testing.T) {
 	require.ErrorContains(t, err, "unrecognized marker proposal content type: *v1beta1.TextProposal")
 }
 
-func (s *HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message) bool {
-	events := result.GetEvents().ToABCIEvents()
-	for _, event := range events {
-		typeEvent, _ := sdk.ParseTypedEvent(event)
-		if assert.ObjectsAreEqual(msg, typeEvent) {
-			return true
-		}
-	}
-	return false
-}
-
 type CommonTest struct {
 	name          string
 	msg           sdk.Msg
 	errorMsg      string
 	expectedEvent proto.Message
-}
-
-func (s *HandlerTestSuite) runTests(cases []CommonTest) {
-	for _, tc := range cases {
-		s.Run(tc.name, func() {
-			response, err := s.handler(s.ctx, tc.msg)
-			if len(tc.errorMsg) > 0 {
-				s.Require().EqualError(err, tc.errorMsg, "handler(%T) error", tc.msg)
-			} else {
-				s.Require().NoError(err, "handler(%T) error", tc.msg)
-				if tc.expectedEvent != nil {
-					result := s.containsMessage(response, tc.expectedEvent)
-					s.Assert().True(result, "Expected typed event was not found in response.\n    Expected: %+v\n    Response: %+v", tc.expectedEvent, response)
-				}
-			}
-		})
-	}
-}
-
-func (s *HandlerTestSuite) TestMsgDeleteAccessMarkerRequest() {
-	hotdogDenom := "hotdog"
-	accessMintGrant := types.AccessGrant{
-		Address:     s.user1,
-		Permissions: types.AccessListByNames("MINT"),
-	}
-
-	cases := []CommonTest{
-		{
-			name: "setup new marker for test",
-			msg:  types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0),
-		},
-		{
-			name: "setup grant access to marker",
-			msg:  types.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, accessMintGrant),
-		},
-		{
-			name:          "should successfully delete grant access to marker",
-			msg:           types.NewDeleteAccessRequest(hotdogDenom, s.user1Addr, s.user1Addr),
-			expectedEvent: types.NewEventMarkerDeleteAccess(s.user1, hotdogDenom, s.user1),
-		},
-	}
-	s.runTests(cases)
 }
 
 func (s *HandlerTestSuite) TestMsgActivateMarkerRequest() {
