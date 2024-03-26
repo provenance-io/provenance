@@ -900,3 +900,223 @@ func (s *MsgServerTestSuite) TestMsgCancelMarkerRequest() {
 		})
 	}
 }
+
+func (s *MsgServerTestSuite) TestMsgDeleteMarkerRequest() {
+	hotdogDenom := "hotdog"
+	accessDeleteMintGrant := types.AccessGrant{
+		Address:     s.owner1,
+		Permissions: types.AccessListByNames("DELETE,MINT"),
+	}
+
+	addMarkerMsg := types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
+	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
+	s.Assert().NoError(err, "should not throw error")
+
+	addAccessMsg := types.NewMsgAddAccessRequest(hotdogDenom, s.owner1Addr, accessDeleteMintGrant)
+	_, err = s.msgServer.AddAccess(s.ctx, addAccessMsg)
+	s.Assert().NoError(err, "should not throw error when adding access to marker")
+
+	cancelMsg := types.NewMsgCancelRequest(hotdogDenom, s.owner1Addr)
+	_, err = s.msgServer.Cancel(s.ctx, cancelMsg)
+	s.Assert().NoError(err, "should not throw error when canceling marker")
+
+	testcases := []struct {
+		name          string
+		msg           *types.MsgDeleteRequest
+		expectedEvent proto.Message
+	}{
+		{
+			msg:           types.NewMsgDeleteRequest(hotdogDenom, s.owner1Addr),
+			expectedEvent: types.NewEventMarkerDelete(hotdogDenom, s.owner1),
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.ctx.WithEventManager(sdk.NewEventManager())
+			response, err := s.msgServer.Delete(s.ctx, tc.msg)
+			s.Require().NoError(err, "handler(%T) error", tc.msg)
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Assert().True(result, "Expected typed event was not found in response.\n    Expected: %+v\n    Response: %+v", tc.expectedEvent, response)
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestMsgMintMarkerRequest() {
+	hotdogDenom := "hotdog"
+	access := types.AccessGrant{
+		Address:     s.owner1,
+		Permissions: types.AccessListByNames("MINT,BURN"),
+	}
+
+	addMarkerMsg := types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
+	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
+	s.Assert().NoError(err, "should not throw error")
+
+	addAccessMsg := types.NewMsgAddAccessRequest(hotdogDenom, s.owner1Addr, access)
+	_, err = s.msgServer.AddAccess(s.ctx, addAccessMsg)
+	s.Assert().NoError(err, "should not throw error when adding access to marker")
+
+	testcases := []struct {
+		name          string
+		msg           *types.MsgMintRequest
+		expectedEvent proto.Message
+	}{
+		{
+			msg:           types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(hotdogDenom, 100)),
+			expectedEvent: types.NewEventMarkerMint("100", hotdogDenom, s.owner1),
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.ctx.WithEventManager(sdk.NewEventManager())
+			response, err := s.msgServer.Mint(s.ctx, tc.msg)
+			s.Require().NoError(err, "handler(%T) error", tc.msg)
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Assert().True(result, "Expected typed event was not found in response.\n    Expected: %+v\n    Response: %+v", tc.expectedEvent, response)
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestMsgBurnMarkerRequest() {
+	hotdogDenom := "hotdog"
+	access := types.AccessGrant{
+		Address:     s.owner1,
+		Permissions: types.AccessListByNames("DELETE,MINT,BURN"),
+	}
+
+	addMarkerMsg := types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
+	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
+	s.Assert().NoError(err, "should not throw error")
+
+	addAccessMsg := types.NewMsgAddAccessRequest(hotdogDenom, s.owner1Addr, access)
+	_, err = s.msgServer.AddAccess(s.ctx, addAccessMsg)
+	s.Assert().NoError(err, "should not throw error when adding access to marker")
+
+	testcases := []struct {
+		name          string
+		msg           *types.MsgBurnRequest
+		expectedEvent proto.Message
+	}{
+		{
+			msg:           types.NewMsgBurnRequest(s.owner1Addr, sdk.NewInt64Coin(hotdogDenom, 100)),
+			expectedEvent: types.NewEventMarkerBurn("100", hotdogDenom, s.owner1),
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.ctx.WithEventManager(sdk.NewEventManager())
+			response, err := s.msgServer.Burn(s.ctx, tc.msg)
+			s.Require().NoError(err, "handler(%T) error", tc.msg)
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Assert().True(result, "Expected typed event was not found in response.\n    Expected: %+v\n    Response: %+v", tc.expectedEvent, response)
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestMsgWithdrawMarkerRequest() {
+	hotdogDenom := "hotdog"
+	access := types.AccessGrant{
+		Address:     s.owner1,
+		Permissions: types.AccessListByNames("DELETE,MINT,WITHDRAW"),
+	}
+
+	addMarkerMsg := types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0)
+	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
+	s.Assert().NoError(err, "should not throw error")
+
+	addAccessMsg := types.NewMsgAddAccessRequest(hotdogDenom, s.owner1Addr, access)
+	_, err = s.msgServer.AddAccess(s.ctx, addAccessMsg)
+	s.Assert().NoError(err, "should not throw error when adding access to marker")
+
+	finalizeMsg := types.NewMsgFinalizeRequest(hotdogDenom, s.owner1Addr)
+	_, err = s.msgServer.Finalize(s.ctx, finalizeMsg)
+	s.Assert().NoError(err, "should not throw error when finalizing marker")
+
+	activateMsg := types.NewMsgActivateRequest(hotdogDenom, s.owner1Addr)
+	_, err = s.msgServer.Activate(s.ctx, activateMsg)
+	s.Assert().NoError(err, "should not throw error when activating marker message")
+
+	testcases := []struct {
+		name          string
+		msg           *types.MsgWithdrawRequest
+		expectedEvent proto.Message
+	}{
+		{
+			msg:           types.NewMsgWithdrawRequest(s.owner1Addr, s.owner1Addr, hotdogDenom, sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 100))),
+			expectedEvent: types.NewEventMarkerWithdraw("100hotdog", hotdogDenom, s.owner1, s.owner1),
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.ctx.WithEventManager(sdk.NewEventManager())
+			response, err := s.msgServer.Withdraw(s.ctx, tc.msg)
+			s.Require().NoError(err, "handler(%T) error", tc.msg)
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Assert().True(result, "Expected typed event was not found in response.\n    Expected: %+v\n    Response: %+v", tc.expectedEvent, response)
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestMsgTransferMarkerRequest() {
+	hotdogDenom := "hotdog"
+	access := types.AccessGrant{
+		Address:     s.owner1,
+		Permissions: types.AccessListByNames("DELETE,MINT,WITHDRAW,TRANSFER"),
+	}
+
+	addMarkerMsg := types.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.owner1Addr, s.owner1Addr, types.MarkerType_Coin, true, true, false, []string{}, 0, 0)
+	_, err := s.msgServer.AddMarker(s.ctx, addMarkerMsg)
+	s.Assert().NoError(err, "should not throw error")
+
+	addAccessMsg := types.NewMsgAddAccessRequest(hotdogDenom, s.owner1Addr, access)
+	_, err = s.msgServer.AddAccess(s.ctx, addAccessMsg)
+	s.Assert().NoError(err, "should not throw error when adding access to marker")
+
+	finalizeMsg := types.NewMsgFinalizeRequest(hotdogDenom, s.owner1Addr)
+	_, err = s.msgServer.Finalize(s.ctx, finalizeMsg)
+	s.Assert().NoError(err, "should not throw error when finalizing marker")
+
+	activateMsg := types.NewMsgActivateRequest(hotdogDenom, s.owner1Addr)
+	_, err = s.msgServer.Activate(s.ctx, activateMsg)
+	s.Assert().NoError(err, "should not throw error when activating marker message")
+
+	mintMsg := types.NewMsgMintRequest(s.owner1Addr, sdk.NewInt64Coin(hotdogDenom, 1000))
+	_, err = s.msgServer.Mint(s.ctx, mintMsg)
+	s.Assert().NoError(err, "should not throw error when minting marker")
+
+	testcases := []struct {
+		name          string
+		msg           *types.MsgTransferRequest
+		expectedEvent proto.Message
+	}{
+		{
+			name:          "should successfully transfer marker",
+			msg:           types.NewMsgTransferRequest(s.owner1Addr, s.owner1Addr, s.owner2Addr, sdk.NewInt64Coin(hotdogDenom, 0)),
+			expectedEvent: types.NewEventMarkerTransfer("0", hotdogDenom, s.owner1, s.owner2, s.owner1),
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.ctx.WithEventManager(sdk.NewEventManager())
+			response, err := s.msgServer.Transfer(s.ctx, tc.msg)
+			s.Require().NoError(err, "handler(%T) error", tc.msg)
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Assert().True(result, "Expected typed event was not found in response.\n    Expected: %+v\n    Response: %+v", tc.expectedEvent, response)
+			}
+		})
+	}
+}
