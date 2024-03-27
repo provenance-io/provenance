@@ -438,7 +438,7 @@ func TestMsgService(tt *testing.T) {
 		// swept fee amount
 		expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), feeModuleAccount.GetAddress().String(), sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100)))...)
 
-		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents) // TODO[1760]: finalize-block
+		assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 	})
 
 	tt.Run("10stake fee associated with msg type", func(t *testing.T) {
@@ -556,7 +556,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 	// fee charged for msg based fee
 	expEvents = append(expEvents, CreateSendCoinEvents(addr1.String(), addr2.String(), sdk.NewCoins(sdk.NewInt64Coin("hotdog", 600)))...)
 
-	assertEventsContains(t, blockRes.TxResults[0].Events, expEvents) // TODO[1760]: finalize-block
+	assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 }
 
 func TestMsgServiceAuthz(tt *testing.T) {
