@@ -9,6 +9,8 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
+// TODO[1760]: marker: Migrate the legacy gov proposals.
+
 func NewProposalHandler(k keeper.Keeper) govtypesv1beta1.Handler {
 	return func(ctx sdk.Context, content govtypesv1beta1.Content) error {
 		switch c := content.(type) {
