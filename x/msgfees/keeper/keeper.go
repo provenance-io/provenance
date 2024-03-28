@@ -22,9 +22,7 @@ import (
 
 const StoreKey = types.ModuleName
 
-// TODO[1760]: event-history: Put this back once our version of the SDK is back in with the updated baseapp.Simulate func.
-// type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
-type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
+type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
 
 // Keeper of the Additional fee store
 type Keeper struct {
