@@ -167,10 +167,21 @@ func jsonArrayJoin(entries ...string) string {
 
 func getLastProposal(t *testing.T, ctx sdk.Context, app *piosimapp.App) *govtypesv1.Proposal {
 	var rv *govtypesv1.Proposal
-	// TODO: proposals: Figure out how to get the most recent proposal.
-	// Propbably involves app.GovKeeper.Proposals.Walk(...).
-	require.NotNil(t, rv, "no gov props found")
-	return nil
+	var highestProposalID uint64 = 0
+
+	err := app.GovKeeper.Proposals.Walk(ctx, nil, func(key uint64, value govtypesv1.Proposal) (stop bool, err error) {
+		if value.Id > highestProposalID {
+			highestProposalID = value.Id
+			rv = &value
+		}
+		return false, nil
+	})
+	if err != nil {
+		t.Fatalf("Error walking through proposals: %v", err)
+	}
+
+	require.NotNil(t, rv, "no gov proposals found")
+	return rv
 }
 
 func TestRegisterMsgService(t *testing.T) {
@@ -1165,29 +1176,28 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 		Txs:    [][]byte{txReward},
 	},
 	)
-	app.Commit()
 	require.NoError(t, err, "FinalizeBlock expected no error")
+	app.Commit()
 
 	time.Sleep(110 * time.Millisecond)
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-	// seq := acct1.Sequence
+	seq := acct1.Sequence
 	for height := int64(2); height <= int64(99); height++ {
-		// require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
-		blockRes, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: height,
 			Time:   time.Now().UTC(),
 			Txs:    [][]byte{tx1},
 		},
 		)
-		app.Commit()
 		require.NoError(t, err, "FinalizeBlock expected no error")
-		assert.NotNil(t, blockRes)
-		// seq = seq + 1
+		app.Commit()
+		seq = seq + 1
 	}
 
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
@@ -1252,6 +1262,7 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 1)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -1299,15 +1310,18 @@ func TestRewardsProgramStartPerformQualifyingActionsRecordedRewardsUnclaimable(t
 	// get past the reward start time ( test that reward program starts up after 50ms)
 	time.Sleep(55 * time.Millisecond)
 
-	for height := int64(2); height < int64(22); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
+	for height := int64(1); height < int64(21); height++ {
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
 		app.Commit()
 		seq = seq + 1
 	}
@@ -1388,6 +1402,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 1)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -1437,17 +1452,21 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	time.Sleep(150 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
-	for height := int64(2); height < int64(7); height++ {
+	for height := int64(1); height < int64(6); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
 		app.Commit()
 		seq = seq + 1
 	}
@@ -1503,42 +1522,53 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	// get the accoutn balances of acct1
 	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// claim rewards for the address
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 7, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	// TODO[1760]: finalize-block: Uncomment these lines.
-	/*
-		msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
-		txClaim, errClaim := SignTxAndGetBytes(
-			NewTestRewardsGasLimit(),
-			fees,
-			encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
-			msgClaim,
-		)
-		require.NoError(t, errClaim, "SignTxAndGetBytes")
-		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
-		require.Equal(t, true, res.IsOK(), "res=%+v", res)
-		// unmarshal the TxMsgData
-		var protoResult sdk.TxMsgData
-		require.NoError(t, proto.Unmarshal(res.Data, &protoResult), "unmarshalling protoResult")
-		require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
-		require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
-			"protoResult.MsgResponses[0].GetTypeUrl()")
-		claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
-		require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
-		assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(), claimResponse.TotalRewardClaim[0].String(),
-			"TotalRewardClaim")
-		if assert.Len(t, claimResponse.ClaimDetails, 1, "ClaimDetails") {
-			assert.Equal(t, 1, int(claimResponse.ClaimDetails[0].RewardProgramId), "RewardProgramId")
-			assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(),
-				claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "ClaimDetails TotalRewardClaim")
-			if assert.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5, "ClaimedRewardPeriodDetails") {
-				assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
-					claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "ClaimPeriodReward")
-			}
+	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
+	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+	txClaim, errClaim := SignTxAndGetBytes(
+		ctx,
+		NewTestRewardsGasLimit(),
+		fees,
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msgClaim,
+	)
+	require.NoError(t, errClaim, "SignTxAndGetBytes")
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 6,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txClaim},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+
+	// unmarshal the TxMsgData
+	var protoResult sdk.TxMsgData
+
+	require.NoError(t, app.AppCodec().Unmarshal(res.TxResults[0].Data, &protoResult), "unmarshalling protoResult")
+	require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
+	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
+		"protoResult.MsgResponses[0].GetTypeUrl()")
+	claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
+	require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
+	assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(), claimResponse.TotalRewardClaim[0].String(),
+		"TotalRewardClaim")
+	if assert.Len(t, claimResponse.ClaimDetails, 1, "ClaimDetails") {
+		assert.Equal(t, 1, int(claimResponse.ClaimDetails[0].RewardProgramId), "RewardProgramId")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(),
+			claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "ClaimDetails TotalRewardClaim")
+		if assert.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5, "ClaimedRewardPeriodDetails") {
+			assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+				claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "ClaimPeriodReward")
 		}
-	*/
-	// app.EndBlock(abci.RequestEndBlock{Height: 7}) // TODO[1760]: finalize-block
+	}
+	// res, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	// 	Height: 7,
+	// 	Time:   time.Now().UTC(),
+	// },
+	// )
+	// _ = res
+	// require.NoError(t, err, "FinalizeBlock expected no error")
 	app.Commit()
+
 	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// make sure account balance has the tokens
 	balanceChange := balanceLater.AmountOf(pioconfig.GetProvenanceConfig().FeeDenom).Sub(balance.AmountOf(pioconfig.GetProvenanceConfig().FeeDenom))
@@ -1599,17 +1629,19 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	time.Sleep(150 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
-	for height := int64(2); height < int64(7); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
+	for height := int64(1); height < int64(6); height++ {
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
 		app.Commit()
 		seq = seq + 1
 	}
@@ -1666,45 +1698,48 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	// get the accoutn balances of acct1
 	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// claim rewards for the address
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 7, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	// TODO[1760]: finalize-block: Uncomment these lines.
-	/*
-		msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
-		txClaim, errClaim := SignTxAndGetBytes(
-			NewTestRewardsGasLimit(),
-			fees,
-			encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
-			msgClaim,
-		)
-		require.NoError(t, errClaim, "SignTxAndGetBytes")
-		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
-		require.Equal(t, true, res.IsOK(), "res=%+v", res)
-		// unmarshal the TxMsgData
-		var protoResult sdk.TxMsgData
-		require.NoError(t, proto.Unmarshal(res.Data, &protoResult), "unmarshalling protoResult")
-		require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
-		require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
-			"protoResult.MsgResponses[0].GetTypeUrl()")
-		claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
-		require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
-		if assert.NotEmpty(t, claimResponse.TotalRewardClaim, "TotalRewardClaim") {
-			assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
-				claimResponse.TotalRewardClaim[0].String(), "TotalRewardClaim")
+	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
+	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+	txClaim, errClaim := SignTxAndGetBytes(
+		ctx,
+		NewTestRewardsGasLimit(),
+		fees,
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msgClaim,
+	)
+	require.NoError(t, errClaim, "SignTxAndGetBytes")
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 6,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txClaim},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+
+	// unmarshal the TxMsgData
+	var protoResult sdk.TxMsgData
+	require.NoError(t, app.AppCodec().Unmarshal(res.TxResults[0].Data, &protoResult), "unmarshalling protoResult")
+	require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
+	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
+		"protoResult.MsgResponses[0].GetTypeUrl()")
+	claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
+	require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
+	if assert.NotEmpty(t, claimResponse.TotalRewardClaim, "TotalRewardClaim") {
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
+			claimResponse.TotalRewardClaim[0].String(), "TotalRewardClaim")
+	}
+	if assert.NotEmpty(t, claimResponse.ClaimDetails, "ClaimDetails") {
+		assert.Len(t, claimResponse.ClaimDetails, 1, "ClaimDetails")
+		assert.Equal(t, 1, int(claimResponse.ClaimDetails[0].RewardProgramId), "RewardProgramId")
+		assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
+			claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "ClaimDetails TotalRewardClaim")
+		if assert.NotEmpty(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, "ClaimedRewardPeriodDetails") {
+			assert.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5, "ClaimedRewardPeriodDetails")
+			assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+				claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "ClaimPeriodReward")
 		}
-		if assert.NotEmpty(t, claimResponse.ClaimDetails, "ClaimDetails") {
-			assert.Len(t, claimResponse.ClaimDetails, 1, "ClaimDetails")
-			assert.Equal(t, 1, int(claimResponse.ClaimDetails[0].RewardProgramId), "RewardProgramId")
-			assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
-				claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "ClaimDetails TotalRewardClaim")
-			if assert.NotEmpty(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, "ClaimedRewardPeriodDetails") {
-				assert.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5, "ClaimedRewardPeriodDetails")
-				assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
-					claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "ClaimPeriodReward")
-			}
-		}
-	*/
-	// app.EndBlock(abci.RequestEndBlock{Height: 7}) // TODO[1760]: finalize-block
+	}
+
 	app.Commit()
 	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	balanceChange := balanceLater.AmountOf("hotdog").Sub(balance.AmountOf("hotdog"))
@@ -1795,17 +1830,21 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	time.Sleep(150 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
-	for height := int64(2); height < int64(7); height++ {
+	for height := int64(1); height < int64(6); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
 		// wait for claim period to end (claim period is 1s)
 		time.Sleep(1500 * time.Millisecond)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
 		app.Commit()
 		seq = seq + 1
 	}
@@ -1862,50 +1901,59 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	// get the accoutn balances of acct1
 	balance := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// claim rewards for the address
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 7, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	// TODO[1760]: finalize-block: Uncomment these lines.
-	/*
-		msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
-		// needs extra gas
-		txClaim, errClaim := SignTxAndGetBytes(300000, fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msgClaim)
-		require.NoError(t, errClaim, "SignTxAndGetBytes")
-		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
-		require.Equal(t, true, res.IsOK(), "res=%+v", res)
-		// unmarshal the TxMsgData
-		var protoResult sdk.TxMsgData
-		require.NoError(t, proto.Unmarshal(res.Data, &protoResult), "unmarshalling protoResult")
-		require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
-		require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
-			"protoResult.MsgResponses[0].GetTypeUrl()")
-		claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
-		require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
+
+	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
+	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+	// needs extra gas
+	txClaim, errClaim := SignTxAndGetBytes(ctx, 300000, fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msgClaim)
+	require.NoError(t, errClaim, "SignTxAndGetBytes")
+
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 6,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txClaim},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+	// unmarshal the TxMsgData
+	var protoResult sdk.TxMsgData
+	require.NoError(t, app.AppCodec().Unmarshal(res.TxResults[0].Data, &protoResult), "unmarshalling protoResult")
+	require.Len(t, protoResult.MsgResponses, 1, "protoResult.MsgResponses")
+	require.Equal(t, protoResult.MsgResponses[0].GetTypeUrl(), "/provenance.reward.v1.MsgClaimAllRewardsResponse",
+		"protoResult.MsgResponses[0].GetTypeUrl()")
+	claimResponse := rewardtypes.MsgClaimAllRewardsResponse{}
+	require.NoError(t, claimResponse.Unmarshal(protoResult.MsgResponses[0].Value), "unmarshalling claimResponse")
+	assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
+		claimResponse.TotalRewardClaim[0].String(), "TotalRewardClaim")
+	if assert.NotEmpty(t, claimResponse.ClaimDetails, "ClaimDetails") {
+		assert.Len(t, claimResponse.ClaimDetails, 2)
+
+		assert.Equal(t, 1, int(claimResponse.ClaimDetails[0].RewardProgramId), "[0].RewardProgramId")
 		assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
-			claimResponse.TotalRewardClaim[0].String(), "TotalRewardClaim")
-		if assert.NotEmpty(t, claimResponse.ClaimDetails, "ClaimDetails") {
-			assert.Len(t, claimResponse.ClaimDetails, 2)
-
-			assert.Equal(t, 1, int(claimResponse.ClaimDetails[0].RewardProgramId), "[0].RewardProgramId")
-			assert.Equal(t, sdk.NewInt64Coin("hotdog", 50_000_000_000).String(),
-				claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "[0].TotalRewardClaim")
-			if assert.NotEmpty(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, "[0].ClaimedRewardPeriodDetails") {
-				assert.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5, "[0].ClaimedRewardPeriodDetails")
-				assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
-					claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "[0].[0].ClaimPeriodReward")
-			}
-
-			assert.Equal(t, 2, int(claimResponse.ClaimDetails[1].RewardProgramId), "[1].RewardProgramId")
-			assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(),
-				claimResponse.ClaimDetails[1].TotalRewardClaim.String(), "[1].TotalRewardClaim")
-			if assert.NotEmpty(t, claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails, "[1].ClaimedRewardPeriodDetails") {
-				assert.Len(t, claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails, 5, "[1].ClaimedRewardPeriodDetails")
-				assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
-					claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "[1].[0].ClaimPeriodReward")
-			}
+			claimResponse.ClaimDetails[0].TotalRewardClaim.String(), "[0].TotalRewardClaim")
+		if assert.NotEmpty(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, "[0].ClaimedRewardPeriodDetails") {
+			assert.Len(t, claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails, 5, "[0].ClaimedRewardPeriodDetails")
+			assert.Equal(t, sdk.NewInt64Coin("hotdog", 10_000_000_000).String(),
+				claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "[0].[0].ClaimPeriodReward")
 		}
-	*/
 
-	// app.EndBlock(abci.RequestEndBlock{Height: 7}) // TODO[1760]: finalize-block
+		assert.Equal(t, 2, int(claimResponse.ClaimDetails[1].RewardProgramId), "[1].RewardProgramId")
+		assert.Equal(t, sdk.NewInt64Coin("nhash", 50_000_000_000).String(),
+			claimResponse.ClaimDetails[1].TotalRewardClaim.String(), "[1].TotalRewardClaim")
+		if assert.NotEmpty(t, claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails, "[1].ClaimedRewardPeriodDetails") {
+			assert.Len(t, claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails, 5, "[1].ClaimedRewardPeriodDetails")
+			assert.Equal(t, sdk.NewInt64Coin("nhash", 10_000_000_000).String(),
+				claimResponse.ClaimDetails[1].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "[1].[0].ClaimPeriodReward")
+		}
+	}
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 7,
+		Time:   time.Now().UTC(),
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+
 	app.Commit()
 	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// make sure account balance has the tokens
@@ -1923,6 +1971,7 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -1971,17 +2020,20 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	time.Sleep(150 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
-	for height := int64(2); height < int64(7); height++ {
+	for height := int64(1); height < int64(6); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
-		// wait for claim period to end (claim period is 1s)
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+
 		time.Sleep(1500 * time.Millisecond)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
 		app.Commit()
 		seq = seq + 1
 	}
@@ -2036,22 +2088,23 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	}
 
 	// claim rewards for the address
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 7, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	// TODO[1760]: finalize-block: Uncomment these lines.
-	/*
-		msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
-		require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
-		txClaim, errClaim := SignTxAndGetBytes(
-			NewTestRewardsGasLimit(),
-			fees,
-			encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
-			msgClaim,
-		)
-		require.NoError(t, errClaim, "SignTxAndGetBytes")
-		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txClaim})
-		require.Equal(t, true, res.IsErr(), "res=%+v", res)
-	*/
-	// app.EndBlock(abci.RequestEndBlock{Height: 7}) // TODO[1760]: finalize-block
+	msgClaim := rewardtypes.NewMsgClaimAllRewardsRequest(acct1.Address)
+	require.NoError(t, acct1.SetSequence(seq), "SetSequence(%d)", seq)
+	txClaim, errClaim := SignTxAndGetBytes(ctx,
+		NewTestRewardsGasLimit(),
+		fees,
+		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
+		msgClaim,
+	)
+	require.NoError(t, errClaim, "SignTxAndGetBytes")
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 6,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txClaim},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
 	app.Commit()
 }
 
@@ -2063,6 +2116,7 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	priv, _, addr := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -2112,16 +2166,20 @@ func TestRewardsProgramStartPerformQualifyingActionsCriteriaNotMet(t *testing.T)
 	time.Sleep(110 * time.Millisecond)
 
 	//go through 5 blocks, but take a long time to cut blocks.
-	for height := int64(2); height < int64(7); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
+	for height := int64(1); height < int64(6); height++ {
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
 		time.Sleep(1100 * time.Millisecond)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
+
 		app.Commit()
 		seq = seq + 1
 	}
@@ -2150,6 +2208,7 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -2200,16 +2259,18 @@ func TestRewardsProgramStartPerformQualifyingActionsTransferAndDelegationsPresen
 	time.Sleep(150 * time.Millisecond)
 
 	//go through 5 blocks, but take a time to cut blocks > claim period time interval.
-	for height := int64(2); height < int64(7); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
+	for height := int64(1); height < int64(6); height++ {
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
 		time.Sleep(1100 * time.Millisecond)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
 		app.Commit()
 		seq = seq + 1
 	}
@@ -2255,6 +2316,7 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -2304,16 +2366,18 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 	time.Sleep(1 * time.Second)
 
 	//go through 5 blocks, but take a long time to cut blocks.
-	for height := int64(2); height < int64(7); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
+	for height := int64(1); height < int64(6); height++ {
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
 		time.Sleep(1100 * time.Millisecond)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
 		app.Commit()
 		seq = seq + 1
 	}
@@ -2337,8 +2401,8 @@ func TestRewardsProgramStartPerformQualifyingActionsThreshHoldNotMet(t *testing.
 func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
-	//_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
@@ -2387,27 +2451,30 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 		coinsPos,
 		addr,
 	)
-
+	require.NoError(t, err, "NewMsgSubmitProposal expected to create msg")
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
-	time.Sleep(200 * time.Millisecond)
 
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txGov, err := SignTx(
+	txGov, err := SignTxAndGetBytes(
 		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		msg,
 	)
-	require.NoError(t, err, "SignTx")
+	require.NoError(t, err, "SignTxAndGetBytes")
 
-	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
-	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
-
-	// app.EndBlock(abci.RequestEndBlock{Height: 2}) // TODO[1760]: finalize-block
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txGov},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+	require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+	require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
+	time.Sleep(200 * time.Millisecond)
 	app.Commit()
 
 	seq = seq + 1
@@ -2416,15 +2483,19 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	// tx with a fee associated with msg type and account has funds
 	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal.Id, govtypesv1beta1.OptionYes)
 
-	for height := int64(3); height < int64(23); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
+	for height := int64(2); height < int64(22); height++ {
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+		res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
+		require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+		require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 		app.Commit()
 		seq = seq + 1
 	}
@@ -2451,6 +2522,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv1.PubKey(), 0, 0)
 	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	acctBalance := sdk.NewCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
@@ -2500,25 +2572,30 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 		coinsPos,
 		addr1,
 	)
+	require.NoError(t, err, "NewMsgSubmitProposal expected to create msg")
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	time.Sleep(200 * time.Millisecond)
 
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txGov, err := SignTx(
+	txGov, err := SignTxAndGetBytes(
 		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv1.PubKey(), priv1, *acct1, ctx.ChainID(),
 		msg,
 	)
-	require.NoError(t, err, "SignTx")
+	require.NoError(t, err, "SignTxAndGetBytes")
 
-	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
-	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txGov},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+	require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+	require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 
-	// app.EndBlock(abci.RequestEndBlock{Height: 2}) // TODO[1760]: finalize-block
 	app.Commit()
 
 	proposal := getLastProposal(t, ctx, app)
@@ -2528,15 +2605,20 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_InvalidDelegations(t *
 	acct2 = app.AccountKeeper.GetAccount(ctx, acct2.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct2.Sequence
 
-	for height := int64(3); height < int64(5); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
+	for height := int64(2); height < int64(4); height++ {
 		require.NoError(t, acct2.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), vote2)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv2.PubKey(), priv2, *acct2, ctx.ChainID(), vote2)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
+		require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+		require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
+
 		app.Commit()
 		seq = seq + 1
 	}
@@ -2580,6 +2662,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
@@ -2628,27 +2711,32 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 		coinsPos,
 		addr,
 	)
+	require.NoError(t, err, "NewMsgSubmitProposal expected to create msg")
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
 	time.Sleep(200 * time.Millisecond)
 
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txGov, err := SignTx(
+	txGov, err := SignTxAndGetBytes(
 		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		msg,
 	)
-	require.NoError(t, err, "SignTx")
+	require.NoError(t, err, "SignTxAndGetBytes")
 
-	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
-	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txGov},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+	require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+	require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 
-	// app.EndBlock(abci.RequestEndBlock{Height: 2}) // TODO[1760]: finalize-block
 	app.Commit()
 
 	seq = seq + 1
@@ -2658,15 +2746,21 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal.Id, govtypesv1beta1.OptionYes)
 
 	// threshold will be met after 10 actions
-	for height := int64(3); height < int64(23); height++ {
+	for height := int64(2); height < int64(22); height++ {
 		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+		res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
+		require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+		require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
+
 		app.Commit()
 		seq = seq + 1
 	}
@@ -2707,6 +2801,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000), sdk.NewInt64Coin("atom", 10000000), sdk.NewInt64Coin("nhash", 1000000_000_000_000))
 
 	rewardProgram := rewardtypes.NewRewardProgram(
@@ -2749,6 +2844,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 		coinsPos,
 		addr,
 	)
+	require.NoError(t, err, "NewMsgSubmitProposal expected to create msg")
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	ctx.WithBlockTime(time.Now())
@@ -2758,13 +2854,19 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	time.Sleep(200 * time.Millisecond)
 
 	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txGov, err := SignTx(ctx, NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-	require.NoError(t, err)
+	txGov, err := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+	require.NoError(t, err, "SignTxAndGetBytes")
 
-	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
-	require.NoError(t, errFromDeliverTx)
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txGov},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+	require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+	require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 
-	// app.EndBlock(abci.RequestEndBlock{Height: 2}) // TODO[1760]: finalize-block
 	app.Commit()
 
 	seq = seq + 1
@@ -2776,15 +2878,19 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 
 	// threshold will be met after 10 actions
-	for height := int64(3); height < int64(23); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-		require.NoError(t, acct1.SetSequence(seq))
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
-		require.NoError(t, err1)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx)
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+	for height := int64(2); height < int64(22); height++ {
+		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+		res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
+		require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+		require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 		app.Commit()
 		seq = seq + 1
 	}
@@ -2863,6 +2969,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 		coinsPos,
 		addr3,
 	)
+	require.NoError(t, err, "NewMsgSubmitProposal expected to create msg")
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	ctx.WithBlockTime(time.Now())
@@ -2871,14 +2978,18 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	ctx.WithBlockTime(time.Now())
 	time.Sleep(200 * time.Millisecond)
 
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txGov, err := SignTx(ctx, NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), msg)
-	require.NoError(t, err)
+	txGov, err := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), msg)
+	require.NoError(t, err, "SignTxAndGetBytes")
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txGov},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+	require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+	require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 
-	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
-	require.NoError(t, errFromDeliverTx)
-
-	// app.EndBlock(abci.RequestEndBlock{Height: 2}) // TODO[1760]: finalize-block
 	app.Commit()
 
 	seq = seq + 1
@@ -2890,15 +3001,19 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
 
 	// threshold will be met after 10 actions
-	for height := int64(3); height < int64(23); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
+	for height := int64(2); height < int64(22); height++ {
 		require.NoError(t, acct3.SetSequence(seq))
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), vote)
-		require.NoError(t, err1)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx)
-		assert.NotEmpty(t, res.GetEvents(), "should have emitted an event.")
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv3.PubKey(), priv3, *acct3, ctx.ChainID(), vote)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+		res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
+		require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+		require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 		app.Commit()
 		seq = seq + 1
 	}
@@ -2931,6 +3046,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
@@ -2980,27 +3096,32 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 		coinsPos,
 		addr,
 	)
+	require.NoError(t, err, "NewMsgSubmitProposal expected to create msg")
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
 	time.Sleep(110 * time.Millisecond)
 
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txGov, err := SignTx(
+	txGov, err := SignTxAndGetBytes(
 		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		msg,
 	)
-	require.NoError(t, err, "SignTx")
+	require.NoError(t, err, "SignTxAndGetBytes")
 
-	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
-	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txGov},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+	require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+	require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 
-	// app.EndBlock(abci.RequestEndBlock{Height: 2}) // TODO[1760]: finalize-block
 	app.Commit()
 
 	seq = seq + 1
@@ -3009,15 +3130,19 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_NoQualifyingAction
 	// tx with a fee associated with msg type and account has funds
 	vote1 := govtypesv1beta1.NewMsgVote(addr, proposal.Id, govtypesv1beta1.OptionYes)
 
-	for height := int64(3); height < int64(15); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
+	for height := int64(2); height < int64(14); height++ {
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+		res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
+		require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+		require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 		app.Commit()
 		seq = seq + 1
 	}
@@ -3054,6 +3179,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	priv, pubKey, addr := testdata.KeyTestPubAddr()
 	_, pubKey2, _ := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
+	pioconfig.SetProvenanceConfig("nhash", 0)
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000000000),
 		sdk.NewInt64Coin("atom", 10000000),
@@ -3108,24 +3234,30 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 		coinsPos,
 		addr,
 	)
+	require.NoError(t, err, "NewMsgSubmitProposal expected to create msg")
 
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
 	seq := acct1.Sequence
 	time.Sleep(200 * time.Millisecond)
 
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txGov, err := SignTx(ctx,
+	txGov, err := SignTxAndGetBytes(ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		msg,
 	)
-	require.NoError(t, err, "SignTx")
+	require.NoError(t, err, "SignTxAndGetBytes")
 
-	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txGov)
-	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txGov},
+	},
+	)
+	require.NoError(t, err, "FinalizeBlock expected no error")
+	require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+	require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 
 	// app.EndBlock(abci.RequestEndBlock{Height: 2}) // TODO[1760]: finalize-block
 	app.Commit()
@@ -3137,16 +3269,21 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	delAddr, _ := valSet.GetByIndex(0)
 	delegation := stakingtypes.NewMsgDelegate(addr.String(), sdk.ValAddress(delAddr).String(), sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000))
 
-	for height := int64(3); height < int64(23); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
+	for height := int64(2); height < int64(22); height++ {
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), delegation)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), delegation)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
+		require.NoError(t, err, "FinalizeBlock expected no error")
+		require.Len(t, res.TxResults, 1, "TxResults expected length not met")
+		require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 		time.Sleep(100 * time.Millisecond)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+
 		app.Commit()
 		seq = seq + 1
 	}
