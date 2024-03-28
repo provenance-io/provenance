@@ -261,6 +261,7 @@ func TestFailedTx(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
+		assert.NoError(t, err, "FinalizeBlock expected no error")
 		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
 		assert.Equal(t, uint32(0x5), blockRes.TxResults[0].Code, "code 5 insufficient funds error")
 
@@ -305,6 +306,7 @@ func TestFailedTx(tt *testing.T) {
 				Txs:    [][]byte{txBytes},
 			},
 		)
+		assert.NoError(t, err, "FinalizeBlock expected no error")
 		t.Logf("Events:\n%s\n", eventsString(blockRes.TxResults[0].Events, true))
 		assert.Equal(t, uint32(0x5), blockRes.TxResults[0].Code, "code 5 insufficient funds error")
 
@@ -977,7 +979,6 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 func TestRewardsProgramStartError(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	priv, _, addr := testdata.KeyTestPubAddr()
-	//_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr, priv.PubKey(), 0, 0)
 	acct1Balance := sdk.NewCoins(
 		sdk.NewInt64Coin("hotdog", 1000), sdk.NewInt64Coin("atom", 1000),
@@ -1078,20 +1079,23 @@ func TestRewardsProgramStart(t *testing.T) {
 			},
 		},
 	)
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txReward, err := SignTx(
+
+	txReward, err := SignTxAndGetBytes(
 		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		&rewardProgram,
 	)
-	require.NoError(t, err, "SignTx")
-	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txReward)
-	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
-	// app.EndBlock(abci.RequestEndBlock{Height: 2}) // TODO[1760]: finalize-block
-	app.Commit()
+	require.NoError(t, err, "SignTxAndGetBytes")
+
+	blockRes, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: ctx.BlockHeight() + 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txReward},
+	},
+	)
+	assert.NoError(t, err, "FinalizeBlock expected no error")
 
 	expEvents := []abci.Event{
 		NewEvent(rewardtypes.EventTypeRewardProgramCreated,
@@ -1099,7 +1103,7 @@ func TestRewardsProgramStart(t *testing.T) {
 		NewEvent(sdk.EventTypeMessage,
 			NewAttribute(sdk.AttributeKeyAction, sdk.MsgTypeURL(&rewardtypes.MsgCreateRewardProgramRequest{}))),
 	}
-	assertEventsContains(t, res.Events, expEvents)
+	assertEventsContains(t, blockRes.TxResults[0].Events, expEvents)
 }
 
 func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
@@ -1146,38 +1150,44 @@ func TestRewardsProgramStartPerformQualifyingActions(t *testing.T) {
 			},
 		},
 	)
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-	txReward, err := SignTx(
+	txReward, err := SignTxAndGetBytes(
 		ctx,
 		NewTestRewardsGasLimit(),
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_190_500_000)),
 		encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(),
 		&rewardProgram,
 	)
-	require.NoError(t, err, "SignTx")
-	_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), txReward)
-	require.NoError(t, errFromDeliverTx, "SimDeliver")
-	assert.NotEmpty(t, res.GetEvents(), "res.GetEvents()")
-	// app.EndBlock(abci.RequestEndBlock{Height: 2}) // TODO[1760]: finalize-block
+	require.NoError(t, err, "SignTxAndGetBytes")
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: ctx.BlockHeight() + 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txReward},
+	},
+	)
 	app.Commit()
+	require.NoError(t, err, "FinalizeBlock expected no error")
 
 	time.Sleep(110 * time.Millisecond)
 	// tx with a fee associated with msg type and account has funds
 	msg := banktypes.NewMsgSend(addr, addr2, sdk.NewCoins(sdk.NewInt64Coin("atom", 50)))
 	fees := sdk.NewCoins(sdk.NewInt64Coin("atom", 150))
 	acct1 = app.AccountKeeper.GetAccount(ctx, acct1.GetAddress()).(*authtypes.BaseAccount)
-	seq := acct1.Sequence
-	for height := int64(3); height <= int64(100); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
-		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
-		tx1, err1 := SignTx(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
-		require.NoError(t, err1, "[%d]: SignTx", height)
-		_, res, errFromDeliverTx := app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx1)
-		require.NoError(t, errFromDeliverTx, "[%d]: SimDeliver", height)
-		assert.NotEmpty(t, res.GetEvents(), "[%d]: res.GetEvents()", height)
-		// app.EndBlock(abci.RequestEndBlock{Height: height}) // TODO[1760]: finalize-block
+	// seq := acct1.Sequence
+	for height := int64(2); height <= int64(99); height++ {
+		// require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
+		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
+		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
+		blockRes, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+			Height: height,
+			Time:   time.Now().UTC(),
+			Txs:    [][]byte{tx1},
+		},
+		)
 		app.Commit()
-		seq = seq + 1
+		require.NoError(t, err, "FinalizeBlock expected no error")
+		assert.NotNil(t, blockRes)
+		// seq = seq + 1
 	}
 
 	claimPeriodDistributions, err := app.RewardKeeper.GetAllClaimPeriodRewardDistributions(ctx)
