@@ -105,6 +105,8 @@ message MsgAddMarkerResponse {}
 
 // MsgAddAccessRequest defines the Msg/AddAccess request type
 message MsgAddAccessRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   string               denom         = 1;
   string               administrator = 2;
   repeated AccessGrant access        = 3 [(gogoproto.nullable) = false];
@@ -115,6 +117,8 @@ message MsgAddAccessResponse {}
 
 // MsgDeleteAccessRequest defines the Msg/DeleteAccess request type
 message MsgDeleteAccessRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   string denom           = 1;
   string administrator   = 2;
   string removed_address = 3;
@@ -124,6 +128,8 @@ message MsgDeleteAccessResponse {}
 
 // MsgFinalizeRequest defines the Msg/Finalize request type
 message MsgFinalizeRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   string denom         = 1;
   string administrator = 2;
 }
@@ -132,6 +138,8 @@ message MsgFinalizeResponse {}
 
 // MsgActivateRequest defines the Msg/Activate request type
 message MsgActivateRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   string denom         = 1;
   string administrator = 2;
 }
@@ -140,6 +148,8 @@ message MsgActivateResponse {}
 
 // MsgCancelRequest defines the Msg/Cancel request type
 message MsgCancelRequest {
+  option (cosmos.msg.v1.signer) = "reward_address";
+
   string denom         = 1;
   string administrator = 2;
 }
@@ -148,6 +158,8 @@ message MsgCancelResponse {}
 
 // MsgDeleteRequest defines the Msg/Delete request type
 message MsgDeleteRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   string denom         = 1;
   string administrator = 2;
 }
@@ -156,6 +168,8 @@ message MsgDeleteResponse {}
 
 // MsgMintRequest defines the Msg/Mint request type
 message MsgMintRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string administrator = 2;
@@ -165,6 +179,8 @@ message MsgMintResponse {}
 
 // MsgBurnRequest defines the Msg/Burn request type
 message MsgBurnRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string administrator = 2;
@@ -174,6 +190,8 @@ message MsgBurnResponse {}
 
 // MsgWithdrawRequest defines the Msg/Withdraw request type
 message MsgWithdrawRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   string   denom                           = 1;
   string   administrator                   = 2;
   string   to_address                      = 3;
@@ -185,6 +203,8 @@ message MsgWithdrawResponse {}
 
 // MsgTransferRequest defines the Msg/Transfer request type
 message MsgTransferRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string administrator = 3;
@@ -197,6 +217,8 @@ message MsgTransferResponse {}
 
 // MsgIbcTransferRequest defines the Msg/IbcTransfer request type for markers.
 message MsgIbcTransferRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   ibc.applications.transfer.v1.MsgTransfer transfer = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customtype) = "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types.MsgTransfer"
@@ -209,6 +231,8 @@ message MsgIbcTransferResponse {}
 
 // MsgSetDenomMetadataRequest defines the Msg/SetDenomMetadata request type
 message MsgSetDenomMetadataRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   cosmos.bank.v1beta1.Metadata metadata = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/x/bank/types.Metadata"];
   string administrator = 2;
@@ -219,6 +243,8 @@ message MsgSetDenomMetadataResponse {}
 
 // MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker request type
 message MsgAddFinalizeActivateMarkerRequest {
+  option (cosmos.msg.v1.signer) = "from_address";
+
   cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"];
   string               manager                  = 3;
@@ -326,6 +352,8 @@ message MsgUpdateSendDenyListResponse {}
 
 // MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 message MsgAddNetAssetValuesRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   string                 denom            = 1;
   string                 administrator    = 2;
   repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
