@@ -36,12 +36,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+
 	// rosettacmd "github.com/cosmos/rosetta/cmd" // TODO[1760]: rosetta
 
 	"github.com/provenance-io/provenance/app"
@@ -60,7 +63,25 @@ const (
 // NewRootCmd creates a new root command for provenanced. It is called once in the main function.
 // Providing sealConfig = false is only for unit tests that want to run multiple commands.
 func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
+	// tempDir creates a temporary home directory.
+	var tempDir = func() string {
+		dir, err := os.MkdirTemp("", "provenanced")
+		if err != nil {
+			panic("failed to create temp dir: " + err.Error())
+		}
+		defer os.RemoveAll(dir)
+
+		return dir
+	}
+
 	encodingConfig := app.MakeEncodingConfig()
+	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
+		tempDir(),
+		0,
+		encodingConfig,
+		simtestutil.EmptyAppOptions{},
+	)
+
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -105,7 +126,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 		},
 	}
 	genAutoCompleteCmd(rootCmd)
-	initRootCmd(rootCmd, encodingConfig)
+	initRootCmd(rootCmd, encodingConfig, tempApp.BasicModuleManager)
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        "",
 		flags.FlagKeyringBackend: "test",
@@ -140,12 +161,12 @@ func Execute(rootCmd *cobra.Command) error {
 	return executor.ExecuteContext(ctx)
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, basicManager module.BasicManager) {
 	rootCmd.AddCommand(
-		InitCmd(app.ModuleBasics),
+		InitCmd(basicManager),
 		// genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome), // TODO[1760]: genutil
 		// genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome), // TODO[1760]: genutil
-		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
+		genutilcli.ValidateGenesisCmd(basicManager),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddRootDomainAccountCmd(app.DefaultNodeHome),
 		AddGenesisMarkerCmd(app.DefaultNodeHome),
@@ -154,7 +175,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		AddGenesisDefaultMarketCmd(app.DefaultNodeHome),
 		AddGenesisCustomMarketCmd(app.DefaultNodeHome),
 		cmtcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		testnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		ConfigCmd(),
 		AddMetaAddressCmd(),
@@ -170,8 +191,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		queryCommand(),
-		txCommand(),
+		queryCommand(basicManager),
+		txCommand(basicManager),
 		keys.Commands(),
 	)
 
@@ -225,7 +246,7 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 }
 
-func queryCommand() *cobra.Command {
+func queryCommand(basicManager module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -243,13 +264,13 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
-	app.ModuleBasics.AddQueryCommands(cmd)
+	basicManager.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
 
-func txCommand() *cobra.Command {
+func txCommand(basicManager module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -271,7 +292,7 @@ func txCommand() *cobra.Command {
 		flags.LineBreak,
 	)
 
-	app.ModuleBasics.AddTxCommands(cmd)
+	basicManager.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd

@@ -6,6 +6,7 @@ import (
 	"sort"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -43,12 +44,17 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		)
 	}
 
+	// finalize block so we have CheckTx state set
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+	})
+	require.NoError(t, err)
+
 	app.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := New(log.NewTestLogger(t), opts.DB, nil, true,
-		map[int64]bool{}, opts.HomePath, 0, opts.EncConfig, simtestutil.EmptyAppOptions{})
-	var err error
+		map[int64]bool{}, opts.HomePath, 0, MakeEncodingConfig(), simtestutil.EmptyAppOptions{})
 	require.NotPanics(t, func() {
 		_, err = app2.ExportAppStateAndValidators(false, nil, nil)
 	}, "exporting app state at current height")
@@ -139,6 +145,12 @@ func TestExportAppStateAndValidators(t *testing.T) {
 
 	allAccounts := app.AccountKeeper.GetAllAccounts(ctx)
 	logAccounts(t, allAccounts, "allAccounts")
+
+	// finalize block so we have CheckTx state set
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: 1,
+	})
+	require.NoError(t, err)
 
 	app.Commit()
 

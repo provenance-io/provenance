@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/core/appmodule"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -25,10 +26,10 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
-	// TODO[1760]: app-module: Add more assertions for the new types and clean up stuff no longer needed.
+	_ module.AppModuleBasic      = (*AppModule)(nil)
+	_ module.AppModuleSimulation = (*AppModule)(nil)
+
+	_ appmodule.AppModule = (*AppModule)(nil)
 )
 
 type AppModule struct {
