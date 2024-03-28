@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "provenance/reward/v1/reward.proto";
+import "cosmos/msg/v1/msg.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/reward/types";
 option java_package        = "io.provenance.reward.v1";
@@ -29,6 +30,8 @@ service Msg {
 
 // MsgCreateRewardProgramRequest is the request type for creating a reward program RPC
 message MsgCreateRewardProgramRequest {
+  option (cosmos.msg.v1.signer) = "distribute_from_address";
+
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
 
@@ -69,6 +72,8 @@ message MsgCreateRewardProgramResponse {
 
 // MsgEndRewardProgramRequest is the request type for ending a reward program RPC
 message MsgEndRewardProgramRequest {
+  option (cosmos.msg.v1.signer) = "program_owner_address";
+
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
 
@@ -83,6 +88,8 @@ message MsgEndRewardProgramResponse {}
 
 // MsgClaimRewardsRequest is the request type for claiming reward from reward program RPC
 message MsgClaimRewardsRequest {
+  option (cosmos.msg.v1.signer) = "reward_address";
+
   // reward program id to claim rewards.
   uint64 reward_program_id = 1;
   // reward address and signer of msg to send claimed rewards to.
@@ -98,6 +105,8 @@ message MsgClaimRewardsResponse {
 
 // MsgClaimRewardsResponse is the request type for claiming rewards from all reward programs RPC
 message MsgClaimAllRewardsRequest {
+  option (cosmos.msg.v1.signer) = "reward_address";
+
   // reward address and signer of msg to send claimed rewards to.
   string reward_address = 1;
 }

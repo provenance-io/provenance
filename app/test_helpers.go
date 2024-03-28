@@ -24,6 +24,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -75,7 +76,7 @@ type SetupOptions struct {
 	ChainID            string
 }
 
-func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
+func setup(t *testing.T, withGenesis bool, invCheckPeriod uint, chainID string) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()
 	// set default config if not set by the flow
@@ -83,7 +84,7 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint) (*App, GenesisSt
 		pioconfig.SetProvenanceConfig("", 0)
 	}
 
-	app := New(loggerMaker(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, simtestutil.EmptyAppOptions{})
+	app := New(loggerMaker(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, simtestutil.EmptyAppOptions{}, baseapp.SetChainID(chainID))
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
@@ -264,7 +265,7 @@ func genesisStateWithValSet(t *testing.T,
 
 // SetupQuerier initializes a new App without genesis and without calling InitChain.
 func SetupQuerier(t *testing.T) *App {
-	app, _ := setup(t, false, 0)
+	app, _ := setup(t, false, 0, "")
 	return app
 }
 
@@ -275,7 +276,7 @@ func SetupQuerier(t *testing.T) *App {
 func SetupWithGenesisValSet(t *testing.T, chainID string, valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	t.Helper()
 
-	app, genesisState := setup(t, true, 5)
+	app, genesisState := setup(t, true, 5, chainID)
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -504,7 +505,7 @@ func SetupWithGenesisRewardsProgram(t *testing.T, nextRewardProgramID uint64, ge
 		}
 	}
 
-	app, genesisState := setup(t, true, 0)
+	app, genesisState := setup(t, true, 0, "")
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
 	genesisState = genesisStateWithRewards(t, app, genesisState, nextRewardProgramID, genesisRewards)
 

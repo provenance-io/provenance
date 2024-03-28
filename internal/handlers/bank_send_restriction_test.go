@@ -174,7 +174,7 @@ func ConstructAndSendTx(tt *testing.T, app piosimapp.App, ctx sdk.Context, acct 
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
 	acct = app.AccountKeeper.GetAccount(ctx, acct.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct, ctx.ChainID(), msg)
+	txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct, ctx.ChainID(), msg)
 	require.NoError(tt, err, "SignTxAndGetBytes")
 	// TODO[1760]: finalize-block: Uncomment the rest of this func.
 	_ = txBytes
