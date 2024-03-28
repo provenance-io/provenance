@@ -13,8 +13,8 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
-	"github.com/provenance-io/provenance/x/marker"
 	"github.com/provenance-io/provenance/x/marker/keeper"
+	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -429,6 +429,7 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
+	msgServer := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrNameOwner.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrNameOwner))
 	err := app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", addrNameOwner, false)
@@ -456,8 +457,7 @@ func TestBankSendCoinsUsesSendRestrictionFn(t *testing.T) {
 		AllowForcedTransfer:    false,
 		RequiredAttributes:     []string{"kyc.provenance.io"},
 	}
-	markerHandler := marker.NewHandler(app.MarkerKeeper)
-	_, err = markerHandler(ctx, makeMarkerMsg)
+	_, err = msgServer.AddFinalizeActivateMarker(ctx, makeMarkerMsg)
 	require.NoError(t, err, "makeMarkerMsg")
 	err = app.MarkerKeeper.WithdrawCoins(ctx, addrHasWithdraw, addrHasAttr, markerDenom, cz(100, markerDenom))
 	require.NoError(t, err, "WithdrawCoins to addrHasTransfer")
@@ -523,6 +523,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false)
+	msgServer := markerkeeper.NewMsgServerImpl(app.MarkerKeeper)
 	app.MarkerKeeper.AddMarkerAccount(ctx, types.NewEmptyMarkerAccount("navcoin", addrManager.String(), []types.AccessGrant{}))
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, addrManager))
 	err := app.NameKeeper.SetNameRecord(ctx, "rando.io", addrManager, false)
@@ -563,8 +564,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 		AllowForcedTransfer:    false,
 		RequiredAttributes:     []string{"rando.io"},
 	}
-	markerHandler := marker.NewHandler(app.MarkerKeeper)
-	_, err = markerHandler(ctx, makeMarkerMsg)
+	_, err = msgServer.AddFinalizeActivateMarker(ctx, makeMarkerMsg)
 	require.NoError(t, err, "MsgAddFinalizeActivateMarkerRequest")
 	err = app.MarkerKeeper.WithdrawCoins(ctx, addrManager, addrManager, markerDenom, cz(100))
 	require.NoError(t, err, "WithdrawCoins to addrInput")

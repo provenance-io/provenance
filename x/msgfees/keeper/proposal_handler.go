@@ -10,6 +10,8 @@ import (
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
+// TODO[1760]: marker: Migrate the legacy gov proposals.
+
 // HandleAddMsgFeeProposal handles an Add msg fees governance proposal request
 func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddMsgFeeProposal, registry codectypes.InterfaceRegistry) error {
 	if err := proposal.ValidateBasic(); err != nil {

@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -16,6 +19,7 @@ import (
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/attribute/types"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 type MsgServerTestSuite struct {
@@ -48,10 +52,30 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.owner1 = s.owner1Addr.String()
 	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.owner1Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
+
+	var nameData nametypes.GenesisState
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", s.owner1Addr, false))
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.name", s.owner1Addr, false))
+	nameData.Params.AllowUnrestrictedNames = false
+	nameData.Params.MaxNameLevels = 16
+	nameData.Params.MinSegmentLength = 2
+	nameData.Params.MaxSegmentLength = 16
+
+	s.app.NameKeeper.InitGenesis(s.ctx, nameData)
 }
 
 func TestMsgServerTestSuite(t *testing.T) {
 	suite.Run(t, new(MsgServerTestSuite))
+}
+
+func (s *MsgServerTestSuite) containsMessage(events []abci.Event, msg proto.Message) bool {
+	for _, event := range events {
+		typeEvent, _ := sdk.ParseTypedEvent(event)
+		if assert.ObjectsAreEqual(msg, typeEvent) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *MsgServerTestSuite) TestUpdateAttributeExpiration() {
@@ -107,6 +131,197 @@ func (s *MsgServerTestSuite) TestUpdateAttributeExpiration() {
 			} else {
 				s.Assert().NoError(err)
 				s.Assert().NotNil(response)
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestMsgAddAttributeRequest() {
+
+	testcases := []struct {
+		name          string
+		msg           *types.MsgAddAttributeRequest
+		signers       []string
+		errorMsg      string
+		expectedEvent proto.Message
+	}{
+		{
+			name: "should successfully add new attribute",
+			msg: types.NewMsgAddAttributeRequest(s.owner1,
+				s.owner1Addr, "example.name", types.AttributeType_String, []byte("value")),
+			signers: []string{s.owner1},
+			expectedEvent: types.NewEventAttributeAdd(
+				types.Attribute{
+					Address:       s.owner1,
+					Name:          "example.name",
+					Value:         []byte("value"),
+					AttributeType: types.AttributeType_String,
+				},
+				s.owner1),
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := s.msgServer.AddAttribute(s.ctx, tc.msg)
+
+			if len(tc.errorMsg) > 0 {
+				s.Assert().EqualError(err, tc.errorMsg)
+			} else {
+				if tc.expectedEvent != nil {
+					result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+					s.True(result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
+				}
+
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestMsgUpdateAttributeRequest() {
+	testAttr := types.Attribute{
+		Address:       s.owner1,
+		Name:          "example.name",
+		Value:         []byte("value"),
+		AttributeType: types.AttributeType_String,
+	}
+	var attrData types.GenesisState
+	attrData.Attributes = append(attrData.Attributes, testAttr)
+	attrData.Params.MaxValueLength = 100
+	s.app.AttributeKeeper.InitGenesis(s.ctx, &attrData)
+
+	testcases := []struct {
+		name          string
+		msg           *types.MsgUpdateAttributeRequest
+		signers       []string
+		errorMsg      string
+		expectedEvent proto.Message
+	}{
+		{
+			name: "should successfully update attribute",
+			msg: types.NewMsgUpdateAttributeRequest(
+				s.owner1,
+				s.owner1Addr, "example.name",
+				[]byte("value"), []byte("1"),
+				types.AttributeType_String,
+				types.AttributeType_Int),
+			signers: []string{s.owner1},
+			expectedEvent: types.NewEventAttributeUpdate(
+				testAttr,
+				types.Attribute{
+					Address:       s.owner1,
+					Name:          "example.name",
+					Value:         []byte("1"),
+					AttributeType: types.AttributeType_Int,
+				},
+				s.owner1),
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := s.msgServer.UpdateAttribute(s.ctx, tc.msg)
+
+			if len(tc.errorMsg) > 0 {
+				s.Assert().EqualError(err, tc.errorMsg)
+			} else {
+				if tc.expectedEvent != nil {
+					result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+					s.True(result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
+				}
+
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestMsgDistinctDeleteAttributeRequest() {
+	testAttr := types.Attribute{
+		Address:       s.owner1,
+		Name:          "example.name",
+		Value:         []byte("value"),
+		AttributeType: types.AttributeType_String,
+	}
+	var attrData types.GenesisState
+	attrData.Attributes = append(attrData.Attributes, testAttr)
+	attrData.Params.MaxValueLength = 100
+	s.app.AttributeKeeper.InitGenesis(s.ctx, &attrData)
+
+	testcases := []struct {
+		name          string
+		msg           *types.MsgDeleteDistinctAttributeRequest
+		signers       []string
+		errorMsg      string
+		expectedEvent proto.Message
+	}{
+		{
+			name:          "should successfully delete attribute with value",
+			msg:           types.NewMsgDeleteDistinctAttributeRequest(s.owner1, s.owner1Addr, "example.name", []byte("value")),
+			signers:       []string{s.owner1},
+			expectedEvent: types.NewEventDistinctAttributeDelete("example.name", "value", s.owner1, s.owner1),
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := s.msgServer.DeleteDistinctAttribute(s.ctx, tc.msg)
+
+			if len(tc.errorMsg) > 0 {
+				s.Assert().EqualError(err, tc.errorMsg)
+			} else {
+				if tc.expectedEvent != nil {
+					result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+					s.True(result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
+				}
+
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestMsgDeleteAttributeRequest() {
+	testAttr := types.Attribute{
+		Address:       s.owner1,
+		Name:          "example.name",
+		Value:         []byte("value"),
+		AttributeType: types.AttributeType_String,
+	}
+	var attrData types.GenesisState
+	attrData.Attributes = append(attrData.Attributes, testAttr)
+	attrData.Params.MaxValueLength = 100
+	s.app.AttributeKeeper.InitGenesis(s.ctx, &attrData)
+
+	testcases := []struct {
+		name          string
+		msg           *types.MsgDeleteAttributeRequest
+		signers       []string
+		errorMsg      string
+		expectedEvent proto.Message
+	}{
+		{
+			name:          "should successfully add new attribute",
+			msg:           types.NewMsgDeleteAttributeRequest(s.owner1, s.owner1Addr, "example.name"),
+			signers:       []string{s.owner1},
+			expectedEvent: types.NewEventAttributeDelete("example.name", s.owner1, s.owner1),
+		},
+	}
+
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := s.msgServer.DeleteAttribute(s.ctx, tc.msg)
+
+			if len(tc.errorMsg) > 0 {
+				s.Assert().EqualError(err, tc.errorMsg)
+			} else {
+				if tc.expectedEvent != nil {
+					result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+					s.True(result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
+				}
+
 			}
 		})
 	}
