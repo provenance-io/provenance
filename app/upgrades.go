@@ -223,7 +223,7 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			err = upgradeToIBCv8(ctx, app)
+			err = updateIBCClients(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -252,7 +252,7 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			err = upgradeToIBCv8(ctx, app)
+			err = updateIBCClients(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -579,14 +579,14 @@ func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
 	return nil
 }
 
-// upgradeToIBCv8 upgrades IBC from v6 to v8.
+// updateIBCClients updates the allowed clients for IBC.
 // TODO: Remove with the umber handlers.
-func upgradeToIBCv8(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Upgrading to IBCv8")
+func updateIBCClients(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Updating IBC AllowedClients")
 	params := app.IBCKeeper.ClientKeeper.GetParams(ctx)
 	params.AllowedClients = append(params.AllowedClients, exported.Localhost)
 	app.IBCKeeper.ClientKeeper.SetParams(ctx, params)
-	ctx.Logger().Info("Done upgrading to IBCv8")
+	ctx.Logger().Info("Done updating IBC AllowedClients")
 	return nil
 }
 

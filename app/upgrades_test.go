@@ -502,8 +502,8 @@ func (s *UpgradeTestSuite) TestUmberRC1() {
 		"INF Done pruning expired consensus states for IBC",
 		"INF Migrating legacy params",
 		"INF Done migrating legacy params",
-		"INF Upgrading to IBCv8",
-		"INF Done Upgrading to IBCv8",
+		"INF Updating IBC AllowedClients",
+		"INF Done updating IBC AllowedClients",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
 	}
@@ -517,8 +517,8 @@ func (s *UpgradeTestSuite) TestUmber() {
 		"INF Done pruning expired consensus states for IBC",
 		"INF Migrating legacy params",
 		"INF Done migrating legacy params",
-		"INF Upgrading to IBCv8",
-		"INF Done Upgrading to IBCv8",
+		"INF Updating IBC AllowedClients",
+		"INF Done updating IBC AllowedClients",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
 	}
