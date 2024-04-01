@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
@@ -41,8 +40,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
-	// TODO[1760]: event-history: Add _ return arg back in.
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, _, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
@@ -91,9 +89,7 @@ func BenchmarkInvariants(b *testing.B) {
 	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, interBlockCacheOpt())
 
 	// run randomized simulation
-	// TODO[1760]: event-history: Add lastBlockTime return arg back in.
-	lastBlockTime := time.Unix(0, 0)
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,

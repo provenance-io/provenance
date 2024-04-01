@@ -144,8 +144,7 @@ func TestFullAppSimulation(t *testing.T) {
 	fmt.Printf("running provenance full app simulation\n")
 
 	// run randomized simulation
-	// TODO[1760]: event-history: Add _ return arg back in.
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, _, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -182,8 +181,7 @@ func TestSimple(t *testing.T) {
 	require.Equal(t, "provenanced", app.Name())
 
 	// run randomized simulation
-	// TODO[1760]: event-history: Add _ return arg back in.
-	_, _, simErr := simulation.SimulateFromSeed(
+	_, _, _, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -223,9 +221,7 @@ func TestAppImportExport(t *testing.T) {
 	fmt.Printf("running provenance test import export\n")
 
 	// Run randomized simulation
-	// TODO[1760]: event-history: Add lastBlockTime return arg back in.
-	lastBlockTime := time.Unix(0, 0)
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -340,9 +336,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	// Run randomized simulation
-	// TODO[1760]: event-history: Add lastBlockTime return arg back in.
-	lastBlockTime := time.Unix(0, 0)
-	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
+	stopEarly, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -390,8 +384,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err, "InitChain")
 
 	simcli.FlagGenesisTimeValue = lastBlockTime.Unix()
-	// TODO[1760]: event-history: Add _ return arg back in.
-	_, _, err = simulation.SimulateFromSeed(
+	_, _, _, err = simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		newApp.BaseApp,
@@ -460,8 +453,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			// TODO[1760]: event-history: Add _ return arg back in.
-			_, _, err := simulation.SimulateFromSeed(
+			_, _, _, err := simulation.SimulateFromSeed(
 				t,
 				os.Stdout,
 				app.BaseApp,
