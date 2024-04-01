@@ -498,10 +498,10 @@ func (s *UpgradeTestSuite) TestTourmaline() {
 
 func (s *UpgradeTestSuite) TestUmberRC1() {
 	expInLog := []string{
-		"INF Migrating legacy params",
-		"INF Done migrating legacy params",
 		"INF Pruning expired consensus states for IBC",
 		"INF Done pruning expired consensus states for IBC",
+		"INF Migrating legacy params",
+		"INF Done migrating legacy params",
 		"INF Upgrading to IBCv8",
 		"INF Done Upgrading to IBCv8",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
@@ -513,10 +513,10 @@ func (s *UpgradeTestSuite) TestUmberRC1() {
 
 func (s *UpgradeTestSuite) TestUmber() {
 	expInLog := []string{
-		"INF Migrating legacy params",
-		"INF Done migrating legacy params",
 		"INF Pruning expired consensus states for IBC",
 		"INF Done pruning expired consensus states for IBC",
+		"INF Migrating legacy params",
+		"INF Done migrating legacy params",
 		"INF Upgrading to IBCv8",
 		"INF Done Upgrading to IBCv8",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",

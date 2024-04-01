@@ -209,12 +209,16 @@ var upgrades = map[string]appUpgrade{
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 
-			err = migrateParams(ctx, app)
+			if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+
+			err = migrateBaseappParams(ctx, app)
 			if err != nil {
 				return nil, err
 			}
 
-			err = upgradeIBC(ctx, app)
+			err = upgradeToIBCv8(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -234,12 +238,16 @@ var upgrades = map[string]appUpgrade{
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 
-			err = migrateParams(ctx, app)
+			if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+
+			err = migrateBaseappParams(ctx, app)
 			if err != nil {
 				return nil, err
 			}
 
-			err = upgradeIBC(ctx, app)
+			err = upgradeToIBCv8(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -559,14 +567,6 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
 }
 
-// upgradeIBC handles all IBC upgrade logic for each upgrade.
-func upgradeIBC(ctx sdk.Context, app *App) error {
-	if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
-		return err
-	}
-	return upgradeToIBCv8(ctx, app)
-}
-
 // pruneIBCExpiredConsensusStates upgrades IBC from v6 to v8.
 func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Pruning expired consensus states for IBC")
@@ -590,9 +590,9 @@ func upgradeToIBCv8(ctx sdk.Context, app *App) error {
 	return nil
 }
 
-// Migrate to new ConsensusParamsKeeper
+// migrateBaseappParams migrates to new ConsensusParamsKeeper
 // TODO: Remove with the umber handlers.
-func migrateParams(ctx sdk.Context, app *App) error {
+func migrateBaseappParams(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Migrating legacy params")
 	legacyBaseAppSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 	err := baseapp.MigrateParams(ctx, legacyBaseAppSubspace, app.ConsensusParamsKeeper.ParamsStore)
