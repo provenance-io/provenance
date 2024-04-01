@@ -1453,7 +1453,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(1); height < int64(6); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
@@ -1831,7 +1830,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(1); height < int64(6); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
@@ -2021,7 +2019,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 
 	//go through 5 blocks, but take a long time to cut blocks.
 	for height := int64(1); height < int64(6); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
@@ -2747,7 +2744,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations(t *te
 
 	// threshold will be met after 10 actions
 	for height := int64(2); height < int64(22); height++ {
-		// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: height, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), vote1)
 		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
@@ -2853,7 +2849,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote_ValidDelegations_Multi
 	ctx.WithBlockTime(time.Now())
 	time.Sleep(200 * time.Millisecond)
 
-	// app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: 2, Time: time.Now().UTC()}}) // TODO[1760]: finalize-block
 	txGov, err := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), sdk.NewCoins(sdk.NewInt64Coin("atom", 150), sdk.NewInt64Coin("nhash", 1_190_500_000)), encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 	require.NoError(t, err, "SignTxAndGetBytes")
 
@@ -3259,7 +3254,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Delegate_QualifyingActionsP
 	require.Len(t, res.TxResults, 1, "TxResults expected length not met")
 	require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
 
-	// app.EndBlock(abci.RequestEndBlock{Height: 2}) // TODO[1760]: finalize-block
 	app.Commit()
 
 	seq = seq + 1
