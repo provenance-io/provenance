@@ -567,7 +567,7 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
 }
 
-// pruneIBCExpiredConsensusStates upgrades IBC from v6 to v8.
+// pruneIBCExpiredConsensusStates prunes expired consensus states for IBC.
 func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Pruning expired consensus states for IBC")
 	_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper)
