@@ -218,12 +218,12 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			err = upgradeToIBCv8(ctx, app)
+			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
 			}
 
-			vm, err = runModuleMigrations(ctx, app, vm)
+			err = upgradeToIBCv8(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -247,12 +247,12 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			err = upgradeToIBCv8(ctx, app)
+			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
 			}
 
-			vm, err = runModuleMigrations(ctx, app, vm)
+			err = upgradeToIBCv8(ctx, app)
 			if err != nil {
 				return nil, err
 			}

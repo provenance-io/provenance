@@ -773,7 +773,7 @@ func New(
 				append(
 					[]govclient.ProposalHandler{},
 					paramsclient.ProposalHandler,
-					nameclient.RootNameProposalHandler, // TODO[1760]: Do we still need the nameclient?
+					nameclient.RootNameProposalHandler,
 				),
 			),
 		})
