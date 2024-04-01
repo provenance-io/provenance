@@ -108,9 +108,6 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	// bad operation
 	op := simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	expBadOp := simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), "cannot choose 2 accounts because there are only 1")
@@ -127,11 +124,11 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 	s.LogOperationMsg(operationMsg, "good")
 
 	var msg types.MsgCreateTriggerRequest
-	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
@@ -148,9 +145,6 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	s.app.TriggerKeeper.SetEventListener(s.ctx, trigger)
 	s.app.TriggerKeeper.SetGasLimit(s.ctx, trigger.GetId(), 1000)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgDestroyTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -162,7 +156,7 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Equal(1000, int(msg.GetId()), "msg.GetId()")
 	s.Assert().Equal(accounts[0].Address.String(), msg.GetAuthority(), "msg.GetAuthority()")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
