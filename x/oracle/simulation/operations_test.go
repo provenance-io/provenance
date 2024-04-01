@@ -62,16 +62,13 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	r := rand.New(source)
 	accs := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	expected := []struct {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightUpdateOracle, sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{}), sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{})},
-		{simappparams.DefaultWeightSendOracleQuery, sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{})},
+		{weight: simappparams.DefaultWeightUpdateOracle, opMsgRoute: types.ModuleName, opMsgName: sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{})},
+		{weight: simappparams.DefaultWeightSendOracleQuery, opMsgRoute: types.ModuleName, opMsgName: sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{})},
 	}
 
 	expNames := make([]string, len(expected))

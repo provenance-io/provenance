@@ -74,9 +74,9 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightMsgBindName, sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{})},
-		{simappparams.DefaultWeightMsgDeleteName, sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{})},
-		{simappparams.DefaultWeightMsgModifyName, sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{})},
+		{weight: simappparams.DefaultWeightMsgBindName, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgBindNameRequest{})},
+		{weight: simappparams.DefaultWeightMsgDeleteName, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgDeleteNameRequest{})},
+		{weight: simappparams.DefaultWeightMsgModifyName, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgModifyNameRequest{})},
 	}
 
 	expNames := make([]string, len(expected))

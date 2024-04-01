@@ -84,19 +84,19 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		// Possible names: types.TypeAddMarkerRequest, fmt.Sprintf("%T", &types.MsgAddMarkerRequest{})
-		{simappparams.DefaultWeightMsgAddMarker, sdk.MsgTypeURL(&types.MsgAddMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddMarkerRequest{})},
+		{weight: simappparams.DefaultWeightMsgAddMarker, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgAddMarkerRequest{})},
 		// Possible names: "ChangeStatus",
 		//	types.TypeActivateRequest, fmt.Sprintf("%T", &types.MsgActivateRequest{}),
 		//	types.TypeFinalizeRequest, fmt.Sprintf("%T", &types.MsgFinalizeRequest{}),
 		//	types.TypeCancelRequest, fmt.Sprintf("%T", &types.MsgCancelRequest{}),
 		//	types.TypeDeleteRequest, fmt.Sprintf("%T", &types.MsgDeleteRequest{}),
-		{simappparams.DefaultWeightMsgFinalize, sdk.MsgTypeURL(&types.MsgFinalizeRequest{}), sdk.MsgTypeURL(&types.MsgFinalizeRequest{})},
+		{weight: simappparams.DefaultWeightMsgFinalize, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgFinalizeRequest{})},
 		// Possible names: types.TypeAddAccessRequest, fmt.Sprintf("%T", &types.MsgAddAccessRequest{})
-		{simappparams.DefaultWeightMsgAddAccess, sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
-		{simappparams.DefaultWeightMsgAddFinalizeActivateMarker, sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},
-		{simappparams.DefaultWeightMsgAddMarkerProposal, "gov", sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})},
-		{simappparams.DefaultWeightMsgSetAccountData, sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{}), sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{})},
-		{simappparams.DefaultWeightMsgUpdateDenySendList, sdk.MsgTypeURL(&types.MsgUpdateSendDenyListRequest{}), sdk.MsgTypeURL(&types.MsgUpdateSendDenyListRequest{})},
+		{weight: simappparams.DefaultWeightMsgAddAccess, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
+		{weight: simappparams.DefaultWeightMsgAddFinalizeActivateMarker, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},
+		{weight: simappparams.DefaultWeightMsgAddMarkerProposal, opMsgRoute: "gov", opMsgName: sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})},
+		{weight: simappparams.DefaultWeightMsgSetAccountData, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{})},
+		{weight: simappparams.DefaultWeightMsgUpdateDenySendList, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgUpdateSendDenyListRequest{})},
 	}
 
 	expNames := make([]string, len(expected))
