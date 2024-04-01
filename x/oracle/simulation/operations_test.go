@@ -105,9 +105,6 @@ func (s *SimTestSuite) TestSimulateMsgUpdateOracle() {
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgUpdateOracle(s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -115,11 +112,11 @@ func (s *SimTestSuite) TestSimulateMsgUpdateOracle() {
 	s.LogOperationMsg(operationMsg, "good")
 
 	var msg types.MsgUpdateOracleRequest
-	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.ModuleName, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
@@ -129,9 +126,6 @@ func (s *SimTestSuite) TestSimulateMsgSendQueryOracle() {
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgSendQueryOracle(s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -139,11 +133,11 @@ func (s *SimTestSuite) TestSimulateMsgSendQueryOracle() {
 	s.LogOperationMsg(operationMsg, "good")
 
 	var msg types.MsgUpdateOracleRequest
-	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.ModuleName, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
