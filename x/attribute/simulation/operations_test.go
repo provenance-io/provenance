@@ -76,11 +76,11 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightMsgAddAttribute, sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), sdk.MsgTypeURL(&types.MsgAddAttributeRequest{})},
-		{simappparams.DefaultWeightMsgUpdateAttribute, sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{})},
-		{simappparams.DefaultWeightMsgDeleteAttribute, sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{})},
-		{simappparams.DefaultWeightMsgDeleteDistinctAttribute, sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{})},
-		{simappparams.DefaultWeightMsgSetAccountData, sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{}), sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{})},
+		{weight: simappparams.DefaultWeightMsgAddAttribute, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgAddAttributeRequest{})},
+		{weight: simappparams.DefaultWeightMsgUpdateAttribute, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{})},
+		{weight: simappparams.DefaultWeightMsgDeleteAttribute, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{})},
+		{weight: simappparams.DefaultWeightMsgDeleteDistinctAttribute, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{})},
+		{weight: simappparams.DefaultWeightMsgSetAccountData, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{})},
 	}
 
 	expNames := make([]string, len(expected))
@@ -119,9 +119,6 @@ func (s *SimTestSuite) TestSimulateMsgAddAttribute() {
 	name := "example.provenance"
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q) error", name)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgAddAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -129,7 +126,7 @@ func (s *SimTestSuite) TestSimulateMsgAddAttribute() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgAddAttributeRequest
-	s.Require().NoError(types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Account, "msg.Account")
@@ -138,7 +135,7 @@ func (s *SimTestSuite) TestSimulateMsgAddAttribute() {
 	s.Assert().Equal(types.AttributeType_Uri, msg.AttributeType, "msg.AttributeType")
 	s.Assert().Equal([]byte("http://www.example.com/"), msg.Value, "msg.Value")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
@@ -154,9 +151,6 @@ func (s *SimTestSuite) TestSimulateMsgUpdateAttribute() {
 	attr := types.NewAttribute(name, accounts[1].Address.String(), types.AttributeType_String, []byte("test"), &expireTime)
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgUpdateAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -164,14 +158,14 @@ func (s *SimTestSuite) TestSimulateMsgUpdateAttribute() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgUpdateAttributeRequest
-	s.Require().NoError(types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
 	s.Assert().Equal(name, msg.Name, "msg.Name")
 	s.Assert().Equal(accounts[0].Address.String(), msg.Owner, "msg.Owner")
 	s.Assert().Equal(accounts[1].Address.String(), msg.Account, "msg.Account")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
@@ -186,8 +180,6 @@ func (s *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q) error", name)
 	attr := types.NewAttribute(name, accounts[1].Address.String(), types.AttributeType_String, []byte("test"), &expireTime)
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}}) // TODO[1760]: finalize-block
 
 	// execute operation
 	op := simulation.SimulateMsgDeleteAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
@@ -196,14 +188,14 @@ func (s *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgDeleteAttributeRequest
-	s.Require().NoError(types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
 	s.Assert().Equal(name, msg.Name, "msg.Name")
 	s.Assert().Equal(accounts[0].Address.String(), msg.Owner, "msg.Owner")
 	s.Assert().Equal(accounts[1].Address.String(), msg.Account, "msg.Account")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
@@ -219,9 +211,6 @@ func (s *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	attr := types.NewAttribute(name, accounts[1].Address.String(), types.AttributeType_String, []byte("test"), &expireTime)
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgDeleteDistinctAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -229,14 +218,14 @@ func (s *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgDeleteDistinctAttributeRequest
-	s.Require().NoError(types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
 	s.Assert().Equal(name, msg.Name, "msg.Name")
 	s.Assert().Equal(accounts[0].Address.String(), msg.Owner, "msg.Owner")
 	s.Assert().Equal(accounts[1].Address.String(), msg.Account, "msg.Account")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
@@ -246,8 +235,6 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	r := rand.New(src)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: time.Now()}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgSetAccountData(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -255,13 +242,13 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgSetAccountDataRequest
-	s.Require().NoError(types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
 	s.Assert().Equal("", msg.Value, "msg.Value")
 	s.Assert().Equal(accounts[1].Address.String(), msg.Account, "msg.Account")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
