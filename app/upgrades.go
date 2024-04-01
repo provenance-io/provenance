@@ -569,37 +569,37 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 
 // pruneIBCExpiredConsensusStates prunes expired consensus states for IBC.
 func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Pruning expired consensus states for IBC")
+	ctx.Logger().Info("Pruning expired consensus states for IBC.")
 	_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("unable to prune expired consensus states, error: %s", err))
+		ctx.Logger().Error(fmt.Sprintf("unable to prune expired consensus states, error: %s.", err))
 		return err
 	}
-	ctx.Logger().Info("Done pruning expired consensus states for IBC")
+	ctx.Logger().Info("Done pruning expired consensus states for IBC.")
 	return nil
 }
 
 // updateIBCClients updates the allowed clients for IBC.
 // TODO: Remove with the umber handlers.
 func updateIBCClients(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Updating IBC AllowedClients")
+	ctx.Logger().Info("Updating IBC AllowedClients.")
 	params := app.IBCKeeper.ClientKeeper.GetParams(ctx)
 	params.AllowedClients = append(params.AllowedClients, exported.Localhost)
 	app.IBCKeeper.ClientKeeper.SetParams(ctx, params)
-	ctx.Logger().Info("Done updating IBC AllowedClients")
+	ctx.Logger().Info("Done updating IBC AllowedClients.")
 	return nil
 }
 
 // migrateBaseappParams migrates to new ConsensusParamsKeeper
 // TODO: Remove with the umber handlers.
 func migrateBaseappParams(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Migrating legacy params")
+	ctx.Logger().Info("Migrating legacy params.")
 	legacyBaseAppSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 	err := baseapp.MigrateParams(ctx, legacyBaseAppSubspace, app.ConsensusParamsKeeper.ParamsStore)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("unable to migrate legacy params to ConsensusParamsKeeper, error: %s", err))
+		ctx.Logger().Error(fmt.Sprintf("unable to migrate legacy params to ConsensusParamsKeeper, error: %s.", err))
 		return err
 	}
-	ctx.Logger().Info("Done migrating legacy params")
+	ctx.Logger().Info("Done migrating legacy params.")
 	return nil
 }
