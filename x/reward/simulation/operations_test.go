@@ -71,20 +71,17 @@ func (s *SimTestSuite) TestSimulateMsgAddRewards() {
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgCreateRewardsProgram(s.app.RewardKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err)
 
 	var msg types.MsgCreateRewardProgramRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg)
 
 	s.Require().True(operationMsg.OK, operationMsg.String())
 	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
+	s.Require().Equal(types.RouterKey, operationMsg.Route)
 	s.Require().Len(futureOperations, 0)
 }
 
