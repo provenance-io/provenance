@@ -133,7 +133,7 @@ install: go.sum
 
 build: validate-go-version go.sum
 	# TODO[1760]: Remove this delay once we're stable again.
-	@if [ -z "${ACK_50}" ]; then printf '\033[93mWARNING:\033[0m The main branch is currently unstable and should not be built for use.\n         To bypass this 10 second delay: ACK_50=1 make build\n'; sleep 10; fi
+	@if [ -z "${ACK_50}" ]; then printf '\033[93mWARNING:\033[0m This branch is currently unstable and should not be built for use.\n         To bypass this 10 second delay: ACK_50=1 make build\n'; sleep 10; fi
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
