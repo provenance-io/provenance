@@ -185,7 +185,7 @@ func ConstructAndSendTx(tt *testing.T, app piosimapp.App, ctx sdk.Context, acct 
 	)
 	require.NoError(tt, err, "FinalizeBlock expected no error")
 	require.Len(tt, res.TxResults, 1, "TxResults expected len not met")
-	require.Equal(tt, expectedCode, res.TxResults[0].Code, "res=%+v", res)
+	require.Equal(tt, int(expectedCode), int(res.TxResults[0].Code), "res=%+v", res)
 	if len(expectedError) > 0 {
 		require.Contains(tt, res.TxResults[0].Log, expectedError, "DeliverTx result.Log")
 	}
