@@ -2,7 +2,6 @@ package app
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -10,12 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -28,7 +25,7 @@ import (
 	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type UpgradeTestSuite struct {
@@ -49,18 +46,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 func (s *UpgradeTestSuite) SetupSuite() {
 	// Alert: This function is SetupSuite. That means all tests in here
 	// will use the same app with the same store and data.
-	bufferedLoggerMaker := func() log.Logger {
-		lw := zerolog.ConsoleWriter{
-			Out:          &s.logBuffer,
-			NoColor:      true,
-			PartsExclude: []string{"time"}, // Without this, each line starts with "<nil> "
-		}
-		// Error log lines will start with "ERR ".
-		// Info log lines will start with "INF ".
-		// Debug log lines are omitted, but would start with "DBG ".
-		return log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
-	}
-	defer SetLoggerMaker(SetLoggerMaker(bufferedLoggerMaker))
+	defer SetLoggerMaker(SetLoggerMaker(BufferedInfoLoggerMaker(&s.logBuffer)))
 	s.app = Setup(s.T())
 	s.logBuffer.Reset()
 	s.startTime = time.Now()
@@ -94,7 +80,7 @@ func (s *UpgradeTestSuite) LogIfError(err error, format string, args ...interfac
 func (s *UpgradeTestSuite) AssertUpgradeHandlerLogs(key string, expInLog, expNotInLog []string) (string, bool) {
 	s.T().Helper()
 
-	if !s.Assert().Contains(upgrades, key, "defined upgrades map") {
+	if !s.Assert().Contains(upgrades, key, "%q defined upgrades map", key) {
 		return "", false // If the upgrades map doesn't have that key, there's nothing more to do in here.
 	}
 	handler := upgrades[key].Handler
@@ -390,48 +376,13 @@ func (s *UpgradeTestSuite) TestKeysInHandlersMap() {
 	})
 }
 
-func (s *UpgradeTestSuite) TestRustRC1() {
-	// Each part is (hopefully) tested thoroughly on its own.
-	// So for this test, just make sure there's log entries for each part being done.
-
-	expInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-		`INF Setting "accountdata" name record.`,
-		`INF Creating message fee for "/cosmos.gov.v1.MsgSubmitProposal" if it doesn't already exist.`,
-		`INF Removing message fee for "/provenance.metadata.v1.MsgP8eMemorializeContractRequest" if one exists.`,
-		"INF Fixing name module store index entries.",
-	}
-
-	s.AssertUpgradeHandlerLogs("rust-rc1", expInLog, nil)
-}
-
-func (s *UpgradeTestSuite) TestRust() {
-	// Each part is (hopefully) tested thoroughly on its own.
-	// So for this test, just make sure there's log entries for each part being done.
-	// And not a log entry for stuff done in rust-rc1 but not this one.
-
-	expInLog := []string{
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-		`INF Setting "accountdata" name record.`,
-		`INF Removing message fee for "/provenance.metadata.v1.MsgP8eMemorializeContractRequest" if one exists.`,
-		"INF Fixing name module store index entries.",
-	}
-	expNotInLog := []string{
-		`Creating message fee for "/cosmos.gov.v1.MsgSubmitProposal" if it doesn't already exist.`,
-	}
-
-	s.AssertUpgradeHandlerLogs("rust", expInLog, expNotInLog)
-}
-
 func (s *UpgradeTestSuite) TestSaffronRC1() {
 	// Each part is (hopefully) tested thoroughly on its own.
 	// So for this test, just make sure there's log entries for each part being done.
 
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
+		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
 		"INF Updating ICQ params",
 		"INF Done updating ICQ params",
 		"INF Updating MaxSupply marker param",
@@ -469,7 +420,7 @@ func (s *UpgradeTestSuite) TestSaffron() {
 
 	expInLog := []string{
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
+		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
 		"INF Updating ICQ params",
 		"INF Done updating ICQ params",
 		"INF Updating MaxSupply marker param",
@@ -485,13 +436,43 @@ func (s *UpgradeTestSuite) TestSaffron() {
 }
 
 func (s *UpgradeTestSuite) TestTourmalineRC1() {
-	expInLog := []string{}
+	expInLog := []string{
+		"INF Converting NAV units.",
+	}
+	expNotInLog := []string{
+		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
+	}
 
-	s.AssertUpgradeHandlerLogs("tourmaline-rc1", expInLog, nil)
+	s.AssertUpgradeHandlerLogs("tourmaline-rc1", expInLog, expNotInLog)
+}
+
+func (s *UpgradeTestSuite) TestTourmalineRC2() {
+	key := "tourmaline-rc2"
+	s.Require().Contains(upgrades, key, "%q defined upgrades map", key)
+	s.Require().Empty(upgrades[key], "upgrades[%q]", key)
+}
+
+func (s *UpgradeTestSuite) TestTourmalineRC3() {
+	expInLog := []string{
+		"INF Setting exchange module payment params to defaults.",
+		"INF Done setting exchange module payment params to defaults.",
+		"INF Adding marker net asset values",
+		"INF Done adding marker net asset values",
+	}
+
+	s.AssertUpgradeHandlerLogs("tourmaline-rc3", expInLog, nil)
 }
 
 func (s *UpgradeTestSuite) TestTourmaline() {
-	expInLog := []string{}
+	expInLog := []string{
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+		"INF Converting NAV units.",
+		"INF Adding marker net asset values with heights.",
+		"INF Done adding marker net asset values with heights.",
+		"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
+		"INF Setting exchange module payment params to defaults.",
+	}
 
 	s.AssertUpgradeHandlerLogs("tourmaline", expInLog, nil)
 }
@@ -529,8 +510,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 1, "GetAllValidators after setup")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			"INF a total of 0 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
@@ -551,10 +532,10 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			"INF a total of 1 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
@@ -587,11 +568,11 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			"INF a total of 1 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, false, runnerName)
 
@@ -633,14 +614,14 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 2 unbonded")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal2.OperatorAddress, 29),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
-			"INF a total of 2 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal2.OperatorAddress, 29),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal2.OperatorAddress, delegationCoinAmt),
+			"INF A total of 2 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, false, runnerName)
 
@@ -681,16 +662,16 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 old unbonded")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			fmt.Sprintf("INF undelegate delegator %v from validator %v of all shares (%v)", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
-			"INF a total of 1 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		notExpectedLogLines := []string{
-			fmt.Sprintf("validator %v has been inactive (unbonded)", unbondedVal2.OperatorAddress),
-			fmt.Sprintf("undelegate delegator %v from validator %v", addr1.String(), unbondedVal2.OperatorAddress),
-			fmt.Sprintf("undelegate delegator %v from validator %v", addr2.String(), unbondedVal2.OperatorAddress),
+			fmt.Sprintf("Validator %v has been inactive (unbonded).", unbondedVal2.OperatorAddress),
+			fmt.Sprintf("Undelegate delegator %v from validator %v", addr1.String(), unbondedVal2.OperatorAddress),
+			fmt.Sprintf("Undelegate delegator %v from validator %v", addr2.String(), unbondedVal2.OperatorAddress),
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, notExpectedLogLines, false, runnerName)
 
@@ -717,9 +698,9 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 empty unbonded")
 
 		expectedLogLines := []string{
-			"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
-			fmt.Sprintf("INF validator %v has been inactive (unbonded) for %d days and will be removed", unbondedVal1.OperatorAddress, 30),
-			"INF a total of 1 inactive (unbonded) validators have had all their delegators removed",
+			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
+			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
 
@@ -727,201 +708,6 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().NoError(err, "GetAllValidators")
 		s.Assert().Len(validators, 3, "GetAllValidators after %s", runnerName)
 	})
-}
-
-func (s *UpgradeTestSuite) TestAddGovV1SubmitFee() {
-	v1TypeURL := "/cosmos.gov.v1.MsgSubmitProposal"
-	v1B1TypeURL := "/cosmos.gov.v1beta1.MsgSubmitProposal"
-
-	startingMsg := `INF Creating message fee for "` + v1TypeURL + `" if it doesn't already exist.`
-	successMsg := func(amt string) string {
-		return `INF Successfully set fee for "` + v1TypeURL + `" with amount "` + amt + `".`
-	}
-
-	coin := func(denom string, amt int64) *sdk.Coin {
-		rv := sdk.NewInt64Coin(denom, amt)
-		return &rv
-	}
-
-	tests := []struct {
-		name     string
-		v1Amt    *sdk.Coin
-		v1B1Amt  *sdk.Coin
-		expInLog []string
-		expAmt   sdk.Coin
-	}{
-		{
-			name:    "v1 fee already exists",
-			v1Amt:   coin("foocoin", 88),
-			v1B1Amt: coin("betacoin", 99),
-			expInLog: []string{
-				startingMsg,
-				`INF Message fee for "` + v1TypeURL + `" already exists with amount "88foocoin". Nothing to do.`,
-			},
-			expAmt: *coin("foocoin", 88),
-		},
-		{
-			name:    "v1beta1 exists",
-			v1B1Amt: coin("betacoin", 99),
-			expInLog: []string{
-				startingMsg,
-				`INF Copying "` + v1B1TypeURL + `" fee to "` + v1TypeURL + `".`,
-				successMsg("99betacoin"),
-			},
-			expAmt: *coin("betacoin", 99),
-		},
-		{
-			name: "brand new",
-			expInLog: []string{
-				startingMsg,
-				`INF Creating "` + v1TypeURL + `" fee.`,
-				successMsg("100000000000nhash"),
-			},
-			expAmt: *coin("nhash", 100_000_000_000),
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			// Set/unset the v1 fee.
-			if tc.v1Amt != nil {
-				fee := msgfeetypes.NewMsgFee(v1TypeURL, *tc.v1Amt, "", 0)
-				s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, fee), "SetMsgFee v1")
-			} else {
-				err := s.app.MsgFeesKeeper.RemoveMsgFee(s.ctx, v1TypeURL)
-				if err != nil && !errors.Is(err, msgfeetypes.ErrMsgFeeDoesNotExist) {
-					s.Require().NoError(err, "RemoveMsgFee v1")
-				}
-			}
-
-			// Set/unset the v1beta1 fee.
-			if tc.v1B1Amt != nil {
-				fee := msgfeetypes.NewMsgFee(v1B1TypeURL, *tc.v1B1Amt, "", 0)
-				s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, fee), "SetMsgFee v1beta1")
-			} else {
-				err := s.app.MsgFeesKeeper.RemoveMsgFee(s.ctx, v1B1TypeURL)
-				if err != nil && !errors.Is(err, msgfeetypes.ErrMsgFeeDoesNotExist) {
-					s.Require().NoError(err, "RemoveMsgFee v1")
-				}
-			}
-
-			// Reset the log buffer to clear out unrelated entries.
-			s.logBuffer.Reset()
-			// Call addGovV1SubmitFee and relog its output (to help if things fail).
-			testFunc := func() {
-				addGovV1SubmitFee(s.ctx, s.app)
-			}
-			didNotPanic := s.Assert().NotPanics(testFunc, "addGovV1SubmitFee")
-			logOutput := s.GetLogOutput("addGovV1SubmitFee")
-			if !didNotPanic {
-				return
-			}
-
-			// Make sure the log has the expected lines.
-			s.AssertLogContents(logOutput, tc.expInLog, nil, true, "addGovV1SubmitFee")
-
-			// Get the fee and make sure it's now as expected.
-			fee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, v1TypeURL)
-			s.Require().NoError(err, "GetMsgFee(%q) error", v1TypeURL)
-			s.Require().NotNil(fee, "GetMsgFee(%q) value", v1TypeURL)
-			actFeeAmt := fee.AdditionalFee
-			s.Assert().Equal(tc.expAmt.String(), actFeeAmt.String(), "final %s fee amount", v1TypeURL)
-		})
-	}
-}
-
-func (s *UpgradeTestSuite) TestRemoveP8eMemorializeContractFee() {
-	typeURL := "/provenance.metadata.v1.MsgP8eMemorializeContractRequest"
-	startingMsg := `INF Removing message fee for "` + typeURL + `" if one exists.`
-
-	coin := func(denom string, amt int64) *sdk.Coin {
-		rv := sdk.NewInt64Coin(denom, amt)
-		return &rv
-	}
-
-	tests := []struct {
-		name     string
-		amt      *sdk.Coin
-		expInLog []string
-	}{
-		{
-			name: "does not exist",
-			expInLog: []string{
-				startingMsg,
-				`INF Message fee for "` + typeURL + `" already does not exist. Nothing to do.`,
-			},
-		},
-		{
-			name: "exists",
-			amt:  coin("p8ecoin", 808),
-			expInLog: []string{
-				startingMsg,
-				`INF Successfully removed message fee for "` + typeURL + `" with amount "808p8ecoin".`,
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			// set/unset the fee
-			if tc.amt != nil {
-				fee := msgfeetypes.NewMsgFee(typeURL, *tc.amt, "", 0)
-				s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, fee), "Setup: SetMsgFee(%q)", typeURL)
-			} else {
-				err := s.app.MsgFeesKeeper.RemoveMsgFee(s.ctx, typeURL)
-				if err != nil && !errors.Is(err, msgfeetypes.ErrMsgFeeDoesNotExist) {
-					s.Require().NoError(err, "Setup: RemoveMsgFee(%q)", typeURL)
-				}
-			}
-
-			// Reset the log buffer to clear out unrelated entries.
-			s.logBuffer.Reset()
-			// Call removeP8eMemorializeContractFee and relog its output (to help if things fail).
-			testFunc := func() {
-				removeP8eMemorializeContractFee(s.ctx, s.app)
-			}
-			didNotPanic := s.Assert().NotPanics(testFunc, "removeP8eMemorializeContractFee")
-			logOutput := s.GetLogOutput("removeP8eMemorializeContractFee")
-			if !didNotPanic {
-				return
-			}
-
-			s.AssertLogContents(logOutput, tc.expInLog, nil, true, "removeP8eMemorializeContractFee")
-
-			// Make sure there isn't a fee anymore.
-			fee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, typeURL)
-			s.Require().NoError(err, "GetMsgFee(%q) error", typeURL)
-			s.Require().Nil(fee, "GetMsgFee(%q) value", typeURL)
-		})
-	}
-}
-
-func (s *UpgradeTestSuite) TestSetAccountDataNameRecord() {
-	// Most of the testing should (hopefully) be done in the name module. So this is
-	// just a superficial test that makes sure it's doing something.
-	// Since the name is also created during InitGenesis, it should already be set up as needed.
-	// So in this unit test, the logs will indicate that.
-	expInLog := []string{
-		`INF Setting "accountdata" name record.`,
-		`INF The "accountdata" name record already exists as needed. Nothing to do.`,
-	}
-	// During an actual upgrade, that last line would instead be this:
-	// `INF Successfully set "accountdata" name record.`
-
-	// Reset the log buffer to clear out unrelated entries.
-	s.logBuffer.Reset()
-	// Call setAccountDataNameRecord and relog its output (to help if things fail).
-	var err error
-	testFunc := func() {
-		err = setAccountDataNameRecord(s.ctx, s.app.AccountKeeper, &s.app.NameKeeper)
-	}
-	didNotPanic := s.Assert().NotPanics(testFunc, "setAccountDataNameRecord")
-	logOutput := s.GetLogOutput("setAccountDataNameRecord")
-	if !didNotPanic {
-		return
-	}
-	s.Require().NoError(err, "setAccountDataNameRecord")
-	s.AssertLogContents(logOutput, expInLog, nil, true, "setAccountDataNameRecord")
 }
 
 func (s *UpgradeTestSuite) TestAddMarkerNavs() {
@@ -1065,6 +851,318 @@ func (s *UpgradeTestSuite) TestSetExchangeParams() {
 			// Make sure the params are as expected now.
 			params := s.app.ExchangeKeeper.GetParams(s.ctx)
 			s.Assert().Equal(tc.expectedParams, params, "params after setExchangeParams")
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestAddMarkerNavsWithHeight() {
+	address1 := sdk.AccAddress("address1")
+	testMarkers := []struct {
+		name   string
+		supply int64
+	}{
+		{"testcoin1", 1},
+		{"testcoininlist1", 1},
+		{"nosupplycoin1", 0},
+		{"hasnavcoin1", 100},
+	}
+
+	for _, tm := range testMarkers {
+		marker := markertypes.NewEmptyMarkerAccount(tm.name, address1.String(), []markertypes.AccessGrant{})
+		marker.Supply = sdkmath.NewInt(tm.supply)
+		s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, marker), "AddMarkerAccount() error")
+	}
+
+	hasnavcoin, _ := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, "hasnavcoin1")
+	presentnav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 55), 100)
+	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hasnavcoin, []markertypes.NetAssetValue{presentnav}, "test"))
+
+	addMarkerNavsWithHeight(s.ctx, s.app, []NetAssetValueWithHeight{
+		{
+			Denom:         "testcoininlist1",
+			NetAssetValue: markertypes.NewNetAssetValue(sdk.NewInt64Coin(markertypes.UsdDenom, 12345), 1),
+			Height:        406,
+		},
+	})
+
+	tests := []struct {
+		name       string
+		markerAddr sdk.AccAddress
+		expNav     *markertypes.NetAssetValue
+		expHeight  uint64
+	}{
+		{
+			name:       "already has nav",
+			markerAddr: hasnavcoin.GetAddress(),
+			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, 55), Volume: 100},
+			expHeight:  0,
+		},
+		{
+			name:       "nav set from custom config with height",
+			markerAddr: markertypes.MustGetMarkerAddress("testcoininlist1"),
+			expNav:     &markertypes.NetAssetValue{Price: sdk.NewInt64Coin(markertypes.UsdDenom, 12345), Volume: 1},
+			expHeight:  406,
+		},
+		{
+			name:       "nav add fails for coin",
+			markerAddr: markertypes.MustGetMarkerAddress("nosupplycoin1"),
+			expNav:     nil,
+			expHeight:  0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			netAssetValues := []markertypes.NetAssetValue{}
+			err := s.app.MarkerKeeper.IterateNetAssetValues(s.ctx, tc.markerAddr, func(state markertypes.NetAssetValue) (stop bool) {
+				netAssetValues = append(netAssetValues, state)
+				return false
+			})
+			s.Require().NoError(err, "IterateNetAssetValues err")
+			if tc.expNav != nil {
+				s.Assert().Len(netAssetValues, 1, "Should be 1 nav set for coin")
+				s.Assert().Equal(tc.expNav.Price, netAssetValues[0].Price, "Net asset value price should equal default upgraded price")
+				s.Assert().Equal(tc.expNav.Volume, netAssetValues[0].Volume, "Net asset value volume should equal 1")
+				s.Assert().Equal(tc.expHeight, netAssetValues[0].UpdatedBlockHeight, "Net asset value updated block height should equal expected")
+			} else {
+				s.Assert().Len(netAssetValues, 0, "Marker not expected to have nav")
+			}
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestConvertNAVUnits() {
+	tests := []struct {
+		name       string
+		markerNavs []sdk.Coins
+		expected   []sdk.Coins
+	}{
+		{
+			name:       "should work with no markers",
+			markerNavs: []sdk.Coins{},
+			expected:   []sdk.Coins{},
+		},
+		{
+			name: "should work with one marker no usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1)),
+			},
+			expected: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1)),
+			},
+		},
+		{
+			name: "should work with multiple markers no usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1)),
+				sdk.NewCoins(sdk.NewInt64Coin("georgethedog", 2)),
+			},
+			expected: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1)),
+				sdk.NewCoins(sdk.NewInt64Coin("georgethedog", 2)),
+			},
+		},
+		{
+			name: "should work with one marker with usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1), sdk.NewInt64Coin(markertypes.UsdDenom, 2)),
+			},
+			expected: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1), sdk.NewInt64Coin(markertypes.UsdDenom, 20)),
+			},
+		},
+		{
+			name: "should work with multiple markers with usd denom",
+			markerNavs: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1), sdk.NewInt64Coin(markertypes.UsdDenom, 3)),
+				sdk.NewCoins(sdk.NewInt64Coin("georgethedog", 2), sdk.NewInt64Coin(markertypes.UsdDenom, 4)),
+			},
+			expected: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 1), sdk.NewInt64Coin(markertypes.UsdDenom, 30)),
+				sdk.NewCoins(sdk.NewInt64Coin("georgethedog", 2), sdk.NewInt64Coin(markertypes.UsdDenom, 40)),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Create the marker
+			for i, prices := range tc.markerNavs {
+				address := sdk.AccAddress(fmt.Sprintf("marker%d", i))
+				marker := markertypes.NewEmptyMarkerAccount(fmt.Sprintf("coin%d", i), address.String(), []markertypes.AccessGrant{})
+				marker.Supply = sdkmath.OneInt()
+				s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, marker), "AddMarkerAccount() error")
+
+				var navs []markertypes.NetAssetValue
+				for _, price := range prices {
+					navs = append(navs, markertypes.NewNetAssetValue(price, uint64(1)))
+					navAddr := sdk.AccAddress(price.Denom)
+					if acc, _ := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, price.Denom); acc == nil {
+						navMarker := markertypes.NewEmptyMarkerAccount(price.Denom, navAddr.String(), []markertypes.AccessGrant{})
+						navMarker.Supply = sdkmath.OneInt()
+						s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, navMarker), "AddMarkerAccount() error")
+					}
+				}
+				s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, marker, navs, "AddSetNetAssetValues() error"))
+			}
+
+			// Test Logic
+			convertNavUnits(s.ctx, s.app)
+			for i := range tc.markerNavs {
+				marker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, fmt.Sprintf("coin%d", i))
+				s.Require().NoError(err, "GetMarkerByDenom() error")
+				var prices sdk.Coins
+
+				s.app.MarkerKeeper.IterateNetAssetValues(s.ctx, marker.GetAddress(), func(state markertypes.NetAssetValue) (stop bool) {
+					prices = append(prices, state.Price)
+					return false
+				})
+				s.Require().EqualValues(tc.expected[i], prices, "should update prices correctly for nav")
+			}
+
+			// Destroy the marker
+			for i, prices := range tc.markerNavs {
+				coin := fmt.Sprintf("coin%d", i)
+				marker, err := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, coin)
+				s.Require().NoError(err, "GetMarkerByDenom() error")
+				s.app.MarkerKeeper.RemoveMarker(s.ctx, marker)
+
+				// We need to remove the nav markers
+				for _, price := range prices {
+					if navMarker, _ := s.app.MarkerKeeper.GetMarkerByDenom(s.ctx, price.Denom); navMarker != nil {
+						s.app.MarkerKeeper.RemoveMarker(s.ctx, navMarker)
+					}
+				}
+			}
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestUpdateMsgFeesNhashPerMil() {
+	origParams := s.app.MsgFeesKeeper.GetParams(s.ctx)
+	defer s.app.MsgFeesKeeper.SetParams(s.ctx, origParams)
+
+	tests := []struct {
+		name           string
+		existingParams msgfeestypes.Params
+	}{
+		{
+			name: "from 0",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("cat", 50),
+				NhashPerUsdMil:     0,
+				ConversionFeeDenom: "horse",
+			},
+		},
+		{
+			name: "from 25,000,000",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("dog", 12),
+				NhashPerUsdMil:     25_000_000,
+				ConversionFeeDenom: "pig",
+			},
+		},
+		{
+			name: "from 40,000,000",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("fish", 83),
+				NhashPerUsdMil:     40_000_000,
+				ConversionFeeDenom: "cow",
+			},
+		},
+		{
+			name: "from 123,456,789",
+			existingParams: msgfeestypes.Params{
+				FloorGasPrice:      sdk.NewInt64Coin("hamster", 83),
+				NhashPerUsdMil:     123_456_789,
+				ConversionFeeDenom: "llama",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.app.MsgFeesKeeper.SetParams(s.ctx, tc.existingParams)
+			expParams := tc.existingParams
+			expParams.NhashPerUsdMil = 40_000_000
+			expInLog := []string{
+				"INF Setting MsgFees Params NhashPerUsdMil to 40000000.",
+				"INF Done setting MsgFees Params NhashPerUsdMil.",
+			}
+
+			// Reset the log buffer and call the func. Relog the output if it panics.
+			s.logBuffer.Reset()
+			testFunc := func() {
+				updateMsgFeesNhashPerMil(s.ctx, s.app)
+			}
+			didNotPanic := s.Assert().NotPanics(testFunc, "updateMsgFeesNhashPerMil")
+			logOutput := s.GetLogOutput("updateMsgFeesNhashPerMil")
+			if !didNotPanic {
+				return
+			}
+			s.AssertLogContents(logOutput, expInLog, nil, true, "updateMsgFeesNhashPerMil")
+
+			actParams := s.app.MsgFeesKeeper.GetParams(s.ctx)
+			s.Assert().Equal(expParams, actParams, "MsgFeesKeeper Params after updateMsgFeesNhashPerMil")
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestSetExchangePaymentParamsToDefaults() {
+	origParams := s.app.ExchangeKeeper.GetParams(s.ctx)
+	defer s.app.ExchangeKeeper.SetParams(s.ctx, origParams)
+
+	defaultParams := exchange.DefaultParams()
+
+	tests := []struct {
+		name           string
+		existingParams *exchange.Params
+		expectedParams *exchange.Params
+	}{
+		{
+			name:           "no params set yet",
+			existingParams: nil,
+			expectedParams: defaultParams,
+		},
+		{
+			name: "params set previously",
+			existingParams: &exchange.Params{
+				DefaultSplit:         333,
+				DenomSplits:          []exchange.DenomSplit{{Denom: "date", Split: 99}},
+				FeeCreatePaymentFlat: nil,
+				FeeAcceptPaymentFlat: nil,
+			},
+			expectedParams: &exchange.Params{
+				DefaultSplit:         333,
+				DenomSplits:          []exchange.DenomSplit{{Denom: "date", Split: 99}},
+				FeeCreatePaymentFlat: defaultParams.FeeCreatePaymentFlat,
+				FeeAcceptPaymentFlat: defaultParams.FeeAcceptPaymentFlat,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.app.ExchangeKeeper.SetParams(s.ctx, tc.existingParams)
+			expInLog := []string{
+				"INF Setting exchange module payment params to defaults.",
+				"INF Done setting exchange module payment params to defaults.",
+			}
+
+			// Reset the log buffer and call the func. Relog the output if it panics.
+			s.logBuffer.Reset()
+			testFunc := func() {
+				setExchangePaymentParamsToDefaults(s.ctx, s.app)
+			}
+			didNotPanic := s.Assert().NotPanics(testFunc, "setExchangePaymentParamsToDefaults")
+			logOutput := s.GetLogOutput("setExchangePaymentParamsToDefaults")
+			if !didNotPanic {
+				return
+			}
+			s.AssertLogContents(logOutput, expInLog, nil, true, "setExchangePaymentParamsToDefaults")
+
+			actParams := s.app.ExchangeKeeper.GetParams(s.ctx)
+			s.Assert().Equal(tc.expectedParams, actParams, "Exchange Params after setExchangePaymentParamsToDefaults")
 		})
 	}
 }

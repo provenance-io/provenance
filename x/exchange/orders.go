@@ -101,7 +101,8 @@ func ValidateOrderIDs(field string, orderIDs []uint64) error {
 // ValidateExternalID makes sure an external id is okay.
 func ValidateExternalID(externalID string) error {
 	if len(externalID) > MaxExternalIDLength {
-		return fmt.Errorf("invalid external id %q: max length %d", externalID, MaxExternalIDLength)
+		return fmt.Errorf("invalid external id %q (length %d): max length %d",
+			externalID[:5]+"..."+externalID[len(externalID)-5:], len(externalID), MaxExternalIDLength)
 	}
 	return nil
 }
@@ -229,7 +230,7 @@ func (o Order) GetHoldAmount() sdk.Coins {
 // Validate returns an error if anything in this order is invalid.
 func (o Order) Validate() error {
 	if o.OrderId == 0 {
-		return errors.New("invalid order id: must not be zero")
+		return errors.New("invalid order id: cannot be zero")
 	}
 	so, err := o.GetSubOrder()
 	if err != nil {
@@ -378,7 +379,7 @@ func (a AskOrder) Validate() error {
 
 	// The market id must be provided.
 	if a.MarketId == 0 {
-		errs = append(errs, errors.New("invalid market id: must not be zero"))
+		errs = append(errs, errors.New("invalid market id: cannot be zero"))
 	}
 
 	// The seller address must be valid and not empty.
@@ -488,7 +489,7 @@ func (b BidOrder) Validate() error {
 
 	// The market id must be provided.
 	if b.MarketId == 0 {
-		errs = append(errs, errors.New("invalid market id: must not be zero"))
+		errs = append(errs, errors.New("invalid market id: cannot be zero"))
 	}
 
 	// The buyer address must be valid and not empty.

@@ -232,6 +232,72 @@ func (s *TestSuite) TestKeeper_GetCreateBidFlatFees() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_GetCreateCommitmentFlatFees() {
+	setter := keeper.SetCreateCommitmentFlatFees
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		expected []sdk.Coin
+	}{
+		{
+			name:     "no entries at all",
+			setup:    nil,
+			marketID: 1,
+			expected: nil,
+		},
+		{
+			name: "no entries for market",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
+				setter(store, 3, []sdk.Coin{s.coin("3apple")})
+			},
+			marketID: 2,
+			expected: nil,
+		},
+		{
+			name: "market with one entry",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []sdk.Coin{s.coin("8acorn")})
+				setter(store, 2, []sdk.Coin{s.coin("5avocado")})
+				setter(store, 3, []sdk.Coin{s.coin("3apple")})
+			},
+			marketID: 2,
+			expected: []sdk.Coin{s.coin("5avocado")},
+		},
+		{
+			name: "market with two coins",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []sdk.Coin{s.coin("1acorn")})
+				setter(store, 2, []sdk.Coin{s.coin("8plum"), s.coin("2apple")})
+				setter(store, 3, []sdk.Coin{s.coin("3acorn")})
+			},
+			marketID: 2,
+			expected: []sdk.Coin{s.coin("2apple"), s.coin("8plum")},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var actual []sdk.Coin
+			testFunc := func() {
+				actual = s.k.GetCreateCommitmentFlatFees(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetCreateCommitmentFlatFees(%d)", tc.marketID)
+			s.Assert().Equal(s.coinsString(tc.expected), s.coinsString(actual),
+				"GetCreateCommitmentFlatFees(%d)", tc.marketID)
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_GetSellerSettlementFlatFees() {
 	setter := keeper.SetSellerSettlementFlatFees
 	tests := []struct {
@@ -508,6 +574,114 @@ func (s *TestSuite) TestKeeper_GetBuyerSettlementRatios() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_GetCommitmentSettlementBips() {
+	setter := keeper.SetCommitmentSettlementBips
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		expected uint32
+	}{
+		{
+			name:     "no entries at all",
+			setup:    nil,
+			marketID: 1,
+			expected: 0,
+		},
+		{
+			name: "no entry for market",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, 10)
+				setter(store, 3, 30)
+			},
+			marketID: 2,
+			expected: 0,
+		},
+		{
+			name: "market has entry",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, 10)
+				setter(store, 2, 20)
+				setter(store, 3, 30)
+			},
+			marketID: 2,
+			expected: 20,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var actual uint32
+			testFunc := func() {
+				actual = s.k.GetCommitmentSettlementBips(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetCommitmentSettlementBips(%d)", tc.marketID)
+			s.Assert().Equal(int(tc.expected), int(actual), "GetCommitmentSettlementBips(%d)", tc.marketID)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_GetIntermediaryDenom() {
+	setter := keeper.SetIntermediaryDenom
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		expected string
+	}{
+		{
+			name:     "no entries at all",
+			setup:    nil,
+			marketID: 1,
+			expected: "",
+		},
+		{
+			name: "no entry for market",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "three")
+			},
+			marketID: 2,
+			expected: "",
+		},
+		{
+			name: "market has entry",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 2, "two")
+				setter(store, 3, "three")
+			},
+			marketID: 2,
+			expected: "two",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var actual string
+			testFunc := func() {
+				actual = s.k.GetIntermediaryDenom(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetIntermediaryDenom(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "GetIntermediaryDenom(%d)", tc.marketID)
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 	setter := keeper.SetSellerSettlementRatios
 	tests := []struct {
@@ -649,13 +823,6 @@ func (s *TestSuite) TestKeeper_CalculateSellerSettlementRatioFee() {
 
 func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 	setter := keeper.SetBuyerSettlementRatios
-	noDivErr := func(ratio, price string) string {
-		return fmt.Sprintf("buyer settlement fees: cannot apply ratio %s to price %s: price amount cannot be evenly divided by ratio price",
-			ratio, price)
-	}
-	noRatiosErr := func(price string) string {
-		return "no applicable buyer settlement fee ratios found for price " + price
-	}
 
 	tests := []struct {
 		name     string
@@ -733,10 +900,8 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 15,
 			price:    s.coin("7503pineapple"),
-			expErr: s.joinErrs(
-				noDivErr("500pineapple:1fig", "7503pineapple"),
-				noRatiosErr("7503pineapple"),
-			),
+			// 7503pineapple * 1fig/500pineapple = 15.006 => 16fig
+			expOpts: s.coins("16fig"),
 		},
 		{
 			name: "three ratios for denom: none divisible",
@@ -752,60 +917,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 21,
 			price:    s.coin("3000plum"),
-			expErr: s.joinErrs(
-				noDivErr("123plum:1fig", "3000plum"),
-				noDivErr("234plum:5grape", "3000plum"),
-				noDivErr("345plum:7honeydew", "3000plum"),
-				noRatiosErr("3000plum"),
-			),
-		},
-		{
-			name: "three ratios for denom: only first divisible",
-			setup: func() {
-				setter(s.getStore(), 21, []exchange.FeeRatio{
-					s.ratio("123plum:1fig"),
-					s.ratio("234plum:5grape"),
-					s.ratio("345plum:7honeydew"),
-					s.ratio("100peach:3fig"),
-					s.ratio("200peach:11grape"),
-					s.ratio("300peach:13honeydew"),
-				})
-			},
-			marketID: 21,
-			price:    s.coin("615plum"),
-			expOpts:  []sdk.Coin{s.coin("5fig")},
-		},
-		{
-			name: "three ratios for denom: only second divisible",
-			setup: func() {
-				setter(s.getStore(), 99, []exchange.FeeRatio{
-					s.ratio("123plum:1fig"),
-					s.ratio("234plum:5grape"),
-					s.ratio("345plum:7honeydew"),
-					s.ratio("100peach:3fig"),
-					s.ratio("200peach:11grape"),
-					s.ratio("300peach:13honeydew"),
-				})
-			},
-			marketID: 99,
-			price:    s.coin("1170plum"),
-			expOpts:  []sdk.Coin{s.coin("25grape")},
-		},
-		{
-			name: "three ratios for denom: only third divisible",
-			setup: func() {
-				setter(s.getStore(), 3, []exchange.FeeRatio{
-					s.ratio("123plum:1fig"),
-					s.ratio("234plum:5grape"),
-					s.ratio("345plum:7honeydew"),
-					s.ratio("100peach:3fig"),
-					s.ratio("200peach:11grape"),
-					s.ratio("300peach:13honeydew"),
-				})
-			},
-			marketID: 3,
-			price:    s.coin("1725plum"),
-			expOpts:  []sdk.Coin{s.coin("35honeydew")},
+			// 3000plum * 1fig/123plum = 24.39 => 25fig
+			// 3000plum * 5grape/234plum = 64.10 => 65grape
+			// 3000plum * 7honeydew/345plum = 60.86 => 61honeydew
+			expOpts: s.coins("25fig,65grape,61honeydew"),
 		},
 		{
 			name: "three ratios for denom: first not divisible",
@@ -821,7 +936,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 1,
 			price:    s.coin("26910plum"),
-			expOpts:  []sdk.Coin{s.coin("575grape"), s.coin("546honeydew")},
+			// 26910plum * 1fig/123plum = 218.78 => 219fig
+			// 26910plum * 5grape/234plum = 575grape
+			// 26910plum * 7honeydew/345plum = 546honeydew
+			expOpts: []sdk.Coin{s.coin("219fig"), s.coin("575grape"), s.coin("546honeydew")},
 		},
 		{
 			name: "three ratios for denom: second not divisible",
@@ -837,7 +955,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 1,
 			price:    s.coin("50100peach"),
-			expOpts:  []sdk.Coin{s.coin("1503fig"), s.coin("2171honeydew")},
+			// 50100peach * 3fig/100peach = 1503fig
+			// 50100peach * 11grape/200peach = 2755.5 => 2756grape
+			// 50100peach * 13honeydew/300peach = 2171honeydew
+			expOpts: []sdk.Coin{s.coin("1503fig"), s.coin("2756grape"), s.coin("2171honeydew")},
 		},
 		{
 			name: "three ratios for denom: third not divisible",
@@ -853,7 +974,10 @@ func (s *TestSuite) TestKeeper_CalculateBuyerSettlementRatioFeeOptions() {
 			},
 			marketID: 1,
 			price:    s.coin("50200peach"),
-			expOpts:  []sdk.Coin{s.coin("1506fig"), s.coin("2761grape")},
+			// 50200peach * 3fig/100peach = 1506fig
+			// 50200peach * 11grape/200peach = 2761grape
+			// 50200peach * 13honeydew/300peach = 2175.33 => 2176honeydew
+			expOpts: []sdk.Coin{s.coin("1506fig"), s.coin("2761grape"), s.coin("2176honeydew")},
 		},
 		{
 			name: "three ratios for denom: all divisible",
@@ -1303,6 +1427,213 @@ func (s *TestSuite) TestKeeper_ValidateCreateBidFlatFee() {
 			}
 			s.Require().NotPanics(testFunc, "ValidateCreateBidFlatFee(%d, %s)", tc.marketID, s.coinPString(tc.fee))
 			s.assertErrorValue(err, tc.expErr, "ValidateCreateBidFlatFee(%d, %s) error", tc.marketID, s.coinPString(tc.fee))
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_ValidateCreateCommitmentFlatFee() {
+	setter := keeper.SetCreateCommitmentFlatFees
+	name := "commitment creation"
+	nilFeeErr := func(opts string) string {
+		return fmt.Sprintf("no %s fee provided, must be one of: %s", name, opts)
+	}
+	noFeeErr := func(fee string, opts string) string {
+		return fmt.Sprintf("invalid %s fee %q, must be one of: %s", name, fee, opts)
+	}
+	lowFeeErr := func(fee string, opts string) string {
+		return fmt.Sprintf("insufficient %s fee: %q is less than required amount %q", name, fee, opts)
+	}
+
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		fee      *sdk.Coin
+		expErr   string
+	}{
+		{
+			name:     "no fees in store: nil",
+			setup:    nil,
+			marketID: 1,
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name:     "no fees in store: not nil",
+			setup:    nil,
+			marketID: 1,
+			fee:      s.coinP("8fig"),
+			expErr:   "",
+		},
+		{
+			name: "no fees for market: nil",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
+			},
+			marketID: 6,
+			fee:      nil,
+			expErr:   "",
+		},
+		{
+			name: "no fees for market: not nil",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("2grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("30fig"),
+			expErr:   "",
+		},
+		{
+			name: "one fee option: nil",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      nil,
+			expErr:   nilFeeErr("11fig"),
+		},
+		{
+			name: "one fee option: diff denom",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("5grape"),
+			expErr:   noFeeErr("5grape", "11fig"),
+		},
+		{
+			name: "one fee option: insufficient",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("10fig"),
+			expErr:   lowFeeErr("10fig", "11fig"),
+		},
+		{
+			name: "one fee option: same",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("11fig"),
+			expErr:   "",
+		},
+		{
+			name: "one fee option: more",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 5, []sdk.Coin{s.coin("10fig"), s.coin("3grape")})
+				setter(store, 6, []sdk.Coin{s.coin("11fig")})
+				setter(store, 7, []sdk.Coin{s.coin("12fig"), s.coin("1grape")})
+			},
+			marketID: 6,
+			fee:      s.coinP("12fig"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: nil",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      nil,
+			expErr:   nilFeeErr("10fig,3grape,7honeydew"),
+		},
+		{
+			name: "three fee options: wrong denom",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("80apple"),
+			expErr:   noFeeErr("80apple", "10fig,3grape,7honeydew"),
+		},
+		{
+			name: "three fee options: first, low",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("9fig"),
+			expErr:   lowFeeErr("9fig", "10fig"),
+		},
+		{
+			name: "three fee options: first, ok",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("10fig"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: second, low",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("2grape"),
+			expErr:   lowFeeErr("2grape", "3grape"),
+		},
+		{
+			name: "three fee options: second, ok",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("3grape"),
+			expErr:   "",
+		},
+		{
+			name: "three fee options: third, low",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("6honeydew"),
+			expErr:   lowFeeErr("6honeydew", "7honeydew"),
+		},
+		{
+			name: "three fee options: third, ok",
+			setup: func() {
+				setter(s.getStore(), 8, []sdk.Coin{s.coin("10fig"), s.coin("3grape"), s.coin("7honeydew")})
+			},
+			marketID: 8,
+			fee:      s.coinP("7honeydew"),
+			expErr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var err error
+			testFunc := func() {
+				err = s.k.ValidateCreateCommitmentFlatFee(s.ctx, tc.marketID, tc.fee)
+			}
+			s.Require().NotPanics(testFunc, "ValidateCreateCommitmentFlatFee(%d, %s)", tc.marketID, s.coinPString(tc.fee))
+			s.assertErrorValue(err, tc.expErr, "ValidateCreateCommitmentFlatFee(%d, %s) error", tc.marketID, s.coinPString(tc.fee))
 		})
 	}
 }
@@ -2386,21 +2717,29 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 		marketID    uint32
 		createAsk   string
 		createBid   string
+		createCom   string
 		sellerFlat  string
 		sellerRatio string
 		buyerFlat   string
 		buyerRatio  string
+		comBips     string
 	}
 	getMarketFees := func(marketID uint32) marketFees {
-		return marketFees{
+		rv := marketFees{
 			marketID:    marketID,
 			createAsk:   sdk.Coins(s.k.GetCreateAskFlatFees(s.ctx, marketID)).String(),
 			createBid:   sdk.Coins(s.k.GetCreateBidFlatFees(s.ctx, marketID)).String(),
+			createCom:   sdk.Coins(s.k.GetCreateCommitmentFlatFees(s.ctx, marketID)).String(),
 			sellerFlat:  sdk.Coins(s.k.GetSellerSettlementFlatFees(s.ctx, marketID)).String(),
 			sellerRatio: exchange.FeeRatiosString(s.k.GetSellerSettlementRatios(s.ctx, marketID)),
 			buyerFlat:   sdk.Coins(s.k.GetBuyerSettlementFlatFees(s.ctx, marketID)).String(),
 			buyerRatio:  exchange.FeeRatiosString(s.k.GetBuyerSettlementRatios(s.ctx, marketID)),
 		}
+		bips := s.k.GetCommitmentSettlementBips(s.ctx, marketID)
+		if bips != 0 {
+			rv.comBips = fmt.Sprintf("%d", bips)
+		}
+		return rv
 	}
 
 	tests := []struct {
@@ -2606,6 +2945,102 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 				AddFeeCreateBidFlat:    s.coins("5honeydew,3cactus,99plum"),
 			},
 			expFees:     marketFees{marketID: 3, createBid: "3cactus,2grape,5honeydew,99plum"},
+			expNoChange: []uint32{1, 2, 4},
+		},
+
+		// Only create-commitment flat fee changes.
+		{
+			name: "create commitment: add one",
+			setup: func() {
+				keeper.SetCreateCommitmentFlatFees(s.getStore(), 3, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, AddFeeCreateCommitmentFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, createCom: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create commitment: remove one, exists",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 3, s.coins("10fig"))
+				keeper.SetCreateCommitmentFlatFees(store, 5, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeCreateCommitmentFlat: s.coins("10fig")},
+			expFees:     marketFees{marketID: 5, createCom: "8grape"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create commitment: remove one, unknown denom",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 3, s.coins("10grape"))
+				keeper.SetCreateCommitmentFlatFees(store, 5, s.coins("10fig"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 5, RemoveFeeCreateCommitmentFlat: s.coins("10grape")},
+			expFees:     marketFees{marketID: 5, createCom: "10fig"},
+			expNoChange: []uint32{3},
+		},
+		{
+			name: "create commitment: remove one, known denom, wrong amount",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 4, s.coins("10grape"))
+				keeper.SetCreateCommitmentFlatFees(store, 2, s.coins("10fig,8grape"))
+			},
+			msg:         &exchange.MsgGovManageFeesRequest{MarketId: 2, RemoveFeeCreateCommitmentFlat: s.coins("8fig")},
+			expFees:     marketFees{marketID: 2, createCom: "8grape"},
+			expNoChange: []uint32{4},
+		},
+		{
+			name: "create commitment: add+remove with different denoms",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetCreateCommitmentFlatFees(store, 8, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                      8,
+				RemoveFeeCreateCommitmentFlat: s.coins("8grape"),
+				AddFeeCreateCommitmentFlat:    s.coins("2honeydew"),
+			},
+			expFees:     marketFees{marketID: 8, createCom: "10fig,2honeydew"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "create commitment: add+remove with same denoms",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 18, s.coins("10grape"))
+				keeper.SetCreateCommitmentFlatFees(store, 1, s.coins("10fig,8grape"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                      1,
+				RemoveFeeCreateCommitmentFlat: s.coins("10fig"),
+				AddFeeCreateCommitmentFlat:    s.coins("7fig"),
+			},
+			expFees:     marketFees{marketID: 1, createCom: "7fig,8grape"},
+			expNoChange: []uint32{18},
+		},
+		{
+			name: "create commitment: complex",
+			// Remove one with wrong amount and don't replace it (10fig)
+			// Remove one with correct amount and replace it with another amount (7honeydew -> 5honeydew).
+			// Add one with a denom that already has a different amount (3cactus stomping on 7cactus)
+			// Add a brand new one (99plum).
+			// Leave one unchanged (2grape).
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCreateCommitmentFlatFees(store, 1, s.coins("10fig,4grape,2honeydew,5apple"))
+				keeper.SetCreateCommitmentFlatFees(store, 2, s.coins("9fig,3grape,1honeydew,6banana"))
+				keeper.SetCreateCommitmentFlatFees(store, 3, s.coins("12fig,2grape,7honeydew,7cactus"))
+				keeper.SetCreateCommitmentFlatFees(store, 4, s.coins("25fig,1grape,3honeydew,8durian"))
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                      3,
+				RemoveFeeCreateCommitmentFlat: s.coins("10fig,7honeydew"),
+				AddFeeCreateCommitmentFlat:    s.coins("5honeydew,3cactus,99plum"),
+			},
+			expFees:     marketFees{marketID: 3, createCom: "3cactus,2grape,5honeydew,99plum"},
 			expNoChange: []uint32{1, 2, 4},
 		},
 
@@ -3094,7 +3529,75 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 			expPanic:    "",
 		},
 
-		//
+		// only commitment settlement bips
+		{
+			name: "not set yet: setting",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentSettlementBips(store, 1, 100)
+				keeper.SetCommitmentSettlementBips(store, 2, 200)
+				keeper.SetCommitmentSettlementBips(store, 4, 400)
+				keeper.SetCommitmentSettlementBips(store, 5, 500)
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                       3,
+				SetFeeCommitmentSettlementBips: 25,
+			},
+			expFees: marketFees{
+				marketID: 3,
+				comBips:  "25",
+			},
+			expNoChange: []uint32{1, 2, 4, 5},
+		},
+		{
+			name: "not set yet: unsetting",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentSettlementBips(store, 1, 100)
+				keeper.SetCommitmentSettlementBips(store, 3, 300)
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                         2,
+				UnsetFeeCommitmentSettlementBips: true,
+			},
+			expFees:     marketFees{marketID: 2},
+			expNoChange: []uint32{1, 3},
+		},
+		{
+			name: "already set: setting",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentSettlementBips(store, 1, 100)
+				keeper.SetCommitmentSettlementBips(store, 2, 200)
+				keeper.SetCommitmentSettlementBips(store, 3, 300)
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                       2,
+				SetFeeCommitmentSettlementBips: 25,
+			},
+			expFees: marketFees{
+				marketID: 2,
+				comBips:  "25",
+			},
+			expNoChange: []uint32{1, 3},
+		},
+		{
+			name: "already set: unsetting",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetCommitmentSettlementBips(store, 1, 100)
+				keeper.SetCommitmentSettlementBips(store, 2, 200)
+				keeper.SetCommitmentSettlementBips(store, 3, 300)
+			},
+			msg: &exchange.MsgGovManageFeesRequest{
+				MarketId:                         2,
+				UnsetFeeCommitmentSettlementBips: true,
+			},
+			expFees:     marketFees{marketID: 2},
+			expNoChange: []uint32{1, 3},
+		},
+
+		// combo
 		{
 			name: "a little bit of everything",
 			// For each type, add one, replace one, remove one, leave one.
@@ -3102,24 +3605,30 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 				store := s.getStore()
 				keeper.SetCreateAskFlatFees(store, 1, s.coins("10grape"))
 				keeper.SetCreateBidFlatFees(store, 1, s.coins("11guava"))
+				keeper.SetCreateCommitmentFlatFees(store, 1, s.coins("14fig"))
 				keeper.SetSellerSettlementFlatFees(store, 1, s.coins("12grapefruit"))
 				keeper.SetBuyerSettlementFlatFees(store, 1, s.coins("13gooseberry"))
 				keeper.SetSellerSettlementRatios(store, 1, s.ratios("100papaya:3goumi"))
 				keeper.SetBuyerSettlementRatios(store, 1, s.ratios("120pineapple:1guarana"))
+				keeper.SetCommitmentSettlementBips(store, 1, 100)
 
 				keeper.SetCreateAskFlatFees(store, 2, s.coins("201acai,202apple,203apricot"))
 				keeper.SetCreateBidFlatFees(store, 2, s.coins("211banana,212biriba,212blueberry"))
+				keeper.SetCreateCommitmentFlatFees(store, 2, s.coins("261raisin,262raspberry,263redcurrent"))
 				keeper.SetSellerSettlementFlatFees(store, 2, s.coins("221cactus,222cantaloupe,223cherry"))
 				keeper.SetBuyerSettlementFlatFees(store, 2, s.coins("231date,232dewberry,233durian"))
 				keeper.SetSellerSettlementRatios(store, 2, s.ratios("241tangerine:1lemon,242tangerine:2lime,243tayberry:3lime"))
 				keeper.SetBuyerSettlementRatios(store, 2, s.ratios("251mandarin:4nectarine,252mango:5nectarine,253mango:6nutmeg"))
+				keeper.SetCommitmentSettlementBips(store, 2, 200)
 
 				keeper.SetCreateAskFlatFees(store, 3, s.coins("30grape"))
 				keeper.SetCreateBidFlatFees(store, 3, s.coins("31guava"))
+				keeper.SetCreateCommitmentFlatFees(store, 3, s.coins("31fig"))
 				keeper.SetSellerSettlementFlatFees(store, 3, s.coins("32grapefruit"))
 				keeper.SetBuyerSettlementFlatFees(store, 3, s.coins("33gooseberry"))
 				keeper.SetSellerSettlementRatios(store, 3, s.ratios("300papaya:3goumi"))
 				keeper.SetBuyerSettlementRatios(store, 3, s.ratios("320pineapple:1guarana"))
+				keeper.SetCommitmentSettlementBips(store, 3, 300)
 			},
 			msg: &exchange.MsgGovManageFeesRequest{
 				MarketId:                        2,
@@ -3127,6 +3636,8 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 				RemoveFeeCreateAskFlat:          s.coins("202apple,203apricot"),
 				AddFeeCreateBidFlat:             s.coins("214barbadine,2102blueberry"),
 				RemoveFeeCreateBidFlat:          s.coins("211banana,212blueberry"),
+				AddFeeCreateCommitmentFlat:      s.coins("2620raspberry,264rata"),
+				RemoveFeeCreateCommitmentFlat:   s.coins("262raspberry,263redcurrent"),
 				AddFeeSellerSettlementFlat:      s.coins("224cassaba,2201cactus"),
 				RemoveFeeSellerSettlementFlat:   s.coins("221cactus,222cantaloupe"),
 				AddFeeBuyerSettlementFlat:       s.coins("2302dewberry,234dragonfruit"),
@@ -3135,15 +3646,18 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 				RemoveFeeSellerSettlementRatios: s.ratios("241tangerine:1lemon,242tangerine:2lime"),
 				AddFeeBuyerSettlementRatios:     s.ratios("2502mango:50nectarine,254marula:7neem"),
 				RemoveFeeBuyerSettlementRatios:  s.ratios("252mango:5nectarine,253mango:6nutmeg"),
+				SetFeeCommitmentSettlementBips:  22,
 			},
 			expFees: marketFees{
 				marketID:    2,
 				createAsk:   "201acai,2002apple,204avocado",
 				createBid:   "214barbadine,212biriba,2102blueberry",
+				createCom:   "261raisin,2620raspberry,264rata",
 				sellerFlat:  "2201cactus,224cassaba,223cherry",
 				buyerFlat:   "2302dewberry,234dragonfruit,233durian",
 				sellerRatio: "244tamarillo:4lemon,2402tangerine:20lime,243tayberry:3lime",
 				buyerRatio:  "251mandarin:4nectarine,2502mango:50nectarine,254marula:7neem",
+				comBips:     "22",
 			},
 			expNoChange: []uint32{1, 3},
 		},
@@ -3186,6 +3700,110 @@ func (s *TestSuite) TestKeeper_UpdateFees() {
 
 			actualEvents := em.Events()
 			s.assertEqualEvents(expectedEvents, actualEvents, "events emitted during UpdateFees")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_UpdateIntermediaryDenom() {
+	setter := keeper.SetIntermediaryDenom
+	tests := []struct {
+		name      string
+		setup     func()
+		marketID  uint32
+		denom     string
+		updatedBy string
+	}{
+		{
+			name:      "no entries",
+			setup:     nil,
+			marketID:  1,
+			denom:     "banana",
+			updatedBy: "alex",
+		},
+		{
+			name: "no entry for market: new value",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "three")
+			},
+			marketID:  2,
+			denom:     "two",
+			updatedBy: "bailey",
+		},
+		{
+			name: "no entry for market: empty",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "three")
+			},
+			marketID:  2,
+			denom:     "",
+			updatedBy: "charlie",
+		},
+		{
+			name: "market has existing: same",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "two")
+				setter(store, 3, "three")
+			},
+			marketID:  2,
+			denom:     "two",
+			updatedBy: "devin",
+		},
+		{
+			name: "market has existing: different",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "two")
+				setter(store, 3, "three")
+			},
+			marketID:  2,
+			denom:     "twenty",
+			updatedBy: "emerson",
+		},
+		{
+			name: "market has existing: empty",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, "one")
+				setter(store, 3, "two")
+				setter(store, 3, "three")
+			},
+			marketID:  2,
+			denom:     "",
+			updatedBy: "forest",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			expEvents := sdk.Events{
+				s.untypeEvent(exchange.NewEventMarketIntermediaryDenomUpdated(tc.marketID, tc.updatedBy)),
+			}
+
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			testFunc := func() {
+				s.k.UpdateIntermediaryDenom(ctx, tc.marketID, tc.denom, tc.updatedBy)
+			}
+			s.Require().NotPanics(testFunc, "UpdateIntermediaryDenom(%d, %q, %q)", tc.marketID, tc.denom, tc.updatedBy)
+
+			actEvents := em.Events()
+			s.assertEqualEvents(expEvents, actEvents, "events emitted during UpdateIntermediaryDenom(%d, %q, %q)",
+				tc.marketID, tc.denom, tc.updatedBy)
+
+			actDenom := s.k.GetIntermediaryDenom(s.ctx, tc.marketID)
+			s.Assert().Equal(tc.denom, actDenom, "denom after UpdateIntermediaryDenom(%d, %q, %q)", tc.marketID, tc.denom, tc.updatedBy)
 		})
 	}
 }
@@ -3243,7 +3861,7 @@ func (s *TestSuite) TestKeeper_IsMarketKnown() {
 	}
 }
 
-func (s *TestSuite) TestKeeper_IsMarketActive() {
+func (s *TestSuite) TestKeeper_IsMarketAcceptingOrders() {
 	tests := []struct {
 		name     string
 		setup    func()
@@ -3260,8 +3878,8 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 			name: "unknown market id",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 3)
 			},
@@ -3272,9 +3890,9 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 			name: "market not active",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 2, false)
-				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 2, false)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
 				keeper.SetMarketKnown(store, 3)
@@ -3286,9 +3904,9 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 			name: "market active and known",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 2, true)
-				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 2, true)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
 				keeper.SetMarketKnown(store, 3)
@@ -3300,9 +3918,9 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 			name: "market inactive but known",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 2, false)
-				keeper.SetMarketActive(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 2, false)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
 				keeper.SetMarketKnown(store, 3)
@@ -3321,15 +3939,15 @@ func (s *TestSuite) TestKeeper_IsMarketActive() {
 
 			var actual bool
 			testFunc := func() {
-				actual = s.k.IsMarketActive(s.ctx, tc.marketID)
+				actual = s.k.IsMarketAcceptingOrders(s.ctx, tc.marketID)
 			}
-			s.Require().NotPanics(testFunc, "IsMarketActive(%d)", tc.marketID)
-			s.Assert().Equal(tc.expected, actual, "IsMarketActive(%d) result", tc.marketID)
+			s.Require().NotPanics(testFunc, "IsMarketAcceptingOrders(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "IsMarketAcceptingOrders(%d) result", tc.marketID)
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_UpdateMarketActive() {
+func (s *TestSuite) TestKeeper_UpdateMarketAcceptingOrders() {
 	tests := []struct {
 		name      string
 		setup     func()
@@ -3356,11 +3974,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			name: "active to active",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 2, false)
-				keeper.SetMarketActive(store, 3, true)
-				keeper.SetMarketActive(store, 4, true)
-				keeper.SetMarketActive(store, 5, false)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 2, false)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 4, true)
+				keeper.SetMarketAcceptingOrders(store, 5, false)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
 				keeper.SetMarketKnown(store, 3)
@@ -3376,11 +3994,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			name: "active to inactive",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 1, true)
-				keeper.SetMarketActive(store, 2, false)
-				keeper.SetMarketActive(store, 3, true)
-				keeper.SetMarketActive(store, 4, true)
-				keeper.SetMarketActive(store, 5, false)
+				keeper.SetMarketAcceptingOrders(store, 1, true)
+				keeper.SetMarketAcceptingOrders(store, 2, false)
+				keeper.SetMarketAcceptingOrders(store, 3, true)
+				keeper.SetMarketAcceptingOrders(store, 4, true)
+				keeper.SetMarketAcceptingOrders(store, 5, false)
 				keeper.SetMarketKnown(store, 1)
 				keeper.SetMarketKnown(store, 2)
 				keeper.SetMarketKnown(store, 3)
@@ -3396,11 +4014,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			name: "inactive to active",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 11, true)
-				keeper.SetMarketActive(store, 12, false)
-				keeper.SetMarketActive(store, 13, false)
-				keeper.SetMarketActive(store, 14, true)
-				keeper.SetMarketActive(store, 15, false)
+				keeper.SetMarketAcceptingOrders(store, 11, true)
+				keeper.SetMarketAcceptingOrders(store, 12, false)
+				keeper.SetMarketAcceptingOrders(store, 13, false)
+				keeper.SetMarketAcceptingOrders(store, 14, true)
+				keeper.SetMarketAcceptingOrders(store, 15, false)
 				keeper.SetMarketKnown(store, 11)
 				keeper.SetMarketKnown(store, 12)
 				keeper.SetMarketKnown(store, 13)
@@ -3416,11 +4034,11 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			name: "inactive to inactive",
 			setup: func() {
 				store := s.getStore()
-				keeper.SetMarketActive(store, 11, true)
-				keeper.SetMarketActive(store, 12, false)
-				keeper.SetMarketActive(store, 13, false)
-				keeper.SetMarketActive(store, 14, true)
-				keeper.SetMarketActive(store, 15, false)
+				keeper.SetMarketAcceptingOrders(store, 11, true)
+				keeper.SetMarketAcceptingOrders(store, 12, false)
+				keeper.SetMarketAcceptingOrders(store, 13, false)
+				keeper.SetMarketAcceptingOrders(store, 14, true)
+				keeper.SetMarketAcceptingOrders(store, 15, false)
 				keeper.SetMarketKnown(store, 11)
 				keeper.SetMarketKnown(store, 12)
 				keeper.SetMarketKnown(store, 13)
@@ -3443,7 +4061,7 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 
 			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
-				event := exchange.NewEventMarketActiveUpdated(tc.marketID, tc.updatedBy, tc.active)
+				event := exchange.NewEventMarketAcceptingOrdersUpdated(tc.marketID, tc.updatedBy, tc.active)
 				expEvents = append(expEvents, s.untypeEvent(event))
 			}
 
@@ -3451,17 +4069,17 @@ func (s *TestSuite) TestKeeper_UpdateMarketActive() {
 			ctx := s.ctx.WithEventManager(em)
 			var err error
 			testFunc := func() {
-				err = s.k.UpdateMarketActive(ctx, tc.marketID, tc.active, tc.updatedBy)
+				err = s.k.UpdateMarketAcceptingOrders(ctx, tc.marketID, tc.active, tc.updatedBy)
 			}
-			s.Require().NotPanics(testFunc, "UpdateMarketActive(%d, %t, %s)", tc.marketID, tc.active, tc.updatedBy)
-			s.assertErrorValue(err, tc.expErr, "UpdateMarketActive(%d, %t, %s)", tc.marketID, tc.active, tc.updatedBy)
+			s.Require().NotPanics(testFunc, "UpdateMarketAcceptingOrders(%d, %t, %s)", tc.marketID, tc.active, string(tc.updatedBy))
+			s.assertErrorValue(err, tc.expErr, "UpdateMarketAcceptingOrders(%d, %t, %s)", tc.marketID, tc.active, string(tc.updatedBy))
 
 			events := em.Events()
-			s.assertEqualEvents(expEvents, events, "events after UpdateMarketActive")
+			s.assertEqualEvents(expEvents, events, "events after UpdateMarketAcceptingOrders")
 
 			if len(tc.expErr) == 0 {
-				isActive := s.k.IsMarketActive(s.ctx, tc.marketID)
-				s.Assert().Equal(tc.active, isActive, "IsMarketActive(%d) after UpdateMarketActive(%d, %t, ...)",
+				isActive := s.k.IsMarketAcceptingOrders(s.ctx, tc.marketID)
+				s.Assert().Equal(tc.active, isActive, "IsMarketAcceptingOrders(%d) after UpdateMarketAcceptingOrders(%d, %t, ...)",
 					tc.marketID, tc.marketID, tc.active)
 			}
 		})
@@ -3644,6 +4262,190 @@ func (s *TestSuite) TestKeeper_UpdateUserSettlementAllowed() {
 			if len(tc.expErr) == 0 {
 				isActive := s.k.IsUserSettlementAllowed(s.ctx, tc.marketID)
 				s.Assert().Equal(tc.allow, isActive, "IsUserSettlementAllowed(%d) after UpdateUserSettlementAllowed(%d, %t, ...)",
+					tc.marketID, tc.marketID, tc.allow)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_IsMarketAcceptingCommitments() {
+	setter := keeper.SetMarketAcceptingCommitments
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		expected bool
+	}{
+		{
+			name:     "empty state",
+			marketID: 1,
+			expected: false,
+		},
+		{
+			name: "unknown market id",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, true)
+				setter(store, 3, true)
+			},
+			marketID: 2,
+			expected: false,
+		},
+		{
+			name: "not allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, true)
+				setter(store, 2, false)
+				setter(store, 3, true)
+			},
+			marketID: 2,
+			expected: false,
+		},
+		{
+			name: "allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, true)
+				setter(store, 2, true)
+				setter(store, 3, true)
+			},
+			marketID: 2,
+			expected: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var actual bool
+			testFunc := func() {
+				actual = s.k.IsMarketAcceptingCommitments(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "IsMarketAcceptingCommitments(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "IsMarketAcceptingCommitments(%d) result", tc.marketID)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_UpdateMarketAcceptingCommitments() {
+	setter := keeper.SetMarketAcceptingCommitments
+	tests := []struct {
+		name      string
+		setup     func()
+		marketID  uint32
+		allow     bool
+		updatedBy string
+		expErr    string
+	}{
+		{
+			name:      "empty state to allowed",
+			marketID:  1,
+			allow:     true,
+			updatedBy: "updatedBy___________",
+			expErr:    "",
+		},
+		{
+			name:      "empty state to not allowed",
+			marketID:  1,
+			allow:     false,
+			updatedBy: "updatedBy___________",
+			expErr:    "market 1 already has accepting-commitments false",
+		},
+		{
+			name: "allowed to allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, true)
+				setter(store, 2, false)
+				setter(store, 3, true)
+				setter(store, 4, true)
+				setter(store, 5, false)
+			},
+			marketID:  3,
+			allow:     true,
+			updatedBy: "updatedBy___________",
+			expErr:    "market 3 already has accepting-commitments true",
+		},
+		{
+			name: "allowed to not allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, true)
+				setter(store, 2, false)
+				setter(store, 3, true)
+				setter(store, 4, true)
+				setter(store, 5, false)
+			},
+			marketID:  3,
+			allow:     false,
+			updatedBy: "updated_by__________",
+			expErr:    "",
+		},
+		{
+			name: "not allowed to allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 11, true)
+				setter(store, 12, false)
+				setter(store, 13, false)
+				setter(store, 14, true)
+				setter(store, 15, false)
+			},
+			marketID:  13,
+			allow:     true,
+			updatedBy: "updated___by________",
+			expErr:    "",
+		},
+		{
+			name: "not allowed to not allowed",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 11, true)
+				setter(store, 12, false)
+				setter(store, 13, false)
+				setter(store, 14, true)
+				setter(store, 15, false)
+			},
+			marketID:  13,
+			allow:     false,
+			updatedBy: "__updated_____by____",
+			expErr:    "market 13 already has accepting-commitments false",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var expEvents sdk.Events
+			if len(tc.expErr) == 0 {
+				event := exchange.NewEventMarketAcceptingCommitmentsUpdated(tc.marketID, tc.updatedBy, tc.allow)
+				expEvents = append(expEvents, s.untypeEvent(event))
+			}
+
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				err = s.k.UpdateMarketAcceptingCommitments(ctx, tc.marketID, tc.allow, tc.updatedBy)
+			}
+			s.Require().NotPanics(testFunc, "UpdateMarketAcceptingCommitments(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
+			s.assertErrorValue(err, tc.expErr, "UpdateMarketAcceptingCommitments(%d, %t, %s)", tc.marketID, tc.allow, string(tc.updatedBy))
+
+			events := em.Events()
+			s.assertEqualEvents(expEvents, events, "events after UpdateMarketAcceptingCommitments")
+
+			if len(tc.expErr) == 0 {
+				isActive := s.k.IsMarketAcceptingCommitments(s.ctx, tc.marketID)
+				s.Assert().Equal(tc.allow, isActive, "IsMarketAcceptingCommitments(%d) after UpdateMarketAcceptingCommitments(%d, %t, ...)",
 					tc.marketID, tc.marketID, tc.allow)
 			}
 		})
@@ -3994,12 +4796,20 @@ func (s *TestSuite) TestKeeper_CanSettleOrders() {
 	s.runPermTest(exchange.Permission_settle, s.k.CanSettleOrders, "CanSettleOrders")
 }
 
+func (s *TestSuite) TestKeeper_CanSettleCommitments() {
+	s.runPermTest(exchange.Permission_settle, s.k.CanSettleCommitments, "CanSettleCommitments")
+}
+
 func (s *TestSuite) TestKeeper_CanSetIDs() {
 	s.runPermTest(exchange.Permission_set_ids, s.k.CanSetIDs, "CanSetIDs")
 }
 
 func (s *TestSuite) TestKeeper_CanCancelOrdersForMarket() {
 	s.runPermTest(exchange.Permission_cancel, s.k.CanCancelOrdersForMarket, "CanCancelOrdersForMarket")
+}
+
+func (s *TestSuite) TestKeeper_CanReleaseCommitmentsForMarket() {
+	s.runPermTest(exchange.Permission_cancel, s.k.CanReleaseCommitmentsForMarket, "CanReleaseCommitmentsForMarket")
 }
 
 func (s *TestSuite) TestKeeper_CanWithdrawMarketFunds() {
@@ -4732,6 +5542,83 @@ func (s *TestSuite) TestKeeper_GetReqAttrsBid() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_GetReqAttrsCommitment() {
+	setter := keeper.SetReqAttrsCommitment
+	tests := []struct {
+		name     string
+		setup    func()
+		marketID uint32
+		expected []string
+	}{
+		{
+			name:     "empty state",
+			setup:    nil,
+			marketID: 1,
+			expected: nil,
+		},
+		{
+			name: "market without any",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 3, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 2,
+			expected: nil,
+		},
+		{
+			name: "market with one",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 3, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 2,
+			expected: []string{"raspberry"},
+		},
+		{
+			name: "market with two",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 1, []string{"bb.aa", "*.cc.bb.aa", "banana"})
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 3, []string{"knee", "elbow"})
+				setter(store, 4, []string{"yy.zz", "*.xx.yy.zz", "banana"})
+			},
+			marketID: 3,
+			expected: []string{"knee", "elbow"},
+		},
+		{
+			name: "market with three",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 2, []string{"raspberry"})
+				setter(store, 33, []string{"knee", "elbow"})
+				setter(store, 444, []string{"head", "shoulders", "toes"})
+			},
+			marketID: 444,
+			expected: []string{"head", "shoulders", "toes"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var actual []string
+			testFunc := func() {
+				actual = s.k.GetReqAttrsCommitment(s.ctx, tc.marketID)
+			}
+			s.Require().NotPanics(testFunc, "GetReqAttrsCommitment(%d)", tc.marketID)
+			s.Assert().Equal(tc.expected, actual, "GetReqAttrsCommitment(%d)", tc.marketID)
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_CanCreateAsk() {
 	setter := keeper.SetReqAttrsAsk
 	addr1 := sdk.AccAddress("addr_one____________")
@@ -5178,6 +6065,230 @@ func (s *TestSuite) TestKeeper_CanCreateBid() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_CanCreateCommitment() {
+	setter := keeper.SetReqAttrsCommitment
+	addr1 := sdk.AccAddress("addr_one____________")
+	addr2 := sdk.AccAddress("addr_two____________")
+	addr3 := sdk.AccAddress("addr_three__________")
+
+	tests := []struct {
+		name           string
+		setup          func()
+		attrKeeper     *MockAttributeKeeper
+		marketID       uint32
+		addr           sdk.AccAddress
+		expected       bool
+		expGetAttrCall bool
+	}{
+		{
+			name:     "empty state",
+			marketID: 1,
+			addr:     sdk.AccAddress("empty_state_addr____"),
+			expected: true,
+		},
+		{
+			name: "no req attrs, addr without any attributes",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 7, []string{"bb.aa"})
+				setter(store, 9, []string{"yy.zz", "*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, nil, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"jk.lm.nl", "yy.zz"}, ""),
+			marketID: 8,
+			addr:     addr2,
+			expected: true,
+		},
+		{
+			name: "no req attrs, addr with some attributes",
+			setup: func() {
+				store := s.getStore()
+				setter(store, 7, []string{"bb.aa"})
+				setter(store, 9, []string{"yy.zz", "*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"left", "right"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"jk.lm.nl", "yy.zz"}, ""),
+			marketID: 8,
+			addr:     addr2,
+			expected: true,
+		},
+		{
+			name: "error getting attributes",
+			setup: func() {
+				setter(s.getStore(), 4, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, nil, "injected test error"),
+			marketID:       4,
+			addr:           addr1,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr, acc has",
+			setup: func() {
+				setter(s.getStore(), 88, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "bb.aa", "lm.no"}, ""),
+			marketID:       88,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr, acc does not have",
+			setup: func() {
+				setter(s.getStore(), 88, []string{"bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "lm.no"}, ""),
+			marketID:       88,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc has",
+			setup: func() {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "jk.lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc has two that match",
+			setup: func() {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "ab.cd.lm.no", "cc.bb.aa", "jk.lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "one req attr with wildcard, acc does not have",
+			setup: func() {
+				setter(s.getStore(), 42, []string{"*.lm.no"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr2, []string{"yy.zz", "cc.bb.aa", "lm.no"}, ""),
+			marketID:       42,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has neither",
+			setup: func() {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"one.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr2,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has just first",
+			setup: func() {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"one.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr3,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has just second",
+			setup: func() {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr3,
+			expected:       false,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has both, same order",
+			setup: func() {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"one.bb.aa", "two.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr1,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+		{
+			name: "two req attr, acc has both, opposite order",
+			setup: func() {
+				setter(s.getStore(), 123, []string{"one.bb.aa", "two.bb.aa"})
+			},
+			attrKeeper: NewMockAttributeKeeper().
+				WithGetAllAttributesAddrResult(addr1, []string{"two.bb.aa", "one.bb.aa"}, "").
+				WithGetAllAttributesAddrResult(addr2, []string{"one.yy.zz", "two.yy.zz"}, "").
+				WithGetAllAttributesAddrResult(addr3, []string{"two.bb.aa"}, ""),
+			marketID:       123,
+			addr:           addr1,
+			expected:       true,
+			expGetAttrCall: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.clearExchangeState()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			var expCalls AttributeCalls
+			if tc.expGetAttrCall {
+				expCalls.GetAllAttributesAddr = append(expCalls.GetAllAttributesAddr, tc.addr)
+			}
+
+			if tc.attrKeeper == nil {
+				tc.attrKeeper = NewMockAttributeKeeper()
+			}
+			kpr := s.k.WithAttributeKeeper(tc.attrKeeper)
+
+			var actual bool
+			testFunc := func() {
+				actual = kpr.CanCreateCommitment(s.ctx, tc.marketID, tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "CanCreateCommitment(%d, %q)", tc.marketID, string(tc.addr))
+			s.Assert().Equal(tc.expected, actual, "CanCreateCommitment(%d, %q) result", tc.marketID, string(tc.addr))
+			s.assertAttributeKeeperCalls(tc.attrKeeper, expCalls, "CanCreateCommitment(%d, %q)", tc.marketID, string(tc.addr))
+		})
+	}
+
+}
+
 func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 	tests := []struct {
 		name     string
@@ -5185,6 +6296,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		msg      *exchange.MsgMarketManageReqAttrsRequest
 		expAsk   []string
 		expBid   []string
+		expCom   []string
 		expErr   string
 		expPanic string
 	}{
@@ -5198,18 +6310,22 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 		{
 			name: "invalid attrs",
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
-				Admin:             "admin_addr_str",
-				MarketId:          1,
-				CreateAskToAdd:    []string{"three-dashes-not-allowed", "this.one.is.okay", "bad,punctuation"},
-				CreateAskToRemove: []string{"internal spaces are bad"}, // no error from this.
-				CreateBidToAdd:    []string{"twodashes-notallowed-either", "this.one.is.also.okay", "really*bad,punctuation"},
-				CreateBidToRemove: []string{"what&are*you(doing)?"}, // no error from this.
+				Admin:                    "admin_addr_str",
+				MarketId:                 1,
+				CreateAskToAdd:           []string{"three-dashes-not-allowed", "this.one.is.okay", "bad,punctuation"},
+				CreateAskToRemove:        []string{"internal spaces are bad"}, // no error from this.
+				CreateBidToAdd:           []string{"twodashes-notallowed-either", "this.one.is.also.okay", "really*bad,punctuation"},
+				CreateBidToRemove:        []string{"what&are*you(doing)?"}, // no error from this.
+				CreateCommitmentToAdd:    []string{"no&ampersands", "this.one.is.still.okay", "horrible|punctuation"},
+				CreateCommitmentToRemove: []string{"[oops>"}, // no error from this.
 			},
 			expErr: s.joinErrs(
 				"invalid attribute \"three-dashes-not-allowed\"",
 				"invalid attribute \"bad,punctuation\"",
 				"invalid attribute \"twodashes-notallowed-either\"",
 				"invalid attribute \"really*bad,punctuation\"",
+				"invalid attribute \"no&ampersands\"",
+				"invalid attribute \"horrible|punctuation\"",
 			),
 		},
 		{
@@ -5231,6 +6347,15 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			expErr: "cannot remove create-bid required attribute \"not.req\": attribute not currently required",
 		},
 		{
+			name: "remove create-commitment that is not required",
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 1,
+				CreateCommitmentToRemove: []string{"not.req"},
+			},
+			expErr: "cannot remove create-commitment required attribute \"not.req\": attribute not currently required",
+		},
+		{
 			name: "add create-ask that is already required",
 			setup: func() {
 				keeper.SetReqAttrsAsk(s.getStore(), 7, []string{"already.req"})
@@ -5243,7 +6368,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			expErr: "cannot add create-ask required attribute \"already.req\": attribute already required",
 		},
 		{
-			name: "add create-ask that is already required",
+			name: "add create-bid that is already required",
 			setup: func() {
 				keeper.SetReqAttrsBid(s.getStore(), 4, []string{"already.req"})
 			},
@@ -5255,19 +6380,34 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			expErr: "cannot add create-bid required attribute \"already.req\": attribute already required",
 		},
 		{
+			name: "add create-commitment that is already required",
+			setup: func() {
+				keeper.SetReqAttrsCommitment(s.getStore(), 12, []string{"already.req"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                 "admin_addr_str",
+				MarketId:              12,
+				CreateCommitmentToAdd: []string{"already.req"},
+			},
+			expErr: "cannot add create-commitment required attribute \"already.req\": attribute already required",
+		},
+		{
 			name: "multiple errors",
 			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 3, []string{"one.ask", "two.ask", "three.ask", "four.ask"})
 				keeper.SetReqAttrsBid(store, 3, []string{"one.bid", "two.bid", "three.bid", "four.bid"})
+				keeper.SetReqAttrsCommitment(store, 3, []string{"one.com", "two.com", "three.com", "four.com"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
-				Admin:             "addr_str_of_admin",
-				MarketId:          3,
-				CreateAskToAdd:    []string{"two.ask", "three .ask", "five.ask"},
-				CreateAskToRemove: []string{" four .ask", "five.ask", "six . ask"},
-				CreateBidToAdd:    []string{"two.bid ", " three.bid", "five.   bid"},
-				CreateBidToRemove: []string{"four. bid ", "five . bid", "six.bid"},
+				Admin:                    "addr_str_of_admin",
+				MarketId:                 3,
+				CreateAskToAdd:           []string{"two.ask", "three .ask", "five.ask"},
+				CreateAskToRemove:        []string{" four .ask", "five.ask", "six . ask"},
+				CreateBidToAdd:           []string{"two.bid ", " three.bid", "five.   bid"},
+				CreateBidToRemove:        []string{"four. bid ", "five . bid", "six.bid"},
+				CreateCommitmentToAdd:    []string{"two. com", "three.com", " five.com "},
+				CreateCommitmentToRemove: []string{"four. com ", "five .com", "six. com"},
 			},
 			expErr: s.joinErrs(
 				"cannot remove create-ask required attribute \"five.ask\": attribute not currently required",
@@ -5278,6 +6418,10 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				"cannot remove create-bid required attribute \"six.bid\": attribute not currently required",
 				"cannot add create-bid required attribute \"two.bid\": attribute already required",
 				"cannot add create-bid required attribute \"three.bid\": attribute already required",
+				"cannot remove create-commitment required attribute \"five.com\": attribute not currently required",
+				"cannot remove create-commitment required attribute \"six.com\": attribute not currently required",
+				"cannot add create-commitment required attribute \"two.com\": attribute already required",
+				"cannot add create-commitment required attribute \"three.com\": attribute already required",
 			),
 		},
 
@@ -5288,6 +6432,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5296,6 +6441,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: nil,
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one create-ask from two",
@@ -5303,6 +6449,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas", "also.ask.okay"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5311,6 +6458,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one create-ask with wildcard",
@@ -5321,6 +6469,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 					"*.ask.can.create.bananas", "two.ask.can.create.bananas",
 				})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5329,6 +6478,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas", "one.ask.can.create.bananas", "two.ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove last two create-ask",
@@ -5336,6 +6486,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 55, []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 55, []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 55, []string{"one.com.can.create.bananas", "two.com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5344,11 +6495,14 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: nil,
 			expBid: []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"},
+			expCom: []string{"one.com.can.create.bananas", "two.com.can.create.bananas"},
 		},
 		{
 			name: "add one create-ask to empty",
 			setup: func() {
-				keeper.SetReqAttrsBid(s.getStore(), 1, []string{"bid.can.create.bananas"})
+				store := s.getStore()
+				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 1, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:          "admin_addr_str",
@@ -5357,6 +6511,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "add one create-ask to existing",
@@ -5364,6 +6519,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 1, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:          "admin_addr_str",
@@ -5372,6 +6528,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas", "*.ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one, add diff create-ask",
@@ -5379,10 +6536,13 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 4, []string{"four.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 4, []string{"four.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 4, []string{"four.com.can.create.bananas"})
 				keeper.SetReqAttrsAsk(store, 5, []string{"five.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 5, []string{"five.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 5, []string{"five.com.can.create.bananas"})
 				keeper.SetReqAttrsAsk(store, 6, []string{"six.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 6, []string{"six.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 6, []string{"six.com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5392,6 +6552,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"*.ask.can.create.bananas"},
 			expBid: []string{"five.bid.can.create.bananas"},
+			expCom: []string{"five.com.can.create.bananas"},
 		},
 
 		// just create-bid manipulation.
@@ -5401,6 +6562,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5409,6 +6571,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: nil,
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one create-bid from two",
@@ -5416,6 +6579,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas", "also.bid.okay"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5424,6 +6588,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one create-bid with wildcard",
@@ -5434,6 +6599,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 					"bid.can.create.bananas", "one.bid.can.create.bananas",
 					"*.bid.can.create.bananas", "two.bid.can.create.bananas",
 				})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5442,6 +6608,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas", "one.bid.can.create.bananas", "two.bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove last two create-bid",
@@ -5449,6 +6616,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 55, []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 55, []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 55, []string{"one.com.can.create.bananas", "two.com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5457,11 +6625,14 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"},
 			expBid: nil,
+			expCom: []string{"one.com.can.create.bananas", "two.com.can.create.bananas"},
 		},
 		{
 			name: "add one create-bid to empty",
 			setup: func() {
-				keeper.SetReqAttrsAsk(s.getStore(), 1, []string{"ask.can.create.bananas"})
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 1, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:          "admin_addr_str",
@@ -5470,6 +6641,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "add one create-bid to existing",
@@ -5477,6 +6649,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 1, []string{"com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:          "admin_addr_str",
@@ -5485,6 +6658,7 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"ask.can.create.bananas"},
 			expBid: []string{"bid.can.create.bananas", "*.bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
 		},
 		{
 			name: "remove one, add diff create-bid",
@@ -5492,10 +6666,13 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 4, []string{"four.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 4, []string{"four.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 4, []string{"four.com.can.create.bananas"})
 				keeper.SetReqAttrsAsk(store, 5, []string{"five.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 5, []string{"five.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 5, []string{"five.com.can.create.bananas"})
 				keeper.SetReqAttrsAsk(store, 6, []string{"six.ask.can.create.bananas"})
 				keeper.SetReqAttrsBid(store, 6, []string{"six.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 6, []string{"six.com.can.create.bananas"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
 				Admin:             "admin_addr_str",
@@ -5505,26 +6682,161 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 			},
 			expAsk: []string{"five.ask.can.create.bananas"},
 			expBid: []string{"*.bid.can.create.bananas"},
+			expCom: []string{"five.com.can.create.bananas"},
 		},
 
-		// manipulation of both.
+		// just create-commitment manipulation.
+		{
+			name: "remove one create-commitment from one",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 9,
+				CreateCommitmentToRemove: []string{"com.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+			expCom: nil,
+		},
+		{
+			name: "remove one create-commitment from two",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{"com.can.create.bananas", "also.com.okay"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 9,
+				CreateCommitmentToRemove: []string{"also.com.okay"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
+		},
+		{
+			name: "remove one create-commitment with wildcard",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 9, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 9, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 9, []string{
+					"com.can.create.bananas", "one.com.can.create.bananas",
+					"*.com.can.create.bananas", "two.com.can.create.bananas",
+				})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 9,
+				CreateCommitmentToRemove: []string{"*.com.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas", "one.com.can.create.bananas", "two.com.can.create.bananas"},
+		},
+		{
+			name: "remove last two create-commitment",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 55, []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 55, []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 55, []string{"one.com.can.create.bananas", "two.com.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 55,
+				CreateCommitmentToRemove: []string{"two.com.can.create.bananas", "one.com.can.create.bananas"},
+			},
+			expAsk: []string{"one.ask.can.create.bananas", "two.ask.can.create.bananas"},
+			expBid: []string{"one.bid.can.create.bananas", "two.bid.can.create.bananas"},
+			expCom: nil,
+		},
+		{
+			name: "add one create-commitment to empty",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                 "admin_addr_str",
+				MarketId:              1,
+				CreateCommitmentToAdd: []string{"com.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas"},
+		},
+		{
+			name: "add one create-commitment to existing",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 1, []string{"ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 1, []string{"bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 1, []string{"com.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                 "admin_addr_str",
+				MarketId:              1,
+				CreateCommitmentToAdd: []string{"*.com.can.create.bananas"},
+			},
+			expAsk: []string{"ask.can.create.bananas"},
+			expBid: []string{"bid.can.create.bananas"},
+			expCom: []string{"com.can.create.bananas", "*.com.can.create.bananas"},
+		},
+		{
+			name: "remove one, add diff create-commitment",
+			setup: func() {
+				store := s.getStore()
+				keeper.SetReqAttrsAsk(store, 4, []string{"four.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 4, []string{"four.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 4, []string{"four.com.can.create.bananas"})
+				keeper.SetReqAttrsAsk(store, 5, []string{"five.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 5, []string{"five.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 5, []string{"five.com.can.create.bananas"})
+				keeper.SetReqAttrsAsk(store, 6, []string{"six.ask.can.create.bananas"})
+				keeper.SetReqAttrsBid(store, 6, []string{"six.bid.can.create.bananas"})
+				keeper.SetReqAttrsCommitment(store, 6, []string{"six.com.can.create.bananas"})
+			},
+			msg: &exchange.MsgMarketManageReqAttrsRequest{
+				Admin:                    "admin_addr_str",
+				MarketId:                 5,
+				CreateCommitmentToAdd:    []string{"*.com.can.create.bananas"},
+				CreateCommitmentToRemove: []string{"five.com.can.create.bananas"},
+			},
+			expAsk: []string{"five.ask.can.create.bananas"},
+			expBid: []string{"five.bid.can.create.bananas"},
+			expCom: []string{"*.com.can.create.bananas"},
+		},
+
+		// manipulation of all.
 		{
 			name: "add and remove two of each",
 			setup: func() {
 				store := s.getStore()
 				keeper.SetReqAttrsAsk(store, 2, []string{"one.ask", "two.ask", "three.ask"})
 				keeper.SetReqAttrsBid(store, 2, []string{"one.bid", "two.bid", "three.bid"})
+				keeper.SetReqAttrsCommitment(store, 2, []string{"one.com", "two.com", "three.com"})
 			},
 			msg: &exchange.MsgMarketManageReqAttrsRequest{
-				Admin:             "admin_addr_string",
-				MarketId:          2,
-				CreateAskToAdd:    []string{"*.other", "four.ask"},
-				CreateAskToRemove: []string{"one.ask", "three.ask"},
-				CreateBidToAdd:    []string{"*.other", "five.bid"},
-				CreateBidToRemove: []string{"three.bid", "two.bid"},
+				Admin:                    "admin_addr_string",
+				MarketId:                 2,
+				CreateAskToAdd:           []string{"*.other", "four.ask"},
+				CreateAskToRemove:        []string{"one.ask", "three.ask"},
+				CreateBidToAdd:           []string{"*.other", "five.bid"},
+				CreateBidToRemove:        []string{"three.bid", "two.bid"},
+				CreateCommitmentToAdd:    []string{"*.other", "six.com"},
+				CreateCommitmentToRemove: []string{"three.com", "two.com"},
 			},
 			expAsk: []string{"two.ask", "*.other", "four.ask"},
 			expBid: []string{"one.bid", "*.other", "five.bid"},
+			expCom: []string{"one.com", "*.other", "six.com"},
 		},
 	}
 
@@ -5559,8 +6871,10 @@ func (s *TestSuite) TestKeeper_UpdateReqAttrs() {
 
 			reqAttrAsk := s.k.GetReqAttrsAsk(s.ctx, tc.msg.MarketId)
 			reqAttrBid := s.k.GetReqAttrsBid(s.ctx, tc.msg.MarketId)
+			reqAttrCom := s.k.GetReqAttrsCommitment(s.ctx, tc.msg.MarketId)
 			s.Assert().Equal(tc.expAsk, reqAttrAsk, "create-ask req attrs after UpdateReqAttrs")
 			s.Assert().Equal(tc.expBid, reqAttrBid, "create-bid req attrs after UpdateReqAttrs")
+			s.Assert().Equal(tc.expCom, reqAttrCom, "create-commitment req attrs after UpdateReqAttrs")
 		})
 	}
 }
@@ -5983,6 +7297,12 @@ func (s *TestSuite) TestKeeper_CreateMarket() {
 				},
 				ReqAttrCreateAsk: []string{"*.ask.whatever"},
 				ReqAttrCreateBid: []string{"*.bid.whatever"},
+
+				AcceptingCommitments:     true,
+				FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("orange", 77)},
+				CommitmentSettlementBips: 15,
+				IntermediaryDenom:        "cherry",
+				ReqAttrCreateCommitment:  []string{"*.com.whatever"},
 			},
 			expMarketID:   3,
 			expHasAccCall: true,
@@ -6183,6 +7503,12 @@ func (s *TestSuite) TestKeeper_GetMarket() {
 					},
 					ReqAttrCreateAsk: []string{"create-ask.my.market", "*.kyc.someone"},
 					ReqAttrCreateBid: []string{"create-bid.my.market", "*.kyc.someone"},
+
+					AcceptingCommitments:     true,
+					FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("orange", 77)},
+					CommitmentSettlementBips: 15,
+					IntermediaryDenom:        "cherry",
+					ReqAttrCreateCommitment:  []string{"create-com.my.market", "*.kyc.someone"},
 				}
 
 				store := s.getStore()
@@ -6503,58 +7829,97 @@ func (s *TestSuite) TestKeeper_GetMarketBrief() {
 
 func (s *TestSuite) TestKeeper_WithdrawMarketFunds() {
 	tests := []struct {
-		name        string
-		bankKeeper  *MockBankKeeper
-		marketID    uint32
-		toAddr      sdk.AccAddress
-		amount      sdk.Coins
-		withdrawnBy string
-		expErr      string
+		name         string
+		bankKeeper   *MockBankKeeper
+		marketID     uint32
+		toAddr       sdk.AccAddress
+		amount       sdk.Coins
+		withdrawnBy  string
+		expErr       string
+		expBlockCall bool
+		expSendCall  bool
+		expQBypass   bool
 	}{
 		{
-			name:        "market 1: error from SendCoins",
-			bankKeeper:  NewMockBankKeeper().WithSendCoinsResults("woopsie-daisy: an error story"),
+			name:        "invalid admin",
 			marketID:    1,
 			toAddr:      s.addr1,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("oops", 55)),
-			withdrawnBy: "noone",
-			expErr:      "failed to withdraw 55oops from market 1: woopsie-daisy: an error story",
+			amount:      sdk.NewCoins(sdk.NewInt64Coin("banana", 12)),
+			withdrawnBy: "ohno",
+			expErr:      "invalid admin \"ohno\": decoding bech32 failed: invalid bech32 string length 4",
 		},
 		{
-			name:        "market 8: error from SendCoins",
-			bankKeeper:  NewMockBankKeeper().WithSendCoinsResults("ouch-ouch-ouch: a sequel error story"),
-			marketID:    8,
-			toAddr:      s.addr1,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("awwww", 77), sdk.NewInt64Coin("hurts", 3)),
-			withdrawnBy: "stillnoone",
-			expErr:      "failed to withdraw 77awwww,3hurts from market 8: ouch-ouch-ouch: a sequel error story",
+			name:         "to blocked address",
+			bankKeeper:   NewMockBankKeeper().WithBlockedAddrResults(true),
+			marketID:     1,
+			toAddr:       s.addr3,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
+			withdrawnBy:  s.adminAddr.String(),
+			expErr:       s.addr3.String() + " is not allowed to receive funds",
+			expBlockCall: true,
 		},
 		{
-			name:        "market 1: okay",
-			marketID:    1,
-			toAddr:      s.addr3,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
-			withdrawnBy: "thatoneguy",
+			name:         "market 1: error from SendCoins",
+			bankKeeper:   NewMockBankKeeper().WithSendCoinsResults("woopsie-daisy: an error story"),
+			marketID:     1,
+			toAddr:       s.addr1,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("oops", 55)),
+			withdrawnBy:  s.adminAddr.String(),
+			expErr:       "failed to withdraw 55oops from market 1: woopsie-daisy: an error story",
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   false,
 		},
 		{
-			name:        "market 8: okay",
-			marketID:    8,
-			toAddr:      s.addr5,
-			amount:      sdk.NewCoins(sdk.NewInt64Coin("kaching", 500_000_001)),
-			withdrawnBy: "itwasallme",
+			name:         "market 8: error from SendCoins",
+			bankKeeper:   NewMockBankKeeper().WithSendCoinsResults("ouch-ouch-ouch: a sequel error story"),
+			marketID:     8,
+			toAddr:       s.addr1,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("awwww", 77), sdk.NewInt64Coin("hurts", 3)),
+			withdrawnBy:  s.adminAddr.String(),
+			expErr:       "failed to withdraw 77awwww,3hurts from market 8: ouch-ouch-ouch: a sequel error story",
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   false,
+		},
+		{
+			name:         "market 1: okay to other",
+			marketID:     1,
+			toAddr:       s.addr3,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("yay", 4444)),
+			withdrawnBy:  s.adminAddr.String(),
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   false,
+		},
+		{
+			name:         "market 8: okay to self",
+			marketID:     8,
+			toAddr:       s.addr5,
+			amount:       sdk.NewCoins(sdk.NewInt64Coin("kaching", 500_000_001)),
+			withdrawnBy:  s.addr5.String(),
+			expBlockCall: true,
+			expSendCall:  true,
+			expQBypass:   true,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			expCalls := BankCalls{
-				SendCoins: []*SendCoinsArgs{
-					{
-						fromAddr: exchange.GetMarketAddress(tc.marketID),
-						toAddr:   tc.toAddr,
-						amt:      tc.amount,
-					},
-				},
+			expCalls := BankCalls{}
+			if tc.expBlockCall {
+				expCalls.BlockedAddr = append(expCalls.BlockedAddr, tc.toAddr)
+			}
+			if tc.expSendCall {
+				admin, err := sdk.AccAddressFromBech32(tc.withdrawnBy)
+				s.Require().NoError(err, "AccAddressFromBech32(%q)", tc.withdrawnBy)
+				expCalls.SendCoins = []*SendCoinsArgs{{
+					ctxHasQuarantineBypass: tc.expQBypass,
+					ctxTransferAgent:       admin,
+					fromAddr:               exchange.GetMarketAddress(tc.marketID),
+					toAddr:                 tc.toAddr,
+					amt:                    tc.amount,
+				}}
 			}
 
 			var expEvents sdk.Events
@@ -6723,6 +8088,40 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 			marketID: 55,
 			expErr:   "",
 		},
+		{
+			name: "commitment bips without denom",
+			setup: func() {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId:                 24,
+					CommitmentSettlementBips: 80,
+				})
+			},
+			marketID: 24,
+			expErr:   "no intermediary denom defined, but commitment settlement bips 80 is not zero",
+		},
+		{
+			name: "intermediary denom without nav",
+			setup: func() {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId:                 32,
+					CommitmentSettlementBips: 80,
+					IntermediaryDenom:        "cherry",
+				})
+			},
+			marketID: 32,
+			expErr:   "no nav exists from intermediary denom \"cherry\" to fee denom \"nhash\"",
+		},
+		{
+			name: "commitments allowed but no fees defined",
+			setup: func() {
+				keeper.StoreMarket(s.getStore(), exchange.Market{
+					MarketId:             28,
+					AcceptingCommitments: true,
+				})
+			},
+			marketID: 28,
+			expErr:   "commitments are allowed but no commitment-related fees are defined",
+		},
 	}
 
 	for _, tc := range tests {
@@ -6740,4 +8139,137 @@ func (s *TestSuite) TestKeeper_ValidateMarket() {
 			s.assertErrorValue(err, tc.expErr, "ValidateMarket(%d) error", tc.marketID)
 		})
 	}
+}
+
+func (s *TestSuite) TestKeeper_CloseMarket() {
+	askOrder := func(orderID uint64, marketID uint32, addr sdk.AccAddress, assets, price string) *exchange.Order {
+		return exchange.NewOrder(orderID).WithAsk(&exchange.AskOrder{
+			MarketId: marketID,
+			Seller:   addr.String(),
+			Assets:   s.coin(assets),
+			Price:    s.coin(price),
+		})
+	}
+	bidOrder := func(orderID uint64, marketID uint32, addr sdk.AccAddress, assets, price string) *exchange.Order {
+		return exchange.NewOrder(orderID).WithBid(&exchange.BidOrder{
+			MarketId: marketID,
+			Buyer:    addr.String(),
+			Assets:   s.coin(assets),
+			Price:    s.coin(price),
+		})
+	}
+	marketID := uint32(14)
+	signer := s.k.GetAuthority()
+
+	expMarket := exchange.Market{
+		MarketId:                 marketID,
+		AcceptingOrders:          false,
+		AllowUserSettlement:      true,
+		AcceptingCommitments:     false,
+		CommitmentSettlementBips: 10,
+		IntermediaryDenom:        "cherry",
+	}
+
+	marketOrders := []*exchange.Order{
+		askOrder(1, marketID, s.addr1, "10apple", "20peach"),
+		askOrder(2, marketID, s.addr1, "15apple", "25peach"),
+		askOrder(3, marketID, s.addr1, "20apple", "26peach"),
+		bidOrder(10, marketID, s.addr2, "45apple", "70peach"),
+		bidOrder(22, marketID, s.addr3, "71acorn", "5plum"),
+		askOrder(24, marketID, s.addr3, "67acorn", "5plum"),
+	}
+	nonMarketOrders := []*exchange.Order{
+		askOrder(4, marketID-1, s.addr1, "10apple", "20peach"),
+		bidOrder(23, marketID+1, s.addr3, "67acorn", "5plum"),
+	}
+	allOrders := make([]*exchange.Order, 0, len(marketOrders)+len(nonMarketOrders))
+	allOrders = append(allOrders, marketOrders...)
+	allOrders = append(allOrders, nonMarketOrders...)
+
+	marketCommitments := []exchange.Commitment{
+		{MarketId: marketID, Account: s.addr1.String(), Amount: s.coins("57cherry,12orange")},
+		{MarketId: marketID, Account: s.addr3.String(), Amount: s.coins("88apple,52banana")},
+		{MarketId: marketID, Account: s.addr5.String(), Amount: s.coins("14acorn,8peach,15plum")},
+	}
+	nonMarketCommitments := []exchange.Commitment{
+		{MarketId: marketID - 1, Account: s.addr3.String(), Amount: s.coins("12apple,48banana")},
+		{MarketId: marketID + 1, Account: s.addr3.String(), Amount: s.coins("832cherry")},
+	}
+	allCommitments := make([]exchange.Commitment, 0, len(marketCommitments)+len(nonMarketCommitments))
+	allCommitments = append(allCommitments, marketCommitments...)
+	allCommitments = append(allCommitments, nonMarketCommitments...)
+
+	expHoldCalls := HoldCalls{
+		ReleaseHold: []*ReleaseHoldArgs{
+			NewReleaseHoldArgs(s.addr1, s.coins("10apple")),
+			NewReleaseHoldArgs(s.addr1, s.coins("15apple")),
+			NewReleaseHoldArgs(s.addr1, s.coins("20apple")),
+			NewReleaseHoldArgs(s.addr2, s.coins("70peach")),
+			NewReleaseHoldArgs(s.addr3, s.coins("5plum")),
+			NewReleaseHoldArgs(s.addr3, s.coins("67acorn")),
+			NewReleaseHoldArgs(s.addr1, s.coins("57cherry,12orange")),
+			NewReleaseHoldArgs(s.addr3, s.coins("88apple,52banana")),
+			NewReleaseHoldArgs(s.addr5, s.coins("14acorn,8peach,15plum")),
+		},
+	}
+	expEvents := make(sdk.Events, 2, 2+len(marketOrders)+len(marketCommitments))
+	expEvents[0] = s.untypeEvent(exchange.NewEventMarketOrdersDisabled(marketID, signer))
+	expEvents[1] = s.untypeEvent(exchange.NewEventMarketCommitmentsDisabled(marketID, signer))
+	for _, order := range marketOrders {
+		expEvents = append(expEvents, s.untypeEvent(exchange.NewEventOrderCancelled(order, signer)))
+	}
+	for _, com := range marketCommitments {
+		expEvents = append(expEvents, s.untypeEvent(exchange.NewEventCommitmentReleased(com.Account, marketID, com.Amount, "GovCloseMarket")))
+	}
+
+	initMarket := s.copyMarket(expMarket)
+	initMarket.AcceptingOrders = true
+	initMarket.AcceptingCommitments = true
+
+	s.clearExchangeState()
+	s.requireCreateMarket(initMarket)
+	store := s.getStore()
+	for _, order := range allOrders {
+		s.Require().NoError(s.k.SetOrderInStore(store, *order), "SetOrderInStore(%d)", order.OrderId)
+	}
+	for i, com := range allCommitments {
+		addr, err := sdk.AccAddressFromBech32(com.Account)
+		s.Require().NoError(err, "[%d]: AccAddressFromBech32(%q) error", i, com.Account)
+		keeper.SetCommitmentAmount(store, com.MarketId, addr, com.Amount)
+	}
+	store = nil
+
+	// Setup done, make the CloseMarket call.
+	em := sdk.NewEventManager()
+	ctx := s.ctx.WithEventManager(em)
+	holdKeeper := NewMockHoldKeeper()
+	kpr := s.k.WithHoldKeeper(holdKeeper)
+	testFunc := func() {
+		kpr.CloseMarket(ctx, marketID, signer)
+	}
+	s.Require().NotPanics(testFunc, "CloseMarket(%d, %q)", marketID, signer)
+
+	// And check everything.
+	s.assertHoldKeeperCalls(holdKeeper, expHoldCalls, "CloseMarket(%d, %q)", marketID, signer)
+	actEvents := em.Events()
+	s.assertEqualEvents(expEvents, actEvents, "events emitted during CloseMarket(%d, %q)", marketID, signer)
+
+	actMarket := s.k.GetMarket(s.ctx, marketID)
+	s.Assert().Equal(&expMarket, actMarket, "market after CloseMarket(%d, %q)", marketID, signer)
+
+	var actOrders []*exchange.Order
+	err := s.k.IterateOrders(s.ctx, func(order *exchange.Order) bool {
+		actOrders = append(actOrders, order)
+		return false
+	})
+	if s.Assert().NoError(err, "IterateOrders") {
+		s.assertEqualOrders(nonMarketOrders, actOrders, "orders left after CloseMarket(%d, %q)", marketID, signer)
+	}
+
+	var actCommitments []exchange.Commitment
+	s.k.IterateCommitments(s.ctx, func(commitment exchange.Commitment) bool {
+		actCommitments = append(actCommitments, commitment)
+		return false
+	})
+	s.assertEqualCommitments(nonMarketCommitments, actCommitments, "commitments left after CloseMarket(%d, %q)", marketID, signer)
 }

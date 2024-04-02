@@ -12,6 +12,7 @@ import (
 	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 
+	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -194,8 +195,13 @@ func (k Keeper) WithdrawCoins(
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", denom, err)
 	}
-	if !m.AddressHasAccess(caller, types.Access_Withdraw) {
-		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Withdraw, m.GetDenom())
+	if err = m.ValidateAddressHasAccess(caller, types.Access_Withdraw); err != nil {
+		return err
+	}
+
+	// If going to a restricted marker, the admin must have deposit access on that marker too.
+	if err = k.validateSendToMarker(ctx, recipient, caller); err != nil {
+		return err
 	}
 
 	// check to see if marker is active (the coins created by a marker can only be withdrawn when it is active)
@@ -206,6 +212,10 @@ func (k Keeper) WithdrawCoins(
 
 	if recipient.Empty() {
 		recipient = caller
+	}
+
+	if k.bankKeeper.BlockedAddr(recipient) {
+		return fmt.Errorf("%s is not allowed to receive funds", recipient)
 	}
 
 	if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), m.GetAddress(), recipient, coins); err != nil {
@@ -228,8 +238,8 @@ func (k Keeper) MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", coin.Denom, err)
 	}
-	if !m.AddressHasAccess(caller, types.Access_Mint) {
-		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Mint, m.GetDenom())
+	if err = m.ValidateAddressHasAccess(caller, types.Access_Mint); err != nil {
+		return err
 	}
 
 	switch {
@@ -268,8 +278,8 @@ func (k Keeper) BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) 
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", coin.Denom, err)
 	}
-	if !m.AddressHasAccess(caller, types.Access_Burn) {
-		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Burn, m.GetDenom())
+	if err = m.ValidateAddressHasAccess(caller, types.Access_Burn); err != nil {
+		return err
 	}
 
 	switch {
@@ -538,8 +548,8 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	switch m.GetStatus() {
 	case types.StatusFinalized, types.StatusActive:
 		// for active or finalized markers the caller must be assigned permission to perform this action.
-		if !m.AddressHasAccess(caller, types.Access_Delete) {
-			return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Delete, m.GetDenom())
+		if err = m.ValidateAddressHasAccess(caller, types.Access_Delete); err != nil {
+			return err
 		}
 		// for finalized/active we need to ensure the full coin supply has been recalled as it will all be burned.
 		totalSupply := k.bankKeeper.GetSupply(ctx, m.GetDenom()).Amount
@@ -552,8 +562,8 @@ func (k Keeper) CancelMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 		}
 	case types.StatusProposed:
 		// for a proposed marker either the manager or someone assigned `delete` can perform this action
-		if !(m.GetManager().Equals(caller) || m.AddressHasAccess(caller, types.Access_Delete)) {
-			return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Delete, m.GetDenom())
+		if err = m.ValidateAddressHasAccess(caller, types.Access_Delete); err != nil && !m.GetManager().Equals(caller) {
+			return err
 		}
 	case types.StatusCancelled:
 		return nil // nothing to be done here.
@@ -584,8 +594,8 @@ func (k Keeper) DeleteMarker(ctx sdk.Context, caller sdk.AccAddress, denom strin
 	}
 
 	// either the manager [set if a proposed marker was cancelled] or someone assigned `delete` can perform this action
-	if !(m.GetManager().Equals(caller) || m.AddressHasAccess(caller, types.Access_Delete)) {
-		return fmt.Errorf("%s does not have %s on %s markeraccount", caller, types.Access_Delete, m.GetDenom())
+	if err = m.ValidateAddressHasAccess(caller, types.Access_Delete); err != nil && !m.GetManager().Equals(caller) {
+		return err
 	}
 
 	// status must currently be set to cancelled
@@ -640,15 +650,33 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 	if err != nil {
 		return fmt.Errorf("marker not found for %s: %w", amount.Denom, err)
 	}
+
+	if m.GetStatus() != types.StatusActive {
+		return fmt.Errorf("marker status (%s) is not active, funds cannot be moved", m.GetStatus())
+	}
+
 	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
 	}
-	if !m.AddressHasAccess(admin, types.Access_Transfer) {
-		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
+
+	adminCanForceTransfer := m.AddressHasAccess(admin, types.Access_ForceTransfer)
+	if err = m.ValidateAddressHasAccess(admin, types.Access_Transfer); err != nil && !adminCanForceTransfer {
+		return err
 	}
+
+	// If going to a restricted marker, the admin must have deposit access on that marker too.
+	if err = k.validateSendToMarker(ctx, to, admin); err != nil {
+		return err
+	}
+
 	if !admin.Equals(from) {
 		switch {
-		case !m.AllowsForcedTransfer():
+		case !m.AllowsForcedTransfer() || !adminCanForceTransfer:
+			// Either force transfers of this denom aren't allowed, or the admin does not have
+			// permission to do forced transfers. Only allow this if there's an authz grant.
+			// We assume that a marker account cannot issue an authz grant.
+			// That means we don't need to check for withdraw access on any from marker account here.
+			// If the from is a marker account this authz check will fail and return an error.
 			err = k.authzHandler(ctx, admin, from, to, amount)
 			if err != nil {
 				return err
@@ -657,9 +685,11 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 			return fmt.Errorf("funds are not allowed to be removed from %s", from)
 		}
 	}
+
 	if k.bankKeeper.BlockedAddr(to) {
 		return fmt.Errorf("%s is not allowed to receive funds", to)
 	}
+
 	// set context to having access to bypass attribute restriction test
 	// send the coins between accounts (does not check send_enabled on coin denom)
 	if err = k.bankKeeper.SendCoins(types.WithBypass(ctx), from, to, sdk.NewCoins(amount)); err != nil {
@@ -679,14 +709,40 @@ func (k Keeper) TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, am
 
 // canForceTransferFrom returns true if funds can be forcefully transferred out of the provided address.
 func (k Keeper) canForceTransferFrom(ctx sdk.Context, from sdk.AccAddress) bool {
-	acc := k.authKeeper.GetAccount(ctx, from)
+	// If the account is a group address, then allow the force transfer.
+	if k.groupChecker != nil && k.groupChecker.IsGroupAddress(ctx, from) {
+		return true
+	}
+
 	// If acc is nil, there's no funds in it, so the transfer will fail anyway.
-	// In that case, return true from here so it can fail later with a more accurate message.
-	// If there is an account, only allow force transfers if the sequence number isn't zero.
-	// This is to prevent forced transfer from module accounts and smart contracts.
-	// It will also block forced transfers from new or dead accounts, though.
+	// In that case, return true here so it can fail later with a more accurate message.
+	acc := k.authKeeper.GetAccount(ctx, from)
+	if acc == nil {
+		return true
+	}
+
+	// We can't allow forced transfers from module accounts and smart contract accounts.
+	// Doing so can result in a chain halt. Unfortunately, specifically checking if an
+	// account is a smart contract account is expensive. Instead, we only allow the forced
+	// transfers from accounts that have signed at least one Tx and therefore have a non-zero
+	// sequence. This also prevents other force transfers that wouldn't cause problems, though.
+	// For example, some funds got erroneously sent to a new account that no one has a key for.
 	// If the forced transfer is absolutely required, use a governance proposal with a MsgSend.
-	return acc == nil || acc.GetSequence() != 0
+	if acc.GetSequence() != 0 {
+		return true
+	}
+
+	// Allow force transfers out of marker accounts still.
+	if _, isMarker := acc.(types.MarkerAccountI); isMarker {
+		return true
+	}
+
+	// Allow force transfers out of market accounts too.
+	if _, isMarket := acc.(*exchange.MarketAccount); isMarket {
+		return true
+	}
+
+	return false
 }
 
 // IbcTransferCoin transfers restricted coins between two chains when the administrator account holds the transfer
@@ -708,8 +764,8 @@ func (k Keeper) IbcTransferCoin(
 	if m.GetMarkerType() != types.MarkerType_RestrictedCoin {
 		return fmt.Errorf("marker type is not restricted_coin, brokered transfer not supported")
 	}
-	if !m.AddressHasAccess(admin, types.Access_Transfer) {
-		return fmt.Errorf("%s is not allowed to broker transfers", admin.String())
+	if err = m.ValidateAddressHasAccess(admin, types.Access_Transfer); err != nil {
+		return err
 	}
 	to, err := sdk.AccAddressFromBech32(receiver)
 	if err != nil {
@@ -784,8 +840,8 @@ func (k Keeper) SetMarkerDenomMetadata(ctx sdk.Context, metadata banktypes.Metad
 	if markerErr != nil {
 		return fmt.Errorf("marker not found for %s: %w", metadata.Base, markerErr)
 	}
-	if !marker.GetManager().Equals(caller) && !marker.AddressHasAccess(caller, types.Access_Admin) {
-		return fmt.Errorf("%s is not allowed to manage marker metadata", caller.String())
+	if err := marker.ValidateAddressHasAccess(caller, types.Access_Admin); err != nil && !marker.GetManager().Equals(caller) {
+		return err
 	}
 
 	var existing *banktypes.Metadata
@@ -838,4 +894,16 @@ func (k Keeper) accountControlsAllSupply(ctx sdk.Context, caller sdk.AccAddress,
 	// the operations as an admin on the marker.
 	supply := m.GetSupply()
 	return supply.Equal(sdk.NewCoin(m.GetDenom(), balance.Amount))
+}
+
+// validateSendToMarker returns an error if the toAddr is a restricted marker but the admin doesn't have deposit access on it.
+func (k Keeper) validateSendToMarker(ctx sdk.Context, toAddr, admin sdk.AccAddress) error {
+	marker, _ := k.GetMarker(ctx, toAddr)
+	if marker == nil {
+		return nil
+	}
+	if marker.GetMarkerType() != types.MarkerType_RestrictedCoin {
+		return nil
+	}
+	return marker.ValidateAddressHasAccess(admin, types.Access_Deposit)
 }

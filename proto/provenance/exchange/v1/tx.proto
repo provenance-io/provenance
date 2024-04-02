@@ -10,9 +10,11 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "provenance/exchange/v1/commitments.proto";
 import "provenance/exchange/v1/market.proto";
 import "provenance/exchange/v1/orders.proto";
 import "provenance/exchange/v1/params.proto";
+import "provenance/exchange/v1/payments.proto";
 
 // Msg is the service for exchange module's tx endpoints.
 service Msg {
@@ -21,6 +23,9 @@ service Msg {
 
   // CreateBid creates a bid order (to buy something you want).
   rpc CreateBid(MsgCreateBidRequest) returns (MsgCreateBidResponse);
+
+  // CommitFunds marks funds in an account as manageable by a market.
+  rpc CommitFunds(MsgCommitFundsRequest) returns (MsgCommitFundsResponse);
 
   // CancelOrder cancels an order.
   rpc CancelOrder(MsgCancelOrderRequest) returns (MsgCancelOrderResponse);
@@ -34,6 +39,12 @@ service Msg {
   // MarketSettle is a market endpoint to trigger the settlement of orders.
   rpc MarketSettle(MsgMarketSettleRequest) returns (MsgMarketSettleResponse);
 
+  // MarketCommitmentSettle is a market endpoint to transfer committed funds.
+  rpc MarketCommitmentSettle(MsgMarketCommitmentSettleRequest) returns (MsgMarketCommitmentSettleResponse);
+
+  // MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s).
+  rpc MarketReleaseCommitments(MsgMarketReleaseCommitmentsRequest) returns (MsgMarketReleaseCommitmentsResponse);
+
   // MarketSetOrderExternalID updates an order's external id field.
   rpc MarketSetOrderExternalID(MsgMarketSetOrderExternalIDRequest) returns (MsgMarketSetOrderExternalIDResponse);
 
@@ -44,10 +55,25 @@ service Msg {
   rpc MarketUpdateDetails(MsgMarketUpdateDetailsRequest) returns (MsgMarketUpdateDetailsResponse);
 
   // MarketUpdateEnabled is a market endpoint to update whether its accepting orders.
-  rpc MarketUpdateEnabled(MsgMarketUpdateEnabledRequest) returns (MsgMarketUpdateEnabledResponse);
+  // Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+  rpc MarketUpdateEnabled(MsgMarketUpdateEnabledRequest) returns (MsgMarketUpdateEnabledResponse) {
+    option deprecated = true;
+  };
+
+  // MarketUpdateAcceptingOrders is a market endpoint to update whether its accepting orders.
+  rpc MarketUpdateAcceptingOrders(MsgMarketUpdateAcceptingOrdersRequest)
+      returns (MsgMarketUpdateAcceptingOrdersResponse);
 
   // MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement.
   rpc MarketUpdateUserSettle(MsgMarketUpdateUserSettleRequest) returns (MsgMarketUpdateUserSettleResponse);
+
+  // MarketUpdateAcceptingCommitments is a market endpoint to update whether it accepts commitments.
+  rpc MarketUpdateAcceptingCommitments(MsgMarketUpdateAcceptingCommitmentsRequest)
+      returns (MsgMarketUpdateAcceptingCommitmentsResponse);
+
+  // MarketUpdateIntermediaryDenom sets a market's intermediary denom.
+  rpc MarketUpdateIntermediaryDenom(MsgMarketUpdateIntermediaryDenomRequest)
+      returns (MsgMarketUpdateIntermediaryDenomResponse);
 
   // MarketManagePermissions is a market endpoint to manage a market's user permissions.
   rpc MarketManagePermissions(MsgMarketManagePermissionsRequest) returns (MsgMarketManagePermissionsResponse);
@@ -55,11 +81,33 @@ service Msg {
   // MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it.
   rpc MarketManageReqAttrs(MsgMarketManageReqAttrsRequest) returns (MsgMarketManageReqAttrsResponse);
 
+  // CreatePayment creates a payment to facilitate a trade between two accounts.
+  rpc CreatePayment(MsgCreatePaymentRequest) returns (MsgCreatePaymentResponse);
+
+  // AcceptPayment is used by a target to accept a payment.
+  rpc AcceptPayment(MsgAcceptPaymentRequest) returns (MsgAcceptPaymentResponse);
+
+  // RejectPayment can be used by a target to reject a payment.
+  rpc RejectPayment(MsgRejectPaymentRequest) returns (MsgRejectPaymentResponse);
+
+  // RejectPayments can be used by a target to reject all payments from one or more sources.
+  rpc RejectPayments(MsgRejectPaymentsRequest) returns (MsgRejectPaymentsResponse);
+
+  // CancelPayments can be used by a source to cancel one or more payments.
+  rpc CancelPayments(MsgCancelPaymentsRequest) returns (MsgCancelPaymentsResponse);
+
+  // ChangePaymentTarget can be used by a source to change the target in one of their payments.
+  rpc ChangePaymentTarget(MsgChangePaymentTargetRequest) returns (MsgChangePaymentTargetResponse);
+
   // GovCreateMarket is a governance proposal endpoint for creating a market.
   rpc GovCreateMarket(MsgGovCreateMarketRequest) returns (MsgGovCreateMarketResponse);
 
   // GovManageFees is a governance proposal endpoint for updating a market's fees.
   rpc GovManageFees(MsgGovManageFeesRequest) returns (MsgGovManageFeesResponse);
+
+  // GovCloseMarket is a governance proposal endpoint that will disable order and commitment creation,
+  // cancel all orders, and release all commitments.
+  rpc GovCloseMarket(MsgGovCloseMarketRequest) returns (MsgGovCloseMarketResponse);
 
   // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
   rpc GovUpdateParams(MsgGovUpdateParamsRequest) returns (MsgGovUpdateParamsResponse);
@@ -97,11 +145,31 @@ message MsgCreateBidResponse {
   uint64 order_id = 1;
 }
 
+// MsgCommitFundsRequest is a request message for the CommitFunds endpoint.
+message MsgCommitFundsRequest {
+  option (cosmos.msg.v1.signer) = "account";
+
+  // account is the address of the account with the funds being committed.
+  string account = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market the funds will be committed to.
+  uint32 market_id = 2;
+  // amount is the funds being committed to the market.
+  repeated cosmos.base.v1beta1.Coin amount = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // creation_fee is the fee that is being paid to create this commitment.
+  cosmos.base.v1beta1.Coin creation_fee = 4;
+  // event_tag is a string that is included in the funds-committed event. Max length is 100 characters.
+  string event_tag = 5;
+}
+
+// MsgCommitFundsResponse is a response message for the CommitFunds endpoint.
+message MsgCommitFundsResponse {}
+
 // MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
 message MsgCancelOrderRequest {
   option (cosmos.msg.v1.signer) = "signer";
 
-  // signer is the account requesting the order cancelation.
+  // signer is the account requesting the order cancellation.
   // It must be either the order owner (e.g. the buyer or seller), the governance module account address, or an account
   // with cancel permission with the market that the order is in.
   string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -169,7 +237,7 @@ message MsgMarketSettleRequest {
 
   // admin is the account with "settle" permission requesting this settlement.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // market_id is the numerical identifier of the market to update required attributes for.
+  // market_id is the numerical identifier of the market requesting this settlement.
   uint32 market_id = 2;
 
   // ask_order_ids are the ask orders being filled.
@@ -185,13 +253,56 @@ message MsgMarketSettleRequest {
 // MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
 message MsgMarketSettleResponse {}
 
+// MsgMarketCommitmentSettleRequest is a request message for the MarketCommitmentSettle endpoint.
+message MsgMarketCommitmentSettleRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the account with "settle" permission requesting this settlement.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market requesting this settlement.
+  uint32 market_id = 2;
+
+  // inputs defines where the funds are coming from. All of these funds must be already committed to the market.
+  repeated AccountAmount inputs = 3 [(gogoproto.nullable) = false];
+  // outputs defines how the funds are to be distributed. These funds will be re-committed in the destination accounts.
+  repeated AccountAmount outputs = 4 [(gogoproto.nullable) = false];
+  // fees is the funds that the market is collecting as part of this settlement.
+  // All of these funds must be already committed to the market.
+  repeated AccountAmount fees = 5 [(gogoproto.nullable) = false];
+  // navs are any NAV info that should be updated at the beginning of this settlement.
+  repeated NetAssetPrice navs = 6 [(gogoproto.nullable) = false];
+  // event_tag is a string that is included in the funds-committed/released events. Max length is 100 characters.
+  string event_tag = 7;
+}
+
+// MsgMarketCommitmentSettleResponse is a response message for the MarketCommitmentSettle endpoint.
+message MsgMarketCommitmentSettleResponse {}
+
+// MsgMarketReleaseCommitmentsRequest is a request message for the MarketReleaseCommitments endpoint.
+message MsgMarketReleaseCommitmentsRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the account with "cancel" permission requesting this release.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market releasing these funds.
+  uint32 market_id = 2;
+  // to_release is the funds that are to be released.
+  // An entry with a zero amount indicates that all committed funds for that account should be released.
+  repeated AccountAmount to_release = 3 [(gogoproto.nullable) = false];
+  // event_tag is a string that is included in the funds-released events. Max length is 100 characters.
+  string event_tag = 4;
+}
+
+// MsgMarketReleaseCommitmentsResponse is a response message for the MarketReleaseCommitments endpoint.
+message MsgMarketReleaseCommitmentsResponse {}
+
 // MsgMarketSetOrderExternalIDRequest is a request message for the MarketSetOrderExternalID endpoint.
 message MsgMarketSetOrderExternalIDRequest {
   option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account with "set_ids" permission requesting this settlement.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // market_id is the numerical identifier of the market to update required attributes for.
+  // market_id is the numerical identifier of the market with the orders to update.
   uint32 market_id = 2;
 
   // order_id is the numerical identifier of the order to update.
@@ -229,7 +340,7 @@ message MsgMarketUpdateDetailsRequest {
 
   // admin is the account with "update" permission requesting this change.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // market_id is the numerical identifier of the market to update required attributes for.
+  // market_id is the numerical identifier of the market to update details for.
   uint32 market_id = 2;
 
   // market_details is some information about this market.
@@ -240,20 +351,44 @@ message MsgMarketUpdateDetailsRequest {
 message MsgMarketUpdateDetailsResponse {}
 
 // MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled endpoint.
+// Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
 message MsgMarketUpdateEnabledRequest {
+  option deprecated             = true;
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the account with "update" permission requesting this change.
+  // Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
+  // market_id is the numerical identifier of the market to enable or disable.
+  // Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+  uint32 market_id = 2 [deprecated = true];
+
+  // accepting_orders is whether this market is allowing orders to be created for it.
+  // Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+  bool accepting_orders = 3 [deprecated = true];
+}
+
+// MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled endpoint.
+// Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+message MsgMarketUpdateEnabledResponse {
+  option deprecated = true;
+}
+
+// MsgMarketUpdateAcceptingOrdersRequest is a request message for the MarketUpdateAcceptingOrders endpoint.
+message MsgMarketUpdateAcceptingOrdersRequest {
   option (cosmos.msg.v1.signer) = "admin";
 
   // admin is the account with "update" permission requesting this change.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // market_id is the numerical identifier of the market to update required attributes for.
+  // market_id is the numerical identifier of the market to enable or disable.
   uint32 market_id = 2;
 
   // accepting_orders is whether this market is allowing orders to be created for it.
   bool accepting_orders = 3;
 }
 
-// MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled endpoint.
-message MsgMarketUpdateEnabledResponse {}
+// MsgMarketUpdateAcceptingOrdersResponse is a response message for the MarketUpdateAcceptingOrders endpoint.
+message MsgMarketUpdateAcceptingOrdersResponse {}
 
 // MsgMarketUpdateUserSettleRequest is a request message for the MarketUpdateUserSettle endpoint.
 message MsgMarketUpdateUserSettleRequest {
@@ -261,17 +396,51 @@ message MsgMarketUpdateUserSettleRequest {
 
   // admin is the account with "update" permission requesting this change.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // market_id is the numerical identifier of the market to update required attributes for.
+  // market_id is the numerical identifier of the market to enable or disable user-settlement for.
   uint32 market_id = 2;
 
   // allow_user_settlement is whether this market allows users to initiate their own settlements.
   // For example, the FillBids and FillAsks endpoints are available if and only if this is true.
-  // The MarketSettle endpoint is only available to market actors regardless of the value of this field.
+  // The MarketSettle endpoint is available (only to market actors) regardless of the value of this field.
   bool allow_user_settlement = 3;
 }
 
 // MsgMarketUpdateUserSettleResponse is a response message for the MarketUpdateUserSettle endpoint.
 message MsgMarketUpdateUserSettleResponse {}
+
+// MsgMarketUpdateAcceptingCommitmentsRequest is a request message for the MarketUpdateAcceptingCommitments endpoint.
+message MsgMarketUpdateAcceptingCommitmentsRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the account with "update" permission requesting this change.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market to enable or disable commitments for.
+  uint32 market_id = 2;
+
+  // accepting_commitments is whether this market allows users to commit funds to it.
+  // For example, the CommitFunds endpoint is available if and only if this is true.
+  // The MarketCommitmentSettle endpoint is available (only to market actors) regardless of the value of this field.
+  bool accepting_commitments = 3;
+}
+
+// MsgMarketUpdateAcceptingCommitmentsResponse is a response message for the MarketUpdateAcceptingCommitments endpoint.
+message MsgMarketUpdateAcceptingCommitmentsResponse {}
+
+// MsgMarketUpdateIntermediaryDenomRequest is a request message for the MarketUpdateIntermediaryDenom endpoint.
+message MsgMarketUpdateIntermediaryDenomRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the account with "update" permission requesting this change.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market changing the intermediary denom.
+  uint32 market_id = 2;
+
+  // intermediary_denom is the new intermediary denom for this market to use.
+  string intermediary_denom = 3;
+}
+
+// MsgMarketUpdateIntermediaryDenomResponse is a response message for the MarketUpdateIntermediaryDenom endpoint.
+message MsgMarketUpdateIntermediaryDenomResponse {}
 
 // MsgMarketManagePermissionsRequest is a request message for the MarketManagePermissions endpoint.
 message MsgMarketManagePermissionsRequest {
@@ -279,7 +448,7 @@ message MsgMarketManagePermissionsRequest {
 
   // admin is the account with "permissions" permission requesting this change.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // market_id is the numerical identifier of the market to update required attributes for.
+  // market_id is the numerical identifier of the market to manage permissions for.
   uint32 market_id = 2;
 
   // revoke_all are addresses that should have all their permissions revoked.
@@ -310,10 +479,92 @@ message MsgMarketManageReqAttrsRequest {
   repeated string create_bid_to_add = 5;
   // create_bid_to_remove are the attributes that should no longer be required to create a bid order.
   repeated string create_bid_to_remove = 6;
+  // create_commitment_to_add are the attributes that should now also be required to create a commitment.
+  repeated string create_commitment_to_add = 7;
+  // create_commitment_to_remove are the attributes that should no longer be required to create a commitment.
+  repeated string create_commitment_to_remove = 8;
 }
 
 // MsgMarketManageReqAttrsResponse is a response message for the MarketManageReqAttrs endpoint.
 message MsgMarketManageReqAttrsResponse {}
+
+// MsgCreatePaymentRequest is a request message for the CreatePayment endpoint.
+message MsgCreatePaymentRequest {
+  option (cosmos.msg.v1.signer) = "payment.source";
+
+  // payment is the details of the payment to create.
+  Payment payment = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgCreatePaymentResponse is a response message for the CreatePayment endpoint.
+message MsgCreatePaymentResponse {}
+
+// MsgAcceptPaymentRequest is a request message for the AcceptPayment endpoint.
+message MsgAcceptPaymentRequest {
+  option (cosmos.msg.v1.signer) = "payment.target";
+
+  // payment is the details of the payment to accept.
+  Payment payment = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgAcceptPaymentResponse is a response message for the AcceptPayment endpoint.
+message MsgAcceptPaymentResponse {}
+
+// MsgRejectPaymentRequest is a request message for the RejectPayment endpoint.
+message MsgRejectPaymentRequest {
+  option (cosmos.msg.v1.signer) = "target";
+
+  // target is the target account of the payment to reject.
+  string target = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source is the source account of the payment to reject.
+  string source = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id is the external id of the payment to reject.
+  string external_id = 3;
+}
+
+// MsgRejectPaymentResponse is a response message for the RejectPayment endpoint.
+message MsgRejectPaymentResponse {}
+
+// MsgRejectPaymentsRequest is a request message for the RejectPayments endpoint.
+message MsgRejectPaymentsRequest {
+  option (cosmos.msg.v1.signer) = "target";
+
+  // target is the account that wishes to reject some payments.
+  string target = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // sources is the source accounts of the payments to reject.
+  repeated string sources = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgRejectPaymentsResponse is a response message for the RejectPayments endpoint.
+message MsgRejectPaymentsResponse {}
+
+// MsgCancelPaymentsRequest is a request message for the CancelPayments endpoint.
+message MsgCancelPaymentsRequest {
+  option (cosmos.msg.v1.signer) = "source";
+
+  // source is the account that wishes to cancel some of their payments.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_ids is all of the external ids of the payments to cancel.
+  repeated string external_ids = 2;
+}
+
+// MsgCancelPaymentsResponse is a response message for the CancelPayments endpoint.
+message MsgCancelPaymentsResponse {}
+
+// MsgChangePaymentTargetRequest is a request message for the ChangePaymentTarget endpoint.
+message MsgChangePaymentTargetRequest {
+  option (cosmos.msg.v1.signer) = "source";
+
+  // source is the account that wishes to update the target of one of their payments.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id is the external id of the payment to update.
+  string external_id = 2;
+  // new_target is the new target account of the payment.
+  string new_target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgChangePaymentTargetResponse is a response message for the ChangePaymentTarget endpoint.
+message MsgChangePaymentTargetResponse {}
 
 // MsgGovCreateMarketRequest is a request message for the GovCreateMarket endpoint.
 message MsgGovCreateMarketRequest {
@@ -369,10 +620,35 @@ message MsgGovManageFeesRequest {
   repeated FeeRatio add_fee_buyer_settlement_ratios = 13 [(gogoproto.nullable) = false];
   // remove_fee_buyer_settlement_ratios are the buyer settlement fee ratios to remove.
   repeated FeeRatio remove_fee_buyer_settlement_ratios = 14 [(gogoproto.nullable) = false];
+
+  // add_fee_create_commitment_flat are the create-commitment flat fee options to add.
+  repeated cosmos.base.v1beta1.Coin add_fee_create_commitment_flat = 15 [(gogoproto.nullable) = false];
+  // remove_fee_create_commitment_flat are the create-commitment flat fee options to remove.
+  repeated cosmos.base.v1beta1.Coin remove_fee_create_commitment_flat = 16 [(gogoproto.nullable) = false];
+
+  // set_fee_commitment_settlement_bips is the new fee_commitment_settlement_bips for the market.
+  // It is ignored if it is zero. To set it to zero set unset_fee_commitment_settlement_bips to true.
+  uint32 set_fee_commitment_settlement_bips = 17;
+  // unset_fee_commitment_settlement_bips, if true, sets the fee_commitment_settlement_bips to zero.
+  // If false, it is ignored.
+  bool unset_fee_commitment_settlement_bips = 18;
 }
 
 // MsgGovManageFeesResponse is a response message for the GovManageFees endpoint.
 message MsgGovManageFeesResponse {}
+
+// MsgGovCloseMarketRequest is a request message for the GovCloseMarket endpoint.
+message MsgGovCloseMarketRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority must be the governance module account.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numerical identifier of the market to close.
+  uint32 market_id = 2;
+}
+
+// MsgGovCloseMarketResponse is a response message for the GovCloseMarket endpoint.
+message MsgGovCloseMarketResponse {}
 
 // MsgGovUpdateParamsRequest is a request message for the GovUpdateParams endpoint.
 message MsgGovUpdateParamsRequest {
