@@ -1456,8 +1456,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
-		// wait for claim period to end (claim period is 1s)
-		time.Sleep(1500 * time.Millisecond)
 
 		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: height,
@@ -1467,6 +1465,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		)
 		require.NoError(t, err, "FinalizeBlock expected no error")
 		app.Commit()
+		// wait for claim period to end (claim period is 1s)
+		time.Sleep(1500 * time.Millisecond)
 		seq = seq + 1
 	}
 
@@ -1559,15 +1559,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 				claimResponse.ClaimDetails[0].ClaimedRewardPeriodDetails[0].ClaimPeriodReward.String(), "ClaimPeriodReward")
 		}
 	}
-	// res, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-	// 	Height: 7,
-	// 	Time:   time.Now().UTC(),
-	// },
-	// )
-	// _ = res
-	// require.NoError(t, err, "FinalizeBlock expected no error")
-	app.Commit()
-
 	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// make sure account balance has the tokens
 	balanceChange := balanceLater.AmountOf(pioconfig.GetProvenanceConfig().FeeDenom).Sub(balance.AmountOf(pioconfig.GetProvenanceConfig().FeeDenom))
@@ -1833,8 +1824,6 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		require.NoError(t, acct1.SetSequence(seq), "[%d]: SetSequence(%d)", height, seq)
 		tx1, err1 := SignTxAndGetBytes(ctx, NewTestRewardsGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct1, ctx.ChainID(), msg)
 		require.NoError(t, err1, "[%d]: SignTxAndGetBytes", height)
-		// wait for claim period to end (claim period is 1s)
-		time.Sleep(1500 * time.Millisecond)
 
 		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: height,
@@ -1844,6 +1833,9 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 		)
 		require.NoError(t, err, "FinalizeBlock expected no error")
 		app.Commit()
+
+		// wait for claim period to end (claim period is 1s)
+		time.Sleep(1500 * time.Millisecond)
 		seq = seq + 1
 	}
 
@@ -1913,6 +1905,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	},
 	)
 	require.NoError(t, err, "FinalizeBlock expected no error")
+	app.Commit()
+
 	// unmarshal the TxMsgData
 	var protoResult sdk.TxMsgData
 	require.NoError(t, app.AppCodec().Unmarshal(res.TxResults[0].Data, &protoResult), "unmarshalling protoResult")
@@ -1951,8 +1945,8 @@ func TestRewardsProgramStartPerformQualifyingActionsSomePeriodsClaimableModuleAc
 	},
 	)
 	require.NoError(t, err, "FinalizeBlock expected no error")
-
 	app.Commit()
+
 	balanceLater := app.BankKeeper.GetAllBalances(ctx, acct1.GetAddress())
 	// make sure account balance has the tokens
 	balanceChangeHotDog := balanceLater.AmountOf("hotdog").Sub(balance.AmountOf("hotdog"))
