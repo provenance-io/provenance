@@ -2455,6 +2455,7 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 		msg,
 	)
 	require.NoError(t, err, "SignTxAndGetBytes")
+	time.Sleep(200 * time.Millisecond)
 
 	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
@@ -2465,7 +2466,6 @@ func TestRewardsProgramStartPerformQualifyingActions_Vote(t *testing.T) {
 	require.NoError(t, err, "FinalizeBlock expected no error")
 	require.Len(t, res.TxResults, 1, "TxResults expected length not met")
 	require.Equal(t, uint32(0), res.TxResults[0].Code, "TxResults tx unexpected result code "+res.TxResults[0].Log)
-	time.Sleep(200 * time.Millisecond)
 	app.Commit()
 
 	seq = seq + 1
