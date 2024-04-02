@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -84,6 +83,4 @@ func (k Keeper) CalculateTxFees(goCtx context.Context, request *types.CalculateT
 		TotalFees:      totalFees,
 		EstimatedGas:   uint64(gasUsed),
 	}, nil
-
-	return nil, errors.New("not yet updated")
 }
