@@ -353,9 +353,16 @@ $(CHECK_TEST_TARGETS): run-tests
 
 run-tests: go.sum
 ifneq (,$(shell which tparse 2>/dev/null))
-	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)'$(TEST_PACKAGES) | tparse
+	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES) | tparse
 else
 	$(GO) test -mod=readonly $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES)
+endif
+
+build-tests: go.sum
+ifneq (,$(shell which tparse 2>/dev/null))
+	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)' -run='ZYX_NOPE_NOPE_XYZ' $(TEST_PACKAGES) | tparse
+else
+	$(GO) test -mod=readonly $(ARGS) -tags='$(TAGS)' -run='ZYX_NOPE_NOPE_XYZ' $(TEST_PACKAGES)
 endif
 
 test-cover:
@@ -364,7 +371,7 @@ test-cover:
 benchmark:
 	$(GO) test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 
-.PHONY: test test-all test-unit test-race test-cover benchmark run-tests  $(TEST_TARGETS)
+.PHONY: test test-all test-unit test-race test-cover benchmark run-tests build-tests $(TEST_TARGETS)
 
 ##############################
 # Test Network Targets
