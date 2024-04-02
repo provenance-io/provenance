@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
@@ -21,10 +22,10 @@ import (
 )
 
 var (
-	// OneInt is an sdkmath.Int of 1.
-	OneInt = sdkmath.NewInt(1)
 	// TenKInt is an sdkmath.Int of 10,000.
 	TenKInt = sdkmath.NewInt(10_000)
+	// TwentyKInt is an sdkmath.Int of 20,000.
+	TwentyKInt = sdkmath.NewInt(20_000)
 )
 
 // Keeper provides the exchange module's state store interactions.
@@ -60,20 +61,31 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, feeCollector
 	return rv
 }
 
+// getLogger gets a logger for the exchange module.
+func (k Keeper) getLogger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", "x/"+exchange.ModuleName)
+}
+
+// logEndpointError logs an error for an endpoint.
+// This uses the standard key+val logging argument pattern instead of the fmt.Sprintf format.
+func (k Keeper) logEndpointError(ctx sdk.Context, endpoint, msg string, keyVals ...interface{}) {
+	k.getLogger(ctx).With("endpoint", endpoint).Error(msg, keyVals...)
+}
+
 // logErrorf uses fmt.Sprintf to combine the msg and args, and logs the result as an error from this module.
 // Note that this is different from the logging .Error(msg string, keyvals ...interface{}) syntax.
 func (k Keeper) logErrorf(ctx sdk.Context, msg string, args ...interface{}) {
-	ctx.Logger().Error(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
+	k.getLogger(ctx).Error(fmt.Sprintf(msg, args...))
 }
 
 // logInfof uses fmt.Sprintf to combine the msg and args, and logs the result as info from this module.
 // Note that this is different from the logging .Info(msg string, keyvals ...interface{}) syntax.
 func (k Keeper) logInfof(ctx sdk.Context, msg string, args ...interface{}) {
-	ctx.Logger().Info(fmt.Sprintf(msg, args...), "module", "x/"+exchange.ModuleName)
+	k.getLogger(ctx).Info(fmt.Sprintf(msg, args...))
 }
 
 // emitEvent emits the provided event and writes any error to the error log.
-// See Also emitEvents.
+// If you have multiple events to emit, consider using emitEvents.
 func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
 	err := ctx.EventManager().EmitTypedEvent(event)
 	if err != nil {
@@ -82,12 +94,27 @@ func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
 }
 
 // emitEvents emits the provided events and writes any error to the error log.
-// See Also emitEvent.
+// If you only have one event to emit, consider using emitEvent.
+// If your events slice is typed to a specific event type (or something other than exactly []proto.Message),
+// use the non-keeper emitEvents(k, ctx, events) function instead.
 func (k Keeper) emitEvents(ctx sdk.Context, events []proto.Message) {
 	err := ctx.EventManager().EmitTypedEvents(events...)
 	if err != nil {
 		k.logErrorf(ctx, "error emitting events %#v: %v", events, err)
 	}
+}
+
+// emitEvents emits the provided events and writes any error to the error log.
+// If you only have one event to emit, consider using k.emitEvent.
+// The difference between this and k.emitEvents is that this will accept a slice of
+// specifically typed events instead of needing to be exactly a []proto.Message slice.
+// E.g. events can be provided here as a []*exchange.EventPaymentRejected.
+func emitEvents[S ~[]E, E proto.Message](k Keeper, ctx sdk.Context, events S) {
+	e2 := make([]proto.Message, len(events))
+	for i, event := range events {
+		e2[i] = event
+	}
+	k.emitEvents(ctx, e2)
 }
 
 // GetAuthority gets the address (as bech32) that has governance authority.
@@ -138,9 +165,9 @@ func deleteAll(store storetypes.KVStore, pre []byte) {
 // iterate iterates over all the entries in the store with the given prefix.
 // The key provided to the callback will NOT have the provided prefix; it will be everything after it.
 // The callback should return false to continue iteration, or true to stop.
-func iterate(store storetypes.KVStore, pre []byte, cb func(key, value []byte) bool) {
+func iterate(store storetypes.KVStore, keyPrefix []byte, cb func(keySuffix, value []byte) bool) {
 	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
-	pStore := prefix.NewStore(store, pre)
+	pStore := prefix.NewStore(store, keyPrefix)
 	iter := pStore.Iterator(nil, nil)
 	defer iter.Close()
 
@@ -159,8 +186,8 @@ func (k Keeper) getStore(ctx sdk.Context) storetypes.KVStore {
 // iterate iterates over all the entries in the store with the given prefix.
 // The key provided to the callback will NOT have the provided prefix; it will be everything after it.
 // The callback should return false to continue iteration, or true to stop.
-func (k Keeper) iterate(ctx sdk.Context, pre []byte, cb func(key, value []byte) bool) {
-	iterate(k.getStore(ctx), pre, cb)
+func (k Keeper) iterate(ctx sdk.Context, keyPrefix []byte, cb func(keySuffix, value []byte) bool) {
+	iterate(k.getStore(ctx), keyPrefix, cb)
 }
 
 // DoTransfer facilitates a transfer of things using the bank module.
@@ -182,8 +209,19 @@ func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs 
 		if err != nil {
 			return fmt.Errorf("invalid outputs[0] address %q: %w", outputs[0].Address, err)
 		}
+		if k.bankKeeper.BlockedAddr(toAddr) {
+			return fmt.Errorf("%s is not allowed to receive funds", toAddr)
+		}
 		return k.bankKeeper.SendCoins(ctx, fromAddr, toAddr, inputs[0].Coins)
 	}
+
+	for _, output := range outputs {
+		toAddr, err := sdk.AccAddressFromBech32(output.Address)
+		if err == nil && k.bankKeeper.BlockedAddr(toAddr) {
+			return fmt.Errorf("%s is not allowed to receive funds", toAddr)
+		}
+	}
+
 	// TODO[1760]: exchange: Put this back once we have InputOutputCoins again.
 	// return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 	return nil
@@ -205,10 +243,7 @@ func (k Keeper) CalculateExchangeSplit(ctx sdk.Context, feeAmt sdk.Coins) sdk.Co
 			continue
 		}
 
-		splitAmt, splitRem := exchange.QuoRemInt(coin.Amount.Mul(sdkmath.NewInt(split)), TenKInt)
-		if !splitRem.IsZero() {
-			splitAmt = splitAmt.Add(OneInt)
-		}
+		splitAmt := exchange.QuoIntRoundUp(coin.Amount.Mul(sdkmath.NewInt(split)), TenKInt)
 		exchangeAmt = append(exchangeAmt, sdk.NewCoin(coin.Denom, splitAmt))
 	}
 	if exchangeAmt.IsZero() {

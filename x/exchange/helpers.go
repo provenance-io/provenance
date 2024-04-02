@@ -85,12 +85,12 @@ func MinSDKInt(a, b sdkmath.Int) sdkmath.Int {
 }
 
 // QuoRemInt does a/b returning the integer result and remainder such that a = quo * b + rem
-// If y == 0, a division-by-zero run-time panic occurs.
+// If b == 0, a division-by-zero run-time panic occurs.
 //
 // QuoRem implements T-division and modulus (like Go):
 //
-//	quo = x/y      with the result truncated to zero
-//	rem = x - y*q
+//	quo = a/b      with the result truncated to zero
+//	rem = a - b*q
 //
 // (See Daan Leijen, “Division and Modulus for Computer Scientists”.)
 func QuoRemInt(a, b sdkmath.Int) (quo sdkmath.Int, rem sdkmath.Int) {
@@ -99,4 +99,18 @@ func QuoRemInt(a, b sdkmath.Int) (quo sdkmath.Int, rem sdkmath.Int) {
 	quo = sdkmath.NewIntFromBigInt(&q)
 	rem = sdkmath.NewIntFromBigInt(&r)
 	return
+}
+
+// QuoIntRoundUp does a/b returning the integer result.
+// If there was any remainder, the result is increased by 1 away from zero.
+func QuoIntRoundUp(a, b sdkmath.Int) sdkmath.Int {
+	rv, rem := QuoRemInt(a, b)
+	if !rem.IsZero() {
+		shift := int64(1)
+		if rv.IsNegative() || (rv.IsZero() && a.Sign()*b.Sign() < 0) {
+			shift = -1
+		}
+		rv = rv.AddRaw(shift)
+	}
+	return rv
 }

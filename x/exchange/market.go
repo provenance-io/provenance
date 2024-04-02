@@ -23,6 +23,9 @@ const (
 	MaxWebsiteURL = 200
 	// MaxIconURI is the maximum length of MarketDetails.IconUri
 	MaxIconURI = 2000
+
+	// MaxBips is the maximum bips value. 10,000 basis points = 100%.
+	MaxBips = uint32(10_000)
 )
 
 var (
@@ -46,6 +49,11 @@ func (m Market) Validate() error {
 		// Nothing to check for with the AcceptingOrders and AllowUserSettlement booleans.
 		ValidateReqAttrs("create-ask", m.ReqAttrCreateAsk),
 		ValidateReqAttrs("create-bid", m.ReqAttrCreateBid),
+		// Nothing to check for the AcceptingCommitments boolean.
+		ValidateFeeOptions("create-commitment flat fee", m.FeeCreateCommitmentFlat),
+		ValidateBips("commitment settlement", m.CommitmentSettlementBips),
+		ValidateIntermediaryDenom(m.IntermediaryDenom),
+		ValidateReqAttrs("create-commitment", m.ReqAttrCreateCommitment),
 	)
 }
 
@@ -696,4 +704,23 @@ func IsReqAttrMatch(reqAttr, accAttr string) bool {
 		return strings.HasSuffix(accAttr, reqAttr[1:])
 	}
 	return reqAttr == accAttr
+}
+
+// ValidateBips returns an error if the provided bips value is bad. The name is part of the error message.
+func ValidateBips(name string, bips uint32) error {
+	if bips > MaxBips {
+		return fmt.Errorf("invalid %s bips %d: exceeds max of %d", name, bips, MaxBips)
+	}
+	return nil
+}
+
+// ValidateIntermediaryDenom returns an error if a non-empty denom is provided that is not a valid denom.
+func ValidateIntermediaryDenom(denom string) error {
+	if len(denom) == 0 {
+		return nil
+	}
+	if err := sdk.ValidateDenom(denom); err != nil {
+		return fmt.Errorf("invalid intermediary denom: %w", err)
+	}
+	return nil
 }

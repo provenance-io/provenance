@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"bytes"
+	"fmt"
 	"sort"
 
 	sdkmath "cosmossdk.io/math"
@@ -21,6 +22,8 @@ var (
 	invReqCode = sdkerrors.ErrInvalidRequest.ABCICode()
 	// invSigCode is the TxResponse code for an ErrInvalidSigner.
 	invSigCode = govtypes.ErrInvalidSigner.ABCICode()
+	// insFeeCode is the TxResponse code for an ErrInsufficientFunds.
+	insFeeCode = sdkerrors.ErrInsufficientFunds.ABCICode()
 )
 
 func (s *CmdTestSuite) TestCmdTxCreateAsk() {
@@ -118,6 +121,66 @@ func (s *CmdTestSuite) TestCmdTxCreateBid() {
 				"--from", s.addr2.String(),
 				"--external-id", "my-new-bid-order-83A99979",
 			},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxCommitFunds() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"commit", "--market", "5", "--amount", "10apple"},
+			expInErr: []string{"at least one of the flags in the group [from account] is required"},
+		},
+		{
+			name: "insufficient creation fee",
+			args: []string{"commit-funds", "--market", "5",
+				"--amount", "1000apple", "--creation-fee", "14peach",
+				"--from", s.addr2.String(),
+			},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"insufficient commitment creation fee: \"14peach\" is less than required amount \"15peach\""},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "okay",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				toCommit := sdk.NewCoins(sdk.NewInt64Coin("apple", 1000))
+				fee := sdk.NewInt64Coin("peach", 15)
+				tag := "committal-0EE2A6EC"
+				args := []string{"--amount", toCommit.String(), "--creation-fee", fee.String(), "--tag", tag}
+
+				addr2Bals := s.queryBankBalances(s.addr2.String())
+				expBals := []banktypes.Balance{{
+					Address: s.addr2.String(),
+					Coins:   addr2Bals.Sub(fee, s.bondCoin(10)),
+				}}
+
+				addr2Spendable := s.queryBankSpendableBalances(s.addr2.String())
+				expSpend := []banktypes.Balance{{
+					Address: s.addr2.String(),
+					Coins:   addr2Spendable.Sub(fee, s.bondCoin(10)).Sub(toCommit...),
+				}}
+
+				expEvent := exchange.NewEventFundsCommitted(s.addr2.String(), 5, toCommit, tag)
+				expEvents := sdk.Events{s.untypeEvent(expEvent)}
+				s.markAttrsIndexed(expEvents)
+
+				fup := s.composeFollowups(
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+					s.assertEventsContains(expEvents),
+				)
+				return args, fup
+			},
+			args:         []string{"commit", "--market", "5", "--from", s.addr2.String()},
 			expectedCode: 0,
 		},
 	}
@@ -383,6 +446,190 @@ func (s *CmdTestSuite) TestCmdTxMarketSettle() {
 				return args, s.assertBalancesFollowup(expBals)
 			},
 			args:         []string{"settle", "--from", s.addr1.String(), "--market", "5"},
+			gas:          300_000,
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxMarketCommitmentSettle() {
+	tests := []txCmdTestCase{
+		{
+			name: "cmd error",
+			args: []string{"market-commitment-settle",
+				"--from", s.addr1.String(),
+				"--inputs", s.addr8.String() + ":10apple",
+				"--outputs", s.addr9.String() + ":10apple",
+			},
+			expInErr: []string{"at least one of the flags in the group [file market] is required"},
+		},
+		{
+			name: "market does not exist",
+			args: []string{"commitment-settle",
+				"--from", s.addr9.String(),
+				"--market", "419",
+				"--inputs", s.addr8.String() + ":10apple",
+				"--outputs", s.addr9.String() + ":10apple",
+			},
+			expInErr: nil,
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr9.String() + " does not have permission to settle commitments for market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "insufficient fees",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				var marketID uint32 = 3
+				amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 41))
+				// 41apple * 8cherry/1apple = 328cherry
+				// 328cherry * 100<fee> = 32800<fee>
+				// 32800<fee> * 50/20000 = 82<fee>
+				tag := "iliketomoveitmoveit"
+				args := []string{
+					"--market", fmt.Sprintf("%d", marketID),
+					"--inputs", fmt.Sprintf("%s:%s", s.addr5, amount),
+					"--outputs", fmt.Sprintf("%s:%s", s.addr6, amount),
+					"--tag", tag,
+				}
+
+				s.commitFunds(s.addr5, marketID, amount, nil)
+
+				balsAddr5 := s.queryBankBalances(s.addr5.String())
+				balsAddr6 := s.queryBankBalances(s.addr6.String())
+				spendBalsAddr5 := s.queryBankSpendableBalances(s.addr5.String())
+				spendBalsAddr6 := s.queryBankSpendableBalances(s.addr6.String())
+
+				expBals := []banktypes.Balance{
+					{Address: s.addr5.String(), Coins: balsAddr5},
+					{Address: s.addr6.String(), Coins: balsAddr6},
+				}
+				expSpendBals := []banktypes.Balance{
+					{Address: s.addr5.String(), Coins: spendBalsAddr5},
+					{Address: s.addr6.String(), Coins: spendBalsAddr6},
+				}
+
+				fups := s.composeFollowups(
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpendBals),
+				)
+				return args, fups
+			},
+			args: []string{"market-settle-commitments", "--from", s.addr1.String()},
+			expInRawLog: []string{"insufficient funds",
+				"negative balance after sending coins to accounts and fee collector",
+				"remainingFees: \"10stake\", sentCoins: \"82nhash\"",
+			},
+			expectedCode: insFeeCode,
+		},
+		{
+			name: "settlement done",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				var marketID uint32 = 3
+				amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 41))
+				// 41apple * 8cherry/1apple = 328cherry
+				// 328cherry * 100<fee> = 32800<fee>
+				// 32800<fee> * 50/20000 = 82<fee>
+				tag := "iliketomoveitmoveit"
+				args := []string{
+					"--market", fmt.Sprintf("%d", marketID),
+					"--inputs", fmt.Sprintf("%s:%s", s.addr5, amount),
+					"--outputs", fmt.Sprintf("%s:%s", s.addr6, amount),
+					"--tag", tag,
+				}
+
+				s.commitFunds(s.addr5, marketID, amount, nil)
+
+				balsAddr5 := s.queryBankBalances(s.addr5.String())
+				balsAddr6 := s.queryBankBalances(s.addr6.String())
+				spendBalsAddr5 := s.queryBankSpendableBalances(s.addr5.String())
+				spendBalsAddr6 := s.queryBankSpendableBalances(s.addr6.String())
+
+				expBals := []banktypes.Balance{
+					{Address: s.addr5.String(), Coins: balsAddr5.Sub(amount...)},
+					{Address: s.addr6.String(), Coins: balsAddr6.Add(amount...)},
+				}
+				expSpendBals := []banktypes.Balance{
+					{Address: s.addr5.String(), Coins: spendBalsAddr5},
+					{Address: s.addr6.String(), Coins: spendBalsAddr6},
+				}
+				expEvents := sdk.Events{
+					s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr5.String(), marketID, amount, tag)),
+					s.untypeEvent(exchange.NewEventFundsCommitted(s.addr6.String(), marketID, amount, tag)),
+				}
+				s.markAttrsIndexed(expEvents)
+
+				fups := s.composeFollowups(
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpendBals),
+					s.assertEventsContains(expEvents),
+				)
+				return args, fups
+			},
+			args:         []string{"settle-commitments", "--from", s.addr1.String()},
+			addedFees:    s.feeCoins(82),
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxMarketReleaseCommitments() {
+	tests := []txCmdTestCase{
+		{
+			name: "cmd error",
+			args: []string{"market-release-commitments", "--from", s.addr1.String(),
+				"--release", s.addr9.String() + ":10apple"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "no permission",
+			args: []string{"release-commitments", "--from", s.addr9.String(), "--market", "419",
+				"--release-all", s.addr9.String()},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr9.String() + " does not have permission to release commitments for market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "funds released",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				var marketID uint32 = 3
+				toRelease := sdk.NewCoins(sdk.NewInt64Coin("apple", 44), sdk.NewInt64Coin("peach", 76))
+				tag := "letitgo"
+				addr := s.addr2
+				args := []string{
+					"--market", fmt.Sprintf("%d", marketID),
+					"--release", fmt.Sprintf("%s:%s", addr, toRelease),
+					"--tag", tag,
+				}
+
+				curSpend := s.queryBankSpendableBalances(addr.String())
+				s.commitFunds(addr, marketID, toRelease, nil)
+				expSpendBals := []banktypes.Balance{{Address: addr.String(), Coins: curSpend.Sub(s.bondCoin(10))}}
+
+				expEvent := exchange.NewEventCommitmentReleased(addr.String(), marketID, toRelease, tag)
+				expEvents := sdk.Events{s.untypeEvent(expEvent)}
+				s.markAttrsIndexed(expEvents)
+
+				fup := s.composeFollowups(
+					s.assertSpendableBalancesFollowup(expSpendBals),
+					s.assertEventsContains(expEvents),
+				)
+				return args, fup
+			},
+			args:         []string{"market-release-commitments", "--from", s.addr3.String()},
 			expectedCode: 0,
 		},
 	}
@@ -563,16 +810,16 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateDetails() {
 	}
 }
 
-func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled() {
+func (s *CmdTestSuite) TestCmdTxMarketUpdateAcceptingOrders() {
 	tests := []txCmdTestCase{
 		{
 			name:     "no market",
-			args:     []string{"market-enabled", "--from", s.addr1.String(), "--enable"},
+			args:     []string{"market-accepting-orders", "--from", s.addr1.String(), "--enable"},
 			expInErr: []string{"required flag(s) \"market\" not set"},
 		},
 		{
 			name: "market does not exist",
-			args: []string{"market-update-enabled", "--market", "419",
+			args: []string{"market-update-accepting-orders", "--market", "419",
 				"--from", s.addr4.String(), "--enable"},
 			expInRawLog: []string{"failed to execute message", "invalid request",
 				"account " + s.addr4.String() + " does not have permission to update market 419",
@@ -586,7 +833,7 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled() {
 				market420.AcceptingOrders = false
 				return nil, s.getMarketFollowup("420", market420)
 			},
-			args:         []string{"update-enabled", "--disable", "--market", "420", "--from", s.addr1.String()},
+			args:         []string{"update-accepting-orders", "--disable", "--market", "420", "--from", s.addr1.String()},
 			expectedCode: 0,
 		},
 		{
@@ -596,7 +843,7 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateEnabled() {
 				market420.AcceptingOrders = true
 				return nil, s.getMarketFollowup("420", market420)
 			},
-			args:         []string{"update-enabled", "--enable", "--market", "420", "--from", s.addr1.String()},
+			args:         []string{"update-accepting-orders", "--enable", "--market", "420", "--from", s.addr1.String()},
 			expectedCode: 0,
 		},
 	}
@@ -642,6 +889,87 @@ func (s *CmdTestSuite) TestCmdTxMarketUpdateUserSettle() {
 				return nil, s.getMarketFollowup("420", market420)
 			},
 			args:         []string{"update-user-settle", "--enable", "--market", "420", "--from", s.addr1.String()},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxMarketUpdateAcceptingCommitments() {
+	tests := []txCmdTestCase{
+		{
+			name:     "no market",
+			args:     []string{"market-accepting-commitments", "--from", s.addr1.String(), "--enable"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "market does not exist",
+			args: []string{"market-update-accepting-commitments", "--market", "419",
+				"--from", s.addr4.String(), "--enable"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr4.String() + " does not have permission to update market 419",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "disable market",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				market420 := s.getMarket("420")
+				market420.AcceptingCommitments = false
+				return nil, s.getMarketFollowup("420", market420)
+			},
+			args:         []string{"update-market-accepting-commitments", "--disable", "--market", "420", "--from", s.addr1.String()},
+			expectedCode: 0,
+		},
+		{
+			name: "enable market",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				market420 := s.getMarket("420")
+				market420.AcceptingCommitments = true
+				return nil, s.getMarketFollowup("420", market420)
+			},
+			args:         []string{"update-accepting-commitments", "--enable", "--market", "420", "--from", s.addr1.String()},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxMarketUpdateIntermediaryDenom() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"market-intermediary-denom", "--from", s.addr2.String(), "--denom", "banana"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "no permission",
+			args: []string{"update-intermediary-denom", "--from", s.addr2.String(),
+				"--denom", "banana", "--market", "421"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"account " + s.addr2.String() + " does not have permission to update market 421",
+			},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "updated",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				expMarket := s.getMarket("421")
+				expMarket.IntermediaryDenom = "orange"
+				return nil, s.getMarketFollowup("421", expMarket)
+			},
+			args: []string{"update-market-intermediary-denom", "--from", s.addr1.String(),
+				"--denom", "orange", "--market", "421"},
 			expectedCode: 0,
 		},
 	}
@@ -796,6 +1124,495 @@ func (s *CmdTestSuite) TestCmdTxMarketManageReqAttrs() {
 	}
 }
 
+func (s *CmdTestSuite) TestCmdTxCreatePayment() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			preRun:   nil,
+			args:     []string{"create-payment", "--from", s.addr1.String(), "--target", s.addr2.String(), "--external-id", "oopsies"},
+			expInErr: []string{"source amount and target amount cannot both be zero"},
+		},
+		{
+			name:   "insufficient creation fee",
+			preRun: nil,
+			args: []string{"create-payment",
+				"--from", s.addr1.String(), "--source-amount", "3strawberry",
+				"--target", s.addr2.String(), "--external-id", "also_oopsies",
+			},
+			addedFees: s.feeCoins(exchange.DefaultFeeCreatePaymentFlatAmount / 2),
+			expInRawLog: []string{"insufficient funds",
+				"negative balance after sending coins to accounts and fee collector"},
+			expectedCode: insFeeCode,
+		},
+		{
+			name: "okay",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt := &exchange.Payment{
+					Source:       s.addr4.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 55)),
+					Target:       s.addr3.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 7)),
+					ExternalId:   "payment-created-by-command",
+				}
+				fees := sdk.NewCoins(s.bondCoin(10), s.feeCoin(exchange.DefaultFeeCreatePaymentFlatAmount))
+				sBals := s.queryBankBalances(pmt.Source).Sub(fees...)
+				sSpend := s.queryBankSpendableBalances(pmt.Source).Sub(fees...)
+				tBals := s.queryBankBalances(pmt.Target)
+				tSpend := s.queryBankSpendableBalances(pmt.Target)
+
+				expBals := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sBals},
+					{Address: pmt.Target, Coins: tBals},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sSpend.Sub(pmt.SourceAmount...)},
+					{Address: pmt.Target, Coins: tSpend},
+				}
+
+				args := []string{
+					"--from", pmt.Source,
+					"--target", pmt.Target,
+					"--target-amount", pmt.TargetAmount.String(),
+					"--source-amount", pmt.SourceAmount.String(),
+					"--external-id", pmt.ExternalId,
+				}
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt.Source, pmt.ExternalId, pmt),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				return args, fup
+			},
+			args:         []string{"create-payment"},
+			addedFees:    s.feeCoins(exchange.DefaultFeeCreatePaymentFlatAmount),
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxAcceptPayment() {
+	tests := []txCmdTestCase{
+		{
+			name: "cmd error",
+			args: []string{"accept-payment",
+				"--from", s.addr1.String(), "--source-amount", "seventytwo",
+				"--target", s.addr2.String(), "--external-id", "elbow",
+			},
+			expInErr: []string{"error parsing --source-amount as coins"},
+		},
+		{
+			name: "no such payment",
+			args: []string{"accept-payment",
+				"--from", s.addr1.String(), "--source", s.addr2.String(),
+				"--target-amount", "500000tangerine", "--external-id", "gimmie",
+			},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"no payment found with source " + s.addr2.String() + " and external id \"gimmie\""},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "payment accepted",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt := exchange.Payment{
+					Source:       s.addr3.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 358)),
+					Target:       s.addr7.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 217)),
+					ExternalId:   "lets swap",
+				}
+				s.createPayment(&pmt)
+
+				fees := sdk.NewCoins(s.bondCoin(10), s.feeCoin(exchange.DefaultFeeCreatePaymentFlatAmount))
+				sBals := s.queryBankBalances(pmt.Source)
+				sSpend := s.queryBankSpendableBalances(pmt.Source)
+				tBals := s.queryBankBalances(pmt.Target).Sub(fees...)
+				tSpend := s.queryBankSpendableBalances(pmt.Target).Sub(fees...)
+
+				expBals := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sBals.Add(pmt.TargetAmount...).Sub(pmt.SourceAmount...)},
+					{Address: pmt.Target, Coins: tBals.Add(pmt.SourceAmount...).Sub(pmt.TargetAmount...)},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sSpend.Add(pmt.TargetAmount...)},
+					{Address: pmt.Target, Coins: tSpend.Add(pmt.SourceAmount...).Sub(pmt.TargetAmount...)},
+				}
+
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt.Source, pmt.ExternalId, nil),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				args := []string{
+					"--source", pmt.Source,
+					"--source-amount", pmt.SourceAmount.String(),
+					"--from", pmt.Target,
+					"--target-amount", pmt.TargetAmount.String(),
+					"--external-id", pmt.ExternalId,
+				}
+				return args, fup
+			},
+			args:         []string{"accept-payment"},
+			addedFees:    s.feeCoins(exchange.DefaultFeeCreatePaymentFlatAmount),
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxRejectPayment() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"reject-payment", "--source", s.addr1.String()},
+			expInErr: []string{"at least one of the flags in the group [from target] is required"},
+		},
+		{
+			name: "wrong target",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt := exchange.Payment{
+					Source:       s.addr1.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 50)),
+					Target:       s.addr4.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 7)),
+					ExternalId:   "insert_evil_laugh",
+				}
+				s.createPayment(&pmt)
+				args := []string{"--source", pmt.Source, "--external-id", pmt.ExternalId, "--from", s.addr3.String()}
+				return args, nil
+			},
+			args: []string{"reject-payment"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"target " + s.addr3.String() + " cannot reject payment with target " + s.addr4.String()},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "payment rejected",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt := exchange.Payment{
+					Source:       s.addr9.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 3)),
+					Target:       s.addr2.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 5000)),
+					ExternalId:   "insert_evil_laugh",
+				}
+				s.createPayment(&pmt)
+
+				fees := sdk.NewCoins(s.bondCoin(10))
+				sBals := s.queryBankBalances(pmt.Source)
+				sSpend := s.queryBankSpendableBalances(pmt.Source)
+				tBals := s.queryBankBalances(pmt.Target).Sub(fees...)
+				tSpend := s.queryBankSpendableBalances(pmt.Target).Sub(fees...)
+
+				expBals := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sBals},
+					{Address: pmt.Target, Coins: tBals},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sSpend.Add(pmt.SourceAmount...)},
+					{Address: pmt.Target, Coins: tSpend},
+				}
+
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt.Source, pmt.ExternalId, nil),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				args := []string{
+					"--source", pmt.Source,
+					"--from", pmt.Target,
+					"--external-id", pmt.ExternalId,
+				}
+				return args, fup
+			},
+			args:         []string{"reject-payment"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxRejectPayments() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"reject-payments", "--sources", s.addr1.String()},
+			expInErr: []string{"at least one of the flags in the group [from target] is required"},
+		},
+		{
+			name: "no such payment",
+			args: []string{"reject-payments", "--from", s.addr2.String(),
+				"--sources", sdk.AccAddress("addr_does_not_exist_").String()},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"source " + sdk.AccAddress("addr_does_not_exist_").String() + " does not have any payments for target " + s.addr2.String()},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "payments rejected",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt8a := exchange.Payment{
+					Source:       s.addr8.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 3)),
+					Target:       s.addr5.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 5000)),
+					ExternalId:   "insert_evil_laugh",
+				}
+				pmt8b := exchange.Payment{
+					Source:       pmt8a.Source,
+					SourceAmount: nil,
+					Target:       pmt8a.Target,
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 7777)),
+					ExternalId:   "more_evil_laugh",
+				}
+				pmt7 := exchange.Payment{
+					Source:       s.addr7.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 357)),
+					Target:       pmt8a.Target,
+					TargetAmount: nil,
+					ExternalId:   "this_is_fine",
+				}
+				pmt3 := exchange.Payment{
+					Source:       s.addr3.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 4567)),
+					Target:       pmt8a.Target,
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 12)),
+					ExternalId:   "gonna keep this one",
+				}
+				s.createPayment(&pmt8a)
+				s.createPayment(&pmt8b)
+				s.createPayment(&pmt7)
+				s.createPayment(&pmt3)
+
+				// This will reject a some initial payments (created at genesis) too.
+				pmt8i := s.makeInitialPayment(8, 5)
+				pmt7i := s.makeInitialPayment(7, 5)
+
+				fees := sdk.NewCoins(s.bondCoin(10))
+				sBals8 := s.queryBankBalances(pmt8a.Source)
+				sBals7 := s.queryBankBalances(pmt7.Source)
+				sBals3 := s.queryBankBalances(pmt3.Source)
+				tBals := s.queryBankBalances(pmt8a.Target).Sub(fees...)
+				sSpend8 := s.queryBankSpendableBalances(pmt8a.Source)
+				sSpend7 := s.queryBankSpendableBalances(pmt7.Source)
+				sSpend3 := s.queryBankSpendableBalances(pmt3.Source)
+				tSpend := s.queryBankSpendableBalances(pmt8a.Target).Sub(fees...)
+
+				expBals := []banktypes.Balance{
+					{Address: pmt8a.Source, Coins: sBals8},
+					{Address: pmt7.Source, Coins: sBals7},
+					{Address: pmt3.Source, Coins: sBals3},
+					{Address: pmt8a.Target, Coins: tBals},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt8a.Source, Coins: sSpend8.Add(pmt8a.SourceAmount...).Add(pmt8b.SourceAmount...).Add(pmt8i.SourceAmount...)},
+					{Address: pmt7.Source, Coins: sSpend7.Add(pmt7.SourceAmount...).Add(pmt7i.SourceAmount...)},
+					{Address: pmt3.Source, Coins: sSpend3},
+					{Address: pmt8a.Target, Coins: tSpend},
+				}
+
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt8a.Source, pmt8a.ExternalId, nil),
+					s.getPaymentFollowup(pmt8b.Source, pmt8b.ExternalId, nil),
+					s.getPaymentFollowup(pmt7.Source, pmt7.ExternalId, nil),
+					s.getPaymentFollowup(pmt3.Source, pmt3.ExternalId, &pmt3),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				args := []string{"--sources", pmt8a.Source + "," + pmt7.Source, "--from", pmt8a.Target}
+				return args, fup
+			},
+			args:         []string{"reject-payments"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxCancelPayments() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"cancel-payments", "--external-ids", "nope"},
+			expInErr: []string{"at least one of the flags in the group [from source] is required"},
+		},
+		{
+			name: "no such payment",
+			args: []string{"cancel-payments", "--from", s.addr2.String(), "--external-ids", "also_nope"},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"no payment found with source " + s.addr2.String() + " and external id \"also_nope\""},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "payments cancelled",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt1 := exchange.Payment{
+					Source:       s.addr3.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 3)),
+					Target:       s.addr4.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 5000)),
+					ExternalId:   "insert_evil_laugh",
+				}
+				pmt2 := exchange.Payment{
+					Source:       pmt1.Source,
+					SourceAmount: nil,
+					Target:       s.addr5.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 7777)),
+					ExternalId:   "more_evil_laugh",
+				}
+				pmt3Kept := exchange.Payment{
+					Source:       pmt1.Source,
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 357)),
+					Target:       pmt1.Target,
+					TargetAmount: sdk.Coins{},
+					ExternalId:   "this_is_fine",
+				}
+				pmt4Kept := exchange.Payment{
+					Source:       s.addr9.String(),
+					SourceAmount: sdk.Coins{},
+					Target:       s.addr5.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 9999)),
+					ExternalId:   "more_evil_laugh",
+				}
+				s.createPayment(&pmt1)
+				s.createPayment(&pmt2)
+				s.createPayment(&pmt3Kept)
+				s.createPayment(&pmt4Kept)
+
+				fees := sdk.NewCoins(s.bondCoin(10))
+				sBals := s.queryBankBalances(pmt1.Source).Sub(fees...)
+				tBals4 := s.queryBankBalances(pmt1.Target)
+				tBals5 := s.queryBankBalances(pmt2.Target)
+				sSpend := s.queryBankSpendableBalances(pmt1.Source).Sub(fees...)
+				tSpend4 := s.queryBankSpendableBalances(pmt1.Target)
+				tSpend5 := s.queryBankSpendableBalances(pmt2.Target)
+
+				expBals := []banktypes.Balance{
+					{Address: pmt1.Source, Coins: sBals},
+					{Address: pmt1.Target, Coins: tBals4},
+					{Address: pmt2.Target, Coins: tBals5},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt1.Source, Coins: sSpend.Add(pmt1.SourceAmount...).Add(pmt2.SourceAmount...)},
+					{Address: pmt1.Target, Coins: tSpend4},
+					{Address: pmt2.Target, Coins: tSpend5},
+				}
+
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt1.Source, pmt1.ExternalId, nil),
+					s.getPaymentFollowup(pmt2.Source, pmt2.ExternalId, nil),
+					s.getPaymentFollowup(pmt3Kept.Source, pmt3Kept.ExternalId, &pmt3Kept),
+					s.getPaymentFollowup(pmt4Kept.Source, pmt4Kept.ExternalId, &pmt4Kept),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				args := []string{
+					"--from", pmt1.Source,
+					"--external-ids", pmt1.ExternalId,
+					"--external-ids", pmt2.ExternalId,
+				}
+				return args, fup
+			},
+			args:         []string{"cancel-payments"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxChangePaymentTarget() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"change-payment-target", "--new-target", s.addr4.String()},
+			expInErr: []string{"at least one of the flags in the group [from source] is required"},
+		},
+		{
+			name: "no such payment",
+			args: []string{"change-payment-target", "--from", s.addr2.String(),
+				"--external-id", "also_nope", "--new-target", s.addr4.String()},
+			expInRawLog: []string{"failed to execute message", "invalid request",
+				"no payment found with source " + s.addr2.String() + " and external id \"also_nope\""},
+			expectedCode: invReqCode,
+		},
+		{
+			name: "payment updated",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				pmt := exchange.Payment{
+					Source:       s.addr3.String(),
+					SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("strawberry", 546)),
+					Target:       s.addr4.String(),
+					TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("tangerine", 30)),
+					ExternalId:   "just_some_payment",
+				}
+				s.createPayment(&pmt)
+
+				fees := sdk.NewCoins(s.bondCoin(10))
+				sBals := s.queryBankBalances(pmt.Source).Sub(fees...)
+				tBals := s.queryBankBalances(pmt.Target)
+				sSpend := s.queryBankSpendableBalances(pmt.Source).Sub(fees...)
+				tSpend := s.queryBankSpendableBalances(pmt.Target)
+
+				expBals := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sBals},
+					{Address: pmt.Target, Coins: tBals},
+				}
+				expSpend := []banktypes.Balance{
+					{Address: pmt.Source, Coins: sSpend},
+					{Address: pmt.Target, Coins: tSpend},
+				}
+
+				expPmt := pmt
+				expPmt.Target = s.addr0.String()
+
+				fup := s.composeFollowups(
+					s.getPaymentFollowup(pmt.Source, pmt.ExternalId, &expPmt),
+					s.assertBalancesFollowup(expBals),
+					s.assertSpendableBalancesFollowup(expSpend),
+				)
+				args := []string{
+					"--from", pmt.Source,
+					"--external-id", pmt.ExternalId,
+					"--new-target", expPmt.Target,
+				}
+				return args, fup
+			},
+			args:         []string{"change-payment-target"},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
 func (s *CmdTestSuite) TestCmdTxGovCreateMarket() {
 	tests := []txCmdTestCase{
 		{
@@ -884,6 +1701,43 @@ func (s *CmdTestSuite) TestCmdTxGovManageFees() {
 				"--ask-add", "99banana", "--seller-flat-remove", "12acorn",
 				"--buyer-ratios-add", "100plum:1plum",
 			},
+			expectedCode: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.runTxCmdTestCase(tc)
+		})
+	}
+}
+
+func (s *CmdTestSuite) TestCmdTxGovCloseMarket() {
+	tests := []txCmdTestCase{
+		{
+			name:     "cmd error",
+			args:     []string{"gov-close-market"},
+			expInErr: []string{"required flag(s) \"market\" not set"},
+		},
+		{
+			name: "wrong authority",
+			args: []string{"close-market", "--market", "419",
+				"--from", s.addr2.String(), "--authority", s.addr2.String()},
+			expInRawLog: []string{"failed to execute message",
+				s.addr2.String(), "expected gov account as only signer for proposal message",
+			},
+			expectedCode: invSigCode,
+		},
+		{
+			name: "prop created",
+			preRun: func() ([]string, func(*sdk.TxResponse)) {
+				expMsg := &exchange.MsgGovCloseMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					MarketId:  419,
+				}
+				return nil, s.govPropFollowup(expMsg)
+			},
+			args:         []string{"close-market", "--market", "419", "--from", s.addr2.String()},
 			expectedCode: 0,
 		},
 	}

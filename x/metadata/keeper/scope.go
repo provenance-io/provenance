@@ -677,3 +677,76 @@ func (k Keeper) ValidateUpdateValueOwners(
 
 	return k.validateSmartContractSigners(ctx, usedSigners, msg)
 }
+
+// AddSetNetAssetValues adds a set of net asset values to a scope
+func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress, netAssetValues []types.NetAssetValue, source string) error {
+	for _, nav := range netAssetValues {
+		if nav.Price.Denom != types.UsdDenom {
+			_, err := k.markerKeeper.GetMarkerByDenom(ctx, nav.Price.Denom)
+			if err != nil {
+				return fmt.Errorf("net asset value denom does not exist: %v", err.Error())
+			}
+		}
+
+		if err := k.SetNetAssetValue(ctx, scopeID, nav, source); err != nil {
+			return fmt.Errorf("cannot set net asset value : %v", err.Error())
+		}
+	}
+	return nil
+}
+
+// SetNetAssetValue adds/updates a net asset value to scope
+func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress, netAssetValue types.NetAssetValue, source string) error {
+	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight())
+	if err := netAssetValue.Validate(); err != nil {
+		return err
+	}
+
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(scopeID, netAssetValue.Price, source)
+	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
+		return err
+	}
+
+	key := types.NetAssetValueKey(scopeID, netAssetValue.Price.Denom)
+	store := ctx.KVStore(k.storeKey)
+
+	bz, err := k.cdc.Marshal(&netAssetValue)
+	if err != nil {
+		return err
+	}
+	store.Set(key, bz)
+
+	return nil
+}
+
+// IterateNetAssetValues iterates net asset values for scope
+func (k Keeper) IterateNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress, handler func(state types.NetAssetValue) (stop bool)) error {
+	store := ctx.KVStore(k.storeKey)
+	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(scopeID))
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		var scopeNav types.NetAssetValue
+		err := k.cdc.Unmarshal(it.Value(), &scopeNav)
+		if err != nil {
+			return err
+		} else if handler(scopeNav) {
+			break
+		}
+	}
+	return nil
+}
+
+// RemoveNetAssetValues removes all net asset values for a scope
+func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress) {
+	store := ctx.KVStore(k.storeKey)
+	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(scopeID))
+	var keys [][]byte
+	for ; it.Valid(); it.Next() {
+		keys = append(keys, it.Key())
+	}
+	it.Close()
+
+	for _, key := range keys {
+		store.Delete(key)
+	}
+}

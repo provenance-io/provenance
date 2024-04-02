@@ -4,20 +4,22 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
-// assertEverythingSet asserts that the provided proto.Message has a value for all fields.
-// Returns true on success, false if one or more things are missing.
-func assertEverythingSet(t *testing.T, tev proto.Message, typeString string) bool {
+// assertEverythingSet asserts that the provided proto.Message can be converted to
+// an untyped event with the expected type string. Then, if assertAllSet = true,
+// this asserts that none of the event attributes are empty.
+// Returns true on success, false if one or more things aren't right.
+func assertEventContent(t *testing.T, tev proto.Message, typeString string, assertAllSet bool) bool {
 	t.Helper()
 	event, err := sdk.TypedEventToEvent(tev)
 	if !assert.NoError(t, err, "TypedEventToEvent(%T)", tev) {
@@ -26,6 +28,10 @@ func assertEverythingSet(t *testing.T, tev proto.Message, typeString string) boo
 
 	expType := "provenance.exchange.v1." + typeString
 	rv := assert.Equal(t, expType, event.Type, "%T event.Type", tev)
+	if !assertAllSet {
+		return rv
+	}
+
 	for i, attr := range event.Attributes {
 		rv = assert.NotEmpty(t, attr.Key, "%T event.attributes[%d].Key", tev, i) && rv
 		rv = assert.NotEqual(t, `""`, attr.Key, "%T event.attributes[%d].Key", tev, i) && rv
@@ -37,6 +43,13 @@ func assertEverythingSet(t *testing.T, tev proto.Message, typeString string) boo
 		rv = assert.NotEqual(t, `"0"`, attr.Value, "%T event.attributes[%d].Value", tev, i) && rv
 	}
 	return rv
+}
+
+// assertEverythingSet asserts that the provided proto.Message can be converted to
+// an untyped event with the expected type string, and a value for all fields.
+// Returns true on success, false if one or more things aren't right.
+func assertEverythingSet(t *testing.T, tev proto.Message, typeString string) bool {
+	return assertEventContent(t, tev, typeString, true)
 }
 
 func TestNewEventOrderCreated(t *testing.T) {
@@ -368,6 +381,42 @@ func TestNewEventOrderExternalIDUpdated(t *testing.T) {
 	}
 }
 
+func TestNewEventFundsCommitted(t *testing.T) {
+	account := sdk.AccAddress("account_____________").String()
+	marketID := uint32(4444)
+	amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 57), sdk.NewInt64Coin("banana", 99))
+	tag := "help-help-i-have-been-committed"
+
+	var event *EventFundsCommitted
+	testFunc := func() {
+		event = NewEventFundsCommitted(account, marketID, amount, tag)
+	}
+	require.NotPanics(t, testFunc, "NewEventFundsCommitted(%q, %d, %q, %q)", account, marketID, amount, tag)
+	assert.Equal(t, account, event.Account, "Account")
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, amount.String(), event.Amount, "Amount")
+	assert.Equal(t, tag, event.Tag, "Tag")
+	assertEverythingSet(t, event, "EventFundsCommitted")
+}
+
+func TestNewEventCommitmentReleased(t *testing.T) {
+	account := sdk.AccAddress("account_____________").String()
+	marketID := uint32(4444)
+	amount := sdk.NewCoins(sdk.NewInt64Coin("apple", 57), sdk.NewInt64Coin("banana", 99))
+	tag := "i-have-been-released"
+
+	var event *EventCommitmentReleased
+	testFunc := func() {
+		event = NewEventCommitmentReleased(account, marketID, amount, tag)
+	}
+	require.NotPanics(t, testFunc, "NewEventCommitmentReleased(%q, %d, %q, %q)", account, marketID, amount, tag)
+	assert.Equal(t, account, event.Account, "Account")
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, amount.String(), event.Amount, "Amount")
+	assert.Equal(t, tag, event.Tag, "Tag")
+	assertEverythingSet(t, event, "EventCommitmentReleased")
+}
+
 func TestNewEventMarketWithdraw(t *testing.T) {
 	marketID := uint32(55)
 	amountWithdrawn := sdk.NewCoins(sdk.NewInt64Coin("mine", 188382), sdk.NewInt64Coin("yours", 3))
@@ -401,7 +450,7 @@ func TestNewEventMarketDetailsUpdated(t *testing.T) {
 	assertEverythingSet(t, event, "EventMarketDetailsUpdated")
 }
 
-func TestNewEventMarketActiveUpdated(t *testing.T) {
+func TestNewEventMarketAcceptingOrdersUpdated(t *testing.T) {
 	someAddr := sdk.AccAddress("some_address________").String()
 
 	tests := []struct {
@@ -416,14 +465,14 @@ func TestNewEventMarketActiveUpdated(t *testing.T) {
 			marketID:  33,
 			updatedBy: someAddr,
 			isActive:  true,
-			expected:  NewEventMarketEnabled(33, someAddr),
+			expected:  NewEventMarketOrdersEnabled(33, someAddr),
 		},
 		{
 			name:      "disabled",
 			marketID:  556,
 			updatedBy: someAddr,
 			isActive:  false,
-			expected:  NewEventMarketDisabled(556, someAddr),
+			expected:  NewEventMarketOrdersDisabled(556, someAddr),
 		},
 	}
 
@@ -431,42 +480,42 @@ func TestNewEventMarketActiveUpdated(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var event proto.Message
 			testFunc := func() {
-				event = NewEventMarketActiveUpdated(tc.marketID, tc.updatedBy, tc.isActive)
+				event = NewEventMarketAcceptingOrdersUpdated(tc.marketID, tc.updatedBy, tc.isActive)
 			}
-			require.NotPanics(t, testFunc, "NewEventMarketActiveUpdated(%d, %q, %t) result",
+			require.NotPanics(t, testFunc, "NewEventMarketAcceptingOrdersUpdated(%d, %q, %t) result",
 				tc.marketID, tc.updatedBy, tc.isActive)
-			assert.Equal(t, tc.expected, event, "NewEventMarketActiveUpdated(%d, %q, %t) result",
+			assert.Equal(t, tc.expected, event, "NewEventMarketAcceptingOrdersUpdated(%d, %q, %t) result",
 				tc.marketID, tc.updatedBy, tc.isActive)
 		})
 	}
 }
 
-func TestNewEventMarketEnabled(t *testing.T) {
+func TestNewEventMarketOrdersEnabled(t *testing.T) {
 	marketID := uint32(919)
 	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
-	var event *EventMarketEnabled
+	var event *EventMarketOrdersEnabled
 	testFunc := func() {
-		event = NewEventMarketEnabled(marketID, updatedBy)
+		event = NewEventMarketOrdersEnabled(marketID, updatedBy)
 	}
-	require.NotPanics(t, testFunc, "NewEventMarketEnabled(%d, %q)", marketID, updatedBy)
+	require.NotPanics(t, testFunc, "NewEventMarketOrdersEnabled(%d, %q)", marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
-	assertEverythingSet(t, event, "EventMarketEnabled")
+	assertEverythingSet(t, event, "EventMarketOrdersEnabled")
 }
 
-func TestNewEventMarketDisabled(t *testing.T) {
+func TestNewEventMarketOrdersDisabled(t *testing.T) {
 	marketID := uint32(5555)
 	updatedBy := sdk.AccAddress("updatedBy___________").String()
 
-	var event *EventMarketDisabled
+	var event *EventMarketOrdersDisabled
 	testFunc := func() {
-		event = NewEventMarketDisabled(marketID, updatedBy)
+		event = NewEventMarketOrdersDisabled(marketID, updatedBy)
 	}
-	require.NotPanics(t, testFunc, "NewEventMarketDisabled(%d, %q)", marketID, updatedBy)
+	require.NotPanics(t, testFunc, "NewEventMarketOrdersDisabled(%d, %q)", marketID, updatedBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
-	assertEverythingSet(t, event, "EventMarketDisabled")
+	assertEverythingSet(t, event, "EventMarketOrdersDisabled")
 }
 
 func TestNewEventMarketUserSettleUpdated(t *testing.T) {
@@ -537,6 +586,88 @@ func TestNewEventMarketUserSettleDisabled(t *testing.T) {
 	assertEverythingSet(t, event, "EventMarketUserSettleDisabled")
 }
 
+func TestNewEventMarketAcceptingCommitmentsUpdated(t *testing.T) {
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	tests := []struct {
+		name      string
+		marketID  uint32
+		updatedBy string
+		isAllowed bool
+		expected  proto.Message
+	}{
+		{
+			name:      "enabled",
+			marketID:  575,
+			updatedBy: updatedBy,
+			isAllowed: true,
+			expected:  NewEventMarketCommitmentsEnabled(575, updatedBy),
+		},
+		{
+			name:      "disabled",
+			marketID:  406,
+			updatedBy: updatedBy,
+			isAllowed: false,
+			expected:  NewEventMarketCommitmentsDisabled(406, updatedBy),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event proto.Message
+			testFunc := func() {
+				event = NewEventMarketAcceptingCommitmentsUpdated(tc.marketID, tc.updatedBy, tc.isAllowed)
+			}
+			require.NotPanics(t, testFunc, "NewEventMarketAcceptingCommitmentsUpdated(%d, %q, %t) result",
+				tc.marketID, tc.updatedBy, tc.isAllowed)
+			assert.Equal(t, tc.expected, event, "NewEventMarketAcceptingCommitmentsUpdated(%d, %q, %t) result",
+				tc.marketID, tc.updatedBy, tc.isAllowed)
+		})
+	}
+}
+
+func TestNewEventMarketCommitmentsEnabled(t *testing.T) {
+	marketID := uint32(4541)
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	var event *EventMarketCommitmentsEnabled
+	testFunc := func() {
+		event = NewEventMarketCommitmentsEnabled(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketCommitmentsEnabled(%d, %q)", marketID, updatedBy)
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
+	assertEverythingSet(t, event, "EventMarketCommitmentsEnabled")
+}
+
+func TestNewEventMarketCommitmentsDisabled(t *testing.T) {
+	marketID := uint32(4541)
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	var event *EventMarketCommitmentsDisabled
+	testFunc := func() {
+		event = NewEventMarketCommitmentsDisabled(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketCommitmentsDisabled(%d, %q)", marketID, updatedBy)
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
+	assertEverythingSet(t, event, "EventMarketCommitmentsDisabled")
+}
+
+func TestNewEventMarketIntermediaryDenomUpdated(t *testing.T) {
+	marketID := uint32(4541)
+	updatedBy := sdk.AccAddress("updatedBy___________").String()
+
+	var event *EventMarketIntermediaryDenomUpdated
+	testFunc := func() {
+		event = NewEventMarketIntermediaryDenomUpdated(marketID, updatedBy)
+	}
+	require.NotPanics(t, testFunc, "NewEventMarketIntermediaryDenomUpdated(%d, %q)", marketID, updatedBy)
+	assert.Equal(t, marketID, event.MarketId, "MarketId")
+	assert.Equal(t, updatedBy, event.UpdatedBy, "UpdatedBy")
+	assertEverythingSet(t, event, "EventMarketIntermediaryDenomUpdated")
+}
+
 func TestNewEventMarketPermissionsUpdated(t *testing.T) {
 	marketID := uint32(5432)
 	updatedBy := sdk.AccAddress("updatedBy___________").String()
@@ -598,10 +729,528 @@ func TestNewEventParamsUpdated(t *testing.T) {
 	assertEverythingSet(t, event, "EventParamsUpdated")
 }
 
+// newTestPayment creates a new Payment using the provided values.
+func newTestPayment(t *testing.T, source, sourceAmount, target, targetAmount, externalID string) *Payment {
+	t.Helper()
+	rv := &Payment{
+		Source:     source,
+		Target:     target,
+		ExternalId: externalID,
+	}
+	var err error
+	rv.SourceAmount, err = sdk.ParseCoinsNormalized(sourceAmount)
+	require.NoError(t, err, "source amount: ParseCoinsNormalized(%q)", sourceAmount)
+	rv.TargetAmount, err = sdk.ParseCoinsNormalized(targetAmount)
+	require.NoError(t, err, "target amount: ParseCoinsNormalized(%q)", targetAmount)
+	return rv
+}
+
+func TestEventPaymentCreated(t *testing.T) {
+	tests := []struct {
+		name      string
+		payment   *Payment
+		expected  *EventPaymentCreated
+		expAllSet bool
+	}{
+		{
+			name:    "all payment fields have content",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentCreated{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				Target:       "target_addr",
+				TargetAmount: "7tangerine",
+				ExternalId:   "just_some_identifier",
+			},
+			expAllSet: true,
+		},
+		{
+			name:    "zero source amount",
+			payment: newTestPayment(t, "source_addr", "", "target_addr", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentCreated{
+				Source:       "source_addr",
+				SourceAmount: "",
+				Target:       "target_addr",
+				TargetAmount: "7tangerine",
+				ExternalId:   "just_some_identifier",
+			},
+		},
+		{
+			name:    "no target",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentCreated{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				Target:       "",
+				TargetAmount: "7tangerine",
+				ExternalId:   "just_some_identifier",
+			},
+		},
+		{
+			name:    "zero target amount",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "", "just_some_identifier"),
+			expected: &EventPaymentCreated{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				Target:       "target_addr",
+				TargetAmount: "",
+				ExternalId:   "just_some_identifier",
+			},
+		},
+		{
+			name:    "empty external id",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", ""),
+			expected: &EventPaymentCreated{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				Target:       "target_addr",
+				TargetAmount: "7tangerine",
+				ExternalId:   "",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event *EventPaymentCreated
+			testFunc := func() {
+				event = NewEventPaymentCreated(tc.payment)
+			}
+			require.NotPanics(t, testFunc, "NewEventPaymentCreated")
+			assert.Equal(t, tc.expected, event, "NewEventPaymentCreated result")
+			assertEventContent(t, event, "EventPaymentCreated", tc.expAllSet)
+		})
+	}
+}
+
+func TestEventPaymentUpdated(t *testing.T) {
+	tests := []struct {
+		name      string
+		payment   *Payment
+		oldTarget string
+		expected  *EventPaymentUpdated
+		expAllSet bool
+	}{
+		{
+			name:      "all payment fields have content",
+			payment:   newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", "just_some_identifier"),
+			oldTarget: "old_target_addr",
+			expected: &EventPaymentUpdated{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				OldTarget:    "old_target_addr",
+				NewTarget:    "target_addr",
+				TargetAmount: "7tangerine",
+				ExternalId:   "just_some_identifier",
+			},
+			expAllSet: true,
+		},
+		{
+			name:      "zero source amount",
+			payment:   newTestPayment(t, "source_addr", "", "target_addr", "7tangerine", "just_some_identifier"),
+			oldTarget: "old_target_addr",
+			expected: &EventPaymentUpdated{
+				Source:       "source_addr",
+				SourceAmount: "",
+				OldTarget:    "old_target_addr",
+				NewTarget:    "target_addr",
+				TargetAmount: "7tangerine",
+				ExternalId:   "just_some_identifier",
+			},
+		},
+		{
+			name:      "no old target",
+			payment:   newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", "just_some_identifier"),
+			oldTarget: "",
+			expected: &EventPaymentUpdated{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				OldTarget:    "",
+				NewTarget:    "target_addr",
+				TargetAmount: "7tangerine",
+				ExternalId:   "just_some_identifier",
+			},
+		},
+		{
+			name:      "no new target",
+			payment:   newTestPayment(t, "source_addr", "312strawberry", "", "7tangerine", "just_some_identifier"),
+			oldTarget: "old_target_addr",
+			expected: &EventPaymentUpdated{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				OldTarget:    "old_target_addr",
+				NewTarget:    "",
+				TargetAmount: "7tangerine",
+				ExternalId:   "just_some_identifier",
+			},
+		},
+		{
+			name:      "zero target amount",
+			payment:   newTestPayment(t, "source_addr", "312strawberry", "target_addr", "", "just_some_identifier"),
+			oldTarget: "old_target_addr",
+			expected: &EventPaymentUpdated{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				OldTarget:    "old_target_addr",
+				NewTarget:    "target_addr",
+				TargetAmount: "",
+				ExternalId:   "just_some_identifier",
+			},
+		},
+		{
+			name:      "empty external id",
+			payment:   newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", ""),
+			oldTarget: "old_target_addr",
+			expected: &EventPaymentUpdated{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				OldTarget:    "old_target_addr",
+				NewTarget:    "target_addr",
+				TargetAmount: "7tangerine",
+				ExternalId:   "",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event *EventPaymentUpdated
+			testFunc := func() {
+				event = NewEventPaymentUpdated(tc.payment, tc.oldTarget)
+			}
+			require.NotPanics(t, testFunc, "NewEventPaymentUpdated")
+			assert.Equal(t, tc.expected, event, "NewEventPaymentUpdated result")
+			assertEventContent(t, event, "EventPaymentUpdated", tc.expAllSet)
+		})
+	}
+}
+
+func TestEventPaymentAccepted(t *testing.T) {
+	tests := []struct {
+		name      string
+		payment   *Payment
+		expected  *EventPaymentAccepted
+		expAllSet bool
+	}{
+		{
+			name:    "all payment fields have content",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentAccepted{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				Target:       "target_addr",
+				TargetAmount: "7tangerine",
+				ExternalId:   "just_some_identifier",
+			},
+			expAllSet: true,
+		},
+		{
+			name:    "zero source amount",
+			payment: newTestPayment(t, "source_addr", "", "target_addr", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentAccepted{
+				Source:       "source_addr",
+				SourceAmount: "",
+				Target:       "target_addr",
+				TargetAmount: "7tangerine",
+				ExternalId:   "just_some_identifier",
+			},
+		},
+		{
+			name:    "no target",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentAccepted{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				Target:       "",
+				TargetAmount: "7tangerine",
+				ExternalId:   "just_some_identifier",
+			},
+		},
+		{
+			name:    "zero target amount",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "", "just_some_identifier"),
+			expected: &EventPaymentAccepted{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				Target:       "target_addr",
+				TargetAmount: "",
+				ExternalId:   "just_some_identifier",
+			},
+		},
+		{
+			name:    "empty external id",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", ""),
+			expected: &EventPaymentAccepted{
+				Source:       "source_addr",
+				SourceAmount: "312strawberry",
+				Target:       "target_addr",
+				TargetAmount: "7tangerine",
+				ExternalId:   "",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event *EventPaymentAccepted
+			testFunc := func() {
+				event = NewEventPaymentAccepted(tc.payment)
+			}
+			require.NotPanics(t, testFunc, "NewEventPaymentAccepted")
+			assert.Equal(t, tc.expected, event, "NewEventPaymentAccepted result")
+			assertEventContent(t, event, "EventPaymentAccepted", tc.expAllSet)
+		})
+	}
+}
+
+func TestEventPaymentRejected(t *testing.T) {
+	tests := []struct {
+		name      string
+		payment   *Payment
+		expected  *EventPaymentRejected
+		expAllSet bool
+	}{
+		{
+			name:    "all payment fields have content",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentRejected{
+				Source:     "source_addr",
+				Target:     "target_addr",
+				ExternalId: "just_some_identifier",
+			},
+			expAllSet: true,
+		},
+		{
+			name:    "zero source amount",
+			payment: newTestPayment(t, "source_addr", "", "target_addr", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentRejected{
+				Source:     "source_addr",
+				Target:     "target_addr",
+				ExternalId: "just_some_identifier",
+			},
+			expAllSet: true,
+		},
+		{
+			name:    "no target",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentRejected{
+				Source:     "source_addr",
+				Target:     "",
+				ExternalId: "just_some_identifier",
+			},
+		},
+		{
+			name:    "zero target amount",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "", "just_some_identifier"),
+			expected: &EventPaymentRejected{
+				Source:     "source_addr",
+				Target:     "target_addr",
+				ExternalId: "just_some_identifier",
+			},
+			expAllSet: true,
+		},
+		{
+			name:    "empty external id",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", ""),
+			expected: &EventPaymentRejected{
+				Source:     "source_addr",
+				Target:     "target_addr",
+				ExternalId: "",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event *EventPaymentRejected
+			testFunc := func() {
+				event = NewEventPaymentRejected(tc.payment)
+			}
+			require.NotPanics(t, testFunc, "NewEventPaymentRejected")
+			assert.Equal(t, tc.expected, event, "NewEventPaymentRejected result")
+			assertEventContent(t, event, "EventPaymentRejected", tc.expAllSet)
+		})
+	}
+}
+
+func TestNewEventsPaymentsRejected(t *testing.T) {
+	eStringer := func(event *EventPaymentRejected) string {
+		return fmt.Sprintf("%s+%q<->%s", event.Source, event.ExternalId, event.Target)
+	}
+
+	tests := []struct {
+		name     string
+		payments []*Payment
+		expected []*EventPaymentRejected
+	}{
+		{
+			name:     "nil payments",
+			payments: nil,
+			expected: []*EventPaymentRejected{},
+		},
+		{
+			name:     "empty payments",
+			payments: []*Payment{},
+			expected: []*EventPaymentRejected{},
+		},
+		{
+			name: "five payments",
+			payments: []*Payment{
+				newTestPayment(t, "source_addr_0", "300strawberry", "target_addr_0", "70tangerine", "just_some_identifier_0"),
+				newTestPayment(t, "source_addr_1", "", "target_addr_1", "71tangerine", "just_some_identifier_1"),
+				newTestPayment(t, "source_addr_2", "302strawberry", "", "72tangerine", "just_some_identifier_2"),
+				newTestPayment(t, "source_addr_3", "303strawberry", "target_addr_3", "", "just_some_identifier_3"),
+				newTestPayment(t, "source_addr_4", "304strawberry", "target_addr_4", "74tangerine", ""),
+			},
+			expected: []*EventPaymentRejected{
+				{Source: "source_addr_0", Target: "target_addr_0", ExternalId: "just_some_identifier_0"},
+				{Source: "source_addr_1", Target: "target_addr_1", ExternalId: "just_some_identifier_1"},
+				{Source: "source_addr_2", Target: "", ExternalId: "just_some_identifier_2"},
+				{Source: "source_addr_3", Target: "target_addr_3", ExternalId: "just_some_identifier_3"},
+				{Source: "source_addr_4", Target: "target_addr_4", ExternalId: ""},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual []*EventPaymentRejected
+			testFunc := func() {
+				actual = NewEventsPaymentsRejected(tc.payments)
+			}
+			require.NotPanics(t, testFunc, "NewEventsPaymentsRejected")
+			assertEqualSlice(t, tc.expected, actual, eStringer, "NewEventsPaymentsRejected")
+		})
+	}
+}
+
+func TestEventPaymentCancelled(t *testing.T) {
+	tests := []struct {
+		name      string
+		payment   *Payment
+		expected  *EventPaymentCancelled
+		expAllSet bool
+	}{
+		{
+			name:    "all payment fields have content",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentCancelled{
+				Source:     "source_addr",
+				Target:     "target_addr",
+				ExternalId: "just_some_identifier",
+			},
+			expAllSet: true,
+		},
+		{
+			name:    "zero source amount",
+			payment: newTestPayment(t, "source_addr", "", "target_addr", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentCancelled{
+				Source:     "source_addr",
+				Target:     "target_addr",
+				ExternalId: "just_some_identifier",
+			},
+			expAllSet: true,
+		},
+		{
+			name:    "no target",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "", "7tangerine", "just_some_identifier"),
+			expected: &EventPaymentCancelled{
+				Source:     "source_addr",
+				Target:     "",
+				ExternalId: "just_some_identifier",
+			},
+		},
+		{
+			name:    "zero target amount",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "", "just_some_identifier"),
+			expected: &EventPaymentCancelled{
+				Source:     "source_addr",
+				Target:     "target_addr",
+				ExternalId: "just_some_identifier",
+			},
+			expAllSet: true,
+		},
+		{
+			name:    "empty external id",
+			payment: newTestPayment(t, "source_addr", "312strawberry", "target_addr", "7tangerine", ""),
+			expected: &EventPaymentCancelled{
+				Source:     "source_addr",
+				Target:     "target_addr",
+				ExternalId: "",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var event *EventPaymentCancelled
+			testFunc := func() {
+				event = NewEventPaymentCancelled(tc.payment)
+			}
+			require.NotPanics(t, testFunc, "NewEventPaymentCancelled")
+			assert.Equal(t, tc.expected, event, "NewEventPaymentCancelled result")
+			assertEventContent(t, event, "EventPaymentCancelled", tc.expAllSet)
+		})
+	}
+}
+
+func TestNewEventsPaymentsCancelled(t *testing.T) {
+	eStringer := func(event *EventPaymentCancelled) string {
+		return fmt.Sprintf("%s+%q<->%s", event.Source, event.ExternalId, event.Target)
+	}
+
+	tests := []struct {
+		name     string
+		payments []*Payment
+		expected []*EventPaymentCancelled
+	}{
+		{
+			name:     "nil payments",
+			payments: nil,
+			expected: []*EventPaymentCancelled{},
+		},
+		{
+			name:     "empty payments",
+			payments: []*Payment{},
+			expected: []*EventPaymentCancelled{},
+		},
+		{
+			name: "five payments",
+			payments: []*Payment{
+				newTestPayment(t, "source_addr_0", "300strawberry", "target_addr_0", "70tangerine", "just_some_identifier_0"),
+				newTestPayment(t, "source_addr_1", "", "target_addr_1", "71tangerine", "just_some_identifier_1"),
+				newTestPayment(t, "source_addr_2", "302strawberry", "", "72tangerine", "just_some_identifier_2"),
+				newTestPayment(t, "source_addr_3", "303strawberry", "target_addr_3", "", "just_some_identifier_3"),
+				newTestPayment(t, "source_addr_4", "304strawberry", "target_addr_4", "74tangerine", ""),
+			},
+			expected: []*EventPaymentCancelled{
+				{Source: "source_addr_0", Target: "target_addr_0", ExternalId: "just_some_identifier_0"},
+				{Source: "source_addr_1", Target: "target_addr_1", ExternalId: "just_some_identifier_1"},
+				{Source: "source_addr_2", Target: "", ExternalId: "just_some_identifier_2"},
+				{Source: "source_addr_3", Target: "target_addr_3", ExternalId: "just_some_identifier_3"},
+				{Source: "source_addr_4", Target: "target_addr_4", ExternalId: ""},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual []*EventPaymentCancelled
+			testFunc := func() {
+				actual = NewEventsPaymentsCancelled(tc.payments)
+			}
+			require.NotPanics(t, testFunc, "NewEventsPaymentsCancelled")
+			assertEqualSlice(t, tc.expected, actual, eStringer, "NewEventsPaymentsCancelled")
+		})
+	}
+}
+
 func TestTypedEventToEvent(t *testing.T) {
 	quoteStr := func(str string) string {
 		return fmt.Sprintf("%q", str)
 	}
+	account := "account_____________"
+	accountQ := quoteStr(account)
 	cancelledBy := "cancelledBy_________"
 	cancelledByQ := quoteStr(cancelledBy)
 	destination := sdk.AccAddress("destination_________")
@@ -612,12 +1261,26 @@ func TestTypedEventToEvent(t *testing.T) {
 	updatedByQ := quoteStr(updatedBy)
 	coins1 := sdk.NewCoins(sdk.NewInt64Coin("onecoin", 1), sdk.NewInt64Coin("twocoin", 2))
 	coins1Q := quoteStr(coins1.String())
+	coins2 := sdk.NewCoins(sdk.NewInt64Coin("threecoin", 3), sdk.NewInt64Coin("fourcoin", 4))
+	coins2Q := quoteStr(coins2.String())
 	acoin := sdk.NewInt64Coin("acoin", 55)
 	acoinQ := quoteStr(acoin.String())
 	pcoin := sdk.NewInt64Coin("pcoin", 66)
 	pcoinQ := quoteStr(pcoin.String())
 	fcoin := sdk.NewInt64Coin("fcoin", 33)
 	fcoinQ := quoteStr(fcoin.String())
+	payment := &Payment{
+		Source:       "source______________",
+		SourceAmount: coins1,
+		Target:       "target______________",
+		TargetAmount: coins2,
+		ExternalId:   "something external",
+	}
+	sourceQ := quoteStr(payment.Source)
+	targetQ := quoteStr(payment.Target)
+	externalIDQ := quoteStr(payment.ExternalId)
+	oldTarget := "old_target__________"
+	oldTargetQ := quoteStr(oldTarget)
 
 	tests := []struct {
 		name     string
@@ -785,6 +1448,32 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
+			name: "EventFundsCommitted",
+			tev:  NewEventFundsCommitted(account, 44, coins1, "tagTagTAG"),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventFundsCommitted",
+				Attributes: []abci.EventAttribute{
+					{Key: "account", Value: accountQ},
+					{Key: "amount", Value: coins1Q},
+					{Key: "market_id", Value: "44"},
+					{Key: "tag", Value: quoteStr("tagTagTAG")},
+				},
+			},
+		},
+		{
+			name: "EventCommitmentReleased",
+			tev:  NewEventCommitmentReleased(account, 15, coins1, "something"),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventCommitmentReleased",
+				Attributes: []abci.EventAttribute{
+					{Key: "account", Value: accountQ},
+					{Key: "amount", Value: coins1Q},
+					{Key: "market_id", Value: "15"},
+					{Key: "tag", Value: quoteStr("something")},
+				},
+			},
+		},
+		{
 			name: "EventMarketWithdraw",
 			tev:  NewEventMarketWithdraw(6, coins1, destination, withdrawnBy.String()),
 			expEvent: sdk.Event{
@@ -809,10 +1498,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "EventMarketEnabled",
-			tev:  NewEventMarketEnabled(8, updatedBy),
+			name: "EventMarketOrdersEnabled",
+			tev:  NewEventMarketOrdersEnabled(8, updatedBy),
 			expEvent: sdk.Event{
-				Type: "provenance.exchange.v1.EventMarketEnabled",
+				Type: "provenance.exchange.v1.EventMarketOrdersEnabled",
 				Attributes: []abci.EventAttribute{
 					{Key: "market_id", Value: "8"},
 					{Key: "updated_by", Value: updatedByQ},
@@ -820,10 +1509,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			},
 		},
 		{
-			name: "EventMarketDisabled",
-			tev:  NewEventMarketDisabled(9, updatedBy),
+			name: "EventMarketOrdersDisabled",
+			tev:  NewEventMarketOrdersDisabled(9, updatedBy),
 			expEvent: sdk.Event{
-				Type: "provenance.exchange.v1.EventMarketDisabled",
+				Type: "provenance.exchange.v1.EventMarketOrdersDisabled",
 				Attributes: []abci.EventAttribute{
 					{Key: "market_id", Value: "9"},
 					{Key: "updated_by", Value: updatedByQ},
@@ -848,6 +1537,39 @@ func TestTypedEventToEvent(t *testing.T) {
 				Type: "provenance.exchange.v1.EventMarketUserSettleDisabled",
 				Attributes: []abci.EventAttribute{
 					{Key: "market_id", Value: "11"},
+					{Key: "updated_by", Value: updatedByQ},
+				},
+			},
+		},
+		{
+			name: "EventMarketCommitmentsEnabled",
+			tev:  NewEventMarketCommitmentsEnabled(52, updatedBy),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventMarketCommitmentsEnabled",
+				Attributes: []abci.EventAttribute{
+					{Key: "market_id", Value: "52"},
+					{Key: "updated_by", Value: updatedByQ},
+				},
+			},
+		},
+		{
+			name: "EventMarketCommitmentsDisabled",
+			tev:  NewEventMarketCommitmentsDisabled(25, updatedBy),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventMarketCommitmentsDisabled",
+				Attributes: []abci.EventAttribute{
+					{Key: "market_id", Value: "25"},
+					{Key: "updated_by", Value: updatedByQ},
+				},
+			},
+		},
+		{
+			name: "EventMarketIntermediaryDenomUpdated",
+			tev:  NewEventMarketIntermediaryDenomUpdated(18, updatedBy),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventMarketIntermediaryDenomUpdated",
+				Attributes: []abci.EventAttribute{
+					{Key: "market_id", Value: "18"},
 					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
@@ -900,6 +1622,73 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type:       "provenance.exchange.v1.EventParamsUpdated",
 				Attributes: nil,
+			},
+		},
+		{
+			name: "EventPaymentCreated",
+			tev:  NewEventPaymentCreated(payment),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventPaymentCreated",
+				Attributes: []abci.EventAttribute{
+					{Key: "external_id", Value: externalIDQ},
+					{Key: "source", Value: sourceQ},
+					{Key: "source_amount", Value: coins1Q},
+					{Key: "target", Value: targetQ},
+					{Key: "target_amount", Value: coins2Q},
+				},
+			},
+		},
+		{
+			name: "EventPaymentUpdated",
+			tev:  NewEventPaymentUpdated(payment, oldTarget),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventPaymentUpdated",
+				Attributes: []abci.EventAttribute{
+					{Key: "external_id", Value: externalIDQ},
+					{Key: "new_target", Value: targetQ},
+					{Key: "old_target", Value: oldTargetQ},
+					{Key: "source", Value: sourceQ},
+					{Key: "source_amount", Value: coins1Q},
+					{Key: "target_amount", Value: coins2Q},
+				},
+			},
+		},
+		{
+			name: "EventPaymentAccepted",
+			tev:  NewEventPaymentAccepted(payment),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventPaymentAccepted",
+				Attributes: []abci.EventAttribute{
+					{Key: "external_id", Value: externalIDQ},
+					{Key: "source", Value: sourceQ},
+					{Key: "source_amount", Value: coins1Q},
+					{Key: "target", Value: targetQ},
+					{Key: "target_amount", Value: coins2Q},
+				},
+			},
+		},
+		{
+			name: "EventPaymentRejected",
+			tev:  NewEventPaymentRejected(payment),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventPaymentRejected",
+				Attributes: []abci.EventAttribute{
+					{Key: "external_id", Value: externalIDQ},
+					{Key: "source", Value: sourceQ},
+					{Key: "target", Value: targetQ},
+				},
+			},
+		},
+		{
+			name: "EventPaymentCancelled",
+			tev:  NewEventPaymentCancelled(payment),
+			expEvent: sdk.Event{
+				Type: "provenance.exchange.v1.EventPaymentCancelled",
+				Attributes: []abci.EventAttribute{
+					{Key: "external_id", Value: externalIDQ},
+					{Key: "source", Value: sourceQ},
+					{Key: "target", Value: targetQ},
+				},
 			},
 		},
 	}

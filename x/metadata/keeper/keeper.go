@@ -120,24 +120,28 @@ type Keeper struct {
 
 	// For getting/setting account data.
 	attrKeeper AttrKeeper
+
+	// For getting marker accounts
+	markerKeeper MarkerKeeper
 }
 
 // NewKeeper creates new instances of the metadata Keeper.
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
-	authKeeper AuthKeeper, authzKeeper AuthzKeeper, attrKeeper AttrKeeper,
+	authKeeper AuthKeeper, authzKeeper AuthzKeeper, attrKeeper AttrKeeper, markerKeeper MarkerKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.OSParamKeyTable())
 	}
 	return Keeper{
-		storeKey:    key,
-		cdc:         cdc,
-		paramSpace:  paramSpace,
-		authKeeper:  authKeeper,
-		authzKeeper: authzKeeper,
-		attrKeeper:  attrKeeper,
+		storeKey:     key,
+		cdc:          cdc,
+		paramSpace:   paramSpace,
+		authKeeper:   authKeeper,
+		authzKeeper:  authzKeeper,
+		attrKeeper:   attrKeeper,
+		markerKeeper: markerKeeper,
 	}
 }
 

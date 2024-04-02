@@ -61,6 +61,19 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 			}
 		}
 	}
+
+	for _, mNavs := range data.NetAssetValues {
+		for _, nav := range mNavs.NetAssetValues {
+			address, err := types.MetadataAddressFromBech32(mNavs.Address)
+			if err != nil {
+				panic(err)
+			}
+			err = k.SetNetAssetValue(ctx, address, types.NewNetAssetValue(nav.Price), types.ModuleName)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
 }
 
 // ExportGenesis exports the current keeper state of the metadata module.ExportGenesis
@@ -134,5 +147,21 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 		panic(err)
 	}
 
-	return types.NewGenesisState(params, oslocatorparams, scopes, sessions, records, scopeSpecs, contractSpecs, recordSpecs, objectStoreLocators)
+	markerNetAssetValues := make([]types.MarkerNetAssetValues, len(scopes))
+	for i := range scopes {
+		var markerNavs types.MarkerNetAssetValues
+		var navs []types.NetAssetValue
+		err := k.IterateNetAssetValues(ctx, scopes[i].ScopeId, func(nav types.NetAssetValue) (stop bool) {
+			navs = append(navs, nav)
+			return false
+		})
+		if err != nil {
+			panic(err)
+		}
+		markerNavs.Address = scopes[i].ScopeId.String()
+		markerNavs.NetAssetValues = navs
+		markerNetAssetValues[i] = markerNavs
+	}
+
+	return types.NewGenesisState(params, oslocatorparams, scopes, sessions, records, scopeSpecs, contractSpecs, recordSpecs, objectStoreLocators, markerNetAssetValues)
 }
