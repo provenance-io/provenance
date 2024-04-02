@@ -100,6 +100,13 @@ func (s *HandlerTestSuite) containsMessage(result *sdk.Result, msg proto.Message
 	return false
 }
 
+// noAccessErr creates an expected error message for an address not having access on a marker.
+func (s *HandlerTestSuite) noAccessErr(addr string, role types.Access, denom string) string {
+	mAddr, err := types.MarkerAddress(denom)
+	s.Require().NoError(err, "MarkerAddress(%q)", denom)
+	return fmt.Sprintf("%s does not have %s on %s marker (%s)", addr, role, denom, mAddr)
+}
+
 type CommonTest struct {
 	name          string
 	msg           sdk.Msg
@@ -463,9 +470,9 @@ func (s *HandlerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 			expectedEvent: types.NewEventMarkerMint("1000", denom, s.user1),
 		},
 		{
-			name:     "should fail to  burn denom, user doesn't have permissions",
+			name:     "should fail to burn denom, user doesn't have permissions",
 			msg:      types.NewMsgBurnRequest(s.user1Addr, sdk.NewInt64Coin(denom, 50)),
-			errorMsg: fmt.Sprintf("%s does not have ACCESS_BURN on hotdog markeraccount: invalid request", s.user1),
+			errorMsg: s.noAccessErr(s.user1, types.Access_Burn, denom) + ": invalid request",
 		},
 	}
 	s.runTests(cases)
@@ -546,7 +553,7 @@ func (s *HandlerTestSuite) TestMsgSetAccountDataRequest() {
 				Value:  "This is some unrestricted coin data. This won't get used though.",
 				Signer: s.user1,
 			},
-			errorMsg: s.user1 + " does not have deposit access for " + denomU + " marker",
+			errorMsg: s.noAccessErr(s.user1, types.Access_Deposit, denomU),
 		},
 		{
 			name: "should successfully set account data on restricted marker via gov prop",
@@ -573,7 +580,7 @@ func (s *HandlerTestSuite) TestMsgSetAccountDataRequest() {
 				Value:  "This is some restricted coin data. This won't get used though.",
 				Signer: s.user1,
 			},
-			errorMsg: s.user1 + " does not have deposit access for " + denomR + " marker",
+			errorMsg: s.noAccessErr(s.user1, types.Access_Deposit, denomR),
 		},
 	}
 	s.runTests(tests)

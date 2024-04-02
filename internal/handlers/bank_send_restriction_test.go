@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -164,7 +165,9 @@ func TestBankSend(tt *testing.T) {
 
 	// On a restricted coin with required attributes using an admin that does not have TRANSFER permission, but the receiver DOES have the required attributes.
 	tranferRAMarker := markertypes.NewMsgTransferRequest(addr2, addr2, addr3, sdk.NewInt64Coin(restrictedAttrMarkerDenom, 25))
-	ConstructAndSendTx(tt, *app, ctx, acct2, priv2, tranferRAMarker, txFailureCode, addr2.String()+" is not allowed to broker transfers")
+	expErr := fmt.Sprintf("%s does not have ACCESS_TRANSFER on restrictedmarkerattr marker (%s)",
+		addr2.String(), raMarkerAcct.GetAddress().String())
+	ConstructAndSendTx(tt, *app, ctx, acct2, priv2, tranferRAMarker, txFailureCode, expErr)
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr2).String()
 	assert.Equal(tt, "50nonrestrictedmarker,125restrictedmarker,75restrictedmarkerattr,999400000stake", addr2afterBalance, "addr1afterBalance")
 	addr2afterBalance = app.BankKeeper.GetAllBalances(ctx, addr3).String()

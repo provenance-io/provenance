@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +25,7 @@ func sumAssetsAndPrice(orders []*exchange.Order) (sdk.Coins, sdk.Coins) {
 	return totalAssets, totalPrice
 }
 
-// validateAcceptingOrdersAndCanUserSettle returns an error if the market isn't active or doesn't allow user settlement.
+// validateAcceptingOrdersAndCanUserSettle returns an error if the market isn't accepting orders or doesn't allow user settlement.
 func validateAcceptingOrdersAndCanUserSettle(store storetypes.KVStore, marketID uint32) error {
 	if err := validateMarketIsAcceptingOrders(store, marketID); err != nil {
 		return err
@@ -223,20 +224,25 @@ func (k Keeper) FillAsks(ctx sdk.Context, msg *exchange.MsgFillAsksRequest) erro
 }
 
 // SettleOrders attempts to settle all the provided orders.
-func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidOrderIds []uint64, expectPartial bool) error {
+func (k Keeper) SettleOrders(ctx sdk.Context, req *exchange.MsgMarketSettleRequest) error {
+	admin, adminErr := sdk.AccAddressFromBech32(req.Admin)
+	if adminErr != nil {
+		return fmt.Errorf("invalid admin %q: %w", req.Admin, adminErr)
+	}
+
 	store := k.getStore(ctx)
-	if err := validateMarketExists(store, marketID); err != nil {
+	if err := validateMarketExists(store, req.MarketId); err != nil {
 		return err
 	}
 
-	askOrders, aoerr := k.getAskOrders(store, marketID, askOrderIDs, "")
-	bidOrders, boerr := k.getBidOrders(store, marketID, bidOrderIds, "")
+	askOrders, aoerr := k.getAskOrders(store, req.MarketId, req.AskOrderIds, "")
+	bidOrders, boerr := k.getBidOrders(store, req.MarketId, req.BidOrderIds, "")
 	if aoerr != nil || boerr != nil {
 		return errors.Join(aoerr, boerr)
 	}
 
 	ratioGetter := func(denom string) (*exchange.FeeRatio, error) {
-		return getSellerSettlementRatio(store, marketID, denom)
+		return getSellerSettlementRatio(store, req.MarketId, denom)
 	}
 
 	settlement, err := exchange.BuildSettlement(askOrders, bidOrders, ratioGetter)
@@ -244,14 +250,14 @@ func (k Keeper) SettleOrders(ctx sdk.Context, marketID uint32, askOrderIDs, bidO
 		return err
 	}
 
-	if !expectPartial && settlement.PartialOrderFilled != nil {
+	if !req.ExpectPartial && settlement.PartialOrderFilled != nil {
 		return fmt.Errorf("settlement resulted in unexpected partial order %d", settlement.PartialOrderFilled.GetOrderID())
 	}
-	if expectPartial && settlement.PartialOrderFilled == nil {
+	if req.ExpectPartial && settlement.PartialOrderFilled == nil {
 		return errors.New("settlement unexpectedly resulted in all orders fully filled")
 	}
 
-	return k.closeSettlement(ctx, store, marketID, settlement)
+	return k.closeSettlement(markertypes.WithTransferAgent(ctx, admin), store, req.MarketId, settlement)
 }
 
 // closeSettlement does all the processing needed to complete a settlement.
@@ -321,7 +327,7 @@ func (k Keeper) closeSettlement(ctx sdk.Context, store storetypes.KVStore, marke
 // recordNAVs attempts to record the provided NAVs in the marker module.
 // If a problem is encountered for one (or more), the error is logged and the rest are still processed.
 // Events should still be emitted even for the ones that have a problem.
-func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []*exchange.NetAssetValue) {
+func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.NetAssetPrice) {
 	source := fmt.Sprintf("x/exchange market %d", marketID)
 
 	// convert them to what the marker module needs.
@@ -386,4 +392,16 @@ func (k Keeper) emitNAVEvents(ctx sdk.Context, denom string, navs []markertypes.
 		events[i] = markertypes.NewEventSetNetAssetValue(denom, nav.Price, nav.Volume, source)
 	}
 	k.emitEvents(ctx, events)
+}
+
+// GetNav looks up a NAV from the marker module and returns it as a NetAssetPrice.
+func (k Keeper) GetNav(ctx sdk.Context, assetsDenom, priceDenom string) *exchange.NetAssetPrice {
+	nav, _ := k.markerKeeper.GetNetAssetValue(ctx, assetsDenom, priceDenom)
+	if nav == nil {
+		return nil
+	}
+	return &exchange.NetAssetPrice{
+		Assets: sdk.Coin{Denom: assetsDenom, Amount: sdkmath.NewIntFromUint64(nav.Volume)},
+		Price:  nav.Price,
+	}
 }

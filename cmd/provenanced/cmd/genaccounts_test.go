@@ -181,8 +181,16 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 // The UnmarshalJSON function uses empty slices instead of nil, but it's cleaner and
 // easier to define test cases by setting stuff to nil (or omitting the field completely).
 func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
-	if exGenState.Params != nil && exGenState.Params.DenomSplits == nil {
-		exGenState.Params.DenomSplits = make([]exchange.DenomSplit, 0)
+	if exGenState.Params != nil {
+		if exGenState.Params.DenomSplits == nil {
+			exGenState.Params.DenomSplits = make([]exchange.DenomSplit, 0)
+		}
+		if exGenState.Params.FeeCreatePaymentFlat == nil {
+			exGenState.Params.FeeCreatePaymentFlat = make([]sdk.Coin, 0)
+		}
+		if exGenState.Params.FeeAcceptPaymentFlat == nil {
+			exGenState.Params.FeeAcceptPaymentFlat = make([]sdk.Coin, 0)
+		}
 	}
 
 	if exGenState.Markets == nil {
@@ -194,6 +202,9 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 		}
 		if market.FeeCreateBidFlat == nil {
 			exGenState.Markets[i].FeeCreateBidFlat = make([]sdk.Coin, 0)
+		}
+		if market.FeeCreateCommitmentFlat == nil {
+			exGenState.Markets[i].FeeCreateCommitmentFlat = make([]sdk.Coin, 0)
 		}
 		if market.FeeSellerSettlementFlat == nil {
 			exGenState.Markets[i].FeeSellerSettlementFlat = make([]sdk.Coin, 0)
@@ -213,6 +224,9 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 		if market.ReqAttrCreateBid == nil {
 			exGenState.Markets[i].ReqAttrCreateBid = make([]string, 0)
 		}
+		if market.ReqAttrCreateCommitment == nil {
+			exGenState.Markets[i].ReqAttrCreateCommitment = make([]string, 0)
+		}
 		if market.AccessGrants == nil {
 			exGenState.Markets[i].AccessGrants = make([]exchange.AccessGrant, 0)
 		}
@@ -222,6 +236,9 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 			}
 		}
 	}
+	if exGenState.Commitments == nil {
+		exGenState.Commitments = make([]exchange.Commitment, 0)
+	}
 
 	if exGenState.Orders == nil {
 		exGenState.Orders = make([]exchange.Order, 0)
@@ -229,6 +246,18 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 	for _, order := range exGenState.Orders {
 		if bid := order.GetBidOrder(); bid != nil && bid.BuyerSettlementFees == nil {
 			bid.BuyerSettlementFees = make(sdk.Coins, 0)
+		}
+	}
+
+	if exGenState.Payments == nil {
+		exGenState.Payments = make([]exchange.Payment, 0)
+	}
+	for i, payment := range exGenState.Payments {
+		if payment.SourceAmount == nil {
+			exGenState.Payments[i].SourceAmount = make([]sdk.Coin, 0)
+		}
+		if payment.TargetAmount == nil {
+			exGenState.Payments[i].TargetAmount = make([]sdk.Coin, 0)
 		}
 	}
 }
@@ -448,9 +477,10 @@ func TestMakeDefaultMarket(t *testing.T) {
 			feeDenom: "",
 			addrs:    nil,
 			expMarket: exchange.Market{
-				MarketDetails:       exchange.MarketDetails{Name: "Default Market"},
-				AcceptingOrders:     true,
-				AllowUserSettlement: true,
+				MarketDetails:        exchange.MarketDetails{Name: "Default Market"},
+				AcceptingOrders:      true,
+				AllowUserSettlement:  true,
+				AcceptingCommitments: true,
 			},
 		},
 		{
@@ -458,10 +488,11 @@ func TestMakeDefaultMarket(t *testing.T) {
 			feeDenom: "",
 			addrs:    addrs[0:1],
 			expMarket: exchange.Market{
-				MarketDetails:       exchange.MarketDetails{Name: "Default Market"},
-				AcceptingOrders:     true,
-				AllowUserSettlement: true,
-				AccessGrants:        []exchange.AccessGrant{{Address: addrs[0], Permissions: exchange.AllPermissions()}},
+				MarketDetails:        exchange.MarketDetails{Name: "Default Market"},
+				AcceptingOrders:      true,
+				AllowUserSettlement:  true,
+				AcceptingCommitments: true,
+				AccessGrants:         []exchange.AccessGrant{{Address: addrs[0], Permissions: exchange.AllPermissions()}},
 			},
 		},
 		{
@@ -469,9 +500,10 @@ func TestMakeDefaultMarket(t *testing.T) {
 			feeDenom: "",
 			addrs:    addrs,
 			expMarket: exchange.Market{
-				MarketDetails:       exchange.MarketDetails{Name: "Default Market"},
-				AcceptingOrders:     true,
-				AllowUserSettlement: true,
+				MarketDetails:        exchange.MarketDetails{Name: "Default Market"},
+				AcceptingOrders:      true,
+				AllowUserSettlement:  true,
+				AcceptingCommitments: true,
 				AccessGrants: []exchange.AccessGrant{
 					{Address: addrs[0], Permissions: exchange.AllPermissions()},
 					{Address: addrs[1], Permissions: exchange.AllPermissions()},
@@ -493,6 +525,10 @@ func TestMakeDefaultMarket(t *testing.T) {
 				FeeBuyerSettlementRatios:  ratios("else", 20, 1),
 				AcceptingOrders:           true,
 				AllowUserSettlement:       true,
+				AcceptingCommitments:      true,
+				FeeCreateCommitmentFlat:   coins(100, "else"),
+				CommitmentSettlementBips:  50,
+				IntermediaryDenom:         "else",
 			},
 		},
 		{
@@ -509,7 +545,11 @@ func TestMakeDefaultMarket(t *testing.T) {
 				FeeBuyerSettlementRatios:  ratios("vspn", 20, 1),
 				AcceptingOrders:           true,
 				AllowUserSettlement:       true,
+				AcceptingCommitments:      true,
 				AccessGrants:              []exchange.AccessGrant{{Address: addrs[0], Permissions: exchange.AllPermissions()}},
+				FeeCreateCommitmentFlat:   coins(100, "vspn"),
+				CommitmentSettlementBips:  50,
+				IntermediaryDenom:         "vspn",
 			},
 		},
 		{
@@ -526,11 +566,15 @@ func TestMakeDefaultMarket(t *testing.T) {
 				FeeBuyerSettlementRatios:  ratios("nhash", 20, 1),
 				AcceptingOrders:           true,
 				AllowUserSettlement:       true,
+				AcceptingCommitments:      true,
 				AccessGrants: []exchange.AccessGrant{
 					{Address: addrs[0], Permissions: exchange.AllPermissions()},
 					{Address: addrs[1], Permissions: exchange.AllPermissions()},
 					{Address: addrs[2], Permissions: exchange.AllPermissions()},
 				},
+				FeeCreateCommitmentFlat:  coins(100, "nhash"),
+				CommitmentSettlementBips: 50,
+				IntermediaryDenom:        "nhash",
 			},
 		},
 	}

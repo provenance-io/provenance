@@ -16,6 +16,8 @@ func NewGenesisState(
 	contracSpecs []ContractSpecification,
 	recordSpecs []RecordSpecification,
 	objectStoreLocators []ObjectStoreLocator,
+	netAssetValues []MarkerNetAssetValues,
+
 ) *GenesisState {
 	return &GenesisState{
 		Params:                 params,
@@ -27,11 +29,14 @@ func NewGenesisState(
 		ContractSpecifications: contracSpecs,
 		RecordSpecifications:   recordSpecs,
 		ObjectStoreLocators:    objectStoreLocators,
+		NetAssetValues:         netAssetValues,
 	}
 }
 
 // DefaultGenesisState returns a zero-value genesis state.
 func DefaultGenesisState() *GenesisState {
-	return &GenesisState{Params: DefaultParams(),
-		OSLocatorParams: DefaultOSLocatorParams()}
+	return &GenesisState{
+		Params:          DefaultParams(),
+		OSLocatorParams: DefaultOSLocatorParams(),
+	}
 }

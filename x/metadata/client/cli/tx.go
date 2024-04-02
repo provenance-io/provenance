@@ -23,6 +23,7 @@ const (
 	FlagRequirePartyRollup = "require-party-rollup"
 	AddSwitch              = "add"
 	RemoveSwitch           = "remove"
+	FlagUsdMills           = "usd-mills"
 )
 
 // NewTxCmd is the top-level command for Metadata CLI transactions.
@@ -66,6 +67,8 @@ func NewTxCmd() *cobra.Command {
 		RemoveRecordCmd(),
 
 		SetAccountDataCmd(),
+
+		GetCmdAddNetAssetValues(),
 	)
 
 	return txCmd
@@ -134,7 +137,12 @@ func WriteScopeCmd() *cobra.Command {
 				requirePartyRollup,
 			)
 
-			msg := types.NewMsgWriteScopeRequest(scope, signers)
+			usdMills, err := cmd.Flags().GetUint64(FlagUsdMills)
+			if err != nil {
+				return fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagUsdMills, err)
+			}
+
+			msg := types.NewMsgWriteScopeRequest(scope, signers, usdMills)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -142,7 +150,7 @@ func WriteScopeCmd() *cobra.Command {
 	cmd.Flags().Bool(FlagRequirePartyRollup, false, "Indicates party rollup is required in this scope")
 	addSignersFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
-
+	cmd.Flags().Uint64(FlagUsdMills, 0, "Indicates the net asset value of scope in usd mills, i.e. 1234 = $1.234")
 	return cmd
 }
 
@@ -1183,6 +1191,50 @@ $ %[1]s tx metadata account-data %[2]s --%[5]s
 	return cmd
 }
 
+// GetCmdAddNetAssetValues returns a CLI command for adding/updating scopes net asset values.
+func GetCmdAddNetAssetValues() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "add-net-asset-values <scope-metadata-address> " + attrcli.AccountDataFlagsUse,
+		Aliases: []string{"add-navs", "anavs"},
+		Short:   "Add/updates net asset values for a scope",
+		Example: fmt.Sprintf(`$ %[1]s tx marker add-net-asset-values scope1234... 1usd,1;2nhash,3`,
+			version.AppName),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			scopeID, err := types.MetadataAddressFromBech32(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid metadata address %q: %w", args[0], err)
+			}
+			if !scopeID.IsScopeAddress() {
+				return fmt.Errorf("metadata address is not scope address: %v", scopeID.String())
+			}
+
+			netAssetValues, err := ParseNetAssetValueString(args[1])
+			if err != nil {
+				return err
+			}
+			signers, err := parseSigners(cmd, &clientCtx)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgAddNetAssetValuesRequest(scopeID.String(), signers, netAssetValues)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
 // addSignersFlagToCmd adds the standard --signers flag to a command.
 // See also: parseSigners.
 func addSignersFlagToCmd(cmd *cobra.Command) {
@@ -1218,4 +1270,21 @@ func validateAccAddress(addr, argName string) (string, error) {
 		return "", fmt.Errorf("invalid %s %q: %w", argName, addr, err)
 	}
 	return addr, nil
+}
+
+// ParseNetAssetValueString splits string (example 1hotdog,2jackthecat) to list of NetAssetValue's
+func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
+	navs := strings.Split(netAssetValuesString, ",")
+	if len(navs) == 1 && len(navs[0]) == 0 {
+		return []types.NetAssetValue{}, nil
+	}
+	netAssetValues := make([]types.NetAssetValue, len(navs))
+	for i, nav := range navs {
+		coin, err := sdk.ParseCoinNormalized(nav)
+		if err != nil {
+			return []types.NetAssetValue{}, fmt.Errorf("invalid net asset value coin : %s", nav)
+		}
+		netAssetValues[i] = types.NewNetAssetValue(coin)
+	}
+	return netAssetValues, nil
 }

@@ -34,9 +34,9 @@ A marker is created using the Add Marker service message.
 The created marker can not be directly added in an Active (or Cancelled/Destroyed) status.  Markers
 must have a valid supply and denomination value.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L77-L93
++++ https://github.com/provenance-io/provenance/blob/d999e7acefea1d77e2d5ce86ea89524dbf2692f8/proto/provenance/marker/v1/tx.proto#L83-L102
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L95-96
++++ https://github.com/provenance-io/provenance/blob/d999e7acefea1d77e2d5ce86ea89524dbf2692f8/proto/provenance/marker/v1/tx.proto#L104-L105
 
 
 This service message is expected to fail if:
@@ -297,9 +297,9 @@ This service message is expected to fail if:
 
 AddFinalizeActivate requested is used for adding, finalizing, and activating a marker in a single request.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L212-L224
++++ https://github.com/provenance-io/provenance/blob/d999e7acefea1d77e2d5ce86ea89524dbf2692f8/proto/provenance/marker/v1/tx.proto#L221-L236
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L226-L227 
++++ https://github.com/provenance-io/provenance/blob/d999e7acefea1d77e2d5ce86ea89524dbf2692f8/proto/provenance/marker/v1/tx.proto#L238-L239
 
 This service message is expected to fail if:
 

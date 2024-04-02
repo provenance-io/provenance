@@ -1351,6 +1351,27 @@ func ParseRecordSpecID(specID string, name string) (types.MetadataAddress, error
 	return types.RecordSpecMetadataAddress(uid, name), nil
 }
 
+// NetAssetValues query for returning net asset values for a marker
+func (k Keeper) ScopeNetAssetValues(c context.Context, req *types.QueryScopeNetAssetValuesRequest) (*types.QueryScopeNetAssetValuesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	scopeID, err := types.MetadataAddressFromBech32(req.Id)
+	if err != nil {
+		return &types.QueryScopeNetAssetValuesResponse{}, fmt.Errorf("error extracting scope address: %w", err)
+	}
+
+	var navs []types.NetAssetValue
+	err = k.IterateNetAssetValues(ctx, scopeID, func(nav types.NetAssetValue) (stop bool) {
+		navs = append(navs, nav)
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryScopeNetAssetValuesResponse{NetAssetValues: navs}, nil
+}
+
 // hasPageRequest is just for use with the getPageRequest func below.
 type hasPageRequest interface {
 	GetPagination() *query.PageRequest

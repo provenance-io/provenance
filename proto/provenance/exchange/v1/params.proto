@@ -7,6 +7,7 @@ option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 // Params is a representation of the exchange module parameters.
 message Params {
@@ -16,6 +17,14 @@ message Params {
   uint32 default_split = 1;
   // denom_splits are the denom-specific amounts the exchange receives.
   repeated DenomSplit denom_splits = 2 [(gogoproto.nullable) = false];
+  // fee_create_payment_flat is the flat fee options for creating a payment.
+  // If the source amount is not zero then one of these fee entries is required to create the payment.
+  // This field is currently limited to zero or one entries.
+  repeated cosmos.base.v1beta1.Coin fee_create_payment_flat = 3 [(gogoproto.nullable) = false];
+  // fee_accept_payment_flat is the flat fee options for accepting a payment.
+  // If the target amount is not zero then one of these fee entries is required to accept the payment.
+  // This field is currently limited to zero or one entries.
+  repeated cosmos.base.v1beta1.Coin fee_accept_payment_flat = 4 [(gogoproto.nullable) = false];
 }
 
 // DenomSplit associates a coin denomination with an amount the exchange receives for that denom.

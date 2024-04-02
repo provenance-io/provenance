@@ -11,9 +11,11 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/api/annotations.proto";
 import "gogoproto/gogo.proto";
+import "provenance/exchange/v1/commitments.proto";
 import "provenance/exchange/v1/market.proto";
 import "provenance/exchange/v1/orders.proto";
 import "provenance/exchange/v1/params.proto";
+import "provenance/exchange/v1/payments.proto";
 import "provenance/exchange/v1/tx.proto";
 
 // Query is the service for exchange module's query endpoints.
@@ -59,6 +61,29 @@ service Query {
     option (google.api.http).get = "/provenance/exchange/v1/orders";
   }
 
+  // GetCommitment gets the funds in an account that are committed to the market.
+  rpc GetCommitment(QueryGetCommitmentRequest) returns (QueryGetCommitmentResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}/commitment/{account}";
+  }
+
+  // GetAccountCommitments gets all the funds in an account that are committed to any market.
+  rpc GetAccountCommitments(QueryGetAccountCommitmentsRequest) returns (QueryGetAccountCommitmentsResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/commitments/account/{account}";
+  }
+
+  // GetMarketCommitments gets all the funds committed to a market from any account.
+  rpc GetMarketCommitments(QueryGetMarketCommitmentsRequest) returns (QueryGetMarketCommitmentsResponse) {
+    option (google.api.http) = {
+      get: "/provenance/exchange/v1/commitments/market/{market_id}"
+      additional_bindings: {get: "/provenance/exchange/v1/market/{market_id}/commitments"}
+    };
+  }
+
+  // GetAllCommitments gets all fund committed to any market from any account.
+  rpc GetAllCommitments(QueryGetAllCommitmentsRequest) returns (QueryGetAllCommitmentsResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/commitments";
+  }
+
   // GetMarket returns all the information and details about a market.
   rpc GetMarket(QueryGetMarketRequest) returns (QueryGetMarketResponse) {
     option (google.api.http).get = "/provenance/exchange/v1/market/{market_id}";
@@ -72,6 +97,12 @@ service Query {
   // Params returns the exchange module parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/provenance/exchange/v1/params";
+  }
+
+  // CommitmentSettlementFeeCalc calculates the fees a market will pay for a commitment settlement using current NAVs.
+  rpc CommitmentSettlementFeeCalc(QueryCommitmentSettlementFeeCalcRequest)
+      returns (QueryCommitmentSettlementFeeCalcResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/fees/commitment_settlement";
   }
 
   // ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have.
@@ -90,6 +121,35 @@ service Query {
   // ValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have.
   rpc ValidateManageFees(QueryValidateManageFeesRequest) returns (QueryValidateManageFeesResponse) {
     option (google.api.http).get = "/provenance/exchange/v1/validate/manage_fees";
+  }
+
+  // GetPayment gets a single specific payment.
+  rpc GetPayment(QueryGetPaymentRequest) returns (QueryGetPaymentResponse) {
+    option (google.api.http) = {
+      get: "/provenance/exchange/v1/payment"
+      additional_bindings: {get: "/provenance/exchange/v1/payment/{source}"}
+      additional_bindings: {get: "/provenance/exchange/v1/payment/{source}/{external_id}"}
+    };
+  }
+
+  // GetPaymentsWithSource gets all payments with a specific source account.
+  rpc GetPaymentsWithSource(QueryGetPaymentsWithSourceRequest) returns (QueryGetPaymentsWithSourceResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/payments/source/{source}";
+  }
+
+  // GetPaymentsWithTarget gets all payments with a specific target account.
+  rpc GetPaymentsWithTarget(QueryGetPaymentsWithTargetRequest) returns (QueryGetPaymentsWithTargetResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/payments/target/{target}";
+  }
+
+  // GetAllPayments gets all payments.
+  rpc GetAllPayments(QueryGetAllPaymentsRequest) returns (QueryGetAllPaymentsResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/payments";
+  }
+
+  // PaymentFeeCalc calculates the fees that must be paid for creating or accepting a specific payment.
+  rpc PaymentFeeCalc(QueryPaymentFeeCalcRequest) returns (QueryPaymentFeeCalcResponse) {
+    option (google.api.http).get = "/provenance/exchange/v1/fees/payment";
   }
 }
 
@@ -230,6 +290,66 @@ message QueryGetAllOrdersResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 99;
 }
 
+// QueryGetCommitmentRequest is a request message for the GetCommitment query.
+message QueryGetCommitmentRequest {
+  // account is the bech32 address string of the account in the commitment.
+  string account = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // market_id is the numeric identifier of the market in the commitment.
+  uint32 market_id = 2;
+}
+
+// QueryGetCommitmentResponse is a response message for the GetCommitment query.
+message QueryGetCommitmentResponse {
+  // amount is the total funds committed to the market by the account.
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// QueryGetAccountCommitmentsRequest is a request message for the GetAccountCommitments query.
+message QueryGetAccountCommitmentsRequest {
+  // account is the bech32 address string of the account with the commitments.
+  string account = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryGetAccountCommitmentsResponse is a response message for the GetAccountCommitments query.
+message QueryGetAccountCommitmentsResponse {
+  // commitments is the amounts committed from the account to the any market.
+  repeated MarketAmount commitments = 1;
+}
+
+// QueryGetMarketCommitmentsRequest is a request message for the GetMarketCommitments query.
+message QueryGetMarketCommitmentsRequest {
+  // market_id is the numeric identifier of the market with the commitment.
+  uint32 market_id = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetMarketCommitmentsResponse is a response message for the GetMarketCommitments query.
+message QueryGetMarketCommitmentsResponse {
+  // commitments is the amounts committed to the market from any account.
+  repeated AccountAmount commitments = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryGetAllCommitmentsRequest is a request message for the GetAllCommitments query.
+message QueryGetAllCommitmentsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetAllCommitmentsResponse is a response message for the GetAllCommitments query.
+message QueryGetAllCommitmentsResponse {
+  // commitments is the requested commitment information.
+  repeated Commitment commitments = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
 // QueryGetMarketRequest is a request message for the GetMarket query.
 message QueryGetMarketRequest {
   // market_id is the id of the market to look up.
@@ -266,6 +386,35 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params are the exchange module parameter values.
   Params params = 1;
+}
+
+// QueryCommitmentSettlementFeeCalcRequest is a request message for the CommitmentSettlementFeeCalc query.
+message QueryCommitmentSettlementFeeCalcRequest {
+  // settlement is a market's commitment settlement request message.
+  // If no inputs are provided, only the to_fee_nav field will be populated in the response.
+  MsgMarketCommitmentSettleRequest settlement = 1;
+  // include_breakdown_fields controls the fields that are populated in the response.
+  // If false, only the exchange_fees field is populated.
+  // If true, all of the fields are populated as possible.
+  // If the settlement does not have any inputs, this field defaults to true.
+  bool include_breakdown_fields = 2;
+}
+
+// QueryCommitmentSettlementFeeCalcResponse is a response message for the CommitmentSettlementFeeCalc query.
+message QueryCommitmentSettlementFeeCalcResponse {
+  // exchange_fees is the total that the exchange would currently pay for the provided settlement.
+  repeated cosmos.base.v1beta1.Coin exchange_fees = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // input_total is the sum of all the inputs in the provided settlement.
+  repeated cosmos.base.v1beta1.Coin input_total = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // converted_total is the input_total converted to a single intermediary denom or left as the fee denom.
+  repeated cosmos.base.v1beta1.Coin converted_total = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // conversion_navs are the NAVs used to convert the input_total to the converted_total.
+  repeated NetAssetPrice conversion_navs = 4 [(gogoproto.nullable) = false];
+  // to_fee_nav is the NAV used to convert the converted_total into the fee denom.
+  NetAssetPrice to_fee_nav = 5;
 }
 
 // QueryValidateCreateMarketRequest is a request message for the ValidateCreateMarket query.
@@ -314,4 +463,85 @@ message QueryValidateManageFeesResponse {
   // gov_prop_will_pass will be true if the the provided msg will be successfully processed at the end of it's voting
   // period (assuming it passes).
   bool gov_prop_will_pass = 2;
+}
+
+// QueryGetPaymentRequest is a request message for the GetPayment query.
+message QueryGetPaymentRequest {
+  // source is the source account of the payment to get.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id is the external id of the payment to get.
+  string external_id = 2;
+}
+
+// QueryGetPaymentResponse is a response message for the GetPayment query.
+message QueryGetPaymentResponse {
+  // payment is the info on the requested payment.
+  Payment payment = 1;
+}
+
+// QueryGetPaymentsWithSourceRequest is a request message for the GetPaymentsWithSource query.
+message QueryGetPaymentsWithSourceRequest {
+  // source is the source account of the payments to get.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetPaymentsWithSourceResponse is a response message for the GetPaymentsWithSource query.
+message QueryGetPaymentsWithSourceResponse {
+  // payments is all the payments with the requested source.
+  repeated Payment payments = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryGetPaymentsWithTargetRequest is a request message for the GetPaymentsWithTarget query.
+message QueryGetPaymentsWithTargetRequest {
+  // target is the target account of the payments to get.
+  string target = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetPaymentsWithTargetResponse is a response message for the GetPaymentsWithTarget query.
+message QueryGetPaymentsWithTargetResponse {
+  // payments is all the payments with the requested target.
+  repeated Payment payments = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryGetAllPaymentsRequest is a request message for the GetAllPayments query.
+message QueryGetAllPaymentsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryGetAllPaymentsResponse is a response message for the GetAllPayments query.
+message QueryGetAllPaymentsResponse {
+  // payments is all the payments on this page of results.
+  repeated Payment payments = 1;
+
+  // pagination is the resulting pagination parameters.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryPaymentFeeCalcRequest is a request message for the PaymentFeeCalc query.
+message QueryPaymentFeeCalcRequest {
+  // payment is the details of the payment to create or accept.
+  Payment payment = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPaymentFeeCalcResponse is a response message for the PaymentFeeCalc query.
+message QueryPaymentFeeCalcResponse {
+  // fee_create is the fee required to create the provided payment.
+  repeated cosmos.base.v1beta1.Coin fee_create = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // fee_accept is the fee required to accept the provided payment.
+  repeated cosmos.base.v1beta1.Coin fee_accept = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

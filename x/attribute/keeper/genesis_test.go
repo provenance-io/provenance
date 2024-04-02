@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -35,18 +32,7 @@ func TestGenesisTestSuite(t *testing.T) {
 func (s *GenesisTestSuite) SetupSuite() {
 	// Alert: This function is SetupSuite. That means all tests in here
 	// will use the same app with the same store and data.
-	bufferedLoggerMaker := func() log.Logger {
-		lw := zerolog.ConsoleWriter{
-			Out:          &s.logBuffer,
-			NoColor:      true,
-			PartsExclude: []string{"time"}, // Without this, each line starts with "<nil> "
-		}
-		// Error log lines will start with "ERR ".
-		// Info log lines will start with "INF ".
-		// Debug log lines are omitted, but would start with "DBG ".
-		return log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
-	}
-	defer app.SetLoggerMaker(app.SetLoggerMaker(bufferedLoggerMaker))
+	defer app.SetLoggerMaker(app.SetLoggerMaker(app.BufferedInfoLoggerMaker(&s.logBuffer)))
 	s.app = app.Setup(s.T())
 	s.logBuffer.Reset()
 	s.ctx = s.app.BaseApp.NewContext(false)

@@ -9,13 +9,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -30,6 +31,7 @@ import (
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -39,6 +41,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/client/cli"
 	"github.com/provenance-io/provenance/x/hold"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 type CmdTestSuite struct {
@@ -49,6 +52,7 @@ type CmdTestSuite struct {
 	keyring      keyring.Keyring
 	keyringDir   string
 	accountAddrs []sdk.AccAddress
+	feeDenom     string
 
 	addr0 sdk.AccAddress
 	addr1 sdk.AccAddress
@@ -75,6 +79,7 @@ func (s *CmdTestSuite) SetupSuite() {
 	s.cfg.NumValidators = 1
 	s.cfg.ChainID = antewrapper.SimAppChainID
 	s.cfg.TimeoutCommit = 500 * time.Millisecond
+	s.feeDenom = pioconfig.GetProvenanceConfig().FeeDenom
 
 	s.generateAccountsWithKeyring(10)
 	s.addr0 = s.accountAddrs[0]
@@ -101,14 +106,43 @@ func (s *CmdTestSuite) SetupSuite() {
 		cli.AuthorityAddr.String(): "authorityAddr",
 	}
 
+	newMarker := func(denom string) *markertypes.MarkerAccount {
+		return &markertypes.MarkerAccount{
+			BaseAccount: &authtypes.BaseAccount{
+				Address: markertypes.MustGetMarkerAddress(denom).String(),
+			},
+			Status:                 markertypes.StatusActive,
+			Denom:                  "cherry",
+			Supply:                 sdkmath.NewInt(0),
+			MarkerType:             markertypes.MarkerType_Coin,
+			SupplyFixed:            false,
+			AllowGovernanceControl: true,
+		}
+	}
+	appleMarker := newMarker("apple")
+	acornMarker := newMarker("acorn")
+	peachMarker := newMarker("peach")
+	cherryMarker := newMarker("cherry")
+	strawberryMarker := newMarker("strawberry")
+	tangerineMarker := newMarker("tangerine")
+
+	allMarkers := []*markertypes.MarkerAccount{
+		appleMarker, acornMarker, peachMarker,
+		cherryMarker, strawberryMarker, tangerineMarker,
+	}
+
 	// Add accounts to auth gen state.
 	var authGen authtypes.GenesisState
 	err := s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[authtypes.ModuleName], &authGen)
 	s.Require().NoError(err, "UnmarshalJSON auth gen state")
-	genAccs := make(authtypes.GenesisAccounts, len(s.accountAddrs))
-	for i, addr := range s.accountAddrs {
-		genAccs[i] = authtypes.NewBaseAccount(addr, nil, 0, 1)
+	genAccs := make(authtypes.GenesisAccounts, 0, len(s.accountAddrs)+len(allMarkers))
+	for _, addr := range s.accountAddrs {
+		genAccs = append(genAccs, authtypes.NewBaseAccount(addr, nil, 0, 1))
 	}
+	for _, marker := range allMarkers {
+		genAccs = append(genAccs, marker)
+	}
+
 	newAccounts, err := authtypes.PackAccounts(genAccs)
 	s.Require().NoError(err, "PackAccounts")
 	authGen.Accounts = append(authGen.Accounts, newAccounts...)
@@ -139,6 +173,9 @@ func (s *CmdTestSuite) SetupSuite() {
 				{Address: s.addr2.String(), Permissions: exchange.AllPermissions()},
 				{Address: s.addr3.String(), Permissions: []exchange.Permission{exchange.Permission_cancel, exchange.Permission_attributes}},
 			},
+			AcceptingCommitments:     true,
+			CommitmentSettlementBips: 50,
+			IntermediaryDenom:        "cherry",
 		},
 		exchange.Market{
 			MarketId: 5,
@@ -157,10 +194,14 @@ func (s *CmdTestSuite) SetupSuite() {
 			AccessGrants: []exchange.AccessGrant{
 				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
 			},
+			AcceptingCommitments:     true,
+			CommitmentSettlementBips: 50,
+			IntermediaryDenom:        "cherry",
+			FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("peach", 15)},
 		},
 		// Do not make a market 419, lots of tests expect it to not exist.
 		exchange.Market{
-			// The orders in this market are for the orders queries.
+			// The stuff in this market is for the query tests.
 			// Don't use it in other unit tests (e.g. order creation or settlement).
 			MarketId: 420,
 			MarketDetails: exchange.MarketDetails{
@@ -185,9 +226,15 @@ func (s *CmdTestSuite) SetupSuite() {
 			},
 			ReqAttrCreateAsk: []string{"seller.kyc"},
 			ReqAttrCreateBid: []string{"buyer.kyc"},
+
+			AcceptingCommitments:     true,
+			FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("peach", 5)},
+			CommitmentSettlementBips: 50,
+			IntermediaryDenom:        "cherry",
+			ReqAttrCreateCommitment:  []string{"committer.kyc"},
 		},
 		exchange.Market{
-			// This market has an invalid setup. Don't mess with it.
+			// This market has an invalid setup. Don't use it for anything else.
 			MarketId:      421,
 			MarketDetails: exchange.MarketDetails{Name: "Broken"},
 			FeeSellerSettlementRatios: []exchange.FeeRatio{
@@ -197,16 +244,53 @@ func (s *CmdTestSuite) SetupSuite() {
 				{Price: sdk.NewInt64Coin("peach", 56), Fee: sdk.NewInt64Coin("peach", 1)},
 				{Price: sdk.NewInt64Coin("plum", 57), Fee: sdk.NewInt64Coin("plum", 1)},
 			},
+			AccessGrants: []exchange.AccessGrant{
+				{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
+			},
 		},
 	)
-	toHold := make(map[string]sdk.Coins)
+
 	exchangeGen.Orders = make([]exchange.Order, 60)
 	for i := range exchangeGen.Orders {
 		order := s.makeInitialOrder(uint64(i + 1))
 		exchangeGen.Orders[i] = *order
-		toHold[order.GetOwner()] = toHold[order.GetOwner()].Add(order.GetHoldAmount()...)
 	}
 	exchangeGen.LastOrderId = uint64(100)
+
+	for i := range s.accountAddrs {
+		com := s.makeInitialCommitment(i)
+		if !com.Amount.IsZero() {
+			exchangeGen.Commitments = append(exchangeGen.Commitments, *com)
+		}
+	}
+	exchangeGen.Commitments = append(exchangeGen.Commitments, exchange.Commitment{
+		Account:  s.addr1.String(),
+		MarketId: 421,
+		Amount:   sdk.NewCoins(sdk.NewInt64Coin("apple", 4210), sdk.NewInt64Coin("peach", 421)),
+	})
+
+	for sourceI := range s.accountAddrs {
+		for targetI := range s.accountAddrs {
+			payment := s.makeInitialPayment(sourceI, targetI)
+			exchangeGen.Payments = append(exchangeGen.Payments, *payment)
+		}
+		payment := s.makeInitialPayment(sourceI, len(s.accountAddrs))
+		exchangeGen.Payments = append(exchangeGen.Payments, *payment)
+	}
+
+	toHold := make(map[string]sdk.Coins)
+	for _, order := range exchangeGen.Orders {
+		toHold[order.GetOwner()] = toHold[order.GetOwner()].Add(order.GetHoldAmount()...)
+	}
+	for _, com := range exchangeGen.Commitments {
+		toHold[com.Account] = toHold[com.Account].Add(com.Amount...)
+	}
+	for _, payment := range exchangeGen.Payments {
+		if !payment.SourceAmount.IsZero() {
+			toHold[payment.Source] = toHold[payment.Source].Add(payment.SourceAmount...)
+		}
+	}
+
 	s.cfg.GenesisState[exchange.ModuleName], err = s.cfg.Codec.MarshalJSON(&exchangeGen)
 	s.Require().NoError(err, "MarshalJSON exchange gen state")
 
@@ -223,14 +307,41 @@ func (s *CmdTestSuite) SetupSuite() {
 	s.cfg.GenesisState[hold.ModuleName], err = s.cfg.Codec.MarshalJSON(&holdGen)
 	s.Require().NoError(err, "MarshalJSON hold gen state")
 
+	var markerGen markertypes.GenesisState
+	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[markertypes.ModuleName], &markerGen)
+	s.Require().NoError(err, "UnmarshalJSON marker gen state")
+	markerGen.NetAssetValues = append(markerGen.NetAssetValues, []markertypes.MarkerNetAssetValues{
+		{
+			Address:        cherryMarker.Address,
+			NetAssetValues: []markertypes.NetAssetValue{{Price: s.feeCoin(100), Volume: 1}},
+		},
+		{
+			Address:        appleMarker.Address,
+			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 8), Volume: 1}},
+		},
+		{
+			Address:        acornMarker.Address,
+			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 3), Volume: 17}},
+		},
+		{
+			Address:        peachMarker.Address,
+			NetAssetValues: []markertypes.NetAssetValue{{Price: sdk.NewInt64Coin("cherry", 778), Volume: 3}},
+		},
+	}...)
+	s.cfg.GenesisState[markertypes.ModuleName], err = s.cfg.Codec.MarshalJSON(&markerGen)
+	s.Require().NoError(err, "MarshalJSON marker gen state")
+
 	// Add balances to bank gen state.
 	// Any initial holds for an account are added to this so that
-	// this is what's available to each at the start of the unit tests.
+	// this is what's spendable to each at the start of the unit tests.
 	balance := sdk.NewCoins(
-		sdk.NewInt64Coin(s.cfg.BondDenom, 1_000_000_000),
+		s.bondCoin(1_000_000_000),
+		s.feeCoin(1_000_000_000_000),
 		sdk.NewInt64Coin("acorn", 1_000_000_000),
 		sdk.NewInt64Coin("apple", 1_000_000_000),
 		sdk.NewInt64Coin("peach", 1_000_000_000),
+		sdk.NewInt64Coin("strawberry", 1_000_000_000),
+		sdk.NewInt64Coin("tangerine", 1_000_000_000),
 	)
 	var bankGen banktypes.GenesisState
 	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[banktypes.ModuleName], &bankGen)
@@ -310,6 +421,87 @@ func (s *CmdTestSuite) makeInitialOrder(orderID uint64) *exchange.Order {
 	return order
 }
 
+// makeInitialCommitment makes a commitment for the s.accountAddrs with the provided addrI.
+// The amount is based off the addrI and might be zero.
+func (s *CmdTestSuite) makeInitialCommitment(addrI int) *exchange.Commitment {
+	var addr sdk.AccAddress
+	s.Require().NotPanics(func() {
+		addr = s.accountAddrs[addrI]
+	}, "s.accountAddrs[%d]", addrI)
+	rv := &exchange.Commitment{
+		Account:  addr.String(),
+		MarketId: 420,
+	}
+
+	i := addrI % 10 // in case the number of addresses changes later.
+	// One denom  (3): 0 = apple, 1 = acorn, 2 = peach
+	// Two denoms (3): 3 = apple+acorn, 4 = apple+peach, 5 = acorn+peach
+	// All denoms (2): 6, 7
+	// Nothing    (2): 8, 9
+	// apple <= 0, 3, 4, 6, 7
+	// acorn <= 1, 3, 5, 6, 7
+	// peach <= 2, 4, 5, 6, 7
+	if contains([]int{0, 3, 4, 6, 7}, i) {
+		rv.Amount = rv.Amount.Add(sdk.NewInt64Coin("apple", int64(1000+addrI*200)))
+	}
+	if contains([]int{1, 3, 5, 6, 7}, i) {
+		rv.Amount = rv.Amount.Add(sdk.NewInt64Coin("acorn", int64(10_000+addrI*100)))
+	}
+	if contains([]int{2, 4, 5, 6, 7}, i) {
+		rv.Amount = rv.Amount.Add(sdk.NewInt64Coin("peach", int64(500+addrI*addrI*100)))
+	}
+	return rv
+}
+
+// makeInitialPayment makes a payment with the source and target having the s.accountAddrs with the given indexes.
+// If sourceI or targetI is not in s.accountAddrs, the payment won't have a source or target (respectively).
+// The amounts are based off of the sourceI and targetI, and might each be zero (but not both).
+func (s *CmdTestSuite) makeInitialPayment(sourceI, targetI int) *exchange.Payment {
+	rv := &exchange.Payment{
+		ExternalId: fmt.Sprintf("initial-payment-%02d-%02d", sourceI, targetI),
+	}
+	if sourceI < len(s.accountAddrs) {
+		rv.Source = s.accountAddrs[sourceI].String()
+	}
+	if targetI < len(s.accountAddrs) {
+		rv.Target = s.accountAddrs[targetI].String()
+	}
+
+	switch sourceI % 3 {
+	case 1:
+		rv.SourceAmount = sdk.NewCoins(sdk.NewInt64Coin("strawberry", int64(300+50*targetI)))
+	case 2:
+		rv.SourceAmount = sdk.NewCoins(sdk.NewInt64Coin("strawberry", int64(500+100*targetI)),
+			sdk.NewInt64Coin("peach", int64(10+50*targetI*targetI)))
+	}
+
+	switch targetI % 3 {
+	case 1:
+		rv.TargetAmount = sdk.NewCoins(sdk.NewInt64Coin("tangerine", int64(100+200*sourceI)))
+	case 2:
+		rv.TargetAmount = sdk.NewCoins(sdk.NewInt64Coin("tangerine", int64(1000+50*sourceI)),
+			sdk.NewInt64Coin("acorn", int64(10_000+10*sourceI*sourceI)))
+	}
+
+	// Don't allow both the amounts to be zero
+	if rv.SourceAmount.IsZero() && rv.TargetAmount.IsZero() {
+		rv.SourceAmount = sdk.NewCoins(sdk.NewInt64Coin("peach", int64(targetI+1)))
+		rv.TargetAmount = sdk.NewCoins(sdk.NewInt64Coin("acorn", int64(sourceI+1)))
+	}
+
+	return rv
+}
+
+// contains reports whether v is present in s.
+func contains[S ~[]E, E comparable](s S, v E) bool {
+	for i := range s {
+		if v == s[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // getClientCtx get a client context that knows about the suite's keyring.
 func (s *CmdTestSuite) getClientCtx() client.Context {
 	return s.testnet.Validators[0].ClientCtx.
@@ -319,6 +511,9 @@ func (s *CmdTestSuite) getClientCtx() client.Context {
 
 // getAddrName tries to get the variable name (in this suite) of the provided address.
 func (s *CmdTestSuite) getAddrName(addr string) string {
+	if len(addr) == 0 {
+		return "<empty>"
+	}
 	if rv, found := s.addrNameLookup[addr]; found {
 		return rv
 	}
@@ -335,6 +530,10 @@ type txCmdTestCase struct {
 	preRun func() ([]string, func(*sdk.TxResponse))
 	// args are the arguments to provide to the command.
 	args []string
+	// addedFees is any fees to add to the default 10<bond> amount.
+	addedFees sdk.Coins
+	// gas is the amount of gas to include. Default is 250,000.
+	gas int
 	// expInErr are strings to expect in an error from the cmd.
 	// Errors that come from the endpoint will not be here; use expInRawLog for those.
 	expInErr []string
@@ -360,10 +559,20 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 
 	cmd := cli.CmdTx()
 
+	fees := s.bondCoins(10)
+	if !tc.addedFees.IsZero() {
+		fees = fees.Add(tc.addedFees...)
+	}
+
+	gas := "250000"
+	if tc.gas > 0 {
+		gas = fmt.Sprintf("%d", tc.gas)
+	}
+
 	args := append(tc.args, extraArgs...)
 	args = append(args,
-		"--"+flags.FlagGas, "250000",
-		"--"+flags.FlagFees, s.bondCoins(10).String(),
+		"--"+flags.FlagGas, gas,
+		"--"+flags.FlagFees, fees.String(),
 		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
 		"--"+flags.FlagSkipConfirmation,
 	)
@@ -476,6 +685,14 @@ func (s *CmdTestSuite) runQueryCmdTestCase(tc queryCmdTestCase) {
 	}
 }
 
+func (s *CmdTestSuite) composeFollowups(followups ...func(*sdk.TxResponse)) func(*sdk.TxResponse) {
+	return func(resp *sdk.TxResponse) {
+		for _, followup := range followups {
+			followup(resp)
+		}
+	}
+}
+
 // getEventAttribute finds the value of an attribute in an event.
 // Returns an error if the value is empty, the attribute doesn't exist, or the event doesn't exist.
 func (s *CmdTestSuite) getEventAttribute(events []abci.Event, eventType, attribute string) (string, error) {
@@ -499,6 +716,35 @@ func (s *CmdTestSuite) getEventAttribute(events []abci.Event, eventType, attribu
 // findNewOrderID gets the order id from the EventOrderCreated event.
 func (s *CmdTestSuite) findNewOrderID(resp *sdk.TxResponse) (string, error) {
 	return s.getEventAttribute(resp.Events, "provenance.exchange.v1.EventOrderCreated", "order_id")
+}
+
+// assertEventTagFollowup asserts that the "tag" attribute of an event with the given name is
+func (s *CmdTestSuite) assertEventsContains(expected sdk.Events) func(*sdk.TxResponse) {
+	return func(resp *sdk.TxResponse) {
+		actual := s.abciEventsToSDKEvents(resp.Events)
+		assertions.AssertEventsContains(s.T(), expected, actual, "TxResponse.Events")
+	}
+}
+
+// abciEventsToSDKEvents converts the provided events into sdk.Events.
+func (s *CmdTestSuite) abciEventsToSDKEvents(fromResp []abci.Event) sdk.Events {
+	if fromResp == nil {
+		return nil
+	}
+	events := make(sdk.Events, len(fromResp))
+	for i, v := range fromResp {
+		events[i] = sdk.Event(v)
+	}
+	return events
+}
+
+// markAttrsIndexed sets Index = true on all attributes in the provided events.
+func (s *CmdTestSuite) markAttrsIndexed(events sdk.Events) {
+	for e, event := range events {
+		for a := range event.Attributes {
+			events[e].Attributes[a].Index = true
+		}
+	}
 }
 
 // assertOrder uses the GetOrder query to look up an order and make sure it equals the one provided.
@@ -561,6 +807,54 @@ func (s *CmdTestSuite) createOrderFollowup(order *exchange.Order) func(*sdk.TxRe
 			order.OrderId = s.asOrderID(orderID)
 			s.assertGetOrder(orderID, order)
 		}
+	}
+}
+
+// assertGetPayment uses the GetPayment query to look up a payment and make sure it equals the one provided.
+// If the provided payment is nil, ensures the query returns a payment not found error.
+func (s *CmdTestSuite) assertGetPayment(source, externalID string, payment *exchange.Payment) (okay bool) {
+	s.T().Helper()
+	if !s.Assert().NotEmpty(source, "source") {
+		return false
+	}
+
+	var expInErr []string
+	if payment == nil {
+		expInErr = append(expInErr, fmt.Sprintf("no payment found with source %s and external id %q", source, externalID))
+	}
+
+	var getPaymentOutBz []byte
+	getPaymentArgs := []string{source, externalID, "--output", "json"}
+	defer func() {
+		if !okay {
+			s.T().Logf("Query GetPayment %q output:\n%s", getPaymentArgs, string(getPaymentOutBz))
+		}
+	}()
+
+	clientCtx := s.getClientCtx()
+	getPaymentCmd := cli.CmdQueryGetPayment()
+	getPaymentOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getPaymentCmd, getPaymentArgs)
+	getPaymentOutBz = getPaymentOutBW.Bytes()
+	if !s.assertErrorContents(err, expInErr, "ExecTestCLICmd GetPayment %q error", getPaymentArgs) {
+		return false
+	}
+
+	if payment == nil {
+		return true
+	}
+
+	var resp exchange.QueryGetPaymentResponse
+	err = clientCtx.Codec.UnmarshalJSON(getPaymentOutBz, &resp)
+	if !s.Assert().NoError(err, "UnmarshalJSON on GetPayment %q response", getPaymentArgs) {
+		return false
+	}
+	return s.Assert().Equal(payment, resp.Payment, "payment %s %q", source, externalID)
+}
+
+// getOrderFollowup returns a follow-up function that looks up an order and makes sure it's the one provided.
+func (s *CmdTestSuite) getPaymentFollowup(source, externalID string, payment *exchange.Payment) func(*sdk.TxResponse) {
+	return func(*sdk.TxResponse) {
+		s.assertGetPayment(source, externalID, payment)
 	}
 }
 
@@ -664,9 +958,24 @@ func (s *CmdTestSuite) assertErrorContents(theError error, contains []string, ms
 	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
+// bondCoin returns a Coin with the bond denom and the provided amount.
+func (s *CmdTestSuite) bondCoin(amt int64) sdk.Coin {
+	return sdk.NewInt64Coin(s.cfg.BondDenom, amt)
+}
+
 // bondCoins returns a Coins with just an entry with the bond denom and the provided amount.
 func (s *CmdTestSuite) bondCoins(amt int64) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, amt))
+}
+
+// feeCoin returns a Coin with the fee denom and the provided amount.
+func (s *CmdTestSuite) feeCoin(amt int64) sdk.Coin {
+	return sdk.NewInt64Coin(s.feeDenom, amt)
+}
+
+// feeCoins returns a Coins with just an entry with the fee denom and the provided amount.
+func (s *CmdTestSuite) feeCoins(amt int64) sdk.Coins {
+	return sdk.NewCoins(sdk.NewInt64Coin(s.feeDenom, amt))
 }
 
 // adjustBalance creates a new Balance with the order owner's Address and a Coins that's
@@ -710,6 +1019,16 @@ func (s *CmdTestSuite) assertBalancesFollowup(expBals []banktypes.Balance) func(
 		for _, expBal := range expBals {
 			actBal := s.queryBankBalances(expBal.Address)
 			s.Assert().Equal(expBal.Coins.String(), actBal.String(), "%s balances", s.getAddrName(expBal.Address))
+		}
+	}
+}
+
+// assertBalancesFollowup returns a follow-up function that asserts that the spendable balances are now as expected.
+func (s *CmdTestSuite) assertSpendableBalancesFollowup(expSpendable []banktypes.Balance) func(*sdk.TxResponse) {
+	return func(_ *sdk.TxResponse) {
+		for _, expBal := range expSpendable {
+			actBal := s.queryBankSpendableBalances(expBal.Address)
+			s.Assert().Equal(expBal.Coins.String(), actBal.String(), "%s spendable balances", s.getAddrName(expBal.Address))
 		}
 	}
 }
@@ -766,6 +1085,91 @@ func (s *CmdTestSuite) createOrder(order *exchange.Order, creationFee *sdk.Coin)
 	return s.asOrderID(orderIDStr)
 }
 
+// commitFunds issues a command to commit funds.
+func (s *CmdTestSuite) commitFunds(addr sdk.AccAddress, marketID uint32, amount sdk.Coins, creationFee sdk.Coins) {
+	cmd := cli.CmdTx()
+	args := []string{
+		"commit",
+		"--from", addr.String(),
+		"--market", fmt.Sprintf("%d", marketID),
+		"--amount", amount.String(),
+	}
+	if !creationFee.IsZero() {
+		args = append(args, "--creation-fee", creationFee.String())
+	}
+
+	args = append(args,
+		"--"+flags.FlagFees, s.bondCoins(10).String(),
+		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
+		"--"+flags.FlagSkipConfirmation,
+	)
+
+	cmdName := cmd.Name()
+	var outBz []byte
+	defer func() {
+		if s.T().Failed() {
+			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
+		}
+	}()
+
+	clientCtx := s.getClientCtx()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	outBz = out.Bytes()
+
+	s.Require().NoError(err, "ExecTestCLICmd error")
+
+	var resp sdk.TxResponse
+	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+	s.Require().NoError(err, "UnmarshalJSON(command output) error")
+	s.Require().Equal(int(0), int(resp.Code), "response code:\n%v", resp)
+}
+
+// createPayment issues a command to create a payment.
+func (s *CmdTestSuite) createPayment(payment *exchange.Payment) {
+	cmd := cli.CmdTx()
+	args := []string{
+		"create-payment", "--from", payment.Source,
+	}
+	if !payment.SourceAmount.IsZero() {
+		args = append(args, "--source-amount", payment.SourceAmount.String())
+	}
+	if len(payment.Target) > 0 {
+		args = append(args, "--target", payment.Target)
+	}
+	if !payment.TargetAmount.IsZero() {
+		args = append(args, "--target-amount", payment.TargetAmount.String())
+	}
+	if len(payment.ExternalId) > 0 {
+		args = append(args, "--external-id", payment.ExternalId)
+	}
+
+	fees := s.bondCoins(10).Add(s.feeCoin(exchange.DefaultFeeCreatePaymentFlatAmount))
+	args = append(args,
+		"--"+flags.FlagFees, fees.String(),
+		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
+		"--"+flags.FlagSkipConfirmation,
+	)
+
+	cmdName := cmd.Name()
+	var outBz []byte
+	defer func() {
+		if s.T().Failed() {
+			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
+		}
+	}()
+
+	clientCtx := s.getClientCtx()
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	outBz = out.Bytes()
+
+	s.Require().NoError(err, "ExecTestCLICmd error")
+
+	var resp sdk.TxResponse
+	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+	s.Require().NoError(err, "UnmarshalJSON(command output) error")
+	s.Require().Equal(int(0), int(resp.Code), "response code:\n%v", resp)
+}
+
 // queryBankBalances executes a bank query to get an account's balances.
 func (s *CmdTestSuite) queryBankBalances(addr string) sdk.Coins {
 	// TODO[1760]: bank: Uncomment once we know how to query for bank balances again.
@@ -783,6 +1187,25 @@ func (s *CmdTestSuite) queryBankBalances(addr string) sdk.Coins {
 		s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
 		return resp.Balances
 	*/
+}
+
+// queryBankSpendableBalances executes a bank query to get an account's spendable balances.
+func (s *CmdTestSuite) queryBankSpendableBalances(addr string) sdk.Coins {
+	// TODO[1760]: bank: Put this back once we know how to query spendable balances again.
+	/*
+		clientCtx := s.getClientCtx()
+		cmd := bankcli.GetSpendableBalancesCmd()
+		args := []string{addr, "--output", "json"}
+		outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
+		outBz := outBW.Bytes()
+
+		var resp banktypes.QuerySpendableBalancesResponse
+		err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+		s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
+		return resp.Balances
+	*/
+	return nil
 }
 
 // execBankSend executes a bank send command.
@@ -809,6 +1232,13 @@ func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 	outStr = outBW.String()
 	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmdName, args)
 	failed = false
+}
+
+// untypeEvent calls untypeEvent and requires it to not return an error.
+func (s *CmdTestSuite) untypeEvent(tev proto.Message) sdk.Event {
+	rv, err := sdk.TypedEventToEvent(tev)
+	s.Require().NoError(err, "TypedEventToEvent(%T)", tev)
+	return rv
 }
 
 // joinErrs joins the provided error strings matching to how errors.Join does.
@@ -905,6 +1335,10 @@ type setupTestCase struct {
 	expExamples []string
 	// skipArgsCheck true causes the runner to skip the check ensuring that the command's Args func has been set.
 	skipArgsCheck bool
+	// skipAddingFromFlag true causes the runner to not add the from flag to the dummy command.
+	skipAddingFromFlag bool
+	// skipFlagInUseCheck true causes the runner to skip checking that each entry in expFlags also appears in the cmd.Use.
+	skipFlagInUseCheck bool
 }
 
 // runSetupTestCase runs the provided setup func and checks that everything is set up as expected.
@@ -918,13 +1352,19 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 			return errors.New("the dummy command should not have been executed")
 		},
 	}
-	cmd.Flags().String(flags.FlagFrom, "", "The from flag")
+	if !tc.skipAddingFromFlag {
+		cmd.Flags().String(flags.FlagFrom, "", "The from flag")
+	}
 
 	testFunc := func() {
 		tc.setup(cmd)
 	}
 	require.NotPanics(t, testFunc, tc.name)
 
+	pageFlags := []string{
+		flags.FlagPage, flags.FlagPageKey, flags.FlagOffset,
+		flags.FlagLimit, flags.FlagCountTotal, flags.FlagReverse,
+	}
 	for i, flagName := range tc.expFlags {
 		t.Run(fmt.Sprintf("flag[%d]: --%s", i, flagName), func(t *testing.T) {
 			flag := cmd.Flags().Lookup(flagName)
@@ -932,6 +1372,13 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 				expAnnotations, _ := tc.expAnnotations[flagName]
 				actAnnotations := flag.Annotations
 				assert.Equal(t, expAnnotations, actAnnotations, "--%s annotations", flagName)
+				if !tc.skipFlagInUseCheck {
+					expInUse := "--" + flagName
+					if exchange.ContainsString(pageFlags, flagName) {
+						expInUse = cli.PageFlagsUse
+					}
+					assert.Contains(t, cmd.Use, expInUse, "cmd.Use should have something about the %s flag", flagName)
+				}
 			}
 		})
 	}
@@ -956,6 +1403,21 @@ func runSetupTestCase(t *testing.T, tc setupTestCase) {
 		t.Run("args", func(t *testing.T) {
 			assert.NotNil(t, cmd.Args, "command args after %s", tc.name)
 		})
+	}
+}
+
+// addOneReqAnnotations adds the expected annotations to a setupTestCase that indicate that one of a set of flags is required.
+// The flags should be provided in the same order that they're provided to cmd.MarkFlagsOneRequired.
+func addOneReqAnnotations(tc *setupTestCase, oneReqFlags ...string) {
+	oneReqVal := strings.Join(oneReqFlags, " ")
+	if tc.expAnnotations == nil {
+		tc.expAnnotations = make(map[string]map[string][]string)
+	}
+	for _, name := range oneReqFlags {
+		if tc.expAnnotations[name] == nil {
+			tc.expAnnotations[name] = make(map[string][]string)
+		}
+		tc.expAnnotations[name][oneReq] = append(tc.expAnnotations[name][oneReq], oneReqVal)
 	}
 }
 

@@ -72,5 +72,28 @@ func (g GenesisState) Validate() error {
 
 	// No validation to do on LastMarketId.
 
+	for i, commitment := range g.Commitments {
+		if err := commitment.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("invalid commitment[%d]: %w", i, err))
+		} else if _, known := marketIDs[commitment.MarketId]; !known {
+			errs = append(errs, fmt.Errorf("invalid commitment[%d]: unknown market id %d", i, commitment.MarketId))
+		}
+	}
+
+	paymentIDs := make(map[string]int)
+	for i, payment := range g.Payments {
+		id := payment.Source + " " + payment.ExternalId
+		if j, seen := paymentIDs[id]; seen {
+			errs = append(errs, fmt.Errorf("invalid payment[%d]: duplicate payment, source %s and external id %q seen at [%d]",
+				i, payment.Source, payment.ExternalId, j))
+			continue
+		}
+		paymentIDs[id] = i
+
+		if err := payment.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("invalid payment[%d]: %w", i, err))
+		}
+	}
+
 	return errors.Join(errs...)
 }

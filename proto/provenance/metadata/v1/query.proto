@@ -242,6 +242,11 @@ service Query {
   rpc AccountData(AccountDataRequest) returns (AccountDataResponse) {
     option (google.api.http).get = "/provenance/metadata/v1/accountdata/{metadata_addr}";
   }
+
+  // ScopeNetAssetValues returns net asset values for scope
+  rpc ScopeNetAssetValues(QueryScopeNetAssetValuesRequest) returns (QueryScopeNetAssetValuesResponse) {
+    option (google.api.http).get = "/provenance/metadata/v1/netassetvalues/{id}";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -846,4 +851,16 @@ message AccountDataRequest {
 message AccountDataResponse {
   // The accountdata for the requested metadata address.
   string value = 1;
+}
+
+// QueryNetAssetValuesRequest is the request type for the Query/NetAssetValues method.
+message QueryScopeNetAssetValuesRequest {
+  // scopeid metadata address
+  string id = 1;
+}
+
+// QueryNetAssetValuesRequest is the response type for the Query/NetAssetValues method.
+message QueryScopeNetAssetValuesResponse {
+  // net asset values for scope
+  repeated NetAssetValue net_asset_values = 1 [(gogoproto.nullable) = false];
 }
