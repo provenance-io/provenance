@@ -172,3 +172,20 @@ func (g *FeeGasMeter) BaseFeeConsumed() sdk.Coins {
 func (g *FeeGasMeter) EventFeeSummary() *msgfeestypes.EventMsgFees {
 	return msgfeestypes.NewEventMsgs(g.feeCalls, g.usedFees)
 }
+
+// ConsumeMsgFee attempts to consume the provided fee for the given msg.
+// If the fee is zero or the ctx does not have a FeeGasMeter, this does nothing.
+func ConsumeMsgFee(ctx sdk.Context, fee sdk.Coins, msg sdk.Msg, recipient string) {
+	if fee.IsZero() {
+		return
+	}
+
+	feeGasMeter, err := GetFeeGasMeter(ctx)
+	if err != nil || feeGasMeter == nil {
+		// There are some legitimate reasons why we might not get a fee gas meter here
+		// (e.g. during a gov prop). In those cases, we just skip consuming this fee and move on.
+		return
+	}
+
+	feeGasMeter.ConsumeFee(fee, sdk.MsgTypeURL(msg), recipient)
+}

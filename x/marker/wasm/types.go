@@ -57,6 +57,8 @@ const (
 	MarkerPermissionDelete MarkerPermission = "delete"
 	// MarkerPermissionDeposit is a concrete marker permission type
 	MarkerPermissionDeposit MarkerPermission = "deposit"
+	// MarkerPermissionForceTransfer is a concrete marker permission type
+	MarkerPermissionForceTransfer MarkerPermission = "force_transfer"
 	// MarkerPermissionMint is a concrete marker permission type
 	MarkerPermissionMint MarkerPermission = "mint"
 	// MarkerPermissionTransfer is a concrete marker permission type
@@ -158,6 +160,8 @@ func permissionFor(input types.Access) MarkerPermission {
 		return MarkerPermissionDelete
 	case types.Access_Deposit:
 		return MarkerPermissionDeposit
+	case types.Access_ForceTransfer:
+		return MarkerPermissionForceTransfer
 	case types.Access_Mint:
 		return MarkerPermissionMint
 	case types.Access_Transfer:

@@ -581,10 +581,6 @@ func New(
 		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, &app.NameKeeper,
 	)
 
-	app.MetadataKeeper = metadatakeeper.NewKeeper(
-		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper,
-	)
-
 	markerReqAttrBypassAddrs := []sdk.AccAddress{
 		authtypes.NewModuleAddress(authtypes.FeeCollectorName), // Allow collecting fees in restricted coins.
 		authtypes.NewModuleAddress(rewardtypes.ModuleName),     // Allow rewards to hold onto restricted coins.
@@ -594,10 +590,16 @@ func New(
 		authtypes.NewModuleAddress(stakingtypes.BondedPoolName),    // Allow bond denom to be a restricted coin.
 		authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName), // Allow bond denom to be a restricted coin.
 	}
+
 	app.MarkerKeeper = markerkeeper.NewKeeper(
 		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
 		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper, markerReqAttrBypassAddrs,
+		NewGroupCheckerFunc(app.GroupKeeper),
+	)
+
+	app.MetadataKeeper = metadatakeeper.NewKeeper(
+		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper,
 	)
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
@@ -1113,6 +1115,7 @@ func New(
 	}
 
 	// Currently in an upgrade hold for this block.
+	var storeLoader baseapp.StoreLoader
 	if upgradeInfo.Name != "" && upgradeInfo.Height == app.LastBlockHeight()+1 {
 		if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 			app.Logger().Info("Skipping upgrade based on height",
@@ -1127,13 +1130,16 @@ func New(
 				"lastHeight", app.LastBlockHeight(),
 			)
 			// See if we have a custom store loader to use for upgrades.
-			storeLoader := GetUpgradeStoreLoader(app, upgradeInfo)
-			if storeLoader != nil {
-				app.SetStoreLoader(storeLoader)
-			}
+			storeLoader = GetUpgradeStoreLoader(app, upgradeInfo)
 		}
 	}
-	// --
+	if storeLoader == nil {
+		storeLoader = baseapp.DefaultStoreLoader
+	}
+
+	// Verify configuration settings
+	storeLoader = ValidateWrapper(app.Logger(), appOpts, storeLoader)
+	app.SetStoreLoader(storeLoader)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -1184,7 +1190,36 @@ func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.
 
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
-	return app.mm.BeginBlock(ctx)
+	resp, err := app.mm.BeginBlock(ctx)
+	if err != nil {
+		return resp, err
+	}
+	resp.Events = filterBeginBlockerEvents(resp)
+	return resp, nil
+}
+
+// filterBeginBlockerEvents filters out events from a given abci.ResponseBeginBlock according to the criteria defined in shouldFilterEvent.
+func filterBeginBlockerEvents(responseBeginBlock sdk.BeginBlock) []abci.Event {
+	filteredEvents := make([]abci.Event, 0)
+	for _, e := range responseBeginBlock.Events {
+		if shouldFilterEvent(e) {
+			continue
+		}
+		filteredEvents = append(filteredEvents, e)
+	}
+	return filteredEvents
+}
+
+// shouldFilterEvent checks if an abci.Event should be filtered based on its type and attributes.
+func shouldFilterEvent(e abci.Event) bool {
+	if e.Type == distrtypes.EventTypeCommission || e.Type == distrtypes.EventTypeRewards || e.Type == distrtypes.EventTypeProposerReward || e.Type == banktypes.EventTypeTransfer || e.Type == banktypes.EventTypeCoinSpent || e.Type == banktypes.EventTypeCoinReceived {
+		for _, a := range e.Attributes {
+			if string(a.Key) == sdk.AttributeKeyAmount && len(a.Value) == 0 {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // EndBlocker application updates every end block

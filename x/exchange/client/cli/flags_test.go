@@ -3,6 +3,7 @@ package cli_test
 import (
 	"errors"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -16,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -234,6 +236,97 @@ func TestReadFlagsAdminOrFrom(t *testing.T) {
 	}
 }
 
+func TestReadFlagsAdminOrFromOrDefault(t *testing.T) {
+	goodFlagSet := func() *pflag.FlagSet {
+		flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+		flagSet.String(cli.FlagAdmin, "", "The admin")
+		flagSet.Bool(cli.FlagAuthority, false, "Use authority")
+		return flagSet
+	}
+
+	tests := []struct {
+		name      string
+		flagSet   func() *pflag.FlagSet
+		flags     []string
+		clientCtx client.Context
+		def       string
+		expAddr   string
+		expErr    string
+	}{
+		{
+			name: "wrong admin flag type",
+			flagSet: func() *pflag.FlagSet {
+				flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+				flagSet.Int(cli.FlagAdmin, 0, "The admin")
+				flagSet.Bool(cli.FlagAuthority, false, "Use authority")
+				return flagSet
+			},
+			def:     "robin",
+			expAddr: "robin",
+			expErr:  "trying to get string value of flag of type int",
+		},
+		{
+			name: "wrong authority flag type",
+			flagSet: func() *pflag.FlagSet {
+				flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+				flagSet.String(cli.FlagAdmin, "", "The admin")
+				flagSet.Int(cli.FlagAuthority, 0, "Use authority")
+				return flagSet
+
+			},
+			def:     "scout",
+			expAddr: "scout",
+			expErr:  "trying to get bool value of flag of type int",
+		},
+		{
+			name:    "admin flag given",
+			flags:   []string{"--" + cli.FlagAdmin, "theadmin"},
+			def:     "kerry",
+			expAddr: "theadmin",
+		},
+		{
+			name:    "authority flag given",
+			flags:   []string{"--" + cli.FlagAuthority},
+			def:     "logan",
+			expAddr: cli.AuthorityAddr.String(),
+		},
+		{
+			name:      "from address given",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			def:       "ezra",
+			expAddr:   sdk.AccAddress("FromAddress_________").String(),
+		},
+		{
+			name:    "only a default",
+			def:     "drew",
+			expAddr: "drew",
+		},
+		{
+			name:   "nothing given",
+			expErr: "no <admin> provided",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.flagSet == nil {
+				tc.flagSet = goodFlagSet
+			}
+			flagSet := tc.flagSet()
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var addr string
+			testFunc := func() {
+				addr, err = cli.ReadFlagsAdminOrFromOrDefault(tc.clientCtx, flagSet, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagsAdminOrFromOrDefault")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagsAdminOrFromOrDefault error")
+			assert.Equal(t, tc.expAddr, addr, "ReadFlagsAdminOrFromOrDefault address")
+		})
+	}
+}
+
 func TestReadFlagAuthority(t *testing.T) {
 	goodFlagSet := func() *pflag.FlagSet {
 		flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
@@ -417,6 +510,87 @@ func TestReadAddrFlagOrFrom(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadAddrFlagOrFrom")
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadAddrFlagOrFrom error")
 			assert.Equal(t, tc.expAddr, addr, "ReadAddrFlagOrFrom address")
+		})
+	}
+}
+
+func TestReadAddrFlagOrFromOrDefault(t *testing.T) {
+	tests := []struct {
+		testName  string
+		flags     []string
+		clientCtx client.Context
+		name      string
+		def       string
+		expAddr   string
+		expErr    string
+	}{
+		{
+			testName: "unknown flag, no default",
+			name:     "notsetup",
+			expErr:   "flag accessed but not defined: notsetup",
+		},
+		{
+			testName: "unknown flag, with default",
+			name:     "notsetup",
+			def:      "justathing",
+			expAddr:  "justathing",
+			expErr:   "flag accessed but not defined: notsetup",
+		},
+		{
+			testName: "wrong flag type, no default",
+			name:     flagInt,
+			expErr:   "trying to get string value of flag of type int",
+		},
+		{
+			testName: "wrong flag type, with default",
+			name:     flagInt,
+			def:      "andanotherthing",
+			expAddr:  "andanotherthing",
+			expErr:   "trying to get string value of flag of type int",
+		},
+		{
+			testName: "flag given",
+			flags:    []string{"--" + flagString, "someaddr"},
+			name:     flagString,
+			def:      "other",
+			expAddr:  "someaddr",
+		},
+		{
+			testName:  "using from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			name:      flagString,
+			def:       "other",
+			expAddr:   sdk.AccAddress("FromAddress_________").String(),
+		},
+		{
+			testName: "not provided, with default",
+			name:     flagString,
+			def:      "other",
+			expAddr:  "other",
+		},
+		{
+			testName: "not provided, empty default",
+			name:     flagString,
+			def:      "",
+			expErr:   "no <string> provided",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(flagString, "", "A string")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var addr string
+			testFunc := func() {
+				addr, err = cli.ReadAddrFlagOrFromOrDefault(tc.clientCtx, flagSet, tc.name, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadAddrFlagOrFromOrDefault")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadAddrFlagOrFromOrDefault error")
+			assert.Equal(t, tc.expAddr, addr, "ReadAddrFlagOrFromOrDefault address")
 		})
 	}
 }
@@ -873,6 +1047,183 @@ func TestReadCoinsFlag(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadCoinsFlag(%q)", tc.name)
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadCoinsFlag(%q) error", tc.name)
 			assert.Equal(t, tc.expCoins.String(), coins.String(), "ReadCoinsFlag(%q) coins", tc.name)
+		})
+	}
+}
+
+func TestReadCoinsFlagOrDefault(t *testing.T) {
+	coins := func(coinsStr string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coinsStr)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", coinsStr)
+		return rv
+	}
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		def      sdk.Coins
+		expCoins sdk.Coins
+		expErr   string
+	}{
+		{
+			testName: "unknown flag, no default",
+			name:     "unknown",
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "unknown flag, with default",
+			name:     "unknown",
+			def:      coins("12orange"),
+			expCoins: coins("12orange"),
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type, no default",
+			name:     flagInt,
+			expErr:   "trying to get string value of flag of type int",
+		},
+		{
+			testName: "wrong flag type, with default",
+			name:     flagInt,
+			def:      coins("8banana,14pear"),
+			expCoins: coins("8banana,14pear"),
+			expErr:   "trying to get string value of flag of type int",
+		},
+		{
+			testName: "nothing provided, no default",
+			name:     flagString,
+			expErr:   "",
+		},
+		{
+			testName: "nothing provided, with default",
+			name:     flagString,
+			def:      coins("88cherry"),
+			expCoins: coins("88cherry"),
+			expErr:   "",
+		},
+		{
+			testName: "invalid coins, no default",
+			flags:    []string{"--" + flagString, "2yupcoin,nopecoin"},
+			name:     flagString,
+			expErr:   "error parsing --" + flagString + " as coins: invalid coin expression: \"nopecoin\"",
+		},
+		{
+			testName: "invalid coins, with default",
+			flags:    []string{"--" + flagString, "2yupcoin,nopecoin"},
+			name:     flagString,
+			def:      coins("57lychee"),
+			expCoins: coins("57lychee"),
+			expErr:   "error parsing --" + flagString + " as coins: invalid coin expression: \"nopecoin\"",
+		},
+		{
+			testName: "one coin, no default",
+			flags:    []string{"--" + flagString, "2grape"},
+			name:     flagString,
+			expCoins: coins("2grape"),
+		},
+		{
+			testName: "one coin, with default",
+			flags:    []string{"--" + flagString, "2grape"},
+			name:     flagString,
+			def:      coins("6apple"),
+			expCoins: coins("2grape"),
+		},
+		{
+			testName: "three coins, no default",
+			flags:    []string{"--" + flagString, "8banana,5apple,14cherry"},
+			name:     flagString,
+			expCoins: sdk.NewCoins(
+				sdk.NewInt64Coin("apple", 5), sdk.NewInt64Coin("banana", 8), sdk.NewInt64Coin("cherry", 14),
+			),
+		},
+		{
+			testName: "three coins, with default",
+			flags:    []string{"--" + flagString, "8banana,5apple,14cherry"},
+			name:     flagString,
+			def:      coins("15plum"),
+			expCoins: coins("5apple,8banana,14cherry"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(flagString, "", "A string")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actCoins sdk.Coins
+			testFunc := func() {
+				actCoins, err = cli.ReadCoinsFlagOrDefault(flagSet, tc.name, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadCoinsFlagOrDefault(%q, %q)", tc.name, tc.def)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadCoinsFlagOrDefault(%q, %q) error", tc.name, tc.def)
+			assert.Equal(t, tc.expCoins.String(), actCoins.String(), "ReadCoinsFlagOrDefault(%q, %q) coins", tc.name, tc.def)
+		})
+	}
+}
+
+func TestReadReqCoinsFlag(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		expCoins sdk.Coins
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			expErr:   "trying to get string value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagString,
+			expErr:   "missing required --" + flagString + " flag",
+		},
+		{
+			testName: "invalid coins",
+			flags:    []string{"--" + flagString, "2yupcoin,nopecoin"},
+			name:     flagString,
+			expErr:   "error parsing --" + flagString + " as coins: invalid coin expression: \"nopecoin\"",
+		},
+		{
+			testName: "one coin",
+			flags:    []string{"--" + flagString, "2grape"},
+			name:     flagString,
+			expCoins: sdk.NewCoins(sdk.NewInt64Coin("grape", 2)),
+		},
+		{
+			testName: "three coins",
+			flags:    []string{"--" + flagString, "8banana,5apple,14cherry"},
+			name:     flagString,
+			expCoins: sdk.NewCoins(
+				sdk.NewInt64Coin("apple", 5), sdk.NewInt64Coin("banana", 8), sdk.NewInt64Coin("cherry", 14),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(flagString, "", "A string")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var coins sdk.Coins
+			testFunc := func() {
+				coins, err = cli.ReadReqCoinsFlag(flagSet, tc.name)
+			}
+			require.NotPanics(t, testFunc, "ReadReqCoinsFlag(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadReqCoinsFlag(%q) error", tc.name)
+			assert.Equal(t, tc.expCoins.String(), coins.String(), "ReadReqCoinsFlag(%q) coins", tc.name)
 		})
 	}
 }
@@ -2004,6 +2355,235 @@ func TestReadStringFlagOrArg(t *testing.T) {
 	}
 }
 
+func TestReadOptStringFlagOrArg(t *testing.T) {
+	tests := []struct {
+		name     string
+		flags    []string
+		args     []string
+		flagName string
+		varName  string
+		expStr   string
+		expErr   string
+	}{
+		{
+			name:     "unknown flag name",
+			flagName: "other",
+			varName:  "nope",
+			expErr:   "flag accessed but not defined: other",
+		},
+		{
+			name:     "wrong flag type",
+			flagName: flagInt,
+			varName:  "number",
+			expErr:   "trying to get string value of flag of type int",
+		},
+		{
+			name:     "both flag and arg",
+			flags:    []string{"--" + flagString, "flagval"},
+			args:     []string{"argval"},
+			flagName: flagString,
+			varName:  "value",
+			expErr:   "cannot provide <value> as both an arg (\"argval\") and flag (--" + flagString + " \"flagval\")",
+		},
+		{
+			name:     "only flag",
+			flags:    []string{"--" + flagString, "flagval"},
+			flagName: flagString,
+			varName:  "value",
+			expStr:   "flagval",
+		},
+		{
+			name:     "only arg",
+			args:     []string{"argval"},
+			flagName: flagString,
+			varName:  "value",
+			expStr:   "argval",
+		},
+		{
+			name:     "neither flag nor arg",
+			flagName: flagString,
+			varName:  "value",
+			expErr:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(flagString, "", "A string")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var str string
+			testFunc := func() {
+				str, err = cli.ReadOptStringFlagOrArg(flagSet, tc.args, tc.flagName, tc.varName)
+			}
+			require.NotPanics(t, testFunc, "ReadOptStringFlagOrArg")
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadOptStringFlagOrArg error")
+			assert.Equal(t, tc.expStr, str, "ReadOptStringFlagOrArg string")
+		})
+	}
+}
+
+func TestReadTxFileFlag(t *testing.T) {
+	tests := []struct {
+		name string
+		// setup should return the filename and the expected Tx.
+		setup    func(t *testing.T) (string, *txtypes.Tx)
+		flagSet  *pflag.FlagSet
+		fileFlag string
+		expInErr []string
+	}{
+		{
+			name: "flag not defined",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				return "", nil
+			},
+			flagSet:  pflag.NewFlagSet("", pflag.ContinueOnError),
+			fileFlag: "fruits",
+			expInErr: []string{"flag accessed but not defined: fruits"},
+		},
+		{
+			name: "flag not provided",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				return "", nil
+			},
+			fileFlag: "fruits",
+		},
+		{
+			name: "file does not exist",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				tdir := t.TempDir()
+				noSuchFile := filepath.Join(tdir, "no-such-file.json")
+				return noSuchFile, nil
+			},
+			fileFlag: "fruits",
+			expInErr: []string{"open ", "no-such-file.json", "no such file or directory"},
+		},
+		{
+			name: "error unmarshalling file",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				tdir := t.TempDir()
+				notJSON := filepath.Join(tdir, "not-json.json")
+				contents := []byte("This is not\na JSON file.\n")
+				writeFile(t, notJSON, contents)
+				return notJSON, nil
+			},
+			fileFlag: "nuts",
+			expInErr: []string{
+				"failed to unmarshal --nuts \"", "\" contents as Tx",
+				"invalid character 'T' looking for beginning of value",
+			},
+		},
+		{
+			name: "okay: one message",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				msg := &exchange.MsgMarketWithdrawRequest{
+					Admin:     sdk.AccAddress("Admin_______________").String(),
+					MarketId:  3,
+					ToAddress: sdk.AccAddress("ToAddress___________").String(),
+					Amount:    sdk.NewCoins(sdk.NewInt64Coin("apple", 15)),
+				}
+				tx := newTx(t, msg)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "one-message.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, tx
+
+			},
+			fileFlag: "legumes",
+		},
+		{
+			name: "okay: three messages",
+			setup: func(t *testing.T) (string, *txtypes.Tx) {
+				msg1 := &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market:    exchange.Market{MarketId: 88},
+				}
+				msg2 := &exchange.MsgGovManageFeesRequest{
+					Authority:           cli.AuthorityAddr.String(),
+					MarketId:            42,
+					AddFeeCreateAskFlat: []sdk.Coin{sdk.NewInt64Coin("plum", 5)},
+				}
+				msg3 := &exchange.MsgCancelOrderRequest{
+					Signer:  cli.AuthorityAddr.String(),
+					OrderId: 5555,
+				}
+				tx := newTx(t, msg1, msg2, msg3)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "three-messages.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, tx
+			},
+			fileFlag: "berries",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			expFilename, expTx := tc.setup(t)
+
+			if tc.flagSet == nil {
+				tc.flagSet = pflag.NewFlagSet("", pflag.ContinueOnError)
+				tc.flagSet.String(tc.fileFlag, "", "The file")
+			}
+
+			if len(expFilename) > 0 && len(tc.expInErr) > 0 {
+				tc.expInErr = append(tc.expInErr, expFilename)
+			}
+
+			args := make([]string, 0, 2)
+			if len(expFilename) > 0 {
+				args = append(args, "--"+tc.fileFlag, expFilename)
+			}
+
+			err := tc.flagSet.Parse(args)
+			require.NoError(t, err, "flagSet.Parse(%q)", args)
+
+			clientCtx := newClientContextWithCodec()
+
+			var actFilename string
+			var actTx *txtypes.Tx
+			testFunc := func() {
+				actFilename, actTx, err = cli.ReadTxFileFlag(clientCtx, tc.flagSet, tc.fileFlag)
+			}
+			require.NotPanics(t, testFunc, "ReadTxFileFlag")
+
+			assertions.AssertErrorContents(t, err, tc.expInErr, "ReadTxFileFlag error")
+			assert.Equal(t, expFilename, actFilename, "ReadTxFileFlag filename")
+
+			// We can't just assert that two []Any lists are equal due to some internal differences.
+			// All we really care about is that they have the same types and msg contents.
+			if expTx == nil {
+				assert.Nil(t, actTx, "ReadTxFileFlag tx")
+				return
+			}
+			if !assert.NotNil(t, actTx, "ReadTxFileFlag tx") {
+				return
+			}
+
+			if expTx.Body == nil {
+				assert.Nil(t, actTx.Body, "ReadTxFileFlag Tx.Body")
+				return
+			}
+			if !assert.NotNil(t, actTx.Body, "ReadTxFileFlag Tx.Body") {
+				return
+			}
+
+			expTypes := getAnyTypes(expTx.Body.Messages)
+			actTypes := getAnyTypes(actTx.Body.Messages)
+			if assert.Equal(t, expTypes, actTypes, "ReadTxFileFlag Tx.Body.Messages types") {
+				for i := range expTx.Body.Messages {
+					expMsg := expTx.Body.Messages[i].GetCachedValue()
+					actMsg := actTx.Body.Messages[i].GetCachedValue()
+					assert.Equal(t, expMsg, actMsg, "ReadTxFileFlag Tx.Body.Messages[%d] cached value", i)
+				}
+			}
+		})
+	}
+}
+
 func TestReadProposalFlag(t *testing.T) {
 	tests := []struct {
 		name string
@@ -2443,6 +3023,372 @@ func TestReadMsgGovManageFeesRequestFromProposalFlag(t *testing.T) {
 	}
 }
 
+func TestReadMsgMarketCommitmentSettleFromFileFlag(t *testing.T) {
+	coins := func(t *testing.T, str string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+
+	tests := []struct {
+		name string
+		// setup should return the filename and the expected Msg.
+		setup    func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest)
+		expInErr []string
+	}{
+		{
+			name: "error reading file",
+			setup: func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest) {
+				tx := newTx(t)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-body-messages.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"the contents of \"", "\" does not have any body messages"},
+		},
+		{
+			name: "no flag given",
+			setup: func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest) {
+				return "", nil
+			},
+			expInErr: nil,
+		},
+		{
+			name: "no msgs of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest) {
+				msg := &exchange.MsgGovCreateMarketRequest{
+					Authority: cli.AuthorityAddr.String(),
+					Market:    exchange.Market{MarketDetails: exchange.MarketDetails{Name: "Some Name"}},
+				}
+				tx := newTx(t, msg)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"no *exchange.MsgMarketCommitmentSettleRequest messages found in \""},
+		},
+		{
+			name: "two msgs of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest) {
+				msg1 := &exchange.MsgMarketCommitmentSettleRequest{
+					Admin:    "msg1_admin_addr",
+					MarketId: 1,
+					Inputs: []exchange.AccountAmount{
+						{Account: "msg1_input1_addr", Amount: coins(t, "10cherry")},
+					},
+					Outputs: []exchange.AccountAmount{
+						{Account: "msg1_output1_addr", Amount: coins(t, "11cherry")},
+					},
+					Fees: []exchange.AccountAmount{
+						{Account: "msg1_fee1_addr", Amount: coins(t, "3orange")},
+					},
+					Navs: []exchange.NetAssetPrice{
+						{Assets: coins(t, "1apple")[0], Price: coins(t, "2banana")[0]},
+					},
+					EventTag: "msg1_event_tag",
+				}
+				msg2 := &exchange.MsgMarketCommitmentSettleRequest{
+					Admin:    "msg2_admin_addr",
+					MarketId: 2,
+					Inputs: []exchange.AccountAmount{
+						{Account: "msg2_input1_addr", Amount: coins(t, "10cherry,5plum")},
+						{Account: "msg2_input2_addr", Amount: coins(t, "1apple,12orange")},
+						{Account: "msg2_input3_addr", Amount: coins(t, "4apple,4cherry,4orange,4plum")},
+					},
+					Outputs: []exchange.AccountAmount{
+						{Account: "msg2_output1_addr", Amount: coins(t, "5apple")},
+						{Account: "msg2_output2_addr", Amount: coins(t, "14cherry")},
+						{Account: "msg2_output3_addr", Amount: coins(t, "16orange")},
+						{Account: "msg2_output5_addr", Amount: coins(t, "9plum")},
+					},
+					EventTag: "msg2_event_tag",
+				}
+				tx := newTx(t, msg1, msg2)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, nil
+			},
+			expInErr: []string{"2 *exchange.MsgMarketCommitmentSettleRequest found in \""},
+		},
+		{
+			name: "one msg of interest",
+			setup: func(t *testing.T) (string, *exchange.MsgMarketCommitmentSettleRequest) {
+				msg := &exchange.MsgMarketCommitmentSettleRequest{
+					Admin:    "msg_admin",
+					MarketId: 1,
+					Inputs: []exchange.AccountAmount{
+						{Account: "msg_input1_addr", Amount: coins(t, "10cherry,5plum")},
+						{Account: "msg_input2_addr", Amount: coins(t, "1apple,12orange")},
+						{Account: "msg_input3_addr", Amount: coins(t, "4apple,4cherry,4orange,4plum")},
+					},
+					Outputs: []exchange.AccountAmount{
+						{Account: "msg_output1_addr", Amount: coins(t, "5apple")},
+						{Account: "msg_output2_addr", Amount: coins(t, "14cherry")},
+						{Account: "msg_output3_addr", Amount: coins(t, "16orange")},
+						{Account: "msg_output4_addr", Amount: coins(t, "9plum")},
+					},
+					Fees: []exchange.AccountAmount{
+						{Account: "msg_fee1_addr", Amount: coins(t, "12fig")},
+						{Account: "msg_fee2_addr", Amount: coins(t, "88fig")},
+					},
+					Navs: []exchange.NetAssetPrice{
+						{Assets: coins(t, "1apple")[0], Price: coins(t, "2banana")[0]},
+						{Assets: coins(t, "1apple")[0], Price: coins(t, "3fig")[0]},
+						{Assets: coins(t, "10apple")[0], Price: coins(t, "1cherry")[0]},
+					},
+					EventTag: "just_some_event_tag",
+				}
+				tx := newTx(t, msg)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-messages-of-interest.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, msg
+			},
+			expInErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			filename, expected := tc.setup(t)
+
+			if expected == nil {
+				expected = &exchange.MsgMarketCommitmentSettleRequest{}
+			}
+
+			if len(filename) > 0 && len(tc.expInErr) > 0 {
+				tc.expInErr = append(tc.expInErr, filename)
+			}
+
+			args := make([]string, 0, 2)
+			if len(filename) > 0 {
+				args = append(args, "--"+cli.FlagFile, filename)
+			}
+
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(cli.FlagFile, "", "The File")
+			err := flagSet.Parse(args)
+			require.NoError(t, err, "flagSet.Parse(%q)", args)
+
+			clientCtx := newClientContextWithCodec()
+
+			var actual *exchange.MsgMarketCommitmentSettleRequest
+			testFunc := func() {
+				actual, err = cli.ReadMsgMarketCommitmentSettleFromFileFlag(clientCtx, flagSet)
+			}
+			require.NotPanics(t, testFunc, "ReadMsgMarketCommitmentSettleFromFileFlag")
+			assertions.AssertErrorContents(t, err, tc.expInErr, "ReadMsgMarketCommitmentSettleFromFileFlag error")
+			assert.Equal(t, expected, actual, "ReadMsgMarketCommitmentSettleFromFileFlag result")
+		})
+	}
+}
+
+func TestReadPaymentFromFileFlag(t *testing.T) {
+	coins := func(t *testing.T, str string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+	testAddr := func(prefix string) sdk.AccAddress {
+		return sdk.AccAddress(prefix + strings.Repeat("_", 20-len(prefix)))
+	}
+	newPayment := func(t *testing.T, sourceAddrPrefix, sourceAmount, targetAddrPrefix, targetAmount, externalID string) exchange.Payment {
+		return exchange.Payment{
+			Source:       testAddr(sourceAddrPrefix).String(),
+			SourceAmount: coins(t, sourceAmount),
+			Target:       testAddr(targetAddrPrefix).String(),
+			TargetAmount: coins(t, targetAmount),
+			ExternalId:   externalID,
+		}
+	}
+
+	tests := []struct {
+		name string
+		// setup should return the filename and the expected Payment.
+		setup    func(t *testing.T) (string, exchange.Payment)
+		expInErr []string
+	}{
+		{
+			name: "no flag given",
+			setup: func(t *testing.T) (string, exchange.Payment) {
+				return "", exchange.Payment{}
+			},
+			expInErr: nil,
+		},
+		{
+			name: "error reading file",
+			setup: func(t *testing.T) (string, exchange.Payment) {
+				tdir := t.TempDir()
+				noSuchFile := filepath.Join(tdir, "no-such-file.json")
+				return noSuchFile, exchange.Payment{}
+			},
+			expInErr: []string{"open ", "no-such-file.json", "no such file or directory"},
+		},
+		{
+			name: "no msgs in tx",
+			setup: func(t *testing.T) (string, exchange.Payment) {
+				tx := newTx(t)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "no-body-messages.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, exchange.Payment{}
+			},
+			expInErr: []string{"the contents of \"", "\" does not have any body messages"},
+		},
+		{
+			name: "no msgs of interest",
+			setup: func(t *testing.T) (string, exchange.Payment) {
+				msg1 := &exchange.MsgRejectPaymentRequest{
+					Target:     testAddr("target1").String(),
+					Source:     testAddr("source1").String(),
+					ExternalId: "something",
+				}
+				msg2 := &exchange.MsgCommitFundsRequest{
+					Account:  testAddr("account1").String(),
+					MarketId: 3,
+					Amount:   coins(t, "10apple"),
+				}
+				tx := newTx(t, msg1, msg2)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-random-msgs.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, exchange.Payment{}
+			},
+			expInErr: []string{"no messages with a Payment found"},
+		},
+		{
+			name: "two msgs: both MsgCreatePaymentRequest",
+			setup: func(t *testing.T) (string, exchange.Payment) {
+				msg1 := &exchange.MsgCreatePaymentRequest{
+					Payment: newPayment(t, "m1_source", "1strawberry", "m1_target", "10tomato", "msg1"),
+				}
+				msg2 := &exchange.MsgCreatePaymentRequest{
+					Payment: newPayment(t, "m2_source", "2starfruit", "m2_target", "20tangerine", "msg2"),
+				}
+				tx := newTx(t, msg1, msg2)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-create-msgs.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, exchange.Payment{}
+			},
+			expInErr: []string{"2 messages with a Payment found"},
+		},
+		{
+			name: "two msgs: both MsgAcceptPaymentRequest",
+			setup: func(t *testing.T) (string, exchange.Payment) {
+				msg1 := &exchange.MsgAcceptPaymentRequest{
+					Payment: newPayment(t, "m1_source", "1strawberry", "m1_target", "10tomato", "msg1"),
+				}
+				msg2 := &exchange.MsgAcceptPaymentRequest{
+					Payment: newPayment(t, "m2_source", "2starfruit", "m2_target", "20tangerine", "msg2"),
+				}
+				tx := newTx(t, msg1, msg2)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-accept-msgs.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, exchange.Payment{}
+			},
+			expInErr: []string{"2 messages with a Payment found"},
+		},
+		{
+			name: "two msgs: MsgCreatePaymentRequest MsgAcceptPaymentRequest",
+			setup: func(t *testing.T) (string, exchange.Payment) {
+				msg1 := &exchange.MsgCreatePaymentRequest{
+					Payment: newPayment(t, "m1_source", "1strawberry", "m1_target", "10tomato", "msg1"),
+				}
+				msg2 := &exchange.MsgAcceptPaymentRequest{
+					Payment: newPayment(t, "m2_source", "2starfruit", "m2_target", "20tangerine", "msg2"),
+				}
+				tx := newTx(t, msg1, msg2)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-msgs-with-payments.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, exchange.Payment{}
+			},
+			expInErr: []string{"2 messages with a Payment found"},
+		},
+		{
+			name: "one msg: MsgCreatePaymentRequest",
+			setup: func(t *testing.T) (string, exchange.Payment) {
+				pmt := newPayment(t, "source_c", "11strawberry", "target_c", "52tangerine", "the-msg")
+				msg1 := &exchange.MsgCreatePaymentRequest{Payment: pmt}
+				tx := newTx(t, msg1)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "create-payment.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, pmt
+			},
+		},
+		{
+			name: "one msg: MsgAcceptPaymentRequest",
+			setup: func(t *testing.T) (string, exchange.Payment) {
+				pmt := newPayment(t, "source", "1starfruit", "target", "5tomato", "the-other-msg")
+				msg1 := &exchange.MsgAcceptPaymentRequest{Payment: pmt}
+				tx := newTx(t, msg1)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "create-payment.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, pmt
+			},
+		},
+		{
+			name: "three msgs in tx, only one has a payment",
+			setup: func(t *testing.T) (string, exchange.Payment) {
+				msg1 := &exchange.MsgCommitFundsRequest{
+					Account:  testAddr("account1").String(),
+					MarketId: 3,
+					Amount:   coins(t, "10apple"),
+				}
+				pmt := newPayment(t, "msg2_source", "22strawberry", "msg2_target", "20tangerine", "msg-of-interest")
+				msg2 := &exchange.MsgAcceptPaymentRequest{Payment: pmt}
+				msg3 := &exchange.MsgRejectPaymentRequest{
+					Target:     testAddr("target1").String(),
+					Source:     testAddr("source1").String(),
+					ExternalId: "something",
+				}
+				tx := newTx(t, msg1, msg2, msg3)
+				tdir := t.TempDir()
+				fn := filepath.Join(tdir, "two-random-msgs.json")
+				writeFileAsJson(t, fn, tx)
+				return fn, pmt
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			filename, expected := tc.setup(t)
+
+			if len(filename) > 0 && len(tc.expInErr) > 0 {
+				tc.expInErr = append(tc.expInErr, filename)
+			}
+
+			args := make([]string, 0, 2)
+			if len(filename) > 0 {
+				args = append(args, "--"+cli.FlagFile, filename)
+			}
+
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.String(cli.FlagFile, "", "The File")
+			err := flagSet.Parse(args)
+			require.NoError(t, err, "flagSet.Parse(%q)", args)
+
+			clientCtx := newClientContextWithCodec()
+
+			var actual exchange.Payment
+			testFunc := func() {
+				actual, err = cli.ReadPaymentFromFileFlag(clientCtx, flagSet)
+			}
+			require.NotPanics(t, testFunc, "ReadPaymentFromFileFlag")
+			assertions.AssertErrorContents(t, err, tc.expInErr, "ReadPaymentFromFileFlag error")
+			assert.Equal(t, expected, actual, "ReadPaymentFromFileFlag result")
+		})
+	}
+}
+
 func TestReadFlagUint32OrDefault(t *testing.T) {
 	tests := []struct {
 		testName string
@@ -2714,6 +3660,643 @@ func TestReadFlagStringOrDefault(t *testing.T) {
 			require.NotPanics(t, testFunc, "ReadFlagStringOrDefault")
 			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagStringOrDefault error")
 			assert.Equal(t, tc.exp, act, "ReadFlagStringOrDefault result")
+		})
+	}
+}
+
+func TestParseAccountAmount(t *testing.T) {
+	tests := []struct {
+		name   string
+		val    string
+		exp    *exchange.AccountAmount
+		expErr string
+	}{
+		{
+			name:   "empty",
+			val:    "",
+			expErr: "invalid account-amount \"\": expected format <account>:<amount>",
+		},
+		{
+			name:   "no colons",
+			val:    "banana",
+			expErr: "invalid account-amount \"banana\": expected format <account>:<amount>",
+		},
+		{
+			name:   "two colons",
+			val:    "plum:8:123",
+			expErr: "invalid account-amount \"plum:8:123\": expected format <account>:<amount>",
+		},
+		{
+			name:   "empty account",
+			val:    ":444",
+			expErr: "invalid account-amount \":444\": both an <account> and <amount> are required",
+		},
+		{
+			name:   "empty amount",
+			val:    "apple:",
+			expErr: "invalid account-amount \"apple:\": both an <account> and <amount> are required",
+		},
+		{
+			name:   "invalid amount",
+			val:    "apple:banana",
+			expErr: "could not parse \"apple:banana\" amount: invalid coin expression: \"banana\"",
+		},
+		{
+			name: "good, one coin",
+			val:  "cherry:1apple",
+			exp:  &exchange.AccountAmount{Account: "cherry", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 1))},
+		},
+		{
+			name: "good, two coins",
+			val:  "pear:1acorn,2beachnut",
+			exp: &exchange.AccountAmount{
+				Account: "pear",
+				Amount:  sdk.NewCoins(sdk.NewInt64Coin("acorn", 1), sdk.NewInt64Coin("beachnut", 2))},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *exchange.AccountAmount
+			var err error
+			testFunc := func() {
+				actual, err = cli.ParseAccountAmount(tc.val)
+			}
+			require.NotPanics(t, testFunc, "ParseAccountAmount(%q)", tc.val)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseAccountAmount(%q) error", tc.val)
+			if !assert.Equal(t, tc.exp, actual, "ParseAccountAmount(%q) result", tc.val) {
+				t.Logf("Expected: %s:%s", tc.exp.Account, tc.exp.Amount)
+				t.Logf("  Actual: %s:%s", actual.Account, actual.Amount)
+			}
+		})
+	}
+}
+
+func TestParseAccountAmounts(t *testing.T) {
+	tests := []struct {
+		name   string
+		vals   []string
+		exp    []exchange.AccountAmount
+		expErr string
+	}{
+		{
+			name:   "nil",
+			vals:   nil,
+			expErr: "",
+		},
+		{
+			name:   "empty",
+			vals:   []string{},
+			expErr: "",
+		},
+		{
+			name:   "one, bad",
+			vals:   []string{"nope"},
+			expErr: "invalid account-amount \"nope\": expected format <account>:<amount>",
+		},
+		{
+			name: "one, good",
+			vals: []string{"yup:5cherry"},
+			exp:  []exchange.AccountAmount{{Account: "yup", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 5))}},
+		},
+		{
+			name: "three, all good",
+			vals: []string{"first:1apple", "second:2banana", "third:3cherry"},
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 1))},
+				{Account: "second", Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 2))},
+				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 3))},
+			},
+		},
+		{
+			name: "three, first bad",
+			vals: []string{"first", "second:2banana", "third:3cherry"},
+			exp: []exchange.AccountAmount{
+				{Account: "second", Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 2))},
+				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 3))},
+			},
+			expErr: "invalid account-amount \"first\": expected format <account>:<amount>",
+		},
+		{
+			name: "three, second bad",
+			vals: []string{"first:1apple", ":22", "third:3cherry"},
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 1))},
+				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 3))},
+			},
+			expErr: "invalid account-amount \":22\": both an <account> and <amount> are required",
+		},
+		{
+			name: "three, third bad",
+			vals: []string{"first:1apple", "second:2banana", "third:333x"},
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 1))},
+				{Account: "second", Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 2))},
+			},
+			expErr: "could not parse \"third:333x\" amount: invalid coin expression: \"333x\"",
+		},
+		{
+			name: "three, all bad",
+			vals: []string{"first", ":22", "third:333x"},
+			expErr: joinErrs(
+				"invalid account-amount \"first\": expected format <account>:<amount>",
+				"invalid account-amount \":22\": both an <account> and <amount> are required",
+				"could not parse \"third:333x\" amount: invalid coin expression: \"333x\"",
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.exp == nil {
+				tc.exp = []exchange.AccountAmount{}
+			}
+
+			var actual []exchange.AccountAmount
+			var err error
+			testFunc := func() {
+				actual, err = cli.ParseAccountAmounts(tc.vals)
+			}
+			require.NotPanics(t, testFunc, "ParseAccountAmounts(%q)", tc.vals)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseAccountAmounts(%q) error", tc.vals)
+			assertEqualSlices(t, tc.exp, actual, exchange.AccountAmount.String, "ParseAccountAmounts(%q) result", tc.vals)
+		})
+	}
+}
+
+func TestReadFlagAccountAmounts(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		exp      []exchange.AccountAmount
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagStringSlice,
+			expErr:   "",
+		},
+		{
+			testName: "three vals, one bad",
+			flags:    []string{"--" + flagStringSlice, "first:3apple,second:80", "--" + flagStringSlice, "third:777cherry,123durian"},
+			name:     flagStringSlice,
+			expErr:   "could not parse \"second:80\" amount: invalid coin expression: \"80\"",
+		},
+		{
+			testName: "three vals, all good",
+			flags:    []string{"--" + flagStringSlice, "first:3apple,second:80pear", "--" + flagStringSlice, "third:777cherry,123durian"},
+			name:     flagStringSlice,
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 3))},
+				{Account: "second", Amount: sdk.NewCoins(sdk.NewInt64Coin("pear", 80))},
+				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 777), sdk.NewInt64Coin("durian", 123))},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "A string slice")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actual []exchange.AccountAmount
+			testFunc := func() {
+				actual, err = cli.ReadFlagAccountAmounts(flagSet, tc.name)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagAccountAmounts(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagAccountAmounts(%q) error", tc.name)
+			assertEqualSlices(t, tc.exp, actual, exchange.AccountAmount.String, "ReadFlagAccountAmounts(%q) result", tc.name)
+		})
+	}
+}
+
+func TestReadFlagAccountAmountsOrDefault(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		def      []exchange.AccountAmount
+		exp      []exchange.AccountAmount
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			def:      []exchange.AccountAmount{{Account: "alex", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 4))}},
+			exp:      []exchange.AccountAmount{{Account: "alex", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 4))}},
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			def:      []exchange.AccountAmount{{Account: "blake", Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 99))}},
+			exp:      []exchange.AccountAmount{{Account: "blake", Amount: sdk.NewCoins(sdk.NewInt64Coin("banana", 99))}},
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagStringSlice,
+			def:      []exchange.AccountAmount{{Account: "carter", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 21))}},
+			exp:      []exchange.AccountAmount{{Account: "carter", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 21))}},
+			expErr:   "",
+		},
+		{
+			testName: "three vals, one bad",
+			flags:    []string{"--" + flagStringSlice, "first:3apple,second:80", "--" + flagStringSlice, "third:777cherry,123durian"},
+			name:     flagStringSlice,
+			def:      []exchange.AccountAmount{},
+			exp:      []exchange.AccountAmount{},
+			expErr:   "could not parse \"second:80\" amount: invalid coin expression: \"80\"",
+		},
+		{
+			testName: "three vals, all good",
+			flags:    []string{"--" + flagStringSlice, "first:3apple,second:80pear", "--" + flagStringSlice, "third:777cherry,123durian"},
+			name:     flagStringSlice,
+			def:      []exchange.AccountAmount{{Account: "ellis", Amount: sdk.NewCoins(sdk.NewInt64Coin("elderberry", 5))}},
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 3))},
+				{Account: "second", Amount: sdk.NewCoins(sdk.NewInt64Coin("pear", 80))},
+				{Account: "third", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 777), sdk.NewInt64Coin("durian", 123))},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "A string slice")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actual []exchange.AccountAmount
+			testFunc := func() {
+				actual, err = cli.ReadFlagAccountAmountsOrDefault(flagSet, tc.name, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagAccountAmountsOrDefault(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagAccountAmountsOrDefault(%q) error", tc.name)
+			assertEqualSlices(t, tc.exp, actual, exchange.AccountAmount.String, "ReadFlagAccountAmountsOrDefault(%q) result", tc.name)
+		})
+	}
+}
+
+func TestReadFlagAccountsWithoutAmounts(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		exp      []exchange.AccountAmount
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagStringSlice,
+			expErr:   "",
+		},
+		{
+			testName: "three vals",
+			flags:    []string{"--" + flagStringSlice, "first,second", "--" + flagStringSlice, "third"},
+			name:     flagStringSlice,
+			exp: []exchange.AccountAmount{
+				{Account: "first", Amount: nil},
+				{Account: "second", Amount: nil},
+				{Account: "third", Amount: nil},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "A string slice")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actual []exchange.AccountAmount
+			testFunc := func() {
+				actual, err = cli.ReadFlagAccountsWithoutAmounts(flagSet, tc.name)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagAccountsWithoutAmounts(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagAccountsWithoutAmounts(%q) error", tc.name)
+			assertEqualSlices(t, tc.exp, actual, exchange.AccountAmount.String, "ReadFlagAccountsWithoutAmounts(%q) result", tc.name)
+		})
+	}
+}
+
+func TestParseNetAssetPrice(t *testing.T) {
+	tests := []struct {
+		name   string
+		val    string
+		exp    *exchange.NetAssetPrice
+		expErr string
+	}{
+		{
+			name:   "empty",
+			val:    "",
+			expErr: "invalid net-asset-price \"\": expected format <assets>:<price>",
+		},
+		{
+			name:   "no colons",
+			val:    "banana",
+			expErr: "invalid net-asset-price \"banana\": expected format <assets>:<price>",
+		},
+		{
+			name:   "two colons",
+			val:    "plum:8:123",
+			expErr: "invalid net-asset-price \"plum:8:123\": expected format <assets>:<price>",
+		},
+		{
+			name:   "empty assets",
+			val:    ":444plum",
+			expErr: "invalid net-asset-price \":444plum\": both an <assets> and <price> are required",
+		},
+		{
+			name:   "empty price",
+			val:    "2apple:",
+			expErr: "invalid net-asset-price \"2apple:\": both an <assets> and <price> are required",
+		},
+		{
+			name:   "invalid assets",
+			val:    "apple:3plum",
+			expErr: "could not parse \"apple:3plum\" assets: invalid coin expression: \"apple\"",
+		},
+		{
+			name:   "invalid price",
+			val:    "1apple:plum",
+			expErr: "could not parse \"1apple:plum\" price: invalid coin expression: \"plum\"",
+		},
+		{
+			name: "good",
+			val:  "57apple:91plum",
+			exp:  &exchange.NetAssetPrice{Assets: sdk.NewInt64Coin("apple", 57), Price: sdk.NewInt64Coin("plum", 91)},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *exchange.NetAssetPrice
+			var err error
+			testFunc := func() {
+				actual, err = cli.ParseNetAssetPrice(tc.val)
+			}
+			require.NotPanics(t, testFunc, "ParseNetAssetPrice(%q)", tc.val)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseNetAssetPrice(%q) error", tc.val)
+			if !assert.Equal(t, tc.exp, actual, "ParseNetAssetPrice(%q) result", tc.val) {
+				t.Logf("Expected: %s:%s", tc.exp.Assets, tc.exp.Price)
+				t.Logf("  Actual: %s:%s", actual.Assets, actual.Price)
+			}
+		})
+	}
+}
+
+func TestParseNetAssetPrices(t *testing.T) {
+	tests := []struct {
+		name   string
+		vals   []string
+		exp    []exchange.NetAssetPrice
+		expErr string
+	}{
+		{
+			name:   "nil",
+			vals:   nil,
+			expErr: "",
+		},
+		{
+			name:   "empty",
+			vals:   []string{},
+			expErr: "",
+		},
+		{
+			name:   "one, bad",
+			vals:   []string{"nope"},
+			expErr: "invalid net-asset-price \"nope\": expected format <assets>:<price>",
+		},
+		{
+			name: "one, good",
+			vals: []string{"3apple:5plum"},
+			exp:  []exchange.NetAssetPrice{{Assets: sdk.NewInt64Coin("apple", 3), Price: sdk.NewInt64Coin("plum", 5)}},
+		},
+		{
+			name: "three, all good",
+			vals: []string{"1apple:2peach", "3acorn:4plum", "5acai:6pear"},
+			exp: []exchange.NetAssetPrice{
+				{Assets: sdk.NewInt64Coin("apple", 1), Price: sdk.NewInt64Coin("peach", 2)},
+				{Assets: sdk.NewInt64Coin("acorn", 3), Price: sdk.NewInt64Coin("plum", 4)},
+				{Assets: sdk.NewInt64Coin("acai", 5), Price: sdk.NewInt64Coin("pear", 6)},
+			},
+		},
+		{
+			name: "three, first bad",
+			vals: []string{"first", "3acorn:4plum", "5acai:6pear"},
+			exp: []exchange.NetAssetPrice{
+				{Assets: sdk.NewInt64Coin("acorn", 3), Price: sdk.NewInt64Coin("plum", 4)},
+				{Assets: sdk.NewInt64Coin("acai", 5), Price: sdk.NewInt64Coin("pear", 6)},
+			},
+			expErr: "invalid net-asset-price \"first\": expected format <assets>:<price>",
+		},
+		{
+			name: "three, second bad",
+			vals: []string{"1apple:2peach", "second", "5acai:6pear"},
+			exp: []exchange.NetAssetPrice{
+				{Assets: sdk.NewInt64Coin("apple", 1), Price: sdk.NewInt64Coin("peach", 2)},
+				{Assets: sdk.NewInt64Coin("acai", 5), Price: sdk.NewInt64Coin("pear", 6)},
+			},
+			expErr: "invalid net-asset-price \"second\": expected format <assets>:<price>",
+		},
+		{
+			name: "three, third bad",
+			vals: []string{"1apple:2peach", "3acorn:4plum", "third"},
+			exp: []exchange.NetAssetPrice{
+				{Assets: sdk.NewInt64Coin("apple", 1), Price: sdk.NewInt64Coin("peach", 2)},
+				{Assets: sdk.NewInt64Coin("acorn", 3), Price: sdk.NewInt64Coin("plum", 4)},
+			},
+			expErr: "invalid net-asset-price \"third\": expected format <assets>:<price>",
+		},
+		{
+			name: "three, all bad",
+			vals: []string{"first", "second", "third"},
+			expErr: joinErrs(
+				"invalid net-asset-price \"first\": expected format <assets>:<price>",
+				"invalid net-asset-price \"second\": expected format <assets>:<price>",
+				"invalid net-asset-price \"third\": expected format <assets>:<price>",
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.exp == nil {
+				tc.exp = []exchange.NetAssetPrice{}
+			}
+
+			var actual []exchange.NetAssetPrice
+			var err error
+			testFunc := func() {
+				actual, err = cli.ParseNetAssetPrices(tc.vals)
+			}
+			require.NotPanics(t, testFunc, "ParseNetAssetPrices(%q)", tc.vals)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ParseNetAssetPrices(%q) error", tc.vals)
+			assertEqualSlices(t, tc.exp, actual, exchange.NetAssetPrice.String, "ParseNetAssetPrices(%q) result", tc.vals)
+		})
+	}
+}
+
+func TestReadFlagNetAssetPrices(t *testing.T) {
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		exp      []exchange.NetAssetPrice
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagStringSlice,
+			expErr:   "",
+		},
+		{
+			testName: "three vals, one bad",
+			flags:    []string{"--" + flagStringSlice, "1apple:2peach,3acai", "--" + flagStringSlice, "5acorn:6pear"},
+			name:     flagStringSlice,
+			expErr:   "invalid net-asset-price \"3acai\": expected format <assets>:<price>",
+		},
+		{
+			testName: "three vals, all good",
+			flags:    []string{"--" + flagStringSlice, "1apple:2peach,3acai:4plum", "--" + flagStringSlice, "5acorn:6pear"},
+			name:     flagStringSlice,
+			exp: []exchange.NetAssetPrice{
+				{Assets: sdk.NewInt64Coin("apple", 1), Price: sdk.NewInt64Coin("peach", 2)},
+				{Assets: sdk.NewInt64Coin("acai", 3), Price: sdk.NewInt64Coin("plum", 4)},
+				{Assets: sdk.NewInt64Coin("acorn", 5), Price: sdk.NewInt64Coin("pear", 6)},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "A string slice")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actual []exchange.NetAssetPrice
+			testFunc := func() {
+				actual, err = cli.ReadFlagNetAssetPrices(flagSet, tc.name)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagNetAssetPrices(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagNetAssetPrices(%q) error", tc.name)
+			assertEqualSlices(t, tc.exp, actual, exchange.NetAssetPrice.String, "ReadFlagNetAssetPrices(%q) result", tc.name)
+		})
+	}
+}
+
+func TestReadFlagNetAssetPricesOrDefault(t *testing.T) {
+	coin := func(str string) sdk.Coin {
+		rv, err := sdk.ParseCoinNormalized(str)
+		require.NoError(t, err, "ParseCoinNormalized(%q)", str)
+		return rv
+	}
+	tests := []struct {
+		testName string
+		flags    []string
+		name     string
+		def      []exchange.NetAssetPrice
+		exp      []exchange.NetAssetPrice
+		expErr   string
+	}{
+		{
+			testName: "unknown flag",
+			name:     "unknown",
+			def:      []exchange.NetAssetPrice{{Assets: coin("10apple"), Price: coin("11banana")}},
+			exp:      []exchange.NetAssetPrice{{Assets: coin("10apple"), Price: coin("11banana")}},
+			expErr:   "flag accessed but not defined: unknown",
+		},
+		{
+			testName: "wrong flag type",
+			name:     flagInt,
+			def:      []exchange.NetAssetPrice{{Assets: coin("3apple"), Price: coin("4banana")}},
+			exp:      []exchange.NetAssetPrice{{Assets: coin("3apple"), Price: coin("4banana")}},
+			expErr:   "trying to get stringSlice value of flag of type int",
+		},
+		{
+			testName: "nothing provided",
+			name:     flagStringSlice,
+			def:      []exchange.NetAssetPrice{{Assets: coin("12fig"), Price: coin("3date")}},
+			exp:      []exchange.NetAssetPrice{{Assets: coin("12fig"), Price: coin("3date")}},
+			expErr:   "",
+		},
+		{
+			testName: "three vals, one bad",
+			flags:    []string{"--" + flagStringSlice, "1apple:2peach,3acai", "--" + flagStringSlice, "5acorn:6pear"},
+			name:     flagStringSlice,
+			def:      []exchange.NetAssetPrice{{Assets: coin("8fig"), Price: coin("7date")}},
+			exp:      []exchange.NetAssetPrice{{Assets: coin("8fig"), Price: coin("7date")}},
+			expErr:   "invalid net-asset-price \"3acai\": expected format <assets>:<price>",
+		},
+		{
+			testName: "three vals, all good",
+			flags:    []string{"--" + flagStringSlice, "1apple:2peach,3acai:4plum", "--" + flagStringSlice, "5acorn:6pear"},
+			name:     flagStringSlice,
+			def:      []exchange.NetAssetPrice{{Assets: coin("8fig"), Price: coin("7date")}},
+			exp: []exchange.NetAssetPrice{
+				{Assets: coin("1apple"), Price: coin("2peach")},
+				{Assets: coin("3acai"), Price: coin("4plum")},
+				{Assets: coin("5acorn"), Price: coin("6pear")},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.testName, func(t *testing.T) {
+			flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+			flagSet.StringSlice(flagStringSlice, nil, "A string slice")
+			flagSet.Int(flagInt, 0, "An int")
+			err := flagSet.Parse(tc.flags)
+			require.NoError(t, err, "flagSet.Parse(%q)", tc.flags)
+
+			var actual []exchange.NetAssetPrice
+			testFunc := func() {
+				actual, err = cli.ReadFlagNetAssetPricesOrDefault(flagSet, tc.name, tc.def)
+			}
+			require.NotPanics(t, testFunc, "ReadFlagNetAssetPricesOrDefault(%q)", tc.name)
+			assertions.AssertErrorValue(t, err, tc.expErr, "ReadFlagNetAssetPricesOrDefault(%q) error", tc.name)
+			assertEqualSlices(t, tc.exp, actual, exchange.NetAssetPrice.String, "ReadFlagNetAssetPricesOrDefault(%q) result", tc.name)
 		})
 	}
 }

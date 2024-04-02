@@ -190,7 +190,7 @@ func OptFlagUse(name string, opt string) string {
 func ProposalFileDesc(msgType sdk.Msg) string {
 	return fmt.Sprintf(`The file provided with the --%[1]s flag should be a json-encoded Tx.
 The Tx should have a message with a %[2]s that contains a %[3]s.
-Such a message can be generated using the --generate-only flag on the tx endpoint.
+Such a message can be generated using the --generate-only flag on the tx command for the endpoint.
 
 Example (with just the important bits):
 {
@@ -213,6 +213,31 @@ Example (with just the important bits):
 If other message flags are provided with --%[1]s, they will overwrite just that field.
 `,
 		FlagProposal, sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}), sdk.MsgTypeURL(msgType), msgType,
+	)
+}
+
+// MsgFileDesc is a description of the --file flag and expected file.
+func MsgFileDesc(msgType sdk.Msg) string {
+	return fmt.Sprintf(`The file provided with the --%[1]s flag should be a json-encoded Tx.
+The Tx should have a %[2]s message in it.
+Such a message can be generated using the --generate-only flag on the tx command for the endpoint.
+
+Example (with just the important bits):
+{
+  "body": {
+    "messages": [
+      {
+		"@type": "%[2]s",
+		"authority": "...",
+		<other %[3]T fields>
+      }
+    ],
+  },
+}
+
+If other message flags are provided with --%[1]s, they will overwrite just that field.
+`,
+		FlagFile, sdk.MsgTypeURL(msgType), msgType,
 	)
 }
 
@@ -273,4 +298,17 @@ Example <fee ratio>: 100nhash:1nhash`
 
 	// OptAsksBidsDesc is a description of the --asks and --bids flags when they're optional.
 	OptAsksBidsDesc = fmt.Sprintf("At most one of --%s or --%s can be provided.", FlagAsks, FlagBids)
+
+	AccountAmountDesc = `An <account-amount> has the format "<account>:<amount>".
+The <account> should be a bech32 address string.
+The <amount> should be a coins string with the format <amount><denom>[,<amount><denom> ...]
+
+Example <account-amount>: ` + ExampleAddr + `:10nhash,3orange`
+
+	NAVDesc = `A <nav> (net-asset-value) has the format "<assets coin>:<price coin>".
+Both <assets coin> and <price coin> have the format "<amount><denom>".
+
+Example <nav>: 1cherry:10nhash`
+
+	PageFlagsUse = "[pagination flags]"
 )

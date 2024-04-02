@@ -882,14 +882,6 @@ func getPriceTransfer(f *orderFulfillment) (*Transfer, error) {
 	panic(fmt.Errorf("%s order %d: unknown order type", f.GetOrderType(), f.GetOrderID()))
 }
 
-// NetAssetValue is a total of assets and the price they sold for.
-type NetAssetValue struct {
-	// Assets is the funds being bought/sold
-	Assets sdk.Coin
-	// Price is the price paid for those assets.
-	Price sdk.Coin
-}
-
 // filterOrders returns all the filled orders (partial or full) that return true from the checker.
 func filterOrders(settlement *Settlement, checker func(order OrderI) bool) []OrderI {
 	var rv []OrderI
@@ -905,7 +897,7 @@ func filterOrders(settlement *Settlement, checker func(order OrderI) bool) []Ord
 }
 
 // GetNAVs returns all the net-asset-value entries that represent this settlement.
-func GetNAVs(settlement *Settlement) []*NetAssetValue {
+func GetNAVs(settlement *Settlement) []NetAssetPrice {
 	// We need to count ONLY the bid orders or ONLY the ask orders.
 	// But some settlements are expected to only have one or the other, so look
 	// for bids first and fall back to asks if there aren't any bids.
@@ -916,21 +908,21 @@ func GetNAVs(settlement *Settlement) []*NetAssetValue {
 		orders = filterOrders(settlement, OrderI.IsAskOrder)
 	}
 
-	var navs []*NetAssetValue
+	var navs []NetAssetPrice
 	for _, order := range orders {
 		assets := order.GetAssets()
 		price := order.GetPrice()
 		found := false
-		for _, nav := range navs {
+		for n, nav := range navs {
 			if nav.Assets.Denom == assets.Denom && nav.Price.Denom == price.Denom {
 				found = true
-				nav.Assets.Amount = nav.Assets.Amount.Add(assets.Amount)
-				nav.Price.Amount = nav.Price.Amount.Add(price.Amount)
+				navs[n].Assets.Amount = nav.Assets.Amount.Add(assets.Amount)
+				navs[n].Price.Amount = nav.Price.Amount.Add(price.Amount)
 				break
 			}
 		}
 		if !found {
-			navs = append(navs, &NetAssetValue{Assets: assets, Price: price})
+			navs = append(navs, NetAssetPrice{Assets: assets, Price: price})
 		}
 	}
 

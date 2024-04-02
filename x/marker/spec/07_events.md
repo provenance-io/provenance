@@ -15,6 +15,7 @@ The marker module emits the following events:
   - [Withdraw](#withdraw)
   - [Transfer](#transfer)
   - [Set Denom Metadata](#set-denom-metadata)
+  - [Set Net Asset Value](#set-net-asset-value)
 
 
 
@@ -23,196 +24,195 @@ The marker module emits the following events:
 
 Fires when a marker is added using the Add Marker Msg.
 
-| Type                   | Attribute Key         | Attribute Value           |
-| ---------------------- | --------------------- | ------------------------- |
-| EventMarkerAdd         | Denom                 | \{denom string\}            |
-| EventMarkerAdd         | Address               | \{marker  address\}         |
-| EventMarkerAdd         | Amount                | \{supply amount\}           |
-| EventMarkerAdd         | Manager               | \{admin account address\}   |
-| EventMarkerAdd         | Status                | \{current marker status\}   |
-| EventMarkerAdd         | MarkerType            | \{type of marker\}          |
+Type: `provenance.marker.v1.EventMarkerAdd`
 
-`provenance.marker.v1.EventMarkerAdd`
+| Attribute Key | Attribute Value           |
+|---------------|---------------------------|
+| Denom         | \{denom string\}          |
+| Address       | \{marker  address\}       |
+| Amount        | \{supply amount\}         |
+| Manager       | \{admin account address\} |
+| Status        | \{current marker status\} |
+| MarkerType    | \{type of marker\}        |
 
 ---
 ## Grant Access
 
 Fires when administrative access is granted for a marker
 
-| Type                   | Attribute Key         | Attribute Value           |
-| ---------------------- | --------------------- | ------------------------- |
-| EventMarkerAddAccess   | Denom                 | \{denom string\}            |
-| EventMarkerAddAccess   | Administrator         | \{admin account address\}   |
-| EventMarkerAddAccess   | Access                | \{access grant format\}     |
+Type: `provenance.marker.v1.EventMarkerAddAccess`
 
-`provenance.marker.v1.EventMarkerAddAccess`
+| Attribute Key | Attribute Value           |
+|---------------|---------------------------|
+| Denom         | \{denom string\}          |
+| Administrator | \{admin account address\} |
+| Access        | \{access grant format\}   |
 
 ### Access Grant Format
 
-| Attribute Key         | Attribute Value          |
-| --------------------- | ------------------------ |
-| Address               | \{bech32 address string\}  |
-| Permissions           | \{array of role names\}    |
+Type: `provenance.marker.v1.EventMarkerAccess`
 
-`provenance.marker.v1.EventMarkerAccess`
+| Attribute Key | Attribute Value           |
+|---------------|---------------------------|
+| Address       | \{bech32 address string\} |
+| Permissions   | \{array of role names\}   |
 
 ---
 ## Revoke Access
 
 Fires when all access grants are removed for a given address.
 
-| Type                     | Attribute Key         | Attribute Value           |
-| ------------------------ | --------------------- | ------------------------- |
-| EventMarkerDeleteAccess  | Denom                 | \{denom string\}            |
-| EventMarkerDeleteAccess  | Administrator         | \{admin account address\}   |
-| EventMarkerDeleteAccess  | RemoveAddress         | \{address removed\}         |
+Type: `provenance.marker.v1.EventMarkerDeleteAccess`
 
-`provenance.marker.v1.EventMarkerDeleteAccess`
+| Attribute Key | Attribute Value           |
+|---------------|---------------------------|
+| Denom         | \{denom string\}          |
+| Administrator | \{admin account address\} |
+| RemoveAddress | \{address removed\}       |
 
 ---
 ## Finalize
 
 Fires when a marker is finalized.
 
-| Type                   | Attribute Key         | Attribute Value           |
-| ---------------------- | --------------------- | ------------------------- |
-| EventMarkerFinalize    | Denom                 | \{denom string\}            |
-| EventMarkerFinalize    | Administrator         | \{admin account address\}   |
+Type: `provenance.marker.v1.EventMarkerFinalize`
 
-`provenance.marker.v1.EventMarkerFinalize`
+| Attribute Key | Attribute Value           |
+|---------------|---------------------------|
+| Denom         | \{denom string\}          |
+| Administrator | \{admin account address\} |
 
 ---
 ## Activate
 
 Fires when a marker is activated.
 
-| Type                      | Attribute Key         | Attribute Value           |
-| ------------------------- | --------------------- | ------------------------- |
-| EventMarkerActivate       | Denom                 | \{denom string\}            |
-| EventMarkerActivate       | Administrator         | \{admin account address\}   |
+Type: `provenance.marker.v1.EventMarkerActivate`
 
-`provenance.marker.v1.EventMarkerActivate`
+| Attribute Key | Attribute Value           |
+|---------------|---------------------------|
+| Denom         | \{denom string\}          |
+| Administrator | \{admin account address\} |
 
 ---
 ## Cancel
 
 Fired when a marker is cancelled successfully.
 
-| Type                   | Attribute Key         | Attribute Value           |
-| ---------------------- | --------------------- | ------------------------- |
-| EventMarkerCancel      | Denom                 | \{denom string\}            |
-| EventMarkerCancel      | Administrator         | \{admin account address\}   |
+Type: `provenance.marker.v1.EventMarkerCancel`
 
-`provenance.marker.v1.EventMarkerCancel`
+| Attribute Key | Attribute Value           |
+|---------------|---------------------------|
+| Denom         | \{denom string\}          |
+| Administrator | \{admin account address\} |
 
 ---
 ## Destroy
 
 Fires when a marker is marked as destroyed and ready for removal.
 
-| Type                   | Attribute Key         | Attribute Value           |
-| ---------------------- | --------------------- | ------------------------- |
-| EventMarkerDelete      | Denom                 | \{denom string\}            |
-| EventMarkerDelete      | Administrator         | \{admin account address\}   |
+Type: `provenance.marker.v1.EventMarkerDelete`
 
-`provenance.marker.v1.EventMarkerDelete`
+| Attribute Key | Attribute Value           |
+|---------------|---------------------------|
+| Denom         | \{denom string\}          |
+| Administrator | \{admin account address\} |
 
 ---
 ## Mint
 
 Fires when coins are minted for a marker.
 
-| Type               | Attribute Key         | Attribute Value           |
-| ------------------ | --------------------- | ------------------------- |
-| EventMarkerMint    | Denom                 | \{denom string\}            |
-| EventMarkerMint    | Amount                | \{supply amount\}           |
-| EventMarkerMint    | Administrator         | \{admin account address\}   |
+Type: `provenance.marker.v1.EventMarkerMint`
 
-`provenance.marker.v1.EventMarkerMint`
+| Attribute Key | Attribute Value           |
+|---------------|---------------------------|
+| Denom         | \{denom string\}          |
+| Amount        | \{supply amount\}         |
+| Administrator | \{admin account address\} |
 
 ---
 ## Burn
 
 Fires when coins are burned from a marker account.
 
-| Type               | Attribute Key         | Attribute Value           |
-| ------------------ | --------------------- | ------------------------- |
-| EventMarkerBurn    | Denom                 | \{denom string\}            |
-| EventMarkerBurn    | Amount                | \{supply amount\}           |
-| EventMarkerBurn    | Administrator         | \{admin account address\}   |
+Type: `provenance.marker.v1.EventMarkerBurn`
 
-`provenance.marker.v1.EventMarkerBurn`
+| Attribute Key | Attribute Value           |
+|---------------|---------------------------|
+| Denom         | \{denom string\}          |
+| Amount        | \{supply amount\}         |
+| Administrator | \{admin account address\} |
 
 ---
-
-Fires when coin is removed from a marker account and transferred to another.
 ## Withdraw
 
-| Type                 | Attribute Key         | Attribute Value             |
-| -------------------- | --------------------- | --------------------------- |
-| EventMarkerWithdraw  | Denom                 | \{denom string\}              |
-| EventMarkerWithdraw  | Amount                | \{supply amount\}             |
-| EventMarkerWithdraw  | Administrator         | \{admin account address\}     |
-| EventMarkerWithdraw  | ToAddress             | \{recipient account address\} |
+Fires during a marker `Withdraw`.
 
-`provenance.marker.v1.EventMarkerWithdraw`
+Type: `provenance.marker.v1.EventMarkerWithdraw`
+
+| Attribute Key | Attribute Value               |
+|---------------|-------------------------------|
+| Denom         | \{denom string\}              |
+| Amount        | \{supply amount\}             |
+| Administrator | \{admin account address\}     |
+| ToAddress     | \{recipient account address\} |
 
 ---
 ## Transfer
 
-Fires when a facilitated transfer is performed of the marker's coin between accounts by an administrator
+Fires during a marker `Transfer`.
 
-| Type                   | Attribute Key         | Attribute Value             |
-| ---------------------- | --------------------- | --------------------------- |
-| EventMarkerTransfer   | Denom                 | \{denom string\}               |
-| EventMarkerTransfer   | Amount                | \{supply amount\}              |
-| EventMarkerTransfer   | Administrator         | \{admin account address\}      |
-| EventMarkerTransfer   | FromAddress           | \{source account address\}     |
-| EventMarkerTransfer   | ToAddress             | \{recipient account address\}  |
+Type: `provenance.marker.v1.EventMarkerTransfer`
 
-`provenance.marker.v1.EventMarkerTransfer`
+| Attribute Key | Attribute Value               |
+|---------------|-------------------------------|
+| Denom         | \{denom string\}              |
+| Amount        | \{supply amount\}             |
+| Administrator | \{admin account address\}     |
+| FromAddress   | \{source account address\}    |
+| ToAddress     | \{recipient account address\} |
 
+---
 ## Set Denom Metadata
 
 Fires when the denom metadata is set for a marker
 
-| Type                          | Attribute Key         | Attribute Value             |
-| ----------------------------- | --------------------- | --------------------------- |
-| EventMarkerSetDenomMetadata   | MetadataBase          | \{marker's denom string\}     |
-| EventMarkerSetDenomMetadata   | MetadataDescription   | \{description string\}        |
-| EventMarkerSetDenomMetadata   | MetadataDisplay       | \{denom string\}              |
-| EventMarkerSetDenomMetadata   | MetadataName          | \{name string\}               |
-| EventMarkerSetDenomMetadata   | MetadataSymbol        | \{symbol string\}             |
-| EventMarkerSetDenomMetadata   | MetadataDenomUnits    | \{array of  denom units\}     |
-| EventMarkerSetDenomMetadata   | Administrator         | \{admin account address\}     |
+Type: `provenance.marker.v1.EventMarkerSetDenomMetadata`
 
-`provenance.marker.v1.EventMarkerSetDenomMetadata`
+| Attribute Key       | Attribute Value           |
+|---------------------|---------------------------|
+| MetadataBase        | \{marker's denom string\} |
+| MetadataDescription | \{description string\}    |
+| MetadataDisplay     | \{denom string\}          |
+| MetadataName        | \{name string\}           |
+| MetadataSymbol      | \{symbol string\}         |
+| MetadataDenomUnits  | \{array of  denom units\} |
+| Administrator       | \{admin account address\} |
 
 ### Denom Unit Format
 
 Denom units have a specified exponent (1-18), a specified denom, and a list of optional aliases.  Example
 aliases for `uhash` might be `microhash` or `µhash`
 
-| Attribute Key         | Attribute Value          |
-| --------------------- | ------------------------ |
-| Denom                 | \{denom string\}           |
-| Exponent              | \{uint\}                   |
-| Aliases               | \{array of denom strings\} |
+Type: `provenance.marker.v1.EventDenomUnit`
 
-`provenance.marker.v1.EventDenomUnit`
-
-### Set Net Asset Value
-
-Fires when a new NetAssetValue is add or updated for a marker.
-
-| Type                    | Attribute Key         | Attribute Value                                   |
-| ------------------------| --------------------- | ------------------------------------------------- |
-| EventSetNetAssetValue   | Denom                 | \{marker's denom string\}                           |
-| EventSetNetAssetValue   | Price                 | \{token amount the marker is valued at for volume\} |
-| EventSetNetAssetValue   | Volume                | \{total volume/shares associated with price\}       |
-| EventSetNetAssetValue   | Source                | \{source address of caller\}                        |
-
-
-`provenance.marker.v1.EventSetNetAssetValue`
+| Attribute Key | Attribute Value            |
+|---------------|----------------------------|
+| Denom         | \{denom string\}           |
+| Exponent      | \{uint\}                   |
+| Aliases       | \{array of denom strings\} |
 
 ---
+## Set Net Asset Value
+
+Fires when a `NetAssetValue` is added or updated for a marker.
+
+Type: `provenance.marker.v1.EventSetNetAssetValue`
+
+| Attribute Key | Attribute Value                                     |
+|---------------|-----------------------------------------------------|
+| Denom         | \{marker's denom string\}                           |
+| Price         | \{token amount the marker is valued at for volume\} |
+| Volume        | \{total volume/shares associated with price\}       |
+| Source        | \{source address of caller\}                        |

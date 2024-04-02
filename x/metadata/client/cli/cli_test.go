@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -14,6 +13,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -26,6 +27,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzcli "github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -33,6 +35,7 @@ import (
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
+	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -2148,6 +2151,24 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 			expectErrMsg: "parties can only be optional when require_party_rollup = true",
 		},
 		{
+			name: "should fail write scope with invalid usd-mills",
+			cmd:  cli.WriteScopeCmd(),
+			args: []string{
+				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
+				scopeSpecID,
+				fmt.Sprintf("%s,servicer,opt;%s,owner", s.accountAddrStr, s.accountAddrStr),
+				s.accountAddrStr,
+				s.accountAddrStr,
+				fmt.Sprintf("--%s", cli.FlagRequirePartyRollup),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "blah"),
+			},
+			expectErrMsg: `invalid argument "blah" for "--usd-mills" flag: strconv.ParseUint: parsing "blah": invalid syntax`,
+		},
+		{
 			name: "should successfully write scope with optional party and rollup",
 			cmd:  cli.WriteScopeCmd(),
 			args: []string{
@@ -2161,6 +2182,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagUsdMills, "10"),
 			},
 			expectErrMsg: "",
 			expectedCode: 0,
@@ -3838,4 +3860,145 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 	}
 
 	runTxCmdTestCases(s, testCases)
+}
+
+func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
+	scopeID := "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
+	argsWStdFlags := func(args ...string) []string {
+		return append(args,
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
+		)
+	}
+
+	tests := []struct {
+		name   string
+		args   []string
+		expErr string
+		incLog bool
+	}{
+		{
+			name:   "invalid net asset string",
+			args:   argsWStdFlags(scopeID, "invalid"),
+			expErr: ("invalid net asset value coin : invalid"),
+		},
+		{
+			name:   "address not meta address",
+			args:   argsWStdFlags("notmetaaddress", "1usd"),
+			expErr: `invalid metadata address "notmetaaddress": decoding bech32 failed: invalid separator index -1`,
+		},
+		{
+			name:   "address not a scope address",
+			args:   argsWStdFlags("session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr", "1usd,1"),
+			expErr: "metadata address is not scope address: session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr",
+		},
+		{
+			name: "successful",
+			args: argsWStdFlags(scopeID, "1usd"),
+		},
+		{
+			name: "successful with multi net asset values",
+			args: argsWStdFlags(scopeID, "1usd,2jackthecat"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			cmd := cli.GetCmdAddNetAssetValues()
+
+			clientCtx := s.testnet.Validators[0].ClientCtx
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			outBz := out.Bytes()
+			outStr := string(outBz)
+
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "GetCmdAddNetAssetValues error")
+				s.Require().Contains(outStr, tc.expErr, "GetCmdAddNetAssetValues output")
+			} else {
+				s.Require().NoError(err, "GetCmdAddNetAssetValues error")
+			}
+		})
+	}
+}
+
+func (s *IntegrationCLITestSuite) TestGetNetAssetValuesCmd() {
+	scopeID := "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
+
+	tests := []struct {
+		name   string
+		args   []string
+		expErr string
+		incLog bool
+	}{
+		{
+			name: "valid query",
+			args: []string{scopeID},
+		},
+		{
+			name:   "address not meta address",
+			args:   []string{"not-a-scope-id"},
+			expErr: `decoding bech32 failed: invalid separator index -1`,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			_, err := clitestutil.ExecTestCLICmd(s.getClientCtx(), cli.GetCmdNetAssetValuesQuery(), tc.args)
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "GetCmdAddNetAssetValues error")
+			} else {
+				s.Require().NoError(err, "GetCmdAddNetAssetValues error")
+			}
+		})
+	}
+}
+
+func (s *IntegrationCLITestSuite) TestParseNetAssertValueString() {
+	testCases := []struct {
+		name           string
+		netAssetValues string
+		expErr         string
+		expResult      []types.NetAssetValue
+	}{
+		{
+			name:           "successfully parses empty string",
+			netAssetValues: "",
+			expErr:         "",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "invalid coin",
+			netAssetValues: "notacoin",
+			expErr:         "invalid net asset value coin : notacoin",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
+			name:           "successfully parse single nav",
+			netAssetValues: "1hotdog",
+			expErr:         "",
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1)}},
+		},
+		{
+			name:           "successfully parse multi nav",
+			netAssetValues: "1hotdog,20jackthecat",
+			expErr:         "",
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1)}, {Price: sdk.NewInt64Coin("jackthecat", 20)}},
+		},
+	}
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			result, err := cli.ParseNetAssetValueString(tc.netAssetValues)
+			if len(tc.expErr) > 0 {
+				s.Assert().Equal(tc.expErr, err.Error())
+				s.Assert().Empty(result)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().ElementsMatch(result, tc.expResult)
+			}
+		})
+	}
 }

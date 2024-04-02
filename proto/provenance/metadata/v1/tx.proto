@@ -82,6 +82,9 @@ service Msg {
   // SetAccountData associates some basic data with a metadata address.
   // Currently, only scope ids are supported.
   rpc SetAccountData(MsgSetAccountDataRequest) returns (MsgSetAccountDataResponse);
+
+  // AddNetAssetValues set the net asset value for a scope
+  rpc AddNetAssetValues(MsgAddNetAssetValuesRequest) returns (MsgAddNetAssetValuesResponse);
 }
 
 // MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
@@ -107,6 +110,9 @@ message MsgWriteScopeRequest {
   // If there is a value in scope.specification_id that is different from the one created from this uuid, an error is
   // returned.
   string spec_uuid = 4 [(gogoproto.moretags) = "yaml:\"spec_uuid\""];
+
+  // usd_mills value of scope in usd mills (1234 = $1.234) used for net asset value
+  uint64 usd_mills = 5;
 }
 
 // MsgWriteScopeResponse is the response type for the Msg/WriteScope RPC method.
@@ -649,3 +655,17 @@ message MsgP8eMemorializeContractResponse {
   SessionIdInfo         session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
   repeated RecordIdInfo record_id_infos = 3 [(gogoproto.moretags) = "yaml:\"record_id_infos\""];
 }
+
+// MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+message MsgAddNetAssetValuesRequest {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters)  = false;
+
+  string                 scope_id         = 1;
+  repeated string        signers          = 2;
+  repeated NetAssetValue net_asset_values = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
+message MsgAddNetAssetValuesResponse {}

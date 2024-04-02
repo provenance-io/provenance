@@ -12,16 +12,23 @@ The exchange module defines a portion of market fees to be paid to the chain (di
     - [Required Attributes](#required-attributes)
     - [Market Permissions](#market-permissions)
     - [Settlement](#settlement)
+    - [Commitment Settlement](#commitment-settlement)
+    - [Transfer Agent](#transfer-agent)
   - [Orders](#orders)
     - [Ask Orders](#ask-orders)
     - [Bid Orders](#bid-orders)
     - [Partial Orders](#partial-orders)
     - [External IDs](#external-ids)
+  - [Commitments](#commitments)
+  - [Payments](#payments)
   - [Fees](#fees)
     - [Order Creation Fees](#order-creation-fees)
     - [Settlement Flat Fees](#settlement-flat-fees)
     - [Settlement Ratio Fees](#settlement-ratio-fees)
-    - [Exchange Fees](#exchange-fees)
+    - [Commitment Fees](#commitment-fees)
+    - [Exchange Fees for Orders](#exchange-fees-for-orders)
+    - [Exchange Fees for Commitments](#exchange-fees-for-commitments)
+    - [Exchange Fees for Payments](#exchange-fees-for-payments)
 
 
 ## Markets
@@ -33,13 +40,14 @@ Fees can only be managed with a governance proposal using the [MsgGovManageFeesR
 
 Each market has a set of optional details designed for human-use, e.g. name, description, website url.
 
-A market is responsible (off-chain) for identifying order matches and triggering (on-chain) settlement.
+If a market accepts orders, it is responsible (off-chain) for identifying order matches and triggering (on-chain) settlement.
+If a market accepts commitments, it is able to manage committed funds and is responsible for releasing commitments as needed.
 
 A market receives fees for order creation and order settlement. It also defines what fees are required and what is acceptable as payments.
 
 A market can delegate various [permissions](#market-permissions) to other accounts, allowing those accounts to use specific endpoints on behalf of the market.
 
-Markets can restrict who can create orders with them by defining account attributes that are required to create orders. See [Required Attributes](#required-attributes).
+Markets can restrict who can create orders or commitments with them by defining account attributes that are required to create orders. See [Required Attributes](#required-attributes).
 
 Markets can control whether user-settlement is allowed.
 When user-settlement is allowed, the [FillBids](03_messages.md#fillbids) and [FillAsks](03_messages.md#fillasks) endpoints can be used for orders in the market.
@@ -47,20 +55,25 @@ When user-settlement is allowed, the [FillBids](03_messages.md#fillbids) and [Fi
 A market can also control whether orders can be created for it.
 When order creation is not allowed, any existing orders can still be settled or cancelled, but no new ones can be made (in that market).
 
+A market can separately control whether funds can be committed to it.
+When commitments are not allowed, any existing commitments can still be settled or cancelled, but no new funds can be committed (to that market).
+
 The fees collected by a market are kept in the market's account, and can be accessed using the [MarketWithdraw](03_messages.md#marketwithdraw) endpoint.
 
 See also: [Market](03_messages.md#market).
 
+
 ### Required Attributes
 
-There is a separate list of attributes required to create each order type.
-If one or more attributes are required to create an order of a certain type, the order creator (buyer or seller) must have all of them on their account.
+There is a separate list of attributes required to create each order type and commitments.
+If one or more attributes are required for an action, the associated account (e.g. buyer, seller, or committer) must have all of them on their account.
 
 Required attributes can have a wildcard at the start to indicate that any attribute with the designated base and one (or more) level(s) is applicable.
 The only place a wildcard `*` is allowed is at the start of the string and must be immediately followed by a period.
 For example, a required attribute of `*.kyc.pb` would match an account attribute of `buyer.kyc.pb` or `special.seller.kyc.pb`, but not `buyer.xkyc.pb` (wrong base) or `kyc.pb` (no extra level).
 
 Attributes are defined using the [x/name](/x/name/spec/README.md) module, and are managed on accounts using the [x/attributes](/x/attribute/spec/README.md) module.
+
 
 ### Market Permissions
 
@@ -71,9 +84,9 @@ Each market manages its own set of [AccessGrants](03_messages.md#accessgrant), w
 * `PERMISSION_UNSPECIFIED`: it is an error to try to use this permission for anything.
 * `PERMISSION_SETTLE`: accounts with this permission can use the [MarketSettle](03_messages.md#marketsettle) endpoint for a market.
 * `PERMISSION_SET_IDS`: accounts with this permission can use the [MarketSetOrderExternalID](03_messages.md#marketsetorderexternalid) endpoint for a market.
-* `PERMISSION_CANCEL`: accounts with this permission can use the [CancelOrder](03_messages.md#cancelorder) endpoint to cancel orders in a market.
+* `PERMISSION_CANCEL`: accounts with this permission can use the [CancelOrder](03_messages.md#cancelorder) and [MarketReleaseCommitments](03_messages.md#marketreleasecommitments) endpoints to cancel orders and release commitments in a market.
 * `PERMISSION_WITHDRAW`: accounts with this permission can use the [MarketWithdraw](03_messages.md#marketwithdraw) endpoint for a market.
-* `PERMISSION_UPDATE`: accounts with this permission can use the [MarketUpdateDetails](03_messages.md#marketupdatedetails), [MarketUpdateEnabled](03_messages.md#marketupdateenabled), and [MarketUpdateUserSettle](03_messages.md#marketupdateusersettle) endpoints for a market.
+* `PERMISSION_UPDATE`: accounts with this permission can use the [MarketUpdateDetails](03_messages.md#marketupdatedetails), [MarketUpdateAcceptingOrders](03_messages.md#marketupdateacceptingorders), [MarketUpdateUserSettle](03_messages.md#marketupdateusersettle), [MarketUpdateAcceptingCommitments](03_messages.md#marketupdateacceptingcommitments), and [MarketUpdateIntermediaryDenom](03_messages.md#marketupdateintermediarydenom) endpoints for a market.
 * `PERMISSION_PERMISSIONS`: accounts with this permission can use the [MarketManagePermissions](03_messages.md#marketmanagepermissions) endpoint for a market.
 * `PERMISSION_ATTRIBUTES`: accounts with this permission can use the [MarketManageReqAttrs](03_messages.md#marketmanagereqattrs) endpoint for a market.
 
@@ -103,10 +116,33 @@ During settlement:
 With complex settlements, it's possible that an ask order's `assets` go to a different account than the `price` funds come from, and vice versa for bid orders.
 
 Transfers of the `assets` and `price` bypass the quarantine module since order creation can be viewed as acceptance of those funds.
-
-Transfers do not bypass any other send-restrictions (e.g. `x/marker` or `x/sanction` module restrictions).
+No other send-restrictions are bypassed (e.g. `x/marker` or `x/sanction` module restrictions).
 E.g. If an order's funds are in a sanctioned account, settlement of that order will fail since those funds cannot be removed from that account.
-Or, if a marker has required attributes, but the recipient does not have those attributes, settlement will fail.
+
+
+### Commitment Settlement
+
+A market can move funds committed to it by using the [MarketCommitmentSettle](03_messages.md#marketcommitmentsettle) endpoint.
+
+During commitment settlement:
+
+1. Holds are released on the funds to be transferred.
+2. The funds are transferred.
+3. The funds are re-committed in the destination accounts.
+
+The market can collect fees as part of this settlement, but is also charged extra fees for the tx.
+See also: [Commitment Fees](#commitment-fees).
+
+The funds are re-committed regardless of the market's `accepting_commitments` value.
+The accounts these funds are being re-committed to also are not required to have the create-commitment required attributes.
+
+
+### Transfer Agent
+
+During a settlement, commitment settlement, or market withdrawal, the `admin` is also used as the transfer agent.
+A transfer agent is used by the `x/marker` module's [Send Restrictions](../../marker/spec/12_transfers.md#send-restrictions) to help facilitate movement of restricted coins.
+E.g. an `admin` with `transfer` access for a denom and `settle` permission for a market can use a settlement to transfer restricted funds to a recipient, regardless of required attributes on that denom or the attributes of the recipient.
+If an `admin` does **not** have `transfer` access for a restricted denom, settlements can still succeed if the recipient has the required attributes for that denom.
 
 
 ## Orders
@@ -208,6 +244,52 @@ Orders with external ids can be looked up using the [GetOrderByExternalID](05_qu
 External ids are limited to 100 characters.
 
 
+## Commitments
+
+A Commitment allows an account to give control of some of its funds to a market.
+
+When funds are committed to a market, they remain in the source account and a [hold](../../hold/spec/01_concepts.md#holds) is placed on them.
+Committed funds are not usable by the account they are in; only the market can move them.
+The funds stay in the account until the market either moves them using the [MarketCommitmentSettle](03_messages.md#marketcommitmentsettle) endpoint or cancels the commitment in part or full.
+Commitments can only be cancelled by the market (or a governance proposal).
+
+For a market to start accepting commitments, it must have either a settlement bips, or a commitment creation flat fee defined.
+If a settlement bips is defined, an intermediary denom must also be defined and a NAV must exist from the intermediary denom to the chain's fee denom.
+
+Management of the settlement bips and commitment creation fee options is part of the fee-management governance proposal.
+The `accepting_commitments` flag and intermediary denom are managed using the [MarketUpdateAcceptingCommitments](03_messages.md#marketupdateacceptingcommitments) and [MarketUpdateIntermediaryDenom](03_messages.md#marketupdateintermediarydenom) endpoints.
+
+
+## Payments
+
+A payment is used to trade fund between two accounts.
+
+The account that creates the payment is the `source`.
+The account that can accept (or reject) the payment is the `target`.
+A target does not need to be declared when a payment is created.
+A payment's target can be changed (by the source) until it has been accepted, rejected, or cancelled.
+
+The amount that the `source` is providing is the `source_amount`.
+The amount that the `target` is providing is the `target_amount`.
+Both the `source_amount` and `target_amount` are optional, but at least one must be provided.
+
+When a payment is created, a hold is placed the `source_amount` funds (in the `source` account).
+When a payment is accepted, that hold is released.
+Then the `source_amount` is sent from the `source` to the `target`, and the `target_amount` is sent from the `target` to the `source`.
+
+A payment is uniquely identified by its `source` and `external_id`.
+It is up to the `source` to choose an `external_id` that they are not already using in another payment.
+Once a payment has been accepted, rejected, or cancelled, its external id can be reused by the source.
+Two different sources can use the same external id.
+
+In order to accept a payment, all the details of the payment must be provided in the request.
+This ensures that the `target` accepts the terms of the payment.
+
+Creating or accepting a payment may require an extra amount to be included in the tx fees.
+This amount is defined in the exchange module [Params](06_params.md).
+The amount required for a specific payment can be calculated using the [PaymentFeeCalc](05_queries.md#paymentfeecalc) query.
+
+
 ## Fees
 
 Markets dictate the minimum required fees. It's possible to pay more than the required fees, but not less.
@@ -215,11 +297,12 @@ Markets dictate the minimum required fees. It's possible to pay more than the re
 A portion of the fees that a market collects are sent to the blockchain and distributed similar to gas fees.
 This portion is dictated by the exchange module in its [params](06_params.md).
 
-There are three types of fees:
+There are several types of fees:
 
 * Order creation: Flat fees paid at the time that an order is created.
 * Settlement flat fees: A fee paid during settlement that is the same for each order.
 * Settlement ratio fees: A fee paid during settlement that is based off of the order's price.
+* Commitment fees: Fees paid in relation to commitments.
 
 For each fee type, there is a configuration for each order type.
 E.g. the ask-order creation fee is configured separately from the bid-order creation fee.
@@ -277,7 +360,6 @@ This allows a market to not charge a ratio fee for a specific `price` denom.
 
 A `FeeRatio` with the same `price` and `fee` denoms must have a larger price amount than fee amount.
 
-
 #### Seller Settlement Ratio Fee
 
 A market's `fee_seller_settlement_ratios` are limited to `FeeRatio`s that have the same `price` and `fee` denom.
@@ -294,7 +376,6 @@ E.g. A market has `1000chicken:3chicken` in `fee_seller_settlement_ratios`.
 The actual amount isn't known until settlement, but a minimum can be calculated by applying the applicable ratio to an ask order's `price`.
 The seller settlement ratio fee will be at least that amount, but since it gets larger slower than the price, `<ask order price> - <ratio fee based on ask order price> - <flat fee>` is the least amount the seller will end up with.
 
-
 #### Buyer Settlement Ratio Fee
 
 A market's `fee_buyer_settlement_ratios` can have `FeeRatios` with any denom pair, i.e. the `price` and `fee` do not need to be the same denom.
@@ -302,16 +383,90 @@ It can also have multiple entries with the same `price` denom or `fee` denom, bu
 E.g. a market can have `100chicken:1cow` and also `100chicken:7chicken`, `500cow:1cow`, and `5cow:1chicken`, but it couldn't also have `105chicken:2cow`.
 
 To calculate the buyer settlement ratio fee, the following formula is used: `<bid price> * <ratio fee> / <ratio price>`.
-If that is not a whole number, the chosen ratio is not applicable to the bid order's price and cannot be used.
-The user will need to either use a different ratio or change their bid price.
+If that is not a whole number, it is rounded up to the next whole number.
 
 The buyer settlement ratio fee should be added to the buyer settlement flat fee and provided in the `buyer_settlement_fees` in the bid order.
 The ratio and flat fees can be in any denoms allowed by the market, and do not have to be the same.
 
 
-### Exchange Fees
+### Commitment Fees
 
-A portion of the fees collected by a market, are given to the exchange.
+A market can collect commitment fees at commitment creation and/or during settlement.
+
+A market is also charged an extra Tx fee when doing a settlement.
+
+#### Commitment Creation Fees
+
+Similar to order creation fees, these are paid by the committer at the time of committal.
+A portion of these fees are given to the exchange.
+This can only be defined as a flat fee: `fee_create_commitment_flat`: The available `Coin` fee options that are paid by the committer when committing funds.
+The commitment's `creation_fee` must be at least one of the available `fee_create_commitment_flat` options.
+
+#### Commitment Settlement Fee Collection
+
+During a commitment settlement, a market can collect fees by populating the `fees` field in the [MsgMarketCommitmentSettleRequest](03_messages.md#msgmarketcommitmentsettlerequest).
+The exchange does **NOT** keep any portion of these fees.
+Only fees that have been committed to the market can be collected in this way.
+
+#### Commitment Settlement Fee Charge
+
+An additional fee is charged (similar to a msg-based fee) for commitment settlements that is based on the total funds being moved.
+The [CommitmentSettlementFeeCalc](05_queries.md#commitmentsettlementfeecalc) query can be used to find out how much the fee will be for a commitment settlement.
+This fee is provided as a portion of the tx fees (in addition to any gas or other fees).
+
+The fee is calculated as such:
+
+1. Sum the settlement inputs.
+2. Use Marker Net-Asset-Value (NAV) entries (or provided NAV entries) to convert the total into the market's intermediary denom (any amounts in the fee denom are not converted).
+3. A NAV is used to convert the intermediary total to the fee denom (which is added to any fee denom amount in the inputs).
+4. The market's `commitment_settlement_bips` is applied to the fee denom total.
+5. That total is divided by two to get the final fee amount.
+
+During step 2, the amount of the intermediary denom is tracked as a real number (not limited to integers).
+At the end of that step, the sum is rounded up to the next integer.
+
+Technically both steps 4 and 5 are done together by doing `amount * bips / 20,000`. If that is not an integer, the result is rounded up.
+
+If a NAV is needed for fee calculation, but does not exist (or wasn't provided), commitment settlement will fail.
+To help, NAVs can be provided as part of a commitment settlement and the marker module will be updated with any NAV info provided.
+NAVs are **NOT** updated in the query, only when provided as part of a settlement.
+NAVs provided to the query are still used for that query, though.
+
+The total is divided by two because the sum of the inputs is effectively double what we usually think of as the "value of a trade".
+E.g. If buying  `1candybar` for `99cusd`, we think of the value of that trade as $0.99.
+Without the halving, though, we might have ended up with a total of $1.98 by converting the `1candybar` into `cusd` (hopefully `99cusd`) and adding that to the other `99cusd`.
+
+##### Commitment Settlement Fee Charge Example
+
+A commitment settlement is requested with the following data and market setup:
+
+| name               | value                                                        |
+|--------------------|--------------------------------------------------------------|
+| Input Total        | `30apple,93banana,87cherry,300nhash`                         |
+| NAVs               | `21apple:500cherry`, `44banana:77cherry`, `10cherry:31nhash` |
+| Intermediary Denom | `cherry`                                                     |
+| Bips               | 25                                                           |
+| Fee Denom          | `nhash`                                                      |
+
+1. Convert the input total to the intermediary denom:
+   * `30apple` * `500cherry`/`21apple` = `714.285714285714cherry`
+   * `93banana` * `77cherry`/`44banana` = `162.75cherry`
+   * `87cherry` => `87cherry` (already intermediary denom, do not convert yet)
+   * `300nhash` => `300nhash` (already in fee denom, do not convert)
+   * Sum: `964.035714285714cherry` => `965cherry` (and `300nhash`).
+2. Convert that to the fee denom:
+   * `965cherry` * `31nhash`/`10cherry` = `2991.5nhash` => `2992nhash`
+   * `300nhash` => `300nhash` (already in fee denom, do not convert)
+   * Sum: `3292nhash`
+3. Apply Bips:
+   * `3292nhash` * `25`/`20000` = `4.115nhash` => `5nhash`
+
+The market will need to provide an extra `5nhash` with the `Tx` fees in order to do this commitment settlement.
+
+
+### Exchange Fees for Orders
+
+A portion of the fees collected by a market for order creation and settlement, are given to the exchange.
 The amount is defined using basis points in the exchange module's [Params](06_params.md#params) and can be configured differently for specific denoms.
 
 When the market collects fees, the applicable basis points are looked up and applied to the amount being collected.
@@ -334,3 +489,21 @@ During order creation, the exchange's portion of the order creation fee is calcu
 During [FillBids](03_messages.md#fillbids) or [FillAsks](03_messages.md#fillasks), the settlement fees are summed and collected separately from the order creation fee.
 That means the math and rounding is done twice, once for the total settlement fees and again for the order creation fee.
 This is done so that the fees are collected the same as if an order were created and later settled by the market.
+
+
+### Exchange Fees for Commitments
+
+When a commitment is created, a portion of the fee collected by the market is given to the exchange in the same manner that order creation fees are handled.
+
+During a commitment settlement, the exchange collects a fee proportional to the funds being settled.
+This fee must be included in the `Tx` fees provided with a `MsgMarketCommitmentSettleRequest`.
+See [Commitment Settlement Fee Charge](#commitment-settlement-fee-charge) for details.
+
+
+### Exchange Fees for Payments
+
+When a payment is created with a non-zero `source_amount`, an extra amount is required to be included in the tx fees.
+When a payment is accepted with a non-zero `target_amount`, an extra amount is required to be included in the tx fees.
+
+The amounts are flat and defined in the exchange module [Params](06_params.md) with separate entries for creating and accepting payments.
+The [PaymentFeeCalc](05_queries.md#paymentfeecalc) query can be used to identify the extra required tx fee amounts.

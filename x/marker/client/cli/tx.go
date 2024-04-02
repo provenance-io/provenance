@@ -1,10 +1,8 @@
 package cli
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -26,7 +24,6 @@ import (
 
 	// govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli" // TODO[1760]: gov-cli
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v8/modules/core/04-channel/client/utils"
 
@@ -54,7 +51,7 @@ const (
 	FlagAdd                    = "add"
 	FlagRemove                 = "remove"
 	FlagGovProposal            = "gov-proposal"
-	FlagUsdCents               = "usd-cents"
+	FlagUsdMills               = "usd-mills"
 	FlagVolume                 = "volume"
 )
 
@@ -100,111 +97,12 @@ func GetCmdMarkerProposal() *cobra.Command {
 		Use:   "proposal [type] [proposal-file] [deposit]",
 		Args:  cobra.ExactArgs(3),
 		Short: "Submit a marker proposal along with an initial deposit",
-		Long: strings.TrimSpace(`Submit a marker proposal along with an initial deposit.
-Proposal title, description, deposit, and marker proposal params must be set in a provided JSON file.
-
-Where proposal.json contains:
-
-{
-  "title": "Test Proposal",
-  "description": "My awesome proposal",
-  "denom": "denomstring"
-  // additional properties based on type here
-}
-
-
-Valid Proposal Types (and associated parameters):
-
-- AddMarker
-	"amount": 100,
-	"manager": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", 
-	"status": "active", // [proposed, finalized, active]
-	"marker_type": "COIN", // COIN, RESTRICTED
-	"access_list": [ {"address":"pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", "permissions": [1,2,3]} ], 
-	"supply_fixed": true, 
-	"allow_governance_control": true, 
-
-- IncreaseSupply
-	"amount": {"denom":"coin", "amount":"10"}
-
-- DecreaseSupply
-	"amount": {"denom":"coin", "amount":"10"}
-
-- SetAdministrator
-	"access": [{"address":"pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk", "permissions": [1,2,3]}]
-
-- RemoveAdministrator
-	"removed_address": ["pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"]
-
-- ChangeStatus
-	"new_status": "MARKER_STATUS_ACTIVE" // [finalized, active, cancelled, destroyed]
-
-- WithdrawEscrow
-	"amount": "100coin"
-	"target_address": "pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk"
-
-- SetDenomMetadata
-	"metadata": {
-		"description": "description text",
-		"base": "basedenom",
-		"display": "displaydenom",
-		"name": "Denom Name",
-		"symbol": "DSYMB",
-		"denom_units": [
-			{"denom":"basedenom","exponent":0,"aliases":[]},
-			{"denom":"otherdenomunit","exponent":9,"aliases":[]}
-		]
-	}
+		Long: strings.TrimSpace(`This command has been deprecated, and is no longer functional.
+Please use 'gov proposal submit-proposal instead.
 `,
 		),
-		Example: fmt.Sprintf(`$ %s tx marker proposal AddMarker "path/to/proposal.json" 1000%s --from mykey`, version.AppName, sdk.DefaultBondDenom),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			contents, err := os.ReadFile(args[1])
-			if err != nil {
-				return err
-			}
-
-			var proposal govtypesv1beta1.Content
-
-			switch args[0] {
-			case types.ProposalTypeIncreaseSupply:
-				proposal = &types.SupplyIncreaseProposal{}
-			case types.ProposalTypeDecreaseSupply:
-				proposal = &types.SupplyDecreaseProposal{}
-			case types.ProposalTypeSetAdministrator:
-				proposal = &types.SetAdministratorProposal{}
-			case types.ProposalTypeRemoveAdministrator:
-				proposal = &types.RemoveAdministratorProposal{}
-			case types.ProposalTypeChangeStatus:
-				proposal = &types.ChangeStatusProposal{}
-			case types.ProposalTypeWithdrawEscrow:
-				proposal = &types.WithdrawEscrowProposal{}
-			case types.ProposalTypeSetDenomMetadata:
-				proposal = &types.SetDenomMetadataProposal{}
-			default:
-				return fmt.Errorf("unknown proposal type %s", args[0])
-			}
-			err = json.Unmarshal(contents, proposal)
-			if err != nil {
-				return err
-			}
-
-			deposit, err := sdk.ParseCoinsNormalized(args[2])
-			if err != nil {
-				return err
-			}
-
-			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
-			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %w", err)
-			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -254,7 +152,7 @@ with the given supply amount and denomination provided in the coin argument
 				flagVals.AllowGovControl,
 				flagVals.AllowForceTransfer,
 				flagVals.RequiredAttributes,
-				flagVals.UsdCents,
+				flagVals.UsdMills,
 				flagVals.Volume,
 			)
 
@@ -973,7 +871,7 @@ with the given supply amount and denomination provided in the coin argument
 			msg := types.NewMsgAddFinalizeActivateMarkerRequest(
 				coin.Denom, coin.Amount, callerAddr, callerAddr, flagVals.MarkerType,
 				flagVals.SupplyFixed, flagVals.AllowGovControl,
-				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants, flagVals.UsdCents, flagVals.Volume,
+				flagVals.AllowForceTransfer, flagVals.RequiredAttributes, accessGrants, flagVals.UsdMills, flagVals.Volume,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -1208,7 +1106,7 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 	return grants
 }
 
-// ParseNetAssetValueString splits string (example address1,perm1,perm2...;address2, perm1...) to list of NetAssetValue's
+// ParseNetAssetValueString splits string (example 1hotdog,1;2jackthecat100,...) to list of NetAssetValue's
 func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
 	navs := strings.Split(netAssetValuesString, ";")
 	if len(navs) == 1 && len(navs[0]) == 0 {
@@ -1222,7 +1120,7 @@ func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValu
 		}
 		coin, err := sdk.ParseCoinNormalized(parts[0])
 		if err != nil {
-			return []types.NetAssetValue{}, fmt.Errorf("invalid coin %s", parts[0])
+			return []types.NetAssetValue{}, fmt.Errorf("invalid net asset value coin : %s", parts[0])
 		}
 		volume, err := strconv.ParseUint(parts[1], 10, 64)
 		if err != nil {
@@ -1241,7 +1139,7 @@ func AddNewMarkerFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagAllowGovernanceControl, false, "Indicates that governance control is allowed")
 	cmd.Flags().Bool(FlagAllowForceTransfer, false, "Indicates that force transfer is allowed")
 	cmd.Flags().StringSlice(FlagRequiredAttributes, []string{}, "comma delimited list of required attributes needed for a restricted marker to have send authority")
-	cmd.Flags().Uint64(FlagUsdCents, 0, "Indicates the net asset value of marker in usd cents, i.e. 1234 = $1.234")
+	cmd.Flags().Uint64(FlagUsdMills, 0, "Indicates the net asset value of marker in usd mills, i.e. 1234 = $1.234")
 	cmd.Flags().Uint64(FlagVolume, 0, "Indicates the volume of the net asset value")
 }
 
@@ -1252,7 +1150,7 @@ type NewMarkerFlagValues struct {
 	AllowGovControl    bool
 	AllowForceTransfer bool
 	RequiredAttributes []string
-	UsdCents           uint64
+	UsdMills           uint64
 	Volume             uint64
 }
 
@@ -1293,9 +1191,9 @@ func ParseNewMarkerFlags(cmd *cobra.Command) (*NewMarkerFlagValues, error) {
 		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: comma delimited list of attributes Error: %w", FlagRequiredAttributes, err)
 	}
 
-	rv.UsdCents, err = cmd.Flags().GetUint64(FlagUsdCents)
+	rv.UsdMills, err = cmd.Flags().GetUint64(FlagUsdMills)
 	if err != nil {
-		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagUsdCents, err)
+		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagUsdMills, err)
 	}
 
 	rv.Volume, err = cmd.Flags().GetUint64(FlagVolume)
@@ -1303,8 +1201,8 @@ func ParseNewMarkerFlags(cmd *cobra.Command) (*NewMarkerFlagValues, error) {
 		return nil, fmt.Errorf("incorrect value for %s flag.  Accepted: 0 or greater value Error: %w", FlagVolume, err)
 	}
 
-	if rv.UsdCents > 0 && rv.Volume == 0 {
-		return nil, fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdCents)
+	if rv.UsdMills > 0 && rv.Volume == 0 {
+		return nil, fmt.Errorf("incorrect value for %s flag.  Must be positive number if %s flag has been set to positive value", FlagVolume, FlagUsdMills)
 	}
 
 	return rv, nil

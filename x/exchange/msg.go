@@ -10,19 +10,32 @@ import (
 var allRequestMsgs = []sdk.Msg{
 	(*MsgCreateAskRequest)(nil),
 	(*MsgCreateBidRequest)(nil),
+	(*MsgCommitFundsRequest)(nil),
 	(*MsgCancelOrderRequest)(nil),
 	(*MsgFillBidsRequest)(nil),
 	(*MsgFillAsksRequest)(nil),
 	(*MsgMarketSettleRequest)(nil),
+	(*MsgMarketCommitmentSettleRequest)(nil),
+	(*MsgMarketReleaseCommitmentsRequest)(nil),
 	(*MsgMarketSetOrderExternalIDRequest)(nil),
 	(*MsgMarketWithdrawRequest)(nil),
 	(*MsgMarketUpdateDetailsRequest)(nil),
 	(*MsgMarketUpdateEnabledRequest)(nil),
+	(*MsgMarketUpdateAcceptingOrdersRequest)(nil),
 	(*MsgMarketUpdateUserSettleRequest)(nil),
+	(*MsgMarketUpdateAcceptingCommitmentsRequest)(nil),
+	(*MsgMarketUpdateIntermediaryDenomRequest)(nil),
 	(*MsgMarketManagePermissionsRequest)(nil),
 	(*MsgMarketManageReqAttrsRequest)(nil),
+	(*MsgCreatePaymentRequest)(nil),
+	(*MsgAcceptPaymentRequest)(nil),
+	(*MsgRejectPaymentRequest)(nil),
+	(*MsgRejectPaymentsRequest)(nil),
+	(*MsgCancelPaymentsRequest)(nil),
+	(*MsgChangePaymentTargetRequest)(nil),
 	(*MsgGovCreateMarketRequest)(nil),
 	(*MsgGovManageFeesRequest)(nil),
+	(*MsgGovCloseMarketRequest)(nil),
 	(*MsgGovUpdateParamsRequest)(nil),
 }
 
@@ -57,6 +70,41 @@ func (m MsgCreateBidRequest) ValidateBasic() error {
 
 func (m MsgCreateBidRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.BidOrder.Buyer)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgCommitFundsRequest) ValidateBasic() error {
+	var errs []error
+
+	if _, err := sdk.AccAddressFromBech32(m.Account); err != nil {
+		errs = append(errs, fmt.Errorf("invalid account %q: %w", m.Account, err))
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, errors.New("invalid market id: cannot be zero"))
+	}
+
+	if m.Amount.IsZero() {
+		errs = append(errs, fmt.Errorf("invalid amount %q: cannot be zero", m.Amount))
+	} else if err := m.Amount.Validate(); err != nil {
+		errs = append(errs, fmt.Errorf("invalid amount %q: %w", m.Amount, err))
+	}
+
+	if m.CreationFee != nil {
+		if err := m.CreationFee.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("invalid creation fee %q: %w", m.CreationFee, err))
+		}
+	}
+
+	if err := ValidateEventTag(m.EventTag); err != nil {
+		errs = append(errs, err)
+	}
+
+	return errors.Join(errs...)
+}
+
+func (m MsgCommitFundsRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Account)
 	return []sdk.AccAddress{addr}
 }
 
@@ -197,6 +245,117 @@ func (m MsgMarketSettleRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+func (m MsgMarketCommitmentSettleRequest) Validate(requireInputs bool) error {
+	var errs []error
+
+	if requireInputs {
+		if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+			errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+		}
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
+	}
+
+	inputsOk := true
+	if len(m.Inputs) == 0 {
+		if requireInputs {
+			errs = append(errs, errors.New("no inputs provided"))
+			inputsOk = false
+		}
+	} else {
+		for i, input := range m.Inputs {
+			if err := input.Validate(); err != nil {
+				errs = append(errs, fmt.Errorf("inputs[%d]: %w", i, err))
+				inputsOk = false
+			}
+		}
+	}
+
+	outputsOk := true
+	if len(m.Outputs) == 0 {
+		if requireInputs {
+			errs = append(errs, errors.New("no outputs provided"))
+			outputsOk = false
+		}
+	} else {
+		for i, output := range m.Outputs {
+			if err := output.Validate(); err != nil {
+				errs = append(errs, fmt.Errorf("outputs[%d]: %w", i, err))
+				outputsOk = false
+			}
+		}
+	}
+
+	if inputsOk && outputsOk {
+		inputTot := SumAccountAmounts(m.Inputs)
+		outputTot := SumAccountAmounts(m.Outputs)
+		if !inputTot.Equal(outputTot) {
+			errs = append(errs, fmt.Errorf("input total %q does not equal output total %q", inputTot, outputTot))
+		}
+	}
+
+	for i, fee := range m.Fees {
+		if err := fee.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("fees[%d]: %w", i, err))
+		}
+	}
+
+	for i, nav := range m.Navs {
+		if err := nav.Validate(); err != nil {
+			errs = append(errs, fmt.Errorf("navs[%d]: %w", i, err))
+		}
+	}
+
+	if err := ValidateEventTag(m.EventTag); err != nil {
+		errs = append(errs, err)
+	}
+
+	return errors.Join(errs...)
+}
+
+func (m MsgMarketCommitmentSettleRequest) ValidateBasic() error {
+	return m.Validate(true)
+}
+
+func (m MsgMarketCommitmentSettleRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgMarketReleaseCommitmentsRequest) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	}
+
+	if m.MarketId == 0 {
+		errs = append(errs, fmt.Errorf("invalid market id: cannot be zero"))
+	}
+
+	if len(m.ToRelease) == 0 {
+		errs = append(errs, errors.New("nothing to release"))
+	} else {
+		for i, toRelease := range m.ToRelease {
+			if err := toRelease.ValidateWithOptionalAmount(); err != nil {
+				errs = append(errs, fmt.Errorf("to release[%d]: %w", i, err))
+			}
+		}
+	}
+
+	if err := ValidateEventTag(m.EventTag); err != nil {
+		errs = append(errs, err)
+	}
+
+	return errors.Join(errs...)
+}
+
+func (m MsgMarketReleaseCommitmentsRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
+}
+
 func (m MsgMarketSetOrderExternalIDRequest) ValidateBasic() error {
 	var errs []error
 
@@ -277,6 +436,15 @@ func (m MsgMarketUpdateDetailsRequest) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgMarketUpdateEnabledRequest) ValidateBasic() error {
+	return errors.New("the MarketUpdateEnabled endpoint has been replaced by the MarketUpdateAcceptingOrders endpoint")
+}
+
+func (m MsgMarketUpdateEnabledRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgMarketUpdateAcceptingOrdersRequest) ValidateBasic() error {
 	var errs []error
 
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
@@ -292,7 +460,7 @@ func (m MsgMarketUpdateEnabledRequest) ValidateBasic() error {
 	return errors.Join(errs...)
 }
 
-func (m MsgMarketUpdateEnabledRequest) GetSigners() []sdk.AccAddress {
+func (m MsgMarketUpdateAcceptingOrdersRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Admin)
 	return []sdk.AccAddress{addr}
 }
@@ -314,6 +482,41 @@ func (m MsgMarketUpdateUserSettleRequest) ValidateBasic() error {
 }
 
 func (m MsgMarketUpdateUserSettleRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgMarketUpdateAcceptingCommitmentsRequest) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	}
+	if m.MarketId == 0 {
+		errs = append(errs, errors.New("invalid market id: cannot be zero"))
+	}
+	return errors.Join(errs...)
+}
+
+func (m MsgMarketUpdateAcceptingCommitmentsRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgMarketUpdateIntermediaryDenomRequest) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		errs = append(errs, fmt.Errorf("invalid administrator %q: %w", m.Admin, err))
+	}
+	if m.MarketId == 0 {
+		errs = append(errs, errors.New("invalid market id: cannot be zero"))
+	}
+	if err := ValidateIntermediaryDenom(m.IntermediaryDenom); err != nil {
+		errs = append(errs, err)
+	}
+	return errors.Join(errs...)
+}
+
+func (m MsgMarketUpdateIntermediaryDenomRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Admin)
 	return []sdk.AccAddress{addr}
 }
@@ -394,6 +597,7 @@ func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
 		errs = append(errs,
 			ValidateAddRemoveReqAttrs("create-ask", m.CreateAskToAdd, m.CreateAskToRemove),
 			ValidateAddRemoveReqAttrs("create-bid", m.CreateBidToAdd, m.CreateBidToRemove),
+			ValidateAddRemoveReqAttrs("create-commitment", m.CreateCommitmentToAdd, m.CreateCommitmentToRemove),
 		)
 	} else {
 		errs = append(errs, errors.New("no updates"))
@@ -405,11 +609,143 @@ func (m MsgMarketManageReqAttrsRequest) ValidateBasic() error {
 // HasUpdates returns true if this has at least one required attribute change, false if devoid of updates.
 func (m MsgMarketManageReqAttrsRequest) HasUpdates() bool {
 	return len(m.CreateAskToAdd) > 0 || len(m.CreateAskToRemove) > 0 ||
-		len(m.CreateBidToAdd) > 0 || len(m.CreateBidToRemove) > 0
+		len(m.CreateBidToAdd) > 0 || len(m.CreateBidToRemove) > 0 ||
+		len(m.CreateCommitmentToAdd) > 0 || len(m.CreateCommitmentToRemove) > 0
 }
 
 func (m MsgMarketManageReqAttrsRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgCreatePaymentRequest) ValidateBasic() error {
+	return m.Payment.Validate()
+}
+
+func (m MsgCreatePaymentRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Payment.Source)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgAcceptPaymentRequest) ValidateBasic() error {
+	var errs []error
+	if err := m.Payment.Validate(); err != nil {
+		errs = append(errs, err)
+	}
+	if len(m.Payment.Target) == 0 {
+		errs = append(errs, fmt.Errorf("invalid target: empty address string is not allowed"))
+	}
+	return errors.Join(errs...)
+}
+
+func (m MsgAcceptPaymentRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Payment.Target)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgRejectPaymentRequest) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Target); err != nil {
+		errs = append(errs, fmt.Errorf("invalid target %q: %w", m.Target, err))
+	}
+	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
+		errs = append(errs, fmt.Errorf("invalid source %q: %w", m.Source, err))
+	}
+	if err := ValidateExternalID(m.ExternalId); err != nil {
+		errs = append(errs, err)
+	}
+	return errors.Join(errs...)
+}
+
+func (m MsgRejectPaymentRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Target)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgRejectPaymentsRequest) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Target); err != nil {
+		errs = append(errs, fmt.Errorf("invalid target %q: %w", m.Target, err))
+	}
+	if len(m.Sources) == 0 {
+		errs = append(errs, errors.New("at least one source is required"))
+	}
+	known := make(map[string]bool)
+	bad := make(map[string]bool)
+	for i, source := range m.Sources {
+		if bad[source] {
+			continue
+		}
+		if known[source] {
+			errs = append(errs, fmt.Errorf("invalid sources: duplicate entry %s", source))
+			bad[source] = true
+			continue
+		}
+		known[source] = true
+		if _, err := sdk.AccAddressFromBech32(source); err != nil {
+			errs = append(errs, fmt.Errorf("invalid sources[%d] %q: %w", i, source, err))
+			bad[source] = true
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func (m MsgRejectPaymentsRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Target)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgCancelPaymentsRequest) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
+		errs = append(errs, fmt.Errorf("invalid source %q: %w", m.Source, err))
+	}
+	if len(m.ExternalIds) == 0 {
+		errs = append(errs, errors.New("at least one external id is required"))
+	}
+	known := make(map[string]bool)
+	bad := make(map[string]bool)
+	for i, externalID := range m.ExternalIds {
+		if bad[externalID] {
+			continue
+		}
+		if known[externalID] {
+			errs = append(errs, fmt.Errorf("invalid external ids: duplicate entry %q", externalID))
+			bad[externalID] = true
+			continue
+		}
+		known[externalID] = true
+		if err := ValidateExternalID(externalID); err != nil {
+			errs = append(errs, fmt.Errorf("invalid external ids[%d]: %w", i, err))
+			bad[externalID] = true
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func (m MsgCancelPaymentsRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Source)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgChangePaymentTargetRequest) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
+		errs = append(errs, fmt.Errorf("invalid source %q: %w", m.Source, err))
+	}
+	if err := ValidateExternalID(m.ExternalId); err != nil {
+		errs = append(errs, err)
+	}
+	if len(m.NewTarget) > 0 {
+		if _, err := sdk.AccAddressFromBech32(m.NewTarget); err != nil {
+			errs = append(errs, fmt.Errorf("invalid new target %q: %w", m.NewTarget, err))
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func (m MsgChangePaymentTargetRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Source)
 	return []sdk.AccAddress{addr}
 }
 
@@ -441,13 +777,21 @@ func (m MsgGovManageFeesRequest) ValidateBasic() error {
 		errs = append(errs,
 			ValidateAddRemoveFeeOptions("create-ask flat fee", m.AddFeeCreateAskFlat, m.RemoveFeeCreateAskFlat),
 			ValidateAddRemoveFeeOptions("create-bid flat fee", m.AddFeeCreateBidFlat, m.RemoveFeeCreateBidFlat),
+			ValidateAddRemoveFeeOptions("create-commitment flat fee", m.AddFeeCreateCommitmentFlat, m.RemoveFeeCreateCommitmentFlat),
 			ValidateAddRemoveFeeOptions("seller settlement flat fee", m.AddFeeSellerSettlementFlat, m.RemoveFeeSellerSettlementFlat),
 			ValidateSellerFeeRatios(m.AddFeeSellerSettlementRatios),
 			ValidateDisjointFeeRatios("seller settlement fee", m.AddFeeSellerSettlementRatios, m.RemoveFeeSellerSettlementRatios),
 			ValidateAddRemoveFeeOptions("buyer settlement flat fee", m.AddFeeBuyerSettlementFlat, m.RemoveFeeBuyerSettlementFlat),
 			ValidateBuyerFeeRatios(m.AddFeeBuyerSettlementRatios),
 			ValidateDisjointFeeRatios("buyer settlement fee", m.AddFeeBuyerSettlementRatios, m.RemoveFeeBuyerSettlementRatios),
+			ValidateBips("commitment settlement", m.SetFeeCommitmentSettlementBips),
 		)
+
+		if m.UnsetFeeCommitmentSettlementBips && m.SetFeeCommitmentSettlementBips > 0 {
+			errs = append(errs, fmt.Errorf(
+				"invalid commitment settlement bips %d: must be zero when unset_fee_commitment_settlement_bips is true",
+				m.SetFeeCommitmentSettlementBips))
+		}
 	} else {
 		errs = append(errs, errors.New("no updates"))
 	}
@@ -462,10 +806,28 @@ func (m MsgGovManageFeesRequest) HasUpdates() bool {
 		len(m.AddFeeSellerSettlementFlat) > 0 || len(m.RemoveFeeSellerSettlementFlat) > 0 ||
 		len(m.AddFeeSellerSettlementRatios) > 0 || len(m.RemoveFeeSellerSettlementRatios) > 0 ||
 		len(m.AddFeeBuyerSettlementFlat) > 0 || len(m.RemoveFeeBuyerSettlementFlat) > 0 ||
-		len(m.AddFeeBuyerSettlementRatios) > 0 || len(m.RemoveFeeBuyerSettlementRatios) > 0
+		len(m.AddFeeBuyerSettlementRatios) > 0 || len(m.RemoveFeeBuyerSettlementRatios) > 0 ||
+		len(m.AddFeeCreateCommitmentFlat) > 0 || len(m.RemoveFeeCreateCommitmentFlat) > 0 ||
+		m.SetFeeCommitmentSettlementBips != 0 || m.UnsetFeeCommitmentSettlementBips
 }
 
 func (m MsgGovManageFeesRequest) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(m.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+func (m MsgGovCloseMarketRequest) ValidateBasic() error {
+	var errs []error
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		errs = append(errs, fmt.Errorf("invalid authority %q: %w", m.Authority, err))
+	}
+	if m.MarketId == 0 {
+		errs = append(errs, errors.New("invalid market id: cannot be zero"))
+	}
+	return errors.Join(errs...)
+}
+
+func (m MsgGovCloseMarketRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}
 }

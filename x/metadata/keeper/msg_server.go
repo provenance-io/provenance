@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -43,6 +44,12 @@ func (k msgServer) WriteScope(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdMills)))
+	err := k.AddSetNetAssetValues(ctx, msg.Scope.ScopeId, []types.NetAssetValue{nav}, types.ModuleName)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
 	k.SetScope(ctx, msg.Scope)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSignerStrs()))
@@ -62,6 +69,8 @@ func (k msgServer) DeleteScope(
 	}
 
 	k.RemoveScope(ctx, msg.ScopeId)
+
+	k.RemoveNetAssetValues(ctx, msg.ScopeId)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSignerStrs()))
 	return types.NewMsgDeleteScopeResponse(), nil
@@ -726,4 +735,38 @@ func (k msgServer) SetAccountData(
 	}
 
 	return &types.MsgSetAccountDataResponse{}, nil
+}
+
+// AddNetAssetValues adds net asset values to a scope
+func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNetAssetValuesRequest) (*types.MsgAddNetAssetValuesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	scopeID, err := types.MetadataAddressFromBech32(msg.ScopeId)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	scope, found := k.GetScope(ctx, scopeID)
+	if !found {
+		return nil, sdkerrors.ErrNotFound.Wrap(fmt.Sprintf("scope not found: %v", scopeID.String()))
+	}
+
+	_, err = k.validateAllRequiredSigned(ctx, scope.GetAllOwnerAddresses(), msg)
+	if err != nil {
+		return nil, sdkerrors.ErrorInvalidSigner.Wrap(err.Error())
+	}
+
+	err = k.AddSetNetAssetValues(ctx, scopeID, msg.NetAssetValues, types.ModuleName)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+	)
+
+	return &types.MsgAddNetAssetValuesResponse{}, nil
 }
