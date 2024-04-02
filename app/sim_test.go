@@ -144,7 +144,7 @@ func TestFullAppSimulation(t *testing.T) {
 	fmt.Printf("running provenance full app simulation\n")
 
 	// run randomized simulation
-	_, _, simParams, simErr := simulation.SimulateFromSeed(
+	_, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -181,7 +181,7 @@ func TestSimple(t *testing.T) {
 	require.Equal(t, "provenanced", app.Name())
 
 	// run randomized simulation
-	_, _, _, simErr := simulation.SimulateFromSeed(
+	_, _, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -221,7 +221,7 @@ func TestAppImportExport(t *testing.T) {
 	fmt.Printf("running provenance test import export\n")
 
 	// Run randomized simulation
-	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
+	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -336,7 +336,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	// Run randomized simulation
-	stopEarly, lastBlockTime, simParams, simErr := simulation.SimulateFromSeed(
+	stopEarly, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(
 		t,
 		os.Stdout,
 		app.BaseApp,
@@ -384,7 +384,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err, "InitChain")
 
 	simcli.FlagGenesisTimeValue = lastBlockTime.Unix()
-	_, _, _, err = simulation.SimulateFromSeed(
+	_, _, err = simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		newApp.BaseApp,
@@ -453,7 +453,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			_, _, _, err := simulation.SimulateFromSeed(
+			_, _, err := simulation.SimulateFromSeed(
 				t,
 				os.Stdout,
 				app.BaseApp,
