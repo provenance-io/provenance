@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/sanction"
@@ -569,7 +571,7 @@ func (s *MsgServerTestSuite) TestKeeper_UpdateParams() {
 			name: "invalid params",
 			req: &sanction.MsgUpdateParams{
 				Params: &sanction.Params{
-					ImmediateSanctionMinDeposit:   sdk.Coins{sdk.Coin{Denom: "a", Amount: sdk.NewInt(5)}},
+					ImmediateSanctionMinDeposit:   sdk.Coins{sdk.Coin{Denom: "a", Amount: sdkmath.NewInt(5)}},
 					ImmediateUnsanctionMinDeposit: nil,
 				},
 				Authority: s.Keeper.GetAuthority(),
