@@ -89,6 +89,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
+			// TODO[1760]: client: Check impact that this has on our custom client config.
 			initClientCtx, err = clientconfig.ReadFromClientConfig(initClientCtx)
 			if err != nil {
 				return err
