@@ -9,7 +9,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+
+	"cosmossdk.io/core/appmodule"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,30 +27,10 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
-
-type AppModule struct {
-	AppModuleBasic
-	keeper     keeper.Keeper
-	accKeeper  sanction.AccountKeeper
-	bankKeeper sanction.BankKeeper
-	govKeeper  sanction.GovKeeper
-	registry   cdctypes.InterfaceRegistry
-}
-
-func NewAppModule(cdc codec.Codec, sanctionKeeper keeper.Keeper, accKeeper sanction.AccountKeeper, bankKeeper sanction.BankKeeper, govKeeper sanction.GovKeeper, registry cdctypes.InterfaceRegistry) AppModule {
-	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         sanctionKeeper,
-		accKeeper:      accKeeper,
-		bankKeeper:     bankKeeper,
-		govKeeper:      govKeeper,
-		registry:       registry,
-	}
-}
 
 type AppModuleBasic struct {
 	cdc codec.Codec
@@ -94,10 +76,34 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	sanction.RegisterInterfaces(registry)
 }
 
-// RegisterLegacyAminoCodec registers the sanction module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	sanction.RegisterLegacyAminoCodec(cdc)
+type AppModule struct {
+	AppModuleBasic
+	keeper     keeper.Keeper
+	accKeeper  sanction.AccountKeeper
+	bankKeeper sanction.BankKeeper
+	govKeeper  sanction.GovKeeper
+	registry   cdctypes.InterfaceRegistry
 }
+
+func NewAppModule(cdc codec.Codec, sanctionKeeper keeper.Keeper, accKeeper sanction.AccountKeeper, bankKeeper sanction.BankKeeper, govKeeper sanction.GovKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         sanctionKeeper,
+		accKeeper:      accKeeper,
+		bankKeeper:     bankKeeper,
+		govKeeper:      govKeeper,
+		registry:       registry,
+	}
+}
+
+// RegisterLegacyAminoCodec registers the sanction module's types for the given codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
 
 // RegisterInvariants does nothing, there are no invariants to enforce for the sanction module.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
