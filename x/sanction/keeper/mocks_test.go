@@ -1,7 +1,8 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"context"
+
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/x/sanction"
@@ -24,20 +25,11 @@ func NewMockGovKeeper() *MockGovKeeper {
 	}
 }
 
-func (k *MockGovKeeper) GetProposal(_ sdk.Context, proposalID uint64) (govv1.Proposal, bool) {
+func (k *MockGovKeeper) GetProposal(_ context.Context, proposalID uint64) *govv1.Proposal {
 	k.GetProposalCalls = append(k.GetProposalCalls, proposalID)
 	prop, ok := k.GetProposalReturns[proposalID]
-	return prop, ok
-}
-
-func (k *MockGovKeeper) GetDepositParams(_ sdk.Context) govv1.DepositParams {
-	return govv1.DefaultParams().DepositParams
-}
-
-func (k *MockGovKeeper) GetVotingParams(_ sdk.Context) govv1.VotingParams {
-	return govv1.DefaultParams().VotingParams
-}
-
-func (k *MockGovKeeper) GetProposalID(_ sdk.Context) (uint64, error) {
-	return 1, nil
+	if !ok {
+		return nil
+	}
+	return &prop
 }

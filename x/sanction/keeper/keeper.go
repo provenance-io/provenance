@@ -3,10 +3,12 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/x/sanction"
@@ -32,14 +34,14 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	bankKeeper sanction.BankKeeper,
-	govKeeper sanction.GovKeeper,
+	govKeeper govkeeper.Keeper,
 	authority string,
 	unsanctionableAddrs []sdk.AccAddress,
 ) Keeper {
 	rv := Keeper{
 		cdc:                         cdc,
 		storeKey:                    storeKey,
-		govKeeper:                   govKeeper,
+		govKeeper:                   WrapGovKeeper(govKeeper),
 		authority:                   authority,
 		unsanctionableAddrs:         make(map[string]bool),
 		msgSanctionTypeURL:          sdk.MsgTypeURL(&sanction.MsgSanction{}),
@@ -140,7 +142,7 @@ func (k Keeper) addTempEntries(ctx sdk.Context, value byte, govPropID uint64, ad
 }
 
 // getLatestTempEntry gets the most recent temporary entry for the given address.
-func (k Keeper) getLatestTempEntry(store sdk.KVStore, addr sdk.AccAddress) []byte {
+func (k Keeper) getLatestTempEntry(store storetypes.KVStore, addr sdk.AccAddress) []byte {
 	if len(addr) == 0 {
 		return nil
 	}
@@ -199,7 +201,7 @@ func (k Keeper) DeleteAddrTempEntries(ctx sdk.Context, addrs ...sdk.AccAddress) 
 }
 
 // getSanctionedAddressPrefixStore returns a kv store prefixed for sanctioned addresses, and the prefix bytes.
-func (k Keeper) getSanctionedAddressPrefixStore(ctx sdk.Context) (sdk.KVStore, []byte) {
+func (k Keeper) getSanctionedAddressPrefixStore(ctx sdk.Context) (storetypes.KVStore, []byte) {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), SanctionedPrefix), SanctionedPrefix
 }
 
@@ -222,7 +224,7 @@ func (k Keeper) IterateSanctionedAddresses(ctx sdk.Context, cb func(addr sdk.Acc
 // getTemporaryEntryPrefixStore returns a kv store prefixed for temporary sanction/unsanction entries, and the prefix bytes used.
 // If an addr is provided, the store is prefixed for just the given address.
 // If addr is empty, it will be prefixed for all temporary entries.
-func (k Keeper) getTemporaryEntryPrefixStore(ctx sdk.Context, addr sdk.AccAddress) (sdk.KVStore, []byte) {
+func (k Keeper) getTemporaryEntryPrefixStore(ctx sdk.Context, addr sdk.AccAddress) (storetypes.KVStore, []byte) {
 	pre := CreateTemporaryAddrPrefix(addr)
 	return prefix.NewStore(ctx.KVStore(k.storeKey), pre), pre
 }
@@ -252,7 +254,7 @@ func (k Keeper) IterateTemporaryEntries(ctx sdk.Context, addr sdk.AccAddress, cb
 // and the prefix bytes used.
 // If a gov prop id is provided, the store is prefixed for just that proposal.
 // If not provided, it will be prefixed for all temp index entries.
-func (k Keeper) getProposalIndexPrefixStore(ctx sdk.Context, govPropID *uint64) (sdk.KVStore, []byte) {
+func (k Keeper) getProposalIndexPrefixStore(ctx sdk.Context, govPropID *uint64) (storetypes.KVStore, []byte) {
 	pre := CreateProposalTempIndexPrefix(govPropID)
 	return prefix.NewStore(ctx.KVStore(k.storeKey), pre), pre
 }
@@ -353,7 +355,7 @@ func (k Keeper) GetImmediateUnsanctionMinDeposit(ctx sdk.Context) sdk.Coins {
 }
 
 // getParam returns a param value and whether it existed.
-func (k Keeper) getParam(store sdk.KVStore, name string) (string, bool) {
+func (k Keeper) getParam(store storetypes.KVStore, name string) (string, bool) {
 	key := CreateParamKey(name)
 	if store.Has(key) {
 		return string(store.Get(key)), true
@@ -362,14 +364,14 @@ func (k Keeper) getParam(store sdk.KVStore, name string) (string, bool) {
 }
 
 // setParam sets a param value.
-func (k Keeper) setParam(store sdk.KVStore, name, value string) {
+func (k Keeper) setParam(store storetypes.KVStore, name, value string) {
 	key := CreateParamKey(name)
 	val := []byte(value)
 	store.Set(key, val)
 }
 
 // deleteParam deletes a param value.
-func (k Keeper) deleteParam(store sdk.KVStore, name string) {
+func (k Keeper) deleteParam(store storetypes.KVStore, name string) {
 	key := CreateParamKey(name)
 	store.Delete(key)
 }

@@ -23,5 +23,5 @@ type BankKeeper interface {
 
 // GovKeeper defines the gov functionality needed from within the sanction module.
 type GovKeeper interface {
-	GetProposal(ctx context.Context, proposalID uint64) (govv1.Proposal, bool)
+	GetProposal(ctx context.Context, proposalID uint64) *govv1.Proposal
 }

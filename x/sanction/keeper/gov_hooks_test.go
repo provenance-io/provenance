@@ -7,10 +7,13 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
@@ -46,13 +49,15 @@ func (s *GovHooksTestSuite) TestKeeper_AfterProposalSubmission() {
 		},
 		Status: 5555,
 	}
-
-	expPanic := "invalid governance proposal status: [5555]"
-	testFunc := func() {
-		s.Keeper.AfterProposalSubmission(s.SdkCtx, govPropID)
-	}
 	s.GovKeeper.GetProposalCalls = nil
-	testutil.RequirePanicsWithMessage(s.T(), expPanic, testFunc, "AfterProposalSubmission")
+
+	expErr := "invalid governance proposal status: [5555]"
+	var err error
+	testFunc := func() {
+		err = s.Keeper.AfterProposalSubmission(s.SdkCtx, govPropID)
+	}
+	s.Require().NotPanics(testFunc, "AfterProposalSubmission")
+	assertions.AssertErrorValue(s.T(), err, expErr, "AfterProposalSubmission error")
 	actualCalls := s.GovKeeper.GetProposalCalls
 	if s.Assert().Len(actualCalls, 1, "number of calls made to GetProposal") {
 		s.Assert().Equal(int(govPropID), int(actualCalls[0]), "the proposal requested to GetProposal")
@@ -78,13 +83,15 @@ func (s *GovHooksTestSuite) TestKeeper_AfterProposalDeposit() {
 		},
 		Status: 4434,
 	}
-
-	expPanic := "invalid governance proposal status: [4434]"
-	testFunc := func() {
-		s.Keeper.AfterProposalDeposit(s.SdkCtx, govPropID, sdk.AccAddress("this doesn't matter"))
-	}
 	s.GovKeeper.GetProposalCalls = nil
-	testutil.RequirePanicsWithMessage(s.T(), expPanic, testFunc, "AfterProposalDeposit")
+
+	expErr := "invalid governance proposal status: [4434]"
+	var err error
+	testFunc := func() {
+		err = s.Keeper.AfterProposalDeposit(s.SdkCtx, govPropID, sdk.AccAddress("this doesn't matter"))
+	}
+	s.Require().NotPanics(testFunc, "AfterProposalDeposit")
+	assertions.AssertErrorValue(s.T(), err, expErr, "AfterProposalDeposit error")
 	actualCalls := s.GovKeeper.GetProposalCalls
 	if s.Assert().Len(actualCalls, 1, "number of calls made to GetProposal") {
 		s.Assert().Equal(int(govPropID), int(actualCalls[0]), "the proposal requested to GetProposal")
@@ -106,12 +113,12 @@ func (s *GovHooksTestSuite) TestKeeper_AfterProposalVote() {
 		},
 		Status: 2411,
 	}
-
-	testFunc := func() {
-		s.Keeper.AfterProposalVote(s.SdkCtx, govPropID, sdk.AccAddress("this doesn't matter either"))
-	}
 	s.GovKeeper.GetProposalCalls = nil
-	s.Require().NotPanics(testFunc, "AfterProposalVote")
+
+	testFunc := func() error {
+		return s.Keeper.AfterProposalVote(s.SdkCtx, govPropID, sdk.AccAddress("this doesn't matter either"))
+	}
+	assertions.AssertNotPanicsNoError(s.T(), testFunc, "AfterProposalVote")
 	actualCalls := s.GovKeeper.GetProposalCalls
 	s.Require().Nil(actualCalls, "calls made to GetProposal")
 }
@@ -135,13 +142,15 @@ func (s *GovHooksTestSuite) TestKeeper_AfterProposalFailedMinDeposit() {
 		},
 		Status: 3275,
 	}
-
-	expPanic := "invalid governance proposal status: [3275]"
-	testFunc := func() {
-		s.Keeper.AfterProposalFailedMinDeposit(s.SdkCtx, govPropID)
-	}
 	s.GovKeeper.GetProposalCalls = nil
-	testutil.RequirePanicsWithMessage(s.T(), expPanic, testFunc, "AfterProposalFailedMinDeposit")
+
+	expErr := "invalid governance proposal status: [3275]"
+	var err error
+	testFunc := func() {
+		err = s.Keeper.AfterProposalFailedMinDeposit(s.SdkCtx, govPropID)
+	}
+	s.Require().NotPanics(testFunc, "AfterProposalFailedMinDeposit")
+	assertions.AssertErrorValue(s.T(), err, expErr, "AfterProposalFailedMinDeposit error")
 	actualCalls := s.GovKeeper.GetProposalCalls
 	if s.Assert().Len(actualCalls, 1, "number of calls made to GetProposal") {
 		s.Assert().Equal(int(govPropID), int(actualCalls[0]), "the proposal requested to GetProposal")
@@ -167,13 +176,15 @@ func (s *GovHooksTestSuite) TestKeeper_AfterProposalVotingPeriodEnded() {
 		},
 		Status: 99,
 	}
-
-	expPanic := "invalid governance proposal status: [99]"
-	testFunc := func() {
-		s.Keeper.AfterProposalVotingPeriodEnded(s.SdkCtx, govPropID)
-	}
 	s.GovKeeper.GetProposalCalls = nil
-	testutil.RequirePanicsWithMessage(s.T(), expPanic, testFunc, "AfterProposalVotingPeriodEnded")
+
+	expErr := "invalid governance proposal status: [99]"
+	var err error
+	testFunc := func() {
+		err = s.Keeper.AfterProposalVotingPeriodEnded(s.SdkCtx, govPropID)
+	}
+	s.Require().NotPanics(testFunc, "AfterProposalVotingPeriodEnded")
+	assertions.AssertErrorValue(s.T(), err, expErr, "AfterProposalVotingPeriodEnded error")
 	actualCalls := s.GovKeeper.GetProposalCalls
 	if s.Assert().Len(actualCalls, 1, "number of calls made to GetProposal") {
 		s.Assert().Equal(int(govPropID), int(actualCalls[0]), "the proposal requested to GetProposal")
@@ -328,7 +339,7 @@ func (s *GovHooksTestSuite) TestKeeper_proposalGovHook() {
 		expPanic   []string
 	}
 
-	tests := []testCase{}
+	var tests []testCase
 
 	// prop status unknown -> panic
 	for _, msgs := range messageSets {
@@ -452,7 +463,7 @@ func (s *GovHooksTestSuite) TestKeeper_proposalGovHook() {
 			state := nonEmptyState(nextPropID())
 			dep := sdk.Coins{}
 			for _, c := range state.Params.ImmediateSanctionMinDeposit.Add(state.Params.ImmediateUnsanctionMinDeposit...) {
-				if c.Amount.GT(sdk.NewInt(1)) {
+				if c.Amount.GT(sdkmath.NewInt(1)) {
 					dep = dep.Add(sdk.NewCoin(c.Denom, c.Amount.SubRaw(1)))
 				}
 			}
@@ -473,10 +484,10 @@ func (s *GovHooksTestSuite) TestKeeper_proposalGovHook() {
 		// deposit == min deposit or depoist > min deposit -> temp entries added for non-boring msgs.
 		mods := []struct {
 			name   string
-			amount sdk.Int
+			amount sdkmath.Int
 		}{
-			{name: " deposit = min", amount: sdk.NewInt(0)},
-			{name: " deposit > min", amount: sdk.NewInt(1)},
+			{name: " deposit = min", amount: sdkmath.NewInt(0)},
+			{name: " deposit > min", amount: sdkmath.NewInt(1)},
 		}
 		for _, mod := range mods {
 			// Using all the messageSets for this would be to complex (just duplicating the code I'm trying to test).

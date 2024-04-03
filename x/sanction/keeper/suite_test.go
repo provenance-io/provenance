@@ -10,6 +10,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 
+	storetypes "cosmossdk.io/store/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -69,7 +70,7 @@ func (s *BaseTestSuite) AssertErrorContents(theError error, contains []string, m
 }
 
 // GetStore gets the sanction module's store.
-func (s *BaseTestSuite) GetStore() sdk.KVStore {
+func (s *BaseTestSuite) GetStore() storetypes.KVStore {
 	return s.SdkCtx.KVStore(s.Keeper.OnlyTestsGetStoreKey())
 }
 

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -15,29 +16,31 @@ var _ govtypes.GovHooks = Keeper{}
 
 // AfterProposalSubmission is called after proposal is submitted.
 // If there's enough deposit, temporary entries are created.
-func (k Keeper) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {
-	k.proposalGovHook(ctx, proposalID)
+func (k Keeper) AfterProposalSubmission(ctx context.Context, proposalID uint64) error {
+	return k.proposalGovHook(ctx, proposalID)
 }
 
 // AfterProposalDeposit is called after a deposit is made.
 // If there's enough deposit, temporary entries are created.
-func (k Keeper) AfterProposalDeposit(ctx sdk.Context, proposalID uint64, _ sdk.AccAddress) {
-	k.proposalGovHook(ctx, proposalID)
+func (k Keeper) AfterProposalDeposit(ctx context.Context, proposalID uint64, _ sdk.AccAddress) error {
+	return k.proposalGovHook(ctx, proposalID)
 }
 
 // AfterProposalVote is called after a vote on a proposal is cast. This one does nothing.
-func (k Keeper) AfterProposalVote(_ sdk.Context, _ uint64, _ sdk.AccAddress) {}
+func (k Keeper) AfterProposalVote(_ context.Context, _ uint64, _ sdk.AccAddress) error {
+	return nil
+}
 
 // AfterProposalFailedMinDeposit is called when proposal fails to reach min deposit.
 // Cleans up any possible temporary entries.
-func (k Keeper) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {
-	k.proposalGovHook(ctx, proposalID)
+func (k Keeper) AfterProposalFailedMinDeposit(ctx context.Context, proposalID uint64) error {
+	return k.proposalGovHook(ctx, proposalID)
 }
 
 // AfterProposalVotingPeriodEnded is called when proposal's finishes it's voting period.
 // Cleans up temporary entries.
-func (k Keeper) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
-	k.proposalGovHook(ctx, proposalID)
+func (k Keeper) AfterProposalVotingPeriodEnded(ctx context.Context, proposalID uint64) error {
+	return k.proposalGovHook(ctx, proposalID)
 }
 
 const (
@@ -48,11 +51,12 @@ const (
 // proposalGovHook does what needs to be done in here with the proposal in question.
 // What needs to be done always depends on the status of the proposal.
 // So while some hooks are probably only called when a proposal has a certain status, it's safer to just always do this.
-func (k Keeper) proposalGovHook(ctx sdk.Context, proposalID uint64) {
+func (k Keeper) proposalGovHook(goCtx context.Context, proposalID uint64) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	// A proposal can sometimes be deleted. In such cases, we still need to do some stuff.
 	propStatus := propStatusNotFound
-	proposal, found := k.govKeeper.GetProposal(ctx, proposalID)
-	if found {
+	proposal := k.govKeeper.GetProposal(ctx, proposalID)
+	if proposal != nil {
 		propStatus = proposal.Status
 	}
 
@@ -97,8 +101,10 @@ func (k Keeper) proposalGovHook(ctx sdk.Context, proposalID uint64) {
 	case govv1.StatusPassed:
 		// Nothing to do. The processing of the proposal message does everything that's needed.
 	default:
-		panic(fmt.Errorf("invalid governance proposal status: [%s]", proposal.Status))
+		return fmt.Errorf("invalid governance proposal status: [%s]", proposal.Status)
 	}
+
+	return nil
 }
 
 // isModuleGovHooksMsgURL returns true if the provided URL is one that these gov hooks care about.

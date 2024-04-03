@@ -1,8 +1,11 @@
 package keeper
 
 import (
+	"context"
+
+	storetypes "cosmossdk.io/store/types"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/sanction"
@@ -68,27 +71,27 @@ func (k Keeper) OnlyTestsGetParamAsCoinsOrDefault(ctx sdk.Context, name string, 
 }
 
 // OnlyTestsGetLatestTempEntry, for unit tests, exposes this keeper's getLatestTempEntry function.
-func (k Keeper) OnlyTestsGetLatestTempEntry(store sdk.KVStore, addr sdk.AccAddress) []byte {
+func (k Keeper) OnlyTestsGetLatestTempEntry(store storetypes.KVStore, addr sdk.AccAddress) []byte {
 	return k.getLatestTempEntry(store, addr)
 }
 
 // OnlyTestsGetParam, for unit tests, exposes this keeper's getParam function.
-func (k Keeper) OnlyTestsGetParam(store sdk.KVStore, name string) (string, bool) {
+func (k Keeper) OnlyTestsGetParam(store storetypes.KVStore, name string) (string, bool) {
 	return k.getParam(store, name)
 }
 
 // OnlyTestsSetParam, for unit tests, exposes this keeper's setParam function.
-func (k Keeper) OnlyTestsSetParam(store sdk.KVStore, name, value string) {
+func (k Keeper) OnlyTestsSetParam(store storetypes.KVStore, name, value string) {
 	k.setParam(store, name, value)
 }
 
 // OnlyTestsDeleteParam, for unit tests, exposes this keeper's deleteParam function.
-func (k Keeper) OnlyTestsDeleteParam(store sdk.KVStore, name string) {
+func (k Keeper) OnlyTestsDeleteParam(store storetypes.KVStore, name string) {
 	k.deleteParam(store, name)
 }
 
 // OnlyTestsProposalGovHook, for unit tests, exposes this keeper's proposalGovHook function.
-func (k Keeper) OnlyTestsProposalGovHook(ctx sdk.Context, proposalID uint64) {
+func (k Keeper) OnlyTestsProposalGovHook(ctx context.Context, proposalID uint64) {
 	k.proposalGovHook(ctx, proposalID)
 }
 
