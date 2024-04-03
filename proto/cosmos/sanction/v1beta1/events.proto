@@ -3,7 +3,7 @@ package cosmos.sanction.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
+option go_package = "github.com/provenance-io/provenance/x/sanction";
 
 // EventAddressSanctioned is an event emitted when an address is sanctioned.
 message EventAddressSanctioned {

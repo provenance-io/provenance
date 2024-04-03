@@ -6,7 +6,7 @@ import "cosmos/sanction/v1beta1/sanction.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
+option go_package = "github.com/provenance-io/provenance/x/sanction";
 
 // Query defines the gRPC querier service.
 service Query {

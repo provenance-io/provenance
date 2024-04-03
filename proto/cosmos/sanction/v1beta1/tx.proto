@@ -5,7 +5,7 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos/sanction/v1beta1/sanction.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
+option go_package = "github.com/provenance-io/provenance/x/sanction";
 
 // Msg defines the sanction Msg service.
 service Msg {
