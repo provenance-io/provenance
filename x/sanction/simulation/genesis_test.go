@@ -13,12 +13,14 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/sanction"
 	"github.com/cosmos/cosmos-sdk/x/sanction/simulation"
+
+	"github.com/provenance-io/provenance/app"
+	simappparams "github.com/provenance-io/provenance/app/params"
 )
 
 // getAccountCount gets the number of accounts to use.
@@ -220,7 +222,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          simapp.MakeTestEncodingConfig().Codec,
+		Cdc:          simappparams.MakeTestEncodingConfig().Codec,
 		Rand:         rand.New(rand.NewSource(0)), // not using getSeedValue because that was used to generate the accounts.
 		NumBonded:    3,
 		Accounts:     accounts,
@@ -269,7 +271,7 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 	// 4. makes sure the exported gen state is equal to the one randomly generated.
 	// It will stop at the first seed that fails.
 
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := simappparams.MakeTestEncodingConfig().Codec
 	accounts := generateAccounts(t)
 
 	for i := int64(0); i <= 1000; i++ {
@@ -306,7 +308,7 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 			}
 
 			// Create a new app, so we can init + export.
-			app := simapp.Setup(t, false)
+			app := app.Setup(t)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 			// Do the init on the random genesis state.

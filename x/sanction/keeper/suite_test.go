@@ -11,11 +11,12 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/sanction"
 	"github.com/cosmos/cosmos-sdk/x/sanction/keeper"
 	"github.com/cosmos/cosmos-sdk/x/sanction/testutil"
+
+	"github.com/provenance-io/provenance/app"
 )
 
 // newTempEntry creates a TemporaryEntry from iterator callback args.
@@ -44,7 +45,7 @@ func newIndTempEntry(govPropId uint64, addr sdk.AccAddress) *sanction.TemporaryE
 type BaseTestSuite struct {
 	suite.Suite
 
-	App       *simapp.SimApp
+	App       *app.App
 	SdkCtx    sdk.Context
 	StdlibCtx context.Context
 	Keeper    keeper.Keeper
@@ -55,7 +56,7 @@ type BaseTestSuite struct {
 
 func (s *BaseTestSuite) BaseSetup() {
 	s.BlockTime = tmtime.Now()
-	s.App = simapp.Setup(s.T(), false)
+	s.App = app.Setup(s.T())
 	s.SdkCtx = s.App.BaseApp.NewContext(false, tmproto.Header{}).WithBlockHeader(tmproto.Header{Time: s.BlockTime})
 	s.StdlibCtx = sdk.WrapSDKContext(s.SdkCtx)
 	s.GovKeeper = NewMockGovKeeper()
