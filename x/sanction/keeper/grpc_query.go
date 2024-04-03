@@ -8,7 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
+
+	"github.com/provenance-io/provenance/x/sanction"
 )
 
 var _ sanction.QueryServer = Keeper{}

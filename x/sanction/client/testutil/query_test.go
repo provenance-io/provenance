@@ -9,9 +9,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	client "github.com/cosmos/cosmos-sdk/x/sanction/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/sanction/keeper"
+
+	"github.com/provenance-io/provenance/x/sanction"
+	client "github.com/provenance-io/provenance/x/sanction/client/cli"
+	"github.com/provenance-io/provenance/x/sanction/keeper"
 )
 
 // These tests are initiated by TestIntegrationTestSuite in cli_test.go

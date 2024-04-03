@@ -13,14 +13,15 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"github.com/cosmos/cosmos-sdk/x/sanction/simulation"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/x/sanction"
+	"github.com/provenance-io/provenance/x/sanction/simulation"
 )
 
 // getAccountCount gets the number of accounts to use.

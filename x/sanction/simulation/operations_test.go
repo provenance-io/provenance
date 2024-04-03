@@ -17,11 +17,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"github.com/cosmos/cosmos-sdk/x/sanction/simulation"
-	"github.com/cosmos/cosmos-sdk/x/sanction/testutil"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/sanction"
+	"github.com/provenance-io/provenance/x/sanction/simulation"
+	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type SimTestSuite struct {

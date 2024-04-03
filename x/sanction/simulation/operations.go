@@ -10,11 +10,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"github.com/cosmos/cosmos-sdk/x/sanction/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/x/sanction"
+	"github.com/provenance-io/provenance/x/sanction/keeper"
 )
 
 const (

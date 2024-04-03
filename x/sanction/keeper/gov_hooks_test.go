@@ -10,8 +10,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"github.com/cosmos/cosmos-sdk/x/sanction/testutil"
+
+	"github.com/provenance-io/provenance/x/sanction"
+	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type GovHooksTestSuite struct {

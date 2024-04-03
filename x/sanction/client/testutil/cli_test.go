@@ -24,8 +24,9 @@ import (
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	client "github.com/cosmos/cosmos-sdk/x/sanction/client/cli"
+
+	"github.com/provenance-io/provenance/x/sanction"
+	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {

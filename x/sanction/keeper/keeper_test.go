@@ -10,11 +10,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	"github.com/cosmos/cosmos-sdk/x/sanction/keeper"
-	"github.com/cosmos/cosmos-sdk/x/sanction/testutil"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/sanction"
+	"github.com/provenance-io/provenance/x/sanction/keeper"
+	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type KeeperTestSuite struct {

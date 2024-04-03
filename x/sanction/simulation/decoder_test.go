@@ -7,10 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/sanction/keeper"
-	"github.com/cosmos/cosmos-sdk/x/sanction/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/x/sanction/keeper"
+	"github.com/provenance-io/provenance/x/sanction/simulation"
 )
 
 func TestDecodeStore(t *testing.T) {

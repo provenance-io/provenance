@@ -10,7 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
+
+	"github.com/provenance-io/provenance/x/sanction"
 )
 
 // exampleQueryCmdBase is the base command that gets a user to one of the query commands in here.

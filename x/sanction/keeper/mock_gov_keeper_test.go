@@ -3,7 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
+
+	"github.com/provenance-io/provenance/x/sanction"
 )
 
 // Define a Mock Gov Keeper that records calls to GetProposal and allows

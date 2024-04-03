@@ -7,8 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/sanction"
-	client "github.com/cosmos/cosmos-sdk/x/sanction/client/cli"
+
+	"github.com/provenance-io/provenance/x/sanction"
+	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
 
 // assertGovPropMsg gets a gov prop and makes sure it has one specific message.
