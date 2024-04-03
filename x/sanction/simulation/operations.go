@@ -9,6 +9,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
@@ -38,7 +39,7 @@ type WeightedOpsArgs struct {
 	ProtoCodec *codec.ProtoCodec
 	AK         sanction.AccountKeeper
 	BK         sanction.BankKeeper
-	GK         sanction.GovKeeper
+	GK         govkeeper.Keeper
 	SK         *keeper.Keeper
 }
 
@@ -60,7 +61,7 @@ type SendGovMsgArgs struct {
 
 func WeightedOperations(
 	appParams simtypes.AppParams, jsonCodec codec.JSONCodec, protoCodec *codec.ProtoCodec,
-	ak sanction.AccountKeeper, bk sanction.BankKeeper, gk sanction.GovKeeper, sk keeper.Keeper,
+	ak sanction.AccountKeeper, bk sanction.BankKeeper, gk govkeeper.Keeper, sk keeper.Keeper,
 ) simulation.WeightedOperations {
 	args := &WeightedOpsArgs{
 		AppParams:  appParams,
@@ -80,15 +81,15 @@ func WeightedOperations(
 		weightUpdateParams        int
 	)
 
-	appParams.GetOrGenerate(jsonCodec, OpWeightSanction, &weightSanction, nil,
+	appParams.GetOrGenerate(OpWeightSanction, &weightSanction, nil,
 		func(_ *rand.Rand) { weightSanction = DefaultWeightSanction })
-	appParams.GetOrGenerate(jsonCodec, OpWeightSanctionImmediate, &weightSanctionImmediate, nil,
+	appParams.GetOrGenerate(OpWeightSanctionImmediate, &weightSanctionImmediate, nil,
 		func(_ *rand.Rand) { weightSanctionImmediate = DefaultWeightSanctionImmediate })
-	appParams.GetOrGenerate(jsonCodec, OpWeightUnsanction, &weightUnsanction, nil,
+	appParams.GetOrGenerate(OpWeightUnsanction, &weightUnsanction, nil,
 		func(_ *rand.Rand) { weightUnsanction = DefaultWeightUnsanction })
-	appParams.GetOrGenerate(jsonCodec, OpWeightUnsanctionImmediate, &weightUnsanctionImmediate, nil,
+	appParams.GetOrGenerate(OpWeightUnsanctionImmediate, &weightUnsanctionImmediate, nil,
 		func(_ *rand.Rand) { weightUnsanctionImmediate = DefaultWeightUnsanctionImmediate })
-	appParams.GetOrGenerate(jsonCodec, OpWeightUpdateParams, &weightUpdateParams, nil,
+	appParams.GetOrGenerate(OpWeightUpdateParams, &weightUpdateParams, nil,
 		func(_ *rand.Rand) { weightUpdateParams = DefaultWeightUpdateParams })
 
 	return simulation.WeightedOperations{
@@ -133,7 +134,6 @@ func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
 		TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
 		Cdc:             args.ProtoCodec,
 		Msg:             govMsg,
-		MsgType:         govMsg.Type(),
 		CoinsSpentInMsg: govMsg.InitialDeposit,
 		Context:         args.Ctx,
 		SimAccount:      args.Sender,
@@ -164,7 +164,6 @@ func OperationMsgVote(args *WeightedOpsArgs, voter simtypes.Account, govPropID u
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:             args.ProtoCodec,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			CoinsSpentInMsg: sdk.Coins{},
 			Context:         ctx,
 			SimAccount:      voter,
@@ -217,7 +216,11 @@ func SimulateGovMsgSanction(args *WeightedOpsArgs) simtypes.Operation {
 		msgType := sdk.MsgTypeURL(msg)
 
 		// First, get the governance min deposit needed and immediate sanction min deposit needed.
-		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
+		govParams, err := args.GK.Params.Get(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(sanction.ModuleName, msgType, "error getting gov params"), nil, err
+		}
+		govMinDep := sdk.NewCoins(govParams.MinDeposit...)
 		imMinDep := args.SK.GetImmediateSanctionMinDeposit(ctx)
 		if !imMinDep.IsZero() && govMinDep.IsAllGTE(imMinDep) {
 			return simtypes.NoOpMsg(sanction.ModuleName, msgType, "cannot sanction without it being immediate"), nil, nil
@@ -250,12 +253,12 @@ func SimulateGovMsgSanction(args *WeightedOpsArgs) simtypes.Operation {
 			return opMsg, nil, err
 		}
 
-		proposalID, err := args.GK.GetProposalID(ctx)
+		proposalID, err := args.GK.ProposalID.Peek(ctx)
 		if err != nil {
-			return opMsg, nil, err
+			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
 		}
 
-		votingPeriod := args.GK.GetVotingParams(ctx).VotingPeriod
+		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
 		for i, acct := range accs {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
@@ -280,7 +283,11 @@ func SimulateGovMsgSanctionImmediate(args *WeightedOpsArgs) simtypes.Operation {
 		msgType := sdk.MsgTypeURL(msg)
 
 		// Get the governance and immediate sanction min deposits and make sure immediate is possible.
-		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
+		govParams, err := args.GK.Params.Get(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(sanction.ModuleName, msgType, "error getting gov params"), nil, err
+		}
+		govMinDep := sdk.NewCoins(govParams.MinDeposit...)
 		imMinDep := args.SK.GetImmediateSanctionMinDeposit(ctx)
 		if imMinDep.IsZero() {
 			return simtypes.NoOpMsg(sanction.ModuleName, msgType, "immediate sanction min deposit is zero"), nil, nil
@@ -323,12 +330,12 @@ func SimulateGovMsgSanctionImmediate(args *WeightedOpsArgs) simtypes.Operation {
 			return opMsg, nil, err
 		}
 
-		proposalID, err := args.GK.GetProposalID(ctx)
+		proposalID, err := args.GK.ProposalID.Peek(ctx)
 		if err != nil {
-			return opMsg, nil, err
+			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
 		}
 
-		votingPeriod := args.GK.GetVotingParams(ctx).VotingPeriod
+		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
 		for i, acct := range accs {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
@@ -358,7 +365,11 @@ func SimulateGovMsgUnsanction(args *WeightedOpsArgs) simtypes.Operation {
 		}
 
 		// Get the governance min deposit needed and immediate sanction min deposit needed.
-		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
+		govParams, err := args.GK.Params.Get(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(sanction.ModuleName, msgType, "error getting gov params"), nil, err
+		}
+		govMinDep := sdk.NewCoins(govParams.MinDeposit...)
 		imMinDep := args.SK.GetImmediateUnsanctionMinDeposit(ctx)
 		if !imMinDep.IsZero() && govMinDep.IsAllGTE(imMinDep) {
 			return simtypes.NoOpMsg(sanction.ModuleName, msgType, "cannot unsanction without it being immediate"), nil, nil
@@ -400,12 +411,12 @@ func SimulateGovMsgUnsanction(args *WeightedOpsArgs) simtypes.Operation {
 			return opMsg, nil, err
 		}
 
-		proposalID, err := args.GK.GetProposalID(ctx)
+		proposalID, err := args.GK.ProposalID.Peek(ctx)
 		if err != nil {
-			return opMsg, nil, err
+			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
 		}
 
-		votingPeriod := args.GK.GetVotingParams(ctx).VotingPeriod
+		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
 		for i, acct := range accs {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
@@ -435,7 +446,11 @@ func SimulateGovMsgUnsanctionImmediate(args *WeightedOpsArgs) simtypes.Operation
 		}
 
 		// Get the governance and immediate sanction min deposits and make sure immediate is possible.
-		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
+		govParams, err := args.GK.Params.Get(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(sanction.ModuleName, msgType, "error getting gov params"), nil, err
+		}
+		govMinDep := sdk.NewCoins(govParams.MinDeposit...)
 		imMinDep := args.SK.GetImmediateUnsanctionMinDeposit(ctx)
 		if imMinDep.IsZero() {
 			return simtypes.NoOpMsg(sanction.ModuleName, msgType, "immediate unsanction min deposit is zero"), nil, nil
@@ -487,12 +502,12 @@ func SimulateGovMsgUnsanctionImmediate(args *WeightedOpsArgs) simtypes.Operation
 			return opMsg, nil, err
 		}
 
-		proposalID, err := args.GK.GetProposalID(ctx)
+		proposalID, err := args.GK.ProposalID.Peek(ctx)
 		if err != nil {
-			return opMsg, nil, err
+			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
 		}
 
-		votingPeriod := args.GK.GetVotingParams(ctx).VotingPeriod
+		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
 		for i, acct := range accs {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
@@ -511,15 +526,20 @@ func SimulateGovMsgUpdateParams(args *WeightedOpsArgs) simtypes.Operation {
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// Get the governance min deposit needed.
-		govMinDep := sdk.NewCoins(args.GK.GetDepositParams(ctx).MinDeposit...)
-
 		// Pick the random params first, so R isn't used for anything else before,
 		// which makes testing easier.
 		msg := &sanction.MsgUpdateParams{
 			Params:    RandomParams(r),
 			Authority: args.SK.GetAuthority(),
 		}
+		msgType := sdk.MsgTypeURL(msg)
+
+		// Get the governance min deposit needed.
+		govParams, err := args.GK.Params.Get(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(sanction.ModuleName, msgType, "error getting gov params"), nil, err
+		}
+		govMinDep := sdk.NewCoins(govParams.MinDeposit...)
 
 		sender, _ := simtypes.RandomAcc(r, accs)
 
@@ -542,12 +562,12 @@ func SimulateGovMsgUpdateParams(args *WeightedOpsArgs) simtypes.Operation {
 			return opMsg, nil, err
 		}
 
-		proposalID, err := args.GK.GetProposalID(ctx)
+		proposalID, err := args.GK.ProposalID.Peek(ctx)
 		if err != nil {
-			return opMsg, nil, err
+			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
 		}
 
-		votingPeriod := args.GK.GetVotingParams(ctx).VotingPeriod
+		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
 		for i, acct := range accs {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)

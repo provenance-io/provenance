@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/client/cli"
@@ -81,11 +82,11 @@ type AppModule struct {
 	keeper     keeper.Keeper
 	accKeeper  sanction.AccountKeeper
 	bankKeeper sanction.BankKeeper
-	govKeeper  sanction.GovKeeper
+	govKeeper  govkeeper.Keeper
 	registry   cdctypes.InterfaceRegistry
 }
 
-func NewAppModule(cdc codec.Codec, sanctionKeeper keeper.Keeper, accKeeper sanction.AccountKeeper, bankKeeper sanction.BankKeeper, govKeeper sanction.GovKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, sanctionKeeper keeper.Keeper, accKeeper sanction.AccountKeeper, bankKeeper sanction.BankKeeper, govKeeper govkeeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         sanctionKeeper,
