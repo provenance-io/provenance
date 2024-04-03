@@ -166,22 +166,12 @@ func jsonArrayJoin(entries ...string) string {
 }
 
 func getLastProposal(t *testing.T, ctx sdk.Context, app *piosimapp.App) *govtypesv1.Proposal {
-	var rv *govtypesv1.Proposal
-	var highestProposalID uint64 = 0
-
-	err := app.GovKeeper.Proposals.Walk(ctx, nil, func(key uint64, value govtypesv1.Proposal) (stop bool, err error) {
-		if value.Id > highestProposalID {
-			highestProposalID = value.Id
-			rv = &value
-		}
-		return false, nil
-	})
-	if err != nil {
-		t.Fatalf("Error walking through proposals: %v", err)
-	}
-
-	require.NotNil(t, rv, "no gov proposals found")
-	return rv
+	propID, err := app.GovKeeper.ProposalID.Peek(ctx)
+	require.NoError(t, err, "app.GovKeeper.ProposalID.Peek(ctx)")
+	require.NotEqual(t, 0, propID, "last proposal id")
+	rv, err := app.GovKeeper.Proposals.Get(ctx, propID)
+	require.NoError(t, err, "app.GovKeeper.Proposals.Get(ctx, %d)", propID)
+	return &rv
 }
 
 func TestRegisterMsgService(t *testing.T) {
