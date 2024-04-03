@@ -41,16 +41,13 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	r := rand.New(source)
 	accs := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	expected := []struct {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightSubmitCreateRewards, sdk.MsgTypeURL(&types.MsgCreateRewardProgramRequest{}), sdk.MsgTypeURL(&types.MsgCreateRewardProgramRequest{})},
-		{simappparams.DefaultWeightSubmitEndRewards, sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{}), sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{})},
+		{weight: simappparams.DefaultWeightSubmitCreateRewards, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgCreateRewardProgramRequest{})},
+		{weight: simappparams.DefaultWeightSubmitEndRewards, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{})},
 	}
 
 	for i, w := range weightedOps {
@@ -71,20 +68,17 @@ func (s *SimTestSuite) TestSimulateMsgAddRewards() {
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgCreateRewardsProgram(s.app.RewardKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err)
 
 	var msg types.MsgCreateRewardProgramRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg)
 
 	s.Require().True(operationMsg.OK, operationMsg.String())
 	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
+	s.Require().Equal(types.RouterKey, operationMsg.Route)
 	s.Require().Len(futureOperations, 0)
 }
 

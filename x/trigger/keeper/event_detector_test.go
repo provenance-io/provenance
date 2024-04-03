@@ -262,8 +262,9 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 				s.ctx.GasMeter().RefundGas(s.ctx.GasMeter().GasConsumed(), "testing")
 				registered = append(registered, trigger)
 			}
-			// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
-			// s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(s.ctx.EventManager().GetABCIEventHistory()))
+			abciEventHistory, ok := s.ctx.EventManager().(sdk.EventManagerWithHistoryI)
+			s.Require().True(ok, "event manager does not implement EventManagerWithHistoryI")
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(abciEventHistory.GetABCIEventHistory()))
 
 			// Action
 			s.app.TriggerKeeper.DetectBlockEvents(s.ctx)
