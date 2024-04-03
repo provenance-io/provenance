@@ -84,19 +84,19 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		// Possible names: types.TypeAddMarkerRequest, fmt.Sprintf("%T", &types.MsgAddMarkerRequest{})
-		{simappparams.DefaultWeightMsgAddMarker, sdk.MsgTypeURL(&types.MsgAddMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddMarkerRequest{})},
+		{weight: simappparams.DefaultWeightMsgAddMarker, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgAddMarkerRequest{})},
 		// Possible names: "ChangeStatus",
 		//	types.TypeActivateRequest, fmt.Sprintf("%T", &types.MsgActivateRequest{}),
 		//	types.TypeFinalizeRequest, fmt.Sprintf("%T", &types.MsgFinalizeRequest{}),
 		//	types.TypeCancelRequest, fmt.Sprintf("%T", &types.MsgCancelRequest{}),
 		//	types.TypeDeleteRequest, fmt.Sprintf("%T", &types.MsgDeleteRequest{}),
-		{simappparams.DefaultWeightMsgFinalize, sdk.MsgTypeURL(&types.MsgFinalizeRequest{}), sdk.MsgTypeURL(&types.MsgFinalizeRequest{})},
+		{weight: simappparams.DefaultWeightMsgFinalize, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgFinalizeRequest{})},
 		// Possible names: types.TypeAddAccessRequest, fmt.Sprintf("%T", &types.MsgAddAccessRequest{})
-		{simappparams.DefaultWeightMsgAddAccess, sdk.MsgTypeURL(&types.MsgAddAccessRequest{}), sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
-		{simappparams.DefaultWeightMsgAddFinalizeActivateMarker, sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{}), sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},
-		{simappparams.DefaultWeightMsgAddMarkerProposal, "gov", sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})},
-		{simappparams.DefaultWeightMsgSetAccountData, sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{}), sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{})},
-		{simappparams.DefaultWeightMsgUpdateDenySendList, sdk.MsgTypeURL(&types.MsgUpdateSendDenyListRequest{}), sdk.MsgTypeURL(&types.MsgUpdateSendDenyListRequest{})},
+		{weight: simappparams.DefaultWeightMsgAddAccess, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgAddAccessRequest{})},
+		{weight: simappparams.DefaultWeightMsgAddFinalizeActivateMarker, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgAddFinalizeActivateMarkerRequest{})},
+		{weight: simappparams.DefaultWeightMsgAddMarkerProposal, opMsgRoute: "gov", opMsgName: sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})},
+		{weight: simappparams.DefaultWeightMsgSetAccountData, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgSetAccountDataRequest{})},
+		{weight: simappparams.DefaultWeightMsgUpdateDenySendList, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgUpdateSendDenyListRequest{})},
 	}
 
 	expNames := make([]string, len(expected))
@@ -131,9 +131,6 @@ func (s *SimTestSuite) TestSimulateMsgAddMarker() {
 	r := rand.New(src)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgAddMarker(s.app.MarkerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -144,7 +141,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarker() {
 
 	s.Require().True(operationMsg.OK, operationMsg.String())
 	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
+	s.Require().Equal(types.RouterKey, operationMsg.Route)
 	s.Require().Len(futureOperations, 0)
 }
 
@@ -156,20 +153,17 @@ func (s *SimTestSuite) TestSimulateMsgAddActivateFinalizeMarker() {
 	r := rand.New(src)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	// execute operation
 	op := simulation.SimulateMsgAddFinalizeActivateMarker(s.app.MarkerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err)
 
 	var msg types.MsgAddFinalizeActivateMarkerRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg)
 
 	s.Require().True(operationMsg.OK, operationMsg.String())
 	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
+	s.Require().Equal(types.RouterKey, operationMsg.Route)
 	s.Require().Len(futureOperations, 0)
 }
 
@@ -384,9 +378,6 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	_, err := markerMsgServer.AddFinalizeActivateMarker(s.ctx, newMarker)
 	s.Require().NoError(err, "AddFinalizeActivateMarker")
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	args := s.getWeightedOpsArgs()
 	// execute operation
 	op := simulation.SimulateMsgSetAccountData(s.app.MarkerKeeper, &args)
@@ -395,14 +386,14 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgSetAccountDataRequest
-	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
 	s.Assert().Equal("simcoin", msg.Denom, "msg.Denom")
 	s.Assert().Equal("", msg.Value, "msg.Value")
 	s.Assert().Equal(accounts[1].Address.String(), msg.Signer, "msg.Signer")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
@@ -436,9 +427,6 @@ func (s *SimTestSuite) TestSimulateMsgUpdateSendDenyList() {
 	_, err := markerMsgServer.AddFinalizeActivateMarker(s.ctx, newMarker)
 	s.Require().NoError(err, "AddFinalizeActivateMarker")
 
-	// begin a new block
-	// s.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}}) // TODO[1760]: finalize-block
-
 	args := s.getWeightedOpsArgs()
 	// execute operation
 	op := simulation.SimulateMsgUpdateSendDenyList(s.app.MarkerKeeper, &args)
@@ -447,14 +435,14 @@ func (s *SimTestSuite) TestSimulateMsgUpdateSendDenyList() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgUpdateSendDenyListRequest
-	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
 	s.Assert().Equal("simcoin", msg.Denom, "msg.Denom")
 	s.Assert().Len(msg.AddDeniedAddresses, 10, "msg.AddDeniedAddresses")
 	s.Assert().Equal(accounts[1].Address.String(), msg.Authority, "msg.Authority")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 

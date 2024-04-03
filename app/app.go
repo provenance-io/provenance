@@ -505,7 +505,7 @@ func New(
 	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
 		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName),
 		authtypes.FeeCollectorName, pioconfig.GetProvenanceConfig().FeeDenom,
-		app.Simulate, encodingConfig.TxConfig.TxDecoder(), interfaceRegistry,
+		app.SimulateProv, encodingConfig.TxConfig.TxDecoder(), interfaceRegistry,
 	)
 
 	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
@@ -731,6 +731,10 @@ func New(
 		appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AccountKeeper, app.BankKeeper,
 		app.StakingKeeper, app.DistrKeeper, app.BaseApp.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000}, govAuthority,
 	)
+
+	// Set legacy router for backwards compatibility with gov v1beta1
+	govKeeper.SetLegacyRouter(govRouter)
+
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 		// app.SanctionKeeper // TODO[1760]: sanction
@@ -1102,7 +1106,7 @@ func New(
 
 	app.SetEndBlocker(app.EndBlocker)
 
-	app.SetAggregateEventsFunc(piohandlers.AggregateEvents) // TODO[1760]: event-history
+	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
 
 	// Add upgrade plans for each release. This must be done before the baseapp seals via LoadLatestVersion() down below.
 	InstallCustomUpgradeHandlers(app)

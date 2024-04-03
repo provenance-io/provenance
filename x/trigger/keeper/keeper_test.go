@@ -88,10 +88,9 @@ func (s *KeeperTestSuite) SetupEventHistory() {
 		event2,
 		event3,
 	}
-	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
-	_ = loggedEvents
-	// eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
-	// s.ctx = s.ctx.WithEventManager(eventManagerStub)
+
+	eventManagerStub := sdk.NewEventManagerWithHistory(loggedEvents.ToABCIEvents())
+	s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
 func (s *KeeperTestSuite) CreateTrigger(id uint64, owner string, event types.TriggerEventI, action sdk.Msg) types.Trigger {

@@ -1,6 +1,8 @@
 syntax = "proto3";
 package provenance.name.v1;
 
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/name/types";
@@ -22,12 +24,14 @@ message Params {
 
 // NameRecord is a structure used to bind ownership of a name hierarchy to a collection of addresses
 message NameRecord {
+  option (cosmos.msg.v1.signer) = "address";
+
   option (gogoproto.goproto_stringer) = false;
 
   // the bound name
   string name = 1;
   // the address the name resolved to
-  string address = 2;
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];;
   // whether owner signature is required to add sub-names
   bool restricted = 3;
 }
