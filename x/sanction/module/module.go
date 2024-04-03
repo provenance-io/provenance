@@ -97,7 +97,7 @@ func NewAppModule(cdc codec.Codec, sanctionKeeper keeper.Keeper, accKeeper sanct
 }
 
 // RegisterLegacyAminoCodec registers the sanction module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 // IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
 func (AppModule) IsOnePerModuleType() {}
@@ -106,20 +106,7 @@ func (AppModule) IsOnePerModuleType() {}
 func (AppModule) IsAppModule() {}
 
 // RegisterInvariants does nothing, there are no invariants to enforce for the sanction module.
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
-
-// Deprecated: Route returns the message routing key for the sanction module, empty.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// Deprecated: QuerierRoute returns the route we respond to for abci queries, "".
-func (AppModule) QuerierRoute() string { return "" }
-
-// Deprecated: LegacyQuerierHandler returns the sanction module sdk.Querier (nil).
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs genesis initialization for the sanction module. It returns
 // no validator updates.
@@ -164,14 +151,14 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized sanction param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 	// While the x/sanction module does have "Params", it doesn't use the x/params module.
 	// So there's nothing to return here.
 	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for sanction module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[sanction.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
