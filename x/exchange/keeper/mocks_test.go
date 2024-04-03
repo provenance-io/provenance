@@ -253,6 +253,7 @@ type MockBankKeeper struct {
 	SendCoinsResultsQueue                    []string
 	SendCoinsFromAccountToModuleResultsQueue []string
 	InputOutputCoinsResultsQueue             []string
+	BlockedAddrQueue                         []bool
 }
 
 // BankCalls contains all the calls that the mock bank keeper makes.
@@ -260,11 +261,13 @@ type BankCalls struct {
 	SendCoins                    []*SendCoinsArgs
 	SendCoinsFromAccountToModule []*SendCoinsFromAccountToModuleArgs
 	InputOutputCoins             []*InputOutputCoinsArgs
+	BlockedAddr                  []sdk.AccAddress
 }
 
 // SendCoinsArgs is a record of a call that is made to SendCoins.
 type SendCoinsArgs struct {
 	ctxHasQuarantineBypass bool
+	ctxTransferAgent       sdk.AccAddress
 	fromAddr               sdk.AccAddress
 	toAddr                 sdk.AccAddress
 	amt                    sdk.Coins
@@ -273,6 +276,7 @@ type SendCoinsArgs struct {
 // SendCoinsFromAccountToModuleArgs is a record of a call that is made to SendCoinsFromAccountToModule.
 type SendCoinsFromAccountToModuleArgs struct {
 	ctxHasQuarantineBypass bool
+	ctxTransferAgent       sdk.AccAddress
 	senderAddr             sdk.AccAddress
 	recipientModule        string
 	amt                    sdk.Coins
@@ -281,6 +285,7 @@ type SendCoinsFromAccountToModuleArgs struct {
 // InputOutputCoinsArgs is a record of a call that is made to InputOutputCoins.
 type InputOutputCoinsArgs struct {
 	ctxHasQuarantineBypass bool
+	ctxTransferAgent       sdk.AccAddress
 	inputs                 []banktypes.Input
 	outputs                []banktypes.Output
 }
@@ -313,6 +318,14 @@ func (k *MockBankKeeper) WithSendCoinsFromAccountToModuleResults(errs ...string)
 // This method both updates the receiver and returns it.
 func (k *MockBankKeeper) WithInputOutputCoinsResults(errs ...string) *MockBankKeeper {
 	k.InputOutputCoinsResultsQueue = append(k.InputOutputCoinsResultsQueue, errs...)
+	return k
+}
+
+// WithBlockedAddrResults queues up the provided bools to be returned from BlockedAddr.
+// Each entry is used only once. If entries run out, false is returned.
+// This method both updates the receiver and returns it.
+func (k *MockBankKeeper) WithBlockedAddrResults(results ...bool) *MockBankKeeper {
+	k.BlockedAddrQueue = append(k.BlockedAddrQueue, results...)
 	return k
 }
 
@@ -353,6 +366,16 @@ func (k *MockBankKeeper) InputOutputCoins(ctx context.Context, inputs []banktype
 	return err
 }
 
+func (k *MockBankKeeper) BlockedAddr(addr sdk.AccAddress) bool {
+	k.Calls.BlockedAddr = append(k.Calls.BlockedAddr, addr)
+	rv := false
+	if len(k.BlockedAddrQueue) > 0 {
+		rv = k.BlockedAddrQueue[0]
+		k.BlockedAddrQueue = k.BlockedAddrQueue[1:]
+	}
+	return rv
+}
+
 // assertSendCoinsCalls asserts that a mock keeper's Calls.SendCoins match the provided expected calls.
 func (s *TestSuite) assertSendCoinsCalls(mk *MockBankKeeper, expected []*SendCoinsArgs, msg string, args ...interface{}) bool {
 	s.T().Helper()
@@ -375,18 +398,27 @@ func (s *TestSuite) assertInputOutputCoinsCalls(mk *MockBankKeeper, expected []*
 		msg+" InputOutputCoins calls", args...)
 }
 
+// assertBlockedAddrCalls asserts that a mock keeper's Calls.BlockedAddr match the provided expected calls.
+func (s *TestSuite) assertBlockedAddrCalls(mk *MockBankKeeper, expected []sdk.AccAddress, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.BlockedAddr, s.getAddrName,
+		msg+" BlockedAddr calls", args...)
+}
+
 // assertBankKeeperCalls asserts that all the calls made to a mock bank keeper match the provided expected calls.
 func (s *TestSuite) assertBankKeeperCalls(mk *MockBankKeeper, expected BankCalls, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	rv := s.assertSendCoinsCalls(mk, expected.SendCoins, msg, args...)
 	rv = s.assertInputOutputCoinsCalls(mk, expected.InputOutputCoins, msg, args...) && rv
-	return s.assertSendCoinsFromAccountToModuleCalls(mk, expected.SendCoinsFromAccountToModule, msg, args...) && rv
+	rv = s.assertSendCoinsFromAccountToModuleCalls(mk, expected.SendCoinsFromAccountToModule, msg, args...) && rv
+	return s.assertBlockedAddrCalls(mk, expected.BlockedAddr, msg, args...) && rv
 }
 
 // NewSendCoinsArgs creates a new record of args provided to a call to SendCoins.
 func NewSendCoinsArgs(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) *SendCoinsArgs {
 	return &SendCoinsArgs{
 		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
+		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		fromAddr:               fromAddr,
 		toAddr:                 toAddr,
 		amt:                    amt,
@@ -396,14 +428,15 @@ func NewSendCoinsArgs(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt 
 // sendCoinsArgsString creates a string of a SendCoinsArgs
 // substituting the address names as possible.
 func (s *TestSuite) sendCoinsArgsString(a *SendCoinsArgs) string {
-	return fmt.Sprintf("{q-bypass:%t, from:%s, to:%s, amt:%s}",
-		a.ctxHasQuarantineBypass, s.getAddrName(a.fromAddr), s.getAddrName(a.toAddr), a.amt)
+	return fmt.Sprintf("{q-bypass:%t, xfer-agent:%q, from:%s, to:%s, amt:%s}",
+		a.ctxHasQuarantineBypass, s.getAddrName(a.ctxTransferAgent), s.getAddrName(a.fromAddr), s.getAddrName(a.toAddr), a.amt)
 }
 
 // NewSendCoinsFromAccountToModuleArgs creates a new record of args provided to a call to SendCoinsFromAccountToModule.
 func NewSendCoinsFromAccountToModuleArgs(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) *SendCoinsFromAccountToModuleArgs {
 	return &SendCoinsFromAccountToModuleArgs{
 		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
+		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		senderAddr:             senderAddr,
 		recipientModule:        recipientModule,
 		amt:                    amt,
@@ -413,14 +446,15 @@ func NewSendCoinsFromAccountToModuleArgs(ctx context.Context, senderAddr sdk.Acc
 // sendCoinsFromAccountToModuleArgsString creates a string of a SendCoinsFromAccountToModuleArgs
 // substituting the address names as possible.
 func (s *TestSuite) sendCoinsFromAccountToModuleArgsString(a *SendCoinsFromAccountToModuleArgs) string {
-	return fmt.Sprintf("{q-bypass:%t, from:%s, to:%s, amt:%s}",
-		a.ctxHasQuarantineBypass, s.getAddrName(a.senderAddr), a.recipientModule, a.amt)
+	return fmt.Sprintf("{q-bypass:%t, xfer-agent:%q, from:%s, to:%s, amt:%s}",
+		a.ctxHasQuarantineBypass, s.getAddrName(a.ctxTransferAgent), s.getAddrName(a.senderAddr), a.recipientModule, a.amt)
 }
 
 // NewInputOutputCoinsArgs creates a new record of args provided to a call to InputOutputCoins.
 func NewInputOutputCoinsArgs(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) *InputOutputCoinsArgs {
 	return &InputOutputCoinsArgs{
 		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
+		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		inputs:                 inputs,
 		outputs:                outputs,
 	}
@@ -428,8 +462,8 @@ func NewInputOutputCoinsArgs(ctx context.Context, inputs []banktypes.Input, outp
 
 // inputOutputCoinsArgsString creates a string of a InputOutputCoinsArgs substituting the address names as possible.
 func (s *TestSuite) inputOutputCoinsArgsString(a *InputOutputCoinsArgs) string {
-	return fmt.Sprintf("{q-bypass:%t, inputs:%s, outputs:%s}",
-		a.ctxHasQuarantineBypass, s.inputsString(a.inputs), s.outputsString(a.outputs))
+	return fmt.Sprintf("{q-bypass:%t, xfer-agent:%q, inputs:%s, outputs:%s}",
+		a.ctxHasQuarantineBypass, s.getAddrName(a.ctxTransferAgent), s.inputsString(a.inputs), s.outputsString(a.outputs))
 }
 
 // inputString creates a string of a banktypes.Input substituting the address names as possible.
@@ -667,17 +701,19 @@ func (s *TestSuite) getHoldCoinArgsString(a *GetHoldCoinArgs) string {
 
 var _ exchange.MarkerKeeper = (*MockMarkerKeeper)(nil)
 
-// MockMarkerKeeper satisfies the exchange.MockMarkerKeeper interface but just records the calls and allows dictation of results.
+// MockMarkerKeeper satisfies the exchange.MarkerKeeper interface but just records the calls and allows dictation of results.
 type MockMarkerKeeper struct {
 	Calls                            MarkerCalls
 	GetMarkerResultsMap              map[string]*GetMarkerResult
 	AddSetNetAssetValuesResultsQueue []string
+	GetNetAssetValueMap              map[string]map[string]*GetNetAssetValueResult
 }
 
 // MarkerCalls contains all the calls that the mock marker keeper makes.
 type MarkerCalls struct {
 	GetMarker            []sdk.AccAddress
 	AddSetNetAssetValues []*AddSetNetAssetValuesArgs
+	GetNetAssetValue     []*GetNetAssetValueArgs
 }
 
 // AddSetNetAssetValuesArgs is a record of a call that is made to AddSetNetAssetValues.
@@ -687,10 +723,22 @@ type AddSetNetAssetValuesArgs struct {
 	source         string
 }
 
+// GetNetAssetValueArgs is a record of a call that is made to GetNetAssetValue.
+type GetNetAssetValueArgs struct {
+	markerDenom string
+	priceDenom  string
+}
+
 // GetMarkerResult contains the result args to return for a GetMarker call.
 type GetMarkerResult struct {
 	account markertypes.MarkerAccountI
 	err     error
+}
+
+// GetNetAssetValueResult contains the result args to return for a GetNetAssetValue call.
+type GetNetAssetValueResult struct {
+	nav *markertypes.NetAssetValue
+	err error
 }
 
 // NewMockMarkerKeeper creates a new empty MockMarkerKeeper.
@@ -699,6 +747,7 @@ type GetMarkerResult struct {
 func NewMockMarkerKeeper() *MockMarkerKeeper {
 	return &MockMarkerKeeper{
 		GetMarkerResultsMap: make(map[string]*GetMarkerResult),
+		GetNetAssetValueMap: make(map[string]map[string]*GetNetAssetValueResult),
 	}
 }
 
@@ -724,6 +773,31 @@ func (k *MockMarkerKeeper) WithAddSetNetAssetValuesResults(errs ...string) *Mock
 	return k
 }
 
+// WithGetNetAssetValueResult sets up this mock keepr to return the provided nav result when GetNetAssetValue is called for the given denoms.
+// This method both updates the receiver and returns it.
+func (k *MockMarkerKeeper) WithGetNetAssetValueResult(markerCoin, priceCoin sdk.Coin) *MockMarkerKeeper {
+	if k.GetNetAssetValueMap[markerCoin.Denom] == nil {
+		k.GetNetAssetValueMap[markerCoin.Denom] = make(map[string]*GetNetAssetValueResult)
+	}
+	k.GetNetAssetValueMap[markerCoin.Denom][priceCoin.Denom] = &GetNetAssetValueResult{
+		nav: &markertypes.NetAssetValue{
+			Price:  priceCoin,
+			Volume: markerCoin.Amount.Uint64(),
+		},
+	}
+	return k
+}
+
+// WithGetNetAssetValueError sets up this mock keepr to return the provided error when GetNetAssetValue is called for the given denoms.
+// This method both updates the receiver and returns it.
+func (k *MockMarkerKeeper) WithGetNetAssetValueError(markerDenom, priceDenom, errMsg string) *MockMarkerKeeper {
+	if k.GetNetAssetValueMap[markerDenom] == nil {
+		k.GetNetAssetValueMap[markerDenom] = make(map[string]*GetNetAssetValueResult)
+	}
+	k.GetNetAssetValueMap[markerDenom][priceDenom] = &GetNetAssetValueResult{err: errors.New(errMsg)}
+	return k
+}
+
 func (k *MockMarkerKeeper) GetMarker(_ sdk.Context, address sdk.AccAddress) (markertypes.MarkerAccountI, error) {
 	k.Calls.GetMarker = append(k.Calls.GetMarker, address)
 	if rv, found := k.GetMarkerResultsMap[string(address)]; found {
@@ -744,6 +818,20 @@ func (k *MockMarkerKeeper) AddSetNetAssetValues(_ sdk.Context, marker markertype
 	return err
 }
 
+func (k *MockMarkerKeeper) GetNetAssetValue(_ sdk.Context, markerDenom, priceDenom string) (*markertypes.NetAssetValue, error) {
+	k.Calls.GetNetAssetValue = append(k.Calls.GetNetAssetValue, &GetNetAssetValueArgs{
+		markerDenom: markerDenom,
+		priceDenom:  priceDenom,
+	})
+	var nav *markertypes.NetAssetValue
+	var err error
+	if k.GetNetAssetValueMap != nil && k.GetNetAssetValueMap[markerDenom] != nil && k.GetNetAssetValueMap[markerDenom][priceDenom] != nil {
+		nav = k.GetNetAssetValueMap[markerDenom][priceDenom].nav
+		err = k.GetNetAssetValueMap[markerDenom][priceDenom].err
+	}
+	return nav, err
+}
+
 // assertGetMarkerCalls asserts that a mock keeper's Calls.GetMarker match the provided expected calls.
 func (s *TestSuite) assertGetMarkerCalls(mk *MockMarkerKeeper, expected []sdk.AccAddress, msg string, args ...interface{}) bool {
 	s.T().Helper()
@@ -758,11 +846,19 @@ func (s *TestSuite) assertAddSetNetAssetValuesCalls(mk *MockMarkerKeeper, expect
 		msg+" AddSetNetAssetValues calls", args...)
 }
 
+// assertGetNetAssetValueCalls asserts that a mock keeper's Calls.GetNetAssetValueArgs match the provided expected calls.
+func (s *TestSuite) assertGetNetAssetValueCalls(mk *MockMarkerKeeper, expected []*GetNetAssetValueArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.GetNetAssetValue, s.getNetAssetValueArgsString,
+		msg+" GetNetAssetValue calls", args...)
+}
+
 // assertMarkerKeeperCalls asserts that all the calls made to a mock marker keeper match the provided expected calls.
 func (s *TestSuite) assertMarkerKeeperCalls(mk *MockMarkerKeeper, expected MarkerCalls, msg string, args ...interface{}) bool {
 	s.T().Helper()
 	rv := s.assertGetMarkerCalls(mk, expected.GetMarker, msg, args...)
-	return s.assertAddSetNetAssetValuesCalls(mk, expected.AddSetNetAssetValues, msg, args...) && rv
+	rv = s.assertAddSetNetAssetValuesCalls(mk, expected.AddSetNetAssetValues, msg, args...) && rv
+	return s.assertGetNetAssetValueCalls(mk, expected.GetNetAssetValue, msg, args...) && rv
 }
 
 // NewAddSetNetAssetValuesArgs creates a new record of args provided to a call to AddSetNetAssetValues.
@@ -780,4 +876,20 @@ func (s *TestSuite) getAddSetNetAssetValuesArgsDenom(args *AddSetNetAssetValuesA
 		return args.marker.GetDenom()
 	}
 	return ""
+}
+
+// getNetAssetValueArgsString returns a string representation of the given GetNetAssetValueArgs.
+func (s *TestSuite) getNetAssetValueArgsString(args *GetNetAssetValueArgs) string {
+	if args == nil {
+		return "<nil>"
+	}
+	md := args.markerDenom
+	if len(md) == 0 {
+		md = `""`
+	}
+	pd := args.priceDenom
+	if len(pd) == 0 {
+		pd = `""`
+	}
+	return fmt.Sprintf("%q->%q", md, pd)
 }

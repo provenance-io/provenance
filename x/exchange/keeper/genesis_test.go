@@ -10,6 +10,48 @@ import (
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 )
 
+// assertEqualGenState asserts that the provided gen states are equal and returns true if they are.
+// If they are different, extra comparisons are done on each field to help identify what's actually different.
+func (s *TestSuite) assertEqualGenState(expected, actual *exchange.GenesisState, msg string, args ...interface{}) bool {
+	if s.Assert().Equalf(expected, actual, msg, args...) {
+		return true
+	}
+
+	// If either are nil, that'll be obvious in the failure output, so we don't need to dig deeper.
+	if expected == nil || actual == nil {
+		return false
+	}
+
+	// Run assertions on individual pieces to hopefully help identify what's actually different.
+	if !s.Assert().Equalf(expected.Params, actual.Params, msg+" Params", args...) && expected.Params != nil && actual.Params != nil {
+		s.Assert().Equalf(int(expected.Params.DefaultSplit), int(actual.Params.DefaultSplit), msg+" Params.DefaultSplit", args...)
+		assertEqualSlice(s, expected.Params.DenomSplits, actual.Params.DenomSplits, s.getGenStateDenomSplitStr, msg+" Params.DenomSplits", args...)
+	}
+	assertEqualSlice(s, expected.Markets, actual.Markets, s.getGenStateMarketStr, msg+" Markets", args...)
+	assertEqualSlice(s, expected.Orders, actual.Orders, s.getGenStateOrderStr, msg+" Orders", args...)
+	s.Assert().Equalf(int(expected.LastMarketId), int(actual.LastMarketId), msg+" LastMarketId", args...)
+	s.Assert().Equalf(fmt.Sprintf("%d", expected.LastOrderId), fmt.Sprintf("%d", actual.LastOrderId), msg+" LastMarketId", args...)
+	s.assertEqualCommitments(expected.Commitments, actual.Commitments, msg+" Commitments", args...)
+	assertEqualSlice(s, expected.Payments, actual.Payments, s.getPaymentString, msg+" Payments", args...)
+	return false
+}
+
+// getGenStateMarketStr returns a string representing the market to help identify slice entries.
+func (s *TestSuite) getGenStateDenomSplitStr(split exchange.DenomSplit) string {
+	return fmt.Sprintf("%s=%d", split.Denom, split.Split)
+}
+
+// getGenStateMarketStr returns a string representing the market to help identify slice entries.
+func (s *TestSuite) getGenStateMarketStr(market exchange.Market) string {
+	return fmt.Sprintf("%d: %s", market.MarketId, market.MarketDetails.Name)
+}
+
+// getGenStateOrderStr returns a string representing the order to help identify slice entries.
+func (s *TestSuite) getGenStateOrderStr(order exchange.Order) string {
+	return fmt.Sprintf("%s order %d: %s %s at %s",
+		order.GetOrderType(), order.OrderId, order.GetOwner(), order.GetAssets(), order.GetPrice())
+}
+
 func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 	marketAcc := func(marketID uint32, name string) *exchange.MarketAccount {
 		return &exchange.MarketAccount{
@@ -55,6 +97,22 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 	}
 	bidHoldCoins := func(orderID uint64) sdk.Coins {
 		return s.coins(fmt.Sprintf("%d%s,%d%s", orderID, priceDenom, orderID, feeDenom))
+	}
+	commitment := func(addr sdk.AccAddress, marketID uint32, amount string) exchange.Commitment {
+		return exchange.Commitment{
+			Account:  addr.String(),
+			MarketId: marketID,
+			Amount:   s.coins(amount),
+		}
+	}
+	payment := func(source sdk.AccAddress, sourceAmount string, target sdk.AccAddress, targetAmount string, externalID string) exchange.Payment {
+		return exchange.Payment{
+			Source:       source.String(),
+			SourceAmount: s.coins(sourceAmount),
+			Target:       target.String(),
+			TargetAmount: s.coins(targetAmount),
+			ExternalId:   externalID,
+		}
 	}
 
 	tests := []struct {
@@ -129,8 +187,13 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 						AccessGrants: []exchange.AccessGrant{
 							{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
 						},
-						ReqAttrCreateAsk: []string{"ask.create.req"},
-						ReqAttrCreateBid: []string{"bid.create.req"},
+						ReqAttrCreateAsk:         []string{"ask.create.req"},
+						ReqAttrCreateBid:         []string{"bid.create.req"},
+						AcceptingCommitments:     true,
+						FeeCreateCommitmentFlat:  s.coins("9cherry"),
+						CommitmentSettlementBips: 50,
+						IntermediaryDenom:        "lemon",
+						ReqAttrCreateCommitment:  []string{"commitment.create.req"},
 					},
 				},
 			},
@@ -325,7 +388,7 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 				GetHoldCoin: []*GetHoldCoinArgs{{addr: accAddr("seller", 7), denom: assetDenom}},
 			},
 			expInitPanic: "account " + accAddr("seller", 7).String() + " should have at least \"7" + assetDenom + "\" on hold " +
-				"(due to exchange orders), but only has \"6" + assetDenom + "\"",
+				"(due to the exchange module), but only has \"6" + assetDenom + "\"",
 		},
 		{
 			name:       "not enough hold on account: bid",
@@ -338,7 +401,7 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 				GetHoldCoin: []*GetHoldCoinArgs{{addr: accAddr("buyer", 777), denom: feeDenom}},
 			},
 			expInitPanic: "account " + accAddr("buyer", 777).String() + " should have at least \"777" + feeDenom + "\" on hold " +
-				"(due to exchange orders), but only has \"776" + feeDenom + "\"",
+				"(due to the exchange module), but only has \"776" + feeDenom + "\"",
 		},
 		{
 			name: "last order id too low",
@@ -394,12 +457,169 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 				"failed to read order 3: unknown type byte 0x8 module=x/exchange\n",
 		},
 		{
+			name:       "one commitment",
+			holdKeeper: NewMockHoldKeeper().WithGetHoldCoinResult(s.addr2, s.coins("25cherry")...),
+			genState: &exchange.GenesisState{
+				Commitments: []exchange.Commitment{commitment(s.addr2, 1, "25cherry")},
+			},
+			expHoldCalls: HoldCalls{GetHoldCoin: []*GetHoldCoinArgs{{addr: s.addr2, denom: "cherry"}}},
+		},
+		{
+			name: "three commitments",
+			holdKeeper: NewMockHoldKeeper().
+				WithGetHoldCoinResult(s.addr2, s.coins("16apple,16cherry")...).
+				WithGetHoldCoinResult(s.addr3, s.coins("17apple,32cherry,15pear")...),
+			genState: &exchange.GenesisState{
+				Commitments: []exchange.Commitment{
+					commitment(s.addr2, 1, "16apple,16cherry"),
+					commitment(s.addr3, 1, "15cherry,15pear"),
+					commitment(s.addr3, 3, "17apple,17cherry"),
+				},
+			},
+			expHoldCalls: HoldCalls{
+				GetHoldCoin: []*GetHoldCoinArgs{
+					{addr: s.addr2, denom: "apple"}, {addr: s.addr2, denom: "cherry"},
+					{addr: s.addr3, denom: "apple"}, {addr: s.addr3, denom: "cherry"}, {addr: s.addr3, denom: "pear"},
+				},
+			},
+		},
+		{
+			name: "commitment with bad address",
+			genState: &exchange.GenesisState{
+				Commitments: []exchange.Commitment{
+					commitment(s.addr2, 1, "22cherry"),
+					commitment(s.addr3, 1, "23cherry"),
+					{Account: "badbadaddr", MarketId: 1, Amount: s.coins("99cherry")},
+					commitment(s.addr4, 1, "24cherry"),
+				},
+			},
+			expInitPanic: "failed to convert commitments[2].Account=\"badbadaddr\" to AccAddress: " +
+				"decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:       "not enough hold on account: commitment",
+			holdKeeper: NewMockHoldKeeper().WithGetHoldCoinResult(s.addr2, s.coins("24cherry")...),
+			genState: &exchange.GenesisState{
+				Commitments: []exchange.Commitment{commitment(s.addr2, 1, "25cherry")},
+			},
+			expHoldCalls: HoldCalls{GetHoldCoin: []*GetHoldCoinArgs{{addr: s.addr2, denom: "cherry"}}},
+			expInitPanic: "account " + s.addr2.String() + " should have at least \"25cherry\" on hold " +
+				"(due to the exchange module), but only has \"24cherry\"",
+		},
+		{
+			name:       "bad commitment entry in state",
+			holdKeeper: NewMockHoldKeeper().WithGetHoldCoinResult(s.addr3, s.coins("25cherry")...),
+			setup: func() {
+				s.getStore().Set(keeper.MakeKeyCommitment(8, s.addr3), []byte("x")) // Entry should just get ignored.
+			},
+			genState: &exchange.GenesisState{
+				Commitments: []exchange.Commitment{commitment(s.addr3, 1, "25cherry")},
+			},
+			expHoldCalls: HoldCalls{GetHoldCoin: []*GetHoldCoinArgs{{addr: s.addr3, denom: "cherry"}}},
+		},
+		{
+			name:       "one payment",
+			holdKeeper: NewMockHoldKeeper().WithGetHoldCoinResult(s.addr2, s.coin("7starfruit")),
+			genState: &exchange.GenesisState{
+				Payments: []exchange.Payment{payment(s.addr2, "7starfruit", s.addr3, "12tangerine", "eid-8")},
+			},
+			expHoldCalls: HoldCalls{GetHoldCoin: []*GetHoldCoinArgs{{addr: s.addr2, denom: "starfruit"}}},
+		},
+		{
+			name: "three payments",
+			holdKeeper: NewMockHoldKeeper().
+				WithGetHoldCoinResult(s.addr2, s.coin("7starfruit"), s.coin("4strawberry")).
+				WithGetHoldCoinResult(s.addr3, s.coin("65strawberry")),
+			genState: &exchange.GenesisState{
+				Payments: []exchange.Payment{
+					payment(s.addr2, "7starfruit", s.addr3, "12tangerine", "eid-4"),
+					payment(s.addr2, "4strawberry", s.addr3, "18tomato", "eid-12"),
+					payment(s.addr3, "65strawberry", s.addr1, "", "eid-77"),
+				},
+			},
+			expHoldCalls: HoldCalls{GetHoldCoin: []*GetHoldCoinArgs{
+				{addr: s.addr2, denom: "starfruit"}, {addr: s.addr2, denom: "strawberry"},
+				{addr: s.addr3, denom: "strawberry"},
+			}},
+		},
+		{
+			name: "payment with bad source",
+			genState: &exchange.GenesisState{
+				Payments: []exchange.Payment{
+					{
+						Source:       "notavalidaddressstring",
+						SourceAmount: s.coins("7starfruit"),
+						Target:       s.addr3.String(),
+						TargetAmount: s.coins("12tangerine"),
+						ExternalId:   "eid-8",
+					},
+				},
+			},
+			expInitPanic: "failed to store Payments[0]: invalid source \"notavalidaddressstring\": " +
+				"decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:       "not enough hold on account: payment",
+			holdKeeper: NewMockHoldKeeper().WithGetHoldCoinResult(s.addr5, s.coins("6starfruit,12strawberry")...),
+			genState: &exchange.GenesisState{
+				Payments: []exchange.Payment{payment(s.addr5, "6starfruit,13strawberry", s.addr1, "", "")},
+			},
+			expInitPanic: "account " + s.addr5.String() + " should have at least \"13strawberry\" on hold " +
+				"(due to the exchange module), but only has \"12strawberry\"",
+			expHoldCalls: HoldCalls{GetHoldCoin: []*GetHoldCoinArgs{
+				{addr: s.addr5, denom: "starfruit"}, {addr: s.addr5, denom: "strawberry"},
+			}},
+		},
+		{
+			name: "bad payment entry in state",
+			setup: func() {
+				s.getStore().Set(keeper.MakeKeyPayment(s.addr4, "broken"), []byte("x")) // Entry should just get ignored.
+			},
+			genState: &exchange.GenesisState{
+				Payments: []exchange.Payment{payment(s.addr4, "", s.addr2, "3tangerine", "good")},
+			},
+		},
+		{
+			name: "payment already exists in state",
+			setup: func() {
+				// Even though this is a bad entry, it should be enough to make it think that payment already exists.
+				s.getStore().Set(keeper.MakeKeyPayment(s.addr4, "taken"), []byte("x")) // Entry should just get ignored.
+			},
+			genState: &exchange.GenesisState{
+				Payments: []exchange.Payment{payment(s.addr4, "", s.addr1, "6tangerine", "taken")},
+			},
+			expInitPanic: "failed to store Payments[0]: a payment already exists with source " + s.addr4.String() + " and external id \"taken\"",
+		},
+		{
+			name: "not enough hold on account: multiple sources",
+			holdKeeper: NewMockHoldKeeper().
+				WithGetHoldCoinResult(s.addr3, s.coins("112apple,99banana,54cherry,186fig,110pear")...), // 54+55+56+22=187 req fig.
+			genState: &exchange.GenesisState{
+				Orders: []exchange.Order{
+					askOrder(55, 1, s.addr3.String()),
+					bidOrder(56, 1, s.addr3.String()),
+				},
+				LastOrderId: 100,
+				Commitments: []exchange.Commitment{commitment(s.addr3, 1, "54apple,54cherry,54fig,54pear")},
+				Payments:    []exchange.Payment{payment(s.addr3, "3apple,99banana,22fig", s.addr5, "", "")},
+			},
+			expHoldCalls: HoldCalls{
+				GetHoldCoin: []*GetHoldCoinArgs{
+					{addr: s.addr3, denom: "apple"}, {addr: s.addr3, denom: "banana"},
+					{addr: s.addr3, denom: "cherry"}, {addr: s.addr3, denom: "fig"},
+				},
+			},
+			expInitPanic: "account " + s.addr3.String() + " should have at least \"187fig\" on hold " +
+				"(due to the exchange module), but only has \"186fig\"",
+		},
+		{
 			name: "a little of everything",
 			holdKeeper: NewMockHoldKeeper().
 				WithGetHoldCoinResult(s.addr1, askHoldCoins(1)...).
-				WithGetHoldCoinResult(s.addr2, bidHoldCoins(10)...).
-				WithGetHoldCoinResult(s.addr3, bidHoldCoins(77).Add(askHoldCoins(79)...)...).
-				WithGetHoldCoinResult(s.addr4, askHoldCoins(1101)...),
+				WithGetHoldCoinResult(s.addr2, bidHoldCoins(10).Add(s.coin("8strawberry"))...).
+				WithGetHoldCoinResult(s.addr3, bidHoldCoins(77).Add(askHoldCoins(79)...).Add(s.coins("25cherry,25fig")...)...).
+				WithGetHoldCoinResult(s.addr4, askHoldCoins(1101).Add(s.coin("22starfruit"))...).
+				WithGetHoldCoinResult(s.addr5, s.coins("53cherry,27grape")...),
 			genState: &exchange.GenesisState{
 				Params: &exchange.Params{DefaultSplit: 333},
 				Markets: []exchange.Market{
@@ -411,6 +631,9 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 						AccessGrants: []exchange.AccessGrant{
 							{Address: s.addr1.String(), Permissions: exchange.AllPermissions()},
 						},
+						AcceptingCommitments:     true,
+						CommitmentSettlementBips: 3,
+						IntermediaryDenom:        "lemon",
 					},
 					{
 						MarketId:            420,
@@ -432,6 +655,16 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 				},
 				LastMarketId: 66,
 				LastOrderId:  5555,
+				Commitments: []exchange.Commitment{
+					commitment(s.addr3, 1, "25cherry,25fig"),
+					commitment(s.addr5, 1, "26cherry"),
+					commitment(s.addr5, 420, "27cherry,27grape"),
+				},
+				Payments: []exchange.Payment{
+					payment(s.addr1, "", s.addr2, "4tomato", "abc"),
+					payment(s.addr2, "8strawberry", s.addr3, "1tangerine", "def"),
+					payment(s.addr4, "22starfruit", s.addr2, "", "ghi"),
+				},
 			},
 			expAccCalls: AccountCalls{
 				GetAccount: []sdk.AccAddress{s.marketAddr1, exchange.GetMarketAddress(420)},
@@ -441,9 +674,11 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 			expHoldCalls: HoldCalls{
 				GetHoldCoin: []*GetHoldCoinArgs{
 					{addr: s.addr1, denom: assetDenom}, {addr: s.addr1, denom: feeDenom},
-					{addr: s.addr2, denom: feeDenom}, {addr: s.addr2, denom: priceDenom},
-					{addr: s.addr3, denom: assetDenom}, {addr: s.addr3, denom: feeDenom}, {addr: s.addr3, denom: priceDenom},
-					{addr: s.addr4, denom: assetDenom}, {addr: s.addr4, denom: feeDenom},
+					{addr: s.addr2, denom: feeDenom}, {addr: s.addr2, denom: priceDenom}, {addr: s.addr2, denom: "strawberry"},
+					{addr: s.addr3, denom: assetDenom}, {addr: s.addr3, denom: "cherry"},
+					{addr: s.addr3, denom: feeDenom}, {addr: s.addr3, denom: priceDenom},
+					{addr: s.addr4, denom: assetDenom}, {addr: s.addr4, denom: feeDenom}, {addr: s.addr4, denom: "starfruit"},
+					{addr: s.addr5, denom: "cherry"}, {addr: s.addr5, denom: "grape"},
 				},
 			},
 		},
@@ -478,7 +713,7 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 				kpr.InitGenesis(ctx, tc.genState)
 			}
 			s.requirePanicEquals(testInit, tc.expInitPanic, "InitGenesis")
-			s.Assert().Equal(origGenState, tc.genState, "GenState before (expected) and after (actual) InitGenesis")
+			s.assertEqualGenState(origGenState, tc.genState, "GenState before (expected) and after (actual) InitGenesis")
 			events := em.Events()
 			s.assertEqualEvents(nil, events, "events emitted during InitGenesis")
 			s.assertAccountKeeperCalls(tc.accKeeper, tc.expAccCalls, "InitGenesis")
@@ -493,7 +728,7 @@ func (s *TestSuite) TestKeeper_InitAndExportGenesis() {
 				actGenState = kpr.ExportGenesis(s.ctx)
 			}
 			s.Require().NotPanics(testExport, "ExportGenesis")
-			s.Assert().Equal(tc.expGenState, actGenState, "ExportGenesis")
+			s.assertEqualGenState(tc.expGenState, actGenState, "ExportGenesis")
 			actExportLog := s.getLogOutput("ExportGenesis")
 			s.Assert().Equal(tc.expExportLog, actExportLog, "things logged during ExportGenesis")
 		})

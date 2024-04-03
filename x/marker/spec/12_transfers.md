@@ -6,10 +6,12 @@ There are some complex interactions involved with transfers of restricted coins.
   - [General](#general)
   - [Definitions](#definitions)
     - [Transfer Permission](#transfer-permission)
+    - [Force Transfer Permission](#force-transfer-permission)
     - [Forced Transfers](#forced-transfers)
     - [Required Attributes](#required-attributes)
     - [Individuality](#individuality)
     - [Deposits](#deposits)
+    - [Withdraws](#withdraws)
     - [Bypass Accounts](#bypass-accounts)
   - [Send Restrictions](#send-restrictions)
     - [Flowcharts](#flowcharts)
@@ -27,13 +29,17 @@ During such transfers several things are checked using a `SendRestrictionFn` inj
 
 ### Transfer Permission
 
-One permission that can be granted to an address is `transfer`.  The `transfer` permission is granted to accounts that represent a "Transfer Agent" or "Transfer Authority" for restricted marker tokens. An address with `transfer` permission can utilize `MsgTransferRequest` to move restricted funds from one account to another. If the marker allows forced transfer, the source account can be any account, otherwise, it must be the admin's own account.
+One permission that can be granted to an address is `transfer`.  The `transfer` permission is granted to accounts that represent a "Transfer Agent" or "Transfer Authority" for restricted marker tokens. An address with `transfer` permission can utilize `MsgTransferRequest` to move restricted funds from one account to another. The source account must be the admin's own account, or else there must be a `MarkerTransferAuthorization` grant (in the `authz` module) from the source account to the admin.
 
 `MsgSend` and `MsgMultiSend` can also be used by an address with `transfer` permission to move funds out of their own account.
 
+### Force Transfer Permission
+
+If a restricted marker allows forced transfers, the `force_transfer` permission grants an account the ability to use the `Transfer` endpoint to move marker funds out of almost any account. An account with `force_transfer` cannot use other means to move marker funds (e.g. `MsgSend`) unless they also have `transfer` access.
+
 ### Forced Transfers
 
-A restricted coin marker can be configured to allow forced transfers. If allowed, an account with `transfer` permission can use a `MsgTransferRequest` to transfer the restricted coins out of almost any account to another. Forced transfer cannot be used to move restricted coins out of module accounts or smart contract accounts, though.
+A restricted coin marker can be configured to allow forced transfers. If allowed, an account with `force_transfer` permission can use a `MsgTransferRequest` to transfer the restricted coins out of almost any account to another. Forced transfer cannot be used to move restricted coins out of module accounts or smart contract accounts, though. Forced transfers can only be made using a `MsgTransferRequest`.
 
 ### Required Attributes
 
@@ -41,7 +47,7 @@ Required attributes allow a marker Transfer Authority to define a set of account
 
 For example, say account A has some restricted coins of a marker that has required attributes. Also say account B has all of those required attributes, and account C does not. Account A could use a `MsgSend` to send those restricted coins to account B. However, account B could not send them to account C (unless B also has `transfer` permission).
 
-If a restricted coin marker does not have any required attributes defined, the only way the funds can be moved is by someone with `transfer` permisison.
+If a restricted coin marker does not have any required attributes defined, the only way the funds can be moved is by someone with `transfer` permission.
 
 ### Individuality
 
@@ -52,7 +58,15 @@ For example, if the sender has `transfer` permission on one of them, it does not
 
 A deposit is when any funds are being sent to a marker's account. The funds being sent do not have to be in the denom of the destination marker.
 
-Whenever funds are being deposited into a marker, the sender must have `deposit` permission on the target marker. If the funds to deposit are restricted coins, the sender also needs `transfer` permission on the funds being moved; required attributes are not taken into account.
+Whenever funds are being deposited into a marker, the sender (or transfer authority) must have `deposit` permission on the target marker. If the funds to deposit are restricted coins, the sender (or transfer authority) also needs `transfer` permission on the funds being moved; required attributes are not taken into account.
+
+### Withdraws
+
+A withdrawal is when any funds are being sent out of a marker's account. The funds being sent do not have to be in the denom of the source marker.
+
+Withdraws can be made using the `Withdraw` endpoint, or another endpoint that utilizes a transfer agent (e.g. the exchange module's `MarketCommitmentSettle`).
+
+Whenever funds are being withdrawn, the transfer agent must have `withdraw` permission on the source marker. If the funds to withdraw are of the source marker's denom, the source marker must be active. The transfer agent must also have `transfer` permission on any restricted coins being moved.
 
 ### Bypass Accounts
 
@@ -80,19 +94,26 @@ Bypass accounts are not considered during a `MsgTransferRequest`.
 
 ## Send Restrictions
 
-The marker module injects a `SendRestrictionFn` into the bank module. This function is responsible for deciding whether any given transfer is allowed from the marker module's point of view. However, it is bypassed during a `MsgTransfer`.
+The marker module injects a `SendRestrictionFn` into the bank module. This function is responsible for deciding whether any given movement of funds (e.g. a `MsgSend`) is allowed from the marker module's point of view. However, it is bypassed for movements initiated within the marker module (e.g. during a `Transfer`).
 
 ### Flowcharts
 
 #### The SendRestrictionFn
 
-This `SendRestrictionFn` uses the following flow.
+The `SendRestrictionFn` uses the following flow to decide whether a send is allowed. It utilizes the [checkSenderMarker](#checkSenderMarker), [checkReceiverMarker](#checkReceiverMarker), and [validateSendDenom](#validateSendDenom) flows.
 
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
     start[["SendRestrictionFn(Sender, Receiver, Amount)"]]
-    qhasbp{{"Does context have bypass?"}}
+    qhasbp{{"Does context have bypass, or is the Sender either\nthe marker module or ibc transfer account?"}}
+    qfc{{"Is the Receiver the fee collector?"}}
+    qrc{{"Is there a restricted coin in the Amount?"}}
+    gta["Get Transfer Agent from the context if possible."]
+    csm[["checkSenderMarker(Sender, Transfer Agent)"]]
+    issmok{{"Proceed?"}}
+    crm[["checkReceiverMarker(Receiver, Sender, Transfer Agent)"]]
+    isrmok{{"Proceed?"}}
     nextd["Get next Denom from Amount."]
     vsd[["validateSendDenom(Sender, Receiver, Denom)"]]
     isdok{{"Is Denom transfer allowed?"}}
@@ -102,33 +123,107 @@ flowchart TD
     denied(["Send denied."])
     style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
     start --> qhasbp
-    qhasbp ------>|yes| ok
-    qhasbp -.->|no| denomloop
+    qhasbp -.->|no| gta
+    qhasbp -->|yes| qfc
+    qfc -->|yes| qrc
+    qfc -.->|no| ok
+    qrc -------->|yes| denied
+    qrc -.->|no| ok
+    gta --> csm
+    csm --> issmok
+    issmok -->|yes| crm
+    issmok -.->|no| denied
+    crm --> isrmok
+    isrmok -->|yes| denomloop
+    isrmok -.->|no| denied
     subgraph denomloop ["Denom Loop"]
     isdok -->|yes| mored
     vsd --> isdok
     mored -->|yes| nextd
     nextd --> vsd
     end
-    mored -.->|no| ok
+    mored -....->|no| ok
     isdok -.->|no| denied
 
     style denomloop fill:#bbffff
-    linkStyle 8 stroke:#b30000,color:#b30000
-    linkStyle 1,7 stroke:#1b8500,color:#1b8500
+    linkStyle 5,10,13,19 stroke:#b30000,color:#b30000
+    linkStyle 4,6,18 stroke:#1b8500,color:#1b8500
+```
+
+#### checkSenderMarker
+
+This flow checks that, if this is a withdrawal, nothing (yet) prevents the send. It is used in the [SendRestrictionFn](#SendRestrictionFn) flow.
+
+```mermaid
+%%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
+flowchart TD
+    start[["checkSenderMarker(Sender, Transfer Agent)"]]
+    issm{{"Is Sender a marker?"}}
+    haveta{{"Is there a Transfer Agent?"}}
+    istaw{{"Does the Transfer Agent\nhave withdraw access?"}}
+    isasm{{"Does the Amount have\nthe Sender marker's denom?"}}
+    issma{{"Is Sender marker active?"}}
+    ok(["Proceed."])
+    style ok fill:#bbffaa,stroke:#1b8500,stroke-width:3px
+    denied(["Send denied."])
+    style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
+    start --> issm
+    issm -->|yes| haveta
+    haveta -->|yes| istaw
+    haveta -.->|no| denied
+    istaw -.->|no| denied
+    istaw -->|yes| isasm
+    isasm -->|yes| issma
+    issma -->|yes| ok
+    isasm -.->|no| ok
+    issma -.->|no| denied
+    issm -.->|no| ok
+    linkStyle 3,4,9 stroke:#b30000,color:#b30000
+    linkStyle 7,8,10 stroke:#1b8500,color:#1b8500
+```
+
+#### checkReceiverMarker
+
+This flow checks that, if this is a deposit, nothing (yet) prevents the send. It is used in the [SendRestrictionFn](#SendRestrictionFn) and  [MsgTransferRequest](#MsgTransferRequest) flows.
+
+```mermaid
+%%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
+flowchart TD
+    start[["checkReceiverMarker(Receiver, Sender, Transfer Agent)"]]
+    issm{{"Is Receiver a restricted marker?"}}
+    haveta{{"Is there a Transfer Agent?"}}
+    isrd{{"Does Sender\nhave deposit access?"}}
+    istad{{"Does Transfer Agent\nhave deposit access?"}}
+    ok(["Proceed."])
+    style ok fill:#bbffaa,stroke:#1b8500,stroke-width:3px
+    denied(["Send denied."])
+    style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
+    start --> issm
+    issm -->|yes| haveta
+    haveta -.->|no| isrd
+    haveta -->|yes| istad
+    isrd -.->|no| denied
+    isrd -->|yes| ok
+    istad -.->|no| denied
+    istad -->|yes| ok
+    issm -.->|no| ok
+    linkStyle 4,6 stroke:#b30000,color:#b30000
+    linkStyle 5,7,8 stroke:#1b8500,color:#1b8500
 ```
 
 #### validateSendDenom
 
-Each `Denom` is checked using `validateSendDenom`, which has this flow:
+Each `Denom` is checked using `validateSendDenom`, which has this flow. It is used in the [SendRestrictionFn](#SendRestrictionFn) flow.
 
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
     start[["validateSendDenom(Sender, Receiver, Denom)"]]
-    qisrdep{{"Is Receiver a restricted coin marker account?"}}
-    qhasdep{{"Does Sender have Deposit\non Receiver marker?"}}
+    isdm{{"Is there a marker for Denom?"}}
+    isma{{"Is the marker active?"}}
     qisrc{{"Is Denom a restricted coin?"}}
+    qistofc{{"Is Receiver the fee collector?"}}
+    ista{{"Is there a Transfer Agent\nwith transfer access?"}}
     qisdeny{{"Is Sender on marker's deny list?"}}
     qhastrans{{"Does Sender have\ntransfer for Denom?"}}
     qisdep{{"Is Receiver a marker account?"}}
@@ -140,13 +235,17 @@ flowchart TD
     style ok fill:#bbffaa,stroke:#1b8500,stroke-width:3px
     denied(["Send denied."])
     style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
-    start --> qisrdep
-    qisrdep -->|yes| qhasdep
-    qisrdep -.->|no| qisrc
-    qhasdep -.->|no| denied
-    qhasdep -->|yes| qisrc
-    qisrc -->|yes| qisdeny
+    start --> isdm
+    isdm -->|yes| isma
+    isdm -.->|no| ok
+    isma -.->|no| denied
+    isma -->|yes| qisrc
+    qisrc -->|yes| qistofc
     qisrc -.->|no| ok
+    qistofc -->|yes| denied
+    qistofc -.->|no| ista
+    ista -.->|no| qisdeny
+    ista -->|yes| ok
     qisdeny -->|yes| denied
     qisdeny -.->|no| qhastrans
     qhastrans -.->|no| qisdep
@@ -162,22 +261,28 @@ flowchart TD
     qrhasattr -.->|no| denied
     qrhasattr -->|yes| ok
 
-    linkStyle 3,7,11,15,19 stroke:#b30000,color:#b30000
-    linkStyle 6,10,16,18,20 stroke:#1b8500,color:#1b8500
+    linkStyle 3,7,11,15,19,23 stroke:#b30000,color:#b30000
+    linkStyle 2,6,10,14,20,22,24 stroke:#1b8500,color:#1b8500
 ```
+
+Note that `force_transfer` access is not considered at all in the `SendRestrictionFn`.
+Only a `MsgTransferRequest` can be used to force a transfer.
 
 #### MsgTransferRequest
 
-A `MsgTransferRequest` bypasses the `SendRestrictionFn` and applies its own logic. A `MsgTransferRequest` only allows for a single coin amount, i.e. there's only one `Denom` to consider.
+A `MsgTransferRequest` bypasses the `SendRestrictionFn` and applies its own logic. A `MsgTransferRequest` only allows for a single coin amount, i.e. there's only one `Denom` to consider. It makes use of the [checkReceiverMarker](#checkReceiverMarker) flow.
 
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
     start[["TransferCoin(Sender, Receiver, Admin)"]]
     qisrc{{"Is Denom a restricted coin?"}}
-    qhast{{"Does Admin have transfer for Denom?"}}
+    qhast{{"Does Admin have transfer\nor force-transfer for Denom?"}}
+    crm[["checkReceiverMarker(Receiver, Sender, Admin)"]]
+    iscrmbad{{"Proceed?"}}
     qadminfrom{{"Does Sender == Admin?"}}
     qallowft{{"Is forced transfer allowed for Denom?"}}
+    qhasft{{"Does Admin have force-transfer?"}}
     qauthz{{"Has Sender granted Admin\npermission with authz?"}}
     qmodacc{{"Is Sender a\nmodule account?"}}
     qblocked{{"Is Receiver an\naddress blocked by\nthe bank module?"}}
@@ -186,34 +291,39 @@ flowchart TD
     denied(["Transfer denied."])
     style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
     start --> qisrc
-    qisrc -->|yes| qhast
     qisrc -.->|no| denied
-    qhast -->|yes| qadminfrom
+    qisrc -->|yes| qhast
     qhast -.->|no| denied
-    qadminfrom -->|yes| qblocked
+    qhast -->|yes| crm
+    crm --> iscrmbad
+    iscrmbad -.->|no| denied
+    iscrmbad -->|yes| qadminfrom
     qadminfrom -.->|no| qallowft
-    qallowft -->|yes| qmodacc
+    qadminfrom -->|yes| qblocked
     qallowft -.->|no| qauthz
-    qmodacc -.->|no| qblocked
+    qallowft -->|yes| qhasft
+    qhasft -.->|no| qauthz
+    qhasft -->|yes| qmodacc
     qmodacc -->|yes| denied
-    qauthz -->|yes| qblocked
+    qmodacc -.->|no| qblocked
     qauthz -.->|no| denied
-    qblocked -.->|no| ok
+    qauthz -->|yes| qblocked
     qblocked -->|yes| denied
+    qblocked -.->|no| ok
 
-    linkStyle 2,4,10,12,14 stroke:#b30000,color:#b30000
-    linkStyle 13 stroke:#1b8500,color:#1b8500
+    linkStyle 1,3,6,14,16,18 stroke:#b30000,color:#b30000
+    linkStyle 19 stroke:#1b8500,color:#1b8500
 ```
 
 ### Quarantine Complexities
 
-There are some noteable complexities involving restricted coins and quarantined accounts.
+There are some notable complexities involving restricted coins and quarantined accounts.
 
 #### Sending Restricted Coins to a Quarantined Account
 
 The marker module's `SendRestrictionFn` is applied before the quarantine module's. So, when funds are being sent to a quarantined account, the marker module runs its check using the original `Sender` and `Receiver` (i.e. the `Receiver` is not `QFH`).
 
-If the `Receiver` is a quarantined account, we can assume that it is neither a marker, nor a bypass account. Then, assuming the `Sender` is not on the deny list, the `validateSendDenom` flow can be simplified to this for restricted coins.
+If the `Receiver` is a quarantined account, we can assume that it is neither a marker, nor a bypass account. Then, (as long as the `Sender` is not on the deny list), the `validateSendDenom` flow can be simplified to this for restricted coins.
 
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%

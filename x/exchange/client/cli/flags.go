@@ -22,63 +22,88 @@ import (
 )
 
 const (
-	FlagAcceptingOrders    = "accepting-orders"
-	FlagAccessGrants       = "access-grants"
-	FlagAdmin              = "admin"
-	FlagAfter              = "after"
-	FlagAllowUserSettle    = "allow-user-settle"
-	FlagAmount             = "amount"
-	FlagAsk                = "ask"
-	FlagAskAdd             = "ask-add"
-	FlagAskRemove          = "ask-remove"
-	FlagAsks               = "asks"
-	FlagAssets             = "assets"
-	FlagAuthority          = "authority"
-	FlagBid                = "bid"
-	FlagBidAdd             = "bid-add"
-	FlagBidRemove          = "bid-remove"
-	FlagBids               = "bids"
-	FlagBuyer              = "buyer"
-	FlagBuyerFlat          = "buyer-flat"
-	FlagBuyerFlatAdd       = "buyer-flat-add"
-	FlagBuyerFlatRemove    = "buyer-flat-remove"
-	FlagBuyerRatios        = "buyer-ratios"
-	FlagBuyerRatiosAdd     = "buyer-ratios-add"
-	FlagBuyerRatiosRemove  = "buyer-ratios-remove"
-	FlagCreateAsk          = "create-ask"
-	FlagCreateBid          = "create-bid"
-	FlagCreationFee        = "creation-fee"
-	FlagDefault            = "default"
-	FlagDenom              = "denom"
-	FlagDescription        = "description"
-	FlagDisable            = "disable"
-	FlagEnable             = "enable"
-	FlagExternalID         = "external-id"
-	FlagGrant              = "grant"
-	FlagIcon               = "icon"
-	FlagMarket             = "market"
-	FlagName               = "name"
-	FlagOrder              = "order"
-	FlagOwner              = "owner"
-	FlagPartial            = "partial"
-	FlagPrice              = "price"
-	FlagProposal           = "proposal"
-	FlagReqAttrAsk         = "req-attr-ask"
-	FlagReqAttrBid         = "req-attr-bid"
-	FlagRevoke             = "revoke"
-	FlagRevokeAll          = "revoke-all"
-	FlagSeller             = "seller"
-	FlagSellerFlat         = "seller-flat"
-	FlagSellerFlatAdd      = "seller-flat-add"
-	FlagSellerFlatRemove   = "seller-flat-remove"
-	FlagSellerRatios       = "seller-ratios"
-	FlagSellerRatiosAdd    = "seller-ratios-add"
-	FlagSellerRatiosRemove = "seller-ratios-remove"
-	FlagSettlementFee      = "settlement-fee"
-	FlagSigner             = "signer"
-	FlagSplit              = "split"
-	FlagTo                 = "to"
-	FlagURL                = "url"
+	FlagAcceptingCommitments = "accepting-commitments"
+	FlagAcceptingOrders      = "accepting-orders"
+	FlagAccessGrants         = "access-grants"
+	FlagAccount              = "account"
+	FlagAdmin                = "admin"
+	FlagAfter                = "after"
+	FlagAllowUserSettle      = "allow-user-settle"
+	FlagAmount               = "amount"
+	FlagAsk                  = "ask"
+	FlagAskAdd               = "ask-add"
+	FlagAskRemove            = "ask-remove"
+	FlagAsks                 = "asks"
+	FlagAssets               = "assets"
+	FlagAuthority            = "authority"
+	FlagBid                  = "bid"
+	FlagBidAdd               = "bid-add"
+	FlagBidRemove            = "bid-remove"
+	FlagBids                 = "bids"
+	FlagBips                 = "bips"
+	FlagBuyer                = "buyer"
+	FlagBuyerFlat            = "buyer-flat"
+	FlagBuyerFlatAdd         = "buyer-flat-add"
+	FlagBuyerFlatRemove      = "buyer-flat-remove"
+	FlagBuyerRatios          = "buyer-ratios"
+	FlagBuyerRatiosAdd       = "buyer-ratios-add"
+	FlagBuyerRatiosRemove    = "buyer-ratios-remove"
+	FlagCommitmentAdd        = "commitment-add"
+	FlagCommitmentRemove     = "commitment-remove"
+	FlagCreateAsk            = "create-ask"
+	FlagCreateBid            = "create-bid"
+	FlagCreateCommitment     = "create-commitment"
+	FlagCreationFee          = "creation-fee"
+	FlagDefault              = "default"
+	FlagDenom                = "denom"
+	FlagDescription          = "description"
+	FlagDetails              = "details"
+	FlagDisable              = "disable"
+	FlagEnable               = "enable"
+	FlagEmptyExternalID      = "empty-external-id"
+	FlagExternalID           = "external-id"
+	FlagExternalIDs          = "external-ids"
+	FlagFile                 = "file"
+	FlagGrant                = "grant"
+	FlagIcon                 = "icon"
+	FlagInputs               = "inputs"
+	FlagMarket               = "market"
+	FlagName                 = "name"
+	FlagNavs                 = "navs"
+	FlagNewTarget            = "new-target"
+	FlagOrder                = "order"
+	FlagOutputs              = "outputs"
+	FlagOwner                = "owner"
+	FlagPartial              = "partial"
+	FlagPrice                = "price"
+	FlagProposal             = "proposal"
+	FlagRelease              = "release"
+	FlagReleaseAll           = "release-all"
+	FlagReqAttrAsk           = "req-attr-ask"
+	FlagReqAttrBid           = "req-attr-bid"
+	FlagReqAttrCommitment    = "req-attr-commitment"
+	FlagRevoke               = "revoke"
+	FlagRevokeAll            = "revoke-all"
+	FlagSeller               = "seller"
+	FlagSellerFlat           = "seller-flat"
+	FlagSellerFlatAdd        = "seller-flat-add"
+	FlagSellerFlatRemove     = "seller-flat-remove"
+	FlagSellerRatios         = "seller-ratios"
+	FlagSellerRatiosAdd      = "seller-ratios-add"
+	FlagSellerRatiosRemove   = "seller-ratios-remove"
+	FlagSettlementFee        = "settlement-fee"
+	FlagSettlementFees       = "settlement-fees"
+	FlagSigner               = "signer"
+	FlagSource               = "source"
+	FlagSources              = "sources"
+	FlagSourceAmount         = "source-amount"
+	FlagSplit                = "split"
+	FlagTag                  = "tag"
+	FlagTarget               = "target"
+	FlagTargetAmount         = "target-amount"
+	FlagTo                   = "to"
+	FlagUnsetBips            = "unset-bips"
+	FlagURL                  = "url"
 )
 
 // MarkFlagsRequired marks the provided flags as required and panics if there's a problem.
@@ -95,36 +120,61 @@ func MarkFlagsRequired(cmd *cobra.Command, names ...string) {
 //
 // Use ReadFlagsAdminOrFrom to read these flags.
 func AddFlagsAdmin(cmd *cobra.Command) {
+	AddFlagsAdminOpt(cmd)
+	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagAdmin, FlagAuthority)
+}
+
+// AddFlagsAdminOpt adds the --admin and --authority flags to a command and makes them mutually exclusive.
+//
+// Use ReadFlagsAdminOrFrom to read these flags.
+func AddFlagsAdminOpt(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAdmin, "", "The admin (defaults to --from account)")
 	cmd.Flags().Bool(FlagAuthority, false, "Use the governance module account for the admin")
 
 	cmd.MarkFlagsMutuallyExclusive(FlagAdmin, FlagAuthority)
-	cmd.MarkFlagsOneRequired(flags.FlagFrom, FlagAdmin, FlagAuthority)
 }
 
 // ReadFlagsAdminOrFrom reads the --admin flag if provided.
 // If not, but the --authority flag was provided, the gov module account address is returned.
-// If no -admin or --authority flag was provided, returns the --from address.
+// If no --admin or --authority flag was provided, returns the --from address.
 // Returns an error if none of those flags were provided or there was an error reading one.
 //
 // This assumes AddFlagsAdmin was used to define the flags, and that the context comes from client.GetClientTxContext.
 func ReadFlagsAdminOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet) (string, error) {
-	rv, err := flagSet.GetString(FlagAdmin)
-	if len(rv) > 0 || err != nil {
-		return rv, err
+	return ReadFlagsAdminOrFromOrDefault(clientCtx, flagSet, "")
+}
+
+// ReadFlagsAdminOrFromOrDefault reads the --admin flag if provided.
+// If not, but the --authority flag was provided, the gov module account address is returned.
+// If no --admin or --authority flag was provided, the --from address is returned.
+// If none of that was provided, but a default was provided, the default is returned.
+// Returns an error if none of those flags nor a default were provided or there was an error reading one.
+//
+// This assumes AddFlagsAdmin was used to define the flags, and that the context comes from client.GetClientTxContext.
+func ReadFlagsAdminOrFromOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, def string) (string, error) {
+	admin, err := flagSet.GetString(FlagAdmin)
+	if err != nil {
+		return def, err
+	}
+	if len(admin) > 0 {
+		return admin, nil
 	}
 
 	useAuth, err := flagSet.GetBool(FlagAuthority)
 	if err != nil {
-		return "", err
+		return def, err
 	}
 	if useAuth {
 		return AuthorityAddr.String(), nil
 	}
 
-	rv = clientCtx.GetFromAddress().String()
-	if len(rv) > 0 {
-		return rv, nil
+	from := clientCtx.GetFromAddress().String()
+	if len(from) > 0 {
+		return from, nil
+	}
+
+	if len(def) > 0 {
+		return def, nil
 	}
 
 	return "", errors.New("no <admin> provided")
@@ -154,14 +204,29 @@ func ReadFlagAuthorityOrDefault(flagSet *pflag.FlagSet, def string) (string, err
 // Returns an error if neither the flag nor --from were provided.
 // This assumes that the flag was defined with a default of "".
 func ReadAddrFlagOrFrom(clientCtx client.Context, flagSet *pflag.FlagSet, name string) (string, error) {
+	return ReadAddrFlagOrFromOrDefault(clientCtx, flagSet, name, "")
+}
+
+// ReadAddrFlagOrFromOrDefault gets the requested flag or, if it wasn't provided, gets the --from address.
+// If neither are provided, the default is returned.
+// Returns an error if neither the flag, --from, or a default were provided.
+// This assumes that the flag was defined with a default of "".
+func ReadAddrFlagOrFromOrDefault(clientCtx client.Context, flagSet *pflag.FlagSet, name string, def string) (string, error) {
 	rv, err := flagSet.GetString(name)
-	if len(rv) > 0 || err != nil {
-		return rv, err
+	if err != nil {
+		return def, err
+	}
+	if len(rv) > 0 {
+		return rv, nil
 	}
 
 	rv = clientCtx.GetFromAddress().String()
 	if len(rv) > 0 {
 		return rv, nil
+	}
+
+	if len(def) > 0 {
+		return def, nil
 	}
 
 	return "", fmt.Errorf("no <%s> provided", name)
@@ -285,13 +350,34 @@ func ReadFlagMarketOrArg(flagSet *pflag.FlagSet, args []string) (uint32, error) 
 //
 // If the flag is a StringSlice, use ReadFlatFeeFlag.
 func ReadCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
+	return ReadCoinsFlagOrDefault(flagSet, name, nil)
+}
+
+// ReadCoinsFlagOrDefault reads a string flag and converts it into sdk.Coins.
+// If the flag wasn't provided, or an error was encountered, the default is returned.
+func ReadCoinsFlagOrDefault(flagSet *pflag.FlagSet, name string, def sdk.Coins) (sdk.Coins, error) {
 	value, err := flagSet.GetString(name)
 	if len(value) == 0 || err != nil {
-		return nil, err
+		return def, err
 	}
 	rv, err := ParseCoins(value)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing --%s as coins: %w", name, err)
+		return def, fmt.Errorf("error parsing --%s as coins: %w", name, err)
+	}
+	return rv, nil
+}
+
+// ReadReqCoinsFlag reads a string flag and converts it into sdk.Coins.
+// If the flag wasn't provided, this returns an error.
+//
+// If the flag is a StringSlice, use ReadFlatFeeFlag.
+func ReadReqCoinsFlag(flagSet *pflag.FlagSet, name string) (sdk.Coins, error) {
+	rv, err := ReadCoinsFlag(flagSet, name)
+	if err != nil {
+		return nil, err
+	}
+	if rv.IsZero() {
+		return nil, fmt.Errorf("missing required --%s flag", name)
 	}
 	return rv, nil
 }
@@ -524,6 +610,19 @@ func ParseSplits(vals []string) ([]exchange.DenomSplit, error) {
 // ReadStringFlagOrArg gets a required string from either a flag or the first provided arg.
 // This assumes that the flag was defined with a default of "".
 func ReadStringFlagOrArg(flagSet *pflag.FlagSet, args []string, flagName, varName string) (string, error) {
+	rv, err := ReadOptStringFlagOrArg(flagSet, args, flagName, varName)
+	if err != nil {
+		return "", err
+	}
+	if len(rv) == 0 {
+		return "", fmt.Errorf("no <%s> provided", varName)
+	}
+	return rv, nil
+}
+
+// ReadOptStringFlagOrArg gets an optional string from either a flag or the first provided arg.
+// This assumes that the flag was defined with a default of "".
+func ReadOptStringFlagOrArg(flagSet *pflag.FlagSet, args []string, flagName, varName string) (string, error) {
 	rv, err := flagSet.GetString(flagName)
 	if err != nil {
 		return "", err
@@ -533,15 +632,88 @@ func ReadStringFlagOrArg(flagSet *pflag.FlagSet, args []string, flagName, varNam
 		if len(rv) > 0 {
 			return "", fmt.Errorf("cannot provide <%s> as both an arg (%q) and flag (--%s %q)", varName, args[0], flagName, rv)
 		}
-
 		return args[0], nil
 	}
 
+	return rv, nil
+}
+
+// ReadTxFileFlag gets a filename from the flag with the provided fileFlag and tries to read that file as a Tx.
+// Then it gets all the messages out of it.
+func ReadTxFileFlag(clientCtx client.Context, flagSet *pflag.FlagSet, fileFlag string) (string, *txtypes.Tx, error) {
+	filename, err := flagSet.GetString(fileFlag)
+	if len(filename) == 0 || err != nil {
+		return "", nil, err
+	}
+
+	propFileContents, err := os.ReadFile(filename)
+	if err != nil {
+		return filename, nil, err
+	}
+
+	var tx txtypes.Tx
+	err = clientCtx.Codec.UnmarshalJSON(propFileContents, &tx)
+	if err != nil {
+		return filename, nil, fmt.Errorf("failed to unmarshal --%s %q contents as Tx: %w", fileFlag, filename, err)
+	}
+
+	return filename, &tx, nil
+}
+
+// getMsgsFromTx gets all the messages in the provided tx that have the same type as the provided emptyMsg.
+func getMsgsFromTx[T sdk.Msg](filename string, tx *txtypes.Tx, emptyMsg T) ([]T, error) {
+	if len(filename) == 0 || tx == nil {
+		return nil, nil
+	}
+
+	if tx.Body == nil {
+		return nil, fmt.Errorf("the contents of %q does not have a \"body\"", filename)
+	}
+
+	if len(tx.Body.Messages) == 0 {
+		return nil, fmt.Errorf("the contents of %q does not have any body messages", filename)
+	}
+
+	var rv []T
+	for _, msgAny := range tx.Body.Messages {
+		msg, isMsg := msgAny.GetCachedValue().(T)
+		if isMsg {
+			rv = append(rv, msg)
+		}
+	}
+
 	if len(rv) == 0 {
-		return "", fmt.Errorf("no <%s> provided", varName)
+		return nil, fmt.Errorf("no %T messages found in %q", emptyMsg, filename)
 	}
 
 	return rv, nil
+}
+
+// getSingleMsgFromFileFlag reads the flag with the provide name and extracts a Msg of a specific type from the file it points to.
+// If the flag wasn't provided, the emptyMsg is returned without error.
+// An error is returned if anything goes wrong or the file doesn't have exactly one T.
+// The emptyMsg is returned even if an error is returned.
+//
+// T is the specific type of Msg to look for.
+func getSingleMsgFromFileFlag[T sdk.Msg](clientCtx client.Context, flagSet *pflag.FlagSet, fileFlag string, emptyMsg T) (T, error) {
+	filename, tx, err := ReadTxFileFlag(clientCtx, flagSet, fileFlag)
+	if len(filename) == 0 || tx == nil || err != nil {
+		return emptyMsg, err
+	}
+
+	msgs, err := getMsgsFromTx(filename, tx, emptyMsg)
+	if err != nil {
+		return emptyMsg, err
+	}
+
+	if len(msgs) == 0 {
+		return emptyMsg, fmt.Errorf("no %T found in %q", emptyMsg, filename)
+	}
+	if len(msgs) != 1 {
+		return emptyMsg, fmt.Errorf("%d %T found in %q", len(msgs), emptyMsg, filename)
+	}
+
+	return msgs[0], nil
 }
 
 // ReadProposalFlag gets the --proposal string value and attempts to read the file in as a Tx in json.
@@ -549,45 +721,24 @@ func ReadStringFlagOrArg(flagSet *pflag.FlagSet, args []string, flagName, varNam
 // An error is returned if anything goes wrong.
 // This assumes that the flag was defined with a default of "".
 func ReadProposalFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (string, []*codectypes.Any, error) {
-	propFN, err := flagSet.GetString(FlagProposal)
-	if len(propFN) == 0 || err != nil {
-		return "", nil, err
-	}
-
-	propFileContents, err := os.ReadFile(propFN)
-	if err != nil {
+	propFN, tx, err := ReadTxFileFlag(clientCtx, flagSet, FlagProposal)
+	if len(propFN) == 0 || tx == nil || err != nil {
 		return propFN, nil, err
 	}
 
-	var tx txtypes.Tx
-	err = clientCtx.Codec.UnmarshalJSON(propFileContents, &tx)
-	if err != nil {
-		return propFN, nil, fmt.Errorf("failed to unmarshal --%s %q contents as Tx: %w", FlagProposal, propFN, err)
+	emptyPropMsg := &govv1.MsgSubmitProposal{}
+	props, err := getMsgsFromTx(propFN, tx, emptyPropMsg)
+	if len(props) == 0 || err != nil {
+		return propFN, nil, err
 	}
 
-	if tx.Body == nil {
-		return propFN, nil, fmt.Errorf("the contents of %q does not have a \"body\"", propFN)
-	}
-
-	if len(tx.Body.Messages) == 0 {
-		return propFN, nil, fmt.Errorf("the contents of %q does not have any body messages", propFN)
-	}
-
-	hadProp := false
 	var rv []*codectypes.Any
-	for _, msgAny := range tx.Body.Messages {
-		prop, isProp := msgAny.GetCachedValue().(*govv1.MsgSubmitProposal)
-		if isProp {
-			hadProp = true
-			rv = append(rv, prop.Messages...)
-		}
+	for _, prop := range props {
+		rv = append(rv, prop.Messages...)
 	}
 
-	if !hadProp {
-		return propFN, nil, fmt.Errorf("no %T messages found in %q", &govv1.MsgSubmitProposal{}, propFN)
-	}
 	if len(rv) == 0 {
-		return propFN, nil, fmt.Errorf("no messages found in any %T messages in %q", &govv1.MsgSubmitProposal{}, propFN)
+		return propFN, nil, fmt.Errorf("no messages found in any %T messages in %q", emptyPropMsg, propFN)
 	}
 
 	return propFN, rv, nil
@@ -637,6 +788,52 @@ func ReadMsgGovCreateMarketRequestFromProposalFlag(clientCtx client.Context, fla
 // This assumes that the flag was defined with a default of "".
 func ReadMsgGovManageFeesRequestFromProposalFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (*exchange.MsgGovManageFeesRequest, error) {
 	return getSingleMsgFromPropFlag(clientCtx, flagSet, &exchange.MsgGovManageFeesRequest{})
+}
+
+// ReadMsgMarketCommitmentSettleFromFileFlag reads the --file flag and extracts the MsgMarketCommitmentSettleRequest from the file points to.
+// An error is returned if anything goes wrong or the file doesn't have exactly one MsgMarketCommitmentSettleRequest.
+// A MsgMarketCommitmentSettleRequest is returned even if an error is returned.
+// This assumes that the flag was defined with a default of "".
+func ReadMsgMarketCommitmentSettleFromFileFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (*exchange.MsgMarketCommitmentSettleRequest, error) {
+	return getSingleMsgFromFileFlag(clientCtx, flagSet, FlagFile, &exchange.MsgMarketCommitmentSettleRequest{})
+}
+
+// hasPayment is an interface that a Msg will satisfy if it has a GetPayment() method.
+type hasPayment interface {
+	GetPayment() exchange.Payment
+}
+
+// ReadPaymentFromFileFlag reads the --file flag and extracts a Payment from either a MsgCreatePaymentRequest or MsgAcceptPaymentRequest contained in the file.
+// An error is returned if anything goes wrong, or the file doesn't have exactly one Payment.
+// A Payment is returned even if an error is returned.
+// This assumes that the flag was defined with a default of "".
+func ReadPaymentFromFileFlag(clientCtx client.Context, flagSet *pflag.FlagSet) (exchange.Payment, error) {
+	rv := exchange.Payment{}
+	filename, tx, err := ReadTxFileFlag(clientCtx, flagSet, FlagFile)
+	if len(filename) == 0 || tx == nil || err != nil {
+		return rv, err
+	}
+
+	if tx.Body == nil || len(tx.Body.Messages) == 0 {
+		return rv, fmt.Errorf("the contents of %q does not have any body messages", filename)
+	}
+
+	var msgs []hasPayment
+	for _, msgAny := range tx.Body.Messages {
+		msg, isMsg := msgAny.GetCachedValue().(hasPayment)
+		if isMsg {
+			msgs = append(msgs, msg)
+		}
+	}
+
+	if len(msgs) == 0 {
+		return rv, fmt.Errorf("no messages with a Payment found in %q", filename)
+	}
+	if len(msgs) != 1 {
+		return rv, fmt.Errorf("%d messages with a Payment found in %q", len(msgs), filename)
+	}
+
+	return msgs[0].GetPayment(), nil
 }
 
 // ReadFlagUint32OrDefault gets a uit32 flag or returns the provided default.
@@ -689,5 +886,150 @@ func ReadFlagStringOrDefault(flagSet *pflag.FlagSet, name string, def string) (s
 	if len(rv) == 0 || err != nil {
 		return def, err
 	}
+	return rv, nil
+}
+
+// ParseAccountAmount parses an AccountAmount from the provided string with the format "<account>:<amount>".
+func ParseAccountAmount(val string) (*exchange.AccountAmount, error) {
+	parts := strings.Split(val, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid account-amount %q: expected format <account>:<amount>", val)
+	}
+
+	acct := strings.TrimSpace(parts[0])
+	amountStr := strings.TrimSpace(parts[1])
+	if len(acct) == 0 || len(amountStr) == 0 {
+		return nil, fmt.Errorf("invalid account-amount %q: both an <account> and <amount> are required", val)
+	}
+
+	amount, err := ParseCoins(amountStr)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse %q amount: %w", val, err)
+	}
+
+	return &exchange.AccountAmount{Account: acct, Amount: amount}, nil
+}
+
+// ParseAccountAmounts parses an AccountAmount from each of the provided strings.
+func ParseAccountAmounts(vals []string) ([]exchange.AccountAmount, error) {
+	var errs []error
+	rv := make([]exchange.AccountAmount, 0, len(vals))
+	for _, val := range vals {
+		entry, err := ParseAccountAmount(val)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			rv = append(rv, *entry)
+		}
+	}
+	return rv, errors.Join(errs...)
+}
+
+// ReadFlagAccountAmounts reads a StringSlice flag and converts it into a slice of exchange.AccountAmount.
+// This assumes that the flag was defined with a default of nil or []string{}.
+func ReadFlagAccountAmounts(flagSet *pflag.FlagSet, name string) ([]exchange.AccountAmount, error) {
+	return ReadFlagAccountAmountsOrDefault(flagSet, name, nil)
+}
+
+func ReadFlagAccountAmountsOrDefault(flagSet *pflag.FlagSet, name string, def []exchange.AccountAmount) ([]exchange.AccountAmount, error) {
+	rawVals, err := flagSet.GetStringSlice(name)
+	if len(rawVals) == 0 || err != nil {
+		return def, err
+	}
+
+	// Slice flags are automatically split on commas. But here, we need commas for separating coin
+	// entries in a coins string. So, add any entries without a colon to the previous entry.
+	vals := make([]string, 0, len(rawVals))
+	for i, val := range rawVals {
+		if i == 0 || strings.Contains(val, ":") {
+			vals = append(vals, val)
+		} else {
+			vals[len(vals)-1] += "," + val
+		}
+	}
+
+	rv, err := ParseAccountAmounts(vals)
+	if err != nil {
+		return def, err
+	}
+
+	return rv, nil
+}
+
+// ReadFlagAccountsWithoutAmounts reads a StringSlice flag and converts it into a slice of exchange.AccountAmount
+// with only the Account field populated using the values provided with the flag.
+// This assumes that the flag was defined with a default of nil or []string{}.
+func ReadFlagAccountsWithoutAmounts(flagSet *pflag.FlagSet, name string) ([]exchange.AccountAmount, error) {
+	vals, err := flagSet.GetStringSlice(name)
+	if len(vals) == 0 || err != nil {
+		return nil, err
+	}
+
+	rv := make([]exchange.AccountAmount, len(vals))
+	for i, val := range vals {
+		rv[i].Account = val
+	}
+	return rv, nil
+}
+
+// ParseNetAssetPrice parses a NetAssetPrice from the provided string with the format "<assets>:<price>".
+func ParseNetAssetPrice(val string) (*exchange.NetAssetPrice, error) {
+	parts := strings.Split(val, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid net-asset-price %q: expected format <assets>:<price>", val)
+	}
+
+	assetsStr := strings.TrimSpace(parts[0])
+	priceStr := strings.TrimSpace(parts[1])
+	if len(assetsStr) == 0 || len(priceStr) == 0 {
+		return nil, fmt.Errorf("invalid net-asset-price %q: both an <assets> and <price> are required", val)
+	}
+
+	assets, err := exchange.ParseCoin(assetsStr)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse %q assets: %w", val, err)
+	}
+	price, err := exchange.ParseCoin(priceStr)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse %q price: %w", val, err)
+	}
+
+	return &exchange.NetAssetPrice{Assets: assets, Price: price}, nil
+}
+
+// ParseNetAssetPrices parses a NetAssetPrice from each of the provided strings.
+func ParseNetAssetPrices(vals []string) ([]exchange.NetAssetPrice, error) {
+	var errs []error
+	rv := make([]exchange.NetAssetPrice, 0, len(vals))
+	for _, val := range vals {
+		entry, err := ParseNetAssetPrice(val)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			rv = append(rv, *entry)
+		}
+	}
+	return rv, errors.Join(errs...)
+}
+
+// ReadFlagNetAssetPrices reads a StringSlice flag and converts it into a slice of exchange.NetAssetPrice.
+// This assumes that the flag was defined with a default of nil or []string{}.
+func ReadFlagNetAssetPrices(flagSet *pflag.FlagSet, name string) ([]exchange.NetAssetPrice, error) {
+	return ReadFlagNetAssetPricesOrDefault(flagSet, name, nil)
+}
+
+// ReadFlagNetAssetPricesOrDefault reads a StringSlice flag and converts it into a slice of exchange.NetAssetPrice.
+// If none are provided or there's an error, the default is returned (along with the error).
+// This assumes that the flag was defined with a default of nil or []string{}.
+func ReadFlagNetAssetPricesOrDefault(flagSet *pflag.FlagSet, name string, def []exchange.NetAssetPrice) ([]exchange.NetAssetPrice, error) {
+	vals, err := flagSet.GetStringSlice(name)
+	if len(vals) == 0 || err != nil {
+		return def, err
+	}
+	rv, err := ParseNetAssetPrices(vals)
+	if err != nil {
+		return def, err
+	}
+
 	return rv, nil
 }

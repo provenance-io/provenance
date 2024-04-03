@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -40,6 +41,23 @@ func (k MsgServer) CreateBid(goCtx context.Context, msg *exchange.MsgCreateBidRe
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgCreateBidResponse{OrderId: orderID}, nil
+}
+
+// CommitFunds marks funds in an account as manageable by a market.
+func (k MsgServer) CommitFunds(goCtx context.Context, msg *exchange.MsgCommitFundsRequest) (*exchange.MsgCommitFundsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	addr, _ := sdk.AccAddressFromBech32(msg.Account)
+
+	err := k.ValidateAndCollectCommitmentCreationFee(ctx, msg.MarketId, addr, msg.CreationFee)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	err = k.AddCommitment(ctx, msg.MarketId, addr, msg.Amount, msg.EventTag)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgCommitFundsResponse{}, nil
 }
 
 // CancelOrder cancels an order.
@@ -83,11 +101,41 @@ func (k MsgServer) MarketSettle(goCtx context.Context, msg *exchange.MsgMarketSe
 	if !k.CanSettleOrders(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("settle orders for", msg.Admin, msg.MarketId)
 	}
-	err := k.SettleOrders(ctx, msg.MarketId, msg.AskOrderIds, msg.BidOrderIds, msg.ExpectPartial)
+	err := k.SettleOrders(ctx, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgMarketSettleResponse{}, nil
+}
+
+// MarketCommitmentSettle is a market endpoint to transfer committed funds.
+func (k MsgServer) MarketCommitmentSettle(goCtx context.Context, msg *exchange.MsgMarketCommitmentSettleRequest) (*exchange.MsgMarketCommitmentSettleResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanSettleCommitments(ctx, msg.MarketId, msg.Admin) {
+		return nil, permError("settle commitments for", msg.Admin, msg.MarketId)
+	}
+	err := k.SettleCommitments(ctx, msg)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	err = k.consumeCommitmentSettlementFee(ctx, msg)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgMarketCommitmentSettleResponse{}, nil
+}
+
+// MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s).
+func (k MsgServer) MarketReleaseCommitments(goCtx context.Context, msg *exchange.MsgMarketReleaseCommitmentsRequest) (*exchange.MsgMarketReleaseCommitmentsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanReleaseCommitmentsForMarket(ctx, msg.MarketId, msg.Admin) {
+		return nil, permError("release commitments for", msg.Admin, msg.MarketId)
+	}
+	err := k.ReleaseCommitments(ctx, msg.MarketId, msg.ToRelease, msg.EventTag)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgMarketReleaseCommitmentsResponse{}, nil
 }
 
 // MarketSetOrderExternalID updates an order's external id field.
@@ -131,16 +179,23 @@ func (k MsgServer) MarketUpdateDetails(goCtx context.Context, msg *exchange.MsgM
 }
 
 // MarketUpdateEnabled is a market endpoint to update whether its accepting orders.
-func (k MsgServer) MarketUpdateEnabled(goCtx context.Context, msg *exchange.MsgMarketUpdateEnabledRequest) (*exchange.MsgMarketUpdateEnabledResponse, error) {
+//
+//nolint:staticcheck // This endpoint needs to keep existing, so use of the deprecated messages is needed.
+func (k MsgServer) MarketUpdateEnabled(_ context.Context, _ *exchange.MsgMarketUpdateEnabledRequest) (*exchange.MsgMarketUpdateEnabledResponse, error) {
+	return nil, fmt.Errorf("the MarketUpdateEnabled endpoint has been replaced by the MarketUpdateAcceptingOrders endpoint")
+}
+
+// MarketUpdateAcceptingOrders is a market endpoint to update whether its accepting orders.
+func (k MsgServer) MarketUpdateAcceptingOrders(goCtx context.Context, msg *exchange.MsgMarketUpdateAcceptingOrdersRequest) (*exchange.MsgMarketUpdateAcceptingOrdersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
 		return nil, permError("update", msg.Admin, msg.MarketId)
 	}
-	err := k.UpdateMarketActive(ctx, msg.MarketId, msg.AcceptingOrders, msg.Admin)
+	err := k.UpdateMarketAcceptingOrders(ctx, msg.MarketId, msg.AcceptingOrders, msg.Admin)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	return &exchange.MsgMarketUpdateEnabledResponse{}, nil
+	return &exchange.MsgMarketUpdateAcceptingOrdersResponse{}, nil
 }
 
 // MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement.
@@ -154,6 +209,36 @@ func (k MsgServer) MarketUpdateUserSettle(goCtx context.Context, msg *exchange.M
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 	return &exchange.MsgMarketUpdateUserSettleResponse{}, nil
+}
+
+// MarketUpdateAcceptingCommitments is a market endpoint to update whether it accepts commitments.
+func (k MsgServer) MarketUpdateAcceptingCommitments(goCtx context.Context, msg *exchange.MsgMarketUpdateAcceptingCommitmentsRequest) (*exchange.MsgMarketUpdateAcceptingCommitmentsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
+		return nil, permError("update", msg.Admin, msg.MarketId)
+	}
+	if !k.IsAuthority(msg.Admin) {
+		if err := validateMarketUpdateAcceptingCommitments(k.getStore(ctx), msg.MarketId, msg.AcceptingCommitments); err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
+	}
+
+	err := k.UpdateMarketAcceptingCommitments(ctx, msg.MarketId, msg.AcceptingCommitments, msg.Admin)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	return &exchange.MsgMarketUpdateAcceptingCommitmentsResponse{}, nil
+}
+
+// MarketUpdateIntermediaryDenom sets a market's intermediary denom.
+func (k MsgServer) MarketUpdateIntermediaryDenom(goCtx context.Context, msg *exchange.MsgMarketUpdateIntermediaryDenomRequest) (*exchange.MsgMarketUpdateIntermediaryDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if !k.CanUpdateMarket(ctx, msg.MarketId, msg.Admin) {
+		return nil, permError("update", msg.Admin, msg.MarketId)
+	}
+	k.UpdateIntermediaryDenom(ctx, msg.MarketId, msg.IntermediaryDenom, msg.Admin)
+	return &exchange.MsgMarketUpdateIntermediaryDenomResponse{}, nil
 }
 
 // MarketManagePermissions is a market endpoint to manage a market's user permissions.
@@ -182,6 +267,113 @@ func (k MsgServer) MarketManageReqAttrs(goCtx context.Context, msg *exchange.Msg
 	return &exchange.MsgMarketManageReqAttrsResponse{}, nil
 }
 
+// CreatePayment creates a payment to facilitate a trade between two accounts.
+func (k MsgServer) CreatePayment(goCtx context.Context, msg *exchange.MsgCreatePaymentRequest) (*exchange.MsgCreatePaymentResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := k.Keeper.CreatePayment(ctx, &msg.Payment); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	if !msg.Payment.SourceAmount.IsZero() {
+		k.consumeCreatePaymentFee(ctx, msg)
+	}
+	return &exchange.MsgCreatePaymentResponse{}, nil
+}
+
+// AcceptPayment is used by a target to accept a payment.
+func (k MsgServer) AcceptPayment(goCtx context.Context, msg *exchange.MsgAcceptPaymentRequest) (*exchange.MsgAcceptPaymentResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := k.Keeper.AcceptPayment(ctx, &msg.Payment); err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	if !msg.Payment.TargetAmount.IsZero() {
+		k.consumeAcceptPaymentFee(ctx, msg)
+	}
+	return &exchange.MsgAcceptPaymentResponse{}, nil
+}
+
+// RejectPayment can be used by a target to reject a payment.
+func (k MsgServer) RejectPayment(goCtx context.Context, msg *exchange.MsgRejectPaymentRequest) (*exchange.MsgRejectPaymentResponse, error) {
+	target, err := sdk.AccAddressFromBech32(msg.Target)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid target %q: %v", msg.Target, err)
+	}
+	source, err := sdk.AccAddressFromBech32(msg.Source)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid source %q: %v", msg.Source, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err = k.Keeper.RejectPayment(ctx, target, source, msg.ExternalId)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+	return &exchange.MsgRejectPaymentResponse{}, nil
+}
+
+// RejectPayments can be used by a target to reject all payments from one or more sources.
+func (k MsgServer) RejectPayments(goCtx context.Context, msg *exchange.MsgRejectPaymentsRequest) (*exchange.MsgRejectPaymentsResponse, error) {
+	target, err := sdk.AccAddressFromBech32(msg.Target)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid target %q: %v", msg.Target, err)
+	}
+	sources := make([]sdk.AccAddress, 0, len(msg.Sources))
+	for i, sourceStr := range msg.Sources {
+		var source sdk.AccAddress
+		source, err = sdk.AccAddressFromBech32(sourceStr)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid sources[%d] %q: %v", i, sourceStr, err)
+		}
+		sources = append(sources, source)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err = k.Keeper.RejectPayments(ctx, target, sources)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+	}
+
+	return &exchange.MsgRejectPaymentsResponse{}, nil
+}
+
+// CancelPayments can be used by a source to cancel one or more payments.
+func (k MsgServer) CancelPayments(goCtx context.Context, msg *exchange.MsgCancelPaymentsRequest) (*exchange.MsgCancelPaymentsResponse, error) {
+	source, err := sdk.AccAddressFromBech32(msg.Source)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid source %q: %v", msg.Source, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err = k.Keeper.CancelPayments(ctx, source, msg.ExternalIds)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	return &exchange.MsgCancelPaymentsResponse{}, nil
+}
+
+// ChangePaymentTarget can be used by a source to change the target in one of their payments.
+func (k MsgServer) ChangePaymentTarget(goCtx context.Context, msg *exchange.MsgChangePaymentTargetRequest) (*exchange.MsgChangePaymentTargetResponse, error) {
+	source, err := sdk.AccAddressFromBech32(msg.Source)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid source %q: %v", msg.Source, err)
+	}
+	var newTarget sdk.AccAddress
+	if len(msg.NewTarget) > 0 {
+		newTarget, err = sdk.AccAddressFromBech32(msg.NewTarget)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid new target %q: %v", msg.NewTarget, err)
+		}
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err = k.UpdatePaymentTarget(ctx, source, msg.ExternalId, newTarget)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
+
+	return &exchange.MsgChangePaymentTargetResponse{}, nil
+}
+
 // GovCreateMarket is a governance proposal endpoint for creating a market.
 func (k MsgServer) GovCreateMarket(goCtx context.Context, msg *exchange.MsgGovCreateMarketRequest) (*exchange.MsgGovCreateMarketResponse, error) {
 	if err := k.ValidateAuthority(msg.Authority); err != nil {
@@ -207,6 +399,19 @@ func (k MsgServer) GovManageFees(goCtx context.Context, msg *exchange.MsgGovMana
 	k.UpdateFees(ctx, msg)
 
 	return &exchange.MsgGovManageFeesResponse{}, nil
+}
+
+// GovCloseMarket is a governance proposal endpoint that will disable order and commitment creation,
+// cancel all orders, and release all commitments.
+func (k MsgServer) GovCloseMarket(goCtx context.Context, msg *exchange.MsgGovCloseMarketRequest) (*exchange.MsgGovCloseMarketResponse, error) {
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	k.CloseMarket(ctx, msg.MarketId, msg.Authority)
+
+	return &exchange.MsgGovCloseMarketResponse{}, nil
 }
 
 // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.

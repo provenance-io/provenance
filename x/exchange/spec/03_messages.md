@@ -7,21 +7,34 @@ The exchange module has `Msg` endpoints for users, markets, and governance propo
   - [User Endpoints](#user-endpoints)
     - [CreateAsk](#createask)
     - [CreateBid](#createbid)
+    - [CommitFunds](#commitfunds)
     - [CancelOrder](#cancelorder)
     - [FillBids](#fillbids)
     - [FillAsks](#fillasks)
   - [Market Endpoints](#market-endpoints)
     - [MarketSettle](#marketsettle)
+    - [MarketCommitmentSettle](#marketcommitmentsettle)
+    - [MarketReleaseCommitments](#marketreleasecommitments)
     - [MarketSetOrderExternalID](#marketsetorderexternalid)
     - [MarketWithdraw](#marketwithdraw)
     - [MarketUpdateDetails](#marketupdatedetails)
-    - [MarketUpdateEnabled](#marketupdateenabled)
+    - [MarketUpdateAcceptingOrders](#marketupdateacceptingorders)
     - [MarketUpdateUserSettle](#marketupdateusersettle)
+    - [MarketUpdateAcceptingCommitments](#marketupdateacceptingcommitments)
+    - [MarketUpdateIntermediaryDenom](#marketupdateintermediarydenom)
     - [MarketManagePermissions](#marketmanagepermissions)
     - [MarketManageReqAttrs](#marketmanagereqattrs)
+  - [Payment Endpoints](#payment-endpoints)
+    - [CreatePayment](#createpayment)
+    - [AcceptPayment](#acceptpayment)
+    - [RejectPayment](#rejectpayment)
+    - [RejectPayments](#rejectpayments)
+    - [CancelPayments](#cancelpayments)
+    - [ChangePaymentTarget](#changepaymenttarget)
   - [Governance Proposals](#governance-proposals)
     - [GovCreateMarket](#govcreatemarket)
     - [GovManageFees](#govmanagefees)
+    - [GovCloseMarket](#govclosemarket)
     - [GovUpdateParams](#govupdateparams)
 
 
@@ -52,15 +65,15 @@ It is expected to fail if:
 
 #### MsgCreateAskRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L68-L76
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L116-L124
 
 #### AskOrder
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/orders.proto#L28-L53
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/orders.proto#L28-L53
 
 #### MsgCreateAskResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L78-L82
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L126-L130
 
 
 ### CreateBid
@@ -85,15 +98,36 @@ It is expected to fail if:
 
 #### MsgCreateBidRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L84-L92
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L132-L140
 
 #### BidOrder
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/orders.proto#L55-L78
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/orders.proto#L55-L78
 
 #### MsgCreateBidResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L94-L98
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L142-L146
+
+
+### CommitFunds
+
+Funds can be committed to a market using the `CommitFunds` endpoint.
+If the account already has funds committed to the market, the provided funds are added to that commitment amount.
+
+It is expected to fail if:
+* The market does not exist.
+* The market is not accepting commitments.
+* The market requires attributes in order to create commitments and the `account` is missing one or more.
+* The `creation_fee` is insufficient (as dictated by the market).
+* The `amount` is not spendable in the account (after paying the creation fee).
+
+#### MsgCommitFundsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L148-L163
+
+#### MsgCommitFundsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L165-L166
 
 
 ### CancelOrder
@@ -115,11 +149,11 @@ It is expected to fail if:
 
 #### MsgCancelOrderRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L100-L110
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L168-L178
 
 #### MsgCancelOrderResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L112-L113
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L180-L181
 
 
 ### FillBids
@@ -146,11 +180,11 @@ It is expected to fail if:
 
 #### MsgFillBidsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L115-L135
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L183-L203
 
 #### MsgFillBidsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L137-L138
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L205-L206
 
 
 ### FillAsks
@@ -177,11 +211,11 @@ It is expected to fail if:
 
 #### MsgFillAsksRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L140-L161
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L208-L229
 
 #### MsgFillAsksResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L163-L164
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L231-L232
 
 
 ## Market Endpoints
@@ -216,11 +250,53 @@ It is expected to fail if:
 
 #### MsgMarketSettleRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L166-L183
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L234-L251
 
 #### MsgMarketSettleResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L185-L186
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L253-L254
+
+
+### MarketCommitmentSettle
+
+A market can move committed funds using the `MarketCommitmentSettle` endpoint.
+The `admin` must have the `PERMISSION_SETTLE` permission in the market (or be the `authority`).
+
+It is expected to fail if:
+* The market does not exist.
+* The `admin` does not have `PERMISSION_SETTLE` in the market, and is not the `authority`.
+* The sum of the `inputs` does not equal the sum of the `outputs`.
+* Not enough funds have been committed by one or more accounts to the market.
+* A NAV is needed (for fee calculation) that does not exist and was not provided.
+
+#### MsgMarketCommitmentSettleRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L256-L276
+
+#### MsgMarketCommitmentSettleResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L278-L279
+
+
+### MarketReleaseCommitments
+
+A market can release committed funds using the `MarketReleaseCommitments` endpoint.
+The `admin` must have the `PERMISSION_CANCEL` permission in the market (or be the `authority`).
+
+Providing an empty amount indicates that all funds currently committed in that account (to the market) should be released.
+
+It is expected to fail if:
+* The market does not exist.
+* The `admin` does not have `PERMISSION_CANCEL` in the market, and is not the `authority`.
+* One or more of the amounts is more than what is currently committed by the associated `account`.
+
+#### MsgMarketReleaseCommitmentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L281-L294
+
+#### MsgMarketReleaseCommitmentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L296-L297
 
 
 ### MarketSetOrderExternalID
@@ -242,11 +318,11 @@ It is expected to fail if:
 
 #### MsgMarketSetOrderExternalIDRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L188-L202
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L299-L313
 
 #### MsgMarketSetOrderExternalIDResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L204-L205
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L315-L316
 
 
 ### MarketWithdraw
@@ -263,11 +339,11 @@ It is expected to fail if:
 
 #### MsgMarketWithdrawRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L207-L221
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L318-L332
 
 #### MsgMarketWithdrawResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L223-L224
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L334-L335
 
 
 ### MarketUpdateDetails
@@ -282,18 +358,18 @@ It is expected to fail if:
 
 #### MsgMarketUpdateDetailsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L226-L237
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L337-L348
 
 See also: [MarketDetails](#marketdetails).
 
 #### MsgMarketUpdateDetailsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L239-L240
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L350-L351
 
 
-### MarketUpdateEnabled
+### MarketUpdateAcceptingOrders
 
-A market can enable or disable order creation using the `MarketUpdateEnabled` endpoint.
+A market can enable or disable order creation using the `MarketUpdateAcceptingOrders` endpoint.
 The `admin` must have the `PERMISSION_UPDATE` permission in the market (or be the `authority`).
 
 With `accepting_orders` = `false`, no one can create any new orders in the market, but existing orders can still be settled or cancelled.
@@ -303,13 +379,13 @@ It is expected to fail if:
 * The `admin` does not have `PERMISSION_UPDATE` in the market, and is not the `authority`.
 * The provided `accepting_orders` value equals the market's current setting.
 
-#### MsgMarketUpdateEnabledRequest
+#### MsgMarketUpdateAcceptingOrdersRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L242-L253
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L377-L388
 
-#### MsgMarketUpdateEnabledResponse
+#### MsgMarketUpdateAcceptingOrdersResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L255-L256
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L390-L391
 
 
 ### MarketUpdateUserSettle
@@ -327,11 +403,53 @@ It is expected to fail if:
 
 #### MsgMarketUpdateUserSettleRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L258-L271
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L393-L406
 
 #### MsgMarketUpdateUserSettleResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L273-L274
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L408-L409
+
+
+### MarketUpdateAcceptingCommitments
+
+Using the `MarketUpdateAcceptingCommitments` endpoint, a market can control whether it is accepting commitments.
+The `admin` must have the `PERMISSION_UPDATE` permission in the market (or be the `authority`).
+
+The [CommitFunds](#CommitFunds) endpoint is only available for markets where `accepting_orders` = `true`.
+
+It is expected to fail if:
+* The market does not exist.
+* The `admin` does not have `PERMISSION_UPDATE` in the market, and is not the `authority`.
+* The provided `accepting_orders` value equals the market's current setting.
+* The provided `accepting_orders` is `true` but no commitment-related fees are defined.
+* The provided `accepting_orders` is `true` and bips are set, but either no intermediary denom is defined or there is no NAV associating the intermediary denom with the chain's fee denom.
+
+#### MsgMarketUpdateAcceptingCommitmentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L411-L424
+
+#### MsgMarketUpdateAcceptingCommitmentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L426-L427
+
+
+### MarketUpdateIntermediaryDenom
+
+The `MarketUpdateIntermediaryDenom` endpoint allows a market to change its intermediary denom (used for commitment settlement fee calculation).
+The `admin` must have the `PERMISSION_UPDATE` permission in the market (or be the `authority`).
+
+It is expected to fail if:
+* The market does not exist.
+* The `admin` does not have `PERMISSION_UPDATE` in the market, and is not the `authority`.
+* The provided `intermediary_denom` is not a valid denom string.
+
+#### MsgMarketUpdateIntermediaryDenomRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L429-L440
+
+#### MsgMarketUpdateIntermediaryDenomResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L442-L443
 
 
 ### MarketManagePermissions
@@ -348,13 +466,13 @@ It is expected to fail if:
 
 #### MsgMarketManagePermissionsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L276-L291
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L445-L460
 
 See also: [AccessGrant](#accessgrant) and [Permission](#permission).
 
 #### MsgMarketManagePermissionsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L293-L295
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L462-L463
 
 
 ### MarketManageReqAttrs
@@ -362,7 +480,7 @@ See also: [AccessGrant](#accessgrant) and [Permission](#permission).
 The attributes required to create orders in a market can be managed using the `MarketManageReqAttrs` endpoint.
 The `admin` must have the `PERMISSION_ATTRIBUTES` permission in the market (or be the `authority`).
 
-See also: [Required Attributes](#required-attributes).
+See also: [Required Attributes](01_concepts.md#required-attributes).
 
 It is expected to fail if:
 * The market does not exist.
@@ -372,11 +490,158 @@ It is expected to fail if:
 
 #### MsgMarketManageReqAttrsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L296-L313
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L465-L486
 
 #### MsgMarketManageReqAttrsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L315-L316
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L488-L489
+
+
+## Payment Endpoints
+
+There are several endpoints for using `Payment`s to facilitate transfers of funds between two accounts.
+These are available to any account, and are not associated with any markets.
+
+
+### CreatePayment
+
+A `Payment` can be created using the `CreatePayment` endpoint.
+The `source` is the account creating the payment. As part of payment creation, a hold is placed on the `source_amount` funds in the `source` account.
+
+A payment is uniquely identified using a combination of its `source` and `external_id`.
+The `source` is responsible for choosing the `external_id` of the payment, so it is up to them to choose one that they aren't currently using.
+Once a payment is accepted, rejected, or cancelled, its `external_id` can be re-used on a new payment.
+
+A payment can be created without a `target`, but one cannot be accepted until a target has been set for it.
+
+A `Tx` with a `MsgCreatePaymentRequest` requires an additional amount in the fee if the `source_amount` is not zero.
+That amount is defined in the exchange module [Params](06_params.md).
+The [OrderFeeCalc](05_queries.md#orderfeecalc) query can be used to identify how much extra fee to include.
+
+It is expected to fail if:
+* The `source` is not a valid bech32 string.
+* The `target` isn't empty and is not a valid bech32 string.
+* The `source_amount` funds are not available in the `source` account.
+* The `external_id` is longer than 100 characters.
+* A payment already exists with the given `source` and `external_id`.
+
+#### MsgCreatePaymentRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L491-L497
+
+#### Payment
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/payments.proto#L13-L43
+
+#### MsgCreatePaymentResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L499-L500
+
+
+### AcceptPayment
+
+A `target` can accept a previously created `Payment` using the `AcceptPayment` endpoint.
+
+When a payment is accepted, the hold on the `source_amount` funds is released, and they are sent to the `target`; then the `target_amount` funds are sent to the `source`. Lastly, the `Payment` record is deleted.
+
+A `Tx` with a `MsgAcceptPaymentRequest` requires an additional amount in the fee if the `target_amount` is not zero.
+That amount is defined in the exchange module [Params](06_params.md).
+The [OrderFeeCalc](05_queries.md#orderfeecalc) query can be used to identify how much extra fee to include.
+
+It is expected to fail if:
+* Any part of the provided `Payment` info does not match the payment's current state.
+* The `target` account does not have the `target_amount` funds in it.
+
+#### MsgAcceptPaymentRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L502-L508
+
+See also: [Payment](#payment).
+
+#### MsgAcceptPaymentResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L510-L511
+
+
+### RejectPayment
+
+A `target` can reject a `Payment` using the `RejectPayment` endpoint.
+
+When a payment is rejected, the hold on the `source_amount` is released and the payment record is deleted.
+
+It is expected to fail if:
+* A payment does not exist with the provided `source` and `external_id`.
+* The existing payment has a `target` different from the one provided (that signed the msg).
+
+#### MsgRejectPaymentRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L513-L523
+
+#### MsgRejectPaymentResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L525-L526
+
+
+### RejectPayments
+
+A `target` can reject all payments from one or more `source` accounts using the `RejectPayments` endpoint.
+
+For each applicable payment, the hold on the `source_amount` funds is released, and the payment record is deleted.
+
+It is expected to fail if:
+* No `source` accounts are provided.
+* One of the provided `source` accounts does not have any payments for the `target`.
+
+#### MsgRejectPaymentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L528-L536
+
+#### MsgRejectPaymentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L538-L539
+
+
+### CancelPayments
+
+A `source` can cancel their payments with one or more `external_id`s using the `CancelPayments` endpoint.
+
+For each applicable payment, the hold on the `source_amount` funds is released, and the payment record is deleted.
+
+It is expected to fail if:
+* No `external_id`s are provided.
+* The `source` does not have a payment with one of the provided external ids.
+
+#### MsgCancelPaymentsRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L541-L549
+
+#### MsgCancelPaymentsResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L551-L552
+
+
+### ChangePaymentTarget
+
+A `source` can change the `target` of a `Payment` using the `ChangePaymentTarget` endpoint.
+
+This can be used to:
+* Set a target on a payment that previously didn't have one.
+* Change the target from one account to another.
+* Unset the payment's target.
+
+A payment's target can be changed multiple times (until it's accepted, rejected, or cancelled).
+
+It is expected to fail if:
+* No payment exists with the given `source` and `external_id`.
+* The provided `new_target` equals the payment's current `target`.
+
+#### MsgChangePaymentTargetRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L554-L564
+
+#### MsgChangePaymentTargetResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L566-L567
 
 
 ## Governance Proposals
@@ -402,15 +667,15 @@ It is expected to fail if:
 
 #### MsgGovCreateMarketRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L318-L329
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L569-L580
 
 #### Market
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L52-L103
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/market.proto#L52-L148
 
 #### MarketDetails
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L28-L40
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/market.proto#L28-L40
 
 * The `name` is limited to 250 characters max.
 * The `description` is limited to 2000 characters max.
@@ -419,19 +684,19 @@ It is expected to fail if:
 
 #### FeeRatio
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L105-L113
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/market.proto#L150-L158
 
 #### AccessGrant
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L115-L121
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/market.proto#L160-L166
 
 #### Permission
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/market.proto#L123-L141
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/market.proto#L168-L186
 
 #### MsgGovCreateMarketResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L331-L332
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L582-L583
 
 
 ### GovManageFees
@@ -445,13 +710,31 @@ It is expected to fail if:
 
 #### MsgGovManageFeesRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L334-L372
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L585-L635
 
 See also: [FeeRatio](#feeratio).
 
 #### MsgGovManageFeesResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L374-L375
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L637-L638
+
+
+### GovCloseMarket
+
+A market can be closed via governance proposal with a `MsgGovCloseMarketRequest`.
+
+When a market is closed, it stops accepting orders and commitments, all orders are cancelled, and all commitments are released.
+
+It is expected to fail if:
+* The provided `authority` is not the governance module's account.
+
+#### MsgGovCloseMarketRequest
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L640-L648
+
+#### MsgGovCloseMarketResponse
+
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L650-L651
 
 
 ### GovUpdateParams
@@ -463,10 +746,10 @@ It is expected to fail if:
 
 #### MsgGovUpdateParamsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L377-L386
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L653-L662
 
 See also: [Params](06_params.md#params).
 
 #### MsgGovUpdateParamsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.17.0/proto/provenance/exchange/v1/tx.proto#L388-L389
++++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L664-L665

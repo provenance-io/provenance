@@ -779,9 +779,10 @@ $ ` + version.AppName + ` add-genesis-custom-market \
 // and gives all permissions to each of the provided addrs.
 func makeDefaultMarket(feeDenom string, addrs []string) exchange.Market {
 	market := exchange.Market{
-		MarketDetails:       exchange.MarketDetails{Name: "Default Market"},
-		AcceptingOrders:     true,
-		AllowUserSettlement: true,
+		MarketDetails:        exchange.MarketDetails{Name: "Default Market"},
+		AcceptingOrders:      true,
+		AllowUserSettlement:  true,
+		AcceptingCommitments: true,
 	}
 
 	if len(feeDenom) > 0 {
@@ -795,6 +796,9 @@ func makeDefaultMarket(feeDenom string, addrs []string) exchange.Market {
 		market.FeeSellerSettlementRatios = settlementRatio
 		market.FeeBuyerSettlementFlat = settlementFlat
 		market.FeeBuyerSettlementRatios = settlementRatio
+		market.FeeCreateCommitmentFlat = creationFee
+		market.CommitmentSettlementBips = 50
+		market.IntermediaryDenom = feeDenom
 	}
 
 	for _, addr := range addrs {

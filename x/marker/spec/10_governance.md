@@ -21,7 +21,7 @@ issue change requests through passing a governance proposal.
 AddMarkerProposal defines a governance proposal to create a new marker.
 
 In a typical add marker situation the `UnrestrictedDenomRegex` parameter would be used to enforce longer denom
-values (preventing users from creating coins with well known symbols such as BTC, ETH, etc).  Markers added
+values (preventing users from creating coins with well known symbols such as BTC, ETH, etc.).  Markers added
 via governance proposal are only limited by the more generic Coin Validation Denom expression enforced by the
 bank module.
 
@@ -116,7 +116,7 @@ WithdrawEscrowProposal defines a governance proposal to withdraw escrow coins fr
 This request is expected to fail if:
 - The governance proposal format (title, description, etc) is invalid
 - Marker does not allow governance control (`AllowGovernanceControl`)
-- The marker account is not holding sufficient assets to cover the requested withdraw amounts.
+- The marker account is not holding sufficient assets to cover the requested withdrawal amounts.
 
 ## Set Denom Metadata Proposal
 

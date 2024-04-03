@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-
 	// govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli" // TODO[1760]: gov-cli
 
 	"github.com/provenance-io/provenance/x/exchange"
@@ -27,19 +26,31 @@ func CmdTx() *cobra.Command {
 	cmd.AddCommand(
 		CmdTxCreateAsk(),
 		CmdTxCreateBid(),
+		CmdTxCommitFunds(),
 		CmdTxCancelOrder(),
 		CmdTxFillBids(),
 		CmdTxFillAsks(),
 		CmdTxMarketSettle(),
+		CmdTxMarketCommitmentSettle(),
+		CmdTxMarketReleaseCommitments(),
 		CmdTxMarketSetOrderExternalID(),
 		CmdTxMarketWithdraw(),
 		CmdTxMarketUpdateDetails(),
-		CmdTxMarketUpdateEnabled(),
+		CmdTxMarketUpdateAcceptingOrders(),
 		CmdTxMarketUpdateUserSettle(),
+		CmdTxMarketUpdateAcceptingCommitments(),
+		CmdTxMarketUpdateIntermediaryDenom(),
 		CmdTxMarketManagePermissions(),
 		CmdTxMarketManageReqAttrs(),
+		CmdTxCreatePayment(),
+		CmdTxAcceptPayment(),
+		CmdTxRejectPayment(),
+		CmdTxRejectPayments(),
+		CmdTxCancelPayments(),
+		CmdTxChangePaymentTarget(),
 		CmdTxGovCreateMarket(),
 		CmdTxGovManageFees(),
+		CmdTxGovCloseMarket(),
 		CmdTxGovUpdateParams(),
 	)
 
@@ -71,6 +82,20 @@ func CmdTxCreateBid() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxCreateBid(cmd)
+	return cmd
+}
+
+// CmdTxCommitFunds creates the commit-funds sub-command for the exchange tx command.
+func CmdTxCommitFunds() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "commit",
+		Aliases: []string{"commit-funds"},
+		Short:   "Commit funds to a market",
+		RunE:    genericTxRunE(MakeMsgCommitFunds),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxCommitFunds(cmd)
 	return cmd
 }
 
@@ -128,6 +153,34 @@ func CmdTxMarketSettle() *cobra.Command {
 	return cmd
 }
 
+// CmdTxMarketCommitmentSettle creates the market-commitment-settle sub-command for the exchange tx command.
+func CmdTxMarketCommitmentSettle() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "market-commitment-settle",
+		Aliases: []string{"commitment-settle", "market-settle-commitments", "settle-commitments"},
+		Short:   "Move some committed funds",
+		RunE:    genericTxRunE(MakeMsgMarketCommitmentSettle),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxMarketCommitmentSettle(cmd)
+	return cmd
+}
+
+// CmdTxMarketReleaseCommitments creates the market-release-commitments sub-command for the exchange tx command.
+func CmdTxMarketReleaseCommitments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "market-release-commitments",
+		Aliases: []string{"release-commitments"},
+		Short:   "Release funds that have been committed to a market",
+		RunE:    genericTxRunE(MakeMsgMarketReleaseCommitments),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxMarketReleaseCommitments(cmd)
+	return cmd
+}
+
 // CmdTxMarketSetOrderExternalID creates the market-set-external-id sub-command for the exchange tx command.
 func CmdTxMarketSetOrderExternalID() *cobra.Command {
 	cmd := &cobra.Command{
@@ -170,17 +223,17 @@ func CmdTxMarketUpdateDetails() *cobra.Command {
 	return cmd
 }
 
-// CmdTxMarketUpdateEnabled creates the market-enabled sub-command for the exchange tx command.
-func CmdTxMarketUpdateEnabled() *cobra.Command {
+// CmdTxMarketUpdateAcceptingOrders creates the market-accepting-orders sub-command for the exchange tx command.
+func CmdTxMarketUpdateAcceptingOrders() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "market-enabled",
-		Aliases: []string{"market-update-enabled", "update-market-enabled", "update-enabled"},
+		Use:     "market-accepting-orders",
+		Aliases: []string{"market-update-accepting-orders", "update-market-accepting-orders", "update-accepting-orders"},
 		Short:   "Change whether a market is accepting orders",
-		RunE:    genericTxRunE(MakeMsgMarketUpdateEnabled),
+		RunE:    genericTxRunE(MakeMsgMarketUpdateAcceptingOrders),
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-	SetupCmdTxMarketUpdateEnabled(cmd)
+	SetupCmdTxMarketUpdateAcceptingOrders(cmd)
 	return cmd
 }
 
@@ -195,6 +248,34 @@ func CmdTxMarketUpdateUserSettle() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	SetupCmdTxMarketUpdateUserSettle(cmd)
+	return cmd
+}
+
+// CmdTxMarketUpdateAcceptingCommitments creates the market-accepting-commitments sub-command for the exchange tx command.
+func CmdTxMarketUpdateAcceptingCommitments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "market-accepting-commitments",
+		Aliases: []string{"market-update-accepting-commitments", "update-market-accepting-commitments", "update-accepting-commitments"},
+		Short:   "Change whether a market is accepting commitments",
+		RunE:    genericTxRunE(MakeMsgMarketUpdateAcceptingCommitments),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxMarketUpdateAcceptingCommitments(cmd)
+	return cmd
+}
+
+// CmdTxMarketUpdateIntermediaryDenom creates the market-intermediary-denom sub-command for the exchange tx command.
+func CmdTxMarketUpdateIntermediaryDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "market-intermediary-denom",
+		Aliases: []string{"market-update-intermediary-denom", "update-market-intermediary-denom", "update-intermediary-denom"},
+		Short:   "Change a market's intermediary denom",
+		RunE:    genericTxRunE(MakeMsgMarketUpdateIntermediaryDenom),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxMarketUpdateIntermediaryDenom(cmd)
 	return cmd
 }
 
@@ -233,6 +314,84 @@ func CmdTxMarketManageReqAttrs() *cobra.Command {
 	return cmd
 }
 
+// CmdTxCreatePayment creates the create-payment sub-command for the exchange tx command.
+func CmdTxCreatePayment() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-payment",
+		Short: "Create a payment",
+		RunE:  genericTxRunE(MakeMsgCreatePayment),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxCreatePayment(cmd)
+	return cmd
+}
+
+// CmdTxAcceptPayment creates the accept-payment sub-command for the exchange tx command.
+func CmdTxAcceptPayment() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "accept-payment",
+		Short: "Accept a payment",
+		RunE:  genericTxRunE(MakeMsgAcceptPayment),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxAcceptPayment(cmd)
+	return cmd
+}
+
+// CmdTxRejectPayment creates the reject-payment sub-command for the exchange tx command.
+func CmdTxRejectPayment() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "reject-payment",
+		Short: "Reject a payment",
+		RunE:  genericTxRunE(MakeMsgRejectPayment),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxRejectPayment(cmd)
+	return cmd
+}
+
+// CmdTxRejectPayments creates the reject-payments sub-command for the exchange tx command.
+func CmdTxRejectPayments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "reject-payments",
+		Short: "Reject multiple payments",
+		RunE:  genericTxRunE(MakeMsgRejectPayments),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxRejectPayments(cmd)
+	return cmd
+}
+
+// CmdTxCancelPayments creates the cancel-payments sub-command for the exchange tx command.
+func CmdTxCancelPayments() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-payments",
+		Short: "Cancel multiple payments",
+		RunE:  genericTxRunE(MakeMsgCancelPayments),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxCancelPayments(cmd)
+	return cmd
+}
+
+// CmdTxChangePaymentTarget creates the change-payment-target sub-command for the exchange tx command.
+func CmdTxChangePaymentTarget() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "change-payment-target",
+		Short: "Change a payment's target",
+		RunE:  genericTxRunE(MakeMsgChangePaymentTarget),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	SetupCmdTxChangePaymentTarget(cmd)
+	return cmd
+}
+
 // CmdTxGovCreateMarket creates the gov-create-market sub-command for the exchange tx command.
 func CmdTxGovCreateMarket() *cobra.Command {
 	cmd := &cobra.Command{
@@ -260,6 +419,21 @@ func CmdTxGovManageFees() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
 	SetupCmdTxGovManageFees(cmd)
+	return cmd
+}
+
+// CmdTxGovCloseMarket creates the gov-close-market sub-command for the exchange tx command.
+func CmdTxGovCloseMarket() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "gov-close-market",
+		Aliases: []string{"close-market"},
+		Short:   "Submit a governance proposal to close a market",
+		RunE:    govTxRunE(MakeMsgGovCloseMarket),
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	// govcli.AddGovPropFlagsToCmd(cmd)  // TODO[1760]: gov-cli
+	SetupCmdTxGovCloseMarket(cmd)
 	return cmd
 }
 
