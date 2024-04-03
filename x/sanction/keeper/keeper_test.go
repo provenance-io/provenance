@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -30,7 +32,7 @@ type KeeperTestSuite struct {
 func (s *KeeperTestSuite) SetupTest() {
 	s.BaseSetup()
 
-	addrs := app.AddTestAddrsIncremental(s.App, s.SdkCtx, 5, sdk.NewInt(1_000_000_000))
+	addrs := app.AddTestAddrsIncremental(s.App, s.SdkCtx, 5, sdkmath.NewInt(1_000_000_000))
 	s.addr1 = addrs[0]
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]

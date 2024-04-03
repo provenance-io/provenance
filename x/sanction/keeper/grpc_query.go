@@ -27,9 +27,8 @@ func (k Keeper) IsSanctioned(goCtx context.Context, req *sanction.QueryIsSanctio
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	resp := &sanction.QueryIsSanctionedResponse{}
-	resp.IsSanctioned = k.IsSanctionedAddr(ctx, addr)
+	resp.IsSanctioned = k.IsSanctionedAddr(goCtx, addr)
 	return resp, nil
 }
 

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
@@ -62,10 +63,11 @@ func (k Keeper) GetAuthority() string {
 }
 
 // IsSanctionedAddr returns true if the provided address is currently sanctioned (either permanently or temporarily).
-func (k Keeper) IsSanctionedAddr(ctx sdk.Context, addr sdk.AccAddress) bool {
+func (k Keeper) IsSanctionedAddr(goCtx context.Context, addr sdk.AccAddress) bool {
 	if len(addr) == 0 || k.IsAddrThatCannotBeSanctioned(addr) {
 		return false
 	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	tempEntry := k.getLatestTempEntry(store, addr)
 	if IsSanctionBz(tempEntry) {
