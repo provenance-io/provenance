@@ -10,8 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -223,7 +221,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          simappparams.MakeTestEncodingConfig().Codec,
+		Cdc:          simappparams.MakeTestEncodingConfig().Marshaler,
 		Rand:         rand.New(rand.NewSource(0)), // not using getSeedValue because that was used to generate the accounts.
 		NumBonded:    3,
 		Accounts:     accounts,
@@ -272,7 +270,7 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 	// 4. makes sure the exported gen state is equal to the one randomly generated.
 	// It will stop at the first seed that fails.
 
-	cdc := simappparams.MakeTestEncodingConfig().Codec
+	cdc := simappparams.MakeTestEncodingConfig().Marshaler
 	accounts := generateAccounts(t)
 
 	for i := int64(0); i <= 1000; i++ {
@@ -310,7 +308,7 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 
 			// Create a new app, so we can init + export.
 			app := app.Setup(t)
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			ctx := app.BaseApp.NewContext(false)
 
 			// Do the init on the random genesis state.
 			testInit := func() {

@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -133,8 +133,8 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 		"--" + flags.FlagFrom, propMsg.Proposer,
 		"--" + flags.FlagFees, feeAmt.String(),
 		"--" + flags.FlagSkipConfirmation,
-		"--" + flags.FlagBroadcastMode, flags.BroadcastBlock,
-		"--" + tmcli.OutputFlag, "json",
+		"--" + flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
+		"--" + cmtcli.OutputFlag, "json",
 	}
 
 	// Usage: simd query gov proposals [flags]
@@ -142,7 +142,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	propsQueryArgs := []string{
 		"--" + flags.FlagReverse,
 		"--" + flags.FlagLimit, "1",
-		"--" + tmcli.OutputFlag, "json",
+		"--" + cmtcli.OutputFlag, "json",
 	}
 
 	// Usage: simd tx gov vote [proposal-id] [option] [flags]
@@ -167,7 +167,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 			"--" + flags.FlagFees, feeAmt.String(),
 			"--" + flags.FlagBroadcastMode, flags.BroadcastAsync,
 			"--" + flags.FlagSkipConfirmation,
-			"--" + tmcli.OutputFlag, "json",
+			"--" + cmtcli.OutputFlag, "json",
 		}
 	}
 
@@ -176,14 +176,14 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	// Here too, that first arg will be updated when we know the proposal id.
 	propQueryArgs := []string{
 		"0",
-		"--" + tmcli.OutputFlag, "json",
+		"--" + cmtcli.OutputFlag, "json",
 	}
 
 	// Usage: simd query sanction is-sanctioned <address> [flags]
 	isSanctCmd := client.QueryIsSanctionedCmd()
 	isSanctArgs := []string{
 		s.network.Validators[sanctionValI].Address.String(),
-		"--" + tmcli.OutputFlag, "json",
+		"--" + cmtcli.OutputFlag, "json",
 	}
 
 	// Finally, wait for the next block.

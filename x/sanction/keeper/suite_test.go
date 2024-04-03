@@ -7,8 +7,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,9 +55,9 @@ type BaseTestSuite struct {
 }
 
 func (s *BaseTestSuite) BaseSetup() {
-	s.BlockTime = tmtime.Now()
+	s.BlockTime = cmttime.Now()
 	s.App = app.Setup(s.T())
-	s.SdkCtx = s.App.BaseApp.NewContext(false, tmproto.Header{}).WithBlockHeader(tmproto.Header{Time: s.BlockTime})
+	s.SdkCtx = s.App.BaseApp.NewContext(false).WithBlockHeader(cmtproto.Header{Time: s.BlockTime})
 	s.StdlibCtx = sdk.WrapSDKContext(s.SdkCtx)
 	s.GovKeeper = NewMockGovKeeper()
 	s.Keeper = s.App.SanctionKeeper.OnlyTestsWithGovKeeper(s.GovKeeper)

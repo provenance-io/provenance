@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -90,7 +91,7 @@ func (s *IntegrationTestSuite) getAuthority() string {
 	if len(s.authority) > 0 {
 		return s.authority
 	}
-	args := []string{"gov", "--" + tmcli.OutputFlag, "json"}
+	args := []string{"gov", "--" + cmtcli.OutputFlag, "json"}
 	outBW, err := cli.ExecTestCLICmd(s.clientCtx, authcli.QueryModuleAccountByNameCmd(), args)
 	s.Require().NoError(err, "ExecTestCLICmd q auth module-account gov")
 	outBz := outBW.Bytes()

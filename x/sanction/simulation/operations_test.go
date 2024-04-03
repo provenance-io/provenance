@@ -9,15 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/simulation"
@@ -42,7 +41,7 @@ func (s *SimTestSuite) SetupTest() {
 
 // freshCtx creates a new context and sets it to this SimTestSuite's ctx field.
 func (s *SimTestSuite) freshCtx() {
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 // createTestingAccounts creates testing accounts with a default balance.
@@ -122,7 +121,7 @@ func (s *SimTestSuite) nextBlock() {
 	s.Require().NotPanics(func() { s.app.Commit() }, "app.Commit")
 	s.Require().NotPanics(func() {
 		s.app.BeginBlock(abci.RequestBeginBlock{
-			Header: tmproto.Header{
+			Header: cmtproto.Header{
 				Height: s.app.LastBlockHeight() + 1,
 			},
 			LastCommitInfo:      abci.LastCommitInfo{},

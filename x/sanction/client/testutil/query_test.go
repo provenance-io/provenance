@@ -3,7 +3,7 @@ package testutil
 import (
 	"fmt"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -71,7 +71,7 @@ func (s *IntegrationTestSuite) TestIsSanctionedCmd() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			cmd := client.QueryIsSanctionedCmd()
-			args := append(tc.args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args := append(tc.args, fmt.Sprintf("--%s=json", cmtcli.OutputFlag))
 			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			outBz := outBW.Bytes()
 			s.T().Logf("Output:\n%s", string(outBz))
@@ -146,7 +146,7 @@ func (s *IntegrationTestSuite) TestQuerySanctionedAddressesCmd() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			cmd := client.QuerySanctionedAddressesCmd()
-			args := append(tc.args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args := append(tc.args, fmt.Sprintf("--%s=json", cmtcli.OutputFlag))
 			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			outBz := outBW.Bytes()
 			s.T().Logf("Output:\n%s", string(outBz))
@@ -255,7 +255,7 @@ func (s *IntegrationTestSuite) TestQueryTemporaryEntriesCmd() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			cmd := client.QueryTemporaryEntriesCmd()
-			args := append(tc.args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args := append(tc.args, fmt.Sprintf("--%s=json", cmtcli.OutputFlag))
 			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			outBz := outBW.Bytes()
 			s.T().Logf("Output:\n%s", string(outBz))
@@ -301,7 +301,7 @@ func (s *IntegrationTestSuite) TestQueryParamsCmd() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			cmd := client.QueryParamsCmd()
-			args := append(tc.args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args := append(tc.args, fmt.Sprintf("--%s=json", cmtcli.OutputFlag))
 			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			outBz := outBW.Bytes()
 			s.T().Logf("Output:\n%s", string(outBz))
