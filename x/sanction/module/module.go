@@ -28,9 +28,10 @@ import (
 )
 
 var (
-	_ appmodule.AppModule        = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+
+	_ appmodule.AppModule = AppModule{}
 )
 
 type AppModuleBasic struct {
