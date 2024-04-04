@@ -3,6 +3,7 @@ module github.com/provenance-io/provenance
 go 1.21
 
 require (
+	cosmossdk.io/core v0.11.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
@@ -46,8 +47,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-require github.com/regen-network/cosmos-proto v0.3.1
-
 require (
 	cloud.google.com/go v0.112.0 // indirect
 	cloud.google.com/go/compute v1.24.0 // indirect
@@ -57,7 +56,6 @@ require (
 	cosmossdk.io/api v0.7.3 // indirect
 	cosmossdk.io/client/v2 v2.0.0-beta.1 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/core v0.11.0 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/x/circuit v0.1.0 // indirect
 	cosmossdk.io/x/nft v0.1.0 // indirect

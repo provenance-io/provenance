@@ -3,10 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/sanction"
 )
