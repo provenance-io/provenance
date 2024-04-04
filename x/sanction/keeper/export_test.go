@@ -25,87 +25,87 @@ var (
 	OnlyTestsToAccAddrs = toAccAddrs
 )
 
-// OnlyTestsWithGovKeeper, for unit tests, creates a copy of this, setting the govKeeper to the provided one.
-func (k Keeper) OnlyTestsWithGovKeeper(govKeeper sanction.GovKeeper) Keeper {
+// WithGovKeeper, for unit tests, creates a copy of this, setting the govKeeper to the provided one.
+func (k Keeper) WithGovKeeper(govKeeper sanction.GovKeeper) Keeper {
 	k.govKeeper = govKeeper
 	return k
 }
 
-// OnlyTestsWithAuthority, for unit tests, creates a copy of this, setting the authority to the provided one.
-func (k Keeper) OnlyTestsWithAuthority(authority string) Keeper {
+// WithAuthority, for unit tests, creates a copy of this, setting the authority to the provided one.
+func (k Keeper) WithAuthority(authority string) Keeper {
 	k.authority = authority
 	return k
 }
 
-// OnlyTestsWithUnsanctionableAddrs, for unit tests, creates a copy of this, setting the unsanctionableAddrs to the provided one.
+// WithUnsanctionableAddrs, for unit tests, creates a copy of this, setting the unsanctionableAddrs to the provided one.
 // This does not add the provided ones to the unsanctionableAddrs, it overwrites the
 // existing ones with the ones provided.
-func (k Keeper) OnlyTestsWithUnsanctionableAddrs(unsanctionableAddrs map[string]bool) Keeper {
+func (k Keeper) WithUnsanctionableAddrs(unsanctionableAddrs map[string]bool) Keeper {
 	k.unsanctionableAddrs = unsanctionableAddrs
 	return k
 }
 
-// OnlyTestsGetStoreKey, for unit tests, exposes this keeper's storekey.
-func (k Keeper) OnlyTestsGetStoreKey() storetypes.StoreKey {
+// StoreKey, for unit tests, exposes this keeper's storekey.
+func (k Keeper) StoreKey() storetypes.StoreKey {
 	return k.storeKey
 }
 
-// OnlyTestsGetMsgSanctionTypeURL, for unit tests, exposes this keeper's msgSanctionTypeURL.
-func (k Keeper) OnlyTestsGetMsgSanctionTypeURL() string {
+// MsgSanctionTypeURL, for unit tests, exposes this keeper's msgSanctionTypeURL.
+func (k Keeper) MsgSanctionTypeURL() string {
 	return k.msgSanctionTypeURL
 }
 
-// OnlyTestsGetMsgUnsanctionTypeURL, for unit tests, exposes this keeper's msgUnsanctionTypeURL.
-func (k Keeper) OnlyTestsGetMsgUnsanctionTypeURL() string {
+// MsgUnsanctionTypeURL, for unit tests, exposes this keeper's msgUnsanctionTypeURL.
+func (k Keeper) MsgUnsanctionTypeURL() string {
 	return k.msgUnsanctionTypeURL
 }
 
-// OnlyTestsGetMsgExecLegacyContentTypeURL, for unit tests, exposes this keeper's msgExecLegacyContentTypeURL.
-func (k Keeper) OnlyTestsGetMsgExecLegacyContentTypeURL() string {
+// MsgExecLegacyContentTypeURL, for unit tests, exposes this keeper's msgExecLegacyContentTypeURL.
+func (k Keeper) MsgExecLegacyContentTypeURL() string {
 	return k.msgExecLegacyContentTypeURL
 }
 
-// OnlyTestsGetParamAsCoinsOrDefault, for unit tests, exposes this keeper's getParamAsCoinsOrDefault function.
-func (k Keeper) OnlyTestsGetParamAsCoinsOrDefault(ctx sdk.Context, name string, dflt sdk.Coins) sdk.Coins {
+// GetParamAsCoinsOrDefault, for unit tests, exposes this keeper's getParamAsCoinsOrDefault function.
+func (k Keeper) GetParamAsCoinsOrDefault(ctx sdk.Context, name string, dflt sdk.Coins) sdk.Coins {
 	return k.getParamAsCoinsOrDefault(ctx, name, dflt)
 }
 
-// OnlyTestsGetLatestTempEntry, for unit tests, exposes this keeper's getLatestTempEntry function.
-func (k Keeper) OnlyTestsGetLatestTempEntry(store storetypes.KVStore, addr sdk.AccAddress) []byte {
+// GetLatestTempEntry, for unit tests, exposes this keeper's getLatestTempEntry function.
+func (k Keeper) GetLatestTempEntry(store storetypes.KVStore, addr sdk.AccAddress) []byte {
 	return k.getLatestTempEntry(store, addr)
 }
 
-// OnlyTestsGetParam, for unit tests, exposes this keeper's getParam function.
-func (k Keeper) OnlyTestsGetParam(store storetypes.KVStore, name string) (string, bool) {
+// GetParam, for unit tests, exposes this keeper's getParam function.
+func (k Keeper) GetParam(store storetypes.KVStore, name string) (string, bool) {
 	return k.getParam(store, name)
 }
 
-// OnlyTestsSetParam, for unit tests, exposes this keeper's setParam function.
-func (k Keeper) OnlyTestsSetParam(store storetypes.KVStore, name, value string) {
+// SetParam, for unit tests, exposes this keeper's setParam function.
+func (k Keeper) SetParam(store storetypes.KVStore, name, value string) {
 	k.setParam(store, name, value)
 }
 
-// OnlyTestsDeleteParam, for unit tests, exposes this keeper's deleteParam function.
-func (k Keeper) OnlyTestsDeleteParam(store storetypes.KVStore, name string) {
+// DeleteParam, for unit tests, exposes this keeper's deleteParam function.
+func (k Keeper) DeleteParam(store storetypes.KVStore, name string) {
 	k.deleteParam(store, name)
 }
 
-// OnlyTestsProposalGovHook, for unit tests, exposes this keeper's proposalGovHook function.
-func (k Keeper) OnlyTestsProposalGovHook(ctx context.Context, proposalID uint64) {
-	k.proposalGovHook(ctx, proposalID)
+// ProposalGovHook, for unit tests, exposes this keeper's proposalGovHook function.
+func (k Keeper) ProposalGovHook(ctx context.Context, proposalID uint64) error {
+	return k.proposalGovHook(ctx, proposalID)
 }
 
-// OnlyTestsIsModuleGovHooksMsgURL, for unit tests, exposes this keeper's isModuleGovHooksMsgURL function.
-func (k Keeper) OnlyTestsIsModuleGovHooksMsgURL(url string) bool {
+// IsModuleGovHooksMsgURL, for unit tests, exposes this keeper's isModuleGovHooksMsgURL function.
+func (k Keeper) IsModuleGovHooksMsgURL(url string) bool {
 	return k.isModuleGovHooksMsgURL(url)
 }
 
-// OnlyTestsGetMsgAddresses, for unit tests, exposes this keeper's getMsgAddresses function.
-func (k Keeper) OnlyTestsGetMsgAddresses(msg *codectypes.Any) []sdk.AccAddress {
+// GetMsgAddresses, for unit tests, exposes this keeper's getMsgAddresses function.
+func (k Keeper) GetMsgAddresses(msg *codectypes.Any) []sdk.AccAddress {
 	return k.getMsgAddresses(msg)
 }
 
-// OnlyTestsGetImmediateMinDeposit, for unit tests, exposes this keeper's getImmediateMinDeposit function.
-func (k Keeper) OnlyTestsGetImmediateMinDeposit(ctx sdk.Context, msg *codectypes.Any) sdk.Coins {
+// ImmediateMinDeposit, for unit tests, exposes this keeper's getImmediateMinDeposit function.
+func (k Keeper) ImmediateMinDeposit(ctx sdk.Context, msg *codectypes.Any) sdk.Coins {
 	return k.getImmediateMinDeposit(ctx, msg)
 }

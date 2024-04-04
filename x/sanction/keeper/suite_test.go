@@ -60,9 +60,9 @@ func (s *BaseTestSuite) BaseSetup() {
 	s.BlockTime = cmttime.Now()
 	s.App = app.Setup(s.T())
 	s.SdkCtx = s.App.BaseApp.NewContext(false).WithBlockHeader(cmtproto.Header{Time: s.BlockTime})
-	s.StdlibCtx = sdk.WrapSDKContext(s.SdkCtx)
+	s.StdlibCtx = context.Context(s.SdkCtx)
 	s.GovKeeper = NewMockGovKeeper()
-	s.Keeper = s.App.SanctionKeeper.OnlyTestsWithGovKeeper(s.GovKeeper)
+	s.Keeper = s.App.SanctionKeeper.WithGovKeeper(s.GovKeeper)
 }
 
 // AssertErrorContents calls assertions.AssertErrorContents using this suite's T.
@@ -72,7 +72,7 @@ func (s *BaseTestSuite) AssertErrorContents(theError error, contains []string, m
 
 // GetStore gets the sanction module's store.
 func (s *BaseTestSuite) GetStore() storetypes.KVStore {
-	return s.SdkCtx.KVStore(s.Keeper.OnlyTestsGetStoreKey())
+	return s.SdkCtx.KVStore(s.Keeper.StoreKey())
 }
 
 // ClearState deletes all entries in the sanction store.

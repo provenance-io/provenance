@@ -335,7 +335,7 @@ func (s *GovHooksTestSuite) TestKeeper_proposalGovHook() {
 		iniState   *sanction.GenesisState
 		proposal   *govv1.Proposal
 		expState   *sanction.GenesisState
-		expPanic   []string
+		expErr     []string
 	}
 
 	var tests []testCase
@@ -352,7 +352,7 @@ func (s *GovHooksTestSuite) TestKeeper_proposalGovHook() {
 				Status:   govv1.ProposalStatus(curPropID() + 5000),
 			},
 			expState: nonEmptyState(curPropID()),
-			expPanic: []string{fmt.Sprintf("invalid governance proposal status: [%d]", curPropID()+5000)},
+			expErr:   []string{fmt.Sprintf("invalid governance proposal status: [%d]", curPropID()+5000)},
 		})
 	}
 
@@ -368,7 +368,7 @@ func (s *GovHooksTestSuite) TestKeeper_proposalGovHook() {
 				Status:   govv1.ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED,
 			},
 			expState: nonEmptyState(curPropID()),
-			expPanic: []string{"invalid governance proposal status: [PROPOSAL_STATUS_UNSPECIFIED]"},
+			expErr:   []string{"invalid governance proposal status: [PROPOSAL_STATUS_UNSPECIFIED]"},
 		})
 	}
 
@@ -1108,10 +1108,12 @@ func (s *GovHooksTestSuite) TestKeeper_proposalGovHook() {
 				s.GovKeeper.GetProposalReturns[tc.proposal.Id] = *tc.proposal
 			}
 
+			var err error
 			testFunc := func() {
-				s.Keeper.OnlyTestsProposalGovHook(s.SdkCtx, tc.proposalID)
+				err = s.Keeper.ProposalGovHook(s.SdkCtx, tc.proposalID)
 			}
-			assertions.RequirePanicContents(s.T(), testFunc, tc.expPanic, "proposalGovHook(%d)", tc.proposalID)
+			s.Require().NotPanics(testFunc, "proposalGovHook(%d)", tc.proposalID)
+			assertions.AssertErrorContents(s.T(), err, tc.expErr, "proposalGovHook(%d) error", tc.proposalID)
 
 			getPropCalls := s.GovKeeper.GetProposalCalls
 			if s.Assert().Len(getPropCalls, 1, "number of calls made to GetProposal") {
@@ -1157,7 +1159,7 @@ func (s *GovHooksTestSuite) TestKeeper_isModuleGovHooksMsgURL() {
 		s.Run(name, func() {
 			var actual bool
 			testFunc := func() {
-				actual = s.Keeper.OnlyTestsIsModuleGovHooksMsgURL(tc.url)
+				actual = s.Keeper.IsModuleGovHooksMsgURL(tc.url)
 			}
 			s.Require().NotPanics(testFunc, "isModuleGovHooksMsgURL(%q)", tc.url)
 			s.Assert().Equal(tc.exp, actual, "isModuleGovHooksMsgURL(%q) result", tc.url)
@@ -1448,7 +1450,7 @@ func (s *GovHooksTestSuite) TestKeeper_getMsgAddresses() {
 		s.Run(tc.name, func() {
 			var actual []sdk.AccAddress
 			testFunc := func() {
-				actual = s.Keeper.OnlyTestsGetMsgAddresses(tc.msg)
+				actual = s.Keeper.GetMsgAddresses(tc.msg)
 			}
 			assertions.AssertPanicContents(s.T(), testFunc, tc.expPanic, "getMsgAddresses")
 			s.Assert().Equal(tc.exp, actual, "getMsgAddresses result")
@@ -1547,7 +1549,7 @@ func (s *GovHooksTestSuite) TestKeeper_getImmediateMinDeposit() {
 			}
 			var actual sdk.Coins
 			testFunc := func() {
-				actual = s.Keeper.OnlyTestsGetImmediateMinDeposit(s.SdkCtx, tc.msg)
+				actual = s.Keeper.ImmediateMinDeposit(s.SdkCtx, tc.msg)
 			}
 			s.Require().NotPanics(testFunc, "getImmediateMinDeposit")
 			s.Assert().Equal(expected, actual, "getImmediateMinDeposit result")
@@ -1570,7 +1572,7 @@ func (s *GovHooksTestSuite) TestKeeper_getImmediateMinDeposit() {
 			}
 			var actual sdk.Coins
 			testFunc := func() {
-				actual = s.Keeper.OnlyTestsGetImmediateMinDeposit(s.SdkCtx, tc.msg)
+				actual = s.Keeper.ImmediateMinDeposit(s.SdkCtx, tc.msg)
 			}
 			s.Require().NotPanics(testFunc, "getImmediateMinDeposit")
 			s.Assert().Equal(expected, actual, "getImmediateMinDeposit result")

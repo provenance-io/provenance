@@ -307,19 +307,19 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 			}
 
 			// Create a new app, so we can init + export.
-			app := app.Setup(t)
-			ctx := app.BaseApp.NewContext(false)
+			provApp := app.Setup(t)
+			ctx := provApp.BaseApp.NewContext(false)
 
 			// Do the init on the random genesis state.
 			testInit := func() {
-				app.SanctionKeeper.InitGenesis(ctx, &randomGenState)
+				provApp.SanctionKeeper.InitGenesis(ctx, &randomGenState)
 			}
 			require.NotPanics(t, testInit, "sanction InitGenesis")
 
 			// Export the app's sanction genesis state.
 			var actualGenState *sanction.GenesisState
 			testExport := func() {
-				actualGenState = app.SanctionKeeper.ExportGenesis(ctx)
+				actualGenState = provApp.SanctionKeeper.ExportGenesis(ctx)
 			}
 			require.NotPanics(t, testExport, "ExportGenesis")
 

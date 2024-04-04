@@ -203,9 +203,9 @@ func TestConcatBz(t *testing.T) {
 		},
 	}
 
-	for _, tc_orig := range tests {
-		passes := t.Run(tc_orig.name, func(t *testing.T) {
-			tc := copyTestCase(tc_orig)
+	for _, tcOrig := range tests {
+		passes := t.Run(tcOrig.name, func(t *testing.T) {
+			tc := copyTestCase(tcOrig)
 			var actual []byte
 			testFunc := func() {
 				actual = keeper.ConcatBz(tc.bz1, tc.bz2)
@@ -215,12 +215,12 @@ func TestConcatBz(t *testing.T) {
 			assert.Equal(t, len(tc.expected), len(actual), "ConcatBz result length")
 			assert.Equal(t, cap(tc.expected), cap(actual), "ConcatBz result capacity")
 			assert.Equal(t, len(actual), cap(actual), "ConcatBz result length and capacity")
-			assert.Equal(t, tc_orig.bz1, tc.bz1, "input 1 before and after ConcatBz")
-			assert.Equal(t, len(tc_orig.bz1), len(tc.bz1), "input 1 length before and after ConcatBz")
-			assert.Equal(t, cap(tc_orig.bz1), cap(tc.bz1), "input 1 capacity before and after ConcatBz")
-			assert.Equal(t, tc_orig.bz2, tc.bz2, "input 2 before and after ConcatBz")
-			assert.Equal(t, len(tc_orig.bz2), len(tc.bz2), "input 2 length before and after ConcatBz")
-			assert.Equal(t, cap(tc_orig.bz2), cap(tc.bz2), "input 2 capacity before and after ConcatBz")
+			assert.Equal(t, tcOrig.bz1, tc.bz1, "input 1 before and after ConcatBz")
+			assert.Equal(t, len(tcOrig.bz1), len(tc.bz1), "input 1 length before and after ConcatBz")
+			assert.Equal(t, cap(tcOrig.bz1), cap(tc.bz1), "input 1 capacity before and after ConcatBz")
+			assert.Equal(t, tcOrig.bz2, tc.bz2, "input 2 before and after ConcatBz")
+			assert.Equal(t, len(tcOrig.bz2), len(tc.bz2), "input 2 length before and after ConcatBz")
+			assert.Equal(t, cap(tcOrig.bz2), cap(tc.bz2), "input 2 capacity before and after ConcatBz")
 			if cap(tc.bz1) > 0 {
 				if len(tc.bz1) > 0 {
 					if tc.bz1[0] == 'x' {
@@ -256,9 +256,9 @@ func TestConcatBz(t *testing.T) {
 			continue
 		}
 
-		if len(tc_orig.expected) > 0 {
-			t.Run(tc_orig.name+" changing result", func(t *testing.T) {
-				tc := copyTestCase(tc_orig)
+		if len(tcOrig.expected) > 0 {
+			t.Run(tcOrig.name+" changing result", func(t *testing.T) {
+				tc := copyTestCase(tcOrig)
 				actual := keeper.ConcatBz(tc.bz1, tc.bz2)
 				if len(actual) > 0 {
 					if actual[0] == 'x' {
@@ -266,9 +266,9 @@ func TestConcatBz(t *testing.T) {
 					} else {
 						actual[0] = 'x'
 					}
-					assert.Equal(t, tc_orig.bz1, tc.bz1, "original bz1 after changing first result byte")
-					assert.Equal(t, len(tc_orig.bz1), len(tc.bz1), "original bz1 length after changing first result byte")
-					assert.Equal(t, cap(tc_orig.bz1), cap(tc.bz1), "original bz1 capacity after changing first result byte")
+					assert.Equal(t, tcOrig.bz1, tc.bz1, "original bz1 after changing first result byte")
+					assert.Equal(t, len(tcOrig.bz1), len(tc.bz1), "original bz1 length after changing first result byte")
+					assert.Equal(t, cap(tcOrig.bz1), cap(tc.bz1), "original bz1 capacity after changing first result byte")
 				}
 				if len(actual) > 1 {
 					if actual[len(actual)-1] == 'x' {
@@ -276,15 +276,15 @@ func TestConcatBz(t *testing.T) {
 					} else {
 						actual[len(actual)-1] = 'x'
 					}
-					assert.Equal(t, tc_orig.bz2, tc.bz2, "original bz2 after changing last result byte")
-					assert.Equal(t, len(tc_orig.bz2), len(tc.bz2), "original bz2 length after changing last result byte")
-					assert.Equal(t, cap(tc_orig.bz2), cap(tc.bz2), "original bz2 capacity after changing last result byte")
+					assert.Equal(t, tcOrig.bz2, tc.bz2, "original bz2 after changing last result byte")
+					assert.Equal(t, len(tcOrig.bz2), len(tc.bz2), "original bz2 length after changing last result byte")
+					assert.Equal(t, cap(tcOrig.bz2), cap(tc.bz2), "original bz2 capacity after changing last result byte")
 				}
 			})
 		}
 
-		t.Run(tc_orig.name+" plus cap", func(t *testing.T) {
-			tc := copyTestCase(tc_orig)
+		t.Run(tcOrig.name+" plus cap", func(t *testing.T) {
+			tc := copyTestCase(tcOrig)
 			plusCap := 5
 			actual := keeper.OnlyTestsConcatBzPlusCap(tc.bz1, tc.bz2, plusCap)
 			assert.Equal(t, tc.expected, actual, "concatBzPlusCap result")
@@ -292,8 +292,8 @@ func TestConcatBz(t *testing.T) {
 			assert.Equal(t, cap(tc.expected)+plusCap, cap(actual), "concatBzPlusCap result capacity")
 			actual = actual[:len(actual)+1]
 			actual[len(actual)-1] = 'x'
-			assert.Equal(t, tc_orig.bz1, tc.bz1, "input 1 after extending result from concatBzPlusCap")
-			assert.Equal(t, tc_orig.bz2, tc.bz2, "input 2 after extending result from concatBzPlusCap")
+			assert.Equal(t, tcOrig.bz1, tc.bz1, "input 1 after extending result from concatBzPlusCap")
+			assert.Equal(t, tcOrig.bz2, tc.bz2, "input 2 after extending result from concatBzPlusCap")
 		})
 	}
 }

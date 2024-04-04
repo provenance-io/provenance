@@ -203,14 +203,14 @@ func (k Keeper) DeleteAddrTempEntries(ctx sdk.Context, addrs ...sdk.AccAddress) 
 }
 
 // getSanctionedAddressPrefixStore returns a kv store prefixed for sanctioned addresses, and the prefix bytes.
-func (k Keeper) getSanctionedAddressPrefixStore(ctx sdk.Context) (storetypes.KVStore, []byte) {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), SanctionedPrefix), SanctionedPrefix
+func (k Keeper) getSanctionedAddressPrefixStore(ctx sdk.Context) storetypes.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), SanctionedPrefix)
 }
 
 // IterateSanctionedAddresses iterates over all of the permanently sanctioned addresses.
 // The callback takes in the sanctioned address and should return whether to stop iteration (true = stop, false = keep going).
 func (k Keeper) IterateSanctionedAddresses(ctx sdk.Context, cb func(addr sdk.AccAddress) (stop bool)) {
-	store, _ := k.getSanctionedAddressPrefixStore(ctx)
+	store := k.getSanctionedAddressPrefixStore(ctx)
 
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()

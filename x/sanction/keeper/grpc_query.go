@@ -41,7 +41,7 @@ func (k Keeper) SanctionedAddresses(goCtx context.Context, req *sanction.QuerySa
 
 	resp := &sanction.QuerySanctionedAddressesResponse{}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	store, _ := k.getSanctionedAddressPrefixStore(ctx)
+	store := k.getSanctionedAddressPrefixStore(ctx)
 	resp.Pagination, err = query.Paginate(
 		store, pagination,
 		func(key, _ []byte) error {
@@ -77,10 +77,10 @@ func (k Keeper) TemporaryEntries(goCtx context.Context, req *sanction.QueryTempo
 	resp.Pagination, err = query.Paginate(
 		store, pagination,
 		func(key, value []byte) error {
-			kAddr, propId := ParseTemporaryKey(ConcatBz(pre, key))
+			kAddr, propID := ParseTemporaryKey(ConcatBz(pre, key))
 			entry := sanction.TemporaryEntry{
 				Address:    kAddr.String(),
-				ProposalId: propId,
+				ProposalId: propID,
 				Status:     ToTempStatus(value),
 			}
 			resp.Entries = append(resp.Entries, &entry)
