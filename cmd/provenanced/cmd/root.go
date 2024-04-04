@@ -64,19 +64,15 @@ const (
 // Providing sealConfig = false is only for unit tests that want to run multiple commands.
 func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	// tempDir creates a temporary home directory.
-	var tempDir = func() string {
-		dir, err := os.MkdirTemp("", "provenanced")
-		if err != nil {
-			panic("failed to create temp dir: " + err.Error())
-		}
-		defer os.RemoveAll(dir)
-
-		return dir
+	tempDir, err := os.MkdirTemp("", "provenanced")
+	if err != nil {
+		panic(fmt.Errorf("failed to create temp dir: %w", err))
 	}
+	os.RemoveAll(tempDir)
 
 	encodingConfig := app.MakeEncodingConfig()
 	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
-		tempDir(),
+		tempDir,
 		0,
 		encodingConfig,
 		simtestutil.EmptyAppOptions{},
