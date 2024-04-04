@@ -10,26 +10,20 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
-	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
-	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	msgfeetypes "github.com/provenance-io/provenance/x/msgfees/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
-	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -57,57 +51,6 @@ type appUpgrade struct {
 // If something is happening in the rc upgrade(s) that isn't being applied in the non-rc,
 // or vice versa, please add comments explaining why in both entries.
 var upgrades = map[string]appUpgrade{
-	"rust-rc1": { // upgrade for v1.16.0-rc1
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			vm, err = runModuleMigrations(ctx, app, vm)
-			if err != nil {
-				return nil, err
-			}
-
-			removeInactiveValidatorDelegations(ctx, app)
-
-			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
-			if err != nil {
-				return nil, err
-			}
-
-			// We only need to call addGovV1SubmitFee on testnet.
-			addGovV1SubmitFee(ctx, app)
-
-			removeP8eMemorializeContractFee(ctx, app)
-
-			fixNameIndexEntries(ctx, app)
-
-			return vm, nil
-		},
-		Added: []string{triggertypes.ModuleName},
-	},
-	"rust": { // upgrade for v1.16.0
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			vm, err = runModuleMigrations(ctx, app, vm)
-			if err != nil {
-				return nil, err
-			}
-
-			removeInactiveValidatorDelegations(ctx, app)
-
-			err = setAccountDataNameRecord(ctx, app.AccountKeeper, &app.NameKeeper)
-			if err != nil {
-				return nil, err
-			}
-
-			// No need to call addGovV1SubmitFee in here as mainnet already has it defined.
-
-			removeP8eMemorializeContractFee(ctx, app)
-
-			fixNameIndexEntries(ctx, app)
-
-			return vm, nil
-		},
-		Added: []string{triggertypes.ModuleName},
-	},
 	"saffron-rc1": { // upgrade for v1.17.0-rc1
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -186,6 +129,17 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			removeInactiveValidatorDelegations(ctx, app)
+			convertNavUnits(ctx, app)
+
+			return vm, nil
+		},
+	},
+	"tourmaline-rc2": {}, // upgrade for v1.18.0-rc2
+	"tourmaline-rc3": { // upgrade for v1.18.0-rc3
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			setExchangePaymentParamsToDefaults(ctx, app)
+			addMarkerNavs(ctx, app, GetPioTestnet1DenomToNav())
 			return vm, nil
 		},
 	},
@@ -197,6 +151,15 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+			convertNavUnits(ctx, app)
+			addMarkerNavsWithHeight(ctx, app, GetPioMainnet1NavsTourmaline())
+
+			// This isn't in an rc because it was handled via gov prop for testnet.
+			updateMsgFeesNhashPerMil(ctx, app)
+
+			setExchangePaymentParamsToDefaults(ctx, app)
 
 			return vm, nil
 		},
@@ -314,62 +277,6 @@ func runModuleMigrations(ctx sdk.Context, app *App, vm module.VersionMap) (modul
 // nor complains about a nolint:unused directive that isn't needed because the function is used.
 var _ = runModuleMigrations
 
-// addGovV1SubmitFee adds a msg-fee for the gov v1 MsgSubmitProposal if there isn't one yet.
-// TODO: Remove with the rust handlers.
-func addGovV1SubmitFee(ctx sdk.Context, app *App) {
-	typeURL := sdk.MsgTypeURL(&govtypesv1.MsgSubmitProposal{})
-
-	ctx.Logger().Info(fmt.Sprintf("Creating message fee for %q if it doesn't already exist.", typeURL))
-	// At the time of writing this, the only way GetMsgFee returns an error is if it can't unmarshall state.
-	// If that's the case for the v1 entry, we want to fix it anyway, so we just ignore any error here.
-	fee, _ := app.MsgFeesKeeper.GetMsgFee(ctx, typeURL)
-	// If there's already a fee for it, do nothing.
-	if fee != nil {
-		ctx.Logger().Info(fmt.Sprintf("Message fee for %q already exists with amount %q. Nothing to do.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
-		return
-	}
-
-	// Copy the fee from the beta entry if it exists, otherwise, just make it fresh.
-	betaTypeURL := sdk.MsgTypeURL(&govtypesv1beta1.MsgSubmitProposal{})
-	// Here too, if there's an error getting the beta fee, just ignore it.
-	betaFee, _ := app.MsgFeesKeeper.GetMsgFee(ctx, betaTypeURL)
-	if betaFee != nil {
-		fee = betaFee
-		fee.MsgTypeUrl = typeURL
-		ctx.Logger().Info(fmt.Sprintf("Copying %q fee to %q.", betaTypeURL, fee.MsgTypeUrl))
-	} else {
-		fee = &msgfeetypes.MsgFee{
-			MsgTypeUrl:           typeURL,
-			AdditionalFee:        sdk.NewInt64Coin("nhash", 100_000_000_000), // 100 hash
-			Recipient:            "",
-			RecipientBasisPoints: 0,
-		}
-		ctx.Logger().Info(fmt.Sprintf("Creating %q fee.", fee.MsgTypeUrl))
-	}
-
-	// At the time of writing this, SetMsgFee always returns nil.
-	_ = app.MsgFeesKeeper.SetMsgFee(ctx, *fee)
-	ctx.Logger().Info(fmt.Sprintf("Successfully set fee for %q with amount %q.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
-}
-
-// removeP8eMemorializeContractFee removes the message fee for the now-non-existent MsgP8eMemorializeContractRequest.
-// TODO: Remove with the rust handlers.
-func removeP8eMemorializeContractFee(ctx sdk.Context, app *App) {
-	typeURL := "/provenance.metadata.v1.MsgP8eMemorializeContractRequest"
-
-	ctx.Logger().Info(fmt.Sprintf("Removing message fee for %q if one exists.", typeURL))
-	// Get the existing fee for log output, but ignore any errors so we try to delete the entry either way.
-	fee, _ := app.MsgFeesKeeper.GetMsgFee(ctx, typeURL)
-	// At the time of writing this, the only error that RemoveMsgFee can return is ErrMsgFeeDoesNotExist.
-	// So ignore any error here and just use fee != nil for the different log messages.
-	_ = app.MsgFeesKeeper.RemoveMsgFee(ctx, typeURL)
-	if fee == nil {
-		ctx.Logger().Info(fmt.Sprintf("Message fee for %q already does not exist. Nothing to do.", typeURL))
-	} else {
-		ctx.Logger().Info(fmt.Sprintf("Successfully removed message fee for %q with amount %q.", fee.MsgTypeUrl, fee.AdditionalFee.String()))
-	}
-}
-
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.
 // This should be applied in most upgrades.
 func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
@@ -431,21 +338,6 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 	ctx.Logger().Info(fmt.Sprintf("A total of %d inactive (unbonded) validators have had all their delegators removed.", removalCount))
 }
 
-// fixNameIndexEntries fixes the name module's address to name index entries.
-// TODO: Remove with the rust handlers.
-func fixNameIndexEntries(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Fixing name module store index entries.")
-	app.NameKeeper.DeleteInvalidAddressIndexEntries(ctx)
-	ctx.Logger().Info("Done fixing name module store index entries.")
-}
-
-// setAccountDataNameRecord makes sure the account data name record exists, is restricted,
-// and is owned by the attribute module. An error is returned if it fails to make it so.
-// TODO: Remove with the rust handlers.
-func setAccountDataNameRecord(ctx sdk.Context, accountK attributetypes.AccountKeeper, nameK attributetypes.NameKeeper) (err error) {
-	return attributekeeper.EnsureModuleAccountAndAccountDataNameRecord(ctx, accountK, nameK)
-}
-
 // setupICQ sets the correct default values for ICQKeeper.
 // TODO: Remove with the saffron handlers.
 func setupICQ(ctx sdk.Context, app *App) {
@@ -466,6 +358,7 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 }
 
 // addMarkerNavs adds navs to existing markers
+// TODO: Remove with the saffron handlers.
 func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.NetAssetValue) {
 	ctx.Logger().Info("Adding marker net asset values")
 	for denom, nav := range denomToNav {
@@ -479,6 +372,26 @@ func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.
 		}
 	}
 	ctx.Logger().Info("Done adding marker net asset values")
+}
+
+// addMarkerNavsWithHeight sets net asset values with heights for markers
+// TODO: Remove with the tourmaline handlers.
+func addMarkerNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAssetValueWithHeight) {
+	ctx.Logger().Info("Adding marker net asset values with heights.")
+
+	for _, navWithHeight := range navsWithHeight {
+		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, navWithHeight.Denom)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to get marker %v: %v", navWithHeight.Denom, err))
+			continue
+		}
+
+		if err := app.MarkerKeeper.SetNetAssetValueWithBlockHeight(ctx, marker, navWithHeight.NetAssetValue, "upgrade_handler", navWithHeight.Height); err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value with height %v at height %d: %v", navWithHeight.NetAssetValue, navWithHeight.Height, err))
+		}
+	}
+
+	ctx.Logger().Info("Done adding marker net asset values with heights.")
 }
 
 // setExchangeParams sets exchange module's params to the defaults.
@@ -532,4 +445,57 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 		return false
 	})
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
+}
+
+// convertNavUnits iterates all the net asset values and updates their units if they are using usd.
+// TODO: Remove with the tourmaline handlers.
+func convertNavUnits(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Converting NAV units.")
+	err := app.MarkerKeeper.IterateAllNetAssetValues(ctx, func(markerAddr sdk.AccAddress, nav markertypes.NetAssetValue) (stop bool) {
+		if nav.Price.Denom == markertypes.UsdDenom {
+			nav.Price.Amount = nav.Price.Amount.Mul(sdkmath.NewInt(10))
+			marker, err := app.MarkerKeeper.GetMarker(ctx, markerAddr)
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Unable to get marker for address: %s, error: %s.", markerAddr, err))
+				return false
+			}
+			err = app.MarkerKeeper.SetNetAssetValue(ctx, marker, nav, "upgrade")
+			if err != nil {
+				ctx.Logger().Error(fmt.Sprintf("Unable to set net asset value for marker: %s, error: %s.", markerAddr, err))
+				return false
+			}
+		}
+		return false
+	})
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Unable to iterate all net asset values error: %s.", err))
+	}
+	ctx.Logger().Info("Done converting NAV units.")
+}
+
+// updateMsgFeesNhashPerMil updates the MsgFees Params to set the NhashPerUsdMil to 40,000,000.
+// TODO: Remove with the tourmaline handlers.
+func updateMsgFeesNhashPerMil(ctx sdk.Context, app *App) {
+	var newVal uint64 = 40_000_000
+	ctx.Logger().Info(fmt.Sprintf("Setting MsgFees Params NhashPerUsdMil to %d.", newVal))
+	params := app.MsgFeesKeeper.GetParams(ctx)
+	params.NhashPerUsdMil = newVal
+	app.MsgFeesKeeper.SetParams(ctx, params)
+	ctx.Logger().Info("Done setting MsgFees Params NhashPerUsdMil.")
+}
+
+// setExchangePaymentParamsToDefaults updates the exchange module params to have the default create payment and accept payment values.
+// TODO: Remove with the tourmaline handlers.
+func setExchangePaymentParamsToDefaults(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Setting exchange module payment params to defaults.")
+	defaultParams := exchange.DefaultParams()
+	curParams := app.ExchangeKeeper.GetParams(ctx)
+	if curParams == nil {
+		curParams = defaultParams
+	} else {
+		curParams.FeeCreatePaymentFlat = defaultParams.FeeCreatePaymentFlat
+		curParams.FeeAcceptPaymentFlat = defaultParams.FeeAcceptPaymentFlat
+	}
+	app.ExchangeKeeper.SetParams(ctx, curParams)
+	ctx.Logger().Info("Done setting exchange module payment params to defaults.")
 }

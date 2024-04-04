@@ -22,6 +22,9 @@ import (
 //   The splits are stored as uint16 in big-endian order.
 //   Default split: 0x00 | "split" => uint16
 //   Specific splits: 0x00 | "split" | <denom> => uint16
+//   The payment flat fees are stored as string versions of the coins.
+//   Create Payment Flat: 0x00 | "fee_create_payment_flat" => string(coins)
+//   Accept Payment Flat: 0x00 | "fee_accept_payment_flat" => string(coins)
 //
 // Last Market ID: 0x06 => uint32
 //   This stores the last auto-selected market id.
@@ -42,12 +45,17 @@ import (
 //   Market Seller Settlement Fee Ratio: 0x01 | <market_id> | 0x03 | <price_denom> | 0x1E | <fee_denom> => price and fee amounts (strings) separated by 0x1E.
 //   Market Buyer Settlement Flat Fee: 0x01 | <market_id> | 0x04 | <denom> => <amount> (string)
 //   Market Buyer Settlement Fee Ratio: 0x01 | <market_id> | 0x05 | <price_denom> | 0x1E | <fee_denom> => price and fee amounts (strings) separated by 0x1E.
-//   Market inactive indicator: 0x01 | <market_id> | 0x06 => nil
+//   Market accepting orders anti-indicator: 0x01 | <market_id> | 0x06 => nil
 //   Market user-settle indicator: 0x01 | <market_id> | 0x07 => nil
 //   Market permissions: 0x01 | <market_id> | 0x08 | <addr len byte> | <address> | <permission type byte> => nil
-//   Market Required Attributes: 0x01 | <market_id> | 0x09 | <order_type_byte> => 0x1E-separated list of required attribute entries.
+//   Market Required Attributes: 0x01 | <market_id> | 0x09 | <req_attr_type_byte> => 0x1E-separated list of required attribute entries.
+//   Market allow commitments indicator: 0x01 | <market_id> | 0x10 => nil
+//   Market Create-Commitment Flat Fee: 0x01 | <market_id> | 0x11 | <denom> => <amount> (string)
+//   Market Commitment Settlement Bips: 0x01 | <market_id> | 0x12 => uint16
+//   Market Intermediary Denom: 0x01 | <market_id> | 0x13 => <denom>
 //
 //   The <permission_type_byte> is a single byte as uint8 with the same values as the enum entries.
+//   The <req_attr_type_byte> is either an order type byte or 0x63 (= 'c' for commitments).
 //
 // Orders:
 //   Order entries all have the following general format:
@@ -60,17 +68,18 @@ import (
 //     Ask Orders: 0x02 | <order_id> (8 bytes) => 0x00 | protobuf(AskOrder)
 //     Bid Orders: 0x02 | <order_id> (8 bytes) => 0x01 | protobuf(BidOrder)
 //
-// A market to order index is maintained with the following format:
-//    0x03 | <market_id> (4 bytes) | <order_id> (8 bytes) => <order type byte>
+// Commitments:
+//   0x63 | <market_id> (4 bytes) | <address> => <coins> (string)
 //
-// An address to order index is maintained with the following format:
-//    0x04 | len(<address>) (1 byte) | <address> | <order_id> (8 bytes) => <order type byte>
+// Payments:
+//    0x70 | len(<source>) (1 byte) | <source> | <external id>
 //
-// An asset type to order index is maintained with the following format:
-//    0x05 | <asset_denom> | <order_id> (8 bytes) => <order type byte>
-//
-// A market external id to order index is maintained with the following format:
-//    0x09 | <market id> (4 bytes) | <external_id> => <order id> (8 bytes)
+// Indexes:
+//    Market to order: 0x03 | <market_id> (4 bytes) | <order_id> (8 bytes) => <order type byte>
+//    Address to order: 0x04 | len(<address>) (1 byte) | <address> | <order_id> (8 bytes) => <order type byte>
+//    Asset denom to order: 0x05 | <asset_denom> | <order_id> (8 bytes) => <order type byte>
+//    Market + external id to order: 0x09 | <market id> (4 bytes) | <external_id> => <order id> (8 bytes)
+//    Target to payment: 0x10 | len(<target>) (1 byte) | <target> | len(<source>) (1 byte) | <source> | <external id>
 
 const (
 	// KeyTypeParams is the type byte for params entries.
@@ -93,6 +102,19 @@ const (
 	KeyTypeAssetToOrderIndex = byte(0x05)
 	// KeyTypeMarketExternalIDToOrderIndex is the type byte for entries in the market and uuid to order index.
 	KeyTypeMarketExternalIDToOrderIndex = byte(0x09)
+	// KeyTypeCommitment is the type byte for commitments.
+	KeyTypeCommitment = byte(0x63)
+	// KeyTypePayment is the type byte for payments.
+	KeyTypePayment = byte(0x70)
+	// KeyTypeTargetToPaymentIndex is the type byte for entries in the target to payment index.
+	KeyTypeTargetToPaymentIndex = byte(0x10)
+
+	// ParamsKeyTypeSplit is the type string used in the keys for params.DefaultSplit and params.DenomSplits.
+	ParamsKeyTypeSplit = "split"
+	// ParamsKeyTypeFeeCreatePaymentFlat is the type string used in the keys for params.FeeCreatePaymentFlat.
+	ParamsKeyTypeFeeCreatePaymentFlat = "fee_create_payment_flat"
+	// ParamsKeyTypeFeeAcceptPaymentFlat is the type string used in the keys for params.FeeAcceptPaymentFlat.
+	ParamsKeyTypeFeeAcceptPaymentFlat = "fee_accept_payment_flat"
 
 	// MarketKeyTypeCreateAskFlat is the market-specific type byte for the create-ask flat fees.
 	MarketKeyTypeCreateAskFlat = byte(0x00)
@@ -106,14 +128,22 @@ const (
 	MarketKeyTypeBuyerSettlementFlat = byte(0x04)
 	// MarketKeyTypeBuyerSettlementRatio is the market-specific type byte for the buyer settlement ratios.
 	MarketKeyTypeBuyerSettlementRatio = byte(0x05)
-	// MarketKeyTypeInactive is the market-specific type byte for the inactive indicators.
-	MarketKeyTypeInactive = byte(0x06)
+	// MarketKeyTypeNotAcceptingOrders is the market-specific type byte for the the accepting-orders anti-indicators.
+	MarketKeyTypeNotAcceptingOrders = byte(0x06)
 	// MarketKeyTypeUserSettle is the market-specific type byte for the user-settle indicators.
 	MarketKeyTypeUserSettle = byte(0x07)
 	// MarketKeyTypePermissions is the market-specific type byte for the market permissions.
 	MarketKeyTypePermissions = byte(0x08)
 	// MarketKeyTypeReqAttr is the market-specific type byte for the market's required attributes lists.
 	MarketKeyTypeReqAttr = byte(0x09)
+	// MarketKeyTypeAcceptingCommitments is the market-specific type byte for the accepting-commitments indicators.
+	MarketKeyTypeAcceptingCommitments = byte(0x10)
+	// MarketKeyTypeCreateCommitmentFlat is the market-specific type byte for the create-commitment flat fees.
+	MarketKeyTypeCreateCommitmentFlat = byte(0x11)
+	// MarketKeyTypeCommitmentSettlementBips is the market-specific type byte for the bips the market is charged for commitment settlements.
+	MarketKeyTypeCommitmentSettlementBips = byte(0x12)
+	// MarketKeyTypeIntermediaryDenom is the market-specific type byte for the intermediary denom used in fee calcs.
+	MarketKeyTypeIntermediaryDenom = byte(0x13)
 
 	// OrderKeyTypeAsk is the order-specific type byte for ask orders.
 	OrderKeyTypeAsk = exchange.OrderTypeByteAsk
@@ -200,7 +230,7 @@ func parseLengthPrefixedAddr(key []byte) (sdk.AccAddress, []byte, error) {
 
 // keyPrefixParamsSplit creates the key prefix for a params "split" entry.
 func keyPrefixParamsSplit(extraCap int) []byte {
-	return prepKey(KeyTypeParams, []byte("split"), extraCap)
+	return prepKey(KeyTypeParams, []byte(ParamsKeyTypeSplit), extraCap)
 }
 
 // GetKeyPrefixParamsSplit creates the key prefix for all params splits entries.
@@ -214,6 +244,16 @@ func MakeKeyParamsSplit(denom string) []byte {
 	rv := keyPrefixParamsSplit(len(denom))
 	rv = append(rv, denom...)
 	return rv
+}
+
+// MakeKeyParamsFeeCreatePaymentFlat creates the key to use for the params FeeCreatePaymentFlat entry.
+func MakeKeyParamsFeeCreatePaymentFlat() []byte {
+	return prepKey(KeyTypeParams, []byte(ParamsKeyTypeFeeCreatePaymentFlat), 0)
+}
+
+// MakeKeyParamsFeeAcceptPaymentFlat creates the key to use for the params FeeAcceptPaymentFlat entry.
+func MakeKeyParamsFeeAcceptPaymentFlat() []byte {
+	return prepKey(KeyTypeParams, []byte(ParamsKeyTypeFeeAcceptPaymentFlat), 0)
 }
 
 // MakeKeyLastMarketID creates the key for the last auto-selected market id.
@@ -299,6 +339,23 @@ func GetKeyPrefixMarketCreateBidFlatFee(marketID uint32) []byte {
 // MakeKeyMarketCreateBidFlatFee creates the key to use for a create-bid flat fee for the given denom.
 func MakeKeyMarketCreateBidFlatFee(marketID uint32, denom string) []byte {
 	rv := marketKeyPrefixCreateBidFlatFee(marketID, len(denom))
+	rv = append(rv, denom...)
+	return rv
+}
+
+// marketKeyPrefixCreateCommitmentFlatFee creates the key prefix for a market's create-commitment flat fees with extra capacity for the rest.
+func marketKeyPrefixCreateCommitmentFlatFee(marketID uint32, extraCap int) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeCreateCommitmentFlat, extraCap)
+}
+
+// GetKeyPrefixMarketCreateCommitmentFlatFee creates the key prefix for the create-commitment flat fees for the provided market.
+func GetKeyPrefixMarketCreateCommitmentFlatFee(marketID uint32) []byte {
+	return marketKeyPrefixCreateCommitmentFlatFee(marketID, 0)
+}
+
+// MakeKeyMarketCreateCommitmentFlatFee creates the key to use for a create-commitment flat fee for the given denom.
+func MakeKeyMarketCreateCommitmentFlatFee(marketID uint32, denom string) []byte {
+	rv := marketKeyPrefixCreateCommitmentFlatFee(marketID, len(denom))
 	rv = append(rv, denom...)
 	return rv
 }
@@ -454,9 +511,9 @@ func MakeKeyMarketBuyerSettlementRatio(marketID uint32, ratio exchange.FeeRatio)
 	return rv
 }
 
-// MakeKeyMarketInactive creates the key to use to indicate that a market is inactive.
-func MakeKeyMarketInactive(marketID uint32) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeInactive, 0)
+// MakeKeyMarketNotAcceptingOrders creates the key to use to indicate that a market is not accepting orders.
+func MakeKeyMarketNotAcceptingOrders(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeNotAcceptingOrders, 0)
 }
 
 // MakeKeyMarketUserSettle creates the key to use to indicate that a market allows settlement by users.
@@ -511,23 +568,26 @@ func ParseKeySuffixMarketPermissions(suffix []byte) (sdk.AccAddress, exchange.Pe
 	return addr, exchange.Permission(remainder[0]), nil
 }
 
-// marketKeyPrefixReqAttr creates the key prefix for a market's required attributes entries with an extra byte of capacity for the order type.
-func marketKeyPrefixReqAttr(marketID uint32) []byte {
-	return keyPrefixMarketType(marketID, MarketKeyTypeReqAttr, 1)
+// marketKeyReqAttr creates the key for a market's required attributes entries of a specific type.
+func marketKeyReqAttr(marketID uint32, reqAttrType byte) []byte {
+	rv := keyPrefixMarketType(marketID, MarketKeyTypeReqAttr, 1)
+	rv = append(rv, reqAttrType)
+	return rv
 }
 
 // MakeKeyMarketReqAttrAsk creates the key to use for a market's attributes required to create an ask order.
 func MakeKeyMarketReqAttrAsk(marketID uint32) []byte {
-	rv := marketKeyPrefixReqAttr(marketID)
-	rv = append(rv, OrderKeyTypeAsk)
-	return rv
+	return marketKeyReqAttr(marketID, OrderKeyTypeAsk)
 }
 
 // MakeKeyMarketReqAttrBid creates the key to use for a market's attributes required to create a bid order.
 func MakeKeyMarketReqAttrBid(marketID uint32) []byte {
-	rv := marketKeyPrefixReqAttr(marketID)
-	rv = append(rv, OrderKeyTypeBid)
-	return rv
+	return marketKeyReqAttr(marketID, OrderKeyTypeBid)
+}
+
+// MakeKeyMarketReqAttrCommitment creates the key to use for a market's attributes required to create a commitment.
+func MakeKeyMarketReqAttrCommitment(marketID uint32) []byte {
+	return marketKeyReqAttr(marketID, KeyTypeCommitment)
 }
 
 // ParseReqAttrStoreValue parses a required attribute store value into it's string slice.
@@ -536,6 +596,21 @@ func ParseReqAttrStoreValue(value []byte) []string {
 		return nil
 	}
 	return strings.Split(string(value), string(RecordSeparator))
+}
+
+// MakeKeyMarketAcceptingCommitments creates the key to use to indicate that a market allows commitments.
+func MakeKeyMarketAcceptingCommitments(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeAcceptingCommitments, 0)
+}
+
+// MakeKeyMarketCommitmentSettlementBips creates the key to use to for a market's commitment settlement bips.
+func MakeKeyMarketCommitmentSettlementBips(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeCommitmentSettlementBips, 0)
+}
+
+// MakeKeyMarketIntermediaryDenom creates the key to use to for a market's commitment intermediary denom.
+func MakeKeyMarketIntermediaryDenom(marketID uint32) []byte {
+	return keyPrefixMarketType(marketID, MarketKeyTypeIntermediaryDenom, 0)
 }
 
 // keyPrefixOrder creates the key prefix for orders with the provided extra capacity for additional elements.
@@ -741,4 +816,198 @@ func MakeIndexKeyMarketExternalIDToOrder(marketID uint32, externalID string) []b
 	rv := prepKey(KeyTypeMarketExternalIDToOrderIndex, uint32Bz(marketID), len(externalID))
 	rv = append(rv, externalID...)
 	return rv
+}
+
+// keyPrefixCommitment creates the key prefix for commitments with the provided extra capacity for additional elements.
+func keyPrefixCommitment(extraCap int) []byte {
+	return prepKey(KeyTypeCommitment, nil, extraCap)
+}
+
+// keyPrefixMarketCommitments creates the key prefix for comitments to a market with the provided extra capacity for additional elements.
+func keyPrefixMarketCommitments(marketID uint32, extraCap int) []byte {
+	suffix := uint32Bz(marketID)
+	rv := keyPrefixCommitment(extraCap + len(suffix))
+	rv = append(rv, suffix...)
+	return rv
+}
+
+// GetKeyPrefixCommitments gets the key prefix for all commitments.
+func GetKeyPrefixCommitments() []byte {
+	return keyPrefixCommitment(0)
+}
+
+// GetKeyPrefixCommitmentsToMarket gets the key prefix for all commitments in a market.
+func GetKeyPrefixCommitmentsToMarket(marketID uint32) []byte {
+	return keyPrefixMarketCommitments(marketID, 0)
+}
+
+// MakeKeyCommitment creates the key to use for a commitment
+func MakeKeyCommitment(marketID uint32, addr sdk.AccAddress) []byte {
+	if len(addr) == 0 {
+		panic(errors.New("empty address not allowed"))
+	}
+	suffix := address.MustLengthPrefix(addr)
+	rv := keyPrefixMarketCommitments(marketID, len(suffix))
+	rv = append(rv, suffix...)
+	return rv
+}
+
+// ParseKeyCommitment extracts the market id and address from a commitment key.
+// The input must have the format: <type byte> | <market id> | <addr length byte> | <addr>.
+func ParseKeyCommitment(key []byte) (uint32, sdk.AccAddress, error) {
+	if len(key) < 7 {
+		return 0, nil, fmt.Errorf("cannot parse commitment key: only has %d bytes, expected at least 7", len(key))
+	}
+	if key[0] != KeyTypeCommitment {
+		return 0, nil, fmt.Errorf("cannot parse commitment key: incorrect type byte %#x", key[0])
+	}
+	marketIDBz, addrBz := key[1:5], key[5:]
+	marketID, _ := uint32FromBz(marketIDBz)
+	addr, err := ParseKeySuffixCommitment(addrBz)
+	if err != nil {
+		return 0, nil, err
+	}
+	return marketID, addr, nil
+}
+
+// ParseKeySuffixCommitment parses the addr portion of a commitment key.
+// The input must have the format: <addr length byte> | <addr>.
+func ParseKeySuffixCommitment(suffix []byte) (sdk.AccAddress, error) {
+	addr, left, err := parseLengthPrefixedAddr(suffix)
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse address from commitment key: %w", err)
+	}
+	if len(left) != 0 {
+		return nil, fmt.Errorf("cannot parse address from commitment key: found %d bytes after address, expected 0", len(left))
+	}
+	return addr, nil
+}
+
+// keyPrefixPayment creates the key prefix for payments with the provided extra capacity for additional elements.
+func keyPrefixPayment(extraCap int) []byte {
+	rv := make([]byte, 1, 1+extraCap)
+	rv[0] = KeyTypePayment
+	return rv
+}
+
+// keyPrefixPaymentsForSource creates the key prefix for payments for a source with the provided extra capacity for additional elements.
+func keyPrefixPaymentsForSource(source sdk.AccAddress, extraCap int) []byte {
+	if len(source) == 0 {
+		panic(errors.New("empty source address not allowed"))
+	}
+	sourceBz := address.MustLengthPrefix(source)
+	rv := keyPrefixPayment(len(sourceBz) + extraCap)
+	rv = append(rv, sourceBz...)
+	return rv
+}
+
+// GetKeyPrefixAllPayments gets the key prefix for all payments.
+func GetKeyPrefixAllPayments() []byte {
+	return keyPrefixPayment(0)
+}
+
+// GetKeyPrefixPaymentsForSource gets the key prefix for payments with a given source.
+func GetKeyPrefixPaymentsForSource(source sdk.AccAddress) []byte {
+	return keyPrefixPaymentsForSource(source, 0)
+}
+
+// MakeKeyPayment creates the key for a payment.
+func MakeKeyPayment(source sdk.AccAddress, externalID string) []byte {
+	suffix := []byte(externalID)
+	rv := keyPrefixPaymentsForSource(source, len(suffix))
+	rv = append(rv, suffix...)
+	return rv
+}
+
+// ParseKeyPayment parses the full key that identifies a payment.
+// The input must have the format: <type byte> | <source length byte> | <source> | <external id>.
+func ParseKeyPayment(key []byte) (sdk.AccAddress, string, error) {
+	if len(key) < 3 {
+		return nil, "", fmt.Errorf("cannot parse payment key: only has %d bytes, expected at least 3", len(key))
+	}
+	if key[0] != KeyTypePayment {
+		return nil, "", fmt.Errorf("cannot parse payment key: incorrect type byte %#x, expected %#x", key[0], KeyTypePayment)
+	}
+	return ParseKeySuffixPayment(key[1:])
+}
+
+// ParseKeySuffixPayment parses a payment key that does not have its type byte.
+// The input must have the format: <source length byte> | <source> | <external id>.
+func ParseKeySuffixPayment(suffix []byte) (sdk.AccAddress, string, error) {
+	addr, left, err := parseLengthPrefixedAddr(suffix)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot parse payment key: invalid source: %w", err)
+	}
+	return addr, string(left), nil
+}
+
+// indexPrefixTargetToPayments creates the prefix for the target to payments index entries with some extra space for the rest.
+func indexPrefixTargetToPayments(target sdk.AccAddress, extraCap int) []byte {
+	if len(target) == 0 {
+		panic(errors.New("empty target address not allowed"))
+	}
+	return prepKey(KeyTypeTargetToPaymentIndex, address.MustLengthPrefix(target), extraCap)
+}
+
+// indexPrefixTargetToPayments creates the prefix for the target to payments index entries, specific to a source, with some extra space for the rest.
+func indexPrefixTargetToPaymentsForSource(target, source sdk.AccAddress, extraCap int) []byte {
+	if len(source) == 0 {
+		panic(errors.New("empty source address not allowed"))
+	}
+	suffix := address.MustLengthPrefix(source)
+	rv := indexPrefixTargetToPayments(target, len(suffix)+extraCap)
+	rv = append(rv, suffix...)
+	return rv
+}
+
+// GetIndexKeyPrefixTargetToPayments creates a key prefix for the target to payments index.
+func GetIndexKeyPrefixTargetToPayments(target sdk.AccAddress) []byte {
+	return indexPrefixTargetToPayments(target, 0)
+}
+
+// GetIndexKeyPrefixTargetToPaymentsForSource creates a key prefix for the target to payments index, specific to a source.
+func GetIndexKeyPrefixTargetToPaymentsForSource(target, source sdk.AccAddress) []byte {
+	return indexPrefixTargetToPaymentsForSource(target, source, 0)
+}
+
+// MakeIndexKeyTargetToPayment creates the key for the target to payment index.
+func MakeIndexKeyTargetToPayment(target, source sdk.AccAddress, externalID string) []byte {
+	suffix := []byte(externalID)
+	rv := indexPrefixTargetToPaymentsForSource(target, source, len(suffix))
+	rv = append(rv, suffix...)
+	return rv
+}
+
+// ParseIndexKeyTargetToPayment parses a target to payment key.
+// The input must have the format: <type byte> | <target length byte> | <target> | <source length byte> | <source> | <external id>.
+func ParseIndexKeyTargetToPayment(key []byte) (target, source sdk.AccAddress, externalID string, err error) {
+	if len(key) < 5 {
+		return nil, nil, "", fmt.Errorf("cannot parse target to payment index key: only has %d bytes, expected at least 5", len(key))
+	}
+	if key[0] != KeyTypeTargetToPaymentIndex {
+		return nil, nil, "", fmt.Errorf("cannot parse target to payment index key: incorrect type byte %#x, expected %#x", key[0], KeyTypeTargetToPaymentIndex)
+	}
+
+	var left []byte
+	target, left, err = parseLengthPrefixedAddr(key[1:])
+	if err != nil {
+		return nil, nil, "", fmt.Errorf("cannot parse target to payment index key: invalid target: %w", err)
+	}
+
+	source, externalID, err = ParseIndexKeySuffixTargetToPayment(left)
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	return target, source, externalID, nil
+}
+
+// ParseIndexKeySuffixTargetToPayment parses the source and external id out of the suffix of a target to payment index key.
+// The input must have the format: <source length byte> | <source> | <external id>.
+func ParseIndexKeySuffixTargetToPayment(suffix []byte) (sdk.AccAddress, string, error) {
+	source, left, err := parseLengthPrefixedAddr(suffix)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot parse target to payment index key: invalid source: %w", err)
+	}
+	return source, string(left), nil
 }

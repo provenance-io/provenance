@@ -22,9 +22,7 @@ import (
 
 const StoreKey = types.ModuleName
 
-// TODO[1760]: event-history: Put this back once our version of the SDK is back in with the updated baseapp.Simulate func.
-// type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
-type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
+type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Context, error)
 
 // Keeper of the Additional fee store
 type Keeper struct {
@@ -91,7 +89,15 @@ func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
 	return min
 }
 
-// GetNhashPerUsdMil returns the current nhash amount per usd mil
+// GetNhashPerUsdMil returns the current nhash amount per usd mil.
+//
+// Conversions:
+//   - x nhash/usd-mil = 1,000,000/x usd/hash
+//   - y usd/hash = 1,000,000/y nhash/usd-mil
+//
+// Examples:
+//   - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash,
+//   - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil
 func (k Keeper) GetNhashPerUsdMil(ctx sdk.Context) uint64 {
 	rateInMils := types.DefaultParams().NhashPerUsdMil
 	if k.paramSpace.Has(ctx, types.ParamStoreKeyNhashPerUsdMil) {

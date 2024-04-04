@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -58,6 +59,7 @@ func GetQueryCmd() *cobra.Command {
 		GetValueOwnershipCmd(),
 		GetOSLocatorCmd(),
 		GetAccountDataCmd(),
+		GetCmdNetAssetValuesQuery(),
 	)
 	return queryCmd
 }
@@ -1107,6 +1109,41 @@ func outputOSLocatorsAll(cmd *cobra.Command) error {
 	}
 
 	return clientCtx.PrintProto(res)
+}
+
+// GetCmdNetAssetValuesQuery is the CLI command for querying a scope's net asset values.
+func GetCmdNetAssetValuesQuery() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "net-asset-values [scope-id]",
+		Aliases: []string{"nav", "navs"},
+		Short:   "Get scope's net asset values'",
+		Example: fmt.Sprintf(`$ %s query metadata net-asset-values scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel`, version.AppName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			id := strings.TrimSpace(args[0])
+			_, err = types.MetadataAddressFromBech32(id)
+			if err != nil {
+				return err
+			}
+
+			var response *types.QueryScopeNetAssetValuesResponse
+			if response, err = queryClient.ScopeNetAssetValues(
+				context.Background(),
+				&types.QueryScopeNetAssetValuesRequest{Id: id},
+			); err != nil {
+				fmt.Printf("failed to query scope %q net asset values details: %v\n", id, err)
+				return nil
+			}
+			return clientCtx.PrintProto(response)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
 }
 
 // ------------ private generic helper functions ------------

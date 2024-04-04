@@ -52,7 +52,7 @@ func NewMsgAddMarkerRequest(
 	allowGovernanceControl bool,
 	allowForcedTransfer bool,
 	requiredAttributes []string,
-	usdCentValue uint64,
+	usdMills uint64,
 	volume uint64,
 ) *MsgAddMarkerRequest {
 	return &MsgAddMarkerRequest{
@@ -65,7 +65,7 @@ func NewMsgAddMarkerRequest(
 		AllowGovernanceControl: allowGovernanceControl,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
-		UsdCents:               usdCentValue,
+		UsdMills:               usdMills,
 		Volume:                 volume,
 	}
 }
@@ -478,6 +478,7 @@ func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
+// NewMsgAddFinalizeActivateMarkerRequest creates a new MsgAddFinalizeActivateMarkerRequest.
 func NewMsgAddFinalizeActivateMarkerRequest(
 	denom string,
 	totalSupply sdkmath.Int,
@@ -489,7 +490,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 	allowForcedTransfer bool,
 	requiredAttributes []string,
 	accessGrants []AccessGrant,
-	usdCentsValue uint64,
+	usdMills uint64,
 	netAssetVolume uint64,
 ) *MsgAddFinalizeActivateMarkerRequest {
 	return &MsgAddFinalizeActivateMarkerRequest{
@@ -502,7 +503,7 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 		AccessList:             accessGrants,
 		AllowForcedTransfer:    allowForcedTransfer,
 		RequiredAttributes:     requiredAttributes,
-		UsdCents:               usdCentsValue,
+		UsdMills:               usdMills,
 		Volume:                 netAssetVolume,
 	}
 }

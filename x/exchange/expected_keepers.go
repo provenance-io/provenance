@@ -24,6 +24,7 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	// TODO[1760]: exchange: Put InputOutputCoins back in this expected keeper once our fork is back in place.
 	// InputOutputCoins(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) error
+	BlockedAddr(addr sdk.AccAddress) bool
 }
 
 type HoldKeeper interface {
@@ -35,4 +36,5 @@ type HoldKeeper interface {
 type MarkerKeeper interface {
 	GetMarker(ctx sdk.Context, address sdk.AccAddress) (markertypes.MarkerAccountI, error)
 	AddSetNetAssetValues(ctx sdk.Context, marker markertypes.MarkerAccountI, netAssetValues []markertypes.NetAssetValue, source string) error
+	GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*markertypes.NetAssetValue, error)
 }

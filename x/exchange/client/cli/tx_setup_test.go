@@ -232,6 +232,71 @@ func TestMakeMsgCreateBid(t *testing.T) {
 	}
 }
 
+func TestSetupCmdTxCommitFunds(t *testing.T) {
+	runSetupTestCase(t, setupTestCase{
+		name:  "SetupCmdTxCommitFunds",
+		setup: cli.SetupCmdTxCommitFunds,
+		expFlags: []string{
+			cli.FlagAccount, cli.FlagMarket, cli.FlagAmount, cli.FlagCreationFee, cli.FlagTag,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			flags.FlagFrom:  {oneReq: {flags.FlagFrom + " " + cli.FlagAccount}},
+			cli.FlagAccount: {oneReq: {flags.FlagFrom + " " + cli.FlagAccount}},
+			cli.FlagMarket:  {required: {"true"}},
+			cli.FlagAmount:  {required: {"true"}},
+		},
+		expInUse: []string{
+			"--account", "--market <market id>", "--amount <amount>",
+			"[--creation-fee <creation fee>]", "[--tag <event tag>]",
+			cli.ReqSignerDesc(cli.FlagAccount),
+		},
+	})
+}
+
+func TestMakeMsgCommitFunds(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgCommitFundsRequest]{
+		makerName: "MakeMsgCommitFunds",
+		maker:     cli.MakeMsgCommitFunds,
+		setup:     cli.SetupCmdTxCommitFunds,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgCommitFundsRequest]{
+		{
+			name:      "a couple errors",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--amount", "nope", "--creation-fee", "123"},
+			expMsg: &exchange.MsgCommitFundsRequest{
+				Account: sdk.AccAddress("FromAddress_________").String(),
+			},
+			expErr: joinErrs(
+				"error parsing --amount as coins: invalid coin expression: \"nope\"",
+				"error parsing --creation-fee as a coin: invalid coin expression: \"123\"",
+			),
+		},
+		{
+			name: "all fields",
+			flags: []string{
+				"--account", "someaddr", "--market", "4", "--amount", "10apple",
+				"--tag", "atagofsomesort", "--creation-fee", "6grape",
+			},
+			expMsg: &exchange.MsgCommitFundsRequest{
+				Account:     "someaddr",
+				MarketId:    4,
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("apple", 10)),
+				CreationFee: &sdk.Coin{Denom: "grape", Amount: sdkmath.NewInt(6)},
+				EventTag:    "atagofsomesort",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
 func TestSetupCmdTxCancelOrder(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
 		name:  "SetupCmdTxCancelOrder",
@@ -444,9 +509,20 @@ func TestSetupCmdTxMarketSettle(t *testing.T) {
 		name:  "SetupCmdTxMarketSettle",
 		setup: cli.SetupCmdTxMarketSettle,
 		expFlags: []string{
+			cli.FlagAdmin, cli.FlagAuthority,
 			cli.FlagMarket, cli.FlagAsks, cli.FlagBids, cli.FlagPartial,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
 		},
 		expAnnotations: map[string]map[string][]string{
+			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
+			cli.FlagAdmin: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagAuthority: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
 			cli.FlagMarket: {required: {"true"}},
 			cli.FlagAsks:   {required: {"true"}},
 			cli.FlagBids:   {required: {"true"}},
@@ -510,6 +586,293 @@ func TestMakeMsgMarketSettle(t *testing.T) {
 				MarketId:    14,
 				AskOrderIds: []uint64{1, 2, 3},
 				BidOrderIds: []uint64{5},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxMarketCommitmentSettle(t *testing.T) {
+	runSetupTestCase(t, setupTestCase{
+		name:  "SetupCmdTxMarketCommitmentSettle",
+		setup: cli.SetupCmdTxMarketCommitmentSettle,
+		expFlags: []string{
+			cli.FlagAdmin, cli.FlagAuthority,
+			cli.FlagMarket, cli.FlagInputs, cli.FlagOutputs,
+			cli.FlagSettlementFees, cli.FlagNavs, cli.FlagTag, cli.FlagFile,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			flags.FlagFrom: {oneReq: {cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
+			cli.FlagAdmin: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagAuthority: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagFile: {oneReq: {
+				cli.FlagFile + " " + flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority,
+				cli.FlagFile + " " + cli.FlagMarket,
+			}},
+			cli.FlagMarket: {oneReq: {cli.FlagFile + " " + cli.FlagMarket}},
+		},
+		expInUse: []string{
+			cli.ReqAdminUse, "[--market <market id>]",
+			"[--inputs <account-amount>]", "[--outputs <account-amount>]",
+			"[--settlement-fees <account-amount>]", "[--navs <nav>]", "[--tag <event tag>]",
+			"[--file <filename>]",
+			cli.ReqAdminDesc, cli.RepeatableDesc, cli.AccountAmountDesc, cli.NAVDesc,
+			cli.MsgFileDesc(&exchange.MsgMarketCommitmentSettleRequest{}),
+		},
+	})
+}
+
+func TestMakeMsgMarketCommitmentSettle(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketCommitmentSettleRequest]{
+		makerName: "MakeMsgMarketCommitmentSettle",
+		maker:     cli.MakeMsgMarketCommitmentSettle,
+		setup:     cli.SetupCmdTxMarketCommitmentSettle,
+	}
+
+	tdir := t.TempDir()
+	filename := filepath.Join(tdir, "commitment-settle.json")
+	fileMsg := &exchange.MsgMarketCommitmentSettleRequest{
+		Admin:    sdk.AccAddress("msg_admin___________").String(),
+		MarketId: 4,
+		Inputs:   []exchange.AccountAmount{{Account: "devin", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 10))}},
+		Outputs:  []exchange.AccountAmount{{Account: "parker", Amount: sdk.NewCoins(sdk.NewInt64Coin("peach", 11))}},
+		Fees:     []exchange.AccountAmount{{Account: "tracey", Amount: sdk.NewCoins(sdk.NewInt64Coin("fig", 4))}},
+		Navs:     []exchange.NetAssetPrice{{Assets: sdk.NewInt64Coin("acorn", 44), Price: sdk.NewInt64Coin("pear", 7)}},
+		EventTag: "the-msg-event-tag",
+	}
+	tx := newTx(t, fileMsg)
+	writeFileAsJson(t, filename, tx)
+
+	tests := []txMakerTestCase[*exchange.MsgMarketCommitmentSettleRequest]{
+		{
+			name:   "no flags",
+			expMsg: &exchange.MsgMarketCommitmentSettleRequest{},
+			expErr: "no <admin> provided",
+		},
+		{
+			name:      "admin from from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			expMsg: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin: sdk.AccAddress("FromAddress_________").String(),
+			},
+		},
+		{
+			name:   "admin from flag",
+			flags:  []string{"--admin", "kelly"},
+			expMsg: &exchange.MsgMarketCommitmentSettleRequest{Admin: "kelly"},
+		},
+		{
+			name:  "admin as authority",
+			flags: []string{"--authority"},
+			expMsg: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin: cli.AuthorityAddr.String(),
+			},
+		},
+		{
+			name: "bad inputs outputs fees and navs",
+			flags: []string{
+				"--admin", "sam",
+				"--inputs", "10nhash", "--outputs", "addr3",
+				"--settlement-fees", "42cherry", "--navs", "18banana",
+			},
+			expMsg: &exchange.MsgMarketCommitmentSettleRequest{Admin: "sam"},
+			expErr: joinErrs(
+				"invalid account-amount \"10nhash\": expected format <account>:<amount>",
+				"invalid account-amount \"addr3\": expected format <account>:<amount>",
+				"invalid account-amount \"42cherry\": expected format <account>:<amount>",
+				"invalid net-asset-price \"18banana\": expected format <assets>:<price>",
+			),
+		},
+		{
+			name: "all provided",
+			flags: []string{
+				"--authority", "--market", "18", "--tag", "thing-4DE17436",
+				"--inputs", "addr1:10nhash,5cherry,addr2:12nhash,addr3:4nhash,10cherry",
+				"--settlement-fees", "addr7:10apple,1prune",
+				"--outputs", "addr4:26nhash,1cherry",
+				"--settlement-fees", "addr6:8apple",
+				"--navs", "8apple:10cherry,10apple:3nhash",
+				"--outputs", "addr5:14cherry",
+				"--navs", "4cherry:15nhash",
+			},
+			expMsg: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    cli.AuthorityAddr.String(),
+				MarketId: 18,
+				Inputs: []exchange.AccountAmount{
+					{Account: "addr1", Amount: sdk.NewCoins(sdk.NewInt64Coin("nhash", 10), sdk.NewInt64Coin("cherry", 5))},
+					{Account: "addr2", Amount: sdk.NewCoins(sdk.NewInt64Coin("nhash", 12))},
+					{Account: "addr3", Amount: sdk.NewCoins(sdk.NewInt64Coin("nhash", 4), sdk.NewInt64Coin("cherry", 10))},
+				},
+				Outputs: []exchange.AccountAmount{
+					{Account: "addr4", Amount: sdk.NewCoins(sdk.NewInt64Coin("nhash", 26), sdk.NewInt64Coin("cherry", 1))},
+					{Account: "addr5", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 14))},
+				},
+				Fees: []exchange.AccountAmount{
+					{Account: "addr7", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 10), sdk.NewInt64Coin("prune", 1))},
+					{Account: "addr6", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 8))},
+				},
+				Navs: []exchange.NetAssetPrice{
+					{Assets: sdk.NewInt64Coin("apple", 8), Price: sdk.NewInt64Coin("cherry", 10)},
+					{Assets: sdk.NewInt64Coin("apple", 10), Price: sdk.NewInt64Coin("nhash", 3)},
+					{Assets: sdk.NewInt64Coin("cherry", 4), Price: sdk.NewInt64Coin("nhash", 15)},
+				},
+				EventTag: "thing-4DE17436",
+			},
+		},
+		{
+			name:      "from file",
+			clientCtx: newClientContextWithCodec(),
+			flags:     []string{"--file", filename},
+			expMsg:    fileMsg,
+		},
+		{
+			name: "file with overrides",
+			flags: []string{
+				"--file", filename, "--tag", "new-thang", "--authority",
+				"--outputs", "monroe:87plum",
+			},
+			clientCtx: newClientContextWithCodec(),
+			expMsg: &exchange.MsgMarketCommitmentSettleRequest{
+				Admin:    cli.AuthorityAddr.String(),
+				MarketId: 4,
+				Inputs:   []exchange.AccountAmount{{Account: "devin", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 10))}},
+				Outputs:  []exchange.AccountAmount{{Account: "monroe", Amount: sdk.NewCoins(sdk.NewInt64Coin("plum", 87))}},
+				Fees:     []exchange.AccountAmount{{Account: "tracey", Amount: sdk.NewCoins(sdk.NewInt64Coin("fig", 4))}},
+				Navs:     []exchange.NetAssetPrice{{Assets: sdk.NewInt64Coin("acorn", 44), Price: sdk.NewInt64Coin("pear", 7)}},
+				EventTag: "new-thang",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxMarketReleaseCommitments(t *testing.T) {
+	runSetupTestCase(t, setupTestCase{
+		name:  "SetupCmdTxMarketReleaseCommitments",
+		setup: cli.SetupCmdTxMarketReleaseCommitments,
+		expFlags: []string{
+			cli.FlagAdmin, cli.FlagAuthority,
+			cli.FlagMarket, cli.FlagRelease, cli.FlagReleaseAll, cli.FlagTag,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
+			cli.FlagAdmin: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagAuthority: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagMarket:     {required: {"true"}},
+			cli.FlagRelease:    {oneReq: {cli.FlagRelease + " " + cli.FlagReleaseAll}},
+			cli.FlagReleaseAll: {oneReq: {cli.FlagRelease + " " + cli.FlagReleaseAll}},
+		},
+		expInUse: []string{
+			cli.ReqAdminUse, "--market <market id>",
+			"[--release <account-amount>]", "[--release-all <account>]", "[--tag <event tag>]",
+			cli.ReqAdminUse,
+			"At least one of --release and/or --release-all must be provided",
+			cli.RepeatableDesc, cli.AccountAmountDesc,
+		},
+	})
+}
+
+func TestMakeMsgMarketReleaseCommitments(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketReleaseCommitmentsRequest]{
+		makerName: "MakeMsgMarketReleaseCommitments",
+		maker:     cli.MakeMsgMarketReleaseCommitments,
+		setup:     cli.SetupCmdTxMarketReleaseCommitments,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgMarketReleaseCommitmentsRequest]{
+		{
+			name:   "nothing",
+			expMsg: &exchange.MsgMarketReleaseCommitmentsRequest{},
+			expErr: "no <admin> provided",
+		},
+		{
+			name:      "admin from from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			expMsg: &exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin: sdk.AccAddress("FromAddress_________").String(),
+			},
+		},
+		{
+			name:  "admin from flag",
+			flags: []string{"--admin", "forest"},
+			expMsg: &exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin: "forest",
+			},
+		},
+		{
+			name:  "authority",
+			flags: []string{"--authority"},
+			expMsg: &exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin: cli.AuthorityAddr.String(),
+			},
+		},
+		{
+			name:      "only release",
+			flags:     []string{"--release", "addr1:10cherry,addr2:5apple"},
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			expMsg: &exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin: sdk.AccAddress("FromAddress_________").String(),
+				ToRelease: []exchange.AccountAmount{
+					{Account: "addr1", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 10))},
+					{Account: "addr2", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 5))},
+				},
+			},
+		},
+		{
+			name:      "only release-all",
+			flags:     []string{"--release-all", "addr1,addr2"},
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			expMsg: &exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin: sdk.AccAddress("FromAddress_________").String(),
+				ToRelease: []exchange.AccountAmount{
+					{Account: "addr1", Amount: nil},
+					{Account: "addr2", Amount: nil},
+				},
+			},
+		},
+		{
+			name: "everything",
+			flags: []string{
+				"--admin", "charly", "--market", "4", "--tag", "someragtag",
+				"--release", "addr1:4apple,5banana",
+				"--release-all", "addr2,addr3",
+				"--release", "addr4:10cherry,addr5:8date",
+			},
+			expMsg: &exchange.MsgMarketReleaseCommitmentsRequest{
+				Admin:    "charly",
+				MarketId: 4,
+				ToRelease: []exchange.AccountAmount{
+					{Account: "addr1", Amount: sdk.NewCoins(sdk.NewInt64Coin("apple", 4), sdk.NewInt64Coin("banana", 5))},
+					{Account: "addr4", Amount: sdk.NewCoins(sdk.NewInt64Coin("cherry", 10))},
+					{Account: "addr5", Amount: sdk.NewCoins(sdk.NewInt64Coin("date", 8))},
+					{Account: "addr2", Amount: nil},
+					{Account: "addr3", Amount: nil},
+				},
+				EventTag: "someragtag",
 			},
 		},
 	}
@@ -665,10 +1028,11 @@ func TestMakeMsgMarketWithdraw(t *testing.T) {
 
 func TestAddFlagsMarketDetails(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
-		name:          "AddFlagsMarketDetails",
-		setup:         cli.AddFlagsMarketDetails,
-		expFlags:      []string{cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon},
-		skipArgsCheck: true,
+		name:               "AddFlagsMarketDetails",
+		setup:              cli.AddFlagsMarketDetails,
+		expFlags:           []string{cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon},
+		skipArgsCheck:      true,
+		skipFlagInUseCheck: true,
 	})
 }
 
@@ -853,10 +1217,10 @@ func TestMakeMsgMarketUpdateDetails(t *testing.T) {
 	}
 }
 
-func TestSetupCmdTxMarketUpdateEnabled(t *testing.T) {
+func TestSetupCmdTxMarketUpdateAcceptingOrders(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
-		name:  "SetupCmdTxMarketUpdateEnabled",
-		setup: cli.SetupCmdTxMarketUpdateEnabled,
+		name:  "SetupCmdTxMarketUpdateAcceptingOrders",
+		setup: cli.SetupCmdTxMarketUpdateAcceptingOrders,
 		expFlags: []string{
 			cli.FlagAdmin, cli.FlagAuthority,
 			cli.FlagMarket, cli.FlagEnable, cli.FlagDisable,
@@ -889,18 +1253,18 @@ func TestSetupCmdTxMarketUpdateEnabled(t *testing.T) {
 	})
 }
 
-func TestMakeMsgMarketUpdateEnabled(t *testing.T) {
-	td := txMakerTestDef[*exchange.MsgMarketUpdateEnabledRequest]{
-		makerName: "MakeMsgMarketUpdateEnabled",
-		maker:     cli.MakeMsgMarketUpdateEnabled,
-		setup:     cli.SetupCmdTxMarketUpdateEnabled,
+func TestMakeMsgMarketUpdateAcceptingOrders(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketUpdateAcceptingOrdersRequest]{
+		makerName: "MakeMsgMarketUpdateAcceptingOrders",
+		maker:     cli.MakeMsgMarketUpdateAcceptingOrders,
+		setup:     cli.SetupCmdTxMarketUpdateAcceptingOrders,
 	}
 
-	tests := []txMakerTestCase[*exchange.MsgMarketUpdateEnabledRequest]{
+	tests := []txMakerTestCase[*exchange.MsgMarketUpdateAcceptingOrdersRequest]{
 		{
 			name:   "some errors",
 			flags:  []string{"--market", "56"},
-			expMsg: &exchange.MsgMarketUpdateEnabledRequest{MarketId: 56},
+			expMsg: &exchange.MsgMarketUpdateAcceptingOrdersRequest{MarketId: 56},
 			expErr: joinErrs(
 				"no <admin> provided",
 				"exactly one of --enable or --disable must be provided",
@@ -910,7 +1274,7 @@ func TestMakeMsgMarketUpdateEnabled(t *testing.T) {
 			name:      "enable",
 			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
 			flags:     []string{"--enable", "--market", "4"},
-			expMsg: &exchange.MsgMarketUpdateEnabledRequest{
+			expMsg: &exchange.MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           sdk.AccAddress("FromAddress_________").String(),
 				MarketId:        4,
 				AcceptingOrders: true,
@@ -920,7 +1284,7 @@ func TestMakeMsgMarketUpdateEnabled(t *testing.T) {
 			name:      "disable",
 			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
 			flags:     []string{"--admin", "Blake", "--market", "94", "--disable"},
-			expMsg: &exchange.MsgMarketUpdateEnabledRequest{
+			expMsg: &exchange.MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           "Blake",
 				MarketId:        94,
 				AcceptingOrders: false,
@@ -1006,6 +1370,170 @@ func TestMakeMsgMarketUpdateUserSettle(t *testing.T) {
 				Admin:               "Blake",
 				MarketId:            94,
 				AllowUserSettlement: false,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxMarketUpdateAcceptingCommitments(t *testing.T) {
+	runSetupTestCase(t, setupTestCase{
+		name:  "SetupCmdTxMarketUpdateAcceptingCommitments",
+		setup: cli.SetupCmdTxMarketUpdateAcceptingCommitments,
+		expFlags: []string{
+			cli.FlagAdmin, cli.FlagAuthority,
+			cli.FlagMarket, cli.FlagEnable, cli.FlagDisable,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
+			cli.FlagAdmin: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagAuthority: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagEnable: {
+				mutExc: {cli.FlagEnable + " " + cli.FlagDisable},
+				oneReq: {cli.FlagEnable + " " + cli.FlagDisable},
+			},
+			cli.FlagDisable: {
+				mutExc: {cli.FlagEnable + " " + cli.FlagDisable},
+				oneReq: {cli.FlagEnable + " " + cli.FlagDisable},
+			},
+		},
+		expInUse: []string{
+			cli.ReqAdminUse, "--market <market id>", cli.ReqEnableDisableUse,
+			cli.ReqAdminDesc, cli.ReqEnableDisableDesc,
+		},
+	})
+}
+
+func TestMakeMsgMarketUpdateAcceptingCommitments(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketUpdateAcceptingCommitmentsRequest]{
+		makerName: "MakeMsgMarketUpdateAcceptingCommitments",
+		maker:     cli.MakeMsgMarketUpdateAcceptingCommitments,
+		setup:     cli.SetupCmdTxMarketUpdateAcceptingCommitments,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgMarketUpdateAcceptingCommitmentsRequest]{
+		{
+			name:   "some errors",
+			flags:  []string{"--market", "56"},
+			expMsg: &exchange.MsgMarketUpdateAcceptingCommitmentsRequest{MarketId: 56},
+			expErr: joinErrs(
+				"no <admin> provided",
+				"exactly one of --enable or --disable must be provided",
+			),
+		},
+		{
+			name:      "enable",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--enable", "--market", "4"},
+			expMsg: &exchange.MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                sdk.AccAddress("FromAddress_________").String(),
+				MarketId:             4,
+				AcceptingCommitments: true,
+			},
+		},
+		{
+			name:      "disable",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--admin", "Blake", "--market", "94", "--disable"},
+			expMsg: &exchange.MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                "Blake",
+				MarketId:             94,
+				AcceptingCommitments: false,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxMarketUpdateIntermediaryDenom(t *testing.T) {
+	runSetupTestCase(t, setupTestCase{
+		name:  "SetupCmdTxMarketUpdateIntermediaryDenom",
+		setup: cli.SetupCmdTxMarketUpdateIntermediaryDenom,
+		expFlags: []string{
+			cli.FlagAdmin, cli.FlagAuthority,
+			cli.FlagMarket, cli.FlagDenom,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			flags.FlagFrom: {oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority}},
+			cli.FlagAdmin: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagAuthority: {
+				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
+				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
+			},
+			cli.FlagMarket: {required: {"true"}},
+			cli.FlagDenom:  {required: {"true"}},
+		},
+		expInUse: []string{
+			cli.ReqAdminUse, "--market <market id>", "--denom <denom>",
+			cli.ReqAdminDesc,
+		},
+	})
+}
+
+func TestMakeMsgMarketUpdateIntermediaryDenom(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgMarketUpdateIntermediaryDenomRequest]{
+		makerName: "MakeMsgMarketUpdateIntermediaryDenom",
+		maker:     cli.MakeMsgMarketUpdateIntermediaryDenom,
+		setup:     cli.SetupCmdTxMarketUpdateIntermediaryDenom,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgMarketUpdateIntermediaryDenomRequest]{
+		{
+			name:  "an error",
+			flags: []string{"--market", "12"},
+			expMsg: &exchange.MsgMarketUpdateIntermediaryDenomRequest{
+				MarketId: 12,
+			},
+			expErr: "no <admin> provided",
+		},
+		{
+			name:      "admin from from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			flags:     []string{"--market", "4", "--denom", "cherry"},
+			expMsg: &exchange.MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             sdk.AccAddress("FromAddress_________").String(),
+				MarketId:          4,
+				IntermediaryDenom: "cherry",
+			},
+		},
+		{
+			name:  "admin from flag",
+			flags: []string{"--market", "51", "--denom", "prune", "--admin", "blake"},
+			expMsg: &exchange.MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             "blake",
+				MarketId:          51,
+				IntermediaryDenom: "prune",
+			},
+		},
+		{
+			name:  "admin as authority",
+			flags: []string{"--market", "7", "--authority", "--denom", "banana"},
+			expMsg: &exchange.MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             cli.AuthorityAddr.String(),
+				MarketId:          7,
+				IntermediaryDenom: "banana",
 			},
 		},
 	}
@@ -1125,12 +1653,13 @@ func TestMakeMsgMarketManagePermissions(t *testing.T) {
 }
 
 func TestSetupCmdTxMarketManageReqAttrs(t *testing.T) {
-	runSetupTestCase(t, setupTestCase{
+	tc := setupTestCase{
 		name:  "SetupCmdTxMarketManageReqAttrs",
 		setup: cli.SetupCmdTxMarketManageReqAttrs,
 		expFlags: []string{
 			cli.FlagAdmin, cli.FlagAuthority, cli.FlagMarket,
 			cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
+			cli.FlagCommitmentAdd, cli.FlagCommitmentRemove,
 			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
 		},
 		expAnnotations: map[string]map[string][]string{
@@ -1143,19 +1672,33 @@ func TestSetupCmdTxMarketManageReqAttrs(t *testing.T) {
 				mutExc: {cli.FlagAdmin + " " + cli.FlagAuthority},
 				oneReq: {flags.FlagFrom + " " + cli.FlagAdmin + " " + cli.FlagAuthority},
 			},
-			cli.FlagMarket:    {required: {"true"}},
-			cli.FlagAskAdd:    {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
-			cli.FlagAskRemove: {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
-			cli.FlagBidAdd:    {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
-			cli.FlagBidRemove: {oneReq: {cli.FlagAskAdd + " " + cli.FlagAskRemove + " " + cli.FlagBidAdd + " " + cli.FlagBidRemove}},
+			cli.FlagMarket: {required: {"true"}},
 		},
 		expInUse: []string{
 			cli.ReqAdminUse, "--market <market id>",
 			"[--ask-add <attrs>]", "[--ask-remove <attrs>]",
 			"[--bid-add <attrs>]", "[--bid-remove <attrs>]",
+			"[--commitment-add <attrs>]", "[--commitment-remove <attrs>]",
 			cli.ReqAdminDesc, cli.RepeatableDesc,
 		},
-	})
+	}
+
+	oneReqFlags := []string{
+		cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
+		cli.FlagCommitmentAdd, cli.FlagCommitmentRemove,
+	}
+	oneReqVal := strings.Join(oneReqFlags, " ")
+	if tc.expAnnotations == nil {
+		tc.expAnnotations = make(map[string]map[string][]string)
+	}
+	for _, name := range oneReqFlags {
+		if tc.expAnnotations[name] == nil {
+			tc.expAnnotations[name] = make(map[string][]string)
+		}
+		tc.expAnnotations[name][oneReq] = []string{oneReqVal}
+	}
+
+	runSetupTestCase(t, tc)
 }
 
 func TestMakeMsgMarketManageReqAttrs(t *testing.T) {
@@ -1170,11 +1713,13 @@ func TestMakeMsgMarketManageReqAttrs(t *testing.T) {
 			name:  "no admin",
 			flags: []string{"--market", "41", "--bid-add", "*.kyc"},
 			expMsg: &exchange.MsgMarketManageReqAttrsRequest{
-				MarketId:          41,
-				CreateAskToAdd:    []string{},
-				CreateAskToRemove: []string{},
-				CreateBidToAdd:    []string{"*.kyc"},
-				CreateBidToRemove: []string{},
+				MarketId:                 41,
+				CreateAskToAdd:           []string{},
+				CreateAskToRemove:        []string{},
+				CreateBidToAdd:           []string{"*.kyc"},
+				CreateBidToRemove:        []string{},
+				CreateCommitmentToAdd:    []string{},
+				CreateCommitmentToRemove: []string{},
 			},
 			expErr: "no <admin> provided",
 		},
@@ -1185,14 +1730,527 @@ func TestMakeMsgMarketManageReqAttrs(t *testing.T) {
 				"--market", "44444",
 				"--ask-add", "def.abc,*.xyz", "--ask-remove", "uvw.xyz",
 				"--bid-add", "ghi.abc,*.xyz", "--bid-remove", "rst.xyz",
+				"--commitment-add", "jkl.abc,*.xyz", "--commitment-remove", "opq.xyz",
 			},
 			expMsg: &exchange.MsgMarketManageReqAttrsRequest{
-				Admin:             sdk.AccAddress("FromAddress_________").String(),
-				MarketId:          44444,
-				CreateAskToAdd:    []string{"def.abc", "*.xyz"},
-				CreateAskToRemove: []string{"uvw.xyz"},
-				CreateBidToAdd:    []string{"ghi.abc", "*.xyz"},
-				CreateBidToRemove: []string{"rst.xyz"},
+				Admin:                    sdk.AccAddress("FromAddress_________").String(),
+				MarketId:                 44444,
+				CreateAskToAdd:           []string{"def.abc", "*.xyz"},
+				CreateAskToRemove:        []string{"uvw.xyz"},
+				CreateBidToAdd:           []string{"ghi.abc", "*.xyz"},
+				CreateBidToRemove:        []string{"rst.xyz"},
+				CreateCommitmentToAdd:    []string{"jkl.abc", "*.xyz"},
+				CreateCommitmentToRemove: []string{"opq.xyz"},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxCreatePayment(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxCreatePayment",
+		setup: cli.SetupCmdTxCreatePayment,
+		expFlags: []string{
+			cli.FlagSource, cli.FlagSourceAmount,
+			cli.FlagTarget, cli.FlagTargetAmount,
+			cli.FlagExternalID, cli.FlagFile,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expInUse: []string{
+			"{--from|--source} <source>", "[--source-amount <source amount>]",
+			"[--target <target>]", "[--target-amount <target amount>]",
+			"[--external-id <external id>]", "[--file <filename>]",
+			cli.ReqSignerDesc(cli.FlagSource),
+			cli.MsgFileDesc(&exchange.MsgCreatePaymentRequest{}),
+		},
+	}
+	addOneReqAnnotations(&tc, cli.FlagFile, flags.FlagFrom, cli.FlagSource)
+
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeMsgCreatePayment(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgCreatePaymentRequest]{
+		makerName: "MakeMsgCreatePayment",
+		maker:     cli.MakeMsgCreatePayment,
+		setup:     cli.SetupCmdTxCreatePayment,
+	}
+
+	coins := func(str string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+	testAddr := func(prefix string) string {
+		return sdk.AccAddress(prefix + strings.Repeat("_", 20-len(prefix))).String()
+	}
+	newPayment := func(sourceAddrPrefix, sourceAmount, targetAddrPrefix, targetAmount, externalID string) exchange.Payment {
+		return exchange.Payment{
+			Source:       testAddr(sourceAddrPrefix),
+			SourceAmount: coins(sourceAmount),
+			Target:       testAddr(targetAddrPrefix),
+			TargetAmount: coins(targetAmount),
+			ExternalId:   externalID,
+		}
+	}
+
+	filePayment := newPayment("file_source", "88strawberry", "file_target", "44tangerine", "some-file-id")
+	fileMsg := &exchange.MsgCreatePaymentRequest{Payment: filePayment}
+	tx := newTx(t, fileMsg)
+	tdir := t.TempDir()
+	txFN := filepath.Join(tdir, "create-payment.json")
+	writeFileAsJson(t, txFN, tx)
+
+	tests := []txMakerTestCase[*exchange.MsgCreatePaymentRequest]{
+		{
+			name: "no source",
+			flags: []string{
+				"--source-amount", "3starfruit",
+				"--target", testAddr("some-target"),
+			},
+			expMsg: &exchange.MsgCreatePaymentRequest{Payment: exchange.Payment{
+				Source:       "",
+				SourceAmount: coins("3starfruit"),
+				Target:       testAddr("some-target"),
+				TargetAmount: nil,
+				ExternalId:   "",
+			}},
+			expErr: "no <source> provided",
+		},
+		{
+			name:      "all fields",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("source_from_from____")},
+			flags: []string{
+				"--external-id", "random-dcic",
+				"--target", testAddr("my-target"),
+				"--source-amount", "13strawberry",
+				"--target-amount", "31tangerine",
+			},
+			expMsg: &exchange.MsgCreatePaymentRequest{Payment: exchange.Payment{
+				Source:       sdk.AccAddress("source_from_from____").String(),
+				SourceAmount: coins("13strawberry"),
+				Target:       testAddr("my-target"),
+				TargetAmount: coins("31tangerine"),
+				ExternalId:   "random-dcic",
+			}},
+		},
+		{
+			name:      "from file",
+			clientCtx: clientContextWithCodec(client.Context{}),
+			flags:     []string{"--file", txFN},
+			expMsg:    &exchange.MsgCreatePaymentRequest{Payment: filePayment},
+		},
+		{
+			name:      "from file with override",
+			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("another_from________")}),
+			flags:     []string{"--external-id", "something-else", "--file", txFN},
+			expMsg: &exchange.MsgCreatePaymentRequest{Payment: exchange.Payment{
+				Source:       sdk.AccAddress("another_from________").String(),
+				SourceAmount: filePayment.SourceAmount,
+				Target:       filePayment.Target,
+				TargetAmount: filePayment.TargetAmount,
+				ExternalId:   "something-else",
+			}},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxAcceptPayment(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxAcceptPayment",
+		setup: cli.SetupCmdTxAcceptPayment,
+		expFlags: []string{
+			cli.FlagSource, cli.FlagSourceAmount,
+			cli.FlagTarget, cli.FlagTargetAmount,
+			cli.FlagExternalID, cli.FlagFile,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expInUse: []string{
+			"[--source <source>]", "[--source-amount <source amount>]",
+			"{--from|--target} <target>", "[--target-amount <target amount>]",
+			"[--external-id <external id>]", "[--file <filename>]",
+			cli.ReqSignerDesc(cli.FlagTarget),
+			cli.MsgFileDesc(&exchange.MsgAcceptPaymentRequest{}),
+		},
+	}
+	addOneReqAnnotations(&tc, cli.FlagFile, flags.FlagFrom, cli.FlagTarget)
+
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeMsgAcceptPayment(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgAcceptPaymentRequest]{
+		makerName: "MakeMsgAcceptPayment",
+		maker:     cli.MakeMsgAcceptPayment,
+		setup:     cli.SetupCmdTxAcceptPayment,
+	}
+
+	coins := func(str string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(str)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", str)
+		return rv
+	}
+	testAddr := func(prefix string) string {
+		return sdk.AccAddress(prefix + strings.Repeat("_", 20-len(prefix))).String()
+	}
+	newPayment := func(sourceAddrPrefix, sourceAmount, targetAddrPrefix, targetAmount, externalID string) exchange.Payment {
+		return exchange.Payment{
+			Source:       testAddr(sourceAddrPrefix),
+			SourceAmount: coins(sourceAmount),
+			Target:       testAddr(targetAddrPrefix),
+			TargetAmount: coins(targetAmount),
+			ExternalId:   externalID,
+		}
+	}
+
+	filePayment := newPayment("file_source", "9strawberry", "file_target", "5tangerine", "some-other-file-id")
+	fileMsg := &exchange.MsgAcceptPaymentRequest{Payment: filePayment}
+	tx := newTx(t, fileMsg)
+	tdir := t.TempDir()
+	txFN := filepath.Join(tdir, "accept-payment.json")
+	writeFileAsJson(t, txFN, tx)
+
+	tests := []txMakerTestCase[*exchange.MsgAcceptPaymentRequest]{
+		{
+			name: "no target",
+			flags: []string{
+				"--source-amount", "4starfruit",
+				"--source", testAddr("some-source"),
+			},
+			expMsg: &exchange.MsgAcceptPaymentRequest{Payment: exchange.Payment{
+				Source:       testAddr("some-source"),
+				SourceAmount: coins("4starfruit"),
+				Target:       "",
+				TargetAmount: nil,
+				ExternalId:   "",
+			}},
+			expErr: "no <target> provided",
+		},
+		{
+			name:      "all fields",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("target_from_from____")},
+			flags: []string{
+				"--external-id", "random-9scik2",
+				"--source", testAddr("my-source"),
+				"--source-amount", "130strawberry",
+				"--target-amount", "310tangerine",
+			},
+			expMsg: &exchange.MsgAcceptPaymentRequest{Payment: exchange.Payment{
+				Source:       testAddr("my-source"),
+				SourceAmount: coins("130strawberry"),
+				Target:       sdk.AccAddress("target_from_from____").String(),
+				TargetAmount: coins("310tangerine"),
+				ExternalId:   "random-9scik2",
+			}},
+		},
+		{
+			name:      "from file",
+			clientCtx: clientContextWithCodec(client.Context{}),
+			flags:     []string{"--file", txFN},
+			expMsg:    &exchange.MsgAcceptPaymentRequest{Payment: filePayment},
+		},
+		{
+			name:      "from file with override",
+			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("another_from________")}),
+			flags:     []string{"--external-id", "something-else", "--file", txFN},
+			expMsg: &exchange.MsgAcceptPaymentRequest{Payment: exchange.Payment{
+				Source:       filePayment.Source,
+				SourceAmount: filePayment.SourceAmount,
+				Target:       sdk.AccAddress("another_from________").String(),
+				TargetAmount: filePayment.TargetAmount,
+				ExternalId:   "something-else",
+			}},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxRejectPayment(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxRejectPayment",
+		setup: cli.SetupCmdTxRejectPayment,
+		expFlags: []string{
+			cli.FlagTarget, cli.FlagSource, cli.FlagExternalID,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			cli.FlagSource: {required: {"true"}},
+		},
+		expInUse: []string{
+			"{--from|--target} <target>", "--source <source>", "[--external-id <external id>",
+			cli.ReqSignerDesc(cli.FlagTarget),
+		},
+	}
+	addOneReqAnnotations(&tc, flags.FlagFrom, cli.FlagTarget)
+
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeMsgRejectPayment(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgRejectPaymentRequest]{
+		makerName: "MakeMsgRejectPayment",
+		maker:     cli.MakeMsgRejectPayment,
+		setup:     cli.SetupCmdTxRejectPayment,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgRejectPaymentRequest]{
+		{
+			name:  "no target",
+			flags: []string{"--source", "the-source"},
+			expMsg: &exchange.MsgRejectPaymentRequest{
+				Target:     "",
+				Source:     "the-source",
+				ExternalId: "",
+			},
+			expErr: "no <target> provided",
+		},
+		{
+			name:      "no external id",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("this-is-me")},
+			flags:     []string{"--source", "this-is-you"},
+			expMsg: &exchange.MsgRejectPaymentRequest{
+				Target:     sdk.AccAddress("this-is-me").String(),
+				Source:     "this-is-you",
+				ExternalId: "",
+			},
+		},
+		{
+			name: "all given",
+			flags: []string{
+				"--target", "jake",
+				"--source", "elroy",
+				"--external-id", "one-two-aone two three four",
+			},
+			expMsg: &exchange.MsgRejectPaymentRequest{
+				Target:     "jake",
+				Source:     "elroy",
+				ExternalId: "one-two-aone two three four",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxRejectPayments(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxRejectPayments",
+		setup: cli.SetupCmdTxRejectPayments,
+		expFlags: []string{
+			cli.FlagTarget, cli.FlagSources,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			cli.FlagSources: {required: {"true"}},
+		},
+		expInUse: []string{
+			"{--from|--target} <target>", "--sources <sources>",
+			cli.ReqSignerDesc(cli.FlagTarget),
+			cli.RepeatableDesc,
+		},
+	}
+	addOneReqAnnotations(&tc, flags.FlagFrom, cli.FlagTarget)
+
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeMsgRejectPayments(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgRejectPaymentsRequest]{
+		makerName: "MakeMsgRejectPayments",
+		maker:     cli.MakeMsgRejectPayments,
+		setup:     cli.SetupCmdTxRejectPayments,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgRejectPaymentsRequest]{
+		{
+			name:  "no target",
+			flags: []string{"--sources", "source1,source2"},
+			expMsg: &exchange.MsgRejectPaymentsRequest{
+				Target:  "",
+				Sources: []string{"source1", "source2"},
+			},
+			expErr: "no <target> provided",
+		},
+		{
+			name:      "target from from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("this-is-me")},
+			flags:     []string{"--sources", "this-is-you"},
+			expMsg: &exchange.MsgRejectPaymentsRequest{
+				Target:  sdk.AccAddress("this-is-me").String(),
+				Sources: []string{"this-is-you"},
+			},
+		},
+		{
+			name: "all given",
+			flags: []string{
+				"--sources", "anthony,chad",
+				"--target", "flea",
+				"--sources", "john",
+			},
+			expMsg: &exchange.MsgRejectPaymentsRequest{
+				Target:  "flea",
+				Sources: []string{"anthony", "chad", "john"},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxCancelPayments(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxCancelPayments",
+		setup: cli.SetupCmdTxCancelPayments,
+		expFlags: []string{
+			cli.FlagSource, cli.FlagExternalIDs, cli.FlagEmptyExternalID,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expAnnotations: map[string]map[string][]string{
+			cli.FlagExternalIDs: {required: {"true"}},
+		},
+		expInUse: []string{
+			"{--from|--source} <source>", "--external-ids <external ids>",
+			"[--empty-external-id]",
+			cli.ReqSignerDesc(cli.FlagSource),
+			cli.RepeatableDesc,
+		},
+	}
+	addOneReqAnnotations(&tc, flags.FlagFrom, cli.FlagSource)
+
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeMsgCancelPayments(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgCancelPaymentsRequest]{
+		makerName: "MakeMsgCancelPayments",
+		maker:     cli.MakeMsgCancelPayments,
+		setup:     cli.SetupCmdTxCancelPayments,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgCancelPaymentsRequest]{
+		{
+			name:  "no source",
+			flags: []string{"--external-ids", "id1,id2"},
+			expMsg: &exchange.MsgCancelPaymentsRequest{
+				Source:      "",
+				ExternalIds: []string{"id1", "id2"},
+			},
+			expErr: "no <source> provided",
+		},
+		{
+			name:      "source from from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("the_from_address____")},
+			flags:     []string{"--external-ids", "the-id"},
+			expMsg: &exchange.MsgCancelPaymentsRequest{
+				Source:      sdk.AccAddress("the_from_address____").String(),
+				ExternalIds: []string{"the-id"},
+			},
+		},
+		{
+			name: "all given",
+			flags: []string{
+				"--external-ids", "a,b,c",
+				"--source", "myself",
+				"--empty-external-id",
+				"--external-ids", "def,ghi",
+			},
+			expMsg: &exchange.MsgCancelPaymentsRequest{
+				Source:      "myself",
+				ExternalIds: []string{"a", "b", "c", "def", "ghi", ""},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxChangePaymentTarget(t *testing.T) {
+	tc := setupTestCase{
+		name:  "SetupCmdTxChangePaymentTarget",
+		setup: cli.SetupCmdTxChangePaymentTarget,
+		expFlags: []string{
+			cli.FlagSource, cli.FlagExternalID, cli.FlagNewTarget,
+			flags.FlagFrom, // not added by setup, but include so the annotation is checked.
+		},
+		expInUse: []string{
+			"{--from|--source} <source>",
+			"[--external-id <external id>]", "[--new-target <new target>]",
+			cli.ReqSignerDesc(cli.FlagSource),
+		},
+	}
+	addOneReqAnnotations(&tc, flags.FlagFrom, cli.FlagSource)
+
+	runSetupTestCase(t, tc)
+}
+
+func TestMakeMsgChangePaymentTarget(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgChangePaymentTargetRequest]{
+		makerName: "MakeMsgChangePaymentTarget",
+		maker:     cli.MakeMsgChangePaymentTarget,
+		setup:     cli.SetupCmdTxChangePaymentTarget,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgChangePaymentTargetRequest]{
+		{
+			name:  "no source",
+			flags: []string{},
+			expMsg: &exchange.MsgChangePaymentTargetRequest{
+				Source:     "",
+				ExternalId: "",
+				NewTarget:  "",
+			},
+			expErr: "no <source> provided",
+		},
+		{
+			name:      "source from from",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("the_from_address____")},
+			flags:     []string{},
+			expMsg: &exchange.MsgChangePaymentTargetRequest{
+				Source:     sdk.AccAddress("the_from_address____").String(),
+				ExternalId: "",
+				NewTarget:  "",
+			},
+		},
+		{
+			name: "all given",
+			flags: []string{
+				"--source", "thesource",
+				"--new-target", "thenewtarget",
+				"--external-id", "theexternalidentifier",
+			},
+			expMsg: &exchange.MsgChangePaymentTargetRequest{
+				Source:     "thesource",
+				ExternalId: "theexternalidentifier",
+				NewTarget:  "thenewtarget",
 			},
 		},
 	}
@@ -1211,21 +2269,23 @@ func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 		expFlags: []string{
 			cli.FlagAuthority,
 			cli.FlagMarket, cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon,
-			cli.FlagCreateAsk, cli.FlagCreateBid,
+			cli.FlagCreateAsk, cli.FlagCreateBid, cli.FlagCreateCommitment,
 			cli.FlagSellerFlat, cli.FlagSellerRatios, cli.FlagBuyerFlat, cli.FlagBuyerRatios,
-			cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAccessGrants,
-			cli.FlagReqAttrAsk, cli.FlagReqAttrBid,
+			cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAcceptingCommitments, cli.FlagAccessGrants,
+			cli.FlagReqAttrAsk, cli.FlagReqAttrBid, cli.FlagReqAttrCommitment,
+			cli.FlagBips, cli.FlagDenom,
 			cli.FlagProposal,
 		},
 		expInUse: []string{
 			"[--authority <authority>]", "[--market <market id>]",
 			"[--name <name>]", "[--description <description>]", "[--url <website url>]", "[--icon <icon uri>]",
-			"[--create-ask <coins>]", "[--create-bid <coins>]",
+			"[--create-ask <coins>]", "[--create-bid <coins>]", "[--create-commitment <coins>]",
 			"[--seller-flat <coins>]", "[--seller-ratios <fee ratios>]",
 			"[--buyer-flat <coins>]", "[--buyer-ratios <fee ratios>]",
-			"[--accepting-orders]", "[--allow-user-settle]",
+			"[--accepting-orders]", "[--allow-user-settle]", "[--accepting-commitments]",
 			"[--access-grants <access grants>]",
-			"[--req-attr-ask <attrs>]", "[--req-attr-bid <attrs>]",
+			"[--req-attr-ask <attrs>]", "[--req-attr-bid <attrs>]", "[--req-attr-commitment <attrs>]",
+			"[--bips <bips>]", "[--denom <denom>]",
 			"[--proposal <json filename>",
 			cli.AuthorityDesc, cli.RepeatableDesc, cli.AccessGrantsDesc, cli.FeeRatioDesc,
 			cli.ProposalFileDesc(&exchange.MsgGovCreateMarketRequest{}),
@@ -1234,10 +2294,11 @@ func TestSetupCmdTxGovCreateMarket(t *testing.T) {
 
 	oneReqFlags := []string{
 		cli.FlagMarket, cli.FlagName, cli.FlagDescription, cli.FlagURL, cli.FlagIcon,
-		cli.FlagCreateAsk, cli.FlagCreateBid,
+		cli.FlagCreateAsk, cli.FlagCreateBid, cli.FlagCreateCommitment,
 		cli.FlagSellerFlat, cli.FlagSellerRatios, cli.FlagBuyerFlat, cli.FlagBuyerRatios,
-		cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAccessGrants,
-		cli.FlagReqAttrAsk, cli.FlagReqAttrBid,
+		cli.FlagAcceptingOrders, cli.FlagAllowUserSettle, cli.FlagAcceptingCommitments, cli.FlagAccessGrants,
+		cli.FlagReqAttrAsk, cli.FlagReqAttrBid, cli.FlagReqAttrCommitment,
+		cli.FlagBips, cli.FlagDenom,
 		cli.FlagProposal,
 	}
 	oneReqVal := strings.Join(oneReqFlags, " ")
@@ -1293,6 +2354,12 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 			},
 			ReqAttrCreateAsk: []string{"ask.create"},
 			ReqAttrCreateBid: []string{"bid.create"},
+
+			AcceptingCommitments:     true,
+			FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("elderberry", 5)},
+			CommitmentSettlementBips: 84,
+			IntermediaryDenom:        "fig",
+			ReqAttrCreateCommitment:  []string{"commitment.create"},
 		},
 	}
 	prop := newGovProp(t, fileMsg)
@@ -1326,15 +2393,16 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
 			flags: []string{
 				"--market", "18",
-				"--create-ask", "10fig", "--create-bid", "5grape",
+				"--create-ask", "10fig", "--create-bid", "5grape", "--create-commitment", "7honeydew",
 				"--seller-flat", "12fig", "--seller-ratios", "100prune:1prune",
 				"--buyer-flat", "17fig", "--buyer-ratios", "88plum:3plum",
-				"--accepting-orders", "--allow-user-settle",
+				"--accepting-orders", "--allow-user-settle", "--accepting-commitments",
 				"--access-grants", "addr1:settle+cancel", "--access-grants", "addr2:update+permissions",
-				"--req-attr-ask", "seller.kyc", "--req-attr-bid", "buyer.kyc",
+				"--req-attr-ask", "seller.kyc", "--req-attr-bid", "buyer.kyc", "--req-attr-commitment", "com.kyc",
 				"--name", "Special market", "--description", "This market is special.",
 				"--url", "https://example.com", "--icon", "https://example.com/icon",
 				"--access-grants", "addr3:all",
+				"--bips", "47", "--denom", "raisin",
 			},
 			expMsg: &exchange.MsgGovCreateMarketRequest{
 				Authority: cli.AuthorityAddr.String(),
@@ -1374,6 +2442,12 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 					},
 					ReqAttrCreateAsk: []string{"seller.kyc"},
 					ReqAttrCreateBid: []string{"buyer.kyc"},
+
+					AcceptingCommitments:     true,
+					FeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("honeydew", 7)},
+					CommitmentSettlementBips: 47,
+					IntermediaryDenom:        "raisin",
+					ReqAttrCreateCommitment:  []string{"com.kyc"},
 				},
 			},
 		},
@@ -1403,6 +2477,11 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 					AccessGrants:              fileMsg.Market.AccessGrants,
 					ReqAttrCreateAsk:          fileMsg.Market.ReqAttrCreateAsk,
 					ReqAttrCreateBid:          fileMsg.Market.ReqAttrCreateBid,
+					AcceptingCommitments:      fileMsg.Market.AcceptingCommitments,
+					FeeCreateCommitmentFlat:   fileMsg.Market.FeeCreateCommitmentFlat,
+					CommitmentSettlementBips:  fileMsg.Market.CommitmentSettlementBips,
+					IntermediaryDenom:         fileMsg.Market.IntermediaryDenom,
+					ReqAttrCreateCommitment:   fileMsg.Market.ReqAttrCreateCommitment,
 				},
 			},
 		},
@@ -1424,6 +2503,7 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 			cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
 			cli.FlagSellerFlatAdd, cli.FlagSellerFlatRemove, cli.FlagSellerRatiosAdd, cli.FlagSellerRatiosRemove,
 			cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
+			cli.FlagCommitmentAdd, cli.FlagCommitmentRemove, cli.FlagBips, cli.FlagUnsetBips,
 			cli.FlagProposal,
 		},
 		expAnnotations: map[string]map[string][]string{
@@ -1433,10 +2513,12 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 			"--market <market id>", "[--authority <authority>]",
 			"[--ask-add <coins>]", "[--ask-remove <coins>]",
 			"[--bid-add <coins>]", "[--bid-remove <coins>]",
+			"[--commitment-add <coins>]", "[--commitment-remove <coins>]",
 			"[--seller-flat-add <coins>]", "[--seller-flat-remove <coins>]",
 			"[--seller-ratios-add <fee ratios>]", "[--seller-ratios-remove <fee ratios>]",
 			"[--buyer-flat-add <coins>]", "[--buyer-flat-remove <coins>]",
 			"[--buyer-ratios-add <fee ratios>]", "[--buyer-ratios-remove <fee ratios>]",
+			"[--bips <bips>]", "[--unset-bips]",
 			"[--proposal <json filename>",
 			cli.AuthorityDesc, cli.RepeatableDesc, cli.FeeRatioDesc,
 			cli.ProposalFileDesc(&exchange.MsgGovManageFeesRequest{}),
@@ -1447,6 +2529,7 @@ func TestSetupCmdTxGovManageFees(t *testing.T) {
 		cli.FlagAskAdd, cli.FlagAskRemove, cli.FlagBidAdd, cli.FlagBidRemove,
 		cli.FlagSellerFlatAdd, cli.FlagSellerFlatRemove, cli.FlagSellerRatiosAdd, cli.FlagSellerRatiosRemove,
 		cli.FlagBuyerFlatAdd, cli.FlagBuyerFlatRemove, cli.FlagBuyerRatiosAdd, cli.FlagBuyerRatiosRemove,
+		cli.FlagCommitmentAdd, cli.FlagCommitmentRemove, cli.FlagBips, cli.FlagUnsetBips,
 		cli.FlagProposal,
 	}
 	oneReqVal := strings.Join(oneReqFlags, " ")
@@ -1495,6 +2578,9 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 		RemoveFeeBuyerSettlementRatios: []exchange.FeeRatio{
 			{Price: sdk.NewInt64Coin("keylime", 104), Fee: sdk.NewInt64Coin("keylime", 4)},
 		},
+		AddFeeCreateCommitmentFlat:     []sdk.Coin{sdk.NewInt64Coin("lemon", 13)},
+		RemoveFeeCreateCommitmentFlat:  []sdk.Coin{sdk.NewInt64Coin("lime", 14)},
+		SetFeeCommitmentSettlementBips: 15,
 	}
 	prop := newGovProp(t, fileMsg)
 	tx := newTx(t, prop)
@@ -1527,6 +2613,8 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 				"--seller-ratios-add", "101prune:7prune", "--seller-ratios-remove", "101prune:3prune",
 				"--buyer-flat-add", "59prune", "--buyer-flat-remove", "57prune",
 				"--buyer-ratios-add", "107prune:1prune", "--buyer-ratios-remove", "43prune:2prune",
+				"--commitment-add", "20lychee", "--commitment-remove", "21lingonberry",
+				"--bips", "87", "--unset-bips",
 			},
 			expMsg: &exchange.MsgGovManageFeesRequest{
 				Authority:                     cli.AuthorityAddr.String(),
@@ -1551,6 +2639,10 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 				RemoveFeeBuyerSettlementRatios: []exchange.FeeRatio{
 					{Price: sdk.NewInt64Coin("prune", 43), Fee: sdk.NewInt64Coin("prune", 2)},
 				},
+				AddFeeCreateCommitmentFlat:       []sdk.Coin{sdk.NewInt64Coin("lychee", 20)},
+				RemoveFeeCreateCommitmentFlat:    []sdk.Coin{sdk.NewInt64Coin("lingonberry", 21)},
+				SetFeeCommitmentSettlementBips:   87,
+				UnsetFeeCommitmentSettlementBips: true,
 			},
 		},
 		{
@@ -1564,22 +2656,75 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
 			flags:     []string{"--market", "5", "--proposal", propFN},
 			expMsg: &exchange.MsgGovManageFeesRequest{
-				Authority:                       fileMsg.Authority,
-				MarketId:                        5,
-				AddFeeCreateAskFlat:             fileMsg.AddFeeCreateAskFlat,
-				RemoveFeeCreateAskFlat:          fileMsg.RemoveFeeCreateAskFlat,
-				AddFeeCreateBidFlat:             fileMsg.AddFeeCreateBidFlat,
-				RemoveFeeCreateBidFlat:          fileMsg.RemoveFeeCreateBidFlat,
-				AddFeeSellerSettlementFlat:      fileMsg.AddFeeSellerSettlementFlat,
-				RemoveFeeSellerSettlementFlat:   fileMsg.RemoveFeeSellerSettlementFlat,
-				AddFeeSellerSettlementRatios:    fileMsg.AddFeeSellerSettlementRatios,
-				RemoveFeeSellerSettlementRatios: fileMsg.RemoveFeeSellerSettlementRatios,
-				AddFeeBuyerSettlementFlat:       fileMsg.AddFeeBuyerSettlementFlat,
-				RemoveFeeBuyerSettlementFlat:    fileMsg.RemoveFeeBuyerSettlementFlat,
-				AddFeeBuyerSettlementRatios:     fileMsg.AddFeeBuyerSettlementRatios,
-				RemoveFeeBuyerSettlementRatios:  fileMsg.RemoveFeeBuyerSettlementRatios,
+				Authority:                        fileMsg.Authority,
+				MarketId:                         5,
+				AddFeeCreateAskFlat:              fileMsg.AddFeeCreateAskFlat,
+				RemoveFeeCreateAskFlat:           fileMsg.RemoveFeeCreateAskFlat,
+				AddFeeCreateBidFlat:              fileMsg.AddFeeCreateBidFlat,
+				RemoveFeeCreateBidFlat:           fileMsg.RemoveFeeCreateBidFlat,
+				AddFeeSellerSettlementFlat:       fileMsg.AddFeeSellerSettlementFlat,
+				RemoveFeeSellerSettlementFlat:    fileMsg.RemoveFeeSellerSettlementFlat,
+				AddFeeSellerSettlementRatios:     fileMsg.AddFeeSellerSettlementRatios,
+				RemoveFeeSellerSettlementRatios:  fileMsg.RemoveFeeSellerSettlementRatios,
+				AddFeeBuyerSettlementFlat:        fileMsg.AddFeeBuyerSettlementFlat,
+				RemoveFeeBuyerSettlementFlat:     fileMsg.RemoveFeeBuyerSettlementFlat,
+				AddFeeBuyerSettlementRatios:      fileMsg.AddFeeBuyerSettlementRatios,
+				RemoveFeeBuyerSettlementRatios:   fileMsg.RemoveFeeBuyerSettlementRatios,
+				AddFeeCreateCommitmentFlat:       fileMsg.AddFeeCreateCommitmentFlat,
+				RemoveFeeCreateCommitmentFlat:    fileMsg.RemoveFeeCreateCommitmentFlat,
+				SetFeeCommitmentSettlementBips:   fileMsg.SetFeeCommitmentSettlementBips,
+				UnsetFeeCommitmentSettlementBips: fileMsg.UnsetFeeCommitmentSettlementBips,
 			},
 			expErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runTxMakerTestCase(t, td, tc)
+		})
+	}
+}
+
+func TestSetupCmdTxGovCloseMarket(t *testing.T) {
+	runSetupTestCase(t, setupTestCase{
+		name:  "SetupCmdTxGovCloseMarket",
+		setup: cli.SetupCmdTxGovCloseMarket,
+		expFlags: []string{
+			cli.FlagAuthority, cli.FlagMarket,
+		},
+		expAnnotations: map[string]map[string][]string{
+			cli.FlagMarket: {required: {"true"}},
+		},
+		expInUse: []string{
+			"--market <market id>", "[--authority <authority>]",
+			cli.AuthorityDesc,
+		},
+	})
+}
+
+func TestMakeMsgGovCloseMarket(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgGovCloseMarketRequest]{
+		makerName: "MakeMsgGovCloseMarket",
+		maker:     cli.MakeMsgGovCloseMarket,
+		setup:     cli.SetupCmdTxGovCloseMarket,
+	}
+
+	tests := []txMakerTestCase[*exchange.MsgGovCloseMarketRequest]{
+		{
+			name:      "nothing",
+			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
+			expMsg: &exchange.MsgGovCloseMarketRequest{
+				Authority: cli.AuthorityAddr.String(),
+			},
+		},
+		{
+			name:  "everything",
+			flags: []string{"--market", "2", "--authority", "alex"},
+			expMsg: &exchange.MsgGovCloseMarketRequest{
+				Authority: "alex",
+				MarketId:  2,
+			},
 		},
 	}
 

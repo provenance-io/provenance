@@ -1,6 +1,7 @@
 syntax = "proto3";
 package provenance.trigger.v1;
 
+import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
@@ -19,6 +20,8 @@ service Msg {
 
 // MsgCreateTriggerRequest is the request type for creating a trigger RPC
 message MsgCreateTriggerRequest {
+  option (cosmos.msg.v1.signer) = "authorities";
+
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
 
@@ -38,6 +41,8 @@ message MsgCreateTriggerResponse {
 
 // MsgDestroyTriggerRequest is the request type for creating a trigger RPC
 message MsgDestroyTriggerRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
 

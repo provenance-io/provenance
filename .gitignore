@@ -21,7 +21,7 @@ vendor/
 # VS Code
 .history/
 .vscode/
-__debug_bin
+__debug_bin*
 
 # Eclipse
 .project

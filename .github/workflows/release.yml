@@ -66,7 +66,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Build osx binary
@@ -77,7 +77,7 @@ jobs:
         # TODO[1760]: github: Re-enable the build_osx provenanced version step.
         if: false
         run: build/provenanced version --long
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: osx-zip
           path: build/*.zip
@@ -93,7 +93,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Install deps
@@ -111,7 +111,7 @@ jobs:
       - name: Compile Tests
         # TODO[1760]: github: Delete this build_linux Compile Tests step.
         run: go test -mod=readonly -timeout 30m -tags='norace ledger test_ledger_mock' -run='ZYX_NOT_A_REAL_TEST_XZY' ./...
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-zip
           path: build/provenance*.zip
@@ -126,7 +126,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Buf setup action
-        uses: bufbuild/buf-setup-action@v1.28.1
+        uses: bufbuild/buf-setup-action@v1.30.0
       - name: Buf push 'proto/'
         uses: bufbuild/buf-push-action@v1
         with:
@@ -168,11 +168,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Download linux zip artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: linux-zip
           path: build/
@@ -232,7 +232,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Java Setup
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: 11

@@ -155,10 +155,10 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 				SupplyFixed:            true,
 				AllowGovernanceControl: true,
 				AllowForcedTransfer:    false,
-				UsdCents:               1,
+				UsdMills:               1,
 				Volume:                 0,
 			},
-			expErr: `cannot set net asset value : marker net asset value volume must be positive value: invalid request`,
+			expErr: `cannot set net asset value: marker net asset value volume must be positive value: invalid request`,
 		},
 		{
 			name: "successfully Add marker with nav",
@@ -171,7 +171,7 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 				SupplyFixed:            true,
 				AllowGovernanceControl: true,
 				AllowForcedTransfer:    false,
-				UsdCents:               1,
+				UsdMills:               1,
 				Volume:                 10,
 			},
 			expEvent: []proto.Message{
@@ -277,6 +277,13 @@ func (s *MsgServerTestSuite) containsMessage(events []abci.Event, msg proto.Mess
 		}
 	}
 	return false
+}
+
+// noAccessErr creates an expected error message for an address not having access on a marker.
+func (s *MsgServerTestSuite) noAccessErr(addr string, role types.Access, denom string) string {
+	mAddr, err := types.MarkerAddress(denom)
+	s.Require().NoError(err, "MarkerAddress(%q)", denom)
+	return fmt.Sprintf("%s does not have %s on %s marker (%s)", addr, role, denom, mAddr)
 }
 
 func (s *MsgServerTestSuite) TestMsgFinalizeMarkerRequest() {
@@ -566,7 +573,7 @@ func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 		{
 			name:   "should fail, signer does not have admin access",
 			msg:    types.MsgUpdateSendDenyListRequest{Denom: rMarkerDenom, Authority: notAuthUser.String(), RemoveDeniedAddresses: []string{}, AddDeniedAddresses: []string{}},
-			expErr: "cosmos1ku2jzvpkt4ffxxaajyk2r88axk9cr5jqlthcm4 does not have transfer authority for restricted-marker marker",
+			expErr: fmt.Sprintf("%s does not have %s on %s marker (%s)", notAuthUser, types.Access_Transfer, rMarkerDenom, rMarkerAcct.Address),
 		},
 		{
 			name:   "should fail, gov not enabled for restricted marker",
@@ -1252,13 +1259,13 @@ func (s *MsgServerTestSuite) TestMsgAddFinalizeActivateMarkerRequest() {
 			expectedEvent: types.NewEventMarkerMint("1000", denom, s.owner1),
 		},
 		{
-			name: "should fail to  burn denom, user doesn't have permissions",
+			name: "should fail to burn denom, user doesn't have permissions",
 			handler: func(ctx sdk.Context) error {
 				msg := types.NewMsgBurnRequest(s.owner1Addr, sdk.NewInt64Coin(denom, 50))
 				_, err := s.msgServer.Burn(s.ctx, msg)
 				return err
 			},
-			errorMsg: fmt.Sprintf("%s does not have ACCESS_BURN on hotdog markeraccount: invalid request", s.owner1),
+			errorMsg: s.noAccessErr(s.owner1, types.Access_Burn, denom) + ": invalid request",
 		},
 	}
 
@@ -1355,7 +1362,7 @@ func (s *MsgServerTestSuite) TestMsgSetAccountDataRequest() {
 				Value:  "This is some unrestricted coin data. This won't get used though.",
 				Signer: s.owner1,
 			},
-			errorMsg: s.owner1 + " does not have deposit access for " + denomU + " marker",
+			errorMsg: s.noAccessErr(s.owner1, types.Access_Deposit, denomU),
 		},
 		{
 			name: "should successfully set account data on restricted marker via gov prop",
@@ -1382,7 +1389,7 @@ func (s *MsgServerTestSuite) TestMsgSetAccountDataRequest() {
 				Value:  "This is some restricted coin data. This won't get used though.",
 				Signer: s.owner1,
 			},
-			errorMsg: s.owner1 + " does not have deposit access for " + denomR + " marker",
+			errorMsg: s.noAccessErr(s.owner1, types.Access_Deposit, denomR),
 		},
 	}
 

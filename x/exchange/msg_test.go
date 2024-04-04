@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/internal/helpers"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
@@ -47,6 +48,9 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			return &MsgCreateBidRequest{BidOrder: BidOrder{Buyer: signer}}
 		},
 		func(signer string) sdk.Msg {
+			return &MsgCommitFundsRequest{Account: signer}
+		},
+		func(signer string) sdk.Msg {
 			return &MsgCancelOrderRequest{Signer: signer}
 		},
 		func(signer string) sdk.Msg {
@@ -57,6 +61,12 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		},
 		func(signer string) sdk.Msg {
 			return &MsgMarketSettleRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketCommitmentSettleRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketReleaseCommitmentsRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
 			return &MsgMarketSetOrderExternalIDRequest{Admin: signer}
@@ -71,7 +81,16 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			return &MsgMarketUpdateEnabledRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateAcceptingOrdersRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
 			return &MsgMarketUpdateUserSettleRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateAcceptingCommitmentsRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateIntermediaryDenomRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
 			return &MsgMarketManagePermissionsRequest{Admin: signer}
@@ -80,10 +99,31 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			return &MsgMarketManageReqAttrsRequest{Admin: signer}
 		},
 		func(signer string) sdk.Msg {
+			return &MsgCreatePaymentRequest{Payment: Payment{Source: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgAcceptPaymentRequest{Payment: Payment{Target: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgRejectPaymentRequest{Target: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgRejectPaymentsRequest{Target: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCancelPaymentsRequest{Source: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgChangePaymentTargetRequest{Source: signer}
+		},
+		func(signer string) sdk.Msg {
 			return &MsgGovCreateMarketRequest{Authority: signer}
 		},
 		func(signer string) sdk.Msg {
 			return &MsgGovManageFeesRequest{Authority: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgGovCloseMarketRequest{Authority: signer}
 		},
 		func(signer string) sdk.Msg {
 			return &MsgGovUpdateParamsRequest{Authority: signer}
@@ -219,7 +259,7 @@ func TestMsgCreateBidRequest_ValidateBasic(t *testing.T) {
 		expErr []string
 	}{
 		{
-			name: "empty ask order",
+			name: "empty bid order",
 			msg:  MsgCreateBidRequest{},
 			expErr: []string{
 				"invalid market id: ",
@@ -240,6 +280,129 @@ func TestMsgCreateBidRequest_ValidateBasic(t *testing.T) {
 				OrderCreationFee: &sdk.Coin{Denom: "cactus", Amount: sdkmath.NewInt(-3)},
 			},
 			expErr: []string{"invalid order creation fee: negative coin amount: -3"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgCommitFundsRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgCommitFundsRequest
+		expErr []string
+	}{
+		{
+			name: "okay",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+			},
+			expErr: nil,
+		},
+		{
+			name: "okay with optional fields",
+			msg: MsgCommitFundsRequest{
+				Account:     sdk.AccAddress("account_____________").String(),
+				MarketId:    3,
+				Amount:      sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+				CreationFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(8)},
+				EventTag:    "just-some-tag",
+			},
+			expErr: nil,
+		},
+		{
+			name: "no account",
+			msg: MsgCommitFundsRequest{
+				Account:  "",
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+			},
+			expErr: []string{"invalid account \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad account",
+			msg: MsgCommitFundsRequest{
+				Account:  "badaccountstring",
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+			},
+			expErr: []string{"invalid account \"badaccountstring\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 0,
+				Amount:   sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "nil amount",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   nil,
+			},
+			expErr: []string{"invalid amount \"\": cannot be zero"},
+		},
+		{
+			name: "empty amount",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.Coins{},
+			},
+			expErr: []string{"invalid amount \"\": cannot be zero"},
+		},
+		{
+			name: "bad amount",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.Coin{Denom: "cherry", Amount: sdkmath.NewInt(-3)}},
+			},
+			expErr: []string{"invalid amount \"-3cherry\": coin -3cherry amount is not positive"},
+		},
+		{
+			name: "bad creation fee",
+			msg: MsgCommitFundsRequest{
+				Account:     sdk.AccAddress("account_____________").String(),
+				MarketId:    1,
+				Amount:      sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+				CreationFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(-1)},
+			},
+			expErr: []string{"invalid creation fee \"-1fig\": negative coin amount: -1"},
+		},
+		{
+			name: "bad event tag",
+			msg: MsgCommitFundsRequest{
+				Account:  sdk.AccAddress("account_____________").String(),
+				MarketId: 1,
+				Amount:   sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
+				EventTag: strings.Repeat("p", 100) + "x",
+			},
+			expErr: []string{"invalid event tag \"ppppp...ppppx\" (length 101): exceeds max length 100"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgCommitFundsRequest{
+				CreationFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(-1)},
+				EventTag:    strings.Repeat("p", 100) + "x",
+			},
+			expErr: []string{
+				"invalid account \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+				"invalid amount \"\": cannot be zero",
+				"invalid creation fee \"-1fig\": negative coin amount: -1",
+				"invalid event tag \"ppppp...ppppx\" (length 101): exceeds max length 100",
+			},
 		},
 	}
 
@@ -790,6 +953,381 @@ func TestMsgMarketSettleRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
+func TestMsgMarketCommitmentSettleRequest_ValidateBasic(t *testing.T) {
+	type testCase struct {
+		name         string
+		msg          MsgMarketCommitmentSettleRequest
+		expErrInReq  []string // for errors that only happen when requireInputs = true.
+		expErrInOpt  []string // for errors that only happen when requireInputs = false.
+		expErrAlways []string // for errors that happen regardless of the requireInputs value.
+	}
+	getExpErr := func(tc testCase, requireInputs bool) []string {
+		if requireInputs {
+			return append(tc.expErrAlways, tc.expErrInReq...)
+		}
+		return append(tc.expErrAlways, tc.expErrInOpt...)
+	}
+	toAccAddr := func(str string) string {
+		return sdk.AccAddress(str + strings.Repeat("_", 20-len(str))).String()
+	}
+	goodAA := func(account, amount string) AccountAmount {
+		addr := toAccAddr(account)
+		amt, err := sdk.ParseCoinsNormalized(amount)
+		require.NoError(t, err, "ParseCoinsNormalized(%q)", amount)
+		return AccountAmount{Account: addr, Amount: amt}
+	}
+	goodNAV := func(assets, price string) NetAssetPrice {
+		rv := NetAssetPrice{}
+		var err error
+		rv.Assets, err = sdk.ParseCoinNormalized(assets)
+		require.NoError(t, err, "ParseCoinNormalized(%q) (assets)", assets)
+		rv.Price, err = sdk.ParseCoinNormalized(price)
+		require.NoError(t, err, "ParseCoinNormalized(%q) (price)", price)
+		return rv
+	}
+	coin := func(amount int64, denom string) sdk.Coin {
+		return sdk.Coin{Denom: denom, Amount: sdkmath.NewInt(amount)}
+	}
+	coins := func(amount int64, denom string) sdk.Coins {
+		return sdk.Coins{{Denom: denom, Amount: sdkmath.NewInt(amount)}}
+	}
+
+	tests := []testCase{
+		{
+			name: "control",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+			},
+		},
+		{
+			name: "okay: with all optional fields",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+				Fees:     []AccountAmount{goodAA("fee0", "7fig")},
+				Navs:     []NetAssetPrice{goodNAV("13cherry", "1990musd")},
+				EventTag: "you're it",
+			},
+		},
+		{
+			name: "no admin",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    "",
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+			},
+			expErrInReq: []string{"invalid administrator \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    "badbadadmin",
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+			},
+			expErrInReq: []string{"invalid administrator \"badbadadmin\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 0,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+			},
+			expErrAlways: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "no inputs",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+			},
+			expErrInReq: []string{"no inputs provided"},
+			expErrInOpt: []string{"input total \"\" does not equal output total \"13cherry\""},
+		},
+		{
+			name: "bad inputs",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs: []AccountAmount{
+					{Account: toAccAddr("input0"), Amount: coins(-3, "cherry")},
+					goodAA("input1", "8cherry"),
+					{Account: "badinput2addr", Amount: coins(4, "cherry")},
+					{Account: toAccAddr("input3"), Amount: nil},
+				},
+			},
+			expErrInReq: []string{"no outputs provided"},
+			expErrAlways: []string{
+				"inputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+				"inputs[2]: invalid account \"badinput2addr\": " + bech32Err,
+				"inputs[3]: invalid amount \"\": cannot be zero",
+			},
+		},
+		{
+			name: "no outputs",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+			},
+			expErrInReq: []string{"no outputs provided"},
+			expErrInOpt: []string{"input total \"13cherry\" does not equal output total \"\""},
+		},
+		{
+			name: "bad outputs",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Outputs: []AccountAmount{
+					{Account: toAccAddr("output0"), Amount: coins(-3, "cherry")},
+					goodAA("output1", "8cherry"),
+					{Account: "badoutput2addr", Amount: coins(4, "cherry")},
+					{Account: toAccAddr("output3"), Amount: sdk.Coins{}},
+				},
+			},
+			expErrInReq: []string{"no inputs provided"},
+			expErrAlways: []string{
+				"outputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+				"outputs[2]: invalid account \"badoutput2addr\": " + bech32Err,
+				"outputs[3]: invalid amount \"\": cannot be zero",
+			},
+		},
+		{
+			name: "input output amounts not equal",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry"), goodAA("input1", "36cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "25cherry"), goodAA("output1", "23cherry")},
+			},
+			expErrAlways: []string{"input total \"49cherry\" does not equal output total \"48cherry\""},
+		},
+		{
+			name: "bad fees",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+				Fees: []AccountAmount{
+					{Account: "badfee0addr", Amount: coins(4, "cherry")},
+					goodAA("fee1", "8cherry"),
+					{Account: toAccAddr("fee2"), Amount: coins(-3, "cherry")},
+					{Account: toAccAddr("fee3"), Amount: nil},
+				},
+			},
+			expErrAlways: []string{
+				"fees[0]: invalid account \"badfee0addr\": " + bech32Err,
+				"fees[2]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+				"fees[3]: invalid amount \"\": cannot be zero",
+			},
+		},
+		{
+			name: "bad navs",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+				Navs: []NetAssetPrice{
+					{Assets: coin(-2, "cherry"), Price: coin(87, "nhash")},
+					goodNAV("13cherry", "1990musd"),
+					{Assets: coin(57, "cherry"), Price: coin(52, "x")},
+				},
+			},
+			expErrAlways: []string{
+				"navs[0]: invalid assets \"-2cherry\": negative coin amount: -2",
+				"navs[2]: invalid price \"52x\": invalid denom: x",
+			},
+		},
+		{
+			name: "bad event tag",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				Inputs:   []AccountAmount{goodAA("input0", "13cherry")},
+				Outputs:  []AccountAmount{goodAA("output0", "13cherry")},
+				EventTag: "p" + strings.Repeat("b", 99) + "f",
+			},
+			expErrAlways: []string{"invalid event tag \"pbbbb...bbbbf\" (length 101): exceeds max length 100"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketCommitmentSettleRequest{
+				Admin:    "",
+				MarketId: 0,
+				Inputs:   []AccountAmount{{Account: toAccAddr("input0"), Amount: coins(-3, "cherry")}},
+				Outputs:  []AccountAmount{{Account: toAccAddr("output0"), Amount: coins(-3, "cherry")}},
+				Fees:     []AccountAmount{{Account: "badfee2addr", Amount: coins(4, "cherry")}},
+				Navs:     []NetAssetPrice{{Assets: coin(-2, "cherry"), Price: coin(87, "nhash")}},
+				EventTag: "p" + strings.Repeat("b", 99) + "f",
+			},
+			expErrInReq: []string{
+				"invalid administrator \"\": " + emptyAddrErr,
+			},
+			expErrAlways: []string{
+				"invalid market id: cannot be zero",
+				"inputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+				"outputs[0]: invalid amount \"-3cherry\": coin -3cherry amount is not positive",
+				"fees[0]: invalid account \"badfee2addr\": " + bech32Err,
+				"navs[0]: invalid assets \"-2cherry\": negative coin amount: -2",
+				"invalid event tag \"pbbbb...bbbbf\" (length 101): exceeds max length 100",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		for _, requireInputs := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s: Validate(%t)", tc.name, requireInputs), func(t *testing.T) {
+				expErr := getExpErr(tc, requireInputs)
+				var err error
+				testFunc := func() {
+					err = tc.msg.Validate(requireInputs)
+				}
+				require.NotPanics(t, testFunc, "%T.Validate(%t)", tc.msg, requireInputs)
+				assertions.AssertErrorContents(t, err, expErr, "%T.Validate(%t) error", tc.msg, requireInputs)
+			})
+		}
+
+		t.Run(fmt.Sprintf("%s: ValidateBasic()", tc.name), func(t *testing.T) {
+			expErr := getExpErr(tc, true)
+			testValidateBasic(t, &tc.msg, expErr)
+		})
+	}
+}
+
+func TestMsgMarketReleaseCommitmentsRequest_ValidateBasic(t *testing.T) {
+	toAccAddr := func(str string) string {
+		return sdk.AccAddress(str + strings.Repeat("_", 20-len(str))).String()
+	}
+
+	tests := []struct {
+		name   string
+		msg    MsgMarketReleaseCommitmentsRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  1,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+			},
+		},
+		{
+			name: "control with optional fields",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  1,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+				EventTag:  "tagtagtag",
+			},
+		},
+		{
+			name: "no admin",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     "",
+				MarketId:  1,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+			},
+			expErr: []string{"invalid administrator \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     "badbadadmin",
+				MarketId:  1,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+			},
+			expErr: []string{"invalid administrator \"badbadadmin\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  0,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "nil to release",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  1,
+				ToRelease: nil,
+			},
+			expErr: []string{"nothing to release"},
+		},
+		{
+			name: "empty to release",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  1,
+				ToRelease: []AccountAmount{},
+			},
+			expErr: []string{"nothing to release"},
+		},
+		{
+			name: "bad to release entries",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:    toAccAddr("admin"),
+				MarketId: 1,
+				ToRelease: []AccountAmount{
+					{Account: "torelease0"},
+					{Account: toAccAddr("torelease1")},
+					{Account: toAccAddr("torelease2"), Amount: sdk.Coins{sdk.Coin{Denom: "cherry", Amount: sdkmath.NewInt(-1)}}},
+				},
+			},
+			expErr: []string{
+				"to release[0]: invalid account \"torelease0\": " + bech32Err,
+				"to release[2]: invalid amount \"-1cherry\": coin -1cherry amount is not positive",
+			},
+		},
+		{
+			name: "bad event tag",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     toAccAddr("admin"),
+				MarketId:  1,
+				ToRelease: []AccountAmount{{Account: toAccAddr("torelease0")}},
+				EventTag:  "abcd" + strings.Repeat("M", 93) + "wxyz",
+			},
+			expErr: []string{"invalid event tag \"abcdM...Mwxyz\" (length 101): exceeds max length 100"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketReleaseCommitmentsRequest{
+				Admin:     "",
+				MarketId:  0,
+				ToRelease: nil,
+				EventTag:  "abcd" + strings.Repeat("M", 93) + "wxyz",
+			},
+			expErr: []string{
+				"invalid administrator \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+				"nothing to release",
+				"invalid event tag \"abcdM...Mwxyz\" (length 101): exceeds max length 100",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
 func TestMsgMarketSetOrderExternalIDRequest_ValidateBasic(t *testing.T) {
 	admin := sdk.AccAddress("admin_address_______").String()
 
@@ -867,8 +1405,8 @@ func TestMsgMarketSetOrderExternalIDRequest_ValidateBasic(t *testing.T) {
 				ExternalId: strings.Repeat("r", MaxExternalIDLength+1),
 			},
 			expErr: []string{
-				fmt.Sprintf("invalid external id %q: max length %d",
-					strings.Repeat("r", MaxExternalIDLength+1), MaxExternalIDLength),
+				fmt.Sprintf("invalid external id %q (length %d): max length %d",
+					"rrrrr...rrrrr", MaxExternalIDLength+1, MaxExternalIDLength),
 			},
 		},
 		{
@@ -892,8 +1430,8 @@ func TestMsgMarketSetOrderExternalIDRequest_ValidateBasic(t *testing.T) {
 			expErr: []string{
 				"invalid administrator \"\"", emptyAddrErr,
 				"invalid market id: cannot be zero",
-				fmt.Sprintf("invalid external id %q: max length %d",
-					strings.Repeat("V", MaxExternalIDLength+1), MaxExternalIDLength),
+				fmt.Sprintf("invalid external id %q (length %d): max length %d",
+					"VVVVV...VVVVV", MaxExternalIDLength+1, MaxExternalIDLength),
 				"invalid order id: cannot be zero",
 			},
 		},
@@ -1165,16 +1703,22 @@ func TestMsgMarketUpdateDetailsRequest_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
+	msg := MsgMarketUpdateEnabledRequest{}
+	expErr := []string{"the MarketUpdateEnabled endpoint has been replaced by the MarketUpdateAcceptingOrders endpoint"}
+	testValidateBasic(t, &msg, expErr)
+}
+
+func TestMsgMarketUpdateAcceptingOrdersRequest_ValidateBasic(t *testing.T) {
 	admin := sdk.AccAddress("admin_______________").String()
 
 	tests := []struct {
 		name   string
-		msg    MsgMarketUpdateEnabledRequest
+		msg    MsgMarketUpdateAcceptingOrdersRequest
 		expErr []string
 	}{
 		{
 			name: "control: true",
-			msg: MsgMarketUpdateEnabledRequest{
+			msg: MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           admin,
 				MarketId:        1,
 				AcceptingOrders: true,
@@ -1183,7 +1727,7 @@ func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "control: false",
-			msg: MsgMarketUpdateEnabledRequest{
+			msg: MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:           admin,
 				MarketId:        1,
 				AcceptingOrders: true,
@@ -1192,7 +1736,7 @@ func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty admin",
-			msg: MsgMarketUpdateEnabledRequest{
+			msg: MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:    "",
 				MarketId: 1,
 			},
@@ -1202,7 +1746,7 @@ func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad admin",
-			msg: MsgMarketUpdateEnabledRequest{
+			msg: MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:    "badadmin",
 				MarketId: 1,
 			},
@@ -1212,7 +1756,7 @@ func TestMsgMarketUpdateEnabledRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "market id zero",
-			msg: MsgMarketUpdateEnabledRequest{
+			msg: MsgMarketUpdateAcceptingOrdersRequest{
 				Admin:    admin,
 				MarketId: 0,
 			},
@@ -1283,6 +1827,149 @@ func TestMsgMarketUpdateUserSettleRequest_ValidateBasic(t *testing.T) {
 			},
 			expErr: []string{
 				"invalid market id", "cannot be zero",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgMarketUpdateAcceptingCommitmentsRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgMarketUpdateAcceptingCommitmentsRequest
+		expErr []string
+	}{
+		{
+			name: "control: false",
+			msg: MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                sdk.AccAddress("admin_______________").String(),
+				MarketId:             1,
+				AcceptingCommitments: false,
+			},
+		},
+		{
+			name: "control: true",
+			msg: MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:                sdk.AccAddress("admin_______________").String(),
+				MarketId:             1,
+				AcceptingCommitments: true,
+			},
+		},
+		{
+			name: "no admin",
+			msg: MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:    "",
+				MarketId: 1,
+			},
+			expErr: []string{"invalid administrator \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:    "notanadminaddr",
+				MarketId: 1,
+			},
+			expErr: []string{"invalid administrator \"notanadminaddr\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgMarketUpdateAcceptingCommitmentsRequest{
+				Admin:    sdk.AccAddress("admin_______________").String(),
+				MarketId: 0,
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "multiple errors",
+			msg:  MsgMarketUpdateAcceptingCommitmentsRequest{},
+			expErr: []string{
+				"invalid administrator \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgMarketUpdateIntermediaryDenomRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgMarketUpdateIntermediaryDenomRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             sdk.AccAddress("admin_______________").String(),
+				MarketId:          1,
+				IntermediaryDenom: "musd",
+			},
+		},
+		{
+			name: "no admin",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             "",
+				MarketId:          1,
+				IntermediaryDenom: "musd",
+			},
+			expErr: []string{"invalid administrator \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad admin",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             "notanadminaddr",
+				MarketId:          1,
+				IntermediaryDenom: "musd",
+			},
+			expErr: []string{"invalid administrator \"notanadminaddr\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             sdk.AccAddress("admin_______________").String(),
+				MarketId:          0,
+				IntermediaryDenom: "musd",
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "no intermediary denom",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             sdk.AccAddress("admin_______________").String(),
+				MarketId:          1,
+				IntermediaryDenom: "",
+			},
+		},
+		{
+			name: "invalid intermediary denom",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             sdk.AccAddress("admin_______________").String(),
+				MarketId:          1,
+				IntermediaryDenom: "x",
+			},
+			expErr: []string{"invalid intermediary denom: invalid denom: x"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgMarketUpdateIntermediaryDenomRequest{
+				Admin:             "",
+				MarketId:          0,
+				IntermediaryDenom: "x",
+			},
+			expErr: []string{
+				"invalid administrator \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+				"invalid intermediary denom: invalid denom: x",
 			},
 		},
 	}
@@ -1639,6 +2326,23 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid create commitment to add entry",
+			msg: MsgMarketManageReqAttrsRequest{
+				Admin:                 goodAdmin,
+				MarketId:              1,
+				CreateCommitmentToAdd: []string{"in-valid-attr"},
+			},
+			expErr: []string{"invalid create-commitment to add required attribute \"in-valid-attr\""},
+		},
+		{
+			name: "invalid create commitment to remove entry",
+			msg: MsgMarketManageReqAttrsRequest{
+				Admin:                    goodAdmin,
+				MarketId:                 1,
+				CreateCommitmentToRemove: []string{"in-valid-attr"},
+			},
+		},
+		{
 			name: "add and remove same create ask entry",
 			msg: MsgMarketManageReqAttrsRequest{
 				Admin:             goodAdmin,
@@ -1657,6 +2361,16 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 				CreateBidToRemove: []string{"jkl", "abc"},
 			},
 			expErr: []string{"cannot add and remove the same create-bid required attributes \"abc\""},
+		},
+		{
+			name: "add and remove same create commitment entry",
+			msg: MsgMarketManageReqAttrsRequest{
+				Admin:                    goodAdmin,
+				MarketId:                 1,
+				CreateCommitmentToAdd:    []string{"abc", "def", "ghi"},
+				CreateCommitmentToRemove: []string{"jkl", "abc"},
+			},
+			expErr: []string{"cannot add and remove the same create-commitment required attributes \"abc\""},
 		},
 		{
 			name: "add to create-ask the same as remove from create-bid",
@@ -1679,12 +2393,14 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "add one to and remove one from each",
 			msg: MsgMarketManageReqAttrsRequest{
-				Admin:             goodAdmin,
-				MarketId:          1,
-				CreateAskToAdd:    []string{"to-add.ask"},
-				CreateAskToRemove: []string{"to-remove.ask"},
-				CreateBidToAdd:    []string{"to-add.bid"},
-				CreateBidToRemove: []string{"to-remove.bid"},
+				Admin:                    goodAdmin,
+				MarketId:                 1,
+				CreateAskToAdd:           []string{"to-add.ask"},
+				CreateAskToRemove:        []string{"to-remove.ask"},
+				CreateBidToAdd:           []string{"to-add.bid"},
+				CreateBidToRemove:        []string{"to-remove.bid"},
+				CreateCommitmentToAdd:    []string{"to-add.com"},
+				CreateCommitmentToRemove: []string{"to-remove.com"},
 			},
 		},
 		{
@@ -1699,12 +2415,14 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "multiple errors",
 			msg: MsgMarketManageReqAttrsRequest{
-				Admin:             "not1valid",
-				MarketId:          0,
-				CreateAskToAdd:    []string{"bad-ask-attr", "dup-ask"},
-				CreateAskToRemove: []string{"dup-ask"},
-				CreateBidToAdd:    []string{"bad-bid-attr", "dup-bid"},
-				CreateBidToRemove: []string{"dup-bid"},
+				Admin:                    "not1valid",
+				MarketId:                 0,
+				CreateAskToAdd:           []string{"bad-ask-attr", "dup-ask"},
+				CreateAskToRemove:        []string{"dup-ask"},
+				CreateBidToAdd:           []string{"bad-bid-attr", "dup-bid"},
+				CreateBidToRemove:        []string{"dup-bid"},
+				CreateCommitmentToAdd:    []string{"bad-com-attr", "dup-com"},
+				CreateCommitmentToRemove: []string{"dup-com"},
 			},
 			expErr: []string{
 				"invalid administrator",
@@ -1713,6 +2431,8 @@ func TestMsgMarketManageReqAttrsRequest_ValidateBasic(t *testing.T) {
 				"cannot add and remove the same create-ask required attributes \"dup-ask\"",
 				"invalid create-bid to add required attribute \"bad-bid-attr\"",
 				"cannot add and remove the same create-bid required attributes \"dup-bid\"",
+				"invalid create-commitment to add required attribute \"bad-com-attr\"",
+				"cannot add and remove the same create-commitment required attributes \"dup-com\"",
 			},
 		},
 	}
@@ -1770,6 +2490,20 @@ func TestMsgMarketManageReqAttrsRequest_HasUpdates(t *testing.T) {
 			},
 			exp: true,
 		},
+		{
+			name: "one commitment to add",
+			msg: MsgMarketManageReqAttrsRequest{
+				CreateCommitmentToAdd: []string{"commitment_to_add"},
+			},
+			exp: true,
+		},
+		{
+			name: "one commitment to remove",
+			msg: MsgMarketManageReqAttrsRequest{
+				CreateCommitmentToRemove: []string{"commitment_to_remove"},
+			},
+			exp: true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -1780,6 +2514,637 @@ func TestMsgMarketManageReqAttrsRequest_HasUpdates(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "%T.HasUpdates()", tc.msg)
 			assert.Equal(t, tc.exp, actual, "%T.HasUpdates()", tc.msg)
+		})
+	}
+}
+
+func TestMsgCreatePaymentRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgCreatePaymentRequest
+		expErr []string
+	}{
+		{
+			name:   "valid payment",
+			msg:    MsgCreatePaymentRequest{Payment: ValidPayment},
+			expErr: nil,
+		},
+		{
+			name: "no target",
+			msg: MsgCreatePaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       "",
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: nil,
+		},
+		{
+			name: "no source amount",
+			msg: MsgCreatePaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: nil,
+				Target:       ValidPayment.Target,
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: nil,
+		},
+		{
+			name: "no target amount",
+			msg: MsgCreatePaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       ValidPayment.Target,
+				TargetAmount: nil,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: nil,
+		},
+		{
+			name: "no external id",
+			msg: MsgCreatePaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       ValidPayment.Target,
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   "",
+			}},
+			expErr: nil,
+		},
+		{
+			name: "invalid payment",
+			msg: MsgCreatePaymentRequest{Payment: Payment{
+				Source:       "",
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       "notgoodeither",
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: []string{
+				"invalid source \"\": empty address string is not allowed",
+				"invalid target \"notgoodeither\": decoding bech32 failed: invalid separator index -1",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgAcceptPaymentRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgAcceptPaymentRequest
+		expErr []string
+	}{
+		{
+			name:   "valid payment",
+			msg:    MsgAcceptPaymentRequest{Payment: ValidPayment},
+			expErr: nil,
+		},
+		{
+			name: "invalid payment",
+			msg: MsgAcceptPaymentRequest{Payment: Payment{
+				Source:       "",
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       "notgoodeither",
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: []string{
+				"invalid source \"\": empty address string is not allowed",
+				"invalid target \"notgoodeither\": decoding bech32 failed: invalid separator index -1",
+			},
+		},
+		{
+			name: "no target",
+			msg: MsgAcceptPaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       "",
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: []string{"invalid target: empty address string is not allowed"},
+		},
+		{
+			name: "no source amount",
+			msg: MsgAcceptPaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: nil,
+				Target:       ValidPayment.Target,
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: nil,
+		},
+		{
+			name: "no target amount",
+			msg: MsgAcceptPaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       ValidPayment.Target,
+				TargetAmount: nil,
+				ExternalId:   ValidPayment.ExternalId,
+			}},
+			expErr: nil,
+		},
+		{
+			name: "no external id",
+			msg: MsgAcceptPaymentRequest{Payment: Payment{
+				Source:       ValidPayment.Source,
+				SourceAmount: ValidPayment.SourceAmount,
+				Target:       ValidPayment.Target,
+				TargetAmount: ValidPayment.TargetAmount,
+				ExternalId:   "",
+			}},
+			expErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgRejectPaymentRequest_ValidateBasic(t *testing.T) {
+	validMsg := MsgRejectPaymentRequest{
+		Target:     sdk.AccAddress("Target______________").String(),
+		Source:     sdk.AccAddress("Source______________").String(),
+		ExternalId: "just-some-id:1D250135-D735-42E7-9DC3-FDB374DE2604",
+	}
+
+	tests := []struct {
+		name   string
+		msg    MsgRejectPaymentRequest
+		expErr []string
+	}{
+		{
+			name:   "valid message",
+			msg:    validMsg,
+			expErr: nil,
+		},
+		{
+			name: "no target",
+			msg: MsgRejectPaymentRequest{
+				Target:     "",
+				Source:     validMsg.Source,
+				ExternalId: validMsg.ExternalId,
+			},
+			expErr: []string{"invalid target \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid target",
+			msg: MsgRejectPaymentRequest{
+				Target:     "reallybad",
+				Source:     validMsg.Source,
+				ExternalId: validMsg.ExternalId,
+			},
+			expErr: []string{"invalid target \"reallybad\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "no source",
+			msg: MsgRejectPaymentRequest{
+				Target:     validMsg.Target,
+				Source:     "",
+				ExternalId: validMsg.ExternalId,
+			},
+			expErr: []string{"invalid source \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid source",
+			msg: MsgRejectPaymentRequest{
+				Target:     validMsg.Target,
+				Source:     "alsoverybad",
+				ExternalId: validMsg.ExternalId,
+			},
+			expErr: []string{"invalid source \"alsoverybad\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "no external id",
+			msg: MsgRejectPaymentRequest{
+				Target:     validMsg.Target,
+				Source:     validMsg.Source,
+				ExternalId: "",
+			},
+			expErr: nil,
+		},
+		{
+			name: "invalid external id",
+			msg: MsgRejectPaymentRequest{
+				Target:     validMsg.Target,
+				Source:     validMsg.Source,
+				ExternalId: "w" + strings.Repeat("o", MaxExternalIDLength) + "w",
+			},
+			expErr: []string{fmt.Sprintf("invalid external id %q (length %d): max length %d",
+				"woooo...oooow", MaxExternalIDLength+2, MaxExternalIDLength)},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgRejectPaymentRequest{
+				Target:     "reallybad",
+				Source:     "",
+				ExternalId: "w" + strings.Repeat("o", MaxExternalIDLength) + "w",
+			},
+			expErr: []string{
+				"invalid target \"reallybad\": decoding bech32 failed: invalid separator index -1",
+				"invalid source \"\": empty address string is not allowed",
+				fmt.Sprintf("invalid external id %q (length %d): max length %d",
+					"woooo...oooow", MaxExternalIDLength+2, MaxExternalIDLength),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgRejectPaymentsRequest_ValidateBasic(t *testing.T) {
+	target := sdk.AccAddress("target______________").String()
+	source0 := sdk.AccAddress("source0_____________").String()
+	source1 := sdk.AccAddress("source1_____________").String()
+	source2 := sdk.AccAddress("source2_____________").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgRejectPaymentsRequest
+		expErr []string
+	}{
+		{
+			name: "valid: one source",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source0},
+			},
+			expErr: nil,
+		},
+		{
+			name: "valid: three sources",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source0, source1, source2},
+			},
+			expErr: nil,
+		},
+		{
+			name: "no target",
+			msg: MsgRejectPaymentsRequest{
+				Target:  "",
+				Sources: []string{source0},
+			},
+			expErr: []string{"invalid target \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid target",
+			msg: MsgRejectPaymentsRequest{
+				Target:  "oopsnotgonnawork",
+				Sources: []string{source0},
+			},
+			expErr: []string{"invalid target \"oopsnotgonnawork\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "nil sources",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: nil,
+			},
+			expErr: []string{"at least one source is required"},
+		},
+		{
+			name: "empty sources",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{},
+			},
+			expErr: []string{"at least one source is required"},
+		},
+		{
+			name: "one source: empty string",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{""},
+			},
+			expErr: []string{"invalid sources[0] \"\": empty address string is not allowed"},
+		},
+		{
+			name: "one source: invalid",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{"diditagain"},
+			},
+			expErr: []string{"invalid sources[0] \"diditagain\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "three sources: all same",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source1, source1, source1},
+			},
+			expErr: []string{"invalid sources: duplicate entry " + source1},
+		},
+		{
+			name: "three sources: same first and third",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source0, source1, source0},
+			},
+			expErr: []string{"invalid sources: duplicate entry " + source0},
+		},
+		{
+			name: "three sources: invalid first",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{"thebadzero", source1, source2},
+			},
+			expErr: []string{"invalid sources[0] \"thebadzero\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "three sources: invalid second",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source0, "thebadone", source2},
+			},
+			expErr: []string{"invalid sources[1] \"thebadone\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "three sources: invalid third",
+			msg: MsgRejectPaymentsRequest{
+				Target:  target,
+				Sources: []string{source0, source1, "thebadtwo"},
+			},
+			expErr: []string{"invalid sources[2] \"thebadtwo\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgRejectPaymentsRequest{
+				Target:  "",
+				Sources: []string{"thebadzero", source1, "thebadtwo"},
+			},
+			expErr: []string{
+				"invalid target \"\": empty address string is not allowed",
+				"invalid sources[0] \"thebadzero\": decoding bech32 failed: invalid separator index -1",
+				"invalid sources[2] \"thebadtwo\": decoding bech32 failed: invalid separator index -1",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgCancelPaymentsRequest_ValidateBasic(t *testing.T) {
+	source := sdk.AccAddress("source______________").String()
+
+	tests := []struct {
+		name   string
+		msg    MsgCancelPaymentsRequest
+		expErr []string
+	}{
+		{
+			name: "valid",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{"valideid"},
+			},
+			expErr: nil,
+		},
+		{
+			name: "no source",
+			msg: MsgCancelPaymentsRequest{
+				Source:      "",
+				ExternalIds: []string{"eid"},
+			},
+			expErr: []string{"invalid source \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid source",
+			msg: MsgCancelPaymentsRequest{
+				Source:      "notanaddr",
+				ExternalIds: []string{"eid"},
+			},
+			expErr: []string{"invalid source \"notanaddr\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "nil external ids",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: nil,
+			},
+			expErr: []string{"at least one external id is required"},
+		},
+		{
+			name: "empty external ids",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{},
+			},
+			expErr: []string{"at least one external id is required"},
+		},
+		{
+			name: "one external id: empty",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{""},
+			},
+			expErr: nil,
+		},
+		{
+			name: "one external id: invalid",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{strings.Repeat("w", MaxExternalIDLength+1)},
+			},
+			expErr: []string{fmt.Sprintf("invalid external id %q (length %d): max length %d",
+				"wwwww...wwwww", MaxExternalIDLength+1, MaxExternalIDLength)},
+		},
+		{
+			name: "three external ids: all same",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{"same", "same", "same"},
+			},
+			expErr: []string{"invalid external ids: duplicate entry \"same\""},
+		},
+		{
+			name: "three external ids: same first and third",
+			msg: MsgCancelPaymentsRequest{
+				Source:      source,
+				ExternalIds: []string{"twin", "other", "twin"},
+			},
+			expErr: []string{"invalid external ids: duplicate entry \"twin\""},
+		},
+		{
+			name: "three external ids: invalid first",
+			msg: MsgCancelPaymentsRequest{
+				Source: source,
+				ExternalIds: []string{
+					strings.Repeat("0", MaxExternalIDLength+1),
+					strings.Repeat("1", MaxExternalIDLength),
+					strings.Repeat("2", MaxExternalIDLength),
+				},
+			},
+			expErr: []string{fmt.Sprintf("invalid external ids[0]: invalid external id %q (length %d): max length %d",
+				"00000...00000", MaxExternalIDLength+1, MaxExternalIDLength)},
+		},
+		{
+			name: "three external ids: invalid second",
+			msg: MsgCancelPaymentsRequest{
+				Source: source,
+				ExternalIds: []string{
+					strings.Repeat("0", MaxExternalIDLength),
+					strings.Repeat("1", MaxExternalIDLength+1),
+					strings.Repeat("2", MaxExternalIDLength),
+				},
+			},
+			expErr: []string{fmt.Sprintf("invalid external ids[1]: invalid external id %q (length %d): max length %d",
+				"11111...11111", MaxExternalIDLength+1, MaxExternalIDLength)},
+		},
+		{
+			name: "three external ids: invalid third",
+			msg: MsgCancelPaymentsRequest{
+				Source: source,
+				ExternalIds: []string{
+					strings.Repeat("0", MaxExternalIDLength),
+					strings.Repeat("1", MaxExternalIDLength),
+					strings.Repeat("2", MaxExternalIDLength+1),
+				},
+			},
+			expErr: []string{fmt.Sprintf("invalid external ids[2]: invalid external id %q (length %d): max length %d",
+				"22222...22222", MaxExternalIDLength+1, MaxExternalIDLength)},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgCancelPaymentsRequest{
+				Source: "",
+				ExternalIds: []string{
+					"eid0",
+					"(^=~" + strings.Repeat("-", MaxExternalIDLength-7) + "~=^)",
+					"eid1",
+					"eid0",
+				},
+			},
+			expErr: []string{
+				"invalid source \"\": empty address string is not allowed",
+				fmt.Sprintf("invalid external ids[1]: invalid external id %q (length %d): max length %d",
+					"(^=~-...-~=^)", MaxExternalIDLength+1, MaxExternalIDLength),
+				"invalid external ids: duplicate entry \"eid0\"",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
+func TestMsgChangePaymentTargetRequest_ValidateBasic(t *testing.T) {
+	source := sdk.AccAddress("source______________").String()
+	newTarget := sdk.AccAddress("newTarget___________").String()
+	eid := "my|1932DA1E-5469-4E47-BCBA-2589877A4860"
+
+	tests := []struct {
+		name   string
+		msg    MsgChangePaymentTargetRequest
+		expErr []string
+	}{
+		{
+			name: "valid",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     source,
+				ExternalId: eid,
+				NewTarget:  newTarget,
+			},
+			expErr: nil,
+		},
+		{
+			name: "no source",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     "",
+				ExternalId: eid,
+				NewTarget:  newTarget,
+			},
+			expErr: []string{"invalid source \"\": empty address string is not allowed"},
+		},
+		{
+			name: "invalid source",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     "justkidding",
+				ExternalId: eid,
+				NewTarget:  newTarget,
+			},
+			expErr: []string{"invalid source \"justkidding\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "empty external id",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     source,
+				ExternalId: "",
+				NewTarget:  newTarget,
+			},
+			expErr: nil,
+		},
+		{
+			name: "invalid external id",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     source,
+				ExternalId: strings.Repeat("e", MaxExternalIDLength+1),
+				NewTarget:  newTarget,
+			},
+			expErr: []string{fmt.Sprintf("invalid external id %q (length %d): max length %d",
+				"eeeee...eeeee", MaxExternalIDLength+1, MaxExternalIDLength)},
+		},
+		{
+			name: "empty new target",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     source,
+				ExternalId: eid,
+				NewTarget:  "",
+			},
+			expErr: nil,
+		},
+		{
+			name: "invalid new target",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     source,
+				ExternalId: eid,
+				NewTarget:  "mistakenaddr",
+			},
+			expErr: []string{"invalid new target \"mistakenaddr\": decoding bech32 failed: invalid separator index -1"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgChangePaymentTargetRequest{
+				Source:     "",
+				ExternalId: strings.Repeat("e", MaxExternalIDLength+1),
+				NewTarget:  "mistakenaddr",
+			},
+			expErr: []string{
+				"invalid source \"\": empty address string is not allowed",
+				fmt.Sprintf("invalid external id %q (length %d): max length %d",
+					"eeeee...eeeee", MaxExternalIDLength+1, MaxExternalIDLength),
+				"invalid new target \"mistakenaddr\": decoding bech32 failed: invalid separator index -1",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
 		})
 	}
 }
@@ -1898,7 +3263,7 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 		{
 			name:   "zero value",
 			msg:    MsgGovManageFeesRequest{},
-			expErr: []string{"invalid authority", "no updates"},
+			expErr: []string{"invalid authority", "no updates", "market id cannot be zero"},
 		},
 		{
 			name: "no authority",
@@ -1917,6 +3282,14 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 			expErr: []string{"invalid authority", bech32Err},
 		},
 		{
+			name: "no market id",
+			msg: MsgGovManageFeesRequest{
+				Authority:           authority,
+				AddFeeCreateAskFlat: []sdk.Coin{coin(1, "nhash")},
+			},
+			expErr: []string{"market id cannot be zero"},
+		},
+		{
 			name: "invalid add create-ask flat",
 			msg: MsgGovManageFeesRequest{
 				Authority:           authority,
@@ -1932,6 +3305,23 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				RemoveFeeCreateAskFlat: []sdk.Coin{coin(1, "nhash")},
 			},
 			expErr: []string{"cannot add and remove the same create-ask flat fee options 1nhash"},
+		},
+		{
+			name: "invalid add create-commitment flat",
+			msg: MsgGovManageFeesRequest{
+				Authority:                  authority,
+				AddFeeCreateCommitmentFlat: []sdk.Coin{coin(0, "nhash")},
+			},
+			expErr: []string{`invalid create-commitment flat fee to add option "0nhash": amount cannot be zero`},
+		},
+		{
+			name: "same add and remove create-commitment flat",
+			msg: MsgGovManageFeesRequest{
+				Authority:                     authority,
+				AddFeeCreateCommitmentFlat:    []sdk.Coin{coin(1, "nhash")},
+				RemoveFeeCreateCommitmentFlat: []sdk.Coin{coin(1, "nhash")},
+			},
+			expErr: []string{"cannot add and remove the same create-commitment flat fee options 1nhash"},
 		},
 		{
 			name: "invalid add create-bid flat",
@@ -2019,28 +3409,52 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 			expErr: []string{"cannot add and remove the same buyer settlement fee ratios 2nhash:1nhash"},
 		},
 		{
+			name: "set fee commitment settlement bips too high",
+			msg: MsgGovManageFeesRequest{
+				Authority:                      authority,
+				SetFeeCommitmentSettlementBips: 10_001,
+			},
+			expErr: []string{"invalid commitment settlement bips 10001: exceeds max of 10000"},
+		},
+		{
+			name: "set fee commitment settlement bips with unset",
+			msg: MsgGovManageFeesRequest{
+				Authority:                        authority,
+				SetFeeCommitmentSettlementBips:   1,
+				UnsetFeeCommitmentSettlementBips: true,
+			},
+			expErr: []string{"invalid commitment settlement bips 1: must be zero when unset_fee_commitment_settlement_bips is true"},
+		},
+		{
 			name: "multiple errors",
 			msg: MsgGovManageFeesRequest{
-				Authority:                       "",
-				AddFeeCreateAskFlat:             []sdk.Coin{coin(0, "nhash")},
-				RemoveFeeCreateAskFlat:          []sdk.Coin{coin(0, "nhash")},
-				AddFeeCreateBidFlat:             []sdk.Coin{coin(0, "nhash")},
-				RemoveFeeCreateBidFlat:          []sdk.Coin{coin(0, "nhash")},
-				AddFeeSellerSettlementFlat:      []sdk.Coin{coin(0, "nhash")},
-				RemoveFeeSellerSettlementFlat:   []sdk.Coin{coin(0, "nhash")},
-				AddFeeSellerSettlementRatios:    []FeeRatio{ratio(1, "nhash", 2, "nhash")},
-				RemoveFeeSellerSettlementRatios: []FeeRatio{ratio(1, "nhash", 2, "nhash")},
-				AddFeeBuyerSettlementFlat:       []sdk.Coin{coin(0, "nhash")},
-				RemoveFeeBuyerSettlementFlat:    []sdk.Coin{coin(0, "nhash")},
-				AddFeeBuyerSettlementRatios:     []FeeRatio{ratio(1, "nhash", 2, "nhash")},
-				RemoveFeeBuyerSettlementRatios:  []FeeRatio{ratio(1, "nhash", 2, "nhash")},
+				Authority:                        "",
+				AddFeeCreateAskFlat:              []sdk.Coin{coin(0, "nhash")},
+				RemoveFeeCreateAskFlat:           []sdk.Coin{coin(0, "nhash")},
+				AddFeeCreateBidFlat:              []sdk.Coin{coin(0, "nhash")},
+				RemoveFeeCreateBidFlat:           []sdk.Coin{coin(0, "nhash")},
+				AddFeeSellerSettlementFlat:       []sdk.Coin{coin(0, "nhash")},
+				RemoveFeeSellerSettlementFlat:    []sdk.Coin{coin(0, "nhash")},
+				AddFeeSellerSettlementRatios:     []FeeRatio{ratio(1, "nhash", 2, "nhash")},
+				RemoveFeeSellerSettlementRatios:  []FeeRatio{ratio(1, "nhash", 2, "nhash")},
+				AddFeeBuyerSettlementFlat:        []sdk.Coin{coin(0, "nhash")},
+				RemoveFeeBuyerSettlementFlat:     []sdk.Coin{coin(0, "nhash")},
+				AddFeeBuyerSettlementRatios:      []FeeRatio{ratio(1, "nhash", 2, "nhash")},
+				RemoveFeeBuyerSettlementRatios:   []FeeRatio{ratio(1, "nhash", 2, "nhash")},
+				AddFeeCreateCommitmentFlat:       []sdk.Coin{coin(0, "nhash")},
+				RemoveFeeCreateCommitmentFlat:    []sdk.Coin{coin(0, "nhash")},
+				SetFeeCommitmentSettlementBips:   12345,
+				UnsetFeeCommitmentSettlementBips: true,
 			},
 			expErr: []string{
 				"invalid authority", emptyAddrErr,
+				"market id cannot be zero",
 				`invalid create-ask flat fee to add option "0nhash": amount cannot be zero`,
 				"cannot add and remove the same create-ask flat fee options 0nhash",
 				`invalid create-bid flat fee to add option "0nhash": amount cannot be zero`,
 				"cannot add and remove the same create-bid flat fee options 0nhash",
+				`invalid create-commitment flat fee to add option "0nhash": amount cannot be zero`,
+				"cannot add and remove the same create-commitment flat fee options 0nhash",
 				`invalid seller settlement flat fee to add option "0nhash": amount cannot be zero`,
 				"cannot add and remove the same seller settlement flat fee options 0nhash",
 				`seller fee ratio fee amount "2nhash" cannot be greater than price amount "1nhash"`,
@@ -2049,6 +3463,8 @@ func TestMsgGovManageFeesRequest_ValidateBasic(t *testing.T) {
 				"cannot add and remove the same buyer settlement flat fee options 0nhash",
 				`buyer fee ratio fee amount "2nhash" cannot be greater than price amount "1nhash"`,
 				"cannot add and remove the same buyer settlement fee ratios 1nhash:2nhash",
+				"invalid commitment settlement bips 12345: exceeds max of 10000",
+				"invalid commitment settlement bips 12345: must be zero when unset_fee_commitment_settlement_bips is true",
 			},
 		},
 	}
@@ -2141,6 +3557,26 @@ func TestMsgGovManageFeesRequest_HasUpdates(t *testing.T) {
 			msg:  MsgGovManageFeesRequest{RemoveFeeBuyerSettlementRatios: oneRatio},
 			exp:  true,
 		},
+		{
+			name: "one add fee create-commitment flat",
+			msg:  MsgGovManageFeesRequest{AddFeeCreateCommitmentFlat: oneCoin},
+			exp:  true,
+		},
+		{
+			name: "one remove fee create-commitment flat",
+			msg:  MsgGovManageFeesRequest{RemoveFeeCreateCommitmentFlat: oneCoin},
+			exp:  true,
+		},
+		{
+			name: "set fee commitment settlement bips",
+			msg:  MsgGovManageFeesRequest{SetFeeCommitmentSettlementBips: 1},
+			exp:  true,
+		},
+		{
+			name: "unset fee commitment settlement bips",
+			msg:  MsgGovManageFeesRequest{UnsetFeeCommitmentSettlementBips: true},
+			exp:  true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -2155,7 +3591,65 @@ func TestMsgGovManageFeesRequest_HasUpdates(t *testing.T) {
 	}
 }
 
+func TestMsgGovCloseMarketRequest_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name   string
+		msg    MsgGovCloseMarketRequest
+		expErr []string
+	}{
+		{
+			name: "control",
+			msg: MsgGovCloseMarketRequest{
+				Authority: sdk.AccAddress("authority___________").String(),
+				MarketId:  1,
+			},
+		},
+		{
+			name: "no authority",
+			msg: MsgGovCloseMarketRequest{
+				Authority: "",
+				MarketId:  1,
+			},
+			expErr: []string{"invalid authority \"\": " + emptyAddrErr},
+		},
+		{
+			name: "bad authority",
+			msg: MsgGovCloseMarketRequest{
+				Authority: "notanauthorityaddr",
+				MarketId:  1,
+			},
+			expErr: []string{"invalid authority \"notanauthorityaddr\": " + bech32Err},
+		},
+		{
+			name: "market zero",
+			msg: MsgGovCloseMarketRequest{
+				Authority: sdk.AccAddress("authority___________").String(),
+				MarketId:  0,
+			},
+			expErr: []string{"invalid market id: cannot be zero"},
+		},
+		{
+			name: "multiple errors",
+			msg: MsgGovCloseMarketRequest{
+				Authority: "",
+				MarketId:  0,
+			},
+			expErr: []string{
+				"invalid authority \"\": " + emptyAddrErr,
+				"invalid market id: cannot be zero",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testValidateBasic(t, &tc.msg, tc.expErr)
+		})
+	}
+}
+
 func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
 	authority := sdk.AccAddress("authority___________").String()
 
 	tests := []struct {

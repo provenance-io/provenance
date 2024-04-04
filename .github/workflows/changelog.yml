@@ -36,7 +36,7 @@ jobs:
       - uses: dangoslen/dependabot-changelog-helper@v3
         with:
           version: ${{ needs.setup.outputs.version }}
-          activationLabel: 'dependencies'
+          activationLabels: 'dependencies'
           changelogPath: './CHANGELOG.md'
 
       # This step is required for committing the changes to your branch.

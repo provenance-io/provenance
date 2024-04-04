@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -1302,6 +1304,62 @@ func (s *QueryServerTestSuite) TestGetByAddr() {
 				s.Assert().Equal(tc.expResp.ContractSpecs, resp.ContractSpecs, "GetByAddr response ContractSpecs")
 				s.Assert().Equal(tc.expResp.RecordSpecs, resp.RecordSpecs, "GetByAddr response RecordSpecs")
 				s.Assert().Equal(tc.expResp.NotFound, resp.NotFound, "GetByAddr response NotFound")
+			}
+		})
+	}
+}
+
+func (s *QueryServerTestSuite) TestScopeNetAssetValuesQuery() {
+	app, ctx, queryClient := s.app, s.ctx, s.queryClient
+	scopeID := types.ScopeMetadataAddress(uuid.New())
+	scopeIDNF := types.ScopeMetadataAddress(uuid.New())
+
+	netAssetValues := make([]types.NetAssetValue, 5)
+	for i := range netAssetValues {
+		netAssetValues[i] = types.NetAssetValue{
+			Price: sdk.Coin{
+				Denom:  fmt.Sprintf("usd%v", i),
+				Amount: sdkmath.NewInt(100 * int64(i+1)),
+			},
+		}
+		err := app.MetadataKeeper.SetNetAssetValue(ctx, scopeID, netAssetValues[i], "source")
+		s.Require().NoError(err)
+	}
+
+	tests := []struct {
+		name       string
+		req        *types.QueryScopeNetAssetValuesRequest
+		expErr     string
+		expNavsLen int
+	}{
+		{
+			name:       "Valid Request with results",
+			req:        &types.QueryScopeNetAssetValuesRequest{Id: scopeID.String()},
+			expErr:     "",
+			expNavsLen: len(netAssetValues),
+		},
+		{
+			name:       "Valid Request without results",
+			req:        &types.QueryScopeNetAssetValuesRequest{Id: scopeIDNF.String()},
+			expErr:     "",
+			expNavsLen: 0,
+		},
+		{
+			name:   "Invalid Request - Bad Scope ID",
+			req:    &types.QueryScopeNetAssetValuesRequest{Id: "note-scope-id"},
+			expErr: "error extracting scope address",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			resp, err := queryClient.ScopeNetAssetValues(gocontext.Background(), tc.req)
+			if tc.expErr != "" {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErr)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Len(resp.NetAssetValues, tc.expNavsLen)
 			}
 		})
 	}

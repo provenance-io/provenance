@@ -218,6 +218,104 @@ func (k QueryServer) GetAllOrders(goCtx context.Context, req *exchange.QueryGetA
 	return resp, nil
 }
 
+// GetCommitment gets the funds in an account that are committed to the market.
+func (k QueryServer) GetCommitment(goCtx context.Context, req *exchange.QueryGetCommitmentRequest) (*exchange.QueryGetCommitmentResponse, error) {
+	if req == nil || len(req.Account) == 0 || req.MarketId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := sdk.AccAddressFromBech32(req.Account)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid account %q: %v", req.Account, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := &exchange.QueryGetCommitmentResponse{
+		Amount: k.GetCommitmentAmount(ctx, req.MarketId, addr),
+	}
+	return resp, nil
+}
+
+// GetAccountCommitments gets all the funds in an account that are committed to any market.
+func (k QueryServer) GetAccountCommitments(goCtx context.Context, req *exchange.QueryGetAccountCommitmentsRequest) (*exchange.QueryGetAccountCommitmentsResponse, error) {
+	if req == nil || len(req.Account) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := sdk.AccAddressFromBech32(req.Account)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid account %q: %v", req.Account, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	store := k.getStore(ctx)
+	resp := &exchange.QueryGetAccountCommitmentsResponse{}
+	k.IterateKnownMarketIDs(ctx, func(marketID uint32) bool {
+		amount := getCommitmentAmount(store, marketID, addr)
+		if !amount.IsZero() {
+			resp.Commitments = append(resp.Commitments, &exchange.MarketAmount{MarketId: marketID, Amount: amount})
+		}
+		return false
+	})
+
+	return resp, nil
+}
+
+// GetMarketCommitments gets all the funds committed to a market from any account.
+func (k QueryServer) GetMarketCommitments(goCtx context.Context, req *exchange.QueryGetMarketCommitmentsRequest) (*exchange.QueryGetMarketCommitmentsResponse, error) {
+	if req == nil || req.MarketId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetKeyPrefixCommitmentsToMarket(req.MarketId)
+	store := prefix.NewStore(k.getStore(ctx), keyPrefix)
+
+	resp := &exchange.QueryGetMarketCommitmentsResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(store, req.Pagination, func(keySuffix []byte, value []byte) error {
+		com, _ := parseCommitmentKeyValue(keyPrefix, keySuffix, value)
+		if com != nil && !com.Amount.IsZero() {
+			resp.Commitments = append(resp.Commitments, &exchange.AccountAmount{Account: com.Account, Amount: com.Amount})
+		}
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating commitments for market %d: %v", req.MarketId, pageErr)
+	}
+
+	return resp, nil
+}
+
+// GetAllCommitments gets all fund committed to any market from any account.
+func (k QueryServer) GetAllCommitments(goCtx context.Context, req *exchange.QueryGetAllCommitmentsRequest) (*exchange.QueryGetAllCommitmentsResponse, error) {
+	var pageReq *query.PageRequest
+	if req != nil {
+		pageReq = req.Pagination
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetKeyPrefixCommitments()
+	store := prefix.NewStore(k.getStore(ctx), keyPrefix)
+
+	resp := &exchange.QueryGetAllCommitmentsResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(store, pageReq, func(keySuffix []byte, value []byte) error {
+		com, _ := parseCommitmentKeyValue(keyPrefix, keySuffix, value)
+		if com != nil && !com.Amount.IsZero() {
+			resp.Commitments = append(resp.Commitments, com)
+		}
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating all commitments: %v", pageErr)
+	}
+
+	return resp, nil
+}
+
 // GetMarket returns all the information and details about a market.
 func (k QueryServer) GetMarket(goCtx context.Context, req *exchange.QueryGetMarketRequest) (*exchange.QueryGetMarketResponse, error) {
 	if req == nil || req.MarketId == 0 {
@@ -279,6 +377,25 @@ func (k QueryServer) GetAllMarkets(goCtx context.Context, req *exchange.QueryGet
 func (k QueryServer) Params(goCtx context.Context, _ *exchange.QueryParamsRequest) (*exchange.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	resp := &exchange.QueryParamsResponse{Params: k.GetParamsOrDefaults(ctx)}
+	return resp, nil
+}
+
+// CommitmentSettlementFeeCalc calculates the fees a market will pay for a commitment settlement using current NAVs.
+func (k QueryServer) CommitmentSettlementFeeCalc(goCtx context.Context, req *exchange.QueryCommitmentSettlementFeeCalcRequest) (*exchange.QueryCommitmentSettlementFeeCalcResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp, err := k.CalculateCommitmentSettlementFee(ctx, req.Settlement)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	if !req.IncludeBreakdownFields && len(req.Settlement.Inputs) > 0 {
+		resp = &exchange.QueryCommitmentSettlementFeeCalcResponse{ExchangeFees: resp.ExchangeFees}
+	}
+
 	return resp, nil
 }
 
@@ -387,6 +504,12 @@ func (k QueryServer) ValidateManageFees(goCtx context.Context, req *exchange.Que
 			createBidFlats, msg.AddFeeCreateBidFlat, msg.RemoveFeeCreateBidFlat)...)
 	}
 
+	if len(msg.AddFeeCreateCommitmentFlat) > 0 || len(msg.RemoveFeeCreateCommitmentFlat) > 0 {
+		createCommitmentFlatKeyMakers := getCreateCommitmentFlatFees(store, msg.MarketId)
+		errs = append(errs, exchange.ValidateAddRemoveFeeOptionsWithExisting("create-commitment",
+			createCommitmentFlatKeyMakers, msg.AddFeeCreateCommitmentFlat, msg.RemoveFeeCreateCommitmentFlat)...)
+	}
+
 	if len(msg.AddFeeSellerSettlementFlat) > 0 || len(msg.RemoveFeeSellerSettlementFlat) > 0 {
 		sellerFlats := getSellerSettlementFlatFees(store, msg.MarketId)
 		errs = append(errs, exchange.ValidateAddRemoveFeeOptionsWithExisting("seller settlement",
@@ -420,5 +543,174 @@ func (k QueryServer) ValidateManageFees(goCtx context.Context, req *exchange.Que
 		resp.Error = errors.Join(errs...).Error()
 	}
 
+	return resp, nil
+}
+
+// GetPayment gets a single specific payment.
+func (k QueryServer) GetPayment(goCtx context.Context, req *exchange.QueryGetPaymentRequest) (*exchange.QueryGetPaymentResponse, error) {
+	if req == nil || len(req.Source) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	source, err := sdk.AccAddressFromBech32(req.Source)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid source %q: %v", req.Source, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := &exchange.QueryGetPaymentResponse{}
+	resp.Payment, err = k.Keeper.GetPayment(ctx, source, req.ExternalId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error reading payment from state with source %s and external id %q: %v",
+			req.Source, req.ExternalId, err)
+	}
+	if resp.Payment == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "no payment found with source %s and external id %q",
+			req.Source, req.ExternalId)
+	}
+
+	return resp, nil
+}
+
+// GetPaymentsWithSource gets all payments with a specific source account.
+func (k QueryServer) GetPaymentsWithSource(goCtx context.Context, req *exchange.QueryGetPaymentsWithSourceRequest) (*exchange.QueryGetPaymentsWithSourceResponse, error) {
+	if req == nil || len(req.Source) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	source, err := sdk.AccAddressFromBech32(req.Source)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid source %q: %v", req.Source, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetKeyPrefixPaymentsForSource(source)
+	preStore := prefix.NewStore(k.getStore(ctx), keyPrefix)
+
+	resp := &exchange.QueryGetPaymentsWithSourceResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(preStore, req.Pagination, func(keySuffix, value []byte) error {
+		// Only add it to the result if we can read it. This might result in fewer results than the limit,
+		// but at least one bad entry won't block others by causing the whole thing to return an error.
+		payment, pErr := k.parsePaymentStoreValue(value)
+		if pErr != nil {
+			k.logEndpointError(ctx, "GetPaymentsWithSource", "Error reading payment from state.", "error", pErr,
+				"source", source.String(), "value", fmt.Sprintf("%v", value),
+				"keyPrefix", fmt.Sprintf("%v", keyPrefix), "keySuffix", fmt.Sprintf("%v", keySuffix))
+			return nil
+		}
+		if payment == nil {
+			k.logEndpointError(ctx, "GetPaymentsWithSource", "Empty payment entry.",
+				"source", source.String(), "value", fmt.Sprintf("%v", value),
+				"keyPrefix", fmt.Sprintf("%v", keyPrefix), "keySuffix", fmt.Sprintf("%v", keySuffix))
+			return nil
+		}
+		resp.Payments = append(resp.Payments, payment)
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating payments with source %s: %v", req.Source, pageErr)
+	}
+
+	return resp, nil
+}
+
+// GetPaymentsWithTarget gets all payments with a specific target account.
+func (k QueryServer) GetPaymentsWithTarget(goCtx context.Context, req *exchange.QueryGetPaymentsWithTargetRequest) (*exchange.QueryGetPaymentsWithTargetResponse, error) {
+	if req == nil || len(req.Target) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	target, err := sdk.AccAddressFromBech32(req.Target)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid target %q: %v", req.Target, err)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetIndexKeyPrefixTargetToPayments(target)
+	store := k.getStore(ctx)
+	preStore := prefix.NewStore(store, keyPrefix)
+
+	resp := &exchange.QueryGetPaymentsWithTargetResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(preStore, req.Pagination, func(keySuffix, _ []byte) error {
+		// Only add it to the result if we can read it. This might result in fewer results than the limit,
+		// but at least one bad entry won't block others by causing the whole thing to return an error.
+		source, externalID, pErr := ParseIndexKeySuffixTargetToPayment(keySuffix)
+		if pErr != nil {
+			k.logEndpointError(ctx, "GetPaymentsWithTarget", "Error reading target to payment index entry.",
+				"error", pErr, "target", target.String(),
+				"keyPrefix", fmt.Sprintf("%v", keyPrefix), "keySuffix", fmt.Sprintf("%v", keySuffix))
+			return nil
+		}
+
+		payment, pErr := k.getPaymentFromStore(store, source, externalID)
+		if pErr != nil {
+			k.logEndpointError(ctx, "GetPaymentsWithTarget", "Error reading payment from store.", "error", pErr,
+				"target", target.String(), "source", source.String(), "externalID", externalID,
+			)
+			return nil
+		}
+		if payment == nil {
+			k.logEndpointError(ctx, "GetPaymentsWithTarget", "No payment found from target to payment index entry.",
+				"target", target.String(), "source", source.String(), "externalID", externalID)
+			return nil
+		}
+
+		resp.Payments = append(resp.Payments, payment)
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating payments with target %s: %v", req.Target, pageErr)
+	}
+
+	return resp, nil
+}
+
+// GetAllPayments gets all payments.
+func (k QueryServer) GetAllPayments(goCtx context.Context, req *exchange.QueryGetAllPaymentsRequest) (*exchange.QueryGetAllPaymentsResponse, error) {
+	var pagination *query.PageRequest
+	if req != nil {
+		pagination = req.Pagination
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	keyPrefix := GetKeyPrefixAllPayments()
+	preStore := prefix.NewStore(k.getStore(ctx), keyPrefix)
+
+	resp := &exchange.QueryGetAllPaymentsResponse{}
+	var pageErr error
+	resp.Pagination, pageErr = query.Paginate(preStore, pagination, func(keySuffix, value []byte) error {
+		payment, pErr := k.parsePaymentStoreValue(value)
+		if pErr != nil {
+			k.logEndpointError(ctx, "GetAllPayments", "Error reading payment from store.",
+				"error", pErr, "value", fmt.Sprintf("%v", value),
+				"keyPrefix", fmt.Sprintf("%v", keyPrefix), "keySuffix", fmt.Sprintf("%v", keySuffix))
+			return nil
+		}
+		if payment == nil {
+			k.logEndpointError(ctx, "GetAllPayments", "Empty payment entry.",
+				"value", fmt.Sprintf("%v", value),
+				"keyPrefix", fmt.Sprintf("%v", keyPrefix), "keySuffix", fmt.Sprintf("%v", keySuffix))
+			return nil
+		}
+		resp.Payments = append(resp.Payments, payment)
+		return nil
+	})
+
+	if pageErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "error iterating all payments: %v", pageErr)
+	}
+
+	return resp, nil
+}
+
+// PaymentFeeCalc calculates the fees that must be paid for creating or accepting a specific payment.
+func (k QueryServer) PaymentFeeCalc(goCtx context.Context, req *exchange.QueryPaymentFeeCalcRequest) (*exchange.QueryPaymentFeeCalcResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	resp := k.CalculatePaymentFees(ctx, &req.Payment)
 	return resp, nil
 }

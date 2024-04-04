@@ -14,6 +14,7 @@ import (
 const (
 	// A sane default for maximum length of an audit message string (memo)
 	maxAuditMessageLength = 200
+	UsdDenom              = "usd"
 )
 
 // NewScope creates a new instance.
@@ -609,4 +610,16 @@ s2Loop:
 		return false
 	}
 	return true
+}
+
+// NewNetAssetValue returns a new instance of NetAssetValue
+func NewNetAssetValue(price sdk.Coin) NetAssetValue {
+	return NetAssetValue{
+		Price: price,
+	}
+}
+
+// Validate returns error if NetAssetValue is not in a valid state
+func (mnav *NetAssetValue) Validate() error {
+	return mnav.Price.Validate()
 }

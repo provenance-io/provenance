@@ -39,7 +39,7 @@ type MsgServerTestSuite struct {
 
 func (s *MsgServerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false)
+	s.ctx = keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
 	s.msgServer = keeper.NewMsgServerImpl(s.app.MetadataKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
@@ -85,7 +85,7 @@ func (s *MsgServerTestSuite) TestAddAndDeleteScopeDataAccess() {
 	_, err := s.msgServer.WriteScopeSpecification(s.ctx, scopeSpecMsg)
 	s.Assert().NoError(err, "setup test with new scope specification")
 
-	writeScopeMsg := types.NewMsgWriteScopeRequest(*scope, []string{s.user1})
+	writeScopeMsg := types.NewMsgWriteScopeRequest(*scope, []string{s.user1}, 0)
 	_, err = s.msgServer.WriteScope(s.ctx, writeScopeMsg)
 	s.Assert().NoError(err, "setup test with new scope")
 
@@ -248,7 +248,7 @@ func (s *MsgServerTestSuite) TestAddAndDeleteScopeOwners() {
 	_, err := s.msgServer.WriteScopeSpecification(s.ctx, scopeSpecMsg)
 	s.Assert().NoError(err, "setup test with new scope specification")
 
-	writeScopeMsg := types.NewMsgWriteScopeRequest(*scope, []string{s.user1})
+	writeScopeMsg := types.NewMsgWriteScopeRequest(*scope, []string{s.user1}, 0)
 	_, err = s.msgServer.WriteScope(s.ctx, writeScopeMsg)
 	s.Assert().NoError(err, "setup test with new scope")
 
@@ -1296,4 +1296,100 @@ func (s *MsgServerTestSuite) TestIssue412WriteScopeOptionalField() {
 		assert.NoError(t, err)
 		assert.NotNil(t, 0, res)
 	})
+}
+
+func (s *MsgServerTestSuite) TestAddNetAssetValue() {
+	scopeSpecUUIDNF := uuid.New()
+	scopeSpecIDNF := types.ScopeSpecMetadataAddress(scopeSpecUUIDNF)
+
+	scopeUUID := uuid.New()
+	scopeID := types.ScopeMetadataAddress(scopeUUID)
+	scopeSpecUUID := uuid.New()
+	scopeSpecID := types.ScopeSpecMetadataAddress(scopeSpecUUID)
+	pubkey1 := secp256k1.GenPrivKey().PubKey()
+	user1Addr := sdk.AccAddress(pubkey1.Address())
+	user1 := user1Addr.String()
+	pubkey2 := secp256k1.GenPrivKey().PubKey()
+	user2Addr := sdk.AccAddress(pubkey2.Address())
+	user2 := user2Addr.String()
+
+	ns := *types.NewScope(scopeID, scopeSpecID, ownerPartyList(user1), []string{user1}, user1, false)
+
+	s.app.MetadataKeeper.SetScope(s.ctx, ns)
+
+	testCases := []struct {
+		name   string
+		msg    types.MsgAddNetAssetValuesRequest
+		expErr string
+	}{
+		{
+			name: "no marker found",
+			msg: types.MsgAddNetAssetValuesRequest{
+				ScopeId: scopeSpecIDNF.String(),
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Price: sdk.NewInt64Coin("navcoin", 1),
+					}},
+				Signers: []string{user1},
+			},
+			expErr: fmt.Sprintf("scope not found: %v: not found", scopeSpecIDNF.String()),
+		},
+		{
+			name: "value denom does not exist",
+			msg: types.MsgAddNetAssetValuesRequest{
+				ScopeId: scopeID.String(),
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Price:              sdk.NewInt64Coin("hotdog", 100),
+						UpdatedBlockHeight: 1,
+					},
+				},
+				Signers: []string{user1},
+			},
+			expErr: `net asset value denom does not exist: marker hotdog not found for address: cosmos1p6l3annxy35gm5mfm6m0jz2mdj8peheuzf9alh: invalid request`,
+		},
+		{
+			name: "not authorize user",
+			msg: types.MsgAddNetAssetValuesRequest{
+				ScopeId: scopeID.String(),
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Price:              sdk.NewInt64Coin(types.UsdDenom, 100),
+						UpdatedBlockHeight: 1,
+					},
+				},
+				Signers: []string{user2},
+			},
+			expErr: fmt.Sprintf("missing signature: %v: tx intended signer does not match the given signer", user1),
+		},
+		{
+			name: "successfully set nav",
+			msg: types.MsgAddNetAssetValuesRequest{
+				ScopeId: scopeID.String(),
+				NetAssetValues: []types.NetAssetValue{
+					{
+						Price:              sdk.NewInt64Coin(types.UsdDenom, 100),
+						UpdatedBlockHeight: 1,
+					},
+				},
+				Signers: []string{user1},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			res, err := s.msgServer.AddNetAssetValues(sdk.WrapSDKContext(s.ctx),
+				&tc.msg)
+
+			if len(tc.expErr) > 0 {
+				s.Assert().Nil(res)
+				s.Assert().EqualError(err, tc.expErr)
+
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().Equal(res, &types.MsgAddNetAssetValuesResponse{})
+			}
+		})
+	}
 }

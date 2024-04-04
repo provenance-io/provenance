@@ -71,7 +71,7 @@ jobs:
           echo "        file-prefix: [${{ needs.setup.outputs.file-prefix }}]"
           echo "go-cache-key-suffix: [${{ needs.setup.outputs.go-cache-key-suffix }}]"
           echo "      go-cache-path: [${{ needs.setup.outputs.go-cache-path }}]"
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Load go cache
         id: go-cache-setup
         with:
@@ -83,7 +83,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev wget curl build-essential cmake gcc sqlite3
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
@@ -111,7 +111,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Load go cache
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
@@ -122,7 +122,7 @@ jobs:
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
@@ -149,7 +149,7 @@ jobs:
             fi
           fi
           exit "$ec"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: ${{ steps.test-logs.outputs.test-logs }}
@@ -170,7 +170,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Load go cache
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
@@ -181,7 +181,7 @@ jobs:
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.db-backend }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
@@ -194,7 +194,7 @@ jobs:
           export DB_BACKEND=${{ matrix.db-backend }}
           make test-sim-${{ matrix.test }} | tee "${{ steps.test-logs.outputs.test-logs }}.txt"
           exit "${PIPESTATUS[0]}"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: ${{ steps.test-logs.outputs.test-logs }}
@@ -214,7 +214,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Load go cache
         with:
           key: ${{ runner.os }}-${{ needs.setup.outputs.go-cache-key-suffix }}
@@ -225,7 +225,7 @@ jobs:
           test_logs="${{ needs.setup.outputs.file-prefix }}-${{ matrix.test }}-${{ matrix.os }}"
           echo "Setting output: test-logs=$test_logs"
           echo "test-logs=$test_logs" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ needs.setup.outputs.go-version }}
       - name: Display go version
@@ -237,7 +237,7 @@ jobs:
           set -x
           make test-sim-${{ matrix.test }} | tee "${{ steps.test-logs.outputs.test-logs }}.txt"
           exit "${PIPESTATUS[0]}"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: ${{ steps.test-logs.outputs.test-logs }}
