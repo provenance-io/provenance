@@ -2,13 +2,18 @@ package keeper_test
 
 import (
 	"encoding/binary"
+	"fmt"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -31,6 +36,12 @@ type MsgServerTestSuite struct {
 	owner1Addr sdk.AccAddress
 	acct1      sdk.AccountI
 
+	privkey2   cryptotypes.PrivKey
+	pubkey2    cryptotypes.PubKey
+	owner2     string
+	owner2Addr sdk.AccAddress
+	acct2      sdk.AccountI
+
 	addresses []sdk.AccAddress
 }
 
@@ -47,10 +58,37 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.owner1 = s.owner1Addr.String()
 	acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.owner1Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, acc)
+
+	s.privkey2 = secp256k1.GenPrivKey()
+	s.pubkey2 = s.privkey2.PubKey()
+	s.owner2Addr = sdk.AccAddress(s.pubkey2.Address())
+	s.owner2 = s.owner2Addr.String()
+	acc2 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.owner2Addr)
+	s.app.AccountKeeper.SetAccount(s.ctx, acc2)
+
+	var nameData types.GenesisState
+	nameData.Bindings = append(nameData.Bindings, types.NewNameRecord("name", s.owner1Addr, false))
+	nameData.Bindings = append(nameData.Bindings, types.NewNameRecord("example.name", s.owner1Addr, false))
+	nameData.Params.AllowUnrestrictedNames = false
+	nameData.Params.MaxNameLevels = 16
+	nameData.Params.MinSegmentLength = 2
+	nameData.Params.MaxSegmentLength = 16
+
+	s.app.NameKeeper.InitGenesis(s.ctx, nameData)
 }
 
 func TestMsgServerTestSuite(t *testing.T) {
 	suite.Run(t, new(MsgServerTestSuite))
+}
+
+func (s *MsgServerTestSuite) containsMessage(events []abci.Event, msg proto.Message) bool {
+	for _, event := range events {
+		typeEvent, _ := sdk.ParseTypedEvent(event)
+		if assert.ObjectsAreEqual(msg, typeEvent) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *MsgServerTestSuite) TestDeleteNameRequest() {
@@ -140,5 +178,157 @@ func (s *MsgServerTestSuite) TestDeleteNameRemovingAttributeAccounts() {
 		bz := attrStore.Get(key)
 		s.Assert().Nil(bz)
 
+	}
+}
+
+// create name record
+func (s *MsgServerTestSuite) TestCreateName() {
+	tests := []struct {
+		name          string
+		expectedError error
+		msg           *types.MsgBindNameRequest
+		expectedEvent proto.Message
+	}{
+		{
+			name:          "create name record",
+			msg:           types.NewMsgBindNameRequest(types.NewNameRecord("new", s.owner2Addr, false), types.NewNameRecord("example.name", s.owner1Addr, false)),
+			expectedError: nil,
+			expectedEvent: types.NewEventNameBound(s.owner2, "new.example.name", false),
+		},
+		{
+			name:          "create bad name record",
+			msg:           types.NewMsgBindNameRequest(types.NewNameRecord("new", s.owner2Addr, false), types.NewNameRecord("foo.name", s.owner1Addr, false)),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap(types.ErrNameNotBound.Error()),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := s.msgServer.BindName(s.ctx, tc.msg)
+			if tc.expectedError != nil {
+				s.Require().EqualError(err, tc.expectedError.Error())
+			} else {
+				s.Require().NoError(err)
+			}
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Require().True(result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
+			}
+		})
+	}
+}
+
+// delete name record
+func (s *MsgServerTestSuite) TestDeleteName() {
+	tests := []struct {
+		name          string
+		expectedError error
+		msg           *types.MsgDeleteNameRequest
+		expectedEvent proto.Message
+	}{
+		{
+			name:          "delete name record",
+			msg:           types.NewMsgDeleteNameRequest(types.NewNameRecord("example.name", s.owner1Addr, false)),
+			expectedError: nil,
+			expectedEvent: types.NewEventNameUnbound(s.owner1, "example.name", false),
+		},
+		{
+			name:          "create bad name record",
+			msg:           types.NewMsgDeleteNameRequest(types.NewNameRecord("example.name", s.owner1Addr, false)),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap("name does not exist"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := s.msgServer.DeleteName(s.ctx, tc.msg)
+			if tc.expectedError != nil {
+				s.Require().EqualError(err, tc.expectedError.Error())
+			} else {
+				s.Require().NoError(err)
+			}
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Require().True(result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestModifyName() {
+	authority := s.app.NameKeeper.GetAuthority()
+
+	tests := []struct {
+		name          string
+		expectedError error
+		msg           *types.MsgModifyNameRequest
+		expectedEvent proto.Message
+	}{
+		{
+			name:          "modify name record, via gov ",
+			msg:           types.NewMsgModifyNameRequest(authority, "name", s.owner1Addr, true),
+			expectedError: nil,
+			expectedEvent: types.NewEventNameUpdate(s.owner1, "name", true),
+		},
+		{
+			name:          "modify name record, via owner",
+			msg:           types.NewMsgModifyNameRequest(s.owner1, "name", s.owner1Addr, true),
+			expectedError: nil,
+			expectedEvent: types.NewEventNameUpdate(s.owner1, "name", true),
+		},
+		{
+			name:          "modify name record with multi level",
+			msg:           types.NewMsgModifyNameRequest(authority, "example.name", s.owner1Addr, true),
+			expectedError: nil,
+			expectedEvent: types.NewEventNameUpdate(s.owner1, "example.name", true),
+		},
+		{
+			name:          "modify name - fails with invalid address",
+			msg:           types.NewMsgModifyNameRequest(authority, "name", sdk.AccAddress{}, true),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap("empty address string is not allowed"),
+			expectedEvent: nil,
+		},
+		{
+			name:          "modify name - fails with non existent root record",
+			msg:           types.NewMsgModifyNameRequest(authority, "jackthecat", s.owner1Addr, true),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap(types.ErrNameNotBound.Error()),
+			expectedEvent: nil,
+		},
+		{
+			name:          "modify name - fails with non existent subdomain record",
+			msg:           types.NewMsgModifyNameRequest(authority, "jackthecat.name", s.owner1Addr, true),
+			expectedError: sdkerrors.ErrInvalidRequest.Wrap(types.ErrNameNotBound.Error()),
+			expectedEvent: nil,
+		},
+		{
+			name:          "modify name - fails with invalid authority",
+			msg:           types.NewMsgModifyNameRequest("jackthecat", "name", s.owner1Addr, true),
+			expectedError: sdkerrors.ErrUnauthorized.Wrapf("expected %s or %s got %s", authority, s.owner1, "jackthecat"),
+			expectedEvent: nil,
+		},
+		{
+			name:          "modify name - fails with empty authority",
+			msg:           types.NewMsgModifyNameRequest("", "name", s.owner1Addr, true),
+			expectedError: sdkerrors.ErrUnauthorized.Wrapf("expected %s or %s got %s", authority, s.owner1, ""),
+			expectedEvent: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := s.msgServer.ModifyName(s.ctx, tc.msg)
+			if tc.expectedError != nil {
+				s.Require().EqualError(err, tc.expectedError.Error())
+			} else {
+				s.Require().NoError(err)
+			}
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Require().True(result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
+			}
+		})
 	}
 }
