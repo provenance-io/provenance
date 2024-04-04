@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -177,15 +178,18 @@ func ConstructAndSendTx(tt *testing.T, app piosimapp.App, ctx sdk.Context, acct 
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
 	acct = app.AccountKeeper.GetAccount(ctx, acct.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct, ctx.ChainID(), msg)
+	txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct, ctx.ChainID(), msg)
 	require.NoError(tt, err, "SignTxAndGetBytes")
-	// TODO[1760]: finalize-block: Uncomment the rest of this func.
-	_ = txBytes
-	/*
-		res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-		require.Equal(tt, expectedCode, res.Code, "res=%+v", res)
-		if len(expectedError) > 0 {
-			require.Contains(tt, res.Log, expectedError, "DeliverTx result.Log")
-		}
-	*/
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: ctx.BlockHeight() + 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txBytes},
+	},
+	)
+	require.NoError(tt, err, "FinalizeBlock expected no error")
+	require.Len(tt, res.TxResults, 1, "TxResults expected len not met")
+	require.Equal(tt, int(expectedCode), int(res.TxResults[0].Code), "res=%+v", res)
+	if len(expectedError) > 0 {
+		require.Contains(tt, res.TxResults[0].Log, expectedError, "DeliverTx result.Log")
+	}
 }

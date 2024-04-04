@@ -48,9 +48,8 @@ func setupEventHistory(s *KeeperTestSuite) {
 }
 
 func SetupEventHistory(s *KeeperTestSuite, events sdk.Events) {
-	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
-	// eventManagerStub := sdk.NewEventManagerWithHistory(events.ToABCIEvents())
-	// s.ctx = s.ctx.WithEventManager(eventManagerStub)
+	eventManagerStub := sdk.NewEventManagerWithHistory(events.ToABCIEvents())
+	s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
 // with delegate
@@ -1173,12 +1172,12 @@ func SetupEventHistoryWithVotes(s *KeeperTestSuite, sender string) {
 		event2,
 		event3,
 	}
-	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
-	_ = loggedEvents
-	// newEvents := loggedEvents.ToABCIEvents()
-	// newEvents = append(newEvents, s.ctx.EventManager().GetABCIEventHistory()...)
-	// eventManagerStub := sdk.NewEventManagerWithHistory(newEvents)
-	// s.ctx = s.ctx.WithEventManager(eventManagerStub)
+	newEvents := loggedEvents.ToABCIEvents()
+	eventManager, _ := s.ctx.EventManager().(sdk.EventManagerWithHistoryI)
+
+	newEvents = append(newEvents, eventManager.GetABCIEventHistory()...)
+	eventManagerStub := sdk.NewEventManagerWithHistory(newEvents)
+	s.ctx = s.ctx.WithEventManager(eventManagerStub)
 }
 
 // transfer

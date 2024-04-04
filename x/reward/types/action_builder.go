@@ -258,7 +258,8 @@ func (v *VoteActionBuilder) AddEvent(_ string, attributes *map[string][]byte) er
 			return err
 		}
 		v.Voter = address
-	} else if action, ok := (*attributes)[sdk.AttributeKeyAction]; ok {
+	}
+	if action, ok := (*attributes)[sdk.AttributeKeyAction]; ok {
 		a := string(action)
 		for _, m := range getGovVoteMsgURLs() {
 			if a == m {

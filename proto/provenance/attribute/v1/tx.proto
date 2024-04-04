@@ -35,6 +35,8 @@ service Msg {
 // MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account.
 // Attributes may only be set in an account by the account that the attribute name resolves to.
 message MsgAddAttributeRequest {
+  option (cosmos.msg.v1.signer) = "account";
+
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -60,6 +62,8 @@ message MsgAddAttributeResponse {}
 // MsgUpdateAttributeRequest defines an sdk.Msg type that is used to update an existing attribute to an account.
 // Attributes may only be set in an account by the account that the attribute name resolves to.
 message MsgUpdateAttributeRequest {
+  option (cosmos.msg.v1.signer) = "owner";
+
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -87,6 +91,8 @@ message MsgUpdateAttributeResponse {}
 // MsgUpdateAttributeExpirationRequest defines an sdk.Msg type that is used to update an existing attribute's expiration
 // date
 message MsgUpdateAttributeExpirationRequest {
+  option (cosmos.msg.v1.signer) = "owner";
+
   option (gogoproto.equal)            = true;
   option (gogoproto.stringer)         = true;
   option (gogoproto.goproto_stringer) = false;
@@ -109,6 +115,8 @@ message MsgUpdateAttributeExpirationResponse {}
 // MsgDeleteAttributeRequest defines a message to delete an attribute from an account
 // Attributes may only be removed from an account by the account that the attribute name resolves to.
 message MsgDeleteAttributeRequest {
+  option (cosmos.msg.v1.signer) = "owner";
+
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
@@ -128,6 +136,8 @@ message MsgDeleteAttributeResponse {}
 // MsgDeleteDistinctAttributeRequest defines a message to delete an attribute with matching name, value, and type from
 // an account. Attributes may only be removed from an account by the account that the attribute name resolves to.
 message MsgDeleteDistinctAttributeRequest {
+  option (cosmos.msg.v1.signer) = "owner";
+
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = false;
