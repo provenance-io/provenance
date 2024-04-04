@@ -1,13 +1,13 @@
 package testutil
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
+	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/sanction"
 	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
@@ -114,7 +114,7 @@ func (s *IntegrationTestSuite) TestTxSanctionCmd() {
 		},
 		{
 			name:   "bad authority",
-			args:   []string{addr1, "--" + flags.FlagAuthority, "bad1auth34sd2"},
+			args:   []string{addr1, "--" + provcli.FlagAuthority, "bad1auth34sd2"},
 			expErr: []string{"authority", `"bad1auth34sd2"`, "decoding bech32 failed"},
 		},
 		{
@@ -204,7 +204,7 @@ func (s *IntegrationTestSuite) TestTxUnsanctionCmd() {
 		},
 		{
 			name:   "bad authority",
-			args:   []string{addr1, "--" + flags.FlagAuthority, "bad1auth34sd2"},
+			args:   []string{addr1, "--" + provcli.FlagAuthority, "bad1auth34sd2"},
 			expErr: []string{"authority", `"bad1auth34sd2"`, "decoding bech32 failed"},
 		},
 		{
@@ -325,7 +325,7 @@ func (s *IntegrationTestSuite) TestTxUpdateParamsCmd() {
 		},
 		{
 			name:   "bad authority",
-			args:   []string{"", "", "--" + flags.FlagAuthority, "bad1auth34sd2"},
+			args:   []string{"", "", "--" + provcli.FlagAuthority, "bad1auth34sd2"},
 			expErr: []string{"authority", `"bad1auth34sd2"`, "decoding bech32 failed"},
 		},
 		{

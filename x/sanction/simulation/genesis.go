@@ -82,7 +82,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	// SanctionedAddresses
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, SanctionAddresses, &genState.SanctionedAddresses, simState.Rand,
+		SanctionAddresses, &genState.SanctionedAddresses, simState.Rand,
 		func(r *rand.Rand) {
 			genState.SanctionedAddresses = RandomSanctionedAddresses(r, simtypes.RandomAccounts(r, len(simState.Accounts)))
 		},
@@ -90,7 +90,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	// TemporaryEntries
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, SanctionTempEntries, &genState.TemporaryEntries, simState.Rand,
+		SanctionTempEntries, &genState.TemporaryEntries, simState.Rand,
 		func(r *rand.Rand) {
 			genState.TemporaryEntries = RandomTempEntries(r, simtypes.RandomAccounts(r, len(simState.Accounts)))
 		},
@@ -98,7 +98,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	// Params
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, SanctionParams, &genState.Params, simState.Rand,
+		SanctionParams, &genState.Params, simState.Rand,
 		func(r *rand.Rand) { genState.Params = RandomParams(r) },
 	)
 

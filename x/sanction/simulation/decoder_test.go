@@ -14,7 +14,7 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simappparams.MakeTestEncodingConfig().Codec
+	cdc := simappparams.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	tests := []struct {

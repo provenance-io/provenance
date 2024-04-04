@@ -56,7 +56,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.commonArgs = []string{
 		fmt.Sprintf("--%s", flags.FlagFrom), s.valAddr.String(),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
 		fmt.Sprintf("--%s=%s", flags.FlagFees, s.bondCoins(10).String()),
 	}
 

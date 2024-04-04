@@ -4,25 +4,18 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/sanction"
 )
 
 var (
-	// DefaultAuthorityAddr is the default authority to provide in the sanction module's governance proposal messages.
-	// It should match the value provided to the sanction keeper constructor.
-	// It is defined as a sdk.AccAddress to be independent of global bech32 HRP definition.
-	DefaultAuthorityAddr = authtypes.NewModuleAddress(govtypes.ModuleName)
-
 	// exampleTxCmdBase is the base command that gets a user to one of the tx commands in here.
 	exampleTxCmdBase = fmt.Sprintf("%s tx %s", version.AppName, sanction.ModuleName)
 	// exampleTxAddr1 is a constant address for use in example strings.
@@ -74,19 +67,19 @@ $ %[1]s sanction %[3]s %[2]s
 
 			msgSanction := &sanction.MsgSanction{
 				Addresses: args,
-				Authority: getAuthority(flagSet),
+				Authority: provcli.GetAuthority(flagSet),
 			}
 			if err = msgSanction.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msgSanction)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msgSanction)
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
 	govcli.AddGovPropFlagsToCmd(cmd)
-	addAuthorityFlagToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 
 	return cmd
 }
@@ -115,19 +108,19 @@ $ %[1]s unsanction %[2]s %[3]s
 
 			msgUnsanction := &sanction.MsgUnsanction{
 				Addresses: args,
-				Authority: getAuthority(flagSet),
+				Authority: provcli.GetAuthority(flagSet),
 			}
 			if err = msgUnsanction.ValidateBasic(); err != nil {
 				return err
 			}
 
-			return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msgUnsanction)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msgUnsanction)
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
 	govcli.AddGovPropFlagsToCmd(cmd)
-	addAuthorityFlagToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 
 	return cmd
 }
@@ -158,7 +151,7 @@ $ %[1]s update-params '' ''
 
 			msgUpdateParams := &sanction.MsgUpdateParams{
 				Params:    &sanction.Params{},
-				Authority: getAuthority(flagSet),
+				Authority: provcli.GetAuthority(flagSet),
 			}
 
 			if len(args[0]) > 0 {
@@ -179,30 +172,13 @@ $ %[1]s update-params '' ''
 				return err
 			}
 
-			return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msgUpdateParams)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msgUpdateParams)
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
 	govcli.AddGovPropFlagsToCmd(cmd)
-	addAuthorityFlagToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 
 	return cmd
-}
-
-// addAuthorityFlagToCmd adds the authority flag to a command.
-func addAuthorityFlagToCmd(cmd *cobra.Command) {
-	// Note: Not setting a default here because the HRP might not yet be set correctly.
-	cmd.Flags().String(flags.FlagAuthority, "", "The authority to use. If not provided, a default is used")
-}
-
-// getAuthority gets the authority string from the flagSet or returns the default.
-func getAuthority(flagSet *pflag.FlagSet) string {
-	// Ignoring the error here since we really don't care,
-	// and it's easier if this just returns a string.
-	authority, _ := flagSet.GetString(flags.FlagAuthority)
-	if len(authority) > 0 {
-		return authority
-	}
-	return DefaultAuthorityAddr.String()
 }
