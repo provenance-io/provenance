@@ -12,6 +12,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"cosmossdk.io/collections"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -29,6 +31,14 @@ type SimTestSuite struct {
 
 	ctx sdk.Context
 	app *app.App
+
+	votingPeriod  time.Duration
+	depositPeriod time.Duration
+	govMinDep     sdk.Coins
+	sanctMinDep   sdk.Coins
+	unsanctMinDep sdk.Coins
+
+	accsRand *rand.Rand
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -38,6 +48,12 @@ func TestSimTestSuite(t *testing.T) {
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.freshCtx()
+
+	s.votingPeriod = 2 * time.Minute
+	s.depositPeriod = 1 * time.Second
+	s.govMinDep = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 3))
+	s.sanctMinDep = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 7))
+	s.unsanctMinDep = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
 }
 
 // freshCtx creates a new context and sets it to this SimTestSuite's ctx field.
@@ -76,7 +92,9 @@ func (s *SimTestSuite) setSanctionParamsAboveGovDeposit() {
 		ImmediateUnsanctionMinDeposit: nil,
 	}
 
-	for _, coin := range s.app.GovKeeper.GetDepositParams(s.ctx).MinDeposit {
+	govParams, err := s.app.GovKeeper.Params.Get(s.ctx)
+	s.Require().NoError(err, "s.app.GovKeeper.Params.Get(s.ctx)")
+	for _, coin := range govParams.MinDeposit {
 		sanctCoin := sdk.NewCoin(coin.Denom, coin.Amount.AddRaw(5))
 		unsanctCoin := sdk.NewCoin(coin.Denom, coin.Amount.AddRaw(10))
 		sancParams.ImmediateSanctionMinDeposit = sancParams.ImmediateSanctionMinDeposit.Add(sanctCoin)
@@ -95,11 +113,109 @@ func (s *SimTestSuite) setSanctionParamsAboveGovDeposit() {
 
 // getLastGovProp gets the last gov prop to be submitted.
 func (s *SimTestSuite) getLastGovProp() *govv1.Proposal {
-	props := s.app.GovKeeper.GetProposals(s.ctx)
-	if len(props) == 0 {
+	propID, err := s.app.GovKeeper.ProposalID.Peek(s.ctx)
+	s.Require().NoError(err, "s.app.GovKeeper.ProposalID.Peek(s.ctx)")
+	if propID == 0 {
 		return nil
 	}
-	return props[len(props)-1]
+	prop, err := s.app.GovKeeper.Proposals.Get(s.ctx, propID)
+	s.Require().NoError(err, "s.app.GovKeeper.Proposals.Get(s.ctx, %d)", propID)
+	return &prop
+}
+
+// getVotes gets all the votes on a proposal.
+func (s *SimTestSuite) getVotes(propID uint64) []*govv1.Vote {
+	var rv []*govv1.Vote
+	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](propID)
+	err := s.app.GovKeeper.Votes.Walk(s.ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote govv1.Vote) (bool, error) {
+		entry := vote
+		rv = append(rv, &entry)
+		return false, nil
+	})
+	s.Require().NoError(err, "error from s.app.GovKeeper.Votes.Walk")
+	return rv
+}
+
+// requireResetParams resets both the gov and sanction params to the standards used by most tests in here.
+func (s *SimTestSuite) requireResetParams() {
+	s.requireResetGovParams()
+	s.requireResetSanctionParams()
+}
+
+// requireResetParams resets the gov params to the standard used by most tests in here.
+func (s *SimTestSuite) requireResetGovParams() {
+	params, err := s.app.GovKeeper.Params.Get(s.ctx)
+	s.Require().NoError(err, "s.app.GovKeeper.Params.Get(s.ctx)")
+	params.VotingPeriod = &s.votingPeriod
+	params.MinDeposit = s.govMinDep
+	params.MaxDepositPeriod = &s.depositPeriod
+	err = s.app.GovKeeper.Params.Set(s.ctx, params)
+	s.Require().NoError(err, "s.app.GovKeeper.Params.Set(s.ctx, params) (setting VotingPeriod, MinDeposit, MaxDepositPeriod)")
+}
+
+// requireSetGovParamsMinDeposit updates the gov params.MinDeposit to the provided amount.
+func (s *SimTestSuite) requireSetGovParamsMinDeposit(minDep sdk.Coins) {
+	params, err := s.app.GovKeeper.Params.Get(s.ctx)
+	s.Require().NoError(err, "s.app.GovKeeper.Params.Get(s.ctx)")
+	params.MinDeposit = minDep
+	err = s.app.GovKeeper.Params.Set(s.ctx, params)
+	s.Require().NoError(err, "s.app.GovKeeper.Params.Set(s.ctx, params) (setting MinDeposit)")
+}
+
+// requireResetSanctionParams resets the sanction params to the standard used by most tests in here.
+func (s *SimTestSuite) requireResetSanctionParams() {
+	assertions.RequireNotPanicsNoError(s.T(), func() error {
+		return s.app.SanctionKeeper.SetParams(s.ctx, &sanction.Params{
+			ImmediateSanctionMinDeposit:   s.sanctMinDep,
+			ImmediateUnsanctionMinDeposit: s.unsanctMinDep,
+		})
+	}, "sanction SetParams")
+}
+
+// requireResetState resets the params to the standard values and deletes all sanctions and temp sanctions.
+func (s *SimTestSuite) requireResetState() {
+	s.requireResetParams()
+
+	var sanctionedAddrs []sdk.AccAddress
+	require.NotPanics(s.T(), func() {
+		s.app.SanctionKeeper.IterateSanctionedAddresses(s.ctx, func(addr sdk.AccAddress) bool {
+			sanctionedAddrs = append(sanctionedAddrs, addr)
+			return false
+		})
+	}, "IterateSanctionedAddresses")
+
+	require.NotPanics(s.T(), func() {
+		s.app.SanctionKeeper.IterateTemporaryEntries(s.ctx, nil, func(addr sdk.AccAddress, _ uint64, _ bool) bool {
+			sanctionedAddrs = append(sanctionedAddrs, addr)
+			return false
+		})
+	}, "IterateTemporaryEntries")
+
+	assertions.RequireNotPanicsNoError(s.T(), func() error {
+		return s.app.SanctionKeeper.UnsanctionAddresses(s.ctx, sanctionedAddrs...)
+	}, "UnsanctionAddresses")
+}
+
+// resetAccsRand resets the accsRand randomizer to seed 1.
+func (s *SimTestSuite) resetAccsRand() {
+	s.accsRand = rand.New(rand.NewSource(1))
+}
+
+// randAddrs creates random acc addresses.
+func (s *SimTestSuite) randAddrs(count int) []sdk.AccAddress {
+	accs := simtypes.RandomAccounts(s.accsRand, count)
+	addrs := make([]sdk.AccAddress, len(accs))
+	for i, acc := range accs {
+		addrs[i] = acc.Address
+	}
+	return addrs
+}
+
+// requireSanctionAddresses sanctions the provided addresses.
+func (s *SimTestSuite) requireSanctionAddresses(addrs []sdk.AccAddress) {
+	assertions.RequireNotPanicsNoError(s.T(), func() error {
+		return s.app.SanctionKeeper.SanctionAddresses(s.ctx, addrs...)
+	})
 }
 
 // getWeightedOpsArgs creates a standard WeightedOpsArgs.
@@ -134,14 +250,8 @@ func (s *SimTestSuite) nextBlock() {
 
 func (s *SimTestSuite) TestWeightedOperations() {
 	s.setSanctionParamsAboveGovDeposit()
-	assertions.RequireNotPanicsNoError(s.T(), func() error {
-		accs := simtypes.RandomAccounts(rand.New(rand.NewSource(500)), 10)
-		addrs := make([]sdk.AccAddress, len(accs))
-		for i, acc := range accs {
-			addrs[i] = acc.Address
-		}
-		return s.app.SanctionKeeper.SanctionAddresses(s.ctx, addrs...)
-	})
+	s.accsRand = rand.New(rand.NewSource(500))
+	s.requireSanctionAddresses(s.randAddrs(10))
 
 	govPropType := sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
 
@@ -522,8 +632,8 @@ func (s *SimTestSuite) TestOperationMsgVote() {
 			if tc.expOpMsgOK && opMsg.OK {
 				// If we were expecting a success and there was a success,
 				// get the prop again and check that the vote went through.
-				vote, found := s.app.GovKeeper.GetVote(s.ctx, tc.govPropID, tc.voter.Address)
-				if s.Assert().True(found, "GetVote(%d) found bool", tc.govPropID) {
+				vote, err := s.app.GovKeeper.Votes.Get(s.ctx, collections.Join(tc.govPropID, tc.voter.Address))
+				if s.Assert().NoError(err, "Votes.Get(%d, %s) error", tc.govPropID, tc.voter.Address) {
 					if s.Assert().Len(vote.Options, 1, "vote options") {
 						s.Assert().Equal(tc.vote, vote.Options[0].Option, "vote option")
 						s.Assert().Equal("1.000000000000000000", vote.Options[0].Weight, "vote option weight")
@@ -699,37 +809,12 @@ func TestMaxCoins(t *testing.T) {
 
 func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 	chainID := "test-simulate-gov-msg-sanction"
-	votingPeriod := 2 * time.Minute
-	depositPeriod := 1 * time.Second
-	govMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 3))
-	sanctMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 7))
-	unsanctMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
 
-	// resetParams resets the params to the values defined above.
-	resetParams := func(t *testing.T, ctx sdk.Context) {
-		require.NotPanics(t, func() {
-			s.app.GovKeeper.SetVotingParams(ctx, govv1.VotingParams{VotingPeriod: &votingPeriod})
-		}, "gov SetVotingParams")
-		require.NotPanics(t, func() {
-			s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{
-				MinDeposit:       govMinDep,
-				MaxDepositPeriod: &depositPeriod,
-			})
-		}, "gov SetDepositParams")
-		assertions.RequireNotPanicsNoError(t, func() error {
-			return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
-				ImmediateSanctionMinDeposit:   sanctMinDep,
-				ImmediateUnsanctionMinDeposit: unsanctMinDep,
-			})
-		}, "sanction SetParams")
-	}
-
-	// Create a random number generator for use only in generating accounts.
-	accsRand := rand.New(rand.NewSource(1))
+	s.resetAccsRand()
 
 	tests := []struct {
 		name            string
-		setup           func(t *testing.T, ctx sdk.Context)
+		setup           func()
 		accs            []simtypes.Account
 		expInErr        []string
 		expOpMsgOK      bool
@@ -739,12 +824,10 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 	}{
 		{
 			name: "gov min deposit equals immediate sanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				require.NotPanics(t, func() {
-					s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{MinDeposit: sanctMinDep})
-				}, "gov SetDepositParams")
+			setup: func() {
+				s.requireSetGovParamsMinDeposit(s.sanctMinDep)
 			},
-			accs:            simtypes.RandomAccounts(accsRand, 10),
+			accs:            simtypes.RandomAccounts(s.accsRand, 10),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgSanction{}),
@@ -752,12 +835,10 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 		},
 		{
 			name: "gov min deposit greater than immediate sanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				require.NotPanics(t, func() {
-					s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{MinDeposit: sanctMinDep.Add(govMinDep...)})
-				}, "gov SetDepositParams")
+			setup: func() {
+				s.requireSetGovParamsMinDeposit(s.sanctMinDep.Add(s.govMinDep...))
 			},
-			accs:            simtypes.RandomAccounts(accsRand, 10),
+			accs:            simtypes.RandomAccounts(s.accsRand, 10),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgSanction{}),
@@ -765,7 +846,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 		},
 		{
 			name:            "problem sending gov msg",
-			accs:            s.createTestingAccountsWithPower(accsRand, 10, 0),
+			accs:            s.createTestingAccountsWithPower(s.accsRand, 10, 0),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgSanction{}),
@@ -773,7 +854,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 		},
 		{
 			name:            "all good",
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
@@ -786,9 +867,9 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			resetParams(s.T(), s.ctx)
+			s.requireResetParams()
 			if tc.setup != nil {
-				tc.setup(s.T(), s.ctx)
+				tc.setup()
 			}
 			var op simtypes.Operation
 			testFunc := func() {
@@ -815,10 +896,10 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 				// If we were expecting it to be okay, and it was, run all the future ops too.
 				// Some of them might fail (due to being sanctioned),
 				// but all the ones that went through should be YES votes.
-				maxBlockTime := s.ctx.BlockHeader().Time.Add(votingPeriod)
+				maxBlockTime := s.ctx.BlockHeader().Time.Add(s.votingPeriod)
 				prop := s.getLastGovProp()
-				s.Assert().Equal(govMinDep.String(), sdk.NewCoins(prop.TotalDeposit...).String(), "prop deposit")
-				preVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
+				s.Assert().Equal(s.govMinDep.String(), sdk.NewCoins(prop.TotalDeposit...).String(), "prop deposit")
+				preVotes := s.getVotes(prop.Id)
 				// There shouldn't be any votes yet.
 				if !s.Assert().Empty(preVotes, "votes before running future ops") {
 					for i, fop := range fops {
@@ -845,7 +926,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 						s.Assert().Equal(tc.expOpMsgComment, fopMsg.Comment, "future op %d msg comment", i+1)
 					}
 					// Now there should be some votes.
-					postVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
+					postVotes := s.getVotes(prop.Id)
 					for i, vote := range postVotes {
 						if s.Assert().Len(vote.Options, 1, "vote %d options count", i+1) {
 							s.Assert().Equal(govv1.OptionYes, vote.Options[0].Option, "vote %d option", i+1)
@@ -882,37 +963,12 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 
 func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 	chainID := "test-simulate-gov-msg-immediate-sanction"
-	votingPeriod := 2 * time.Minute
-	depositPeriod := 1 * time.Second
-	govMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 3))
-	sanctMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 7))
-	unsanctMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
 
-	// resetParams resets the params to the values defined above.
-	resetParams := func(t *testing.T, ctx sdk.Context) {
-		require.NotPanics(t, func() {
-			s.app.GovKeeper.SetVotingParams(ctx, govv1.VotingParams{VotingPeriod: &votingPeriod})
-		}, "gov SetVotingParams")
-		require.NotPanics(t, func() {
-			s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{
-				MinDeposit:       govMinDep,
-				MaxDepositPeriod: &depositPeriod,
-			})
-		}, "gov SetDepositParams")
-		assertions.RequireNotPanicsNoError(t, func() error {
-			return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
-				ImmediateSanctionMinDeposit:   sanctMinDep,
-				ImmediateUnsanctionMinDeposit: unsanctMinDep,
-			})
-		}, "sanction SetParams")
-	}
-
-	// Create a random number generator for use only in generating accounts.
-	accsRand := rand.New(rand.NewSource(1))
+	s.resetAccsRand()
 
 	tests := []struct {
 		name            string
-		setup           func(t *testing.T, ctx sdk.Context)
+		setup           func()
 		r               *rand.Rand
 		accs            []simtypes.Account
 		expInErr        []string
@@ -925,16 +981,16 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 	}{
 		{
 			name: "immediate min deposit is zero",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
+			setup: func() {
+				assertions.RequireNotPanicsNoError(s.T(), func() error {
+					return s.app.SanctionKeeper.SetParams(s.ctx, &sanction.Params{
 						ImmediateSanctionMinDeposit:   sdk.Coins{},
 						ImmediateUnsanctionMinDeposit: sdk.Coins{},
 					})
 				}, "sanction SetParams")
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            simtypes.RandomAccounts(accsRand, 10),
+			accs:            simtypes.RandomAccounts(s.accsRand, 10),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgSanction{}),
@@ -943,56 +999,46 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 		{
 			name:            "gov min deposit less than immediate sanction",
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 10),
+			accs:            s.createTestingAccounts(s.accsRand, 10),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate sanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      sanctMinDep,
+			expDeposit:      s.sanctMinDep,
 		},
 		{
 			name: "gov min deposit equals immediate sanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				require.NotPanics(t, func() {
-					s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{
-						MinDeposit:       sanctMinDep,
-						MaxDepositPeriod: &depositPeriod,
-					})
-				}, "gov SetDepositParams")
+			setup: func() {
+				s.requireSetGovParamsMinDeposit(s.sanctMinDep)
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 10),
+			accs:            s.createTestingAccounts(s.accsRand, 10),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate sanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      sanctMinDep,
+			expDeposit:      s.sanctMinDep,
 		},
 		{
 			name: "gov min deposit greater than immediate sanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				require.NotPanics(t, func() {
-					s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{
-						MinDeposit:       sanctMinDep.Add(govMinDep...),
-						MaxDepositPeriod: &depositPeriod,
-					})
-				}, "gov SetDepositParams")
+			setup: func() {
+				s.requireSetGovParamsMinDeposit(s.sanctMinDep.Add(s.govMinDep...))
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 10),
+			accs:            s.createTestingAccounts(s.accsRand, 10),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate sanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      sanctMinDep.Add(govMinDep...),
+			expDeposit:      s.sanctMinDep.Add(s.govMinDep...),
 		},
 		{
 			name:            "problem sending gov msg",
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccountsWithPower(accsRand, 10, 0),
+			accs:            s.createTestingAccountsWithPower(s.accsRand, 10, 0),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgSanction{}),
@@ -1001,24 +1047,24 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 		{
 			name:            "all good yes vote",
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate sanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      sanctMinDep,
+			expDeposit:      s.sanctMinDep,
 		},
 		{
 			name:            "all good no vote",
 			r:               rand.New(rand.NewSource(0)),
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate sanction",
 			expVote:         govv1.OptionNo,
-			expDeposit:      sanctMinDep,
+			expDeposit:      s.sanctMinDep,
 		},
 	}
 
@@ -1027,9 +1073,9 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			resetParams(s.T(), s.ctx)
+			s.requireResetParams()
 			if tc.setup != nil {
-				tc.setup(s.T(), s.ctx)
+				tc.setup()
 			}
 			var op simtypes.Operation
 			testFunc := func() {
@@ -1056,10 +1102,10 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 				// If we were expecting it to be okay, and it was, run all the future ops too.
 				// Some of them might fail (due to being sanctioned),
 				// but all the ones that went through should be YES votes.
-				maxBlockTime := s.ctx.BlockHeader().Time.Add(votingPeriod)
+				maxBlockTime := s.ctx.BlockHeader().Time.Add(s.votingPeriod)
 				prop := s.getLastGovProp()
 				s.Assert().Equal(tc.expDeposit.String(), sdk.NewCoins(prop.TotalDeposit...).String(), "prop deposit")
-				preVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
+				preVotes := s.getVotes(prop.Id)
 				// There shouldn't be any votes yet.
 				if !s.Assert().Empty(preVotes, "votes before running future ops") {
 					for i, fop := range fops {
@@ -1086,7 +1132,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 						s.Assert().Equal(tc.expOpMsgComment, fopMsg.Comment, "future op %d msg comment", i+1)
 					}
 					// Now there should be some votes.
-					postVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
+					postVotes := s.getVotes(prop.Id)
 					for i, vote := range postVotes {
 						if s.Assert().Len(vote.Options, 1, "vote %d options count", i+1) {
 							s.Assert().Equal(tc.expVote, vote.Options[0].Option, "vote %d option", i+1)
@@ -1123,62 +1169,12 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 
 func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 	chainID := "test-simulate-gov-msg-unsanction"
-	votingPeriod := 2 * time.Minute
-	depositPeriod := 1 * time.Second
-	govMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 3))
-	sanctMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 7))
-	unsanctMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
 
-	// resetState resets the params to the values defined above and deletes all sanctions and temp sanctions.
-	resetState := func(t *testing.T, ctx sdk.Context) {
-		require.NotPanics(t, func() {
-			s.app.GovKeeper.SetVotingParams(ctx, govv1.VotingParams{VotingPeriod: &votingPeriod})
-		}, "gov SetVotingParams")
-		require.NotPanics(t, func() {
-			s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{
-				MinDeposit:       govMinDep,
-				MaxDepositPeriod: &depositPeriod,
-			})
-		}, "gov SetDepositParams")
-		assertions.RequireNotPanicsNoError(t, func() error {
-			return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
-				ImmediateSanctionMinDeposit:   sanctMinDep,
-				ImmediateUnsanctionMinDeposit: unsanctMinDep,
-			})
-		}, "sanction SetParams")
-		var sanctionedAddrs []sdk.AccAddress
-		require.NotPanics(t, func() {
-			s.app.SanctionKeeper.IterateSanctionedAddresses(ctx, func(addr sdk.AccAddress) bool {
-				sanctionedAddrs = append(sanctionedAddrs, addr)
-				return false
-			})
-		}, "IterateSanctionedAddresses")
-		require.NotPanics(t, func() {
-			s.app.SanctionKeeper.IterateTemporaryEntries(ctx, nil, func(addr sdk.AccAddress, _ uint64, _ bool) bool {
-				sanctionedAddrs = append(sanctionedAddrs, addr)
-				return false
-			})
-		}, "IterateTemporaryEntries")
-		assertions.RequireNotPanicsNoError(t, func() error {
-			return s.app.SanctionKeeper.UnsanctionAddresses(ctx, sanctionedAddrs...)
-		}, "UnsanctionAddresses")
-	}
-
-	// Create a random number generator for use only in generating accounts.
-	accsRand := rand.New(rand.NewSource(1))
-
-	randAddrs := func(count int) []sdk.AccAddress {
-		accs := simtypes.RandomAccounts(accsRand, count)
-		addrs := make([]sdk.AccAddress, len(accs))
-		for i, acc := range accs {
-			addrs[i] = acc.Address
-		}
-		return addrs
-	}
+	s.resetAccsRand()
 
 	tests := []struct {
 		name            string
-		setup           func(t *testing.T, ctx sdk.Context)
+		setup           func()
 		accs            []simtypes.Account
 		expInErr        []string
 		expOpMsgOK      bool
@@ -1189,7 +1185,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 	}{
 		{
 			name:            "no addresses sanctioned",
-			accs:            simtypes.RandomAccounts(accsRand, 10),
+			accs:            simtypes.RandomAccounts(s.accsRand, 10),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgUnsanction{}),
@@ -1197,15 +1193,11 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		},
 		{
 			name: "gov min deposit equals immediate unsanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
-				})
-				require.NotPanics(t, func() {
-					s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{MinDeposit: unsanctMinDep})
-				}, "gov SetDepositParams")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(5))
+				s.requireSetGovParamsMinDeposit(s.unsanctMinDep)
 			},
-			accs:            simtypes.RandomAccounts(accsRand, 10),
+			accs:            simtypes.RandomAccounts(s.accsRand, 10),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgUnsanction{}),
@@ -1213,15 +1205,11 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		},
 		{
 			name: "gov min deposit greater than immediate unsanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
-				})
-				require.NotPanics(t, func() {
-					s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{MinDeposit: unsanctMinDep.Add(govMinDep...)})
-				}, "gov SetDepositParams")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(5))
+				s.requireSetGovParamsMinDeposit(s.unsanctMinDep.Add(s.govMinDep...))
 			},
-			accs:            simtypes.RandomAccounts(accsRand, 10),
+			accs:            simtypes.RandomAccounts(s.accsRand, 10),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgUnsanction{}),
@@ -1229,12 +1217,10 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		},
 		{
 			name: "problem sending gov msg",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
-				})
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(5))
 			},
-			accs:            s.createTestingAccountsWithPower(accsRand, 10, 0),
+			accs:            s.createTestingAccountsWithPower(s.accsRand, 10, 0),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgUnsanction{}),
@@ -1242,12 +1228,10 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		},
 		{
 			name: "3 addrs to unsanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(3)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(3))
 			},
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
@@ -1256,12 +1240,10 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		},
 		{
 			name: "10 addrs to unsanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(10)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(10))
 			},
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
@@ -1270,12 +1252,10 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		},
 		{
 			name: "39 addrs to unsanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(39)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(39))
 			},
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
@@ -1284,12 +1264,10 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		},
 		{
 			name: "40 addrs to unsanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(40)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(40))
 			},
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
@@ -1303,9 +1281,9 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			resetState(s.T(), s.ctx)
+			s.requireResetState()
 			if tc.setup != nil {
-				tc.setup(s.T(), s.ctx)
+				tc.setup()
 			}
 			var op simtypes.Operation
 			testFunc := func() {
@@ -1332,10 +1310,10 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 				// If we were expecting it to be okay, and it was, run all the future ops too.
 				// Some of them might fail (due to being sanctioned),
 				// but all the ones that went through should be YES votes.
-				maxBlockTime := s.ctx.BlockHeader().Time.Add(votingPeriod)
+				maxBlockTime := s.ctx.BlockHeader().Time.Add(s.votingPeriod)
 				prop := s.getLastGovProp()
-				s.Assert().Equal(govMinDep.String(), sdk.NewCoins(prop.TotalDeposit...).String(), "prop deposit")
-				preVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
+				s.Assert().Equal(s.govMinDep.String(), sdk.NewCoins(prop.TotalDeposit...).String(), "prop deposit")
+				preVotes := s.getVotes(prop.Id)
 				// There shouldn't be any votes yet.
 				if !s.Assert().Empty(preVotes, "votes before running future ops") {
 					for i, fop := range fops {
@@ -1362,7 +1340,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 						s.Assert().Equal(tc.expOpMsgComment, fopMsg.Comment, "future op %d msg comment", i+1)
 					}
 					// Now there should be some votes.
-					postVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
+					postVotes := s.getVotes(prop.Id)
 					for i, vote := range postVotes {
 						if s.Assert().Len(vote.Options, 1, "vote %d options count", i+1) {
 							s.Assert().Equal(govv1.OptionYes, vote.Options[0].Option, "vote %d option", i+1)
@@ -1399,62 +1377,12 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 
 func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 	chainID := "test-simulate-gov-msg-immediate-unsanction"
-	votingPeriod := 2 * time.Minute
-	depositPeriod := 1 * time.Second
-	govMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 3))
-	sanctMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 7))
-	unsanctMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
 
-	// resetState resets the params to the values defined above and deletes all sanctions and temp sanctions.
-	resetState := func(t *testing.T, ctx sdk.Context) {
-		require.NotPanics(t, func() {
-			s.app.GovKeeper.SetVotingParams(ctx, govv1.VotingParams{VotingPeriod: &votingPeriod})
-		}, "gov SetVotingParams")
-		require.NotPanics(t, func() {
-			s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{
-				MinDeposit:       govMinDep,
-				MaxDepositPeriod: &depositPeriod,
-			})
-		}, "gov SetDepositParams")
-		assertions.RequireNotPanicsNoError(t, func() error {
-			return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
-				ImmediateSanctionMinDeposit:   sanctMinDep,
-				ImmediateUnsanctionMinDeposit: unsanctMinDep,
-			})
-		}, "sanction SetParams")
-		var sanctionedAddrs []sdk.AccAddress
-		require.NotPanics(t, func() {
-			s.app.SanctionKeeper.IterateSanctionedAddresses(ctx, func(addr sdk.AccAddress) bool {
-				sanctionedAddrs = append(sanctionedAddrs, addr)
-				return false
-			})
-		}, "IterateSanctionedAddresses")
-		require.NotPanics(t, func() {
-			s.app.SanctionKeeper.IterateTemporaryEntries(ctx, nil, func(addr sdk.AccAddress, _ uint64, _ bool) bool {
-				sanctionedAddrs = append(sanctionedAddrs, addr)
-				return false
-			})
-		}, "IterateTemporaryEntries")
-		assertions.RequireNotPanicsNoError(t, func() error {
-			return s.app.SanctionKeeper.UnsanctionAddresses(ctx, sanctionedAddrs...)
-		}, "UnsanctionAddresses")
-	}
-
-	// Create a random number generator for use only in generating accounts.
-	accsRand := rand.New(rand.NewSource(1))
-
-	randAddrs := func(count int) []sdk.AccAddress {
-		accs := simtypes.RandomAccounts(accsRand, count)
-		addrs := make([]sdk.AccAddress, len(accs))
-		for i, acc := range accs {
-			addrs[i] = acc.Address
-		}
-		return addrs
-	}
+	s.resetAccsRand()
 
 	tests := []struct {
 		name            string
-		setup           func(t *testing.T, ctx sdk.Context)
+		setup           func()
 		r               *rand.Rand
 		accs            []simtypes.Account
 		expInErr        []string
@@ -1469,7 +1397,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name:            "no addrs to sanction",
 			r:               rand.New(rand.NewSource(1)),
-			accs:            simtypes.RandomAccounts(accsRand, 10),
+			accs:            simtypes.RandomAccounts(s.accsRand, 10),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgUnsanction{}),
@@ -1477,19 +1405,17 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		},
 		{
 			name: "immediate min deposit is zero",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
-				}, "SanctionAddresses")
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(5))
+				assertions.RequireNotPanicsNoError(s.T(), func() error {
+					return s.app.SanctionKeeper.SetParams(s.ctx, &sanction.Params{
 						ImmediateSanctionMinDeposit:   sdk.Coins{},
 						ImmediateUnsanctionMinDeposit: sdk.Coins{},
 					})
 				}, "sanction SetParams")
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            simtypes.RandomAccounts(accsRand, 10),
+			accs:            simtypes.RandomAccounts(s.accsRand, 10),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgUnsanction{}),
@@ -1498,76 +1424,58 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		},
 		{
 			name: "gov min deposit less than immediate unsanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(5))
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 10),
+			accs:            s.createTestingAccounts(s.accsRand, 10),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      unsanctMinDep,
+			expDeposit:      s.unsanctMinDep,
 			expAddrCount:    4,
 		},
 		{
 			name: "gov min deposit equals immediate unsanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
-				}, "SanctionAddresses")
-				require.NotPanics(t, func() {
-					s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{
-						MinDeposit:       unsanctMinDep,
-						MaxDepositPeriod: &depositPeriod,
-					})
-				}, "gov SetDepositParams")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(5))
+				s.requireSetGovParamsMinDeposit(s.unsanctMinDep)
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 10),
+			accs:            s.createTestingAccounts(s.accsRand, 10),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      unsanctMinDep,
+			expDeposit:      s.unsanctMinDep,
 			expAddrCount:    4,
 		},
 		{
 			name: "gov min deposit greater than immediate unsanction",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
-				}, "SanctionAddresses")
-				require.NotPanics(t, func() {
-					s.app.GovKeeper.SetDepositParams(ctx, govv1.DepositParams{
-						MinDeposit:       unsanctMinDep.Add(govMinDep...),
-						MaxDepositPeriod: &depositPeriod,
-					})
-				}, "gov SetDepositParams")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(5))
+				s.requireSetGovParamsMinDeposit(s.unsanctMinDep.Add(s.govMinDep...))
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 10),
+			accs:            s.createTestingAccounts(s.accsRand, 10),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      unsanctMinDep.Add(govMinDep...),
+			expDeposit:      s.unsanctMinDep.Add(s.govMinDep...),
 			expAddrCount:    4,
 		},
 		{
 			name: "problem sending gov msg",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(5))
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccountsWithPower(accsRand, 10, 0),
+			accs:            s.createTestingAccountsWithPower(s.accsRand, 10, 0),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgUnsanction{}),
@@ -1575,138 +1483,122 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		},
 		{
 			name: "3 addrs to unsanction yes",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(3)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(3))
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      unsanctMinDep,
+			expDeposit:      s.unsanctMinDep,
 			expAddrCount:    3,
 		},
 		{
 			name: "3 addrs to unsanction no",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(3)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(3))
 			},
 			r:               rand.New(rand.NewSource(0)),
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionNo,
-			expDeposit:      unsanctMinDep,
+			expDeposit:      s.unsanctMinDep,
 			expAddrCount:    3,
 		},
 		{
 			name: "10 addrs to unsanction yes",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(10)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(10))
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      unsanctMinDep,
+			expDeposit:      s.unsanctMinDep,
 			expAddrCount:    4,
 		},
 		{
 			name: "10 addrs to unsanction no",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(10)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(10))
 			},
 			r:               rand.New(rand.NewSource(0)),
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionNo,
-			expDeposit:      unsanctMinDep,
+			expDeposit:      s.unsanctMinDep,
 			expAddrCount:    4,
 		},
 		{
 			name: "39 addrs to unsanction yes",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(39)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(39))
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      unsanctMinDep,
+			expDeposit:      s.unsanctMinDep,
 			expAddrCount:    9,
 		},
 		{
 			name: "39 addrs to unsanction no",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(39)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(39))
 			},
 			r:               rand.New(rand.NewSource(0)),
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionNo,
-			expDeposit:      unsanctMinDep,
+			expDeposit:      s.unsanctMinDep,
 			expAddrCount:    9,
 		},
 		{
 			name: "40 addrs to unsanction yes",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(40)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(40))
 			},
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionYes,
-			expDeposit:      unsanctMinDep,
+			expDeposit:      s.unsanctMinDep,
 			expAddrCount:    10,
 		},
 		{
 			name: "40 addrs to unsanction no",
-			setup: func(t *testing.T, ctx sdk.Context) {
-				assertions.RequireNotPanicsNoError(t, func() error {
-					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(40)...)
-				}, "SanctionAddresses")
+			setup: func() {
+				s.requireSanctionAddresses(s.randAddrs(40))
 			},
 			r:               rand.New(rand.NewSource(0)),
-			accs:            s.createTestingAccounts(accsRand, 20),
+			accs:            s.createTestingAccounts(s.accsRand, 20),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
 			expOpMsgComment: "immediate unsanction",
 			expVote:         govv1.OptionNo,
-			expDeposit:      unsanctMinDep,
+			expDeposit:      s.unsanctMinDep,
 			expAddrCount:    10,
 		},
 	}
@@ -1716,9 +1608,9 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			resetState(s.T(), s.ctx)
+			s.requireResetState()
 			if tc.setup != nil {
-				tc.setup(s.T(), s.ctx)
+				tc.setup()
 			}
 			var op simtypes.Operation
 			testFunc := func() {
@@ -1745,10 +1637,10 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 				// If we were expecting it to be okay, and it was, run all the future ops too.
 				// Some of them might fail (due to being sanctioned),
 				// but all the ones that went through should be YES votes.
-				maxBlockTime := s.ctx.BlockHeader().Time.Add(votingPeriod)
+				maxBlockTime := s.ctx.BlockHeader().Time.Add(s.votingPeriod)
 				prop := s.getLastGovProp()
 				s.Assert().Equal(tc.expDeposit.String(), sdk.NewCoins(prop.TotalDeposit...).String(), "prop deposit")
-				preVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
+				preVotes := s.getVotes(prop.Id)
 				// There shouldn't be any votes yet.
 				if !s.Assert().Empty(preVotes, "votes before running future ops") {
 					for i, fop := range fops {
@@ -1775,7 +1667,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 						s.Assert().Equal(tc.expOpMsgComment, fopMsg.Comment, "future op %d msg comment", i+1)
 					}
 					// Now there should be some votes.
-					postVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
+					postVotes := s.getVotes(prop.Id)
 					for i, vote := range postVotes {
 						if s.Assert().Len(vote.Options, 1, "vote %d options count", i+1) {
 							s.Assert().Equal(tc.expVote, vote.Options[0].Option, "vote %d option", i+1)
@@ -1812,21 +1704,14 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 
 func (s *SimTestSuite) TestSimulateGovMsgUpdateParams() {
 	chainID := "test-simulate-gov-msg-update-params"
-	votingPeriod := 2 * time.Minute
-	depositPeriod := 1 * time.Second
-	govMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2))
-	s.Require().NotPanics(func() {
-		s.app.GovKeeper.SetVotingParams(s.ctx, govv1.VotingParams{VotingPeriod: &votingPeriod})
-	}, "gov SetVotingParams")
-	s.Require().NotPanics(func() {
-		s.app.GovKeeper.SetDepositParams(s.ctx, govv1.DepositParams{
-			MinDeposit:       govMinDep,
-			MaxDepositPeriod: &depositPeriod,
-		})
-	}, "gov SetDepositParams")
+	origMinDep := s.govMinDep
+	defer func() {
+		s.govMinDep = origMinDep
+	}()
+	s.govMinDep = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2))
+	s.requireResetParams()
 
-	// Create a random number generator for use only in generating accounts.
-	accsRand := rand.New(rand.NewSource(1))
+	s.resetAccsRand()
 
 	tests := []struct {
 		name            string
@@ -1842,7 +1727,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUpdateParams() {
 		{
 			name:            "problem sending gov msg",
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccountsWithPower(accsRand, 10, 0),
+			accs:            s.createTestingAccountsWithPower(s.accsRand, 10, 0),
 			expOpMsgOK:      false,
 			expOpMsgRoute:   "sanction",
 			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgUpdateParams{}),
@@ -1851,7 +1736,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUpdateParams() {
 		{
 			name:            "all good seed 1",
 			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(accsRand, 10),
+			accs:            s.createTestingAccounts(s.accsRand, 10),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
@@ -1864,7 +1749,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUpdateParams() {
 		{
 			name:            "all good seed 100",
 			r:               rand.New(rand.NewSource(100)),
-			accs:            s.createTestingAccounts(accsRand, 10),
+			accs:            s.createTestingAccounts(s.accsRand, 10),
 			expOpMsgOK:      true,
 			expOpMsgRoute:   "gov",
 			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
@@ -1906,10 +1791,10 @@ func (s *SimTestSuite) TestSimulateGovMsgUpdateParams() {
 				// If we were expecting it to be okay, and it was, run all the future ops too.
 				// Some of them might fail (due to being sanctioned),
 				// but all the ones that went through should be YES votes.
-				maxBlockTime := s.ctx.BlockHeader().Time.Add(votingPeriod)
+				maxBlockTime := s.ctx.BlockHeader().Time.Add(s.votingPeriod)
 				prop := s.getLastGovProp()
-				s.Assert().Equal(govMinDep.String(), sdk.NewCoins(prop.TotalDeposit...).String(), "prop deposit")
-				preVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
+				s.Assert().Equal(s.govMinDep.String(), sdk.NewCoins(prop.TotalDeposit...).String(), "prop deposit")
+				preVotes := s.getVotes(prop.Id)
 				// There shouldn't be any votes yet.
 				if !s.Assert().Empty(preVotes, "votes before running future ops") {
 					for i, fop := range fops {
@@ -1936,7 +1821,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUpdateParams() {
 						s.Assert().Equal(tc.expOpMsgComment, fopMsg.Comment, "future op %d msg comment", i+1)
 					}
 					// Now there should be some votes.
-					postVotes := s.app.GovKeeper.GetVotes(s.ctx, prop.Id)
+					postVotes := s.getVotes(prop.Id)
 					for i, vote := range postVotes {
 						if s.Assert().Len(vote.Options, 1, "vote %d options count", i+1) {
 							s.Assert().Equal(govv1.OptionYes, vote.Options[0].Option, "vote %d option", i+1)
