@@ -52,12 +52,25 @@
   
     - [Msg](#provenance.attribute.v1.Msg)
   
+- [provenance/exchange/v1/commitments.proto](#provenance/exchange/v1/commitments.proto)
+    - [AccountAmount](#provenance.exchange.v1.AccountAmount)
+    - [Commitment](#provenance.exchange.v1.Commitment)
+    - [MarketAmount](#provenance.exchange.v1.MarketAmount)
+    - [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice)
+  
 - [provenance/exchange/v1/events.proto](#provenance/exchange/v1/events.proto)
+    - [EventCommitmentReleased](#provenance.exchange.v1.EventCommitmentReleased)
+    - [EventFundsCommitted](#provenance.exchange.v1.EventFundsCommitted)
+    - [EventMarketCommitmentsDisabled](#provenance.exchange.v1.EventMarketCommitmentsDisabled)
+    - [EventMarketCommitmentsEnabled](#provenance.exchange.v1.EventMarketCommitmentsEnabled)
     - [EventMarketCreated](#provenance.exchange.v1.EventMarketCreated)
     - [EventMarketDetailsUpdated](#provenance.exchange.v1.EventMarketDetailsUpdated)
     - [EventMarketDisabled](#provenance.exchange.v1.EventMarketDisabled)
     - [EventMarketEnabled](#provenance.exchange.v1.EventMarketEnabled)
     - [EventMarketFeesUpdated](#provenance.exchange.v1.EventMarketFeesUpdated)
+    - [EventMarketIntermediaryDenomUpdated](#provenance.exchange.v1.EventMarketIntermediaryDenomUpdated)
+    - [EventMarketOrdersDisabled](#provenance.exchange.v1.EventMarketOrdersDisabled)
+    - [EventMarketOrdersEnabled](#provenance.exchange.v1.EventMarketOrdersEnabled)
     - [EventMarketPermissionsUpdated](#provenance.exchange.v1.EventMarketPermissionsUpdated)
     - [EventMarketReqAttrUpdated](#provenance.exchange.v1.EventMarketReqAttrUpdated)
     - [EventMarketUserSettleDisabled](#provenance.exchange.v1.EventMarketUserSettleDisabled)
@@ -69,6 +82,11 @@
     - [EventOrderFilled](#provenance.exchange.v1.EventOrderFilled)
     - [EventOrderPartiallyFilled](#provenance.exchange.v1.EventOrderPartiallyFilled)
     - [EventParamsUpdated](#provenance.exchange.v1.EventParamsUpdated)
+    - [EventPaymentAccepted](#provenance.exchange.v1.EventPaymentAccepted)
+    - [EventPaymentCancelled](#provenance.exchange.v1.EventPaymentCancelled)
+    - [EventPaymentCreated](#provenance.exchange.v1.EventPaymentCreated)
+    - [EventPaymentRejected](#provenance.exchange.v1.EventPaymentRejected)
+    - [EventPaymentUpdated](#provenance.exchange.v1.EventPaymentUpdated)
   
 - [provenance/exchange/v1/market.proto](#provenance/exchange/v1/market.proto)
     - [AccessGrant](#provenance.exchange.v1.AccessGrant)
@@ -89,52 +107,93 @@
     - [DenomSplit](#provenance.exchange.v1.DenomSplit)
     - [Params](#provenance.exchange.v1.Params)
   
+- [provenance/exchange/v1/payments.proto](#provenance/exchange/v1/payments.proto)
+    - [Payment](#provenance.exchange.v1.Payment)
+  
 - [provenance/exchange/v1/genesis.proto](#provenance/exchange/v1/genesis.proto)
     - [GenesisState](#provenance.exchange.v1.GenesisState)
   
 - [provenance/exchange/v1/tx.proto](#provenance/exchange/v1/tx.proto)
+    - [MsgAcceptPaymentRequest](#provenance.exchange.v1.MsgAcceptPaymentRequest)
+    - [MsgAcceptPaymentResponse](#provenance.exchange.v1.MsgAcceptPaymentResponse)
     - [MsgCancelOrderRequest](#provenance.exchange.v1.MsgCancelOrderRequest)
     - [MsgCancelOrderResponse](#provenance.exchange.v1.MsgCancelOrderResponse)
+    - [MsgCancelPaymentsRequest](#provenance.exchange.v1.MsgCancelPaymentsRequest)
+    - [MsgCancelPaymentsResponse](#provenance.exchange.v1.MsgCancelPaymentsResponse)
+    - [MsgChangePaymentTargetRequest](#provenance.exchange.v1.MsgChangePaymentTargetRequest)
+    - [MsgChangePaymentTargetResponse](#provenance.exchange.v1.MsgChangePaymentTargetResponse)
+    - [MsgCommitFundsRequest](#provenance.exchange.v1.MsgCommitFundsRequest)
+    - [MsgCommitFundsResponse](#provenance.exchange.v1.MsgCommitFundsResponse)
     - [MsgCreateAskRequest](#provenance.exchange.v1.MsgCreateAskRequest)
     - [MsgCreateAskResponse](#provenance.exchange.v1.MsgCreateAskResponse)
     - [MsgCreateBidRequest](#provenance.exchange.v1.MsgCreateBidRequest)
     - [MsgCreateBidResponse](#provenance.exchange.v1.MsgCreateBidResponse)
+    - [MsgCreatePaymentRequest](#provenance.exchange.v1.MsgCreatePaymentRequest)
+    - [MsgCreatePaymentResponse](#provenance.exchange.v1.MsgCreatePaymentResponse)
     - [MsgFillAsksRequest](#provenance.exchange.v1.MsgFillAsksRequest)
     - [MsgFillAsksResponse](#provenance.exchange.v1.MsgFillAsksResponse)
     - [MsgFillBidsRequest](#provenance.exchange.v1.MsgFillBidsRequest)
     - [MsgFillBidsResponse](#provenance.exchange.v1.MsgFillBidsResponse)
+    - [MsgGovCloseMarketRequest](#provenance.exchange.v1.MsgGovCloseMarketRequest)
+    - [MsgGovCloseMarketResponse](#provenance.exchange.v1.MsgGovCloseMarketResponse)
     - [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest)
     - [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse)
     - [MsgGovManageFeesRequest](#provenance.exchange.v1.MsgGovManageFeesRequest)
     - [MsgGovManageFeesResponse](#provenance.exchange.v1.MsgGovManageFeesResponse)
     - [MsgGovUpdateParamsRequest](#provenance.exchange.v1.MsgGovUpdateParamsRequest)
     - [MsgGovUpdateParamsResponse](#provenance.exchange.v1.MsgGovUpdateParamsResponse)
+    - [MsgMarketCommitmentSettleRequest](#provenance.exchange.v1.MsgMarketCommitmentSettleRequest)
+    - [MsgMarketCommitmentSettleResponse](#provenance.exchange.v1.MsgMarketCommitmentSettleResponse)
     - [MsgMarketManagePermissionsRequest](#provenance.exchange.v1.MsgMarketManagePermissionsRequest)
     - [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse)
     - [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest)
     - [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse)
+    - [MsgMarketReleaseCommitmentsRequest](#provenance.exchange.v1.MsgMarketReleaseCommitmentsRequest)
+    - [MsgMarketReleaseCommitmentsResponse](#provenance.exchange.v1.MsgMarketReleaseCommitmentsResponse)
     - [MsgMarketSetOrderExternalIDRequest](#provenance.exchange.v1.MsgMarketSetOrderExternalIDRequest)
     - [MsgMarketSetOrderExternalIDResponse](#provenance.exchange.v1.MsgMarketSetOrderExternalIDResponse)
     - [MsgMarketSettleRequest](#provenance.exchange.v1.MsgMarketSettleRequest)
     - [MsgMarketSettleResponse](#provenance.exchange.v1.MsgMarketSettleResponse)
+    - [MsgMarketUpdateAcceptingCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsRequest)
+    - [MsgMarketUpdateAcceptingCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsResponse)
+    - [MsgMarketUpdateAcceptingOrdersRequest](#provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersRequest)
+    - [MsgMarketUpdateAcceptingOrdersResponse](#provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersResponse)
     - [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest)
     - [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse)
     - [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest)
     - [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse)
+    - [MsgMarketUpdateIntermediaryDenomRequest](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest)
+    - [MsgMarketUpdateIntermediaryDenomResponse](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomResponse)
     - [MsgMarketUpdateUserSettleRequest](#provenance.exchange.v1.MsgMarketUpdateUserSettleRequest)
     - [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse)
     - [MsgMarketWithdrawRequest](#provenance.exchange.v1.MsgMarketWithdrawRequest)
     - [MsgMarketWithdrawResponse](#provenance.exchange.v1.MsgMarketWithdrawResponse)
+    - [MsgRejectPaymentRequest](#provenance.exchange.v1.MsgRejectPaymentRequest)
+    - [MsgRejectPaymentResponse](#provenance.exchange.v1.MsgRejectPaymentResponse)
+    - [MsgRejectPaymentsRequest](#provenance.exchange.v1.MsgRejectPaymentsRequest)
+    - [MsgRejectPaymentsResponse](#provenance.exchange.v1.MsgRejectPaymentsResponse)
   
     - [Msg](#provenance.exchange.v1.Msg)
   
 - [provenance/exchange/v1/query.proto](#provenance/exchange/v1/query.proto)
+    - [QueryCommitmentSettlementFeeCalcRequest](#provenance.exchange.v1.QueryCommitmentSettlementFeeCalcRequest)
+    - [QueryCommitmentSettlementFeeCalcResponse](#provenance.exchange.v1.QueryCommitmentSettlementFeeCalcResponse)
+    - [QueryGetAccountCommitmentsRequest](#provenance.exchange.v1.QueryGetAccountCommitmentsRequest)
+    - [QueryGetAccountCommitmentsResponse](#provenance.exchange.v1.QueryGetAccountCommitmentsResponse)
+    - [QueryGetAllCommitmentsRequest](#provenance.exchange.v1.QueryGetAllCommitmentsRequest)
+    - [QueryGetAllCommitmentsResponse](#provenance.exchange.v1.QueryGetAllCommitmentsResponse)
     - [QueryGetAllMarketsRequest](#provenance.exchange.v1.QueryGetAllMarketsRequest)
     - [QueryGetAllMarketsResponse](#provenance.exchange.v1.QueryGetAllMarketsResponse)
     - [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest)
     - [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse)
+    - [QueryGetAllPaymentsRequest](#provenance.exchange.v1.QueryGetAllPaymentsRequest)
+    - [QueryGetAllPaymentsResponse](#provenance.exchange.v1.QueryGetAllPaymentsResponse)
     - [QueryGetAssetOrdersRequest](#provenance.exchange.v1.QueryGetAssetOrdersRequest)
     - [QueryGetAssetOrdersResponse](#provenance.exchange.v1.QueryGetAssetOrdersResponse)
+    - [QueryGetCommitmentRequest](#provenance.exchange.v1.QueryGetCommitmentRequest)
+    - [QueryGetCommitmentResponse](#provenance.exchange.v1.QueryGetCommitmentResponse)
+    - [QueryGetMarketCommitmentsRequest](#provenance.exchange.v1.QueryGetMarketCommitmentsRequest)
+    - [QueryGetMarketCommitmentsResponse](#provenance.exchange.v1.QueryGetMarketCommitmentsResponse)
     - [QueryGetMarketOrdersRequest](#provenance.exchange.v1.QueryGetMarketOrdersRequest)
     - [QueryGetMarketOrdersResponse](#provenance.exchange.v1.QueryGetMarketOrdersResponse)
     - [QueryGetMarketRequest](#provenance.exchange.v1.QueryGetMarketRequest)
@@ -145,10 +204,18 @@
     - [QueryGetOrderResponse](#provenance.exchange.v1.QueryGetOrderResponse)
     - [QueryGetOwnerOrdersRequest](#provenance.exchange.v1.QueryGetOwnerOrdersRequest)
     - [QueryGetOwnerOrdersResponse](#provenance.exchange.v1.QueryGetOwnerOrdersResponse)
+    - [QueryGetPaymentRequest](#provenance.exchange.v1.QueryGetPaymentRequest)
+    - [QueryGetPaymentResponse](#provenance.exchange.v1.QueryGetPaymentResponse)
+    - [QueryGetPaymentsWithSourceRequest](#provenance.exchange.v1.QueryGetPaymentsWithSourceRequest)
+    - [QueryGetPaymentsWithSourceResponse](#provenance.exchange.v1.QueryGetPaymentsWithSourceResponse)
+    - [QueryGetPaymentsWithTargetRequest](#provenance.exchange.v1.QueryGetPaymentsWithTargetRequest)
+    - [QueryGetPaymentsWithTargetResponse](#provenance.exchange.v1.QueryGetPaymentsWithTargetResponse)
     - [QueryOrderFeeCalcRequest](#provenance.exchange.v1.QueryOrderFeeCalcRequest)
     - [QueryOrderFeeCalcResponse](#provenance.exchange.v1.QueryOrderFeeCalcResponse)
     - [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse)
+    - [QueryPaymentFeeCalcRequest](#provenance.exchange.v1.QueryPaymentFeeCalcRequest)
+    - [QueryPaymentFeeCalcResponse](#provenance.exchange.v1.QueryPaymentFeeCalcResponse)
     - [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest)
     - [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse)
     - [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest)
@@ -353,6 +420,7 @@
     - [EventSessionCreated](#provenance.metadata.v1.EventSessionCreated)
     - [EventSessionDeleted](#provenance.metadata.v1.EventSessionDeleted)
     - [EventSessionUpdated](#provenance.metadata.v1.EventSessionUpdated)
+    - [EventSetNetAssetValue](#provenance.metadata.v1.EventSetNetAssetValue)
     - [EventTxCompleted](#provenance.metadata.v1.EventTxCompleted)
   
 - [provenance/metadata/v1/metadata.proto](#provenance/metadata/v1/metadata.proto)
@@ -376,6 +444,7 @@
   
 - [provenance/metadata/v1/scope.proto](#provenance/metadata/v1/scope.proto)
     - [AuditFields](#provenance.metadata.v1.AuditFields)
+    - [NetAssetValue](#provenance.metadata.v1.NetAssetValue)
     - [Party](#provenance.metadata.v1.Party)
     - [Process](#provenance.metadata.v1.Process)
     - [Record](#provenance.metadata.v1.Record)
@@ -393,6 +462,7 @@
   
 - [provenance/metadata/v1/genesis.proto](#provenance/metadata/v1/genesis.proto)
     - [GenesisState](#provenance.metadata.v1.GenesisState)
+    - [MarkerNetAssetValues](#provenance.metadata.v1.MarkerNetAssetValues)
   
 - [provenance/metadata/v1/p8e/p8e.proto](#provenance/metadata/v1/p8e/p8e.proto)
     - [Condition](#provenance.metadata.v1.p8e.Condition)
@@ -447,6 +517,8 @@
     - [OwnershipResponse](#provenance.metadata.v1.OwnershipResponse)
     - [QueryParamsRequest](#provenance.metadata.v1.QueryParamsRequest)
     - [QueryParamsResponse](#provenance.metadata.v1.QueryParamsResponse)
+    - [QueryScopeNetAssetValuesRequest](#provenance.metadata.v1.QueryScopeNetAssetValuesRequest)
+    - [QueryScopeNetAssetValuesResponse](#provenance.metadata.v1.QueryScopeNetAssetValuesResponse)
     - [RecordSpecificationRequest](#provenance.metadata.v1.RecordSpecificationRequest)
     - [RecordSpecificationResponse](#provenance.metadata.v1.RecordSpecificationResponse)
     - [RecordSpecificationWrapper](#provenance.metadata.v1.RecordSpecificationWrapper)
@@ -482,6 +554,8 @@
 - [provenance/metadata/v1/tx.proto](#provenance/metadata/v1/tx.proto)
     - [MsgAddContractSpecToScopeSpecRequest](#provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest)
     - [MsgAddContractSpecToScopeSpecResponse](#provenance.metadata.v1.MsgAddContractSpecToScopeSpecResponse)
+    - [MsgAddNetAssetValuesRequest](#provenance.metadata.v1.MsgAddNetAssetValuesRequest)
+    - [MsgAddNetAssetValuesResponse](#provenance.metadata.v1.MsgAddNetAssetValuesResponse)
     - [MsgAddScopeDataAccessRequest](#provenance.metadata.v1.MsgAddScopeDataAccessRequest)
     - [MsgAddScopeDataAccessResponse](#provenance.metadata.v1.MsgAddScopeDataAccessResponse)
     - [MsgAddScopeOwnerRequest](#provenance.metadata.v1.MsgAddScopeOwnerRequest)
@@ -1377,10 +1451,160 @@ Msg defines the attribute module Msg service.
 
 
 
+<a name="provenance/exchange/v1/commitments.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/commitments.proto
+
+
+
+<a name="provenance.exchange.v1.AccountAmount"></a>
+
+### AccountAmount
+AccountAmount associates an account with a coins amount.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account associated with the amount. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds associated with the address. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.Commitment"></a>
+
+### Commitment
+Commitment contains information on committed funds.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string with the committed funds. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numeric identifier of the market the funds are committed to. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds that have been committed by the account to the market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MarketAmount"></a>
+
+### MarketAmount
+MarketAmount associates a market with a coins amount.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numeric identifier the amount has been committed to. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds associated with the address. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.NetAssetPrice"></a>
+
+### NetAssetPrice
+NetAssetPrice is an association of assets and price used to record the value of things.
+It is related to the NetAssetValue message from the x/marker module, and is therefore often referred to as "a NAV".
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `assets` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | assets is the volume and denom that has been bought or sold. |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is what was paid for the assets. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="provenance/exchange/v1/events.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/exchange/v1/events.proto
+
+
+
+<a name="provenance.exchange.v1.EventCommitmentReleased"></a>
+
+### EventCommitmentReleased
+EventCommitmentReleased is an event emitted when funds are released from their commitment.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `amount` | [string](#string) |  | amount is the coins string of the funds that were released from commitment. |
+| `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventFundsCommitted"></a>
+
+### EventFundsCommitted
+EventFundsCommitted is an event emitted when funds are committed to a market.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `amount` | [string](#string) |  | amount is the coins string of the newly committed funds. |
+| `tag` | [string](#string) |  | tag is the string provided in the message causing this event. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketCommitmentsDisabled"></a>
+
+### EventMarketCommitmentsDisabled
+EventMarketCommitmentsDisabled is an event emitted when a market's accepting_commitments option is disabled.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the accepting_commitments option. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketCommitmentsEnabled"></a>
+
+### EventMarketCommitmentsEnabled
+EventMarketCommitmentsEnabled is an event emitted when a market's accepting_commitments option is enabled.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the accepting_commitments option. |
+
+
+
 
 
 
@@ -1419,6 +1643,7 @@ EventMarketDetailsUpdated is an event emitted when a market's details are update
 
 ### EventMarketDisabled
 EventMarketDisabled is an event emitted when a market is disabled.
+Deprecated: This event is no longer used. It is replaced with EventMarketOrdersDisabled.
 
 
 | Field | Type | Label | Description |
@@ -1435,6 +1660,7 @@ EventMarketDisabled is an event emitted when a market is disabled.
 
 ### EventMarketEnabled
 EventMarketEnabled is an event emitted when a market is enabled.
+Deprecated: This event is no longer used. It is replaced with EventMarketOrdersEnabled.
 
 
 | Field | Type | Label | Description |
@@ -1456,6 +1682,55 @@ EventMarketFeesUpdated is an event emitted when a market's fees have been update
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketIntermediaryDenomUpdated"></a>
+
+### EventMarketIntermediaryDenomUpdated
+EventMarketIntermediaryDenomUpdated is an event emitted when a market updates its
+commitment_settlement_intermediary_denom field.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the intermediary denom. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketOrdersDisabled"></a>
+
+### EventMarketOrdersDisabled
+EventMarketOrdersEnabled is an event emitted when a market disables order creation.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the accepting_orders option. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventMarketOrdersEnabled"></a>
+
+### EventMarketOrdersEnabled
+EventMarketOrdersEnabled is an event emitted when a market enables order creation.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market. |
+| `updated_by` | [string](#string) |  | updated_by is the account that updated the accepting_orders option. |
 
 
 
@@ -1647,6 +1922,98 @@ EventParamsUpdated is an event emitted when the exchange module's params have be
 
 
 
+
+<a name="provenance.exchange.v1.EventPaymentAccepted"></a>
+
+### EventPaymentAccepted
+EventPaymentAccepted is an event emitted when a payment is accepted.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that created the Payment. |
+| `source_amount` | [string](#string) |  | source_amount is the coins amount string of the funds that the source will pay (to the target). |
+| `target` | [string](#string) |  | target is the account that accepted the Payment. |
+| `target_amount` | [string](#string) |  | target_amount is the coins amount string of the funds that the target will pay (to the source). |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventPaymentCancelled"></a>
+
+### EventPaymentCancelled
+EventPaymentCancelled is an event emitted when a payment is cancelled (by the source).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that cancelled (and created) the Payment. |
+| `target` | [string](#string) |  | target is the account that could have accepted the Payment. |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventPaymentCreated"></a>
+
+### EventPaymentCreated
+EventPaymentCreated is an event emitted when a payment is created.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that created the Payment. |
+| `source_amount` | [string](#string) |  | source_amount is the coins amount string of the funds that the source will pay (to the target). |
+| `target` | [string](#string) |  | target is the account that can accept the Payment. |
+| `target_amount` | [string](#string) |  | target_amount is the coins amount string of the funds that the target will pay (to the source). |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventPaymentRejected"></a>
+
+### EventPaymentRejected
+EventPaymentRejected is an event emitted when a payment is rejected (by the target).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that created the Payment. |
+| `target` | [string](#string) |  | target is the account that rejected the Payment. |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.EventPaymentUpdated"></a>
+
+### EventPaymentUpdated
+EventPaymentUpdated is an event emitted when a payment is updated.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that updated (and previously created) the Payment. |
+| `source_amount` | [string](#string) |  | source_amount is the coins amount string of the funds that the source will pay (to the target). |
+| `old_target` | [string](#string) |  | old_target is the account that used to be able to accept the Payment (but not any more). |
+| `new_target` | [string](#string) |  | new_target is the account that is now able to accept the Payment. |
+| `target_amount` | [string](#string) |  | target_amount is the coins amount string of the funds that the target will pay (to the source). |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment. |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -1720,6 +2087,15 @@ Market contains all information about a market.
 
 An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "b.x.a", or "c.b.a.x". |
 | `req_attr_create_bid` | [string](#string) | repeated | req_attr_create_ask is a list of attributes required on an account for it to be allowed to create a bid order. An account must have all of these attributes in order to create a bid order in this market. If the list is empty, any account can create bid orders in this market.
+
+An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x". |
+| `accepting_commitments` | [bool](#bool) |  | accepting_commitments is whether the market is allowing users to commit funds to it. |
+| `fee_create_commitment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create_commitment_flat is the flat fee charged for creating a commitment. Each coin entry is a separate option. When a commitment is created, one of these must be paid. If empty, no fee is required to create a commitment. |
+| `commitment_settlement_bips` | [uint32](#uint32) |  | commitment_settlement_bips is the fraction of a commitment settlement that will be paid to the exchange. It is represented in basis points (1/100th of 1%, e.g. 0.0001) and is limited to 0 to 10,000 inclusive. During a commitment settlement, the inputs are summed and NAVs are used to convert that total to the intermediary denom, then to the fee denom. That is then multiplied by this value to get the fee amount that will be transferred out of the market's account into the exchange for that settlement.
+
+Summing the inputs effectively doubles the value of the settlement from what what is usually thought of as the value of a trade. That should be taken into account when setting this value. E.g. if two accounts are trading 10apples for 100grapes, the inputs total will be 10apples,100grapes (which might then be converted to USD then nhash before applying this ratio); Usually, though, the value of that trade would be viewed as either just 10apples or just 100grapes. |
+| `intermediary_denom` | [string](#string) |  | intermediary_denom is the denom that funds get converted to (before being converted to the chain's fee denom) when calculating the fees that are paid to the exchange. NAVs are used for this conversion and actions will fail if a NAV is needed but not available. |
+| `req_attr_create_commitment` | [string](#string) | repeated | req_attr_create_commitment is a list of attributes required on an account for it to be allowed to create a commitment. An account must have all of these attributes in order to create a commitment in this market. If the list is empty, any account can create commitments in this market.
 
 An entry that starts with "*." will match any attributes that end with the rest of it. E.g. "*.b.a" will match all of "c.b.a", "x.b.a", and "e.d.c.b.a"; but not "b.a", "xb.a", "c.b.x.a", or "c.b.a.x". |
 
@@ -1915,6 +2291,49 @@ Params is a representation of the exchange module parameters.
 | ----- | ---- | ----- | ----------- |
 | `default_split` | [uint32](#uint32) |  | default_split is the default proportion of fees the exchange receives in basis points. It is used if there isn't an applicable denom-specific split defined. E.g. 100 = 1%. Min = 0, Max = 10000. |
 | `denom_splits` | [DenomSplit](#provenance.exchange.v1.DenomSplit) | repeated | denom_splits are the denom-specific amounts the exchange receives. |
+| `fee_create_payment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create_payment_flat is the flat fee options for creating a payment. If the source amount is not zero then one of these fee entries is required to create the payment. This field is currently limited to zero or one entries. |
+| `fee_accept_payment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_accept_payment_flat is the flat fee options for accepting a payment. If the target amount is not zero then one of these fee entries is required to accept the payment. This field is currently limited to zero or one entries. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="provenance/exchange/v1/payments.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## provenance/exchange/v1/payments.proto
+
+
+
+<a name="provenance.exchange.v1.Payment"></a>
+
+### Payment
+Payment represents one account's desire to trade funds with another account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that created this Payment. It is considered the owner of the payment. |
+| `source_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | source_amount is the funds that the source is will pay the target in exchange for the target_amount. A hold will be placed on this amount in the source account until this Payment is accepted, rejected or cancelled. If the source_amount is zero, this Payment can be considered a "payment request." |
+| `target` | [string](#string) |  | target is the account that can accept this Payment. The target is the only thing allowed to change in a payment. I.e. it can be empty initially and updated later as needed. |
+| `target_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | target_amount is the funds that the target will pay the source in exchange for the source_amount. If the target_amount is zero, this Payment can be considered a "peer-to-peer (P2P) payment." |
+| `external_id` | [string](#string) |  | external_id is used along with the source to uniquely identify this Payment.
+
+A source can only have one Payment with any given external id. A source can have two payments with two different external ids. Two different sources can each have a payment with the same external id. But a source cannot have two different payments each with the same external id.
+
+An external id can be reused by a source once the payment is accepted, rejected, or cancelled.
+
+The external id is limited to 100 bytes. An empty string is a valid external id. |
 
 
 
@@ -1950,6 +2369,8 @@ GenesisState is the data that should be loaded into the exchange module during g
 | `orders` | [Order](#provenance.exchange.v1.Order) | repeated | orders are all the orders to create at genesis. |
 | `last_market_id` | [uint32](#uint32) |  | last_market_id is the value of the last auto-selected market id. |
 | `last_order_id` | [uint64](#uint64) |  | last_order_id is the value of the last order id created. |
+| `commitments` | [Commitment](#provenance.exchange.v1.Commitment) | repeated | commitments are all of the commitments to create at genesis. |
+| `payments` | [Payment](#provenance.exchange.v1.Payment) | repeated | payments are all the payments to create at genesis. |
 
 
 
@@ -1972,6 +2393,31 @@ GenesisState is the data that should be loaded into the exchange module during g
 
 
 
+<a name="provenance.exchange.v1.MsgAcceptPaymentRequest"></a>
+
+### MsgAcceptPaymentRequest
+MsgAcceptPaymentRequest is a request message for the AcceptPayment endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payment` | [Payment](#provenance.exchange.v1.Payment) |  | payment is the details of the payment to accept. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgAcceptPaymentResponse"></a>
+
+### MsgAcceptPaymentResponse
+MsgAcceptPaymentResponse is a response message for the AcceptPayment endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgCancelOrderRequest"></a>
 
 ### MsgCancelOrderRequest
@@ -1980,7 +2426,7 @@ MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `signer` | [string](#string) |  | signer is the account requesting the order cancelation. It must be either the order owner (e.g. the buyer or seller), the governance module account address, or an account with cancel permission with the market that the order is in. |
+| `signer` | [string](#string) |  | signer is the account requesting the order cancellation. It must be either the order owner (e.g. the buyer or seller), the governance module account address, or an account with cancel permission with the market that the order is in. |
 | `order_id` | [uint64](#uint64) |  | order_id is the id of the order to cancel. |
 
 
@@ -1992,6 +2438,88 @@ MsgCancelOrderRequest is a request message for the CancelOrder endpoint.
 
 ### MsgCancelOrderResponse
 MsgCancelOrderResponse is a response message for the CancelOrder endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCancelPaymentsRequest"></a>
+
+### MsgCancelPaymentsRequest
+MsgCancelPaymentsRequest is a request message for the CancelPayments endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that wishes to cancel some of their payments. |
+| `external_ids` | [string](#string) | repeated | external_ids is all of the external ids of the payments to cancel. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCancelPaymentsResponse"></a>
+
+### MsgCancelPaymentsResponse
+MsgCancelPaymentsResponse is a response message for the CancelPayments endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgChangePaymentTargetRequest"></a>
+
+### MsgChangePaymentTargetRequest
+MsgChangePaymentTargetRequest is a request message for the ChangePaymentTarget endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the account that wishes to update the target of one of their payments. |
+| `external_id` | [string](#string) |  | external_id is the external id of the payment to update. |
+| `new_target` | [string](#string) |  | new_target is the new target account of the payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgChangePaymentTargetResponse"></a>
+
+### MsgChangePaymentTargetResponse
+MsgChangePaymentTargetResponse is a response message for the ChangePaymentTarget endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCommitFundsRequest"></a>
+
+### MsgCommitFundsRequest
+MsgCommitFundsRequest is a request message for the CommitFunds endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the address of the account with the funds being committed. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market the funds will be committed to. |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the funds being committed to the market. |
+| `creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | creation_fee is the fee that is being paid to create this commitment. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-committed event. Max length is 100 characters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCommitFundsResponse"></a>
+
+### MsgCommitFundsResponse
+MsgCommitFundsResponse is a response message for the CommitFunds endpoint.
 
 
 
@@ -2060,6 +2588,31 @@ MsgCreateBidResponse is a response message for the CreateBid endpoint.
 
 
 
+<a name="provenance.exchange.v1.MsgCreatePaymentRequest"></a>
+
+### MsgCreatePaymentRequest
+MsgCreatePaymentRequest is a request message for the CreatePayment endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payment` | [Payment](#provenance.exchange.v1.Payment) |  | payment is the details of the payment to create. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgCreatePaymentResponse"></a>
+
+### MsgCreatePaymentResponse
+MsgCreatePaymentResponse is a response message for the CreatePayment endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgFillAsksRequest"></a>
 
 ### MsgFillAsksRequest
@@ -2120,6 +2673,32 @@ MsgFillBidsResponse is a response message for the FillBids endpoint.
 
 
 
+<a name="provenance.exchange.v1.MsgGovCloseMarketRequest"></a>
+
+### MsgGovCloseMarketRequest
+MsgGovCloseMarketRequest is a request message for the GovCloseMarket endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  | authority must be the governance module account. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to close. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgGovCloseMarketResponse"></a>
+
+### MsgGovCloseMarketResponse
+MsgGovCloseMarketResponse is a response message for the GovCloseMarket endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgGovCreateMarketRequest"></a>
 
 ### MsgGovCreateMarketRequest
@@ -2168,6 +2747,10 @@ MsgGovManageFeesRequest is a request message for the GovManageFees endpoint.
 | `remove_fee_buyer_settlement_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_buyer_settlement_flat are the buyer settlement flat fee options to remove. |
 | `add_fee_buyer_settlement_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | add_fee_buyer_settlement_ratios are the buyer settlement fee ratios to add. |
 | `remove_fee_buyer_settlement_ratios` | [FeeRatio](#provenance.exchange.v1.FeeRatio) | repeated | remove_fee_buyer_settlement_ratios are the buyer settlement fee ratios to remove. |
+| `add_fee_create_commitment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | add_fee_create_commitment_flat are the create-commitment flat fee options to add. |
+| `remove_fee_create_commitment_flat` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | remove_fee_create_commitment_flat are the create-commitment flat fee options to remove. |
+| `set_fee_commitment_settlement_bips` | [uint32](#uint32) |  | set_fee_commitment_settlement_bips is the new fee_commitment_settlement_bips for the market. It is ignored if it is zero. To set it to zero set unset_fee_commitment_settlement_bips to true. |
+| `unset_fee_commitment_settlement_bips` | [bool](#bool) |  | unset_fee_commitment_settlement_bips, if true, sets the fee_commitment_settlement_bips to zero. If false, it is ignored. |
 
 
 
@@ -2210,6 +2793,37 @@ MsgGovUpdateParamsResponse is a response message for the GovUpdateParams endpoin
 
 
 
+<a name="provenance.exchange.v1.MsgMarketCommitmentSettleRequest"></a>
+
+### MsgMarketCommitmentSettleRequest
+MsgMarketCommitmentSettleRequest is a request message for the MarketCommitmentSettle endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "settle" permission requesting this settlement. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market requesting this settlement. |
+| `inputs` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | inputs defines where the funds are coming from. All of these funds must be already committed to the market. |
+| `outputs` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | outputs defines how the funds are to be distributed. These funds will be re-committed in the destination accounts. |
+| `fees` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | fees is the funds that the market is collecting as part of this settlement. All of these funds must be already committed to the market. |
+| `navs` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) | repeated | navs are any NAV info that should be updated at the beginning of this settlement. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-committed/released events. Max length is 100 characters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketCommitmentSettleResponse"></a>
+
+### MsgMarketCommitmentSettleResponse
+MsgMarketCommitmentSettleResponse is a response message for the MarketCommitmentSettle endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgMarketManagePermissionsRequest"></a>
 
 ### MsgMarketManagePermissionsRequest
@@ -2219,7 +2833,7 @@ MsgMarketManagePermissionsRequest is a request message for the MarketManagePermi
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "permissions" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to manage permissions for. |
 | `revoke_all` | [string](#string) | repeated | revoke_all are addresses that should have all their permissions revoked. |
 | `to_revoke` | [AccessGrant](#provenance.exchange.v1.AccessGrant) | repeated | to_revoke are the specific permissions to remove for addresses. |
 | `to_grant` | [AccessGrant](#provenance.exchange.v1.AccessGrant) | repeated | to_grant are the permissions to grant to addresses. |
@@ -2253,6 +2867,8 @@ MsgMarketManageReqAttrsRequest is a request message for the MarketManageReqAttrs
 | `create_ask_to_remove` | [string](#string) | repeated | create_ask_to_remove are the attributes that should no longer be required to create an ask order. |
 | `create_bid_to_add` | [string](#string) | repeated | create_bid_to_add are the attributes that should now also be required to create a bid order. |
 | `create_bid_to_remove` | [string](#string) | repeated | create_bid_to_remove are the attributes that should no longer be required to create a bid order. |
+| `create_commitment_to_add` | [string](#string) | repeated | create_commitment_to_add are the attributes that should now also be required to create a commitment. |
+| `create_commitment_to_remove` | [string](#string) | repeated | create_commitment_to_remove are the attributes that should no longer be required to create a commitment. |
 
 
 
@@ -2269,6 +2885,34 @@ MsgMarketManageReqAttrsResponse is a response message for the MarketManageReqAtt
 
 
 
+<a name="provenance.exchange.v1.MsgMarketReleaseCommitmentsRequest"></a>
+
+### MsgMarketReleaseCommitmentsRequest
+MsgMarketReleaseCommitmentsRequest is a request message for the MarketReleaseCommitments endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "cancel" permission requesting this release. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market releasing these funds. |
+| `to_release` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | to_release is the funds that are to be released. An entry with a zero amount indicates that all committed funds for that account should be released. |
+| `event_tag` | [string](#string) |  | event_tag is a string that is included in the funds-released events. Max length is 100 characters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketReleaseCommitmentsResponse"></a>
+
+### MsgMarketReleaseCommitmentsResponse
+MsgMarketReleaseCommitmentsResponse is a response message for the MarketReleaseCommitments endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgMarketSetOrderExternalIDRequest"></a>
 
 ### MsgMarketSetOrderExternalIDRequest
@@ -2278,7 +2922,7 @@ MsgMarketSetOrderExternalIDRequest is a request message for the MarketSetOrderEx
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "set_ids" permission requesting this settlement. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market with the orders to update. |
 | `order_id` | [uint64](#uint64) |  | order_id is the numerical identifier of the order to update. |
 | `external_id` | [string](#string) |  | external_id is the new external id to associate with the order. Max length is 100 characters. If the external id is already associated with another order in this market, this update will fail. |
 
@@ -2306,7 +2950,7 @@ MsgMarketSettleRequest is a request message for the MarketSettle endpoint.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "settle" permission requesting this settlement. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market requesting this settlement. |
 | `ask_order_ids` | [uint64](#uint64) | repeated | ask_order_ids are the ask orders being filled. |
 | `bid_order_ids` | [uint64](#uint64) | repeated | bid_order_ids are the bid orders being filled. |
 | `expect_partial` | [bool](#bool) |  | expect_partial is whether to expect an order to only be partially filled. Set to true to indicate that either the last ask order, or last bid order will be partially filled by this settlement. Set to false to indicate that all provided orders will be filled in full during this settlement. |
@@ -2326,6 +2970,60 @@ MsgMarketSettleResponse is a response message for the MarketSettle endpoint.
 
 
 
+<a name="provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsRequest"></a>
+
+### MsgMarketUpdateAcceptingCommitmentsRequest
+MsgMarketUpdateAcceptingCommitmentsRequest is a request message for the MarketUpdateAcceptingCommitments endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to enable or disable commitments for. |
+| `accepting_commitments` | [bool](#bool) |  | accepting_commitments is whether this market allows users to commit funds to it. For example, the CommitFunds endpoint is available if and only if this is true. The MarketCommitmentSettle endpoint is available (only to market actors) regardless of the value of this field. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsResponse"></a>
+
+### MsgMarketUpdateAcceptingCommitmentsResponse
+MsgMarketUpdateAcceptingCommitmentsResponse is a response message for the MarketUpdateAcceptingCommitments endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersRequest"></a>
+
+### MsgMarketUpdateAcceptingOrdersRequest
+MsgMarketUpdateAcceptingOrdersRequest is a request message for the MarketUpdateAcceptingOrders endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to enable or disable. |
+| `accepting_orders` | [bool](#bool) |  | accepting_orders is whether this market is allowing orders to be created for it. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersResponse"></a>
+
+### MsgMarketUpdateAcceptingOrdersResponse
+MsgMarketUpdateAcceptingOrdersResponse is a response message for the MarketUpdateAcceptingOrders endpoint.
+
+
+
+
+
+
 <a name="provenance.exchange.v1.MsgMarketUpdateDetailsRequest"></a>
 
 ### MsgMarketUpdateDetailsRequest
@@ -2335,7 +3033,7 @@ MsgMarketUpdateDetailsRequest is a request message for the MarketUpdateDetails e
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update details for. |
 | `market_details` | [MarketDetails](#provenance.exchange.v1.MarketDetails) |  | market_details is some information about this market. |
 
 
@@ -2357,13 +3055,14 @@ MsgMarketUpdateDetailsResponse is a response message for the MarketUpdateDetails
 
 ### MsgMarketUpdateEnabledRequest
 MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled endpoint.
+Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
-| `accepting_orders` | [bool](#bool) |  | accepting_orders is whether this market is allowing orders to be created for it. |
+| `admin` | [string](#string) |  | **Deprecated.** admin is the account with "update" permission requesting this change. Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders. |
+| `market_id` | [uint32](#uint32) |  | **Deprecated.** market_id is the numerical identifier of the market to enable or disable. Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders. |
+| `accepting_orders` | [bool](#bool) |  | **Deprecated.** accepting_orders is whether this market is allowing orders to be created for it. Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders. |
 
 
 
@@ -2374,6 +3073,34 @@ MsgMarketUpdateEnabledRequest is a request message for the MarketUpdateEnabled e
 
 ### MsgMarketUpdateEnabledResponse
 MsgMarketUpdateEnabledResponse is a response message for the MarketUpdateEnabled endpoint.
+Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest"></a>
+
+### MsgMarketUpdateIntermediaryDenomRequest
+MsgMarketUpdateIntermediaryDenomRequest is a request message for the MarketUpdateIntermediaryDenom endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market changing the intermediary denom. |
+| `intermediary_denom` | [string](#string) |  | intermediary_denom is the new intermediary denom for this market to use. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomResponse"></a>
+
+### MsgMarketUpdateIntermediaryDenomResponse
+MsgMarketUpdateIntermediaryDenomResponse is a response message for the MarketUpdateIntermediaryDenom endpoint.
 
 
 
@@ -2389,8 +3116,8 @@ MsgMarketUpdateUserSettleRequest is a request message for the MarketUpdateUserSe
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `admin` | [string](#string) |  | admin is the account with "update" permission requesting this change. |
-| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to update required attributes for. |
-| `allow_user_settlement` | [bool](#bool) |  | allow_user_settlement is whether this market allows users to initiate their own settlements. For example, the FillBids and FillAsks endpoints are available if and only if this is true. The MarketSettle endpoint is only available to market actors regardless of the value of this field. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numerical identifier of the market to enable or disable user-settlement for. |
+| `allow_user_settlement` | [bool](#bool) |  | allow_user_settlement is whether this market allows users to initiate their own settlements. For example, the FillBids and FillAsks endpoints are available if and only if this is true. The MarketSettle endpoint is available (only to market actors) regardless of the value of this field. |
 
 
 
@@ -2434,6 +3161,59 @@ MsgMarketWithdrawResponse is a response message for the MarketWithdraw endpoint.
 
 
 
+
+<a name="provenance.exchange.v1.MsgRejectPaymentRequest"></a>
+
+### MsgRejectPaymentRequest
+MsgRejectPaymentRequest is a request message for the RejectPayment endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `target` | [string](#string) |  | target is the target account of the payment to reject. |
+| `source` | [string](#string) |  | source is the source account of the payment to reject. |
+| `external_id` | [string](#string) |  | external_id is the external id of the payment to reject. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgRejectPaymentResponse"></a>
+
+### MsgRejectPaymentResponse
+MsgRejectPaymentResponse is a response message for the RejectPayment endpoint.
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgRejectPaymentsRequest"></a>
+
+### MsgRejectPaymentsRequest
+MsgRejectPaymentsRequest is a request message for the RejectPayments endpoint.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `target` | [string](#string) |  | target is the account that wishes to reject some payments. |
+| `sources` | [string](#string) | repeated | sources is the source accounts of the payments to reject. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.MsgRejectPaymentsResponse"></a>
+
+### MsgRejectPaymentsResponse
+MsgRejectPaymentsResponse is a response message for the RejectPayments endpoint.
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -2450,19 +3230,32 @@ Msg is the service for exchange module's tx endpoints.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateAsk` | [MsgCreateAskRequest](#provenance.exchange.v1.MsgCreateAskRequest) | [MsgCreateAskResponse](#provenance.exchange.v1.MsgCreateAskResponse) | CreateAsk creates an ask order (to sell something you own). | |
 | `CreateBid` | [MsgCreateBidRequest](#provenance.exchange.v1.MsgCreateBidRequest) | [MsgCreateBidResponse](#provenance.exchange.v1.MsgCreateBidResponse) | CreateBid creates a bid order (to buy something you want). | |
+| `CommitFunds` | [MsgCommitFundsRequest](#provenance.exchange.v1.MsgCommitFundsRequest) | [MsgCommitFundsResponse](#provenance.exchange.v1.MsgCommitFundsResponse) | CommitFunds marks funds in an account as manageable by a market. | |
 | `CancelOrder` | [MsgCancelOrderRequest](#provenance.exchange.v1.MsgCancelOrderRequest) | [MsgCancelOrderResponse](#provenance.exchange.v1.MsgCancelOrderResponse) | CancelOrder cancels an order. | |
 | `FillBids` | [MsgFillBidsRequest](#provenance.exchange.v1.MsgFillBidsRequest) | [MsgFillBidsResponse](#provenance.exchange.v1.MsgFillBidsResponse) | FillBids uses the assets in your account to fulfill one or more bids (similar to a fill-or-cancel ask). | |
 | `FillAsks` | [MsgFillAsksRequest](#provenance.exchange.v1.MsgFillAsksRequest) | [MsgFillAsksResponse](#provenance.exchange.v1.MsgFillAsksResponse) | FillAsks uses the funds in your account to fulfill one or more asks (similar to a fill-or-cancel bid). | |
 | `MarketSettle` | [MsgMarketSettleRequest](#provenance.exchange.v1.MsgMarketSettleRequest) | [MsgMarketSettleResponse](#provenance.exchange.v1.MsgMarketSettleResponse) | MarketSettle is a market endpoint to trigger the settlement of orders. | |
+| `MarketCommitmentSettle` | [MsgMarketCommitmentSettleRequest](#provenance.exchange.v1.MsgMarketCommitmentSettleRequest) | [MsgMarketCommitmentSettleResponse](#provenance.exchange.v1.MsgMarketCommitmentSettleResponse) | MarketCommitmentSettle is a market endpoint to transfer committed funds. | |
+| `MarketReleaseCommitments` | [MsgMarketReleaseCommitmentsRequest](#provenance.exchange.v1.MsgMarketReleaseCommitmentsRequest) | [MsgMarketReleaseCommitmentsResponse](#provenance.exchange.v1.MsgMarketReleaseCommitmentsResponse) | MarketReleaseCommitments is a market endpoint return control of funds back to the account owner(s). | |
 | `MarketSetOrderExternalID` | [MsgMarketSetOrderExternalIDRequest](#provenance.exchange.v1.MsgMarketSetOrderExternalIDRequest) | [MsgMarketSetOrderExternalIDResponse](#provenance.exchange.v1.MsgMarketSetOrderExternalIDResponse) | MarketSetOrderExternalID updates an order's external id field. | |
 | `MarketWithdraw` | [MsgMarketWithdrawRequest](#provenance.exchange.v1.MsgMarketWithdrawRequest) | [MsgMarketWithdrawResponse](#provenance.exchange.v1.MsgMarketWithdrawResponse) | MarketWithdraw is a market endpoint to withdraw fees that have been collected. | |
 | `MarketUpdateDetails` | [MsgMarketUpdateDetailsRequest](#provenance.exchange.v1.MsgMarketUpdateDetailsRequest) | [MsgMarketUpdateDetailsResponse](#provenance.exchange.v1.MsgMarketUpdateDetailsResponse) | MarketUpdateDetails is a market endpoint to update its details. | |
-| `MarketUpdateEnabled` | [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest) | [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse) | MarketUpdateEnabled is a market endpoint to update whether its accepting orders. | |
+| `MarketUpdateEnabled` | [MsgMarketUpdateEnabledRequest](#provenance.exchange.v1.MsgMarketUpdateEnabledRequest) | [MsgMarketUpdateEnabledResponse](#provenance.exchange.v1.MsgMarketUpdateEnabledResponse) | MarketUpdateEnabled is a market endpoint to update whether its accepting orders. Deprecated: This endpoint is no longer usable. It is replaced by MarketUpdateAcceptingOrders. | |
+| `MarketUpdateAcceptingOrders` | [MsgMarketUpdateAcceptingOrdersRequest](#provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersRequest) | [MsgMarketUpdateAcceptingOrdersResponse](#provenance.exchange.v1.MsgMarketUpdateAcceptingOrdersResponse) | MarketUpdateAcceptingOrders is a market endpoint to update whether its accepting orders. | |
 | `MarketUpdateUserSettle` | [MsgMarketUpdateUserSettleRequest](#provenance.exchange.v1.MsgMarketUpdateUserSettleRequest) | [MsgMarketUpdateUserSettleResponse](#provenance.exchange.v1.MsgMarketUpdateUserSettleResponse) | MarketUpdateUserSettle is a market endpoint to update whether it allows user-initiated settlement. | |
+| `MarketUpdateAcceptingCommitments` | [MsgMarketUpdateAcceptingCommitmentsRequest](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsRequest) | [MsgMarketUpdateAcceptingCommitmentsResponse](#provenance.exchange.v1.MsgMarketUpdateAcceptingCommitmentsResponse) | MarketUpdateAcceptingCommitments is a market endpoint to update whether it accepts commitments. | |
+| `MarketUpdateIntermediaryDenom` | [MsgMarketUpdateIntermediaryDenomRequest](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomRequest) | [MsgMarketUpdateIntermediaryDenomResponse](#provenance.exchange.v1.MsgMarketUpdateIntermediaryDenomResponse) | MarketUpdateIntermediaryDenom sets a market's intermediary denom. | |
 | `MarketManagePermissions` | [MsgMarketManagePermissionsRequest](#provenance.exchange.v1.MsgMarketManagePermissionsRequest) | [MsgMarketManagePermissionsResponse](#provenance.exchange.v1.MsgMarketManagePermissionsResponse) | MarketManagePermissions is a market endpoint to manage a market's user permissions. | |
 | `MarketManageReqAttrs` | [MsgMarketManageReqAttrsRequest](#provenance.exchange.v1.MsgMarketManageReqAttrsRequest) | [MsgMarketManageReqAttrsResponse](#provenance.exchange.v1.MsgMarketManageReqAttrsResponse) | MarketManageReqAttrs is a market endpoint to manage the attributes required to interact with it. | |
+| `CreatePayment` | [MsgCreatePaymentRequest](#provenance.exchange.v1.MsgCreatePaymentRequest) | [MsgCreatePaymentResponse](#provenance.exchange.v1.MsgCreatePaymentResponse) | CreatePayment creates a payment to facilitate a trade between two accounts. | |
+| `AcceptPayment` | [MsgAcceptPaymentRequest](#provenance.exchange.v1.MsgAcceptPaymentRequest) | [MsgAcceptPaymentResponse](#provenance.exchange.v1.MsgAcceptPaymentResponse) | AcceptPayment is used by a target to accept a payment. | |
+| `RejectPayment` | [MsgRejectPaymentRequest](#provenance.exchange.v1.MsgRejectPaymentRequest) | [MsgRejectPaymentResponse](#provenance.exchange.v1.MsgRejectPaymentResponse) | RejectPayment can be used by a target to reject a payment. | |
+| `RejectPayments` | [MsgRejectPaymentsRequest](#provenance.exchange.v1.MsgRejectPaymentsRequest) | [MsgRejectPaymentsResponse](#provenance.exchange.v1.MsgRejectPaymentsResponse) | RejectPayments can be used by a target to reject all payments from one or more sources. | |
+| `CancelPayments` | [MsgCancelPaymentsRequest](#provenance.exchange.v1.MsgCancelPaymentsRequest) | [MsgCancelPaymentsResponse](#provenance.exchange.v1.MsgCancelPaymentsResponse) | CancelPayments can be used by a source to cancel one or more payments. | |
+| `ChangePaymentTarget` | [MsgChangePaymentTargetRequest](#provenance.exchange.v1.MsgChangePaymentTargetRequest) | [MsgChangePaymentTargetResponse](#provenance.exchange.v1.MsgChangePaymentTargetResponse) | ChangePaymentTarget can be used by a source to change the target in one of their payments. | |
 | `GovCreateMarket` | [MsgGovCreateMarketRequest](#provenance.exchange.v1.MsgGovCreateMarketRequest) | [MsgGovCreateMarketResponse](#provenance.exchange.v1.MsgGovCreateMarketResponse) | GovCreateMarket is a governance proposal endpoint for creating a market. | |
 | `GovManageFees` | [MsgGovManageFeesRequest](#provenance.exchange.v1.MsgGovManageFeesRequest) | [MsgGovManageFeesResponse](#provenance.exchange.v1.MsgGovManageFeesResponse) | GovManageFees is a governance proposal endpoint for updating a market's fees. | |
+| `GovCloseMarket` | [MsgGovCloseMarketRequest](#provenance.exchange.v1.MsgGovCloseMarketRequest) | [MsgGovCloseMarketResponse](#provenance.exchange.v1.MsgGovCloseMarketResponse) | GovCloseMarket is a governance proposal endpoint that will disable order and commitment creation, cancel all orders, and release all commitments. | |
 | `GovUpdateParams` | [MsgGovUpdateParamsRequest](#provenance.exchange.v1.MsgGovUpdateParamsRequest) | [MsgGovUpdateParamsResponse](#provenance.exchange.v1.MsgGovUpdateParamsResponse) | GovUpdateParams is a governance proposal endpoint for updating the exchange module's params. | |
 
  <!-- end services -->
@@ -2473,6 +3266,102 @@ Msg is the service for exchange module's tx endpoints.
 <p align="right"><a href="#top">Top</a></p>
 
 ## provenance/exchange/v1/query.proto
+
+
+
+<a name="provenance.exchange.v1.QueryCommitmentSettlementFeeCalcRequest"></a>
+
+### QueryCommitmentSettlementFeeCalcRequest
+QueryCommitmentSettlementFeeCalcRequest is a request message for the CommitmentSettlementFeeCalc query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `settlement` | [MsgMarketCommitmentSettleRequest](#provenance.exchange.v1.MsgMarketCommitmentSettleRequest) |  | settlement is a market's commitment settlement request message. If no inputs are provided, only the to_fee_nav field will be populated in the response. |
+| `include_breakdown_fields` | [bool](#bool) |  | include_breakdown_fields controls the fields that are populated in the response. If false, only the exchange_fees field is populated. If true, all of the fields are populated as possible. If the settlement does not have any inputs, this field defaults to true. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryCommitmentSettlementFeeCalcResponse"></a>
+
+### QueryCommitmentSettlementFeeCalcResponse
+QueryCommitmentSettlementFeeCalcResponse is a response message for the CommitmentSettlementFeeCalc query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `exchange_fees` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | exchange_fees is the total that the exchange would currently pay for the provided settlement. |
+| `input_total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | input_total is the sum of all the inputs in the provided settlement. |
+| `converted_total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | converted_total is the input_total converted to a single intermediary denom or left as the fee denom. |
+| `conversion_navs` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) | repeated | conversion_navs are the NAVs used to convert the input_total to the converted_total. |
+| `to_fee_nav` | [NetAssetPrice](#provenance.exchange.v1.NetAssetPrice) |  | to_fee_nav is the NAV used to convert the converted_total into the fee denom. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAccountCommitmentsRequest"></a>
+
+### QueryGetAccountCommitmentsRequest
+QueryGetAccountCommitmentsRequest is a request message for the GetAccountCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account with the commitments. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAccountCommitmentsResponse"></a>
+
+### QueryGetAccountCommitmentsResponse
+QueryGetAccountCommitmentsResponse is a response message for the GetAccountCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `commitments` | [MarketAmount](#provenance.exchange.v1.MarketAmount) | repeated | commitments is the amounts committed from the account to the any market. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAllCommitmentsRequest"></a>
+
+### QueryGetAllCommitmentsRequest
+QueryGetAllCommitmentsRequest is a request message for the GetAllCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAllCommitmentsResponse"></a>
+
+### QueryGetAllCommitmentsResponse
+QueryGetAllCommitmentsResponse is a response message for the GetAllCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `commitments` | [Commitment](#provenance.exchange.v1.Commitment) | repeated | commitments is the requested commitment information. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
 
 
 
@@ -2538,6 +3427,37 @@ QueryGetAllOrdersResponse is a response message for the GetAllOrders query.
 
 
 
+<a name="provenance.exchange.v1.QueryGetAllPaymentsRequest"></a>
+
+### QueryGetAllPaymentsRequest
+QueryGetAllPaymentsRequest is a request message for the GetAllPayments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetAllPaymentsResponse"></a>
+
+### QueryGetAllPaymentsResponse
+QueryGetAllPaymentsResponse is a response message for the GetAllPayments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payments` | [Payment](#provenance.exchange.v1.Payment) | repeated | payments is all the payments on this page of results. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
 <a name="provenance.exchange.v1.QueryGetAssetOrdersRequest"></a>
 
 ### QueryGetAssetOrdersRequest
@@ -2565,6 +3485,69 @@ QueryGetAssetOrdersResponse is a response message for the GetAssetOrders query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `orders` | [Order](#provenance.exchange.v1.Order) | repeated | orders are a page of the orders for the provided asset. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetCommitmentRequest"></a>
+
+### QueryGetCommitmentRequest
+QueryGetCommitmentRequest is a request message for the GetCommitment query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [string](#string) |  | account is the bech32 address string of the account in the commitment. |
+| `market_id` | [uint32](#uint32) |  | market_id is the numeric identifier of the market in the commitment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetCommitmentResponse"></a>
+
+### QueryGetCommitmentResponse
+QueryGetCommitmentResponse is a response message for the GetCommitment query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the total funds committed to the market by the account. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetMarketCommitmentsRequest"></a>
+
+### QueryGetMarketCommitmentsRequest
+QueryGetMarketCommitmentsRequest is a request message for the GetMarketCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `market_id` | [uint32](#uint32) |  | market_id is the numeric identifier of the market with the commitment. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetMarketCommitmentsResponse"></a>
+
+### QueryGetMarketCommitmentsResponse
+QueryGetMarketCommitmentsResponse is a response message for the GetMarketCommitments query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `commitments` | [AccountAmount](#provenance.exchange.v1.AccountAmount) | repeated | commitments is the amounts committed to the market from any account. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
 
 
@@ -2732,6 +3715,101 @@ QueryGetOwnerOrdersResponse is a response message for the GetOwnerOrders query.
 
 
 
+<a name="provenance.exchange.v1.QueryGetPaymentRequest"></a>
+
+### QueryGetPaymentRequest
+QueryGetPaymentRequest is a request message for the GetPayment query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the source account of the payment to get. |
+| `external_id` | [string](#string) |  | external_id is the external id of the payment to get. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetPaymentResponse"></a>
+
+### QueryGetPaymentResponse
+QueryGetPaymentResponse is a response message for the GetPayment query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payment` | [Payment](#provenance.exchange.v1.Payment) |  | payment is the info on the requested payment. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetPaymentsWithSourceRequest"></a>
+
+### QueryGetPaymentsWithSourceRequest
+QueryGetPaymentsWithSourceRequest is a request message for the GetPaymentsWithSource query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `source` | [string](#string) |  | source is the source account of the payments to get. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetPaymentsWithSourceResponse"></a>
+
+### QueryGetPaymentsWithSourceResponse
+QueryGetPaymentsWithSourceResponse is a response message for the GetPaymentsWithSource query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payments` | [Payment](#provenance.exchange.v1.Payment) | repeated | payments is all the payments with the requested source. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetPaymentsWithTargetRequest"></a>
+
+### QueryGetPaymentsWithTargetRequest
+QueryGetPaymentsWithTargetRequest is a request message for the GetPaymentsWithTarget query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `target` | [string](#string) |  | target is the target account of the payments to get. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryGetPaymentsWithTargetResponse"></a>
+
+### QueryGetPaymentsWithTargetResponse
+QueryGetPaymentsWithTargetResponse is a response message for the GetPaymentsWithTarget query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payments` | [Payment](#provenance.exchange.v1.Payment) | repeated | payments is all the payments with the requested target. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination is the resulting pagination parameters. |
+
+
+
+
+
+
 <a name="provenance.exchange.v1.QueryOrderFeeCalcRequest"></a>
 
 ### QueryOrderFeeCalcRequest
@@ -2789,6 +3867,37 @@ QueryParamsResponse is a response message for the Params query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#provenance.exchange.v1.Params) |  | params are the exchange module parameter values. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryPaymentFeeCalcRequest"></a>
+
+### QueryPaymentFeeCalcRequest
+QueryPaymentFeeCalcRequest is a request message for the PaymentFeeCalc query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `payment` | [Payment](#provenance.exchange.v1.Payment) |  | payment is the details of the payment to create or accept. |
+
+
+
+
+
+
+<a name="provenance.exchange.v1.QueryPaymentFeeCalcResponse"></a>
+
+### QueryPaymentFeeCalcResponse
+QueryPaymentFeeCalcResponse is a response message for the PaymentFeeCalc query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_create` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_create is the fee required to create the provided payment. |
+| `fee_accept` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | fee_accept is the fee required to accept the provided payment. |
 
 
 
@@ -2907,12 +4016,22 @@ Query is the service for exchange module's query endpoints.
 | `GetOwnerOrders` | [QueryGetOwnerOrdersRequest](#provenance.exchange.v1.QueryGetOwnerOrdersRequest) | [QueryGetOwnerOrdersResponse](#provenance.exchange.v1.QueryGetOwnerOrdersResponse) | GetOwnerOrders looks up the orders from the provided owner address. | GET|/provenance/exchange/v1/orders/owner/{owner}|
 | `GetAssetOrders` | [QueryGetAssetOrdersRequest](#provenance.exchange.v1.QueryGetAssetOrdersRequest) | [QueryGetAssetOrdersResponse](#provenance.exchange.v1.QueryGetAssetOrdersResponse) | GetAssetOrders looks up the orders for a specific asset denom. | GET|/provenance/exchange/v1/orders/asset/{asset}|
 | `GetAllOrders` | [QueryGetAllOrdersRequest](#provenance.exchange.v1.QueryGetAllOrdersRequest) | [QueryGetAllOrdersResponse](#provenance.exchange.v1.QueryGetAllOrdersResponse) | GetAllOrders gets all orders in the exchange module. | GET|/provenance/exchange/v1/orders|
+| `GetCommitment` | [QueryGetCommitmentRequest](#provenance.exchange.v1.QueryGetCommitmentRequest) | [QueryGetCommitmentResponse](#provenance.exchange.v1.QueryGetCommitmentResponse) | GetCommitment gets the funds in an account that are committed to the market. | GET|/provenance/exchange/v1/market/{market_id}/commitment/{account}|
+| `GetAccountCommitments` | [QueryGetAccountCommitmentsRequest](#provenance.exchange.v1.QueryGetAccountCommitmentsRequest) | [QueryGetAccountCommitmentsResponse](#provenance.exchange.v1.QueryGetAccountCommitmentsResponse) | GetAccountCommitments gets all the funds in an account that are committed to any market. | GET|/provenance/exchange/v1/commitments/account/{account}|
+| `GetMarketCommitments` | [QueryGetMarketCommitmentsRequest](#provenance.exchange.v1.QueryGetMarketCommitmentsRequest) | [QueryGetMarketCommitmentsResponse](#provenance.exchange.v1.QueryGetMarketCommitmentsResponse) | GetMarketCommitments gets all the funds committed to a market from any account. | GET|/provenance/exchange/v1/commitments/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/commitments|
+| `GetAllCommitments` | [QueryGetAllCommitmentsRequest](#provenance.exchange.v1.QueryGetAllCommitmentsRequest) | [QueryGetAllCommitmentsResponse](#provenance.exchange.v1.QueryGetAllCommitmentsResponse) | GetAllCommitments gets all fund committed to any market from any account. | GET|/provenance/exchange/v1/commitments|
 | `GetMarket` | [QueryGetMarketRequest](#provenance.exchange.v1.QueryGetMarketRequest) | [QueryGetMarketResponse](#provenance.exchange.v1.QueryGetMarketResponse) | GetMarket returns all the information and details about a market. | GET|/provenance/exchange/v1/market/{market_id}|
 | `GetAllMarkets` | [QueryGetAllMarketsRequest](#provenance.exchange.v1.QueryGetAllMarketsRequest) | [QueryGetAllMarketsResponse](#provenance.exchange.v1.QueryGetAllMarketsResponse) | GetAllMarkets returns brief information about each market. | GET|/provenance/exchange/v1/markets|
 | `Params` | [QueryParamsRequest](#provenance.exchange.v1.QueryParamsRequest) | [QueryParamsResponse](#provenance.exchange.v1.QueryParamsResponse) | Params returns the exchange module parameters. | GET|/provenance/exchange/v1/params|
+| `CommitmentSettlementFeeCalc` | [QueryCommitmentSettlementFeeCalcRequest](#provenance.exchange.v1.QueryCommitmentSettlementFeeCalcRequest) | [QueryCommitmentSettlementFeeCalcResponse](#provenance.exchange.v1.QueryCommitmentSettlementFeeCalcResponse) | CommitmentSettlementFeeCalc calculates the fees a market will pay for a commitment settlement using current NAVs. | GET|/provenance/exchange/v1/fees/commitment_settlement|
 | `ValidateCreateMarket` | [QueryValidateCreateMarketRequest](#provenance.exchange.v1.QueryValidateCreateMarketRequest) | [QueryValidateCreateMarketResponse](#provenance.exchange.v1.QueryValidateCreateMarketResponse) | ValidateCreateMarket checks the provided MsgGovCreateMarketResponse and returns any errors it might have. | GET|/provenance/exchange/v1/validate/create_market|
 | `ValidateMarket` | [QueryValidateMarketRequest](#provenance.exchange.v1.QueryValidateMarketRequest) | [QueryValidateMarketResponse](#provenance.exchange.v1.QueryValidateMarketResponse) | ValidateMarket checks for any problems with a market's setup. | GET|/provenance/exchange/v1/validate/market/{market_id}GET|/provenance/exchange/v1/market/{market_id}/validate|
 | `ValidateManageFees` | [QueryValidateManageFeesRequest](#provenance.exchange.v1.QueryValidateManageFeesRequest) | [QueryValidateManageFeesResponse](#provenance.exchange.v1.QueryValidateManageFeesResponse) | ValidateManageFees checks the provided MsgGovManageFeesRequest and returns any errors that it might have. | GET|/provenance/exchange/v1/validate/manage_fees|
+| `GetPayment` | [QueryGetPaymentRequest](#provenance.exchange.v1.QueryGetPaymentRequest) | [QueryGetPaymentResponse](#provenance.exchange.v1.QueryGetPaymentResponse) | GetPayment gets a single specific payment. | GET|/provenance/exchange/v1/paymentGET|/provenance/exchange/v1/payment/{source}GET|/provenance/exchange/v1/payment/{source}/{external_id}|
+| `GetPaymentsWithSource` | [QueryGetPaymentsWithSourceRequest](#provenance.exchange.v1.QueryGetPaymentsWithSourceRequest) | [QueryGetPaymentsWithSourceResponse](#provenance.exchange.v1.QueryGetPaymentsWithSourceResponse) | GetPaymentsWithSource gets all payments with a specific source account. | GET|/provenance/exchange/v1/payments/source/{source}|
+| `GetPaymentsWithTarget` | [QueryGetPaymentsWithTargetRequest](#provenance.exchange.v1.QueryGetPaymentsWithTargetRequest) | [QueryGetPaymentsWithTargetResponse](#provenance.exchange.v1.QueryGetPaymentsWithTargetResponse) | GetPaymentsWithTarget gets all payments with a specific target account. | GET|/provenance/exchange/v1/payments/target/{target}|
+| `GetAllPayments` | [QueryGetAllPaymentsRequest](#provenance.exchange.v1.QueryGetAllPaymentsRequest) | [QueryGetAllPaymentsResponse](#provenance.exchange.v1.QueryGetAllPaymentsResponse) | GetAllPayments gets all payments. | GET|/provenance/exchange/v1/payments|
+| `PaymentFeeCalc` | [QueryPaymentFeeCalcRequest](#provenance.exchange.v1.QueryPaymentFeeCalcRequest) | [QueryPaymentFeeCalcResponse](#provenance.exchange.v1.QueryPaymentFeeCalcResponse) | PaymentFeeCalc calculates the fees that must be paid for creating or accepting a specific payment. | GET|/provenance/exchange/v1/fees/payment|
 
  <!-- end services -->
 
@@ -3496,13 +4615,14 @@ Access defines the different types of permissions that a marker supports grantin
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | ACCESS_UNSPECIFIED | 0 | ACCESS_UNSPECIFIED defines a no-op vote option. |
-| ACCESS_MINT | 1 | ACCESS_MINT is the ability to increase the supply of a marker |
+| ACCESS_MINT | 1 | ACCESS_MINT is the ability to increase the supply of a marker. |
 | ACCESS_BURN | 2 | ACCESS_BURN is the ability to decrease the supply of the marker using coin held by the marker. |
-| ACCESS_DEPOSIT | 3 | ACCESS_DEPOSIT is the ability to set a marker reference to this marker in the metadata/scopes module |
-| ACCESS_WITHDRAW | 4 | ACCESS_WITHDRAW is the ability to remove marker references to this marker in from metadata/scopes or transfer coin from this marker account to another account. |
-| ACCESS_DELETE | 5 | ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state. This access also allows cancelled markers to be marked for deletion |
-| ACCESS_ADMIN | 6 | ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions. |
-| ACCESS_TRANSFER | 7 | ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange. This access right is only supported on RESTRICTED markers. |
+| ACCESS_DEPOSIT | 3 | ACCESS_DEPOSIT is the ability to transfer funds from another account to this marker account or to set a reference to this marker in the metadata/scopes module. |
+| ACCESS_WITHDRAW | 4 | ACCESS_WITHDRAW is the ability to transfer funds from this marker account to another account or to remove a reference to this marker in the metadata/scopes module. |
+| ACCESS_DELETE | 5 | ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state. This access also allows cancelled markers to be marked for deletion. |
+| ACCESS_ADMIN | 6 | ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions. This access also gives the ability to update the marker's denom metadata. |
+| ACCESS_TRANSFER | 7 | ACCESS_TRANSFER is the ability to manage transfer settings and broker transfers of the marker. Accounts with this access can: - Update the marker's required attributes. - Update the send-deny list. - Use the transfer or bank send endpoints to move marker funds out of their own account. This access right is only supported on RESTRICTED markers. |
+| ACCESS_FORCE_TRANSFER | 8 | ACCESS_FORCE_TRANSFER is the ability to transfer restricted coins from a 3rd-party account without their signature. This access right is only supported on RESTRICTED markers and only has meaning when allow_forced_transfer is true. |
 
 
  <!-- end enums -->
@@ -4623,8 +5743,9 @@ MsgAddFinalizeActivateMarkerRequest defines the Msg/AddFinalizeActivateMarker re
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
-| `usd_cents` | [uint64](#uint64) |  |  |
+| `usd_cents` | [uint64](#uint64) |  | **Deprecated.**  |
 | `volume` | [uint64](#uint64) |  |  |
+| `usd_mills` | [uint64](#uint64) |  |  |
 
 
 
@@ -4660,8 +5781,9 @@ If being provided as a governance proposal, set the from_address to the gov modu
 | `allow_governance_control` | [bool](#bool) |  |  |
 | `allow_forced_transfer` | [bool](#bool) |  |  |
 | `required_attributes` | [string](#string) | repeated |  |
-| `usd_cents` | [uint64](#uint64) |  |  |
+| `usd_cents` | [uint64](#uint64) |  | **Deprecated.**  |
 | `volume` | [uint64](#uint64) |  |  |
+| `usd_mills` | [uint64](#uint64) |  |  |
 
 
 
@@ -5514,6 +6636,23 @@ EventSessionUpdated is an event message indicating a session has been updated.
 
 
 
+<a name="provenance.metadata.v1.EventSetNetAssetValue"></a>
+
+### EventSetNetAssetValue
+EventSetNetAssetValue event emitted when Net Asset Value for a scope is update or added
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_id` | [string](#string) |  |  |
+| `price` | [string](#string) |  |  |
+| `source` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.EventTxCompleted"></a>
 
 ### EventTxCompleted
@@ -5859,6 +6998,22 @@ AuditFields capture information about the last account to make modifications and
 
 
 
+<a name="provenance.metadata.v1.NetAssetValue"></a>
+
+### NetAssetValue
+NetAssetValue defines a scope's net asset value
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | price is the complete value of the asset's volume |
+| `updated_block_height` | [uint64](#uint64) |  | updated_block_height is the block height of last update |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.Party"></a>
 
 ### Party
@@ -6101,6 +7256,23 @@ GenesisState defines the account module's genesis state.
 | `record_specifications` | [RecordSpecification](#provenance.metadata.v1.RecordSpecification) | repeated |  |
 | `o_s_locator_params` | [OSLocatorParams](#provenance.metadata.v1.OSLocatorParams) |  |  |
 | `object_store_locators` | [ObjectStoreLocator](#provenance.metadata.v1.ObjectStoreLocator) | repeated |  |
+| `net_asset_values` | [MarkerNetAssetValues](#provenance.metadata.v1.MarkerNetAssetValues) | repeated | Net asset values assigned to scopes |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MarkerNetAssetValues"></a>
+
+### MarkerNetAssetValues
+MarkerNetAssetValues defines the net asset values for a scope
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address defines the scope address |
+| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated | net_asset_values that are assigned to scope |
 
 
 
@@ -6949,6 +8121,36 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 
 
+<a name="provenance.metadata.v1.QueryScopeNetAssetValuesRequest"></a>
+
+### QueryScopeNetAssetValuesRequest
+QueryNetAssetValuesRequest is the request type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | scopeid metadata address |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.QueryScopeNetAssetValuesResponse"></a>
+
+### QueryScopeNetAssetValuesResponse
+QueryNetAssetValuesRequest is the response type for the Query/NetAssetValues method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated | net asset values for scope |
+
+
+
+
+
+
 <a name="provenance.metadata.v1.RecordSpecificationRequest"></a>
 
 ### RecordSpecificationRequest
@@ -7533,6 +8735,7 @@ The specification_id can either be a uuid, e.g. def6bc0a-c9dd-4874-948f-5206e606
 | `OSLocatorsByScope` | [OSLocatorsByScopeRequest](#provenance.metadata.v1.OSLocatorsByScopeRequest) | [OSLocatorsByScopeResponse](#provenance.metadata.v1.OSLocatorsByScopeResponse) | OSLocatorsByScope returns all ObjectStoreLocator entries for a for all signer's present in the specified scope. | GET|/provenance/metadata/v1/locator/scope/{scope_id}|
 | `OSAllLocators` | [OSAllLocatorsRequest](#provenance.metadata.v1.OSAllLocatorsRequest) | [OSAllLocatorsResponse](#provenance.metadata.v1.OSAllLocatorsResponse) | OSAllLocators returns all ObjectStoreLocator entries. | GET|/provenance/metadata/v1/locators/all|
 | `AccountData` | [AccountDataRequest](#provenance.metadata.v1.AccountDataRequest) | [AccountDataResponse](#provenance.metadata.v1.AccountDataResponse) | AccountData gets the account data associated with a metadata address. Currently, only scope ids are supported. | GET|/provenance/metadata/v1/accountdata/{metadata_addr}|
+| `ScopeNetAssetValues` | [QueryScopeNetAssetValuesRequest](#provenance.metadata.v1.QueryScopeNetAssetValuesRequest) | [QueryScopeNetAssetValuesResponse](#provenance.metadata.v1.QueryScopeNetAssetValuesResponse) | ScopeNetAssetValues returns net asset values for scope | GET|/provenance/metadata/v1/netassetvalues/{id}|
 
  <!-- end services -->
 
@@ -7566,6 +8769,33 @@ MsgAddContractSpecToScopeSpecRequest is the request type for the Msg/AddContract
 
 ### MsgAddContractSpecToScopeSpecResponse
 MsgAddContractSpecToScopeSpecResponse is the response type for the Msg/AddContractSpecToScopeSpec RPC method.
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgAddNetAssetValuesRequest"></a>
+
+### MsgAddNetAssetValuesRequest
+MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `scope_id` | [string](#string) |  |  |
+| `signers` | [string](#string) | repeated |  |
+| `net_asset_values` | [NetAssetValue](#provenance.metadata.v1.NetAssetValue) | repeated |  |
+
+
+
+
+
+
+<a name="provenance.metadata.v1.MsgAddNetAssetValuesResponse"></a>
+
+### MsgAddNetAssetValuesResponse
+MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
 
 
 
@@ -8193,6 +9423,7 @@ MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
 | `signers` | [string](#string) | repeated | signers is the list of address of those signing this request. |
 | `scope_uuid` | [string](#string) |  | scope_uuid is an optional uuid string, e.g. "91978ba2-5f35-459a-86a7-feca1b0512e0" If provided, it will be used to generate the MetadataAddress for the scope which will override the scope_id in the provided scope. If not provided (or it is an empty string), nothing special happens. If there is a value in scope.scope_id that is different from the one created from this uuid, an error is returned. |
 | `spec_uuid` | [string](#string) |  | spec_uuid is an optional scope specification uuid string, e.g. "dc83ea70-eacd-40fe-9adf-1cf6148bf8a2" If provided, it will be used to generate the MetadataAddress for the scope specification which will override the specification_id in the provided scope. If not provided (or it is an empty string), nothing special happens. If there is a value in scope.specification_id that is different from the one created from this uuid, an error is returned. |
+| `usd_mills` | [uint64](#uint64) |  | usd_mills value of scope in usd mills (1234 = $1.234) used for net asset value |
 
 
 
@@ -8332,6 +9563,7 @@ Msg defines the Metadata Msg service.
 | `DeleteOSLocator` | [MsgDeleteOSLocatorRequest](#provenance.metadata.v1.MsgDeleteOSLocatorRequest) | [MsgDeleteOSLocatorResponse](#provenance.metadata.v1.MsgDeleteOSLocatorResponse) | DeleteOSLocator deletes an existing ObjectStoreLocator record. | |
 | `ModifyOSLocator` | [MsgModifyOSLocatorRequest](#provenance.metadata.v1.MsgModifyOSLocatorRequest) | [MsgModifyOSLocatorResponse](#provenance.metadata.v1.MsgModifyOSLocatorResponse) | ModifyOSLocator updates an ObjectStoreLocator record by the current owner. | |
 | `SetAccountData` | [MsgSetAccountDataRequest](#provenance.metadata.v1.MsgSetAccountDataRequest) | [MsgSetAccountDataResponse](#provenance.metadata.v1.MsgSetAccountDataResponse) | SetAccountData associates some basic data with a metadata address. Currently, only scope ids are supported. | |
+| `AddNetAssetValues` | [MsgAddNetAssetValuesRequest](#provenance.metadata.v1.MsgAddNetAssetValuesRequest) | [MsgAddNetAssetValuesResponse](#provenance.metadata.v1.MsgAddNetAssetValuesResponse) | AddNetAssetValues set the net asset value for a scope | |
 
  <!-- end services -->
 
@@ -8408,9 +9640,13 @@ Params defines the set of params for the msgfees module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | constant used to calculate fees when gas fees shares denom with msg fee |
-| `nhash_per_usd_mil` | [uint64](#uint64) |  | total nhash per usd mil for converting usd to nhash |
-| `conversion_fee_denom` | [string](#string) |  | conversion fee denom is the denom usd is converted to |
+| `floor_gas_price` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.
+
+Conversions: - x nhash/usd-mil = 1,000,000/x usd/hash - y usd/hash = 1,000,000/y nhash/usd-mil
+
+Examples: - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash, - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil |
+| `nhash_per_usd_mil` | [uint64](#uint64) |  | nhash_per_usd_mil is the total nhash per usd mil for converting usd to nhash. |
+| `conversion_fee_denom` | [string](#string) |  | conversion_fee_denom is the denom usd is converted to. |
 
 
 

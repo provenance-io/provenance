@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/simapp v0.0.0-20231107193120-9814f684b9dd
+	cosmossdk.io/simapp v0.0.0-20231107193120-9814f684b9dd // TODO[1760]: Copy needed stuff out of simapp and remove this require.
 	cosmossdk.io/store v1.0.2
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.1.0
@@ -21,7 +21,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.4
 	github.com/cosmos/cosmos-sdk v0.50.4
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/gogoproto v1.4.11
+	github.com/cosmos/gogoproto v1.4.12
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
 	github.com/cosmos/ibc-go/v8 v8.0.0
@@ -43,7 +43,7 @@ require (
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/text v0.14.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240205150955-31a09d347014
-	google.golang.org/grpc v1.62.0
+	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -218,7 +218,7 @@ replace (
 	// TODO[1760]: wasm: Put this CosmWasm/wasmd replace back with an updated version (or delete it).
 	// github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
 	// TODO[1760]: sdk: Put this replace back with an updated version of the sdk from our fork.
-	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-pio-1
+	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-pio-2
 
 	// TODO[1760]: Update once async-icq creates tag with our changes https://github.com/cosmos/ibc-apps/pull/168
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 => github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1
@@ -232,5 +232,4 @@ replace (
 
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	github.com/tecbot/gorocksdb => github.com/cosmos/gorocksdb v1.1.1
 )

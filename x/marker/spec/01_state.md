@@ -87,23 +87,32 @@ or applied afterwards through the API calls to add or remove access.
 const (
 	// ACCESS_UNSPECIFIED defines a no-op vote option.
 	Access_Unknown Access = 0
-	// ACCESS_MINT is the ability to increase the supply of a marker
+	// ACCESS_MINT is the ability to increase the supply of a marker.
 	Access_Mint Access = 1
 	// ACCESS_BURN is the ability to decrease the supply of the marker using coin held by the marker.
 	Access_Burn Access = 2
-	// ACCESS_DEPOSIT is the ability to set a marker reference to this marker in the metadata/scopes module
+	// ACCESS_DEPOSIT is the ability to transfer funds from another account to this marker account
+	// or to set a reference to this marker in the metadata/scopes module.
 	Access_Deposit Access = 3
-	// ACCESS_WITHDRAW is the ability to remove marker references to this marker in from metadata/scopes or
-	// transfer coin from this marker account to another account.
+	// ACCESS_WITHDRAW is the ability to transfer funds from this marker account to another account
+	// or to remove a reference to this marker in the metadata/scopes module.
 	Access_Withdraw Access = 4
-	// ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state. This
-	// access also allows cancelled markers to be marked for deletion
+	// ACCESS_DELETE is the ability to move a proposed, finalized or active marker into the cancelled state.
+	// This access also allows cancelled markers to be marked for deletion.
 	Access_Delete Access = 5
 	// ACCESS_ADMIN is the ability to add access grants for accounts to the list of marker permissions.
+	// This access also gives the ability to update the marker's denom metadata.
 	Access_Admin Access = 6
-	// ACCESS_TRANSFER is the ability to invoke a send operation using the marker module to facilitate exchange.
-	// This capability is useful when the marker denomination has "send enabled = false" preventing normal bank transfer
+	// ACCESS_TRANSFER is the ability to manage transfer settings and broker transfers of the marker.
+	// Accounts with this access can:
+	//  - Update the marker's required attributes.
+	//  - Update the send-deny list.
+	//  - Use the transfer or bank send endpoints to move marker funds out of their own account.
+	// This access right is only supported on RESTRICTED markers.
 	Access_Transfer Access = 7
+	// ACCESS_FORCE_TRANSFER is the ability to transfer restricted coins from a 3rd-party account without their signature.
+	// This access right is only supported on RESTRICTED markers and only has meaning when allow_forced_transfer is true.
+	Access_ForceTransfer Access = 8
 )
 
 // A structure associating a list of access permissions for a given account identified by is address
@@ -115,11 +124,15 @@ type AccessGrant struct {
 }
 ```
 
+An admin with `Access_ForceTransfer` can use the `Transfer` endpoint to move marker funds (forced or not). However, an
+admin with `Access_ForceTransfer`, but without `Access_Transfer`, cannot move marker funds by other means (e.g. a bank
+`Send`). I.e. `Access_ForceTransfer` only has meaning with the `Transfer` endpoint.
+
 ### Fixed Supply vs Floating
 
 A marker can be configured to have a fixed supply or one that is allowed to float.  A marker will always mint an amount
 of coin indicated in its `supply` field when it is activated.  For markers that have a fixed supply an invariant check
-is enforced that ensures the supply of the marker alway matches the configured value.  For a floating supply no
+is enforced that ensures the supply of the marker always matches the configured value.  For a floating supply no
 additional checks or adjustments are performed and the supply value is set to zero when activated.
 
 #### When a Marker has a Fixed Supply that does not match target
@@ -143,18 +156,19 @@ chain and a slash penalty is assessed resulting in the burning of a portion of c
 ### Forced Transfers
 
 A marker with the **Restricted Coin** type can be configured to allow forced transfer of funds for that marker's denom.
-A forced transfer is one where the `admin` (with `TRANSFER` access) is different than the `from` address. In such cases,
-if the marker allows forced transfers, the transfer is allowed. If forced transfers are not allowed, an `admin` cannot
-transfer the marker's coins from another account unless granted permission to do so via `authz`.
+A forced transfer is one where the `admin` (with `ACCESS_FORCE_TRANSFER`) is different than the `from` address. In such
+cases, if the marker allows forced transfers, the transfer is allowed. If forced transfers are not allowed, an `admin`
+cannot transfer the marker's coins from another account unless granted permission to do so via `authz`.
+Forced transfers can only be made using the marker module's `Transfer` endpoint.
 
 Markers with **Coin** type cannot be configured to allow forced transfers.
 
 ### Required Attributes
 
-A marker with the **Restricted Coin** type can be configured to allow transfers with a normal `MsgSend` to address that have defined attributes. 
+A marker with the **Restricted Coin** type can be configured to allow transfers with a normal `MsgSend` to address that have defined attributes.
 This can be configured by setting the `required_attributes` array on the Marker.  When a `MsgSend` transaction is executed and the coin type is `restricted`, the `required_attributes` are checked. If the `ToAddress` associated with the `MsgSend` command has **all** the required attributes, the transfer will be executed.
 
-A single wildcard can only be used for the starting name of the required attribute. For example, `*.provenance.io` is a valid wildcard attribute. Invalid wildcard usages include forms such as `*kyc.provenance.io` or `kyc.*.provenance.io`.  Matching will be accepted for any number of child level names, i.e. `one.two.three.provenance.io` and `one.provenance.io` will be accepted for `*.provenance.io`. 
+A single wildcard can only be used for the starting name of the required attribute. For example, `*.provenance.io` is a valid wildcard attribute. Invalid wildcard usages include forms such as `*kyc.provenance.io` or `kyc.*.provenance.io`.  Matching will be accepted for any number of child level names, i.e. `one.two.three.provenance.io` and `one.provenance.io` will be accepted for `*.provenance.io`.
 
 ## Marker Address Cache
 

@@ -8,9 +8,9 @@ This document describes the state transition operations involved in the rewards 
 
 <!-- TOC -->
   - [Reward Programs](#reward-programs)
-    - [Pending ](#pending)
-    - [Started ](#started)
-    - [Finished ](#finished)
+    - [Pending](#pending)
+    - [Started](#started)
+    - [Finished](#finished)
     - [Expired](#expired)
   - [Reward Claims](#reward-claims)
     - [Unclaimable](#unclaimable)

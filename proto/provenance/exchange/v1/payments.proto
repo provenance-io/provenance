@@ -1,0 +1,43 @@
+syntax = "proto3";
+package provenance.exchange.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/exchange";
+
+option java_package        = "io.provenance.exchange.v1";
+option java_multiple_files = true;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+// Payment represents one account's desire to trade funds with another account.
+message Payment {
+  option (gogoproto.goproto_stringer) = false;
+
+  // source is the account that created this Payment. It is considered the owner of the payment.
+  string source = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source_amount is the funds that the source is will pay the target in exchange for the target_amount.
+  // A hold will be placed on this amount in the source account until this Payment is accepted, rejected or cancelled.
+  // If the source_amount is zero, this Payment can be considered a "payment request."
+  repeated cosmos.base.v1beta1.Coin source_amount = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // target is the account that can accept this Payment.
+  // The target is the only thing allowed to change in a payment.
+  // I.e. it can be empty initially and updated later as needed.
+  string target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // target_amount is the funds that the target will pay the source in exchange for the source_amount.
+  // If the target_amount is zero, this Payment can be considered a "peer-to-peer (P2P) payment."
+  repeated cosmos.base.v1beta1.Coin target_amount = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // external_id is used along with the source to uniquely identify this Payment.
+  //
+  // A source can only have one Payment with any given external id.
+  // A source can have two payments with two different external ids.
+  // Two different sources can each have a payment with the same external id.
+  // But a source cannot have two different payments each with the same external id.
+  //
+  // An external id can be reused by a source once the payment is accepted, rejected, or cancelled.
+  //
+  // The external id is limited to 100 bytes. An empty string is a valid external id.
+  string external_id = 5;
+}

@@ -66,6 +66,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signers []string) MetadataMsg { return &MsgWriteRecordSpecificationRequest{Signers: signers} },
 		func(signers []string) MetadataMsg { return &MsgDeleteRecordSpecificationRequest{Signers: signers} },
 		func(signers []string) MetadataMsg { return &MsgSetAccountDataRequest{Signers: signers} },
+		func(signers []string) MetadataMsg { return &MsgAddNetAssetValuesRequest{Signers: signers} },
 	}
 
 	singleSignerMsgMakers := []func(signer string) MetadataMsg{
@@ -227,7 +228,7 @@ func TestWriteScopeRoute(t *testing.T) {
 		DataAccess:        []string{"data_accessor"},
 		ValueOwnerAddress: "value_owner",
 	}
-	var msg = NewMsgWriteScopeRequest(*scope, []string{})
+	var msg = NewMsgWriteScopeRequest(*scope, []string{}, 0)
 
 	require.Equal(t, sdk.MsgTypeURL(msg), "/provenance.metadata.v1.MsgWriteScopeRequest")
 	expectedYaml := `scope:
@@ -244,6 +245,7 @@ func TestWriteScopeRoute(t *testing.T) {
 signers: []
 scope_uuid: ""
 spec_uuid: ""
+usdmills: 0
 `
 	bz, err := yaml.Marshal(msg)
 	require.NoError(t, err, "yaml.Marshal(msg)")
@@ -251,7 +253,7 @@ spec_uuid: ""
 
 	bz, err = ModuleCdc.MarshalJSON(msg)
 	require.NoError(t, err, "ModuleCdc.MarshalJSON(msg)")
-	assert.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\",\"require_party_rollup\":false},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\"}", string(bz))
+	assert.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\",\"require_party_rollup\":false},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\",\"usd_mills\":\"0\"}", string(bz))
 }
 
 func TestWriteScopeValidation(t *testing.T) {
@@ -262,7 +264,7 @@ func TestWriteScopeValidation(t *testing.T) {
 		DataAccess:        []string{"data_accessor"},
 		ValueOwnerAddress: "value_owner",
 	}
-	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"})
+	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"}, 0)
 	err := msg.ValidateBasic()
 	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1")
 	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")
@@ -1051,6 +1053,67 @@ func TestRegisterInterfaces(t *testing.T) {
 						assert.Equal(t, msgActual, msgToAny, "message after unpacking it from the any")
 					}
 				}
+			}
+		})
+	}
+}
+
+func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
+	addr := sdk.AccAddress("addr________________").String()
+	scopeID := "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
+	sessionID := "session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"
+	netAssetValue1 := NetAssetValue{Price: sdk.NewInt64Coin("jackthecat", 100)}
+	netAssetValue2 := NetAssetValue{Price: sdk.NewInt64Coin("hotdog", 100)}
+	invalidNetAssetValue2 := NetAssetValue{Price: sdk.NewInt64Coin("hotdog", 100), UpdatedBlockHeight: 1}
+
+	tests := []struct {
+		name   string
+		msg    MsgAddNetAssetValuesRequest
+		expErr string
+	}{
+		{
+			name: "should succeed",
+			msg:  MsgAddNetAssetValuesRequest{ScopeId: scopeID, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2}, Signers: []string{addr}},
+		},
+		{
+			name:   "block height is set",
+			msg:    MsgAddNetAssetValuesRequest{ScopeId: scopeID, NetAssetValues: []NetAssetValue{invalidNetAssetValue2}, Signers: []string{addr}},
+			expErr: "scope net asset value must not have update height set",
+		},
+		{
+			name:   "duplicate net asset values",
+			msg:    MsgAddNetAssetValuesRequest{ScopeId: scopeID, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Signers: []string{addr}},
+			expErr: "list of net asset values contains duplicates",
+		},
+		{
+			name:   "incorrect meta address",
+			msg:    MsgAddNetAssetValuesRequest{ScopeId: "", NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Signers: []string{addr}},
+			expErr: `invalid metadata address "": empty address string is not allowed`,
+		},
+		{
+			name:   "not scope meta address",
+			msg:    MsgAddNetAssetValuesRequest{ScopeId: sessionID, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2, netAssetValue2}, Signers: []string{addr}},
+			expErr: "metadata address is not scope address: session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr",
+		},
+		{
+			name:   "invalid administrator address",
+			msg:    MsgAddNetAssetValuesRequest{ScopeId: scopeID, NetAssetValues: []NetAssetValue{netAssetValue1, netAssetValue2}, Signers: []string{"invalid"}},
+			expErr: "decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			name:   "empty net asset list",
+			msg:    MsgAddNetAssetValuesRequest{ScopeId: scopeID, NetAssetValues: []NetAssetValue{}, Signers: []string{addr}},
+			expErr: "net asset value list cannot be empty",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if len(tc.expErr) > 0 {
+				require.EqualErrorf(t, err, tc.expErr, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
 			}
 		})
 	}

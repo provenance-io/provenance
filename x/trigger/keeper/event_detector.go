@@ -24,26 +24,28 @@ func (k Keeper) DetectBlockEvents(ctx sdk.Context) {
 
 // detectTransactionEvents Detects triggers that have been activated by transaction events.
 func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigger) {
-	// TODO[1760]: event-history: Put this back once the event history stuff is back in the SDK.
-	/*
-		detectedTriggers := map[uint64]bool{}
-		terminator := func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
-			return false
-		}
+	detectedTriggers := map[uint64]bool{}
+	terminator := func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
+		return false
+	}
 
-		for _, event := range ctx.EventManager().GetABCIEventHistory() {
-			matched := k.getMatchingTriggersUntil(ctx, event.GetType(), func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
-				if _, isDetected := detectedTriggers[trigger.Id]; isDetected {
-					return false
-				}
-				txEvent := triggerEvent.(*types.TransactionEvent)
-				detected := txEvent.Matches(event)
-				detectedTriggers[trigger.Id] = detected
-				return detected
-			}, terminator)
-			triggers = append(triggers, matched...)
-		}
-	*/
+	abciEventHistory, ok := ctx.EventManager().(sdk.EventManagerWithHistoryI)
+	if !ok {
+		panic("event manager does not implement EventManagerWithHistoryI")
+	}
+
+	for _, event := range abciEventHistory.GetABCIEventHistory() {
+		matched := k.getMatchingTriggersUntil(ctx, event.GetType(), func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
+			if _, isDetected := detectedTriggers[trigger.Id]; isDetected {
+				return false
+			}
+			txEvent := triggerEvent.(*types.TransactionEvent)
+			detected := txEvent.Matches(event)
+			detectedTriggers[trigger.Id] = detected
+			return detected
+		}, terminator)
+		triggers = append(triggers, matched...)
+	}
 	return
 }
 

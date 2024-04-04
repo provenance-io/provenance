@@ -1242,21 +1242,21 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			"IncreaseSupply",
 			fmt.Sprintf(`{"title":"test mint marker","description":"description","manager":"%s",
 			"amount":{"denom":"propcoin","amount":"10"}}`, s.testnet.Validators[0].Address.String()),
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"burn marker proposal",
 			"DecreaseSupply",
 			fmt.Sprintf(`{"title":"test burn marker","description":"description","manager":"%s",
 			"amount":{"denom":"propcoin","amount":"10"}}`, s.testnet.Validators[0].Address.String()),
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"change status marker proposal",
 			"ChangeStatus",
 			`{"title":"test change marker status","description":"description","denom":"propcoin",
 			"new_status":"MARKER_STATUS_CANCELLED"}`,
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"add admin marker proposal",
@@ -1264,7 +1264,7 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			fmt.Sprintf(`{"title":"test add admin to marker","description":"description",
 			"denom":"propcoin","access":[{"address":"%s", "permissions": [1,2,3,4,5,6]}]}`,
 				s.testnet.Validators[0].Address.String()),
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"remove admin marker proposal",
@@ -1272,7 +1272,7 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			fmt.Sprintf(`{"title":"test remove marker admin","description":"description",
 			"denom":"propcoin","removed_address":["%s"]}`,
 				s.testnet.Validators[0].Address.String()),
-			false, &sdk.TxResponse{}, 0,
+			true, &sdk.TxResponse{}, 0,
 		},
 		{
 			"withdraw escrow marker proposal",
@@ -1280,7 +1280,7 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 			fmt.Sprintf(`{"title":"test withdraw marker","description":"description","target_address":"%s",
 			"denom":"%s", "amount":[{"denom":"%s","amount":"1"}]}`, s.testnet.Validators[0].Address.String(),
 				s.cfg.BondDenom, s.cfg.BondDenom),
-			false, &sdk.TxResponse{}, 0x5,
+			true, &sdk.TxResponse{}, 0x5,
 			// The gov module now has its own set of errors.
 			// This /should/ fail due to insufficient funds, and it does, but then the gov module erroneously wraps it again.
 			// Insufficient funds is 0x5 in the main SDK's set of errors.
@@ -1909,7 +1909,7 @@ func (s *IntegrationTestSuite) TestParseNetAssertValueString() {
 		{
 			name:           "invalid coin",
 			netAssetValues: "notacoin,1",
-			expErr:         "invalid coin notacoin",
+			expErr:         "invalid net asset value coin : notacoin",
 			expResult:      []types.NetAssetValue{},
 		},
 		{
@@ -1970,7 +1970,7 @@ func TestParseNewMarkerFlags(t *testing.T) {
 	argGov := "--" + markercli.FlagAllowGovernanceControl
 	argForce := "--" + markercli.FlagAllowForceTransfer
 	argRequiredAtt := "--" + markercli.FlagRequiredAttributes
-	argUsdCents := "--" + markercli.FlagUsdCents
+	argUsdMills := "--" + markercli.FlagUsdMills
 	argVolume := "--" + markercli.FlagVolume
 
 	tests := []struct {
@@ -2157,10 +2157,10 @@ func TestParseNewMarkerFlags(t *testing.T) {
 			},
 		},
 		{
-			name:   "usd cents present without volume",
+			name:   "usd mills present without volume",
 			cmd:    getTestCmd(),
-			args:   []string{argUsdCents + "=10"},
-			expErr: []string{"incorrect value for volume flag.  Must be positive number if usd-cents flag has been set to positive value"},
+			args:   []string{argUsdMills + "=10"},
+			expErr: []string{"incorrect value for volume flag.  Must be positive number if usd-mills flag has been set to positive value"},
 		},
 		{
 			name: "volume present",
@@ -2172,35 +2172,35 @@ func TestParseNewMarkerFlags(t *testing.T) {
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
 				RequiredAttributes: []string{},
-				UsdCents:           0,
+				UsdMills:           0,
 				Volume:             11,
 			},
 		},
 		{
-			name: "usd-cents and volume present",
+			name: "usd-mills and volume present",
 			cmd:  getTestCmd(),
-			args: []string{argVolume + "=11", argUsdCents + "=1"},
+			args: []string{argVolume + "=11", argUsdMills + "=1"},
 			exp: &markercli.NewMarkerFlagValues{
 				MarkerType:         types.MarkerType_Coin,
 				SupplyFixed:        false,
 				AllowGovControl:    false,
 				AllowForceTransfer: false,
 				RequiredAttributes: []string{},
-				UsdCents:           1,
+				UsdMills:           1,
 				Volume:             11,
 			},
 		},
 		{
 			name: "everything",
 			cmd:  getTestCmd(),
-			args: []string{argForce, argGov, argType, "RESTRICTED", argFixed, argRequiredAtt, "jack.the.cat.io,george.the.dog.io", argUsdCents, "10", argVolume, "12"},
+			args: []string{argForce, argGov, argType, "RESTRICTED", argFixed, argRequiredAtt, "jack.the.cat.io,george.the.dog.io", argUsdMills, "10", argVolume, "12"},
 			exp: &markercli.NewMarkerFlagValues{
 				MarkerType:         types.MarkerType_RestrictedCoin,
 				SupplyFixed:        true,
 				AllowGovControl:    true,
 				AllowForceTransfer: true,
 				RequiredAttributes: []string{"jack.the.cat.io", "george.the.dog.io"},
-				UsdCents:           10,
+				UsdMills:           10,
 				Volume:             12,
 			},
 		},

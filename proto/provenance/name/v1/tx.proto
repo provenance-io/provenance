@@ -30,6 +30,8 @@ service Msg {
 // The record may optionally be restricted to prevent additional names from being added under this one without the
 // owner signing the request.
 message MsgBindNameRequest {
+  option (cosmos.msg.v1.signer) = "parent";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -46,6 +48,8 @@ message MsgBindNameResponse {}
 // may not have any child names currently bound for this request to be successful. All associated attributes on account
 // addresses will be deleted.
 message MsgDeleteNameRequest {
+  option (cosmos.msg.v1.signer) = "record";
+
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

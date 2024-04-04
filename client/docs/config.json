@@ -17,6 +17,7 @@
           ]
       }
     },
+
     {
       "url": "./tmp-swagger-gen/provenance/attribute/v1/query.swagger.json",
       "operationIds": {
@@ -28,6 +29,39 @@
     {
       "url": "./tmp-swagger-gen/provenance/attribute/v1/tx.swagger.json"
     },
+
+    {
+      "url": "./tmp-swagger-gen/provenance/exchange/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ExchangeParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/exchange/v1/tx.swagger.json"
+    },
+
+    {
+      "url": "./tmp-swagger-gen/provenance/hold/v1/query.swagger.json"
+    },
+
+    {
+      "url": "./tmp-swagger-gen/provenance/ibchooks/v1/tx.swagger.json"
+    },
+
+    {
+      "url": "./tmp-swagger-gen/provenance/ibcratelimit/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCRateLimitParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/ibcratelimit/v1/tx.swagger.json"
+    },
+
     {
       "url": "./tmp-swagger-gen/provenance/marker/v1/query.swagger.json",
       "operationIds": {
@@ -41,6 +75,7 @@
     {
       "url": "./tmp-swagger-gen/provenance/marker/v1/tx.swagger.json"
     },
+
     {
       "url": "./tmp-swagger-gen/provenance/metadata/v1/query.swagger.json",
       "operationIds": {
@@ -53,6 +88,19 @@
     {
       "url": "./tmp-swagger-gen/provenance/metadata/v1/tx.swagger.json"
     },
+
+    {
+      "url": "./tmp-swagger-gen/provenance/msgfees/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "MsgFeeParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/msgfees/v1/tx.swagger.json"
+    },
+
     {
       "url": "./tmp-swagger-gen/provenance/name/v1/query.swagger.json",
       "operationIds": {
@@ -64,8 +112,16 @@
     {
       "url": "./tmp-swagger-gen/provenance/name/v1/tx.swagger.json"
     },
+
     {
-      "url": "./tmp-swagger-gen/provenance/msgfees/v1/query.swagger.json",
+      "url": "./tmp-swagger-gen/provenance/oracle/v1/query.swagger.json"
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/oracle/v1/tx.swagger.json"
+    },
+
+    {
+      "url": "./tmp-swagger-gen/provenance/reward/v1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "MsgFeeParams"
@@ -75,13 +131,12 @@
     {
       "url": "./tmp-swagger-gen/provenance/reward/v1/tx.swagger.json"
     },
+
     {
-      "url": "./tmp-swagger-gen/provenance/reward/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "MsgFeeParams"
-        }
-      }
+      "url": "./tmp-swagger-gen/provenance/trigger/v1/query.swagger.json"
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/trigger/v1/tx.swagger.json"
     }
   ]
 }
