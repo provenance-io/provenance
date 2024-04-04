@@ -35,7 +35,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	bankKeeper sanction.BankKeeper,
-	govKeeper govkeeper.Keeper,
+	govKeeper *govkeeper.Keeper,
 	authority string,
 	unsanctionableAddrs []sdk.AccAddress,
 ) Keeper {
