@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/keeper"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type QueryTestSuite struct {
@@ -87,7 +87,7 @@ func (s *QueryTestSuite) TestKeeper_IsSanctioned() {
 				resp, err = s.Keeper.IsSanctioned(s.StdlibCtx, tc.req)
 			}
 			s.Require().NotPanics(testFunc, "IsSanctioned")
-			testutil.AssertErrorContents(s.T(), err, tc.expErr, "IsSanctioned error")
+			assertions.AssertErrorContents(s.T(), err, tc.expErr, "IsSanctioned error")
 			s.Assert().Equal(tc.exp, resp, "IsSanctioned response")
 		})
 	}
@@ -308,7 +308,7 @@ func (s *QueryTestSuite) TestKeeper_SanctionedAddresses() {
 				resp, err = s.Keeper.SanctionedAddresses(s.StdlibCtx, tc.req)
 			}
 			s.Require().NotPanics(testFunc, "SanctionedAddresses")
-			testutil.AssertErrorContents(s.T(), err, tc.expErr, "SanctionedAddresses error")
+			assertions.AssertErrorContents(s.T(), err, tc.expErr, "SanctionedAddresses error")
 			if !s.Assert().Equal(tc.exp, resp, "SanctionedAddresses response") && tc.exp != nil && resp != nil {
 				s.Assert().Equal(tc.exp.Addresses, resp.Addresses, "SanctionedAddresses response Addresses")
 				s.Assert().Equal(tc.exp.Pagination.NextKey, resp.Pagination.NextKey, "TemporaryEntries response Pagination.NextKey")
@@ -814,7 +814,7 @@ func (s *QueryTestSuite) TestKeeper_TemporaryEntries() {
 				resp, err = s.Keeper.TemporaryEntries(s.StdlibCtx, tc.req)
 			}
 			s.Require().NotPanics(testFunc, "TemporaryEntries")
-			testutil.AssertErrorContents(s.T(), err, tc.expErr, "TemporaryEntries error")
+			assertions.AssertErrorContents(s.T(), err, tc.expErr, "TemporaryEntries error")
 			if !s.Assert().Equal(tc.exp, resp, "TemporaryEntries response") && tc.exp != nil && resp != nil {
 				s.Assert().Equal(tc.exp.Entries, resp.Entries, "TemporaryEntries response Entries")
 				s.Assert().Equal(tc.exp.Pagination.NextKey, resp.Pagination.NextKey, "TemporaryEntries response Pagination.NextKey")

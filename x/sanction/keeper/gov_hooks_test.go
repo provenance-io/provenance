@@ -15,7 +15,6 @@ import (
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type GovHooksTestSuite struct {
@@ -1112,7 +1111,7 @@ func (s *GovHooksTestSuite) TestKeeper_proposalGovHook() {
 			testFunc := func() {
 				s.Keeper.OnlyTestsProposalGovHook(s.SdkCtx, tc.proposalID)
 			}
-			testutil.RequirePanicContents(s.T(), tc.expPanic, testFunc, "proposalGovHook(%d)", tc.proposalID)
+			assertions.RequirePanicContents(s.T(), testFunc, tc.expPanic, "proposalGovHook(%d)", tc.proposalID)
 
 			getPropCalls := s.GovKeeper.GetProposalCalls
 			if s.Assert().Len(getPropCalls, 1, "number of calls made to GetProposal") {
@@ -1451,7 +1450,7 @@ func (s *GovHooksTestSuite) TestKeeper_getMsgAddresses() {
 			testFunc := func() {
 				actual = s.Keeper.OnlyTestsGetMsgAddresses(tc.msg)
 			}
-			testutil.AssertPanicContents(s.T(), tc.expPanic, testFunc, "getMsgAddresses")
+			assertions.AssertPanicContents(s.T(), testFunc, tc.expPanic, "getMsgAddresses")
 			s.Assert().Equal(tc.exp, actual, "getMsgAddresses result")
 		})
 	}

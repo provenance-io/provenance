@@ -9,8 +9,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type MsgServerTestSuite struct {
@@ -236,7 +236,7 @@ func (s *MsgServerTestSuite) TestKeeper_Sanction() {
 				_, err = s.Keeper.Sanction(s.StdlibCtx, tc.req)
 			}
 			s.Require().NotPanics(testFunc, "Sanction")
-			testutil.AssertErrorContents(s.T(), err, tc.expErr, "Sanction error")
+			assertions.AssertErrorContents(s.T(), err, tc.expErr, "Sanction error")
 			if tc.expState != nil {
 				s.ExportAndCheck(tc.expState)
 			}
@@ -495,7 +495,7 @@ func (s *MsgServerTestSuite) TestKeeper_Unsanction() {
 				_, err = s.Keeper.Unsanction(s.StdlibCtx, tc.req)
 			}
 			s.Require().NotPanics(testFunc, "Unsanction")
-			testutil.AssertErrorContents(s.T(), err, tc.expErr, "Unsanction error")
+			assertions.AssertErrorContents(s.T(), err, tc.expErr, "Unsanction error")
 			if tc.expState != nil {
 				s.ExportAndCheck(tc.expState)
 			}
@@ -652,7 +652,7 @@ func (s *MsgServerTestSuite) TestKeeper_UpdateParams() {
 				_, err = s.Keeper.UpdateParams(s.StdlibCtx, tc.req)
 			}
 			s.Require().NotPanics(testFunc, "UpdateParams")
-			testutil.AssertErrorContents(s.T(), err, tc.expErr, "UpdateParams error")
+			assertions.AssertErrorContents(s.T(), err, tc.expErr, "UpdateParams error")
 			if tc.expState != nil {
 				s.ExportAndCheck(tc.expState)
 			}

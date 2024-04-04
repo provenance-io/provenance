@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 func TestNewMsgSanction(t *testing.T) {
@@ -176,7 +176,7 @@ func TestMsgSanction_ValidateBasic(t *testing.T) {
 				err = tc.msg.ValidateBasic()
 			}
 			require.NotPanics(t, testFunc, "ValidateBasic")
-			testutil.AssertErrorContents(t, err, tc.exp, "ValidateBasic result.")
+			assertions.AssertErrorContents(t, err, tc.exp, "ValidateBasic result.")
 		})
 	}
 }
@@ -385,7 +385,7 @@ func TestMsgUnsanction_ValidateBasic(t *testing.T) {
 				err = tc.msg.ValidateBasic()
 			}
 			require.NotPanics(t, testFunc, "ValidateBasic")
-			testutil.AssertErrorContents(t, err, tc.exp, "ValidateBasic result.")
+			assertions.AssertErrorContents(t, err, tc.exp, "ValidateBasic result.")
 		})
 	}
 }
@@ -612,7 +612,7 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 				err = tc.msg.ValidateBasic()
 			}
 			require.NotPanics(t, testFunc, "ValidateBasic")
-			testutil.AssertErrorContents(t, err, tc.exp, "ValidateBasic result.")
+			assertions.AssertErrorContents(t, err, tc.exp, "ValidateBasic result.")
 		})
 	}
 }

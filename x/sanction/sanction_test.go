@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 func TestDefaultParams(t *testing.T) {
@@ -137,7 +137,7 @@ func TestParams_ValidateBasic(t *testing.T) {
 				err = tc.params.ValidateBasic()
 			}
 			require.NotPanics(t, testFunc, "ValidateBasic")
-			testutil.AssertErrorContents(t, err, tc.exp, "ValidateBasic result")
+			assertions.AssertErrorContents(t, err, tc.exp, "ValidateBasic result")
 		})
 	}
 }

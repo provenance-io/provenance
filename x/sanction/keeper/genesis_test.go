@@ -7,9 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/keeper"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type GenesisTestSuite struct {
@@ -400,7 +400,7 @@ func (s *GenesisTestSuite) TestKeeper_InitGenesis() {
 			testFuncInit := func() {
 				s.Keeper.InitGenesis(ctx, tc.genState)
 			}
-			testutil.RequirePanicContents(s.T(), tc.expPanic, testFuncInit, "InitGenesis")
+			assertions.RequirePanicContents(s.T(), testFuncInit, tc.expPanic, "InitGenesis")
 			events := em.Events()
 			s.Assert().Empty(events, "events emitted during InitGenesis")
 			if tc.expExport != nil {

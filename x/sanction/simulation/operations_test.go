@@ -17,10 +17,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/simulation"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type SimTestSuite struct {
@@ -133,7 +134,7 @@ func (s *SimTestSuite) nextBlock() {
 
 func (s *SimTestSuite) TestWeightedOperations() {
 	s.setSanctionParamsAboveGovDeposit()
-	testutil.RequireNotPanicsNoError(s.T(), func() error {
+	assertions.RequireNotPanicsNoError(s.T(), func() error {
 		accs := simtypes.RandomAccounts(rand.New(rand.NewSource(500)), 10)
 		addrs := make([]sdk.AccAddress, len(accs))
 		for i, acc := range accs {
@@ -322,7 +323,7 @@ func (s *SimTestSuite) TestSendGovMsg() {
 				skip, opMsg, err = simulation.SendGovMsg(args)
 			}
 			s.Require().NotPanics(testFunc, "SendGovMsg")
-			testutil.AssertErrorContents(s.T(), err, tc.expInErr, "SendGovMsg error")
+			assertions.AssertErrorContents(s.T(), err, tc.expInErr, "SendGovMsg error")
 			s.Assert().Equal(tc.expSkip, skip, "SendGovMsg result skip bool")
 			s.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "SendGovMsg result op msg route")
 			s.Assert().Equal(tc.expOpMsgName, opMsg.Name, "SendGovMsg result op msg name")
@@ -513,7 +514,7 @@ func (s *SimTestSuite) TestOperationMsgVote() {
 				opMsg, fops, err = op(rand.New(rand.NewSource(1)), s.app.BaseApp, s.ctx, accounts, chainID)
 			}
 			s.Require().NotPanics(testOp, "calling Operation returned by OperationMsgVote")
-			testutil.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
+			assertions.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
 			s.Assert().Equal(tc.expOpMsgOK, opMsg.OK, "op msg ok")
 			s.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "op msg route")
 			s.Assert().Equal(tc.expOpMsgName, opMsg.Name, "op msg name")
@@ -715,7 +716,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 				MaxDepositPeriod: &depositPeriod,
 			})
 		}, "gov SetDepositParams")
-		testutil.RequireNotPanicsNoError(t, func() error {
+		assertions.RequireNotPanicsNoError(t, func() error {
 			return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
 				ImmediateSanctionMinDeposit:   sanctMinDep,
 				ImmediateUnsanctionMinDeposit: unsanctMinDep,
@@ -801,7 +802,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 				opMsg, fops, err = op(rand.New(rand.NewSource(1)), s.app.BaseApp, s.ctx, tc.accs, chainID)
 			}
 			s.Require().NotPanics(testOp, "SimulateGovMsgSanction op execution")
-			testutil.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
+			assertions.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
 			s.Assert().Equal(tc.expOpMsgOK, opMsg.OK, "op msg ok")
 			s.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "op msg route")
 			s.Assert().Equal(tc.expOpMsgName, opMsg.Name, "op msg name")
@@ -898,7 +899,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 				MaxDepositPeriod: &depositPeriod,
 			})
 		}, "gov SetDepositParams")
-		testutil.RequireNotPanicsNoError(t, func() error {
+		assertions.RequireNotPanicsNoError(t, func() error {
 			return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
 				ImmediateSanctionMinDeposit:   sanctMinDep,
 				ImmediateUnsanctionMinDeposit: unsanctMinDep,
@@ -925,7 +926,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 		{
 			name: "immediate min deposit is zero",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
 						ImmediateSanctionMinDeposit:   sdk.Coins{},
 						ImmediateUnsanctionMinDeposit: sdk.Coins{},
@@ -1042,7 +1043,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 				opMsg, fops, err = op(tc.r, s.app.BaseApp, s.ctx, tc.accs, chainID)
 			}
 			s.Require().NotPanics(testOp, "SimulateGovMsgSanctionImmediate op execution")
-			testutil.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
+			assertions.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
 			s.Assert().Equal(tc.expOpMsgOK, opMsg.OK, "op msg ok")
 			s.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "op msg route")
 			s.Assert().Equal(tc.expOpMsgName, opMsg.Name, "op msg name")
@@ -1139,7 +1140,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 				MaxDepositPeriod: &depositPeriod,
 			})
 		}, "gov SetDepositParams")
-		testutil.RequireNotPanicsNoError(t, func() error {
+		assertions.RequireNotPanicsNoError(t, func() error {
 			return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
 				ImmediateSanctionMinDeposit:   sanctMinDep,
 				ImmediateUnsanctionMinDeposit: unsanctMinDep,
@@ -1158,7 +1159,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 				return false
 			})
 		}, "IterateTemporaryEntries")
-		testutil.RequireNotPanicsNoError(t, func() error {
+		assertions.RequireNotPanicsNoError(t, func() error {
 			return s.app.SanctionKeeper.UnsanctionAddresses(ctx, sanctionedAddrs...)
 		}, "UnsanctionAddresses")
 	}
@@ -1197,7 +1198,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		{
 			name: "gov min deposit equals immediate unsanction",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
 				})
 				require.NotPanics(t, func() {
@@ -1213,7 +1214,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		{
 			name: "gov min deposit greater than immediate unsanction",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
 				})
 				require.NotPanics(t, func() {
@@ -1229,7 +1230,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		{
 			name: "problem sending gov msg",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
 				})
 			},
@@ -1242,7 +1243,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		{
 			name: "3 addrs to unsanction",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(3)...)
 				}, "SanctionAddresses")
 			},
@@ -1256,7 +1257,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		{
 			name: "10 addrs to unsanction",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(10)...)
 				}, "SanctionAddresses")
 			},
@@ -1270,7 +1271,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		{
 			name: "39 addrs to unsanction",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(39)...)
 				}, "SanctionAddresses")
 			},
@@ -1284,7 +1285,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 		{
 			name: "40 addrs to unsanction",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(40)...)
 				}, "SanctionAddresses")
 			},
@@ -1318,7 +1319,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 				opMsg, fops, err = op(rand.New(rand.NewSource(1)), s.app.BaseApp, s.ctx, tc.accs, chainID)
 			}
 			s.Require().NotPanics(testOp, "SimulateGovMsgUnsanction op execution")
-			testutil.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
+			assertions.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
 			s.Assert().Equal(tc.expOpMsgOK, opMsg.OK, "op msg ok")
 			s.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "op msg route")
 			s.Assert().Equal(tc.expOpMsgName, opMsg.Name, "op msg name")
@@ -1415,7 +1416,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 				MaxDepositPeriod: &depositPeriod,
 			})
 		}, "gov SetDepositParams")
-		testutil.RequireNotPanicsNoError(t, func() error {
+		assertions.RequireNotPanicsNoError(t, func() error {
 			return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
 				ImmediateSanctionMinDeposit:   sanctMinDep,
 				ImmediateUnsanctionMinDeposit: unsanctMinDep,
@@ -1434,7 +1435,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 				return false
 			})
 		}, "IterateTemporaryEntries")
-		testutil.RequireNotPanicsNoError(t, func() error {
+		assertions.RequireNotPanicsNoError(t, func() error {
 			return s.app.SanctionKeeper.UnsanctionAddresses(ctx, sanctionedAddrs...)
 		}, "UnsanctionAddresses")
 	}
@@ -1477,10 +1478,10 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "immediate min deposit is zero",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
 				}, "SanctionAddresses")
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SetParams(ctx, &sanction.Params{
 						ImmediateSanctionMinDeposit:   sdk.Coins{},
 						ImmediateUnsanctionMinDeposit: sdk.Coins{},
@@ -1498,7 +1499,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "gov min deposit less than immediate unsanction",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
 				}, "SanctionAddresses")
 			},
@@ -1515,7 +1516,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "gov min deposit equals immediate unsanction",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
 				}, "SanctionAddresses")
 				require.NotPanics(t, func() {
@@ -1538,7 +1539,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "gov min deposit greater than immediate unsanction",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
 				}, "SanctionAddresses")
 				require.NotPanics(t, func() {
@@ -1561,7 +1562,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "problem sending gov msg",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(5)...)
 				}, "SanctionAddresses")
 			},
@@ -1575,7 +1576,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "3 addrs to unsanction yes",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(3)...)
 				}, "SanctionAddresses")
 			},
@@ -1592,7 +1593,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "3 addrs to unsanction no",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(3)...)
 				}, "SanctionAddresses")
 			},
@@ -1609,7 +1610,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "10 addrs to unsanction yes",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(10)...)
 				}, "SanctionAddresses")
 			},
@@ -1626,7 +1627,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "10 addrs to unsanction no",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(10)...)
 				}, "SanctionAddresses")
 			},
@@ -1643,7 +1644,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "39 addrs to unsanction yes",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(39)...)
 				}, "SanctionAddresses")
 			},
@@ -1660,7 +1661,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "39 addrs to unsanction no",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(39)...)
 				}, "SanctionAddresses")
 			},
@@ -1677,7 +1678,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "40 addrs to unsanction yes",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(40)...)
 				}, "SanctionAddresses")
 			},
@@ -1694,7 +1695,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 		{
 			name: "40 addrs to unsanction no",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				testutil.RequireNotPanicsNoError(t, func() error {
+				assertions.RequireNotPanicsNoError(t, func() error {
 					return s.app.SanctionKeeper.SanctionAddresses(ctx, randAddrs(40)...)
 				}, "SanctionAddresses")
 			},
@@ -1731,7 +1732,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 				opMsg, fops, err = op(tc.r, s.app.BaseApp, s.ctx, tc.accs, chainID)
 			}
 			s.Require().NotPanics(testOp, "SimulateGovMsgUnsanctionImmediate op execution")
-			testutil.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
+			assertions.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
 			s.Assert().Equal(tc.expOpMsgOK, opMsg.OK, "op msg ok")
 			s.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "op msg route")
 			s.Assert().Equal(tc.expOpMsgName, opMsg.Name, "op msg name")
@@ -1892,7 +1893,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUpdateParams() {
 				opMsg, fops, err = op(tc.r, s.app.BaseApp, s.ctx, tc.accs, chainID)
 			}
 			s.Require().NotPanics(testOp, "SimulateGovMsgUpdateParams op execution")
-			testutil.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
+			assertions.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
 			s.Assert().Equal(tc.expOpMsgOK, opMsg.OK, "op msg ok")
 			s.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "op msg route")
 			s.Assert().Equal(tc.expOpMsgName, opMsg.Name, "op msg name")

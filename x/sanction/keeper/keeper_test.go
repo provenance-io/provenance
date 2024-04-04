@@ -14,9 +14,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/keeper"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type KeeperTestSuite struct {
@@ -330,7 +330,7 @@ func (s *KeeperTestSuite) TestKeeper_SanctionAddresses() {
 				err = k.SanctionAddresses(ctx, tc.addrs...)
 			}
 			s.Require().NotPanics(testFunc, "SanctionAddresses")
-			testutil.AssertErrorContents(s.T(), err, tc.expErr, "SanctionAddresses error")
+			assertions.AssertErrorContents(s.T(), err, tc.expErr, "SanctionAddresses error")
 			events := em.Events()
 			s.Assert().Equal(tc.expEvents, events, "events emitted during SanctionAddresses")
 			for _, addr := range tc.checkSanctioned {
@@ -655,7 +655,7 @@ func (s *KeeperTestSuite) TestKeeper_AddTemporarySanction() {
 				err = k.AddTemporarySanction(ctx, tc.govPropID, tc.addrs...)
 			}
 			s.Require().NotPanics(testFunc, "AddTemporarySanction")
-			testutil.AssertErrorContents(s.T(), err, tc.expErr, "AddTemporarySanction error")
+			assertions.AssertErrorContents(s.T(), err, tc.expErr, "AddTemporarySanction error")
 
 			events := em.Events()
 			s.Assert().Equal(tc.expEvents, events, "events emitted during AddTemporarySanction")
@@ -2387,7 +2387,7 @@ func (s *KeeperTestSuite) Test_toAccAddrs() {
 				actual, err = keeper.OnlyTestsToAccAddrs(tc.addrs)
 			}
 			s.Require().NotPanics(testFunc, "toAccAddrs")
-			testutil.AssertErrorContents(s.T(), err, tc.expErr, "toAccAddrs error")
+			assertions.AssertErrorContents(s.T(), err, tc.expErr, "toAccAddrs error")
 			s.Assert().Equal(tc.exp, actual, "toAccAddrs result")
 		})
 	}

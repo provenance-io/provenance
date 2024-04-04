@@ -10,10 +10,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/provenance-io/provenance/testutil/assertions"
 
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/keeper"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 func TestPrefixValues(t *testing.T) {
@@ -542,12 +542,8 @@ func TestParseSanctionedAddrKey(t *testing.T) {
 			testFunc := func() {
 				actual = keeper.ParseSanctionedAddrKey(tc.key)
 			}
-			if len(tc.expPanic) > 0 {
-				testutil.RequirePanicsWithMessage(t, tc.expPanic, testFunc, "ParseSanctionedAddrKey")
-			} else {
-				require.NotPanics(t, testFunc, "ParseSanctionedAddrKey")
-				assert.Equal(t, tc.exp, actual, "ParseSanctionedAddrKey result")
-			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "ParseSanctionedAddrKey")
+			assert.Equal(t, tc.exp, actual, "ParseSanctionedAddrKey result")
 		})
 	}
 }
@@ -723,13 +719,9 @@ func TestParseTemporaryKey(t *testing.T) {
 			testFunc := func() {
 				addr, id = keeper.ParseTemporaryKey(tc.key)
 			}
-			if len(tc.expPanic) > 0 {
-				testutil.RequirePanicsWithMessage(t, tc.expPanic, testFunc, "ParseTemporaryKey")
-			} else {
-				require.NotPanics(t, testFunc, "ParseTemporaryKey")
-				assert.Equal(t, tc.expAddr, addr, "ParseTemporaryKey address")
-				assert.Equal(t, tc.expId, id, "ParseTemporaryKey gov prop id")
-			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "ParseTemporaryKey")
+			assert.Equal(t, tc.expAddr, addr, "ParseTemporaryKey address")
+			assert.Equal(t, tc.expId, id, "ParseTemporaryKey gov prop id")
 		})
 	}
 }
@@ -896,12 +888,8 @@ func TestNewTempEvent(t *testing.T) {
 			testFunc := func() {
 				actual = keeper.NewTempEvent(tc.typeVal, tc.addr)
 			}
-			if len(tc.expPanic) > 0 {
-				testutil.RequirePanicsWithMessage(t, tc.expPanic, testFunc, "NewTempEvent")
-			} else {
-				require.NotPanics(t, testFunc, "NewTempEvent")
-				assert.Equal(t, tc.exp, actual, "NewTempEvent result")
-			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "NewTempEvent")
+			assert.Equal(t, tc.exp, actual, "NewTempEvent result")
 		})
 	}
 }
@@ -1080,13 +1068,9 @@ func TestParseProposalTempIndexKey(t *testing.T) {
 			testFunc := func() {
 				id, addr = keeper.ParseProposalTempIndexKey(tc.key)
 			}
-			if len(tc.expPanic) > 0 {
-				testutil.RequirePanicsWithMessage(t, tc.expPanic, testFunc, "ParseProposalTempIndexKey")
-			} else {
-				require.NotPanics(t, testFunc, "ParseProposalTempIndexKey")
-				assert.Equal(t, tc.expId, id, "ParseProposalTempIndexKey gov prop id")
-				assert.Equal(t, tc.expAddr, addr, "ParseProposalTempIndexKey address")
-			}
+			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "ParseProposalTempIndexKey")
+			assert.Equal(t, tc.expId, id, "ParseProposalTempIndexKey gov prop id")
+			assert.Equal(t, tc.expAddr, addr, "ParseProposalTempIndexKey address")
 		})
 	}
 }

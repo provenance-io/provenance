@@ -15,8 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 type IntegrationTestSuite struct {
@@ -69,7 +69,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 // assertErrorContents calls AssertErrorContents using this suite's t.
 func (s *IntegrationTestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
-	return testutil.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
 // bondCoin creates an sdk.Coin with the bond-denom in the amount provided.

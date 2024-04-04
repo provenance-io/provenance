@@ -15,9 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/keeper"
-	"github.com/provenance-io/provenance/x/sanction/testutil"
 )
 
 // newTempEntry creates a TemporaryEntry from iterator callback args.
@@ -64,9 +64,9 @@ func (s *BaseTestSuite) BaseSetup() {
 	s.Keeper = s.App.SanctionKeeper.OnlyTestsWithGovKeeper(s.GovKeeper)
 }
 
-// AssertErrorContents calls testutil.AssertErrorContents using this suite's T.
+// AssertErrorContents calls assertions.AssertErrorContents using this suite's T.
 func (s *BaseTestSuite) AssertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
-	return testutil.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
 // GetStore gets the sanction module's store.
@@ -126,7 +126,7 @@ func (s *BaseTestSuite) GetAllIndexTempEntries() []*sanction.TemporaryEntry {
 // RequireNotPanicsNoError calls RequireNotPanicsNoError with this suite's t.
 func (s *BaseTestSuite) RequireNotPanicsNoError(f func() error, msgAndArgs ...interface{}) {
 	s.T().Helper()
-	testutil.RequireNotPanicsNoError(s.T(), f, msgAndArgs...)
+	assertions.RequireNotPanicsNoError(s.T(), f, msgAndArgs...)
 }
 
 // ReqOKSetParams calls SetParams, making sure it doesn't panic and doesn't return an error.
