@@ -101,8 +101,8 @@ func (s *SendRestrictionTestSuite) TestBankSendCoinsUsesSendRestrictionFn() {
 	otherAddr := sdk.AccAddress("otherAddr___________")
 
 	// Fund the addresses
-	s.Require().NoError(testutil.FundAccount(s.App.BankKeeper, s.SdkCtx, sanctionedAddr, cz(1_000_005_000_000_000)), "FundAccount sanctionedAddr")
-	s.Require().NoError(testutil.FundAccount(s.App.BankKeeper, s.SdkCtx, otherAddr, cz(3_000)), "FundAccount otherAddr")
+	s.Require().NoError(testutil.FundAccount(s.SdkCtx, s.App.BankKeeper, sanctionedAddr, cz(1_000_005_000_000_000)), "FundAccount sanctionedAddr")
+	s.Require().NoError(testutil.FundAccount(s.SdkCtx, s.App.BankKeeper, otherAddr, cz(3_000)), "FundAccount otherAddr")
 
 	// Sanction the account.
 	s.ReqOKAddPermSanct("sanctionedAddr", sanctionedAddr)
@@ -148,10 +148,10 @@ func (s *SendRestrictionTestSuite) TestBankInputOutputCoinsUsesSendRestrictionFn
 	otherAddr3 := sdk.AccAddress("otherAddr3__________")
 
 	// Fund the addresses
-	s.Require().NoError(testutil.FundAccount(s.App.BankKeeper, s.SdkCtx, sanctionedAddr, cz(6_006)), "FundAccount sanctionedAddr")
-	s.Require().NoError(testutil.FundAccount(s.App.BankKeeper, s.SdkCtx, otherAddr1, cz(1)), "FundAccount otherAddr1")
-	s.Require().NoError(testutil.FundAccount(s.App.BankKeeper, s.SdkCtx, otherAddr2, cz(2)), "FundAccount otherAddr2")
-	s.Require().NoError(testutil.FundAccount(s.App.BankKeeper, s.SdkCtx, otherAddr3, cz(3)), "FundAccount otherAddr3")
+	s.Require().NoError(testutil.FundAccount(s.SdkCtx, s.App.BankKeeper, sanctionedAddr, cz(6_006)), "FundAccount sanctionedAddr")
+	s.Require().NoError(testutil.FundAccount(s.SdkCtx, s.App.BankKeeper, otherAddr1, cz(1)), "FundAccount otherAddr1")
+	s.Require().NoError(testutil.FundAccount(s.SdkCtx, s.App.BankKeeper, otherAddr2, cz(2)), "FundAccount otherAddr2")
+	s.Require().NoError(testutil.FundAccount(s.SdkCtx, s.App.BankKeeper, otherAddr3, cz(3)), "FundAccount otherAddr3")
 
 	// Sanction the account.
 	s.ReqOKAddPermSanct("sanctionedAddr", sanctionedAddr)
@@ -163,7 +163,7 @@ func (s *SendRestrictionTestSuite) TestBankInputOutputCoinsUsesSendRestrictionFn
 		{Address: otherAddr2.String(), Coins: cz(2_000)},
 		{Address: otherAddr3.String(), Coins: cz(3_000)},
 	}
-	err := s.App.BankKeeper.InputOutputCoins(s.SdkCtx, inputs, outputs)
+	err := s.App.BankKeeper.InputOutputCoins(s.SdkCtx, inputs[0], outputs)
 
 	s.Run("error is as expected", func() {
 		exp := "cannot send from " + sanctionedAddr.String() + ": account is sanctioned"

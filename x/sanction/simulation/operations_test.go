@@ -61,7 +61,7 @@ func (s *SimTestSuite) createTestingAccountsWithPower(r *rand.Rand, count int, p
 	for _, account := range accounts {
 		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
 		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		s.Require().NoError(bankutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins))
+		s.Require().NoError(bankutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins))
 	}
 
 	return accounts
