@@ -22,7 +22,6 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 
-	// "cosmossdk.io/store/streaming" // TODO[1760]: streaming: See if we can use this directly or if we have needed modifications.
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -58,13 +57,16 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -286,6 +288,7 @@ type App struct {
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
+	txConfig          client.TxConfig
 
 	invCheckPeriod uint
 
@@ -435,7 +438,10 @@ func New(
 	}
 
 	// Register State listening services.
-	app.RegisterStreamingServices(appOpts)
+	if err := app.BaseApp.RegisterStreamingServices(appOpts, app.keys); err != nil {
+		app.Logger().Error("failed to register streaming plugin", "error", err)
+		os.Exit(1)
+	}
 
 	// Register helpers for state-sync status.
 	statesync.RegisterSyncStatus()
@@ -483,6 +489,21 @@ func New(
 		logger,
 	)
 
+	// optional: enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
+	enabledSignModes := append(tx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
+	txConfigOpts := tx.ConfigOptions{
+		EnabledSignModes:           enabledSignModes,
+		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
+	}
+	txConfig, err := tx.NewTxConfigWithOptions(
+		appCodec,
+		txConfigOpts,
+	)
+	if err != nil {
+		panic(err)
+	}
+	app.txConfig = txConfig
+
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, govAuthority, authcodec.NewBech32Codec(valAddrPrefix), authcodec.NewBech32Codec(consAddrPrefix),
 	)
@@ -505,7 +526,7 @@ func New(
 	app.MsgFeesKeeper = msgfeeskeeper.NewKeeper(
 		appCodec, keys[msgfeestypes.StoreKey], app.GetSubspace(msgfeestypes.ModuleName),
 		authtypes.FeeCollectorName, pioconfig.GetProvenanceConfig().FeeDenom,
-		app.SimulateProv, encodingConfig.TxConfig.TxDecoder(), interfaceRegistry,
+		app.SimulateProv, app.txConfig.TxDecoder(), interfaceRegistry,
 	)
 
 	pioMsgFeesRouter := app.MsgServiceRouter().(*piohandlers.PioMsgServiceRouter)
@@ -636,7 +657,7 @@ func New(
 	wasmDir := filepath.Join(homePath, "data", "wasm")
 
 	wasmWrap := WasmWrapper{Wasm: wasmtypes.DefaultWasmConfig()}
-	err := viper.Unmarshal(&wasmWrap)
+	err = viper.Unmarshal(&wasmWrap)
 	if err != nil {
 		panic("error while reading wasm config: " + err.Error())
 	}
@@ -774,7 +795,7 @@ func New(
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.mm = module.NewManager(
-		genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app.BaseApp, encodingConfig.TxConfig),
+		genutil.NewAppModule(app.AccountKeeper, app.StakingKeeper, app.BaseApp, app.txConfig),
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
@@ -1079,7 +1100,7 @@ func New(
 		antewrapper.HandlerOptions{
 			AccountKeeper:       app.AccountKeeper,
 			BankKeeper:          app.BankKeeper,
-			TxSigningHandlerMap: encodingConfig.TxConfig.SignModeHandler(),
+			TxSigningHandlerMap: app.txConfig.SignModeHandler(),
 			FeegrantKeeper:      app.FeeGrantKeeper,
 			MsgFeesKeeper:       app.MsgFeesKeeper,
 			SigGasConsumer:      ante.DefaultSigVerificationGasConsumer,
@@ -1095,7 +1116,7 @@ func New(
 		BankKeeper:     app.BankKeeper,
 		FeegrantKeeper: app.FeeGrantKeeper,
 		MsgFeesKeeper:  app.MsgFeesKeeper,
-		Decoder:        encodingConfig.TxConfig.TxDecoder(),
+		Decoder:        app.txConfig.TxDecoder(),
 	})
 
 	if err != nil {
@@ -1181,7 +1202,7 @@ func (app *App) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 
 // GetTxConfig implements the TestingApp interface (for ibc testing).
 func (app *App) GetTxConfig() client.TxConfig {
-	return MakeEncodingConfig().TxConfig
+	return app.txConfig
 }
 
 // Name returns the name of the App
@@ -1352,36 +1373,6 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 // RegisterNodeService registers the node query server.
 func (app *App) RegisterNodeService(clientCtx client.Context, cfg serverconfig.Config) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
-}
-
-// RegisterStreamingServices registers types.ABCIListener State Listening services with the App.
-func (app *App) RegisterStreamingServices(appOpts servertypes.AppOptions) {
-	// TODO[1760]: streaming: Ensure that this change is correct.
-	if err := app.BaseApp.RegisterStreamingServices(appOpts, app.keys); err != nil {
-		app.Logger().Error("failed to register streaming plugin", "error", err)
-		os.Exit(1)
-	}
-	/*
-		// register streaming services
-		streamingCfg := cast.ToStringMap(appOpts.Get(baseapp.StreamingTomlKey))
-		for service := range streamingCfg {
-			pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingABCIPluginTomlKey)
-			pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
-			if len(pluginName) > 0 {
-				logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
-				plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
-				if err != nil {
-					app.Logger().Error("failed to load streaming plugin", "error", err)
-					os.Exit(1)
-				}
-				if err := app.BaseApp.RegisterStreamingServices(appOpts, app.keys, plugin); err != nil {
-					app.Logger().Error("failed to register streaming plugin", "error", err)
-					os.Exit(1)
-				}
-				app.Logger().Info("streaming service registered", "service", service, "plugin", pluginName)
-			}
-		}
-	*/
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
