@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/collections"
 
@@ -234,17 +233,14 @@ func (s *SimTestSuite) getWeightedOpsArgs() simulation.WeightedOpsArgs {
 // nextBlock ends the current block, commits it, and starts a new one.
 // This is needed because some tests would run out of gas if all done in a single block.
 func (s *SimTestSuite) nextBlock() {
-	s.Require().NotPanics(func() { s.app.EndBlock(abci.RequestEndBlock{}) }, "app.EndBlock")
-	s.Require().NotPanics(func() { s.app.Commit() }, "app.Commit")
-	s.Require().NotPanics(func() {
-		s.app.BeginBlock(abci.RequestBeginBlock{
-			Header: cmtproto.Header{
-				Height: s.app.LastBlockHeight() + 1,
-			},
-			LastCommitInfo:      abci.LastCommitInfo{},
-			ByzantineValidators: nil,
-		})
-	}, "app.BeginBlock")
+	assertions.RequireNotPanicsNoError(s.T(), func() error {
+		_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight(), Time: s.ctx.BlockTime()})
+		return err
+	}, "app.FinalizeBlock")
+	assertions.RequireNotPanicsNoError(s.T(), func() error {
+		_, err := s.app.Commit()
+		return err
+	}, "app.Commit")
 	s.freshCtx()
 }
 
