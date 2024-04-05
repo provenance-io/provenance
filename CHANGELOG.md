@@ -54,6 +54,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `github.com/cosmos/ibc-go/v8` from 8.0.0 to 8.2.0 ([#1910](https://github.com/provenance-io/provenance/pull/1910))
+
 ## [v1.18.0](https://github.com/provenance-io/provenance/releases/tag/v1.18.0) - 2024-03-22
 
 ### Features
