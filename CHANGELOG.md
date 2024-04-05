@@ -52,10 +52,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Updated app.go to use RegisterStreamingServices on BaseApp [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Bump the SDK to `v0.50.5-pio-1` (from an earlier ephemeral version) [#1897](https://github.com/provenance-io/provenance/pull/1897).
 
----
-
 ### Dependencies
+
 - Bump `google.golang.org/grpc` from 1.62.1 to 1.63.0 ([#1903](https://github.com/provenance-io/provenance/pull/1903))
+
+---
 
 ## [v1.18.0](https://github.com/provenance-io/provenance/releases/tag/v1.18.0) - 2024-03-22
 
