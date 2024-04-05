@@ -6,14 +6,14 @@ import (
 	"github.com/google/uuid"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func FreshCtx(app *simapp.App) sdk.Context {
-	return keeper.AddAuthzCacheToContext(app.BaseApp.NewContext(false, tmproto.Header{}))
+	return keeper.AddAuthzCacheToContext(app.BaseApp.NewContext(false))
 }
 
 func TestValidateSetAccountData(t *testing.T) {

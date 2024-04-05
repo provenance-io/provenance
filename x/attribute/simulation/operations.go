@@ -6,9 +6,10 @@ import (
 
 	"github.com/google/uuid"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -48,31 +49,31 @@ func WeightedOperations(
 		weightMsgSetAccountDataRequest   int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgAddAttribute, &weightMsgAddAttribute, nil,
+	appParams.GetOrGenerate(OpWeightMsgAddAttribute, &weightMsgAddAttribute, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddAttribute = simappparams.DefaultWeightMsgAddAttribute
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateAttribute, &weightMsgUpdateAttribute, nil,
+	appParams.GetOrGenerate(OpWeightMsgUpdateAttribute, &weightMsgUpdateAttribute, nil,
 		func(_ *rand.Rand) {
 			weightMsgUpdateAttribute = simappparams.DefaultWeightMsgUpdateAttribute
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDeleteAttribute, &weightMsgDeleteAttribute, nil,
+	appParams.GetOrGenerate(OpWeightMsgDeleteAttribute, &weightMsgDeleteAttribute, nil,
 		func(_ *rand.Rand) {
 			weightMsgDeleteAttribute = simappparams.DefaultWeightMsgDeleteAttribute
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgDeleteDistinctAttribute, &weightMsgDeleteDistinctAttribute, nil,
+	appParams.GetOrGenerate(OpWeightMsgDeleteDistinctAttribute, &weightMsgDeleteDistinctAttribute, nil,
 		func(_ *rand.Rand) {
 			weightMsgDeleteDistinctAttribute = simappparams.DefaultWeightMsgDeleteDistinctAttribute
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgSetAccountData, &weightMsgSetAccountDataRequest, nil,
+	appParams.GetOrGenerate(OpWeightMsgSetAccountData, &weightMsgSetAccountDataRequest, nil,
 		func(_ *rand.Rand) {
 			weightMsgSetAccountDataRequest = simappparams.DefaultWeightMsgSetAccountData
 		},
@@ -270,12 +271,12 @@ func Dispatch(
 	}
 
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenSignedMockTx(
+	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -290,7 +291,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), nil, nil
+	return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 }
 
 // getRandomNameRecord finds a random name record owned by a known account.

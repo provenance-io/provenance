@@ -87,7 +87,7 @@ func QueryCmdGetAllHolds() *cobra.Command {
 			}
 
 			req := hold.GetAllHoldsRequest{}
-			req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+			req.Pagination, err = client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 			if err != nil {
 				return err
 			}

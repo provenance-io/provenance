@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -1647,7 +1648,7 @@ func TestNetAssetValueValidate(t *testing.T) {
 		{
 			name: "price validation fails",
 			nav: NetAssetValue{
-				Price: sdk.Coin{Denom: "invalidDenom", Amount: sdk.NewInt(-100)},
+				Price: sdk.Coin{Denom: "invalidDenom", Amount: sdkmath.NewInt(-100)},
 			},
 			expErr: "negative coin amount: -100", // Replace with the actual error message from Price.Validate()
 		},

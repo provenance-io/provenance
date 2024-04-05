@@ -12,7 +12,7 @@ import (
 )
 
 func TestProposalTypeIncreaseSupply_Format(t *testing.T) {
-	m := NewSupplyIncreaseProposal("title", "description", sdk.NewCoin("test", sdk.NewInt(100)), "")
+	m := NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("test", 100), "")
 	require.NotNil(t, m)
 
 	require.Equal(t, RouterKey, m.ProposalRoute())
@@ -30,7 +30,7 @@ func TestProposalTypeIncreaseSupply_Format(t *testing.T) {
 }
 
 func TestProposalTypeDecreaseSupply_Format(t *testing.T) {
-	m := NewSupplyDecreaseProposal("title", "description", sdk.NewCoin("test", sdk.NewInt(100)))
+	m := NewSupplyDecreaseProposal("title", "description", sdk.NewInt64Coin("test", 100))
 	require.NotNil(t, m)
 
 	require.Equal(t, RouterKey, m.ProposalRoute())
@@ -101,7 +101,7 @@ func TestProposalTypeChangeStatus_Format(t *testing.T) {
 
 func TestProposalTypeWithdrawEscrow_Format(t *testing.T) {
 	addr := testAddress()
-	m := NewWithdrawEscrowProposal("title", "description", "test", sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))), addr.String())
+	m := NewWithdrawEscrowProposal("title", "description", "test", sdk.NewCoins(sdk.NewInt64Coin("test", 100)), addr.String())
 	require.NotNil(t, m)
 
 	require.Equal(t, RouterKey, m.ProposalRoute())

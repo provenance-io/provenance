@@ -3,7 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
+
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -13,7 +15,7 @@ import (
 // IterateRecordSpecs processes all record specs using a given handler.
 func (k Keeper) IterateRecordSpecs(ctx sdk.Context, handler func(specification types.RecordSpecification) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.RecordSpecificationKeyPrefix)
+	it := storetypes.KVStorePrefixIterator(store, types.RecordSpecificationKeyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var recordSpec types.RecordSpecification
@@ -58,7 +60,7 @@ func (k Keeper) IterateRecordSpecsForContractSpec(ctx sdk.Context, contractSpecI
 	if err != nil {
 		return err
 	}
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var recordSpecID types.MetadataAddress
@@ -163,7 +165,7 @@ func (k Keeper) isRecordSpecUsed(_ sdk.Context, _ types.MetadataAddress) bool {
 // IterateContractSpecs processes all contract specs using a given handler.
 func (k Keeper) IterateContractSpecs(ctx sdk.Context, handler func(specification types.ContractSpecification) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.ContractSpecificationKeyPrefix)
+	it := storetypes.KVStorePrefixIterator(store, types.ContractSpecificationKeyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var contractSpec types.ContractSpecification
@@ -182,7 +184,7 @@ func (k Keeper) IterateContractSpecs(ctx sdk.Context, handler func(specification
 func (k Keeper) IterateContractSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(contractSpecID types.MetadataAddress) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetAddressContractSpecCacheIteratorPrefix(ownerAddress)
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var contractSpecID types.MetadataAddress
@@ -371,7 +373,7 @@ func (k Keeper) ValidateWriteContractSpecification(_ sdk.Context, existing *type
 // IterateScopeSpecs processes all scope specs using a given handler.
 func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification types.ScopeSpecification) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.ScopeSpecificationKeyPrefix)
+	it := storetypes.KVStorePrefixIterator(store, types.ScopeSpecificationKeyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeSpec types.ScopeSpecification
@@ -390,7 +392,7 @@ func (k Keeper) IterateScopeSpecs(ctx sdk.Context, handler func(specification ty
 func (k Keeper) IterateScopeSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetAddressScopeSpecCacheIteratorPrefix(ownerAddress)
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeSpecID types.MetadataAddress
@@ -408,7 +410,7 @@ func (k Keeper) IterateScopeSpecsForOwner(ctx sdk.Context, ownerAddress sdk.AccA
 func (k Keeper) IterateScopeSpecsForContractSpec(ctx sdk.Context, contractSpecID types.MetadataAddress, handler func(scopeSpecID types.MetadataAddress) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetContractSpecScopeSpecCacheIteratorPrefix(contractSpecID)
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeSpecID types.MetadataAddress

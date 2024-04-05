@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
@@ -34,13 +34,13 @@ func assertEventContent(t *testing.T, tev proto.Message, typeString string, asse
 
 	for i, attr := range event.Attributes {
 		rv = assert.NotEmpty(t, attr.Key, "%T event.attributes[%d].Key", tev, i) && rv
-		rv = assert.NotEqual(t, `""`, string(attr.Key), "%T event.attributes[%d].Key", tev, i) && rv
-		rv = assert.NotEqual(t, `0`, string(attr.Key), "%T event.attributes[%d].Key", tev, i) && rv
-		rv = assert.NotEqual(t, `"0"`, string(attr.Key), "%T event.attributes[%d].Key", tev, i) && rv
+		rv = assert.NotEqual(t, `""`, attr.Key, "%T event.attributes[%d].Key", tev, i) && rv
+		rv = assert.NotEqual(t, `0`, attr.Key, "%T event.attributes[%d].Key", tev, i) && rv
+		rv = assert.NotEqual(t, `"0"`, attr.Key, "%T event.attributes[%d].Key", tev, i) && rv
 		rv = assert.NotEmpty(t, attr.Value, "%T event.attributes[%d].Value", tev, i) && rv
-		rv = assert.NotEqual(t, `""`, string(attr.Value), "%T event.attributes[%d].Value", tev, i) && rv
-		rv = assert.NotEqual(t, `0`, string(attr.Value), "%T event.attributes[%d].Value", tev, i) && rv
-		rv = assert.NotEqual(t, `"0"`, string(attr.Value), "%T event.attributes[%d].Value", tev, i) && rv
+		rv = assert.NotEqual(t, `""`, attr.Value, "%T event.attributes[%d].Value", tev, i) && rv
+		rv = assert.NotEqual(t, `0`, attr.Value, "%T event.attributes[%d].Value", tev, i) && rv
+		rv = assert.NotEqual(t, `"0"`, attr.Value, "%T event.attributes[%d].Value", tev, i) && rv
 	}
 	return rv
 }
@@ -428,7 +428,7 @@ func TestNewEventMarketWithdraw(t *testing.T) {
 		event = NewEventMarketWithdraw(marketID, amountWithdrawn, destination, withdrawnBy)
 	}
 	require.NotPanics(t, testFunc, "NewEventMarketWithdraw(%d, %q, %q, %q)",
-		marketID, amountWithdrawn, string(destination), string(withdrawnBy))
+		marketID, amountWithdrawn, string(destination), withdrawnBy)
 	assert.Equal(t, marketID, event.MarketId, "MarketId")
 	assert.Equal(t, amountWithdrawn.String(), event.Amount, "Amount")
 	assert.Equal(t, destination.String(), event.Destination, "Destination")
@@ -1246,29 +1246,29 @@ func TestNewEventsPaymentsCancelled(t *testing.T) {
 }
 
 func TestTypedEventToEvent(t *testing.T) {
-	quoteBz := func(str string) []byte {
-		return []byte(fmt.Sprintf("%q", str))
+	quoteStr := func(str string) string {
+		return fmt.Sprintf("%q", str)
 	}
 	account := "account_____________"
-	accountQ := quoteBz(account)
+	accountQ := quoteStr(account)
 	cancelledBy := "cancelledBy_________"
-	cancelledByQ := quoteBz(cancelledBy)
+	cancelledByQ := quoteStr(cancelledBy)
 	destination := sdk.AccAddress("destination_________")
-	destinationQ := quoteBz(destination.String())
+	destinationQ := quoteStr(destination.String())
 	withdrawnBy := sdk.AccAddress("withdrawnBy_________")
-	withdrawnByQ := quoteBz(withdrawnBy.String())
+	withdrawnByQ := quoteStr(withdrawnBy.String())
 	updatedBy := "updatedBy___________"
-	updatedByQ := quoteBz(updatedBy)
+	updatedByQ := quoteStr(updatedBy)
 	coins1 := sdk.NewCoins(sdk.NewInt64Coin("onecoin", 1), sdk.NewInt64Coin("twocoin", 2))
-	coins1Q := quoteBz(coins1.String())
+	coins1Q := quoteStr(coins1.String())
 	coins2 := sdk.NewCoins(sdk.NewInt64Coin("threecoin", 3), sdk.NewInt64Coin("fourcoin", 4))
-	coins2Q := quoteBz(coins2.String())
+	coins2Q := quoteStr(coins2.String())
 	acoin := sdk.NewInt64Coin("acoin", 55)
-	acoinQ := quoteBz(acoin.String())
+	acoinQ := quoteStr(acoin.String())
 	pcoin := sdk.NewInt64Coin("pcoin", 66)
-	pcoinQ := quoteBz(pcoin.String())
+	pcoinQ := quoteStr(pcoin.String())
 	fcoin := sdk.NewInt64Coin("fcoin", 33)
-	fcoinQ := quoteBz(fcoin.String())
+	fcoinQ := quoteStr(fcoin.String())
 	payment := &Payment{
 		Source:       "source______________",
 		SourceAmount: coins1,
@@ -1276,11 +1276,11 @@ func TestTypedEventToEvent(t *testing.T) {
 		TargetAmount: coins2,
 		ExternalId:   "something external",
 	}
-	sourceQ := quoteBz(payment.Source)
-	targetQ := quoteBz(payment.Target)
-	externalIDQ := quoteBz(payment.ExternalId)
+	sourceQ := quoteStr(payment.Source)
+	targetQ := quoteStr(payment.Target)
+	externalIDQ := quoteStr(payment.ExternalId)
 	oldTarget := "old_target__________"
-	oldTargetQ := quoteBz(oldTarget)
+	oldTargetQ := quoteStr(oldTarget)
 
 	tests := []struct {
 		name     string
@@ -1293,10 +1293,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCreated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("external_id"), Value: quoteBz("stuff")},
-					{Key: []byte("market_id"), Value: []byte("88")},
-					{Key: []byte("order_id"), Value: quoteBz("1")},
-					{Key: []byte("order_type"), Value: quoteBz("ask")},
+					{Key: "external_id", Value: quoteStr("stuff")},
+					{Key: "market_id", Value: "88"},
+					{Key: "order_id", Value: quoteStr("1")},
+					{Key: "order_type", Value: quoteStr("ask")},
 				},
 			},
 		},
@@ -1306,10 +1306,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCreated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("external_id"), Value: quoteBz("something else")},
-					{Key: []byte("market_id"), Value: []byte("77")},
-					{Key: []byte("order_id"), Value: quoteBz("2")},
-					{Key: []byte("order_type"), Value: quoteBz("bid")},
+					{Key: "external_id", Value: quoteStr("something else")},
+					{Key: "market_id", Value: "77"},
+					{Key: "order_id", Value: quoteStr("2")},
+					{Key: "order_type", Value: quoteStr("bid")},
 				},
 			},
 		},
@@ -1319,10 +1319,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCancelled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("cancelled_by"), Value: cancelledByQ},
-					{Key: []byte("external_id"), Value: quoteBz("outside 8")},
-					{Key: []byte("market_id"), Value: []byte("66")},
-					{Key: []byte("order_id"), Value: quoteBz("3")},
+					{Key: "cancelled_by", Value: cancelledByQ},
+					{Key: "external_id", Value: quoteStr("outside 8")},
+					{Key: "market_id", Value: "66"},
+					{Key: "order_id", Value: quoteStr("3")},
 				},
 			},
 		},
@@ -1332,10 +1332,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderCancelled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("cancelled_by"), Value: cancelledByQ},
-					{Key: []byte("external_id"), Value: quoteBz("outside 8")},
-					{Key: []byte("market_id"), Value: []byte("55")},
-					{Key: []byte("order_id"), Value: quoteBz("3")},
+					{Key: "cancelled_by", Value: cancelledByQ},
+					{Key: "external_id", Value: quoteStr("outside 8")},
+					{Key: "market_id", Value: "55"},
+					{Key: "order_id", Value: quoteStr("3")},
 				},
 			},
 		},
@@ -1351,12 +1351,12 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderFilled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("assets"), Value: acoinQ},
-					{Key: []byte("external_id"), Value: quoteBz("eeeeiiiiiddddd")},
-					{Key: []byte("fees"), Value: fcoinQ},
-					{Key: []byte("market_id"), Value: []byte("33")},
-					{Key: []byte("order_id"), Value: quoteBz("4")},
-					{Key: []byte("price"), Value: pcoinQ},
+					{Key: "assets", Value: acoinQ},
+					{Key: "external_id", Value: quoteStr("eeeeiiiiiddddd")},
+					{Key: "fees", Value: fcoinQ},
+					{Key: "market_id", Value: "33"},
+					{Key: "order_id", Value: quoteStr("4")},
+					{Key: "price", Value: pcoinQ},
 				},
 			},
 		},
@@ -1372,12 +1372,12 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderFilled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("assets"), Value: acoinQ},
-					{Key: []byte("external_id"), Value: quoteBz("that one thing")},
-					{Key: []byte("fees"), Value: fcoinQ},
-					{Key: []byte("market_id"), Value: []byte("44")},
-					{Key: []byte("order_id"), Value: quoteBz("104")},
-					{Key: []byte("price"), Value: pcoinQ},
+					{Key: "assets", Value: acoinQ},
+					{Key: "external_id", Value: quoteStr("that one thing")},
+					{Key: "fees", Value: fcoinQ},
+					{Key: "market_id", Value: "44"},
+					{Key: "order_id", Value: quoteStr("104")},
+					{Key: "price", Value: pcoinQ},
 				},
 			},
 		},
@@ -1393,12 +1393,12 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderPartiallyFilled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("assets"), Value: acoinQ},
-					{Key: []byte("external_id"), Value: quoteBz("12345")},
-					{Key: []byte("fees"), Value: fcoinQ},
-					{Key: []byte("market_id"), Value: []byte("22")},
-					{Key: []byte("order_id"), Value: quoteBz("5")},
-					{Key: []byte("price"), Value: pcoinQ},
+					{Key: "assets", Value: acoinQ},
+					{Key: "external_id", Value: quoteStr("12345")},
+					{Key: "fees", Value: fcoinQ},
+					{Key: "market_id", Value: "22"},
+					{Key: "order_id", Value: quoteStr("5")},
+					{Key: "price", Value: pcoinQ},
 				},
 			},
 		},
@@ -1414,12 +1414,12 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderPartiallyFilled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("assets"), Value: acoinQ},
-					{Key: []byte("external_id"), Value: quoteBz("67890")},
-					{Key: []byte("fees"), Value: fcoinQ},
-					{Key: []byte("market_id"), Value: []byte("11")},
-					{Key: []byte("order_id"), Value: quoteBz("5")},
-					{Key: []byte("price"), Value: pcoinQ},
+					{Key: "assets", Value: acoinQ},
+					{Key: "external_id", Value: quoteStr("67890")},
+					{Key: "fees", Value: fcoinQ},
+					{Key: "market_id", Value: "11"},
+					{Key: "order_id", Value: quoteStr("5")},
+					{Key: "price", Value: pcoinQ},
 				},
 			},
 		},
@@ -1429,9 +1429,9 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderExternalIDUpdated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("external_id"), Value: quoteBz("yellow")},
-					{Key: []byte("market_id"), Value: []byte("99")},
-					{Key: []byte("order_id"), Value: quoteBz("8")},
+					{Key: "external_id", Value: quoteStr("yellow")},
+					{Key: "market_id", Value: "99"},
+					{Key: "order_id", Value: quoteStr("8")},
 				},
 			},
 		},
@@ -1441,9 +1441,9 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventOrderExternalIDUpdated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("external_id"), Value: quoteBz("yellow")},
-					{Key: []byte("market_id"), Value: []byte("111")},
-					{Key: []byte("order_id"), Value: quoteBz("8")},
+					{Key: "external_id", Value: quoteStr("yellow")},
+					{Key: "market_id", Value: "111"},
+					{Key: "order_id", Value: quoteStr("8")},
 				},
 			},
 		},
@@ -1453,10 +1453,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventFundsCommitted",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("account"), Value: accountQ},
-					{Key: []byte("amount"), Value: coins1Q},
-					{Key: []byte("market_id"), Value: []byte("44")},
-					{Key: []byte("tag"), Value: quoteBz("tagTagTAG")},
+					{Key: "account", Value: accountQ},
+					{Key: "amount", Value: coins1Q},
+					{Key: "market_id", Value: "44"},
+					{Key: "tag", Value: quoteStr("tagTagTAG")},
 				},
 			},
 		},
@@ -1466,10 +1466,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventCommitmentReleased",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("account"), Value: accountQ},
-					{Key: []byte("amount"), Value: coins1Q},
-					{Key: []byte("market_id"), Value: []byte("15")},
-					{Key: []byte("tag"), Value: quoteBz("something")},
+					{Key: "account", Value: accountQ},
+					{Key: "amount", Value: coins1Q},
+					{Key: "market_id", Value: "15"},
+					{Key: "tag", Value: quoteStr("something")},
 				},
 			},
 		},
@@ -1479,10 +1479,10 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketWithdraw",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("amount"), Value: coins1Q},
-					{Key: []byte("destination"), Value: destinationQ},
-					{Key: []byte("market_id"), Value: []byte("6")},
-					{Key: []byte("withdrawn_by"), Value: withdrawnByQ},
+					{Key: "amount", Value: coins1Q},
+					{Key: "destination", Value: destinationQ},
+					{Key: "market_id", Value: "6"},
+					{Key: "withdrawn_by", Value: withdrawnByQ},
 				},
 			},
 		},
@@ -1492,8 +1492,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketDetailsUpdated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("7")},
-					{Key: []byte("updated_by"), Value: updatedByQ},
+					{Key: "market_id", Value: "7"},
+					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
 		},
@@ -1503,8 +1503,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketOrdersEnabled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("8")},
-					{Key: []byte("updated_by"), Value: updatedByQ},
+					{Key: "market_id", Value: "8"},
+					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
 		},
@@ -1514,8 +1514,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketOrdersDisabled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("9")},
-					{Key: []byte("updated_by"), Value: updatedByQ},
+					{Key: "market_id", Value: "9"},
+					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
 		},
@@ -1525,8 +1525,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketUserSettleEnabled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("10")},
-					{Key: []byte("updated_by"), Value: updatedByQ},
+					{Key: "market_id", Value: "10"},
+					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
 		},
@@ -1536,8 +1536,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketUserSettleDisabled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("11")},
-					{Key: []byte("updated_by"), Value: updatedByQ},
+					{Key: "market_id", Value: "11"},
+					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
 		},
@@ -1547,8 +1547,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketCommitmentsEnabled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("52")},
-					{Key: []byte("updated_by"), Value: updatedByQ},
+					{Key: "market_id", Value: "52"},
+					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
 		},
@@ -1558,8 +1558,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketCommitmentsDisabled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("25")},
-					{Key: []byte("updated_by"), Value: updatedByQ},
+					{Key: "market_id", Value: "25"},
+					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
 		},
@@ -1569,8 +1569,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketIntermediaryDenomUpdated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("18")},
-					{Key: []byte("updated_by"), Value: updatedByQ},
+					{Key: "market_id", Value: "18"},
+					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
 		},
@@ -1580,8 +1580,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketPermissionsUpdated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("12")},
-					{Key: []byte("updated_by"), Value: updatedByQ},
+					{Key: "market_id", Value: "12"},
+					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
 		},
@@ -1591,8 +1591,8 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketReqAttrUpdated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("13")},
-					{Key: []byte("updated_by"), Value: updatedByQ},
+					{Key: "market_id", Value: "13"},
+					{Key: "updated_by", Value: updatedByQ},
 				},
 			},
 		},
@@ -1602,7 +1602,7 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketCreated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("14")},
+					{Key: "market_id", Value: "14"},
 				},
 			},
 		},
@@ -1612,7 +1612,7 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventMarketFeesUpdated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("market_id"), Value: []byte("15")},
+					{Key: "market_id", Value: "15"},
 				},
 			},
 		},
@@ -1630,11 +1630,11 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventPaymentCreated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("external_id"), Value: externalIDQ},
-					{Key: []byte("source"), Value: sourceQ},
-					{Key: []byte("source_amount"), Value: coins1Q},
-					{Key: []byte("target"), Value: targetQ},
-					{Key: []byte("target_amount"), Value: coins2Q},
+					{Key: "external_id", Value: externalIDQ},
+					{Key: "source", Value: sourceQ},
+					{Key: "source_amount", Value: coins1Q},
+					{Key: "target", Value: targetQ},
+					{Key: "target_amount", Value: coins2Q},
 				},
 			},
 		},
@@ -1644,12 +1644,12 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventPaymentUpdated",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("external_id"), Value: externalIDQ},
-					{Key: []byte("new_target"), Value: targetQ},
-					{Key: []byte("old_target"), Value: oldTargetQ},
-					{Key: []byte("source"), Value: sourceQ},
-					{Key: []byte("source_amount"), Value: coins1Q},
-					{Key: []byte("target_amount"), Value: coins2Q},
+					{Key: "external_id", Value: externalIDQ},
+					{Key: "new_target", Value: targetQ},
+					{Key: "old_target", Value: oldTargetQ},
+					{Key: "source", Value: sourceQ},
+					{Key: "source_amount", Value: coins1Q},
+					{Key: "target_amount", Value: coins2Q},
 				},
 			},
 		},
@@ -1659,11 +1659,11 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventPaymentAccepted",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("external_id"), Value: externalIDQ},
-					{Key: []byte("source"), Value: sourceQ},
-					{Key: []byte("source_amount"), Value: coins1Q},
-					{Key: []byte("target"), Value: targetQ},
-					{Key: []byte("target_amount"), Value: coins2Q},
+					{Key: "external_id", Value: externalIDQ},
+					{Key: "source", Value: sourceQ},
+					{Key: "source_amount", Value: coins1Q},
+					{Key: "target", Value: targetQ},
+					{Key: "target_amount", Value: coins2Q},
 				},
 			},
 		},
@@ -1673,9 +1673,9 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventPaymentRejected",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("external_id"), Value: externalIDQ},
-					{Key: []byte("source"), Value: sourceQ},
-					{Key: []byte("target"), Value: targetQ},
+					{Key: "external_id", Value: externalIDQ},
+					{Key: "source", Value: sourceQ},
+					{Key: "target", Value: targetQ},
 				},
 			},
 		},
@@ -1685,9 +1685,9 @@ func TestTypedEventToEvent(t *testing.T) {
 			expEvent: sdk.Event{
 				Type: "provenance.exchange.v1.EventPaymentCancelled",
 				Attributes: []abci.EventAttribute{
-					{Key: []byte("external_id"), Value: externalIDQ},
-					{Key: []byte("source"), Value: sourceQ},
-					{Key: []byte("target"), Value: targetQ},
+					{Key: "external_id", Value: externalIDQ},
+					{Key: "source", Value: sourceQ},
+					{Key: "target", Value: targetQ},
 				},
 			},
 		},

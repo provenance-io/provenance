@@ -195,7 +195,7 @@ func HandleChangeStatusProposal(ctx sdk.Context, k Keeper, c *types.ChangeStatus
 		if m.GetStatus() != types.StatusCancelled {
 			return fmt.Errorf("only cancelled markers can be deleted")
 		}
-		if err = k.AdjustCirculation(ctx, m, sdk.NewCoin(c.Denom, sdk.ZeroInt())); err != nil {
+		if err = k.AdjustCirculation(ctx, m, sdk.NewInt64Coin(c.Denom, 0)); err != nil {
 			return fmt.Errorf("could not dispose of marker supply: %w", err)
 		}
 	}

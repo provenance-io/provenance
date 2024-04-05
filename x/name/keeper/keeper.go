@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -232,7 +232,7 @@ func (k Keeper) DeleteRecord(ctx sdk.Context, name string) error {
 func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle func(record types.NameRecord) error) error {
 	// Init a name record iterator
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, prefix)
+	iterator := storetypes.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 	// Iterate over records, processing callbacks.
 	for ; iterator.Valid(); iterator.Next() {
@@ -325,7 +325,7 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.AddressKeyPrefix)
+	iter := storetypes.KVStorePrefixIterator(store, types.AddressKeyPrefix)
 	defer func() {
 		if iter != nil {
 			iter.Close()

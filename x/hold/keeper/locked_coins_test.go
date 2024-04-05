@@ -32,25 +32,25 @@ func (s *TestSuite) TestKeeper_GetLockedCoins() {
 	}{
 		{
 			name:     "no coins on hold",
-			ctx:      s.sdkCtx,
+			ctx:      s.ctx,
 			addr:     addrNoHold,
 			expCoins: nil,
 		},
 		{
 			name:     "some coins on hold",
-			ctx:      s.sdkCtx,
+			ctx:      s.ctx,
 			addr:     addrWithHolds,
 			expCoins: s.coins("12acorn,99banana"),
 		},
 		{
 			name:     "with bypass: some coins on hold",
-			ctx:      hold.WithBypass(s.sdkCtx),
+			ctx:      hold.WithBypass(s.ctx),
 			addr:     addrWithHolds,
 			expCoins: nil,
 		},
 		{
 			name: "error getting hold coins",
-			ctx:  s.sdkCtx,
+			ctx:  s.ctx,
 			addr: addrWithBadHold,
 			expPanic: []string{
 				"failed to read amount of badcoin", addrWithBadHold.String(),
@@ -59,7 +59,7 @@ func (s *TestSuite) TestKeeper_GetLockedCoins() {
 		},
 		{
 			name:     "with bypass: error getting hold coins",
-			ctx:      hold.WithBypass(s.sdkCtx),
+			ctx:      hold.WithBypass(s.ctx),
 			addr:     addrWithBadHold,
 			expCoins: nil,
 		},
@@ -86,11 +86,12 @@ func (s *TestSuite) TestBank_LockedCoins() {
 	addrVestingAndHolds := sdk.AccAddress("addrVestingAndHolds_")
 	addrWithBadHold := sdk.AccAddress("addrWithBadHold_____")
 
-	vestingAccount := vestingtypes.NewPermanentLockedAccount(
-		s.app.AccountKeeper.NewAccountWithAddress(s.sdkCtx, addrVestingAndHolds).(*authtypes.BaseAccount),
+	vestingAccount, err := vestingtypes.NewPermanentLockedAccount(
+		s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addrVestingAndHolds).(*authtypes.BaseAccount),
 		s.coins("100vestcoin"),
 	)
-	s.app.AccountKeeper.SetAccount(s.sdkCtx, vestingAccount)
+	s.Require().NoError(err, "NewPermanentLockedAccount addrVestingAndHolds")
+	s.app.AccountKeeper.SetAccount(s.ctx, vestingAccount)
 	s.requireFundAccount(addrNoHold, "100acorn,100banana,100badcoin")
 	s.requireFundAccount(addrWithHolds, "100acorn,100banana,100badcoin")
 	s.requireFundAccount(addrWithBadHold, "100acorn,100banana,100badcoin")
@@ -112,25 +113,25 @@ func (s *TestSuite) TestBank_LockedCoins() {
 	}{
 		{
 			name:     "no coins on hold",
-			ctx:      s.sdkCtx,
+			ctx:      s.ctx,
 			addr:     addrNoHold,
 			expCoins: nil,
 		},
 		{
 			name:     "some coins on hold",
-			ctx:      s.sdkCtx,
+			ctx:      s.ctx,
 			addr:     addrWithHolds,
 			expCoins: s.coins("12acorn,99banana"),
 		},
 		{
 			name:     "with bypass: some coins on hold",
-			ctx:      hold.WithBypass(s.sdkCtx),
+			ctx:      hold.WithBypass(s.ctx),
 			addr:     addrWithHolds,
 			expCoins: nil,
 		},
 		{
 			name: "error getting hold coins",
-			ctx:  s.sdkCtx,
+			ctx:  s.ctx,
 			addr: addrWithBadHold,
 			expPanic: []string{
 				"failed to read amount of badcoin", addrWithBadHold.String(),
@@ -139,19 +140,19 @@ func (s *TestSuite) TestBank_LockedCoins() {
 		},
 		{
 			name:     "with bypass: error getting hold coins",
-			ctx:      hold.WithBypass(s.sdkCtx),
+			ctx:      hold.WithBypass(s.ctx),
 			addr:     addrWithBadHold,
 			expCoins: nil,
 		},
 		{
 			name:     "vesting and holds",
-			ctx:      s.sdkCtx,
+			ctx:      s.ctx,
 			addr:     addrVestingAndHolds,
 			expCoins: s.coins("8banana,100vestcoin"),
 		},
 		{
 			name:     "with bypass: vesting and holds",
-			ctx:      hold.WithBypass(s.sdkCtx),
+			ctx:      hold.WithBypass(s.ctx),
 			addr:     addrVestingAndHolds,
 			expCoins: s.coins("100vestcoin"),
 		},
@@ -178,11 +179,12 @@ func (s *TestSuite) TestBank_SpendableCoins() {
 	addrVestingAndHolds := sdk.AccAddress("addrVestingAndHolds_")
 	addrWithBadHold := sdk.AccAddress("addrWithBadHold_____")
 
-	vestingAccount := vestingtypes.NewPermanentLockedAccount(
-		s.app.AccountKeeper.NewAccountWithAddress(s.sdkCtx, addrVestingAndHolds).(*authtypes.BaseAccount),
+	vestingAccount, err := vestingtypes.NewPermanentLockedAccount(
+		s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addrVestingAndHolds).(*authtypes.BaseAccount),
 		s.coins("100vestcoin"),
 	)
-	s.app.AccountKeeper.SetAccount(s.sdkCtx, vestingAccount)
+	s.Require().NoError(err, "NewPermanentLockedAccount addrVestingAndHolds")
+	s.app.AccountKeeper.SetAccount(s.ctx, vestingAccount)
 	s.requireFundAccount(addrNoHold, "100acorn,100banana,100badcoin")
 	s.requireFundAccount(addrWithHolds, "100acorn,100banana,100badcoin")
 	s.requireFundAccount(addrWithBadHold, "100acorn,100banana,100badcoin")
@@ -204,25 +206,25 @@ func (s *TestSuite) TestBank_SpendableCoins() {
 	}{
 		{
 			name:     "no coins on hold",
-			ctx:      s.sdkCtx,
+			ctx:      s.ctx,
 			addr:     addrNoHold,
 			expCoins: s.coins("100acorn,100banana,100badcoin"),
 		},
 		{
 			name:     "some coins on hold",
-			ctx:      s.sdkCtx,
+			ctx:      s.ctx,
 			addr:     addrWithHolds,
 			expCoins: s.coins("88acorn,1banana,100badcoin"),
 		},
 		{
 			name:     "with bypass: some coins on hold",
-			ctx:      hold.WithBypass(s.sdkCtx),
+			ctx:      hold.WithBypass(s.ctx),
 			addr:     addrWithHolds,
 			expCoins: s.coins("100acorn,100banana,100badcoin"),
 		},
 		{
 			name: "error getting hold coins",
-			ctx:  s.sdkCtx,
+			ctx:  s.ctx,
 			addr: addrWithBadHold,
 			expPanic: []string{
 				"failed to read amount of badcoin", addrWithBadHold.String(),
@@ -231,19 +233,19 @@ func (s *TestSuite) TestBank_SpendableCoins() {
 		},
 		{
 			name:     "with bypass: error getting hold coins",
-			ctx:      hold.WithBypass(s.sdkCtx),
+			ctx:      hold.WithBypass(s.ctx),
 			addr:     addrWithBadHold,
 			expCoins: s.coins("100acorn,100banana,100badcoin"),
 		},
 		{
 			name:     "vesting and holds",
-			ctx:      s.sdkCtx,
+			ctx:      s.ctx,
 			addr:     addrVestingAndHolds,
 			expCoins: s.coins("100acorn,92banana,100badcoin"),
 		},
 		{
 			name:     "with bypass: vesting and holds",
-			ctx:      hold.WithBypass(s.sdkCtx),
+			ctx:      hold.WithBypass(s.ctx),
 			addr:     addrVestingAndHolds,
 			expCoins: s.coins("100acorn,100banana,100badcoin"),
 		},
@@ -277,11 +279,11 @@ func (s *TestSuite) TestBank_Send() {
 	store = nil
 
 	s.Run("send less than balance but more than spendable", func() {
-		err := s.bankKeeper.SendCoins(s.sdkCtx, fromAddr, toAddr, s.coins("5banana"))
+		err := s.bankKeeper.SendCoins(s.ctx, fromAddr, toAddr, s.coins("5banana"))
 		s.Assert().EqualError(err, "spendable balance 1banana is smaller than 5banana: insufficient funds", "SendCoins error")
-		fromBal := s.bankKeeper.GetAllBalances(s.sdkCtx, fromAddr)
+		fromBal := s.bankKeeper.GetAllBalances(s.ctx, fromAddr)
 		s.Assert().Equal("100acorn,100banana,100coolcoin", fromBal.String(), "GetAllBalances(fromAddr)")
-		toBal := s.bankKeeper.GetAllBalances(s.sdkCtx, toAddr)
+		toBal := s.bankKeeper.GetAllBalances(s.ctx, toAddr)
 		s.Assert().Equal("", toBal.String(), "GetAllBalances(toAddr)")
 	})
 
@@ -290,23 +292,23 @@ func (s *TestSuite) TestBank_Send() {
 		// It's better to release the hold first, then do a send coins without any bypass.
 		// But for this test, I want to see that the bypass is being passed on as expected.
 
-		ctx := hold.WithBypass(s.sdkCtx)
+		ctx := hold.WithBypass(s.ctx)
 		err := s.bankKeeper.SendCoins(ctx, fromAddr, toAddr, s.coins("5banana"))
 		s.Assert().NoError(err, "SendCoins error")
-		err = s.keeper.ReleaseHold(s.sdkCtx, fromAddr, s.coins("4banana"))
+		err = s.keeper.ReleaseHold(s.ctx, fromAddr, s.coins("4banana"))
 		s.Assert().NoError(err, "ReleaseHold error")
-		fromBal := s.bankKeeper.GetAllBalances(s.sdkCtx, fromAddr)
+		fromBal := s.bankKeeper.GetAllBalances(s.ctx, fromAddr)
 		s.Assert().Equal("100acorn,95banana,100coolcoin", fromBal.String(), "GetAllBalances(fromAddr)")
-		toBal := s.bankKeeper.GetAllBalances(s.sdkCtx, toAddr)
+		toBal := s.bankKeeper.GetAllBalances(s.ctx, toAddr)
 		s.Assert().Equal("5banana", toBal.String(), "GetAllBalances(toAddr)")
 	})
 
 	s.Run("send exactly spendable", func() {
-		err := s.bankKeeper.SendCoins(s.sdkCtx, fromAddr, toAddr, s.coins("88acorn"))
+		err := s.bankKeeper.SendCoins(s.ctx, fromAddr, toAddr, s.coins("88acorn"))
 		s.Assert().NoError(err, "SendCoins error")
-		fromBal := s.bankKeeper.GetAllBalances(s.sdkCtx, fromAddr)
+		fromBal := s.bankKeeper.GetAllBalances(s.ctx, fromAddr)
 		s.Assert().Equal(s.coins("12acorn,95banana,100coolcoin").String(), fromBal.String(), "GetAllBalances(fromAddr)")
-		toBal := s.bankKeeper.GetAllBalances(s.sdkCtx, toAddr)
+		toBal := s.bankKeeper.GetAllBalances(s.ctx, toAddr)
 		s.Assert().Equal("88acorn,5banana", toBal.String(), "GetAllBalances(toAddr)")
 	})
 }

@@ -15,23 +15,13 @@ for dir in $proto_dirs; do
   query_file=$(find "${dir}" -maxdepth 1 -name 'query.proto')
   if [[ -n "$query_file" ]]; then
     [[ -n "$verbose" ]] && printf 'Generating swagger file for [%s].\n' "$query_file"
-    buf protoc  \
-    -I "proto" \
-    -I "third_party/proto" \
-    "$query_file" \
-    --swagger_out=./tmp-swagger-gen \
-    --swagger_opt=logtostderr=true --swagger_opt=fqn_for_swagger_name=true --swagger_opt=simple_operation_ids=true
+    buf generate --template proto/buf.gen.swagger.yaml "$query_file"
   fi
   # generate swagger files for the transactions.
   tx_file=$(find "${dir}" -maxdepth 1 -name 'tx.proto')
   if [[ -n "$tx_file" ]]; then
     [[ -n "$verbose" ]] && printf 'Generating swagger file for [%s].\n' "$tx_file"
-    buf protoc  \
-    -I "proto" \
-    -I "third_party/proto" \
-    "$tx_file" \
-    --swagger_out=./tmp-swagger-gen \
-    --swagger_opt=logtostderr=true --swagger_opt=fqn_for_swagger_name=true --swagger_opt=simple_operation_ids=true
+    buf generate --template proto/buf.gen.swagger.yaml "$tx_file"
   fi
 done
 

@@ -5,8 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,14 +15,14 @@ import (
 )
 
 var (
-	coin1000   = sdk.NewCoin("stake", sdk.NewInt(1000))
-	coin500    = sdk.NewCoin("stake", sdk.NewInt(500))
+	coin1000   = sdk.NewInt64Coin("stake", 1000)
+	coin500    = sdk.NewInt64Coin("stake", 500)
 	msgTypeURL = "/provenance.marker.v1.MsgTransferRequest"
 )
 
 func TestMarkerTransferAuthorization(t *testing.T) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	authorization := NewMarkerTransferAuthorization(sdk.NewCoins(coin1000), []sdk.AccAddress{})
 
 	t.Run("verify authorization returns valid method name", func(t *testing.T) {

@@ -20,15 +20,15 @@ EOF
 DEST="${1:-$( cd "$( dirname "${BASH_SOURCE:-$0}" )/.."; pwd -P )/third_party}"
 
 # Retrieve versions from go.mod (single source of truth)
-CONFIO_PROTO_URL="https://raw.githubusercontent.com/confio/ics23/go/$( go list -m github.com/confio/ics23/go | sed 's:.* ::' )/proofs.proto"
-GOGO_PROTO_URL="https://raw.githubusercontent.com/regen-network/protobuf/$( go list -m github.com/gogo/protobuf | sed 's:.* ::' )/gogoproto/gogo.proto"
+ICS23_PROTO_URL="https://raw.githubusercontent.com/cosmos/ics23/go/$( go list -m github.com/cosmos/ics23/go | sed 's:.* ::' )/proto/cosmos/ics23/v1/proofs.proto"
+GOGO_PROTO_URL="https://raw.githubusercontent.com/cosmos/gogoproto/$( go list -m github.com/cosmos/gogoproto | sed 's:.* ::' )/gogoproto/gogo.proto"
 COSMOS_PROTO_URL="raw.githubusercontent.com/cosmos/cosmos-proto/$( go list -m github.com/cosmos/cosmos-proto | sed 's:.* ::' )/proto/cosmos_proto/cosmos.proto"
 COSMWASM_V1BETA1_TARBALL_URL='github.com/CosmWasm/wasmd/tarball/v0.17.0'  # Backwards compatibility. Needed to serialize/deserialize older wasmd protos.
 COSMWASM_CUR_TARBALL_URL="$( go list -m github.com/CosmWasm/wasmd | sed 's:.* => ::; s: :/tarball/:;' )"
 IBC_PORT_V1_QUERY_URL='https://raw.githubusercontent.com/cosmos/ibc-go/v2.3.1/proto/ibc/core/port/v1/query.proto' # Backwards compatibility.
-IBC_GO_TARBALL_URL="$( go list -m github.com/cosmos/ibc-go/v6 | sed 's:.* => ::; s: :/tarball/:; s:/v6::;')"
+IBC_GO_TARBALL_URL="$( go list -m github.com/cosmos/ibc-go/v8 | sed 's:.* => ::; s: :/tarball/:; s:/v8::;')"
 COSMOS_TARBALL_URL="$( go list -m github.com/cosmos/cosmos-sdk | sed 's:.* => ::; s: :/tarball/:;' )"
-TM_TARBALL_URL="$( go list -m github.com/tendermint/tendermint | sed 's:.* => ::; s: :/tarball/:;' )"
+COMETBFT_TARBALL_URL="$( go list -m github.com/cometbft/cometbft | sed 's:.* => ::; s: :/tarball/:;' )"
 
 # gnu tar on ubuntu requires the '--wildcards' flag
 tar='tar zx --strip-components 1'
@@ -41,9 +41,6 @@ cd "$DEST"
 PROTO_EXPR='*/proto/**/*.proto'
 
 # Refresh third_party protos
-CONFIO_FILE='proto/proofs.proto'
-rm -f "$CONFIO_FILE" "$CONFIO_FILE.orig"
-curl -f -sSL "$CONFIO_PROTO_URL" -o "$CONFIO_FILE.orig" --create-dirs
 
 GOGO_FILE='proto/gogoproto/gogo.proto'
 rm -f "$GOGO_FILE"
@@ -68,16 +65,7 @@ rm -rf 'proto/cosmos'
 curl -f -sSL "$COSMOS_TARBALL_URL" | $tar --exclude='*/third_party' --exclude='*/testutil' "$PROTO_EXPR"
 
 rm -rf 'proto/tendermint'
-curl -f -sSL "$TM_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
+curl -f -sSL "$COMETBFT_TARBALL_URL" | $tar --exclude='*/third_party' "$PROTO_EXPR"
 
-## insert go, java package option into proofs.proto file
-## Issue link: https://github.com/confio/ics23/issues/32 (instead of a simple sed we need 4 lines cause bsd sed -i is incompatible)
-# See: https://github.com/koalaman/shellcheck/wiki/SC2129
-{
-  head -n3 "$CONFIO_FILE.orig"
-  printf 'option go_package = "github.com/confio/ics23/go";\n'
-  printf 'option java_package = "tech.confio.ics23";\n'
-  printf 'option java_multiple_files = true;\n'
-  tail -n+4 "$CONFIO_FILE.orig"
-} > "$CONFIO_FILE"
-rm "$CONFIO_FILE.orig"
+ICS23_FILE='proto/cosmos/ics23/v1/proofs.proto'
+curl -f -sSL "$ICS23_PROTO_URL" -o "$ICS23_FILE" --create-dirs

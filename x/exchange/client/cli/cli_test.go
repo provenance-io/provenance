@@ -9,13 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -31,8 +30,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -574,7 +573,7 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 	args = append(args,
 		"--"+flags.FlagGas, gas,
 		"--"+flags.FlagFees, fees.String(),
-		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
 		"--"+flags.FlagSkipConfirmation,
 	)
 
@@ -700,8 +699,8 @@ func (s *CmdTestSuite) getEventAttribute(events []abci.Event, eventType, attribu
 	for _, event := range events {
 		if event.Type == eventType {
 			for _, attr := range event.Attributes {
-				if string(attr.Key) == attribute {
-					val := strings.Trim(string(attr.Value), `"`)
+				if attr.Key == attribute {
+					val := strings.Trim(attr.Value, `"`)
 					if len(val) > 0 {
 						return val, nil
 					}
@@ -910,32 +909,36 @@ func (s *CmdTestSuite) assertGovPropMsg(propID string, msg sdk.Msg) bool {
 		return true
 	}
 
-	if !s.Assert().NotEmpty(propID, "proposal id") {
-		return false
-	}
-	expPropMsgAny, err := codectypes.NewAnyWithValue(msg)
-	if !s.Assert().NoError(err, "NewAnyWithValue(%T)", msg) {
-		return false
-	}
+	// TODO[1760]: gov: Uncomment once we figure out how to query for a gov proposal again.
+	return false
+	/*
+		if !s.Assert().NotEmpty(propID, "proposal id") {
+			return false
+		}
+		expPropMsgAny, err := codectypes.NewAnyWithValue(msg)
+		if !s.Assert().NoError(err, "NewAnyWithValue(%T)", msg) {
+			return false
+		}
 
-	clientCtx := s.getClientCtx()
-	getPropCmd := govcli.GetCmdQueryProposal()
-	propOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getPropCmd, []string{propID, "--output", "json"})
-	propOutBz := propOutBW.Bytes()
-	s.T().Logf("Query proposal %s output:\n%s", propID, string(propOutBz))
-	if !s.Assert().NoError(err, "GetCmdQueryProposal %s error", propID) {
-		return false
-	}
+		clientCtx := s.getClientCtx()
+		getPropCmd := govcli.GetCmdQueryProposal()
+		propOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getPropCmd, []string{propID, "--output", "json"})
+		propOutBz := propOutBW.Bytes()
+		s.T().Logf("Query proposal %s output:\n%s", propID, string(propOutBz))
+		if !s.Assert().NoError(err, "GetCmdQueryProposal %s error", propID) {
+			return false
+		}
 
-	var prop govv1.Proposal
-	err = clientCtx.Codec.UnmarshalJSON(propOutBz, &prop)
-	if !s.Assert().NoError(err, "UnmarshalJSON on proposal %s response", propID) {
-		return false
-	}
-	if !s.Assert().Len(prop.Messages, 1, "number of messages in proposal %s", propID) {
-		return false
-	}
-	return s.Assert().Equal(expPropMsgAny, prop.Messages[0], "the message in proposal %s", propID)
+		var prop govv1.Proposal
+		err = clientCtx.Codec.UnmarshalJSON(propOutBz, &prop)
+		if !s.Assert().NoError(err, "UnmarshalJSON on proposal %s response", propID) {
+			return false
+		}
+		if !s.Assert().Len(prop.Messages, 1, "number of messages in proposal %s", propID) {
+			return false
+		}
+		return s.Assert().Equal(expPropMsgAny, prop.Messages[0], "the message in proposal %s", propID)
+	*/
 }
 
 // govPropFollowup returns a followup function that identifies the new proposal id, looks it up,
@@ -1056,7 +1059,7 @@ func (s *CmdTestSuite) createOrder(order *exchange.Order, creationFee *sdk.Coin)
 	}
 	args = append(args,
 		"--"+flags.FlagFees, s.bondCoins(10).String(),
-		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
 		"--"+flags.FlagSkipConfirmation,
 	)
 
@@ -1097,7 +1100,7 @@ func (s *CmdTestSuite) commitFunds(addr sdk.AccAddress, marketID uint32, amount 
 
 	args = append(args,
 		"--"+flags.FlagFees, s.bondCoins(10).String(),
-		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
 		"--"+flags.FlagSkipConfirmation,
 	)
 
@@ -1143,7 +1146,7 @@ func (s *CmdTestSuite) createPayment(payment *exchange.Payment) {
 	fees := s.bondCoins(10).Add(s.feeCoin(exchange.DefaultFeeCreatePaymentFlatAmount))
 	args = append(args,
 		"--"+flags.FlagFees, fees.String(),
-		"--"+flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
 		"--"+flags.FlagSkipConfirmation,
 	)
 
@@ -1169,43 +1172,52 @@ func (s *CmdTestSuite) createPayment(payment *exchange.Payment) {
 
 // queryBankBalances executes a bank query to get an account's balances.
 func (s *CmdTestSuite) queryBankBalances(addr string) sdk.Coins {
-	clientCtx := s.getClientCtx()
-	cmd := bankcli.GetBalancesCmd()
-	args := []string{addr, "--output", "json"}
-	outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
-	outBz := outBW.Bytes()
+	// TODO[1760]: bank: Uncomment once we know how to query for bank balances again.
+	return nil
+	/*
+		clientCtx := s.getClientCtx()
+		cmd := bankcli.GetBalancesCmd()
+		args := []string{addr, "--output", "json"}
+		outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
+		outBz := outBW.Bytes()
 
-	var resp banktypes.QueryAllBalancesResponse
-	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
-	s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
-	return resp.Balances
+		var resp banktypes.QueryAllBalancesResponse
+		err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+		s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
+		return resp.Balances
+	*/
 }
 
 // queryBankSpendableBalances executes a bank query to get an account's spendable balances.
 func (s *CmdTestSuite) queryBankSpendableBalances(addr string) sdk.Coins {
-	clientCtx := s.getClientCtx()
-	cmd := bankcli.GetSpendableBalancesCmd()
-	args := []string{addr, "--output", "json"}
-	outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
-	outBz := outBW.Bytes()
+	// TODO[1760]: bank: Put this back once we know how to query spendable balances again.
+	/*
+		clientCtx := s.getClientCtx()
+		cmd := bankcli.GetSpendableBalancesCmd()
+		args := []string{addr, "--output", "json"}
+		outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
+		outBz := outBW.Bytes()
 
-	var resp banktypes.QuerySpendableBalancesResponse
-	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
-	s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
-	return resp.Balances
+		var resp banktypes.QuerySpendableBalancesResponse
+		err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
+		s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
+		return resp.Balances
+	*/
+	return nil
 }
 
 // execBankSend executes a bank send command.
 func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 	clientCtx := s.getClientCtx()
-	cmd := bankcli.NewSendTxCmd()
+	addrCdc := s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec()
+	cmd := bankcli.NewSendTxCmd(addrCdc)
 	cmdName := cmd.Name()
 	args := []string{
 		fromAddr, toAddr, amount,
 		"--" + flags.FlagFees, s.bondCoins(10).String(),
-		"--" + flags.FlagBroadcastMode, flags.BroadcastBlock,
+		"--" + flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
 		"--" + flags.FlagSkipConfirmation,
 	}
 	failed := true

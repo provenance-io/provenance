@@ -95,12 +95,13 @@ $ %s tx gov submit-legacy-proposal \
 				Owner:       proposalOwner,
 				Restricted:  !viper.GetBool(FlagUnrestricted),
 			}
-
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
+			err = content.ValidateBasic()
 			if err != nil {
 				return err
 			}
-			if err = msg.ValidateBasic(); err != nil {
+
+			msg, err := govtypesv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
+			if err != nil {
 				return err
 			}
 

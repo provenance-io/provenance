@@ -6,19 +6,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
-	"github.com/provenance-io/provenance/app"
-	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
-	"github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/stretchr/testify/suite"
+	"github.com/provenance-io/provenance/app"
+	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type RecordKeeperTestSuite struct {
@@ -92,7 +90,7 @@ func (s *RecordKeeperTestSuite) SetupTest() {
 }
 
 func (s *RecordKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
 }
 
 func TestRecordKeeperTestSuite(t *testing.T) {

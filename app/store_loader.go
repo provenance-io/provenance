@@ -7,15 +7,15 @@ import (
 	"strings"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
 	"github.com/spf13/cast"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ValidateWrapperSleeper is the sleeper that the ValidateWrapper will use.
@@ -24,7 +24,7 @@ var ValidateWrapperSleeper Sleeper = &DefaultSleeper{}
 
 // ValidateWrapper creates a new StoreLoader that first checks the config settings before calling the provided StoreLoader.
 func ValidateWrapper(logger log.Logger, appOpts servertypes.AppOptions, storeLoader baseapp.StoreLoader) baseapp.StoreLoader {
-	return func(ms sdk.CommitMultiStore) error {
+	return func(ms storetypes.CommitMultiStore) error {
 		IssueConfigWarnings(logger, appOpts, ValidateWrapperSleeper)
 		return storeLoader(ms)
 	}

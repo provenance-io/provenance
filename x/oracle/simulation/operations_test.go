@@ -6,17 +6,16 @@ import (
 	"math/rand"
 	"strings"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/oracle/simulation"
 	"github.com/provenance-io/provenance/x/oracle/types"
-	"github.com/stretchr/testify/suite"
 )
 
 type SimTestSuite struct {
@@ -28,7 +27,7 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -63,16 +62,13 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	r := rand.New(source)
 	accs := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
-
 	expected := []struct {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightUpdateOracle, sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{}), sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{})},
-		{simappparams.DefaultWeightSendOracleQuery, sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{})},
+		{weight: simappparams.DefaultWeightUpdateOracle, opMsgRoute: types.ModuleName, opMsgName: sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{})},
+		{weight: simappparams.DefaultWeightSendOracleQuery, opMsgRoute: types.ModuleName, opMsgName: sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{})},
 	}
 
 	expNames := make([]string, len(expected))
@@ -106,9 +102,6 @@ func (s *SimTestSuite) TestSimulateMsgUpdateOracle() {
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
-
 	// execute operation
 	op := simulation.SimulateMsgUpdateOracle(s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -116,11 +109,11 @@ func (s *SimTestSuite) TestSimulateMsgUpdateOracle() {
 	s.LogOperationMsg(operationMsg, "good")
 
 	var msg types.MsgUpdateOracleRequest
-	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.ModuleName, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
@@ -130,9 +123,6 @@ func (s *SimTestSuite) TestSimulateMsgSendQueryOracle() {
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
-
 	// execute operation
 	op := simulation.SimulateMsgSendQueryOracle(s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -140,11 +130,11 @@ func (s *SimTestSuite) TestSimulateMsgSendQueryOracle() {
 	s.LogOperationMsg(operationMsg, "good")
 
 	var msg types.MsgUpdateOracleRequest
-	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.ModuleName, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
@@ -216,7 +206,7 @@ func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Accoun
 	for _, account := range accounts {
 		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
 		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		err := testutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins)
+		err := testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins)
 		s.Require().NoError(err)
 	}
 

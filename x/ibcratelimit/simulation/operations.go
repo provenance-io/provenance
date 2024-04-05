@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"math/rand"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -34,7 +37,7 @@ func WeightedOperations(
 		weightMsgUpdateParams int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
+	appParams.GetOrGenerate(OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
 		func(_ *rand.Rand) {
 			weightMsgUpdateParams = simappparams.DefaultWeightGovUpdateParams
 		},
@@ -92,20 +95,20 @@ func Dispatch(
 	if err != nil {
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
-	err = testutil.FundAccount(bk, ctx, account.GetAddress(), sdk.NewCoins(sdk.Coin{
+	err = testutil.FundAccount(ctx, bk, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 		Denom:  pioconfig.GetProvenanceConfig().BondDenom,
-		Amount: sdk.NewInt(1_000_000_000_000_000),
+		Amount: sdkmath.NewInt(1_000_000_000_000_000),
 	}))
 	if err != nil {
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account"), nil, err
 	}
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenSignedMockTx(
+	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -120,7 +123,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, nil
+	return simtypes.NewOperationMsg(msg, true, ""), futures, nil
 }
 
 func RandomAccs(r *rand.Rand, accs []simtypes.Account, count uint64) ([]simtypes.Account, error) {

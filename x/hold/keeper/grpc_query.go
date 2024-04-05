@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	db "github.com/cometbft/cometbft-db"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	dbm "github.com/cometbft/cometbft-db"
+
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -159,7 +161,7 @@ func (k Keeper) paginateAllHolds(ctx sdk.Context, pageRequest *query.PageRequest
 
 // getIterator creates an iterator on the provided store with the provided start and direction.
 // It's copied from query.pagination.go.
-func getIterator(prefixStore storetypes.KVStore, start []byte, reverse bool) db.Iterator {
+func getIterator(prefixStore storetypes.KVStore, start []byte, reverse bool) dbm.Iterator {
 	if reverse {
 		var end []byte
 		if start != nil {

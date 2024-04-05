@@ -38,13 +38,13 @@ func OracleFn(r *rand.Rand, accs []simtypes.Account) string {
 func RandomizedGenState(simState *module.SimulationState) {
 	var port string
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, Port, &port, simState.Rand,
+		Port, &port, simState.Rand,
 		func(r *rand.Rand) { port = PortFn(r) },
 	)
 
 	var oracle string
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, Port, &port, simState.Rand,
+		Port, &port, simState.Rand,
 		func(r *rand.Rand) { oracle = OracleFn(r, simState.Accounts) },
 	)
 

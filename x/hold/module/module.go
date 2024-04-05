@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/core/appmodule"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,9 +26,10 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModuleBasic      = (*AppModule)(nil)
+	_ module.AppModuleSimulation = (*AppModule)(nil)
+
+	_ appmodule.AppModule = (*AppModule)(nil)
 )
 
 type AppModule struct {
@@ -41,6 +43,12 @@ func NewAppModule(cdc codec.Codec, holdKeeper keeper.Keeper) AppModule {
 		keeper:         holdKeeper,
 	}
 }
+
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
 
 type AppModuleBasic struct {
 	cdc codec.Codec
@@ -92,15 +100,6 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Deprecated: Route returns the message routing key for the hold module, empty.
-func (am AppModule) Route() sdk.Route { return sdk.Route{} }
-
-// Deprecated: QuerierRoute returns the route we respond to for abci queries, "".
-func (AppModule) QuerierRoute() string { return "" }
-
-// Deprecated: LegacyQuerierHandler returns the hold module sdk.Querier (nil).
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier { return nil }
-
 // InitGenesis performs genesis initialization for the hold module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
@@ -141,10 +140,10 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 
 // RandomizedParams returns randomized hold param changes for the simulator,
 // of which there are none since this module doesn't use the params module.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange { return nil }
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange { return nil }
 
 // RegisterStoreDecoder registers a decoder for hold module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[hold.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

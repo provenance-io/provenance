@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -63,7 +63,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var genBalances []banktypes.Balance
 	for i := range s.accountAddresses {
 		genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[i].String(), Coins: sdk.NewCoins(
-			sdk.NewCoin("nhash", sdk.NewInt(100000000)), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000000)),
+			sdk.NewInt64Coin("nhash", 100_000_000), sdk.NewInt64Coin(s.cfg.BondDenom, 100_000_000),
 		).Sort()})
 	}
 	var bankGenState banktypes.GenesisState
@@ -151,7 +151,7 @@ func (s *IntegrationTestSuite) TestQueryOracleAddress() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetQueryOracleAddressCmd(), []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetQueryOracleAddressCmd(), []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)})
 			if len(tc.expectErrMsg) > 0 {
 				s.EqualError(err, tc.expectErrMsg, "should have correct error message for invalid QueryOracleAddress")
 			} else {
@@ -197,15 +197,15 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 			args := []string{
 				tc.address,
 			}
-			flags := []string{
+			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
-			args = append(args, flags...)
+			args = append(args, flagArgs...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdOracleUpdate(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdOracleUpdate(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
@@ -270,15 +270,15 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 				tc.channel,
 				tc.query,
 			}
-			flags := []string{
+			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
-			args = append(args, flags...)
+			args = append(args, flagArgs...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdSendQuery(), append(args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdSendQuery(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {

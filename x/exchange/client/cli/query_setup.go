@@ -185,7 +185,7 @@ func MakeQueryGetMarketOrders(_ client.Context, flagSet *pflag.FlagSet, args []s
 	req.MarketId, errs[0] = ReadFlagMarketOrArg(flagSet, args)
 	req.OrderType, errs[1] = ReadFlagsAsksBidsOpt(flagSet)
 	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagAfter)
-	req.Pagination, errs[3] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+	req.Pagination, errs[3] = client.ReadPageRequest(flagSet) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 
 	return req, errors.Join(errs...)
 }
@@ -223,7 +223,7 @@ func MakeQueryGetOwnerOrders(_ client.Context, flagSet *pflag.FlagSet, args []st
 	req.Owner, errs[0] = ReadStringFlagOrArg(flagSet, args, FlagOwner, "owner")
 	req.OrderType, errs[1] = ReadFlagsAsksBidsOpt(flagSet)
 	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagAfter)
-	req.Pagination, errs[3] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+	req.Pagination, errs[3] = client.ReadPageRequest(flagSet) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 
 	return req, errors.Join(errs...)
 }
@@ -261,7 +261,7 @@ func MakeQueryGetAssetOrders(_ client.Context, flagSet *pflag.FlagSet, args []st
 	req.Asset, errs[0] = ReadStringFlagOrArg(flagSet, args, FlagDenom, "asset")
 	req.OrderType, errs[1] = ReadFlagsAsksBidsOpt(flagSet)
 	req.AfterOrderId, errs[2] = flagSet.GetUint64(FlagAfter)
-	req.Pagination, errs[3] = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+	req.Pagination, errs[3] = client.ReadPageRequest(flagSet) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 
 	return req, errors.Join(errs...)
 }
@@ -284,7 +284,7 @@ func MakeQueryGetAllOrders(_ client.Context, flagSet *pflag.FlagSet, _ []string)
 	req := &exchange.QueryGetAllOrdersRequest{}
 
 	var err error
-	req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+	req.Pagination, err = client.ReadPageRequest(flagSet) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 
 	return req, err
 }
@@ -439,7 +439,7 @@ func MakeQueryGetAllMarkets(_ client.Context, flagSet *pflag.FlagSet, _ []string
 	req := &exchange.QueryGetAllMarketsRequest{}
 
 	var err error
-	req.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(flagSet)
+	req.Pagination, err = client.ReadPageRequest(flagSet) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 
 	return req, err
 }

@@ -29,7 +29,7 @@ const (
 )
 
 var (
-	_ authtypes.AccountI       = (*MarketAccount)(nil)
+	_ sdk.AccountI             = (*MarketAccount)(nil)
 	_ authtypes.GenesisAccount = (*MarketAccount)(nil)
 )
 
@@ -276,8 +276,6 @@ func (r FeeRatio) Validate() error {
 
 // Equals returns true if this FeeRatio has the same price and fee as the provided other FeeRatio.
 func (r FeeRatio) Equals(other FeeRatio) bool {
-	// Cannot use coin.IsEqual because it panics if the denoms are different, because that makes perfect sense.
-	// The coin.Equal(interface{}) function behaves as expected, though, but with the extra casting costs.
 	return r.Price.Equal(other.Price) && r.Fee.Equal(other.Fee)
 }
 
@@ -303,7 +301,7 @@ func (r FeeRatio) applyLooselyTo(price sdk.Coin) (sdkmath.Int, bool, error) {
 
 // ApplyTo attempts to calculate the fee that results from applying this fee ratio to the provided price.
 func (r FeeRatio) ApplyTo(price sdk.Coin) (sdk.Coin, error) {
-	rv := sdk.Coin{Denom: "", Amount: sdk.ZeroInt()}
+	rv := sdk.Coin{Denom: "", Amount: sdkmath.ZeroInt()}
 	amt, wasRounded, err := r.applyLooselyTo(price)
 	if err != nil {
 		return rv, err
@@ -319,7 +317,7 @@ func (r FeeRatio) ApplyTo(price sdk.Coin) (sdk.Coin, error) {
 // ApplyToLoosely calculates the fee that results from applying this fee ratio to the provided price, allowing for the
 // ratio to not evenly apply to the price.
 func (r FeeRatio) ApplyToLoosely(price sdk.Coin) (sdk.Coin, error) {
-	rv := sdk.Coin{Denom: "", Amount: sdk.ZeroInt()}
+	rv := sdk.Coin{Denom: "", Amount: sdkmath.ZeroInt()}
 	amt, _, err := r.applyLooselyTo(price)
 	if err != nil {
 		return rv, err

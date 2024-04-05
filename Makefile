@@ -6,22 +6,10 @@ BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
 WITH_LEDGER ?= true
-WITH_CLEVELDB ?= false
-WITH_ROCKSDB ?= false
-WITH_BADGERDB ?= false
 
 # We used to use 'yes' on these flags, so at least for now, change 'yes' into 'true'
 ifeq ($(WITH_LEDGER),yes)
   WITH_LEDGER=true
-endif
-ifeq ($(WITH_CLEVELDB),yes)
-  WITH_CLEVELDB=true
-endif
-ifeq ($(WITH_ROCKSDB),yes)
-  WITH_ROCKSDB=true
-endif
-ifeq ($(WITH_BADGERDB),yes)
-  WITH_BADGERDB=true
 endif
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null)
@@ -46,11 +34,11 @@ HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
-# Only support go version 1.20
+# Only support go version 1.21
 GO_MAJOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
 GO_MINOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 SUPPORTED_GO_MAJOR_VERSION = 1
-SUPPORTED_GO_MINOR_VERSION = 20
+SUPPORTED_GO_MINOR_VERSION = 21
 GO_VERSION_VALIDATION_ERR_MSG = Golang version $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION) is not supported, you must use $(SUPPORTED_GO_MAJOR_VERSION).$(SUPPORTED_GO_MINOR_VERSION)
 
 # The below include contains the tools target.
@@ -79,21 +67,6 @@ endif
 # Build Flags/Tags
 ##############################
 
-ifeq ($(WITH_CLEVELDB),true)
-  ifneq ($(have_gcc),true)
-    $(error gcc not installed for cleveldb support, please install or set WITH_CLEVELDB=false)
-  else
-    build_tags += gcc
-    build_tags += cleveldb
-  endif
-endif
-ifeq ($(WITH_ROCKSDB),true)
-  build_tags += rocksdb
-endif
-ifeq ($(WITH_BADGERDB),true)
-  build_tags += badgerdb
-endif
-
 ifeq ($(WITH_LEDGER),true)
   ifeq ($(UNAME_S),openbsd)
     $(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
@@ -112,20 +85,6 @@ ifeq ($(UNAME_S),darwin)
 else ifeq ($(UNAME_S),linux)
   # linux liner settings
   cgo_ldflags += -Wl,-rpath,\$$ORIGIN
-endif
-
-# cleveldb linker settings
-ifeq ($(WITH_CLEVELDB),true)
-  ifeq ($(UNAME_S),darwin)
-    LEVELDB_PATH ?= $(shell brew --prefix leveldb 2> /dev/null)
-    # Only do stuff if that LEVELDB_PATH exists. Otherwise, leave it up to already installed libraries.
-    ifneq ($(wildcard $(LEVELDB_PATH)/.),)
-      cgo_cflags  += -I$(LEVELDB_PATH)/include
-	  cgo_ldflags += -L$(LEVELDB_PATH)/lib
-	endif
-  else ifeq ($(UNAME_S),linux)
-    # Intentionally left blank to leave it up to already installed libraries.
-  endif
 endif
 
 cgo_ldflags += $(CGO_LDFLAGS)
@@ -173,6 +132,8 @@ install: go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
 build: validate-go-version go.sum
+	# TODO[1760]: Remove this delay once we're stable again.
+	@if [ -z "${ACK_50}" ]; then printf '\033[93mWARNING:\033[0m This branch is currently unstable and should not be built for use.\n         To bypass this 10 second delay: ACK_50=1 make build\n'; sleep 10; fi
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
@@ -205,17 +166,6 @@ else
 endif
 
 .PHONY: install build build-linux run
-
-##############################
-# Build DB Migration Tools   #
-##############################
-
-install-dbmigrate: go.sum
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/dbmigrate
-
-build-dbmigrate: validate-go-version go.sum
-	mkdir -p $(BUILDDIR)
-	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/dbmigrate
 
 ##############################
 # Release artifacts and plan #
@@ -251,14 +201,10 @@ RELEASE_PIO=$(RELEASE_BIN)/provenanced
 RELEASE_ZIP_BASE=provenance-$(UNAME_S)-$(ARCH)
 RELEASE_ZIP_NAME=$(RELEASE_ZIP_BASE)-$(VERSION).zip
 RELEASE_ZIP=$(BUILDDIR)/$(RELEASE_ZIP_NAME)
-DBMIGRATE=$(BUILDDIR)/dbmigrate
-DBMIGRATE_ZIP_BASE=dbmigrate-$(UNAME_S)-$(ARCH)
-DBMIGRATE_ZIP_NAME=$(DBMIGRATE_ZIP_BASE)-$(VERSION).zip
-DBMIGRATE_ZIP=$(BUILDDIR)/$(DBMIGRATE_ZIP_NAME)
 
 .PHONY: build-release-clean
 build-release-clean:
-	rm -rf $(RELEASE_BIN) $(RELEASE_PLAN) $(RELEASE_CHECKSUM) $(RELEASE_ZIP) $(DBMIGRATE_ZIP)
+	rm -rf $(RELEASE_BIN) $(RELEASE_PLAN) $(RELEASE_CHECKSUM) $(RELEASE_ZIP)
 
 .PHONY: build-release-checksum
 build-release-checksum: $(RELEASE_CHECKSUM)
@@ -297,17 +243,6 @@ build-release-zip: $(RELEASE_ZIP)
 $(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 	cd $(BUILDDIR) && \
 	  zip -u $(RELEASE_ZIP_NAME) bin/$(LIBWASMVM) bin/provenanced && \
-	cd ..
-
-$(DBMIGRATE):
-	$(MAKE) build-dbmigrate
-
-.PHONY: build-dbmigrate-zip
-build-dbmigrate-zip: $(DBMIGRATE_ZIP)
-
-$(DBMIGRATE_ZIP): $(DBMIGRATE)
-	cd $(BUILDDIR) && \
-	  zip -u $(DBMIGRATE_ZIP_NAME) dbmigrate && \
 	cd ..
 
 # gon packages the zip wrong. need bin/provenanced and bin/libwasmvm
@@ -370,15 +305,7 @@ linkify:
 update-tocs:
 	scripts/update-toc.sh x docs CONTRIBUTING.md
 
-# Download, compile, and install rocksdb so that it can be used when doing a build.
-rocksdb:
-	scripts/rocksdb_build_and_install.sh
-
-# Download, compile, and install cleveldb so that it can be used when doing a build.
-cleveldb:
-	scripts/cleveldb_build_and_install.sh
-
-.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs rocksdb cleveldb
+.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
@@ -406,10 +333,6 @@ PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
 
-ifeq ($(WITH_CLEVELDB),true)
-	TAGS+= cleveldb
-endif
-
 # Test runs-specific rules. To add a new test target, just add
 # a new rule, customise TAGS, ARGS and/or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
@@ -432,9 +355,16 @@ $(CHECK_TEST_TARGETS): run-tests
 
 run-tests: go.sum
 ifneq (,$(shell which tparse 2>/dev/null))
-	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)'$(TEST_PACKAGES) | tparse
+	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES) | tparse
 else
 	$(GO) test -mod=readonly $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES)
+endif
+
+build-tests: go.sum
+ifneq (,$(shell which tparse 2>/dev/null))
+	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)' -run='ZYX_NOPE_NOPE_XYZ' $(TEST_PACKAGES) | tparse
+else
+	$(GO) test -mod=readonly $(ARGS) -tags='$(TAGS)' -run='ZYX_NOPE_NOPE_XYZ' $(TEST_PACKAGES)
 endif
 
 test-cover:
@@ -443,7 +373,7 @@ test-cover:
 benchmark:
 	$(GO) test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 
-.PHONY: test test-all test-unit test-race test-cover benchmark run-tests  $(TEST_TARGETS)
+.PHONY: test test-all test-unit test-race test-cover benchmark run-tests build-tests $(TEST_TARGETS)
 
 ##############################
 # Test Network Targets
@@ -545,8 +475,8 @@ proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-
 proto-checks: proto-update-deps proto-lint proto-check-breaking proto-check-breaking-third-party
 proto-regen: proto-format proto-gen update-swagger-docs
 
-containerProtoVer=v0.2
-containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
+containerProtoVer=0.14.0
+containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
 containerProtoGen=prov-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=prov-proto-gen-swagger-$(containerProtoVer)
 containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
@@ -564,12 +494,6 @@ proto-gen:
 			sh ./scripts/protocgen.sh; \
 	fi
 	mv .go.mod.bak go.mod
-	go mod tidy
-
-# This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
-proto-gen-any:
-	@echo "Generating Protobuf Any"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen-any.sh
 	go mod tidy
 
 proto-swagger-gen:
@@ -616,7 +540,7 @@ proto-update-deps:
 	@echo "Updating Protobuf files"
 	sh ./scripts/proto-update-deps.sh
 
-.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-gen-any proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
+.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
 
 
 ##############################

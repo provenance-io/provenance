@@ -670,7 +670,7 @@ func outputScopesAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if e != nil {
 		return e
 	}
@@ -726,7 +726,7 @@ func outputSessionsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if e != nil {
 		return e
 	}
@@ -779,7 +779,7 @@ func outputRecordsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if e != nil {
 		return e
 	}
@@ -805,7 +805,7 @@ func outputOwnership(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if e != nil {
 		return e
 	}
@@ -827,7 +827,7 @@ func outputValueOwnership(cmd *cobra.Command, address string) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if e != nil {
 		return e
 	}
@@ -873,7 +873,7 @@ func outputScopeSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if e != nil {
 		return e
 	}
@@ -922,7 +922,7 @@ func outputContractSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if e != nil {
 		return e
 	}
@@ -993,7 +993,7 @@ func outputRecordSpecsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if e != nil {
 		return e
 	}
@@ -1055,7 +1055,7 @@ func outputOSLocatorsByURI(cmd *cobra.Command, uri string) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if e != nil {
 		return e
 	}
@@ -1095,7 +1095,7 @@ func outputOSLocatorsAll(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	pageReq, e := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
+	pageReq, e := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
 	if e != nil {
 		return e
 	}

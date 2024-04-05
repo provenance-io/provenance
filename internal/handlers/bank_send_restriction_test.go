@@ -3,17 +3,18 @@ package handlers_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -31,9 +32,9 @@ func TestBankSend(tt *testing.T) {
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	priv3, _, addr3 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv1.PubKey(), 0, 0)
-	acct1Balance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000000)))
+	acct1Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000))
 	acct2 := authtypes.NewBaseAccount(addr2, priv2.PubKey(), 1, 0)
-	acct2Balance := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000000)))
+	acct2Balance := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000))
 	acct3 := authtypes.NewBaseAccount(addr3, priv3.PubKey(), 2, 0)
 
 	app := piosimapp.SetupWithGenesisAccounts(tt, "bank-restriction-testing",
@@ -41,8 +42,8 @@ func TestBankSend(tt *testing.T) {
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 		banktypes.Balance{Address: addr2.String(), Coins: acct2Balance},
 	)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "bank-restriction-testing"})
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "bank-restriction-testing"})
+	app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams())
 
 	require.NoError(tt, app.NameKeeper.SetNameRecord(ctx, "some.kyc.provenance.io", addr1, false))
 	require.NoError(tt, app.AttributeKeeper.SetAttribute(ctx, attrtypes.NewAttribute("some.kyc.provenance.io", acct3.Address, attrtypes.AttributeType_Bytes, []byte{}, nil), addr1))
@@ -174,14 +175,21 @@ func TestBankSend(tt *testing.T) {
 }
 
 func ConstructAndSendTx(tt *testing.T, app piosimapp.App, ctx sdk.Context, acct *authtypes.BaseAccount, priv cryptotypes.PrivKey, msg sdk.Msg, expectedCode uint32, expectedError string) {
-	encCfg := sdksim.MakeTestEncodingConfig()
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
 	acct = app.AccountKeeper.GetAccount(ctx, acct.GetAddress()).(*authtypes.BaseAccount)
-	txBytes, err := SignTxAndGetBytes(NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct, ctx.ChainID(), msg)
+	txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct, ctx.ChainID(), msg)
 	require.NoError(tt, err, "SignTxAndGetBytes")
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(tt, expectedCode, res.Code, "res=%+v", res)
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: ctx.BlockHeight() + 1,
+		Time:   time.Now().UTC(),
+		Txs:    [][]byte{txBytes},
+	},
+	)
+	require.NoError(tt, err, "FinalizeBlock expected no error")
+	require.Len(tt, res.TxResults, 1, "TxResults expected len not met")
+	require.Equal(tt, int(expectedCode), int(res.TxResults[0].Code), "res=%+v", res)
 	if len(expectedError) > 0 {
-		require.Contains(tt, res.Log, expectedError, "DeliverTx result.Log")
+		require.Contains(tt, res.TxResults[0].Log, expectedError, "DeliverTx result.Log")
 	}
 }

@@ -1,6 +1,10 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"context"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 var (
 	bypassKey        = "bypass-marker-restriction"
@@ -8,18 +12,23 @@ var (
 )
 
 // WithBypass returns a new context that will cause the marker bank send restriction to be skipped.
-func WithBypass(ctx sdk.Context) sdk.Context {
-	return ctx.WithValue(bypassKey, true)
+func WithBypass[C context.Context](ctx C) C {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithValue(bypassKey, true)
+	return context.Context(sdkCtx).(C)
 }
 
 // WithoutBypass returns a new context that will cause the marker bank send restriction to not be skipped.
-func WithoutBypass(ctx sdk.Context) sdk.Context {
-	return ctx.WithValue(bypassKey, false)
+func WithoutBypass[C context.Context](ctx C) C {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithValue(bypassKey, false)
+	return context.Context(sdkCtx).(C)
 }
 
 // HasBypass checks the context to see if the marker bank send restriction should be skipped.
-func HasBypass(ctx sdk.Context) bool {
-	bypassValue := ctx.Value(bypassKey)
+func HasBypass[C context.Context](ctx C) bool {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	bypassValue := sdkCtx.Value(bypassKey)
 	if bypassValue == nil {
 		return false
 	}
@@ -28,18 +37,23 @@ func HasBypass(ctx sdk.Context) bool {
 }
 
 // WithTransferAgent returns a new context that contains the provided marker transfer agent.
-func WithTransferAgent(ctx sdk.Context, transferAgent sdk.AccAddress) sdk.Context {
-	return ctx.WithValue(transferAgentKey, transferAgent)
+func WithTransferAgent[C context.Context](ctx C, transferAgent sdk.AccAddress) C {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithValue(transferAgentKey, transferAgent)
+	return context.Context(sdkCtx).(C)
 }
 
 // WithoutTransferAgent returns a new context with a nil marker transfer agent.
-func WithoutTransferAgent(ctx sdk.Context) sdk.Context {
-	return ctx.WithValue(transferAgentKey, sdk.AccAddress(nil))
+func WithoutTransferAgent[C context.Context](ctx C) C {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithValue(transferAgentKey, sdk.AccAddress(nil))
+	return context.Context(sdkCtx).(C)
 }
 
 // GetTransferAgent gets the marker transfer agent from the provided context.
-func GetTransferAgent(ctx sdk.Context) sdk.AccAddress {
-	val := ctx.Value(transferAgentKey)
+func GetTransferAgent[C context.Context](ctx C) sdk.AccAddress {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	val := sdkCtx.Value(transferAgentKey)
 	if val == nil {
 		return nil
 	}

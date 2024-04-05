@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provenance-io/provenance/x/reward/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (s *KeeperTestSuite) TestStartRewardProgram() {
@@ -36,7 +37,7 @@ func (s *KeeperTestSuite) TestStartRewardProgram() {
 	s.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should be set to 1")
 	s.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
 
-	claimPeriodAmount := program.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(program.GetClaimPeriods())))
+	claimPeriodAmount := program.GetTotalRewardPool().Amount.QuoRaw(int64(program.GetClaimPeriods()))
 	claimPeriodPool := sdk.NewCoin(program.GetTotalRewardPool().Denom, claimPeriodAmount)
 	reward, err := s.app.RewardKeeper.GetClaimPeriodRewardDistribution(s.ctx, 1, 1)
 	s.Assert().NoError(err)
@@ -134,7 +135,7 @@ func (s *KeeperTestSuite) TestStartRewardProgramClaimPeriod() {
 	s.Assert().Equal(uint64(1), program.CurrentClaimPeriod, "current claim period should incremented")
 	s.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
 
-	claimPeriodAmount := program.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(program.GetClaimPeriods())))
+	claimPeriodAmount := program.GetTotalRewardPool().Amount.QuoRaw(int64(program.GetClaimPeriods()))
 	claimPeriodPool := sdk.NewCoin(program.GetTotalRewardPool().Denom, claimPeriodAmount)
 	reward, err := s.app.RewardKeeper.GetClaimPeriodRewardDistribution(s.ctx, 1, 1)
 	s.Assert().NoError(err)
@@ -171,7 +172,7 @@ func (s *KeeperTestSuite) TestStartRewardProgramClaimPeriodUpdatesExpectedEndTim
 	s.Assert().Equal(uint64(4), program.CurrentClaimPeriod, "current claim period should incremented")
 	s.Assert().Equal(blockTime.Add(time.Duration(program.ClaimPeriodSeconds)*time.Second), program.ClaimPeriodEndTime, "claim period end time should be set")
 
-	claimPeriodAmount := program.GetTotalRewardPool().Amount.Quo(sdk.NewInt(int64(program.GetClaimPeriods())))
+	claimPeriodAmount := program.GetTotalRewardPool().Amount.QuoRaw(int64(program.GetClaimPeriods()))
 	claimPeriodPool := sdk.NewCoin(program.GetTotalRewardPool().Denom, claimPeriodAmount)
 	reward, err := s.app.RewardKeeper.GetClaimPeriodRewardDistribution(s.ctx, 4, 1)
 	s.Assert().NoError(err)
@@ -956,8 +957,8 @@ func (s *KeeperTestSuite) TestUpdate() {
 
 	attr := func(key, value string) abci.EventAttribute {
 		return abci.EventAttribute{
-			Key:   []byte(key),
-			Value: []byte(value),
+			Key:   key,
+			Value: value,
 		}
 	}
 	newEvent := func(typeName string, attributes ...abci.EventAttribute) sdk.Event {
@@ -1003,7 +1004,7 @@ func EventsStrings(events sdk.Events) []string {
 			if attr.Index {
 				indexed = " (indexed)"
 			}
-			rv = append(rv, fmt.Sprintf("[%d]%s[%d]: %q = %q%s", i, event.Type, j, string(attr.Key), string(attr.Value), indexed))
+			rv = append(rv, fmt.Sprintf("[%d]%s[%d]: %q = %q%s", i, event.Type, j, attr.Key, attr.Value, indexed))
 		}
 	}
 	return rv

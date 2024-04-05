@@ -1,8 +1,6 @@
 package types
 
-import (
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
-)
+import icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 const (
 	// ModuleName defines the module name

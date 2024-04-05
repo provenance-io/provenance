@@ -4,16 +4,21 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/gogoproto/proto"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+
+	cerrs "cosmossdk.io/errors"
+
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
-	proto "github.com/gogo/protobuf/proto"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+
 	"github.com/provenance-io/provenance/x/oracle/keeper"
 	"github.com/provenance-io/provenance/x/oracle/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (s *KeeperTestSuite) TestSendQuery() {
@@ -57,8 +62,8 @@ func (s *KeeperTestSuite) TestSendQuery() {
 }
 
 func (s *KeeperTestSuite) TestOnAcknowledgementPacket() {
-	wasmError := sdkerrors.New("codespace", 2, "jackthecat ran away")
-	_, code, _ := sdkerrors.ABCIInfo(wasmError, false)
+	wasmError := cerrs.New("codespace", 2, "jackthecat ran away")
+	_, code, _ := cerrs.ABCIInfo(wasmError, false)
 
 	tests := []struct {
 		name   string

@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/core/appmodule"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -36,8 +37,10 @@ const StoreKey = types.StoreKey
 
 // type check to ensure the interface is properly implemented
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleBasic      = (*AppModule)(nil)
+	_ module.AppModuleSimulation = (*AppModule)(nil)
+
+	_ appmodule.AppModule = (*AppModule)(nil)
 )
 
 // AppModuleBasic contains non-dependent elements for the metadata module.
@@ -106,28 +109,19 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeepe
 	}
 }
 
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // Name returns the module name.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
-// Route returns the message routing key for the metadata module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
-}
-
 // RegisterInvariants does not register any invariants for the metadata module
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {
-}
-
-// QuerierRoute returns the query route for this module.
-func (am AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns no sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
 }
 
 // RegisterServices registers module services.
@@ -150,15 +144,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return cdc.MustMarshalJSON(gs)
 }
 
-// BeginBlock returns the begin blocker for the metadata module.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
-// EndBlock returns the end blocker for the metadata module. It returns no validator
-// updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 // ____________________________________________________________________________
 
 // GenerateGenesisState creates a randomized GenState of the metadata module.
@@ -173,12 +158,12 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized metadata param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{} // simulation.ParamChanges(r)
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for metadata module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
 	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

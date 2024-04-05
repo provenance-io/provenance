@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/provenance-io/provenance/internal"
 	"github.com/provenance-io/provenance/testutil/assertions"
@@ -27,7 +27,7 @@ func NewStoreLoaderMocker(errMsg string) *StoreLoaderMocker {
 	}
 }
 
-func (s *StoreLoaderMocker) StoreLoader(_ sdk.CommitMultiStore) error {
+func (s *StoreLoaderMocker) StoreLoader(_ storetypes.CommitMultiStore) error {
 	s.Called = true
 	if len(s.ErrMsg) > 0 {
 		return errors.New(s.ErrMsg)

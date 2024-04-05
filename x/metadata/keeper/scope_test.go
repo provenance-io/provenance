@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -88,7 +88,7 @@ func (s *ScopeKeeperTestSuite) SetupTest() {
 }
 
 func (s *ScopeKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
 }
 
 // AssertErrorValue asserts that:
@@ -501,7 +501,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			},
 		},
 		Denom:      "testcoin",
-		Supply:     sdk.NewInt(1000),
+		Supply:     sdkmath.NewInt(1000),
 		MarkerType: markertypes.MarkerType_Coin,
 		Status:     markertypes.StatusActive,
 	})
@@ -1059,7 +1059,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 			},
 		},
 		Denom:      markerDenom,
-		Supply:     sdk.NewInt(1000),
+		Supply:     sdkmath.NewInt(1000),
 		MarkerType: markertypes.MarkerType_Coin,
 		Status:     markertypes.StatusActive,
 	})
@@ -2463,7 +2463,7 @@ func (s *ScopeKeeperTestSuite) TestAddSetNetAssetValues() {
 				{
 					Price: sdk.Coin{
 						Denom:  "invalid",
-						Amount: sdk.NewInt(1000),
+						Amount: sdkmath.NewInt(1000),
 					},
 				},
 			},
@@ -2477,7 +2477,7 @@ func (s *ScopeKeeperTestSuite) TestAddSetNetAssetValues() {
 				{
 					Price: sdk.Coin{
 						Denom:  "usd",
-						Amount: sdk.NewInt(1000),
+						Amount: sdkmath.NewInt(1000),
 					},
 				},
 			},
@@ -2490,7 +2490,7 @@ func (s *ScopeKeeperTestSuite) TestAddSetNetAssetValues() {
 				{
 					Price: sdk.Coin{
 						Denom:  "jackthecat",
-						Amount: sdk.NewInt(1000),
+						Amount: sdkmath.NewInt(1000),
 					},
 				},
 			},
@@ -2526,7 +2526,7 @@ func (s *ScopeKeeperTestSuite) TestSetNetAssetValue() {
 			netAssetValue: types.NetAssetValue{
 				Price: sdk.Coin{
 					Denom:  "usd",
-					Amount: sdk.NewInt(1000),
+					Amount: sdkmath.NewInt(1000),
 				},
 			},
 			source: "test",
@@ -2537,7 +2537,7 @@ func (s *ScopeKeeperTestSuite) TestSetNetAssetValue() {
 			netAssetValue: types.NetAssetValue{
 				Price: sdk.Coin{
 					Denom:  "",
-					Amount: sdk.NewInt(1000),
+					Amount: sdkmath.NewInt(1000),
 				},
 			},
 			source: "source",
@@ -2586,7 +2586,7 @@ func (s *ScopeKeeperTestSuite) TestRemoveNetAssetValues() {
 			netAssetValue: types.NetAssetValue{
 				Price: sdk.Coin{
 					Denom:  "usd",
-					Amount: sdk.NewInt(1000),
+					Amount: sdkmath.NewInt(1000),
 				},
 			},
 			expErr: "",

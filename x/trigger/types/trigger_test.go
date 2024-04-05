@@ -6,12 +6,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 func TestNewTrigger(t *testing.T) {
@@ -55,37 +56,37 @@ func TestTransactionEventMatches(t *testing.T) {
 		{
 			name:        "valid - two exact events match",
 			event:       TransactionEvent{Name: "name", Attributes: []Attribute{{Name: "attr1", Value: "value1"}, {Name: "attr2", Value: "value2"}}},
-			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: []byte("attr1"), Value: []byte("value1")}, {Key: []byte("attr2"), Value: []byte("value2")}}},
+			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: "attr1", Value: "value1"}, {Key: "attr2", Value: "value2"}}},
 			shouldMatch: true,
 		},
 		{
 			name:        "valid - only specified attributes need to match match",
 			event:       TransactionEvent{Name: "name", Attributes: []Attribute{{Name: "attr1", Value: "value1"}}},
-			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: []byte("attr1"), Value: []byte("value1")}, {Key: []byte("attr2"), Value: []byte("value2")}}},
+			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: "attr1", Value: "value1"}, {Key: "attr2", Value: "value2"}}},
 			shouldMatch: true,
 		},
 		{
 			name:        "valid - no attributes",
 			event:       TransactionEvent{Name: "name", Attributes: []Attribute{}},
-			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: []byte("attr1"), Value: []byte("value1")}, {Key: []byte("attr2"), Value: []byte("value2")}}},
+			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: "attr1", Value: "value1"}, {Key: "attr2", Value: "value2"}}},
 			shouldMatch: true,
 		},
 		{
 			name:        "invalid - event name doesn't match",
 			event:       TransactionEvent{Name: "invalid", Attributes: []Attribute{{Name: "attr1", Value: "value1"}, {Name: "attr2", Value: "value2"}}},
-			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: []byte("attr1"), Value: []byte("value1")}, {Key: []byte("attr2"), Value: []byte("value2")}}},
+			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: "attr1", Value: "value1"}, {Key: "attr2", Value: "value2"}}},
 			shouldMatch: false,
 		},
 		{
 			name:        "invalid - missing attribute",
 			event:       TransactionEvent{Name: "name", Attributes: []Attribute{{Name: "attr1", Value: "value1"}, {Name: "attr2", Value: "value2"}}},
-			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: []byte("attr1"), Value: []byte("value1")}, {Key: []byte("attr3"), Value: []byte("value3")}}},
+			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: "attr1", Value: "value1"}, {Key: "attr3", Value: "value3"}}},
 			shouldMatch: false,
 		},
 		{
 			name:        "invalid - attribute value doesn't match",
 			event:       TransactionEvent{Name: "name", Attributes: []Attribute{{Name: "attr1", Value: "value1"}, {Name: "attr2", Value: "value2"}}},
-			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: []byte("attr1"), Value: []byte("value3")}, {Key: []byte("attr2"), Value: []byte("value2")}}},
+			event2:      abci.Event{Type: "name", Attributes: []abci.EventAttribute{{Key: "attr1", Value: "value3"}, {Key: "attr2", Value: "value2"}}},
 			shouldMatch: false,
 		},
 	}
@@ -107,25 +108,25 @@ func TestAttributeMatches(t *testing.T) {
 		{
 			name:        "valid - two exact attributes are equal",
 			attr1:       Attribute{Name: "attr", Value: "value"},
-			attr2:       abci.EventAttribute{Key: []byte("attr"), Value: []byte("value")},
+			attr2:       abci.EventAttribute{Key: "attr", Value: "value"},
 			shouldMatch: true,
 		},
 		{
 			name:        "valid - attribute matches wildcard",
 			attr1:       Attribute{Name: "attr", Value: ""},
-			attr2:       abci.EventAttribute{Key: []byte("attr"), Value: []byte("value")},
+			attr2:       abci.EventAttribute{Key: "attr", Value: "value"},
 			shouldMatch: true,
 		},
 		{
 			name:        "invalid - names don't match",
 			attr1:       Attribute{Name: "attr", Value: "value"},
-			attr2:       abci.EventAttribute{Key: []byte("blah"), Value: []byte("value")},
+			attr2:       abci.EventAttribute{Key: "blah", Value: "value"},
 			shouldMatch: false,
 		},
 		{
 			name:        "invalid - values don't match",
 			attr1:       Attribute{Name: "attr", Value: "value"},
-			attr2:       abci.EventAttribute{Key: []byte("attr"), Value: []byte("blah")},
+			attr2:       abci.EventAttribute{Key: "attr", Value: "blah"},
 			shouldMatch: false,
 		},
 	}
@@ -192,7 +193,7 @@ func TestTransactionEventValidate(t *testing.T) {
 }
 
 func TestTransactionEventValidateContext(t *testing.T) {
-	ctx := sdk.NewContext(nil, tmproto.Header{Time: time.Now().UTC()}, false, nil)
+	ctx := sdk.NewContext(nil, cmtproto.Header{Time: time.Now().UTC()}, false, nil)
 	ctx = ctx.WithBlockHeight(100)
 
 	tests := []struct {
@@ -220,7 +221,7 @@ func TestTransactionEventValidateContext(t *testing.T) {
 }
 
 func TestBlockHeightEventValidateContext(t *testing.T) {
-	ctx := sdk.NewContext(nil, tmproto.Header{Time: time.Now().UTC()}, false, nil)
+	ctx := sdk.NewContext(nil, cmtproto.Header{Time: time.Now().UTC()}, false, nil)
 	ctx = ctx.WithBlockHeight(100)
 
 	tests := []struct {
@@ -259,7 +260,7 @@ func TestBlockHeightEventValidateContext(t *testing.T) {
 
 func TestBlockTimeEventValidateContext(t *testing.T) {
 	now := time.Now().UTC()
-	ctx := sdk.NewContext(nil, tmproto.Header{Time: now}, false, nil)
+	ctx := sdk.NewContext(nil, cmtproto.Header{Time: now}, false, nil)
 	ctx = ctx.WithBlockHeight(100)
 
 	tests := []struct {

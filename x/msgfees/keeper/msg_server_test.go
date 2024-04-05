@@ -4,14 +4,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/msgfees/keeper"
@@ -29,17 +28,17 @@ type MsgServerTestSuite struct {
 	pubkey1    cryptotypes.PubKey
 	owner1     string
 	owner1Addr sdk.AccAddress
-	acct1      authtypes.AccountI
+	acct1      sdk.AccountI
 
 	addresses []sdk.AccAddress
 }
 
 func (s *MsgServerTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(true, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(true)
 	s.ctx = s.ctx.WithBlockHeight(1).WithBlockTime(time.Now())
 	s.msgServer = keeper.NewMsgServerImpl(s.app.MsgFeesKeeper)
-	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())
+	s.app.AccountKeeper.Params.Set(s.ctx, authtypes.DefaultParams())
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
 
 	s.privkey1 = secp256k1.GenPrivKey()

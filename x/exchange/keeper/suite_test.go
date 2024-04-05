@@ -7,13 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
@@ -66,10 +67,10 @@ func (s *TestSuite) SetupTest() {
 
 	s.app = app.Setup(s.T())
 	s.logBuffer.Reset()
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.k = s.app.ExchangeKeeper
 
-	addrs := app.AddTestAddrsIncremental(s.app, s.ctx, 5, sdk.NewInt(1_000_000_000))
+	addrs := app.AddTestAddrsIncremental(s.app, s.ctx, 5, sdkmath.NewInt(1_000_000_000))
 	s.addr1 = addrs[0]
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]
@@ -91,7 +92,7 @@ func (s *TestSuite) SetupTest() {
 	s.adminAddr = sdk.AccAddress("adminAddr___________")
 	s.addAddrLookup(s.adminAddr, "adminAddr")
 
-	longAddrs := app.AddTestAddrsIncrementalLong(s.app, s.ctx, 3, sdk.NewInt(1_000_000_000))
+	longAddrs := app.AddTestAddrsIncrementalLong(s.app, s.ctx, 3, sdkmath.NewInt(1_000_000_000))
 	s.longAddr1 = longAddrs[0]
 	s.longAddr2 = longAddrs[1]
 	s.longAddr3 = longAddrs[2]
@@ -714,7 +715,7 @@ func (s *TestSuite) getAddrStrName(addrStr string) string {
 }
 
 // getStore gets the exchange store.
-func (s *TestSuite) getStore() sdk.KVStore {
+func (s *TestSuite) getStore() storetypes.KVStore {
 	return s.k.GetStore(s.ctx)
 }
 
@@ -741,14 +742,14 @@ func (s *TestSuite) dumpExchangeState() []string {
 }
 
 // requireSetOrderInStore calls SetOrderInStore making sure it doesn't panic or return an error.
-func (s *TestSuite) requireSetOrderInStore(store sdk.KVStore, order *exchange.Order) {
+func (s *TestSuite) requireSetOrderInStore(store storetypes.KVStore, order *exchange.Order) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
 		return s.k.SetOrderInStore(store, *order)
 	}, "SetOrderInStore(%d)", order.OrderId)
 }
 
 // requireSetOrdersInStore calls requireSetOrderInStore for each provided order and returns all the provided orders.
-func (s *TestSuite) requireSetOrdersInStore(store sdk.KVStore, orders ...*exchange.Order) []*exchange.Order {
+func (s *TestSuite) requireSetOrdersInStore(store storetypes.KVStore, orders ...*exchange.Order) []*exchange.Order {
 	for _, order := range orders {
 		s.requireSetOrderInStore(store, order)
 	}

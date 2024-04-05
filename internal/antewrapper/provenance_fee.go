@@ -1,7 +1,10 @@
 package antewrapper
 
 import (
+	"bytes"
+
 	cerrs "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -155,7 +158,7 @@ func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper msgfeestypes.Feegr
 
 	// if feegranter set deduct base fee from feegranter account.
 	// this works with only when feegrant enabled.
-	if feeGranter != nil && !feeGranter.Equals(feePayer) {
+	if feeGranter != nil && !bytes.Equal(feeGranter, feePayer) {
 		if feegrantKeeper == nil {
 			return nil, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		}
@@ -183,7 +186,7 @@ func CalculateBaseFee(ctx sdk.Context, feeTx sdk.FeeTx, msgfeekeeper msgfeestype
 	}
 	gasWanted := feeTx.GetGas()
 	floorPrice := msgfeekeeper.GetFloorGasPrice(ctx)
-	amount := floorPrice.Amount.Mul(sdk.NewIntFromUint64(gasWanted))
+	amount := floorPrice.Amount.Mul(sdkmath.NewIntFromUint64(gasWanted))
 	baseFeeToDeduct := sdk.NewCoins(sdk.NewCoin(floorPrice.Denom, amount))
 	ctx.Logger().Debug("CalculateBaseFee",
 		"gasWanted", gasWanted,

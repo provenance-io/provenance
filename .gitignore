@@ -8,7 +8,6 @@ data/
 .idea/
 *.swp
 utils/
-!cmd/dbmigrate/utils
 .blockade
 blockade.yaml
 *.sock
@@ -22,7 +21,7 @@ vendor/
 # VS Code
 .history/
 .vscode/
-__debug_bin
+__debug_bin*
 
 # Eclipse
 .project

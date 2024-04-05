@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -20,7 +20,7 @@ const (
 	RouterKey = ModuleName
 
 	// QuerierRoute to be used for queries
-	QuerierRoute = ModuleName
+	QuerierRoute = ModuleName // TODO[1760]: marker: Delete this variable.
 
 	// CoinPoolName to be used for coin pool associated with mint/burn activities.
 	CoinPoolName = ModuleName

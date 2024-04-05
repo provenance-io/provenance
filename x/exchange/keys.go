@@ -3,7 +3,7 @@ package exchange
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

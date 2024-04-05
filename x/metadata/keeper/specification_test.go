@@ -5,20 +5,18 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-
-	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
-	"github.com/provenance-io/provenance/x/metadata/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
+	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type SpecKeeperTestSuite struct {
@@ -74,7 +72,7 @@ func (s *SpecKeeperTestSuite) SetupTest() {
 }
 
 func (s *SpecKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{}))
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
 }
 
 func containsMetadataAddress(arr []types.MetadataAddress, newVal types.MetadataAddress) bool {

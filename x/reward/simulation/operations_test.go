@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -27,7 +25,7 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 func (s *SimTestSuite) TestWeightedOperations() {
@@ -43,16 +41,13 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	r := rand.New(source)
 	accs := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
-
 	expected := []struct {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightSubmitCreateRewards, sdk.MsgTypeURL(&types.MsgCreateRewardProgramRequest{}), sdk.MsgTypeURL(&types.MsgCreateRewardProgramRequest{})},
-		{simappparams.DefaultWeightSubmitEndRewards, sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{}), sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{})},
+		{weight: simappparams.DefaultWeightSubmitCreateRewards, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgCreateRewardProgramRequest{})},
+		{weight: simappparams.DefaultWeightSubmitEndRewards, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgEndRewardProgramRequest{})},
 	}
 
 	for i, w := range weightedOps {
@@ -73,20 +68,17 @@ func (s *SimTestSuite) TestSimulateMsgAddRewards() {
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
-
 	// execute operation
 	op := simulation.SimulateMsgCreateRewardsProgram(s.app.RewardKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err)
 
 	var msg types.MsgCreateRewardProgramRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg)
 
 	s.Require().True(operationMsg.OK, operationMsg.String())
 	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
-	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route)
+	s.Require().Equal(types.RouterKey, operationMsg.Route)
 	s.Require().Len(futureOperations, 0)
 }
 
@@ -104,7 +96,7 @@ func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Accoun
 	for _, account := range accounts {
 		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
 		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		err := testutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins)
+		err := testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins)
 		s.Require().NoError(err)
 	}
 

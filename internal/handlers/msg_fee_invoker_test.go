@@ -5,23 +5,19 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/feegrant"
+
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
-	sdkgas "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -44,11 +40,11 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	s.Require().NoError(err, "txEncoder")
 
 	s.ctx = s.ctx.WithTxBytes(bz)
-	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.NewTestLogger(s.T()), storetypes.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000))), msgType, "")
-		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
+		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000)), msgType, "")
+		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewInt64Coin("atom", 100_000)})
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
@@ -65,17 +61,17 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(900000)))), "fund account")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 900_000))), "fund account")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().ErrorContains(err, "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "feeChargeFn 2")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 2")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(100000)))), "fund account again")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 100_000))), "fund account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().NoError(err, "feeChargeFn 3")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(NHash, sdk.NewInt(1000000))}), "coins all gt 1000000nhash")
+	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewInt64Coin(NHash, 1_000_000)}), "coins all gt 1000000nhash")
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
@@ -89,13 +85,14 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 		panic(err)
 	}
 	s.ctx = s.ctx.WithTxBytes(bz)
-	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.NewTestLogger(s.T()), storetypes.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000))), msgType, "")
-		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))}) // fee consumed at ante handler
+		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000)), msgType, "")
+		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewInt64Coin("atom", 100_000)}) // fee consumed at ante handler
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
+
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  s.app.AccountKeeper,
 		BankKeeper:     s.app.BankKeeper,
@@ -105,19 +102,20 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	})
 	s.Require().NoError(err, "NewAdditionalMsgFeeHandler")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000)))), "funding account")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
 	coins, _, err := feeChargeFn(s.ctx, false)
 	s.Require().ErrorContains(err, "spendable balance 0atom is smaller than 20000atom: insufficient funds", "feeChargeFn 1")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(NHash, 1000000))), "funding account again")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(NHash, 1000000))), "funding account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().Nil(err, "Got error when should have successfully paid all msg fees and swept remaining base fees")
-	s.Require().True(coins.IsEqual(sdk.Coins{sdk.NewInt64Coin(NHash, 1000000), sdk.NewInt64Coin("atom", 20000)}))
+	s.Require().True(coins.Equal(sdk.Coins{sdk.NewInt64Coin(NHash, 1000000), sdk.NewInt64Coin("atom", 20000)}))
 	s.Require().NoError(err, "feeChargeFn 2")
 	expected := sdk.Coins{sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(NHash, 1000000)}
 	s.Require().Equal(expected, coins, "final coins")
+
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
@@ -131,13 +129,14 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 		panic(err)
 	}
 	s.ctx = s.ctx.WithTxBytes(bz)
-	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.NewTestLogger(s.T()), storetypes.NewGasMeter(100000), false).(*antewrapper.FeeGasMeter)
 	s.Require().NotPanics(func() {
 		msgType := sdk.MsgTypeURL(&testdata.TestMsg{})
-		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000))), msgType, "")
-		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(100000))})
+		feeGasMeter.ConsumeFee(sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000)), msgType, "")
+		feeGasMeter.ConsumeBaseFee(sdk.Coins{sdk.NewInt64Coin("atom", 100_000)})
 	}, "panicked on adding fees")
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
+
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  s.app.AccountKeeper,
 		BankKeeper:     s.app.BankKeeper,
@@ -149,7 +148,8 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedFeeGranter() {
 	coins, _, err := feeChargeFn(s.ctx, false)
 	s.Require().Nil(err, "Got error when should not have.")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
-	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewCoin(NHash, sdk.NewInt(1000000))}))
+	s.Require().True(coins.IsAllGTE(sdk.Coins{sdk.NewInt64Coin(NHash, 1000000)}))
+
 }
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
@@ -163,20 +163,22 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 		panic(err)
 	}
 	s.ctx = s.ctx.WithTxBytes(bz)
-	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.TestingLogger(), sdkgas.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
+	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.NewTestLogger(s.T()), storetypes.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
+
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  s.app.AccountKeeper,
 		BankKeeper:     s.app.BankKeeper,
 		FeegrantKeeper: s.app.FeeGrantKeeper,
 		MsgFeesKeeper:  s.app.MsgFeesKeeper,
-		Decoder:        sdksim.MakeTestEncodingConfig().TxConfig.TxDecoder(),
+		Decoder:        moduletestutil.MakeTestEncodingConfig().TxConfig.TxDecoder(),
 	})
 	s.Require().NoError(err)
 	s.Require().Panics(func() { feeChargeFn(s.ctx, false) }, "Bad decoder while setting up app.")
+
 }
 
-func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (params.EncodingConfig, error) {
+func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (moduletestutil.TestEncodingConfig, error) {
 	pioconfig.SetProvenanceConfig("", 0)
 	encodingConfig := s.SetupTest(s.T()) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -192,13 +194,13 @@ func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeC
 // returns context and app with params set on account keeper
 func createTestApp(t *testing.T) (*simapp.App, sdk.Context) {
 	app := simapp.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	ctx := app.BaseApp.NewContext(false)
+	app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams())
 
 	return app, ctx
 }
 
-func createTestTx(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
+func createTestTx(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, sdk.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
@@ -218,7 +220,7 @@ func createTestTx(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsig
 	return testTx, acct1
 }
 
-func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, types.AccountI) {
+func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, sdk.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
@@ -244,7 +246,7 @@ func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coin
 	})
 	s.txBuilder.SetFeeGranter(acct2.GetAddress())
 
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, acct2.GetAddress(), sdk.NewCoins(sdk.NewCoin(NHash, sdk.NewInt(1000000)))), "funding account")
+	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct2.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
 
 	testTx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err, "CreateTestTx")
@@ -252,12 +254,12 @@ func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coin
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func (s *HandlerTestSuite) SetupTest(t *testing.T) params.EncodingConfig {
+func (s *HandlerTestSuite) SetupTest(t *testing.T) moduletestutil.TestEncodingConfig {
 	s.app, s.ctx = createTestApp(t)
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := sdksim.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
@@ -287,7 +289,7 @@ func (s *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []u
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				// SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), // TODO[1760]: signing: same type name diff packages.
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -302,21 +304,24 @@ func (s *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []u
 
 	// Second round: all signer infos are set, so each signer can sign.
 	sigsV2 = []signing.SignatureV2{}
-	for i, priv := range privs {
-		signerData := xauthsigning.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNums[i],
-			Sequence:      accSeqs[i],
-		}
-		sigV2, err := tx.SignWithPrivKey(
-			s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
-			s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
-		if err != nil {
-			return nil, err
-		}
+	// TODO[1760]: signing: SignWithPrivKey: Uncomment these lines.
+	/*
+		for i, priv := range privs {
+			signerData := xauthsigning.SignerData{
+				ChainID:       chainID,
+				AccountNumber: accNums[i],
+				Sequence:      accSeqs[i],
+			}
+			sigV2, err := tx.SignWithPrivKey(
+				s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+				s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
+			if err != nil {
+				return nil, err
+			}
 
-		sigsV2 = append(sigsV2, sigV2)
-	}
+			sigsV2 = append(sigsV2, sigV2)
+		}
+	*/
 	err = s.txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, err

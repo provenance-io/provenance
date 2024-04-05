@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -50,7 +51,7 @@ func (w *WrappedBankKeeper) WithExtraBlockedAddrs(addrs ...sdk.AccAddress) *Wrap
 }
 
 // SendCoins either returns a pre-defined error, or, if there isn't one, calls SendCoins on the parent.
-func (w *WrappedBankKeeper) SendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (w *WrappedBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	if len(w.SendCoinsErrs) > 0 {
 		rv := w.SendCoinsErrs[0]
 		w.SendCoinsErrs = w.SendCoinsErrs[1:]
@@ -150,21 +151,21 @@ func (m *MockAuthzKeeper) WithAuthzHandlerUpdateError(err string) *MockAuthzKeep
 	return m
 }
 
-func (m *MockAuthzKeeper) GetAuthorization(_ sdk.Context, _ sdk.AccAddress, _ sdk.AccAddress, _ string) (authz.Authorization, *time.Time) {
+func (m *MockAuthzKeeper) GetAuthorization(_ context.Context, _ sdk.AccAddress, _ sdk.AccAddress, _ string) (authz.Authorization, *time.Time) {
 	if m.GetAuthorizationResult != nil {
 		return m.GetAuthorizationResult.Authorization, m.GetAuthorizationResult.Expiration
 	}
 	return nil, nil
 }
 
-func (m *MockAuthzKeeper) DeleteGrant(_ sdk.Context, _ sdk.AccAddress, _ sdk.AccAddress, _ string) error {
+func (m *MockAuthzKeeper) DeleteGrant(_ context.Context, _ sdk.AccAddress, _ sdk.AccAddress, _ string) error {
 	if len(m.DeleteGrantResult) > 0 {
 		return errors.New(m.DeleteGrantResult)
 	}
 	return nil
 }
 
-func (m *MockAuthzKeeper) SaveGrant(_ sdk.Context, _, _ sdk.AccAddress, _ authz.Authorization, _ *time.Time) error {
+func (m *MockAuthzKeeper) SaveGrant(_ context.Context, _, _ sdk.AccAddress, _ authz.Authorization, _ *time.Time) error {
 	if len(m.SaveGrantResult) > 0 {
 		return errors.New(m.SaveGrantResult)
 	}
@@ -211,7 +212,7 @@ func (a *mockAuthorization) WithError(err string) *mockAuthorization {
 }
 
 // Accept just returns everything it was defined to return.
-func (a *mockAuthorization) Accept(_ sdk.Context, _ sdk.Msg) (authz.AcceptResponse, error) {
+func (a *mockAuthorization) Accept(_ context.Context, _ sdk.Msg) (authz.AcceptResponse, error) {
 	resp := authz.AcceptResponse{
 		Accept: a.RespAccept,
 		Delete: a.RespDelete,

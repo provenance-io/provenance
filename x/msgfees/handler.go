@@ -10,6 +10,8 @@ import (
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
+// TODO[1760]: marker: Migrate the legacy gov proposals.
+
 func NewProposalHandler(k keeper.Keeper, registry cdctypes.InterfaceRegistry) govtypesv1beta1.Handler {
 	return func(ctx sdk.Context, content govtypesv1beta1.Content) error {
 		switch c := content.(type) {

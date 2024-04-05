@@ -7,13 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/feegrant"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 )
 
 func TestMsgGrantAllowance(t *testing.T) {
@@ -176,7 +177,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail on attributes for non restricted coin",
 			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -193,7 +194,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			name: "should succeed on attributes for restricted coin",
 			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_RestrictedCoin,
@@ -210,7 +211,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			name: "should succeed on for restricted coin",
 			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_RestrictedCoin,
@@ -227,7 +228,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			name: "should succeed on for non-restricted coin",
 			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -244,7 +245,7 @@ func TestMsgAddMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail duplicate entries for req attrs",
 			msg: *NewMsgAddMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_RestrictedCoin,
@@ -286,7 +287,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail on invalid marker",
 			msg: MsgAddFinalizeActivateMarkerRequest{
 				Amount: sdk.Coin{
-					Amount: math.NewInt(100),
+					Amount: sdkmath.NewInt(100),
 					Denom:  "",
 				},
 				Manager:                "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
@@ -315,7 +316,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail on empty access list",
 			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -333,7 +334,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail on attributes for non restricted coin",
 			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -351,7 +352,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should succeed",
 			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -369,7 +370,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should succeed for restricted coin with required attributes",
 			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"hotdog",
-				sdk.NewInt(100),
+				sdkmath.NewInt(100),
 				validAddress,
 				validAddress,
 				MarkerType_RestrictedCoin,
@@ -387,7 +388,7 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 			name: "should fail when forced tranfers allowed with coin type",
 			msg: *NewMsgAddFinalizeActivateMarkerRequest(
 				"banana",
-				sdk.NewInt(500),
+				sdkmath.NewInt(500),
 				validAddress,
 				validAddress,
 				MarkerType_Coin,
@@ -423,7 +424,7 @@ func TestMsgSupplyIncreaseProposalRequestGetSigners(t *testing.T) {
 	targetAddress := sdk.AccAddress("input22222222222")
 	amount :=
 		sdk.Coin{
-			Amount: math.NewInt(100),
+			Amount: sdkmath.NewInt(100),
 			Denom:  "chocolate",
 		}
 
@@ -448,7 +449,7 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 		{
 			name: "negative coin amount",
 			amount: sdk.Coin{
-				Amount: math.NewInt(-1),
+				Amount: sdkmath.NewInt(-1),
 				Denom:  "invalid-denom",
 			},
 			targetAddress: targetAddress,
@@ -459,7 +460,7 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 		{
 			name: "invalid target address",
 			amount: sdk.Coin{
-				Amount: math.NewInt(100),
+				Amount: sdkmath.NewInt(100),
 				Denom:  "bbq-hotdog",
 			},
 			targetAddress: "",
@@ -470,7 +471,7 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 		{
 			name: "invalid authority",
 			amount: sdk.Coin{
-				Amount: math.NewInt(100),
+				Amount: sdkmath.NewInt(100),
 				Denom:  "bbq-hotdog",
 			},
 			targetAddress: targetAddress,

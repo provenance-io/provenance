@@ -12,14 +12,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -68,7 +70,7 @@ func (s *AuthzTestSuite) SetupTest() {
 }
 
 func (s *AuthzTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()}))
+	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()}))
 }
 
 // AssertErrorValue asserts that:
@@ -754,32 +756,36 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorization
 		}.Real(),
 	}
 
-	msg := &types.MsgDeleteScopeRequest{Signers: []string{accStr(signer)}}
-	msgTypeURL := types.TypeURLMsgDeleteScopeRequest
+	// TODO[1760]: count-authz: Uncomment the rest of this test once we have that back in the SDK.
+	_, _, _, _ = reqParties, availableParties, reqRoles, expDetails
+	/*
+		msg := &types.MsgDeleteScopeRequest{Signers: []string{accStr(signer)}}
+		msgTypeURL := types.TypeURLMsgDeleteScopeRequest
 
-	ctx := s.FreshCtx()
+		ctx := s.FreshCtx()
 
-	// first grant: signer can sign for party1 one time.
-	auth1 := authz.NewCountAuthorization(msgTypeURL, 1)
-	err := s.app.AuthzKeeper.SaveGrant(ctx, acc(signer), acc(party1), auth1, nil)
-	s.Require().NoError(err, "SaveGrant signer can sign for party1: 1 use")
+		// first grant: signer can sign for party1 one time.
+		auth1 := authz.NewCountAuthorization(msgTypeURL, 1)
+		err := s.app.AuthzKeeper.SaveGrant(ctx, acc(signer), acc(party1), auth1, nil)
+		s.Require().NoError(err, "SaveGrant signer can sign for party1: 1 use")
 
-	// second grant: signer can sign for party2 two times.
-	auth2 := authz.NewCountAuthorization(msgTypeURL, 2)
-	err = s.app.AuthzKeeper.SaveGrant(ctx, acc(signer), acc(party2), auth2, nil)
-	s.Require().NoError(err, "SaveGrant signer can sign for party2: 2 uses")
+		// second grant: signer can sign for party2 two times.
+		auth2 := authz.NewCountAuthorization(msgTypeURL, 2)
+		err = s.app.AuthzKeeper.SaveGrant(ctx, acc(signer), acc(party2), auth2, nil)
+		s.Require().NoError(err, "SaveGrant signer can sign for party2: 2 uses")
 
-	details, err := s.app.MetadataKeeper.ValidateAllRequiredPartiesSigned(ctx, reqParties, availableParties, reqRoles, msg)
-	s.Require().NoError(err, "ValidateSignersWithParties error")
-	s.Assert().Equal(expDetails, details, "ValidateSignersWithParties party details")
+		details, err := s.app.MetadataKeeper.ValidateAllRequiredPartiesSigned(ctx, reqParties, availableParties, reqRoles, msg)
+		s.Require().NoError(err, "ValidateSignersWithParties error")
+		s.Assert().Equal(expDetails, details, "ValidateSignersWithParties party details")
 
-	auth1Final, _ := s.app.AuthzKeeper.GetAuthorization(ctx, acc(signer), acc(party1), msgTypeURL)
-	s.Assert().Nil(auth1Final, "GetAuthorization after only allowed use")
+		auth1Final, _ := s.app.AuthzKeeper.GetAuthorization(ctx, acc(signer), acc(party1), msgTypeURL)
+		s.Assert().Nil(auth1Final, "GetAuthorization after only allowed use")
 
-	auth2Final, _ := s.app.AuthzKeeper.GetAuthorization(ctx, acc(signer), acc(party2), msgTypeURL)
-	s.Assert().NotNil(auth2Final, "GetAuthorization after first of two uses")
-	actual := auth2Final.(*authz.CountAuthorization).AllowedAuthorizations
-	s.Assert().Equal(1, int(actual), "number of uses left after first of two uses")
+		auth2Final, _ := s.app.AuthzKeeper.GetAuthorization(ctx, acc(signer), acc(party2), msgTypeURL)
+		s.Assert().NotNil(auth2Final, "GetAuthorization after first of two uses")
+		actual := auth2Final.(*authz.CountAuthorization).AllowedAuthorizations
+		s.Assert().Equal(1, int(actual), "number of uses left after first of two uses")
+	*/
 }
 
 func TestAssociateSigners(t *testing.T) {
@@ -4657,7 +4663,7 @@ func (s *AuthzTestSuite) TestIsWasmAccount() {
 			AccessControl:          nil,
 			Status:                 markertypes.StatusActive,
 			Denom:                  denom,
-			Supply:                 sdk.OneInt(),
+			Supply:                 sdkmath.OneInt(),
 			MarkerType:             markertypes.MarkerType_Coin,
 			SupplyFixed:            false,
 			AllowGovernanceControl: false,
@@ -4758,7 +4764,7 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 			MsgType: normalMsgType,
 		}
 	}
-	smartAcc := func(addr string) authtypes.AccountI {
+	smartAcc := func(addr string) sdk.AccountI {
 		return authtypes.NewBaseAccount(acc(addr), nil, 0, 0)
 	}
 	smartAccCall := func(addr string) *GetAccountCall {
@@ -4767,7 +4773,7 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 			Result: smartAcc(addr),
 		}
 	}
-	userAcc := func(addr string) authtypes.AccountI {
+	userAcc := func(addr string) sdk.AccountI {
 		return authtypes.NewBaseAccount(acc(addr), nil, 0, 1)
 	}
 	userAccCall := func(addr string) *GetAccountCall {
@@ -5113,7 +5119,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 		},
 		Status:     markertypes.StatusActive,
 		Denom:      "onecoin",
-		Supply:     sdk.OneInt(),
+		Supply:     sdkmath.OneInt(),
 		MarkerType: markertypes.MarkerType_RestrictedCoin,
 	}
 	marker1AddrAcc, marker1AddrErr := markertypes.MarkerAddress(marker1.Denom)
@@ -5127,7 +5133,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerUpdate() {
 		AccessControl: marker1.AccessControl,
 		Status:        markertypes.StatusActive,
 		Denom:         "twocoin",
-		Supply:        sdk.OneInt(),
+		Supply:        sdkmath.OneInt(),
 		MarkerType:    markertypes.MarkerType_RestrictedCoin,
 	}
 	marker2AddrAcc, marker2AddrErr := markertypes.MarkerAddress(marker2.Denom)
@@ -5691,7 +5697,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerChangeFromExisting() {
 		BaseAccount: authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
 		Status:      markertypes.StatusActive,
 		Denom:       markerDenom,
-		Supply:      sdk.NewInt(1000),
+		Supply:      sdkmath.NewInt(1000),
 		MarkerType:  markertypes.MarkerType_RestrictedCoin,
 		AccessControl: []markertypes.AccessGrant{
 			{
@@ -5899,7 +5905,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnerChangeToProposed() {
 		BaseAccount: authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
 		Status:      markertypes.StatusActive,
 		Denom:       markerDenom,
-		Supply:      sdk.NewInt(1000),
+		Supply:      sdkmath.NewInt(1000),
 		MarkerType:  markertypes.MarkerType_RestrictedCoin,
 		AccessControl: []markertypes.AccessGrant{
 			{
@@ -6351,9 +6357,12 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned_CountAuthorizations() {
 			ctx := s.FreshCtx()
 			msgTypeURL := sdk.MsgTypeURL(tc.msg)
 			if tc.grantee != nil && tc.granter != nil {
-				a := authz.NewCountAuthorization(msgTypeURL, tc.count)
-				err := s.app.AuthzKeeper.SaveGrant(ctx, tc.grantee, tc.granter, a, nil)
-				s.Require().NoError(err, "SaveGrant")
+				// TODO[1760]: count-authz: Uncomment the rest of this test once we have that back in the SDK.
+				/*
+					a := authz.NewCountAuthorization(msgTypeURL, tc.count)
+					err := s.app.AuthzKeeper.SaveGrant(ctx, tc.grantee, tc.granter, a, nil)
+					s.Require().NoError(err, "SaveGrant")
+				*/
 			}
 
 			_, err := s.app.MetadataKeeper.ValidateAllRequiredSigned(ctx, tc.owners, tc.msg)
@@ -6366,53 +6375,59 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned_CountAuthorizations() {
 					// authorization is deleted after one use
 					s.Assert().Nil(auth, "GetAuthorization after only allowed use")
 				} else {
-					actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
-					s.Assert().Equal(tc.count-1, actual, "uses left on authorization")
+					// TODO[1760]: count-authz: Uncomment the rest of this test once we have that back in the SDK.
+					/*
+						actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
+						s.Assert().Equal(tc.count-1, actual, "uses left on authorization")
+					*/
 				}
 			}
 		})
 	}
 
 	s.Run("ensure authorizations are updated", func() {
-		ctx := s.FreshCtx()
-		// Two owners (1 & 2), and one signer (3),
-		// Two authz count authorization
-		//	- count grants:
-		//		granter: 1, grantee: 3, count: 1
-		//		granter: 2, grantee: 3, count: 2
-		// Require signatures from 1 and 2, but sign with 3.
-		// Ensure both authorizations are applied and updated.
+		// TODO[1760]: count-authz: Uncomment the rest of this test once we have that back in the SDK.
+		/*
+			ctx := s.FreshCtx()
+			// Two owners (1 & 2), and one signer (3),
+			// Two authz count authorization
+			//	- count grants:
+			//		granter: 1, grantee: 3, count: 1
+			//		granter: 2, grantee: 3, count: 2
+			// Require signatures from 1 and 2, but sign with 3.
+			// Ensure both authorizations are applied and updated.
 
-		msg := &types.MsgDeleteScopeRequest{}
-		msgTypeUrl := sdk.MsgTypeURL(msg)
+			msg := &types.MsgDeleteScopeRequest{}
+			msgTypeUrl := sdk.MsgTypeURL(msg)
 
-		// first grant: 3 can sign for 1 one time.
-		a := authz.NewCountAuthorization(msgTypeUrl, 1)
-		err := s.app.AuthzKeeper.SaveGrant(ctx, s.user3Addr, s.user1Addr, a, nil)
-		s.Assert().NoError(err, "SaveGrant 1 -> 3, 1 use")
+			// first grant: 3 can sign for 1 one time.
+			a := authz.NewCountAuthorization(msgTypeUrl, 1)
+			err := s.app.AuthzKeeper.SaveGrant(ctx, s.user3Addr, s.user1Addr, a, nil)
+			s.Assert().NoError(err, "SaveGrant 1 -> 3, 1 use")
 
-		// second grant: 3 can sign for 2 two times.
-		a = authz.NewCountAuthorization(msgTypeUrl, 2)
-		err = s.app.AuthzKeeper.SaveGrant(ctx, s.user3Addr, s.user2Addr, a, nil)
-		s.Assert().NoError(err, "SaveGrant 2 -> 3, 2 uses")
+			// second grant: 3 can sign for 2 two times.
+			a = authz.NewCountAuthorization(msgTypeUrl, 2)
+			err = s.app.AuthzKeeper.SaveGrant(ctx, s.user3Addr, s.user2Addr, a, nil)
+			s.Assert().NoError(err, "SaveGrant 2 -> 3, 2 uses")
 
-		// two owners (1 & 2), and one signer (3)
-		owners := []string{s.user1, s.user2}
-		msg.Signers = []string{s.user3}
+			// two owners (1 & 2), and one signer (3)
+			owners := []string{s.user1, s.user2}
+			msg.Signers = []string{s.user3}
 
-		// Validate signatures. This should also use both count authorizations.
-		_, err = s.app.MetadataKeeper.ValidateAllRequiredSigned(ctx, owners, msg)
-		s.Assert().NoError(err, "ValidateSignersWithoutParties")
+			// Validate signatures. This should also use both count authorizations.
+			_, err = s.app.MetadataKeeper.ValidateAllRequiredSigned(ctx, owners, msg)
+			s.Assert().NoError(err, "ValidateSignersWithoutParties")
 
-		// first grant should be deleted because it used its last use.
-		auth, _ := s.app.AuthzKeeper.GetAuthorization(ctx, s.user3Addr, s.user1Addr, msgTypeUrl)
-		s.Assert().Nil(auth, "GetAuthorization 1 -> 3 after only allowed use")
+			// first grant should be deleted because it used its last use.
+			auth, _ := s.app.AuthzKeeper.GetAuthorization(ctx, s.user3Addr, s.user1Addr, msgTypeUrl)
+			s.Assert().Nil(auth, "GetAuthorization 1 -> 3 after only allowed use")
 
-		// second grant should still exist, but only have one use left.
-		auth, _ = s.app.AuthzKeeper.GetAuthorization(ctx, s.user3Addr, s.user2Addr, msgTypeUrl)
-		s.Assert().NotNil(auth, "GetAuthorization 2 -> 3 after one use")
-		actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
-		s.Assert().Equal(1, int(actual), "number of uses left on 2 -> 3 authorization")
+			// second grant should still exist, but only have one use left.
+			auth, _ = s.app.AuthzKeeper.GetAuthorization(ctx, s.user3Addr, s.user2Addr, msgTypeUrl)
+			s.Assert().NotNil(auth, "GetAuthorization 2 -> 3 after one use")
+			actual := auth.(*authz.CountAuthorization).AllowedAuthorizations
+			s.Assert().Equal(1, int(actual), "number of uses left on 2 -> 3 authorization")
+		*/
 	})
 }
 
@@ -6688,7 +6703,7 @@ func (s *AuthzTestSuite) TestGetMarkerAndCheckAuthority() {
 			},
 		},
 		Denom:      "testcoin",
-		Supply:     sdk.NewInt(1000),
+		Supply:     sdkmath.NewInt(1000),
 		MarkerType: markertypes.MarkerType_Coin,
 		Status:     markertypes.StatusActive,
 	}

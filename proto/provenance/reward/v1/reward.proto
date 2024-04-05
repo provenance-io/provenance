@@ -4,6 +4,7 @@ package provenance.reward.v1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package          = "github.com/provenance-io/provenance/x/reward/types";
 option java_package        = "io.provenance.reward.v1";
@@ -154,11 +155,17 @@ message ActionDelegate {
   // Maximum amount that the user must have currently delegated on the validator.
   cosmos.base.v1beta1.Coin maximum_delegation_amount = 4;
   // Minimum percentile that can be below the validator's power ranking.
-  string minimum_active_stake_percentile = 5
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string minimum_active_stake_percentile = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
   // Maximum percentile that can be below the validator's power ranking.
-  string maximum_active_stake_percentile = 6
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string maximum_active_stake_percentile = 6 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // ActionTransfer represents the transfer action and its required eligibility criteria.

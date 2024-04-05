@@ -85,7 +85,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	holdGenState := hold.DefaultGenesisState()
 
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, HoldAccountHolds, &holdGenState.Holds, simState.Rand,
+		HoldAccountHolds, &holdGenState.Holds, simState.Rand,
 		func(r *rand.Rand) {
 			holdGenState.Holds = RandomAccountHolds(r, simState.Accounts)
 		},

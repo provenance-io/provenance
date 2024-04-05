@@ -8,8 +8,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/core/appmodule"
 	cerrs "cosmossdk.io/errors"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -26,9 +27,10 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModuleBasic      = (*AppModule)(nil)
+	_ module.AppModuleSimulation = (*AppModule)(nil)
+
+	_ appmodule.AppModule = (*AppModule)(nil)
 )
 
 // AppModuleBasic defines the basic application module used by the msgfee module.
@@ -105,6 +107,12 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, registry cdctypes.Inter
 	}
 }
 
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // Name returns the msgfees module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
@@ -112,19 +120,6 @@ func (AppModule) Name() string {
 
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// Deprecated: Route returns the message routing key for the msgfees module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the route we respond to for abci queries
-func (AppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns the msgfees module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
 
 // InitGenesis performs genesis initialization for the msgfees module. It returns
 // no validator updates.
@@ -145,13 +140,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
-// EndBlock does nothing
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 // ____________________________________________________________________________
 
 // AppModuleSimulation functions
@@ -168,12 +156,12 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized msgfees param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.LegacyParamChange {
 	return simulation.ParamChanges(r)
 }
 
 // RegisterStoreDecoder registers a decoder for msgfees module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

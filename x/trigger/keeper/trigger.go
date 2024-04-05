@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -40,7 +42,7 @@ func (k Keeper) GetTrigger(ctx sdk.Context, id types.TriggerID) (trigger types.T
 // IterateTriggers Iterates through all the triggers.
 func (k Keeper) IterateTriggers(ctx sdk.Context, handle func(trigger types.Trigger) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.TriggerKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.TriggerKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

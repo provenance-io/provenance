@@ -4,15 +4,15 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	ibctypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -188,7 +188,7 @@ func (k Keeper) RemoveMarker(ctx sdk.Context, marker types.MarkerAccountI) {
 // IterateMarkers iterates all markers with the given handler function.
 func (k Keeper) IterateMarkers(ctx sdk.Context, cb func(marker types.MarkerAccountI) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.MarkerStoreKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.MarkerStoreKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -242,7 +242,7 @@ func (k Keeper) ClearSendDeny(ctx sdk.Context, markerAddr sdk.AccAddress) {
 // IterateMarkers  iterates all markers with the given handler function.
 func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.DenySendKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.DenySendKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -255,7 +255,7 @@ func (k Keeper) IterateSendDeny(ctx sdk.Context, handler func(key []byte) (stop 
 // GetSendDenyList gets the list of sender addresses from the marker's deny list
 func (k Keeper) GetSendDenyList(ctx sdk.Context, markerAddr sdk.AccAddress) []sdk.AccAddress {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.DenySendMarkerPrefix(markerAddr))
+	iterator := storetypes.KVStorePrefixIterator(store, types.DenySendMarkerPrefix(markerAddr))
 	list := []sdk.AccAddress{}
 
 	defer iterator.Close()
@@ -367,7 +367,7 @@ func (k Keeper) GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string
 // IterateNetAssetValues iterates net asset values for marker
 func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress, handler func(state types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
+	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var markerNav types.NetAssetValue
@@ -384,7 +384,7 @@ func (k Keeper) IterateNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress
 // IterateAllNetAssetValues iterates all net asset values
 func (k Keeper) IterateAllNetAssetValues(ctx sdk.Context, handler func(sdk.AccAddress, types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.NetAssetValuePrefix)
+	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValuePrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		markerAddr := types.GetMarkerFromNetAssetValueKey(it.Key())
@@ -402,7 +402,7 @@ func (k Keeper) IterateAllNetAssetValues(ctx sdk.Context, handler func(sdk.AccAd
 // RemoveNetAssetValues removes all net asset values for a marker
 func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, markerAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
+	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(markerAddr))
 	var keys [][]byte
 	for ; it.Valid(); it.Next() {
 		keys = append(keys, it.Key())

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -41,12 +43,12 @@ func (k Keeper) WithMarkerKeeper(markerKeeper exchange.MarkerKeeper) Keeper {
 }
 
 // GetStore is a test-only exposure of getStore.
-func (k Keeper) GetStore(ctx sdk.Context) sdk.KVStore {
+func (k Keeper) GetStore(ctx sdk.Context) storetypes.KVStore {
 	return k.getStore(ctx)
 }
 
 // SetOrderInStore is a test-only exposure of setOrderInStore.
-func (k Keeper) SetOrderInStore(store sdk.KVStore, order exchange.Order) error {
+func (k Keeper) SetOrderInStore(store storetypes.KVStore, order exchange.Order) error {
 	return k.setOrderInStore(store, order)
 }
 
@@ -61,7 +63,7 @@ func (k Keeper) AddCommitmentsUnsafe(ctx sdk.Context, marketID uint32, toAdd []e
 }
 
 // SetPaymentInStore is a test-only exposure of setPaymentInStore.
-func (k Keeper) SetPaymentInStore(store sdk.KVStore, payment *exchange.Payment) error {
+func (k Keeper) SetPaymentInStore(store storetypes.KVStore, payment *exchange.Payment) error {
 	return k.setPaymentInStore(store, payment)
 }
 

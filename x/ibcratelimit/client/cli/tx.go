@@ -7,12 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+
+	// govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli" // TODO[1760]: gov-cli
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/ibcratelimit"
@@ -58,20 +56,25 @@ func GetCmdParamsUpdate() *cobra.Command {
 				args[0],
 			)
 
-			proposal, govErr := govcli.ReadGovPropFlags(clientCtx, cmd.Flags())
-			if govErr != nil {
-				return govErr
-			}
-			proposal.Messages, govErr = sdktx.SetMsgs([]sdk.Msg{msg})
-			if govErr != nil {
-				return govErr
-			}
+			// TODO[1760]: gov-cli: Replace this with GenerateOrBroadcastTxCLIAsGovProp once its back.
+			_, _ = msg, clientCtx
+			/*
+				proposal, govErr := govcli.ReadGovPropFlags(clientCtx, cmd.Flags())
+				if govErr != nil {
+					return govErr
+				}
+				proposal.Messages, govErr = sdktx.SetMsgs([]sdk.Msg{msg})
+				if govErr != nil {
+					return govErr
+				}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
+				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
+			*/
+			return fmt.Errorf("not yet updated")
 		},
 	}
 
-	govcli.AddGovPropFlagsToCmd(cmd)
+	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

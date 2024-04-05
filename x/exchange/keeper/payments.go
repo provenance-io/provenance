@@ -4,15 +4,17 @@ import (
 	"errors"
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
+	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
 // paymentExists returns true if there's a payment in the store with the given source and external id.
-func paymentExists(store sdk.KVStore, source, externalID string) bool {
+func paymentExists(store storetypes.KVStore, source, externalID string) bool {
 	sourceAddr, err := sdk.AccAddressFromBech32(source)
 	if err != nil {
 		return false
@@ -36,14 +38,14 @@ func (k Keeper) parsePaymentStoreValue(value []byte) (*exchange.Payment, error) 
 }
 
 // getPaymentFromStore gets a Payment from the store.
-func (k Keeper) getPaymentFromStore(store sdk.KVStore, source sdk.AccAddress, externalID string) (*exchange.Payment, error) {
+func (k Keeper) getPaymentFromStore(store storetypes.KVStore, source sdk.AccAddress, externalID string) (*exchange.Payment, error) {
 	key := MakeKeyPayment(source, externalID)
 	value := store.Get(key)
 	return k.parsePaymentStoreValue(value)
 }
 
 // getPaymentsForTargetAndSourceFromStore gets all the payments with the given target and source from the state store.
-func (k Keeper) getPaymentsForTargetAndSourceFromStore(store sdk.KVStore, target, source sdk.AccAddress) []*exchange.Payment {
+func (k Keeper) getPaymentsForTargetAndSourceFromStore(store storetypes.KVStore, target, source sdk.AccAddress) []*exchange.Payment {
 	if len(target) == 0 || len(source) == 0 {
 		return nil
 	}
@@ -62,7 +64,7 @@ func (k Keeper) getPaymentsForTargetAndSourceFromStore(store sdk.KVStore, target
 
 // requirePaymentFromStore is like getPaymentFromStore but returns with an error if the payment does not exist.
 // This will always return either a payment or error. It will never return both or nil, nil.
-func (k Keeper) requirePaymentFromStore(store sdk.KVStore, source sdk.AccAddress, externalID string) (*exchange.Payment, error) {
+func (k Keeper) requirePaymentFromStore(store storetypes.KVStore, source sdk.AccAddress, externalID string) (*exchange.Payment, error) {
 	payment, err := k.getPaymentFromStore(store, source, externalID)
 	if err != nil {
 		return nil, fmt.Errorf("error getting existing payment with source %s and external id %q: %w",
@@ -75,7 +77,7 @@ func (k Keeper) requirePaymentFromStore(store sdk.KVStore, source sdk.AccAddress
 }
 
 // setPaymentInStore sets a payment in the store making sure the index entry stays up to date.
-func (k Keeper) setPaymentInStore(store sdk.KVStore, payment *exchange.Payment) error {
+func (k Keeper) setPaymentInStore(store storetypes.KVStore, payment *exchange.Payment) error {
 	source, err := sdk.AccAddressFromBech32(payment.Source)
 	if err != nil {
 		return fmt.Errorf("invalid source %q: %w", payment.Source, err)
@@ -126,7 +128,7 @@ func (k Keeper) setPaymentInStore(store sdk.KVStore, payment *exchange.Payment) 
 }
 
 // createPaymentInStore verifies that the provided payment does not yet exist, then writes it to the state store.
-func (k Keeper) createPaymentInStore(store sdk.KVStore, payment *exchange.Payment) error {
+func (k Keeper) createPaymentInStore(store storetypes.KVStore, payment *exchange.Payment) error {
 	if paymentExists(store, payment.Source, payment.ExternalId) {
 		return fmt.Errorf("a payment already exists with source %s and external id %q",
 			payment.Source, payment.ExternalId)
@@ -135,7 +137,7 @@ func (k Keeper) createPaymentInStore(store sdk.KVStore, payment *exchange.Paymen
 }
 
 // deletePaymentFromStore deletes a payment (and its index) from the state store.
-func deletePaymentFromStore(store sdk.KVStore, payment *exchange.Payment) error {
+func deletePaymentFromStore(store storetypes.KVStore, payment *exchange.Payment) error {
 	if payment == nil {
 		return errors.New("cannot delete nil payment")
 	}
@@ -165,7 +167,7 @@ func deletePaymentFromStore(store sdk.KVStore, payment *exchange.Payment) error 
 }
 
 // deletePaymentAndReleaseHold deletes a payment from the state store and releases its hold.
-func (k Keeper) deletePaymentAndReleaseHold(ctx sdk.Context, store sdk.KVStore, payment *exchange.Payment) error {
+func (k Keeper) deletePaymentAndReleaseHold(ctx sdk.Context, store storetypes.KVStore, payment *exchange.Payment) error {
 	err := deletePaymentFromStore(store, payment)
 	if err != nil {
 		if payment != nil {
@@ -184,7 +186,7 @@ func (k Keeper) deletePaymentAndReleaseHold(ctx sdk.Context, store sdk.KVStore, 
 }
 
 // deletePaymentsAndReleaseHolds deletes several payments and releases their holds.
-func (k Keeper) deletePaymentsAndReleaseHolds(ctx sdk.Context, store sdk.KVStore, payments []*exchange.Payment) error {
+func (k Keeper) deletePaymentsAndReleaseHolds(ctx sdk.Context, store storetypes.KVStore, payments []*exchange.Payment) error {
 	for _, payment := range payments {
 		err := k.deletePaymentAndReleaseHold(ctx, store, payment)
 		if err != nil {
@@ -248,7 +250,7 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 		return fmt.Errorf("provided source %s does not equal existing source %s",
 			payment.Source, existing.Source)
 	}
-	if !exchange.CoinsEquals(payment.SourceAmount, existing.SourceAmount) {
+	if !payment.SourceAmount.Equal(existing.SourceAmount) {
 		return fmt.Errorf("provided source amount %q does not equal existing source amount %q",
 			payment.SourceAmount, existing.SourceAmount)
 	}
@@ -256,7 +258,7 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 		return fmt.Errorf("provided target %s does not equal existing target %s",
 			payment.Target, existing.Target)
 	}
-	if !exchange.CoinsEquals(payment.TargetAmount, existing.TargetAmount) {
+	if !payment.TargetAmount.Equal(existing.TargetAmount) {
 		return fmt.Errorf("provided target amount %q does not equal existing target amount %q",
 			payment.TargetAmount, existing.TargetAmount)
 	}
@@ -270,7 +272,7 @@ func (k Keeper) AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error 
 		return err
 	}
 
-	ctx = quarantine.WithBypass(ctx)
+	// ctx = quarantine.WithBypass(ctx) // TODO[1760]: quarantine
 	if !existing.SourceAmount.IsZero() {
 		err = k.bankKeeper.SendCoins(ctx, source, target, existing.SourceAmount)
 		if err != nil {

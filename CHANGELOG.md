@@ -37,7 +37,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Features
+
+* Bump cosmos-SDK to `v0.50.2` (from `v0.46.13-pio-2`) [#1772](https://github.com/provenance-io/provenance/issues/1772).
+* Add store for crisis module for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Add PreBlocker support for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
+
+### Improvements
+
+* Remove unsupported database types [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Update ibc and migrate params [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Replace ModuleBasics with BasicModuleManager [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Remove handlers from provenance modules [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Updated app.go to use RegisterStreamingServices on BaseApp [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Bump the SDK to `v0.50.5-pio-1` (from an earlier ephemeral version) [#1897](https://github.com/provenance-io/provenance/pull/1897).
 
 ---
 

@@ -11,6 +11,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
@@ -19,6 +20,10 @@ const (
 	emptyAddrErr = "empty address string is not allowed"
 	bech32Err    = "decoding bech32 failed: "
 )
+
+type HasGetSigners interface {
+	GetSigners() []sdk.AccAddress
+}
 
 func TestAllMsgsGetSigners(t *testing.T) {
 	// getTypeName gets just the type name of the provided thing, e.g. "MsgGovCreateMarketRequest".
@@ -173,9 +178,12 @@ func TestAllMsgsGetSigners(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			smsg, ok := tc.msg.(HasGetSigners)
+			require.True(t, ok, "%T does not have a .GetSigners method.")
+
 			var signers []sdk.AccAddress
 			testFunc := func() {
-				signers = tc.msg.GetSigners()
+				signers = smsg.GetSigners()
 			}
 
 			assertions.RequirePanicEquals(t, testFunc, tc.expPanic, "GetSigners")
@@ -199,7 +207,7 @@ func testValidateBasic(t *testing.T, msg sdk.Msg, expErr []string) {
 	t.Helper()
 	var err error
 	testFunc := func() {
-		err = msg.ValidateBasic()
+		err = helpers.ValidateBasic(msg)
 	}
 	require.NotPanics(t, testFunc, "%T.ValidateBasic()", msg)
 
@@ -358,7 +366,7 @@ func TestMsgCommitFundsRequest_ValidateBasic(t *testing.T) {
 			msg: MsgCommitFundsRequest{
 				Account:  sdk.AccAddress("account_____________").String(),
 				MarketId: 1,
-				Amount:   sdk.Coins{sdk.Coin{Denom: "cherry", Amount: sdk.NewInt(-3)}},
+				Amount:   sdk.Coins{sdk.Coin{Denom: "cherry", Amount: sdkmath.NewInt(-3)}},
 			},
 			expErr: []string{"invalid amount \"-3cherry\": coin -3cherry amount is not positive"},
 		},
@@ -368,7 +376,7 @@ func TestMsgCommitFundsRequest_ValidateBasic(t *testing.T) {
 				Account:     sdk.AccAddress("account_____________").String(),
 				MarketId:    1,
 				Amount:      sdk.Coins{sdk.NewInt64Coin("cherry", 52)},
-				CreationFee: &sdk.Coin{Denom: "fig", Amount: sdk.NewInt(-1)},
+				CreationFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(-1)},
 			},
 			expErr: []string{"invalid creation fee \"-1fig\": negative coin amount: -1"},
 		},
@@ -385,7 +393,7 @@ func TestMsgCommitFundsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "multiple errors",
 			msg: MsgCommitFundsRequest{
-				CreationFee: &sdk.Coin{Denom: "fig", Amount: sdk.NewInt(-1)},
+				CreationFee: &sdk.Coin{Denom: "fig", Amount: sdkmath.NewInt(-1)},
 				EventTag:    strings.Repeat("p", 100) + "x",
 			},
 			expErr: []string{

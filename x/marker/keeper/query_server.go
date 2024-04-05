@@ -6,8 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -203,4 +203,22 @@ func (k Keeper) NetAssetValues(c context.Context, req *types.QueryNetAssetValues
 	}
 
 	return &types.QueryNetAssetValuesResponse{NetAssetValues: navs}, nil
+}
+
+// accountForDenomOrAddress attempts to first get a marker by account address and then by denom.
+func accountForDenomOrAddress(ctx sdk.Context, keeper Keeper, lookup string) (types.MarkerAccountI, error) {
+	var addrErr, err error
+	var addr sdk.AccAddress
+	var account types.MarkerAccountI
+
+	// try to parse the argument as an address, if this fails try as a denom string.
+	if addr, addrErr = sdk.AccAddressFromBech32(lookup); addrErr != nil {
+		account, err = keeper.GetMarkerByDenom(ctx, lookup)
+	} else {
+		account, err = keeper.GetMarker(ctx, addr)
+	}
+	if err != nil {
+		return nil, types.ErrMarkerNotFound.Wrap("invalid denom or address")
+	}
+	return account, nil
 }

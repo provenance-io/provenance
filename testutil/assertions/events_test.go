@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 func TestPrependToEach(t *testing.T) {
@@ -67,8 +67,8 @@ func TestPrependToEach(t *testing.T) {
 func TestEventsToStrings(t *testing.T) {
 	attr := func(key, value string) abci.EventAttribute {
 		return abci.EventAttribute{
-			Key:   []byte(key),
-			Value: []byte(fmt.Sprintf("%q", value)),
+			Key:   key,
+			Value: fmt.Sprintf("%q", value),
 		}
 	}
 	addrAdd := sdk.AccAddress("address_add_event___").String()
@@ -142,8 +142,8 @@ func TestEventsToStrings(t *testing.T) {
 func TestEventToStrings(t *testing.T) {
 	attr := func(key, value string) abci.EventAttribute {
 		return abci.EventAttribute{
-			Key:   []byte(key),
-			Value: []byte(fmt.Sprintf("%q", value)),
+			Key:   key,
+			Value: fmt.Sprintf("%q", value),
 		}
 	}
 
@@ -204,8 +204,8 @@ func TestEventToStrings(t *testing.T) {
 func TestAttrsToStrings(t *testing.T) {
 	attr := func(key, value string, index bool) abci.EventAttribute {
 		return abci.EventAttribute{
-			Key:   []byte(key),
-			Value: []byte(fmt.Sprintf("%q", value)),
+			Key:   key,
+			Value: fmt.Sprintf("%q", value),
 			Index: index,
 		}
 	}
@@ -275,14 +275,14 @@ type equalEventsTestCase struct {
 func getEqualEventsTestCases() []equalEventsTestCase {
 	attr := func(key, value string) abci.EventAttribute {
 		return abci.EventAttribute{
-			Key:   []byte(key),
-			Value: []byte(value),
+			Key:   key,
+			Value: value,
 		}
 	}
 	attri := func(key, value string) abci.EventAttribute {
 		return abci.EventAttribute{
-			Key:   []byte(key),
-			Value: []byte(value),
+			Key:   key,
+			Value: value,
 			Index: true,
 		}
 	}
@@ -584,10 +584,10 @@ type eventsContainsTestCase struct {
 // getEventsContainsTestCases returns all the tests cases for the [Assert|Require]EventsContains[f]? functions.
 func getEventsContainsTestCases() []eventsContainsTestCase {
 	attr := func(key, value string) abci.EventAttribute {
-		return abci.EventAttribute{Key: []byte(key), Value: []byte(value)}
+		return abci.EventAttribute{Key: key, Value: value}
 	}
 	attrWIndex := func(key, value string) abci.EventAttribute {
-		return abci.EventAttribute{Key: []byte(key), Value: []byte(value), Index: true}
+		return abci.EventAttribute{Key: key, Value: value, Index: true}
 	}
 	newEvent := func(eventType string, attrs ...abci.EventAttribute) sdk.Event {
 		return sdk.Event{Type: eventType, Attributes: attrs}

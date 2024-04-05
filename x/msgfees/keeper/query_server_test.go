@@ -6,19 +6,20 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	sdksigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -40,13 +41,13 @@ type QueryServerTestSuite struct {
 	pubkey1   cryptotypes.PubKey
 	user1     string
 	user1Addr sdk.AccAddress
-	acct1     authtypes.AccountI
+	acct1     sdk.AccountI
 
 	privkey2  cryptotypes.PrivKey
 	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
-	acct2     authtypes.AccountI
+	acct2     sdk.AccountI
 
 	minGasPrice       sdk.Coin
 	usdConversionRate uint64
@@ -54,8 +55,8 @@ type QueryServerTestSuite struct {
 
 func (s *QueryServerTestSuite) SetupTest() {
 	s.app = simapp.SetupQuerier(s.T())
-	s.ctx = s.app.BaseApp.NewContext(true, tmproto.Header{})
-	s.app.AccountKeeper.SetParams(s.ctx, authtypes.DefaultParams())
+	s.ctx = s.app.BaseApp.NewContext(true)
+	s.app.AccountKeeper.Params.Set(s.ctx, authtypes.DefaultParams())
 	s.app.BankKeeper.SetParams(s.ctx, banktypes.DefaultParams())
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
@@ -64,7 +65,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 
 	s.minGasPrice = sdk.Coin{
 		Denom:  s.cfg.BondDenom,
-		Amount: sdk.NewInt(10),
+		Amount: sdkmath.NewInt(10),
 	}
 	s.usdConversionRate = 7
 	s.app.MsgFeesKeeper.SetParams(s.ctx, types.NewParams(s.minGasPrice, s.usdConversionRate, pioconfig.GetProvenanceConfig().FeeDenom))
@@ -84,7 +85,7 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.acct2 = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
 	s.app.AccountKeeper.SetAccount(s.ctx, s.acct2)
 	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, markertypes.NewEmptyMarkerAccount("navcoin", s.acct1.GetAddress().String(), []markertypes.AccessGrant{})))
-	s.Require().NoError(banktestutil.FundAccount(s.app.BankKeeper, s.ctx, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000)))))
+	s.Require().NoError(banktestutil.FundAccount(s.ctx, s.app.BankKeeper, s.acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 100_000))))
 }
 
 func TestQuerierTestSuite(t *testing.T) {
@@ -92,7 +93,7 @@ func TestQuerierTestSuite(t *testing.T) {
 }
 
 func (s *QueryServerTestSuite) TestCalculateTxFees() {
-	bankSend := banktypes.NewMsgSend(s.user1Addr, s.user2Addr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))))
+	bankSend := banktypes.NewMsgSend(s.user1Addr, s.user2Addr, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 100)))
 	simulateReq := s.createTxFeesRequest(s.pubkey1, s.privkey1, s.acct1, bankSend)
 
 	// do send without additional fee
@@ -100,63 +101,63 @@ func (s *QueryServerTestSuite) TestCalculateTxFees() {
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
 	s.Assert().True(response.AdditionalFees.Empty())
-	expectedTotalFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
+	expectedTotalFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, s.minGasPrice.Amount.MulRaw(int64(response.EstimatedGas))))
 	s.Assert().Equal(expectedTotalFees.String(), response.TotalFees.String())
 
 	// do send with an additional fee
-	sendAddFee := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))
+	sendAddFee := sdk.NewInt64Coin(s.cfg.BondDenom, 1)
 	s.Require().NoError(s.app.MsgFeesKeeper.SetMsgFee(s.ctx, types.NewMsgFee("/cosmos.bank.v1beta1.MsgSend", sendAddFee, "", types.DefaultMsgFeeBips)))
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
-	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
+	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, s.minGasPrice.Amount.MulRaw(int64(response.EstimatedGas))))
 	s.Assert().Equal(expectedTotalFees, response.TotalFees)
 	s.Assert().Equal(sdk.NewCoins(sendAddFee), response.AdditionalFees)
 
 	// do multiple sends in tx with fee
-	bankSend1 := banktypes.NewMsgSend(s.user1Addr, s.user2Addr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(2))))
-	bankSend2 := banktypes.NewMsgSend(s.user1Addr, s.user2Addr, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(3))))
+	bankSend1 := banktypes.NewMsgSend(s.user1Addr, s.user2Addr, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 2)))
+	bankSend2 := banktypes.NewMsgSend(s.user1Addr, s.user2Addr, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 3)))
 	simulateReq = s.createTxFeesRequest(s.pubkey1, s.privkey1, s.acct1, bankSend1, bankSend2)
 
 	response, err = s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
-	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
+	expectedTotalFees = response.AdditionalFees.Add(sdk.NewCoin(s.cfg.BondDenom, s.minGasPrice.Amount.MulRaw(int64(response.EstimatedGas))))
 	s.Assert().Equal(expectedTotalFees, response.TotalFees)
-	s.Assert().Equal(sdk.NewCoins(sdk.NewCoin(sendAddFee.Denom, sendAddFee.Amount.Mul(sdk.NewInt(2)))), response.AdditionalFees)
+	s.Assert().Equal(sdk.NewCoins(sdk.NewCoin(sendAddFee.Denom, sendAddFee.Amount.MulRaw(2))), response.AdditionalFees)
 }
 
 func (s *QueryServerTestSuite) TestCalculateTxFeesAuthz() {
 	server := markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
 
 	hotdogDenom := "hotdog"
-	_, err := server.AddMarker(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddMarkerRequest(hotdogDenom, sdk.NewInt(100), s.user1Addr, s.user1Addr, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0))
+	_, err := server.AddMarker(s.ctx, markertypes.NewMsgAddMarkerRequest(hotdogDenom, sdkmath.NewInt(100), s.user1Addr, s.user1Addr, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}, 0, 0))
 	s.Require().NoError(err)
 	access := markertypes.AccessGrant{
 		Address:     s.user1,
 		Permissions: markertypes.AccessListByNames("DELETE,MINT,WITHDRAW,TRANSFER,ADMIN,BURN"),
 	}
-	_, err = server.AddAccess(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access))
+	_, err = server.AddAccess(s.ctx, markertypes.NewMsgAddAccessRequest(hotdogDenom, s.user1Addr, access))
 	s.Require().NoError(err)
-	_, err = server.Finalize(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr))
+	_, err = server.Finalize(s.ctx, markertypes.NewMsgFinalizeRequest(hotdogDenom, s.user1Addr))
 	s.Require().NoError(err)
-	_, err = server.Activate(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgActivateRequest(hotdogDenom, s.user1Addr))
+	_, err = server.Activate(s.ctx, markertypes.NewMsgActivateRequest(hotdogDenom, s.user1Addr))
 	s.Require().NoError(err)
-	_, err = server.Mint(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgMintRequest(s.user1Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(1000))))
+	_, err = server.Mint(s.ctx, markertypes.NewMsgMintRequest(s.user1Addr, sdk.NewInt64Coin(hotdogDenom, 1000)))
 	s.Require().NoError(err)
-	_, err = server.Withdraw(sdk.WrapSDKContext(s.ctx), markertypes.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, hotdogDenom, sdk.NewCoins(sdk.NewCoin(hotdogDenom, sdk.NewInt(10)))))
+	_, err = server.Withdraw(s.ctx, markertypes.NewMsgWithdrawRequest(s.user1Addr, s.user1Addr, hotdogDenom, sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 10))))
 	s.Require().NoError(err)
 	msgGrant := &authz.MsgGrant{
 		Granter: s.user1,
 		Grantee: s.user2,
 		Grant:   authz.Grant{},
 	}
-	err = msgGrant.SetAuthorization(markertypes.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewCoin(hotdogDenom, sdk.NewInt(10))), []sdk.AccAddress{s.user1Addr}))
+	err = msgGrant.SetAuthorization(markertypes.NewMarkerTransferAuthorization(sdk.NewCoins(sdk.NewInt64Coin(hotdogDenom, 10)), []sdk.AccAddress{s.user1Addr}))
 	s.Require().NoError(err)
-	_, err = s.app.AuthzKeeper.Grant(sdk.WrapSDKContext(s.ctx), msgGrant)
+	_, err = s.app.AuthzKeeper.Grant(s.ctx, msgGrant)
 	s.Require().NoError(err)
 
-	transferRequest := markertypes.NewMsgTransferRequest(s.user1Addr, s.user1Addr, s.user2Addr, sdk.NewCoin(hotdogDenom, sdk.NewInt(9)))
+	transferRequest := markertypes.NewMsgTransferRequest(s.user1Addr, s.user1Addr, s.user2Addr, sdk.NewInt64Coin(hotdogDenom, 9))
 	simulateReq := s.createTxFeesRequest(s.pubkey2, s.privkey2, s.acct2, transferRequest)
 	response, err := s.queryClient.CalculateTxFees(s.ctx.Context(), &simulateReq)
 	s.Assert().NoError(err)
@@ -174,7 +175,7 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
 	s.Assert().NoError(err)
 	s.Assert().NotNil(response)
 	s.Assert().Equal(sdk.NewCoins(additionalAccessedFeesCoin), response.AdditionalFees)
-	expectedGasFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
+	expectedGasFees := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, s.minGasPrice.Amount.MulRaw(int64(response.EstimatedGas))))
 	s.Assert().Equal(fmt.Sprintf("%s,%s", additionalAccessedFeesCoin.String(), expectedGasFees.String()), response.TotalFees.String())
 
 	// do assessCustomFee where custom fee has a message fee associated with it
@@ -185,11 +186,11 @@ func (s *QueryServerTestSuite) TestCalculateTxFeesWithAssessCustomFees() {
 	s.Assert().NotNil(response)
 	additionalAccessedFeesCoin = sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 200)
 	s.Assert().Equal(sdk.NewCoins(additionalAccessedFeesCoin), response.AdditionalFees)
-	expectedGasFees = sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(int64(response.EstimatedGas)*s.minGasPrice.Amount.Int64())))
+	expectedGasFees = sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, s.minGasPrice.Amount.MulRaw(int64(response.EstimatedGas))))
 	s.Assert().Equal(fmt.Sprintf("%s,%s", additionalAccessedFeesCoin.String(), expectedGasFees.String()), response.TotalFees.String())
 }
 
-func (s *QueryServerTestSuite) createTxFeesRequest(pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.AccountI, msgs ...sdk.Msg) types.CalculateTxFeesRequest {
+func (s *QueryServerTestSuite) createTxFeesRequest(pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct sdk.AccountI, msgs ...sdk.Msg) types.CalculateTxFeesRequest {
 	theTx := s.cfg.TxConfig.NewTxBuilder()
 	s.Require().NoError(theTx.SetMsgs(msgs...))
 	s.signTx(theTx, pubKey, privKey, acct)
@@ -201,20 +202,21 @@ func (s *QueryServerTestSuite) createTxFeesRequest(pubKey cryptotypes.PubKey, pr
 	}
 }
 
-func (s *QueryServerTestSuite) signTx(theTx client.TxBuilder, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct authtypes.AccountI) {
-	accountSig := signing.SignatureV2{
+func (s *QueryServerTestSuite) signTx(theTx client.TxBuilder, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct sdk.AccountI) {
+	accountSig := sdksigning.SignatureV2{
 		PubKey: pubKey,
-		Data: &signing.SingleSignatureData{
-			SignMode: s.cfg.TxConfig.SignModeHandler().DefaultMode(),
+		Data: &sdksigning.SingleSignatureData{
+			SignMode: sdksigning.SignMode(s.cfg.TxConfig.SignModeHandler().DefaultMode()),
 		},
 		Sequence: acct.GetSequence(),
 	}
-	signerData := authsign.SignerData{
+	signerData := signing.SignerData{
 		ChainID:       s.cfg.ChainID,
 		AccountNumber: acct.GetAccountNumber(),
 		Sequence:      acct.GetSequence(),
 	}
-	signBytes, err := s.cfg.TxConfig.SignModeHandler().GetSignBytes(s.cfg.TxConfig.SignModeHandler().DefaultMode(), signerData, theTx.GetTx())
+	txData := signing.TxData{} // TODO[1760]: signing: Base this off of theTx.GetTx().
+	signBytes, err := s.cfg.TxConfig.SignModeHandler().GetSignBytes(s.ctx, s.cfg.TxConfig.SignModeHandler().DefaultMode(), signerData, txData)
 	if err != nil {
 		panic(err)
 	}
@@ -222,7 +224,7 @@ func (s *QueryServerTestSuite) signTx(theTx client.TxBuilder, pubKey cryptotypes
 	if err != nil {
 		panic(err)
 	}
-	accountSig.Data.(*signing.SingleSignatureData).Signature = sig
+	accountSig.Data.(*sdksigning.SingleSignatureData).Signature = sig
 	err = theTx.SetSignatures(accountSig)
 	if err != nil {
 		panic(err)

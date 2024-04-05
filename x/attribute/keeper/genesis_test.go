@@ -9,10 +9,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/provenance-io/provenance/x/attribute/keeper"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/x/attribute/keeper"
 	"github.com/provenance-io/provenance/x/attribute/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -36,7 +35,7 @@ func (s *GenesisTestSuite) SetupSuite() {
 	defer app.SetLoggerMaker(app.SetLoggerMaker(app.BufferedInfoLoggerMaker(&s.logBuffer)))
 	s.app = app.Setup(s.T())
 	s.logBuffer.Reset()
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 // newMockNameKeeper creates a mockNameKeeper backed by this suite's app's name keeper.
@@ -64,7 +63,7 @@ func (s *GenesisTestSuite) TestInitGenesisModAcctAndNameRecord() {
 		modAddr := authtypes.NewModuleAddress(types.ModuleName)
 		acct := s.app.AccountKeeper.GetAccount(s.ctx, modAddr)
 		s.Require().NotNil(acct, "GetAccount(%q) (%s module account address)", modAddr.String(), types.ModuleName)
-		modAcct, isModAcct := acct.(authtypes.ModuleAccountI)
+		modAcct, isModAcct := acct.(sdk.ModuleAccountI)
 		s.Require().True(isModAcct, "can cast %T to authtypes.ModuleAccountI", acct)
 		s.Assert().Equal(types.ModuleName, modAcct.GetName(), "module account name")
 	})

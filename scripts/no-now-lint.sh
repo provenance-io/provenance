@@ -84,7 +84,7 @@ filters+=( '^x/reward/simulation/operations\.go:(7[0-9]|8[0-5]):[[:space:]]+now 
 #     It's in the header creation for the BeginBlock.
 #     Since it's expected that it might move, and also that additional
 #     such uses might be added, allow it to be on any line number.
-filters+=( '^app/test_helpers\.go:[[:digit:]]+:.*tmproto\.Header{' )
+filters+=( '^app/test_helpers\.go:[[:digit:]]+:.*cmtproto\.Header{' )
 # The x/marker/client/cli/tx.go file has two legitimate uses due to authz and feegrant grant creation.
 #     Since that file is not involved in any block processing, just ignore the whole file.
 filters+=( '^x/marker/client/cli/tx\.go:' )
@@ -92,8 +92,6 @@ filters+=( '^x/marker/client/cli/tx\.go:' )
 #     Since it's setting a variable more specifically named than 'now',
 #     we can ignore the specific line, but let it be on any line number.
 filters+=( '^cmd/provenanced/cmd/testnet\.go:[[:digit:]]+:[[:space:]]+genTime := [[:alnum:]]+\.Now\(\)$' )
-# The dbmigrate migrator has several legitimate uses, and there's nothing in there that affects block processing.
-filters+=( '^cmd/dbmigrate/utils/migrator\.go:' )
 
 for filters in "${filters[@]}"; do
     now_uses="$( grep -vE "$filters" <<< "$now_uses" )"

@@ -7,21 +7,24 @@ import (
 	"strings"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	simappparams "github.com/provenance-io/provenance/app/params"
 	markersim "github.com/provenance-io/provenance/x/marker/simulation"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
@@ -43,10 +46,10 @@ type Wrapper struct {
 	nk   namekeeper.Keeper
 }
 
-func NewWrapper(cdc codec.Codec, keeper *wasm.Keeper, validatorSetSource keeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper) *Wrapper {
+func NewWrapper(cdc codec.Codec, keeper *wasmkeeper.Keeper, validatorSetSource wasmkeeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, router *baseapp.MsgServiceRouter, ss exported.Subspace) *Wrapper {
 	return &Wrapper{
 		cdc:  cdc,
-		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk),
+		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, ss),
 		ak:   ak,
 		bk:   bk,
 		nk:   nk,
@@ -69,7 +72,6 @@ func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 		Codes:     nil,
 		Contracts: nil,
 		Sequences: nil,
-		GenMsgs:   nil,
 	}
 
 	_, err := input.Cdc.MarshalJSON(&wasmGenesis)
@@ -82,16 +84,17 @@ func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 
 // ProposalContents doesn't return any content functions for governance proposals.
 func (pw Wrapper) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return pw.wasm.ProposalContents(simState)
+	// return pw.wasm.ProposalContents(simState) // TODO[1760]: wasm: Find replacement for this or delete it.
+	return nil
 }
 
 // RandomizedParams returns empty list as the params don't change
-func (pw Wrapper) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
+func (pw Wrapper) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
-func (pw Wrapper) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (pw Wrapper) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	pw.wasm.RegisterStoreDecoder(sdr)
 }
 
@@ -162,7 +165,7 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msg := markertypes.NewMsgAddMarkerRequest(
 			denom,
-			sdk.NewIntFromUint64(1000000000),
+			sdkmath.NewIntFromUint64(1_000_000_000),
 			node.Address,
 			node.Address,
 			markertypes.MarkerType_Coin,
@@ -177,9 +180,9 @@ func SimulateMsgAddMarker(ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk
 		bk.SetSendEnabled(ctx, denom, true)
 
 		// fund the node account to do all of these txs
-		fundErr := testutil.FundAccount(bk, ctx, node.Address, sdk.NewCoins(sdk.Coin{
+		fundErr := testutil.FundAccount(ctx, bk, node.Address, sdk.NewCoins(sdk.Coin{
 			Denom:  "stake",
-			Amount: sdk.NewInt(1000000000000000),
+			Amount: sdkmath.NewInt(1_000_000_000_000_000),
 		}))
 
 		if fundErr != nil {
@@ -243,7 +246,7 @@ func SimulateMsgWithdrawRequest(ak authkeeper.AccountKeeperI, bk bankkeeper.Keep
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		coins := []sdk.Coin{{
 			Denom:  denom,
-			Amount: sdk.NewIntFromUint64(1000000),
+			Amount: sdkmath.NewIntFromUint64(1_000_000),
 		}}
 		msg := markertypes.NewMsgWithdrawRequest(node.Address, consumer.Address, denom, coins)
 		msg2, ops, err := markersim.Dispatch(r, app, ctx, ak, bk, node, chainID, msg, nil)
@@ -350,7 +353,7 @@ func SimulateMsgExecuteContract(ak authkeeper.AccountKeeperI, bk bankkeeper.View
 		amount, _ := sdk.ParseCoinsNormalized(fmt.Sprintf("100%s", denom))
 		coins := bk.SpendableCoins(ctx, consumer.Address)
 
-		if coins.AmountOf(denom).LT(sdk.NewInt(100)) {
+		if coins.AmountOf(denom).LT(sdkmath.NewInt(100)) {
 			return simtypes.NoOpMsg("provwasm", "", "not enough coins"), nil, nil
 		}
 
@@ -398,13 +401,13 @@ func Dispatch(
 		panic("no fees")
 	}
 
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenSignedMockTx(
+	txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
+	tx, err := simtestutil.GenSignedMockTx(
 		r,
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas*10, // storing a contract requires more gas than most txs
+		simtestutil.DefaultGenTxGas*10, // storing a contract requires more gas than most txs
 		chainID,
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
@@ -419,7 +422,7 @@ func Dispatch(
 		panic(err2)
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), futures, sdkResponse, nil
+	return simtypes.NewOperationMsg(msg, true, ""), futures, sdkResponse, nil
 }
 
 // getRandomRootNameRecord finds a random root name record owned by a known account.

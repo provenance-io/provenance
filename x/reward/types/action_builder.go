@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -220,7 +219,7 @@ func (v *VoteActionBuilder) GetEventCriteria() *EventCriteria {
 	return NewEventCriteria([]ABCIEvent{
 		{
 			Type:       sdk.EventTypeMessage,
-			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte(govtypes.AttributeValueCategory)},
+			Attributes: map[string][]byte{sdk.AttributeKeyModule: []byte("governance")}, // TODO[1760]: reward: Ensure "governance" is still correct here.
 		},
 		{
 			Type:       sdk.EventTypeMessage,
@@ -259,7 +258,8 @@ func (v *VoteActionBuilder) AddEvent(_ string, attributes *map[string][]byte) er
 			return err
 		}
 		v.Voter = address
-	} else if action, ok := (*attributes)[sdk.AttributeKeyAction]; ok {
+	}
+	if action, ok := (*attributes)[sdk.AttributeKeyAction]; ok {
 		a := string(action)
 		for _, m := range getGovVoteMsgURLs() {
 			if a == m {

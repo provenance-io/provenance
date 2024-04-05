@@ -1,20 +1,25 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
+	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
@@ -161,6 +166,64 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	"umber-rc1": { // upgrade for v1.19.0-rc1
+		Added: []string{crisistypes.ModuleName},
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+
+			if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+
+			err = migrateBaseappParams(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			err = updateIBCClients(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			return vm, nil
+		},
+	},
+	"umber": { // upgrade for v1.19.0
+		Added: []string{crisistypes.ModuleName},
+		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
+			var err error
+
+			if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+
+			err = migrateBaseappParams(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
+			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			err = updateIBCClients(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
+			removeInactiveValidatorDelegations(ctx, app)
+
+			return vm, nil
+		},
+	},
 	// TODO - Add new upgrade definitions here.
 }
 
@@ -171,13 +234,15 @@ func InstallCustomUpgradeHandlers(app *App) {
 		// If the handler has been defined, add it here, otherwise, use no-op.
 		var handler upgradetypes.UpgradeHandler
 		if upgrade.Handler == nil {
-			handler = func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
+			handler = func(goCtx context.Context, plan upgradetypes.Plan, versionMap module.VersionMap) (module.VersionMap, error) {
+				ctx := sdk.UnwrapSDKContext(goCtx)
 				ctx.Logger().Info(fmt.Sprintf("Applying no-op upgrade to %q", plan.Name))
 				return versionMap, nil
 			}
 		} else {
 			ref := upgrade
-			handler = func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			handler = func(goCtx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				ctx := sdk.UnwrapSDKContext(goCtx)
 				ctx.Logger().Info(fmt.Sprintf("Starting upgrade to %q", plan.Name), "version-map", vm)
 				newVM, err := ref.Handler(ctx, app, vm)
 				if err != nil {
@@ -247,10 +312,24 @@ var _ = runModuleMigrations
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.
 // This should be applied in most upgrades.
 func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
-	unbondingTimeParam := app.StakingKeeper.GetParams(ctx).UnbondingTime
-	ctx.Logger().Info(fmt.Sprintf("Removing all delegations from validators that have been inactive (unbonded) for %d days.", int64(unbondingTimeParam.Hours()/24)))
+	ctx.Logger().Info(fmt.Sprintf("Removing inactive validator delegations."))
+
+	sParams, perr := app.StakingKeeper.GetParams(ctx)
+	if perr != nil {
+		ctx.Logger().Error(fmt.Sprintf("Could not get staking params: %v.", perr))
+		return
+	}
+
+	unbondingTimeParam := sParams.UnbondingTime
+	ctx.Logger().Info(fmt.Sprintf("Threshold: %d days", int64(unbondingTimeParam.Hours()/24)))
+
+	validators, verr := app.StakingKeeper.GetAllValidators(ctx)
+	if verr != nil {
+		ctx.Logger().Error(fmt.Sprintf("Could not get all validators: %v.", perr))
+		return
+	}
+
 	removalCount := 0
-	validators := app.StakingKeeper.GetAllValidators(ctx)
 	for _, validator := range validators {
 		if validator.IsUnbonded() {
 			inactiveDuration := ctx.BlockTime().Sub(validator.UnbondingTime)
@@ -261,12 +340,25 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 					ctx.Logger().Error(fmt.Sprintf("Invalid operator address: %s: %v.", validator.OperatorAddress, err))
 					continue
 				}
-				delegations := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
+
+				delegations, err := app.StakingKeeper.GetValidatorDelegations(ctx, valAddress)
+				if err != nil {
+					ctx.Logger().Error(fmt.Sprintf("Could not delegations for validator %s: %v.", valAddress, perr))
+					continue
+				}
+
 				for _, delegation := range delegations {
 					ctx.Logger().Info(fmt.Sprintf("Undelegate delegator %v from validator %v of all shares (%v).", delegation.DelegatorAddress, validator.OperatorAddress, delegation.GetShares()))
-					_, err = app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), valAddress, delegation.GetShares())
+					var delAddr sdk.AccAddress
+					delegator := delegation.GetDelegatorAddr()
+					delAddr, err = sdk.AccAddressFromBech32(delegator)
 					if err != nil {
-						ctx.Logger().Error(fmt.Sprintf("Failed to undelegate delegator %s from validator %s: %v.", delegation.GetDelegatorAddr().String(), valAddress.String(), err))
+						ctx.Logger().Error(fmt.Sprintf("Failed to undelegate delegator %s from validator %s: could not parse delegator address: %v.", delegator, valAddress.String(), err))
+						continue
+					}
+					_, _, err = app.StakingKeeper.Undelegate(ctx, delAddr, valAddress, delegation.GetShares())
+					if err != nil {
+						ctx.Logger().Error(fmt.Sprintf("Failed to undelegate delegator %s from validator %s: %v.", delegator, valAddress.String(), err))
 						continue
 					}
 				}
@@ -274,6 +366,7 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 			}
 		}
 	}
+
 	ctx.Logger().Info(fmt.Sprintf("A total of %d inactive (unbonded) validators have had all their delegators removed.", removalCount))
 }
 
@@ -291,7 +384,7 @@ func updateMaxSupply(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating MaxSupply marker param")
 	params := app.MarkerKeeper.GetParams(ctx)
 	//nolint:staticcheck // Populate new param with deprecated param
-	params.MaxSupply = math.NewIntFromUint64(params.MaxTotalSupply)
+	params.MaxSupply = sdkmath.NewIntFromUint64(params.MaxTotalSupply)
 	app.MarkerKeeper.SetParams(ctx, params)
 	ctx.Logger().Info("Done updating MaxSupply marker param")
 }
@@ -386,13 +479,50 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
 }
 
+// pruneIBCExpiredConsensusStates prunes expired consensus states for IBC.
+func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Pruning expired consensus states for IBC.")
+	_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("unable to prune expired consensus states, error: %s.", err))
+		return err
+	}
+	ctx.Logger().Info("Done pruning expired consensus states for IBC.")
+	return nil
+}
+
+// updateIBCClients updates the allowed clients for IBC.
+// TODO: Remove with the umber handlers.
+func updateIBCClients(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Updating IBC AllowedClients.")
+	params := app.IBCKeeper.ClientKeeper.GetParams(ctx)
+	params.AllowedClients = append(params.AllowedClients, exported.Localhost)
+	app.IBCKeeper.ClientKeeper.SetParams(ctx, params)
+	ctx.Logger().Info("Done updating IBC AllowedClients.")
+	return nil
+}
+
+// migrateBaseappParams migrates to new ConsensusParamsKeeper
+// TODO: Remove with the umber handlers.
+func migrateBaseappParams(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Migrating legacy params.")
+	legacyBaseAppSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
+	err := baseapp.MigrateParams(ctx, legacyBaseAppSubspace, app.ConsensusParamsKeeper.ParamsStore)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("unable to migrate legacy params to ConsensusParamsKeeper, error: %s.", err))
+		return err
+	}
+	ctx.Logger().Info("Done migrating legacy params.")
+	return nil
+}
+
 // convertNavUnits iterates all the net asset values and updates their units if they are using usd.
 // TODO: Remove with the tourmaline handlers.
 func convertNavUnits(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Converting NAV units.")
 	err := app.MarkerKeeper.IterateAllNetAssetValues(ctx, func(markerAddr sdk.AccAddress, nav markertypes.NetAssetValue) (stop bool) {
 		if nav.Price.Denom == markertypes.UsdDenom {
-			nav.Price.Amount = nav.Price.Amount.Mul(math.NewInt(10))
+			nav.Price.Amount = nav.Price.Amount.Mul(sdkmath.NewInt(10))
 			marker, err := app.MarkerKeeper.GetMarker(ctx, markerAddr)
 			if err != nil {
 				ctx.Logger().Error(fmt.Sprintf("Unable to get marker for address: %s, error: %s.", markerAddr, err))

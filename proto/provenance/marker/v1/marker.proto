@@ -51,7 +51,7 @@ message MarkerAccount {
   string denom = 5;
   // the total supply expected for a marker.  This is the amount that is minted when a marker is created.
   string supply = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
     (gogoproto.moretags)   = "json:\"total_supply\" yaml:\"total_supply\""
   ];

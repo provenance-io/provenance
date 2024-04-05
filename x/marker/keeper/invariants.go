@@ -36,7 +36,7 @@ func supplyInvariant(mk Keeper, bk bankkeeper.Keeper) sdk.Invariant {
 				currentSupply := bk.GetSupply(ctx, requiredSupply.Denom)
 
 				// Just log the supply status
-				if !requiredSupply.IsEqual(currentSupply) {
+				if !requiredSupply.Equal(currentSupply) {
 					ctx.Logger().Error(
 						fmt.Sprintf("Current %s supply is NOT at the required amount",
 							requiredSupply.Denom), invariantName, currentSupply)

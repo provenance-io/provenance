@@ -1,26 +1,28 @@
 package statesync
 
 import (
-	tmrpccore "github.com/tendermint/tendermint/rpc/core"
-	tmrpc "github.com/tendermint/tendermint/rpc/jsonrpc/server"
-	tmrpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
+	// cmtrpccore "github.com/cometbft/cometbft/rpc/core" // TODO[1760]: sync-info
+	// cmtrpc "github.com/cometbft/cometbft/rpc/jsonrpc/server" // TODO[1760]: sync-info
+	cmtrpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func RegisterSyncStatus() {
-	tmrpccore.Routes["sync_info"] = tmrpc.NewRPCFunc(GetSyncInfoAtBlock, "height")
+	// TODO[1760]: sync-info: Figure out how to still set a custom route.
+	// cmtrpccore.Routes["sync_info"] = cmtrpc.NewRPCFunc(GetSyncInfoAtBlock, "height")
 }
 
-func GetSyncInfoAtBlock(ctx *tmrpctypes.Context, height *int64) (*GetSyncInfo, error) {
-	block, err := tmrpccore.Block(ctx, height)
-	if err != nil {
-		return nil, err
-	}
+func GetSyncInfoAtBlock(ctx *cmtrpctypes.Context, height *int64) (*GetSyncInfo, error) {
+	// TODO[1760]: sync-info: Figure out the new way to get the current block.
+	// block, err := cmtrpccore.Block(ctx, height)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	versionInfo := version.NewInfo()
 	si := &GetSyncInfo{
-		BlockHeight: block.Block.Header.Height,
-		BlockHash:   block.Block.Header.Hash().String(),
+		BlockHeight: 123,        // block.Block.Header.Height, // TODO[1760]: sync-info
+		BlockHash:   "finishme", // block.Block.Header.Hash().String(), // TODO[1760]: sync-info
 		Version:     versionInfo.Version,
 	}
 	return si, nil

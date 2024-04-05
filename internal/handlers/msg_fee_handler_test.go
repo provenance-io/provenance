@@ -66,5 +66,4 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerSetUpIncorrect() {
 		Decoder:        nil,
 	})
 	s.Require().Error(err)
-
 }

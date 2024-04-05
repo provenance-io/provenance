@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/hold"
@@ -27,14 +27,14 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper h
 		storeKey:   storeKey,
 		bankKeeper: bankKeeper,
 	}
-	bankKeeper.AppendLockedCoinsGetter(rv.GetLockedCoins)
+	// bankKeeper.AppendLockedCoinsGetter(rv.GetLockedCoins) // TODO[1760]: locked-coins
 	return rv
 }
 
 // setHoldCoinAmount updates the store with the provided hold info.
 // If the amount is zero, the hold coin entry for addr+denom is deleted.
 // Otherwise, the hold coin entry for addr+denom is created/updated in the provided amount.
-func (k Keeper) setHoldCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) error {
+func (k Keeper) setHoldCoinAmount(store storetypes.KVStore, addr sdk.AccAddress, denom string, amount sdkmath.Int) error {
 	if len(denom) == 0 {
 		return fmt.Errorf("cannot store hold with an empty denom for %s", addr)
 	}
@@ -57,7 +57,7 @@ func (k Keeper) setHoldCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom 
 }
 
 // getHoldCoinAmount gets (from the store) the amount marked as on hold for the given address and denom.
-func (k Keeper) getHoldCoinAmount(store sdk.KVStore, addr sdk.AccAddress, denom string) (sdkmath.Int, error) {
+func (k Keeper) getHoldCoinAmount(store storetypes.KVStore, addr sdk.AccAddress, denom string) (sdkmath.Int, error) {
 	key := CreateHoldCoinKey(addr, denom)
 	amountBz := store.Get(key)
 	return UnmarshalHoldCoinValue(amountBz)
@@ -202,7 +202,7 @@ func (k Keeper) GetHoldCoins(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, e
 }
 
 // getHoldCoinPrefixStore returns a kv store prefixed for hold coin entries for the provided address.
-func (k Keeper) getHoldCoinPrefixStore(ctx sdk.Context, addr sdk.AccAddress) sdk.KVStore {
+func (k Keeper) getHoldCoinPrefixStore(ctx sdk.Context, addr sdk.AccAddress) storetypes.KVStore {
 	pre := CreateHoldCoinKeyAddrPrefix(addr)
 	return prefix.NewStore(ctx.KVStore(k.storeKey), pre)
 }
@@ -238,7 +238,7 @@ func (k Keeper) IterateHolds(ctx sdk.Context, addr sdk.AccAddress, process func(
 }
 
 // getAllHoldCoinPrefixStore returns a kv store prefixed for all hold coin entries.
-func (k Keeper) getAllHoldCoinPrefixStore(ctx sdk.Context) sdk.KVStore {
+func (k Keeper) getAllHoldCoinPrefixStore(ctx sdk.Context) storetypes.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), KeyPrefixHoldCoin)
 }
 

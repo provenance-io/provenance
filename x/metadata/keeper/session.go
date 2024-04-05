@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
+
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -89,7 +91,7 @@ func (k Keeper) IterateSessions(ctx sdk.Context, scopeID types.MetadataAddress, 
 	if err != nil {
 		return err
 	}
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var session types.Session

@@ -11,11 +11,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/types"
+	cmtos "github.com/cometbft/cometbft/libs/os"
+	cmtrand "github.com/cometbft/cometbft/libs/rand"
+	cmttypes "github.com/cometbft/cometbft/types"
 
-	errors "cosmossdk.io/errors"
+	cerrs "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -25,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -104,7 +106,7 @@ func Init(
 
 	// Stop now if the genesis file already exists and an overwrite wasn't requested.
 	genFile := tmConfig.GenesisFile()
-	if !doOverwrite && tmos.FileExists(genFile) {
+	if !doOverwrite && cmtos.FileExists(genFile) {
 		return fmt.Errorf("genesis file already exists: %v", genFile)
 	}
 
@@ -113,7 +115,7 @@ func Init(
 
 	tmConfig.Moniker = moniker
 	if len(chainID) == 0 {
-		chainID = "provenance-chain-" + tmrand.NewRand().Str(6)
+		chainID = "provenance-chain-" + cmtrand.NewRand().Str(6)
 		cmd.Printf("chain id: %s\n", chainID)
 	}
 	clientConfig.ChainID = chainID
@@ -194,13 +196,13 @@ func createAndExportGenesisFile(
 		moduleName := minttypes.ModuleName
 		var mintGenState minttypes.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &mintGenState)
-		mintGenState.Minter.Inflation = sdk.ZeroDec()
-		mintGenState.Minter.AnnualProvisions = sdk.OneDec()
+		mintGenState.Minter.Inflation = sdkmath.LegacyZeroDec()
+		mintGenState.Minter.AnnualProvisions = sdkmath.LegacyOneDec()
 		mintGenState.Params.MintDenom = pioconfig.GetProvenanceConfig().BondDenom
-		mintGenState.Params.InflationMax = sdk.ZeroDec()
-		mintGenState.Params.InflationMin = sdk.ZeroDec()
-		mintGenState.Params.InflationRateChange = sdk.OneDec()
-		mintGenState.Params.GoalBonded = sdk.OneDec()
+		mintGenState.Params.InflationMax = sdkmath.LegacyZeroDec()
+		mintGenState.Params.InflationMin = sdkmath.LegacyZeroDec()
+		mintGenState.Params.InflationRateChange = sdkmath.LegacyOneDec()
+		mintGenState.Params.GoalBonded = sdkmath.LegacyOneDec()
 		mintGenState.Params.BlocksPerYear = 6311520 // (86400 / 5) * 365.25
 		appGenState[moduleName] = cdc.MustMarshalJSON(&mintGenState)
 	}
@@ -228,7 +230,7 @@ func createAndExportGenesisFile(
 		moduleName := govtypes.ModuleName
 		var govGenState govtypesv1beta1.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &govGenState)
-		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(pioconfig.GetProvenanceConfig().BondDenom, sdk.NewInt(minDeposit)))
+		govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().BondDenom, minDeposit))
 		appGenState[moduleName] = cdc.MustMarshalJSON(&govGenState)
 	}
 
@@ -267,28 +269,34 @@ func createAndExportGenesisFile(
 		return err
 	}
 
-	genDoc := &types.GenesisDoc{}
+	appGen := &genutiltypes.AppGenesis{}
 	if _, err = os.Stat(genFile); err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
 	} else {
-		genDoc, err = types.GenesisDocFromFile(genFile)
+		appGen, err = genutiltypes.AppGenesisFromFile(genFile)
 		if err != nil {
-			return errors.Wrap(err, "Failed to read genesis doc from file")
+			return cerrs.Wrap(err, "Failed to read genesis doc from file")
 		}
 	}
 
-	genDoc.ChainID = chainID
-	genDoc.AppState = appState
-	genDoc.Validators = nil
-	if genDoc.ConsensusParams == nil {
-		genDoc.ConsensusParams = types.DefaultConsensusParams()
+	appGen.ChainID = chainID
+	appGen.AppState = appState
+	if appGen.Consensus == nil {
+		appGen.Consensus = &genutiltypes.ConsensusGenesis{
+			Validators: nil,
+			Params:     nil,
+		}
 	}
-	genDoc.ConsensusParams.Block.MaxGas = maxGas
+	appGen.Consensus.Validators = nil
+	if appGen.Consensus.Params == nil {
+		appGen.Consensus.Params = cmttypes.DefaultConsensusParams()
+	}
+	appGen.Consensus.Params.Block.MaxGas = maxGas
 
-	if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
-		return errors.Wrap(err, "Failed to export gensis file")
+	if err = genutil.ExportGenesisFile(appGen, genFile); err != nil {
+		return cerrs.Wrap(err, "Failed to export gensis file")
 	}
 
 	cmd.Printf("Genesis file created: %s\n", genFile)

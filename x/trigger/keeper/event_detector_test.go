@@ -256,13 +256,15 @@ func (s *KeeperTestSuite) TestDetectBlockEvents() {
 			registered := []types.Trigger{}
 			for _, event := range tc.triggers {
 				actions, _ := sdktx.SetMsgs([]sdk.Msg{&types.MsgDestroyTriggerRequest{Id: 1, Authority: s.accountAddresses[0].String()}})
-				any, _ := codectypes.NewAnyWithValue(event)
-				trigger := s.app.TriggerKeeper.NewTriggerWithID(s.ctx, s.accountAddresses[0].String(), any, actions)
+				anyMsg, _ := codectypes.NewAnyWithValue(event)
+				trigger := s.app.TriggerKeeper.NewTriggerWithID(s.ctx, s.accountAddresses[0].String(), anyMsg, actions)
 				s.app.TriggerKeeper.RegisterTrigger(s.ctx, trigger)
 				s.ctx.GasMeter().RefundGas(s.ctx.GasMeter().GasConsumed(), "testing")
 				registered = append(registered, trigger)
 			}
-			s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(s.ctx.EventManager().GetABCIEventHistory()))
+			abciEventHistory, ok := s.ctx.EventManager().(sdk.EventManagerWithHistoryI)
+			s.Require().True(ok, "event manager does not implement EventManagerWithHistoryI")
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManagerWithHistory(abciEventHistory.GetABCIEventHistory()))
 
 			// Action
 			s.app.TriggerKeeper.DetectBlockEvents(s.ctx)

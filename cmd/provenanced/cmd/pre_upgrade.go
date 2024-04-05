@@ -6,17 +6,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tmconfig "github.com/tendermint/tendermint/config"
+	cmtconfig "github.com/cometbft/cometbft/config"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 
+	cmderrors "github.com/provenance-io/provenance/cmd/errors"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
 )
 
 var (
-	ErrFail      error = server.ErrorCode{Code: 30}
-	ErrFailRetry error = server.ErrorCode{Code: 31}
+	ErrFail      error = cmderrors.ExitCodeError(30)
+	ErrFailRetry error = cmderrors.ExitCodeError(31)
 )
 
 // GetPreUpgradeCmd returns the pre-upgrade command which cosmovisor runs before
@@ -97,7 +97,7 @@ func UpdateConfig(cmd *cobra.Command) error {
 // SafeSaveConfigs calls config.SaveConfigs but returns an error instead of panicking.
 func SafeSaveConfigs(cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *tmconfig.Config,
+	tmConfig *cmtconfig.Config,
 	clientConfig *config.ClientConfig,
 	verbose bool,
 ) (err error) {

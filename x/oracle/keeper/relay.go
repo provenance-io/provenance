@@ -3,16 +3,17 @@ package keeper
 import (
 	"strconv"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	cerrs "cosmossdk.io/errors"
 
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v6/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
@@ -122,6 +123,7 @@ func (k Keeper) OnAcknowledgementPacket(
 			k.Logger(ctx).Error("interchain query ack response was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
 			return err
 		}
+		return cerrs.Wrapf(sdkerrors.ErrNotSupported, "not yet updated")
 	case *channeltypes.Acknowledgement_Error:
 		err := ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryError{
 			SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),

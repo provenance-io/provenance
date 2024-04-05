@@ -5,19 +5,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/reward"
 	"github.com/provenance-io/provenance/x/reward/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var (
@@ -30,7 +33,8 @@ type KeeperTestSuite struct {
 	app         *simapp.App
 	ctx         sdk.Context
 	queryClient types.QueryClient
-	handler     sdk.Handler
+	// TODO[1760]: reward: Get rid of this reward handler and call the desired keeper endpoints directly in these tests.
+	handler func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error)
 
 	accountAddr      sdk.AccAddress
 	accountKey       *secp256k1.PrivKey
@@ -53,9 +57,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.CreateAccounts(4)
 	s.handler = reward.NewHandler(s.app.RewardKeeper)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now().UTC()})
+	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now().UTC()})
 	s.createTestValidators(10)
-	s.Require().NoError(testutil.FundModuleAccount(s.app.BankKeeper, s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000000000000))), "funding module")
+	s.Require().NoError(testutil.FundModuleAccount(s.ctx, s.app.BankKeeper, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("nhash", 10000000000000))), "funding module")
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.RewardKeeper)
@@ -96,8 +100,8 @@ func (s *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
 	action.MinimumActions = 1
-	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(0, 0)
-	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(0, 0)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minimumDelegation
@@ -127,8 +131,8 @@ func (s *KeeperTestSuite) TestDelegateAgainstInactiveRewardPrograms() {
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -167,8 +171,8 @@ func (s *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
 	action.MinimumActions = 1
-	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(0, 0)
-	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(0, 0)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 10)
 	action.MinimumDelegationAmount = &minimumDelegation
@@ -198,8 +202,8 @@ func (s *KeeperTestSuite) TestNonDelegateAgainstRewardProgram() {
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -274,8 +278,8 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
 	action.MinimumActions = 1
-	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(0, 0)
-	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(0, 0)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
@@ -306,8 +310,8 @@ func (s *KeeperTestSuite) TestSingleDelegate() {
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -340,8 +344,8 @@ func (s *KeeperTestSuite) TestMultipleDelegate() {
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
 	action.MinimumActions = 1
-	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(0, 0)
-	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(0, 0)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
@@ -372,8 +376,8 @@ func (s *KeeperTestSuite) TestMultipleDelegate() {
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -407,8 +411,8 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
 	action.MinimumActions = 1
-	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(0, 0)
-	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(0, 0)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
@@ -439,8 +443,8 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumActions() {
 						MaximumActions:               20,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(7, 1),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(7, 1),
 					},
 				},
 			},
@@ -499,8 +503,8 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumActions() {
 						MaximumActions:               0,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -535,8 +539,8 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
 	action.MinimumActions = 1
-	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(0, 0)
-	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(0, 0)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 100)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 200)
@@ -567,8 +571,8 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumDelegation() {
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -603,8 +607,8 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
 	action.MinimumActions = 1
-	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(0, 0)
-	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(0, 0)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 50)
@@ -635,8 +639,8 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumDelegation() {
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -671,8 +675,8 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
 	action.MinimumActions = 1
-	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(0, 0)
-	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(0, 0)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
@@ -703,8 +707,8 @@ func (s *KeeperTestSuite) TestDelegateBelowMinimumPercentile() {
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(7, 1),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(7, 1),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 					},
 				},
 			},
@@ -739,8 +743,8 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
 	action := types.NewActionDelegate()
 	action.MaximumActions = 10
 	action.MinimumActions = 1
-	action.MinimumActiveStakePercentile = sdk.NewDecWithPrec(0, 0)
-	action.MaximumActiveStakePercentile = sdk.NewDecWithPrec(1, 0)
+	action.MinimumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(0, 0)
+	action.MaximumActiveStakePercentile = sdkmath.LegacyNewDecWithPrec(1, 0)
 
 	minimumDelegation := sdk.NewInt64Coin("nhash", 0)
 	maximumDelegation := sdk.NewInt64Coin("nhash", 100)
@@ -771,8 +775,8 @@ func (s *KeeperTestSuite) TestDelegateAboveMaximumPercentile() {
 						MaximumActions:               10,
 						MinimumDelegationAmount:      &minimumDelegation,
 						MaximumDelegationAmount:      &maximumDelegation,
-						MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-						MaximumActiveStakePercentile: sdk.NewDecWithPrec(2, 1),
+						MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+						MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(2, 1),
 					},
 				},
 			},

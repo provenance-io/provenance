@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,8 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -34,9 +36,9 @@ var bankSendAuthMsgType = banktypes.SendAuthorization{}.MsgTypeURL()
 
 func (s *TestSuite) SetupTest() {
 	app := simapp.Setup(s.T())
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
+	ctx := app.BaseApp.NewContext(false)
+	now := cmttime.Now()
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.MsgFeesKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
@@ -45,7 +47,7 @@ func (s *TestSuite) SetupTest() {
 	s.app = app
 	s.ctx = ctx
 	s.queryClient = queryClient
-	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 4, sdk.NewInt(30000000))
+	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 4, sdkmath.NewInt(30000000))
 }
 
 func (s *TestSuite) TestKeeper() {
@@ -81,25 +83,25 @@ func (s *TestSuite) TestKeeper() {
 
 func (s *TestSuite) TestConvertDenomToHash() {
 	app, ctx, _ := s.app, s.ctx, s.addrs
-	usdDollar := sdk.NewCoin(types.UsdDenom, sdk.NewInt(7_000)) // $7.00 == 100hash
+	usdDollar := sdk.NewInt64Coin(types.UsdDenom, 7_000) // $7.00 == 100hash
 	nhash, err := app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(175_000_000_000)), nhash)
-	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(70)) // $7 == 1hash
+	s.Assert().Equal(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 175_000_000_000), nhash)
+	usdDollar = sdk.NewInt64Coin(types.UsdDenom, 70) // $7 == 1hash
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(1_750_000_000)), nhash)
-	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(1_000)) // $1 == 14.2hash
+	s.Assert().Equal(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 1_750_000_000), nhash)
+	usdDollar = sdk.NewInt64Coin(types.UsdDenom, 1_000) // $1 == 14.2hash
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(25_000_000_000)), nhash)
+	s.Assert().Equal(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 25_000_000_000), nhash)
 
-	usdDollar = sdk.NewCoin(types.UsdDenom, sdk.NewInt(10))
+	usdDollar = sdk.NewInt64Coin(types.UsdDenom, 10)
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, usdDollar)
 	s.Assert().NoError(err)
-	s.Assert().Equal(sdk.NewCoin(pioconfig.GetProvenanceConfig().FeeDenom, sdk.NewInt(250_000_000)), nhash)
+	s.Assert().Equal(sdk.NewInt64Coin(pioconfig.GetProvenanceConfig().FeeDenom, 250_000_000), nhash)
 
-	jackTheCat := sdk.NewCoin("jackThecat", sdk.NewInt(70))
+	jackTheCat := sdk.NewInt64Coin("jackThecat", 70)
 	nhash, err = app.MsgFeesKeeper.ConvertDenomToHash(ctx, jackTheCat)
 	s.Assert().Equal("denom not supported for conversion jackThecat: invalid type", err.Error())
 	s.Assert().Equal(sdk.Coin{}, nhash)
@@ -131,7 +133,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	s.Assert().ErrorContains(err, "spendable balance 0jackthecat is smaller than 10jackthecat: insufficient funds")
 
 	// Account has enough funds to pay account, but not enough to sweep remaining coins
-	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))), "initial fund")
+	s.Require().NoError(testutil.FundAccount(ctx, app.BankKeeper, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))), "initial fund")
 	feeDist = make(map[string]sdk.Coins)
 	feeDist[addrs[1].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	remainingCoins = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))
@@ -143,7 +145,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	s.Assert().Equal(balances.String(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10), stakeCoin).String())
 
 	// Account has enough to pay funds to account and to sweep the remaining coins
-	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))), "followup fund")
+	s.Require().NoError(testutil.FundAccount(ctx, app.BankKeeper, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))), "followup fund")
 	feeDist = make(map[string]sdk.Coins)
 	feeDist[addrs[1].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	remainingCoins = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 11))
@@ -155,7 +157,7 @@ func (s *TestSuite) TestDeductFeesDistributions() {
 	s.Assert().Equal(balances.String(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 20), stakeCoin).String())
 
 	// Account has enough to pay funds to account, module, and to sweep the remaining coins
-	s.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 21))), "final fund")
+	s.Require().NoError(testutil.FundAccount(ctx, app.BankKeeper, acct.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 21))), "final fund")
 	feeDist = make(map[string]sdk.Coins)
 	feeDist[""] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))
 	feeDist[addrs[1].String()] = sdk.NewCoins(sdk.NewInt64Coin("jackthecat", 10))

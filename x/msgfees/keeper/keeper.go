@@ -5,11 +5,11 @@ import (
 
 	"golang.org/x/exp/constraints"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -159,7 +159,7 @@ type Handler func(record types.MsgFee) (stop bool)
 // IterateMsgFees  iterates all msg fees with the given handler function.
 func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.MsgFeeKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.MsgFeeKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -177,7 +177,7 @@ func (k Keeper) IterateMsgFees(ctx sdk.Context, handle func(msgFees types.MsgFee
 // DeductFeesDistributions deducts fees from the given account.  The fees map contains a key of bech32 addresses to distribute funds to.
 // If the key in the map is an empty string, those will go to the fee collector.  After all the accounts in fees map are paid out,
 // the remainder of remainingFees will be swept to the fee collector account.
-func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc cosmosauthtypes.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error {
+func (k Keeper) DeductFeesDistributions(bankKeeper bankkeeper.Keeper, ctx sdk.Context, acc sdk.AccountI, remainingFees sdk.Coins, fees map[string]sdk.Coins) error {
 	sentCoins := sdk.NewCoins()
 	for _, key := range sortedKeys(fees) {
 		coins := fees[key]
@@ -223,7 +223,7 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 	switch coin.Denom {
 	case types.UsdDenom:
 		nhashPerMil := int64(k.GetNhashPerUsdMil(ctx))
-		amount := coin.Amount.Mul(sdk.NewInt(nhashPerMil))
+		amount := coin.Amount.MulRaw(nhashPerMil)
 		msgFeeCoin := sdk.NewInt64Coin(conversionDenom, amount.Int64())
 		return msgFeeCoin, nil
 	case conversionDenom:

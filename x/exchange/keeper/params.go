@@ -3,13 +3,15 @@ package keeper
 import (
 	"strings"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
 // deleteAllParamsSplits deletes all the params splits in the store.
-func deleteAllParamsSplits(store sdk.KVStore) {
+func deleteAllParamsSplits(store storetypes.KVStore) {
 	keys := getAllKeys(store, GetKeyPrefixParamsSplit())
 	for _, key := range keys {
 		store.Delete(key)
@@ -17,14 +19,14 @@ func deleteAllParamsSplits(store sdk.KVStore) {
 }
 
 // setParamsSplit sets the provided params split for the provided denom.
-func setParamsSplit(store sdk.KVStore, denom string, split uint16) {
+func setParamsSplit(store storetypes.KVStore, denom string, split uint16) {
 	key := MakeKeyParamsSplit(denom)
 	value := uint16Bz(split)
 	store.Set(key, value)
 }
 
 // getParamsSplit gets the params split amount for the provided denom, and whether the entry existed.
-func getParamsSplit(store sdk.KVStore, denom string) (uint16, bool) {
+func getParamsSplit(store storetypes.KVStore, denom string) (uint16, bool) {
 	key := MakeKeyParamsSplit(denom)
 	if store.Has(key) {
 		value := store.Get(key)
@@ -36,7 +38,7 @@ func getParamsSplit(store sdk.KVStore, denom string) (uint16, bool) {
 // getParamsSplits gets the default split and all denom splits from state.
 // Returns the default split amount, the specific denom splits, and whether there were any entries in state.
 // If there are no splits entries in state (default or specific), returns 0, nil, false.
-func getParamsSplits(store sdk.KVStore) (uint32, []exchange.DenomSplit, bool) {
+func getParamsSplits(store storetypes.KVStore) (uint32, []exchange.DenomSplit, bool) {
 	var defaultSplit uint32
 	var denomSplits []exchange.DenomSplit
 	var haveVals bool
@@ -62,7 +64,7 @@ func getParamsSplits(store sdk.KVStore) (uint32, []exchange.DenomSplit, bool) {
 }
 
 // setParamsFeePaymentFlat sets a payment flat fee params entry.
-func setParamsFeePaymentFlat(store sdk.KVStore, key []byte, opts []sdk.Coin) {
+func setParamsFeePaymentFlat(store storetypes.KVStore, key []byte, opts []sdk.Coin) {
 	if len(opts) == 0 || sdk.Coins(opts).IsZero() {
 		store.Delete(key)
 		return
@@ -72,7 +74,7 @@ func setParamsFeePaymentFlat(store sdk.KVStore, key []byte, opts []sdk.Coin) {
 }
 
 // getParamsPaymentFlatFee gets a payment flat fee params entry.
-func getParamsPaymentFlatFee(store sdk.KVStore, key []byte) []sdk.Coin {
+func getParamsPaymentFlatFee(store storetypes.KVStore, key []byte) []sdk.Coin {
 	val := store.Get(key)
 	if len(val) == 0 {
 		return nil
@@ -91,22 +93,22 @@ func getParamsPaymentFlatFee(store sdk.KVStore, key []byte) []sdk.Coin {
 }
 
 // setParamsFeeCreatePaymentFlat sets the params entry for the create-payment flat fee.
-func setParamsFeeCreatePaymentFlat(store sdk.KVStore, opts []sdk.Coin) {
+func setParamsFeeCreatePaymentFlat(store storetypes.KVStore, opts []sdk.Coin) {
 	setParamsFeePaymentFlat(store, MakeKeyParamsFeeCreatePaymentFlat(), opts)
 }
 
 // setParamsFeeCreatePaymentFlat sets the params entry for the accept-payment flat fee.
-func setParamsFeeAcceptPaymentFlat(store sdk.KVStore, opts []sdk.Coin) {
+func setParamsFeeAcceptPaymentFlat(store storetypes.KVStore, opts []sdk.Coin) {
 	setParamsFeePaymentFlat(store, MakeKeyParamsFeeAcceptPaymentFlat(), opts)
 }
 
 // getParamsFeeCreatePaymentFlat gets the params entry for the create-payment flat fee.
-func getParamsFeeCreatePaymentFlat(store sdk.KVStore) []sdk.Coin {
+func getParamsFeeCreatePaymentFlat(store storetypes.KVStore) []sdk.Coin {
 	return getParamsPaymentFlatFee(store, MakeKeyParamsFeeCreatePaymentFlat())
 }
 
 // getParamsFeeAcceptPaymentFlat gets the params entry for the accept-payment flat fee.
-func getParamsFeeAcceptPaymentFlat(store sdk.KVStore) []sdk.Coin {
+func getParamsFeeAcceptPaymentFlat(store storetypes.KVStore) []sdk.Coin {
 	return getParamsPaymentFlatFee(store, MakeKeyParamsFeeAcceptPaymentFlat())
 }
 

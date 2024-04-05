@@ -12,13 +12,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
 
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/provenance-io/provenance/app"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -48,10 +47,8 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	app := app.Setup(s.T())
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	s.app = app
-	s.ctx = ctx
+	s.app = app.Setup(s.T())
+	s.ctx = s.app.BaseApp.NewContext(false)
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
 	s.user1 = s.user1Addr.String()
@@ -68,7 +65,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	nameData.Params.MinSegmentLength = 2
 	nameData.Params.MaxSegmentLength = 16
 
-	app.NameKeeper.InitGenesis(ctx, nameData)
+	s.app.NameKeeper.InitGenesis(s.ctx, nameData)
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr))
@@ -411,7 +408,7 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 	// b) I don't want to worry about any of the name records automatically added for the suite runs.
 
 	provApp := app.Setup(t)
-	ctx := provApp.NewContext(false, tmproto.Header{})
+	ctx := provApp.NewContext(false)
 
 	getRecordNames := func(records nametypes.NameRecords) []string {
 		rv := make([]string, len(records))
@@ -514,12 +511,12 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 				// Error log lines will start with "ERR ".
 				// Info log lines will start with "INF ".
 				// Debug log lines are omitted, but would start with "DBG ".
-				logger := server.ZeroLogWrapper{Logger: zerolog.New(lw).Level(zerolog.InfoLevel)}
+				logger := log.NewCustomLogger(zerolog.New(lw).Level(zerolog.InfoLevel))
 
 				// And use a fresh event manager.
 				em := sdk.NewEventManager()
 
-				tctx := provApp.NewContext(false, tmproto.Header{}).WithEventManager(em).WithLogger(logger)
+				tctx := provApp.NewContext(false).WithEventManager(em).WithLogger(logger)
 				testFunc := func() {
 					provApp.NameKeeper.DeleteInvalidAddressIndexEntries(tctx)
 				}

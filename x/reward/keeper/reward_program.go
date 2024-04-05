@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -76,7 +78,7 @@ func (k Keeper) GetRewardProgram(ctx sdk.Context, id uint64) (rewardProgram type
 // IterateRewardPrograms iterates all reward programs with the given handler function.
 func (k Keeper) IterateRewardPrograms(ctx sdk.Context, handle func(rewardProgram types.RewardProgram) (stop bool, err error)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.RewardProgramKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.RewardProgramKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

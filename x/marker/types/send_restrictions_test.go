@@ -5,8 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestKeysContainModuleName(t *testing.T) {
@@ -16,7 +17,7 @@ func TestKeysContainModuleName(t *testing.T) {
 
 func TestContextCombos(t *testing.T) {
 	newCtx := func() sdk.Context {
-		return sdk.NewContext(nil, tmproto.Header{}, false, nil)
+		return sdk.NewContext(nil, cmtproto.Header{}, false, nil)
 	}
 
 	tests := []struct {
@@ -64,37 +65,37 @@ func TestBypassFuncs(t *testing.T) {
 	}{
 		{
 			name: "brand new mostly empty context",
-			ctx:  sdk.NewContext(nil, tmproto.Header{}, false, nil),
+			ctx:  sdk.NewContext(nil, cmtproto.Header{}, false, nil),
 			exp:  false,
 		},
 		{
 			name: "context with bypass",
-			ctx:  WithBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil)),
+			ctx:  WithBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil)),
 			exp:  true,
 		},
 		{
 			name: "context with bypass on one that originally was without it",
-			ctx:  WithBypass(WithoutBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil))),
+			ctx:  WithBypass(WithoutBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil))),
 			exp:  true,
 		},
 		{
 			name: "context with bypass twice",
-			ctx:  WithBypass(WithBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil))),
+			ctx:  WithBypass(WithBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil))),
 			exp:  true,
 		},
 		{
 			name: "context without bypass",
-			ctx:  WithoutBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil)),
+			ctx:  WithoutBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil)),
 			exp:  false,
 		},
 		{
 			name: "context without bypass on one that originally had it",
-			ctx:  WithoutBypass(WithBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil))),
+			ctx:  WithoutBypass(WithBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil))),
 			exp:  false,
 		},
 		{
 			name: "context without bypass twice",
-			ctx:  WithoutBypass(WithoutBypass(sdk.NewContext(nil, tmproto.Header{}, false, nil))),
+			ctx:  WithoutBypass(WithoutBypass(sdk.NewContext(nil, cmtproto.Header{}, false, nil))),
 			exp:  false,
 		},
 	}
@@ -108,7 +109,7 @@ func TestBypassFuncs(t *testing.T) {
 }
 
 func TestBypassFuncsDoNotModifyProvided(t *testing.T) {
-	origCtx := sdk.NewContext(nil, tmproto.Header{}, false, nil)
+	origCtx := sdk.NewContext(nil, cmtproto.Header{}, false, nil)
 	assert.False(t, HasBypass(origCtx), "HasBypass(origCtx)")
 	afterWith := WithBypass(origCtx)
 	assert.True(t, HasBypass(afterWith), "HasBypass(afterWith)")
@@ -121,7 +122,7 @@ func TestBypassFuncsDoNotModifyProvided(t *testing.T) {
 
 func TestTransferAgentFuncs(t *testing.T) {
 	newCtx := func() sdk.Context {
-		return sdk.NewContext(nil, tmproto.Header{}, false, nil)
+		return sdk.NewContext(nil, cmtproto.Header{}, false, nil)
 	}
 
 	tests := []struct {
@@ -175,7 +176,7 @@ func TestTransferAgentFuncs(t *testing.T) {
 }
 
 func TestTransferAgentFuncsDoNotModifyProvided(t *testing.T) {
-	origCtx := sdk.NewContext(nil, tmproto.Header{}, false, nil)
+	origCtx := sdk.NewContext(nil, cmtproto.Header{}, false, nil)
 	assert.Nil(t, GetTransferAgent(origCtx), "GetTransferAgent(origCtx)")
 
 	ta := sdk.AccAddress("great_transfer_agent")

@@ -3,16 +3,13 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	tmconfig "github.com/tendermint/tendermint/config"
+	cmtconfig "github.com/cometbft/cometbft/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -95,7 +92,7 @@ func DefaultAppConfig() *serverconfig.Config {
 }
 
 // ExtractTmConfig creates a tendermint config from the command context.
-func ExtractTmConfig(cmd *cobra.Command) (*tmconfig.Config, error) {
+func ExtractTmConfig(cmd *cobra.Command) (*cmtconfig.Config, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
 	conf := DefaultTmConfig()
 	if err := v.Unmarshal(conf); err != nil {
@@ -113,7 +110,7 @@ func ExtractTmConfig(cmd *cobra.Command) (*tmconfig.Config, error) {
 }
 
 // ExtractTmConfigAndMap from the command context, creates a tendermint config and related string->value map.
-func ExtractTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap, error) {
+func ExtractTmConfigAndMap(cmd *cobra.Command) (*cmtconfig.Config, FieldValueMap, error) {
 	conf, err := ExtractTmConfig(cmd)
 	if err != nil {
 		return nil, nil, err
@@ -123,8 +120,8 @@ func ExtractTmConfigAndMap(cmd *cobra.Command) (*tmconfig.Config, FieldValueMap,
 	return conf, fields, nil
 }
 
-func DefaultTmConfig() *tmconfig.Config {
-	rv := tmconfig.DefaultConfig()
+func DefaultTmConfig() *cmtconfig.Config {
+	rv := cmtconfig.DefaultConfig()
 	rv.Consensus.TimeoutCommit = DefaultConsensusTimeoutCommit
 	rv.TxIndex.Indexer = "null"
 	return rv
@@ -187,7 +184,7 @@ func GetAllConfigDefaults() FieldValueMap {
 func SaveConfigs(
 	cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *tmconfig.Config,
+	tmConfig *cmtconfig.Config,
 	clientConfig *ClientConfig,
 	verbose bool,
 ) {
@@ -204,7 +201,7 @@ func SaveConfigs(
 func writeUnpackedConfig(
 	cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *tmconfig.Config,
+	tmConfig *cmtconfig.Config,
 	clientConfig *ClientConfig,
 	verbose bool,
 ) {
@@ -224,7 +221,7 @@ func writeUnpackedConfig(
 		if verbose {
 			cmd.Printf("Writing tendermint config to: %s ... ", confFile)
 		}
-		tmconfig.WriteConfigFile(confFile, tmConfig)
+		cmtconfig.WriteConfigFile(confFile, tmConfig)
 		if verbose {
 			cmd.Printf("Done.\n")
 		}
@@ -270,7 +267,7 @@ func deleteUnpackedConfig(cmd *cobra.Command, verbose bool) error {
 func generateAndWritePackedConfig(
 	cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *tmconfig.Config,
+	tmConfig *cmtconfig.Config,
 	clientConfig *ClientConfig,
 	verbose bool,
 ) {
@@ -607,22 +604,10 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 	serverCtx.Config.SetRoot(clientCtx.HomeDir)
 
 	// Set the server context's logger using what Viper has now.
-	var logWriter io.Writer
-	switch logFmt := serverCtx.Viper.GetString(flags.FlagLogFormat); strings.ToLower(logFmt) {
-	case tmconfig.LogFormatPlain:
-		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
-	case tmconfig.LogFormatJSON:
-		logWriter = os.Stderr
-	default:
-		return fmt.Errorf("unknown log format: %s", logFmt)
+	serverCtx.Logger, err = server.CreateSDKLogger(serverCtx, cmd.ErrOrStderr())
+	if err != nil {
+		return fmt.Errorf("error creating logger: %w", err)
 	}
-	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
-	logLvl, perr := zerolog.ParseLevel(strings.ToLower(logLvlStr))
-	if perr != nil {
-		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, perr)
-	}
-	logger := zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()
-	serverCtx.Logger = server.ZeroLogWrapper{Logger: logger}
 
 	// Copy all settings from our viper to the global viper since some stuff uses the global one.
 	if err = viper.MergeConfigMap(serverCtx.Viper.AllSettings()); err != nil {

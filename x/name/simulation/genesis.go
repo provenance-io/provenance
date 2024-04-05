@@ -53,31 +53,31 @@ func GenRootNameSegment(r *rand.Rand, minSegmentLength uint32) string {
 func RandomizedGenState(simState *module.SimulationState) {
 	var maxValueLength uint32
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MaxSegmentLength, &maxValueLength, simState.Rand,
+		MaxSegmentLength, &maxValueLength, simState.Rand,
 		func(r *rand.Rand) { maxValueLength = GenMaxSegmentLength(r) },
 	)
 
 	var maxNameLevels uint32
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MaxSegmentLength, &maxNameLevels, simState.Rand,
+		MaxSegmentLength, &maxNameLevels, simState.Rand,
 		func(r *rand.Rand) { maxNameLevels = GenMaxNameLevels(r) },
 	)
 
 	var minValueLength uint32
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, MaxSegmentLength, &minValueLength, simState.Rand,
+		MaxSegmentLength, &minValueLength, simState.Rand,
 		func(r *rand.Rand) { minValueLength = GenMinSegmentLength(r) },
 	)
 
 	var allowUnrestrictedNames bool
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, AllowUnrestrictedNames, &allowUnrestrictedNames, simState.Rand,
+		AllowUnrestrictedNames, &allowUnrestrictedNames, simState.Rand,
 		func(r *rand.Rand) { allowUnrestrictedNames = GenAllowUnrestrictedNames(r) },
 	)
 
 	var rootNameSegment string
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, RootNameSegment, &rootNameSegment, simState.Rand,
+		RootNameSegment, &rootNameSegment, simState.Rand,
 		func(r *rand.Rand) { rootNameSegment = GenRootNameSegment(r, minValueLength) },
 	)
 

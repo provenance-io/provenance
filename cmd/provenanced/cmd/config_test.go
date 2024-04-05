@@ -17,11 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
@@ -51,7 +51,7 @@ func (s *ConfigTestSuite) SetupTest() {
 
 	pioconfig.SetProvenanceConfig("confcoin", 5)
 
-	encodingConfig := sdksim.MakeTestEncodingConfig()
+	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithHomeDir(s.Home)

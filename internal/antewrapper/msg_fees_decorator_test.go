@@ -3,11 +3,12 @@ package antewrapper_test
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -38,7 +39,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorIgnoresMinGasPrice() {
 	tx, _ := createTestTx(s, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)))
 
 	// Set gas price to 1,000,000 stake to make sure it's not being used in the handler.
-	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(1_000_000))
+	stakePrice := sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdkmath.LegacyNewDec(1_000_000))
 	highGasPrice := []sdk.DecCoin{stakePrice}
 	ctx := s.ctx.WithMinGasPrices(highGasPrice).WithChainID("test-chain")
 
@@ -136,7 +137,7 @@ func (s *AnteTestSuite) TestMsgFeesDecoratorWrongDenom() {
 	s.Assert().ErrorContains(err, `insufficient fee`)
 }
 
-func createTestTx(s *AnteTestSuite, feeAmount sdk.Coins) (signing.Tx, types.AccountI) {
+func createTestTx(s *AnteTestSuite, feeAmount sdk.Coins) (signing.Tx, sdk.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)

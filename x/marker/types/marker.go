@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
+
+	sdkmath "cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +16,7 @@ import (
 
 var (
 	// ensure the MarkerAccount correctly extends the following interfaces
-	_ authtypes.AccountI       = (*MarkerAccount)(nil)
+	_ sdk.AccountI             = (*MarkerAccount)(nil)
 	_ authtypes.GenesisAccount = (*MarkerAccount)(nil)
 	_ MarkerAccountI           = (*MarkerAccount)(nil)
 )
@@ -23,7 +25,7 @@ var (
 type MarkerAccountI interface {
 	proto.Message
 
-	authtypes.AccountI
+	sdk.AccountI
 	Clone() *MarkerAccount
 
 	Validate() error
@@ -66,7 +68,7 @@ func NewEmptyMarkerAccount(denom, manager string, grants []AccessGrant) *MarkerA
 		AccessControl:          grants,
 		Denom:                  denom,
 		Manager:                manager,
-		Supply:                 sdk.ZeroInt(),
+		Supply:                 sdkmath.ZeroInt(),
 		Status:                 StatusProposed,
 		MarkerType:             MarkerType_Coin,
 		SupplyFixed:            true,
@@ -483,7 +485,7 @@ func (mnav *NetAssetValue) Validate() error {
 		return err
 	}
 
-	if mnav.Price.Amount.GT(sdk.NewInt(0)) && mnav.Volume < 1 {
+	if mnav.Price.Amount.GT(sdkmath.NewInt(0)) && mnav.Volume < 1 {
 		return fmt.Errorf("marker net asset value volume must be positive value")
 	}
 

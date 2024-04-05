@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -67,8 +69,8 @@ func (s *RewardTypesTestSuite) TestRewardProgramValidate() {
 								MaximumActions:               1,
 								MinimumDelegationAmount:      &minDelegation,
 								MaximumDelegationAmount:      &maxDelegation,
-								MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-								MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+								MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+								MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 							},
 						},
 					},
@@ -362,8 +364,8 @@ func (s *RewardTypesTestSuite) TestActionDelegateCreation() {
 		MaximumActions:               1,
 		MinimumDelegationAmount:      &minDelegation,
 		MaximumDelegationAmount:      &maxDelegation,
-		MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-		MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+		MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+		MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 	}
 	s.Assert().Nil(action.Validate(), "validate basic must have no error")
 	s.Assert().Equal("ActionDelegate", action.ActionType(), "must have appropriate action type")

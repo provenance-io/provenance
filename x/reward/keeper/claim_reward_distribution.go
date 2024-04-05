@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/reward/types"
@@ -28,7 +30,7 @@ func (k Keeper) GetClaimPeriodRewardDistribution(ctx sdk.Context, claimPeriodID 
 // IterateClaimPeriodRewardDistributions  iterates all epoch reward distributions with the given handler function.
 func (k Keeper) IterateClaimPeriodRewardDistributions(ctx sdk.Context, handle func(ClaimPeriodRewardDistribution types.ClaimPeriodRewardDistribution) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.ClaimPeriodRewardDistributionKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.ClaimPeriodRewardDistributionKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

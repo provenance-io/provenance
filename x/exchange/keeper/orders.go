@@ -5,17 +5,20 @@ import (
 	"fmt"
 	"strings"
 
-	db "github.com/cometbft/cometbft-db"
+	dbm "github.com/cometbft/cometbft-db"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/exchange"
 )
 
 // getLastOrderID gets the id of the last order created.
-func getLastOrderID(store sdk.KVStore) uint64 {
+func getLastOrderID(store storetypes.KVStore) uint64 {
 	key := MakeKeyLastOrderID()
 	value := store.Get(key)
 	rv, _ := uint64FromBz(value)
@@ -23,7 +26,7 @@ func getLastOrderID(store sdk.KVStore) uint64 {
 }
 
 // setLastOrderID sets the id of the last order created.
-func setLastOrderID(store sdk.KVStore, orderID uint64) {
+func setLastOrderID(store storetypes.KVStore, orderID uint64) {
 	key := MakeKeyLastOrderID()
 	value := uint64Bz(orderID)
 	store.Set(key, value)
@@ -31,7 +34,7 @@ func setLastOrderID(store sdk.KVStore, orderID uint64) {
 
 // nextOrderID finds the next available order id, updates the last order id
 // store entry, and returns the unused id it found.
-func nextOrderID(store sdk.KVStore) uint64 {
+func nextOrderID(store storetypes.KVStore) uint64 {
 	orderID := getLastOrderID(store) + 1
 	setLastOrderID(store, orderID)
 	return orderID
@@ -116,7 +119,7 @@ func (k Keeper) parseOrderStoreKeyValue(key, value []byte) (*exchange.Order, err
 
 // createConstantIndexEntries creates all the key/value index entries for an order that don't change.
 // See also: createMarketExternalIDToOrderEntry.
-func createConstantIndexEntries(order exchange.Order) []sdk.KVPair {
+func createConstantIndexEntries(order exchange.Order) []kv.Pair {
 	marketID := order.GetMarketID()
 	orderID := order.GetOrderID()
 	orderTypeByte := order.GetOrderTypeByte()
@@ -124,7 +127,7 @@ func createConstantIndexEntries(order exchange.Order) []sdk.KVPair {
 	addr := sdk.MustAccAddressFromBech32(owner)
 	assets := order.GetAssets()
 
-	return []sdk.KVPair{
+	return []kv.Pair{
 		{
 			Key:   MakeIndexKeyMarketToOrder(marketID, orderID),
 			Value: []byte{orderTypeByte},
@@ -142,19 +145,19 @@ func createConstantIndexEntries(order exchange.Order) []sdk.KVPair {
 
 // createMarketExternalIDToOrderEntry creates the market external id to order store entry.
 // See also createConstantIndexEntries
-func createMarketExternalIDToOrderEntry(order exchange.OrderI) *sdk.KVPair {
+func createMarketExternalIDToOrderEntry(order exchange.OrderI) *kv.Pair {
 	externalID := order.GetExternalID()
 	if len(externalID) == 0 {
 		return nil
 	}
-	return &sdk.KVPair{
+	return &kv.Pair{
 		Key:   MakeIndexKeyMarketExternalIDToOrder(order.GetMarketID(), externalID),
 		Value: uint64Bz(order.GetOrderID()),
 	}
 }
 
 // getOrderFromStore looks up an order from the store. Returns nil, nil if the order does not exist.
-func (k Keeper) getOrderFromStore(store sdk.KVStore, orderID uint64) (*exchange.Order, error) {
+func (k Keeper) getOrderFromStore(store storetypes.KVStore, orderID uint64) (*exchange.Order, error) {
 	key := MakeKeyOrder(orderID)
 	value := store.Get(key)
 	if len(value) == 0 {
@@ -168,7 +171,7 @@ func (k Keeper) getOrderFromStore(store sdk.KVStore, orderID uint64) (*exchange.
 }
 
 // setOrderInStore writes an order to the store (along with all its indexes).
-func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
+func (k Keeper) setOrderInStore(store storetypes.KVStore, order exchange.Order) error {
 	key, value, err := k.getOrderStoreKeyValue(order)
 	if err != nil {
 		return fmt.Errorf("failed to create order %d store key/value: %w", order.GetOrderID(), err)
@@ -201,7 +204,7 @@ func (k Keeper) setOrderInStore(store sdk.KVStore, order exchange.Order) error {
 }
 
 // deleteAndDeIndexOrder deletes an order from the store along with its indexes.
-func deleteAndDeIndexOrder(store sdk.KVStore, order exchange.Order) {
+func deleteAndDeIndexOrder(store storetypes.KVStore, order exchange.Order) {
 	key := MakeKeyOrder(order.OrderId)
 	store.Delete(key)
 	indexEntries := createConstantIndexEntries(order)
@@ -294,7 +297,7 @@ func (k Keeper) getPageOfOrdersFromIndex(
 // When accumulate is set to true the current result should be appended to the result set returned
 // to the client.
 func filteredPaginateAfterOrder(
-	prefixStore sdk.KVStore,
+	prefixStore storetypes.KVStore,
 	pageRequest *query.PageRequest,
 	afterOrderID uint64,
 	onResult func(key []byte, value []byte, accumulate bool) (bool, error),
@@ -403,7 +406,7 @@ func filteredPaginateAfterOrder(
 }
 
 // getOrderIterator is similar to query.getIterator but allows limiting it to only entries after a certain order id.
-func getOrderIterator(prefixStore sdk.KVStore, start []byte, reverse bool, afterOrderID uint64) db.Iterator {
+func getOrderIterator(prefixStore storetypes.KVStore, start []byte, reverse bool, afterOrderID uint64) dbm.Iterator {
 	if reverse {
 		var end []byte
 		if start != nil {
@@ -436,7 +439,7 @@ func getOrderIterator(prefixStore sdk.KVStore, start []byte, reverse bool, after
 }
 
 // validateMarketIsAcceptingOrders makes sure the market exists and is accepting orders.
-func validateMarketIsAcceptingOrders(store sdk.KVStore, marketID uint32) error {
+func validateMarketIsAcceptingOrders(store storetypes.KVStore, marketID uint32) error {
 	if err := validateMarketExists(store, marketID); err != nil {
 		return err
 	}
@@ -463,7 +466,7 @@ func (k Keeper) validateUserCanCreateBid(ctx sdk.Context, marketID uint32, buyer
 }
 
 // validateCreateAskFees makes sure the fees are okay for creating an ask order.
-func validateCreateAskFees(store sdk.KVStore, marketID uint32, creationFee *sdk.Coin, settlementFlatFee *sdk.Coin) error {
+func validateCreateAskFees(store storetypes.KVStore, marketID uint32, creationFee *sdk.Coin, settlementFlatFee *sdk.Coin) error {
 	if err := validateCreateAskFlatFee(store, marketID, creationFee); err != nil {
 		return err
 	}
@@ -471,7 +474,7 @@ func validateCreateAskFees(store sdk.KVStore, marketID uint32, creationFee *sdk.
 }
 
 // validateCreateBidFees makes sure the fees are okay for creating a bid order.
-func validateCreateBidFees(store sdk.KVStore, marketID uint32, creationFee *sdk.Coin, price sdk.Coin, settlementFees sdk.Coins) error {
+func validateCreateBidFees(store storetypes.KVStore, marketID uint32, creationFee *sdk.Coin, price sdk.Coin, settlementFees sdk.Coins) error {
 	if err := validateCreateBidFlatFee(store, marketID, creationFee); err != nil {
 		return err
 	}
@@ -480,7 +483,7 @@ func validateCreateBidFees(store sdk.KVStore, marketID uint32, creationFee *sdk.
 
 // getAskOrders gets orders from the store, making sure they're ask orders in the given market
 // and do not have the same seller as the provided buyer. If the buyer isn't yet known, just provide "" for it.
-func (k Keeper) getAskOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, buyer string) ([]*exchange.Order, error) {
+func (k Keeper) getAskOrders(store storetypes.KVStore, marketID uint32, orderIDs []uint64, buyer string) ([]*exchange.Order, error) {
 	var errs []error
 	orders := make([]*exchange.Order, 0, len(orderIDs))
 
@@ -520,7 +523,7 @@ func (k Keeper) getAskOrders(store sdk.KVStore, marketID uint32, orderIDs []uint
 
 // getBidOrders gets orders from the store, making sure they're bid orders in the given market
 // and do not have the same buyer as the provided seller. If the seller isn't yet known, just provide "" for it.
-func (k Keeper) getBidOrders(store sdk.KVStore, marketID uint32, orderIDs []uint64, seller string) ([]*exchange.Order, error) {
+func (k Keeper) getBidOrders(store storetypes.KVStore, marketID uint32, orderIDs []uint64, seller string) ([]*exchange.Order, error) {
 	var errs []error
 	orders := make([]*exchange.Order, 0, len(orderIDs))
 

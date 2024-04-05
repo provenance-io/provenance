@@ -5,7 +5,11 @@ import (
 	"testing"
 	"time"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+	"github.com/stretchr/testify/suite"
+
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -16,8 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -67,11 +69,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var genBalances []banktypes.Balance
 	for i := range s.accountAddresses {
 		genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[i].String(), Coins: sdk.NewCoins(
-			sdk.NewCoin("nhash", sdk.NewInt(100000000)), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000000)),
+			sdk.NewInt64Coin("nhash", 100_000_000), sdk.NewInt64Coin(s.cfg.BondDenom, 100_000_000),
 		).Sort()})
 	}
 	genBalances = append(genBalances, banktypes.Balance{Address: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma", Coins: sdk.NewCoins(
-		sdk.NewCoin("nhash", sdk.NewInt(100000000)), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100000000))).Sort()})
+		sdk.NewInt64Coin("nhash", 100_000_000), sdk.NewInt64Coin(s.cfg.BondDenom, 100_000_000)).Sort()})
 	var bankGenState banktypes.GenesisState
 	bankGenState.Params = banktypes.DefaultParams()
 	bankGenState.Balances = genBalances
@@ -102,8 +104,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 					MaximumActions:               10,
 					MinimumDelegationAmount:      &minimumDelegation,
 					MaximumDelegationAmount:      &maximumDelegation,
-					MinimumActiveStakePercentile: sdk.NewDecWithPrec(0, 0),
-					MaximumActiveStakePercentile: sdk.NewDecWithPrec(1, 0),
+					MinimumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(0, 0),
+					MaximumActiveStakePercentile: sdkmath.LegacyNewDecWithPrec(1, 0),
 				},
 			},
 		},
@@ -315,7 +317,7 @@ func (s *IntegrationTestSuite) TestQueryRewardPrograms() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), []string{tc.queryTypeArg, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardProgramCmd(), []string{tc.queryTypeArg, fmt.Sprintf("--%s=json", cmtcli.OutputFlag)})
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else if tc.byId {
@@ -456,7 +458,7 @@ func (s *IntegrationTestSuite) TestQueryClaimPeriodRewardDistributionAll() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetClaimPeriodRewardDistributionCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)
 			} else if tc.byId {
@@ -681,12 +683,12 @@ func (s *IntegrationTestSuite) TestGetCmdRewardProgramAdd() {
 			args := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
 			tc.args = append(tc.args, args...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramAdd(), append(tc.args, []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}...))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdRewardProgramAdd(), append(tc.args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
 			var response sdk.TxResponse
 			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
 			if len(tc.expectErrMsg) > 0 {
@@ -726,8 +728,8 @@ func (s *IntegrationTestSuite) TestTxClaimReward() {
 			args := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.network.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
 			args = append(args, tc.claimRewardArg)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdClaimReward(), args)
@@ -798,8 +800,8 @@ func (s *IntegrationTestSuite) TestTxEndRewardProgram() {
 			args := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
 			args = append(args, tc.endRewardProgramId)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetCmdEndRewardProgram(), args)
@@ -905,7 +907,7 @@ func (s *IntegrationTestSuite) TestQueryAllRewardsPerAddress() {
 
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			args := []string{tc.addressArg, tc.stateArg, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+			args := []string{tc.addressArg, tc.stateArg, fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, rewardcli.GetRewardsByAddressCmd(), args)
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg)

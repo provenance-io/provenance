@@ -291,7 +291,7 @@ func (m MsgMarketCommitmentSettleRequest) Validate(requireInputs bool) error {
 	if inputsOk && outputsOk {
 		inputTot := SumAccountAmounts(m.Inputs)
 		outputTot := SumAccountAmounts(m.Outputs)
-		if !CoinsEquals(inputTot, outputTot) {
+		if !inputTot.Equal(outputTot) {
 			errs = append(errs, fmt.Errorf("input total %q does not equal output total %q", inputTot, outputTot))
 		}
 	}

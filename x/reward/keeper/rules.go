@@ -18,7 +18,12 @@ import (
 // This is similar to the ctx.CacheContext() function, but this keeps the history so we can act on it.
 func CacheContextWithHistory(ctx sdk.Context) (cc sdk.Context, writeCache func()) {
 	cms := ctx.MultiStore().CacheMultiStore()
-	cc = ctx.WithMultiStore(cms).WithEventManager(sdk.NewEventManagerWithHistory(ctx.EventManager().GetABCIEventHistory()))
+	cc = ctx.WithMultiStore(cms)
+	abciEventHistory, ok := ctx.EventManager().(sdk.EventManagerWithHistoryI)
+	if !ok {
+		panic("event manager does not implement EventManagerWithHistoryI")
+	}
+	cc = cc.WithEventManager(sdk.NewEventManagerWithHistory(abciEventHistory.GetABCIEventHistory()))
 
 	writeCache = func() {
 		ctx.EventManager().EmitEvents(cc.EventManager().Events())
@@ -174,7 +179,12 @@ func (k Keeper) RewardShares(ctx sdk.Context, rewardProgram *types.RewardProgram
 // IterateABCIEvents Iterates through all the ABCIEvents that match the eventCriteria.
 // Nil criteria means to iterate over everything.
 func (k Keeper) IterateABCIEvents(ctx sdk.Context, criteria *types.EventCriteria, action func(string, *map[string][]byte) error) error {
-	for _, event := range ctx.EventManager().GetABCIEventHistory() {
+	abciEventHistory, ok := ctx.EventManager().(sdk.EventManagerWithHistoryI)
+	if !ok {
+		panic("event manager does not implement EventManagerWithHistoryI")
+	}
+
+	for _, event := range abciEventHistory.GetABCIEventHistory() {
 		event := event
 
 		// Event type must match the criteria
@@ -186,7 +196,7 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, criteria *types.EventCriteria
 		// Convert the attributes into a map
 		attributes := make(map[string][]byte)
 		for _, attribute := range event.Attributes {
-			attributes[string(attribute.Key)] = attribute.Value
+			attributes[string(attribute.Key)] = []byte(attribute.Value)
 		}
 
 		valid := true
@@ -210,7 +220,6 @@ func (k Keeper) IterateABCIEvents(ctx sdk.Context, criteria *types.EventCriteria
 			return err
 		}
 	}
-
 	return nil
 }
 

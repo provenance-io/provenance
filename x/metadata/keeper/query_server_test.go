@@ -7,16 +7,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -58,7 +58,7 @@ type QueryServerTestSuite struct {
 
 func (s *QueryServerTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, s.app.MetadataKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
@@ -1319,7 +1319,7 @@ func (s *QueryServerTestSuite) TestScopeNetAssetValuesQuery() {
 		netAssetValues[i] = types.NetAssetValue{
 			Price: sdk.Coin{
 				Denom:  fmt.Sprintf("usd%v", i),
-				Amount: sdk.NewInt(100 * int64(i+1)),
+				Amount: sdkmath.NewInt(100 * int64(i+1)),
 			},
 		}
 		err := app.MetadataKeeper.SetNetAssetValue(ctx, scopeID, netAssetValues[i], "source")

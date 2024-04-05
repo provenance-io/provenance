@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -9,7 +11,7 @@ import (
 // This file is available only to unit tests and exposes private things
 // so that they can be used in unit tests.
 
-func (k Keeper) GetStore(ctx sdk.Context) sdk.KVStore {
+func (k Keeper) GetStore(ctx sdk.Context) storetypes.KVStore {
 	return ctx.KVStore(k.storeKey)
 }
 

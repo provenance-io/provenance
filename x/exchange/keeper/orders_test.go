@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
@@ -1657,7 +1658,7 @@ func (s *TestSuite) TestKeeper_CancelOrder() {
 			}
 
 			var expEvents sdk.Events
-			var expDelKVs []sdk.KVPair
+			var expDelKVs []kv.Pair
 			if cancelledOrder != nil {
 				event := exchange.NewEventOrderCancelled(cancelledOrder, tc.signer)
 				expEvents = append(expEvents, s.untypeEvent(event))
@@ -1694,9 +1695,9 @@ func (s *TestSuite) TestKeeper_CancelOrder() {
 			s.Assert().NoError(err, "GetOrder(%d) error after cancel")
 			s.Assert().Nil(order, "GetOrder(%d) order after cancel")
 			store := s.getStore()
-			for i, kv := range expDelKVs {
-				has := store.Has(kv.Key)
-				s.Assert().False(has, "[%d]: store.Has(%q) (index entry) after cancel", i, kv.Key)
+			for i, pair := range expDelKVs {
+				has := store.Has(pair.Key)
+				s.Assert().False(has, "[%d]: store.Has(%q) (index entry) after cancel", i, pair.Key)
 			}
 		})
 	}

@@ -9,9 +9,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -33,7 +30,7 @@ type SimTestSuite struct {
 
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -68,16 +65,13 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	r := rand.New(source)
 	accs := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
-
 	expected := []struct {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightSubmitCreateTrigger, sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{})},
-		{simappparams.DefaultWeightSubmitDestroyTrigger, sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{})},
+		{weight: simappparams.DefaultWeightSubmitCreateTrigger, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{})},
+		{weight: simappparams.DefaultWeightSubmitDestroyTrigger, opMsgRoute: types.RouterKey, opMsgName: sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{})},
 	}
 
 	expNames := make([]string, len(expected))
@@ -111,9 +105,6 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
-
 	// bad operation
 	op := simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	expBadOp := simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), "cannot choose 2 accounts because there are only 1")
@@ -130,11 +121,11 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 	s.LogOperationMsg(operationMsg, "good")
 
 	var msg types.MsgCreateTriggerRequest
-	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
@@ -151,9 +142,6 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	s.app.TriggerKeeper.SetEventListener(s.ctx, trigger)
 	s.app.TriggerKeeper.SetGasLimit(s.ctx, trigger.GetId(), 1000)
 
-	// begin a new block
-	s.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash}})
-
 	// execute operation
 	op := simulation.SimulateMsgDestroyTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
@@ -165,7 +153,7 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Equal(1000, int(msg.GetId()), "msg.GetId()")
 	s.Assert().Equal(accounts[0].Address.String(), msg.GetAuthority(), "msg.GetAuthority()")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
@@ -243,7 +231,7 @@ func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Accoun
 	for _, account := range accounts {
 		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
 		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		err := testutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins)
+		err := testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins)
 		s.Require().NoError(err)
 	}
 

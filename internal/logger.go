@@ -6,9 +6,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/tendermint/tendermint/libs/log"
-
-	"github.com/cosmos/cosmos-sdk/server"
+	"cosmossdk.io/log"
 )
 
 // NewBufferedLogger creates a new logger that writes to the provided buffer.
@@ -22,7 +20,7 @@ func NewBufferedLogger(buffer *bytes.Buffer, level zerolog.Level) log.Logger {
 		PartsExclude: []string{"time"}, // Without this, each line starts with "<nil> "
 	}
 	logger := zerolog.New(lw).Level(level)
-	return server.ZeroLogWrapper{Logger: logger}
+	return log.NewCustomLogger(logger)
 }
 
 // NewBufferedInfoLogger creates a new logger with level info that writes to the provided buffer.

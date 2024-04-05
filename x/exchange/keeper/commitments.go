@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -15,7 +16,7 @@ import (
 )
 
 // getCommitmentAmount gets the amount that the given address has committed to the provided market.
-func getCommitmentAmount(store sdk.KVStore, marketID uint32, addr sdk.AccAddress) sdk.Coins {
+func getCommitmentAmount(store storetypes.KVStore, marketID uint32, addr sdk.AccAddress) sdk.Coins {
 	key := MakeKeyCommitment(marketID, addr)
 	value := store.Get(key)
 	if len(value) == 0 {
@@ -52,7 +53,7 @@ func parseCommitmentKeyValue(keyPrefix, keySuffix, value []byte) (*exchange.Comm
 
 // setCommitmentAmount sets the amount that the given address has committed to the provided market.
 // If the amount is zero, the entry is deleted.
-func setCommitmentAmount(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, amount sdk.Coins) {
+func setCommitmentAmount(store storetypes.KVStore, marketID uint32, addr sdk.AccAddress, amount sdk.Coins) {
 	key := MakeKeyCommitment(marketID, addr)
 	if !amount.IsZero() {
 		value := amount.String()
@@ -63,13 +64,13 @@ func setCommitmentAmount(store sdk.KVStore, marketID uint32, addr sdk.AccAddress
 }
 
 // addCommitmentAmount adds the provided amount to the funds committed by the addr to the given market.
-func addCommitmentAmount(store sdk.KVStore, marketID uint32, addr sdk.AccAddress, amount sdk.Coins) {
+func addCommitmentAmount(store storetypes.KVStore, marketID uint32, addr sdk.AccAddress, amount sdk.Coins) {
 	cur := getCommitmentAmount(store, marketID, addr)
 	setCommitmentAmount(store, marketID, addr, cur.Add(amount...))
 }
 
 // validateMarketIsAcceptingCommitments makes sure the market exists and is accepting commitments.
-func validateMarketIsAcceptingCommitments(store sdk.KVStore, marketID uint32) error {
+func validateMarketIsAcceptingCommitments(store storetypes.KVStore, marketID uint32) error {
 	if err := validateMarketExists(store, marketID); err != nil {
 		return err
 	}

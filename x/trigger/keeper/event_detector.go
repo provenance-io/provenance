@@ -29,7 +29,12 @@ func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigg
 		return false
 	}
 
-	for _, event := range ctx.EventManager().GetABCIEventHistory() {
+	abciEventHistory, ok := ctx.EventManager().(sdk.EventManagerWithHistoryI)
+	if !ok {
+		panic("event manager does not implement EventManagerWithHistoryI")
+	}
+
+	for _, event := range abciEventHistory.GetABCIEventHistory() {
 		matched := k.getMatchingTriggersUntil(ctx, event.GetType(), func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
 			if _, isDetected := detectedTriggers[trigger.Id]; isDetected {
 				return false

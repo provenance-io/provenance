@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
+
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -100,7 +102,7 @@ func (k Keeper) IterateRecords(ctx sdk.Context, scopeID types.MetadataAddress, h
 	if err != nil {
 		return err
 	}
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var record types.Record

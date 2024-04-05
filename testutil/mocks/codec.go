@@ -3,11 +3,11 @@ package mocks
 import (
 	"errors"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 // This doesn't yet have injectable errors for all the possible things because they weren't needed yet.
@@ -16,7 +16,7 @@ import (
 // MockCodec is a wrapper on a codec that allows injection of errors on these functions:
 // MarshalJSON, MustMarshalJSON, UnmarshalJSON, MustUnmarshalJSON.
 type MockCodec struct {
-	Base              codec.Codec
+	codec.Codec
 	MarshalJSONErrs   []string
 	UnmarshalJSONErrs []string
 }
@@ -24,8 +24,8 @@ type MockCodec struct {
 var _ codec.Codec = (*MockCodec)(nil)
 
 // NewMockCodec creates a new mock codec based on the standard test encoding config codec.
-func NewMockCodec() *MockCodec {
-	return &MockCodec{Base: sdksim.MakeTestEncodingConfig().Codec}
+func NewMockCodec(modules ...module.AppModuleBasic) *MockCodec {
+	return &MockCodec{Codec: moduletestutil.MakeTestEncodingConfig(modules...).Codec}
 }
 
 // WithMarshalJSONErrs adds the given errors to be returned from MarshalJSON or MustMarshalJSON.
@@ -46,50 +46,6 @@ func (c *MockCodec) WithUnmarshalJSONErrs(errMsgs ...string) *MockCodec {
 	return c
 }
 
-func (c *MockCodec) Marshal(o codec.ProtoMarshaler) ([]byte, error) {
-	return c.Base.Marshal(o)
-}
-
-func (c *MockCodec) MustMarshal(o codec.ProtoMarshaler) []byte {
-	return c.Base.MustMarshal(o)
-}
-
-func (c *MockCodec) MarshalLengthPrefixed(o codec.ProtoMarshaler) ([]byte, error) {
-	return c.Base.MarshalLengthPrefixed(o)
-}
-
-func (c *MockCodec) MustMarshalLengthPrefixed(o codec.ProtoMarshaler) []byte {
-	return c.Base.MustMarshalLengthPrefixed(o)
-}
-
-func (c *MockCodec) Unmarshal(bz []byte, ptr codec.ProtoMarshaler) error {
-	return c.Base.Unmarshal(bz, ptr)
-}
-
-func (c *MockCodec) MustUnmarshal(bz []byte, ptr codec.ProtoMarshaler) {
-	c.Base.MustUnmarshal(bz, ptr)
-}
-
-func (c *MockCodec) UnmarshalLengthPrefixed(bz []byte, ptr codec.ProtoMarshaler) error {
-	return c.Base.UnmarshalLengthPrefixed(bz, ptr)
-}
-
-func (c *MockCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr codec.ProtoMarshaler) {
-	c.Base.MustUnmarshalLengthPrefixed(bz, ptr)
-}
-
-func (c *MockCodec) MarshalInterface(i proto.Message) ([]byte, error) {
-	return c.Base.MarshalInterface(i)
-}
-
-func (c *MockCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
-	return c.Base.UnmarshalInterface(bz, ptr)
-}
-
-func (c *MockCodec) UnpackAny(a *codectypes.Any, iface interface{}) error {
-	return c.Base.UnpackAny(a, iface)
-}
-
 func (c *MockCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	if len(c.MarshalJSONErrs) > 0 {
 		errMsg := c.MarshalJSONErrs[0]
@@ -98,7 +54,7 @@ func (c *MockCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 			return nil, errors.New(errMsg)
 		}
 	}
-	return c.Base.MarshalJSON(o)
+	return c.Codec.MarshalJSON(o)
 }
 
 func (c *MockCodec) MustMarshalJSON(o proto.Message) []byte {
@@ -109,15 +65,7 @@ func (c *MockCodec) MustMarshalJSON(o proto.Message) []byte {
 			panic(errors.New(errMsg))
 		}
 	}
-	return c.Base.MustMarshalJSON(o)
-}
-
-func (c *MockCodec) MarshalInterfaceJSON(i proto.Message) ([]byte, error) {
-	return c.Base.MarshalInterfaceJSON(i)
-}
-
-func (c *MockCodec) UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error {
-	return c.Base.UnmarshalInterfaceJSON(bz, ptr)
+	return c.Codec.MustMarshalJSON(o)
 }
 
 func (c *MockCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
@@ -128,7 +76,7 @@ func (c *MockCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 			return errors.New(errMsg)
 		}
 	}
-	return c.Base.UnmarshalJSON(bz, ptr)
+	return c.Codec.UnmarshalJSON(bz, ptr)
 }
 
 func (c *MockCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
@@ -139,5 +87,5 @@ func (c *MockCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 			panic(errors.New(errMsg))
 		}
 	}
-	c.Base.MustUnmarshalJSON(bz, ptr)
+	c.Codec.MustUnmarshalJSON(bz, ptr)
 }

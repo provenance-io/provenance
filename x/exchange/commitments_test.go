@@ -46,7 +46,7 @@ func TestCommitment_Validate(t *testing.T) {
 			commitment: Commitment{
 				Account:  sdk.AccAddress("account_____________").String(),
 				MarketId: 1,
-				Amount:   sdk.Coins{sdk.Coin{Denom: "p", Amount: sdk.NewInt(5)}},
+				Amount:   sdk.Coins{sdk.Coin{Denom: "p", Amount: sdkmath.NewInt(5)}},
 			},
 			exp: "invalid amount \"5p\": invalid denom: p",
 		},
@@ -55,7 +55,7 @@ func TestCommitment_Validate(t *testing.T) {
 			commitment: Commitment{
 				Account:  sdk.AccAddress("account_____________").String(),
 				MarketId: 1,
-				Amount:   sdk.Coins{sdk.Coin{Denom: "plum", Amount: sdk.NewInt(-5)}},
+				Amount:   sdk.Coins{sdk.Coin{Denom: "plum", Amount: sdkmath.NewInt(-5)}},
 			},
 			exp: "invalid amount \"-5plum\": coin -5plum amount is not positive",
 		},
@@ -151,7 +151,7 @@ func TestAccountAmount_ValidateWithOptionalAmount(t *testing.T) {
 			name: "bad amount denom",
 			val: AccountAmount{
 				Account: sdk.AccAddress("account_____________").String(),
-				Amount:  sdk.Coins{sdk.Coin{Denom: "x", Amount: sdk.NewInt(12)}},
+				Amount:  sdk.Coins{sdk.Coin{Denom: "x", Amount: sdkmath.NewInt(12)}},
 			},
 			exp: "invalid amount \"12x\": invalid denom: x",
 		},
@@ -159,7 +159,7 @@ func TestAccountAmount_ValidateWithOptionalAmount(t *testing.T) {
 			name: "negative amount",
 			val: AccountAmount{
 				Account: sdk.AccAddress("account_____________").String(),
-				Amount:  sdk.Coins{sdk.Coin{Denom: "negcoin", Amount: sdk.NewInt(-3)}},
+				Amount:  sdk.Coins{sdk.Coin{Denom: "negcoin", Amount: sdkmath.NewInt(-3)}},
 			},
 			exp: "invalid amount \"-3negcoin\": coin -3negcoin amount is not positive",
 		},
@@ -174,7 +174,7 @@ func TestAccountAmount_ValidateWithOptionalAmount(t *testing.T) {
 			name: "zero coin in amount",
 			val: AccountAmount{
 				Account: sdk.AccAddress("account_____________").String(),
-				Amount:  sdk.Coins{sdk.Coin{Denom: "zcoin", Amount: sdk.NewInt(0)}},
+				Amount:  sdk.Coins{sdk.Coin{Denom: "zcoin", Amount: sdkmath.NewInt(0)}},
 			},
 			exp: "invalid amount \"0zcoin\": coin 0zcoin amount is not positive",
 		},
@@ -218,7 +218,7 @@ func TestAccountAmount_Validate(t *testing.T) {
 			name: "bad amount denom",
 			val: AccountAmount{
 				Account: sdk.AccAddress("account_____________").String(),
-				Amount:  sdk.Coins{sdk.Coin{Denom: "x", Amount: sdk.NewInt(12)}},
+				Amount:  sdk.Coins{sdk.Coin{Denom: "x", Amount: sdkmath.NewInt(12)}},
 			},
 			exp: "invalid amount \"12x\": invalid denom: x",
 		},
@@ -226,7 +226,7 @@ func TestAccountAmount_Validate(t *testing.T) {
 			name: "negative amount",
 			val: AccountAmount{
 				Account: sdk.AccAddress("account_____________").String(),
-				Amount:  sdk.Coins{sdk.Coin{Denom: "negcoin", Amount: sdk.NewInt(-3)}},
+				Amount:  sdk.Coins{sdk.Coin{Denom: "negcoin", Amount: sdkmath.NewInt(-3)}},
 			},
 			exp: "invalid amount \"-3negcoin\": coin -3negcoin amount is not positive",
 		},
@@ -242,7 +242,7 @@ func TestAccountAmount_Validate(t *testing.T) {
 			name: "zero coin in amount",
 			val: AccountAmount{
 				Account: sdk.AccAddress("account_____________").String(),
-				Amount:  sdk.Coins{sdk.Coin{Denom: "zcoin", Amount: sdk.NewInt(0)}},
+				Amount:  sdk.Coins{sdk.Coin{Denom: "zcoin", Amount: sdkmath.NewInt(0)}},
 			},
 			exp: "invalid amount \"0zcoin\": coin 0zcoin amount is not positive",
 		},
@@ -668,7 +668,7 @@ func TestNetAssetPrice_Validate(t *testing.T) {
 		{
 			name: "bad assets denom",
 			nav: NetAssetPrice{
-				Assets: sdk.Coin{Denom: "x", Amount: sdk.NewInt(16)},
+				Assets: sdk.Coin{Denom: "x", Amount: sdkmath.NewInt(16)},
 				Price:  sdk.NewInt64Coin("plum", 44),
 			},
 			exp: "invalid assets \"16x\": invalid denom: x",
@@ -676,7 +676,7 @@ func TestNetAssetPrice_Validate(t *testing.T) {
 		{
 			name: "negative assets",
 			nav: NetAssetPrice{
-				Assets: sdk.Coin{Denom: "apple", Amount: sdk.NewInt(-12)},
+				Assets: sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(-12)},
 				Price:  sdk.NewInt64Coin("plum", 44),
 			},
 			exp: "invalid assets \"-12apple\": negative coin amount: -12",
@@ -684,7 +684,7 @@ func TestNetAssetPrice_Validate(t *testing.T) {
 		{
 			name: "zero assets",
 			nav: NetAssetPrice{
-				Assets: sdk.Coin{Denom: "apple", Amount: sdk.NewInt(0)},
+				Assets: sdk.Coin{Denom: "apple", Amount: sdkmath.NewInt(0)},
 				Price:  sdk.NewInt64Coin("plum", 44),
 			},
 			exp: "invalid assets \"0apple\": cannot be zero",
@@ -693,7 +693,7 @@ func TestNetAssetPrice_Validate(t *testing.T) {
 			name: "bad price denom",
 			nav: NetAssetPrice{
 				Assets: sdk.NewInt64Coin("apple", 15),
-				Price:  sdk.Coin{Denom: "y", Amount: sdk.NewInt(16)},
+				Price:  sdk.Coin{Denom: "y", Amount: sdkmath.NewInt(16)},
 			},
 			exp: "invalid price \"16y\": invalid denom: y",
 		},
@@ -701,7 +701,7 @@ func TestNetAssetPrice_Validate(t *testing.T) {
 			name: "negative price",
 			nav: NetAssetPrice{
 				Assets: sdk.NewInt64Coin("apple", 15),
-				Price:  sdk.Coin{Denom: "plum", Amount: sdk.NewInt(-12)},
+				Price:  sdk.Coin{Denom: "plum", Amount: sdkmath.NewInt(-12)},
 			},
 			exp: "invalid price \"-12plum\": negative coin amount: -12",
 		},
@@ -709,7 +709,7 @@ func TestNetAssetPrice_Validate(t *testing.T) {
 			name: "zero price",
 			nav: NetAssetPrice{
 				Assets: sdk.NewInt64Coin("apple", 15),
-				Price:  sdk.Coin{Denom: "plum", Amount: sdk.NewInt(0)},
+				Price:  sdk.Coin{Denom: "plum", Amount: sdkmath.NewInt(0)},
 			},
 			exp: "invalid price \"0plum\": cannot be zero",
 		},

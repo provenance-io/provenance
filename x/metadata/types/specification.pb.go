@@ -6,8 +6,8 @@ package types
 import (
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -206,6 +206,7 @@ type ContractSpecification struct {
 	// contract
 	//
 	// Types that are valid to be assigned to Source:
+	//
 	//	*ContractSpecification_ResourceId
 	//	*ContractSpecification_Hash
 	Source isContractSpecification_Source `protobuf_oneof:"source"`
@@ -411,6 +412,7 @@ type InputSpecification struct {
 	// source is either on chain (record_id) or off-chain (hash)
 	//
 	// Types that are valid to be assigned to Source:
+	//
 	//	*InputSpecification_RecordId
 	//	*InputSpecification_Hash
 	Source isInputSpecification_Source `protobuf_oneof:"source"`

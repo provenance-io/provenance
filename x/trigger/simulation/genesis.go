@@ -175,25 +175,25 @@ func randomTriggerIDs(r *rand.Rand, count int, max int) []uint64 {
 func RandomizedGenState(simState *module.SimulationState) {
 	var triggerID uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, TriggerID, &triggerID, simState.Rand,
+		TriggerID, &triggerID, simState.Rand,
 		func(r *rand.Rand) { triggerID = TriggerIDStartFn(r) },
 	)
 
 	var queueStart uint64
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, QueueStart, &queueStart, simState.Rand,
+		QueueStart, &queueStart, simState.Rand,
 		func(r *rand.Rand) { queueStart = QueueStartFn(r) },
 	)
 
 	var numIniTrig int
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, NumIniTrig, &numIniTrig, simState.Rand,
+		NumIniTrig, &numIniTrig, simState.Rand,
 		func(r *rand.Rand) { numIniTrig = r.Intn(6) },
 	)
 
 	var numIniTrigQueued int
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, NumIniTrigQueued, &numIniTrigQueued, simState.Rand,
+		NumIniTrigQueued, &numIniTrigQueued, simState.Rand,
 		func(r *rand.Rand) { numIniTrigQueued = r.Intn(6) },
 	)
 
@@ -204,13 +204,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 	triggerIDs, queueTriggerIDs := randomTriggerAndQueueIDs(simState.Rand, numIniTrig, numIniTrigQueued, int(triggerID))
 	var triggers []types.Trigger
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, Triggers, &triggers, simState.Rand,
+		Triggers, &triggers, simState.Rand,
 		func(r *rand.Rand) { triggers = RandomNewTriggers(r, simState, simState.Accounts, triggerIDs) },
 	)
 
 	var queuedTriggers []types.QueuedTrigger
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, QueuedTriggers, &queuedTriggers, simState.Rand,
+		QueuedTriggers, &queuedTriggers, simState.Rand,
 		func(r *rand.Rand) {
 			queuedTriggers = RandomNewQueuedTriggers(r, simState, simState.Accounts, queueTriggerIDs)
 		},
@@ -218,7 +218,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	var gasLimits []types.GasLimit
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, GasLimits, &gasLimits, simState.Rand,
+		GasLimits, &gasLimits, simState.Rand,
 		func(r *rand.Rand) { gasLimits = RandomGasLimits(r, triggers, queuedTriggers) },
 	)
 

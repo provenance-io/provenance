@@ -7,9 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	cerrs "cosmossdk.io/errors"
+
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestNewGroupCheckerFunc(t *testing.T) {
@@ -45,7 +47,7 @@ func TestIsGroupAddress(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			querier := NewMockGroupPolicyQuerier(tc.querySuccess)
 			checker := NewGroupCheckerFunc(querier)
-			ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
+			ctx := sdk.NewContext(nil, cmtproto.Header{}, true, nil)
 			success := checker.IsGroupAddress(ctx, tc.address)
 			assert.Equal(t, tc.querySuccess, success, "should correctly detect if the supplied address is a group address")
 		})

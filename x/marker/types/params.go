@@ -6,7 +6,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -43,7 +43,7 @@ func NewParams(
 	maxTotalSupply uint64,
 	enableGovernance bool,
 	unrestrictedDenomRegex string,
-	maxSupply math.Int,
+	maxSupply sdkmath.Int,
 ) Params {
 	return Params{
 		EnableGovernance:       enableGovernance,
@@ -124,7 +124,7 @@ func validateIntParam(i interface{}) error {
 }
 
 func validateBigIntParam(i interface{}) error {
-	_, ok := i.(math.Int)
+	_, ok := i.(sdkmath.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -152,10 +152,10 @@ func validateRegexParam(i interface{}) error {
 	return err
 }
 
-func StringToBigInt(val string) math.Int {
-	res, ok := math.NewIntFromString(val)
+func StringToBigInt(val string) sdkmath.Int {
+	res, ok := sdkmath.NewIntFromString(val)
 	if !ok {
-		panic(fmt.Errorf("unable to create math.Int from string: %s", val))
+		panic(fmt.Errorf("unable to create sdkmath.Int from string: %s", val))
 	}
 	return res
 }

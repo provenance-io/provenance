@@ -3,7 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
+
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -13,7 +15,7 @@ import (
 // IterateScopes processes all stored scopes with the given handler.
 func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.ScopeKeyPrefix)
+	it := storetypes.KVStorePrefixIterator(store, types.ScopeKeyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scope types.Scope
@@ -29,7 +31,7 @@ func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop b
 func (k Keeper) IterateScopesForAddress(ctx sdk.Context, address sdk.AccAddress, handler func(scopeID types.MetadataAddress) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetAddressScopeCacheIteratorPrefix(address)
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeID types.MetadataAddress
@@ -52,7 +54,7 @@ func (k Keeper) IterateScopesForValueOwner(ctx sdk.Context, valueOwner string, h
 
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetValueOwnerScopeCacheIteratorPrefix(addr)
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeID types.MetadataAddress
@@ -73,7 +75,7 @@ func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.Met
 ) error {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID)
-	it := sdk.KVStorePrefixIterator(store, prefix)
+	it := storetypes.KVStorePrefixIterator(store, prefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeID types.MetadataAddress
@@ -145,7 +147,7 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 	if err != nil {
 		panic(err)
 	}
-	iter := sdk.KVStorePrefixIterator(store, prefix)
+	iter := storetypes.KVStorePrefixIterator(store, prefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		k.RemoveRecord(ctx, iter.Key())
@@ -272,7 +274,7 @@ func (v scopeIndexValues) IndexKeys() [][]byte {
 //
 // If both newScope and oldScope are not nil, it is assumed that they have the same ScopeId.
 // Failure to meet this assumption will result in strange and bad behavior.
-func (k Keeper) indexScope(store sdk.KVStore, newScope, oldScope *types.Scope) {
+func (k Keeper) indexScope(store storetypes.KVStore, newScope, oldScope *types.Scope) {
 	if newScope == nil && oldScope == nil {
 		return
 	}
@@ -720,7 +722,7 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress,
 // IterateNetAssetValues iterates net asset values for scope
 func (k Keeper) IterateNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress, handler func(state types.NetAssetValue) (stop bool)) error {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(scopeID))
+	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(scopeID))
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		var scopeNav types.NetAssetValue
@@ -737,7 +739,7 @@ func (k Keeper) IterateNetAssetValues(ctx sdk.Context, scopeID types.MetadataAdd
 // RemoveNetAssetValues removes all net asset values for a scope
 func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddress) {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(scopeID))
+	it := storetypes.KVStorePrefixIterator(store, types.NetAssetValueKeyPrefix(scopeID))
 	var keys [][]byte
 	for ; it.Valid(); it.Next() {
 		keys = append(keys, it.Key())

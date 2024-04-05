@@ -5,17 +5,17 @@ import (
 	"testing"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
+	cmtrand "github.com/cometbft/cometbft/libs/rand"
 
-	tmrand "github.com/tendermint/tendermint/libs/rand"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdksim "github.com/cosmos/cosmos-sdk/simapp"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -25,13 +25,15 @@ import (
 
 // NewAppConstructor returns a new provenanceapp AppConstructor
 func NewAppConstructor(encodingCfg params.EncodingConfig) testnet.AppConstructor {
-	return func(val testnet.Validator) servertypes.Application {
+	return func(val testnet.ValidatorI) servertypes.Application {
+		ctx := val.GetCtx()
+		appCfg := val.GetAppConfig()
 		return provenanceapp.New(
-			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), ctx.Config.RootDir, 0,
 			encodingCfg,
-			sdksim.EmptyAppOptions{},
-			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			simtestutil.EmptyAppOptions{},
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(appCfg.Pruning)),
+			baseapp.SetMinGasPrices(appCfg.MinGasPrices),
 		)
 	}
 }
@@ -39,6 +41,8 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) testnet.AppConstructor
 // DefaultTestNetworkConfig creates a network configuration for inproc testing
 func DefaultTestNetworkConfig() testnet.Config {
 	encCfg := provenanceapp.MakeEncodingConfig()
+	tempApp := NewAppConstructor(encCfg)(nil).(*provenanceapp.App)
+
 	return testnet.Config{
 		Codec:             encCfg.Marshaler,
 		TxConfig:          encCfg.TxConfig,
@@ -46,9 +50,9 @@ func DefaultTestNetworkConfig() testnet.Config {
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    NewAppConstructor(encCfg),
-		GenesisState:      provenanceapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
+		GenesisState:      tempApp.DefaultGenesis(),
 		TimeoutCommit:     2 * time.Second,
-		ChainID:           "chain-" + tmrand.NewRand().Str(6),
+		ChainID:           "chain-" + cmtrand.NewRand().Str(6),
 		NumValidators:     4,
 		BondDenom:         sdk.DefaultBondDenom, // we use the SDK bond denom here, at least until the entire genesis is rewritten to match bond denom
 		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),

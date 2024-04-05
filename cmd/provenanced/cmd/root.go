@@ -9,18 +9,24 @@ import (
 	"path/filepath"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	tmcfg "github.com/tendermint/tendermint/config"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
+	cmtconfig "github.com/cometbft/cometbft/config"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
+	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
+
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -31,15 +37,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+
+	// rosettacmd "github.com/cosmos/rosetta/cmd" // TODO[1760]: rosetta
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
@@ -50,14 +60,28 @@ import (
 const (
 	// EnvTypeFlag is a flag for indicating a testnet
 	EnvTypeFlag = "testnet"
-	// Flag used to indicate coin type.
+	// CoinTypeFlag is a flag for indicating coin type.
 	CoinTypeFlag = "coin-type"
 )
 
 // NewRootCmd creates a new root command for provenanced. It is called once in the main function.
 // Providing sealConfig = false is only for unit tests that want to run multiple commands.
 func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
+	// tempDir creates a temporary home directory.
+	tempDir, err := os.MkdirTemp("", "provenanced")
+	if err != nil {
+		panic(fmt.Errorf("failed to create temp dir: %w", err))
+	}
+	os.RemoveAll(tempDir)
+
 	encodingConfig := app.MakeEncodingConfig()
+	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
+		tempDir,
+		0,
+		encodingConfig,
+		simtestutil.EmptyAppOptions{},
+	)
+
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -65,7 +89,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithBroadcastMode(flags.BroadcastBlock).
+		WithBroadcastMode(flags.BroadcastSync). // TODO[1760]: broadcast: Verify that this is right since BroadcastBlock is gone.
 		WithHomeDir(app.DefaultNodeHome).
 		WithViper("PIO")
 	sdk.SetCoinDenomRegex(app.SdkCoinDenomRegex)
@@ -76,10 +100,37 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
-			if cmd.Flags().Changed(flags.FlagHome) {
-				rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
-				initClientCtx = initClientCtx.WithHomeDir(rootDir)
+			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
+			if err != nil {
+				return err
 			}
+
+			// TODO[1760]: client: Check impact that this has on our custom client config.
+			initClientCtx, err = clientconfig.ReadFromClientConfig(initClientCtx)
+			if err != nil {
+				return err
+			}
+
+			// This needs to go after ReadFromClientConfig, as that function
+			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
+			// is only available if the client is online.
+			if !initClientCtx.Offline {
+				enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+				txConfigOpts := tx.ConfigOptions{
+					EnabledSignModes:           enabledSignModes,
+					TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
+				}
+				txConfig, err := tx.NewTxConfigWithOptions(
+					initClientCtx.Codec,
+					txConfigOpts,
+				)
+				if err != nil {
+					return err
+				}
+
+				initClientCtx = initClientCtx.WithTxConfig(txConfig)
+			}
+
 			if err := client.SetCmdClientContext(cmd, initClientCtx); err != nil {
 				return err
 			}
@@ -102,7 +153,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 		},
 	}
 	genAutoCompleteCmd(rootCmd)
-	initRootCmd(rootCmd, encodingConfig)
+	initRootCmd(rootCmd, encodingConfig, tempApp.BasicModuleManager)
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        "",
 		flags.FlagKeyringBackend: "test",
@@ -126,23 +177,23 @@ func Execute(rootCmd *cobra.Command) error {
 
 	rootCmd.PersistentFlags().BoolP(EnvTypeFlag, "t", false, "Indicates this command should use the testnet configuration (default: false [mainnet])")
 	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
-	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
+	rootCmd.PersistentFlags().String(flags.FlagLogFormat, cmtconfig.LogFormatPlain, "The logging format (json|plain)")
 
 	// Custom denom flag added to root command
 	rootCmd.PersistentFlags().String(config.CustomDenomFlag, "", "Indicates if a custom denom is to be used, and the name of it (default nhash)")
 	// Custom msgFee floor price flag added to root command
 	rootCmd.PersistentFlags().Int64(config.CustomMsgFeeFloorPriceFlag, 0, "Custom msgfee floor price, optional (default 1905)")
 
-	executor := tmcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
+	executor := cmtcli.PrepareBaseCmd(rootCmd, "", app.DefaultNodeHome)
 	return executor.ExecuteContext(ctx)
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, basicManager module.BasicManager) {
 	rootCmd.AddCommand(
-		InitCmd(app.ModuleBasics),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
+		InitCmd(basicManager),
+		// genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome), // TODO[1760]: genutil
+		// genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome), // TODO[1760]: genutil
+		genutilcli.ValidateGenesisCmd(basicManager),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddRootDomainAccountCmd(app.DefaultNodeHome),
 		AddGenesisMarkerCmd(app.DefaultNodeHome),
@@ -150,8 +201,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		AddGenesisCustomFloorPriceDenomCmd(app.DefaultNodeHome),
 		AddGenesisDefaultMarketCmd(app.DefaultNodeHome),
 		AddGenesisCustomMarketCmd(app.DefaultNodeHome),
-		tmcli.NewCompletionCmd(rootCmd, true),
-		testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		cmtcli.NewCompletionCmd(rootCmd, true),
+		testnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		ConfigCmd(),
 		AddMetaAddressCmd(),
@@ -166,15 +217,15 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
-		queryCommand(),
-		txCommand(),
-		keys.Commands(app.DefaultNodeHome),
+		server.StatusCommand(),
+		queryCommand(basicManager),
+		txCommand(basicManager),
+		keys.Commands(),
 	)
 
 	// Add Rosetta command
-	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
-	rootCmd.AddCommand(pruning.PruningCmd(newApp))
+	// rootCmd.AddCommand(rosettacmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler)) // TODO[1760]: rosetta
+	rootCmd.AddCommand(pruning.Cmd(newApp, app.DefaultNodeHome))
 	// Disable usage when the start command returns an error.
 	startCmd, _, err := rootCmd.Find([]string{"start"})
 	if err != nil {
@@ -222,7 +273,7 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 }
 
-func queryCommand() *cobra.Command {
+func queryCommand(basicManager module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -233,20 +284,20 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
+		// authcmd.GetAccountCmd(), // TODO[1760]: auto-cli: Figure out how to still have this.
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		// rpc.BlockCommand(), // TODO[1760]: auto-cli: Figure out how to still have this.
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
 
-	app.ModuleBasics.AddQueryCommands(cmd)
+	basicManager.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
 
-func txCommand() *cobra.Command {
+func txCommand(basicManager module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -268,16 +319,17 @@ func txCommand() *cobra.Command {
 		flags.LineBreak,
 	)
 
-	app.ModuleBasics.AddTxCommands(cmd)
+	basicManager.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
 
+// AppCreator func(log.Logger, dbm.DB, io.Writer, AppOptions) Application
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	warnAboutSettings(logger, appOpts)
 
-	var cache sdk.MultiStorePersistentCache
+	var cache storetypes.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -332,7 +384,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(getIAVLCacheSize(appOpts)),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
-		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(server.FlagIAVLLazyLoading))),
 	)
 }
 
@@ -365,6 +416,7 @@ func createAppAndExport(
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions,
+	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	encCfg := app.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
@@ -385,7 +437,7 @@ func createAppAndExport(
 		a = app.New(logger, db, traceStore, true, map[int64]bool{}, homePath, cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
 	}
 
-	return a.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return a.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }
 
 // fixDebugPubkeyRawTypeFlag removes the -t shorthand option of the --type flag from the debug pubkey-raw command.

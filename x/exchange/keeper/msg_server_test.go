@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
+	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -91,12 +91,11 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 	gm := antewrapper.NewFeeGasMeterWrapper(log.NewNopLogger(), storetypes.NewInfiniteGasMeter(), false).(*antewrapper.FeeGasMeter)
 	em := sdk.NewEventManager()
 	s.ctx = s.ctx.WithEventManager(em).WithGasMeter(gm)
-	goCtx := sdk.WrapSDKContext(s.ctx)
 	s.logBuffer.Reset()
 	var resp *S
 	var err error
 	testFunc := func() {
-		resp, err = td.endpoint(goCtx, &tc.msg)
+		resp, err = td.endpoint(s.ctx, &tc.msg)
 	}
 	s.Require().NotPanicsf(testFunc, td.endpointName)
 	_ = s.getLogOutput(td.endpointName)
@@ -115,7 +114,7 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 
 // newAttr creates a new EventAttribute with the provided key and value.
 func (s *TestSuite) newAttr(key, value string) abci.EventAttribute {
-	return abci.EventAttribute{Key: []byte(key), Value: []byte(value)}
+	return abci.EventAttribute{Key: key, Value: value}
 }
 
 // eventCoinSpent creates a new "coin_spent" event (emitted by the bank module).
@@ -200,7 +199,7 @@ func (s *TestSuite) eventCommitmentReleased(addr sdk.AccAddress, marketID uint32
 // requireFundAccount calls testutil.FundAccount, making sure it doesn't panic or return an error.
 func (s *TestSuite) requireFundAccount(addr sdk.AccAddress, coins string) {
 	assertions.RequireNotPanicsNoErrorf(s.T(), func() error {
-		return testutil.FundAccount(s.app.BankKeeper, s.ctx, addr, s.coins(coins))
+		return testutil.FundAccount(s.ctx, s.app.BankKeeper, addr, s.coins(coins))
 	}, "FundAccount(%s, %q)", s.getAddrName(addr), coins)
 }
 
@@ -243,14 +242,16 @@ func (s *TestSuite) requireSetAttr(addr sdk.AccAddress, name string, owner sdk.A
 
 // requireQuarantineOptIn opts an address into quarantine, requiring it to not error.
 func (s *TestSuite) requireQuarantineOptIn(addr sdk.AccAddress) {
-	err := s.app.QuarantineKeeper.SetOptIn(s.ctx, addr)
-	s.Require().NoError(err, "QuarantineKeeper.SetOptIn(%s)", s.getAddrName(addr))
+	// TODO[1760]: quarantine: Uncomment these lines.
+	// err := s.app.QuarantineKeeper.SetOptIn(s.ctx, addr)
+	// s.Require().NoError(err, "QuarantineKeeper.SetOptIn(%s)", s.getAddrName(addr))
 }
 
 // requireSanctionAddress sanctions an address, requiring it to not error.
 func (s *TestSuite) requireSanctionAddress(addr sdk.AccAddress) {
-	err := s.app.SanctionKeeper.SanctionAddresses(s.ctx, addr)
-	s.Require().NoError(err, "SanctionAddresses(%s)", s.getAddrName(addr))
+	// TODO[1760]: quarantine: Uncomment these lines.
+	// err := s.app.SanctionKeeper.SanctionAddresses(s.ctx, addr)
+	// s.Require().NoError(err, "SanctionAddresses(%s)", s.getAddrName(addr))
 }
 
 // requireAddFinalizeAndActivateMarker creates a restricted marker, requiring it to not error.

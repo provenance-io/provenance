@@ -9,8 +9,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/core/appmodule"
 	cerrs "cosmossdk.io/errors"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
@@ -21,7 +22,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	channelkeeper "github.com/cosmos/ibc-go/v6/modules/core/04-channel/keeper"
+	channelkeeper "github.com/cosmos/ibc-go/v8/modules/core/04-channel/keeper"
 
 	"github.com/provenance-io/provenance/x/oracle/client/cli"
 	"github.com/provenance-io/provenance/x/oracle/keeper"
@@ -30,9 +31,10 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModuleBasic      = (*AppModule)(nil)
+	_ module.AppModuleSimulation = (*AppModule)(nil)
+
+	_ appmodule.AppModule = (*AppModule)(nil)
 )
 
 // AppModuleBasic defines the basic application module used by the oracle module.
@@ -111,6 +113,12 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeepe
 	}
 }
 
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
+
 // GenerateGenesisState creates a randomized GenState of the oracle module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
@@ -123,13 +131,13 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams returns randomized module parameters for param change proposals.
-func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 	// currently no module params exist
 	return nil
 }
 
 // RegisterStoreDecoder registers a func to decode each module's defined types from their corresponding store key
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
@@ -147,19 +155,6 @@ func (AppModule) Name() string {
 
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
-// Deprecated: Route returns the message routing key for the oracle module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the route we respond to for abci queries
-func (AppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns the oracle module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
 
 // InitGenesis performs genesis initialization for the oracle module. It returns
 // no validator updates.
@@ -179,17 +174,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-// BeginBlock is the `BeginBlocker` function run at the beginning of each block to
-// process oracle module updates.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {
-}
-
-// EndBlock The `EndBlocker` abci call is ran at the end of each block. The `EventManager` is monitored
-// and `Qualifying Actions` are deduced from newly created events and prior internal state.
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
