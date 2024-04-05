@@ -2,6 +2,15 @@ name: Provenance Build and Release
 
 on:
   pull_request:
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "**.mk"
+      - "Makefile"
+      - "gon.json"
+      - "scripts/**"
+      - ".github/workflows/release.yml"
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"     # Push events to matching v*, i.e. v1.0, v20.15.10
@@ -21,18 +30,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Init
     steps:
-      - uses: actions/checkout@v4
-      - uses: technote-space/get-diff-action@v6.1.2
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-            **/**.mk
-            Makefile
-            gon.json
-            scripts/**
-            .github/workflows/release.yml
       - name: Define Variables
         id: vars
         # ${GITHUB_REF##*/} removes everything before the last slash. E.g. 'refs/tags/v1.8.0' becomes 'v1.8.0'
@@ -55,7 +52,6 @@ jobs:
           echo "Setting output: prerelease=$prerelease"
           echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
     outputs:
-      should_build: ${{ env.GIT_DIFF }}
       version: ${{ steps.vars.outputs.version }}
       is_release: ${{ steps.vars.outputs.is_release }}
       prerelease: ${{ steps.vars.outputs.prerelease }}
@@ -70,20 +66,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup go
-        if: needs.build_init.outputs.is_release == 'true' || needs.build_init.outputs.should_build
         uses: actions/setup-go@v5
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Build osx binary
-        if: needs.build_init.outputs.is_release == 'true' || needs.build_init.outputs.should_build
         run: |
           export VERSION=${{ needs.build_init.outputs.version }}
           make build-release-zip
       - name: Provenanced version
-        if: needs.build_init.outputs.is_release == 'true' || needs.build_init.outputs.should_build
         run: build/provenanced version --long
       - uses: actions/upload-artifact@v4
-        if: needs.build_init.outputs.is_release == 'true' || needs.build_init.outputs.should_build
         with:
           name: osx-zip
           path: build/*.zip
@@ -99,25 +91,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup go
-        if: needs.build_init.outputs.is_release == 'true' || needs.build_init.outputs.should_build
         uses: actions/setup-go@v5
         with:
           go-version: ${{ needs.build_init.outputs.go_version }}
       - name: Install deps
-        if: needs.build_init.outputs.is_release == 'true' || needs.build_init.outputs.should_build
         run: |
           sudo apt-get update
           sudo apt-get install -y libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Build linux binary
-        if: needs.build_init.outputs.is_release == 'true' || needs.build_init.outputs.should_build
         run: |
           export VERSION=${{ needs.build_init.outputs.version }}
           make build-release-zip
       - name: Provenanced version
-        if: needs.build_init.outputs.is_release == 'true' || needs.build_init.outputs.should_build
         run: build/provenanced version --long
       - uses: actions/upload-artifact@v4
-        if: needs.build_init.outputs.is_release == 'true' || needs.build_init.outputs.should_build
         with:
           name: linux-zip
           path: build/provenance*.zip
