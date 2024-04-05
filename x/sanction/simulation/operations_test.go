@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/collections"
 
@@ -53,6 +53,15 @@ func (s *SimTestSuite) SetupTest() {
 	s.govMinDep = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 3))
 	s.sanctMinDep = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 7))
 	s.unsanctMinDep = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10))
+
+	// The block will run out of gas using the default max gas, so we get rid of it here.
+	consensusParams := s.app.GetConsensusParams(s.ctx)
+	if consensusParams.Block == nil {
+		consensusParams.Block = &cmtproto.BlockParams{}
+	}
+	consensusParams.Block.MaxGas = -1
+	s.Require().NoError(s.app.StoreConsensusParams(s.ctx, consensusParams), "StoreConsensusParams")
+	s.freshCtx()
 }
 
 // freshCtx creates a new context and sets it to this SimTestSuite's ctx field.
@@ -114,6 +123,7 @@ func (s *SimTestSuite) setSanctionParamsAboveGovDeposit() {
 func (s *SimTestSuite) getLastGovProp() *govv1.Proposal {
 	propID, err := s.app.GovKeeper.ProposalID.Peek(s.ctx)
 	s.Require().NoError(err, "s.app.GovKeeper.ProposalID.Peek(s.ctx)")
+	propID--
 	if propID == 0 {
 		return nil
 	}
@@ -230,20 +240,6 @@ func (s *SimTestSuite) getWeightedOpsArgs() simulation.WeightedOpsArgs {
 	}
 }
 
-// nextBlock ends the current block, commits it, and starts a new one.
-// This is needed because some tests would run out of gas if all done in a single block.
-func (s *SimTestSuite) nextBlock() {
-	assertions.RequireNotPanicsNoError(s.T(), func() error {
-		_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight(), Time: s.ctx.BlockTime()})
-		return err
-	}, "app.FinalizeBlock")
-	assertions.RequireNotPanicsNoError(s.T(), func() error {
-		_, err := s.app.Commit()
-		return err
-	}, "app.Commit")
-	s.freshCtx()
-}
-
 func (s *SimTestSuite) TestWeightedOperations() {
 	s.setSanctionParamsAboveGovDeposit()
 	s.accsRand = rand.New(rand.NewSource(500))
@@ -304,6 +300,8 @@ func (s *SimTestSuite) TestWeightedOperations() {
 }
 
 func (s *SimTestSuite) TestSendGovMsg() {
+	s.requireResetGovParams()
+
 	r := rand.New(rand.NewSource(1))
 	accounts := s.createTestingAccounts(r, 10)
 	accounts = append(accounts, s.createTestingAccountsWithPower(r, 1, 0)...)
@@ -863,6 +861,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			s.freshCtx()
 			s.requireResetParams()
 			if tc.setup != nil {
 				tc.setup()
@@ -952,7 +951,6 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 					}
 				}
 			}
-			s.nextBlock()
 		})
 	}
 }
@@ -1069,6 +1067,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			s.freshCtx()
 			s.requireResetParams()
 			if tc.setup != nil {
 				tc.setup()
@@ -1158,7 +1157,6 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 					}
 				}
 			}
-			s.nextBlock()
 		})
 	}
 }
@@ -1277,6 +1275,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			s.freshCtx()
 			s.requireResetState()
 			if tc.setup != nil {
 				tc.setup()
@@ -1366,7 +1365,6 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 					}
 				}
 			}
-			s.nextBlock()
 		})
 	}
 }
@@ -1604,6 +1602,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			s.freshCtx()
 			s.requireResetState()
 			if tc.setup != nil {
 				tc.setup()
@@ -1693,7 +1692,6 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 					}
 				}
 			}
-			s.nextBlock()
 		})
 	}
 }
@@ -1762,6 +1760,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUpdateParams() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			s.freshCtx()
 			var op simtypes.Operation
 			testFunc := func() {
 				op = simulation.SimulateGovMsgUpdateParams(&wopArgs)
@@ -1843,7 +1842,6 @@ func (s *SimTestSuite) TestSimulateGovMsgUpdateParams() {
 					}
 				}
 			}
-			s.nextBlock()
 		})
 	}
 }

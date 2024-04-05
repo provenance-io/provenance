@@ -125,7 +125,8 @@ func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
 		Messages:       []*codectypes.Any{msgAny},
 		InitialDeposit: args.Deposit,
 		Proposer:       args.Sender.Address.String(),
-		Metadata:       "",
+		Title:          args.Comment,
+		Summary:        args.Comment,
 	}
 
 	txCtx := simulation.OperationInput{
@@ -257,6 +258,7 @@ func SimulateGovMsgSanction(args *WeightedOpsArgs) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
 		}
+		proposalID--
 
 		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
@@ -334,6 +336,7 @@ func SimulateGovMsgSanctionImmediate(args *WeightedOpsArgs) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
 		}
+		proposalID--
 
 		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
@@ -415,6 +418,7 @@ func SimulateGovMsgUnsanction(args *WeightedOpsArgs) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
 		}
+		proposalID--
 
 		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
@@ -506,6 +510,7 @@ func SimulateGovMsgUnsanctionImmediate(args *WeightedOpsArgs) simtypes.Operation
 		if err != nil {
 			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
 		}
+		proposalID--
 
 		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))
@@ -566,6 +571,7 @@ func SimulateGovMsgUpdateParams(args *WeightedOpsArgs) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
 		}
+		proposalID--
 
 		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))

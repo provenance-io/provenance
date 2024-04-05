@@ -168,6 +168,7 @@ func jsonArrayJoin(entries ...string) string {
 func getLastProposal(t *testing.T, ctx sdk.Context, app *piosimapp.App) *govtypesv1.Proposal {
 	propID, err := app.GovKeeper.ProposalID.Peek(ctx)
 	require.NoError(t, err, "app.GovKeeper.ProposalID.Peek(ctx)")
+	propID--
 	require.NotEqual(t, 0, propID, "last proposal id")
 	rv, err := app.GovKeeper.Proposals.Get(ctx, propID)
 	require.NoError(t, err, "app.GovKeeper.Proposals.Get(ctx, %d)", propID)
