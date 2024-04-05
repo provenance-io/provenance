@@ -1,7 +1,5 @@
 package app
 
-// TODO[1760]: Delete this line that was added just to have a diff in a .go file.
-
 import (
 	"encoding/json"
 	"io"
