@@ -191,56 +191,6 @@ var (
 	// DefaultPowerReduction pio specific value for power reduction for TokensFromConsensusPower
 	DefaultPowerReduction = sdkmath.NewIntFromUint64(1_000_000_000)
 
-	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration
-	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(
-		auth.AppModuleBasic{},
-		genutil.AppModuleBasic{},
-		bank.AppModuleBasic{},
-		capability.AppModuleBasic{},
-		staking.AppModuleBasic{},
-		mint.AppModuleBasic{},
-		distr.AppModuleBasic{},
-		gov.NewAppModuleBasic(append(
-			[]govclient.ProposalHandler{},
-			paramsclient.ProposalHandler,
-			nameclient.RootNameProposalHandler,
-		),
-		),
-		params.AppModuleBasic{},
-		crisis.AppModuleBasic{},
-		slashing.AppModuleBasic{},
-		feegrantmodule.AppModuleBasic{},
-		upgrade.AppModuleBasic{},
-		evidence.AppModuleBasic{},
-		authzmodule.AppModuleBasic{},
-		groupmodule.AppModuleBasic{},
-		vesting.AppModuleBasic{},
-		// quarantinemodule.AppModuleBasic{}, // TODO[1760]: quarantine
-		// sanctionmodule.AppModuleBasic{}, // TODO[1760]: sanction
-		consensus.AppModuleBasic{},
-
-		ibc.AppModuleBasic{},
-		ibctransfer.AppModuleBasic{},
-		ica.AppModuleBasic{},
-		icq.AppModuleBasic{},
-		ibchooks.AppModuleBasic{},
-		ibcratelimitmodule.AppModuleBasic{},
-
-		marker.AppModuleBasic{},
-		attribute.AppModuleBasic{},
-		name.AppModuleBasic{},
-		metadata.AppModuleBasic{},
-		wasm.AppModuleBasic{},
-		msgfeesmodule.AppModuleBasic{},
-		rewardmodule.AppModuleBasic{},
-		triggermodule.AppModuleBasic{},
-		oraclemodule.AppModuleBasic{},
-		holdmodule.AppModuleBasic{},
-		exchangemodule.AppModuleBasic{},
-	)
-
 	// module account permissions
 	maccPerms = map[string][]string{
 		authtypes.FeeCollectorName:     nil,
@@ -449,7 +399,7 @@ func New(
 	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
 	// set the BaseApp's parameter store
-	// TODO[1760]: Update upgrade handler
+
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
@@ -838,25 +788,24 @@ func New(
 		icaModule,
 	)
 
-	// TODO[1760]: app-module: BasicModuleManager: Make sure that this setup has everything we need (it was just copied from the SDK).
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration and genesis verification.
 	// By default it is composed of all the module from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as argument.
-	/*
-		app.BasicModuleManager = module.NewBasicManagerFromManager(
-			app.mm,
-			map[string]module.AppModuleBasic{
-				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-				govtypes.ModuleName: gov.NewAppModuleBasic(
-					[]govclient.ProposalHandler{
-						paramsclient.ProposalHandler,
-					},
+	app.BasicModuleManager = module.NewBasicManagerFromManager(
+		app.mm,
+		map[string]module.AppModuleBasic{
+			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			govtypes.ModuleName: gov.NewAppModuleBasic(
+				append(
+					[]govclient.ProposalHandler{},
+					paramsclient.ProposalHandler,
+					nameclient.RootNameProposalHandler,
 				),
-			})
-		app.BasicModuleManager.RegisterLegacyAminoCodec(legacyAmino)
-		app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
-	*/
+			),
+		})
+	app.BasicModuleManager.RegisterLegacyAminoCodec(legacyAmino)
+	app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
 
 	// NOTE: upgrade module is required to be prioritized
 	app.mm.SetOrderPreBlockers(
@@ -1299,9 +1248,8 @@ func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
-func (a *App) DefaultGenesis() map[string]json.RawMessage {
-	// TODO[1760] This was changed to ModuleBasics, but it will be removed
-	return ModuleBasics.DefaultGenesis(a.appCodec)
+func (app *App) DefaultGenesis() map[string]json.RawMessage {
+	return app.BasicModuleManager.DefaultGenesis(app.appCodec)
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
@@ -1352,7 +1300,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig serverconfig.API
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
-	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	app.BasicModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
 	if apiConfig.Swagger {
@@ -1420,11 +1368,12 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	// register the key tables for legacy param subspaces
 	keyTable := ibcclienttypes.ParamKeyTable()
 	keyTable.RegisterParamSet(&ibcconnectiontypes.Params{})
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName) // TODO[1760]: params: Migrate ibc-transfer params.
-	paramsKeeper.Subspace(ibcexported.ModuleName)      // TODO[1760]: params: Migrate ibc-host params.
-	paramsKeeper.Subspace(icahosttypes.SubModuleName)  // TODO[1760]: params: Migrate ica-host params.
-	paramsKeeper.Subspace(icqtypes.ModuleName)         // TODO[1760]: params: Migrate icq params.
-	paramsKeeper.Subspace(ibchookstypes.ModuleName)    // TODO[1760]: params: Migrate ibc-hooks params.
+	paramsKeeper.Subspace(ibcexported.ModuleName).WithKeyTable(keyTable)
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
+	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
+
+	paramsKeeper.Subspace(icqtypes.ModuleName)      // TODO[1760]: params: Migrate icq params.
+	paramsKeeper.Subspace(ibchookstypes.ModuleName) // TODO[1760]: params: Migrate ibc-hooks params.
 
 	return paramsKeeper
 }

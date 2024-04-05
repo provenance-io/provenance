@@ -9,15 +9,17 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
+	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
@@ -168,7 +170,22 @@ var upgrades = map[string]appUpgrade{
 		Added: []string{crisistypes.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
+
+			if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+
+			err = migrateBaseappParams(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
 			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			err = updateIBCClients(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -182,7 +199,22 @@ var upgrades = map[string]appUpgrade{
 		Added: []string{crisistypes.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
+
+			if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+				return nil, err
+			}
+
+			err = migrateBaseappParams(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
 			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			err = updateIBCClients(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -445,6 +477,43 @@ func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
 		return false
 	})
 	ctx.Logger().Info("Done updating ibc marker denom metadata")
+}
+
+// pruneIBCExpiredConsensusStates prunes expired consensus states for IBC.
+func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Pruning expired consensus states for IBC.")
+	_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("unable to prune expired consensus states, error: %s.", err))
+		return err
+	}
+	ctx.Logger().Info("Done pruning expired consensus states for IBC.")
+	return nil
+}
+
+// updateIBCClients updates the allowed clients for IBC.
+// TODO: Remove with the umber handlers.
+func updateIBCClients(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Updating IBC AllowedClients.")
+	params := app.IBCKeeper.ClientKeeper.GetParams(ctx)
+	params.AllowedClients = append(params.AllowedClients, exported.Localhost)
+	app.IBCKeeper.ClientKeeper.SetParams(ctx, params)
+	ctx.Logger().Info("Done updating IBC AllowedClients.")
+	return nil
+}
+
+// migrateBaseappParams migrates to new ConsensusParamsKeeper
+// TODO: Remove with the umber handlers.
+func migrateBaseappParams(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Migrating legacy params.")
+	legacyBaseAppSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
+	err := baseapp.MigrateParams(ctx, legacyBaseAppSubspace, app.ConsensusParamsKeeper.ParamsStore)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("unable to migrate legacy params to ConsensusParamsKeeper, error: %s.", err))
+		return err
+	}
+	ctx.Logger().Info("Done migrating legacy params.")
+	return nil
 }
 
 // convertNavUnits iterates all the net asset values and updates their units if they are using usd.

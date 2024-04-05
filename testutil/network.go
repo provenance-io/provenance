@@ -41,6 +41,8 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) testnet.AppConstructor
 // DefaultTestNetworkConfig creates a network configuration for inproc testing
 func DefaultTestNetworkConfig() testnet.Config {
 	encCfg := provenanceapp.MakeEncodingConfig()
+	tempApp := NewAppConstructor(encCfg)(nil).(*provenanceapp.App)
+
 	return testnet.Config{
 		Codec:             encCfg.Marshaler,
 		TxConfig:          encCfg.TxConfig,
@@ -48,7 +50,7 @@ func DefaultTestNetworkConfig() testnet.Config {
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    NewAppConstructor(encCfg),
-		GenesisState:      provenanceapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
+		GenesisState:      tempApp.DefaultGenesis(),
 		TimeoutCommit:     2 * time.Second,
 		ChainID:           "chain-" + cmtrand.NewRand().Str(6),
 		NumValidators:     4,
