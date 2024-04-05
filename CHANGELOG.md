@@ -46,9 +46,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Remove unsupported database types [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Update ibc and migrate params [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Replace ModuleBasics with BasicModuleManager [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Remove handlers from provenance modules [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Updated app.go to use RegisterStreamingServices on BaseApp [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Bump the SDK to `v0.50.5-pio-1` (from an earlier ephemeral version) [#1897](https://github.com/provenance-io/provenance/pull/1897).
+
+### Dependencies
+
+- Bump `github.com/cosmos/ibc-go/v8` from 8.0.0 to 8.2.0 ([#1910](https://github.com/provenance-io/provenance/pull/1910))
 
 ---
 
