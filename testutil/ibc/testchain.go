@@ -28,7 +28,7 @@ type TestChain struct {
 
 func SetupTestingApp(t *testing.T) (ibctesting.TestingApp, map[string]json.RawMessage) {
 	provenanceApp := provenanceapp.Setup(t)
-	return provenanceApp, provenanceapp.NewDefaultGenesisState(provenanceApp.AppCodec())
+	return provenanceApp, provenanceApp.DefaultGenesis()
 }
 
 func (chain *TestChain) StoreContractCounterDirect(suite *suite.Suite) uint64 {

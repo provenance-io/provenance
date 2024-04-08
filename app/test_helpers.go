@@ -86,7 +86,7 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint, chainID string) 
 
 	app := New(loggerMaker(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, simtestutil.EmptyAppOptions{}, baseapp.SetChainID(chainID))
 	if withGenesis {
-		return app, NewDefaultGenesisState(encCdc.Marshaler)
+		return app, app.DefaultGenesis()
 	}
 	return app, GenesisState{}
 }
@@ -161,7 +161,7 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 	}
 
 	app := New(options.Logger, options.DB, nil, true, options.SkipUpgradeHeights, options.HomePath, options.InvCheckPeriod, options.EncConfig, options.AppOpts)
-	genesisState := NewDefaultGenesisState(app.appCodec)
+	genesisState := app.DefaultGenesis()
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	if !isCheckTx {
@@ -223,7 +223,7 @@ func genesisStateWithValSet(t *testing.T,
 	bondAmt := sdk.DefaultPowerReduction
 
 	for _, val := range valSet.Validators {
-		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
+		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		require.NoError(t, err)
 		pkAny, err := codectypes.NewAnyWithValue(pk)
 		require.NoError(t, err)
@@ -352,7 +352,7 @@ func GenesisStateWithSingleValidator(t *testing.T, app *App) GenesisState {
 		},
 	}
 
-	genesisState := NewDefaultGenesisState(app.appCodec)
+	genesisState := app.DefaultGenesis()
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
 
 	return genesisState
