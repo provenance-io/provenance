@@ -61,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.30.1 ([#1904](https://github.com/provenance-io/provenance/pull/1904))
 - Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.6 ([#1912](https://github.com/provenance-io/provenance/pull/1912))
 - Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.1 ([#1913](https://github.com/provenance-io/provenance/pull/1913))
+- Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
 
 ---
 
