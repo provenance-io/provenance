@@ -56,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 - Bump `github.com/cosmos/ibc-go/v8` from 8.0.0 to 8.2.0 ([#1910](https://github.com/provenance-io/provenance/pull/1910))
 - Bump `google.golang.org/grpc` from 1.62.1 to 1.63.0 ([#1903](https://github.com/provenance-io/provenance/pull/1903))
+- Bump `cosmossdk.io/store` from 1.0.2 to 1.1.0 ([#1915](https://github.com/provenance-io/provenance/pull/1915))
 
 ---
 
