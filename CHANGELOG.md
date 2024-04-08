@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `bufbuild/buf-breaking-action` from 1.1.3 to 1.1.4 ([#1894](https://github.com/provenance-io/provenance/pull/1894))
 - Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
 - Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.30.1 ([#1904](https://github.com/provenance-io/provenance/pull/1904))
+- Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.6 ([#1912](https://github.com/provenance-io/provenance/pull/1912))
 
 ---
 
