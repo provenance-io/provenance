@@ -43,7 +43,6 @@ import (
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
@@ -515,65 +514,4 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 		panic(errors.ErrInvalidPubKey.Wrap("invalid pubkey size"))
 	}
 	return &ed25519.PubKey{Key: pkBytes}
-}
-
-// SetupWithGenesisRewardsProgram initializes a new SimApp with the provided
-// rewards programs, genesis accounts, validators, and balances.
-func SetupWithGenesisRewardsProgram(t *testing.T, nextRewardProgramID uint64, genesisRewards []rewardtypes.RewardProgram, genAccs []authtypes.GenesisAccount, valSet *cmttypes.ValidatorSet, balances ...banktypes.Balance) *App {
-	t.Helper()
-
-	// Make sure there's a validator set with at least one validator in it.
-	if valSet == nil || len(valSet.Validators) == 0 {
-		privVal := mock.NewPV()
-		pubKey, err := privVal.GetPubKey()
-		require.NoError(t, err)
-		validator := cmttypes.NewValidator(pubKey, 1)
-		if valSet == nil {
-			valSet = cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
-		} else {
-			require.NoError(t, valSet.UpdateWithChangeSet([]*cmttypes.Validator{validator}))
-		}
-	}
-
-	app, genesisState := setup(t, true, 0, "")
-	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
-	genesisState = genesisStateWithRewards(t, app, genesisState, nextRewardProgramID, genesisRewards)
-
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	require.NoError(t, err, "marshaling genesis state to json")
-
-	_, err = app.InitChain(
-		&abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
-	)
-	require.NoError(t, err, "InitChain")
-
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height:             app.LastBlockHeight() + 1,
-		Hash:               app.LastCommitID().Hash,
-		NextValidatorsHash: valSet.Hash(),
-		Time:               time.Now().UTC(),
-	})
-	require.NoError(t, err, "FinalizeBlock")
-
-	return app
-}
-
-func genesisStateWithRewards(t *testing.T,
-	app *App, genesisState GenesisState,
-	nextRewardProgramID uint64, genesisRewards []rewardtypes.RewardProgram,
-) GenesisState {
-	rewardGenesisState := rewardtypes.NewGenesisState(
-		nextRewardProgramID,
-		genesisRewards,
-		[]rewardtypes.ClaimPeriodRewardDistribution{},
-		[]rewardtypes.RewardAccountState{},
-	)
-	var err error
-	genesisState[rewardtypes.ModuleName], err = app.AppCodec().MarshalJSON(rewardGenesisState)
-	require.NoError(t, err, "marshaling reward genesis state JSON")
-	return genesisState
 }
