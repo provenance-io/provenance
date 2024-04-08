@@ -31,7 +31,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/hashicorp/go-metrics v0.5.2
+	github.com/hashicorp/go-metrics v0.5.3
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1 // TODO[1760]: Verify that this is still needed
 	github.com/rs/zerolog v1.32.0
