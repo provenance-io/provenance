@@ -74,8 +74,6 @@ jobs:
           export VERSION=${{ needs.build_init.outputs.version }}
           make build-release-zip
       - name: Provenanced version
-        # TODO[1760]: github: Re-enable the build_osx provenanced version step.
-        if: false
         run: build/provenanced version --long
       - uses: actions/upload-artifact@v4
         with:
@@ -105,12 +103,7 @@ jobs:
           export VERSION=${{ needs.build_init.outputs.version }}
           make build-release-zip
       - name: Provenanced version
-        # TODO[1760]: github: Re-enable the build_linux provenanced version step.
-        if: false
         run: build/provenanced version --long
-      - name: Compile Tests
-        # TODO[1760]: github: Delete this build_linux Compile Tests step.
-        run: go test -mod=readonly -timeout 30m -tags='norace ledger test_ledger_mock' -run='ZYX_NOT_A_REAL_TEST_XZY' ./...
       - uses: actions/upload-artifact@v4
         with:
           name: linux-zip
