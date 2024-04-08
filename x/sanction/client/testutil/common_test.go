@@ -1,21 +1,17 @@
 package testutil
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/stretchr/testify/suite"
 
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/sanction"
 )
 
@@ -27,6 +23,7 @@ type IntegrationTestSuite struct {
 	clientCtx client.Context
 
 	commonArgs []string
+	val0       *network.Validator
 	valAddr    sdk.AccAddress
 	authority  string
 
@@ -50,6 +47,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
+	s.val0 = s.network.Validators[0]
 	s.clientCtx = s.network.Validators[0].ClientCtx
 	s.valAddr = s.network.Validators[0].Address
 
@@ -88,38 +86,7 @@ func (s *IntegrationTestSuite) appendCommonArgsTo(args ...string) []string {
 }
 
 func (s *IntegrationTestSuite) getAuthority() string {
-	if len(s.authority) > 0 {
-		return s.authority
-	}
-	args := []string{"gov", "--" + cmtcli.OutputFlag, "json"}
-	outBW, err := cli.ExecTestCLICmd(s.clientCtx, authcli.QueryModuleAccountByNameCmd(), args)
-	s.Require().NoError(err, "ExecTestCLICmd q auth module-account gov")
-	outBz := outBW.Bytes()
-	s.T().Logf("q auth module-account gov output:\n%s", string(outBz))
-	// example output:
-	// {
-	//   "account": {
-	//     "@type": "/cosmos.auth.v1beta1.ModuleAccount",
-	//     "base_account": {
-	//       "address": "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-	//       "pub_key": null,
-	//       "account_number": "9",
-	//       "sequence": "0"
-	//     },
-	//     "name": "gov",
-	//     "permissions": ["burner"]
-	//   }
-	// }
-	var output map[string]json.RawMessage
-	err = json.Unmarshal(outBz, &output)
-	s.Require().NoError(err, "Unmarshal output json")
-	var account map[string]json.RawMessage
-	err = json.Unmarshal(output["account"], &account)
-	s.Require().NoError(err, "Unmarshal account")
-	var baseAccount map[string]string
-	err = json.Unmarshal(account["base_account"], &baseAccount)
-	s.Require().NoError(err, "Unmarshal base_account")
-	s.authority = baseAccount["address"]
-	s.T().Logf("authority: %q", s.authority)
-	return s.authority
+	acct, err := queries.GetModuleAccountByName(s.val0, "gov")
+	s.Require().NoError(err, "GetModuleAccountByName(\"gov\")")
+	return acct.GetAddress().String()
 }

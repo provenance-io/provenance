@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/provcli"
+	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/sanction"
 	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
@@ -27,17 +27,8 @@ func (s *IntegrationTestSuite) assertGovPropMsg(propID string, msg sdk.Msg) bool
 		return false
 	}
 
-	getPropCmd := govcli.GetCmdQueryProposal()
-	propOutBW, err := cli.ExecTestCLICmd(s.clientCtx, getPropCmd, []string{propID, "--output", "json"})
-	propOut := propOutBW.String()
-	s.T().Logf("Query proposal %s output:\n%s", propID, propOut)
-	if !s.Assert().NoError(err, "GetCmdQueryProposal error") {
-		return false
-	}
-
-	var prop govv1.Proposal
-	err = s.clientCtx.Codec.UnmarshalJSON([]byte(propOut), &prop)
-	if !s.Assert().NoError(err, "UnmarshalJSON on proposal response") {
+	prop, err := queries.GetGovProp(s.val0, propID)
+	if !s.Assert().NoError(err, "GetGovProp(%s)", propID) {
 		return false
 	}
 	if !s.Assert().Len(prop.Messages, 1, "number of messages in proposal") {

@@ -26,6 +26,7 @@ import (
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/sanction"
 	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
@@ -77,10 +78,10 @@ func TestIntegrationTestSuite(t *testing.T) {
 	if len(govGenBz) > 0 {
 		cfg.Codec.MustUnmarshalJSON(govGenBz, &govGen)
 	}
-	govGen.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(cfg.BondDenom, 6))
-	fiveSeconds := time.Second * 5
-	govGen.DepositParams.MaxDepositPeriod = &fiveSeconds
-	govGen.VotingParams.VotingPeriod = &fiveSeconds
+	govGen.Params.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(cfg.BondDenom, 6))
+	twoSeconds := time.Second * 2
+	govGen.Params.MaxDepositPeriod = &twoSeconds
+	govGen.Params.VotingPeriod = &twoSeconds
 	cfg.GenesisState[gov.ModuleName] = cfg.Codec.MustMarshalJSON(&govGen)
 
 	suite.Run(t, NewIntegrationTestSuite(cfg, &sanctionGen))
@@ -139,14 +140,6 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 		"--" + cmtcli.OutputFlag, "json",
 	}
 
-	// Usage: simd query gov proposals [flags]
-	propsQueryCmd := govcli.GetCmdQueryProposals()
-	propsQueryArgs := []string{
-		"--" + flags.FlagReverse,
-		"--" + flags.FlagLimit, "1",
-		"--" + cmtcli.OutputFlag, "json",
-	}
-
 	// Usage: simd tx gov vote [proposal-id] [option] [flags]
 	voteCmd := govcli.NewCmdVote()
 	allVoteArgs := make([][]string, len(s.network.Validators))
@@ -173,14 +166,6 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 		}
 	}
 
-	// Usage: simd query gov proposal [proposal-id] [flags]
-	propQueryCmd := govcli.GetCmdQueryProposal()
-	// Here too, that first arg will be updated when we know the proposal id.
-	propQueryArgs := []string{
-		"0",
-		"--" + cmtcli.OutputFlag, "json",
-	}
-
 	// Usage: simd query sanction is-sanctioned <address> [flags]
 	isSanctCmd := client.QueryIsSanctionedCmd()
 	isSanctArgs := []string{
@@ -192,25 +177,19 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	s.Require().NoError(s.network.WaitForNextBlock(), "wait for next block 2")
 	s.logHeight()
 
-	// Submit the proposal. This shouldn't return until the next block is cut.
+	// Submit the proposal.
 	s.T().Logf("Proposal: %s\n%s", propFile, propMsgBz)
 	propOutBW, err := cli.ExecTestCLICmd(s.clientCtx, propCmd, propArgs)
 	s.Require().NoError(err, "ExecTestCLICmd tx gov submit-proposal")
 	propOutBz := propOutBW.Bytes()
 	s.T().Logf("tx gov submit-proposal output:\n%s", propOutBz)
+	s.Require().NoError(s.network.WaitForNextBlock(), "wait for next block 3")
 	propHeight := s.logHeight()
 
 	// Find the last proposal (assuming it's the one just submitted above).
-	propsQueryOutBW, err := cli.ExecTestCLICmd(s.clientCtx, propsQueryCmd, propsQueryArgs)
-	s.Require().NoError(err, "ExecTestCLICmd query gov proposals")
-	propsQueryOutBz := propsQueryOutBW.Bytes()
-	s.T().Logf("q gov proposals output:\n%s", propsQueryOutBz)
-	var propsQueryOut govv1.QueryProposalsResponse
-	err = s.cfg.Codec.UnmarshalJSON(propsQueryOutBz, &propsQueryOut)
-	s.Require().NoError(err, "Unmarshal QueryProposalsResponse")
-	s.Require().NotEmpty(propsQueryOut.Proposals, "proposals")
-	s.Assert().Equal(govv1.StatusVotingPeriod, propsQueryOut.Proposals[0].Status, "proposal status")
-	propID := fmt.Sprintf("%d", propsQueryOut.Proposals[0].Id)
+	lastProp, err := queries.GetLastGovProp(s.val0)
+	s.Require().NoError(err, "GetLastGovProp")
+	propID := fmt.Sprintf("%d", lastProp.Id)
 	s.T().Logf("Proposal id to vote on: %s", propID)
 
 	// Verify that the validator is sanctioned
@@ -232,24 +211,18 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 		s.T().Logf("[%d]: tx gov vote output:\n%s", i, voteOutBz)
 	}
 
-	// We configured 1 second per block, and a 5-second voting period.
-	// So wait for 6 blocks after the proposal block.
+	// We configured 1/2 second per block, and a 2-second voting period.
+	// So wait for 4 blocks after the proposal block.
 	s.logHeight()
 	s.T().Log("waiting for voting period to end")
-	_, err = s.network.WaitForHeight(propHeight + 6)
+	_, err = s.network.WaitForHeight(propHeight + 4)
 	s.Require().NoError(err, "waiting for block after voting should end")
 	lastHeight := s.logHeight()
 
 	// Check that the proposal passed.
-	propQueryArgs[0] = propID
-	propQueryOutBW, err := cli.ExecTestCLICmd(s.clientCtx, propQueryCmd, propQueryArgs)
-	s.Require().NoError(err, "ExecTestCLICmd query gov proposal %s", propID)
-	propQueryOutBz := propQueryOutBW.Bytes()
-	s.T().Logf("query gov prop %s output:\n%s", propID, propQueryOutBz)
-	var propQueryOut govv1.Proposal
-	err = s.cfg.Codec.UnmarshalJSON(propQueryOutBz, &propQueryOut)
-	s.Require().NoError(err, "Unmarshal QueryProposalResponse")
-	s.Assert().Equal(govv1.StatusPassed, propQueryOut.Status, "proposal status")
+	finalProp, err := queries.GetGovProp(s.val0, propID)
+	s.Require().NoError(err, "GetGovProp(%s)", propID)
+	s.Assert().Equal(govv1.StatusPassed, finalProp.Status, "proposal status")
 
 	// Check that that validator is still sanctioned.
 	isSanctOutBW2, err := cli.ExecTestCLICmd(s.clientCtx, isSanctCmd, isSanctArgs)
