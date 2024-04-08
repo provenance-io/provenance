@@ -3,7 +3,7 @@ module github.com/provenance-io/provenance
 go 1.21
 
 require (
-	cosmossdk.io/core v0.11.0
+	cosmossdk.io/core v0.12.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
