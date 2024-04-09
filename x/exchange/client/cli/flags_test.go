@@ -2541,7 +2541,7 @@ func TestReadTxFileFlag(t *testing.T) {
 			err := tc.flagSet.Parse(args)
 			require.NoError(t, err, "flagSet.Parse(%q)", args)
 
-			clientCtx := newClientContextWithCodec()
+			clientCtx := newClientContextWithCodec(t)
 
 			var actFilename string
 			var actTx *txtypes.Tx
@@ -2765,7 +2765,7 @@ func TestReadProposalFlag(t *testing.T) {
 			err := tc.flagSet.Parse(args)
 			require.NoError(t, err, "flagSet.Parse(%q)", args)
 
-			clientCtx := newClientContextWithCodec()
+			clientCtx := newClientContextWithCodec(t)
 
 			var actPropFN string
 			var actAnys []*codectypes.Any
@@ -2893,7 +2893,7 @@ func TestReadMsgGovCreateMarketRequestFromProposalFlag(t *testing.T) {
 			err := flagSet.Parse(args)
 			require.NoError(t, err, "flagSet.Parse(%q)", args)
 
-			clientCtx := newClientContextWithCodec()
+			clientCtx := newClientContextWithCodec(t)
 
 			var actual *exchange.MsgGovCreateMarketRequest
 			testFunc := func() {
@@ -3010,7 +3010,7 @@ func TestReadMsgGovManageFeesRequestFromProposalFlag(t *testing.T) {
 			err := flagSet.Parse(args)
 			require.NoError(t, err, "flagSet.Parse(%q)", args)
 
-			clientCtx := newClientContextWithCodec()
+			clientCtx := newClientContextWithCodec(t)
 
 			var actual *exchange.MsgGovManageFeesRequest
 			testFunc := func() {
@@ -3173,7 +3173,7 @@ func TestReadMsgMarketCommitmentSettleFromFileFlag(t *testing.T) {
 			err := flagSet.Parse(args)
 			require.NoError(t, err, "flagSet.Parse(%q)", args)
 
-			clientCtx := newClientContextWithCodec()
+			clientCtx := newClientContextWithCodec(t)
 
 			var actual *exchange.MsgMarketCommitmentSettleRequest
 			testFunc := func() {
@@ -3376,7 +3376,7 @@ func TestReadPaymentFromFileFlag(t *testing.T) {
 			err := flagSet.Parse(args)
 			require.NoError(t, err, "flagSet.Parse(%q)", args)
 
-			clientCtx := newClientContextWithCodec()
+			clientCtx := newClientContextWithCodec(t)
 
 			var actual exchange.Payment
 			testFunc := func() {

@@ -17,7 +17,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/provenance-io/provenance/app"
-	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/simulation"
 )
@@ -221,7 +220,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          simappparams.MakeTestEncodingConfig().Marshaler,
+		Cdc:          app.MakeTestEncodingConfig(t).Marshaler,
 		Rand:         rand.New(rand.NewSource(0)), // not using getSeedValue because that was used to generate the accounts.
 		NumBonded:    3,
 		Accounts:     accounts,
@@ -270,7 +269,7 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 	// 4. makes sure the exported gen state is equal to the one randomly generated.
 	// It will stop at the first seed that fails.
 
-	cdc := simappparams.MakeTestEncodingConfig().Marshaler
+	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	accounts := generateAccounts(t)
 
 	for i := int64(0); i <= 1000; i++ {
