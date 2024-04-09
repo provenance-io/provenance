@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump cosmos-SDK to `v0.50.2` (from `v0.46.13-pio-2`) [#1772](https://github.com/provenance-io/provenance/issues/1772).
 * Add store for crisis module for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Add PreBlocker support for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Add AutoCLI support [#1760](https://github.com/provenance-io/provenance/issues/1760).
 
 ### Improvements
 
