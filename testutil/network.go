@@ -13,6 +13,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -34,6 +35,7 @@ func NewAppConstructor() testnet.AppConstructor {
 			simtestutil.EmptyAppOptions{},
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(appCfg.Pruning)),
 			baseapp.SetMinGasPrices(appCfg.MinGasPrices),
+			baseapp.SetChainID(ctx.Viper.GetString(flags.FlagChainID)),
 		)
 	}
 }
