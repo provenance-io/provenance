@@ -26,7 +26,6 @@ import (
 
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
-	// "github.com/cosmos/cosmos-sdk/x/sanction" // TODO[1760]: sanction
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -57,6 +56,7 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	"github.com/provenance-io/provenance/x/sanction"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -296,7 +296,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
 		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{authzkeeper.GrantKey, authzkeeper.GrantQueuePrefix}},
 		// {app.keys[quarantine.StoreKey], newApp.keys[quarantine.StoreKey], [][]byte{}}, // TODO[1760]: quarantine
-		// {app.keys[sanction.StoreKey], newApp.keys[sanction.StoreKey], [][]byte{}}, // TODO[1760]: sanction
+		{app.keys[sanction.StoreKey], newApp.keys[sanction.StoreKey], [][]byte{}},
 
 		{app.keys[markertypes.StoreKey], newApp.keys[markertypes.StoreKey], [][]byte{}},
 		{app.keys[msgfeetype.StoreKey], newApp.keys[msgfeetype.StoreKey], [][]byte{}},
