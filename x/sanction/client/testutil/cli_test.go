@@ -15,6 +15,8 @@ import (
 
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -32,7 +34,8 @@ import (
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
+	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 5
 	cfg.TimeoutCommit = 500 * time.Millisecond
@@ -100,7 +103,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	}
 	sanctMsgAny, err := codectypes.NewAnyWithValue(sanctMsg)
 	depAmt := s.sanctionGenesis.Params.ImmediateSanctionMinDeposit
-	feeAmt := sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)
+	feeAmt := s.bondCoins(10)
 	s.Require().NoError(err, "NewAnyWithValue(MsgSanction)")
 	// Thankfully, the struct used to unmarshal the proposal json (in NewCmdSubmitProposal), is private.
 	// And to be really helpful, it's not the same as MsgSubmitProposal.
@@ -113,6 +116,8 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 		InitialDeposit: depAmt,
 		Proposer:       s.network.Validators[proposerValI].Address.String(),
 		Metadata:       "",
+		Title:          "Sanction an address",
+		Summary:        "Sanction an address",
 	}
 	propMsgBzStep1, err := s.cfg.Codec.MarshalJSON(propMsg)
 	s.Require().NoError(err, "MarshalJSON(MsgSubmitProposal)")
@@ -175,7 +180,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 
 	// Finally, wait for the next block.
 	s.Require().NoError(s.network.WaitForNextBlock(), "wait for next block 2")
-	s.logHeight()
+	startHeight := s.logHeight()
 
 	// Submit the proposal.
 	s.T().Logf("Proposal: %s\n%s", propFile, propMsgBz)
@@ -183,8 +188,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	s.Require().NoError(err, "ExecTestCLICmd tx gov submit-proposal")
 	propOutBz := propOutBW.Bytes()
 	s.T().Logf("tx gov submit-proposal output:\n%s", propOutBz)
-	s.Require().NoError(s.network.WaitForNextBlock(), "wait for next block 3")
-	propHeight := s.logHeight()
+	propHeight := s.waitForHeight(startHeight + 1)
 
 	// Find the last proposal (assuming it's the one just submitted above).
 	lastProp := queries.GetLastGovProp(s.T(), s.val0)
@@ -214,9 +218,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	// So wait for 4 blocks after the proposal block.
 	s.logHeight()
 	s.T().Log("waiting for voting period to end")
-	_, err = s.network.WaitForHeight(propHeight + 4)
-	s.Require().NoError(err, "waiting for block after voting should end")
-	lastHeight := s.logHeight()
+	lastHeight := s.waitForHeight(propHeight + 4)
 
 	// Check that the proposal passed.
 	finalProp := queries.GetGovProp(s.T(), s.val0, propID)
@@ -250,11 +252,4 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	s.Assert().True(isSanctOut3.IsSanctioned, "is sanctioned (third time)")
 
 	s.T().Log("done")
-}
-
-func (s *IntegrationTestSuite) logHeight() int64 {
-	height, err := s.network.LatestHeight()
-	s.Require().NoError(err, "LatestHeight()")
-	s.T().Logf("Current height: %d", height)
-	return height
 }

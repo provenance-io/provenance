@@ -90,3 +90,17 @@ func (s *IntegrationTestSuite) getAuthority() string {
 	acct := queries.GetModuleAccountByName(s.T(), s.val0, "gov")
 	return acct.GetAddress().String()
 }
+
+func (s *IntegrationTestSuite) logHeight() int64 {
+	height, err := s.network.LatestHeight()
+	s.Require().NoError(err, "LatestHeight()")
+	s.T().Logf("Current height: %d", height)
+	return height
+}
+
+func (s *IntegrationTestSuite) waitForHeight(height int64) int64 {
+	rv, err := s.network.WaitForHeight(height)
+	s.Require().NoError(err, "WaitForHeight(%d)", height)
+	s.T().Logf("Current height: %d", rv)
+	return rv
+}

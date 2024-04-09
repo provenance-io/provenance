@@ -117,6 +117,7 @@ func (s *IntegrationTestSuite) TestTxSanctionCmd() {
 			cmd := client.TxSanctionCmd()
 			cmdFuncName := "TxSanctionCmd"
 			args := s.appendCommonArgsTo(tc.args...)
+			args = append(args, "--title", cmdFuncName, "--summary", tc.name)
 
 			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			out := outBW.String()
@@ -128,9 +129,9 @@ func (s *IntegrationTestSuite) TestTxSanctionCmd() {
 
 			var propID string
 			if len(tc.expErr) == 0 {
-				var txResp sdk.TxResponse
-				err = s.clientCtx.Codec.UnmarshalJSON([]byte(out), &txResp)
-				if s.Assert().NoError(err, "UnmarshalJSON on %s", cmdFuncName) {
+				s.Require().NoError(s.network.WaitForNextBlock(), "wait for next")
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				if ok {
 					s.Assert().Equal(0, int(txResp.Code), "%s response code", cmdFuncName)
 				}
 				propID = s.findProposalID(&txResp)
@@ -207,6 +208,7 @@ func (s *IntegrationTestSuite) TestTxUnsanctionCmd() {
 			cmd := client.TxUnsanctionCmd()
 			cmdFuncName := "TxUnsanctionCmd"
 			args := s.appendCommonArgsTo(tc.args...)
+			args = append(args, "--title", cmdFuncName, "--summary", tc.name)
 
 			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			out := outBW.String()
@@ -218,9 +220,9 @@ func (s *IntegrationTestSuite) TestTxUnsanctionCmd() {
 
 			var propID string
 			if len(tc.expErr) == 0 {
-				var txResp sdk.TxResponse
-				err = s.clientCtx.Codec.UnmarshalJSON([]byte(out), &txResp)
-				if s.Assert().NoError(err, "UnmarshalJSON on %s", cmdFuncName) {
+				s.Require().NoError(s.network.WaitForNextBlock(), "wait for next")
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				if ok {
 					s.Assert().Equal(0, int(txResp.Code), "%s response code", cmdFuncName)
 				}
 				propID = s.findProposalID(&txResp)
@@ -328,6 +330,7 @@ func (s *IntegrationTestSuite) TestTxUpdateParamsCmd() {
 			cmd := client.TxUpdateParamsCmd()
 			cmdFuncName := "TxUpdateParamsCmd"
 			args := s.appendCommonArgsTo(tc.args...)
+			args = append(args, "--title", cmdFuncName, "--summary", tc.name)
 
 			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			out := outBW.String()
@@ -339,9 +342,9 @@ func (s *IntegrationTestSuite) TestTxUpdateParamsCmd() {
 
 			var propID string
 			if len(tc.expErr) == 0 {
-				var txResp sdk.TxResponse
-				err = s.clientCtx.Codec.UnmarshalJSON([]byte(out), &txResp)
-				if s.Assert().NoError(err, "UnmarshalJSON on %s", cmdFuncName) {
+				s.Require().NoError(s.network.WaitForNextBlock(), "wait for next")
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				if ok {
 					s.Assert().Equal(0, int(txResp.Code), "%s response code", cmdFuncName)
 				}
 				propID = s.findProposalID(&txResp)

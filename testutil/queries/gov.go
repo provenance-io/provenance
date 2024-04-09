@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
@@ -35,6 +36,14 @@ func AssertGetLastGovProp(t *testing.T, val *network.Validator) (*govv1.Proposal
 	if !assert.NotNil(t, resp.Proposals[0], "most recent proposal") {
 		return nil, false
 	}
+	// Unpack all the proposal messages so that the cachedValue is set in them.
+	for i := range resp.Proposals[0].Messages {
+		var msg sdk.Msg
+		err := val.ClientCtx.Codec.UnpackAny(resp.Proposals[0].Messages[i], &msg)
+		if !assert.NoError(t, err, "UnpackAny on Messages[%d]", i) {
+			return nil, false
+		}
+	}
 	return resp.Proposals[0], true
 }
 
@@ -59,6 +68,14 @@ func AssertGetGovProp(t *testing.T, val *network.Validator, propID string) (*gov
 	}
 	if !assert.NotNil(t, resp.Proposal, "governance proposal %d", propID) {
 		return nil, false
+	}
+	// Unpack all the proposal messages so that the cachedValue is set in them.
+	for i := range resp.Proposal.Messages {
+		var msg sdk.Msg
+		err := val.ClientCtx.Codec.UnpackAny(resp.Proposal.Messages[i], &msg)
+		if !assert.NoError(t, err, "UnpackAny on Messages[%d]", i) {
+			return nil, false
+		}
 	}
 	return resp.Proposal, true
 }
