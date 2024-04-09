@@ -136,7 +136,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 		"--" + flags.FlagFrom, propMsg.Proposer,
 		"--" + flags.FlagFees, feeAmt.String(),
 		"--" + flags.FlagSkipConfirmation,
-		"--" + flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
+		"--" + flags.FlagBroadcastMode, flags.BroadcastSync,
 		"--" + cmtcli.OutputFlag, "json",
 	}
 
@@ -187,8 +187,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	propHeight := s.logHeight()
 
 	// Find the last proposal (assuming it's the one just submitted above).
-	lastProp, err := queries.GetLastGovProp(s.val0)
-	s.Require().NoError(err, "GetLastGovProp")
+	lastProp := queries.GetLastGovProp(s.T(), s.val0)
 	propID := fmt.Sprintf("%d", lastProp.Id)
 	s.T().Logf("Proposal id to vote on: %s", propID)
 
@@ -220,8 +219,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	lastHeight := s.logHeight()
 
 	// Check that the proposal passed.
-	finalProp, err := queries.GetGovProp(s.val0, propID)
-	s.Require().NoError(err, "GetGovProp(%s)", propID)
+	finalProp := queries.GetGovProp(s.T(), s.val0, propID)
 	s.Assert().Equal(govv1.StatusPassed, finalProp.Status, "proposal status")
 
 	// Check that that validator is still sanctioned.

@@ -1,7 +1,9 @@
 package queries
 
 import (
-	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/gogoproto/proto"
 
@@ -9,16 +11,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
-func GetRequest[T proto.Message](val *network.Validator, url string, emptyResp T) (T, error) {
+// AssertGetRequest does an HTTP get on the provided url and unmarshalls the response into the provided emptyResp.
+// The returned bool will be true on success, or false if something goes wrong.
+func AssertGetRequest[T proto.Message](t *testing.T, val *network.Validator, url string, emptyResp T) (T, bool) {
+	t.Helper()
 	respBz, err := testutil.GetRequestWithHeaders(url, nil)
-	if err != nil {
-		return emptyResp, fmt.Errorf("failed to execute GET %q: %w", url, err)
+	if !assert.NoError(t, err, "failed to execute GET %q", url) {
+		return emptyResp, false
 	}
+	t.Logf("GET %q\nResponse: %s", url, string(respBz))
 
 	err = val.ClientCtx.Codec.UnmarshalJSON(respBz, emptyResp)
-	if err != nil {
-		return emptyResp, fmt.Errorf("failed to unmarshal GET %q response as %T: %w\nResponse: %s", url, emptyResp, err, string(respBz))
+	if !assert.NoError(t, err, "failed to unmarshal response as %T", emptyResp) {
+		return emptyResp, false
 	}
 
-	return emptyResp, nil
+	return emptyResp, true
 }

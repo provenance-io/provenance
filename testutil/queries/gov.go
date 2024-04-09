@@ -1,33 +1,64 @@
 package queries
 
 import (
-	"errors"
 	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-func GetLastGovProp(val *network.Validator) (*govv1.Proposal, error) {
-	url := fmt.Sprintf("%s/cosmos/gov/v1/proposals?limit=1&reverse=true", val.APIAddress)
-	resp, err := GetRequest(val, url, &govv1.QueryProposalsResponse{})
-	if err != nil {
-		return nil, err
+// GetLastGovProp executes a query to get the most recent governance proposal, requiring everything to be okay.
+func GetLastGovProp(t *testing.T, val *network.Validator) *govv1.Proposal {
+	t.Helper()
+	rv, ok := AssertGetLastGovProp(t, val)
+	if !ok {
+		t.FailNow()
 	}
-	if len(resp.Proposals) == 0 {
-		return nil, errors.New("no governance proposals found")
-	}
-	return resp.Proposals[0], nil
+	return rv
 }
 
-func GetGovProp(val *network.Validator, propID string) (*govv1.Proposal, error) {
+// AssertGetLastGovProp executes a query to get the most recent governance proposal, asserting that everything is okay.
+// The returned bool will be true on success, or false if something goes wrong.
+func AssertGetLastGovProp(t *testing.T, val *network.Validator) (*govv1.Proposal, bool) {
+	t.Helper()
+	url := fmt.Sprintf("%s/cosmos/gov/v1/proposals?limit=1&reverse=true", val.APIAddress)
+	resp, ok := AssertGetRequest(t, val, url, &govv1.QueryProposalsResponse{})
+	if !ok {
+		return nil, false
+	}
+	if !assert.NotEmpty(t, resp.Proposals, "returned proposals") {
+		return nil, false
+	}
+	if !assert.NotNil(t, resp.Proposals[0], "most recent proposal") {
+		return nil, false
+	}
+	return resp.Proposals[0], true
+}
+
+// GetGovProp executes a query to get the requested governance proposal, requiring everything to be okay.
+func GetGovProp(t *testing.T, val *network.Validator, propID string) *govv1.Proposal {
+	t.Helper()
+	rv, ok := AssertGetGovProp(t, val, propID)
+	if !ok {
+		t.FailNow()
+	}
+	return rv
+}
+
+// AssertGetGovProp executes a query to get the requested governance proposal, asserting that everything is okay.
+// The returned bool will be true on success, or false if something goes wrong.
+func AssertGetGovProp(t *testing.T, val *network.Validator, propID string) (*govv1.Proposal, bool) {
+	t.Helper()
 	url := fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.APIAddress, propID)
-	resp, err := GetRequest(val, url, &govv1.QueryProposalResponse{})
-	if err != nil {
-		return nil, err
+	resp, ok := AssertGetRequest(t, val, url, &govv1.QueryProposalResponse{})
+	if !ok {
+		return nil, false
 	}
-	if resp.Proposal == nil {
-		return nil, fmt.Errorf("governance proposal %d not found", propID)
+	if !assert.NotNil(t, resp.Proposal, "governance proposal %d", propID) {
+		return nil, false
 	}
-	return resp.Proposal, nil
+	return resp.Proposal, true
 }

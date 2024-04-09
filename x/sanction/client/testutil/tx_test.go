@@ -27,10 +27,7 @@ func (s *IntegrationTestSuite) assertGovPropMsg(propID string, msg sdk.Msg) bool
 		return false
 	}
 
-	prop, err := queries.GetGovProp(s.val0, propID)
-	if !s.Assert().NoError(err, "GetGovProp(%s)", propID) {
-		return false
-	}
+	prop := queries.GetGovProp(s.T(), s.val0, propID)
 	if !s.Assert().Len(prop.Messages, 1, "number of messages in proposal") {
 		return false
 	}

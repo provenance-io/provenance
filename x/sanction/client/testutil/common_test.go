@@ -54,7 +54,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.commonArgs = []string{
 		fmt.Sprintf("--%s", flags.FlagFrom), s.valAddr.String(),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, s.bondCoins(10).String()),
 	}
 
@@ -85,8 +85,8 @@ func (s *IntegrationTestSuite) appendCommonArgsTo(args ...string) []string {
 	return append(args, s.commonArgs...)
 }
 
+// getAuthority executes a query to get the address of the gov module account.
 func (s *IntegrationTestSuite) getAuthority() string {
-	acct, err := queries.GetModuleAccountByName(s.val0, "gov")
-	s.Require().NoError(err, "GetModuleAccountByName(\"gov\")")
+	acct := queries.GetModuleAccountByName(s.T(), s.val0, "gov")
 	return acct.GetAddress().String()
 }
