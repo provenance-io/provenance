@@ -34,6 +34,7 @@ import (
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/gogoproto/proto"
 
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
@@ -349,6 +350,9 @@ func New(
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 	legacyAmino := codec.NewLegacyAmino()
 	txConfig := tx.NewTxConfig(appCodec, tx.DefaultSignModes)
+
+	std.RegisterLegacyAminoCodec(legacyAmino)
+	std.RegisterInterfaces(interfaceRegistry)
 
 	bApp := baseapp.NewBaseApp("provenanced", logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter(txConfig.TxDecoder()))
