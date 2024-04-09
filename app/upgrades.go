@@ -3,29 +3,18 @@ package app
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
-	"github.com/provenance-io/provenance/x/exchange"
-	"github.com/provenance-io/provenance/x/hold"
-	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
-	ibcratelimit "github.com/provenance-io/provenance/x/ibcratelimit"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -53,119 +42,6 @@ type appUpgrade struct {
 // If something is happening in the rc upgrade(s) that isn't being applied in the non-rc,
 // or vice versa, please add comments explaining why in both entries.
 var upgrades = map[string]appUpgrade{
-	"saffron-rc1": { // upgrade for v1.17.0-rc1
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			vm, err = runModuleMigrations(ctx, app, vm)
-			if err != nil {
-				return nil, err
-			}
-			// set ibchoooks defaults (no allowed async contracts)
-			app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
-
-			removeInactiveValidatorDelegations(ctx, app)
-			setupICQ(ctx, app)
-			updateMaxSupply(ctx, app)
-			setExchangeParams(ctx, app)
-
-			return vm, nil
-		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
-	},
-	"saffron-rc2": { // upgrade for v1.17.0-rc2
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			vm, err = runModuleMigrations(ctx, app, vm)
-			if err != nil {
-				return nil, err
-			}
-
-			updateIbcMarkerDenomMetadata(ctx, app)
-
-			return vm, nil
-		},
-	},
-	"saffron-rc3": { // upgrade for v1.17.0-rc3
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			vm, err = runModuleMigrations(ctx, app, vm)
-			if err != nil {
-				return nil, err
-			}
-
-			updateIbcMarkerDenomMetadata(ctx, app)
-
-			return vm, nil
-		},
-	},
-	"saffron": { // upgrade for v1.17.0,
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			vm, err = runModuleMigrations(ctx, app, vm)
-			if err != nil {
-				return nil, err
-			}
-
-			// set ibchoooks defaults (no allowed async contracts)
-			app.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
-
-			removeInactiveValidatorDelegations(ctx, app)
-			setupICQ(ctx, app)
-			updateMaxSupply(ctx, app)
-
-			addMarkerNavs(ctx, app, GetPioMainnet1DenomToNav())
-
-			setExchangeParams(ctx, app)
-			updateIbcMarkerDenomMetadata(ctx, app)
-
-			return vm, nil
-		},
-		Added: []string{icqtypes.ModuleName, oracletypes.ModuleName, ibchookstypes.StoreKey, hold.ModuleName, exchange.ModuleName},
-	},
-	"tourmaline-rc1": { // upgrade for v1.18.0-rc1
-		Added: []string{ibcratelimit.ModuleName},
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			vm, err = runModuleMigrations(ctx, app, vm)
-			if err != nil {
-				return nil, err
-			}
-
-			removeInactiveValidatorDelegations(ctx, app)
-			convertNavUnits(ctx, app)
-
-			return vm, nil
-		},
-	},
-	"tourmaline-rc2": {}, // upgrade for v1.18.0-rc2
-	"tourmaline-rc3": { // upgrade for v1.18.0-rc3
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			setExchangePaymentParamsToDefaults(ctx, app)
-			addMarkerNavs(ctx, app, GetPioTestnet1DenomToNav())
-			return vm, nil
-		},
-	},
-	"tourmaline": { // upgrade for v1.18.0
-		Added: []string{ibcratelimit.ModuleName},
-		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
-			var err error
-			vm, err = runModuleMigrations(ctx, app, vm)
-			if err != nil {
-				return nil, err
-			}
-
-			removeInactiveValidatorDelegations(ctx, app)
-			convertNavUnits(ctx, app)
-			addMarkerNavsWithHeight(ctx, app, GetPioMainnet1NavsTourmaline())
-
-			// This isn't in an rc because it was handled via gov prop for testnet.
-			updateMsgFeesNhashPerMil(ctx, app)
-
-			setExchangePaymentParamsToDefaults(ctx, app)
-
-			return vm, nil
-		},
-	},
 	"umber-rc1": { // upgrade for v1.19.0-rc1
 		Added: []string{crisistypes.ModuleName},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -370,115 +246,6 @@ func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
 	ctx.Logger().Info(fmt.Sprintf("A total of %d inactive (unbonded) validators have had all their delegators removed.", removalCount))
 }
 
-// setupICQ sets the correct default values for ICQKeeper.
-// TODO: Remove with the saffron handlers.
-func setupICQ(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Updating ICQ params")
-	app.ICQKeeper.SetParams(ctx, icqtypes.NewParams(true, []string{"/provenance.oracle.v1.Query/Oracle"}))
-	ctx.Logger().Info("Done updating ICQ params")
-}
-
-// updateMaxSupply sets the value of max supply to the current value of MaxTotalSupply.
-// TODO: Remove with the saffron handlers.
-func updateMaxSupply(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Updating MaxSupply marker param")
-	params := app.MarkerKeeper.GetParams(ctx)
-	//nolint:staticcheck // Populate new param with deprecated param
-	params.MaxSupply = sdkmath.NewIntFromUint64(params.MaxTotalSupply)
-	app.MarkerKeeper.SetParams(ctx, params)
-	ctx.Logger().Info("Done updating MaxSupply marker param")
-}
-
-// addMarkerNavs adds navs to existing markers
-// TODO: Remove with the saffron handlers.
-func addMarkerNavs(ctx sdk.Context, app *App, denomToNav map[string]markertypes.NetAssetValue) {
-	ctx.Logger().Info("Adding marker net asset values")
-	for denom, nav := range denomToNav {
-		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, denom)
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("unable to get marker %v: %v", denom, err))
-			continue
-		}
-		if err := app.MarkerKeeper.AddSetNetAssetValues(ctx, marker, []markertypes.NetAssetValue{nav}, "upgrade_handler"); err != nil {
-			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value %v: %v", nav, err))
-		}
-	}
-	ctx.Logger().Info("Done adding marker net asset values")
-}
-
-// addMarkerNavsWithHeight sets net asset values with heights for markers
-// TODO: Remove with the tourmaline handlers.
-func addMarkerNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAssetValueWithHeight) {
-	ctx.Logger().Info("Adding marker net asset values with heights.")
-
-	for _, navWithHeight := range navsWithHeight {
-		marker, err := app.MarkerKeeper.GetMarkerByDenom(ctx, navWithHeight.Denom)
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("unable to get marker %v: %v", navWithHeight.Denom, err))
-			continue
-		}
-
-		if err := app.MarkerKeeper.SetNetAssetValueWithBlockHeight(ctx, marker, navWithHeight.NetAssetValue, "upgrade_handler", navWithHeight.Height); err != nil {
-			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value with height %v at height %d: %v", navWithHeight.NetAssetValue, navWithHeight.Height, err))
-		}
-	}
-
-	ctx.Logger().Info("Done adding marker net asset values with heights.")
-}
-
-// setExchangeParams sets exchange module's params to the defaults.
-// TODO: Remove with the saffron handlers.
-func setExchangeParams(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Ensuring exchange module params are set.")
-	params := app.ExchangeKeeper.GetParams(ctx)
-	if params != nil {
-		ctx.Logger().Info("Exchange module params are already defined.")
-	} else {
-		params = exchange.DefaultParams()
-		ctx.Logger().Info("Setting exchange module params to defaults.")
-		app.ExchangeKeeper.SetParams(ctx, params)
-	}
-	ctx.Logger().Info("Done ensuring exchange module params are set.")
-}
-
-// updateIbcMarkerDenomMetadata iterates markers and creates denom metadata for ibc markers
-// TODO: Remove with the saffron handlers.
-func updateIbcMarkerDenomMetadata(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Updating ibc marker denom metadata")
-	app.MarkerKeeper.IterateMarkers(ctx, func(record markertypes.MarkerAccountI) bool {
-		if !strings.HasPrefix(record.GetDenom(), "ibc/") {
-			return false
-		}
-
-		hash, err := transfertypes.ParseHexHash(strings.TrimPrefix(record.GetDenom(), "ibc/"))
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("invalid denom trace hash: %s, error: %s", hash.String(), err))
-			return false
-		}
-		denomTrace, found := app.TransferKeeper.GetDenomTrace(ctx, hash)
-		if !found {
-			ctx.Logger().Error(fmt.Sprintf("trace not found: %s, error: %s", hash.String(), err))
-			return false
-		}
-
-		parts := strings.Split(denomTrace.Path, "/")
-		if len(parts) == 2 && parts[0] == "transfer" {
-			ctx.Logger().Info(fmt.Sprintf("Adding metadata to %s", record.GetDenom()))
-			chainID := app.Ics20MarkerHooks.GetChainID(ctx, parts[0], parts[1], app.IBCKeeper)
-			markerMetadata := banktypes.Metadata{
-				Base:        record.GetDenom(),
-				Name:        chainID + "/" + denomTrace.BaseDenom,
-				Display:     chainID + "/" + denomTrace.BaseDenom,
-				Description: denomTrace.BaseDenom + " from " + chainID,
-			}
-			app.BankKeeper.SetDenomMetaData(ctx, markerMetadata)
-		}
-
-		return false
-	})
-	ctx.Logger().Info("Done updating ibc marker denom metadata")
-}
-
 // pruneIBCExpiredConsensusStates prunes expired consensus states for IBC.
 func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Pruning expired consensus states for IBC.")
@@ -514,57 +281,4 @@ func migrateBaseappParams(ctx sdk.Context, app *App) error {
 	}
 	ctx.Logger().Info("Done migrating legacy params.")
 	return nil
-}
-
-// convertNavUnits iterates all the net asset values and updates their units if they are using usd.
-// TODO: Remove with the tourmaline handlers.
-func convertNavUnits(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Converting NAV units.")
-	err := app.MarkerKeeper.IterateAllNetAssetValues(ctx, func(markerAddr sdk.AccAddress, nav markertypes.NetAssetValue) (stop bool) {
-		if nav.Price.Denom == markertypes.UsdDenom {
-			nav.Price.Amount = nav.Price.Amount.Mul(sdkmath.NewInt(10))
-			marker, err := app.MarkerKeeper.GetMarker(ctx, markerAddr)
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("Unable to get marker for address: %s, error: %s.", markerAddr, err))
-				return false
-			}
-			err = app.MarkerKeeper.SetNetAssetValue(ctx, marker, nav, "upgrade")
-			if err != nil {
-				ctx.Logger().Error(fmt.Sprintf("Unable to set net asset value for marker: %s, error: %s.", markerAddr, err))
-				return false
-			}
-		}
-		return false
-	})
-	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("Unable to iterate all net asset values error: %s.", err))
-	}
-	ctx.Logger().Info("Done converting NAV units.")
-}
-
-// updateMsgFeesNhashPerMil updates the MsgFees Params to set the NhashPerUsdMil to 40,000,000.
-// TODO: Remove with the tourmaline handlers.
-func updateMsgFeesNhashPerMil(ctx sdk.Context, app *App) {
-	var newVal uint64 = 40_000_000
-	ctx.Logger().Info(fmt.Sprintf("Setting MsgFees Params NhashPerUsdMil to %d.", newVal))
-	params := app.MsgFeesKeeper.GetParams(ctx)
-	params.NhashPerUsdMil = newVal
-	app.MsgFeesKeeper.SetParams(ctx, params)
-	ctx.Logger().Info("Done setting MsgFees Params NhashPerUsdMil.")
-}
-
-// setExchangePaymentParamsToDefaults updates the exchange module params to have the default create payment and accept payment values.
-// TODO: Remove with the tourmaline handlers.
-func setExchangePaymentParamsToDefaults(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Setting exchange module payment params to defaults.")
-	defaultParams := exchange.DefaultParams()
-	curParams := app.ExchangeKeeper.GetParams(ctx)
-	if curParams == nil {
-		curParams = defaultParams
-	} else {
-		curParams.FeeCreatePaymentFlat = defaultParams.FeeCreatePaymentFlat
-		curParams.FeeAcceptPaymentFlat = defaultParams.FeeAcceptPaymentFlat
-	}
-	app.ExchangeKeeper.SetParams(ctx, curParams)
-	ctx.Logger().Info("Done setting exchange module payment params to defaults.")
 }
