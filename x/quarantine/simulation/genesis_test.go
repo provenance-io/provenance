@@ -9,17 +9,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/quarantine/simulation"
 
@@ -32,7 +30,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          simapp.MakeTestEncodingConfig().Codec,
+		Cdc:          app.MakeTestEncodingConfig(t).Codec,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 10),
@@ -76,7 +74,7 @@ func TestRandomizedGenState(t *testing.T) {
 }
 
 func TestRandomizedGenStateImportExport(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := app.MakeTestEncodingConfig(t).Codec
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
 	emptyBankGen := banktypes.GenesisState{}
 	emptyBankGenBz, err := cdc.MarshalJSON(&emptyBankGen)
@@ -116,22 +114,22 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 			err = simState.Cdc.UnmarshalJSON(simState.GenState[banktypes.ModuleName], &bankGen)
 			require.NoError(t, err, "UnmarshalJSON on bank genesis state")
 
-			app := simapp.Setup(t, false)
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			testApp := app.Setup(t)
+			ctx := testApp.BaseApp.NewContext(false)
 
 			testBankInit := func() {
-				app.BankKeeper.InitGenesis(ctx, &bankGen)
+				testApp.BankKeeper.InitGenesis(ctx, &bankGen)
 			}
 			require.NotPanics(t, testBankInit, "bank InitGenesis")
 
 			testInit := func() {
-				app.QuarantineKeeper.InitGenesis(ctx, &randomGenState)
+				testApp.QuarantineKeeper.InitGenesis(ctx, &randomGenState)
 			}
 			require.NotPanics(t, testInit, "quarantine InitGenesis")
 
 			var actualGenState *quarantine.GenesisState
 			testExport := func() {
-				actualGenState = app.QuarantineKeeper.ExportGenesis(ctx)
+				actualGenState = testApp.QuarantineKeeper.ExportGenesis(ctx)
 			}
 			require.NotPanics(t, testExport, "ExportGenesis")
 

@@ -7,13 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/quarantine/keeper"
 )
@@ -58,15 +58,15 @@ func WeightedOperations(
 		weightMsgUpdateAutoResponses int
 	)
 
-	appParams.GetOrGenerate(cdc, OpMsgOptIn, &weightMsgOptIn, nil,
+	appParams.GetOrGenerate(OpMsgOptIn, &weightMsgOptIn, nil,
 		func(_ *rand.Rand) { weightMsgOptIn = WeightMsgOptIn })
-	appParams.GetOrGenerate(cdc, OpMsgOptOut, &weightMsgOptOut, nil,
+	appParams.GetOrGenerate(OpMsgOptOut, &weightMsgOptOut, nil,
 		func(_ *rand.Rand) { weightMsgOptOut = WeightMsgOptOut })
-	appParams.GetOrGenerate(cdc, OpMsgAccept, &weightMsgAccept, nil,
+	appParams.GetOrGenerate(OpMsgAccept, &weightMsgAccept, nil,
 		func(_ *rand.Rand) { weightMsgAccept = WeightMsgAccept })
-	appParams.GetOrGenerate(cdc, OpMsgDecline, &weightMsgDecline, nil,
+	appParams.GetOrGenerate(OpMsgDecline, &weightMsgDecline, nil,
 		func(_ *rand.Rand) { weightMsgDecline = WeightMsgDecline })
-	appParams.GetOrGenerate(cdc, OpMsgUpdateAutoResponses, &weightMsgUpdateAutoResponses, nil,
+	appParams.GetOrGenerate(OpMsgUpdateAutoResponses, &weightMsgUpdateAutoResponses, nil,
 		func(_ *rand.Rand) { weightMsgUpdateAutoResponses = WeightMsgUpdateAutoResponses })
 
 	return simulation.WeightedOperations{
@@ -99,12 +99,12 @@ func SimulateMsgOptIn(ak quarantine.AccountKeeper, bk quarantine.BankKeeper) sim
 		account := ak.GetAccount(ctx, acct.Address)
 
 		encCfg := simappparams.MakeTestEncodingConfig()
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			encCfg.TxConfig,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -119,7 +119,7 @@ func SimulateMsgOptIn(ak quarantine.AccountKeeper, bk quarantine.BankKeeper) sim
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", codec.NewProtoCodec(encCfg.InterfaceRegistry)), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -162,12 +162,12 @@ func SimulateMsgOptOut(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 		account := ak.GetAccount(ctx, acct.Address)
 
 		encCfg := simappparams.MakeTestEncodingConfig()
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			encCfg.TxConfig,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -182,7 +182,7 @@ func SimulateMsgOptOut(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", codec.NewProtoCodec(encCfg.InterfaceRegistry)), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -235,12 +235,12 @@ func SimulateMsgAccept(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 		account := ak.GetAccount(ctx, acct.Address)
 
 		encCfg := simappparams.MakeTestEncodingConfig()
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			encCfg.TxConfig,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -255,7 +255,7 @@ func SimulateMsgAccept(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", codec.NewProtoCodec(encCfg.InterfaceRegistry)), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -308,12 +308,12 @@ func SimulateMsgDecline(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k
 		account := ak.GetAccount(ctx, acct.Address)
 
 		encCfg := simappparams.MakeTestEncodingConfig()
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			encCfg.TxConfig,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -328,7 +328,7 @@ func SimulateMsgDecline(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", codec.NewProtoCodec(encCfg.InterfaceRegistry)), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 
@@ -392,12 +392,12 @@ func SimulateMsgUpdateAutoResponses(ak quarantine.AccountKeeper, bk quarantine.B
 		account := ak.GetAccount(ctx, acct.Address)
 
 		encCfg := simappparams.MakeTestEncodingConfig()
-		tx, err := helpers.GenSignedMockTx(
+		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			encCfg.TxConfig,
 			[]sdk.Msg{msg},
 			fees,
-			helpers.DefaultGenTxGas,
+			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},
 			[]uint64{account.GetSequence()},
@@ -412,7 +412,7 @@ func SimulateMsgUpdateAutoResponses(ak quarantine.AccountKeeper, bk quarantine.B
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, "", codec.NewProtoCodec(encCfg.InterfaceRegistry)), nil, nil
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
 

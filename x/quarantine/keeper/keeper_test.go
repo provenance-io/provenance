@@ -12,14 +12,15 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/quarantine/keeper"
 
@@ -68,7 +69,7 @@ func accs(accz ...sdk.AccAddress) []sdk.AccAddress {
 type TestSuite struct {
 	suite.Suite
 
-	app        *simapp.SimApp
+	app        *app.App
 	sdkCtx     sdk.Context
 	stdlibCtx  context.Context
 	keeper     keeper.Keeper
@@ -84,13 +85,13 @@ type TestSuite struct {
 
 func (s *TestSuite) SetupTest() {
 	s.blockTime = tmtime.Now()
-	s.app = simapp.Setup(s.T(), false)
-	s.sdkCtx = s.app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockHeader(tmproto.Header{Time: s.blockTime})
-	s.stdlibCtx = sdk.WrapSDKContext(s.sdkCtx)
+	s.app = app.Setup(s.T())
+	s.sdkCtx = s.app.BaseApp.NewContext(false).WithBlockTime(s.blockTime)
+	s.stdlibCtx = context.Context(s.sdkCtx)
 	s.keeper = s.app.QuarantineKeeper
 	s.bankKeeper = s.app.BankKeeper
 
-	addrs := simapp.AddTestAddrsIncremental(s.app, s.sdkCtx, 5, sdk.NewInt(1_000_000_000))
+	addrs := app.AddTestAddrsIncremental(s.app, s.sdkCtx, 5, sdkmath.NewInt(1_000_000_000))
 	s.addr1 = addrs[0]
 	s.addr2 = addrs[1]
 	s.addr3 = addrs[2]

@@ -10,11 +10,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/quarantine/simulation"
 )
@@ -23,7 +23,7 @@ type SimTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
-	app *simapp.SimApp
+	app *app.App
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -40,15 +40,15 @@ func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Accoun
 	for _, account := range accounts {
 		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
 		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.ctx, account.Address, initCoins))
+		s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins))
 	}
 
 	return accounts
 }
 
 func (s *SimTestSuite) SetupTest() {
-	s.app = simapp.Setup(s.T(), false)
-	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
+	s.app = app.Setup(s.T())
+	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
 func (s *SimTestSuite) TestWeightedOperations() {

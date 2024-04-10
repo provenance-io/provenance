@@ -6,17 +6,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/gogoproto/proto"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/quarantine/simulation"
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := app.MakeTestEncodingConfig(t).Codec
 	dec := simulation.NewDecodeStore(cdc)
 
 	cz := func(coins string) sdk.Coins {
@@ -25,7 +25,7 @@ func TestDecodeStore(t *testing.T) {
 		return rv
 	}
 
-	marshal := func(o codec.ProtoMarshaler, name string) []byte {
+	marshal := func(o proto.Message, name string) []byte {
 		rv, err := cdc.Marshal(o)
 		require.NoError(t, err, "cdc.Marshal(%s)", name)
 		return rv
