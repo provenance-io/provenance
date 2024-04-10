@@ -1,10 +1,12 @@
-<!--
-order: 2
--->
-
 # State
 
 The `x/sanction` module uses key/value pairs to store sanction-related data in state.
+
+<!-- TOC -->
+  - [Params](#params)
+  - [Sanctioned Accounts](#sanctioned-accounts)
+  - [Temporary Entries](#temporary-entries)
+  - [Temporary Index](#temporary-index)
 
 ## Params
 

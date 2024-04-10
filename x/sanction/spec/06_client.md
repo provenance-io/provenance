@@ -1,10 +1,13 @@
-<!--
-order: 6
--->
-
 # Client
 
 A user can interact with the `x/sanction` module using `gRPC`, `CLI`, or `REST`.
+
+<!-- TOC -->
+  - [gRPC](#grpc)
+  - [CLI](#cli)
+    - [Transactions](#transactions)
+    - [Queries](#queries)
+  - [REST](#rest)
 
 ## gRPC
 

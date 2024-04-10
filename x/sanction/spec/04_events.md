@@ -1,10 +1,13 @@
-<!--
-order: 4
--->
-
 # Events
 
-The `x/sanction` module emits the following events:
+The `x/sanction` module emits the following events.
+
+<!-- TOC -->
+  - [EventAddressSanctioned](#eventaddresssanctioned)
+  - [EventAddressUnsanctioned](#eventaddressunsanctioned)
+  - [EventTempAddressSanctioned](#eventtempaddresssanctioned)
+  - [EventTempAddressUnsanctioned](#eventtempaddressunsanctioned)
+  - [EventParamsUpdated](#eventparamsupdated)
 
 ## EventAddressSanctioned
 

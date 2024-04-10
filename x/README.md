@@ -16,4 +16,5 @@ Provenance Blockchain leverages inherited modules from Cosmos SDK, and has purpo
 * [Name](./name/spec/README.md) - Provides a system for providing human-readable names as aliases for addresses.
 * [Oracle](./oracle/spec/README.md) - Provides the capability to dynamically expose query endpoints.
 * [Reward](./reward/spec/README.md) - Provides a system for distributing rewards to accounts.
+* [Sanction](./sanction/spec/README.md) - Provides a mechanism for freezing accounts.
 * [Trigger](./trigger/spec/README.md) - Provides a system for triggering transactions based on predeterminded events.

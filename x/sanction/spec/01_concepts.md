@@ -1,8 +1,15 @@
-<!--
-order: 1
--->
-
 # Concepts
+
+<!-- TOC -->
+  - [Sanctioned Account](#sanctioned-account)
+  - [Immediate Temporary Sanctions](#immediate-temporary-sanctions)
+  - [Unsanctioning](#unsanctioning)
+  - [Immediate Temporary Unsanctions](#immediate-temporary-unsanctions)
+  - [Unsanctionable Addresses](#unsanctionable-addresses)
+  - [Params](#params)
+  - [Complex Interactions](#complex-interactions)
+    - [Conflicting Messages in a Proposal](#conflicting-messages-in-a-proposal)
+    - [Conflicting Governance Proposals](#conflicting-governance-proposals)
 
 ## Sanctioned Account
 
@@ -99,7 +106,7 @@ There will be 4 temporary entries: account A will have a temporary sanction; and
 If the proposal passes, a permanent sanction will be placed on A, and accounts B, C, and D will have their sanctions removed.
 
 If a proposal contains both a `MsgSanction` and `MsgUnsanction` and the total deposit is enough for immediate temporary entries of one type, but not the other,
-the temporary entries are enacted for the one, but not the other. If later, more deposit is added so there's enoug for both, the others will then be enacted too.
+the temporary entries are enacted for the one, but not the other. If later, more deposit is added so there's enough for both, the others will then be enacted too.
 
 ### Conflicting Governance Proposals
 
