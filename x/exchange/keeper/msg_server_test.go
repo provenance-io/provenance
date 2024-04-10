@@ -242,9 +242,8 @@ func (s *TestSuite) requireSetAttr(addr sdk.AccAddress, name string, owner sdk.A
 
 // requireQuarantineOptIn opts an address into quarantine, requiring it to not error.
 func (s *TestSuite) requireQuarantineOptIn(addr sdk.AccAddress) {
-	// TODO[1760]: quarantine: Uncomment these lines.
-	// err := s.app.QuarantineKeeper.SetOptIn(s.ctx, addr)
-	// s.Require().NoError(err, "QuarantineKeeper.SetOptIn(%s)", s.getAddrName(addr))
+	err := s.app.QuarantineKeeper.SetOptIn(s.ctx, addr)
+	s.Require().NoError(err, "QuarantineKeeper.SetOptIn(%s)", s.getAddrName(addr))
 }
 
 // requireSanctionAddress sanctions an address, requiring it to not error.

@@ -37,9 +37,6 @@ import (
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
-	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
-	// quarantinekeeper "github.com/cosmos/cosmos-sdk/x/quarantine/keeper" // TODO[1760]: quarantine
-	// quarantinemodule "github.com/cosmos/cosmos-sdk/x/quarantine/module" // TODO[1760]: quarantine
 	// "github.com/cosmos/cosmos-sdk/x/sanction" // TODO[1760]: sanction
 	// sanctionkeeper "github.com/cosmos/cosmos-sdk/x/sanction/keeper" // TODO[1760]: sanction
 	// sanctionmodule "github.com/cosmos/cosmos-sdk/x/sanction/module" // TODO[1760]: sanction
@@ -174,6 +171,9 @@ import (
 	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
 	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
+	"github.com/provenance-io/provenance/x/quarantine"
+	quarantinekeeper "github.com/provenance-io/provenance/x/quarantine/keeper"
+	quarantinemodule "github.com/provenance-io/provenance/x/quarantine/module"
 	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
 	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
 	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
@@ -265,7 +265,7 @@ type App struct {
 	FeeGrantKeeper   feegrantkeeper.Keeper
 	MsgFeesKeeper    msgfeeskeeper.Keeper
 	RewardKeeper     rewardkeeper.Keeper
-	// QuarantineKeeper quarantinekeeper.Keeper // TODO[1760]: quarantine
+	QuarantineKeeper quarantinekeeper.Keeper
 	// SanctionKeeper sanctionkeeper.Keeper // TODO[1760]: sanction
 	TriggerKeeper         triggerkeeper.Keeper
 	OracleKeeper          oraclekeeper.Keeper
@@ -364,7 +364,7 @@ func New(
 		msgfeestypes.StoreKey,
 		wasmtypes.StoreKey,
 		rewardtypes.StoreKey,
-		// quarantine.StoreKey, // TODO[1760]: quarantine
+		quarantine.StoreKey,
 		// sanction.StoreKey, // TODO[1760]: sanction
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
@@ -553,9 +553,9 @@ func New(
 	)
 
 	markerReqAttrBypassAddrs := []sdk.AccAddress{
-		authtypes.NewModuleAddress(authtypes.FeeCollectorName), // Allow collecting fees in restricted coins.
-		authtypes.NewModuleAddress(rewardtypes.ModuleName),     // Allow rewards to hold onto restricted coins.
-		// authtypes.NewModuleAddress(quarantine.ModuleName),          // Allow quarantine to hold onto restricted coins. // TODO[1760]: quarantine
+		authtypes.NewModuleAddress(authtypes.FeeCollectorName),     // Allow collecting fees in restricted coins.
+		authtypes.NewModuleAddress(rewardtypes.ModuleName),         // Allow rewards to hold onto restricted coins.
+		authtypes.NewModuleAddress(quarantine.ModuleName),          // Allow quarantine to hold onto restricted coins.
 		authtypes.NewModuleAddress(govtypes.ModuleName),            // Allow restricted coins in deposits.
 		authtypes.NewModuleAddress(distrtypes.ModuleName),          // Allow fee denoms to be restricted coins.
 		authtypes.NewModuleAddress(stakingtypes.BondedPoolName),    // Allow bond denom to be a restricted coin.
@@ -734,7 +734,7 @@ func New(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	// app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName)) // TODO[1760]: quarantine
+	app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName))
 
 	/****  Module Options ****/
 
@@ -763,7 +763,7 @@ func New(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
-		// quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), // TODO[1760]: quarantine
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		// sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry), // TODO[1760]: sanction
 
 		// PROVENANCE
@@ -850,7 +850,7 @@ func New(
 		icqtypes.ModuleName,
 		nametypes.ModuleName,
 		vestingtypes.ModuleName,
-		// quarantine.ModuleName, // TODO[1760]: quarantine
+		quarantine.ModuleName,
 		// sanction.ModuleName, // TODO[1760]: sanction
 		hold.ModuleName,
 		exchange.ModuleName,
@@ -892,7 +892,7 @@ func New(
 		markertypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
-		// quarantine.ModuleName, // TODO[1760]: quarantine
+		quarantine.ModuleName,
 		// sanction.ModuleName, // TODO[1760]: sanction
 		hold.ModuleName,
 		exchange.ModuleName,
@@ -920,7 +920,7 @@ func New(
 		authz.ModuleName,
 		group.ModuleName,
 		feegrant.ModuleName,
-		// quarantine.ModuleName, // TODO[1760]: quarantine
+		quarantine.ModuleName,
 		// sanction.ModuleName, // TODO[1760]: sanction
 
 		nametypes.ModuleName,
@@ -968,7 +968,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-		// quarantine.ModuleName, // TODO[1760]: quarantine
+		quarantine.ModuleName,
 		// sanction.ModuleName, // TODO[1760]: sanction
 		hold.ModuleName,
 		exchange.ModuleName,
@@ -1011,7 +1011,7 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		// quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), // TODO[1760]: quarantine
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		// sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry), // TODO[1760]: sanction
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
