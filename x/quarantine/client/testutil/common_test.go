@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	. "github.com/provenance-io/provenance/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 type IntegrationTestSuite struct {
@@ -116,7 +116,7 @@ func (s *IntegrationTestSuite) appendCommonFlagsTo(args ...string) []string {
 
 // assertErrorContents calls AssertErrorContents using this suite's t.
 func (s *IntegrationTestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
-	return AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
 var _ fmt.Stringer = asStringer("")

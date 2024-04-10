@@ -10,8 +10,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	. "github.com/provenance-io/provenance/x/quarantine"
-	. "github.com/provenance-io/provenance/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/x/quarantine"
+	"github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 type coinMaker func() sdk.Coins
@@ -29,14 +30,14 @@ var (
 func TestContainsAddress(t *testing.T) {
 	// Technically, if containsAddress breaks, a lot of other tests should also break,
 	// but I figure it's better safe than sorry.
-	addrShort0 := MakeTestAddr("cs", 0)
-	addrShort1 := MakeTestAddr("cs", 1)
-	addrLong2 := MakeLongAddr("cs", 2)
-	addrLong3 := MakeLongAddr("cs", 3)
+	addrShort0 := testutil.MakeTestAddr("cs", 0)
+	addrShort1 := testutil.MakeTestAddr("cs", 1)
+	addrLong2 := testutil.MakeLongAddr("cs", 2)
+	addrLong3 := testutil.MakeLongAddr("cs", 3)
 	addrEmpty := make(sdk.AccAddress, 0)
-	addrShort0Almost := MakeCopyOfAccAddress(addrShort0)
+	addrShort0Almost := testutil.MakeCopyOfAccAddress(addrShort0)
 	addrShort0Almost[len(addrShort0Almost)-1]++
-	addr2Almost := MakeCopyOfAccAddress(addrLong2)
+	addr2Almost := testutil.MakeCopyOfAccAddress(addrLong2)
 	addr2Almost[len(addr2Almost)-1]++
 
 	tests := []struct {
@@ -271,10 +272,10 @@ func TestContainsAddress(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			origSuffixes := MakeCopyOfAccAddresses(tc.addrs)
-			origSuffixToFind := MakeCopyOfAccAddress(tc.addrToFind)
+			origSuffixes := testutil.MakeCopyOfAccAddresses(tc.addrs)
+			origSuffixToFind := testutil.MakeCopyOfAccAddress(tc.addrToFind)
 
-			actual := ContainsAddress(tc.addrs, tc.addrToFind)
+			actual := quarantine.ContainsAddress(tc.addrs, tc.addrToFind)
 			assert.Equal(t, tc.expected, actual, "containsSuffix result")
 			assert.Equal(t, origSuffixes, tc.addrs, "addrs before and after containsSuffix")
 			assert.Equal(t, origSuffixToFind, tc.addrToFind, "addrToFind before and after containsSuffix")
@@ -283,12 +284,12 @@ func TestContainsAddress(t *testing.T) {
 }
 
 func TestFindAddresses(t *testing.T) {
-	addr0 := MakeTestAddr("fa", 0)
-	addr1 := MakeTestAddr("fa", 1)
-	addr2 := MakeTestAddr("fa", 2)
-	addr3 := MakeTestAddr("fa", 3)
-	addr4 := MakeTestAddr("fa", 4)
-	addr5 := MakeTestAddr("fa", 5)
+	addr0 := testutil.MakeTestAddr("fa", 0)
+	addr1 := testutil.MakeTestAddr("fa", 1)
+	addr2 := testutil.MakeTestAddr("fa", 2)
+	addr3 := testutil.MakeTestAddr("fa", 3)
+	addr4 := testutil.MakeTestAddr("fa", 4)
+	addr5 := testutil.MakeTestAddr("fa", 5)
 
 	tests := []struct {
 		name        string
@@ -441,9 +442,9 @@ func TestFindAddresses(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			allAddrsOrig := MakeCopyOfAccAddresses(tc.allAddrs)
-			addrsToFindOrig := MakeCopyOfAccAddresses(tc.addrsToFind)
-			found, leftover := FindAddresses(tc.allAddrs, tc.addrsToFind)
+			allAddrsOrig := testutil.MakeCopyOfAccAddresses(tc.allAddrs)
+			addrsToFindOrig := testutil.MakeCopyOfAccAddresses(tc.addrsToFind)
+			found, leftover := quarantine.FindAddresses(tc.allAddrs, tc.addrsToFind)
 			assert.Equal(t, tc.found, found, "found")
 			assert.Equal(t, tc.leftover, leftover, "leftover")
 			assert.Equal(t, allAddrsOrig, tc.allAddrs, "allAddrs before and after findAddresses")
@@ -455,14 +456,14 @@ func TestFindAddresses(t *testing.T) {
 func TestContainsSuffix(t *testing.T) {
 	// Technically, if containsSuffix breaks, a lot of other tests should also break,
 	// but I figure it's better safe than sorry.
-	suffixShort0 := []byte(MakeTestAddr("cs", 0))
-	suffixShort1 := []byte(MakeTestAddr("cs", 1))
-	suffixLong2 := []byte(MakeLongAddr("cs", 2))
-	suffixLong3 := []byte(MakeLongAddr("cs", 3))
+	suffixShort0 := []byte(testutil.MakeTestAddr("cs", 0))
+	suffixShort1 := []byte(testutil.MakeTestAddr("cs", 1))
+	suffixLong2 := []byte(testutil.MakeLongAddr("cs", 2))
+	suffixLong3 := []byte(testutil.MakeLongAddr("cs", 3))
 	suffixEmpty := make([]byte, 0)
-	suffixShort0Almost := MakeCopyOfByteSlice(suffixShort0)
+	suffixShort0Almost := testutil.MakeCopyOfByteSlice(suffixShort0)
 	suffixShort0Almost[len(suffixShort0Almost)-1]++
-	suffixLong2Almost := MakeCopyOfByteSlice(suffixLong2)
+	suffixLong2Almost := testutil.MakeCopyOfByteSlice(suffixLong2)
 	suffixLong2Almost[len(suffixLong2Almost)-1]++
 
 	tests := []struct {
@@ -697,10 +698,10 @@ func TestContainsSuffix(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			origSuffixes := MakeCopyOfByteSliceSlice(tc.suffixes)
-			origSuffixToFind := MakeCopyOfByteSlice(tc.suffixToFind)
+			origSuffixes := testutil.MakeCopyOfByteSliceSlice(tc.suffixes)
+			origSuffixToFind := testutil.MakeCopyOfByteSlice(tc.suffixToFind)
 
-			actual := ContainsSuffix(tc.suffixes, tc.suffixToFind)
+			actual := quarantine.ContainsSuffix(tc.suffixes, tc.suffixToFind)
 			assert.Equal(t, tc.expected, actual, "containsSuffix result")
 			assert.Equal(t, origSuffixes, tc.suffixes, "suffixes before and after containsSuffix")
 			assert.Equal(t, origSuffixToFind, tc.suffixToFind, "suffixToFind before and after containsSuffix")
@@ -709,8 +710,8 @@ func TestContainsSuffix(t *testing.T) {
 }
 
 func TestNewQuarantinedFunds(t *testing.T) {
-	testAddr0 := MakeTestAddr("nqf", 0)
-	testAddr1 := MakeTestAddr("nqf", 1)
+	testAddr0 := testutil.MakeTestAddr("nqf", 0)
+	testAddr1 := testutil.MakeTestAddr("nqf", 1)
 
 	tests := []struct {
 		name      string
@@ -718,7 +719,7 @@ func TestNewQuarantinedFunds(t *testing.T) {
 		fromAddrs []sdk.AccAddress
 		Coins     sdk.Coins
 		declined  bool
-		expected  *QuarantinedFunds
+		expected  *quarantine.QuarantinedFunds
 	}{
 		{
 			name:      "control",
@@ -726,7 +727,7 @@ func TestNewQuarantinedFunds(t *testing.T) {
 			fromAddrs: []sdk.AccAddress{testAddr1},
 			Coins:     sdk.NewCoins(sdk.NewInt64Coin("rando", 88)),
 			declined:  false,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   sdk.NewCoins(sdk.NewInt64Coin("rando", 88)),
@@ -739,7 +740,7 @@ func TestNewQuarantinedFunds(t *testing.T) {
 			fromAddrs: []sdk.AccAddress{testAddr1},
 			Coins:     sdk.NewCoins(sdk.NewInt64Coin("rando", 87)),
 			declined:  true,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   sdk.NewCoins(sdk.NewInt64Coin("rando", 87)),
@@ -752,7 +753,7 @@ func TestNewQuarantinedFunds(t *testing.T) {
 			fromAddrs: []sdk.AccAddress{testAddr1},
 			Coins:     sdk.NewCoins(sdk.NewInt64Coin("rando", 86)),
 			declined:  false,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               "",
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   sdk.NewCoins(sdk.NewInt64Coin("rando", 86)),
@@ -765,7 +766,7 @@ func TestNewQuarantinedFunds(t *testing.T) {
 			fromAddrs: nil,
 			Coins:     sdk.NewCoins(sdk.NewInt64Coin("rando", 85)),
 			declined:  false,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{},
 				Coins:                   sdk.NewCoins(sdk.NewInt64Coin("rando", 85)),
@@ -778,7 +779,7 @@ func TestNewQuarantinedFunds(t *testing.T) {
 			fromAddrs: []sdk.AccAddress{},
 			Coins:     sdk.NewCoins(sdk.NewInt64Coin("rando", 85)),
 			declined:  false,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{},
 				Coins:                   sdk.NewCoins(sdk.NewInt64Coin("rando", 85)),
@@ -791,7 +792,7 @@ func TestNewQuarantinedFunds(t *testing.T) {
 			fromAddrs: []sdk.AccAddress{testAddr1},
 			Coins:     sdk.Coins{},
 			declined:  false,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   sdk.Coins{},
@@ -804,7 +805,7 @@ func TestNewQuarantinedFunds(t *testing.T) {
 			fromAddrs: []sdk.AccAddress{testAddr1},
 			Coins:     nil,
 			declined:  false,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   nil,
@@ -817,7 +818,7 @@ func TestNewQuarantinedFunds(t *testing.T) {
 			fromAddrs: []sdk.AccAddress{testAddr1},
 			Coins:     sdk.Coins{sdk.Coin{Denom: "bad", Amount: sdkmath.NewInt(-1)}},
 			declined:  false,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   sdk.Coins{sdk.Coin{Denom: "bad", Amount: sdkmath.NewInt(-1)}},
@@ -828,25 +829,25 @@ func TestNewQuarantinedFunds(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := NewQuarantinedFunds(tc.toAddr, tc.fromAddrs, tc.Coins, tc.declined)
+			actual := quarantine.NewQuarantinedFunds(tc.toAddr, tc.fromAddrs, tc.Coins, tc.declined)
 			assert.Equal(t, tc.expected, actual, "NewQuarantinedFunds")
 		})
 	}
 }
 
 func TestQuarantinedFunds_Validate(t *testing.T) {
-	testAddr0 := MakeTestAddr("qfv", 0).String()
-	testAddr1 := MakeTestAddr("qfv", 1).String()
-	testAddr2 := MakeTestAddr("qfv", 2).String()
+	testAddr0 := testutil.MakeTestAddr("qfv", 0).String()
+	testAddr1 := testutil.MakeTestAddr("qfv", 1).String()
+	testAddr2 := testutil.MakeTestAddr("qfv", 2).String()
 
 	tests := []struct {
 		name          string
-		qf            *QuarantinedFunds
+		qf            *quarantine.QuarantinedFunds
 		expectedInErr []string
 	}{
 		{
 			name: "control",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -856,7 +857,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "declined true",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -866,7 +867,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "bad to address",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               "notgonnawork",
 				UnacceptedFromAddresses: []string{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -876,7 +877,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "empty to address",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               "",
 				UnacceptedFromAddresses: []string{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -886,7 +887,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "bad from address",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{"alsonotgood"},
 				Coins:                   coinMakerOK(),
@@ -896,7 +897,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "empty from address",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{""},
 				Coins:                   coinMakerOK(),
@@ -906,7 +907,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "nil from addresses",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: nil,
 				Coins:                   coinMakerOK(),
@@ -916,7 +917,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "empty from addresses",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{},
 				Coins:                   coinMakerOK(),
@@ -926,7 +927,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "two from addresses both good",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{testAddr1, testAddr2},
 				Coins:                   coinMakerOK(),
@@ -936,7 +937,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "two same from addresses",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{testAddr2, testAddr2},
 				Coins:                   coinMakerOK(),
@@ -946,7 +947,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "three from addresses same first last",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{testAddr1, testAddr2, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -956,7 +957,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "two from addresses first bad",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{"this is not an address", testAddr2},
 				Coins:                   coinMakerOK(),
@@ -966,7 +967,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "two from addresses last bad",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{testAddr1, "this is also bad"},
 				Coins:                   coinMakerOK(),
@@ -976,7 +977,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "empty coins",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{testAddr1},
 				Coins:                   coinMakerEmpty(),
@@ -986,7 +987,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "nil coins",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{testAddr1},
 				Coins:                   coinMakerNil(),
@@ -996,7 +997,7 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 		},
 		{
 			name: "bad coins",
-			qf: &QuarantinedFunds{
+			qf: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0,
 				UnacceptedFromAddresses: []string{testAddr1},
 				Coins:                   coinMakerBad(),
@@ -1008,78 +1009,78 @@ func TestQuarantinedFunds_Validate(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			qfOrig := MakeCopyOfQuarantinedFunds(tc.qf)
+			qfOrig := testutil.MakeCopyOfQuarantinedFunds(tc.qf)
 			err := tc.qf.Validate()
-			AssertErrorContents(t, err, tc.expectedInErr, "Validate")
+			assertions.AssertErrorContents(t, err, tc.expectedInErr, "Validate")
 			assert.Equal(t, qfOrig, tc.qf, "QuarantinedFunds before and after")
 		})
 	}
 }
 
 func TestNewAutoResponseEntry(t *testing.T) {
-	testAddr0 := MakeTestAddr("nare", 0)
-	testAddr1 := MakeTestAddr("nare", 1)
+	testAddr0 := testutil.MakeTestAddr("nare", 0)
+	testAddr1 := testutil.MakeTestAddr("nare", 1)
 
 	tests := []struct {
 		name     string
 		toAddr   sdk.AccAddress
 		fromAddr sdk.AccAddress
-		resp     AutoResponse
-		expected *AutoResponseEntry
+		resp     quarantine.AutoResponse
+		expected *quarantine.AutoResponseEntry
 	}{
 		{
 			name:     "accept",
 			toAddr:   testAddr0,
 			fromAddr: testAddr1,
-			resp:     AUTO_RESPONSE_ACCEPT,
-			expected: &AutoResponseEntry{
+			resp:     quarantine.AUTO_RESPONSE_ACCEPT,
+			expected: &quarantine.AutoResponseEntry{
 				ToAddress:   testAddr0.String(),
 				FromAddress: testAddr1.String(),
-				Response:    AUTO_RESPONSE_ACCEPT,
+				Response:    quarantine.AUTO_RESPONSE_ACCEPT,
 			},
 		},
 		{
 			name:     "decline",
 			toAddr:   testAddr0,
 			fromAddr: testAddr1,
-			resp:     AUTO_RESPONSE_DECLINE,
-			expected: &AutoResponseEntry{
+			resp:     quarantine.AUTO_RESPONSE_DECLINE,
+			expected: &quarantine.AutoResponseEntry{
 				ToAddress:   testAddr0.String(),
 				FromAddress: testAddr1.String(),
-				Response:    AUTO_RESPONSE_DECLINE,
+				Response:    quarantine.AUTO_RESPONSE_DECLINE,
 			},
 		},
 		{
 			name:     "unspecified",
 			toAddr:   testAddr0,
 			fromAddr: testAddr1,
-			resp:     AUTO_RESPONSE_UNSPECIFIED,
-			expected: &AutoResponseEntry{
+			resp:     quarantine.AUTO_RESPONSE_UNSPECIFIED,
+			expected: &quarantine.AutoResponseEntry{
 				ToAddress:   testAddr0.String(),
 				FromAddress: testAddr1.String(),
-				Response:    AUTO_RESPONSE_UNSPECIFIED,
+				Response:    quarantine.AUTO_RESPONSE_UNSPECIFIED,
 			},
 		},
 		{
 			name:     "nil to address",
 			toAddr:   nil,
 			fromAddr: testAddr1,
-			resp:     AUTO_RESPONSE_ACCEPT,
-			expected: &AutoResponseEntry{
+			resp:     quarantine.AUTO_RESPONSE_ACCEPT,
+			expected: &quarantine.AutoResponseEntry{
 				ToAddress:   "",
 				FromAddress: testAddr1.String(),
-				Response:    AUTO_RESPONSE_ACCEPT,
+				Response:    quarantine.AUTO_RESPONSE_ACCEPT,
 			},
 		},
 		{
 			name:     "nil from address",
 			toAddr:   testAddr0,
 			fromAddr: nil,
-			resp:     AUTO_RESPONSE_DECLINE,
-			expected: &AutoResponseEntry{
+			resp:     quarantine.AUTO_RESPONSE_DECLINE,
+			expected: &quarantine.AutoResponseEntry{
 				ToAddress:   testAddr0.String(),
 				FromAddress: "",
-				Response:    AUTO_RESPONSE_DECLINE,
+				Response:    quarantine.AUTO_RESPONSE_DECLINE,
 			},
 		},
 		{
@@ -1087,7 +1088,7 @@ func TestNewAutoResponseEntry(t *testing.T) {
 			toAddr:   testAddr1,
 			fromAddr: testAddr0,
 			resp:     -3,
-			expected: &AutoResponseEntry{
+			expected: &quarantine.AutoResponseEntry{
 				ToAddress:   testAddr1.String(),
 				FromAddress: testAddr0.String(),
 				Response:    -3,
@@ -1097,71 +1098,71 @@ func TestNewAutoResponseEntry(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := NewAutoResponseEntry(tc.toAddr, tc.fromAddr, tc.resp)
+			actual := quarantine.NewAutoResponseEntry(tc.toAddr, tc.fromAddr, tc.resp)
 			assert.Equal(t, tc.expected, actual, "NewAutoResponseEntry")
 		})
 	}
 }
 
 func TestAutoResponseEntry_Validate(t *testing.T) {
-	testAddr0 := MakeTestAddr("arev", 0).String()
-	testAddr1 := MakeTestAddr("arev", 1).String()
+	testAddr0 := testutil.MakeTestAddr("arev", 0).String()
+	testAddr1 := testutil.MakeTestAddr("arev", 1).String()
 
 	tests := []struct {
 		name          string
 		toAddr        string
 		fromAddr      string
-		resp          AutoResponse
-		qf            QuarantinedFunds
+		resp          quarantine.AutoResponse
+		qf            quarantine.QuarantinedFunds
 		expectedInErr []string
 	}{
 		{
 			name:          "accept",
 			toAddr:        testAddr0,
 			fromAddr:      testAddr1,
-			resp:          AUTO_RESPONSE_ACCEPT,
+			resp:          quarantine.AUTO_RESPONSE_ACCEPT,
 			expectedInErr: nil,
 		},
 		{
 			name:          "decline",
 			toAddr:        testAddr0,
 			fromAddr:      testAddr1,
-			resp:          AUTO_RESPONSE_DECLINE,
+			resp:          quarantine.AUTO_RESPONSE_DECLINE,
 			expectedInErr: nil,
 		},
 		{
 			name:          "unspecified",
 			toAddr:        testAddr0,
 			fromAddr:      testAddr1,
-			resp:          AUTO_RESPONSE_UNSPECIFIED,
+			resp:          quarantine.AUTO_RESPONSE_UNSPECIFIED,
 			expectedInErr: nil,
 		},
 		{
 			name:          "bad to address",
 			toAddr:        "notgonnawork",
 			fromAddr:      testAddr1,
-			resp:          AUTO_RESPONSE_ACCEPT,
+			resp:          quarantine.AUTO_RESPONSE_ACCEPT,
 			expectedInErr: []string{"invalid to address"},
 		},
 		{
 			name:          "empty to address",
 			toAddr:        "",
 			fromAddr:      testAddr1,
-			resp:          AUTO_RESPONSE_DECLINE,
+			resp:          quarantine.AUTO_RESPONSE_DECLINE,
 			expectedInErr: []string{"invalid to address"},
 		},
 		{
 			name:          "bad from address",
 			toAddr:        testAddr0,
 			fromAddr:      "alsonotgood",
-			resp:          AUTO_RESPONSE_UNSPECIFIED,
+			resp:          quarantine.AUTO_RESPONSE_UNSPECIFIED,
 			expectedInErr: []string{"invalid from address"},
 		},
 		{
 			name:          "empty from address",
 			toAddr:        testAddr0,
 			fromAddr:      "",
-			resp:          AUTO_RESPONSE_ACCEPT,
+			resp:          quarantine.AUTO_RESPONSE_ACCEPT,
 			expectedInErr: []string{"invalid from address"},
 		},
 		{
@@ -1182,62 +1183,62 @@ func TestAutoResponseEntry_Validate(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			entryOrig := AutoResponseEntry{
+			entryOrig := quarantine.AutoResponseEntry{
 				ToAddress:   tc.toAddr,
 				FromAddress: tc.fromAddr,
 				Response:    tc.resp,
 			}
-			entry := AutoResponseEntry{
+			entry := quarantine.AutoResponseEntry{
 				ToAddress:   tc.toAddr,
 				FromAddress: tc.fromAddr,
 				Response:    tc.resp,
 			}
 			err := entry.Validate()
-			AssertErrorContents(t, err, tc.expectedInErr, "Validate")
+			assertions.AssertErrorContents(t, err, tc.expectedInErr, "Validate")
 			assert.Equal(t, entryOrig, entry, "AutoResponseEntry before and after")
 		})
 	}
 }
 
 func TestAutoResponseUpdate_Validate(t *testing.T) {
-	testAddr0 := MakeTestAddr("arev", 0).String()
-	testAddr1 := MakeTestAddr("arev", 1).String()
+	testAddr0 := testutil.MakeTestAddr("arev", 0).String()
+	testAddr1 := testutil.MakeTestAddr("arev", 1).String()
 
 	tests := []struct {
 		name          string
 		fromAddr      string
-		resp          AutoResponse
-		qf            QuarantinedFunds
+		resp          quarantine.AutoResponse
+		qf            quarantine.QuarantinedFunds
 		expectedInErr []string
 	}{
 		{
 			name:          "accept",
 			fromAddr:      testAddr0,
-			resp:          AUTO_RESPONSE_ACCEPT,
+			resp:          quarantine.AUTO_RESPONSE_ACCEPT,
 			expectedInErr: nil,
 		},
 		{
 			name:          "decline",
 			fromAddr:      testAddr1,
-			resp:          AUTO_RESPONSE_DECLINE,
+			resp:          quarantine.AUTO_RESPONSE_DECLINE,
 			expectedInErr: nil,
 		},
 		{
 			name:          "unspecified",
 			fromAddr:      testAddr0,
-			resp:          AUTO_RESPONSE_UNSPECIFIED,
+			resp:          quarantine.AUTO_RESPONSE_UNSPECIFIED,
 			expectedInErr: nil,
 		},
 		{
 			name:          "bad from address",
 			fromAddr:      "yupnotgood",
-			resp:          AUTO_RESPONSE_UNSPECIFIED,
+			resp:          quarantine.AUTO_RESPONSE_UNSPECIFIED,
 			expectedInErr: []string{"invalid from address"},
 		},
 		{
 			name:          "empty from address",
 			fromAddr:      "",
-			resp:          AUTO_RESPONSE_ACCEPT,
+			resp:          quarantine.AUTO_RESPONSE_ACCEPT,
 			expectedInErr: []string{"invalid from address"},
 		},
 		{
@@ -1256,16 +1257,16 @@ func TestAutoResponseUpdate_Validate(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			updateOrig := AutoResponseUpdate{
+			updateOrig := quarantine.AutoResponseUpdate{
 				FromAddress: tc.fromAddr,
 				Response:    tc.resp,
 			}
-			update := AutoResponseUpdate{
+			update := quarantine.AutoResponseUpdate{
 				FromAddress: tc.fromAddr,
 				Response:    tc.resp,
 			}
 			err := update.Validate()
-			AssertErrorContents(t, err, tc.expectedInErr, "Validate")
+			assertions.AssertErrorContents(t, err, tc.expectedInErr, "Validate")
 			assert.Equal(t, updateOrig, update, "AutoResponseUpdate before and after")
 		})
 	}
@@ -1273,47 +1274,47 @@ func TestAutoResponseUpdate_Validate(t *testing.T) {
 
 func TestAutoBValues(t *testing.T) {
 	// If these were the same, it'd be bad.
-	assert.NotEqual(t, NoAutoB, AutoAcceptB, "NoAutoB vs AutoAcceptB")
-	assert.NotEqual(t, NoAutoB, AutoDeclineB, "NoAutoB vs AutoDeclineB")
-	assert.NotEqual(t, AutoAcceptB, AutoDeclineB, "AutoAcceptB vs AutoDeclineB")
+	assert.NotEqual(t, quarantine.NoAutoB, quarantine.AutoAcceptB, "NoAutoB vs AutoAcceptB")
+	assert.NotEqual(t, quarantine.NoAutoB, quarantine.AutoDeclineB, "NoAutoB vs AutoDeclineB")
+	assert.NotEqual(t, quarantine.AutoAcceptB, quarantine.AutoDeclineB, "AutoAcceptB vs AutoDeclineB")
 }
 
 func TestToAutoB(t *testing.T) {
 	tests := []struct {
 		name     string
-		r        AutoResponse
+		r        quarantine.AutoResponse
 		expected byte
 	}{
 		{
 			name:     "accept",
-			r:        AUTO_RESPONSE_ACCEPT,
-			expected: AutoAcceptB,
+			r:        quarantine.AUTO_RESPONSE_ACCEPT,
+			expected: quarantine.AutoAcceptB,
 		},
 		{
 			name:     "decline",
-			r:        AUTO_RESPONSE_DECLINE,
-			expected: AutoDeclineB,
+			r:        quarantine.AUTO_RESPONSE_DECLINE,
+			expected: quarantine.AutoDeclineB,
 		},
 		{
 			name:     "unspecified",
-			r:        AUTO_RESPONSE_UNSPECIFIED,
-			expected: NoAutoB,
+			r:        quarantine.AUTO_RESPONSE_UNSPECIFIED,
+			expected: quarantine.NoAutoB,
 		},
 		{
 			name:     "negative",
 			r:        -1,
-			expected: NoAutoB,
+			expected: quarantine.NoAutoB,
 		},
 		{
 			name:     "too large",
 			r:        3,
-			expected: NoAutoB,
+			expected: quarantine.NoAutoB,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := ToAutoB(tc.r)
+			actual := quarantine.ToAutoB(tc.r)
 			assert.Equal(t, tc.expected, actual, "ToAutoB(%s)", tc.r)
 		})
 	}
@@ -1321,57 +1322,57 @@ func TestToAutoB(t *testing.T) {
 
 func TestAutoResponseValues(t *testing.T) {
 	// If these were the same, it'd be bad.
-	assert.NotEqual(t, AUTO_RESPONSE_UNSPECIFIED, AUTO_RESPONSE_ACCEPT, "AUTO_RESPONSE_UNSPECIFIED vs AUTO_RESPONSE_ACCEPT")
-	assert.NotEqual(t, AUTO_RESPONSE_UNSPECIFIED, AUTO_RESPONSE_DECLINE, "AUTO_RESPONSE_UNSPECIFIED vs AUTO_RESPONSE_DECLINE")
-	assert.NotEqual(t, AUTO_RESPONSE_ACCEPT, AUTO_RESPONSE_DECLINE, "AUTO_RESPONSE_ACCEPT vs AUTO_RESPONSE_DECLINE")
+	assert.NotEqual(t, quarantine.AUTO_RESPONSE_UNSPECIFIED, quarantine.AUTO_RESPONSE_ACCEPT, "AUTO_RESPONSE_UNSPECIFIED vs AUTO_RESPONSE_ACCEPT")
+	assert.NotEqual(t, quarantine.AUTO_RESPONSE_UNSPECIFIED, quarantine.AUTO_RESPONSE_DECLINE, "AUTO_RESPONSE_UNSPECIFIED vs AUTO_RESPONSE_DECLINE")
+	assert.NotEqual(t, quarantine.AUTO_RESPONSE_ACCEPT, quarantine.AUTO_RESPONSE_DECLINE, "AUTO_RESPONSE_ACCEPT vs AUTO_RESPONSE_DECLINE")
 }
 
 func TestToAutoResponse(t *testing.T) {
 	tests := []struct {
 		name     string
 		bz       []byte
-		expected AutoResponse
+		expected quarantine.AutoResponse
 	}{
 		{
 			name:     "AutoAcceptB",
-			bz:       []byte{AutoAcceptB},
-			expected: AUTO_RESPONSE_ACCEPT,
+			bz:       []byte{quarantine.AutoAcceptB},
+			expected: quarantine.AUTO_RESPONSE_ACCEPT,
 		},
 		{
 			name:     "AutoDeclineB",
-			bz:       []byte{AutoDeclineB},
-			expected: AUTO_RESPONSE_DECLINE,
+			bz:       []byte{quarantine.AutoDeclineB},
+			expected: quarantine.AUTO_RESPONSE_DECLINE,
 		},
 		{
 			name:     "NoAutoB",
-			bz:       []byte{NoAutoB},
-			expected: AUTO_RESPONSE_UNSPECIFIED,
+			bz:       []byte{quarantine.NoAutoB},
+			expected: quarantine.AUTO_RESPONSE_UNSPECIFIED,
 		},
 		{
 			name:     "something else",
 			bz:       []byte{0x7d},
-			expected: AUTO_RESPONSE_UNSPECIFIED,
+			expected: quarantine.AUTO_RESPONSE_UNSPECIFIED,
 		},
 		{
 			name:     "nil",
 			bz:       nil,
-			expected: AUTO_RESPONSE_UNSPECIFIED,
+			expected: quarantine.AUTO_RESPONSE_UNSPECIFIED,
 		},
 		{
 			name:     "empty",
 			bz:       []byte{},
-			expected: AUTO_RESPONSE_UNSPECIFIED,
+			expected: quarantine.AUTO_RESPONSE_UNSPECIFIED,
 		},
 		{
 			name:     "too long",
-			bz:       []byte{AutoAcceptB, AutoAcceptB},
-			expected: AUTO_RESPONSE_UNSPECIFIED,
+			bz:       []byte{quarantine.AutoAcceptB, quarantine.AutoAcceptB},
+			expected: quarantine.AUTO_RESPONSE_UNSPECIFIED,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := ToAutoResponse(tc.bz)
+			actual := quarantine.ToAutoResponse(tc.bz)
 			assert.Equal(t, tc.expected, actual, "ToAutoResponse(%v)", tc.bz)
 		})
 	}
@@ -1380,22 +1381,22 @@ func TestToAutoResponse(t *testing.T) {
 func TestAutoResponse_IsValid(t *testing.T) {
 	tests := []struct {
 		name     string
-		r        AutoResponse
+		r        quarantine.AutoResponse
 		expected bool
 	}{
 		{
 			name:     "accept",
-			r:        AUTO_RESPONSE_ACCEPT,
+			r:        quarantine.AUTO_RESPONSE_ACCEPT,
 			expected: true,
 		},
 		{
 			name:     "decline",
-			r:        AUTO_RESPONSE_DECLINE,
+			r:        quarantine.AUTO_RESPONSE_DECLINE,
 			expected: true,
 		},
 		{
 			name:     "unspecified",
-			r:        AUTO_RESPONSE_UNSPECIFIED,
+			r:        quarantine.AUTO_RESPONSE_UNSPECIFIED,
 			expected: true,
 		},
 		{
@@ -1423,22 +1424,22 @@ func TestAutoResponse_IsValid(t *testing.T) {
 func TestAutoResponse_IsAccept(t *testing.T) {
 	tests := []struct {
 		name     string
-		r        AutoResponse
+		r        quarantine.AutoResponse
 		expected bool
 	}{
 		{
 			name:     "accept",
-			r:        AUTO_RESPONSE_ACCEPT,
+			r:        quarantine.AUTO_RESPONSE_ACCEPT,
 			expected: true,
 		},
 		{
 			name:     "decline",
-			r:        AUTO_RESPONSE_DECLINE,
+			r:        quarantine.AUTO_RESPONSE_DECLINE,
 			expected: false,
 		},
 		{
 			name:     "unspecified",
-			r:        AUTO_RESPONSE_UNSPECIFIED,
+			r:        quarantine.AUTO_RESPONSE_UNSPECIFIED,
 			expected: false,
 		},
 		{
@@ -1466,22 +1467,22 @@ func TestAutoResponse_IsAccept(t *testing.T) {
 func TestAutoResponse_IsDecline(t *testing.T) {
 	tests := []struct {
 		name     string
-		r        AutoResponse
+		r        quarantine.AutoResponse
 		expected bool
 	}{
 		{
 			name:     "accept",
-			r:        AUTO_RESPONSE_ACCEPT,
+			r:        quarantine.AUTO_RESPONSE_ACCEPT,
 			expected: false,
 		},
 		{
 			name:     "decline",
-			r:        AUTO_RESPONSE_DECLINE,
+			r:        quarantine.AUTO_RESPONSE_DECLINE,
 			expected: true,
 		},
 		{
 			name:     "unspecified",
-			r:        AUTO_RESPONSE_UNSPECIFIED,
+			r:        quarantine.AUTO_RESPONSE_UNSPECIFIED,
 			expected: false,
 		},
 		{
@@ -1507,15 +1508,15 @@ func TestAutoResponse_IsDecline(t *testing.T) {
 }
 
 func TestNewQuarantineRecord(t *testing.T) {
-	testAddr0 := MakeTestAddr("nqr", 0)
-	testAddr1 := MakeTestAddr("nqr", 1)
+	testAddr0 := testutil.MakeTestAddr("nqr", 0)
+	testAddr1 := testutil.MakeTestAddr("nqr", 1)
 
 	tests := []struct {
 		name        string
 		uaFromAddrs []string
 		coins       sdk.Coins
 		declined    bool
-		expected    *QuarantineRecord
+		expected    *quarantine.QuarantineRecord
 		expPanic    string
 	}{
 		{
@@ -1523,7 +1524,7 @@ func TestNewQuarantineRecord(t *testing.T) {
 			uaFromAddrs: []string{testAddr0.String()},
 			coins:       coinMakerOK(),
 			declined:    false,
-			expected: &QuarantineRecord{
+			expected: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -1535,7 +1536,7 @@ func TestNewQuarantineRecord(t *testing.T) {
 			uaFromAddrs: []string{testAddr0.String()},
 			coins:       coinMakerOK(),
 			declined:    true,
-			expected: &QuarantineRecord{
+			expected: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -1547,7 +1548,7 @@ func TestNewQuarantineRecord(t *testing.T) {
 			uaFromAddrs: []string{testAddr0.String()},
 			coins:       coinMakerMulti(),
 			declined:    false,
-			expected: &QuarantineRecord{
+			expected: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerMulti(),
@@ -1559,7 +1560,7 @@ func TestNewQuarantineRecord(t *testing.T) {
 			uaFromAddrs: []string{testAddr0.String()},
 			coins:       coinMakerEmpty(),
 			declined:    false,
-			expected: &QuarantineRecord{
+			expected: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerEmpty(),
@@ -1571,7 +1572,7 @@ func TestNewQuarantineRecord(t *testing.T) {
 			uaFromAddrs: []string{testAddr0.String()},
 			coins:       coinMakerNil(),
 			declined:    false,
-			expected: &QuarantineRecord{
+			expected: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerNil(),
@@ -1583,7 +1584,7 @@ func TestNewQuarantineRecord(t *testing.T) {
 			uaFromAddrs: []string{testAddr0.String()},
 			coins:       coinMakerBad(),
 			declined:    false,
-			expected: &QuarantineRecord{
+			expected: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerBad(),
@@ -1616,7 +1617,7 @@ func TestNewQuarantineRecord(t *testing.T) {
 			uaFromAddrs: []string{testAddr0.String(), testAddr1.String()},
 			coins:       coinMakerOK(),
 			declined:    false,
-			expected: &QuarantineRecord{
+			expected: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -1628,7 +1629,7 @@ func TestNewQuarantineRecord(t *testing.T) {
 			uaFromAddrs: []string{},
 			coins:       coinMakerOK(),
 			declined:    false,
-			expected: &QuarantineRecord{
+			expected: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -1640,7 +1641,7 @@ func TestNewQuarantineRecord(t *testing.T) {
 			uaFromAddrs: nil,
 			coins:       coinMakerOK(),
 			declined:    false,
-			expected: &QuarantineRecord{
+			expected: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -1651,9 +1652,9 @@ func TestNewQuarantineRecord(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var actual *QuarantineRecord
+			var actual *quarantine.QuarantineRecord
 			testFunc := func() {
-				actual = NewQuarantineRecord(tc.uaFromAddrs, tc.coins, tc.declined)
+				actual = quarantine.NewQuarantineRecord(tc.uaFromAddrs, tc.coins, tc.declined)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "NewQuarantineRecord") {
@@ -1667,18 +1668,18 @@ func TestNewQuarantineRecord(t *testing.T) {
 }
 
 func TestQuarantineRecord_Validate(t *testing.T) {
-	testAddr0 := MakeTestAddr("qrv", 0)
-	testAddr1 := MakeTestAddr("qrv", 1)
-	testAddr2 := MakeTestAddr("qrv", 2)
+	testAddr0 := testutil.MakeTestAddr("qrv", 0)
+	testAddr1 := testutil.MakeTestAddr("qrv", 1)
+	testAddr2 := testutil.MakeTestAddr("qrv", 2)
 
 	tests := []struct {
 		name          string
-		qr            *QuarantineRecord
+		qr            *quarantine.QuarantineRecord
 		expectedInErr []string
 	}{
 		{
 			name: "control",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -1688,7 +1689,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "declined",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -1698,7 +1699,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "no accepted addresses is ok",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{},
 				Coins:                   coinMakerOK(),
@@ -1708,7 +1709,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "nil accepted addresses is ok",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -1718,7 +1719,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "multi coins",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerMulti(),
@@ -1728,7 +1729,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "empty coins",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerEmpty(),
@@ -1738,7 +1739,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "nil coins",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerNil(),
@@ -1748,7 +1749,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "bad coins",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerBad(),
@@ -1758,7 +1759,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "nil unaccepted addrs",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -1768,7 +1769,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "empty unaccepted addrs",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -1778,7 +1779,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "two unaccepted addrs",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -1788,7 +1789,7 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 		},
 		{
 			name: "three unaccepted addrs",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1, testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -1800,19 +1801,19 @@ func TestQuarantineRecord_Validate(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			qrOrig := MakeCopyOfQuarantineRecord(tc.qr)
+			qrOrig := testutil.MakeCopyOfQuarantineRecord(tc.qr)
 			err := tc.qr.Validate()
-			AssertErrorContents(t, err, tc.expectedInErr, "Validate")
+			assertions.AssertErrorContents(t, err, tc.expectedInErr, "Validate")
 			assert.Equal(t, qrOrig, tc.qr, "QuarantineRecord before and after")
 		})
 	}
 }
 
 func TestQuarantineRecord_AddCoins(t *testing.T) {
-	testAddr0 := MakeTestAddr("qrac", 0)
-	testAddr1 := MakeTestAddr("qrac", 1)
-	testAddr2 := MakeTestAddr("qrac", 2)
-	testAddr3 := MakeTestAddr("qrac", 3)
+	testAddr0 := testutil.MakeTestAddr("qrac", 0)
+	testAddr1 := testutil.MakeTestAddr("qrac", 1)
+	testAddr2 := testutil.MakeTestAddr("qrac", 2)
+	testAddr3 := testutil.MakeTestAddr("qrac", 3)
 
 	keyEmpty := "empty"
 	keyNil := "nil"
@@ -2084,13 +2085,13 @@ func TestQuarantineRecord_AddCoins(t *testing.T) {
 			for _, declined := range []bool{false, true} {
 				name := fmt.Sprintf("%s+%s=%q %t %s", tc.qrCoinKey, tc.addCoinKey, tc.expected.String(), declined, ac.name)
 				t.Run(name, func(t *testing.T) {
-					expected := QuarantineRecord{
-						UnacceptedFromAddresses: MakeCopyOfAccAddresses(ac.unaccepted),
-						AcceptedFromAddresses:   MakeCopyOfAccAddresses(ac.accepted),
+					expected := quarantine.QuarantineRecord{
+						UnacceptedFromAddresses: testutil.MakeCopyOfAccAddresses(ac.unaccepted),
+						AcceptedFromAddresses:   testutil.MakeCopyOfAccAddresses(ac.accepted),
 						Coins:                   tc.expected,
 						Declined:                declined,
 					}
-					qr := QuarantineRecord{
+					qr := quarantine.QuarantineRecord{
 						UnacceptedFromAddresses: ac.unaccepted,
 						AcceptedFromAddresses:   ac.accepted,
 						Coins:                   coinMakerMap[tc.qrCoinKey](),
@@ -2108,17 +2109,17 @@ func TestQuarantineRecord_AddCoins(t *testing.T) {
 }
 
 func TestQuarantineRecord_IsFullyAccepted(t *testing.T) {
-	testAddr0 := MakeTestAddr("qrifa", 0)
-	testAddr1 := MakeTestAddr("qrifa", 1)
+	testAddr0 := testutil.MakeTestAddr("qrifa", 0)
+	testAddr1 := testutil.MakeTestAddr("qrifa", 1)
 
 	tests := []struct {
 		name     string
-		qr       *QuarantineRecord
+		qr       *quarantine.QuarantineRecord
 		expected bool
 	}{
 		{
 			name: "no addresses at all",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2128,7 +2129,7 @@ func TestQuarantineRecord_IsFullyAccepted(t *testing.T) {
 		},
 		{
 			name: "one unaccepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2138,7 +2139,7 @@ func TestQuarantineRecord_IsFullyAccepted(t *testing.T) {
 		},
 		{
 			name: "one accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2148,7 +2149,7 @@ func TestQuarantineRecord_IsFullyAccepted(t *testing.T) {
 		},
 		{
 			name: "declined one accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2158,7 +2159,7 @@ func TestQuarantineRecord_IsFullyAccepted(t *testing.T) {
 		},
 		{
 			name: "one accepted one unaccepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2168,7 +2169,7 @@ func TestQuarantineRecord_IsFullyAccepted(t *testing.T) {
 		},
 		{
 			name: "two unaccepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2178,7 +2179,7 @@ func TestQuarantineRecord_IsFullyAccepted(t *testing.T) {
 		},
 		{
 			name: "two accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2188,7 +2189,7 @@ func TestQuarantineRecord_IsFullyAccepted(t *testing.T) {
 		},
 		{
 			name: "declined two accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2200,7 +2201,7 @@ func TestQuarantineRecord_IsFullyAccepted(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			orig := MakeCopyOfQuarantineRecord(tc.qr)
+			orig := testutil.MakeCopyOfQuarantineRecord(tc.qr)
 			actual := tc.qr.IsFullyAccepted()
 			assert.Equal(t, tc.expected, actual, "IsFullyAccepted: %v", tc.qr)
 			assert.Equal(t, orig, tc.qr, "QuarantineRecord before and after")
@@ -2209,22 +2210,22 @@ func TestQuarantineRecord_IsFullyAccepted(t *testing.T) {
 }
 
 func TestQuarantineRecord_AcceptFrom(t *testing.T) {
-	testAddr0 := MakeTestAddr("qraf", 0)
-	testAddr1 := MakeTestAddr("qraf", 1)
-	testAddr2 := MakeTestAddr("qraf", 2)
-	testAddr3 := MakeTestAddr("qraf", 3)
-	testAddr4 := MakeTestAddr("qraf", 4)
+	testAddr0 := testutil.MakeTestAddr("qraf", 0)
+	testAddr1 := testutil.MakeTestAddr("qraf", 1)
+	testAddr2 := testutil.MakeTestAddr("qraf", 2)
+	testAddr3 := testutil.MakeTestAddr("qraf", 3)
+	testAddr4 := testutil.MakeTestAddr("qraf", 4)
 
 	tests := []struct {
 		name  string
-		qr    *QuarantineRecord
+		qr    *quarantine.QuarantineRecord
 		addrs []sdk.AccAddress
 		exp   bool
-		expQr *QuarantineRecord
+		expQr *quarantine.QuarantineRecord
 	}{
 		{
 			name: "control",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2232,7 +2233,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2241,7 +2242,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "nil addrs",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2249,7 +2250,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: nil,
 			exp:   false,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2258,7 +2259,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "empty addrs",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2266,7 +2267,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{},
 			exp:   false,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2275,7 +2276,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "one addrs only in accepted already",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2283,7 +2284,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr1},
 			exp:   false,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2292,7 +2293,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "record has nil addresses",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2300,7 +2301,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0},
 			exp:   false,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2309,7 +2310,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "one address in both",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2317,7 +2318,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2326,7 +2327,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "two unaccepted two other provided",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2334,7 +2335,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr2, testAddr3},
 			exp:   false,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2343,7 +2344,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "two unaccepted both provided",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2351,7 +2352,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0, testAddr1},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2360,7 +2361,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "two unaccepted both provided opposite order",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2368,7 +2369,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr1, testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2377,7 +2378,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "two unaccepted first provided first with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2},
 				Coins:                   coinMakerOK(),
@@ -2385,7 +2386,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0, testAddr3, testAddr4},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2, testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2394,7 +2395,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "two unaccepted first provided second with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2},
 				Coins:                   coinMakerOK(),
@@ -2402,7 +2403,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr3, testAddr0, testAddr4},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2, testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2411,7 +2412,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "two unaccepted first provided third with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2},
 				Coins:                   coinMakerOK(),
@@ -2419,7 +2420,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr4, testAddr3, testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2, testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2428,7 +2429,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "two same unaccepted provided once",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2},
 				Coins:                   coinMakerOK(),
@@ -2436,7 +2437,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2, testAddr0, testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2445,7 +2446,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "two unaccepted second provided first with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2},
 				Coins:                   coinMakerOK(),
@@ -2453,7 +2454,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr1, testAddr3, testAddr4},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2462,7 +2463,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "two unaccepted second provided second with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2},
 				Coins:                   coinMakerOK(),
@@ -2470,7 +2471,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr3, testAddr1, testAddr4},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2479,7 +2480,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "two unaccepted second provided third with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2},
 				Coins:                   coinMakerOK(),
@@ -2487,7 +2488,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr4, testAddr3, testAddr1},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2496,7 +2497,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 		},
 		{
 			name: "one unaccepted provided thrice",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr4},
 				Coins:                   coinMakerOK(),
@@ -2504,7 +2505,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0, testAddr0, testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr4, testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2515,7 +2516,7 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			origInput := MakeCopyOfAccAddresses(tc.addrs)
+			origInput := testutil.MakeCopyOfAccAddresses(tc.addrs)
 			actual := tc.qr.AcceptFrom(tc.addrs)
 			assert.Equal(t, tc.exp, actual, "AcceptFrom return value")
 			assert.Equal(t, tc.expQr, tc.qr, "QuarantineRecord after AcceptFrom")
@@ -2525,22 +2526,22 @@ func TestQuarantineRecord_AcceptFrom(t *testing.T) {
 }
 
 func TestQuarantineRecord_DeclineFrom(t *testing.T) {
-	testAddr0 := MakeTestAddr("qrdf", 0)
-	testAddr1 := MakeTestAddr("qrdf", 1)
-	testAddr2 := MakeTestAddr("qrdf", 2)
-	testAddr3 := MakeTestAddr("qrdf", 3)
-	testAddr4 := MakeTestAddr("qrdf", 4)
+	testAddr0 := testutil.MakeTestAddr("qrdf", 0)
+	testAddr1 := testutil.MakeTestAddr("qrdf", 1)
+	testAddr2 := testutil.MakeTestAddr("qrdf", 2)
+	testAddr3 := testutil.MakeTestAddr("qrdf", 3)
+	testAddr4 := testutil.MakeTestAddr("qrdf", 4)
 
 	tests := []struct {
 		name  string
-		qr    *QuarantineRecord
+		qr    *quarantine.QuarantineRecord
 		addrs []sdk.AccAddress
 		exp   bool
-		expQr *QuarantineRecord
+		expQr *quarantine.QuarantineRecord
 	}{
 		{
 			name: "control",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2548,7 +2549,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2557,7 +2558,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "nil addrs",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2565,7 +2566,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: nil,
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2574,7 +2575,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "nil addrs already declined",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2582,7 +2583,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: nil,
 			exp:   false,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2591,7 +2592,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "empty addrs",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2599,7 +2600,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2608,7 +2609,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "one addrs only in unaccepted already",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2616,7 +2617,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2625,7 +2626,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "one addrs only in unaccepted already and already declined",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2633,7 +2634,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0},
 			exp:   false,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2642,7 +2643,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "record has nil addresses",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2650,7 +2651,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2659,7 +2660,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "one address in both",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2667,7 +2668,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2676,7 +2677,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two accepted two other provided",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2684,7 +2685,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr2, testAddr3},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2693,7 +2694,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two accepted both provided",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2701,7 +2702,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0, testAddr1},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr0, testAddr1},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2710,7 +2711,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two accepted both provided previously declined",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2718,7 +2719,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0, testAddr1},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr0, testAddr1},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2727,7 +2728,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two accepted both provided opposite order",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2735,7 +2736,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr1, testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr0, testAddr1},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2744,7 +2745,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two accepted first provided first with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2752,7 +2753,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0, testAddr3, testAddr4},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2761,7 +2762,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two accepted first provided second with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2769,7 +2770,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr3, testAddr0, testAddr4},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2778,7 +2779,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two accepted first provided third with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2786,7 +2787,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr4, testAddr3, testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2795,7 +2796,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two same accepted provided once",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2803,7 +2804,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr0, testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2812,7 +2813,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two accepted second provided first with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2820,7 +2821,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr1, testAddr3, testAddr4},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2829,7 +2830,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two accepted second provided second with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2837,7 +2838,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr3, testAddr1, testAddr4},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2846,7 +2847,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "two accepted second provided third with 2 others",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 				Coins:                   coinMakerOK(),
@@ -2854,7 +2855,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr4, testAddr3, testAddr1},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2863,7 +2864,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 		},
 		{
 			name: "one accepted provided thrice",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr4},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0},
 				Coins:                   coinMakerOK(),
@@ -2871,7 +2872,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 			},
 			addrs: []sdk.AccAddress{testAddr0, testAddr0, testAddr0},
 			exp:   true,
-			expQr: &QuarantineRecord{
+			expQr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr4, testAddr0},
 				AcceptedFromAddresses:   nil,
 				Coins:                   coinMakerOK(),
@@ -2882,7 +2883,7 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			origInput := MakeCopyOfAccAddresses(tc.addrs)
+			origInput := testutil.MakeCopyOfAccAddresses(tc.addrs)
 			actual := tc.qr.DeclineFrom(tc.addrs)
 			assert.Equal(t, tc.exp, actual, "DeclineFrom return value")
 			assert.Equal(t, tc.expQr, tc.qr, "QuarantineRecord after DeclineFrom")
@@ -2893,20 +2894,20 @@ func TestQuarantineRecord_DeclineFrom(t *testing.T) {
 }
 
 func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
-	testAddr0 := MakeTestAddr("qrgafa", 0)
-	testAddr1 := MakeTestAddr("qrgafa", 1)
-	testAddr2 := MakeTestAddr("qrgafa", 2)
-	testAddr3 := MakeTestAddr("qrgafa", 3)
-	testAddr4 := MakeTestAddr("qrgafa", 4)
+	testAddr0 := testutil.MakeTestAddr("qrgafa", 0)
+	testAddr1 := testutil.MakeTestAddr("qrgafa", 1)
+	testAddr2 := testutil.MakeTestAddr("qrgafa", 2)
+	testAddr3 := testutil.MakeTestAddr("qrgafa", 3)
+	testAddr4 := testutil.MakeTestAddr("qrgafa", 4)
 
 	tests := []struct {
 		name string
-		qr   *QuarantineRecord
+		qr   *quarantine.QuarantineRecord
 		exp  []sdk.AccAddress
 	}{
 		{
 			name: "nil unaccepted nil accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   nil,
 			},
@@ -2914,7 +2915,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "nil unaccepted empty accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{},
 			},
@@ -2922,7 +2923,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "empty unaccepted nil accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{},
 				AcceptedFromAddresses:   nil,
 			},
@@ -2930,7 +2931,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "empty unaccepted empty accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{},
 				AcceptedFromAddresses:   []sdk.AccAddress{},
 			},
@@ -2938,7 +2939,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "one unaccepted nil accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   nil,
 			},
@@ -2946,7 +2947,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "two unaccepted nil accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   nil,
 			},
@@ -2954,7 +2955,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "one unaccepted empty accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{},
 			},
@@ -2962,7 +2963,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "two unaccepted empty accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{},
 			},
@@ -2970,7 +2971,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "nil unaccepted one accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0},
 			},
@@ -2978,7 +2979,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "nil unaccepted two accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 			},
@@ -2986,7 +2987,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "empty unaccepted one accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0},
 			},
@@ -2994,7 +2995,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "empty unaccepted two accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr1},
 			},
@@ -3002,7 +3003,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "one unaccepted one accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1},
 			},
@@ -3010,7 +3011,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "two unaccepted one accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2},
 			},
@@ -3018,7 +3019,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "one unaccepted two accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1, testAddr2},
 			},
@@ -3026,7 +3027,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "two unaccepted two accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr4, testAddr3},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1, testAddr2},
 			},
@@ -3034,7 +3035,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "three unaccepted two accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr2, testAddr3, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr0, testAddr4},
 			},
@@ -3042,7 +3043,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "two unaccepted three accepted",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr0, testAddr4},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr2, testAddr3, testAddr1},
 			},
@@ -3050,7 +3051,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 		},
 		{
 			name: "same address in both twice",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr1, testAddr1},
 				AcceptedFromAddresses:   []sdk.AccAddress{testAddr1, testAddr1},
 			},
@@ -3074,7 +3075,7 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			orig := MakeCopyOfQuarantineRecord(tc.qr)
+			orig := testutil.MakeCopyOfQuarantineRecord(tc.qr)
 			actual := tc.qr.GetAllFromAddrs()
 			assert.Equal(t, tc.exp, actual, "GetAllFromAddrs result")
 			assert.Equal(t, orig, tc.qr, "QuarantineRecord before and after")
@@ -3083,25 +3084,25 @@ func TestQuarantineRecord_GetAllFromAddrs(t *testing.T) {
 }
 
 func TestQuarantineRecord_AsQuarantinedFunds(t *testing.T) {
-	testAddr0 := MakeTestAddr("qrasqf", 0)
-	testAddr1 := MakeTestAddr("qrasqf", 1)
-	testAddr2 := MakeTestAddr("qrasqf", 2)
+	testAddr0 := testutil.MakeTestAddr("qrasqf", 0)
+	testAddr1 := testutil.MakeTestAddr("qrasqf", 1)
+	testAddr2 := testutil.MakeTestAddr("qrasqf", 2)
 
 	tests := []struct {
 		name     string
-		qr       *QuarantineRecord
+		qr       *quarantine.QuarantineRecord
 		toAddr   sdk.AccAddress
-		expected *QuarantinedFunds
+		expected *quarantine.QuarantinedFunds
 	}{
 		{
 			name: "control",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
 				Declined:                false,
 			},
 			toAddr: testAddr0,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   coinMakerOK(),
@@ -3110,13 +3111,13 @@ func TestQuarantineRecord_AsQuarantinedFunds(t *testing.T) {
 		},
 		{
 			name: "declined",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
 				Declined:                true,
 			},
 			toAddr: testAddr0,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   coinMakerOK(),
@@ -3125,13 +3126,13 @@ func TestQuarantineRecord_AsQuarantinedFunds(t *testing.T) {
 		},
 		{
 			name: "bad coins",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerBad(),
 				Declined:                false,
 			},
 			toAddr: testAddr0,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   coinMakerBad(),
@@ -3140,13 +3141,13 @@ func TestQuarantineRecord_AsQuarantinedFunds(t *testing.T) {
 		},
 		{
 			name: "empty coins",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerEmpty(),
 				Declined:                false,
 			},
 			toAddr: testAddr0,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   coinMakerEmpty(),
@@ -3155,13 +3156,13 @@ func TestQuarantineRecord_AsQuarantinedFunds(t *testing.T) {
 		},
 		{
 			name: "no to address",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr1},
 				Coins:                   coinMakerOK(),
 				Declined:                false,
 			},
 			toAddr: nil,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               "",
 				UnacceptedFromAddresses: []string{testAddr1.String()},
 				Coins:                   coinMakerOK(),
@@ -3170,13 +3171,13 @@ func TestQuarantineRecord_AsQuarantinedFunds(t *testing.T) {
 		},
 		{
 			name: "nil from addresses",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: nil,
 				Coins:                   coinMakerOK(),
 				Declined:                false,
 			},
 			toAddr: testAddr0,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{},
 				Coins:                   coinMakerOK(),
@@ -3185,13 +3186,13 @@ func TestQuarantineRecord_AsQuarantinedFunds(t *testing.T) {
 		},
 		{
 			name: "empty from addresses",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{},
 				Coins:                   coinMakerOK(),
 				Declined:                false,
 			},
 			toAddr: testAddr0,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{},
 				Coins:                   coinMakerOK(),
@@ -3200,13 +3201,13 @@ func TestQuarantineRecord_AsQuarantinedFunds(t *testing.T) {
 		},
 		{
 			name: "two from addresses",
-			qr: &QuarantineRecord{
+			qr: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: []sdk.AccAddress{testAddr1, testAddr2},
 				Coins:                   coinMakerOK(),
 				Declined:                false,
 			},
 			toAddr: testAddr0,
-			expected: &QuarantinedFunds{
+			expected: &quarantine.QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String(), testAddr2.String()},
 				Coins:                   coinMakerOK(),
@@ -3217,7 +3218,7 @@ func TestQuarantineRecord_AsQuarantinedFunds(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			qrOrig := MakeCopyOfQuarantineRecord(tc.qr)
+			qrOrig := testutil.MakeCopyOfQuarantineRecord(tc.qr)
 			actual := tc.qr.AsQuarantinedFunds(tc.toAddr)
 			assert.Equal(t, tc.expected, actual, "resulting QuarantinedFunds")
 			assert.Equal(t, qrOrig, tc.qr, "QuarantineRecord before and after")
@@ -3226,481 +3227,481 @@ func TestQuarantineRecord_AsQuarantinedFunds(t *testing.T) {
 }
 
 func TestQuarantineRecordSuffixIndex_AddSuffixes(t *testing.T) {
-	suffixShort0 := []byte(MakeTestAddr("qrsias", 0))
-	suffixShort1 := []byte(MakeTestAddr("qrsias", 1))
-	suffixShort2 := []byte(MakeTestAddr("qrsias", 2))
-	suffixShort3 := []byte(MakeTestAddr("qrsias", 3))
-	suffixLong4 := []byte(MakeLongAddr("qrsias", 4))
-	suffixLong5 := []byte(MakeLongAddr("qrsias", 5))
-	suffixLong6 := []byte(MakeLongAddr("qrsias", 6))
-	suffixLong7 := []byte(MakeLongAddr("qrsias", 7))
-	suffixBad8 := []byte(MakeBadAddr("qrsias", 8))
+	suffixShort0 := []byte(testutil.MakeTestAddr("qrsias", 0))
+	suffixShort1 := []byte(testutil.MakeTestAddr("qrsias", 1))
+	suffixShort2 := []byte(testutil.MakeTestAddr("qrsias", 2))
+	suffixShort3 := []byte(testutil.MakeTestAddr("qrsias", 3))
+	suffixLong4 := []byte(testutil.MakeLongAddr("qrsias", 4))
+	suffixLong5 := []byte(testutil.MakeLongAddr("qrsias", 5))
+	suffixLong6 := []byte(testutil.MakeLongAddr("qrsias", 6))
+	suffixLong7 := []byte(testutil.MakeLongAddr("qrsias", 7))
+	suffixBad8 := []byte(testutil.MakeBadAddr("qrsias", 8))
 	suffixEmpty := make([]byte, 0)
 
 	tests := []struct {
 		name  string
-		qrsi  *QuarantineRecordSuffixIndex
+		qrsi  *quarantine.QuarantineRecordSuffixIndex
 		toAdd [][]byte
-		exp   *QuarantineRecordSuffixIndex
+		exp   *quarantine.QuarantineRecordSuffixIndex
 	}{
 		// nil + ...
 		{
 			name:  "nil + nil",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toAdd: nil,
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:  "nil + empty",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toAdd: [][]byte{},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:  "nil + short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toAdd: [][]byte{suffixShort1},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1}},
 		},
 		{
 			name:  "nil + long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toAdd: [][]byte{suffixLong5},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong5}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong5}},
 		},
 		{
 			name:  "nil + short short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toAdd: [][]byte{suffixShort2, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort3}},
 		},
 		{
 			name:  "nil + short long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toAdd: [][]byte{suffixShort2, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixLong6}},
 		},
 		{
 			name:  "nil + long short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toAdd: [][]byte{suffixLong7, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong7, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong7, suffixShort3}},
 		},
 		{
 			name:  "nil + long long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toAdd: [][]byte{suffixLong7, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong7, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong7, suffixLong6}},
 		},
 
 		// empty + ...
 		{
 			name:  "empty + nil",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toAdd: nil,
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 		},
 		{
 			name:  "empty + empty",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toAdd: [][]byte{},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 		},
 		{
 			name:  "empty + short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toAdd: [][]byte{suffixShort1},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1}},
 		},
 		{
 			name:  "empty + long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toAdd: [][]byte{suffixLong5},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong5}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong5}},
 		},
 		{
 			name:  "empty + short short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toAdd: [][]byte{suffixShort2, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort3}},
 		},
 		{
 			name:  "empty + short long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toAdd: [][]byte{suffixShort2, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixLong6}},
 		},
 		{
 			name:  "empty + long short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toAdd: [][]byte{suffixLong7, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong7, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong7, suffixShort3}},
 		},
 		{
 			name:  "empty + long long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toAdd: [][]byte{suffixLong7, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong7, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong7, suffixLong6}},
 		},
 
 		// short + ...
 		{
 			name:  "short + nil",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toAdd: nil,
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:  "short + empty",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toAdd: [][]byte{},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:  "short + short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toAdd: [][]byte{suffixShort1},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 		},
 		{
 			name:  "short + long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toAdd: [][]byte{suffixLong5},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong5}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong5}},
 		},
 		{
 			name:  "short + short short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toAdd: [][]byte{suffixShort2, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2, suffixShort3}},
 		},
 		{
 			name:  "short + short long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toAdd: [][]byte{suffixShort2, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2, suffixLong6}},
 		},
 		{
 			name:  "short + long short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toAdd: [][]byte{suffixLong7, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong7, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong7, suffixShort3}},
 		},
 		{
 			name:  "short + long long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toAdd: [][]byte{suffixLong7, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong7, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong7, suffixLong6}},
 		},
 
 		// long + ...
 		{
 			name:  "long + nil",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toAdd: nil,
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 		},
 		{
 			name:  "long + empty",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toAdd: [][]byte{},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 		},
 		{
 			name:  "long + short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toAdd: [][]byte{suffixShort1},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort1}},
 		},
 		{
 			name:  "long + long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toAdd: [][]byte{suffixLong5},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
 		},
 		{
 			name:  "long + short short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toAdd: [][]byte{suffixShort2, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort2, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort2, suffixShort3}},
 		},
 		{
 			name:  "long + short long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toAdd: [][]byte{suffixShort2, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort2, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort2, suffixLong6}},
 		},
 		{
 			name:  "long + long short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toAdd: [][]byte{suffixLong7, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong7, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong7, suffixShort3}},
 		},
 		{
 			name:  "long + long long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toAdd: [][]byte{suffixLong7, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong7, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong7, suffixLong6}},
 		},
 
 		// short short + ...
 		{
 			name:  "short short + nil",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 			toAdd: nil,
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 		},
 		{
 			name:  "short short + empty",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 			toAdd: [][]byte{},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 		},
 		{
 			name:  "short short + short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
 			toAdd: [][]byte{suffixShort1},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2, suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2, suffixShort1}},
 		},
 		{
 			name:  "short short + long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 			toAdd: [][]byte{suffixLong5},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1, suffixLong5}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1, suffixLong5}},
 		},
 		{
 			name:  "short short + short short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
 			toAdd: [][]byte{suffixShort1, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2, suffixShort1, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2, suffixShort1, suffixShort3}},
 		},
 		{
 			name:  "short short + short long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
 			toAdd: [][]byte{suffixShort1, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2, suffixShort1, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2, suffixShort1, suffixLong6}},
 		},
 		{
 			name:  "short short + long short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 			toAdd: [][]byte{suffixLong7, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1, suffixLong7, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1, suffixLong7, suffixShort3}},
 		},
 		{
 			name:  "short short + long long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 			toAdd: [][]byte{suffixLong7, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1, suffixLong7, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1, suffixLong7, suffixLong6}},
 		},
 
 		// short long + ...
 		{
 			name:  "short long + nil",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
 			toAdd: nil,
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
 		},
 		{
 			name:  "short long + empty",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
 			toAdd: [][]byte{},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
 		},
 		{
 			name:  "short long + short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
 			toAdd: [][]byte{suffixShort1},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixShort1}},
 		},
 		{
 			name:  "short long + long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
 			toAdd: [][]byte{suffixLong5},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixLong5}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixLong5}},
 		},
 		{
 			name:  "short long + short short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
 			toAdd: [][]byte{suffixShort2, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixShort2, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixShort2, suffixShort3}},
 		},
 		{
 			name:  "short long + short long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
 			toAdd: [][]byte{suffixShort2, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixShort2, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixShort2, suffixLong6}},
 		},
 		{
 			name:  "short long + long short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
 			toAdd: [][]byte{suffixLong7, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixLong7, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixLong7, suffixShort3}},
 		},
 		{
 			name:  "short long + long long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4}},
 			toAdd: [][]byte{suffixLong7, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixLong7, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong4, suffixLong7, suffixLong6}},
 		},
 
 		// long short + ...
 		{
 			name:  "long short + nil",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
 			toAdd: nil,
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
 		},
 		{
 			name:  "long short + empty",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
 			toAdd: [][]byte{},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
 		},
 		{
 			name:  "long short + short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
 			toAdd: [][]byte{suffixShort1},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixShort1}},
 		},
 		{
 			name:  "long short + long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
 			toAdd: [][]byte{suffixLong5},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixLong5}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixLong5}},
 		},
 		{
 			name:  "long short + short short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
 			toAdd: [][]byte{suffixShort2, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixShort2, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixShort2, suffixShort3}},
 		},
 		{
 			name:  "long short + short long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
 			toAdd: [][]byte{suffixShort2, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixShort2, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixShort2, suffixLong6}},
 		},
 		{
 			name:  "long short + long short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
 			toAdd: [][]byte{suffixLong7, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixLong7, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixLong7, suffixShort3}},
 		},
 		{
 			name:  "long short + long long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0}},
 			toAdd: [][]byte{suffixLong7, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixLong7, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixShort0, suffixLong7, suffixLong6}},
 		},
 
 		// long long + ...
 		{
 			name:  "long long + nil",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
 			toAdd: nil,
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
 		},
 		{
 			name:  "long long + empty",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
 			toAdd: [][]byte{},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
 		},
 		{
 			name:  "long long + short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
 			toAdd: [][]byte{suffixShort1},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5, suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5, suffixShort1}},
 		},
 		{
 			name:  "long long + long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong6}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong6}},
 			toAdd: [][]byte{suffixLong5},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong6, suffixLong5}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong6, suffixLong5}},
 		},
 		{
 			name:  "long long + short short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
 			toAdd: [][]byte{suffixShort2, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5, suffixShort2, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5, suffixShort2, suffixShort3}},
 		},
 		{
 			name:  "long long + short long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
 			toAdd: [][]byte{suffixShort2, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5, suffixShort2, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5, suffixShort2, suffixLong6}},
 		},
 		{
 			name:  "long long + long short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
 			toAdd: [][]byte{suffixLong7, suffixShort3},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5, suffixLong7, suffixShort3}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5, suffixLong7, suffixShort3}},
 		},
 		{
 			name:  "long long + long long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5}},
 			toAdd: [][]byte{suffixLong7, suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5, suffixLong7, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4, suffixLong5, suffixLong7, suffixLong6}},
 		},
 
 		// other ...
 		{
 			name:  "short long + bad",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong7}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong7}},
 			toAdd: [][]byte{suffixBad8},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong7, suffixBad8}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong7, suffixBad8}},
 		},
 		{
 			name:  "long short + empty suffix",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong5, suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong5, suffixShort0}},
 			toAdd: [][]byte{suffixEmpty},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong5, suffixShort0, suffixEmpty}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong5, suffixShort0, suffixEmpty}},
 		},
 		{
 			name:  "bad + short short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixBad8}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixBad8}},
 			toAdd: [][]byte{suffixShort3, suffixShort1},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixBad8, suffixShort3, suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixBad8, suffixShort3, suffixShort1}},
 		},
 		{
 			name:  "empty suffix + long long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixEmpty}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixEmpty}},
 			toAdd: [][]byte{suffixLong7, suffixLong4},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixEmpty, suffixLong7, suffixLong4}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixEmpty, suffixLong7, suffixLong4}},
 		},
 		{
 			name:  "short + same short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toAdd: [][]byte{suffixShort0},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort0}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort0}},
 		},
 		{
 			name:  "short long + same short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong4}},
 			toAdd: [][]byte{suffixShort1},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong4, suffixShort1}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong4, suffixShort1}},
 		},
 		{
 			name:  "short long + same long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong4}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong4}},
 			toAdd: [][]byte{suffixLong4},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong4, suffixLong4}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong4, suffixLong4}},
 		},
 		{
 			name:  "long short + same short",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong6, suffixShort2}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong6, suffixShort2}},
 			toAdd: [][]byte{suffixShort2},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong6, suffixShort2, suffixShort2}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong6, suffixShort2, suffixShort2}},
 		},
 		{
 			name:  "long short + same long",
-			qrsi:  &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong6, suffixShort2}},
+			qrsi:  &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong6, suffixShort2}},
 			toAdd: [][]byte{suffixLong6},
-			exp:   &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong6, suffixShort2, suffixLong6}},
+			exp:   &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong6, suffixShort2, suffixLong6}},
 		},
 		{
 			name: "shmorgishborg",
-			qrsi: &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{
+			qrsi: &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{
 				suffixShort1, suffixShort3, suffixLong6, suffixBad8, suffixLong7,
 				suffixLong4, suffixShort0, suffixLong5, suffixEmpty, suffixShort2,
 			}},
@@ -3708,7 +3709,7 @@ func TestQuarantineRecordSuffixIndex_AddSuffixes(t *testing.T) {
 				suffixShort0, suffixBad8, suffixShort1, suffixShort1, suffixLong5,
 				suffixEmpty, suffixLong4, suffixLong6, suffixShort0, suffixLong7,
 			},
-			exp: &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{
+			exp: &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{
 				suffixShort1, suffixShort3, suffixLong6, suffixBad8, suffixLong7,
 				suffixLong4, suffixShort0, suffixLong5, suffixEmpty, suffixShort2,
 				suffixShort0, suffixBad8, suffixShort1, suffixShort1, suffixLong5,
@@ -3726,421 +3727,421 @@ func TestQuarantineRecordSuffixIndex_AddSuffixes(t *testing.T) {
 }
 
 func TestQuarantineRecordSuffixIndex_Simplify(t *testing.T) {
-	suffixShort0 := []byte(MakeTestAddr("qrsis", 0))
-	suffixShort1 := []byte(MakeTestAddr("qrsis", 1))
-	suffixShort2 := []byte(MakeTestAddr("qrsis", 2))
-	suffixShort3 := []byte(MakeTestAddr("qrsis", 3))
-	suffixLong4 := []byte(MakeLongAddr("qrsis", 4))
-	suffixLong5 := []byte(MakeLongAddr("qrsis", 5))
-	suffixLong6 := []byte(MakeLongAddr("qrsis", 6))
-	suffixLong7 := []byte(MakeLongAddr("qrsis", 7))
-	suffixBad8 := []byte(MakeBadAddr("qrsis", 8))
+	suffixShort0 := []byte(testutil.MakeTestAddr("qrsis", 0))
+	suffixShort1 := []byte(testutil.MakeTestAddr("qrsis", 1))
+	suffixShort2 := []byte(testutil.MakeTestAddr("qrsis", 2))
+	suffixShort3 := []byte(testutil.MakeTestAddr("qrsis", 3))
+	suffixLong4 := []byte(testutil.MakeLongAddr("qrsis", 4))
+	suffixLong5 := []byte(testutil.MakeLongAddr("qrsis", 5))
+	suffixLong6 := []byte(testutil.MakeLongAddr("qrsis", 6))
+	suffixLong7 := []byte(testutil.MakeLongAddr("qrsis", 7))
+	suffixBad8 := []byte(testutil.MakeBadAddr("qrsis", 8))
 	suffixEmpty := make([]byte, 0)
 
 	tests := []struct {
 		name     string
-		qrsi     *QuarantineRecordSuffixIndex
+		qrsi     *quarantine.QuarantineRecordSuffixIndex
 		toRemove [][]byte
-		exp      *QuarantineRecordSuffixIndex
+		exp      *quarantine.QuarantineRecordSuffixIndex
 	}{
 		// nil - ...
 		{
 			name:     "nil - nil",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toRemove: nil,
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "nil - empty",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toRemove: [][]byte{},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "nil - short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toRemove: [][]byte{suffixShort1},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "nil - long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toRemove: [][]byte{suffixLong5},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "nil - short short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toRemove: [][]byte{suffixShort2, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "nil - short long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toRemove: [][]byte{suffixShort2, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "nil - long short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toRemove: [][]byte{suffixLong7, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "nil - long long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 			toRemove: [][]byte{suffixLong7, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 
 		// empty - ...
 		{
 			name:     "empty - nil",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toRemove: nil,
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "empty - empty",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toRemove: [][]byte{},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "empty - short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toRemove: [][]byte{suffixShort1},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "empty - long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toRemove: [][]byte{suffixLong5},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "empty - short short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toRemove: [][]byte{suffixShort2, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "empty - short long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toRemove: [][]byte{suffixShort2, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "empty - long short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toRemove: [][]byte{suffixLong7, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "empty - long long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{}},
 			toRemove: [][]byte{suffixLong7, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 
 		// short - ...
 		{
 			name:     "short - nil",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: nil,
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:     "short - empty",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:     "short - other short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{suffixShort1},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:     "short - same short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{suffixShort0},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "short - long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{suffixLong5},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:     "short - other short other short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{suffixShort2, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:     "short - same short other short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{suffixShort0, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "short - other short same short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{suffixShort2, suffixShort0},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "short - same short same short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{suffixShort0, suffixShort0},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "short - short long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{suffixShort2, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:     "short - long short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{suffixLong7, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:     "short - long long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 			toRemove: [][]byte{suffixLong7, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 
 		// long - ...
 		{
 			name:     "long - nil",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: nil,
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 		},
 		{
 			name:     "long - empty",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 		},
 		{
 			name:     "long - short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixShort1},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 		},
 		{
 			name:     "long - other long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixLong5},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 		},
 		{
 			name:     "long - same long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixLong4},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "long - short short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixShort2, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 		},
 		{
 			name:     "long - short other long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixShort2, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 		},
 		{
 			name:     "long - short same long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixShort2, suffixLong4},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "long - other long short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixLong7, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 		},
 		{
 			name:     "long - same long short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixLong4, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "long - other long other long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixLong7, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 		},
 		{
 			name:     "long - other long same long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixLong7, suffixLong4},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "long - same long other long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixLong4, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "long - same long same long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong4}},
 			toRemove: [][]byte{suffixLong4, suffixLong4},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 
 		// short short - ...
 		{
 			name:     "short short - nil",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 			toRemove: nil,
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 		},
 		{
 			name:     "short short - empty",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 			toRemove: [][]byte{},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 		},
 		{
 			name:     "short short - other short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
 			toRemove: [][]byte{suffixShort1},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
 		},
 		{
 			name:     "short short - same first short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
 			toRemove: [][]byte{suffixShort0},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2}},
 		},
 		{
 			name:     "short short - same second short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
 			toRemove: [][]byte{suffixShort2},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:     "short short - long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 			toRemove: [][]byte{suffixLong5},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 		},
 		{
 			name:     "short short - other short other short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
 			toRemove: [][]byte{suffixShort1, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
 		},
 		{
 			name:     "short short - first short other short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
 			toRemove: [][]byte{suffixShort2, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:     "short short - second short other short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
 			toRemove: [][]byte{suffixShort0, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2}},
 		},
 		{
 			name:     "short short - other short first short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
 			toRemove: [][]byte{suffixShort1, suffixShort2},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0}},
 		},
 		{
 			name:     "short short - other short second short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
 			toRemove: [][]byte{suffixShort1, suffixShort0},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2}},
 		},
 		{
 			name:     "short short - first short second short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
 			toRemove: [][]byte{suffixShort2, suffixShort0},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "short short - second short first short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort2, suffixShort0}},
 			toRemove: [][]byte{suffixShort0, suffixShort2},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "short short - short long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
 			toRemove: [][]byte{suffixShort1, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort2}},
 		},
 		{
 			name:     "short short - long short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 			toRemove: [][]byte{suffixLong7, suffixShort3},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 		},
 		{
 			name:     "short short - long long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 			toRemove: [][]byte{suffixLong7, suffixLong6},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixShort1}},
 		},
 
 		// other ...
 		{
 			name:     "short long - bad",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong7}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong7}},
 			toRemove: [][]byte{suffixBad8},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong7}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort1, suffixLong7}},
 		},
 		{
 			name:     "long short - empty suffix",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong5, suffixShort0}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixLong5, suffixShort0}},
 			toRemove: [][]byte{suffixEmpty},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong5}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixShort0, suffixLong5}},
 		},
 		{
 			name:     "bad - short short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixBad8}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixBad8}},
 			toRemove: [][]byte{suffixShort3, suffixShort1},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixBad8}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixBad8}},
 		},
 		{
 			name:     "bad - short bad long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixBad8}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixBad8}},
 			toRemove: [][]byte{suffixShort3, suffixBad8, suffixLong7},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name:     "empty suffix - long long",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixEmpty}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixEmpty}},
 			toRemove: [][]byte{suffixLong7, suffixLong4},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixEmpty}},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixEmpty}},
 		},
 		{
 			name:     "empty suffix - long empty suffix short",
-			qrsi:     &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixEmpty}},
+			qrsi:     &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{suffixEmpty}},
 			toRemove: [][]byte{suffixLong7, suffixEmpty, suffixShort2},
-			exp:      &QuarantineRecordSuffixIndex{RecordSuffixes: nil},
+			exp:      &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: nil},
 		},
 		{
 			name: "shmorgishborg",
-			qrsi: &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{
+			qrsi: &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{
 				suffixShort1, suffixShort3, suffixLong6, suffixBad8, suffixLong7,
 				suffixLong4, suffixShort0, suffixLong5, suffixEmpty, suffixShort2,
 			}},
@@ -4148,7 +4149,7 @@ func TestQuarantineRecordSuffixIndex_Simplify(t *testing.T) {
 				suffixShort0, suffixBad8, suffixShort1, suffixShort1, suffixLong4,
 				suffixEmpty, suffixLong4, suffixLong6, suffixShort0, suffixLong7,
 			},
-			exp: &QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{
+			exp: &quarantine.QuarantineRecordSuffixIndex{RecordSuffixes: [][]byte{
 				suffixShort2, suffixShort3, suffixLong5,
 			}},
 		},

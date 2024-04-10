@@ -6,16 +6,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/provenance-io/provenance/x/quarantine"
-
-	. "github.com/provenance-io/provenance/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 // These tests are initiated by TestKeeperTestSuite in keeper_test.go
 
 func (s *TestSuite) TestIsQuarantined() {
-	addrQuarantinedAcc := MakeTestAddr("iq", 0)
+	addrQuarantinedAcc := testutil.MakeTestAddr("iq", 0)
 	addrQuarantinedStr := addrQuarantinedAcc.String()
-	addrNormalStr := MakeTestAddr("iq", 1).String()
+	addrNormalStr := testutil.MakeTestAddr("iq", 1).String()
 
 	s.Require().NoError(s.keeper.SetOptIn(s.sdkCtx, addrQuarantinedAcc), "SetOptIn")
 
@@ -76,7 +75,7 @@ func (s *TestSuite) TestIsQuarantined() {
 
 func (s *TestSuite) TestQuarantinedFunds() {
 	makeAddr := func(index uint8) (sdk.AccAddress, string) {
-		addr := MakeTestAddr("qf", index)
+		addr := testutil.MakeTestAddr("qf", index)
 		return addr, addr.String()
 	}
 	newQF := func(coins string, toAddr string, fromAddrs ...string) *quarantine.QuarantinedFunds {
@@ -344,7 +343,7 @@ func (s *TestSuite) TestQuarantinedFunds() {
 
 func (s *TestSuite) TestAutoResponses() {
 	makeAddr := func(index uint8) (sdk.AccAddress, string) {
-		addr := MakeTestAddr("ar", index)
+		addr := testutil.MakeTestAddr("ar", index)
 		return addr, addr.String()
 	}
 	newARE := func(toAddr, fromAddr string, resp quarantine.AutoResponse) *quarantine.AutoResponseEntry {

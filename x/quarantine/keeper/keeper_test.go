@@ -21,10 +21,10 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/quarantine/keeper"
-
-	. "github.com/provenance-io/provenance/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 // updateQR updates the AccAddresses using the provided addrs.
@@ -108,7 +108,7 @@ func (s *TestSuite) cz(coins string) sdk.Coins {
 
 func (s *TestSuite) AssertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
 	s.T().Helper()
-	return AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -660,15 +660,15 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 	})
 
 	s.Run("set get one unaccepted no accepted", func() {
-		toAddr := MakeTestAddr("sgouna", 0)
-		uFromAddr := MakeTestAddr("sgouna", 1)
+		toAddr := testutil.MakeTestAddr("sgouna", 0)
+		uFromAddr := testutil.MakeTestAddr("sgouna", 1)
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: accs(uFromAddr),
 			AcceptedFromAddresses:   nil,
 			Coins:                   s.cz("456bar,1233foo"),
 			Declined:                false,
 		}
-		expected := MakeCopyOfQuarantineRecord(record)
+		expected := testutil.MakeCopyOfQuarantineRecord(record)
 
 		testFuncSet := func() {
 			s.keeper.SetQuarantineRecord(s.sdkCtx, toAddr, record)
@@ -692,16 +692,16 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 	})
 
 	s.Run("set get one unaccepted one accepted", func() {
-		toAddr := MakeTestAddr("sgouoa", 0)
-		uFromAddr := MakeTestAddr("sgouoa", 1)
-		aFromAddr := MakeTestAddr("sgouoa", 2)
+		toAddr := testutil.MakeTestAddr("sgouoa", 0)
+		uFromAddr := testutil.MakeTestAddr("sgouoa", 1)
+		aFromAddr := testutil.MakeTestAddr("sgouoa", 2)
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: accs(uFromAddr),
 			AcceptedFromAddresses:   accs(aFromAddr),
 			Coins:                   sdk.Coins{},
 			Declined:                false,
 		}
-		expected := MakeCopyOfQuarantineRecord(record)
+		expected := testutil.MakeCopyOfQuarantineRecord(record)
 
 		testFuncSet := func() {
 			s.keeper.SetQuarantineRecord(s.sdkCtx, toAddr, record)
@@ -725,16 +725,16 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 	})
 
 	s.Run("set get two unaccepted no accepted", func() {
-		toAddr := MakeTestAddr("sgtuna", 0)
-		uFromAddr1 := MakeTestAddr("sgtuna", 1)
-		uFromAddr2 := MakeTestAddr("sgtuna", 2)
+		toAddr := testutil.MakeTestAddr("sgtuna", 0)
+		uFromAddr1 := testutil.MakeTestAddr("sgtuna", 1)
+		uFromAddr2 := testutil.MakeTestAddr("sgtuna", 2)
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: accs(uFromAddr1, uFromAddr2),
 			AcceptedFromAddresses:   nil,
 			Coins:                   sdk.Coins{},
 			Declined:                false,
 		}
-		expected := MakeCopyOfQuarantineRecord(record)
+		expected := testutil.MakeCopyOfQuarantineRecord(record)
 
 		testFuncSet := func() {
 			s.keeper.SetQuarantineRecord(s.sdkCtx, toAddr, record)
@@ -772,8 +772,8 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 	})
 
 	s.Run("set get no unaccepted one accepted", func() {
-		toAddr := MakeTestAddr("sgnuoa", 0)
-		aFromAddr := MakeTestAddr("sgnuoa", 1)
+		toAddr := testutil.MakeTestAddr("sgnuoa", 0)
+		aFromAddr := testutil.MakeTestAddr("sgnuoa", 1)
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: nil,
 			AcceptedFromAddresses:   accs(aFromAddr),
@@ -795,9 +795,9 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 	})
 
 	s.Run("set get no unaccepted two accepted", func() {
-		toAddr := MakeTestAddr("sgnuta", 0)
-		aFromAddr1 := MakeTestAddr("sgnuta", 1)
-		aFromAddr2 := MakeTestAddr("sgnuta", 2)
+		toAddr := testutil.MakeTestAddr("sgnuta", 0)
+		aFromAddr1 := testutil.MakeTestAddr("sgnuta", 1)
+		aFromAddr2 := testutil.MakeTestAddr("sgnuta", 2)
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: nil,
 			AcceptedFromAddresses:   accs(aFromAddr1, aFromAddr2),
@@ -827,17 +827,17 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 	})
 
 	s.Run("set get two unaccepted one accepted", func() {
-		toAddr := MakeTestAddr("sgtuoa", 0)
-		uFromAddr1 := MakeTestAddr("sgtuoa", 1)
-		uFromAddr2 := MakeTestAddr("sgtuoa", 2)
-		aFromAddr := MakeTestAddr("sgtuoa", 3)
+		toAddr := testutil.MakeTestAddr("sgtuoa", 0)
+		uFromAddr1 := testutil.MakeTestAddr("sgtuoa", 1)
+		uFromAddr2 := testutil.MakeTestAddr("sgtuoa", 2)
+		aFromAddr := testutil.MakeTestAddr("sgtuoa", 3)
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: accs(uFromAddr1, uFromAddr2),
 			AcceptedFromAddresses:   accs(aFromAddr),
 			Coins:                   sdk.Coins{},
 			Declined:                false,
 		}
-		expected := MakeCopyOfQuarantineRecord(record)
+		expected := testutil.MakeCopyOfQuarantineRecord(record)
 
 		testFuncSet := func() {
 			s.keeper.SetQuarantineRecord(s.sdkCtx, toAddr, record)
@@ -903,17 +903,17 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 	})
 
 	s.Run("set get one unaccepted two accepted", func() {
-		toAddr := MakeTestAddr("sgouta", 0)
-		uFromAddr := MakeTestAddr("sgouta", 1)
-		aFromAddr1 := MakeTestAddr("sgouta", 2)
-		aFromAddr2 := MakeTestAddr("sgouta", 3)
+		toAddr := testutil.MakeTestAddr("sgouta", 0)
+		uFromAddr := testutil.MakeTestAddr("sgouta", 1)
+		aFromAddr1 := testutil.MakeTestAddr("sgouta", 2)
+		aFromAddr2 := testutil.MakeTestAddr("sgouta", 3)
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: accs(uFromAddr),
 			AcceptedFromAddresses:   accs(aFromAddr1, aFromAddr2),
 			Coins:                   sdk.Coins{},
 			Declined:                false,
 		}
-		expected := MakeCopyOfQuarantineRecord(record)
+		expected := testutil.MakeCopyOfQuarantineRecord(record)
 
 		testFuncSet := func() {
 			s.keeper.SetQuarantineRecord(s.sdkCtx, toAddr, record)
@@ -980,10 +980,10 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 }
 
 func (s *TestSuite) TestGetQuarantineRecords() {
-	addr0 := MakeTestAddr("gqr", 0)
-	addr1 := MakeTestAddr("gqr", 1)
-	addr2 := MakeTestAddr("gqr", 2)
-	addr3 := MakeTestAddr("gqr", 3)
+	addr0 := testutil.MakeTestAddr("gqr", 0)
+	addr1 := testutil.MakeTestAddr("gqr", 1)
+	addr2 := testutil.MakeTestAddr("gqr", 2)
+	addr3 := testutil.MakeTestAddr("gqr", 3)
 
 	mustCoins := func(amt string) sdk.Coins {
 		coins, err := sdk.ParseCoinsNormalized(amt)
@@ -1742,7 +1742,7 @@ func (s *TestSuite) TestAddQuarantinedCoins() {
 			// Set up all the address stuff.
 			addrs := make([]sdk.AccAddress, tc.addrCount)
 			for i := range addrs {
-				addrs[i] = MakeTestAddr(tc.addrBase, uint8(i))
+				addrs[i] = testutil.MakeTestAddr(tc.addrBase, uint8(i))
 			}
 			toAddr := addrs[tc.toAddr]
 			fromAddrs := make([]sdk.AccAddress, len(tc.fromAddrs))
@@ -2352,7 +2352,7 @@ func (s *TestSuite) TestAcceptQuarantinedFunds() {
 			// Set up all the address stuff.
 			addrs := make([]sdk.AccAddress, tc.addrCount)
 			for i := range addrs {
-				addrs[i] = MakeTestAddr(tc.addrBase, uint8(i))
+				addrs[i] = testutil.MakeTestAddr(tc.addrBase, uint8(i))
 			}
 
 			toAddr := addrs[0]
@@ -2465,11 +2465,11 @@ func (s *TestSuite) TestAcceptQuarantinedFunds() {
 		s.Require().False(seenAddrBases[addrBase], "an earlier test already used the address base %q", addrBase)
 		seenAddrBases[addrBase] = true
 
-		toAddr := MakeTestAddr(addrBase, 0)
-		fromAddr1 := MakeTestAddr(addrBase, 1)
-		fromAddr2 := MakeTestAddr(addrBase, 2)
-		fromAddr3 := MakeTestAddr(addrBase, 3)
-		fromAddr4 := MakeTestAddr(addrBase, 4)
+		toAddr := testutil.MakeTestAddr(addrBase, 0)
+		fromAddr1 := testutil.MakeTestAddr(addrBase, 1)
+		fromAddr2 := testutil.MakeTestAddr(addrBase, 2)
+		fromAddr3 := testutil.MakeTestAddr(addrBase, 3)
+		fromAddr4 := testutil.MakeTestAddr(addrBase, 4)
 		fromAddrs := accs(fromAddr1, fromAddr2, fromAddr3, fromAddr4)
 
 		// Define the existing records and expected stuff.
@@ -2935,7 +2935,7 @@ func (s *TestSuite) TestDeclineQuarantinedFunds() {
 			// Set up all the address stuff.
 			addrs := make([]sdk.AccAddress, tc.addrCount)
 			for i := range addrs {
-				addrs[i] = MakeTestAddr(tc.addrBase, uint8(i))
+				addrs[i] = testutil.MakeTestAddr(tc.addrBase, uint8(i))
 			}
 
 			toAddr := addrs[0]
@@ -2981,14 +2981,14 @@ func (s *TestSuite) TestDeclineQuarantinedFunds() {
 
 func (s *TestSuite) TestQuarantineRecordsIterateAndGetAll() {
 	addrBase := "qriga"
-	addr0 := MakeTestAddr(addrBase, 0)
-	addr1 := MakeTestAddr(addrBase, 1)
-	addr2 := MakeTestAddr(addrBase, 2)
-	addr3 := MakeTestAddr(addrBase, 3)
-	addr4 := MakeTestAddr(addrBase, 4)
-	addr5 := MakeTestAddr(addrBase, 5)
-	addr6 := MakeTestAddr(addrBase, 6)
-	addr7 := MakeTestAddr(addrBase, 7)
+	addr0 := testutil.MakeTestAddr(addrBase, 0)
+	addr1 := testutil.MakeTestAddr(addrBase, 1)
+	addr2 := testutil.MakeTestAddr(addrBase, 2)
+	addr3 := testutil.MakeTestAddr(addrBase, 3)
+	addr4 := testutil.MakeTestAddr(addrBase, 4)
+	addr5 := testutil.MakeTestAddr(addrBase, 5)
+	addr6 := testutil.MakeTestAddr(addrBase, 6)
+	addr7 := testutil.MakeTestAddr(addrBase, 7)
 
 	// Create 7 records
 	initialRecords := []*struct {
@@ -3056,8 +3056,8 @@ func (s *TestSuite) TestQuarantineRecordsIterateAndGetAll() {
 	}
 
 	// Remove the 2nd one by setting it as fully accepted.
-	secondTo := MakeCopyOfAccAddress(initialRecords[1].to)
-	secondRec := MakeCopyOfQuarantineRecord(initialRecords[1].record)
+	secondTo := testutil.MakeCopyOfAccAddress(initialRecords[1].to)
+	secondRec := testutil.MakeCopyOfQuarantineRecord(initialRecords[1].record)
 	secondRec.AcceptFrom(secondRec.UnacceptedFromAddresses)
 	testFuncUnset := func() {
 		s.keeper.SetQuarantineRecord(s.sdkCtx, secondTo, secondRec)
@@ -3142,9 +3142,9 @@ func (s *TestSuite) TestQuarantineRecordsIterateAndGetAll() {
 				key := quarantine.CreateRecordKey(tr.to, tr.record.GetAllFromAddrs()...)
 				_, suffix := quarantine.ParseRecordKey(key)
 				expected[i] = &cbArgs{
-					toAddr: MakeCopyOfAccAddress(tr.to),
-					suffix: MakeCopyOfAccAddress(suffix),
-					record: MakeCopyOfQuarantineRecord(tr.record),
+					toAddr: testutil.MakeCopyOfAccAddress(tr.to),
+					suffix: testutil.MakeCopyOfAccAddress(suffix),
+					record: testutil.MakeCopyOfQuarantineRecord(tr.record),
 				}
 			}
 
@@ -3173,9 +3173,9 @@ func (s *TestSuite) TestQuarantineRecordsIterateAndGetAll() {
 			key := quarantine.CreateRecordKey(tr.to, tr.record.GetAllFromAddrs()...)
 			_, suffix := quarantine.ParseRecordKey(key)
 			expected[i] = &cbArgs{
-				toAddr: MakeCopyOfAccAddress(tr.to),
-				suffix: MakeCopyOfAccAddress(suffix),
-				record: MakeCopyOfQuarantineRecord(tr.record),
+				toAddr: testutil.MakeCopyOfAccAddress(tr.to),
+				suffix: testutil.MakeCopyOfAccAddress(suffix),
+				record: testutil.MakeCopyOfQuarantineRecord(tr.record),
 			}
 		}
 
@@ -3281,14 +3281,14 @@ func (s *TestSuite) TestBzToQuarantineRecordSuffixIndex() {
 }
 
 func (s *TestSuite) TestSuffixIndexGetSet() {
-	toAddr := MakeTestAddr("sigs", 0)
-	fromAddr := MakeTestAddr("sigs", 1)
-	suffix0 := []byte(MakeTestAddr("sfxsigs", 0))
-	suffix1 := []byte(MakeTestAddr("sfxsigs", 1))
-	suffix2 := []byte(MakeTestAddr("sfxsigs", 2))
-	suffix3 := []byte(MakeTestAddr("sfxsigs", 3))
-	suffix4 := []byte(MakeTestAddr("sfxsigs", 4))
-	suffix5 := []byte(MakeTestAddr("sfxsigs", 5))
+	toAddr := testutil.MakeTestAddr("sigs", 0)
+	fromAddr := testutil.MakeTestAddr("sigs", 1)
+	suffix0 := []byte(testutil.MakeTestAddr("sfxsigs", 0))
+	suffix1 := []byte(testutil.MakeTestAddr("sfxsigs", 1))
+	suffix2 := []byte(testutil.MakeTestAddr("sfxsigs", 2))
+	suffix3 := []byte(testutil.MakeTestAddr("sfxsigs", 3))
+	suffix4 := []byte(testutil.MakeTestAddr("sfxsigs", 4))
+	suffix5 := []byte(testutil.MakeTestAddr("sfxsigs", 5))
 
 	s.Run("1 getQuarantineRecordSuffix on unset entry", func() {
 		store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
@@ -3353,14 +3353,14 @@ func (s *TestSuite) TestSuffixIndexGetSet() {
 }
 
 func (s *TestSuite) TestAddQuarantineRecordSuffixIndexes() {
-	toAddr := MakeTestAddr("sad", 0)
-	fromAddr1 := MakeTestAddr("sad", 1)
-	fromAddr2 := MakeTestAddr("sad", 2)
-	fromAddr3 := MakeTestAddr("sad", 3)
-	suffix0 := []byte(MakeTestAddr("sfxsad", 0))
-	suffix1 := []byte(MakeTestAddr("sfxsad", 1))
-	suffix2 := []byte(MakeTestAddr("sfxsad", 2))
-	suffix3 := []byte(MakeTestAddr("sfxsad", 3))
+	toAddr := testutil.MakeTestAddr("sad", 0)
+	fromAddr1 := testutil.MakeTestAddr("sad", 1)
+	fromAddr2 := testutil.MakeTestAddr("sad", 2)
+	fromAddr3 := testutil.MakeTestAddr("sad", 3)
+	suffix0 := []byte(testutil.MakeTestAddr("sfxsad", 0))
+	suffix1 := []byte(testutil.MakeTestAddr("sfxsad", 1))
+	suffix2 := []byte(testutil.MakeTestAddr("sfxsad", 2))
+	suffix3 := []byte(testutil.MakeTestAddr("sfxsad", 3))
 
 	tests := []struct {
 		name      string
@@ -3409,9 +3409,9 @@ func (s *TestSuite) TestAddQuarantineRecordSuffixIndexes() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-			toAddrOrig := MakeCopyOfAccAddress(tc.toAddr)
-			fromAddrsOrig := MakeCopyOfAccAddresses(tc.fromAddrs)
-			suffixOrig := MakeCopyOfByteSlice(tc.suffix)
+			toAddrOrig := testutil.MakeCopyOfAccAddress(tc.toAddr)
+			fromAddrsOrig := testutil.MakeCopyOfAccAddresses(tc.fromAddrs)
+			suffixOrig := testutil.MakeCopyOfByteSlice(tc.suffix)
 
 			testFuncAdd := func() {
 				s.keeper.AddQuarantineRecordSuffixIndexes(store, tc.toAddr, tc.fromAddrs, tc.suffix)
@@ -3422,7 +3422,7 @@ func (s *TestSuite) TestAddQuarantineRecordSuffixIndexes() {
 			s.Assert().Equal(suffixOrig, tc.suffix, "suffix before and after")
 
 			for i, fromAddr := range fromAddrsOrig {
-				expected := MakeCopyOfQuarantineRecordSuffixIndex(tc.expected)
+				expected := testutil.MakeCopyOfQuarantineRecordSuffixIndex(tc.expected)
 				var actual *quarantine.QuarantineRecordSuffixIndex
 				testFuncGet := func() {
 					actual, _ = s.keeper.GetQuarantineRecordSuffixIndex(store, toAddrOrig, fromAddr)
@@ -3436,14 +3436,14 @@ func (s *TestSuite) TestAddQuarantineRecordSuffixIndexes() {
 }
 
 func (s *TestSuite) TestDeleteQuarantineRecordSuffixIndexes() {
-	toAddr := MakeTestAddr("sad", 0)
-	fromAddr1 := MakeTestAddr("sad", 1)
-	fromAddr2 := MakeTestAddr("sad", 2)
-	fromAddr3 := MakeTestAddr("sad", 3)
-	suffix0 := []byte(MakeTestAddr("sfxsad", 0))
-	suffix1 := []byte(MakeTestAddr("sfxsad", 1))
-	suffix2 := []byte(MakeTestAddr("sfxsad", 2))
-	suffix3 := []byte(MakeTestAddr("sfxsad", 3))
+	toAddr := testutil.MakeTestAddr("sad", 0)
+	fromAddr1 := testutil.MakeTestAddr("sad", 1)
+	fromAddr2 := testutil.MakeTestAddr("sad", 2)
+	fromAddr3 := testutil.MakeTestAddr("sad", 3)
+	suffix0 := []byte(testutil.MakeTestAddr("sfxsad", 0))
+	suffix1 := []byte(testutil.MakeTestAddr("sfxsad", 1))
+	suffix2 := []byte(testutil.MakeTestAddr("sfxsad", 2))
+	suffix3 := []byte(testutil.MakeTestAddr("sfxsad", 3))
 
 	// Create some existing entries that can then be altered.
 	existing := []struct {
@@ -3509,9 +3509,9 @@ func (s *TestSuite) TestDeleteQuarantineRecordSuffixIndexes() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-			toAddrOrig := MakeCopyOfAccAddress(toAddr)
-			fromAddrsOrig := MakeCopyOfAccAddresses(tc.fromAddrs)
-			suffixOrig := MakeCopyOfByteSlice(tc.suffix)
+			toAddrOrig := testutil.MakeCopyOfAccAddress(toAddr)
+			fromAddrsOrig := testutil.MakeCopyOfAccAddresses(tc.fromAddrs)
+			suffixOrig := testutil.MakeCopyOfByteSlice(tc.suffix)
 
 			testFuncDelete := func() {
 				s.keeper.DeleteQuarantineRecordSuffixIndexes(store, toAddr, tc.fromAddrs, tc.suffix)
@@ -3559,15 +3559,15 @@ func (s *TestSuite) TestDeleteQuarantineRecordSuffixIndexes() {
 
 func (s *TestSuite) TestGetQuarantineRecordSuffixes() {
 	// The effects of getQuarantineRecordSuffixes are well tested elsewhere. Just doing a big one-off here.
-	toAddr := MakeTestAddr("gqrs", 0)
-	fromAddr1 := MakeTestAddr("gqrs", 1)
-	fromAddr2 := MakeTestAddr("gqrs", 2)
-	fromAddr3 := MakeTestAddr("gqrs", 3)
-	fromAddr4 := MakeTestAddr("gqrs", 4)
-	suffix5 := []byte(MakeTestAddr("sfxgqrs", 5))
-	suffix6 := []byte(MakeTestAddr("sfxgqrs", 6))
-	suffix7 := []byte(MakeTestAddr("sfxgqrs", 7))
-	fromAddr8 := MakeTestAddr("gqrs", 8)
+	toAddr := testutil.MakeTestAddr("gqrs", 0)
+	fromAddr1 := testutil.MakeTestAddr("gqrs", 1)
+	fromAddr2 := testutil.MakeTestAddr("gqrs", 2)
+	fromAddr3 := testutil.MakeTestAddr("gqrs", 3)
+	fromAddr4 := testutil.MakeTestAddr("gqrs", 4)
+	suffix5 := []byte(testutil.MakeTestAddr("sfxgqrs", 5))
+	suffix6 := []byte(testutil.MakeTestAddr("sfxgqrs", 6))
+	suffix7 := []byte(testutil.MakeTestAddr("sfxgqrs", 7))
+	fromAddr8 := testutil.MakeTestAddr("gqrs", 8)
 
 	// sfxs is just a shorter way of creating a [][]byte
 	sfxs := func(suffixes ...[]byte) [][]byte {
@@ -3632,8 +3632,8 @@ func (s *TestSuite) TestGetQuarantineRecordSuffixes() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			store := s.sdkCtx.KVStore(s.keeper.GetStoreKey())
-			toAddrOrig := MakeCopyOfAccAddress(toAddr)
-			fromAddrsOrig := MakeCopyOfAccAddresses(tc.fromAddrs)
+			toAddrOrig := testutil.MakeCopyOfAccAddress(toAddr)
+			fromAddrsOrig := testutil.MakeCopyOfAccAddresses(tc.fromAddrs)
 
 			var actual [][]byte
 			testFuncGet := func() {
@@ -3648,14 +3648,14 @@ func (s *TestSuite) TestGetQuarantineRecordSuffixes() {
 }
 
 func (s *TestSuite) TestInitAndExportGenesis() {
-	addr0 := MakeTestAddr("ieg", 0).String()
-	addr1 := MakeTestAddr("ieg", 1).String()
-	addr2 := MakeTestAddr("ieg", 2).String()
-	addr3 := MakeTestAddr("ieg", 3).String()
-	addr4 := MakeTestAddr("ieg", 4).String()
-	addr5 := MakeTestAddr("ieg", 5).String()
-	addr6 := MakeTestAddr("ieg", 6).String()
-	addr7 := MakeTestAddr("ieg", 7).String()
+	addr0 := testutil.MakeTestAddr("ieg", 0).String()
+	addr1 := testutil.MakeTestAddr("ieg", 1).String()
+	addr2 := testutil.MakeTestAddr("ieg", 2).String()
+	addr3 := testutil.MakeTestAddr("ieg", 3).String()
+	addr4 := testutil.MakeTestAddr("ieg", 4).String()
+	addr5 := testutil.MakeTestAddr("ieg", 5).String()
+	addr6 := testutil.MakeTestAddr("ieg", 6).String()
+	addr7 := testutil.MakeTestAddr("ieg", 7).String()
 
 	genesisState := &quarantine.GenesisState{
 		QuarantinedAddresses: []string{addr0, addr2, addr4, addr6, addr7, addr5, addr1, addr3},
@@ -3722,17 +3722,17 @@ func (s *TestSuite) TestInitAndExportGenesis() {
 	expectedGenesisState := &quarantine.GenesisState{
 		QuarantinedAddresses: []string{addr0, addr1, addr2, addr3, addr4, addr5, addr6, addr7},
 		AutoResponses: []*quarantine.AutoResponseEntry{
-			MakeCopyOfAutoResponseEntry(genesisState.AutoResponses[5]),
-			MakeCopyOfAutoResponseEntry(genesisState.AutoResponses[3]),
-			MakeCopyOfAutoResponseEntry(genesisState.AutoResponses[1]),
-			MakeCopyOfAutoResponseEntry(genesisState.AutoResponses[2]),
-			MakeCopyOfAutoResponseEntry(genesisState.AutoResponses[0]),
+			testutil.MakeCopyOfAutoResponseEntry(genesisState.AutoResponses[5]),
+			testutil.MakeCopyOfAutoResponseEntry(genesisState.AutoResponses[3]),
+			testutil.MakeCopyOfAutoResponseEntry(genesisState.AutoResponses[1]),
+			testutil.MakeCopyOfAutoResponseEntry(genesisState.AutoResponses[2]),
+			testutil.MakeCopyOfAutoResponseEntry(genesisState.AutoResponses[0]),
 		},
 		QuarantinedFunds: []*quarantine.QuarantinedFunds{
-			MakeCopyOfQuarantinedFunds(genesisState.QuarantinedFunds[1]),
-			MakeCopyOfQuarantinedFunds(genesisState.QuarantinedFunds[3]),
-			MakeCopyOfQuarantinedFunds(genesisState.QuarantinedFunds[2]),
-			MakeCopyOfQuarantinedFunds(genesisState.QuarantinedFunds[0]),
+			testutil.MakeCopyOfQuarantinedFunds(genesisState.QuarantinedFunds[1]),
+			testutil.MakeCopyOfQuarantinedFunds(genesisState.QuarantinedFunds[3]),
+			testutil.MakeCopyOfQuarantinedFunds(genesisState.QuarantinedFunds[2]),
+			testutil.MakeCopyOfQuarantinedFunds(genesisState.QuarantinedFunds[0]),
 		},
 	}
 
@@ -3758,7 +3758,7 @@ func (s *TestSuite) TestInitAndExportGenesis() {
 		expectedErr := fmt.Sprintf("quarantine fund holder account %q does not have enough funds %q to cover quarantined funds %q",
 			s.keeper.GetFundsHolder().String(), "199999dolla,1dull,33fancy", "200000dolla,2dull,34fancy")
 
-		genStateCopy := MakeCopyOfGenesisState(genesisState)
+		genStateCopy := testutil.MakeCopyOfGenesisState(genesisState)
 		testFuncInit := func() {
 			qKeeper.InitGenesis(s.sdkCtx, genStateCopy)
 		}
@@ -3770,7 +3770,7 @@ func (s *TestSuite) TestInitAndExportGenesis() {
 		bKeeper.AllBalances[string(s.keeper.GetFundsHolder())] = s.cz("200000dolla,2dull,34fancy")
 		qKeeper := s.keeper.WithBankKeeper(bKeeper)
 
-		genStateCopy := MakeCopyOfGenesisState(genesisState)
+		genStateCopy := testutil.MakeCopyOfGenesisState(genesisState)
 		testFuncInit := func() {
 			qKeeper.InitGenesis(s.sdkCtx, genStateCopy)
 		}

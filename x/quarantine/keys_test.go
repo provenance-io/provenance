@@ -9,8 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
-	. "github.com/provenance-io/provenance/x/quarantine"
-	. "github.com/provenance-io/provenance/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/x/quarantine"
+	"github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 func TestPrefixValues(t *testing.T) {
@@ -19,10 +19,10 @@ func TestPrefixValues(t *testing.T) {
 		prefix   []byte
 		expected []byte
 	}{
-		{name: "OptInPrefix", prefix: OptInPrefix, expected: []byte{0x00}},
-		{name: "AutoResponsePrefix", prefix: AutoResponsePrefix, expected: []byte{0x01}},
-		{name: "RecordPrefix", prefix: RecordPrefix, expected: []byte{0x02}},
-		{name: "RecordIndexPrefix", prefix: RecordIndexPrefix, expected: []byte{0x03}},
+		{name: "OptInPrefix", prefix: quarantine.OptInPrefix, expected: []byte{0x00}},
+		{name: "AutoResponsePrefix", prefix: quarantine.AutoResponsePrefix, expected: []byte{0x01}},
+		{name: "RecordPrefix", prefix: quarantine.RecordPrefix, expected: []byte{0x02}},
+		{name: "RecordIndexPrefix", prefix: quarantine.RecordIndexPrefix, expected: []byte{0x03}},
 	}
 
 	for _, p := range prefixes {
@@ -124,10 +124,10 @@ func TestMakeKey(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			origPart1 := MakeCopyOfByteSlice(tc.part1)
-			origPart2 := MakeCopyOfByteSlice(tc.part2)
-			actual := MakeKey(tc.part1, tc.part2)
-			actualCopy := MakeCopyOfByteSlice(actual)
+			origPart1 := testutil.MakeCopyOfByteSlice(tc.part1)
+			origPart2 := testutil.MakeCopyOfByteSlice(tc.part2)
+			actual := quarantine.MakeKey(tc.part1, tc.part2)
+			actualCopy := testutil.MakeCopyOfByteSlice(actual)
 			assert.Equal(t, tc.exp, actual, "MakeKey result")
 			assert.Equal(t, origPart1, tc.part1, "part1 before and after MakeKey")
 			assert.Equal(t, origPart2, tc.part2, "part2 before and after MakeKey")
@@ -167,13 +167,13 @@ func TestMakeKey(t *testing.T) {
 }
 
 func TestCreateOptInKey(t *testing.T) {
-	expectedPrefix := OptInPrefix
-	testAddr0 := MakeTestAddr("coik", 0)
-	testAddr1 := MakeTestAddr("coik", 1)
-	badAddr := MakeBadAddr("coik", 2)
+	expectedPrefix := quarantine.OptInPrefix
+	testAddr0 := testutil.MakeTestAddr("coik", 0)
+	testAddr1 := testutil.MakeTestAddr("coik", 1)
+	badAddr := testutil.MakeBadAddr("coik", 2)
 
 	t.Run("starts with OptInPrefix", func(t *testing.T) {
-		key := CreateOptInKey(testAddr0)
+		key := quarantine.CreateOptInKey(testAddr0)
 		actual := key[:len(expectedPrefix)]
 		assert.Equal(t, expectedPrefix, actual, "key prefix")
 	})
@@ -218,7 +218,7 @@ func TestCreateOptInKey(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []byte
 			testFunc := func() {
-				actual = CreateOptInKey(tc.toAddr)
+				actual = quarantine.CreateOptInKey(tc.toAddr)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "CreateOptInKey") {
@@ -232,10 +232,10 @@ func TestCreateOptInKey(t *testing.T) {
 }
 
 func TestParseOptInKey(t *testing.T) {
-	testAddr0 := MakeTestAddr("poik", 0)
-	testAddr1 := MakeTestAddr("poik", 1)
-	testAddr2 := MakeTestAddr("poik", 2)
-	longAddr := MakeLongAddr("poik", 3)
+	testAddr0 := testutil.MakeTestAddr("poik", 0)
+	testAddr1 := testutil.MakeTestAddr("poik", 1)
+	testAddr2 := testutil.MakeTestAddr("poik", 2)
+	longAddr := testutil.MakeLongAddr("poik", 3)
 
 	makeKey := func(pre []byte, addrLen int, addrBz []byte) []byte {
 		rv := make([]byte, 0, len(pre)+1+len(addrBz))
@@ -252,47 +252,47 @@ func TestParseOptInKey(t *testing.T) {
 	}{
 		{
 			name:     "addr 0",
-			key:      makeKey(OptInPrefix, len(testAddr0), testAddr0),
+			key:      makeKey(quarantine.OptInPrefix, len(testAddr0), testAddr0),
 			expected: testAddr0,
 		},
 		{
 			name:     "addr 1",
-			key:      makeKey(OptInPrefix, len(testAddr1), testAddr1),
+			key:      makeKey(quarantine.OptInPrefix, len(testAddr1), testAddr1),
 			expected: testAddr1,
 		},
 		{
 			name:     "addr 2",
-			key:      makeKey(OptInPrefix, len(testAddr2), testAddr2),
+			key:      makeKey(quarantine.OptInPrefix, len(testAddr2), testAddr2),
 			expected: testAddr2,
 		},
 		{
 			name:     "longer addr",
-			key:      makeKey(OptInPrefix, len(longAddr), longAddr),
+			key:      makeKey(quarantine.OptInPrefix, len(longAddr), longAddr),
 			expected: longAddr,
 		},
 		{
 			name:     "too short",
-			key:      makeKey(OptInPrefix, len(testAddr0)+1, testAddr0),
+			key:      makeKey(quarantine.OptInPrefix, len(testAddr0)+1, testAddr0),
 			expPanic: fmt.Sprintf("expected key of length at least %d, got %d", len(testAddr0)+1+2, len(testAddr0)+2),
 		},
 		{
 			name:     "from CreateOptInKey addr 0",
-			key:      CreateOptInKey(testAddr0),
+			key:      quarantine.CreateOptInKey(testAddr0),
 			expected: testAddr0,
 		},
 		{
 			name:     "from CreateOptInKey addr 1",
-			key:      CreateOptInKey(testAddr1),
+			key:      quarantine.CreateOptInKey(testAddr1),
 			expected: testAddr1,
 		},
 		{
 			name:     "from CreateOptInKey addr 2",
-			key:      CreateOptInKey(testAddr2),
+			key:      quarantine.CreateOptInKey(testAddr2),
 			expected: testAddr2,
 		},
 		{
 			name:     "from CreateOptInKey longAddr",
-			key:      CreateOptInKey(longAddr),
+			key:      quarantine.CreateOptInKey(longAddr),
 			expected: longAddr,
 		},
 	}
@@ -301,7 +301,7 @@ func TestParseOptInKey(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual sdk.AccAddress
 			testFunc := func() {
-				actual = ParseOptInKey(tc.key)
+				actual = quarantine.ParseOptInKey(tc.key)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "ParseOptInKey") {
@@ -315,13 +315,13 @@ func TestParseOptInKey(t *testing.T) {
 }
 
 func TestCreateAutoResponseToAddrPrefix(t *testing.T) {
-	expectedPrefix := AutoResponsePrefix
-	testAddr0 := MakeTestAddr("cartap", 0)
-	testAddr1 := MakeTestAddr("cartap", 1)
-	badAddr := MakeBadAddr("cartap", 2)
+	expectedPrefix := quarantine.AutoResponsePrefix
+	testAddr0 := testutil.MakeTestAddr("cartap", 0)
+	testAddr1 := testutil.MakeTestAddr("cartap", 1)
+	badAddr := testutil.MakeBadAddr("cartap", 2)
 
 	t.Run("starts with AutoResponsePrefix", func(t *testing.T) {
-		key := CreateAutoResponseToAddrPrefix(testAddr0)
+		key := quarantine.CreateAutoResponseToAddrPrefix(testAddr0)
 		actual := key[:len(expectedPrefix)]
 		assert.Equal(t, expectedPrefix, actual, "key prefix")
 	})
@@ -367,7 +367,7 @@ func TestCreateAutoResponseToAddrPrefix(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []byte
 			testFunc := func() {
-				actual = CreateAutoResponseToAddrPrefix(tc.toAddr)
+				actual = quarantine.CreateAutoResponseToAddrPrefix(tc.toAddr)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "CreateAutoResponseToAddrPrefix") {
@@ -381,14 +381,14 @@ func TestCreateAutoResponseToAddrPrefix(t *testing.T) {
 }
 
 func TestCreateAutoResponseKey(t *testing.T) {
-	expectedPrefix := AutoResponsePrefix
-	testAddr0 := MakeTestAddr("cark", 0)
-	testAddr1 := MakeTestAddr("cark", 1)
-	badAddr := MakeBadAddr("cark", 2)
-	longAddr := MakeLongAddr("cark", 3)
+	expectedPrefix := quarantine.AutoResponsePrefix
+	testAddr0 := testutil.MakeTestAddr("cark", 0)
+	testAddr1 := testutil.MakeTestAddr("cark", 1)
+	badAddr := testutil.MakeBadAddr("cark", 2)
+	longAddr := testutil.MakeLongAddr("cark", 3)
 
 	t.Run("starts with AutoResponsePrefix", func(t *testing.T) {
-		key := CreateAutoResponseKey(testAddr0, testAddr1)
+		key := quarantine.CreateAutoResponseKey(testAddr0, testAddr1)
 		actual := key[:len(expectedPrefix)]
 		assert.Equal(t, expectedPrefix, actual, "key prefix")
 	})
@@ -452,7 +452,7 @@ func TestCreateAutoResponseKey(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []byte
 			testFunc := func() {
-				actual = CreateAutoResponseKey(tc.toAddr, tc.fromAddr)
+				actual = quarantine.CreateAutoResponseKey(tc.toAddr, tc.fromAddr)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "CreateAutoResponseKey") {
@@ -466,9 +466,9 @@ func TestCreateAutoResponseKey(t *testing.T) {
 }
 
 func TestParseAutoResponseKey(t *testing.T) {
-	testAddr0 := MakeTestAddr("park", 0)
-	testAddr1 := MakeTestAddr("park", 1)
-	longAddr := MakeLongAddr("park", 2)
+	testAddr0 := testutil.MakeTestAddr("park", 0)
+	testAddr1 := testutil.MakeTestAddr("park", 1)
+	longAddr := testutil.MakeLongAddr("park", 2)
 
 	makeKey := func(pre []byte, toAddrLen int, toAddrBz []byte, fromAddrLen int, fromAddrBz []byte) []byte {
 		rv := make([]byte, 0, len(pre)+1+len(toAddrBz)+1+len(fromAddrBz))
@@ -489,36 +489,36 @@ func TestParseAutoResponseKey(t *testing.T) {
 	}{
 		{
 			name:        "addr 0 addr 1",
-			key:         CreateAutoResponseKey(testAddr0, testAddr1),
+			key:         quarantine.CreateAutoResponseKey(testAddr0, testAddr1),
 			expToAddr:   testAddr0,
 			expFromAddr: testAddr1,
 		},
 		{
 			name:        "addr 1 addr 0",
-			key:         CreateAutoResponseKey(testAddr1, testAddr0),
+			key:         quarantine.CreateAutoResponseKey(testAddr1, testAddr0),
 			expToAddr:   testAddr1,
 			expFromAddr: testAddr0,
 		},
 		{
 			name:        "long addr addr 1",
-			key:         CreateAutoResponseKey(longAddr, testAddr1),
+			key:         quarantine.CreateAutoResponseKey(longAddr, testAddr1),
 			expToAddr:   longAddr,
 			expFromAddr: testAddr1,
 		},
 		{
 			name:        "addr 0 long addr",
-			key:         CreateAutoResponseKey(testAddr0, longAddr),
+			key:         quarantine.CreateAutoResponseKey(testAddr0, longAddr),
 			expToAddr:   testAddr0,
 			expFromAddr: longAddr,
 		},
 		{
 			name:     "bad toAddr len",
-			key:      makeKey(AutoResponsePrefix, 200, testAddr0, 20, testAddr1),
+			key:      makeKey(quarantine.AutoResponsePrefix, 200, testAddr0, 20, testAddr1),
 			expPanic: fmt.Sprintf("expected key of length at least %d, got %d", 202, 43),
 		},
 		{
 			name:     "bad fromAddr len",
-			key:      makeKey(AutoResponsePrefix, len(testAddr1), testAddr1, len(testAddr0)+1, testAddr0),
+			key:      makeKey(quarantine.AutoResponsePrefix, len(testAddr1), testAddr1, len(testAddr0)+1, testAddr0),
 			expPanic: fmt.Sprintf("expected key of length at least %d, got %d", 44, 43),
 		},
 	}
@@ -527,7 +527,7 @@ func TestParseAutoResponseKey(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actualToAddr, actualFromAddr sdk.AccAddress
 			testFunc := func() {
-				actualToAddr, actualFromAddr = ParseAutoResponseKey(tc.key)
+				actualToAddr, actualFromAddr = quarantine.ParseAutoResponseKey(tc.key)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "ParseAutoResponseKey") {
@@ -542,13 +542,13 @@ func TestParseAutoResponseKey(t *testing.T) {
 }
 
 func TestCreateRecordToAddrPrefix(t *testing.T) {
-	expectedPrefix := RecordPrefix
-	testAddr0 := MakeTestAddr("crtap", 0)
-	testAddr1 := MakeTestAddr("crtap", 1)
-	badAddr := MakeBadAddr("crtap", 2)
+	expectedPrefix := quarantine.RecordPrefix
+	testAddr0 := testutil.MakeTestAddr("crtap", 0)
+	testAddr1 := testutil.MakeTestAddr("crtap", 1)
+	badAddr := testutil.MakeBadAddr("crtap", 2)
 
 	t.Run("starts with RecordPrefix", func(t *testing.T) {
-		key := CreateRecordToAddrPrefix(testAddr0)
+		key := quarantine.CreateRecordToAddrPrefix(testAddr0)
 		actual := key[:len(expectedPrefix)]
 		assert.Equal(t, expectedPrefix, actual, "key prefix")
 	})
@@ -594,7 +594,7 @@ func TestCreateRecordToAddrPrefix(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []byte
 			testFunc := func() {
-				actual = CreateRecordToAddrPrefix(tc.toAddr)
+				actual = quarantine.CreateRecordToAddrPrefix(tc.toAddr)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "CreateRecordToAddrPrefix") {
@@ -608,22 +608,22 @@ func TestCreateRecordToAddrPrefix(t *testing.T) {
 }
 
 func TestCreateRecordKey(t *testing.T) {
-	expectedPrefix := RecordPrefix
-	testAddr0 := MakeTestAddr("crk", 0)
-	testAddr1 := MakeTestAddr("crk", 1)
-	testAddr2 := MakeTestAddr("crk", 2)
-	testAddr3 := MakeTestAddr("crk", 3)
-	badAddr := MakeBadAddr("crk", 4)
-	longAddr := MakeLongAddr("crk", 5)
+	expectedPrefix := quarantine.RecordPrefix
+	testAddr0 := testutil.MakeTestAddr("crk", 0)
+	testAddr1 := testutil.MakeTestAddr("crk", 1)
+	testAddr2 := testutil.MakeTestAddr("crk", 2)
+	testAddr3 := testutil.MakeTestAddr("crk", 3)
+	badAddr := testutil.MakeBadAddr("crk", 4)
+	longAddr := testutil.MakeLongAddr("crk", 5)
 
 	t.Run("starts with RecordPrefix", func(t *testing.T) {
-		key := CreateRecordKey(testAddr0, testAddr1)
+		key := quarantine.CreateRecordKey(testAddr0, testAddr1)
 		actual := key[:len(expectedPrefix)]
 		assert.Equal(t, expectedPrefix, actual, "key prefix")
 	})
 
 	makeExpected := func(toAddrBz []byte, fromAddrs ...sdk.AccAddress) []byte {
-		recordId := CreateRecordSuffix(fromAddrs)
+		recordId := quarantine.CreateRecordSuffix(fromAddrs)
 		rv := make([]byte, 0, len(expectedPrefix)+1+len(toAddrBz)+1+len(recordId))
 		rv = append(rv, expectedPrefix...)
 		rv = append(rv, byte(len(toAddrBz)))
@@ -700,7 +700,7 @@ func TestCreateRecordKey(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []byte
 			testFunc := func() {
-				actual = CreateRecordKey(tc.toAddr, tc.fromAddrs...)
+				actual = quarantine.CreateRecordKey(tc.toAddr, tc.fromAddrs...)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "CreateRecordKey") {
@@ -714,22 +714,22 @@ func TestCreateRecordKey(t *testing.T) {
 }
 
 func TestCreateRecordSuffix(t *testing.T) {
-	testAddr0 := MakeTestAddr("crs", 0)
-	testAddr1 := MakeTestAddr("crs", 1)
-	testAddr2 := MakeTestAddr("crs", 2)
+	testAddr0 := testutil.MakeTestAddr("crs", 0)
+	testAddr1 := testutil.MakeTestAddr("crs", 1)
+	testAddr2 := testutil.MakeTestAddr("crs", 2)
 	testAddrs := []sdk.AccAddress{testAddr0, testAddr1, testAddr2}
-	badAddr := MakeBadAddr("crs", 3)
+	badAddr := testutil.MakeBadAddr("crs", 3)
 
 	t.Run("panics if no addrs", func(t *testing.T) {
 		assert.PanicsWithError(t, "at least one fromAddr is required: internal logic error",
-			func() { CreateRecordSuffix([]sdk.AccAddress{}) },
+			func() { quarantine.CreateRecordSuffix([]sdk.AccAddress{}) },
 			"createRecordSuffix([]sdk.AccAddress{})",
 		)
 	})
 
 	t.Run("panics with nil addrs", func(t *testing.T) {
 		assert.PanicsWithError(t, "at least one fromAddr is required: internal logic error",
-			func() { CreateRecordSuffix(nil) },
+			func() { quarantine.CreateRecordSuffix(nil) },
 			"createRecordSuffix(nil)",
 		)
 	})
@@ -746,7 +746,7 @@ func TestCreateRecordSuffix(t *testing.T) {
 				copy(orig[i], addr)
 			}
 		}
-		actual := CreateRecordSuffix(input)
+		actual := quarantine.CreateRecordSuffix(input)
 		assert.Equal(t, orig, input, msgAndArgs...)
 		return actual
 	}
@@ -819,10 +819,10 @@ func TestCreateRecordSuffix(t *testing.T) {
 }
 
 func TestParseRecordKey(t *testing.T) {
-	testAddr0 := MakeTestAddr("prk", 0)
-	testAddr1 := MakeTestAddr("prk", 1)
-	testAddr2 := MakeTestAddr("prk", 2)
-	longAddr := MakeLongAddr("prk", 3)
+	testAddr0 := testutil.MakeTestAddr("prk", 0)
+	testAddr1 := testutil.MakeTestAddr("prk", 1)
+	testAddr2 := testutil.MakeTestAddr("prk", 2)
+	longAddr := testutil.MakeLongAddr("prk", 3)
 
 	makeKey := func(pre []byte, toAddrLen int, toAddrBz []byte, fromAddrLen int, fromAddrBz []byte) []byte {
 		rv := make([]byte, 0, len(pre)+1+len(toAddrBz)+1+len(fromAddrBz))
@@ -843,48 +843,48 @@ func TestParseRecordKey(t *testing.T) {
 	}{
 		{
 			name:        "addr 0 addr 1",
-			key:         CreateRecordKey(testAddr0, testAddr1),
+			key:         quarantine.CreateRecordKey(testAddr0, testAddr1),
 			expToAddr:   testAddr0,
 			expFromAddr: testAddr1,
 		},
 		{
 			name:        "addr 1 addr 0",
-			key:         CreateRecordKey(testAddr1, testAddr0),
+			key:         quarantine.CreateRecordKey(testAddr1, testAddr0),
 			expToAddr:   testAddr1,
 			expFromAddr: testAddr0,
 		},
 		{
 			name:        "long addr addr 1",
-			key:         CreateRecordKey(longAddr, testAddr1),
+			key:         quarantine.CreateRecordKey(longAddr, testAddr1),
 			expToAddr:   longAddr,
 			expFromAddr: testAddr1,
 		},
 		{
 			name:        "addr 0 long addr",
-			key:         CreateRecordKey(testAddr0, longAddr),
+			key:         quarantine.CreateRecordKey(testAddr0, longAddr),
 			expToAddr:   testAddr0,
 			expFromAddr: longAddr,
 		},
 		{
 			name:        "multiple from addrs",
-			key:         CreateRecordKey(testAddr0, testAddr1, testAddr2),
+			key:         quarantine.CreateRecordKey(testAddr0, testAddr1, testAddr2),
 			expToAddr:   testAddr0,
-			expFromAddr: CreateRecordSuffix([]sdk.AccAddress{testAddr1, testAddr2}),
+			expFromAddr: quarantine.CreateRecordSuffix([]sdk.AccAddress{testAddr1, testAddr2}),
 		},
 		{
 			name:        "multiple from addrs diff order",
-			key:         CreateRecordKey(testAddr0, testAddr2, testAddr1),
+			key:         quarantine.CreateRecordKey(testAddr0, testAddr2, testAddr1),
 			expToAddr:   testAddr0,
-			expFromAddr: CreateRecordSuffix([]sdk.AccAddress{testAddr1, testAddr2}),
+			expFromAddr: quarantine.CreateRecordSuffix([]sdk.AccAddress{testAddr1, testAddr2}),
 		},
 		{
 			name:     "bad toAddr len",
-			key:      makeKey(RecordPrefix, 200, testAddr0, 20, testAddr1),
+			key:      makeKey(quarantine.RecordPrefix, 200, testAddr0, 20, testAddr1),
 			expPanic: fmt.Sprintf("expected key of length at least %d, got %d", 202, 43),
 		},
 		{
 			name:     "bad fromAddr len",
-			key:      makeKey(RecordPrefix, len(testAddr1), testAddr1, len(testAddr0)+1, testAddr0),
+			key:      makeKey(quarantine.RecordPrefix, len(testAddr1), testAddr1, len(testAddr0)+1, testAddr0),
 			expPanic: fmt.Sprintf("expected key of length at least %d, got %d", 44, 43),
 		},
 	}
@@ -893,7 +893,7 @@ func TestParseRecordKey(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actualToAddr, actualFromAddr sdk.AccAddress
 			testFunc := func() {
-				actualToAddr, actualFromAddr = ParseRecordKey(tc.key)
+				actualToAddr, actualFromAddr = quarantine.ParseRecordKey(tc.key)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "ParseRecordKey") {
@@ -908,13 +908,13 @@ func TestParseRecordKey(t *testing.T) {
 }
 
 func TestCreateRecordIndexToAddrPrefix(t *testing.T) {
-	expectedPrefix := RecordIndexPrefix
-	testAddr0 := MakeTestAddr("critap", 0)
-	testAddr1 := MakeTestAddr("critap", 1)
-	badAddr := MakeBadAddr("critap", 2)
+	expectedPrefix := quarantine.RecordIndexPrefix
+	testAddr0 := testutil.MakeTestAddr("critap", 0)
+	testAddr1 := testutil.MakeTestAddr("critap", 1)
+	badAddr := testutil.MakeBadAddr("critap", 2)
 
 	t.Run("starts with RecordIndexPrefix", func(t *testing.T) {
-		key := CreateRecordIndexToAddrPrefix(testAddr0)
+		key := quarantine.CreateRecordIndexToAddrPrefix(testAddr0)
 		actual := key[:len(expectedPrefix)]
 		assert.Equal(t, expectedPrefix, actual, "key prefix")
 	})
@@ -960,7 +960,7 @@ func TestCreateRecordIndexToAddrPrefix(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []byte
 			testFunc := func() {
-				actual = CreateRecordIndexToAddrPrefix(tc.toAddr)
+				actual = quarantine.CreateRecordIndexToAddrPrefix(tc.toAddr)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "CreateRecordIndexToAddrPrefix") {
@@ -974,14 +974,14 @@ func TestCreateRecordIndexToAddrPrefix(t *testing.T) {
 }
 
 func TestCreateRecordIndexKey(t *testing.T) {
-	expectedPrefix := RecordIndexPrefix
-	testAddr0 := MakeTestAddr("crik", 0)
-	testAddr1 := MakeTestAddr("crik", 1)
-	badAddr := MakeBadAddr("crik", 2)
-	longAddr := MakeLongAddr("crik", 3)
+	expectedPrefix := quarantine.RecordIndexPrefix
+	testAddr0 := testutil.MakeTestAddr("crik", 0)
+	testAddr1 := testutil.MakeTestAddr("crik", 1)
+	badAddr := testutil.MakeBadAddr("crik", 2)
+	longAddr := testutil.MakeLongAddr("crik", 3)
 
 	t.Run("starts with RecordIndexPrefix", func(t *testing.T) {
-		key := CreateRecordIndexKey(testAddr0, testAddr1)
+		key := quarantine.CreateRecordIndexKey(testAddr0, testAddr1)
 		actual := key[:len(expectedPrefix)]
 		assert.Equal(t, expectedPrefix, actual, "key prefix")
 	})
@@ -1045,7 +1045,7 @@ func TestCreateRecordIndexKey(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual []byte
 			testFunc := func() {
-				actual = CreateRecordIndexKey(tc.toAddr, tc.fromAddr)
+				actual = quarantine.CreateRecordIndexKey(tc.toAddr, tc.fromAddr)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "CreateRecordIndexKey") {
@@ -1059,9 +1059,9 @@ func TestCreateRecordIndexKey(t *testing.T) {
 }
 
 func TestParseRecordIndexKey(t *testing.T) {
-	testAddr0 := MakeTestAddr("prik", 0)
-	testAddr1 := MakeTestAddr("prik", 1)
-	longAddr := MakeLongAddr("prik", 2)
+	testAddr0 := testutil.MakeTestAddr("prik", 0)
+	testAddr1 := testutil.MakeTestAddr("prik", 1)
+	longAddr := testutil.MakeLongAddr("prik", 2)
 
 	makeKey := func(pre []byte, toAddrLen int, toAddrBz []byte, fromAddrLen int, fromAddrBz []byte) []byte {
 		rv := make([]byte, 0, len(pre)+1+len(toAddrBz)+1+len(fromAddrBz))
@@ -1082,36 +1082,36 @@ func TestParseRecordIndexKey(t *testing.T) {
 	}{
 		{
 			name:        "addr 0 addr 1",
-			key:         CreateRecordIndexKey(testAddr0, testAddr1),
+			key:         quarantine.CreateRecordIndexKey(testAddr0, testAddr1),
 			expToAddr:   testAddr0,
 			expFromAddr: testAddr1,
 		},
 		{
 			name:        "addr 1 addr 0",
-			key:         CreateRecordIndexKey(testAddr1, testAddr0),
+			key:         quarantine.CreateRecordIndexKey(testAddr1, testAddr0),
 			expToAddr:   testAddr1,
 			expFromAddr: testAddr0,
 		},
 		{
 			name:        "long addr addr 1",
-			key:         CreateRecordIndexKey(longAddr, testAddr1),
+			key:         quarantine.CreateRecordIndexKey(longAddr, testAddr1),
 			expToAddr:   longAddr,
 			expFromAddr: testAddr1,
 		},
 		{
 			name:        "addr 0 long addr",
-			key:         CreateRecordIndexKey(testAddr0, longAddr),
+			key:         quarantine.CreateRecordIndexKey(testAddr0, longAddr),
 			expToAddr:   testAddr0,
 			expFromAddr: longAddr,
 		},
 		{
 			name:     "bad toAddr len",
-			key:      makeKey(RecordIndexPrefix, 200, testAddr0, 20, testAddr1),
+			key:      makeKey(quarantine.RecordIndexPrefix, 200, testAddr0, 20, testAddr1),
 			expPanic: fmt.Sprintf("expected key of length at least %d, got %d", 202, 43),
 		},
 		{
 			name:     "bad fromAddr len",
-			key:      makeKey(RecordIndexPrefix, len(testAddr1), testAddr1, len(testAddr0)+1, testAddr0),
+			key:      makeKey(quarantine.RecordIndexPrefix, len(testAddr1), testAddr1, len(testAddr0)+1, testAddr0),
 			expPanic: fmt.Sprintf("expected key of length at least %d, got %d", 44, 43),
 		},
 	}
@@ -1120,7 +1120,7 @@ func TestParseRecordIndexKey(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actualToAddr, actualFromAddr sdk.AccAddress
 			testFunc := func() {
-				actualToAddr, actualFromAddr = ParseRecordIndexKey(tc.key)
+				actualToAddr, actualFromAddr = quarantine.ParseRecordIndexKey(tc.key)
 			}
 			if len(tc.expPanic) == 0 {
 				if assert.NotPanics(t, testFunc, "ParseRecordIndexKey") {

@@ -7,46 +7,47 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	. "github.com/provenance-io/provenance/x/quarantine"
-	. "github.com/provenance-io/provenance/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/x/quarantine"
+	"github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 func TestNewMsgOptIn(t *testing.T) {
-	testAddr0 := MakeTestAddr("nmoi", 0)
-	testAddr1 := MakeTestAddr("nmoi", 1)
+	testAddr0 := testutil.MakeTestAddr("nmoi", 0)
+	testAddr1 := testutil.MakeTestAddr("nmoi", 1)
 
 	tests := []struct {
 		name     string
 		toAddr   sdk.AccAddress
-		expected *MsgOptIn
+		expected *quarantine.MsgOptIn
 	}{
 		{
 			name:     "addr 0",
 			toAddr:   testAddr0,
-			expected: &MsgOptIn{ToAddress: testAddr0.String()},
+			expected: &quarantine.MsgOptIn{ToAddress: testAddr0.String()},
 		},
 		{
 			name:     "addr 1",
 			toAddr:   testAddr1,
-			expected: &MsgOptIn{ToAddress: testAddr1.String()},
+			expected: &quarantine.MsgOptIn{ToAddress: testAddr1.String()},
 		},
 		{
 			name:     "nil",
 			toAddr:   nil,
-			expected: &MsgOptIn{ToAddress: ""},
+			expected: &quarantine.MsgOptIn{ToAddress: ""},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := NewMsgOptIn(tc.toAddr)
+			actual := quarantine.NewMsgOptIn(tc.toAddr)
 			assert.Equal(t, tc.expected, actual, "NewMsgOptIn")
 		})
 	}
 }
 
 func TestMsgOptIn_ValidateBasic(t *testing.T) {
-	addr := MakeTestAddr("moivb", 0).String()
+	addr := testutil.MakeTestAddr("moivb", 0).String()
 
 	tests := []struct {
 		name          string
@@ -72,17 +73,17 @@ func TestMsgOptIn_ValidateBasic(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msgOrig := MsgOptIn{ToAddress: tc.addr}
-			msg := MsgOptIn{ToAddress: tc.addr}
+			msgOrig := quarantine.MsgOptIn{ToAddress: tc.addr}
+			msg := quarantine.MsgOptIn{ToAddress: tc.addr}
 			err := msg.ValidateBasic()
-			AssertErrorContents(t, err, tc.expectedInErr, "ValidateBasic")
+			assertions.AssertErrorContents(t, err, tc.expectedInErr, "ValidateBasic")
 			assert.Equal(t, msgOrig, msg, "MsgOptIn before and after")
 		})
 	}
 }
 
 func TestMsgOptIn_GetSigners(t *testing.T) {
-	addr := MakeTestAddr("moigs", 0)
+	addr := testutil.MakeTestAddr("moigs", 0)
 
 	tests := []struct {
 		name     string
@@ -108,8 +109,8 @@ func TestMsgOptIn_GetSigners(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msgOrig := MsgOptIn{ToAddress: tc.addr}
-			msg := MsgOptIn{ToAddress: tc.addr}
+			msgOrig := quarantine.MsgOptIn{ToAddress: tc.addr}
+			msg := quarantine.MsgOptIn{ToAddress: tc.addr}
 			actual := msg.GetSigners()
 			assert.Equal(t, tc.expected, actual, "GetSigners")
 			assert.Equal(t, msgOrig, msg, "MsgOptIn before and after")
@@ -118,41 +119,41 @@ func TestMsgOptIn_GetSigners(t *testing.T) {
 }
 
 func TestNewMsgOptOut(t *testing.T) {
-	testAddr0 := MakeTestAddr("nmoo", 0)
-	testAddr1 := MakeTestAddr("nmoo", 1)
+	testAddr0 := testutil.MakeTestAddr("nmoo", 0)
+	testAddr1 := testutil.MakeTestAddr("nmoo", 1)
 
 	tests := []struct {
 		name     string
 		toAddr   sdk.AccAddress
-		expected *MsgOptOut
+		expected *quarantine.MsgOptOut
 	}{
 		{
 			name:     "addr 0",
 			toAddr:   testAddr0,
-			expected: &MsgOptOut{ToAddress: testAddr0.String()},
+			expected: &quarantine.MsgOptOut{ToAddress: testAddr0.String()},
 		},
 		{
 			name:     "addr 1",
 			toAddr:   testAddr1,
-			expected: &MsgOptOut{ToAddress: testAddr1.String()},
+			expected: &quarantine.MsgOptOut{ToAddress: testAddr1.String()},
 		},
 		{
 			name:     "nil",
 			toAddr:   nil,
-			expected: &MsgOptOut{ToAddress: ""},
+			expected: &quarantine.MsgOptOut{ToAddress: ""},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := NewMsgOptOut(tc.toAddr)
+			actual := quarantine.NewMsgOptOut(tc.toAddr)
 			assert.Equal(t, tc.expected, actual, "NewMsgOptOut")
 		})
 	}
 }
 
 func TestMsgOptOut_ValidateBasic(t *testing.T) {
-	addr := MakeTestAddr("moovb", 0).String()
+	addr := testutil.MakeTestAddr("moovb", 0).String()
 
 	tests := []struct {
 		name          string
@@ -178,17 +179,17 @@ func TestMsgOptOut_ValidateBasic(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msgOrig := MsgOptOut{ToAddress: tc.addr}
-			msg := MsgOptOut{ToAddress: tc.addr}
+			msgOrig := quarantine.MsgOptOut{ToAddress: tc.addr}
+			msg := quarantine.MsgOptOut{ToAddress: tc.addr}
 			err := msg.ValidateBasic()
-			AssertErrorContents(t, err, tc.expectedInErr, "ValidateBasic")
+			assertions.AssertErrorContents(t, err, tc.expectedInErr, "ValidateBasic")
 			assert.Equal(t, msgOrig, msg, "MsgOptOut before and after")
 		})
 	}
 }
 
 func TestMsgOptOut_GetSigners(t *testing.T) {
-	addr := MakeTestAddr("moogs", 0)
+	addr := testutil.MakeTestAddr("moogs", 0)
 
 	tests := []struct {
 		name     string
@@ -214,8 +215,8 @@ func TestMsgOptOut_GetSigners(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msgOrig := MsgOptOut{ToAddress: tc.addr}
-			msg := MsgOptOut{ToAddress: tc.addr}
+			msgOrig := quarantine.MsgOptOut{ToAddress: tc.addr}
+			msg := quarantine.MsgOptOut{ToAddress: tc.addr}
 			actual := msg.GetSigners()
 			assert.Equal(t, tc.expected, actual, "GetSigners")
 			assert.Equal(t, msgOrig, msg, "MsgOptOut before and after")
@@ -224,22 +225,22 @@ func TestMsgOptOut_GetSigners(t *testing.T) {
 }
 
 func TestNewMsgAccept(t *testing.T) {
-	testAddr0 := MakeTestAddr("nma", 0)
-	testAddr1 := MakeTestAddr("nma", 1)
+	testAddr0 := testutil.MakeTestAddr("nma", 0)
+	testAddr1 := testutil.MakeTestAddr("nma", 1)
 
 	tests := []struct {
 		name      string
 		toAddr    sdk.AccAddress
 		fromAddrs []string
 		permanent bool
-		expected  *MsgAccept
+		expected  *quarantine.MsgAccept
 	}{
 		{
 			name:      "control",
 			toAddr:    testAddr0,
 			fromAddrs: []string{testAddr1.String()},
 			permanent: false,
-			expected: &MsgAccept{
+			expected: &quarantine.MsgAccept{
 				ToAddress:     testAddr0.String(),
 				FromAddresses: []string{testAddr1.String()},
 				Permanent:     false,
@@ -250,7 +251,7 @@ func TestNewMsgAccept(t *testing.T) {
 			toAddr:    nil,
 			fromAddrs: []string{testAddr1.String()},
 			permanent: false,
-			expected: &MsgAccept{
+			expected: &quarantine.MsgAccept{
 				ToAddress:     "",
 				FromAddresses: []string{testAddr1.String()},
 				Permanent:     false,
@@ -261,7 +262,7 @@ func TestNewMsgAccept(t *testing.T) {
 			toAddr:    testAddr1,
 			fromAddrs: nil,
 			permanent: false,
-			expected: &MsgAccept{
+			expected: &quarantine.MsgAccept{
 				ToAddress:     testAddr1.String(),
 				FromAddresses: nil,
 				Permanent:     false,
@@ -272,7 +273,7 @@ func TestNewMsgAccept(t *testing.T) {
 			toAddr:    testAddr1,
 			fromAddrs: []string{},
 			permanent: false,
-			expected: &MsgAccept{
+			expected: &quarantine.MsgAccept{
 				ToAddress:     testAddr1.String(),
 				FromAddresses: []string{},
 				Permanent:     false,
@@ -283,7 +284,7 @@ func TestNewMsgAccept(t *testing.T) {
 			toAddr:    testAddr1,
 			fromAddrs: []string{"one", "two", "three"},
 			permanent: false,
-			expected: &MsgAccept{
+			expected: &quarantine.MsgAccept{
 				ToAddress:     testAddr1.String(),
 				FromAddresses: []string{"one", "two", "three"},
 				Permanent:     false,
@@ -294,7 +295,7 @@ func TestNewMsgAccept(t *testing.T) {
 			toAddr:    testAddr1,
 			fromAddrs: []string{testAddr0.String()},
 			permanent: true,
-			expected: &MsgAccept{
+			expected: &quarantine.MsgAccept{
 				ToAddress:     testAddr1.String(),
 				FromAddresses: []string{testAddr0.String()},
 				Permanent:     true,
@@ -304,16 +305,16 @@ func TestNewMsgAccept(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := NewMsgAccept(tc.toAddr, tc.fromAddrs, tc.permanent)
+			actual := quarantine.NewMsgAccept(tc.toAddr, tc.fromAddrs, tc.permanent)
 			assert.Equal(t, tc.expected, actual, "NewMsgAccept")
 		})
 	}
 }
 
 func TestMsgAccept_ValidateBasic(t *testing.T) {
-	testAddr0 := MakeTestAddr("mavb", 0).String()
-	testAddr1 := MakeTestAddr("mavb", 1).String()
-	testAddr2 := MakeTestAddr("mavb", 2).String()
+	testAddr0 := testutil.MakeTestAddr("mavb", 0).String()
+	testAddr1 := testutil.MakeTestAddr("mavb", 1).String()
+	testAddr2 := testutil.MakeTestAddr("mavb", 2).String()
 
 	tests := []struct {
 		name          string
@@ -382,27 +383,27 @@ func TestMsgAccept_ValidateBasic(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msgOrig := MsgAccept{
+			msgOrig := quarantine.MsgAccept{
 				ToAddress:     tc.toAddr,
-				FromAddresses: MakeCopyOfStringSlice(tc.fromAddrs),
+				FromAddresses: testutil.MakeCopyOfStringSlice(tc.fromAddrs),
 				Permanent:     tc.permanent,
 			}
-			msg := MsgAccept{
+			msg := quarantine.MsgAccept{
 				ToAddress:     tc.toAddr,
 				FromAddresses: tc.fromAddrs,
 				Permanent:     tc.permanent,
 			}
 			err := msg.ValidateBasic()
-			AssertErrorContents(t, err, tc.expectedInErr, "ValidateBasic")
+			assertions.AssertErrorContents(t, err, tc.expectedInErr, "ValidateBasic")
 			assert.Equal(t, msgOrig, msg, "MsgAccept before and after")
 		})
 	}
 }
 
 func TestMsgAccept_GetSigners(t *testing.T) {
-	testAddr0 := MakeTestAddr("mags", 0)
-	testAddr1 := MakeTestAddr("mags", 1)
-	testAddr2 := MakeTestAddr("mags", 2)
+	testAddr0 := testutil.MakeTestAddr("mags", 0)
+	testAddr1 := testutil.MakeTestAddr("mags", 1)
+	testAddr2 := testutil.MakeTestAddr("mags", 2)
 
 	tests := []struct {
 		name      string
@@ -464,12 +465,12 @@ func TestMsgAccept_GetSigners(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msgOrig := MsgAccept{
+			msgOrig := quarantine.MsgAccept{
 				ToAddress:     tc.toAddr,
-				FromAddresses: MakeCopyOfStringSlice(tc.fromAddrs),
+				FromAddresses: testutil.MakeCopyOfStringSlice(tc.fromAddrs),
 				Permanent:     tc.permanent,
 			}
-			msg := MsgAccept{
+			msg := quarantine.MsgAccept{
 				ToAddress:     tc.toAddr,
 				FromAddresses: tc.fromAddrs,
 				Permanent:     tc.permanent,
@@ -482,22 +483,22 @@ func TestMsgAccept_GetSigners(t *testing.T) {
 }
 
 func TestNewMsgDecline(t *testing.T) {
-	testAddr0 := MakeTestAddr("nmd", 0)
-	testAddr1 := MakeTestAddr("nmd", 1)
+	testAddr0 := testutil.MakeTestAddr("nmd", 0)
+	testAddr1 := testutil.MakeTestAddr("nmd", 1)
 
 	tests := []struct {
 		name      string
 		toAddr    sdk.AccAddress
 		fromAddrs []string
 		permanent bool
-		expected  *MsgDecline
+		expected  *quarantine.MsgDecline
 	}{
 		{
 			name:      "control",
 			toAddr:    testAddr0,
 			fromAddrs: []string{testAddr1.String()},
 			permanent: false,
-			expected: &MsgDecline{
+			expected: &quarantine.MsgDecline{
 				ToAddress:     testAddr0.String(),
 				FromAddresses: []string{testAddr1.String()},
 				Permanent:     false,
@@ -508,7 +509,7 @@ func TestNewMsgDecline(t *testing.T) {
 			toAddr:    nil,
 			fromAddrs: []string{testAddr1.String()},
 			permanent: false,
-			expected: &MsgDecline{
+			expected: &quarantine.MsgDecline{
 				ToAddress:     "",
 				FromAddresses: []string{testAddr1.String()},
 				Permanent:     false,
@@ -519,7 +520,7 @@ func TestNewMsgDecline(t *testing.T) {
 			toAddr:    testAddr1,
 			fromAddrs: nil,
 			permanent: false,
-			expected: &MsgDecline{
+			expected: &quarantine.MsgDecline{
 				ToAddress:     testAddr1.String(),
 				FromAddresses: nil,
 				Permanent:     false,
@@ -530,7 +531,7 @@ func TestNewMsgDecline(t *testing.T) {
 			toAddr:    testAddr1,
 			fromAddrs: []string{},
 			permanent: false,
-			expected: &MsgDecline{
+			expected: &quarantine.MsgDecline{
 				ToAddress:     testAddr1.String(),
 				FromAddresses: []string{},
 				Permanent:     false,
@@ -541,7 +542,7 @@ func TestNewMsgDecline(t *testing.T) {
 			toAddr:    testAddr1,
 			fromAddrs: []string{"one", "two", "three"},
 			permanent: false,
-			expected: &MsgDecline{
+			expected: &quarantine.MsgDecline{
 				ToAddress:     testAddr1.String(),
 				FromAddresses: []string{"one", "two", "three"},
 				Permanent:     false,
@@ -552,7 +553,7 @@ func TestNewMsgDecline(t *testing.T) {
 			toAddr:    testAddr1,
 			fromAddrs: []string{testAddr0.String()},
 			permanent: true,
-			expected: &MsgDecline{
+			expected: &quarantine.MsgDecline{
 				ToAddress:     testAddr1.String(),
 				FromAddresses: []string{testAddr0.String()},
 				Permanent:     true,
@@ -562,16 +563,16 @@ func TestNewMsgDecline(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := NewMsgDecline(tc.toAddr, tc.fromAddrs, tc.permanent)
+			actual := quarantine.NewMsgDecline(tc.toAddr, tc.fromAddrs, tc.permanent)
 			assert.Equal(t, tc.expected, actual, "NewMsgDecline")
 		})
 	}
 }
 
 func TestMsgDecline_ValidateBasic(t *testing.T) {
-	testAddr0 := MakeTestAddr("mdvb", 0).String()
-	testAddr1 := MakeTestAddr("mdvb", 1).String()
-	testAddr2 := MakeTestAddr("mdvb", 2).String()
+	testAddr0 := testutil.MakeTestAddr("mdvb", 0).String()
+	testAddr1 := testutil.MakeTestAddr("mdvb", 1).String()
+	testAddr2 := testutil.MakeTestAddr("mdvb", 2).String()
 
 	tests := []struct {
 		name          string
@@ -640,27 +641,27 @@ func TestMsgDecline_ValidateBasic(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msgOrig := MsgDecline{
+			msgOrig := quarantine.MsgDecline{
 				ToAddress:     tc.toAddr,
-				FromAddresses: MakeCopyOfStringSlice(tc.fromAddrs),
+				FromAddresses: testutil.MakeCopyOfStringSlice(tc.fromAddrs),
 				Permanent:     tc.permanent,
 			}
-			msg := MsgDecline{
+			msg := quarantine.MsgDecline{
 				ToAddress:     tc.toAddr,
 				FromAddresses: tc.fromAddrs,
 				Permanent:     tc.permanent,
 			}
 			err := msg.ValidateBasic()
-			AssertErrorContents(t, err, tc.expectedInErr, "ValidateBasic")
+			assertions.AssertErrorContents(t, err, tc.expectedInErr, "ValidateBasic")
 			assert.Equal(t, msgOrig, msg, "MsgDecline before and after")
 		})
 	}
 }
 
 func TestMsgDecline_GetSigners(t *testing.T) {
-	testAddr0 := MakeTestAddr("mdgs", 0)
-	testAddr1 := MakeTestAddr("mdgs", 1)
-	testAddr2 := MakeTestAddr("mdgs", 2)
+	testAddr0 := testutil.MakeTestAddr("mdgs", 0)
+	testAddr1 := testutil.MakeTestAddr("mdgs", 1)
+	testAddr2 := testutil.MakeTestAddr("mdgs", 2)
 
 	tests := []struct {
 		name      string
@@ -722,12 +723,12 @@ func TestMsgDecline_GetSigners(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msgOrig := MsgDecline{
+			msgOrig := quarantine.MsgDecline{
 				ToAddress:     tc.toAddr,
-				FromAddresses: MakeCopyOfStringSlice(tc.fromAddrs),
+				FromAddresses: testutil.MakeCopyOfStringSlice(tc.fromAddrs),
 				Permanent:     tc.permanent,
 			}
-			msg := MsgDecline{
+			msg := quarantine.MsgDecline{
 				ToAddress:     tc.toAddr,
 				FromAddresses: tc.fromAddrs,
 				Permanent:     tc.permanent,
@@ -740,91 +741,91 @@ func TestMsgDecline_GetSigners(t *testing.T) {
 }
 
 func TestNewMsgUpdateAutoResponses(t *testing.T) {
-	testAddr0 := MakeTestAddr("nmuar", 0)
-	testAddr1 := MakeTestAddr("nmuar", 1)
-	testAddr2 := MakeTestAddr("nmuar", 2)
-	testAddr3 := MakeTestAddr("nmuar", 3)
-	testAddr4 := MakeTestAddr("nmuar", 4)
-	testAddr5 := MakeTestAddr("nmuar", 5)
+	testAddr0 := testutil.MakeTestAddr("nmuar", 0)
+	testAddr1 := testutil.MakeTestAddr("nmuar", 1)
+	testAddr2 := testutil.MakeTestAddr("nmuar", 2)
+	testAddr3 := testutil.MakeTestAddr("nmuar", 3)
+	testAddr4 := testutil.MakeTestAddr("nmuar", 4)
+	testAddr5 := testutil.MakeTestAddr("nmuar", 5)
 
 	tests := []struct {
 		name     string
 		toAddr   sdk.AccAddress
-		updates  []*AutoResponseUpdate
-		expected *MsgUpdateAutoResponses
+		updates  []*quarantine.AutoResponseUpdate
+		expected *quarantine.MsgUpdateAutoResponses
 	}{
 		{
 			name:    "empty updates",
 			toAddr:  testAddr0,
-			updates: []*AutoResponseUpdate{},
-			expected: &MsgUpdateAutoResponses{
+			updates: []*quarantine.AutoResponseUpdate{},
+			expected: &quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0.String(),
-				Updates:   []*AutoResponseUpdate{},
+				Updates:   []*quarantine.AutoResponseUpdate{},
 			},
 		},
 		{
 			name:    "one update no to addr",
 			toAddr:  nil,
-			updates: []*AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_ACCEPT}},
-			expected: &MsgUpdateAutoResponses{
+			updates: []*quarantine.AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT}},
+			expected: &quarantine.MsgUpdateAutoResponses{
 				ToAddress: "",
-				Updates:   []*AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_ACCEPT}},
+				Updates:   []*quarantine.AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT}},
 			},
 		},
 		{
 			name:    "one update accept",
 			toAddr:  testAddr1,
-			updates: []*AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_ACCEPT}},
-			expected: &MsgUpdateAutoResponses{
+			updates: []*quarantine.AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT}},
+			expected: &quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr1.String(),
-				Updates:   []*AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_ACCEPT}},
+				Updates:   []*quarantine.AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT}},
 			},
 		},
 		{
 			name:    "one update decline",
 			toAddr:  testAddr2,
-			updates: []*AutoResponseUpdate{{FromAddress: testAddr1.String(), Response: AUTO_RESPONSE_DECLINE}},
-			expected: &MsgUpdateAutoResponses{
+			updates: []*quarantine.AutoResponseUpdate{{FromAddress: testAddr1.String(), Response: quarantine.AUTO_RESPONSE_DECLINE}},
+			expected: &quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr2.String(),
-				Updates:   []*AutoResponseUpdate{{FromAddress: testAddr1.String(), Response: AUTO_RESPONSE_DECLINE}},
+				Updates:   []*quarantine.AutoResponseUpdate{{FromAddress: testAddr1.String(), Response: quarantine.AUTO_RESPONSE_DECLINE}},
 			},
 		},
 		{
 			name:    "one update unspecified",
 			toAddr:  testAddr0,
-			updates: []*AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_UNSPECIFIED}},
-			expected: &MsgUpdateAutoResponses{
+			updates: []*quarantine.AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_UNSPECIFIED}},
+			expected: &quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0.String(),
-				Updates:   []*AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_UNSPECIFIED}},
+				Updates:   []*quarantine.AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_UNSPECIFIED}},
 			},
 		},
 		{
 			name:    "one update unspecified",
 			toAddr:  testAddr0,
-			updates: []*AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_UNSPECIFIED}},
-			expected: &MsgUpdateAutoResponses{
+			updates: []*quarantine.AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_UNSPECIFIED}},
+			expected: &quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0.String(),
-				Updates:   []*AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_UNSPECIFIED}},
+				Updates:   []*quarantine.AutoResponseUpdate{{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_UNSPECIFIED}},
 			},
 		},
 		{
 			name:   "five updates",
 			toAddr: testAddr0,
-			updates: []*AutoResponseUpdate{
-				{FromAddress: testAddr1.String(), Response: AUTO_RESPONSE_ACCEPT},
-				{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_DECLINE},
-				{FromAddress: testAddr3.String(), Response: AUTO_RESPONSE_ACCEPT},
-				{FromAddress: testAddr4.String(), Response: AUTO_RESPONSE_UNSPECIFIED},
-				{FromAddress: testAddr5.String(), Response: AUTO_RESPONSE_ACCEPT},
+			updates: []*quarantine.AutoResponseUpdate{
+				{FromAddress: testAddr1.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT},
+				{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_DECLINE},
+				{FromAddress: testAddr3.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT},
+				{FromAddress: testAddr4.String(), Response: quarantine.AUTO_RESPONSE_UNSPECIFIED},
+				{FromAddress: testAddr5.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT},
 			},
-			expected: &MsgUpdateAutoResponses{
+			expected: &quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0.String(),
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr1.String(), Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_DECLINE},
-					{FromAddress: testAddr3.String(), Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr4.String(), Response: AUTO_RESPONSE_UNSPECIFIED},
-					{FromAddress: testAddr5.String(), Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr1.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_DECLINE},
+					{FromAddress: testAddr3.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr4.String(), Response: quarantine.AUTO_RESPONSE_UNSPECIFIED},
+					{FromAddress: testAddr5.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 		},
@@ -832,78 +833,78 @@ func TestNewMsgUpdateAutoResponses(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := NewMsgUpdateAutoResponses(tc.toAddr, tc.updates)
+			actual := quarantine.NewMsgUpdateAutoResponses(tc.toAddr, tc.updates)
 			assert.Equal(t, tc.expected, actual, "NewMsgUpdateAutoResponses")
 		})
 	}
 }
 
 func TestMsgUpdateAutoResponses_ValidateBasic(t *testing.T) {
-	testAddr0 := MakeTestAddr("muarvb", 0).String()
-	testAddr1 := MakeTestAddr("muarvb", 1).String()
-	testAddr2 := MakeTestAddr("muarvb", 2).String()
-	testAddr3 := MakeTestAddr("muarvb", 3).String()
-	testAddr4 := MakeTestAddr("muarvb", 4).String()
-	testAddr5 := MakeTestAddr("muarvb", 5).String()
+	testAddr0 := testutil.MakeTestAddr("muarvb", 0).String()
+	testAddr1 := testutil.MakeTestAddr("muarvb", 1).String()
+	testAddr2 := testutil.MakeTestAddr("muarvb", 2).String()
+	testAddr3 := testutil.MakeTestAddr("muarvb", 3).String()
+	testAddr4 := testutil.MakeTestAddr("muarvb", 4).String()
+	testAddr5 := testutil.MakeTestAddr("muarvb", 5).String()
 
 	tests := []struct {
 		name          string
-		orig          MsgUpdateAutoResponses
+		orig          quarantine.MsgUpdateAutoResponses
 		expectedInErr []string
 	}{
 		{
 			name: "control accept",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr1, Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr1, Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expectedInErr: nil,
 		},
 		{
 			name: "control decline",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr2, Response: AUTO_RESPONSE_DECLINE},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr2, Response: quarantine.AUTO_RESPONSE_DECLINE},
 				},
 			},
 			expectedInErr: nil,
 		},
 		{
 			name: "control unspecified",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr3, Response: AUTO_RESPONSE_UNSPECIFIED},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr3, Response: quarantine.AUTO_RESPONSE_UNSPECIFIED},
 				},
 			},
 			expectedInErr: nil,
 		},
 		{
 			name: "bad to address",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: "not really that bad",
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr1, Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr1, Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expectedInErr: []string{"invalid to address"},
 		},
 		{
 			name: "empty to address",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: "",
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr1, Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr1, Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expectedInErr: []string{"invalid to address"},
 		},
 		{
 			name: "nil updates",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
 				Updates:   nil,
 			},
@@ -911,37 +912,37 @@ func TestMsgUpdateAutoResponses_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty updates",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates:   []*AutoResponseUpdate{},
+				Updates:   []*quarantine.AutoResponseUpdate{},
 			},
 			expectedInErr: []string{"invalid value", "no updates"},
 		},
 		{
 			name: "one update bad from address",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: "Okay, I'm bad again.", Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: "Okay, I'm bad again.", Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expectedInErr: []string{"invalid update 1", "invalid from address"},
 		},
 		{
 			name: "one update empty from address",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: "", Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: "", Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expectedInErr: []string{"invalid update 1", "invalid from address"},
 		},
 		{
 			name: "one update negative resp",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
+				Updates: []*quarantine.AutoResponseUpdate{
 					{FromAddress: testAddr1, Response: -1},
 				},
 			},
@@ -949,9 +950,9 @@ func TestMsgUpdateAutoResponses_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "one update resp too large",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
+				Updates: []*quarantine.AutoResponseUpdate{
 					{FromAddress: testAddr2, Response: 900},
 				},
 			},
@@ -959,55 +960,55 @@ func TestMsgUpdateAutoResponses_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "five updates third bad from address",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr1, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr2, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: "still not good", Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr4, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr5, Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr1, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr2, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: "still not good", Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr4, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr5, Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expectedInErr: []string{"invalid update 3", "invalid from address"},
 		},
 		{
 			name: "five updates fourth empty from address",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr1, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr2, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr3, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: "", Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr5, Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr1, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr2, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr3, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: "", Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr5, Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expectedInErr: []string{"invalid update 4", "invalid from address"},
 		},
 		{
 			name: "five updates first negative resp",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
+				Updates: []*quarantine.AutoResponseUpdate{
 					{FromAddress: testAddr1, Response: -88},
-					{FromAddress: testAddr2, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr3, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr4, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr5, Response: AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr2, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr3, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr4, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr5, Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expectedInErr: []string{"invalid update 1", "unknown auto-response value: -88"},
 		},
 		{
 			name: "five update last resp too large",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0,
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr1, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr2, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr3, Response: AUTO_RESPONSE_ACCEPT},
-					{FromAddress: testAddr4, Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr1, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr2, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr3, Response: quarantine.AUTO_RESPONSE_ACCEPT},
+					{FromAddress: testAddr4, Response: quarantine.AUTO_RESPONSE_ACCEPT},
 					{FromAddress: testAddr5, Response: 55},
 				},
 			},
@@ -1017,62 +1018,62 @@ func TestMsgUpdateAutoResponses_ValidateBasic(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := MsgUpdateAutoResponses{
+			msg := quarantine.MsgUpdateAutoResponses{
 				ToAddress: tc.orig.ToAddress,
 				Updates:   nil,
 			}
 			if tc.orig.Updates != nil {
-				msg.Updates = []*AutoResponseUpdate{}
+				msg.Updates = []*quarantine.AutoResponseUpdate{}
 				for _, update := range tc.orig.Updates {
-					msg.Updates = append(msg.Updates, &AutoResponseUpdate{
+					msg.Updates = append(msg.Updates, &quarantine.AutoResponseUpdate{
 						FromAddress: update.FromAddress,
 						Response:    update.Response,
 					})
 				}
 			}
 			err := msg.ValidateBasic()
-			AssertErrorContents(t, err, tc.expectedInErr, "ValidateBasic")
+			assertions.AssertErrorContents(t, err, tc.expectedInErr, "ValidateBasic")
 			assert.Equal(t, tc.orig, msg, "MsgUpdateAutoResponses before and after")
 		})
 	}
 }
 
 func TestMsgUpdateAutoResponses_GetSigners(t *testing.T) {
-	testAddr0 := MakeTestAddr("muargs", 0)
-	testAddr1 := MakeTestAddr("muargs", 1)
-	testAddr2 := MakeTestAddr("muargs", 2)
+	testAddr0 := testutil.MakeTestAddr("muargs", 0)
+	testAddr1 := testutil.MakeTestAddr("muargs", 1)
+	testAddr2 := testutil.MakeTestAddr("muargs", 2)
 
 	tests := []struct {
 		name     string
-		orig     MsgUpdateAutoResponses
+		orig     quarantine.MsgUpdateAutoResponses
 		expected []sdk.AccAddress
 	}{
 		{
 			name: "control",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: testAddr0.String(),
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr1.String(), Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr1.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expected: []sdk.AccAddress{testAddr0},
 		},
 		{
 			name: "bad addr",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: "bad bad bad",
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr2.String(), Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr2.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expected: []sdk.AccAddress{nil},
 		},
 		{
 			name: "empty addr",
-			orig: MsgUpdateAutoResponses{
+			orig: quarantine.MsgUpdateAutoResponses{
 				ToAddress: "",
-				Updates: []*AutoResponseUpdate{
-					{FromAddress: testAddr1.String(), Response: AUTO_RESPONSE_ACCEPT},
+				Updates: []*quarantine.AutoResponseUpdate{
+					{FromAddress: testAddr1.String(), Response: quarantine.AUTO_RESPONSE_ACCEPT},
 				},
 			},
 			expected: []sdk.AccAddress{{}},
@@ -1081,14 +1082,14 @@ func TestMsgUpdateAutoResponses_GetSigners(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := MsgUpdateAutoResponses{
+			msg := quarantine.MsgUpdateAutoResponses{
 				ToAddress: tc.orig.ToAddress,
 				Updates:   nil,
 			}
 			if tc.orig.Updates != nil {
-				msg.Updates = []*AutoResponseUpdate{}
+				msg.Updates = []*quarantine.AutoResponseUpdate{}
 				for _, update := range tc.orig.Updates {
-					msg.Updates = append(msg.Updates, &AutoResponseUpdate{
+					msg.Updates = append(msg.Updates, &quarantine.AutoResponseUpdate{
 						FromAddress: update.FromAddress,
 						Response:    update.Response,
 					})

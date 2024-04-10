@@ -4,14 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/quarantine"
-
-	. "github.com/provenance-io/provenance/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 // These tests are initiated by TestKeeperTestSuite in keeper_test.go
 
 func (s *TestSuite) TestOptIn() {
-	addr0 := MakeTestAddr("optin", 0).String()
+	addr0 := testutil.MakeTestAddr("optin", 0).String()
 
 	tests := []struct {
 		name   string
@@ -50,9 +49,9 @@ func (s *TestSuite) TestOptIn() {
 }
 
 func (s *TestSuite) TestOptOut() {
-	addr0Acc := MakeTestAddr("optout", 0)
+	addr0Acc := testutil.MakeTestAddr("optout", 0)
 	addr0 := addr0Acc.String()
-	addr1 := MakeTestAddr("oook", 1).String()
+	addr1 := testutil.MakeTestAddr("oook", 1).String()
 
 	// Setup, opt addr0 in so it can be opted out later.
 	var err error
@@ -104,7 +103,7 @@ func (s *TestSuite) TestOptOut() {
 
 func (s *TestSuite) TestAccept() {
 	makeAddr := func(index uint8) (sdk.AccAddress, string) {
-		addr := MakeTestAddr("accept", index)
+		addr := testutil.MakeTestAddr("accept", index)
 		return addr, addr.String()
 	}
 	makeFREvent := func(addr string, amt sdk.Coins) sdk.Event {
@@ -190,7 +189,7 @@ func (s *TestSuite) TestAccept() {
 			expSend: &SentCoins{
 				FromAddr: s.keeper.GetFundsHolder(),
 				ToAddr:   addr0Acc,
-				Amt:      MakeCopyOfCoins(amt1),
+				Amt:      testutil.MakeCopyOfCoins(amt1),
 			},
 		},
 		{
@@ -204,7 +203,7 @@ func (s *TestSuite) TestAccept() {
 			expSend: &SentCoins{
 				FromAddr: s.keeper.GetFundsHolder(),
 				ToAddr:   addr0Acc,
-				Amt:      MakeCopyOfCoins(amt2),
+				Amt:      testutil.MakeCopyOfCoins(amt2),
 			},
 			expPerm: true,
 		},
@@ -261,7 +260,7 @@ func (s *TestSuite) TestAccept() {
 
 func (s *TestSuite) TestDecline() {
 	makeAddr := func(index uint8) (sdk.AccAddress, string) {
-		addr := MakeTestAddr("decline", index)
+		addr := testutil.MakeTestAddr("decline", index)
 		return addr, addr.String()
 	}
 	addr0Acc, addr0 := makeAddr(0)
@@ -334,7 +333,7 @@ func (s *TestSuite) TestDecline() {
 			},
 			expRec: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: accs(addr1Acc),
-				Coins:                   MakeCopyOfCoins(amt1),
+				Coins:                   testutil.MakeCopyOfCoins(amt1),
 				Declined:                true,
 			},
 		},
@@ -347,7 +346,7 @@ func (s *TestSuite) TestDecline() {
 			},
 			expRec: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: accs(addr2Acc),
-				Coins:                   MakeCopyOfCoins(amt2),
+				Coins:                   testutil.MakeCopyOfCoins(amt2),
 				Declined:                true,
 			},
 			expPerm: true,
@@ -361,7 +360,7 @@ func (s *TestSuite) TestDecline() {
 			},
 			expRec: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: accs(addr1Acc),
-				Coins:                   MakeCopyOfCoins(amt1),
+				Coins:                   testutil.MakeCopyOfCoins(amt1),
 				Declined:                true,
 			},
 			expPerm: true,
@@ -403,13 +402,13 @@ func (s *TestSuite) TestDecline() {
 }
 
 func (s *TestSuite) TestUpdateAutoResponses() {
-	addr0 := MakeTestAddr("uar", 0).String()
-	addr1 := MakeTestAddr("uar", 1).String()
-	addr2 := MakeTestAddr("uar", 2).String()
-	addr3 := MakeTestAddr("uar", 3).String()
-	addr4 := MakeTestAddr("uar", 4).String()
-	addr5 := MakeTestAddr("uar", 5).String()
-	addr6 := MakeTestAddr("uar", 6).String()
+	addr0 := testutil.MakeTestAddr("uar", 0).String()
+	addr1 := testutil.MakeTestAddr("uar", 1).String()
+	addr2 := testutil.MakeTestAddr("uar", 2).String()
+	addr3 := testutil.MakeTestAddr("uar", 3).String()
+	addr4 := testutil.MakeTestAddr("uar", 4).String()
+	addr5 := testutil.MakeTestAddr("uar", 5).String()
+	addr6 := testutil.MakeTestAddr("uar", 6).String()
 
 	tests := []struct {
 		name   string

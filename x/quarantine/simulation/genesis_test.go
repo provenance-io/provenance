@@ -20,8 +20,7 @@ import (
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/quarantine/simulation"
-
-	. "github.com/provenance-io/provenance/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 func TestRandomizedGenState(t *testing.T) {
@@ -101,7 +100,7 @@ func TestRandomizedGenStateImportExport(t *testing.T) {
 			require.NoError(t, err, "UnmarshalJSON on quarantine genesis state")
 
 			// The unspecified auto-responses don't get written, so we need to remove them to get the expected.
-			expGenState := MakeCopyOfGenesisState(&randomGenState)
+			expGenState := testutil.MakeCopyOfGenesisState(&randomGenState)
 			expectedAutoResponses := make([]*quarantine.AutoResponseEntry, 0, len(expGenState.AutoResponses))
 			for _, entry := range expGenState.AutoResponses {
 				if entry.Response != quarantine.AUTO_RESPONSE_UNSPECIFIED {

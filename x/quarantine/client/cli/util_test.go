@@ -10,9 +10,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/quarantine"
-
-	. "github.com/provenance-io/provenance/x/quarantine/testutil"
+	"github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 func TestExampleAddress(t *testing.T) {
@@ -97,7 +97,7 @@ func TestValidateAddress(t *testing.T) {
 				act, err = validateAddress(tc.addr, tc.argName)
 			}
 			require.NotPanics(t, testFunc, "validateAddress")
-			AssertErrorContents(t, err, tc.expErr, "validateAddress error")
+			assertions.AssertErrorContents(t, err, tc.expErr, "validateAddress error")
 			assert.Equal(t, tc.exp, act, "validateAddress result")
 		})
 	}
@@ -110,12 +110,12 @@ func TestParseAutoResponseUpdatesFromArgs(t *testing.T) {
 			Response:    response,
 		}
 	}
-	addr0 := MakeTestAddr("parufa", 0).String()
-	addr1 := MakeTestAddr("parufa", 1).String()
-	addr2 := MakeTestAddr("parufa", 2).String()
-	addr3 := MakeTestAddr("parufa", 3).String()
-	addr4 := MakeTestAddr("parufa", 4).String()
-	addr5 := MakeTestAddr("parufa", 5).String()
+	addr0 := testutil.MakeTestAddr("parufa", 0).String()
+	addr1 := testutil.MakeTestAddr("parufa", 1).String()
+	addr2 := testutil.MakeTestAddr("parufa", 2).String()
+	addr3 := testutil.MakeTestAddr("parufa", 3).String()
+	addr4 := testutil.MakeTestAddr("parufa", 4).String()
+	addr5 := testutil.MakeTestAddr("parufa", 5).String()
 
 	tests := []struct {
 		name       string
@@ -268,7 +268,7 @@ func TestParseAutoResponseUpdatesFromArgs(t *testing.T) {
 				act, err = ParseAutoResponseUpdatesFromArgs(tc.args, tc.startIndex)
 			}
 			require.NotPanics(t, testFunc, "ParseAutoResponseUpdatesFromArgs")
-			AssertErrorContents(t, err, tc.expErr, "ParseAutoResponseUpdatesFromArgs error")
+			assertions.AssertErrorContents(t, err, tc.expErr, "ParseAutoResponseUpdatesFromArgs error")
 			assert.Equal(t, tc.exp, act, "ParseAutoResponseUpdatesFromArgs result")
 		})
 	}
