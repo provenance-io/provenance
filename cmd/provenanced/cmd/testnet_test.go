@@ -27,16 +27,15 @@ import (
 
 func Test_TestnetCmd(t *testing.T) {
 	home := t.TempDir()
-	encodingConfig := app.MakeEncodingConfig()
 	pioconfig.SetProvenanceConfig("", 0)
 	logger := log.NewNopLogger()
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
 		home,
 		0,
-		encodingConfig,
 		simtestutil.EmptyAppOptions{},
 	)
+	encodingConfig := tempApp.GetEncodingConfig()
 
 	require.NoError(t, err)
 

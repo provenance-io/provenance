@@ -34,6 +34,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
@@ -1421,14 +1422,28 @@ func addOneReqAnnotations(tc *setupTestCase, oneReqFlags ...string) {
 	}
 }
 
+// encodingConfig is an encoding config that can be used by these tests.
+// Do not use this variable directly. Instead, use the getEncodingConfig function.
+var encodingConfig *params.EncodingConfig
+
+// getEncodingConfig gets the encoding config, creating it if it hasn't been made yet.
+func getEncodingConfig(t *testing.T) params.EncodingConfig {
+	t.Helper()
+	if encodingConfig == nil {
+		encCfg := app.MakeTestEncodingConfig(t)
+		encodingConfig = &encCfg
+	}
+	return *encodingConfig
+}
+
 // newClientContextWithCodec returns a new client.Context that has a useful Codec.
-func newClientContextWithCodec() client.Context {
-	return clientContextWithCodec(client.Context{})
+func newClientContextWithCodec(t *testing.T) client.Context {
+	return clientContextWithCodec(t, client.Context{})
 }
 
 // clientContextWithCodec adds a useful Codec to the provided client context.
-func clientContextWithCodec(clientCtx client.Context) client.Context {
-	encCfg := app.MakeEncodingConfig()
+func clientContextWithCodec(t *testing.T, clientCtx client.Context) client.Context {
+	encCfg := getEncodingConfig(t)
 	return clientCtx.
 		WithCodec(encCfg.Marshaler).
 		WithInterfaceRegistry(encCfg.InterfaceRegistry).
@@ -1463,7 +1478,7 @@ func newTx(t *testing.T, msgs ...sdk.Msg) *txtypes.Tx {
 
 // writeFileAsJson writes the provided proto message as a json file, requiring it to not error.
 func writeFileAsJson(t *testing.T, filename string, content proto.Message) {
-	clientCtx := newClientContextWithCodec()
+	clientCtx := newClientContextWithCodec(t)
 	bz, err := clientCtx.Codec.MarshalJSON(content)
 	require.NoError(t, err, "MarshalJSON(%T)", content)
 	writeFile(t, filename, bz)

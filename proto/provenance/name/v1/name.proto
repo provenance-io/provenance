@@ -31,7 +31,7 @@ message NameRecord {
   // the bound name
   string name = 1;
   // the address the name resolved to
-  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];;
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // whether owner signature is required to add sub-names
   bool restricted = 3;
 }
