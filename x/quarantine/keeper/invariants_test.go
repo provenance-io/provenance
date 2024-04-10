@@ -2,8 +2,9 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/quarantine/keeper"
-	"github.com/cosmos/cosmos-sdk/x/quarantine/testutil"
+
+	"github.com/provenance-io/provenance/x/quarantine/keeper"
+	"github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 // These tests are initiated by TestKeeperTestSuite in keeper_test.go

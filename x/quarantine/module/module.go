@@ -9,17 +9,19 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/quarantine"
-	"github.com/cosmos/cosmos-sdk/x/quarantine/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/quarantine/keeper"
-	"github.com/cosmos/cosmos-sdk/x/quarantine/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/provenance-io/provenance/x/quarantine"
+	"github.com/provenance-io/provenance/x/quarantine/client/cli"
+	"github.com/provenance-io/provenance/x/quarantine/keeper"
+	"github.com/provenance-io/provenance/x/quarantine/simulation"
 )
 
 var (

@@ -2,9 +2,11 @@ package quarantine
 
 import (
 	"cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	qerrors "github.com/cosmos/cosmos-sdk/x/quarantine/errors"
+
+	qerrors "github.com/provenance-io/provenance/x/quarantine/errors"
 )
 
 var _ sdk.Msg = &MsgOptIn{}

@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
-	. "github.com/cosmos/cosmos-sdk/x/quarantine"
-	. "github.com/cosmos/cosmos-sdk/x/quarantine/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	. "github.com/provenance-io/provenance/x/quarantine"
+	. "github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 type coinMaker func() sdk.Coins

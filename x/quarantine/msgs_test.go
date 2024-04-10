@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	. "github.com/cosmos/cosmos-sdk/x/quarantine"
-	. "github.com/cosmos/cosmos-sdk/x/quarantine/testutil"
+	. "github.com/provenance-io/provenance/x/quarantine"
+	. "github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 func TestNewMsgOptIn(t *testing.T) {

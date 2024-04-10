@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 
-	. "github.com/cosmos/cosmos-sdk/x/quarantine/testutil"
+	. "github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 type IntegrationTestSuite struct {

@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	. "github.com/cosmos/cosmos-sdk/x/quarantine"
-	. "github.com/cosmos/cosmos-sdk/x/quarantine/testutil"
+	. "github.com/provenance-io/provenance/x/quarantine"
+	. "github.com/provenance-io/provenance/x/quarantine/testutil"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

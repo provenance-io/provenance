@@ -6,7 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/quarantine/errors"
+
+	"github.com/provenance-io/provenance/x/quarantine/errors"
 )
 
 // containsAddress returns true if the addrToFind is an entry in the addrs.
