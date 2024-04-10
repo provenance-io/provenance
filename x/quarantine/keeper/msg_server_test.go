@@ -224,7 +224,7 @@ func (s *TestSuite) TestAccept() {
 			bKeeper := NewMockBankKeeper()
 			qKeeper := s.keeper.WithBankKeeper(bKeeper)
 			em := sdk.NewEventManager()
-			ctx := sdk.WrapSDKContext(s.sdkCtx.WithEventManager(em))
+			ctx := s.sdkCtx.WithEventManager(em)
 			actResp, actErr := qKeeper.Accept(ctx, tc.msg)
 			s.AssertErrorContents(actErr, tc.expErr, "Accept error")
 			if len(tc.expErr) == 0 {
@@ -371,7 +371,7 @@ func (s *TestSuite) TestDecline() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			em := sdk.NewEventManager()
-			ctx := sdk.WrapSDKContext(s.sdkCtx.WithEventManager(em))
+			ctx := s.sdkCtx.WithEventManager(em)
 			actResp, actErr := s.keeper.Decline(ctx, tc.msg)
 			s.AssertErrorContents(actErr, tc.expErr, "Decline error")
 			if len(tc.expErr) == 0 {

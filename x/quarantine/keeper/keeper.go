@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -65,7 +66,7 @@ func (k Keeper) IsQuarantinedAddr(ctx sdk.Context, toAddr sdk.AccAddress) bool {
 }
 
 // getQuarantinedAccountsPrefixStore returns a kv store prefixed for quarantine opt-in entries, and the prefix bytes.
-func (k Keeper) getQuarantinedAccountsPrefixStore(ctx sdk.Context) (sdk.KVStore, []byte) {
+func (k Keeper) getQuarantinedAccountsPrefixStore(ctx sdk.Context) (storetypes.KVStore, []byte) {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), quarantine.OptInPrefix), quarantine.OptInPrefix
 }
 
@@ -133,7 +134,7 @@ func (k Keeper) IsAutoDecline(ctx sdk.Context, toAddr sdk.AccAddress, fromAddrs 
 // getAutoResponsesPrefixStore returns a kv store prefixed for quarantine auto-responses and the prefix used.
 // If a toAddr is provided, the store is prefixed for just the given address.
 // If toAddr is empty, it will be prefixed for all quarantine auto-responses.
-func (k Keeper) getAutoResponsesPrefixStore(ctx sdk.Context, toAddr sdk.AccAddress) (sdk.KVStore, []byte) {
+func (k Keeper) getAutoResponsesPrefixStore(ctx sdk.Context, toAddr sdk.AccAddress) (storetypes.KVStore, []byte) {
 	pre := quarantine.AutoResponsePrefix
 	if len(toAddr) > 0 {
 		pre = quarantine.CreateAutoResponseToAddrPrefix(toAddr)
@@ -321,7 +322,7 @@ func (k Keeper) DeclineQuarantinedFunds(ctx sdk.Context, toAddr sdk.AccAddress, 
 // getQuarantineRecordPrefixStore returns a kv store prefixed for quarantine records and the prefix used.
 // If a toAddr is provided, the store is prefixed for just the given address.
 // If toAddr is empty, it will be prefixed for all quarantine records.
-func (k Keeper) getQuarantineRecordPrefixStore(ctx sdk.Context, toAddr sdk.AccAddress) (sdk.KVStore, []byte) {
+func (k Keeper) getQuarantineRecordPrefixStore(ctx sdk.Context, toAddr sdk.AccAddress) (storetypes.KVStore, []byte) {
 	pre := quarantine.RecordPrefix
 	if len(toAddr) > 0 {
 		pre = quarantine.CreateRecordToAddrPrefix(toAddr)
@@ -350,7 +351,7 @@ func (k Keeper) IterateQuarantineRecords(ctx sdk.Context, toAddr sdk.AccAddress,
 
 // setQuarantineRecordSuffixIndex writes the provided suffix index.
 // If it is nil or there are no record suffixes, the entry is instead deleted.
-func (k Keeper) setQuarantineRecordSuffixIndex(store sdk.KVStore, key []byte, value *quarantine.QuarantineRecordSuffixIndex) {
+func (k Keeper) setQuarantineRecordSuffixIndex(store storetypes.KVStore, key []byte, value *quarantine.QuarantineRecordSuffixIndex) {
 	if value == nil || len(value.RecordSuffixes) == 0 {
 		store.Delete(key)
 	} else {
@@ -382,7 +383,7 @@ func (k Keeper) mustBzToQuarantineRecordSuffixIndex(bz []byte) *quarantine.Quara
 }
 
 // getQuarantineRecordSuffixIndex gets a quarantine record suffix entry and it's key.
-func (k Keeper) getQuarantineRecordSuffixIndex(store sdk.KVStore, toAddr, fromAddr sdk.AccAddress) (*quarantine.QuarantineRecordSuffixIndex, []byte) {
+func (k Keeper) getQuarantineRecordSuffixIndex(store storetypes.KVStore, toAddr, fromAddr sdk.AccAddress) (*quarantine.QuarantineRecordSuffixIndex, []byte) {
 	key := quarantine.CreateRecordIndexKey(toAddr, fromAddr)
 	bz := store.Get(key)
 	rv := k.mustBzToQuarantineRecordSuffixIndex(bz)
@@ -391,7 +392,7 @@ func (k Keeper) getQuarantineRecordSuffixIndex(store sdk.KVStore, toAddr, fromAd
 
 // getQuarantineRecordSuffixes gets a sorted list of known record suffixes of quarantine records to toAddr
 // from any of the fromAddrs. The list will not contain duplicates, but may contain suffixes that don't point to records.
-func (k Keeper) getQuarantineRecordSuffixes(store sdk.KVStore, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress) [][]byte {
+func (k Keeper) getQuarantineRecordSuffixes(store storetypes.KVStore, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress) [][]byte {
 	rv := &quarantine.QuarantineRecordSuffixIndex{}
 	for _, fromAddr := range fromAddrs {
 		suffixes, _ := k.getQuarantineRecordSuffixIndex(store, toAddr, fromAddr)
@@ -403,7 +404,7 @@ func (k Keeper) getQuarantineRecordSuffixes(store sdk.KVStore, toAddr sdk.AccAdd
 }
 
 // addQuarantineRecordSuffixIndexes adds the provided suffix to all to/from suffix index entries.
-func (k Keeper) addQuarantineRecordSuffixIndexes(store sdk.KVStore, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress, suffix []byte) {
+func (k Keeper) addQuarantineRecordSuffixIndexes(store storetypes.KVStore, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress, suffix []byte) {
 	for _, fromAddr := range fromAddrs {
 		ind, key := k.getQuarantineRecordSuffixIndex(store, toAddr, fromAddr)
 		ind.AddSuffixes(suffix)
@@ -414,7 +415,7 @@ func (k Keeper) addQuarantineRecordSuffixIndexes(store sdk.KVStore, toAddr sdk.A
 
 // deleteQuarantineRecordSuffixIndexes removes the provided suffix from all to/from suffix index entries and either saves
 // the updated list or deletes it if it's now empty.
-func (k Keeper) deleteQuarantineRecordSuffixIndexes(store sdk.KVStore, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress, suffix []byte) {
+func (k Keeper) deleteQuarantineRecordSuffixIndexes(store storetypes.KVStore, toAddr sdk.AccAddress, fromAddrs []sdk.AccAddress, suffix []byte) {
 	for _, fromAddr := range fromAddrs {
 		ind, key := k.getQuarantineRecordSuffixIndex(store, toAddr, fromAddr)
 		ind.Simplify(fromAddr, suffix)

@@ -215,19 +215,19 @@ func RandomizedGenState(simState *module.SimulationState, fundsHolder sdk.AccAdd
 
 	// QuarantinedAddresses
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, QuarantineOptIn, &gen.QuarantinedAddresses, simState.Rand,
+		QuarantineOptIn, &gen.QuarantinedAddresses, simState.Rand,
 		func(r *rand.Rand) { gen.QuarantinedAddresses = RandomQuarantinedAddresses(r, simState.Accounts) },
 	)
 
 	// AutoResponses
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, QuarantineAutoResp, &gen.AutoResponses, simState.Rand,
+		QuarantineAutoResp, &gen.AutoResponses, simState.Rand,
 		func(r *rand.Rand) { gen.AutoResponses = RandomQuarantineAutoResponses(r, gen.QuarantinedAddresses) },
 	)
 
 	// QuarantinedFunds
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, QuarantineFunds, &gen.QuarantinedFunds, simState.Rand,
+		QuarantineFunds, &gen.QuarantinedFunds, simState.Rand,
 		func(r *rand.Rand) { gen.QuarantinedFunds = RandomQuarantinedFunds(r, gen.QuarantinedAddresses) },
 	)
 

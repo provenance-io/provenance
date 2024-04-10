@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	. "github.com/provenance-io/provenance/x/quarantine"
@@ -21,7 +23,7 @@ var (
 	}
 	coinMakerEmpty coinMaker = func() sdk.Coins { return sdk.Coins{} }
 	coinMakerNil   coinMaker = func() sdk.Coins { return nil }
-	coinMakerBad   coinMaker = func() sdk.Coins { return sdk.Coins{sdk.Coin{Denom: "badcoin", Amount: sdk.NewInt(-1)}} }
+	coinMakerBad   coinMaker = func() sdk.Coins { return sdk.Coins{sdk.Coin{Denom: "badcoin", Amount: sdkmath.NewInt(-1)}} }
 )
 
 func TestContainsAddress(t *testing.T) {
@@ -813,12 +815,12 @@ func TestNewQuarantinedFunds(t *testing.T) {
 			name:      "invalid coins",
 			toAddr:    testAddr0,
 			fromAddrs: []sdk.AccAddress{testAddr1},
-			Coins:     sdk.Coins{sdk.Coin{Denom: "bad", Amount: sdk.NewInt(-1)}},
+			Coins:     sdk.Coins{sdk.Coin{Denom: "bad", Amount: sdkmath.NewInt(-1)}},
 			declined:  false,
 			expected: &QuarantinedFunds{
 				ToAddress:               testAddr0.String(),
 				UnacceptedFromAddresses: []string{testAddr1.String()},
-				Coins:                   sdk.Coins{sdk.Coin{Denom: "bad", Amount: sdk.NewInt(-1)}},
+				Coins:                   sdk.Coins{sdk.Coin{Denom: "bad", Amount: sdkmath.NewInt(-1)}},
 				Declined:                false,
 			},
 		},
