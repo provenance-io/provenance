@@ -9,8 +9,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/core/appmodule"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -25,28 +26,11 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+
+	_ appmodule.AppModule = AppModule{}
 )
-
-type AppModule struct {
-	AppModuleBasic
-	keeper     keeper.Keeper
-	accKeeper  quarantine.AccountKeeper
-	bankKeeper quarantine.BankKeeper
-	registry   cdctypes.InterfaceRegistry
-}
-
-func NewAppModule(cdc codec.Codec, quarantineKeeper keeper.Keeper, accKeeper quarantine.AccountKeeper, bankKeeper quarantine.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
-	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         quarantineKeeper,
-		accKeeper:      accKeeper,
-		bankKeeper:     bankKeeper,
-		registry:       registry,
-	}
-}
 
 type AppModuleBasic struct {
 	cdc codec.Codec
@@ -93,9 +77,31 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 }
 
 // RegisterLegacyAminoCodec registers the quarantine module's types for the given codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	quarantine.RegisterLegacyAminoCodec(cdc)
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+
+type AppModule struct {
+	AppModuleBasic
+	keeper     keeper.Keeper
+	accKeeper  quarantine.AccountKeeper
+	bankKeeper quarantine.BankKeeper
+	registry   cdctypes.InterfaceRegistry
 }
+
+func NewAppModule(cdc codec.Codec, quarantineKeeper keeper.Keeper, accKeeper quarantine.AccountKeeper, bankKeeper quarantine.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         quarantineKeeper,
+		accKeeper:      accKeeper,
+		bankKeeper:     bankKeeper,
+		registry:       registry,
+	}
+}
+
+// IsOnePerModuleType is a dummy function that satisfies the OnePerModuleType interface (needed by AppModule).
+func (AppModule) IsOnePerModuleType() {}
+
+// IsAppModule is a dummy function that satisfies the AppModule interface.
+func (AppModule) IsAppModule() {}
 
 // Name returns the quarantine module's name.
 func (AppModule) Name() string {
@@ -105,19 +111,6 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing, there are no invariants to enforce for the quarantine module.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
-}
-
-// Deprecated: Route returns the message routing key for the quarantine module, empty.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// Deprecated: QuerierRoute returns the route we respond to for abci queries, "".
-func (AppModule) QuerierRoute() string { return "" }
-
-// Deprecated: LegacyQuerierHandler returns the quarantine module sdk.Querier (nil).
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
 }
 
 // InitGenesis performs genesis initialization for the quarantine module. It returns
@@ -160,12 +153,12 @@ func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weight
 }
 
 // RandomizedParams creates randomized quarantine param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for quarantine module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[quarantine.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
