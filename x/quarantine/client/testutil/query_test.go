@@ -3,11 +3,11 @@ package testutil
 import (
 	"fmt"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 
 	"github.com/provenance-io/provenance/x/quarantine"
 	client "github.com/provenance-io/provenance/x/quarantine/client/cli"
@@ -27,9 +27,9 @@ func (s *IntegrationTestSuite) TestQueryQuarantinedFundsCmd() {
 
 	quarantinedAmount := int64(50)
 	// Send some funds from 1 to 0 so that there's some quarantined funds to find.
-	_, err = banktestutil.MsgSendExec(s.clientCtx,
+	_, err = clitestutil.MsgSendExec(s.clientCtx,
 		asStringer(addr1), asStringer(addr0), s.bondCoins(quarantinedAmount),
-		s.commonFlags...,
+		s.addrCodec, s.commonFlags...,
 	)
 	s.Require().NoError(err, "MsgSendExec 1 -> 0, 50")
 

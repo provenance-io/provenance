@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -96,7 +96,7 @@ func (s *SimTestSuite) TestSimulateMsgOptIn() {
 	accounts := s.getTestingAccounts(r, 10)
 
 	s.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  s.app.LastBlockHeight() + 1,
 			AppHash: s.app.LastCommitID().Hash,
 		},
@@ -121,7 +121,7 @@ func (s *SimTestSuite) TestSimulateMsgOptOut() {
 	s.Require().NoError(err, "SetOptIn on accounts[0]")
 
 	s.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  s.app.LastBlockHeight() + 1,
 			AppHash: s.app.LastCommitID().Hash,
 		},
@@ -151,7 +151,7 @@ func (s *SimTestSuite) TestSimulateMsgAccept() {
 	s.Require().NoError(err, "SendCoins")
 
 	s.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  s.app.LastBlockHeight() + 1,
 			AppHash: s.app.LastCommitID().Hash,
 		},
@@ -181,7 +181,7 @@ func (s *SimTestSuite) TestSimulateMsgDecline() {
 	s.Require().NoError(err, "SendCoins")
 
 	s.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  s.app.LastBlockHeight() + 1,
 			AppHash: s.app.LastCommitID().Hash,
 		},
@@ -206,7 +206,7 @@ func (s *SimTestSuite) TestSimulateMsgUpdateAutoResponses() {
 	s.Require().NoError(err, "SetOptIn on accounts[0]")
 
 	s.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  s.app.LastBlockHeight() + 1,
 			AppHash: s.app.LastCommitID().Hash,
 		},

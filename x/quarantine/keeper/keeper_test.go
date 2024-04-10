@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -84,7 +84,7 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-	s.blockTime = tmtime.Now()
+	s.blockTime = cmttime.Now()
 	s.app = app.Setup(s.T())
 	s.sdkCtx = s.app.BaseApp.NewContext(false).WithBlockTime(s.blockTime)
 	s.stdlibCtx = context.Context(s.sdkCtx)
@@ -182,8 +182,8 @@ func (s *TestSuite) TestQuarantineOptInOut() {
 				Type: "cosmos.quarantine.v1beta1.EventOptIn",
 				Attributes: []abci.EventAttribute{
 					{
-						Key:   []byte("to_address"),
-						Value: []byte(fmt.Sprintf(`"%s"`, s.addr3.String())),
+						Key:   "to_address",
+						Value: fmt.Sprintf(`"%s"`, s.addr3.String()),
 					},
 				},
 			},
@@ -202,8 +202,8 @@ func (s *TestSuite) TestQuarantineOptInOut() {
 				Type: "cosmos.quarantine.v1beta1.EventOptOut",
 				Attributes: []abci.EventAttribute{
 					{
-						Key:   []byte("to_address"),
-						Value: []byte(fmt.Sprintf(`"%s"`, s.addr3.String())),
+						Key:   "to_address",
+						Value: fmt.Sprintf(`"%s"`, s.addr3.String()),
 					},
 				},
 			},

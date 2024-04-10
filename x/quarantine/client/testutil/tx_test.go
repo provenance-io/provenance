@@ -3,11 +3,11 @@ package testutil
 import (
 	"fmt"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/quarantine"
@@ -428,15 +428,15 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 	s.stopIfFailed()
 
 	s.Run("do two sends from different addresses", func() {
-		outBW, err := banktestutil.MsgSendExec(s.clientCtx,
+		outBW, err := clitestutil.MsgSendExec(s.clientCtx,
 			asStringer(fromAddr1), asStringer(toAddr), s.bondCoins(amt1),
-			s.commonFlags...,
+			s.addrCodec, s.commonFlags...,
 		)
 		s.T().Logf("MsgSendExec 1 Output:\n%s", outBW.String())
 		s.Require().NoError(err, "MsgSendExec 1")
-		outBW, err = banktestutil.MsgSendExec(s.clientCtx,
+		outBW, err = clitestutil.MsgSendExec(s.clientCtx,
 			asStringer(fromAddr2), asStringer(toAddr), s.bondCoins(amt2),
-			s.commonFlags...,
+			s.addrCodec, s.commonFlags...,
 		)
 		s.T().Logf("MsgSendExec 2 Output:\n%s", outBW.String())
 		s.Require().NoError(err, "MsgSendExec 2")

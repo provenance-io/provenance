@@ -15,6 +15,6 @@ import (
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 2
-	cfg.TimeoutCommit = 1 * time.Second
+	cfg.TimeoutCommit = 500 * time.Millisecond
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 }

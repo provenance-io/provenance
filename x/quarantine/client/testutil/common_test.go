@@ -6,13 +6,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"cosmossdk.io/core/address"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 
 	. "github.com/provenance-io/provenance/x/quarantine/testutil"
 )
@@ -26,6 +28,8 @@ type IntegrationTestSuite struct {
 
 	commonFlags []string
 	valAddr     sdk.AccAddress
+
+	addrCodec address.Codec
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
@@ -37,7 +41,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, s.bondCoins(10).String()),
 	}
 	var err error
@@ -49,6 +53,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.clientCtx = s.network.Validators[0].ClientCtx
 	s.valAddr = s.network.Validators[0].Address
+
+	sdkcfg := sdk.GetConfig()
+	s.addrCodec = addresscodec.NewBech32Codec(sdkcfg.GetBech32AccountAddrPrefix())
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -88,11 +95,12 @@ func (s *IntegrationTestSuite) createAndFundAccount(index int, bondCoinAmt int64
 
 	account := sdk.AccAddress(pk.Address())
 
-	_, err = banktestutil.MsgSendExec(
+	_, err = clitestutil.MsgSendExec(
 		s.clientCtx,
 		s.valAddr,
 		account,
 		s.bondCoins(bondCoinAmt),
+		s.addrCodec,
 		s.commonFlags...,
 	)
 	s.Require().NoError(err, "MsgSendExec[%d]", index)
