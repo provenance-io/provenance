@@ -80,8 +80,7 @@ type HooksTestSuite struct {
 func SetupSimApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	db := dbm.NewMemDB()
-	encCdc := app.MakeEncodingConfig()
-	provenanceApp := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, encCdc, simtestutil.EmptyAppOptions{})
+	provenanceApp := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, simtestutil.EmptyAppOptions{})
 	genesis := provenanceApp.DefaultGenesis()
 	return provenanceApp, genesis
 }

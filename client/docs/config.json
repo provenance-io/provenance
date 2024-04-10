@@ -122,14 +122,21 @@
 
     {
       "url": "./tmp-swagger-gen/provenance/reward/v1/query.swagger.json",
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/reward/v1/tx.swagger.json"
+    },
+
+    {
+      "url": "./tmp-swagger-gen/cosmos/sanction/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "MsgFeeParams"
+          "Params": "SanctionParams"
         }
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/reward/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/cosmos/sanction/v1beta1/tx.swagger.json"
     },
 
     {

@@ -34,7 +34,6 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		InvCheckPeriod:     0,
 		HomePath:           t.TempDir(),
 		SkipUpgradeHeights: map[int64]bool{},
-		EncConfig:          MakeEncodingConfig(),
 		AppOpts:            simtestutil.EmptyAppOptions{},
 	}
 	app := NewAppWithCustomOptions(t, false, opts)
@@ -57,7 +56,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := New(log.NewTestLogger(t), opts.DB, nil, true,
-		map[int64]bool{}, opts.HomePath, 0, MakeEncodingConfig(), simtestutil.EmptyAppOptions{})
+		map[int64]bool{}, opts.HomePath, 0, simtestutil.EmptyAppOptions{})
 	require.NotPanics(t, func() {
 		_, err = app2.ExportAppStateAndValidators(false, nil, nil)
 	}, "exporting app state at current height")
@@ -81,7 +80,6 @@ func TestExportAppStateAndValidators(t *testing.T) {
 		InvCheckPeriod:     0,
 		HomePath:           t.TempDir(),
 		SkipUpgradeHeights: map[int64]bool{},
-		EncConfig:          MakeEncodingConfig(),
 		AppOpts:            simtestutil.EmptyAppOptions{},
 	}
 	app := NewAppWithCustomOptions(t, false, opts)

@@ -14,7 +14,7 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := app.MakeEncodingConfig().Marshaler
+	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	testAttributeRecord := types.NewAttribute("test", "", types.AttributeType_Int, []byte{1}, nil)
