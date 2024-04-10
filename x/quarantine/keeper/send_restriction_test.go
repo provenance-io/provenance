@@ -179,7 +179,7 @@ func (s *TestSuite) TestBankSendCoinsUsesSendRestrictionFn() {
 	// Set up addr1 to be quarantined.
 	s.Require().NoError(s.keeper.SetOptIn(s.sdkCtx, s.addr1), "SetOptIn addr1")
 	// Give addr2 some funds and send them to addr1.
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, s.addr2, cz(888)), "FundAccount addr2 888%s", denom)
+	s.Require().NoError(testutil.FundAccount(s.sdkCtx, s.app.BankKeeper, s.addr2, cz(888)), "FundAccount addr2 888%s", denom)
 
 	// Do a Send from addr2 to addr1
 	s.Require().NoError(s.app.BankKeeper.SendCoins(s.sdkCtx, s.addr2, s.addr1, cz(88)), "SendCoins 88%s from addr2 to addr1", denom)
@@ -227,7 +227,7 @@ func (s *TestSuite) TestBankInputOutputCoinsUsesSendRestrictionFn() {
 	s.Require().NoError(s.keeper.SetOptOut(s.sdkCtx, s.addr2), "SetOptOut addr2")
 	s.Require().NoError(s.keeper.SetOptOut(s.sdkCtx, s.addr4), "SetOptOut addr4")
 	// Give addr5 some funds.
-	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, s.addr5, cz(888)), "FundAccount addr5 888%s", denom)
+	s.Require().NoError(testutil.FundAccount(s.sdkCtx, s.app.BankKeeper, s.addr5, cz(888)), "FundAccount addr5 888%s", denom)
 
 	// Do an InputOutputCoins from 5 to 1, 2, 3, and 4.
 	inputs := []banktypes.Input{{Address: s.addr5.String(), Coins: cz(322)}}
@@ -237,7 +237,7 @@ func (s *TestSuite) TestBankInputOutputCoinsUsesSendRestrictionFn() {
 		{Address: s.addr3.String(), Coins: cz(89)},
 		{Address: s.addr4.String(), Coins: cz(145)},
 	}
-	s.Require().NoError(s.app.BankKeeper.InputOutputCoins(s.sdkCtx, inputs, outputs), "InputOutputCoins")
+	s.Require().NoError(s.app.BankKeeper.InputOutputCoins(s.sdkCtx, inputs[0], outputs), "InputOutputCoins")
 
 	expBalances := []struct {
 		name string

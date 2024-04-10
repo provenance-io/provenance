@@ -10,6 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func TestKeyContainsModuleName(t *testing.T) {
+	assert.Contains(t, bypassKey, ModuleName, "bypassKey")
+}
+
 func TestSendRestrictionContextFuncs(t *testing.T) {
 	tests := []struct {
 		name string
@@ -61,7 +65,7 @@ func TestSendRestrictionContextFuncs(t *testing.T) {
 	}
 }
 
-func TestContextFuncsDoNotModifyProvided(t *testing.T) {
+func TestBypassFuncsDoNotModifyProvided(t *testing.T) {
 	origCtx := sdk.NewContext(nil, cmtproto.Header{}, false, nil)
 	assert.False(t, HasBypass(origCtx), "HasBypass(origCtx)")
 	afterWith := WithBypass(origCtx)
@@ -71,8 +75,4 @@ func TestContextFuncsDoNotModifyProvided(t *testing.T) {
 	assert.False(t, HasBypass(afterWithout), "HasBypass(afterWithout)")
 	assert.True(t, HasBypass(afterWith), "HasBypass(afterWith) after giving it to WithoutBypass")
 	assert.False(t, HasBypass(origCtx), "HasBypass(origCtx) after giving afterWith to WithoutBypass")
-}
-
-func TestKeyContainsModuleName(t *testing.T) {
-	assert.Contains(t, bypassKey, ModuleName, "bypassKey")
 }

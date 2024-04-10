@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -10,9 +12,9 @@ import (
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
-func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
 	// bypass if the context says to.
-	if quarantine.HasBypass(ctx) {
+	if quarantine.HasBypass(goCtx) {
 		return toAddr, nil
 	}
 	// bypass if the fromAddr is either the toAddr or the funds holder.
@@ -20,6 +22,7 @@ func (k Keeper) SendRestrictionFn(ctx sdk.Context, fromAddr, toAddr sdk.AccAddre
 	if fromAddr.Equals(toAddr) || fromAddr.Equals(fundsHolder) {
 		return toAddr, nil
 	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Nothing to do if they're not quarantined or if they are, but have auto-accept enabled for the fromAddr.
 	if !k.IsQuarantinedAddr(ctx, toAddr) || k.IsAutoAccept(ctx, toAddr, fromAddr) {
 		return toAddr, nil
