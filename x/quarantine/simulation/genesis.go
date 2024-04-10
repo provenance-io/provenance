@@ -20,24 +20,24 @@ const (
 
 // RandomQuarantinedAddresses randomly selects accounts from the ones provided to be quarantined.
 func RandomQuarantinedAddresses(r *rand.Rand, accounts []simtypes.Account) []string {
-	// Max number of addresses:
+	// Number of addresses:
 	// 15% each: 1, 2, 3, 4, 5
 	// 5% each: 6, 7, 8, 9, 0
 	// Each provided account has a 25% chance to be quarantined.
-	max := 0
+	count := 0
 	maxR := r.Intn(20)
 	switch {
 	case maxR <= 14:
-		max = maxR/3 + 1
+		count = maxR/3 + 1
 	case maxR >= 15 && maxR <= 18:
-		max = maxR - 9
+		count = maxR - 9
 	case maxR == 19:
-		max = 0
+		count = 0
 	default:
 		panic(sdkerrors.ErrLogic.Wrapf("address max count random number case %d not present in switch", maxR))
 	}
 
-	if max == 0 {
+	if count == 0 {
 		return nil
 	}
 
@@ -46,7 +46,7 @@ func RandomQuarantinedAddresses(r *rand.Rand, accounts []simtypes.Account) []str
 		if r.Intn(4) == 0 {
 			rv = append(rv, acct.Address.String())
 		}
-		if len(rv) >= max {
+		if len(rv) >= count {
 			break
 		}
 	}
