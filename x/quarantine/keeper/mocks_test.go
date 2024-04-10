@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -44,11 +46,11 @@ func (k *MockBankKeeper) AppendSendRestriction(_ banktypes.SendRestrictionFn) {
 	// do nothing.
 }
 
-func (k *MockBankKeeper) GetAllBalances(_ sdk.Context, addr sdk.AccAddress) sdk.Coins {
+func (k *MockBankKeeper) GetAllBalances(_ context.Context, addr sdk.AccAddress) sdk.Coins {
 	return k.AllBalances[string(addr)]
 }
 
-func (k *MockBankKeeper) SendCoins(_ sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k *MockBankKeeper) SendCoins(_ context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	if len(k.QueuedSendCoinsErrors) > 0 {
 		err := k.QueuedSendCoinsErrors[0]
 		k.QueuedSendCoinsErrors = k.QueuedSendCoinsErrors[1:]
@@ -64,6 +66,6 @@ func (k *MockBankKeeper) SendCoins(_ sdk.Context, fromAddr sdk.AccAddress, toAdd
 	return nil
 }
 
-func (k *MockBankKeeper) SpendableCoins(_ sdk.Context, addr sdk.AccAddress) sdk.Coins {
+func (k *MockBankKeeper) SpendableCoins(_ context.Context, addr sdk.AccAddress) sdk.Coins {
 	return k.AllBalances[string(addr)]
 }
