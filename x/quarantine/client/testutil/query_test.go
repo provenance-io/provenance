@@ -16,8 +16,9 @@ import (
 // These tests are initiated by TestIntegrationTestSuite in cli_test.go
 
 func (s *IntegrationTestSuite) TestQueryQuarantinedFundsCmd() {
-	addr0 := s.createAndFundAccount(0, 2000)
-	addr1 := s.createAndFundAccount(0, 2000)
+	addrs := s.createAndFundAccounts(2, 2000)
+	addr0 := addrs[0]
+	addr1 := addrs[1]
 
 	// Opt addr0 into quarantine.
 	_, err := cli.ExecTestCLICmd(s.clientCtx, client.TxOptInCmd(),
@@ -136,8 +137,9 @@ func (s *IntegrationTestSuite) TestQueryQuarantinedFundsCmd() {
 }
 
 func (s *IntegrationTestSuite) TestQueryIsQuarantinedCmd() {
-	addr0 := s.createAndFundAccount(0, 2000)
-	addr1 := s.createAndFundAccount(0, 2000)
+	addrs := s.createAndFundAccounts(2, 2000)
+	addr0 := addrs[0]
+	addr1 := addrs[1]
 
 	// Opt addr0 into quarantine.
 	_, err := cli.ExecTestCLICmd(s.clientCtx, client.TxOptInCmd(),
@@ -197,9 +199,10 @@ func (s *IntegrationTestSuite) TestQueryIsQuarantinedCmd() {
 }
 
 func (s *IntegrationTestSuite) TestQueryAutoResponsesCmd() {
-	addr0 := s.createAndFundAccount(0, 200)
-	addr1 := s.createAndFundAccount(1, 200)
-	addr2 := s.createAndFundAccount(2, 200)
+	addrs := s.createAndFundAccounts(3, 200)
+	addr0 := addrs[0]
+	addr1 := addrs[1]
+	addr2 := addrs[2]
 
 	// Set 0 <- 1 to auto-accept.
 	// Set 0 <- 2 to auto-decline.

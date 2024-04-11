@@ -16,8 +16,10 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/testutil/queries"
 )
 
 type IntegrationTestSuite struct {
@@ -28,6 +30,7 @@ type IntegrationTestSuite struct {
 	clientCtx client.Context
 
 	commonFlags []string
+	val0        *network.Validator
 	valAddr     sdk.AccAddress
 
 	addrCodec address.Codec
@@ -54,6 +57,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.clientCtx = s.network.Validators[0].ClientCtx
 	s.valAddr = s.network.Validators[0].Address
+	s.val0 = s.network.Validators[0]
 
 	sdkcfg := sdk.GetConfig()
 	s.addrCodec = addresscodec.NewBech32Codec(sdkcfg.GetBech32AccountAddrPrefix())
@@ -80,8 +84,7 @@ func (s *IntegrationTestSuite) bondCoins(amt int64) sdk.Coins {
 	return sdk.NewCoins(s.bondCoin(amt))
 }
 
-// createAndFundAccount creates an account, adding the key to the keyring, funded with the provided amount of bond-denom coins.
-func (s *IntegrationTestSuite) createAndFundAccount(index int, bondCoinAmt int64) string {
+func (s *IntegrationTestSuite) addAccountToKeyring(index, count int) string {
 	memberNumber := uuid.New().String()
 
 	info, _, err := s.clientCtx.Keyring.NewMnemonic(
@@ -89,24 +92,64 @@ func (s *IntegrationTestSuite) createAndFundAccount(index int, bondCoinAmt int64
 		keyring.English, sdk.FullFundraiserPath,
 		keyring.DefaultBIP39Passphrase, hd.Secp256k1,
 	)
-	s.Require().NoError(err, "NewMnemonic[%d]", index)
+	s.Require().NoError(err, "[%d/%d] NewMnemonic", index, count)
 
 	pk, err := info.GetPubKey()
-	s.Require().NoError(err, "GetPubKey[%d]", index)
+	s.Require().NoError(err, "[%d/%d] GetPubKey", index, count)
 
-	account := sdk.AccAddress(pk.Address())
+	addr := pk.Address()
+	rv, err := s.addrCodec.BytesToString(addr)
+	s.Require().NoError(err, "[%d/%d] BytesToString(%v)", index, count, addr)
 
-	_, err = clitestutil.MsgSendExec(
+	return rv
+}
+
+// createAndFundAccount creates an account, adding the key to the keyring, funded with the provided amount of bond-denom coins.
+func (s *IntegrationTestSuite) createAndFundAccount(bondCoinAmt int64) string {
+	addr := s.addAccountToKeyring(1, 1)
+	out, err := clitestutil.MsgSendExec(
 		s.clientCtx,
 		s.valAddr,
-		account,
+		asStringer(addr),
 		s.bondCoins(bondCoinAmt),
 		s.addrCodec,
 		s.commonFlags...,
 	)
-	s.Require().NoError(err, "MsgSendExec[%d]", index)
+	s.Require().NoError(err, "MsgSendExec")
+	outBz := out.Bytes()
+	s.T().Logf("MsgSendExec response:\n%s", string(outBz))
+	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock after MsgSendExec")
+	resp := queries.GetTxFromResponse(s.T(), s.val0, outBz)
+	s.Require().Equal(0, int(resp.Code), "MsgSendExec tx response code. Tx response:\n%#v", resp)
 
-	return account.String()
+	return addr
+}
+
+// createAndFundAccounts creates count account, adding the keys to the keyring, each funded with the provided amount of bond-denom coins.
+func (s *IntegrationTestSuite) createAndFundAccounts(count int, bondCoinAmt int64) []string {
+	addrs := make([]string, count)
+	for i := range addrs {
+		addrs[i] = s.addAccountToKeyring(i+1, count)
+	}
+
+	amount := s.bondCoins(bondCoinAmt).String()
+
+	cmd := bankcli.NewMultiSendTxCmd(s.addrCodec)
+	var args []string
+	args = append(args, s.valAddr.String())
+	args = append(args, addrs...)
+	args = append(args, amount)
+	args = s.appendCommonFlagsTo(args...)
+
+	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
+	s.Require().NoError(err, "ExecTestCLICmd bank multisend")
+	outBz := out.Bytes()
+	s.T().Logf("Multisend response:\n%s", string(outBz))
+	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock after multisend")
+	resp := queries.GetTxFromResponse(s.T(), s.val0, outBz)
+	s.Require().Equal(0, int(resp.Code), "Multisend tx response code. Tx response:\n%#v", resp)
+
+	return addrs
 }
 
 // appendCommonFlagsTo adds this suite's common flags to the end of the provided arguments.

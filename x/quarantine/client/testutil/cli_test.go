@@ -5,16 +5,23 @@ package testutil
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+
+	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/testutil"
 )
 
 func TestIntegrationTestSuite(t *testing.T) {
-	cfg := network.DefaultConfig()
+	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
+	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
+	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 2
-	cfg.TimeoutCommit = 500 * time.Millisecond
+
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 }

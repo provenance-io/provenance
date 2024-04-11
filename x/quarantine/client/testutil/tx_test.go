@@ -8,15 +8,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/quarantine"
 	client "github.com/provenance-io/provenance/x/quarantine/client/cli"
 )
 
 func (s *IntegrationTestSuite) TestTxOptInCmd() {
-	addr0 := s.createAndFundAccount(0, 2000)
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+	addr0 := s.createAndFundAccount(2000)
 
 	tests := []struct {
 		name    string
@@ -67,8 +66,7 @@ func (s *IntegrationTestSuite) TestTxOptInCmd() {
 }
 
 func (s *IntegrationTestSuite) TestTxOptOutCmd() {
-	addr0 := s.createAndFundAccount(0, 2000)
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+	addr0 := s.createAndFundAccount(2000)
 
 	tests := []struct {
 		name    string
@@ -119,11 +117,11 @@ func (s *IntegrationTestSuite) TestTxOptOutCmd() {
 }
 
 func (s *IntegrationTestSuite) TestTxAcceptCmd() {
-	addr0 := s.createAndFundAccount(0, 2000)
-	addr1 := s.createAndFundAccount(1, 2000)
-	addr2 := s.createAndFundAccount(2, 2000)
-	addr3 := s.createAndFundAccount(3, 2000)
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+	addrs := s.createAndFundAccounts(4, 2000)
+	addr0 := addrs[0]
+	addr1 := addrs[1]
+	addr2 := addrs[2]
+	addr3 := addrs[3]
 
 	permFlag := "--" + client.FlagPermanent
 	tests := []struct {
@@ -207,11 +205,9 @@ func (s *IntegrationTestSuite) TestTxAcceptCmd() {
 				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
 			}
 			if len(tc.expErr) == 0 {
-				var txResp sdk.TxResponse
-				testFuncUn := func() {
-					err = s.clientCtx.Codec.UnmarshalJSON([]byte(out), &txResp)
-				}
-				if s.Assert().NotPanics(testFuncUn, "UnmarshalJSON output") {
+				s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				if ok {
 					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
 				}
 			}
@@ -220,11 +216,11 @@ func (s *IntegrationTestSuite) TestTxAcceptCmd() {
 }
 
 func (s *IntegrationTestSuite) TestTxDeclineCmd() {
-	addr0 := s.createAndFundAccount(0, 2000)
-	addr1 := s.createAndFundAccount(1, 2000)
-	addr2 := s.createAndFundAccount(2, 2000)
-	addr3 := s.createAndFundAccount(3, 2000)
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+	addrs := s.createAndFundAccounts(4, 2000)
+	addr0 := addrs[0]
+	addr1 := addrs[1]
+	addr2 := addrs[2]
+	addr3 := addrs[3]
 
 	permFlag := "--" + client.FlagPermanent
 	tests := []struct {
@@ -308,11 +304,9 @@ func (s *IntegrationTestSuite) TestTxDeclineCmd() {
 				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
 			}
 			if len(tc.expErr) == 0 {
-				var txResp sdk.TxResponse
-				testFuncUn := func() {
-					err = s.clientCtx.Codec.UnmarshalJSON([]byte(out), &txResp)
-				}
-				if s.Assert().NotPanics(testFuncUn, "UnmarshalJSON output") {
+				s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				if ok {
 					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
 				}
 			}
@@ -321,11 +315,11 @@ func (s *IntegrationTestSuite) TestTxDeclineCmd() {
 }
 
 func (s *IntegrationTestSuite) TestTxUpdateAutoResponsesCmd() {
-	addr0 := s.createAndFundAccount(0, 2000)
-	addr1 := s.createAndFundAccount(1, 2000)
-	addr2 := s.createAndFundAccount(2, 2000)
-	addr3 := s.createAndFundAccount(3, 2000)
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+	addrs := s.createAndFundAccounts(4, 2000)
+	addr0 := addrs[0]
+	addr1 := addrs[1]
+	addr2 := addrs[2]
+	addr3 := addrs[3]
 
 	tests := []struct {
 		name    string
@@ -381,11 +375,9 @@ func (s *IntegrationTestSuite) TestTxUpdateAutoResponsesCmd() {
 				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
 			}
 			if len(tc.expErr) == 0 {
-				var txResp sdk.TxResponse
-				testFuncUn := func() {
-					err = s.clientCtx.Codec.UnmarshalJSON([]byte(out), &txResp)
-				}
-				if s.Assert().NotPanics(testFuncUn, "UnmarshalJSON output") {
+				s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				if ok {
 					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
 				}
 			}
@@ -394,10 +386,10 @@ func (s *IntegrationTestSuite) TestTxUpdateAutoResponsesCmd() {
 }
 
 func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
-	toAddr := s.createAndFundAccount(0, 2000)
-	fromAddr1 := s.createAndFundAccount(1, 2000)
-	fromAddr2 := s.createAndFundAccount(2, 2000)
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+	addrs := s.createAndFundAccounts(3, 2000)
+	toAddr := addrs[0]
+	fromAddr1 := addrs[1]
+	fromAddr2 := addrs[2]
 
 	amt1 := int64(50)
 	amt2 := int64(75)
@@ -514,16 +506,8 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			outBW, err := banktestutil.QueryBalancesExec(s.clientCtx, asStringer(tc.addr), asJSONFlag)
-			out := outBW.String()
-			s.T().Logf("QueryBalancesExec Output:\n%s", out)
-			s.Require().NoError(err, "QueryBalancesExec error")
-			resp := &banktypes.QueryAllBalancesResponse{}
-			s.Require().NotPanics(func() {
-				err = s.clientCtx.Codec.UnmarshalJSON([]byte(out), resp)
-			})
-			s.Require().NoError(err, "UnmarshalJSON QueryAllBalancesResponse")
-			s.Require().Equal(tc.exp, resp.Balances, "Balances")
+			balances := queries.GetAllBalances(s.T(), s.val0, tc.addr)
+			s.Require().Equal(tc.exp, balances, "Balances")
 		})
 	}
 }
