@@ -4,5 +4,5 @@ deps:
   - remote: buf.build
     owner: provenance-io
     repository: third-party
-    commit: 5423d1b01b7e47fd94d5743632695951
-    digest: shake256:352e660d08ed3a6d1277631b0c53d59d2832c7c03ee6f8ef65b50f33b644e96ebdc55e3cf8480a6992dc4596cfe2bc18eded0a01db3559f2de3760cb17ceb05f
+    commit: 1c6a4ef465af434c9e81ffcc82a9c75c
+    digest: shake256:bce4fbc65d211c3494f646a61bbf14a784d0405510423a564247df50b9b213d7343ee42b25c1675aeee956c40fae0fd396b84c1909909c1ee052d414f6e6e81f
