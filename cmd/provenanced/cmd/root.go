@@ -33,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -72,15 +71,14 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	if err != nil {
 		panic(fmt.Errorf("failed to create temp dir: %w", err))
 	}
-	os.RemoveAll(tempDir)
+	defer os.RemoveAll(tempDir)
 
-	encodingConfig := app.MakeEncodingConfig()
 	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
 		tempDir,
 		0,
-		encodingConfig,
 		simtestutil.EmptyAppOptions{},
 	)
+	encodingConfig := tempApp.GetEncodingConfig()
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
@@ -371,7 +369,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		app.MakeEncodingConfig(), // Ideally, we would reuse the one created by NewRootCmd.
 		appOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
@@ -418,8 +415,6 @@ func createAppAndExport(
 	appOpts servertypes.AppOptions,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	encCfg := app.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
-	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var a *app.App
 
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
@@ -428,13 +423,13 @@ func createAppAndExport(
 	}
 
 	if height != -1 {
-		a = app.New(logger, db, traceStore, false, map[int64]bool{}, homePath, cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
+		a = app.New(logger, db, traceStore, false, map[int64]bool{}, homePath, cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), appOpts)
 
 		if err := a.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		a = app.New(logger, db, traceStore, true, map[int64]bool{}, homePath, cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), encCfg, appOpts)
+		a = app.New(logger, db, traceStore, true, map[int64]bool{}, homePath, cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), appOpts)
 	}
 
 	return a.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

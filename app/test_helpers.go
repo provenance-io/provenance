@@ -71,20 +71,18 @@ type SetupOptions struct {
 	InvCheckPeriod     uint
 	HomePath           string
 	SkipUpgradeHeights map[int64]bool
-	EncConfig          params.EncodingConfig
 	AppOpts            servertypes.AppOptions
 	ChainID            string
 }
 
 func setup(t *testing.T, withGenesis bool, invCheckPeriod uint, chainID string) (*App, GenesisState) {
 	db := dbm.NewMemDB()
-	encCdc := MakeEncodingConfig()
 	// set default config if not set by the flow
 	if len(pioconfig.GetProvenanceConfig().FeeDenom) == 0 {
 		pioconfig.SetProvenanceConfig("", 0)
 	}
 
-	app := New(loggerMaker(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, encCdc, simtestutil.EmptyAppOptions{}, baseapp.SetChainID(chainID))
+	app := New(loggerMaker(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, simtestutil.EmptyAppOptions{}, baseapp.SetChainID(chainID))
 	if withGenesis {
 		return app, app.DefaultGenesis()
 	}
@@ -160,7 +158,7 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 		Coins:   sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000_000_000)),
 	}
 
-	app := New(options.Logger, options.DB, nil, true, options.SkipUpgradeHeights, options.HomePath, options.InvCheckPeriod, options.EncConfig, options.AppOpts)
+	app := New(options.Logger, options.DB, nil, true, options.SkipUpgradeHeights, options.HomePath, options.InvCheckPeriod, options.AppOpts)
 	genesisState := app.DefaultGenesis()
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
@@ -515,3 +513,86 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 	}
 	return &ed25519.PubKey{Key: pkBytes}
 }
+<<<<<<< HEAD
+=======
+
+// SetupWithGenesisRewardsProgram initializes a new SimApp with the provided
+// rewards programs, genesis accounts, validators, and balances.
+func SetupWithGenesisRewardsProgram(t *testing.T, nextRewardProgramID uint64, genesisRewards []rewardtypes.RewardProgram, genAccs []authtypes.GenesisAccount, valSet *cmttypes.ValidatorSet, balances ...banktypes.Balance) *App {
+	t.Helper()
+
+	// Make sure there's a validator set with at least one validator in it.
+	if valSet == nil || len(valSet.Validators) == 0 {
+		privVal := mock.NewPV()
+		pubKey, err := privVal.GetPubKey()
+		require.NoError(t, err)
+		validator := cmttypes.NewValidator(pubKey, 1)
+		if valSet == nil {
+			valSet = cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
+		} else {
+			require.NoError(t, valSet.UpdateWithChangeSet([]*cmttypes.Validator{validator}))
+		}
+	}
+
+	app, genesisState := setup(t, true, 0, "")
+	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
+	genesisState = genesisStateWithRewards(t, app, genesisState, nextRewardProgramID, genesisRewards)
+
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	require.NoError(t, err, "marshaling genesis state to json")
+
+	_, err = app.InitChain(
+		&abci.RequestInitChain{
+			Validators:      []abci.ValidatorUpdate{},
+			ConsensusParams: DefaultConsensusParams,
+			AppStateBytes:   stateBytes,
+		},
+	)
+	require.NoError(t, err, "InitChain")
+
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height:             app.LastBlockHeight() + 1,
+		Hash:               app.LastCommitID().Hash,
+		NextValidatorsHash: valSet.Hash(),
+		Time:               time.Now().UTC(),
+	})
+	require.NoError(t, err, "FinalizeBlock")
+
+	return app
+}
+
+func genesisStateWithRewards(t *testing.T,
+	app *App, genesisState GenesisState,
+	nextRewardProgramID uint64, genesisRewards []rewardtypes.RewardProgram,
+) GenesisState {
+	rewardGenesisState := rewardtypes.NewGenesisState(
+		nextRewardProgramID,
+		genesisRewards,
+		[]rewardtypes.ClaimPeriodRewardDistribution{},
+		[]rewardtypes.RewardAccountState{},
+	)
+	var err error
+	genesisState[rewardtypes.ModuleName], err = app.AppCodec().MarshalJSON(rewardGenesisState)
+	require.NoError(t, err, "marshaling reward genesis state JSON")
+	return genesisState
+}
+
+// MakeTestEncodingConfig creates an encoding config suitable for unit tests.
+func MakeTestEncodingConfig(t *testing.T) params.EncodingConfig {
+	tempDir, err := os.MkdirTemp("", "tempprovapp")
+	switch {
+	case t != nil:
+		require.NoError(t, err, "failed to create temp dir %q", tempDir)
+	case err != nil:
+		panic(fmt.Errorf("failed to create temp dir %q: %w", tempDir, err))
+	}
+	defer os.RemoveAll(tempDir)
+
+	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
+		tempDir,
+		0,
+		simtestutil.EmptyAppOptions{},
+	)
+	return tempApp.GetEncodingConfig()
+}
+>>>>>>> main

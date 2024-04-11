@@ -26,7 +26,6 @@ import (
 
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
-	// "github.com/cosmos/cosmos-sdk/x/sanction" // TODO[1760]: sanction
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -57,6 +56,7 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	"github.com/provenance-io/provenance/x/sanction"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -138,7 +138,7 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, t.TempDir(), simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	app := New(logger, db, nil, true, map[int64]bool{}, t.TempDir(), simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "provenanced", app.Name())
 
 	fmt.Printf("running provenance full app simulation\n")
@@ -177,7 +177,7 @@ func TestSimple(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, t.TempDir(), simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	app := New(logger, db, nil, true, map[int64]bool{}, t.TempDir(), simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "provenanced", app.Name())
 
 	// run randomized simulation
@@ -216,7 +216,7 @@ func TestAppImportExport(t *testing.T) {
 	}()
 
 	home := t.TempDir()
-	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	fmt.Printf("running provenance test import export\n")
 
@@ -255,7 +255,7 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	var genesisState sdksim.GenesisState
 	err = json.Unmarshal(exported.AppState, &genesisState)
@@ -296,7 +296,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
 		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{authzkeeper.GrantKey, authzkeeper.GrantQueuePrefix}},
 		// {app.keys[quarantine.StoreKey], newApp.keys[quarantine.StoreKey], [][]byte{}}, // TODO[1760]: quarantine
-		// {app.keys[sanction.StoreKey], newApp.keys[sanction.StoreKey], [][]byte{}}, // TODO[1760]: sanction
+		{app.keys[sanction.StoreKey], newApp.keys[sanction.StoreKey], [][]byte{}},
 
 		{app.keys[markertypes.StoreKey], newApp.keys[markertypes.StoreKey], [][]byte{}},
 		{app.keys[msgfeetype.StoreKey], newApp.keys[msgfeetype.StoreKey], [][]byte{}},
@@ -333,7 +333,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	}()
 
 	home := t.TempDir()
-	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	// Run randomized simulation
 	stopEarly, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(
@@ -375,7 +375,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
 
 	_, err = newApp.InitChain(&abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
@@ -446,7 +446,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-			app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, MakeEncodingConfig(), simtestutil.EmptyAppOptions{}, interBlockCacheOpt())
+			app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",

@@ -21,6 +21,7 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/tx/signing"
 
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
@@ -32,6 +33,9 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/gogoproto/proto"
 
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
@@ -40,9 +44,6 @@ import (
 	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
 	// quarantinekeeper "github.com/cosmos/cosmos-sdk/x/quarantine/keeper" // TODO[1760]: quarantine
 	// quarantinemodule "github.com/cosmos/cosmos-sdk/x/quarantine/module" // TODO[1760]: quarantine
-	// "github.com/cosmos/cosmos-sdk/x/sanction" // TODO[1760]: sanction
-	// sanctionkeeper "github.com/cosmos/cosmos-sdk/x/sanction/keeper" // TODO[1760]: sanction
-	// sanctionmodule "github.com/cosmos/cosmos-sdk/x/sanction/module" // TODO[1760]: sanction
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -131,7 +132,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
-	appparams "github.com/provenance-io/provenance/app/params"
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -174,6 +175,15 @@ import (
 	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
 	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
+<<<<<<< HEAD
+=======
+	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
+	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
+	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
+	"github.com/provenance-io/provenance/x/sanction"
+	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
+	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
+>>>>>>> main
 	triggerkeeper "github.com/provenance-io/provenance/x/trigger/keeper"
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -261,7 +271,7 @@ type App struct {
 	FeeGrantKeeper   feegrantkeeper.Keeper
 	MsgFeesKeeper    msgfeeskeeper.Keeper
 	// QuarantineKeeper quarantinekeeper.Keeper // TODO[1760]: quarantine
-	// SanctionKeeper sanctionkeeper.Keeper // TODO[1760]: sanction
+	SanctionKeeper        sanctionkeeper.Keeper
 	TriggerKeeper         triggerkeeper.Keeper
 	OracleKeeper          oraclekeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
@@ -324,15 +334,29 @@ func init() {
 // New returns a reference to an initialized Provenance Blockchain App.
 func New(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
-	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
+	homePath string, invCheckPeriod uint,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
-	appCodec := encodingConfig.Marshaler
-	legacyAmino := encodingConfig.Amino
-	interfaceRegistry := encodingConfig.InterfaceRegistry
+	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+			},
+			ValidatorAddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+			},
+		},
+	})
+	appCodec := codec.NewProtoCodec(interfaceRegistry)
+	legacyAmino := codec.NewLegacyAmino()
+	txConfig := tx.NewTxConfig(appCodec, tx.DefaultSignModes)
 
-	bApp := baseapp.NewBaseApp("provenanced", logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter(encodingConfig.TxConfig.TxDecoder()))
+	std.RegisterLegacyAminoCodec(legacyAmino)
+	std.RegisterInterfaces(interfaceRegistry)
+
+	bApp := baseapp.NewBaseApp("provenanced", logger, db, txConfig.TxDecoder(), baseAppOptions...)
+	bApp.SetMsgServiceRouter(piohandlers.NewPioMsgServiceRouter(txConfig.TxDecoder()))
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -359,7 +383,7 @@ func New(
 		msgfeestypes.StoreKey,
 		wasmtypes.StoreKey,
 		// quarantine.StoreKey, // TODO[1760]: quarantine
-		// sanction.StoreKey, // TODO[1760]: sanction
+		sanction.StoreKey,
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
 		hold.StoreKey,
@@ -439,10 +463,8 @@ func New(
 		EnabledSignModes:           enabledSignModes,
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
 	}
-	txConfig, err := tx.NewTxConfigWithOptions(
-		appCodec,
-		txConfigOpts,
-	)
+	var err error
+	txConfig, err = tx.NewTxConfigWithOptions(appCodec, txConfigOpts)
 	if err != nil {
 		panic(err)
 	}
@@ -670,15 +692,14 @@ func New(
 	)
 	oracleModule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper)
 
-	// TODO[1760]: sanction
-	// unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
-	// for mName := range maccPerms {
-	// 	unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
-	// }
-	// unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(quarantine.ModuleName))
-	// app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, keys[sanction.StoreKey],
-	// 	app.BankKeeper, &app.GovKeeper,
-	// 	govAuthority, unsanctionableAddrs)
+	unsanctionableAddrs := make([]sdk.AccAddress, 0, len(maccPerms)+1)
+	for mName := range maccPerms {
+		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
+	}
+	// unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(quarantine.ModuleName)) // TODO[1760]: quarantine
+	app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, keys[sanction.StoreKey],
+		app.BankKeeper, &app.GovKeeper,
+		govAuthority, unsanctionableAddrs)
 
 	// register the proposal types
 	govRouter := govtypesv1beta1.NewRouter()
@@ -697,11 +718,7 @@ func New(
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
 
-	app.GovKeeper = *govKeeper.SetHooks(
-		govtypes.NewMultiGovHooks(
-		// app.SanctionKeeper // TODO[1760]: sanction
-		),
-	)
+	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(app.SanctionKeeper))
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
@@ -755,7 +772,7 @@ func New(
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		// quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), // TODO[1760]: quarantine
-		// sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry), // TODO[1760]: sanction
+		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		// PROVENANCE
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
@@ -840,7 +857,7 @@ func New(
 		nametypes.ModuleName,
 		vestingtypes.ModuleName,
 		// quarantine.ModuleName, // TODO[1760]: quarantine
-		// sanction.ModuleName, // TODO[1760]: sanction
+		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
 		consensusparamtypes.ModuleName,
@@ -881,7 +898,7 @@ func New(
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		// quarantine.ModuleName, // TODO[1760]: quarantine
-		// sanction.ModuleName, // TODO[1760]: sanction
+		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
 		consensusparamtypes.ModuleName,
@@ -909,7 +926,7 @@ func New(
 		group.ModuleName,
 		feegrant.ModuleName,
 		// quarantine.ModuleName, // TODO[1760]: quarantine
-		// sanction.ModuleName, // TODO[1760]: sanction
+		sanction.ModuleName,
 
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
@@ -956,7 +973,7 @@ func New(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		// quarantine.ModuleName, // TODO[1760]: quarantine
-		// sanction.ModuleName, // TODO[1760]: sanction
+		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
 		consensusparamtypes.ModuleName, // TODO[1760]: Is this the correct placement?
@@ -998,7 +1015,7 @@ func New(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		// quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), // TODO[1760]: quarantine
-		// sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry), // TODO[1760]: sanction
+		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
 		marker.NewAppModule(appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
@@ -1230,6 +1247,16 @@ func (app *App) AppCodec() codec.Codec {
 // InterfaceRegistry returns Provenance's InterfaceRegistry
 func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
+}
+
+// GetEncodingConfig returns the various encoding configurations used in this app.
+func (app *App) GetEncodingConfig() simappparams.EncodingConfig {
+	return simappparams.EncodingConfig{
+		InterfaceRegistry: app.InterfaceRegistry(),
+		Marshaler:         app.AppCodec(),
+		TxConfig:          app.GetTxConfig(),
+		Amino:             app.LegacyAmino(),
+	}
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.

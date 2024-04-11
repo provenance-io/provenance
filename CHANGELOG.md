@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump cosmos-SDK to `v0.50.2` (from `v0.46.13-pio-2`) [#1772](https://github.com/provenance-io/provenance/issues/1772).
 * Add store for crisis module for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Add PreBlocker support for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Add the Sanction module back in [#1922](https://github.com/provenance-io/provenance/pull/1922).
 
 ### Improvements
 
@@ -51,12 +52,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Remove handlers from provenance modules [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Updated app.go to use RegisterStreamingServices on BaseApp [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Bump the SDK to `v0.50.5-pio-1` (from an earlier ephemeral version) [#1897](https://github.com/provenance-io/provenance/pull/1897).
+<<<<<<< HEAD
 * Removed `rewards` module [#1905](https://github.com/provenance-io/provenance/pull/1905).
+=======
+* Remove unused navs [#1920](https://github.com/provenance-io/provenance/issues/1920).
+>>>>>>> main
 
 ### Dependencies
 
 - Bump `github.com/cosmos/ibc-go/v8` from 8.0.0 to 8.2.0 ([#1910](https://github.com/provenance-io/provenance/pull/1910))
-- Bump `google.golang.org/grpc` from 1.62.1 to 1.63.0 ([#1903](https://github.com/provenance-io/provenance/pull/1903))
+- Bump `google.golang.org/grpc` from 1.62.1 to 1.63.2 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918))
+- Bump `bufbuild/buf-breaking-action` from 1.1.3 to 1.1.4 ([#1894](https://github.com/provenance-io/provenance/pull/1894))
+- Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
+- Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.30.1 ([#1904](https://github.com/provenance-io/provenance/pull/1904))
+- Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.6 ([#1912](https://github.com/provenance-io/provenance/pull/1912))
+- Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.1 ([#1913](https://github.com/provenance-io/provenance/pull/1913))
+- Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
 
 ---
 

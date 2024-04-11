@@ -18,7 +18,7 @@ if [ "$1" == '-v' ] || [ "$1" == '--verbose' ]; then
 fi
 
 # Find all files that import the "time" module, and identify what they're referenced as in that file.
-# There's at least one other module that has a .Now() function ("github.com/tendermint/tendermint/types/time") that we don't want used.
+# There's at least one other module that has a .Now() function ("github.com/cometbft/cometbft/types/time") that we don't want used.
 # So we're actually finding an import of any "time" package.
 # If a file has multiple such imports, there'll be a line for each import.
 # The vendor directory is ignored since it's not under our control and has lots of matches (that hopefully don't cause problems).

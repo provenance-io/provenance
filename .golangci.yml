@@ -83,8 +83,10 @@ linters-settings:
 
           - github.com/armon/go-metrics
 
-          - cosmossdk.io/math
+          - cosmossdk.io/core
           - cosmossdk.io/errors
+          - cosmossdk.io/math
+          - cosmossdk.io/store
           - github.com/cosmos/go-bip39
           - github.com/cosmos/cosmos-sdk
           - github.com/cosmos/ibc-go/v6
