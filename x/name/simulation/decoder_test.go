@@ -15,7 +15,7 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := app.MakeEncodingConfig().Marshaler
+	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	testNameRecord := types.NewNameRecord("test", sdk.AccAddress{}, true)

@@ -99,6 +99,8 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 }
 
 func TestAddGenesisMsgFeeCmd(t *testing.T) {
+	encCfg := app.MakeTestEncodingConfig(t)
+
 	tests := []struct {
 		name            string
 		msgType         string
@@ -156,7 +158,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 			cmd := provenancecmd.AddGenesisCustomFloorPriceDenomCmd(home)
-			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home, app.MakeEncodingConfig().InterfaceRegistry)
+			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home, encCfg.InterfaceRegistry)
 			cmd.SetArgs([]string{
 				tc.msgFeeFloorCoin,
 				fmt.Sprintf("--%s=home", flags.FlagHome)})

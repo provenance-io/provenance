@@ -2,15 +2,18 @@ package testutil
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
 	cmtrand "github.com/cometbft/cometbft/libs/rand"
 
+	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -20,28 +23,36 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	provenanceapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/app/params"
 )
 
 // NewAppConstructor returns a new provenanceapp AppConstructor
-func NewAppConstructor(encodingCfg params.EncodingConfig) testnet.AppConstructor {
+func NewAppConstructor() testnet.AppConstructor {
 	return func(val testnet.ValidatorI) servertypes.Application {
 		ctx := val.GetCtx()
 		appCfg := val.GetAppConfig()
 		return provenanceapp.New(
 			ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), ctx.Config.RootDir, 0,
-			encodingCfg,
 			simtestutil.EmptyAppOptions{},
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(appCfg.Pruning)),
 			baseapp.SetMinGasPrices(appCfg.MinGasPrices),
+			baseapp.SetChainID(ctx.Viper.GetString(flags.FlagChainID)),
 		)
 	}
 }
 
 // DefaultTestNetworkConfig creates a network configuration for inproc testing
 func DefaultTestNetworkConfig() testnet.Config {
-	encCfg := provenanceapp.MakeEncodingConfig()
-	tempApp := NewAppConstructor(encCfg)(nil).(*provenanceapp.App)
+	tempDir, err := os.MkdirTemp("", "tempprovapp")
+	if err != nil {
+		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
+	}
+	defer os.RemoveAll(tempDir)
+
+	tempApp := provenanceapp.New(
+		log.NewNopLogger(), dbm.NewMemDB(), nil, true, make(map[int64]bool), tempDir, 0,
+		simtestutil.NewAppOptionsWithFlagHome(tempDir),
+	)
+	encCfg := provenanceapp.MakeTestEncodingConfig(nil)
 
 	return testnet.Config{
 		Codec:             encCfg.Marshaler,
@@ -49,9 +60,9 @@ func DefaultTestNetworkConfig() testnet.Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewAppConstructor(encCfg),
+		AppConstructor:    NewAppConstructor(),
 		GenesisState:      tempApp.DefaultGenesis(),
-		TimeoutCommit:     2 * time.Second,
+		TimeoutCommit:     500 * time.Millisecond,
 		ChainID:           "chain-" + cmtrand.NewRand().Str(6),
 		NumValidators:     4,
 		BondDenom:         sdk.DefaultBondDenom, // we use the SDK bond denom here, at least until the entire genesis is rewritten to match bond denom

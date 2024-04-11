@@ -333,10 +333,11 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			return opMsg, nil, err
 		}
 
-		proposalID, err := args.GK.ProposalID.Next(ctx)
+		proposalID, err := args.GK.ProposalID.Peek(ctx)
 		if err != nil {
 			return opMsg, nil, err
 		}
+		proposalID--
 
 		votingPeriod := govParams.VotingPeriod
 		fops := make([]simtypes.FutureOperation, len(accs))

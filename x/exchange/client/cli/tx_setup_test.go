@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -733,7 +732,7 @@ func TestMakeMsgMarketCommitmentSettle(t *testing.T) {
 		},
 		{
 			name:      "from file",
-			clientCtx: newClientContextWithCodec(),
+			clientCtx: newClientContextWithCodec(t),
 			flags:     []string{"--file", filename},
 			expMsg:    fileMsg,
 		},
@@ -743,7 +742,7 @@ func TestMakeMsgMarketCommitmentSettle(t *testing.T) {
 				"--file", filename, "--tag", "new-thang", "--authority",
 				"--outputs", "monroe:87plum",
 			},
-			clientCtx: newClientContextWithCodec(),
+			clientCtx: newClientContextWithCodec(t),
 			expMsg: &exchange.MsgMarketCommitmentSettleRequest{
 				Admin:    cli.AuthorityAddr.String(),
 				MarketId: 4,
@@ -1842,13 +1841,13 @@ func TestMakeMsgCreatePayment(t *testing.T) {
 		},
 		{
 			name:      "from file",
-			clientCtx: clientContextWithCodec(client.Context{}),
+			clientCtx: clientContextWithCodec(t, client.Context{}),
 			flags:     []string{"--file", txFN},
 			expMsg:    &exchange.MsgCreatePaymentRequest{Payment: filePayment},
 		},
 		{
 			name:      "from file with override",
-			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("another_from________")}),
+			clientCtx: clientContextWithCodec(t, client.Context{FromAddress: sdk.AccAddress("another_from________")}),
 			flags:     []string{"--external-id", "something-else", "--file", txFN},
 			expMsg: &exchange.MsgCreatePaymentRequest{Payment: exchange.Payment{
 				Source:       sdk.AccAddress("another_from________").String(),
@@ -1957,13 +1956,13 @@ func TestMakeMsgAcceptPayment(t *testing.T) {
 		},
 		{
 			name:      "from file",
-			clientCtx: clientContextWithCodec(client.Context{}),
+			clientCtx: clientContextWithCodec(t, client.Context{}),
 			flags:     []string{"--file", txFN},
 			expMsg:    &exchange.MsgAcceptPaymentRequest{Payment: filePayment},
 		},
 		{
 			name:      "from file with override",
-			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("another_from________")}),
+			clientCtx: clientContextWithCodec(t, client.Context{FromAddress: sdk.AccAddress("another_from________")}),
 			flags:     []string{"--external-id", "something-else", "--file", txFN},
 			expMsg: &exchange.MsgAcceptPaymentRequest{Payment: exchange.Payment{
 				Source:       filePayment.Source,
@@ -2453,13 +2452,13 @@ func TestMakeMsgGovCreateMarket(t *testing.T) {
 		},
 		{
 			name:      "proposal flag",
-			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
+			clientCtx: clientContextWithCodec(t, client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
 			flags:     []string{"--proposal", propFN},
 			expMsg:    fileMsg,
 		},
 		{
 			name:      "proposal flag with others",
-			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
+			clientCtx: clientContextWithCodec(t, client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
 			flags:     []string{"--proposal", propFN, "--market", "22"},
 			expMsg: &exchange.MsgGovCreateMarketRequest{
 				Authority: fileMsg.Authority,
@@ -2647,13 +2646,13 @@ func TestMakeMsgGovManageFees(t *testing.T) {
 		},
 		{
 			name:      "proposal flag",
-			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
+			clientCtx: clientContextWithCodec(t, client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
 			flags:     []string{"--proposal", propFN},
 			expMsg:    fileMsg,
 		},
 		{
 			name:      "proposal flag plus others",
-			clientCtx: clientContextWithCodec(client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
+			clientCtx: clientContextWithCodec(t, client.Context{FromAddress: sdk.AccAddress("FromAddress_________")}),
 			flags:     []string{"--market", "5", "--proposal", propFN},
 			expMsg: &exchange.MsgGovManageFeesRequest{
 				Authority:                        fileMsg.Authority,
