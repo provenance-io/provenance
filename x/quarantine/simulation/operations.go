@@ -138,11 +138,11 @@ func SimulateMsgOptOut(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 		if r.Intn(4) != 0 {
 			addr := randomQuarantinedAccount(ctx, r, k)
 			if len(addr) == 0 {
-				return simtypes.NoOpMsg(msgType, msgType, "no addresses opted in yet"), nil, nil
+				return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "no addresses opted in yet"), nil, nil
 			}
 			acctInd := findAccount(accs, addr)
 			if acctInd < 0 {
-				return simtypes.NoOpMsg(msgType, msgType, "account not found for quarantined address"), nil, nil
+				return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "account not found for quarantined address"), nil, nil
 			}
 			acct = accs[acctInd]
 			msg.ToAddress = addr.String()
@@ -202,7 +202,7 @@ func SimulateMsgAccept(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 		if r.Intn(4) != 0 {
 			funds := randomQuarantinedFunds(ctx, r, k)
 			if funds == nil {
-				return simtypes.NoOpMsg(msgType, msgType, "no funds yet quarantined"), nil, nil
+				return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "no funds yet quarantined"), nil, nil
 			}
 			msg.ToAddress = funds.ToAddress
 			msg.FromAddresses = funds.UnacceptedFromAddresses
@@ -212,7 +212,7 @@ func SimulateMsgAccept(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 			}
 			acctInd := findAccount(accs, addr)
 			if acctInd < 0 {
-				return simtypes.NoOpMsg(msgType, msgType, "account not found for to address"), nil, nil
+				return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "account not found for to address"), nil, nil
 			}
 			acct = accs[acctInd]
 		}
@@ -275,7 +275,7 @@ func SimulateMsgDecline(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k
 		if r.Intn(4) != 0 {
 			funds := randomQuarantinedFunds(ctx, r, k)
 			if funds == nil {
-				return simtypes.NoOpMsg(msgType, msgType, "no funds yet quarantined"), nil, nil
+				return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "no funds yet quarantined"), nil, nil
 			}
 			msg.ToAddress = funds.ToAddress
 			msg.FromAddresses = funds.UnacceptedFromAddresses
@@ -348,11 +348,11 @@ func SimulateMsgUpdateAutoResponses(ak quarantine.AccountKeeper, bk quarantine.B
 		if r.Intn(4) != 0 {
 			addr := randomQuarantinedAccount(ctx, r, k)
 			if len(addr) == 0 {
-				return simtypes.NoOpMsg(msgType, msgType, "no addresses opted in yet"), nil, nil
+				return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "no addresses opted in yet"), nil, nil
 			}
 			acctInd := findAccount(accs, addr)
 			if acctInd < 0 {
-				return simtypes.NoOpMsg(msgType, msgType, "account not found for quarantined address"), nil, nil
+				return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "account not found for quarantined address"), nil, nil
 			}
 			acct = accs[acctInd]
 			msg.ToAddress = addr.String()

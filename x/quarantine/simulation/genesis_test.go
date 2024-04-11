@@ -29,7 +29,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 	simState := module.SimulationState{
 		AppParams:    make(simtypes.AppParams),
-		Cdc:          app.MakeTestEncodingConfig(t).Codec,
+		Cdc:          app.MakeTestEncodingConfig(t).Marshaler,
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 10),
@@ -73,7 +73,7 @@ func TestRandomizedGenState(t *testing.T) {
 }
 
 func TestRandomizedGenStateImportExport(t *testing.T) {
-	cdc := app.MakeTestEncodingConfig(t).Codec
+	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
 	emptyBankGen := banktypes.GenesisState{}
 	emptyBankGenBz, err := cdc.MarshalJSON(&emptyBankGen)

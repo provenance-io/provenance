@@ -7,9 +7,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -60,11 +57,11 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opsMsgRoute string
 		opsMsgName  string
 	}{
-		{simulation.WeightMsgOptIn, simulation.TypeMsgOptIn, simulation.TypeMsgOptIn},
-		{simulation.WeightMsgOptOut, simulation.TypeMsgOptOut, simulation.TypeMsgOptOut},
-		{simulation.WeightMsgAccept, simulation.TypeMsgAccept, simulation.TypeMsgAccept},
-		{simulation.WeightMsgDecline, simulation.TypeMsgDecline, simulation.TypeMsgDecline},
-		{simulation.WeightMsgUpdateAutoResponses, simulation.TypeMsgUpdateAutoResponses, simulation.TypeMsgUpdateAutoResponses},
+		{simulation.WeightMsgOptIn, quarantine.ModuleName, simulation.TypeMsgOptIn},
+		{simulation.WeightMsgOptOut, quarantine.ModuleName, simulation.TypeMsgOptOut},
+		{simulation.WeightMsgAccept, quarantine.ModuleName, simulation.TypeMsgAccept},
+		{simulation.WeightMsgDecline, quarantine.ModuleName, simulation.TypeMsgDecline},
+		{simulation.WeightMsgUpdateAutoResponses, quarantine.ModuleName, simulation.TypeMsgUpdateAutoResponses},
 	}
 
 	weightedOps := simulation.WeightedOperations(
@@ -95,21 +92,17 @@ func (s *SimTestSuite) TestSimulateMsgOptIn() {
 	r := rand.New(rand.NewSource(1))
 	accounts := s.getTestingAccounts(r, 10)
 
-	s.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  s.app.LastBlockHeight() + 1,
-			AppHash: s.app.LastCommitID().Hash,
-		},
-	})
-
 	op := simulation.SimulateMsgOptIn(s.app.AccountKeeper, s.app.BankKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "running SimulateMsgOptIn op")
 
 	var msg quarantine.MsgOptIn
-	err = s.app.AppCodec().UnmarshalJSON(opMsg.Msg, &msg)
-	s.Assert().NoError(err, "UnmarshalJSON on opMsg.Msg for MsgOptIn")
+	err = s.app.AppCodec().Unmarshal(opMsg.Msg, &msg)
+	s.Assert().NoError(err, "Unmarshal on opMsg.Msg for MsgOptIn")
 	s.Assert().True(opMsg.OK, "opMsg.OK")
+	s.Assert().Equal(opMsg.Route, quarantine.ModuleName, "opMsg.Route")
+	s.Assert().Equal(opMsg.Name, simulation.TypeMsgOptIn, "opMsg.Name")
+	s.Assert().Equal(opMsg.Comment, "", "opMsg.Comment")
 	s.Assert().Len(futureOps, 0)
 }
 
@@ -120,20 +113,16 @@ func (s *SimTestSuite) TestSimulateMsgOptOut() {
 	err := s.app.QuarantineKeeper.SetOptIn(s.ctx, accounts[0].Address)
 	s.Require().NoError(err, "SetOptIn on accounts[0]")
 
-	s.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  s.app.LastBlockHeight() + 1,
-			AppHash: s.app.LastCommitID().Hash,
-		},
-	})
-
 	op := simulation.SimulateMsgOptOut(s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "running SimulateMsgOptIn op")
 
 	var msg quarantine.MsgOptOut
-	err = s.app.AppCodec().UnmarshalJSON(opMsg.Msg, &msg)
-	s.Assert().NoError(err, "UnmarshalJSON on opMsg.Msg for MsgOptIn")
+	err = s.app.AppCodec().Unmarshal(opMsg.Msg, &msg)
+	s.Assert().NoError(err, "Unmarshal on opMsg.Msg for MsgOptOut")
+	s.Assert().Equal(opMsg.Route, quarantine.ModuleName, "opMsg.Route")
+	s.Assert().Equal(opMsg.Name, simulation.TypeMsgOptOut, "opMsg.Name")
+	s.Assert().Equal(opMsg.Comment, "", "opMsg.Comment")
 	s.Assert().True(opMsg.OK, "opMsg.OK")
 	s.Assert().Len(futureOps, 0)
 }
@@ -150,21 +139,17 @@ func (s *SimTestSuite) TestSimulateMsgAccept() {
 	err = s.app.BankKeeper.SendCoins(s.ctx, accounts[1].Address, accounts[0].Address, toSend)
 	s.Require().NoError(err, "SendCoins")
 
-	s.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  s.app.LastBlockHeight() + 1,
-			AppHash: s.app.LastCommitID().Hash,
-		},
-	})
-
 	op := simulation.SimulateMsgAccept(s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "running SimulateMsgOptIn op")
 
 	var msg quarantine.MsgAccept
-	err = s.app.AppCodec().UnmarshalJSON(opMsg.Msg, &msg)
-	s.Assert().NoError(err, "UnmarshalJSON on opMsg.Msg for MsgOptIn")
+	err = s.app.AppCodec().Unmarshal(opMsg.Msg, &msg)
+	s.Assert().NoError(err, "Unmarshal on opMsg.Msg for MsgAccept")
 	s.Assert().True(opMsg.OK, "opMsg.OK")
+	s.Assert().Equal(opMsg.Route, quarantine.ModuleName, "opMsg.Route")
+	s.Assert().Equal(opMsg.Name, simulation.TypeMsgAccept, "opMsg.Name")
+	s.Assert().Equal(opMsg.Comment, "", "opMsg.Comment")
 	s.Assert().Len(futureOps, 0)
 }
 
@@ -180,21 +165,17 @@ func (s *SimTestSuite) TestSimulateMsgDecline() {
 	err = s.app.BankKeeper.SendCoins(s.ctx, accounts[1].Address, accounts[0].Address, toSend)
 	s.Require().NoError(err, "SendCoins")
 
-	s.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  s.app.LastBlockHeight() + 1,
-			AppHash: s.app.LastCommitID().Hash,
-		},
-	})
-
 	op := simulation.SimulateMsgDecline(s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "running SimulateMsgOptIn op")
 
 	var msg quarantine.MsgDecline
-	err = s.app.AppCodec().UnmarshalJSON(opMsg.Msg, &msg)
-	s.Assert().NoError(err, "UnmarshalJSON on opMsg.Msg for MsgOptIn")
+	err = s.app.AppCodec().Unmarshal(opMsg.Msg, &msg)
+	s.Assert().NoError(err, "Unmarshal on opMsg.Msg for MsgDecline")
 	s.Assert().True(opMsg.OK, "opMsg.OK")
+	s.Assert().Equal(opMsg.Route, quarantine.ModuleName, "opMsg.Route")
+	s.Assert().Equal(opMsg.Name, simulation.TypeMsgDecline, "opMsg.Name")
+	s.Assert().Equal(opMsg.Comment, "", "opMsg.Comment")
 	s.Assert().Len(futureOps, 0)
 }
 
@@ -205,21 +186,17 @@ func (s *SimTestSuite) TestSimulateMsgUpdateAutoResponses() {
 	err := s.app.QuarantineKeeper.SetOptIn(s.ctx, accounts[0].Address)
 	s.Require().NoError(err, "SetOptIn on accounts[0]")
 
-	s.app.BeginBlock(abci.RequestBeginBlock{
-		Header: cmtproto.Header{
-			Height:  s.app.LastBlockHeight() + 1,
-			AppHash: s.app.LastCommitID().Hash,
-		},
-	})
-
 	op := simulation.SimulateMsgUpdateAutoResponses(s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "running SimulateMsgOptIn op")
 
 	var msg quarantine.MsgUpdateAutoResponses
-	err = s.app.AppCodec().UnmarshalJSON(opMsg.Msg, &msg)
-	s.Assert().NoError(err, "UnmarshalJSON on opMsg.Msg for MsgOptIn")
+	err = s.app.AppCodec().Unmarshal(opMsg.Msg, &msg)
+	s.Assert().NoError(err, "Unmarshal on opMsg.Msg for MsgUpdateAutoResponses")
 	s.Assert().True(opMsg.OK, "opMsg.OK")
+	s.Assert().Equal(opMsg.Route, quarantine.ModuleName, "opMsg.Route")
+	s.Assert().Equal(opMsg.Name, simulation.TypeMsgUpdateAutoResponses, "opMsg.Name")
+	s.Assert().Equal(opMsg.Comment, "", "opMsg.Comment")
 	s.Assert().Len(futureOps, 0)
 	s.Assert().GreaterOrEqual(len(msg.Updates), 1, "number of updates")
 }

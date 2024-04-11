@@ -16,7 +16,7 @@ import (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := app.MakeTestEncodingConfig(t).Codec
+	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	cz := func(coins string) sdk.Coins {
