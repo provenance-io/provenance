@@ -175,15 +175,10 @@ import (
 	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
 	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
-<<<<<<< HEAD
-=======
-	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
-	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
-	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
+
 	"github.com/provenance-io/provenance/x/sanction"
 	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
 	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
->>>>>>> main
 	triggerkeeper "github.com/provenance-io/provenance/x/trigger/keeper"
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
