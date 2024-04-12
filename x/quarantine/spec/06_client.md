@@ -1,10 +1,21 @@
-<!--
-order: 6
--->
-
 # Client
 
 A user can interact with the `x/quarantine` module using `gRPC`, `CLI`, or `REST`.
+
+<!-- TOC 2 4 -->
+  - [gRPC](#grpc)
+  - [CLI](#cli)
+    - [Transactions](#transactions)
+      - [OptIn](#optin)
+      - [OptOut](#optout)
+      - [Accept](#accept)
+      - [Decline](#decline)
+      - [UpdateAutoResponses](#updateautoresponses)
+    - [Queries](#queries)
+      - [IsQuarantined](#isquarantined)
+      - [QuarantinedFunds](#quarantinedfunds)
+      - [AutoResponses](#autoresponses)
+  - [REST](#rest)
 
 ## gRPC
 

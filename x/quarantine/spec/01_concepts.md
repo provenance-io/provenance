@@ -1,8 +1,12 @@
-<!--
-order: 1
--->
-
 # Concepts
+
+<!-- TOC -->
+  - [Quarantined Account](#quarantined-account)
+  - [Opt-In](#opt-in)
+  - [Quarantined Funds](#quarantined-funds)
+    - [Accept Funds](#accept-funds)
+    - [Decline Funds](#decline-funds)
+  - [Auto-Responses](#auto-responses)
 
 ## Quarantined Account
 

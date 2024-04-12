@@ -1,10 +1,12 @@
-<!--
-order: 2
--->
-
 # State
 
 The `x/quarantine` module uses key/value pairs to store quarantine-related data in state.
+
+<!-- TOC -->
+  - [Quarantined Accounts](#quarantined-accounts)
+  - [Auto-Responses](#auto-responses)
+  - [Quarantine Records](#quarantine-records)
+  - [Quarantine Records Suffix Index](#quarantine-records-suffix-index)
 
 ## Quarantined Accounts
 
