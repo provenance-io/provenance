@@ -31,6 +31,7 @@ var (
 	AttributeKeyPrefix           = []byte{0x02}
 	AttributeAddrLookupKeyPrefix = []byte{0x03}
 	AttributeExpirationKeyPrefix = []byte{0x04}
+	AttributeParamPrefix         = []byte{0x05}
 )
 
 // AddrAttributeKey creates a key for an account attribute
