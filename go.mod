@@ -215,7 +215,8 @@ replace (
 	// TODO[1760]: wasm: Put this CosmWasm/wasmd replace back with an updated version (or delete it).
 	// github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
 	// TODO[1760]: sdk: Put this replace back with an updated version of the sdk from our fork.
-	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-pio-2
+	// github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-pio-2
+	github.com/cosmos/cosmos-sdk => ../prov-cosmos-sdk
 
 	// TODO[1760]: Update once async-icq creates tag with our changes https://github.com/cosmos/ibc-apps/pull/168
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 => github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1
