@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	sdksim "cosmossdk.io/simapp"
 
 	dbm "github.com/cosmos/cosmos-db"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -159,7 +158,7 @@ func TestExportAppStateAndValidators(t *testing.T) {
 	exported, err := app.ExportAppStateAndValidators(false, nil, nil)
 	require.NoError(t, err, "ExportAppStateAndValidators")
 
-	var genState sdksim.GenesisState
+	var genState map[string]json.RawMessage
 	err = json.Unmarshal(exported.AppState, &genState)
 	require.NoError(t, err, "unmarshalling exported app state")
 
