@@ -76,10 +76,6 @@ filters=()
 filters+=( '^[^:]+_test\.go:' )
 # It's okay to use it in the telemetry.MeasureSince and telemetry.ModuleMeasureSince functions.
 filters+=( 'telemetry\.(Module)?MeasureSince\(' )
-# There's a use in the x/reward/simulation/operations.go file that's okay.
-#     It's pretty generic though, so rather than ignoring all such lines in the file, only ignore
-#     such lines from line 70 to 85 (inclusive). It's on line 78 as of writing this.
-filters+=( '^x/reward/simulation/operations\.go:(7[0-9]|8[0-5]):[[:space:]]+now := [[:alnum:]]+\.Now\(\)$' )
 # The app/test_helpers.go file also has a legitimate use since it's only for unit tests.
 #     It's in the header creation for the BeginBlock.
 #     Since it's expected that it might move, and also that additional

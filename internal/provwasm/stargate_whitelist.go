@@ -22,7 +22,6 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -134,13 +133,6 @@ func init() {
 	setWhitelistedQuery("/provenance.name.v1.Query/Params", &nametypes.QueryParamsResponse{})
 	setWhitelistedQuery("/provenance.name.v1.Query/Resolve", &nametypes.QueryResolveResponse{})
 	setWhitelistedQuery("/provenance.name.v1.Query/ReverseLookup", &nametypes.QueryReverseLookupResponse{})
-
-	// reward
-	setWhitelistedQuery("/provenance.reward.v1.Query/RewardProgramByID", &rewardtypes.QueryRewardProgramByIDResponse{})
-	setWhitelistedQuery("/provenance.reward.v1.Query/RewardPrograms", &rewardtypes.QueryRewardProgramsResponse{})
-	setWhitelistedQuery("/provenance.reward.v1.Query/ClaimPeriodRewardDistributions", &rewardtypes.QueryClaimPeriodRewardDistributionsResponse{})
-	setWhitelistedQuery("/provenance.reward.v1.Query/ClaimPeriodRewardDistributionsByID", &rewardtypes.QueryClaimPeriodRewardDistributionsByIDResponse{})
-	setWhitelistedQuery("/provenance.reward.v1.Query/RewardDistributionsByAddress", &rewardtypes.QueryRewardDistributionsByAddressResponse{})
 
 	// trigger
 	setWhitelistedQuery("/provenance.trigger.v1.Query/TriggerByID", &triggertypes.QueryTriggerByIDResponse{})

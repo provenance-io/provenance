@@ -34,7 +34,6 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
-	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -2886,7 +2885,6 @@ func TestReqAttrBypassAddrs(t *testing.T) {
 	// Tests both GetReqAttrBypassAddrs and IsReqAttrBypassAddr.
 	expectedNames := []string{
 		authtypes.FeeCollectorName,
-		rewardtypes.ModuleName,
 		// quarantine.ModuleName, // TODO[1760]: quarantine
 		govtypes.ModuleName,
 		distrtypes.ModuleName,
