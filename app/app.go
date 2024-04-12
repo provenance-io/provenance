@@ -8,21 +8,20 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
+
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtos "github.com/cometbft/cometbft/libs/os"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/tx/signing"
-
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -30,12 +29,10 @@ import (
 	"cosmossdk.io/x/feegrant"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/gogoproto/proto"
 
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
@@ -44,6 +41,10 @@ import (
 	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
 	// quarantinekeeper "github.com/cosmos/cosmos-sdk/x/quarantine/keeper" // TODO[1760]: quarantine
 	// quarantinemodule "github.com/cosmos/cosmos-sdk/x/quarantine/module" // TODO[1760]: quarantine
+
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/gogoproto/proto"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -250,7 +251,7 @@ type App struct {
 
 	// keepers
 	AccountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
+	BankKeeper       *bankkeeper.BaseKeeper
 	CapabilityKeeper *capabilitykeeper.Keeper
 	StakingKeeper    *stakingkeeper.Keeper
 	SlashingKeeper   slashingkeeper.Keeper
@@ -443,7 +444,7 @@ func New(
 	// add keepers
 	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(addrPrefix), addrPrefix, govAuthority)
 
-	app.BankKeeper = bankkeeper.NewBaseKeeper(
+	bankKeeper := bankkeeper.NewBaseKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		app.AccountKeeper,
@@ -451,6 +452,7 @@ func New(
 		govAuthority,
 		logger,
 	)
+	app.BankKeeper = &bankKeeper
 
 	// optional: enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
 	enabledSignModes := append(tx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
