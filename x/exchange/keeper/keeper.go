@@ -222,9 +222,7 @@ func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs 
 		}
 	}
 
-	// TODO[1760]: exchange: Put this back once we have InputOutputCoins again.
-	// return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
-	return nil
+	return k.bankKeeper.InputOutputCoinsProv(ctx, inputs, outputs)
 }
 
 // CalculateExchangeSplit calculates the amount that the exchange will keep of the provided fee.
@@ -302,11 +300,9 @@ func (k Keeper) CollectFees(ctx sdk.Context, marketID uint32, inputs []banktypes
 
 	marketAddr := exchange.GetMarketAddress(marketID)
 	outputs := []banktypes.Output{{Address: marketAddr.String(), Coins: feeAmt}}
-	// TODO[1760]: exchange: Put this back once we have InputOutputCoins again.
-	_ = outputs
-	// if err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs); err != nil {
-	// 	return fmt.Errorf("error collecting fees for market %d: %w", marketID, err)
-	// }
+	if err := k.bankKeeper.InputOutputCoinsProv(ctx, inputs, outputs); err != nil {
+		return fmt.Errorf("error collecting fees for market %d: %w", marketID, err)
+	}
 	if !exchangeAmt.IsZero() {
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeAmt); err != nil {
 			return fmt.Errorf("error collecting exchange fee %s (based off %s) from market %d: %w", exchangeAmt, feeAmt, marketID, err)
