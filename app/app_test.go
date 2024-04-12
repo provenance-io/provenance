@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"sort"
 	"testing"
 
@@ -24,7 +23,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/provenance-io/provenance/app/params"
 	markermodule "github.com/provenance-io/provenance/x/marker"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -426,23 +424,4 @@ func TestFilterBeginBlockerEvents(t *testing.T) {
 			}
 		})
 	}
-}
-
-// MakeTestEncodingConfig creates an encoding config suitable for unit tests.
-func MakeTestEncodingConfig(t *testing.T) params.EncodingConfig {
-	tempDir, err := os.MkdirTemp("", "tempprovapp")
-	switch {
-	case t != nil:
-		require.NoError(t, err, "failed to create temp dir %q", tempDir)
-	case err != nil:
-		panic(fmt.Errorf("failed to create temp dir %q: %w", tempDir, err))
-	}
-	defer os.RemoveAll(tempDir)
-
-	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
-		tempDir,
-		0,
-		simtestutil.EmptyAppOptions{},
-	)
-	return tempApp.GetEncodingConfig()
 }

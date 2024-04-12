@@ -40,6 +40,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
@@ -511,4 +512,23 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 		panic(errors.ErrInvalidPubKey.Wrap("invalid pubkey size"))
 	}
 	return &ed25519.PubKey{Key: pkBytes}
+}
+
+// MakeTestEncodingConfig creates an encoding config suitable for unit tests.
+func MakeTestEncodingConfig(t *testing.T) params.EncodingConfig {
+	tempDir, err := os.MkdirTemp("", "tempprovapp")
+	switch {
+	case t != nil:
+		require.NoError(t, err, "failed to create temp dir %q", tempDir)
+	case err != nil:
+		panic(fmt.Errorf("failed to create temp dir %q: %w", tempDir, err))
+	}
+	defer os.RemoveAll(tempDir)
+
+	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
+		tempDir,
+		0,
+		simtestutil.EmptyAppOptions{},
+	)
+	return tempApp.GetEncodingConfig()
 }
