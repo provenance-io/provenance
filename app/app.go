@@ -174,9 +174,6 @@ import (
 	"github.com/provenance-io/provenance/x/quarantine"
 	quarantinekeeper "github.com/provenance-io/provenance/x/quarantine/keeper"
 	quarantinemodule "github.com/provenance-io/provenance/x/quarantine/module"
-	rewardkeeper "github.com/provenance-io/provenance/x/reward/keeper"
-	rewardmodule "github.com/provenance-io/provenance/x/reward/module"
-	rewardtypes "github.com/provenance-io/provenance/x/reward/types"
 	"github.com/provenance-io/provenance/x/sanction"
 	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
 	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
@@ -210,7 +207,6 @@ var (
 		attributetypes.ModuleName: nil,
 		markertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		wasmtypes.ModuleName:      {authtypes.Burner},
-		rewardtypes.ModuleName:    nil,
 		triggertypes.ModuleName:   nil,
 		oracletypes.ModuleName:    nil,
 	}
@@ -267,7 +263,6 @@ type App struct {
 	EvidenceKeeper        evidencekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	MsgFeesKeeper         msgfeeskeeper.Keeper
-	RewardKeeper          rewardkeeper.Keeper
 	QuarantineKeeper      quarantinekeeper.Keeper
 	SanctionKeeper        sanctionkeeper.Keeper
 	TriggerKeeper         triggerkeeper.Keeper
@@ -380,7 +375,6 @@ func New(
 		nametypes.StoreKey,
 		msgfeestypes.StoreKey,
 		wasmtypes.StoreKey,
-		rewardtypes.StoreKey,
 		quarantine.StoreKey,
 		sanction.StoreKey,
 		triggertypes.StoreKey,
@@ -503,8 +497,6 @@ func New(
 		stakingtypes.NewMultiStakingHooks(restrictHooks, app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.RewardKeeper = rewardkeeper.NewKeeper(appCodec, keys[rewardtypes.StoreKey], app.StakingKeeper, &app.GovKeeper, app.BankKeeper, app.AccountKeeper)
-
 	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper)
 
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.BaseApp.MsgServiceRouter(), app.AccountKeeper, group.DefaultConfig())
@@ -569,7 +561,6 @@ func New(
 
 	markerReqAttrBypassAddrs := []sdk.AccAddress{
 		authtypes.NewModuleAddress(authtypes.FeeCollectorName),     // Allow collecting fees in restricted coins.
-		authtypes.NewModuleAddress(rewardtypes.ModuleName),         // Allow rewards to hold onto restricted coins.
 		authtypes.NewModuleAddress(quarantine.ModuleName),          // Allow quarantine to hold onto restricted coins.
 		authtypes.NewModuleAddress(govtypes.ModuleName),            // Allow restricted coins in deposits.
 		authtypes.NewModuleAddress(distrtypes.ModuleName),          // Allow fee denoms to be restricted coins.
@@ -783,7 +774,6 @@ func New(
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, nil, app.GetSubspace(wasmtypes.ModuleName)), // TODO[1760]: Need to pass message router instead of nil
-		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oracleModule,
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
@@ -837,7 +827,6 @@ func New(
 		markertypes.ModuleName,
 		icatypes.ModuleName,
 		attributetypes.ModuleName,
-		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
 
 		// no-ops
@@ -874,7 +863,6 @@ func New(
 		authtypes.ModuleName,
 		icatypes.ModuleName,
 		group.ModuleName,
-		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
 
 		// no-ops
@@ -948,7 +936,6 @@ func New(
 		ibchookstypes.ModuleName,
 		// wasm after ibc transfer
 		wasmtypes.ModuleName,
-		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
 
@@ -995,7 +982,6 @@ func New(
 		msgfeestypes.ModuleName,
 		metadatatypes.ModuleName,
 		nametypes.ModuleName,
-		rewardtypes.ModuleName,
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
 
@@ -1029,7 +1015,6 @@ func New(
 		name.NewAppModule(appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
 		msgfeesmodule.NewAppModule(appCodec, app.MsgFeesKeeper, app.interfaceRegistry),
-		rewardmodule.NewAppModule(appCodec, app.RewardKeeper, app.AccountKeeper, app.BankKeeper),
 		triggermodule.NewAppModule(appCodec, app.TriggerKeeper, app.AccountKeeper, app.BankKeeper),
 		oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper),
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
@@ -1382,7 +1367,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(attributetypes.ModuleName) // TODO[1760]: params: Migrate attribute params.
 	paramsKeeper.Subspace(msgfeestypes.ModuleName)   // TODO[1760]: params: Migrate msgFees params.
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
-	paramsKeeper.Subspace(rewardtypes.ModuleName)  // TODO[1760]: params: Migrate reward params.
 	paramsKeeper.Subspace(triggertypes.ModuleName) // TODO[1760]: params: Migrate trigger params.
 
 	// register the key tables for legacy param subspaces
