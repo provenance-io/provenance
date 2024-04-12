@@ -331,27 +331,18 @@ PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
 PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
 
 TEST_PACKAGES=./...
-TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
+TEST_TARGETS := test-unit test-unit-proto test-ledger-mock test-race test-ledger
 
 # Test runs-specific rules. To add a new test target, just add
 # a new rule, customise TAGS, ARGS and/or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
 test-unit: TAGS+=cgo ledger test_ledger_mock norace
-test-unit-amino: TAGS+=ledger test_ledger_mock test_amino norace
 test-ledger: TAGS+=cgo ledger norace
 test-ledger-mock: TAGS+=ledger test_ledger_mock norace
 test-race: ARGS+=-race
 test-race: TAGS+=cgo ledger test_ledger_mock
 test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 $(TEST_TARGETS): run-tests
-
-# check-* compiles and collects tests without running them
-# note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
-CHECK_TEST_TARGETS := check-test-unit check-test-unit-amino
-check-test-unit: TAGS+=cgo ledger test_ledger_mock norace
-check-test-unit-amino: TAGS+=ledger test_ledger_mock test_amino norace
-$(CHECK_TEST_TARGETS): ARGS+=-run=none
-$(CHECK_TEST_TARGETS): run-tests
 
 run-tests: go.sum
 ifneq (,$(shell which tparse 2>/dev/null))
@@ -373,7 +364,7 @@ test-cover:
 benchmark:
 	$(GO) test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 
-.PHONY: test test-all test-unit test-race test-cover benchmark run-tests build-tests $(TEST_TARGETS)
+.PHONY: test test-all test-cover benchmark run-tests build-tests $(TEST_TARGETS)
 
 ##############################
 # Test Network Targets

@@ -1,10 +1,8 @@
-//go:build !test_amino
-// +build !test_amino
-
 package params
 
 import (
 	"cosmossdk.io/x/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	amino "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
