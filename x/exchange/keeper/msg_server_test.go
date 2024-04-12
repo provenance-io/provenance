@@ -248,9 +248,8 @@ func (s *TestSuite) requireQuarantineOptIn(addr sdk.AccAddress) {
 
 // requireSanctionAddress sanctions an address, requiring it to not error.
 func (s *TestSuite) requireSanctionAddress(addr sdk.AccAddress) {
-	// TODO[1760]: quarantine: Uncomment these lines.
-	// err := s.app.SanctionKeeper.SanctionAddresses(s.ctx, addr)
-	// s.Require().NoError(err, "SanctionAddresses(%s)", s.getAddrName(addr))
+	err := s.app.SanctionKeeper.SanctionAddresses(s.ctx, addr)
+	s.Require().NoError(err, "SanctionAddresses(%s)", s.getAddrName(addr))
 }
 
 // requireAddFinalizeAndActivateMarker creates a restricted marker, requiring it to not error.
