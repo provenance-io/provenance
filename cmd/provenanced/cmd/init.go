@@ -227,6 +227,7 @@ func createAndExportGenesisFile(
 
 	// Set the gov deposit denom
 	{
+		// TODO[1760]: gov: Verify that these changes are okay and nothing else is needed.
 		moduleName := govtypes.ModuleName
 		var govGenState govtypesv1.GenesisState
 		cdc.MustUnmarshalJSON(appGenState[moduleName], &govGenState)
