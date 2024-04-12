@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/queries"
 )
@@ -30,7 +31,6 @@ type IntegrationTestSuite struct {
 	clientCtx client.Context
 
 	commonFlags []string
-	val0        *network.Validator
 	valAddr     sdk.AccAddress
 
 	addrCodec address.Codec
@@ -52,12 +52,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	_, err = testutil.WaitForHeight(s.network, 1)
+	s.Require().NoError(err, "WaitForHeight(1)")
 
 	s.clientCtx = s.network.Validators[0].ClientCtx
 	s.valAddr = s.network.Validators[0].Address
-	s.val0 = s.network.Validators[0]
 
 	sdkcfg := sdk.GetConfig()
 	s.addrCodec = addresscodec.NewBech32Codec(sdkcfg.GetBech32AccountAddrPrefix())
@@ -65,7 +64,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
+	testutil.CleanUp(s.network, s.T())
 }
 
 func (s *IntegrationTestSuite) stopIfFailed() {
@@ -118,9 +117,7 @@ func (s *IntegrationTestSuite) createAndFundAccount(bondCoinAmt int64) string {
 	s.Require().NoError(err, "MsgSendExec")
 	outBz := out.Bytes()
 	s.T().Logf("MsgSendExec response:\n%s", string(outBz))
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock after MsgSendExec")
-	resp := queries.GetTxFromResponse(s.T(), s.val0, outBz)
-	s.Require().Equal(0, int(resp.Code), "MsgSendExec tx response code. Tx response:\n%#v", resp)
+	s.waitForTx(outBz, "MsgSendExec")
 
 	return addr
 }
@@ -143,11 +140,9 @@ func (s *IntegrationTestSuite) createAndFundAccounts(count int, bondCoinAmt int6
 
 	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 	s.Require().NoError(err, "ExecTestCLICmd bank multisend")
-	outBz := out.Bytes()
-	s.T().Logf("Multisend response:\n%s", string(outBz))
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock after multisend")
-	resp := queries.GetTxFromResponse(s.T(), s.val0, outBz)
-	s.Require().Equal(0, int(resp.Code), "Multisend tx response code. Tx response:\n%#v", resp)
+	outBZ := out.Bytes()
+	s.T().Logf("Multisend response:\n%s", string(outBZ))
+	s.waitForTx(outBZ, "Multisend")
 
 	return addrs
 }
@@ -160,6 +155,41 @@ func (s *IntegrationTestSuite) appendCommonFlagsTo(args ...string) []string {
 // assertErrorContents calls AssertErrorContents using this suite's t.
 func (s *IntegrationTestSuite) assertErrorContents(theError error, contains []string, msgAndArgs ...interface{}) bool {
 	return assertions.AssertErrorContents(s.T(), theError, contains, msgAndArgs...)
+}
+
+func (s *IntegrationTestSuite) splitMsgAndArgs(msgAndArgs []interface{}) (string, []interface{}) {
+	s.T().Helper()
+	if len(msgAndArgs) == 0 {
+		return "", nil
+	}
+	msg, ok := msgAndArgs[0].(string)
+	s.Require().True(ok, "The first entry in msgAndArgs must be a string")
+	if len(msgAndArgs) == 1 {
+		return msg, nil
+	}
+	return msg, msgAndArgs[1:]
+}
+
+// waitForNextBlock waits for the next block, requiring it to not error.
+func (s *IntegrationTestSuite) waitForNextBlock(msgAndArgs ...interface{}) {
+	s.T().Helper()
+	msg, args := s.splitMsgAndArgs(msgAndArgs)
+	s.Require().NoErrorf(testutil.WaitForNextBlock(s.network), "WaitForNextBlock "+msg, args...)
+}
+
+// waitForTx calls GetTxFromResponse and makes sure the result code is 0.
+func (s *IntegrationTestSuite) waitForTx(respBz []byte, msgAndArgs ...interface{}) {
+	s.T().Helper()
+	msg, args := s.splitMsgAndArgs(msgAndArgs)
+	if len(msg) == 0 {
+		msg = "tx response code."
+	} else {
+		msg = msg + " tx response code."
+	}
+	msg = msg + " Tx response:\n%#v"
+	resp := queries.GetTxFromResponse(s.T(), s.network, respBz)
+	args = append(args, resp)
+	s.Require().Equalf(0, int(resp.Code), msg, args...)
 }
 
 var _ fmt.Stringer = asStringer("")

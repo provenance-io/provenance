@@ -10,9 +10,9 @@ import (
 )
 
 // GetAllBalances executes a query to get all balances for an account, requiring everything to be okay.
-func GetAllBalances(t *testing.T, val *network.Validator, addr string) sdk.Coins {
+func GetAllBalances(t *testing.T, n *network.Network, addr string) sdk.Coins {
 	t.Helper()
-	rv, ok := AssertGetAllBalances(t, val, addr)
+	rv, ok := AssertGetAllBalances(t, n, addr)
 	if !ok {
 		t.FailNow()
 	}
@@ -21,10 +21,10 @@ func GetAllBalances(t *testing.T, val *network.Validator, addr string) sdk.Coins
 
 // AssertGetAllBalances executes a query to get all balances for an account, asserting that everything is okay.
 // The returned bool will be true on success, or false if something goes wrong.
-func AssertGetAllBalances(t *testing.T, val *network.Validator, addr string) (sdk.Coins, bool) {
+func AssertGetAllBalances(t *testing.T, n *network.Network, addr string) (sdk.Coins, bool) {
 	t.Helper()
-	url := fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s?limit=10000", val.APIAddress, addr)
-	resp, ok := AssertGetRequest(t, val, url, &banktypes.QueryAllBalancesResponse{})
+	url := fmt.Sprintf("/cosmos/bank/v1beta1/balances/%s?limit=10000", addr)
+	resp, ok := AssertGetRequest(t, n, url, &banktypes.QueryAllBalancesResponse{})
 	if !ok {
 		return nil, false
 	}
@@ -32,9 +32,9 @@ func AssertGetAllBalances(t *testing.T, val *network.Validator, addr string) (sd
 }
 
 // GetSpendableBalances executes a query to get spendable balances for an account, requiring everything to be okay.
-func GetSpendableBalances(t *testing.T, val *network.Validator, addr string) sdk.Coins {
+func GetSpendableBalances(t *testing.T, n *network.Network, addr string) sdk.Coins {
 	t.Helper()
-	rv, ok := AssertGetSpendableBalances(t, val, addr)
+	rv, ok := AssertGetSpendableBalances(t, n, addr)
 	if !ok {
 		t.FailNow()
 	}
@@ -43,10 +43,10 @@ func GetSpendableBalances(t *testing.T, val *network.Validator, addr string) sdk
 
 // AssertGetSpendableBalances executes a query to get spendable balances for an account, asserting that everything is okay.
 // The returned bool will be true on success, or false if something goes wrong.
-func AssertGetSpendableBalances(t *testing.T, val *network.Validator, addr string) (sdk.Coins, bool) {
+func AssertGetSpendableBalances(t *testing.T, n *network.Network, addr string) (sdk.Coins, bool) {
 	t.Helper()
-	url := fmt.Sprintf("%s/cosmos/bank/v1beta1/spendable_balances/%s?limit=10000", val.APIAddress, addr)
-	resp, ok := AssertGetRequest(t, val, url, &banktypes.QuerySpendableBalancesResponse{})
+	url := fmt.Sprintf("/cosmos/bank/v1beta1/spendable_balances/%s?limit=10000", addr)
+	resp, ok := AssertGetRequest(t, n, url, &banktypes.QuerySpendableBalancesResponse{})
 	if !ok {
 		return nil, false
 	}

@@ -28,13 +28,12 @@ func (s *IntegrationTestSuite) TestQueryQuarantinedFundsCmd() {
 
 	quarantinedAmount := int64(50)
 	// Send some funds from 1 to 0 so that there's some quarantined funds to find.
-	_, err = clitestutil.MsgSendExec(s.clientCtx,
+	outBW, err := clitestutil.MsgSendExec(s.clientCtx,
 		asStringer(addr1), asStringer(addr0), s.bondCoins(quarantinedAmount),
 		s.addrCodec, s.commonFlags...,
 	)
 	s.Require().NoError(err, "MsgSendExec 1 -> 0, 50")
-
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+	s.waitForTx(outBW.Bytes(), "MsgSendExec")
 
 	newQF := func(to, from string, amt int64) *quarantine.QuarantinedFunds {
 		return &quarantine.QuarantinedFunds{
@@ -142,12 +141,11 @@ func (s *IntegrationTestSuite) TestQueryIsQuarantinedCmd() {
 	addr1 := addrs[1]
 
 	// Opt addr0 into quarantine.
-	_, err := cli.ExecTestCLICmd(s.clientCtx, client.TxOptInCmd(),
+	outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.TxOptInCmd(),
 		s.appendCommonFlagsTo(addr0),
 	)
 	s.Require().NoError(err, "TxOptInCmd addr0")
-
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+	s.waitForTx(outBW.Bytes(), "TxOptInCmd")
 
 	tests := []struct {
 		name   string
@@ -176,7 +174,7 @@ func (s *IntegrationTestSuite) TestQueryIsQuarantinedCmd() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryIsQuarantinedCmd()
 			args := append(tc.args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
-			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
+			outBW, err = cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			out := outBW.String()
 			s.T().Logf("Output:\n%s", out)
 			s.assertErrorContents(err, tc.expErr, "QueryIsQuarantinedCmd error")
@@ -206,12 +204,11 @@ func (s *IntegrationTestSuite) TestQueryAutoResponsesCmd() {
 
 	// Set 0 <- 1 to auto-accept.
 	// Set 0 <- 2 to auto-decline.
-	_, err := cli.ExecTestCLICmd(s.clientCtx, client.TxUpdateAutoResponsesCmd(),
+	outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.TxUpdateAutoResponsesCmd(),
 		s.appendCommonFlagsTo(addr0, "accept", addr1, "decline", addr2),
 	)
 	s.Require().NoError(err, "TxUpdateAutoResponsesCmd for setup")
-
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+	s.waitForTx(outBW.Bytes(), "TxUpdateAutoResponsesCmd")
 
 	newARE := func(to, from string, response quarantine.AutoResponse) *quarantine.AutoResponseEntry {
 		return &quarantine.AutoResponseEntry{
@@ -292,7 +289,7 @@ func (s *IntegrationTestSuite) TestQueryAutoResponsesCmd() {
 		s.Run(tc.name, func() {
 			cmd := client.QueryAutoResponsesCmd()
 			args := append(tc.args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
-			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
+			outBW, err = cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			out := outBW.String()
 			s.T().Logf("Output:\n%s", out)
 			s.assertErrorContents(err, tc.expErr, "QueryAutoResponsesCmd error")

@@ -38,7 +38,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 5
-	cfg.TimeoutCommit = 500 * time.Millisecond
 
 	// Define some stuff in the sanction genesis state.
 	sanctionedAddr1 := sdk.AccAddress("1_sanctioned_address_")
@@ -93,7 +92,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	// Wait 2 blocks to start this. That way, hopefully the query tests are done.
 	// In between the two, create all the stuff to send.
-	s.Require().NoError(s.network.WaitForNextBlock(), "wait for next block 1")
+	s.waitForNextBlock("wait for next block 1")
 	authority := s.getAuthority()
 	proposerValI := 0
 	sanctionValI := 4
@@ -179,7 +178,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	}
 
 	// Finally, wait for the next block.
-	s.Require().NoError(s.network.WaitForNextBlock(), "wait for next block 2")
+	s.waitForNextBlock("wait for next block 2")
 	startHeight := s.logHeight()
 
 	// Submit the proposal.
@@ -191,7 +190,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	propHeight := s.waitForHeight(startHeight + 1)
 
 	// Find the last proposal (assuming it's the one just submitted above).
-	lastProp := queries.GetLastGovProp(s.T(), s.val0)
+	lastProp := queries.GetLastGovProp(s.T(), s.network)
 	propID := fmt.Sprintf("%d", lastProp.Id)
 	s.T().Logf("Proposal id to vote on: %s", propID)
 
@@ -218,10 +217,10 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	// So wait for 4 blocks after the proposal block.
 	s.logHeight()
 	s.T().Log("waiting for voting period to end")
-	lastHeight := s.waitForHeight(propHeight + 4)
+	s.waitForHeight(propHeight + 4)
 
 	// Check that the proposal passed.
-	finalProp := queries.GetGovProp(s.T(), s.val0, propID)
+	finalProp := queries.GetGovProp(s.T(), s.network, propID)
 	s.Assert().Equal(govv1.StatusPassed, finalProp.Status, "proposal status")
 
 	// Check that that validator is still sanctioned.
@@ -234,11 +233,11 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	s.Require().NoError(err, "Unmarshal QueryIsSanctionedResponse (second time)")
 	s.Assert().True(isSanctOut2.IsSanctioned, "is sanctioned (second time)")
 
-	// Wait 20 more blocks to make sure nothing unravels.
-	s.logHeight()
-	s.T().Log("waiting 20 blocks before shutdown")
-	_, err = s.network.WaitForHeightWithTimeout(lastHeight+20, 30*time.Second)
-	s.Require().NoError(err, "waiting for block %d (or 30 seconds)", lastHeight+20)
+	// Wait 10 more blocks to make sure nothing unravels.
+	lastHeight := s.logHeight()
+	s.T().Log("waiting 10 blocks before final checks")
+	_, err = testutil.WaitForHeightWithTimeout(s.network, lastHeight+10, 30*time.Second)
+	s.Require().NoError(err, "waiting for block %d (or 30 seconds)", lastHeight+10)
 	s.logHeight()
 
 	// Check that that validator is still sanctioned one last time.

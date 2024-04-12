@@ -205,8 +205,7 @@ func (s *IntegrationTestSuite) TestTxAcceptCmd() {
 				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
 			}
 			if len(tc.expErr) == 0 {
-				s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
 				if ok {
 					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
 				}
@@ -304,8 +303,7 @@ func (s *IntegrationTestSuite) TestTxDeclineCmd() {
 				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
 			}
 			if len(tc.expErr) == 0 {
-				s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
 				if ok {
 					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
 				}
@@ -375,8 +373,7 @@ func (s *IntegrationTestSuite) TestTxUpdateAutoResponsesCmd() {
 				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
 			}
 			if len(tc.expErr) == 0 {
-				s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
 				if ok {
 					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
 				}
@@ -401,12 +398,13 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 
 	s.Run("opt toAddr into quarantine", func() {
 		outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.TxOptInCmd(), s.appendCommonFlagsTo(toAddr))
-		s.T().Logf("TxOptInCmd Output:\n%s", outBW.String())
+		out := outBW.String()
+		s.T().Logf("TxOptInCmd Output:\n%s", out)
 		s.Require().NoError(err, "TxOptInCmd error")
-		s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+		s.waitForTx([]byte(out))
 
 		outBW, err = cli.ExecTestCLICmd(s.clientCtx, client.QueryIsQuarantinedCmd(), []string{toAddr, asJSONFlag})
-		out := outBW.String()
+		out = outBW.String()
 		s.T().Logf("QueryIsQuarantinedCmd Output:\n%s", out)
 		s.Require().NoError(err, "QueryIsQuarantinedCmd error")
 		resp := &quarantine.QueryIsQuarantinedResponse{}
@@ -426,13 +424,14 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 		)
 		s.T().Logf("MsgSendExec 1 Output:\n%s", outBW.String())
 		s.Require().NoError(err, "MsgSendExec 1")
+
 		outBW, err = clitestutil.MsgSendExec(s.clientCtx,
 			asStringer(fromAddr2), asStringer(toAddr), s.bondCoins(amt2),
 			s.addrCodec, s.commonFlags...,
 		)
 		s.T().Logf("MsgSendExec 2 Output:\n%s", outBW.String())
 		s.Require().NoError(err, "MsgSendExec 2")
-		s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+		s.waitForTx(outBW.Bytes(), "MsgSendExec")
 
 		expFunds := []*quarantine.QuarantinedFunds{
 			{
@@ -466,7 +465,7 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 		outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.TxAcceptCmd(), s.appendCommonFlagsTo(toAddr, fromAddr2, fromAddr1))
 		s.T().Logf("TxAcceptCmd Output:\n%s", outBW.String())
 		s.Require().NoError(err, "TxAcceptCmd error")
-		s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
+		s.waitForTx(outBW.Bytes(), "TxAcceptCmd")
 
 		outBW, err = cli.ExecTestCLICmd(s.clientCtx, client.QueryQuarantinedFundsCmd(), []string{toAddr, asJSONFlag})
 		out := outBW.String()
@@ -498,7 +497,7 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 			exp:  s.bondCoins(expFromAddr1Amt),
 		},
 		{
-			name: "final fromAddr1 balance",
+			name: "final fromAddr2 balance",
 			addr: fromAddr2,
 			exp:  s.bondCoins(expFromAddr2Amt),
 		},
@@ -506,7 +505,7 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			balances := queries.GetAllBalances(s.T(), s.val0, tc.addr)
+			balances := queries.GetAllBalances(s.T(), s.network, tc.addr)
 			s.Require().Equal(tc.exp, balances, "Balances")
 		})
 	}

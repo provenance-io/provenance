@@ -1,6 +1,8 @@
 package testutil
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -14,6 +16,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -84,10 +87,141 @@ func CleanUp(n *testnet.Network, t *testing.T) {
 	}
 	t.Log("teardown waiting for next block")
 	//nolint:errcheck // The test shouldn't fail because cleanup was a problem. So ignoring any error from this.
-	n.WaitForNextBlock()
+	WaitForNextBlock(n)
 	t.Log("teardown cleaning up testnet")
 	n.Cleanup()
 	// Give things a chance to finish closing up. Hopefully will prevent things like address collisions. 100ms chosen randomly.
 	time.Sleep(100 * time.Millisecond)
 	t.Log("teardown done")
+}
+
+// queryCurrentHeight executes a query to get the current height.
+// Returns 0 if there's a problem.
+func queryCurrentHeight(queryClient cmtservice.ServiceClient) int64 {
+	res, err := queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
+	if err != nil || res == nil {
+		return 0
+	}
+	return res.SdkBlock.Header.Height
+}
+
+// LatestHeight returns the latest height of the network or an error if the
+// query fails or no validators exist.
+//
+// This is similar to Network.LatestHeight() except that this one doesn't wait for a first tick before
+// trying to get the current height (so it can return earlier), and it also checks every 500ms instead of every 1s.
+func LatestHeight(n *testnet.Network) (int64, error) {
+	if len(n.Validators) == 0 {
+		return 0, errors.New("no validators available")
+	}
+
+	queryClient := cmtservice.NewServiceClient(n.Validators[0].ClientCtx)
+	latestHeight := queryCurrentHeight(queryClient)
+	if latestHeight != 0 {
+		return latestHeight, nil
+	}
+
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	timeout := time.NewTimer(5 * time.Second)
+	defer timeout.Stop()
+
+	for {
+		select {
+		case <-timeout.C:
+			return latestHeight, errors.New("timeout exceeded waiting for block")
+		case <-ticker.C:
+			done := make(chan struct{})
+			go func() {
+				latestHeight = queryCurrentHeight(queryClient)
+				done <- struct{}{}
+			}()
+			select {
+			case <-timeout.C:
+				return latestHeight, errors.New("timeout exceeded waiting for block")
+			case <-done:
+				if latestHeight != 0 {
+					return latestHeight, nil
+				}
+			}
+		}
+	}
+}
+
+// WaitForHeight performs a blocking check where it waits for a block to be
+// committed after a given block. If that height is not reached within a timeout,
+// an error is returned. Regardless, the latest height queried is returned.
+//
+// This is similar to Network.WaitForHeight(h) except that this one doesn't wait for a first tick before
+// trying to get the current height (so it can return earlier), and it also checks every 500ms instead of every 1s.
+func WaitForHeight(n *testnet.Network, h int64) (int64, error) {
+	return WaitForHeightWithTimeout(n, h, 10*time.Second)
+}
+
+// WaitForHeightWithTimeout is the same as WaitForHeight except the caller can
+// provide a custom timeout.
+//
+// This is similar to Network.WaitForHeightWithTimeout(h, t) except that this one doesn't wait for a first tick before
+// trying to get the current height (so it can return earlier), and it also checks every 500ms instead of every 1s.
+func WaitForHeightWithTimeout(n *testnet.Network, h int64, t time.Duration) (int64, error) {
+	if len(n.Validators) == 0 {
+		return 0, errors.New("no validators available")
+	}
+
+	queryClient := cmtservice.NewServiceClient(n.Validators[0].ClientCtx)
+	latestHeight := queryCurrentHeight(queryClient)
+	if latestHeight >= h {
+		return latestHeight, nil
+	}
+
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	timeout := time.NewTimer(t)
+	defer timeout.Stop()
+
+	for {
+		select {
+		case <-timeout.C:
+			return latestHeight, errors.New("timeout exceeded waiting for block")
+		case <-ticker.C:
+			latestHeight = queryCurrentHeight(queryClient)
+			if latestHeight >= h {
+				return latestHeight, nil
+			}
+		}
+	}
+}
+
+// WaitForNextBlock waits for the next block to be committed, returning an error
+// upon failure.
+//
+// This is similar to Network.WaitForNextBlock(h, t) except that this one doesn't wait for a first tick before
+// trying to get the current height (so it can return earlier), and it also checks every 500ms instead of every 1s.
+func WaitForNextBlock(n *testnet.Network) error {
+	if len(n.Validators) == 0 {
+		return errors.New("no validators available")
+	}
+
+	queryClient := cmtservice.NewServiceClient(n.Validators[0].ClientCtx)
+	startHeight := queryCurrentHeight(queryClient)
+
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	timeout := time.NewTimer(5 * time.Second)
+	defer timeout.Stop()
+
+	for {
+		select {
+		case <-timeout.C:
+			return errors.New("timeout exceeded waiting for next block")
+		case <-ticker.C:
+			latestHeight := queryCurrentHeight(queryClient)
+			if latestHeight > startHeight {
+				return nil
+			}
+		}
+	}
 }
