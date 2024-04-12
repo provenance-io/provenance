@@ -331,12 +331,14 @@ PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
 PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
 
 TEST_PACKAGES=./...
-TEST_TARGETS := test-unit test-unit-proto test-ledger-mock test-race test-ledger
+TEST_TARGETS := test-unit test-unit-proto test-ledger-mock test-race test-ledger build-tests
 
 # Test runs-specific rules. To add a new test target, just add
 # a new rule, customise TAGS, ARGS and/or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
 test-unit: TAGS+=cgo ledger test_ledger_mock norace
+build-tests: TAGS+=cgo ledger test_ledger_mock norace
+build-tests: ARGS+=-run='ZYX_NOPE_NOPE_XYZ'
 test-ledger: TAGS+=cgo ledger norace
 test-ledger-mock: TAGS+=ledger test_ledger_mock norace
 test-race: ARGS+=-race
@@ -349,13 +351,6 @@ ifneq (,$(shell which tparse 2>/dev/null))
 	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES) | tparse
 else
 	$(GO) test -mod=readonly $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES)
-endif
-
-build-tests: go.sum
-ifneq (,$(shell which tparse 2>/dev/null))
-	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)' -run='ZYX_NOPE_NOPE_XYZ' $(TEST_PACKAGES) | tparse
-else
-	$(GO) test -mod=readonly $(ARGS) -tags='$(TAGS)' -run='ZYX_NOPE_NOPE_XYZ' $(TEST_PACKAGES)
 endif
 
 test-cover:
