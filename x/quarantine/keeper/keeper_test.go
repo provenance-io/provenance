@@ -594,7 +594,7 @@ func (s *TestSuite) TestBzToQuarantineRecord() {
 			expected: &quarantine.QuarantineRecord{
 				UnacceptedFromAddresses: accs(s.addr1),
 				AcceptedFromAddresses:   accs(s.addr2),
-				Coins:                   sdk.Coins{},
+				Coins:                   nil,
 				Declined:                false,
 			},
 		},
@@ -698,7 +698,7 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: accs(uFromAddr),
 			AcceptedFromAddresses:   accs(aFromAddr),
-			Coins:                   sdk.Coins{},
+			Coins:                   nil,
 			Declined:                false,
 		}
 		expected := testutil.MakeCopyOfQuarantineRecord(record)
@@ -731,7 +731,7 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: accs(uFromAddr1, uFromAddr2),
 			AcceptedFromAddresses:   nil,
-			Coins:                   sdk.Coins{},
+			Coins:                   nil,
 			Declined:                false,
 		}
 		expected := testutil.MakeCopyOfQuarantineRecord(record)
@@ -834,7 +834,7 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: accs(uFromAddr1, uFromAddr2),
 			AcceptedFromAddresses:   accs(aFromAddr),
-			Coins:                   sdk.Coins{},
+			Coins:                   nil,
 			Declined:                false,
 		}
 		expected := testutil.MakeCopyOfQuarantineRecord(record)
@@ -910,7 +910,7 @@ func (s *TestSuite) TestQuarantineRecordGetSet() {
 		record := &quarantine.QuarantineRecord{
 			UnacceptedFromAddresses: accs(uFromAddr),
 			AcceptedFromAddresses:   accs(aFromAddr1, aFromAddr2),
-			Coins:                   sdk.Coins{},
+			Coins:                   nil,
 			Declined:                false,
 		}
 		expected := testutil.MakeCopyOfQuarantineRecord(record)

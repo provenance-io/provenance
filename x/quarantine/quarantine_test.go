@@ -1839,17 +1839,17 @@ func TestQuarantineRecord_AddCoins(t *testing.T) {
 		{
 			qrCoinKey:  keyEmpty,
 			addCoinKey: keyEmpty,
-			expected:   nil,
+			expected:   sdk.Coins{},
 		},
 		{
 			qrCoinKey:  keyEmpty,
 			addCoinKey: keyNil,
-			expected:   nil,
+			expected:   sdk.Coins{},
 		},
 		{
 			qrCoinKey:  keyEmpty,
 			addCoinKey: key0Acorn,
-			expected:   nil,
+			expected:   sdk.Coins{},
 		},
 		{
 			qrCoinKey:  keyEmpty,
@@ -1871,17 +1871,17 @@ func TestQuarantineRecord_AddCoins(t *testing.T) {
 		{
 			qrCoinKey:  keyNil,
 			addCoinKey: keyEmpty,
-			expected:   nil,
+			expected:   sdk.Coins{},
 		},
 		{
 			qrCoinKey:  keyNil,
 			addCoinKey: keyNil,
-			expected:   nil,
+			expected:   sdk.Coins{},
 		},
 		{
 			qrCoinKey:  keyNil,
 			addCoinKey: key0Acorn,
-			expected:   nil,
+			expected:   sdk.Coins{},
 		},
 		{
 			qrCoinKey:  keyNil,
@@ -1903,17 +1903,17 @@ func TestQuarantineRecord_AddCoins(t *testing.T) {
 		{
 			qrCoinKey:  key0Acorn,
 			addCoinKey: keyEmpty,
-			expected:   nil,
+			expected:   sdk.Coins{},
 		},
 		{
 			qrCoinKey:  key0Acorn,
 			addCoinKey: keyNil,
-			expected:   nil,
+			expected:   sdk.Coins{},
 		},
 		{
 			qrCoinKey:  key0Acorn,
 			addCoinKey: key0Acorn,
-			expected:   nil,
+			expected:   sdk.Coins{},
 		},
 		{
 			qrCoinKey:  key0Acorn,
