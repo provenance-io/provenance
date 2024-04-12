@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
@@ -130,8 +131,8 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	// - One denom fully on hold.
 	s.addr1Desc = "addr with large amounts"
 	addr1Plus := "15banana,5000000000000000000000hugecoin,1xenon"
-	addr1Esrow := "5banana,2000000000000000000000hugecoin,1xenon"
-	s.addr1Bal, s.addr1Hold, s.addr1Spendable = newAmounts("addr1", addr1Plus, addr1Esrow)
+	addr1Escrow := "5banana,2000000000000000000000hugecoin,1xenon"
+	s.addr1Bal, s.addr1Hold, s.addr1Spendable = newAmounts("addr1", addr1Plus, addr1Escrow)
 
 	// addr2 characteristics:
 	// - One extra denom.
@@ -505,53 +506,43 @@ func (s *IntegrationCLITestSuite) TestQueryCmdGetAllHolds() {
 func (s *IntegrationCLITestSuite) TestHoldsNotInFromSpendable() {
 	// The purpose of these tests is to make sure that the bank module is
 	// being properly informed of the locked hold funds.
-	cmdGen := func() *cobra.Command {
-		// TODO[1760]: bank: Put this back once we know how to query spendable balances again.
-		return nil
-		// return bankcli.GetSpendableBalancesCmd()
-	}
-	resp := func(balances sdk.Coins) *banktypes.QuerySpendableBalancesResponse {
-		return &banktypes.QuerySpendableBalancesResponse{
-			Balances: balances,
-			Pagination: &query.PageResponse{
-				NextKey: nil,
-				Total:   0,
-			},
-		}
-	}
-
-	tests := []queryCmdTestCase{
+	tests := []struct {
+		name string
+		addr sdk.AccAddress
+		exp  sdk.Coins
+	}{
 		{
-			name:   s.addr1Desc + ": get spendable",
-			args:   []string{s.addr1.String(), s.flagAsJSON},
-			expOut: s.asJSON(resp(s.addr1Spendable)),
+			name: s.addr1Desc + ": get spendable",
+			addr: s.addr1,
+			exp:  s.addr1Spendable,
 		},
 		{
-			name:   s.addr2Desc + ": get spendable",
-			args:   []string{s.addr2.String(), s.flagAsJSON},
-			expOut: s.asJSON(resp(s.addr2Spendable)),
+			name: s.addr2Desc + ": get spendable",
+			addr: s.addr2,
+			exp:  s.addr2Spendable,
 		},
 		{
-			name:   s.addr3Desc + ": get spendable",
-			args:   []string{s.addr3.String(), s.flagAsJSON},
-			expOut: s.asJSON(resp(s.addr3Spendable)),
+			name: s.addr3Desc + ": get spendable",
+			addr: s.addr3,
+			exp:  s.addr3Spendable,
 		},
 		{
-			name:   s.addr4Desc + ": get spendable",
-			args:   []string{s.addr4.String(), s.flagAsJSON},
-			expOut: s.asJSON(resp(s.addr4Spendable)),
+			name: s.addr4Desc + ": get spendable",
+			addr: s.addr4,
+			exp:  s.addr4Spendable,
 		},
 		{
-			name:   s.addr5Desc + ": get spendable",
-			args:   []string{s.addr5.String(), s.flagAsJSON},
-			expOut: s.asJSON(resp(s.addr5Spendable)),
+			name: s.addr5Desc + ": get spendable",
+			addr: s.addr5,
+			exp:  s.addr5Spendable,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc.cmd = cmdGen()
-			s.assertQueryCmdTestCase(tc)
+			// TODO[1760]: Uncomment this once the quarantine PR has merged.
+			//actual := queries.GetSpendableBalances(s.T(), s.testnet, tc.addr.String())
+			//s.Assert().Equal(tc.exp, actual, "spendable balances")
 		})
 	}
 }
