@@ -111,7 +111,7 @@ $ %[1]s query name lookup pb1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk --page=2 --l
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
