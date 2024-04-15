@@ -542,7 +542,7 @@ func (s *IntegrationCLITestSuite) TestHoldsNotInFromSpendable() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			actual := queries.GetSpendableBalances(s.T(), s.testnet, tc.addr.String())
-			s.Assert().Equal(tc.exp, actual, "spendable balances")
+			s.Assert().Equal(tc.exp.String(), actual.String(), "spendable balances")
 		})
 	}
 }
