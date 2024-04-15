@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -56,11 +57,17 @@ func (s *SimTestSuite) LogIfError(err error, format string, args ...interface{})
 	}
 }
 
-func (s *SimTestSuite) TestWeightedOperations() {
-	cdc := s.app.AppCodec()
-	appParams := make(simtypes.AppParams)
+// MakeTestSimState creates a new module.SimulationState struct with the fields needed by the functions being tested.
+func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
+	return module.SimulationState{
+		AppParams: make(simtypes.AppParams),
+		Cdc:       s.app.AppCodec(),
+		TxConfig:  s.app.GetTxConfig(),
+	}
+}
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, s.app.NameKeeper,
+func (s *SimTestSuite) TestWeightedOperations() {
+	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), s.app.NameKeeper,
 		s.app.AccountKeeper, s.app.BankKeeper,
 	)
 
@@ -117,7 +124,7 @@ func (s *SimTestSuite) TestSimulateMsgBindName() {
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// execute operation
-	op := simulation.SimulateMsgBindName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgBindName(s.MakeTestSimState(), s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgBindName op(...) error")
 	s.LogOperationMsg(operationMsg)
@@ -148,7 +155,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteName() {
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// execute operation
-	op := simulation.SimulateMsgDeleteName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgDeleteName(s.MakeTestSimState(), s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgDeleteName op(...) error")
 	s.LogOperationMsg(operationMsg)
@@ -177,7 +184,7 @@ func (s *SimTestSuite) TestSimulateMsgModifyName() {
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q)", name)
 
 	// execute operation
-	op := simulation.SimulateMsgModifyName(s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgModifyName(s.MakeTestSimState(), s.app.NameKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgModifyName op(...) error")
 	s.LogOperationMsg(operationMsg)
