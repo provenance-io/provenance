@@ -193,7 +193,7 @@ var _ = runModuleMigrations
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.
 // This should be applied in most upgrades.
 func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
-	ctx.Logger().Info(fmt.Sprintf("Removing inactive validator delegations."))
+	ctx.Logger().Info("Removing inactive validator delegations.")
 
 	sParams, perr := app.StakingKeeper.GetParams(ctx)
 	if perr != nil {
@@ -291,6 +291,7 @@ func migrateBaseappParams(ctx sdk.Context, app *App) error {
 // migrateAttributeParams migrates to new Attribute Params store
 // TODO: Remove with the umber handlers.
 func migrateAttributeParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating attribute params.")
 	attributeParamSpace := app.GetSubspace(attributetypes.ModuleName)
 	maxValueLength := uint32(attributetypes.DefaultMaxValueLength)
 	// TODO: remove attributetypes.ParamStoreKeyMaxValueLength with the umber handlers.
@@ -298,4 +299,5 @@ func migrateAttributeParams(ctx sdk.Context, app *App) {
 		attributeParamSpace.Get(ctx, attributetypes.ParamStoreKeyMaxValueLength, &maxValueLength)
 	}
 	app.AttributeKeeper.SetParams(ctx, attributetypes.Params{MaxValueLength: uint32(maxValueLength)})
+	ctx.Logger().Info("Done migrating attribute params.")
 }
