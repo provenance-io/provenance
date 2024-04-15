@@ -54,6 +54,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump the SDK to `v0.50.5-pio-1` (from an earlier ephemeral version) [#1897](https://github.com/provenance-io/provenance/pull/1897).
 * Removed `rewards` module [#1905](https://github.com/provenance-io/provenance/pull/1905).
 * Remove unused navs [#1920](https://github.com/provenance-io/provenance/issues/1920).
+* Restore the hold module [#1930](https://github.com/provenance-io/provenance/pull/1930).
+* Restore gov-prop cli commands and fix next key decoding [#1930](https://github.com/provenance-io/provenance/pull/1930).
+* Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
 
 ### Dependencies
 
