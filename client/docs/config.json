@@ -133,6 +133,13 @@
     },
 
     {
+      "url": "./tmp-swagger-gen/cosmos/quarantine/v1beta1/query.swagger.json"
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/quarantine/v1beta1/tx.swagger.json"
+    },
+
+    {
       "url": "./tmp-swagger-gen/provenance/trigger/v1/query.swagger.json"
     },
     {

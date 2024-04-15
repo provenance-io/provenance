@@ -14,8 +14,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 
-	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
-
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -34,6 +32,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -2885,7 +2884,7 @@ func TestReqAttrBypassAddrs(t *testing.T) {
 	// Tests both GetReqAttrBypassAddrs and IsReqAttrBypassAddr.
 	expectedNames := []string{
 		authtypes.FeeCollectorName,
-		// quarantine.ModuleName, // TODO[1760]: quarantine
+		quarantine.ModuleName,
 		govtypes.ModuleName,
 		distrtypes.ModuleName,
 		stakingtypes.BondedPoolName,

@@ -7,14 +7,13 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // #############################################################################
@@ -417,7 +416,7 @@ func (s *TestSuite) assertBankKeeperCalls(mk *MockBankKeeper, expected BankCalls
 // NewSendCoinsArgs creates a new record of args provided to a call to SendCoins.
 func NewSendCoinsArgs(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) *SendCoinsArgs {
 	return &SendCoinsArgs{
-		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
+		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
 		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		fromAddr:               fromAddr,
 		toAddr:                 toAddr,
@@ -435,7 +434,7 @@ func (s *TestSuite) sendCoinsArgsString(a *SendCoinsArgs) string {
 // NewSendCoinsFromAccountToModuleArgs creates a new record of args provided to a call to SendCoinsFromAccountToModule.
 func NewSendCoinsFromAccountToModuleArgs(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) *SendCoinsFromAccountToModuleArgs {
 	return &SendCoinsFromAccountToModuleArgs{
-		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
+		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
 		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		senderAddr:             senderAddr,
 		recipientModule:        recipientModule,
@@ -453,7 +452,7 @@ func (s *TestSuite) sendCoinsFromAccountToModuleArgsString(a *SendCoinsFromAccou
 // NewInputOutputCoinsArgs creates a new record of args provided to a call to InputOutputCoins.
 func NewInputOutputCoinsArgs(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) *InputOutputCoinsArgs {
 	return &InputOutputCoinsArgs{
-		ctxHasQuarantineBypass: false, // quarantine.HasBypass(ctx), // TODO[1760]: quarantine
+		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
 		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		inputs:                 inputs,
 		outputs:                outputs,
