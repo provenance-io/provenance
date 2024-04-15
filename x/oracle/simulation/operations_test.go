@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"testing"
 
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -49,11 +51,17 @@ func (s *SimTestSuite) LogOperationMsg(operationMsg simtypes.OperationMsg, msg s
 	)
 }
 
-func (s *SimTestSuite) TestWeightedOperations() {
-	cdc := s.app.AppCodec()
-	appParams := make(simtypes.AppParams)
+// MakeTestSimState creates a new module.SimulationState struct with the fields needed by the functions being tested.
+func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
+	return module.SimulationState{
+		AppParams: make(simtypes.AppParams),
+		Cdc:       s.app.AppCodec(),
+		TxConfig:  s.app.GetTxConfig(),
+	}
+}
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, s.app.OracleKeeper,
+func (s *SimTestSuite) TestWeightedOperations() {
+	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), s.app.OracleKeeper,
 		s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper,
 	)
 
@@ -103,7 +111,7 @@ func (s *SimTestSuite) TestSimulateMsgUpdateOracle() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// execute operation
-	op := simulation.SimulateMsgUpdateOracle(s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgUpdateOracle(s.MakeTestSimState(), s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgUpdateOracle op(...) error")
 	s.LogOperationMsg(operationMsg, "good")
@@ -124,7 +132,7 @@ func (s *SimTestSuite) TestSimulateMsgSendQueryOracle() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// execute operation
-	op := simulation.SimulateMsgSendQueryOracle(s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper)
+	op := simulation.SimulateMsgSendQueryOracle(s.MakeTestSimState(), s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgSendQueryOracle op(...) error")
 	s.LogOperationMsg(operationMsg, "good")
@@ -211,4 +219,8 @@ func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Accoun
 	}
 
 	return accounts
+}
+
+func TestSimTestSuite(t *testing.T) {
+	suite.Run(t, new(SimTestSuite))
 }
