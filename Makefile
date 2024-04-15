@@ -330,7 +330,7 @@ PACKAGES               := $(shell $(GO) list ./... 2>/dev/null || true)
 PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
 PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
 
-TEST_PACKAGES=./...
+TEST_PACKAGES ?= ./...
 TEST_TARGETS := test-unit test-unit-proto test-ledger-mock test-race test-ledger build-tests
 
 # Test runs-specific rules. To add a new test target, just add
