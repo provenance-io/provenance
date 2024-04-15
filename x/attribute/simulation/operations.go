@@ -41,64 +41,30 @@ func WeightedOperations(
 	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgAddAttribute            int
-		weightMsgUpdateAttribute         int
-		weightMsgDeleteAttribute         int
-		weightMsgDeleteDistinctAttribute int
-		weightMsgSetAccountDataRequest   int
+		wMsgAddAttribute            int
+		wMsgUpdateAttribute         int
+		wMsgDeleteAttribute         int
+		wMsgDeleteDistinctAttribute int
+		wMsgSetAccountDataRequest   int
 	)
 
-	simState.AppParams.GetOrGenerate(OpWeightMsgAddAttribute, &weightMsgAddAttribute, nil,
-		func(_ *rand.Rand) {
-			weightMsgAddAttribute = simappparams.DefaultWeightMsgAddAttribute
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateAttribute, &weightMsgUpdateAttribute, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateAttribute = simappparams.DefaultWeightMsgUpdateAttribute
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgDeleteAttribute, &weightMsgDeleteAttribute, nil,
-		func(_ *rand.Rand) {
-			weightMsgDeleteAttribute = simappparams.DefaultWeightMsgDeleteAttribute
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgDeleteDistinctAttribute, &weightMsgDeleteDistinctAttribute, nil,
-		func(_ *rand.Rand) {
-			weightMsgDeleteDistinctAttribute = simappparams.DefaultWeightMsgDeleteDistinctAttribute
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgSetAccountData, &weightMsgSetAccountDataRequest, nil,
-		func(_ *rand.Rand) {
-			weightMsgSetAccountDataRequest = simappparams.DefaultWeightMsgSetAccountData
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgAddAttribute, &wMsgAddAttribute, nil,
+		func(_ *rand.Rand) { wMsgAddAttribute = simappparams.DefaultWeightMsgAddAttribute })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateAttribute, &wMsgUpdateAttribute, nil,
+		func(_ *rand.Rand) { wMsgUpdateAttribute = simappparams.DefaultWeightMsgUpdateAttribute })
+	simState.AppParams.GetOrGenerate(OpWeightMsgDeleteAttribute, &wMsgDeleteAttribute, nil,
+		func(_ *rand.Rand) { wMsgDeleteAttribute = simappparams.DefaultWeightMsgDeleteAttribute })
+	simState.AppParams.GetOrGenerate(OpWeightMsgDeleteDistinctAttribute, &wMsgDeleteDistinctAttribute, nil,
+		func(_ *rand.Rand) { wMsgDeleteDistinctAttribute = simappparams.DefaultWeightMsgDeleteDistinctAttribute })
+	simState.AppParams.GetOrGenerate(OpWeightMsgSetAccountData, &wMsgSetAccountDataRequest, nil,
+		func(_ *rand.Rand) { wMsgSetAccountDataRequest = simappparams.DefaultWeightMsgSetAccountData })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgAddAttribute,
-			SimulateMsgAddAttribute(simState, k, ak, bk, nk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgUpdateAttribute,
-			SimulateMsgUpdateAttribute(simState, k, ak, bk, nk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgDeleteAttribute,
-			SimulateMsgDeleteAttribute(simState, k, ak, bk, nk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgDeleteDistinctAttribute,
-			SimulateMsgDeleteDistinctAttribute(simState, k, ak, bk, nk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgSetAccountDataRequest,
-			SimulateMsgSetAccountData(simState, k, ak, bk),
-		),
+		simulation.NewWeightedOperation(wMsgAddAttribute, SimulateMsgAddAttribute(simState, k, ak, bk, nk)),
+		simulation.NewWeightedOperation(wMsgUpdateAttribute, SimulateMsgUpdateAttribute(simState, k, ak, bk, nk)),
+		simulation.NewWeightedOperation(wMsgDeleteAttribute, SimulateMsgDeleteAttribute(simState, k, ak, bk, nk)),
+		simulation.NewWeightedOperation(wMsgDeleteDistinctAttribute, SimulateMsgDeleteDistinctAttribute(simState, k, ak, bk, nk)),
+		simulation.NewWeightedOperation(wMsgSetAccountDataRequest, SimulateMsgSetAccountData(simState, k, ak, bk)),
 	}
 }
 

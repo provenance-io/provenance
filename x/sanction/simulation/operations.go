@@ -72,30 +72,30 @@ func WeightedOperations(
 	}
 
 	var (
-		weightSanction            int
-		weightSanctionImmediate   int
-		weightUnsanction          int
-		weightUnsanctionImmediate int
-		weightUpdateParams        int
+		wSanction            int
+		wSanctionImmediate   int
+		wUnsanction          int
+		wUnsanctionImmediate int
+		wUpdateParams        int
 	)
 
-	simState.AppParams.GetOrGenerate(OpWeightSanction, &weightSanction, nil,
-		func(_ *rand.Rand) { weightSanction = DefaultWeightSanction })
-	simState.AppParams.GetOrGenerate(OpWeightSanctionImmediate, &weightSanctionImmediate, nil,
-		func(_ *rand.Rand) { weightSanctionImmediate = DefaultWeightSanctionImmediate })
-	simState.AppParams.GetOrGenerate(OpWeightUnsanction, &weightUnsanction, nil,
-		func(_ *rand.Rand) { weightUnsanction = DefaultWeightUnsanction })
-	simState.AppParams.GetOrGenerate(OpWeightUnsanctionImmediate, &weightUnsanctionImmediate, nil,
-		func(_ *rand.Rand) { weightUnsanctionImmediate = DefaultWeightUnsanctionImmediate })
-	simState.AppParams.GetOrGenerate(OpWeightUpdateParams, &weightUpdateParams, nil,
-		func(_ *rand.Rand) { weightUpdateParams = DefaultWeightUpdateParams })
+	simState.AppParams.GetOrGenerate(OpWeightSanction, &wSanction, nil,
+		func(_ *rand.Rand) { wSanction = DefaultWeightSanction })
+	simState.AppParams.GetOrGenerate(OpWeightSanctionImmediate, &wSanctionImmediate, nil,
+		func(_ *rand.Rand) { wSanctionImmediate = DefaultWeightSanctionImmediate })
+	simState.AppParams.GetOrGenerate(OpWeightUnsanction, &wUnsanction, nil,
+		func(_ *rand.Rand) { wUnsanction = DefaultWeightUnsanction })
+	simState.AppParams.GetOrGenerate(OpWeightUnsanctionImmediate, &wUnsanctionImmediate, nil,
+		func(_ *rand.Rand) { wUnsanctionImmediate = DefaultWeightUnsanctionImmediate })
+	simState.AppParams.GetOrGenerate(OpWeightUpdateParams, &wUpdateParams, nil,
+		func(_ *rand.Rand) { wUpdateParams = DefaultWeightUpdateParams })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(weightSanction, SimulateGovMsgSanction(args)),
-		simulation.NewWeightedOperation(weightSanctionImmediate, SimulateGovMsgSanctionImmediate(args)),
-		simulation.NewWeightedOperation(weightUnsanction, SimulateGovMsgUnsanction(args)),
-		simulation.NewWeightedOperation(weightUnsanctionImmediate, SimulateGovMsgUnsanctionImmediate(args)),
-		simulation.NewWeightedOperation(weightUpdateParams, SimulateGovMsgUpdateParams(args)),
+		simulation.NewWeightedOperation(wSanction, SimulateGovMsgSanction(args)),
+		simulation.NewWeightedOperation(wSanctionImmediate, SimulateGovMsgSanctionImmediate(args)),
+		simulation.NewWeightedOperation(wUnsanction, SimulateGovMsgUnsanction(args)),
+		simulation.NewWeightedOperation(wUnsanctionImmediate, SimulateGovMsgUnsanctionImmediate(args)),
+		simulation.NewWeightedOperation(wUpdateParams, SimulateGovMsgUpdateParams(args)),
 	}
 }
 

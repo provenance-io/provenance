@@ -35,30 +35,18 @@ func WeightedOperations(
 	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgCreateTrigger  int
-		weightMsgDestroyTrigger int
+		wMsgCreateTrigger  int
+		wMsgDestroyTrigger int
 	)
 
-	simState.AppParams.GetOrGenerate(OpWeightMsgCreateTrigger, &weightMsgCreateTrigger, nil,
-		func(_ *rand.Rand) {
-			weightMsgCreateTrigger = simappparams.DefaultWeightSubmitCreateTrigger
-		},
-	)
-	simState.AppParams.GetOrGenerate(OpWeightMsgDestroyTrigger, &weightMsgDestroyTrigger, nil,
-		func(_ *rand.Rand) {
-			weightMsgDestroyTrigger = simappparams.DefaultWeightSubmitDestroyTrigger
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgCreateTrigger, &wMsgCreateTrigger, nil,
+		func(_ *rand.Rand) { wMsgCreateTrigger = simappparams.DefaultWeightSubmitCreateTrigger })
+	simState.AppParams.GetOrGenerate(OpWeightMsgDestroyTrigger, &wMsgDestroyTrigger, nil,
+		func(_ *rand.Rand) { wMsgDestroyTrigger = simappparams.DefaultWeightSubmitDestroyTrigger })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgCreateTrigger,
-			SimulateMsgCreateTrigger(simState, k, ak, bk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgDestroyTrigger,
-			SimulateMsgDestroyTrigger(simState, k, ak, bk),
-		),
+		simulation.NewWeightedOperation(wMsgCreateTrigger, SimulateMsgCreateTrigger(simState, k, ak, bk)),
+		simulation.NewWeightedOperation(wMsgDestroyTrigger, SimulateMsgDestroyTrigger(simState, k, ak, bk)),
 	}
 }
 

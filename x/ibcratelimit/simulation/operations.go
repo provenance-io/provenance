@@ -33,20 +33,14 @@ func WeightedOperations(
 	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgUpdateParams int
+		wMsgUpdateParams int
 	)
 
-	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateParams = simappparams.DefaultWeightGovUpdateParams
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateParams, &wMsgUpdateParams, nil,
+		func(_ *rand.Rand) { wMsgUpdateParams = simappparams.DefaultWeightGovUpdateParams })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgUpdateParams,
-			SimulateMsgGovUpdateParams(simState, k, ak, bk),
-		),
+		simulation.NewWeightedOperation(wMsgUpdateParams, SimulateMsgGovUpdateParams(simState, k, ak, bk)),
 	}
 }
 

@@ -61,86 +61,38 @@ func WeightedOperations(
 	}
 
 	var (
-		weightMsgAddMarker                 int
-		weightMsgChangeStatus              int
-		weightMsgAddAccess                 int
-		weightMsgAddFinalizeActivateMarker int
-		weightMsgAddMarkerProposal         int
-		weightMsgSetAccountData            int
-		weightMsgUpdateSendDenyList        int
+		wMsgAddMarker          int
+		wMsgChangeStatus       int
+		wMsgAddAccess          int
+		wMsgAFAM               int
+		wMsgAddMarkerProposal  int
+		wMsgSetAccountData     int
+		wMsgUpdateSendDenyList int
 	)
 
-	simState.AppParams.GetOrGenerate(OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
-		func(_ *rand.Rand) {
-			weightMsgAddMarker = simappparams.DefaultWeightMsgAddMarker
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgChangeStatus, &weightMsgChangeStatus, nil,
-		func(_ *rand.Rand) {
-			weightMsgChangeStatus = simappparams.DefaultWeightMsgChangeStatus
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgAddAccess, &weightMsgAddAccess, nil,
-		func(_ *rand.Rand) {
-			weightMsgAddAccess = simappparams.DefaultWeightMsgAddAccess
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgAddActivateFinalizeMarker, &weightMsgAddFinalizeActivateMarker, nil,
-		func(_ *rand.Rand) {
-			weightMsgAddFinalizeActivateMarker = simappparams.DefaultWeightMsgAddFinalizeActivateMarker
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgAddMarkerProposal, &weightMsgAddMarkerProposal, nil,
-		func(_ *rand.Rand) {
-			weightMsgAddMarkerProposal = simappparams.DefaultWeightMsgAddMarkerProposal
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgSetAccountData, &weightMsgSetAccountData, nil,
-		func(_ *rand.Rand) {
-			weightMsgSetAccountData = simappparams.DefaultWeightMsgSetAccountData
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateSendDenyList, &weightMsgUpdateSendDenyList, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateSendDenyList = simappparams.DefaultWeightMsgUpdateDenySendList
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgAddMarker, &wMsgAddMarker, nil,
+		func(_ *rand.Rand) { wMsgAddMarker = simappparams.DefaultWeightMsgAddMarker })
+	simState.AppParams.GetOrGenerate(OpWeightMsgChangeStatus, &wMsgChangeStatus, nil,
+		func(_ *rand.Rand) { wMsgChangeStatus = simappparams.DefaultWeightMsgChangeStatus })
+	simState.AppParams.GetOrGenerate(OpWeightMsgAddAccess, &wMsgAddAccess, nil,
+		func(_ *rand.Rand) { wMsgAddAccess = simappparams.DefaultWeightMsgAddAccess })
+	simState.AppParams.GetOrGenerate(OpWeightMsgAddActivateFinalizeMarker, &wMsgAFAM, nil,
+		func(_ *rand.Rand) { wMsgAFAM = simappparams.DefaultWeightMsgAddFinalizeActivateMarker })
+	simState.AppParams.GetOrGenerate(OpWeightMsgAddMarkerProposal, &wMsgAddMarkerProposal, nil,
+		func(_ *rand.Rand) { wMsgAddMarkerProposal = simappparams.DefaultWeightMsgAddMarkerProposal })
+	simState.AppParams.GetOrGenerate(OpWeightMsgSetAccountData, &wMsgSetAccountData, nil,
+		func(_ *rand.Rand) { wMsgSetAccountData = simappparams.DefaultWeightMsgSetAccountData })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateSendDenyList, &wMsgUpdateSendDenyList, nil,
+		func(_ *rand.Rand) { wMsgUpdateSendDenyList = simappparams.DefaultWeightMsgUpdateDenySendList })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgAddMarker,
-			SimulateMsgAddMarker(k, args),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgChangeStatus,
-			SimulateMsgChangeStatus(k, args),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgAddAccess,
-			SimulateMsgAddAccess(k, args),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgAddFinalizeActivateMarker,
-			SimulateMsgAddFinalizeActivateMarker(k, args),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgAddMarkerProposal,
-			SimulateMsgAddMarkerProposal(k, args),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgSetAccountData,
-			SimulateMsgSetAccountData(k, args),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgUpdateSendDenyList,
-			SimulateMsgUpdateSendDenyList(k, args),
-		),
+		simulation.NewWeightedOperation(wMsgAddMarker, SimulateMsgAddMarker(k, args)),
+		simulation.NewWeightedOperation(wMsgChangeStatus, SimulateMsgChangeStatus(k, args)),
+		simulation.NewWeightedOperation(wMsgAddAccess, SimulateMsgAddAccess(k, args)),
+		simulation.NewWeightedOperation(wMsgAFAM, SimulateMsgAddFinalizeActivateMarker(k, args)),
+		simulation.NewWeightedOperation(wMsgAddMarkerProposal, SimulateMsgAddMarkerProposal(k, args)),
+		simulation.NewWeightedOperation(wMsgSetAccountData, SimulateMsgSetAccountData(k, args)),
+		simulation.NewWeightedOperation(wMsgUpdateSendDenyList, SimulateMsgUpdateSendDenyList(k, args)),
 	}
 }
 

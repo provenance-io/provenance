@@ -36,30 +36,18 @@ func WeightedOperations(
 	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, ck channelkeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgUpdateOracle    int
-		weightMsgSendOracleQuery int
+		wMsgUpdateOracle    int
+		wMsgSendOracleQuery int
 	)
 
-	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateOracle, &weightMsgUpdateOracle, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateOracle = simappparams.DefaultWeightUpdateOracle
-		},
-	)
-	simState.AppParams.GetOrGenerate(OpWeightMsgSendOracleQuery, &weightMsgSendOracleQuery, nil,
-		func(_ *rand.Rand) {
-			weightMsgSendOracleQuery = simappparams.DefaultWeightSendOracleQuery
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateOracle, &wMsgUpdateOracle, nil,
+		func(_ *rand.Rand) { wMsgUpdateOracle = simappparams.DefaultWeightUpdateOracle })
+	simState.AppParams.GetOrGenerate(OpWeightMsgSendOracleQuery, &wMsgSendOracleQuery, nil,
+		func(_ *rand.Rand) { wMsgSendOracleQuery = simappparams.DefaultWeightSendOracleQuery })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgUpdateOracle,
-			SimulateMsgUpdateOracle(simState, k, ak, bk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgSendOracleQuery,
-			SimulateMsgSendQueryOracle(simState, k, ak, bk, ck),
-		),
+		simulation.NewWeightedOperation(wMsgUpdateOracle, SimulateMsgUpdateOracle(simState, k, ak, bk)),
+		simulation.NewWeightedOperation(wMsgSendOracleQuery, SimulateMsgSendQueryOracle(simState, k, ak, bk, ck)),
 	}
 }
 

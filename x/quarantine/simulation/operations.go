@@ -48,30 +48,30 @@ func WeightedOperations(
 	simState module.SimulationState, ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgOptIn               int
-		weightMsgOptOut              int
-		weightMsgAccept              int
-		weightMsgDecline             int
-		weightMsgUpdateAutoResponses int
+		wMsgOptIn               int
+		wMsgOptOut              int
+		wMsgAccept              int
+		wMsgDecline             int
+		wMsgUpdateAutoResponses int
 	)
 
-	simState.AppParams.GetOrGenerate(OpMsgOptIn, &weightMsgOptIn, nil,
-		func(_ *rand.Rand) { weightMsgOptIn = WeightMsgOptIn })
-	simState.AppParams.GetOrGenerate(OpMsgOptOut, &weightMsgOptOut, nil,
-		func(_ *rand.Rand) { weightMsgOptOut = WeightMsgOptOut })
-	simState.AppParams.GetOrGenerate(OpMsgAccept, &weightMsgAccept, nil,
-		func(_ *rand.Rand) { weightMsgAccept = WeightMsgAccept })
-	simState.AppParams.GetOrGenerate(OpMsgDecline, &weightMsgDecline, nil,
-		func(_ *rand.Rand) { weightMsgDecline = WeightMsgDecline })
-	simState.AppParams.GetOrGenerate(OpMsgUpdateAutoResponses, &weightMsgUpdateAutoResponses, nil,
-		func(_ *rand.Rand) { weightMsgUpdateAutoResponses = WeightMsgUpdateAutoResponses })
+	simState.AppParams.GetOrGenerate(OpMsgOptIn, &wMsgOptIn, nil,
+		func(_ *rand.Rand) { wMsgOptIn = WeightMsgOptIn })
+	simState.AppParams.GetOrGenerate(OpMsgOptOut, &wMsgOptOut, nil,
+		func(_ *rand.Rand) { wMsgOptOut = WeightMsgOptOut })
+	simState.AppParams.GetOrGenerate(OpMsgAccept, &wMsgAccept, nil,
+		func(_ *rand.Rand) { wMsgAccept = WeightMsgAccept })
+	simState.AppParams.GetOrGenerate(OpMsgDecline, &wMsgDecline, nil,
+		func(_ *rand.Rand) { wMsgDecline = WeightMsgDecline })
+	simState.AppParams.GetOrGenerate(OpMsgUpdateAutoResponses, &wMsgUpdateAutoResponses, nil,
+		func(_ *rand.Rand) { wMsgUpdateAutoResponses = WeightMsgUpdateAutoResponses })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(weightMsgOptIn, SimulateMsgOptIn(simState, ak, bk)),
-		simulation.NewWeightedOperation(weightMsgOptOut, SimulateMsgOptOut(simState, ak, bk, k)),
-		simulation.NewWeightedOperation(weightMsgAccept, SimulateMsgAccept(simState, ak, bk, k)),
-		simulation.NewWeightedOperation(weightMsgDecline, SimulateMsgDecline(simState, ak, bk, k)),
-		simulation.NewWeightedOperation(weightMsgUpdateAutoResponses, SimulateMsgUpdateAutoResponses(simState, ak, bk, k)),
+		simulation.NewWeightedOperation(wMsgOptIn, SimulateMsgOptIn(simState, ak, bk)),
+		simulation.NewWeightedOperation(wMsgOptOut, SimulateMsgOptOut(simState, ak, bk, k)),
+		simulation.NewWeightedOperation(wMsgAccept, SimulateMsgAccept(simState, ak, bk, k)),
+		simulation.NewWeightedOperation(wMsgDecline, SimulateMsgDecline(simState, ak, bk, k)),
+		simulation.NewWeightedOperation(wMsgUpdateAutoResponses, SimulateMsgUpdateAutoResponses(simState, ak, bk, k)),
 	}
 }
 

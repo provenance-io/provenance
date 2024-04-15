@@ -33,42 +33,22 @@ func WeightedOperations(
 	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgBindName   int
-		weightMsgDeleteName int
-		weightMsgModifyName int
+		wMsgBindName   int
+		wMsgDeleteName int
+		wMsgModifyName int
 	)
 
-	simState.AppParams.GetOrGenerate(OpWeightMsgBindName, &weightMsgBindName, nil,
-		func(_ *rand.Rand) {
-			weightMsgBindName = simappparams.DefaultWeightMsgBindName
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgDeleteName, &weightMsgDeleteName, nil,
-		func(_ *rand.Rand) {
-			weightMsgDeleteName = simappparams.DefaultWeightMsgDeleteName
-		},
-	)
-
-	simState.AppParams.GetOrGenerate(OpWeightMsgModifyName, &weightMsgModifyName, nil,
-		func(_ *rand.Rand) {
-			weightMsgModifyName = simappparams.DefaultWeightMsgModifyName
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgBindName, &wMsgBindName, nil,
+		func(_ *rand.Rand) { wMsgBindName = simappparams.DefaultWeightMsgBindName })
+	simState.AppParams.GetOrGenerate(OpWeightMsgDeleteName, &wMsgDeleteName, nil,
+		func(_ *rand.Rand) { wMsgDeleteName = simappparams.DefaultWeightMsgDeleteName })
+	simState.AppParams.GetOrGenerate(OpWeightMsgModifyName, &wMsgModifyName, nil,
+		func(_ *rand.Rand) { wMsgModifyName = simappparams.DefaultWeightMsgModifyName })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgBindName,
-			SimulateMsgBindName(simState, k, ak, bk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgDeleteName,
-			SimulateMsgDeleteName(simState, k, ak, bk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgModifyName,
-			SimulateMsgModifyName(simState, k, ak, bk),
-		),
+		simulation.NewWeightedOperation(wMsgBindName, SimulateMsgBindName(simState, k, ak, bk)),
+		simulation.NewWeightedOperation(wMsgDeleteName, SimulateMsgDeleteName(simState, k, ak, bk)),
+		simulation.NewWeightedOperation(wMsgModifyName, SimulateMsgModifyName(simState, k, ak, bk)),
 	}
 }
 
