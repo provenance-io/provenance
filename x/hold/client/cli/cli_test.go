@@ -25,6 +25,7 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/client/cli"
 	holdkeeper "github.com/provenance-io/provenance/x/hold/keeper"
@@ -540,9 +541,8 @@ func (s *IntegrationCLITestSuite) TestHoldsNotInFromSpendable() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			// TODO[1760]: Uncomment this once the quarantine PR has merged.
-			//actual := queries.GetSpendableBalances(s.T(), s.testnet, tc.addr.String())
-			//s.Assert().Equal(tc.exp, actual, "spendable balances")
+			actual := queries.GetSpendableBalances(s.T(), s.testnet, tc.addr.String())
+			s.Assert().Equal(tc.exp, actual, "spendable balances")
 		})
 	}
 }
