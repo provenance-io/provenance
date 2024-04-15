@@ -56,6 +56,8 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			migrateAttributeParams(ctx, app)
+
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
@@ -85,6 +87,8 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
+
+			migrateAttributeParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -287,8 +291,9 @@ func migrateBaseappParams(ctx sdk.Context, app *App) error {
 // migrateAttributeParams migrates to new Attribute Params store
 // TODO: Remove with the umber handlers.
 func migrateAttributeParams(ctx sdk.Context, app *App) {
-	attributeParamSpace := app.ParamsKeeper.Subspace(attributetypes.ModuleName)
-	maxValueLength := attributetypes.DefaultMaxValueLength
+	attributeParamSpace := app.GetSubspace(attributetypes.ModuleName)
+	maxValueLength := uint32(attributetypes.DefaultMaxValueLength)
+	// TODO: remove attributetypes.ParamStoreKeyMaxValueLength with the umber handlers.
 	if attributeParamSpace.Has(ctx, attributetypes.ParamStoreKeyMaxValueLength) {
 		attributeParamSpace.Get(ctx, attributetypes.ParamStoreKeyMaxValueLength, &maxValueLength)
 	}
