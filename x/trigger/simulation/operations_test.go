@@ -11,6 +11,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -52,11 +53,17 @@ func (s *SimTestSuite) LogOperationMsg(operationMsg simtypes.OperationMsg, msg s
 	)
 }
 
-func (s *SimTestSuite) TestWeightedOperations() {
-	cdc := s.app.AppCodec()
-	appParams := make(simtypes.AppParams)
+// MakeTestSimState creates a new module.SimulationState struct with the fields needed by the functions being tested.
+func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
+	return module.SimulationState{
+		AppParams: make(simtypes.AppParams),
+		Cdc:       s.app.AppCodec(),
+		TxConfig:  s.app.GetTxConfig(),
+	}
+}
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, s.app.TriggerKeeper,
+func (s *SimTestSuite) TestWeightedOperations() {
+	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), s.app.TriggerKeeper,
 		s.app.AccountKeeper, s.app.BankKeeper,
 	)
 
@@ -106,7 +113,7 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// bad operation
-	op := simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgCreateTrigger(s.MakeTestSimState(), s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	expBadOp := simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), "cannot choose 2 accounts because there are only 1")
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts[0:1], "")
 	s.LogOperationMsg(operationMsg, "bad SimulateMsgCreateTrigger")
@@ -115,7 +122,7 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 	s.Assert().NoError(err, "bad SimulateMsgCreateTrigger op(...) error")
 
 	// execute operation
-	op = simulation.SimulateMsgCreateTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op = simulation.SimulateMsgCreateTrigger(s.MakeTestSimState(), s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err = op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgCreateTrigger op(...) error")
 	s.LogOperationMsg(operationMsg, "good")
@@ -143,7 +150,7 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	s.app.TriggerKeeper.SetGasLimit(s.ctx, trigger.GetId(), 1000)
 
 	// execute operation
-	op := simulation.SimulateMsgDestroyTrigger(s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgDestroyTrigger(s.MakeTestSimState(), s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgDestroyTrigger op(...) error")
 	s.LogOperationMsg(operationMsg, "good")
