@@ -41,10 +41,6 @@ import (
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
-	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
-	// quarantinekeeper "github.com/cosmos/cosmos-sdk/x/quarantine/keeper" // TODO[1760]: quarantine
-	// quarantinemodule "github.com/cosmos/cosmos-sdk/x/quarantine/module" // TODO[1760]: quarantine
-
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -175,7 +171,9 @@ import (
 	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
 	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
-
+	"github.com/provenance-io/provenance/x/quarantine"
+	quarantinekeeper "github.com/provenance-io/provenance/x/quarantine/keeper"
+	quarantinemodule "github.com/provenance-io/provenance/x/quarantine/module"
 	"github.com/provenance-io/provenance/x/sanction"
 	sanctionkeeper "github.com/provenance-io/provenance/x/sanction/keeper"
 	sanctionmodule "github.com/provenance-io/provenance/x/sanction/module"
@@ -249,23 +247,23 @@ type App struct {
 	memKeys map[string]*storetypes.MemoryStoreKey
 
 	// keepers
-	AccountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
-	CapabilityKeeper *capabilitykeeper.Keeper
-	StakingKeeper    *stakingkeeper.Keeper
-	SlashingKeeper   slashingkeeper.Keeper
-	MintKeeper       mintkeeper.Keeper
-	DistrKeeper      distrkeeper.Keeper
-	GovKeeper        govkeeper.Keeper
-	CrisisKeeper     *crisiskeeper.Keeper
-	UpgradeKeeper    *upgradekeeper.Keeper
-	ParamsKeeper     paramskeeper.Keeper
-	AuthzKeeper      authzkeeper.Keeper
-	GroupKeeper      groupkeeper.Keeper
-	EvidenceKeeper   evidencekeeper.Keeper
-	FeeGrantKeeper   feegrantkeeper.Keeper
-	MsgFeesKeeper    msgfeeskeeper.Keeper
-	// QuarantineKeeper quarantinekeeper.Keeper // TODO[1760]: quarantine
+	AccountKeeper         authkeeper.AccountKeeper
+	BankKeeper            bankkeeper.Keeper
+	CapabilityKeeper      *capabilitykeeper.Keeper
+	StakingKeeper         *stakingkeeper.Keeper
+	SlashingKeeper        slashingkeeper.Keeper
+	MintKeeper            mintkeeper.Keeper
+	DistrKeeper           distrkeeper.Keeper
+	GovKeeper             govkeeper.Keeper
+	CrisisKeeper          *crisiskeeper.Keeper
+	UpgradeKeeper         *upgradekeeper.Keeper
+	ParamsKeeper          paramskeeper.Keeper
+	AuthzKeeper           authzkeeper.Keeper
+	GroupKeeper           groupkeeper.Keeper
+	EvidenceKeeper        evidencekeeper.Keeper
+	FeeGrantKeeper        feegrantkeeper.Keeper
+	MsgFeesKeeper         msgfeeskeeper.Keeper
+	QuarantineKeeper      quarantinekeeper.Keeper
 	SanctionKeeper        sanctionkeeper.Keeper
 	TriggerKeeper         triggerkeeper.Keeper
 	OracleKeeper          oraclekeeper.Keeper
@@ -377,7 +375,7 @@ func New(
 		nametypes.StoreKey,
 		msgfeestypes.StoreKey,
 		wasmtypes.StoreKey,
-		// quarantine.StoreKey, // TODO[1760]: quarantine
+		quarantine.StoreKey,
 		sanction.StoreKey,
 		triggertypes.StoreKey,
 		oracletypes.StoreKey,
@@ -562,8 +560,8 @@ func New(
 	)
 
 	markerReqAttrBypassAddrs := []sdk.AccAddress{
-		authtypes.NewModuleAddress(authtypes.FeeCollectorName), // Allow collecting fees in restricted coins.
-		// authtypes.NewModuleAddress(quarantine.ModuleName),          // Allow quarantine to hold onto restricted coins. // TODO[1760]: quarantine
+		authtypes.NewModuleAddress(authtypes.FeeCollectorName),     // Allow collecting fees in restricted coins.
+		authtypes.NewModuleAddress(quarantine.ModuleName),          // Allow quarantine to hold onto restricted coins.
 		authtypes.NewModuleAddress(govtypes.ModuleName),            // Allow restricted coins in deposits.
 		authtypes.NewModuleAddress(distrtypes.ModuleName),          // Allow fee denoms to be restricted coins.
 		authtypes.NewModuleAddress(stakingtypes.BondedPoolName),    // Allow bond denom to be a restricted coin.
@@ -691,7 +689,7 @@ func New(
 	for mName := range maccPerms {
 		unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(mName))
 	}
-	// unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(quarantine.ModuleName)) // TODO[1760]: quarantine
+	unsanctionableAddrs = append(unsanctionableAddrs, authtypes.NewModuleAddress(quarantine.ModuleName))
 	app.SanctionKeeper = sanctionkeeper.NewKeeper(appCodec, keys[sanction.StoreKey],
 		app.BankKeeper, &app.GovKeeper,
 		govAuthority, unsanctionableAddrs)
@@ -737,7 +735,7 @@ func New(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	// app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName)) // TODO[1760]: quarantine
+	app.QuarantineKeeper = quarantinekeeper.NewKeeper(appCodec, keys[quarantine.StoreKey], app.BankKeeper, authtypes.NewModuleAddress(quarantine.ModuleName))
 
 	/****  Module Options ****/
 
@@ -766,7 +764,7 @@ func New(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
-		// quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), // TODO[1760]: quarantine
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		// PROVENANCE
@@ -851,7 +849,7 @@ func New(
 		icqtypes.ModuleName,
 		nametypes.ModuleName,
 		vestingtypes.ModuleName,
-		// quarantine.ModuleName, // TODO[1760]: quarantine
+		quarantine.ModuleName,
 		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
@@ -892,7 +890,7 @@ func New(
 		markertypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
-		// quarantine.ModuleName, // TODO[1760]: quarantine
+		quarantine.ModuleName,
 		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
@@ -920,7 +918,7 @@ func New(
 		authz.ModuleName,
 		group.ModuleName,
 		feegrant.ModuleName,
-		// quarantine.ModuleName, // TODO[1760]: quarantine
+		quarantine.ModuleName,
 		sanction.ModuleName,
 
 		nametypes.ModuleName,
@@ -967,7 +965,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-		// quarantine.ModuleName, // TODO[1760]: quarantine
+		quarantine.ModuleName,
 		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
@@ -1009,7 +1007,7 @@ func New(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		// quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), // TODO[1760]: quarantine
+		quarantinemodule.NewAppModule(appCodec, app.QuarantineKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		sanctionmodule.NewAppModule(appCodec, app.SanctionKeeper, app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.interfaceRegistry),
 
 		metadata.NewAppModule(appCodec, app.MetadataKeeper, app.AccountKeeper),
