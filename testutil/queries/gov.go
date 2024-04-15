@@ -12,9 +12,9 @@ import (
 )
 
 // GetLastGovProp executes a query to get the most recent governance proposal, requiring everything to be okay.
-func GetLastGovProp(t *testing.T, val *network.Validator) *govv1.Proposal {
+func GetLastGovProp(t *testing.T, n *network.Network) *govv1.Proposal {
 	t.Helper()
-	rv, ok := AssertGetLastGovProp(t, val)
+	rv, ok := AssertGetLastGovProp(t, n)
 	if !ok {
 		t.FailNow()
 	}
@@ -23,10 +23,10 @@ func GetLastGovProp(t *testing.T, val *network.Validator) *govv1.Proposal {
 
 // AssertGetLastGovProp executes a query to get the most recent governance proposal, asserting that everything is okay.
 // The returned bool will be true on success, or false if something goes wrong.
-func AssertGetLastGovProp(t *testing.T, val *network.Validator) (*govv1.Proposal, bool) {
+func AssertGetLastGovProp(t *testing.T, n *network.Network) (*govv1.Proposal, bool) {
 	t.Helper()
-	url := fmt.Sprintf("%s/cosmos/gov/v1/proposals?limit=1&reverse=true", val.APIAddress)
-	resp, ok := AssertGetRequest(t, val, url, &govv1.QueryProposalsResponse{})
+	url := "/cosmos/gov/v1/proposals?limit=1&reverse=true"
+	resp, ok := AssertGetRequest(t, n, url, &govv1.QueryProposalsResponse{})
 	if !ok {
 		return nil, false
 	}
@@ -39,7 +39,7 @@ func AssertGetLastGovProp(t *testing.T, val *network.Validator) (*govv1.Proposal
 	// Unpack all the proposal messages so that the cachedValue is set in them.
 	for i := range resp.Proposals[0].Messages {
 		var msg sdk.Msg
-		err := val.ClientCtx.Codec.UnpackAny(resp.Proposals[0].Messages[i], &msg)
+		err := n.Validators[0].ClientCtx.Codec.UnpackAny(resp.Proposals[0].Messages[i], &msg)
 		if !assert.NoError(t, err, "UnpackAny on Messages[%d]", i) {
 			return nil, false
 		}
@@ -48,9 +48,9 @@ func AssertGetLastGovProp(t *testing.T, val *network.Validator) (*govv1.Proposal
 }
 
 // GetGovProp executes a query to get the requested governance proposal, requiring everything to be okay.
-func GetGovProp(t *testing.T, val *network.Validator, propID string) *govv1.Proposal {
+func GetGovProp(t *testing.T, n *network.Network, propID string) *govv1.Proposal {
 	t.Helper()
-	rv, ok := AssertGetGovProp(t, val, propID)
+	rv, ok := AssertGetGovProp(t, n, propID)
 	if !ok {
 		t.FailNow()
 	}
@@ -59,10 +59,10 @@ func GetGovProp(t *testing.T, val *network.Validator, propID string) *govv1.Prop
 
 // AssertGetGovProp executes a query to get the requested governance proposal, asserting that everything is okay.
 // The returned bool will be true on success, or false if something goes wrong.
-func AssertGetGovProp(t *testing.T, val *network.Validator, propID string) (*govv1.Proposal, bool) {
+func AssertGetGovProp(t *testing.T, n *network.Network, propID string) (*govv1.Proposal, bool) {
 	t.Helper()
-	url := fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s", val.APIAddress, propID)
-	resp, ok := AssertGetRequest(t, val, url, &govv1.QueryProposalResponse{})
+	url := fmt.Sprintf("/cosmos/gov/v1/proposals/%s", propID)
+	resp, ok := AssertGetRequest(t, n, url, &govv1.QueryProposalResponse{})
 	if !ok {
 		return nil, false
 	}
@@ -72,7 +72,7 @@ func AssertGetGovProp(t *testing.T, val *network.Validator, propID string) (*gov
 	// Unpack all the proposal messages so that the cachedValue is set in them.
 	for i := range resp.Proposal.Messages {
 		var msg sdk.Msg
-		err := val.ClientCtx.Codec.UnpackAny(resp.Proposal.Messages[i], &msg)
+		err := n.Validators[0].ClientCtx.Codec.UnpackAny(resp.Proposal.Messages[i], &msg)
 		if !assert.NoError(t, err, "UnpackAny on Messages[%d]", i) {
 			return nil, false
 		}

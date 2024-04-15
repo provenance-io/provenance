@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add store for crisis module for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Add PreBlocker support for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Add the Sanction module back in [#1922](https://github.com/provenance-io/provenance/pull/1922).
+* Add the Quarantine module back in [#1926](https://github.com/provenance-io/provenance/pull/1926).
 
 ### Improvements
 
