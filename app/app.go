@@ -576,7 +576,7 @@ func New(
 	)
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
-		appCodec, keys[metadatatypes.StoreKey], app.GetSubspace(metadatatypes.ModuleName), app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper,
+		appCodec, keys[metadatatypes.StoreKey], app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper,
 	)
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
@@ -1361,7 +1361,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 
-	paramsKeeper.Subspace(metadatatypes.ModuleName)  // TODO[1760]: params: Migrate metadata params.
 	paramsKeeper.Subspace(markertypes.ModuleName)    // TODO[1760]: params: Migrate marker params.
 	paramsKeeper.Subspace(nametypes.ModuleName)      // TODO[1760]: params: Migrate name params.
 	paramsKeeper.Subspace(attributetypes.ModuleName) // TODO[1760]: params: Migrate attribute params.
