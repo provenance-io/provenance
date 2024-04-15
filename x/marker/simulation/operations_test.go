@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -54,11 +54,17 @@ func (s *SimTestSuite) LogOperationMsg(operationMsg simtypes.OperationMsg) {
 	)
 }
 
-func (s *SimTestSuite) TestWeightedOperations() {
-	cdc := s.app.AppCodec()
-	appParams := make(simtypes.AppParams)
+// MakeTestSimState creates a new module.SimulationState struct with the fields needed by the functions being tested.
+func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
+	return module.SimulationState{
+		AppParams: make(simtypes.AppParams),
+		Cdc:       s.app.AppCodec(),
+		TxConfig:  s.app.GetTxConfig(),
+	}
+}
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, codec.NewProtoCodec(s.app.InterfaceRegistry()), s.app.MarkerKeeper,
+func (s *SimTestSuite) TestWeightedOperations() {
+	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), codec.NewProtoCodec(s.app.InterfaceRegistry()), s.app.MarkerKeeper,
 		s.app.AccountKeeper, s.app.BankKeeper, s.app.GovKeeper, s.app.AttributeKeeper,
 	)
 
@@ -132,7 +138,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarker() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// execute operation
-	op := simulation.SimulateMsgAddMarker(s.app.MarkerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgAddMarker(s.app.MarkerKeeper, s.getWeightedOpsArgs())
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err)
 
@@ -154,7 +160,7 @@ func (s *SimTestSuite) TestSimulateMsgAddActivateFinalizeMarker() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// execute operation
-	op := simulation.SimulateMsgAddFinalizeActivateMarker(s.app.MarkerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgAddFinalizeActivateMarker(s.app.MarkerKeeper, s.getWeightedOpsArgs())
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err)
 
@@ -308,7 +314,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 		s.Run(tc.name, func() {
 
 			args := &simulation.SendGovMsgArgs{
-				WeightedOpsArgs: s.getWeightedOpsArgs(),
+				WeightedOpsArgs: *s.getWeightedOpsArgs(),
 				R:               rand.New(rand.NewSource(1)),
 				App:             s.app.BaseApp,
 				Ctx:             s.ctx,
@@ -378,9 +384,8 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	_, err := markerMsgServer.AddFinalizeActivateMarker(s.ctx, newMarker)
 	s.Require().NoError(err, "AddFinalizeActivateMarker")
 
-	args := s.getWeightedOpsArgs()
 	// execute operation
-	op := simulation.SimulateMsgSetAccountData(s.app.MarkerKeeper, &args)
+	op := simulation.SimulateMsgSetAccountData(s.app.MarkerKeeper, s.getWeightedOpsArgs())
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgSetAccountData op(...) error")
 	s.LogOperationMsg(operationMsg)
@@ -427,9 +432,8 @@ func (s *SimTestSuite) TestSimulateMsgUpdateSendDenyList() {
 	_, err := markerMsgServer.AddFinalizeActivateMarker(s.ctx, newMarker)
 	s.Require().NoError(err, "AddFinalizeActivateMarker")
 
-	args := s.getWeightedOpsArgs()
 	// execute operation
-	op := simulation.SimulateMsgUpdateSendDenyList(s.app.MarkerKeeper, &args)
+	op := simulation.SimulateMsgUpdateSendDenyList(s.app.MarkerKeeper, s.getWeightedOpsArgs())
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgUpdateSendDenyList op(...) error")
 	s.LogOperationMsg(operationMsg)
@@ -468,10 +472,9 @@ func TestSimTestSuite(t *testing.T) {
 }
 
 // getWeightedOpsArgs creates a standard WeightedOpsArgs.
-func (s *SimTestSuite) getWeightedOpsArgs() simulation.WeightedOpsArgs {
-	return simulation.WeightedOpsArgs{
-		AppParams:  make(simtypes.AppParams),
-		JSONCodec:  s.app.AppCodec(),
+func (s *SimTestSuite) getWeightedOpsArgs() *simulation.WeightedOpsArgs {
+	return &simulation.WeightedOpsArgs{
+		SimState:   s.MakeTestSimState(),
 		ProtoCodec: codec.NewProtoCodec(s.app.InterfaceRegistry()),
 		AK:         s.app.AccountKeeper,
 		BK:         s.app.BankKeeper,

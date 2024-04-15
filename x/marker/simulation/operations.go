@@ -14,6 +14,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -47,12 +48,11 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, protoCodec *codec.ProtoCodec,
+	simState module.SimulationState, protoCodec *codec.ProtoCodec,
 	k keeper.Keeper, ak authkeeper.AccountKeeper, bk bankkeeper.Keeper, gk govkeeper.Keeper, attrk types.AttrKeeper,
 ) simulation.WeightedOperations {
 	args := &WeightedOpsArgs{
-		AppParams:  appParams,
-		JSONCodec:  cdc,
+		SimState:   simState,
 		ProtoCodec: protoCodec,
 		AK:         ak,
 		BK:         bk,
@@ -70,43 +70,43 @@ func WeightedOperations(
 		weightMsgUpdateSendDenyList        int
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
+	simState.AppParams.GetOrGenerate(OpWeightMsgAddMarker, &weightMsgAddMarker, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddMarker = simappparams.DefaultWeightMsgAddMarker
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgChangeStatus, &weightMsgChangeStatus, nil,
+	simState.AppParams.GetOrGenerate(OpWeightMsgChangeStatus, &weightMsgChangeStatus, nil,
 		func(_ *rand.Rand) {
 			weightMsgChangeStatus = simappparams.DefaultWeightMsgChangeStatus
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgAddAccess, &weightMsgAddAccess, nil,
+	simState.AppParams.GetOrGenerate(OpWeightMsgAddAccess, &weightMsgAddAccess, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddAccess = simappparams.DefaultWeightMsgAddAccess
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgAddActivateFinalizeMarker, &weightMsgAddFinalizeActivateMarker, nil,
+	simState.AppParams.GetOrGenerate(OpWeightMsgAddActivateFinalizeMarker, &weightMsgAddFinalizeActivateMarker, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddFinalizeActivateMarker = simappparams.DefaultWeightMsgAddFinalizeActivateMarker
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgAddMarkerProposal, &weightMsgAddMarkerProposal, nil,
+	simState.AppParams.GetOrGenerate(OpWeightMsgAddMarkerProposal, &weightMsgAddMarkerProposal, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddMarkerProposal = simappparams.DefaultWeightMsgAddMarkerProposal
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgSetAccountData, &weightMsgSetAccountData, nil,
+	simState.AppParams.GetOrGenerate(OpWeightMsgSetAccountData, &weightMsgSetAccountData, nil,
 		func(_ *rand.Rand) {
 			weightMsgSetAccountData = simappparams.DefaultWeightMsgSetAccountData
 		},
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgUpdateSendDenyList, &weightMsgUpdateSendDenyList, nil,
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateSendDenyList, &weightMsgUpdateSendDenyList, nil,
 		func(_ *rand.Rand) {
 			weightMsgUpdateSendDenyList = simappparams.DefaultWeightMsgUpdateDenySendList
 		},
@@ -115,19 +115,19 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgAddMarker,
-			SimulateMsgAddMarker(k, ak, bk),
+			SimulateMsgAddMarker(k, args),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgChangeStatus,
-			SimulateMsgChangeStatus(k, ak, bk),
+			SimulateMsgChangeStatus(k, args),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgAddAccess,
-			SimulateMsgAddAccess(k, ak, bk),
+			SimulateMsgAddAccess(k, args),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgAddFinalizeActivateMarker,
-			SimulateMsgAddFinalizeActivateMarker(k, ak, bk),
+			SimulateMsgAddFinalizeActivateMarker(k, args),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgAddMarkerProposal,
@@ -145,7 +145,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgAddMarker will Add a random marker with random configuration.
-func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgAddMarker(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -166,12 +166,12 @@ func SimulateMsgAddMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 			0,
 		)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+		return Dispatch(r, app, ctx, args.SimState, args.AK, args.BK, simAccount, chainID, msg, nil)
 	}
 }
 
 // SimulateMsgChangeStatus will randomly change the status of the marker depending on it's current state.
-func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgChangeStatus(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -216,12 +216,12 @@ func SimulateMsgChangeStatus(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			return simtypes.NoOpMsg("marker", "", "unknown marker status"), nil, fmt.Errorf("unknown marker status: %#v", m)
 		}
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+		return Dispatch(r, app, ctx, args.SimState, args.AK, args.BK, simAccount, chainID, msg, nil)
 	}
 }
 
 // SimulateMsgAddAccess will Add a random access to an account.
-func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgAddAccess(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -235,12 +235,12 @@ func SimulateMsgAddAccess(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bank
 		}
 		grants := randomAccessGrants(r, accs, 100, m.GetMarkerType())
 		msg := types.NewMsgAddAccessRequest(m.GetDenom(), simAccount.Address, grants[0])
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+		return Dispatch(r, app, ctx, args.SimState, args.AK, args.BK, simAccount, chainID, msg, nil)
 	}
 }
 
 // SimulateMsgAddFinalizeActivateMarker will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -269,7 +269,7 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, ak authkeeper.Account
 			msg.AllowForcedTransfer = false
 		}
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg, nil)
+		return Dispatch(r, app, ctx, args.SimState, args.AK, args.BK, simAccount, chainID, msg, nil)
 	}
 }
 
@@ -379,7 +379,7 @@ func SimulateMsgSetAccountData(k keeper.Keeper, args *WeightedOpsArgs) simtypes.
 			msg.Value = simtypes.RandStringOfLength(r, strLen)
 		}
 
-		return Dispatch(r, app, ctx, args.AK, args.BK, signer, chainID, msg, nil)
+		return Dispatch(r, app, ctx, args.SimState, args.AK, args.BK, signer, chainID, msg, nil)
 	}
 }
 
@@ -405,7 +405,7 @@ func SimulateMsgUpdateSendDenyList(k keeper.Keeper, args *WeightedOpsArgs) simty
 		msg.AddDeniedAddresses = addDenyAddresses
 		msg.Authority = signer.Address.String()
 
-		return Dispatch(r, app, ctx, args.AK, args.BK, signer, chainID, msg, nil)
+		return Dispatch(r, app, ctx, args.SimState, args.AK, args.BK, signer, chainID, msg, nil)
 	}
 }
 
@@ -415,6 +415,7 @@ func Dispatch(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
 	ctx sdk.Context,
+	simState module.SimulationState,
 	ak authkeeper.AccountKeeperI,
 	bk bankkeeper.Keeper,
 	from simtypes.Account,
@@ -448,10 +449,9 @@ func Dispatch(
 		})
 	}
 
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
-		txGen,
+		simState.TxConfig,
 		[]sdk.Msg{msg},
 		fees,
 		simtestutil.DefaultGenTxGas,
@@ -464,7 +464,7 @@ func Dispatch(
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 	if err != nil {
 		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
@@ -585,10 +585,9 @@ func randomInt63(r *rand.Rand, max int64) (result int64) {
 
 // WeightedOpsArgs holds all the args provided to WeightedOperations so that they can be passed on later more easily.
 type WeightedOpsArgs struct {
-	AppParams  simtypes.AppParams
-	JSONCodec  codec.JSONCodec
+	SimState   module.SimulationState
 	ProtoCodec *codec.ProtoCodec
-	AK         authkeeper.AccountKeeper
+	AK         authkeeper.AccountKeeperI
 	BK         bankkeeper.Keeper
 	GK         govkeeper.Keeper
 	AttrK      types.AttrKeeper
@@ -640,7 +639,7 @@ func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
 	txCtx := simulation.OperationInput{
 		R:               args.R,
 		App:             args.App,
-		TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		TxGen:           args.SimState.TxConfig,
 		Cdc:             args.ProtoCodec,
 		Msg:             govMsg,
 		CoinsSpentInMsg: govMsg.InitialDeposit,
@@ -670,7 +669,7 @@ func OperationMsgVote(args *WeightedOpsArgs, voter simtypes.Account, govPropID u
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           args.SimState.TxConfig,
 			Cdc:             args.ProtoCodec,
 			Msg:             msg,
 			CoinsSpentInMsg: sdk.Coins{},
