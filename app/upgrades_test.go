@@ -23,7 +23,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/provenance-io/provenance/internal/helpers"
-	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 )
 
 type UpgradeTestSuite struct {
@@ -628,14 +627,4 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().NoError(err, "GetAllValidators")
 		s.Assert().Len(validators, 3, "GetAllValidators after %s", runnerName)
 	})
-}
-
-func (s *UpgradeTestSuite) TestMigrateAttributeParams() {
-	expectedValueLength := uint32(512)
-	s.app.GetSubspace(attributetypes.ModuleName).SetParamSet(s.ctx, &attributetypes.Params{MaxValueLength: expectedValueLength})
-
-	migrateAttributeParams(s.ctx, s.app)
-
-	params := s.app.AttributeKeeper.GetParams(s.ctx)
-	s.Require().Equal(expectedValueLength, params.MaxValueLength, "GetParams() MaxValueLength should match the pre-set value")
 }

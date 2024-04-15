@@ -292,7 +292,7 @@ func migrateBaseappParams(ctx sdk.Context, app *App) error {
 // TODO: Remove with the umber handlers.
 func migrateAttributeParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Migrating attribute params.")
-	attributeParamSpace := app.GetSubspace(attributetypes.ModuleName)
+	attributeParamSpace := app.ParamsKeeper.Subspace(attributetypes.ModuleName).WithKeyTable(attributetypes.ParamKeyTable())
 	maxValueLength := uint32(attributetypes.DefaultMaxValueLength)
 	// TODO: remove attributetypes.ParamStoreKeyMaxValueLength with the umber handlers.
 	if attributeParamSpace.Has(ctx, attributetypes.ParamStoreKeyMaxValueLength) {
