@@ -60,10 +60,10 @@ func SimulateMsgBindName(simState module.SimulationState, k keeper.Keeper, ak au
 		params := k.GetParams(ctx)
 		parentRecord, parentOwner, found, err := getRandomRecord(r, ctx, k, accs, 1, int(params.MaxNameLevels)-1)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "iterator of existing records failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "iterator of existing records failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "no name records available to create under"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "no name records available to create under"), nil, nil
 		}
 
 		nameLen := randIntBetween(r, int(params.GetMinSegmentLength()), int(params.GetMaxSegmentLength()))
@@ -90,10 +90,10 @@ func SimulateMsgDeleteName(simState module.SimulationState, k keeper.Keeper, ak 
 		// Not doing a min/max params lookup because they can change during the sim and don't apply to this operation.
 		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, 2, 1_000_000)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "iterator of existing records failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "iterator of existing records failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "no name records available to delete"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "no name records available to delete"), nil, nil
 		}
 
 		msg := types.NewMsgDeleteNameRequest(randomRecord)
@@ -110,10 +110,10 @@ func SimulateMsgModifyName(simState module.SimulationState, k keeper.Keeper, ak 
 		params := k.GetParams(ctx)
 		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, 1, int(params.MaxNameLevels))
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "iterator of existing records failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "iterator of existing records failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "no name records available to modify"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "no name records available to modify"), nil, nil
 		}
 
 		newOwner, _ := simtypes.RandomAcc(r, accs)
@@ -146,7 +146,7 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 
 	tx, err := simtestutil.GenSignedMockTx(
@@ -161,12 +161,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, ""), nil, nil

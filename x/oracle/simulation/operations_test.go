@@ -27,6 +27,10 @@ type SimTestSuite struct {
 	app *app.App
 }
 
+func TestSimTestSuite(t *testing.T) {
+	suite.Run(t, new(SimTestSuite))
+}
+
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false)
@@ -219,8 +223,4 @@ func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Accoun
 	}
 
 	return accounts
-}
-
-func TestSimTestSuite(t *testing.T) {
-	suite.Run(t, new(SimTestSuite))
 }

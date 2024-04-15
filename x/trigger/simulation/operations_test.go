@@ -29,6 +29,10 @@ type SimTestSuite struct {
 	app *app.App
 }
 
+func TestSimTestSuite(t *testing.T) {
+	suite.Run(t, new(SimTestSuite))
+}
+
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false)
@@ -114,7 +118,7 @@ func (s *SimTestSuite) TestSimulateMsgCreateTrigger() {
 
 	// bad operation
 	op := simulation.SimulateMsgCreateTrigger(s.MakeTestSimState(), s.app.TriggerKeeper, s.app.AccountKeeper, s.app.BankKeeper)
-	expBadOp := simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), "cannot choose 2 accounts because there are only 1")
+	expBadOp := simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), "cannot choose 2 accounts because there are only 1")
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts[0:1], "")
 	s.LogOperationMsg(operationMsg, "bad SimulateMsgCreateTrigger")
 	s.Assert().Equal(expBadOp, operationMsg, "bad operationMsg")
@@ -222,10 +226,6 @@ func (s *SimTestSuite) TestRandomAccs() {
 			}
 		})
 	}
-}
-
-func TestSimTestSuite(t *testing.T) {
-	suite.Run(t, new(SimTestSuite))
 }
 
 func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {

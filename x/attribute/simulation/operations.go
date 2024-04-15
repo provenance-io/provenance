@@ -75,10 +75,10 @@ func SimulateMsgAddAttribute(simState module.SimulationState, _ keeper.Keeper, a
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		randomRecord, simAccount, found, err := getRandomNameRecord(r, ctx, &nk, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "iterator of existing name records failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "iterator of existing name records failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "no name records available to create under"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "no name records available to create under"), nil, nil
 		}
 
 		t := types.AttributeType(r.Intn(9))
@@ -101,10 +101,10 @@ func SimulateMsgUpdateAttribute(simState module.SimulationState, k keeper.Keeper
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		randomAttribute, simAccount, found, err := getRandomAttribute(r, ctx, k, &nk, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "iterator of existing attributes failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "no attributes available to delete"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "no attributes available to delete"), nil, nil
 		}
 
 		t := types.AttributeType(r.Intn(9))
@@ -129,10 +129,10 @@ func SimulateMsgDeleteAttribute(simState module.SimulationState, k keeper.Keeper
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		randomAttribute, simAccount, found, err := getRandomAttribute(r, ctx, k, &nk, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "iterator of existing attributes failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "no attributes available to delete"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "no attributes available to delete"), nil, nil
 		}
 
 		msg := types.NewMsgDeleteAttributeRequest(randomAttribute.Address, simAccount.Address, randomAttribute.Name)
@@ -148,10 +148,10 @@ func SimulateMsgDeleteDistinctAttribute(simState module.SimulationState, k keepe
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		randomAttribute, simAccount, found, err := getRandomAttribute(r, ctx, k, &nk, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "iterator of existing attributes failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "no attributes available to delete distinct"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "no attributes available to delete distinct"), nil, nil
 		}
 
 		msg := types.NewMsgDeleteDistinctAttributeRequest(randomAttribute.Address, simAccount.Address, randomAttribute.Name, randomAttribute.Value)
@@ -248,12 +248,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, ""), nil, nil
