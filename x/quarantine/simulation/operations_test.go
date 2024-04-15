@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -48,10 +49,16 @@ func (s *SimTestSuite) SetupTest() {
 	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
-func (s *SimTestSuite) TestWeightedOperations() {
-	cdc := s.app.AppCodec()
-	appParams := make(simtypes.AppParams)
+// MakeTestSimState creates a new module.SimulationState struct with the fields needed by the functions being tested.
+func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
+	return module.SimulationState{
+		AppParams: make(simtypes.AppParams),
+		Cdc:       s.app.AppCodec(),
+		TxConfig:  s.app.GetTxConfig(),
+	}
+}
 
+func (s *SimTestSuite) TestWeightedOperations() {
 	expected := []struct {
 		weight      int
 		opsMsgRoute string
@@ -64,10 +71,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		{simulation.WeightMsgUpdateAutoResponses, quarantine.ModuleName, simulation.TypeMsgUpdateAutoResponses},
 	}
 
-	weightedOps := simulation.WeightedOperations(
-		appParams, cdc,
-		s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper, cdc,
-	)
+	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
 
 	s.Require().Len(weightedOps, len(expected), "weighted ops")
 
@@ -92,7 +96,7 @@ func (s *SimTestSuite) TestSimulateMsgOptIn() {
 	r := rand.New(rand.NewSource(1))
 	accounts := s.getTestingAccounts(r, 10)
 
-	op := simulation.SimulateMsgOptIn(s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgOptIn(s.MakeTestSimState(), s.app.AccountKeeper, s.app.BankKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "running SimulateMsgOptIn op")
 
@@ -113,7 +117,7 @@ func (s *SimTestSuite) TestSimulateMsgOptOut() {
 	err := s.app.QuarantineKeeper.SetOptIn(s.ctx, accounts[0].Address)
 	s.Require().NoError(err, "SetOptIn on accounts[0]")
 
-	op := simulation.SimulateMsgOptOut(s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
+	op := simulation.SimulateMsgOptOut(s.MakeTestSimState(), s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "running SimulateMsgOptIn op")
 
@@ -139,7 +143,7 @@ func (s *SimTestSuite) TestSimulateMsgAccept() {
 	err = s.app.BankKeeper.SendCoins(s.ctx, accounts[1].Address, accounts[0].Address, toSend)
 	s.Require().NoError(err, "SendCoins")
 
-	op := simulation.SimulateMsgAccept(s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
+	op := simulation.SimulateMsgAccept(s.MakeTestSimState(), s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "running SimulateMsgOptIn op")
 
@@ -165,7 +169,7 @@ func (s *SimTestSuite) TestSimulateMsgDecline() {
 	err = s.app.BankKeeper.SendCoins(s.ctx, accounts[1].Address, accounts[0].Address, toSend)
 	s.Require().NoError(err, "SendCoins")
 
-	op := simulation.SimulateMsgDecline(s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
+	op := simulation.SimulateMsgDecline(s.MakeTestSimState(), s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "running SimulateMsgOptIn op")
 
@@ -186,7 +190,7 @@ func (s *SimTestSuite) TestSimulateMsgUpdateAutoResponses() {
 	err := s.app.QuarantineKeeper.SetOptIn(s.ctx, accounts[0].Address)
 	s.Require().NoError(err, "SetOptIn on accounts[0]")
 
-	op := simulation.SimulateMsgUpdateAutoResponses(s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
+	op := simulation.SimulateMsgUpdateAutoResponses(s.MakeTestSimState(), s.app.AccountKeeper, s.app.BankKeeper, s.app.QuarantineKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "running SimulateMsgOptIn op")
 
