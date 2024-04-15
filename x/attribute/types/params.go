@@ -14,6 +14,7 @@ const (
 )
 
 // Parameter store keys
+// TODO: remove with the umber (v1.19.x) handlers.
 var (
 	ParamStoreKeyMaxValueLength = []byte("MaxValueLength")
 )
