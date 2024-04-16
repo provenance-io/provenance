@@ -403,7 +403,7 @@ func (s *UpgradeTestSuite) TestUmber() {
 		"INF Migrating attribute params.",
 		"INF Done migrating attribute params.",
 		"INF Migrating metadata os locator params.",
-		"INF Done migrating metadata os locatorparams.",
+		"INF Done migrating metadata os locator params.",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Updating IBC AllowedClients.",
 		"INF Done updating IBC AllowedClients.",

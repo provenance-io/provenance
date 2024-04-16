@@ -315,6 +315,6 @@ func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
 	if metadataParamSpace.Has(ctx, metadatatypes.ParamStoreKeyMaxValueLength) {
 		metadataParamSpace.Get(ctx, metadatatypes.ParamStoreKeyMaxValueLength, &maxValueLength)
 	}
-	app.AttributeKeeper.SetParams(ctx, attributetypes.Params{MaxValueLength: uint32(maxValueLength)})
+	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: uint32(maxValueLength)})
 	ctx.Logger().Info("Done migrating metadata os locator params.")
 }
