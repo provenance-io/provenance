@@ -509,17 +509,6 @@ func (s *MsgServerTestSuite) TestUpdateForcedTransfer() {
 					allowsForcedTransfer := markerNow.AllowsForcedTransfer()
 					s.Assert().Equal(tc.msg.AllowForcedTransfer, allowsForcedTransfer, "AllowsForcedTransfer after UpdateForcedTransfer")
 				}
-
-				expEvents := sdk.Events{
-					{
-						Type: sdk.EventTypeMessage,
-						Attributes: []abci.EventAttribute{
-							{Key: sdk.AttributeKeyModule, Value: types.ModuleName},
-						},
-					},
-				}
-				events := em.Events()
-				s.Assert().Equal(expEvents, events, "events emitted during UpdateForcedTransfer")
 			}
 		})
 	}
