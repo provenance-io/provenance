@@ -569,10 +569,10 @@ func New(
 	}
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
-		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper, markerReqAttrBypassAddrs,
-		NewGroupCheckerFunc(app.GroupKeeper),
+		appCodec, keys[markertypes.StoreKey], app.AccountKeeper,
+		app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
+		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper,
+		markerReqAttrBypassAddrs, NewGroupCheckerFunc(app.GroupKeeper),
 	)
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(

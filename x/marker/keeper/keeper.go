@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibctypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -43,9 +42,6 @@ type MarkerKeeperI interface {
 
 // Keeper defines the name module Keeper
 type Keeper struct {
-	// The reference to the Paramstore to get and set account specific params
-	paramSpace paramtypes.Subspace
-
 	// To check whether accounts exist for addresses.
 	authKeeper types.AccountKeeper
 
@@ -100,7 +96,6 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
-	paramSpace paramtypes.Subspace,
 	authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	authzKeeper types.AuthzKeeper,
@@ -111,12 +106,7 @@ func NewKeeper(
 	reqAttrBypassAddrs []sdk.AccAddress,
 	checker types.GroupChecker,
 ) Keeper {
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
 	rv := Keeper{
-		paramSpace:            paramSpace,
 		authKeeper:            authKeeper,
 		authzKeeper:           authzKeeper,
 		bankKeeper:            bankKeeper,
