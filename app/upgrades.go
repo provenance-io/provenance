@@ -16,6 +16,7 @@ import (
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -61,6 +62,7 @@ var upgrades = map[string]appUpgrade{
 			migrateAttributeParams(ctx, app)
 			migrateMarkerParams(ctx, app)
 			migrateMetadataOSLocatorParams(ctx, app)
+			migrateMsgFeesParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -95,6 +97,7 @@ var upgrades = map[string]appUpgrade{
 			migrateAttributeParams(ctx, app)
 			migrateMarkerParams(ctx, app)
 			migrateMetadataOSLocatorParams(ctx, app)
+			migrateMsgFeesParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -362,4 +365,34 @@ func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
 	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: uint32(maxValueLength)})
 	ctx.Logger().Info("Done migrating metadata os locator params.")
 
+}
+
+// migrateMsgFeesParams migrates to new MsgFees Params store
+func migrateMsgFeesParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating msgfees params.")
+	msgFeesParamSpace := app.ParamsKeeper.Subspace(msgfeestypes.ModuleName).WithKeyTable(msgfeestypes.ParamKeyTable())
+
+	var floorGasPrice sdk.Coin
+	if msgFeesParamSpace.Has(ctx, msgfeestypes.ParamStoreKeyFloorGasPrice) {
+		msgFeesParamSpace.Get(ctx, msgfeestypes.ParamStoreKeyFloorGasPrice, &floorGasPrice)
+	}
+
+	var nhashPerUsdMil uint64
+	if msgFeesParamSpace.Has(ctx, msgfeestypes.ParamStoreKeyNhashPerUsdMil) {
+		msgFeesParamSpace.Get(ctx, msgfeestypes.ParamStoreKeyNhashPerUsdMil, &nhashPerUsdMil)
+	}
+
+	var conversionFeeDenom string
+	if msgFeesParamSpace.Has(ctx, msgfeestypes.ParamStoreKeyConversionFeeDenom) {
+		msgFeesParamSpace.Get(ctx, msgfeestypes.ParamStoreKeyConversionFeeDenom, &conversionFeeDenom)
+	}
+
+	migratedParams := msgfeestypes.Params{
+		FloorGasPrice:      floorGasPrice,
+		NhashPerUsdMil:     nhashPerUsdMil,
+		ConversionFeeDenom: conversionFeeDenom,
+	}
+	app.MsgFeesKeeper.SetParams(ctx, migratedParams)
+
+	ctx.Logger().Info("Done migrating msgfees params.")
 }
