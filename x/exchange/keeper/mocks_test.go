@@ -353,7 +353,7 @@ func (k *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, sende
 	return err
 }
 
-func (k *MockBankKeeper) InputOutputCoins(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
+func (k *MockBankKeeper) InputOutputCoinsProv(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
 	k.Calls.InputOutputCoins = append(k.Calls.InputOutputCoins, NewInputOutputCoinsArgs(ctx, inputs, outputs))
 	var err error
 	if len(k.InputOutputCoinsResultsQueue) > 0 {

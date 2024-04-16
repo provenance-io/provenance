@@ -1599,13 +1599,13 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 			}, "casting addr account to %T", acc)
 
 			stepResults[i] = &stepResult{
-				step:       step,
-				balance:    s.app.BankKeeper.GetAllBalances(ctx, addr),
-				delegated:  s.app.BankKeeper.GetAllBalances(ctx, modAddr),
-				spendable:  s.app.BankKeeper.SpendableCoins(ctx, addr),
-				locked:     s.app.BankKeeper.LockedCoins(ctx, addr),
-				lockedHold: s.keeper.GetLockedCoins(ctx, addr),
-				// lockedVest:          s.app.BankKeeper.UnvestedCoins(ctx, addr), TODO[1760]: locked-coins
+				step:                step,
+				balance:             s.app.BankKeeper.GetAllBalances(ctx, addr),
+				delegated:           s.app.BankKeeper.GetAllBalances(ctx, modAddr),
+				spendable:           s.app.BankKeeper.SpendableCoins(ctx, addr),
+				locked:              s.app.BankKeeper.LockedCoins(ctx, addr),
+				lockedHold:          s.keeper.GetLockedCoins(ctx, addr),
+				lockedVest:          s.app.BankKeeper.UnvestedCoins(ctx, addr),
 				accVesting:          acc.GetVestingCoins(blockTime),
 				accVested:           acc.GetVestedCoins(blockTime),
 				accDelegatedVesting: acc.GetDelegatedVesting(),

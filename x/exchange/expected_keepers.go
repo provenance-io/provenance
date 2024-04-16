@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -22,8 +23,7 @@ type AttributeKeeper interface {
 type BankKeeper interface {
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	// TODO[1760]: exchange: Put InputOutputCoins back in this expected keeper once our fork is back in place.
-	// InputOutputCoins(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) error
+	InputOutputCoinsProv(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) error
 	BlockedAddr(addr sdk.AccAddress) bool
 }
 
