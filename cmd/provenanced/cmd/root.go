@@ -74,6 +74,13 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	}
 	defer os.RemoveAll(tempDir)
 
+	// These are added to prevent invalid address caching from tempApp.
+	sdk.SetAddrCacheEnabled(false)
+	defer sdk.SetAddrCacheEnabled(true)
+
+	// We initially set the config as testnet so commands that run before start work for testing such as gentx.
+	app.SetConfig(true, false)
+
 	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
 		tempDir,
 		0,
@@ -366,6 +373,8 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+
 	return app.New(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
@@ -382,6 +391,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(getIAVLCacheSize(appOpts)),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
+		baseapp.SetChainID(chainID),
 	)
 }
 
