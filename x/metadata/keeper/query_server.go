@@ -25,11 +25,7 @@ var _ types.QueryServer = Keeper{}
 // Params queries params of metadata module.
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Params")
-	ctx := sdk.UnwrapSDKContext(c)
-	var params types.Params
-	k.paramSpace.GetParamSet(ctx, &params)
-
-	resp := &types.QueryParamsResponse{Params: params}
+	resp := &types.QueryParamsResponse{Params: types.Params{}}
 	if req != nil && req.IncludeRequest {
 		resp.Request = req
 	}
@@ -1046,9 +1042,7 @@ func (k Keeper) GetByAddr(c context.Context, req *types.GetByAddrRequest) (*type
 func (k Keeper) OSLocatorParams(c context.Context, request *types.OSLocatorParamsRequest) (*types.OSLocatorParamsResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "OSLocatorParams")
 	ctx := sdk.UnwrapSDKContext(c)
-	var params types.OSLocatorParams
-	k.paramSpace.GetParamSet(ctx, &params)
-
+	params := k.GetOSLocatorParams(ctx)
 	resp := &types.OSLocatorParamsResponse{Params: params}
 	if request != nil && request.IncludeRequest {
 		resp.Request = request

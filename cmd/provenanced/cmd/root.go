@@ -47,6 +47,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	// rosettacmd "github.com/cosmos/rosetta/cmd" // TODO[1760]: rosetta
 
@@ -72,6 +73,13 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 		panic(fmt.Errorf("failed to create temp dir: %w", err))
 	}
 	defer os.RemoveAll(tempDir)
+
+	// These are added to prevent invalid address caching from tempApp.
+	sdk.SetAddrCacheEnabled(false)
+	defer sdk.SetAddrCacheEnabled(true)
+
+	// We initially set the config as testnet so commands that run before start work for testing such as gentx.
+	app.SetConfig(true, false)
 
 	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
 		tempDir,
@@ -189,8 +197,8 @@ func Execute(rootCmd *cobra.Command) error {
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, basicManager module.BasicManager) {
 	rootCmd.AddCommand(
 		InitCmd(basicManager),
-		// genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome), // TODO[1760]: genutil
-		// genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome), // TODO[1760]: genutil
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator, encodingConfig.InterfaceRegistry.SigningContext().ValidatorAddressCodec()),
+		genutilcli.GenTxCmd(basicManager, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, encodingConfig.InterfaceRegistry.SigningContext().ValidatorAddressCodec()),
 		genutilcli.ValidateGenesisCmd(basicManager),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddRootDomainAccountCmd(app.DefaultNodeHome),
@@ -365,6 +373,8 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+
 	return app.New(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
@@ -381,6 +391,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(getIAVLCacheSize(appOpts)),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
+		baseapp.SetChainID(chainID),
 	)
 }
 

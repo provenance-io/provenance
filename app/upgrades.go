@@ -15,6 +15,7 @@ import (
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -59,6 +60,7 @@ var upgrades = map[string]appUpgrade{
 
 			migrateAttributeParams(ctx, app)
 			migrateMarkerParams(ctx, app)
+			migrateMetadataOSLocatorParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -92,6 +94,7 @@ var upgrades = map[string]appUpgrade{
 
 			migrateAttributeParams(ctx, app)
 			migrateMarkerParams(ctx, app)
+			migrateMetadataOSLocatorParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -344,4 +347,19 @@ func migrateMarkerParams(ctx sdk.Context, app *App) {
 	app.MarkerKeeper.SetParams(ctx, params)
 
 	ctx.Logger().Info("Done migrating marker params.")
+}
+
+// migrateAttributeParams migrates to new Metadata Os Locator Params store
+// TODO: Remove with the umber handlers.
+func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating metadata os locator params.")
+	metadataParamSpace := app.ParamsKeeper.Subspace(metadatatypes.ModuleName).WithKeyTable(metadatatypes.ParamKeyTable())
+	maxValueLength := uint32(metadatatypes.DefaultMaxURILength)
+	// TODO: remove metadatatypes.ParamStoreKeyMaxValueLength with the umber handlers.
+	if metadataParamSpace.Has(ctx, metadatatypes.ParamStoreKeyMaxValueLength) {
+		metadataParamSpace.Get(ctx, metadatatypes.ParamStoreKeyMaxValueLength, &maxValueLength)
+	}
+	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: uint32(maxValueLength)})
+	ctx.Logger().Info("Done migrating metadata os locator params.")
+
 }

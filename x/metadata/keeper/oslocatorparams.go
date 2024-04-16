@@ -6,23 +6,34 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
-// GetParams returns the total set of metadata parameters.
+// GetOSLocatorParams returns the metadata OSLocatorParams.
 func (k Keeper) GetOSLocatorParams(ctx sdk.Context) (osLocatorParams types.OSLocatorParams) {
-	return types.OSLocatorParams{
-		MaxUriLength: k.GetMaxURILength(ctx),
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.OSLocatorParamPrefix)
+	if bz == nil {
+		return types.OSLocatorParams{
+			MaxUriLength: types.DefaultMaxURILength,
+		}
 	}
+	err := k.cdc.Unmarshal(bz, &osLocatorParams)
+	if err != nil {
+		panic(err)
+	}
+	return osLocatorParams
 }
 
-// SetParams sets the distribution parameters to the param space.
+// SetOSLocatorParams sets the metadata OSLocator parameters to the store.
 func (k Keeper) SetOSLocatorParams(ctx sdk.Context, params types.OSLocatorParams) {
-	k.paramSpace.SetParamSet(ctx, &params)
+	bz, err := k.cdc.Marshal(&params)
+	if err != nil {
+		panic(err)
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.OSLocatorParamPrefix, bz)
 }
 
-// GetMaxURILength gets the configured parameter for max uri length on a locator record (or the default if unset)
+// GetMaxURILength returns the configured parameter for max URI length on a locator record
 func (k Keeper) GetMaxURILength(ctx sdk.Context) (max uint32) {
-	max = types.DefaultMaxURILength
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyMaxValueLength) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyMaxValueLength, &max)
-	}
-	return
+	return k.GetOSLocatorParams(ctx).MaxUriLength
 }
