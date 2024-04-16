@@ -379,10 +379,14 @@ func (s *UpgradeTestSuite) TestUmberRC1() {
 		"INF Done pruning expired consensus states for IBC.",
 		"INF Migrating legacy params.",
 		"INF Done migrating legacy params.",
+		"INF Migrating attribute params.",
+		"INF Done migrating attribute params.",
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Updating IBC AllowedClients.",
 		"INF Done updating IBC AllowedClients.",
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
+		"INF Removing inactive validator delegations.",
+		"INF Threshold: 21 days",
+		"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
 	}
 
 	s.AssertUpgradeHandlerLogs("umber-rc1", expInLog, nil)
@@ -394,10 +398,14 @@ func (s *UpgradeTestSuite) TestUmber() {
 		"INF Done pruning expired consensus states for IBC.",
 		"INF Migrating legacy params.",
 		"INF Done migrating legacy params.",
+		"INF Migrating attribute params.",
+		"INF Done migrating attribute params.",
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Updating IBC AllowedClients.",
 		"INF Done updating IBC AllowedClients.",
-		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
-		"INF removing all delegations from validators that have been inactive (unbonded) for 21 days",
+		"INF Removing inactive validator delegations.",
+		"INF Threshold: 21 days",
+		"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
 	}
 
 	s.AssertUpgradeHandlerLogs("umber", expInLog, nil)

@@ -6,23 +6,34 @@ import (
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
-// GetParams returns the total set of account parameters.
+// GetParams returns the attribute Params.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	return types.Params{
-		MaxValueLength: k.GetMaxValueLength(ctx),
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.AttributeParamPrefix)
+	if bz == nil {
+		return types.Params{
+			MaxValueLength: types.DefaultMaxValueLength,
+		}
 	}
+	err := k.cdc.Unmarshal(bz, &params)
+	if err != nil {
+		panic(err)
+	}
+	return params
 }
 
-// SetParams sets the account parameters to the param space.
+// SetParams sets the account parameters to the param store.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
+	bz, err := k.cdc.Marshal(&params)
+	if err != nil {
+		panic(err)
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.AttributeParamPrefix, bz)
 }
 
-// GetMaxValueLength returns the current distribution community tax (or default if unset)
+// GetMaxValueLength returns the max value for attribute length.
 func (k Keeper) GetMaxValueLength(ctx sdk.Context) (maxValueLength uint32) {
-	maxValueLength = types.DefaultMaxValueLength
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyMaxValueLength) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyMaxValueLength, &maxValueLength)
-	}
-	return
+	return k.GetParams(ctx).MaxValueLength
 }
