@@ -17,14 +17,11 @@ type OSLocatorParamTestSuite struct {
 
 	app *app.App
 	ctx sdk.Context
-
-	startBlockTime time.Time
 }
 
 func (s *OSLocatorParamTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.startBlockTime = time.Now()
-	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.startBlockTime})
+	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
 }
 
 func TestOSLocatorParamTestSuite(t *testing.T) {
