@@ -81,7 +81,7 @@ func AllMarkersCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -128,7 +128,7 @@ func AllHoldersCmd() *cobra.Command {
 			}
 			id := strings.ToLower(strings.TrimSpace(args[0]))
 			queryClient := types.NewQueryClient(clientCtx)
-			pageReq, err := client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
+			pageReq, err := client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}

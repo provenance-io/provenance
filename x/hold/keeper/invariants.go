@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/hold"
 )
@@ -44,7 +45,7 @@ func holdAccountBalancesInvariantHelper(ctx sdk.Context, keeper Keeper) (string,
 	// So, long story short (too late), if the block time is zero, also bypass the vesting locked funds getter.
 	blockTime := ctx.BlockTime()
 	if blockTime.IsZero() {
-		ctx = ctx // banktypes.WithVestingLockedBypass(ctx) // TODO[1760]: locked-coins
+		ctx = banktypes.WithVestingLockedBypass(ctx)
 	}
 	var addr sdk.AccAddress
 	var total sdk.Coins
