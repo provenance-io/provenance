@@ -24,7 +24,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	simapp "github.com/provenance-io/provenance/app"
@@ -3029,7 +3028,7 @@ func TestBypassAddrsLocked(t *testing.T) {
 		sdk.AccAddress("addrs[4]____________"),
 	}
 
-	mk := markerkeeper.NewKeeper(nil, nil, paramtypes.NewSubspace(nil, nil, nil, nil, "test"), nil, &dummyBankKeeper{}, nil, nil, nil, nil, nil, addrs, nil)
+	mk := markerkeeper.NewKeeper(nil, nil, nil, &dummyBankKeeper{}, nil, nil, nil, nil, nil, addrs, nil)
 
 	// Now that the keeper has been created using the provided addresses, change the first byte of
 	// the first address to something else. Then, get the addresses back from the keeper and make

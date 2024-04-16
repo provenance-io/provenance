@@ -569,10 +569,10 @@ func New(
 	}
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
-		appCodec, keys[markertypes.StoreKey], app.GetSubspace(markertypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
-		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper, markerReqAttrBypassAddrs,
-		NewGroupCheckerFunc(app.GroupKeeper),
+		appCodec, keys[markertypes.StoreKey], app.AccountKeeper,
+		app.BankKeeper, app.AuthzKeeper, app.FeeGrantKeeper,
+		app.AttributeKeeper, app.NameKeeper, app.TransferKeeper,
+		markerReqAttrBypassAddrs, NewGroupCheckerFunc(app.GroupKeeper),
 	)
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
@@ -1361,7 +1361,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 
-	paramsKeeper.Subspace(markertypes.ModuleName)  // TODO[1760]: params: Migrate marker params.
 	paramsKeeper.Subspace(nametypes.ModuleName)    // TODO[1760]: params: Migrate name params.
 	paramsKeeper.Subspace(msgfeestypes.ModuleName) // TODO[1760]: params: Migrate msgFees params.
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
