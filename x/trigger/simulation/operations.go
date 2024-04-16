@@ -7,9 +7,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -32,66 +32,54 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper,
+	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgCreateTrigger  int
-		weightMsgDestroyTrigger int
+		wMsgCreateTrigger  int
+		wMsgDestroyTrigger int
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgCreateTrigger, &weightMsgCreateTrigger, nil,
-		func(_ *rand.Rand) {
-			weightMsgCreateTrigger = simappparams.DefaultWeightSubmitCreateTrigger
-		},
-	)
-	appParams.GetOrGenerate(OpWeightMsgDestroyTrigger, &weightMsgDestroyTrigger, nil,
-		func(_ *rand.Rand) {
-			weightMsgDestroyTrigger = simappparams.DefaultWeightSubmitDestroyTrigger
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgCreateTrigger, &wMsgCreateTrigger, nil,
+		func(_ *rand.Rand) { wMsgCreateTrigger = simappparams.DefaultWeightSubmitCreateTrigger })
+	simState.AppParams.GetOrGenerate(OpWeightMsgDestroyTrigger, &wMsgDestroyTrigger, nil,
+		func(_ *rand.Rand) { wMsgDestroyTrigger = simappparams.DefaultWeightSubmitDestroyTrigger })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgCreateTrigger,
-			SimulateMsgCreateTrigger(k, ak, bk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgDestroyTrigger,
-			SimulateMsgDestroyTrigger(k, ak, bk),
-		),
+		simulation.NewWeightedOperation(wMsgCreateTrigger, SimulateMsgCreateTrigger(simState, k, ak, bk)),
+		simulation.NewWeightedOperation(wMsgDestroyTrigger, SimulateMsgDestroyTrigger(simState, k, ak, bk)),
 	}
 }
 
 // SimulateMsgCreateTrigger sends a MsgCreateTriggerRequest.
-func SimulateMsgCreateTrigger(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgCreateTrigger(simState module.SimulationState, _ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		now := ctx.BlockTime()
 		raccs, err := RandomAccs(r, accs, 2)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), err.Error()), nil, nil
 		}
 		from := raccs[0]
 		to := raccs[1]
 
 		msg, err := types.NewCreateTriggerRequest([]string{from.Address.String()}, NewRandomEvent(r, now), []sdk.Msg{NewRandomAction(r, from.Address.String(), to.Address.String())})
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "error creating message"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "error creating message"), nil, err
 		}
 
-		return Dispatch(r, app, ctx, from, chainID, msg, ak, bk, nil)
+		return Dispatch(r, app, ctx, simState, from, chainID, msg, ak, bk, nil)
 	}
 }
 
 // SimulateMsgDestroyTrigger sends a MsgDestroyTriggerRequest.
-func SimulateMsgDestroyTrigger(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgDestroyTrigger(simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		trigger := randomTrigger(r, ctx, k)
 		if trigger == nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), "unable to find a valid trigger"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), "unable to find a valid trigger"), nil, nil
 		}
 		addr, err := sdk.AccAddressFromBech32(trigger.Owner)
 		if err != nil {
@@ -100,10 +88,10 @@ func SimulateMsgDestroyTrigger(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk
 		}
 		simAccount, found := simtypes.FindAccount(accs, addr)
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), "creator of trigger does not exist"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDestroyTriggerRequest{}), "creator of trigger does not exist"), nil, nil
 		}
 		msg := types.NewDestroyTriggerRequest(trigger.GetOwner(), trigger.GetId())
-		return Dispatch(r, app, ctx, simAccount, chainID, msg, ak, bk, nil)
+		return Dispatch(r, app, ctx, simState, simAccount, chainID, msg, ak, bk, nil)
 	}
 }
 
@@ -113,6 +101,7 @@ func Dispatch(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
 	ctx sdk.Context,
+	simState module.SimulationState,
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
@@ -129,19 +118,19 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 	err = testutil.FundAccount(ctx, bk, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 		Denom:  pioconfig.GetProvenanceConfig().BondDenom,
 		Amount: sdkmath.NewInt(1_000_000_000_000_000),
 	}))
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to fund account"), nil, err
 	}
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
-		txGen,
+		simState.TxConfig,
 		[]sdk.Msg{msg},
 		fees,
 		simtestutil.DefaultGenTxGas,
@@ -151,12 +140,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, ""), futures, nil

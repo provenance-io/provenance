@@ -6,9 +6,11 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
@@ -50,11 +52,16 @@ var upgrades = map[string]appUpgrade{
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 
-			if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
 
 			err = migrateBaseappParams(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
+			err = migrateBankParams(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -85,11 +92,16 @@ var upgrades = map[string]appUpgrade{
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 
-			if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
 
 			err = migrateBaseappParams(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
+			err = migrateBankParams(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -265,7 +277,7 @@ func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Pruning expired consensus states for IBC.")
 	_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("unable to prune expired consensus states, error: %s.", err))
+		ctx.Logger().Error(fmt.Sprintf("Unable to prune expired consensus states, error: %s.", err))
 		return err
 	}
 	ctx.Logger().Info("Done pruning expired consensus states for IBC.")
@@ -290,11 +302,32 @@ func migrateBaseappParams(ctx sdk.Context, app *App) error {
 	legacyBaseAppSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 	err := baseapp.MigrateParams(ctx, legacyBaseAppSubspace, app.ConsensusParamsKeeper.ParamsStore)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("unable to migrate legacy params to ConsensusParamsKeeper, error: %s.", err))
+		ctx.Logger().Error(fmt.Sprintf("Unable to migrate legacy params to ConsensusParamsKeeper, error: %s.", err))
 		return err
 	}
 	ctx.Logger().Info("Done migrating legacy params.")
 	return nil
+}
+
+// migrateBankParams migrates the bank params from the params module to the bank module's state.
+// The SDK has this as part of their bank v4 migration, but we're already on v4, so that one
+// won't run on its own. This is the only part of that migration that we still need to have
+// done, and this brings us in-line with format the bank state on v4.
+// TODO: delete with the umber handlers.
+func migrateBankParams(ctx sdk.Context, app *App) (err error) {
+	ctx.Logger().Info("Migrating bank params.")
+	defer func() {
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Unable to migrate bank params, error: %s.", err))
+		}
+		ctx.Logger().Info("Done migrating bank params.")
+	}()
+
+	bankParamsSpace, ok := app.ParamsKeeper.GetSubspace(banktypes.ModuleName)
+	if !ok {
+		return fmt.Errorf("params subspace not found: %q", banktypes.ModuleName)
+	}
+	return app.BankKeeper.MigrateParamsProv(ctx, bankParamsSpace)
 }
 
 // migrateAttributeParams migrates to new Attribute Params store

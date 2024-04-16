@@ -12,18 +12,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	// govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli" // TODO[1760]: gov-cli
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/provenance-io/provenance/internal/provcli"
 
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
-// The flag for creating unrestricted names
+// FlagUnrestricted is the flag for creating unrestricted names
 const FlagUnrestricted = "unrestrict"
 
-// The flag to specify that the command should be ran as a gov proposal
+// FlagGovProposal is the flag to specify that the command should be run as a gov proposal
 const FlagGovProposal = "gov-proposal"
 
 // NewTxCmd is the top-level command for name CLI transactions.
@@ -140,46 +138,24 @@ $ %s tx name modify-name \
 				return err
 			}
 
-			var authority sdk.AccAddress
-			if !isGov {
-				authority = clientCtx.GetFromAddress()
-			} else {
-				authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+			modifyMsg := &types.MsgModifyNameRequest{
+				Record: types.NewNameRecord(strings.ToLower(args[0]), owner, !viper.GetBool(FlagUnrestricted)),
 			}
 
-			modifyMsg := types.MsgModifyNameRequest{
-				Authority: authority.String(),
-				Record:    types.NewNameRecord(strings.ToLower(args[0]), owner, !viper.GetBool(FlagUnrestricted)),
-			}
-
-			var req sdk.Msg
 			if isGov {
-				// TODO[1760]: gov-cli: Replace this with GenerateOrBroadcastTxCLIAsGovProp once its back.
-				/*
-					var govErr error
-					proposal, govErr := govcli.ReadGovPropFlags(clientCtx, cmd.Flags())
-					if govErr != nil {
-						return govErr
-					}
-					anys, govErr := sdktx.SetMsgs([]sdk.Msg{&modifyMsg})
-					if govErr != nil {
-						return govErr
-					}
-					proposal.Messages = anys
-					req = proposal
-				*/
-				return fmt.Errorf("not yet updated")
-			} else {
-				req = &modifyMsg
+				modifyMsg.Authority = provcli.GetAuthority(cmd.Flags())
+				return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, cmd.Flags(), modifyMsg)
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), req)
+			modifyMsg.Authority = clientCtx.GetFromAddress().String()
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), modifyMsg)
 		},
 	}
 
 	cmd.Flags().BoolP(FlagUnrestricted, "u", false, "Allow child name creation by everyone")
 	cmd.Flags().Bool(FlagGovProposal, false, "Run transaction as gov proposal")
-	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"math/rand"
 
-	"cosmossdk.io/core/appmodule"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/core/appmodule"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -169,9 +170,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.keeper, am.ak, am.bk,
-	)
+	return simulation.WeightedOperations(simState, am.keeper, am.ak, am.bk)
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

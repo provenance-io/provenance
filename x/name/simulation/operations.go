@@ -4,19 +4,18 @@ import (
 	"math/rand"
 	"strings"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
-	keeper "github.com/provenance-io/provenance/x/name/keeper"
-	types "github.com/provenance-io/provenance/x/name/types"
+	"github.com/provenance-io/provenance/x/name/keeper"
+	"github.com/provenance-io/provenance/x/name/types"
 )
 
 // Simulation operation weights constants
@@ -31,60 +30,40 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
+	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgBindName   int
-		weightMsgDeleteName int
-		weightMsgModifyName int
+		wMsgBindName   int
+		wMsgDeleteName int
+		wMsgModifyName int
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgBindName, &weightMsgBindName, nil,
-		func(_ *rand.Rand) {
-			weightMsgBindName = simappparams.DefaultWeightMsgBindName
-		},
-	)
-
-	appParams.GetOrGenerate(OpWeightMsgDeleteName, &weightMsgDeleteName, nil,
-		func(_ *rand.Rand) {
-			weightMsgDeleteName = simappparams.DefaultWeightMsgDeleteName
-		},
-	)
-
-	appParams.GetOrGenerate(OpWeightMsgModifyName, &weightMsgModifyName, nil,
-		func(_ *rand.Rand) {
-			weightMsgModifyName = simappparams.DefaultWeightMsgModifyName
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgBindName, &wMsgBindName, nil,
+		func(_ *rand.Rand) { wMsgBindName = simappparams.DefaultWeightMsgBindName })
+	simState.AppParams.GetOrGenerate(OpWeightMsgDeleteName, &wMsgDeleteName, nil,
+		func(_ *rand.Rand) { wMsgDeleteName = simappparams.DefaultWeightMsgDeleteName })
+	simState.AppParams.GetOrGenerate(OpWeightMsgModifyName, &wMsgModifyName, nil,
+		func(_ *rand.Rand) { wMsgModifyName = simappparams.DefaultWeightMsgModifyName })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgBindName,
-			SimulateMsgBindName(k, ak, bk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgDeleteName,
-			SimulateMsgDeleteName(k, ak, bk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgModifyName,
-			SimulateMsgModifyName(k, ak, bk),
-		),
+		simulation.NewWeightedOperation(wMsgBindName, SimulateMsgBindName(simState, k, ak, bk)),
+		simulation.NewWeightedOperation(wMsgDeleteName, SimulateMsgDeleteName(simState, k, ak, bk)),
+		simulation.NewWeightedOperation(wMsgModifyName, SimulateMsgModifyName(simState, k, ak, bk)),
 	}
 }
 
 // SimulateMsgBindName will bind a NAME under an existing name using a 40% probability of restricting it.
-func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+func SimulateMsgBindName(simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		params := k.GetParams(ctx)
 		parentRecord, parentOwner, found, err := getRandomRecord(r, ctx, k, accs, 1, int(params.MaxNameLevels)-1)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "iterator of existing records failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "iterator of existing records failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgBindNameRequest{}), sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "no name records available to create under"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "no name records available to create under"), nil, nil
 		}
 
 		nameLen := randIntBetween(r, int(params.GetMinSegmentLength()), int(params.GetMaxSegmentLength()))
@@ -97,12 +76,12 @@ func SimulateMsgBindName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankk
 		newRecord := types.NewNameRecord(newRecordName, newRecordOwner.Address, newRecordRestricted)
 		msg := types.NewMsgBindNameRequest(newRecord, parentRecord)
 
-		return Dispatch(r, app, ctx, ak, bk, parentOwner, chainID, msg)
+		return Dispatch(r, app, ctx, simState, ak, bk, parentOwner, chainID, msg)
 	}
 }
 
 // SimulateMsgDeleteName will dispatch a delete name operation against a random name record
-func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+func SimulateMsgDeleteName(simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -111,37 +90,37 @@ func SimulateMsgDeleteName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk ban
 		// Not doing a min/max params lookup because they can change during the sim and don't apply to this operation.
 		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, 2, 1_000_000)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "iterator of existing records failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "iterator of existing records failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "no name records available to delete"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteNameRequest{}), "no name records available to delete"), nil, nil
 		}
 
 		msg := types.NewMsgDeleteNameRequest(randomRecord)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, simState, ak, bk, simAccount, chainID, msg)
 	}
 }
 
 // SimulateMsgModifyName will dispatch a modify name operation against a random name record
-func SimulateMsgModifyName(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+func SimulateMsgModifyName(simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		params := k.GetParams(ctx)
 		randomRecord, simAccount, found, err := getRandomRecord(r, ctx, k, accs, 1, int(params.MaxNameLevels))
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "iterator of existing records failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "iterator of existing records failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "no name records available to modify"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgModifyNameRequest{}), "no name records available to modify"), nil, nil
 		}
 
 		newOwner, _ := simtypes.RandomAcc(r, accs)
 		restrict := r.Intn(9) < 4
 		msg := types.NewMsgModifyNameRequest(simAccount.Address.String(), randomRecord.Name, newOwner.Address, restrict)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, simState, ak, bk, simAccount, chainID, msg)
 	}
 }
 
@@ -151,6 +130,7 @@ func Dispatch(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
 	ctx sdk.Context,
+	simState module.SimulationState,
 	ak authkeeper.AccountKeeperI,
 	bk bankkeeper.ViewKeeper,
 	from simtypes.Account,
@@ -166,13 +146,12 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
-		txGen,
+		simState.TxConfig,
 		[]sdk.Msg{msg},
 		fees,
 		simtestutil.DefaultGenTxGas,
@@ -182,12 +161,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, ""), nil, nil
