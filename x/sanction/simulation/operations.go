@@ -8,12 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/sanction"
 	"github.com/provenance-io/provenance/x/sanction/keeper"
 )
@@ -34,8 +34,7 @@ const (
 
 // WeightedOpsArgs holds all the args provided to WeightedOperations so that they can be passed on later more easily.
 type WeightedOpsArgs struct {
-	AppParams  simtypes.AppParams
-	JSONCodec  codec.JSONCodec
+	SimState   module.SimulationState
 	ProtoCodec *codec.ProtoCodec
 	AK         sanction.AccountKeeper
 	BK         sanction.BankKeeper
@@ -60,12 +59,11 @@ type SendGovMsgArgs struct {
 }
 
 func WeightedOperations(
-	appParams simtypes.AppParams, jsonCodec codec.JSONCodec, protoCodec *codec.ProtoCodec,
+	simState module.SimulationState, protoCodec *codec.ProtoCodec,
 	ak sanction.AccountKeeper, bk sanction.BankKeeper, gk govkeeper.Keeper, sk keeper.Keeper,
 ) simulation.WeightedOperations {
 	args := &WeightedOpsArgs{
-		AppParams:  appParams,
-		JSONCodec:  jsonCodec,
+		SimState:   simState,
 		ProtoCodec: protoCodec,
 		AK:         ak,
 		BK:         bk,
@@ -74,30 +72,30 @@ func WeightedOperations(
 	}
 
 	var (
-		weightSanction            int
-		weightSanctionImmediate   int
-		weightUnsanction          int
-		weightUnsanctionImmediate int
-		weightUpdateParams        int
+		wSanction            int
+		wSanctionImmediate   int
+		wUnsanction          int
+		wUnsanctionImmediate int
+		wUpdateParams        int
 	)
 
-	appParams.GetOrGenerate(OpWeightSanction, &weightSanction, nil,
-		func(_ *rand.Rand) { weightSanction = DefaultWeightSanction })
-	appParams.GetOrGenerate(OpWeightSanctionImmediate, &weightSanctionImmediate, nil,
-		func(_ *rand.Rand) { weightSanctionImmediate = DefaultWeightSanctionImmediate })
-	appParams.GetOrGenerate(OpWeightUnsanction, &weightUnsanction, nil,
-		func(_ *rand.Rand) { weightUnsanction = DefaultWeightUnsanction })
-	appParams.GetOrGenerate(OpWeightUnsanctionImmediate, &weightUnsanctionImmediate, nil,
-		func(_ *rand.Rand) { weightUnsanctionImmediate = DefaultWeightUnsanctionImmediate })
-	appParams.GetOrGenerate(OpWeightUpdateParams, &weightUpdateParams, nil,
-		func(_ *rand.Rand) { weightUpdateParams = DefaultWeightUpdateParams })
+	simState.AppParams.GetOrGenerate(OpWeightSanction, &wSanction, nil,
+		func(_ *rand.Rand) { wSanction = DefaultWeightSanction })
+	simState.AppParams.GetOrGenerate(OpWeightSanctionImmediate, &wSanctionImmediate, nil,
+		func(_ *rand.Rand) { wSanctionImmediate = DefaultWeightSanctionImmediate })
+	simState.AppParams.GetOrGenerate(OpWeightUnsanction, &wUnsanction, nil,
+		func(_ *rand.Rand) { wUnsanction = DefaultWeightUnsanction })
+	simState.AppParams.GetOrGenerate(OpWeightUnsanctionImmediate, &wUnsanctionImmediate, nil,
+		func(_ *rand.Rand) { wUnsanctionImmediate = DefaultWeightUnsanctionImmediate })
+	simState.AppParams.GetOrGenerate(OpWeightUpdateParams, &wUpdateParams, nil,
+		func(_ *rand.Rand) { wUpdateParams = DefaultWeightUpdateParams })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(weightSanction, SimulateGovMsgSanction(args)),
-		simulation.NewWeightedOperation(weightSanctionImmediate, SimulateGovMsgSanctionImmediate(args)),
-		simulation.NewWeightedOperation(weightUnsanction, SimulateGovMsgUnsanction(args)),
-		simulation.NewWeightedOperation(weightUnsanctionImmediate, SimulateGovMsgUnsanctionImmediate(args)),
-		simulation.NewWeightedOperation(weightUpdateParams, SimulateGovMsgUpdateParams(args)),
+		simulation.NewWeightedOperation(wSanction, SimulateGovMsgSanction(args)),
+		simulation.NewWeightedOperation(wSanctionImmediate, SimulateGovMsgSanctionImmediate(args)),
+		simulation.NewWeightedOperation(wUnsanction, SimulateGovMsgUnsanction(args)),
+		simulation.NewWeightedOperation(wUnsanctionImmediate, SimulateGovMsgUnsanctionImmediate(args)),
+		simulation.NewWeightedOperation(wUpdateParams, SimulateGovMsgUpdateParams(args)),
 	}
 }
 
@@ -132,7 +130,7 @@ func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
 	txCtx := simulation.OperationInput{
 		R:               args.R,
 		App:             args.App,
-		TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+		TxGen:           args.SimState.TxConfig,
 		Cdc:             args.ProtoCodec,
 		Msg:             govMsg,
 		CoinsSpentInMsg: govMsg.InitialDeposit,
@@ -162,7 +160,7 @@ func OperationMsgVote(args *WeightedOpsArgs, voter simtypes.Account, govPropID u
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           args.SimState.TxConfig,
 			Cdc:             args.ProtoCodec,
 			Msg:             msg,
 			CoinsSpentInMsg: sdk.Coins{},

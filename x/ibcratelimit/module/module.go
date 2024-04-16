@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"math/rand"
 
-	"cosmossdk.io/core/appmodule"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -135,9 +136,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 
 // WeightedOperations returns simulation operations (i.e msgs) with their respective weight
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.keeper, am.accountKeeper, am.bankKeeper,
-	)
+	return simulation.WeightedOperations(simState, am.keeper, am.accountKeeper, am.bankKeeper)
 }
 
 // Name returns the ibcratelimit module's name.

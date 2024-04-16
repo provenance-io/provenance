@@ -5,66 +5,48 @@ import (
 	"regexp"
 
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-// GetParams returns the total set of distribution parameters.
+// GetParams returns the total set of marker parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	return types.Params{
-		MaxTotalSupply:         k.GetMaxTotalSupply(ctx),
-		EnableGovernance:       k.GetEnableGovernance(ctx),
-		UnrestrictedDenomRegex: k.GetUnrestrictedDenomRegex(ctx),
-		MaxSupply:              k.GetMaxSupply(ctx),
+	store := ctx.KVStore(k.storeKey)
+	params = types.DefaultParams() // Assuming a method that returns default parameters
+
+	// Deserialize parameters if they are set
+	if bz := store.Get(types.ParamStoreKey); bz != nil {
+		k.cdc.MustUnmarshal(bz, &params)
 	}
+
+	return params
 }
 
-// SetParams sets the distribution parameters to the param space.
+// SetParams sets the marker parameters to the store.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&params)
+	store.Set(types.ParamStoreKey, bz)
 }
 
-// GetMaxTotalSupply is deprecated.
 // Deprecated: GetMaxTotalSupply is kept for backwards compatibility.
 func (k Keeper) GetMaxTotalSupply(ctx sdk.Context) (max uint64) {
-	max = types.DefaultMaxTotalSupply
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyMaxTotalSupply) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyMaxTotalSupply, &max)
-	}
-	return
+	return k.GetParams(ctx).MaxTotalSupply
 }
 
-// GetMaxSupply return the current parameter value for the max allowed supply (or default if unset)
+// GetMaxSupply returns the current parameter value for the max allowed supply.
 func (k Keeper) GetMaxSupply(ctx sdk.Context) (max sdkmath.Int) {
-	max = types.StringToBigInt(types.DefaultMaxSupply)
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyMaxSupply) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyMaxSupply, &max)
-	}
-	return
+	return k.GetParams(ctx).MaxSupply
 }
 
-// GetEnableGovernance returns the current parameter value for enabling governance control (or default if unset)
+// GetEnableGovernance returns whether governance control is enabled.
 func (k Keeper) GetEnableGovernance(ctx sdk.Context) (enabled bool) {
-	enabled = types.DefaultEnableGovernance
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyEnableGovernance) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyEnableGovernance, &enabled)
-	}
-	return
+	return k.GetParams(ctx).EnableGovernance
 }
 
-// GetUnrestrictedDenomRegex returns the current parameter value for enabling governance control (or default if unset)
+// GetUnrestrictedDenomRegex returns the regex for unrestricted denom validation.
 func (k Keeper) GetUnrestrictedDenomRegex(ctx sdk.Context) (regex string) {
-	regex = types.DefaultUnrestrictedDenomRegex
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyUnrestrictedDenomRegex) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyUnrestrictedDenomRegex, &regex)
-		// use the default value for empty regex expressions.
-		if len(regex) == 0 {
-			regex = types.DefaultUnrestrictedDenomRegex
-		}
-	}
-	return
+	return k.GetParams(ctx).UnrestrictedDenomRegex
 }
 
 // ValidateUnrestictedDenom checks if the supplied denom is valid based on the module params
@@ -72,8 +54,6 @@ func (k Keeper) ValidateUnrestictedDenom(ctx sdk.Context, denom string) error {
 	// Anchors are enforced on the denom validation expression.  Similar to how the SDK does hits.
 	// https://github.com/cosmos/cosmos-sdk/blob/512b533242d34926972a8fc2f5639e8cf182f5bd/types/coin.go#L625
 	exp := k.GetUnrestrictedDenomRegex(ctx)
-
-	// Safe to use must compile here because the regular expression is validated on parameter set.
 	r := regexp.MustCompile(fmt.Sprintf(`^%s$`, exp))
 	if !r.MatchString(denom) {
 		return fmt.Errorf("invalid denom [%s] (fails unrestricted marker denom validation %s)", denom, exp)

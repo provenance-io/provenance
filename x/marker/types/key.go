@@ -38,6 +38,9 @@ var (
 
 	// NetAssetValuePrefix prefix for net asset values of markers
 	NetAssetValuePrefix = []byte{0x04}
+
+	// ParamStoreKey prefix for marker module's params
+	ParamStoreKey = []byte{0x05}
 )
 
 // MarkerAddress returns the module account address for the given denomination

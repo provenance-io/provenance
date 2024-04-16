@@ -6,11 +6,10 @@ import (
 
 	"github.com/google/uuid"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -39,81 +38,47 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper,
+	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgAddAttribute            int
-		weightMsgUpdateAttribute         int
-		weightMsgDeleteAttribute         int
-		weightMsgDeleteDistinctAttribute int
-		weightMsgSetAccountDataRequest   int
+		wMsgAddAttribute            int
+		wMsgUpdateAttribute         int
+		wMsgDeleteAttribute         int
+		wMsgDeleteDistinctAttribute int
+		wMsgSetAccountDataRequest   int
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgAddAttribute, &weightMsgAddAttribute, nil,
-		func(_ *rand.Rand) {
-			weightMsgAddAttribute = simappparams.DefaultWeightMsgAddAttribute
-		},
-	)
-
-	appParams.GetOrGenerate(OpWeightMsgUpdateAttribute, &weightMsgUpdateAttribute, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateAttribute = simappparams.DefaultWeightMsgUpdateAttribute
-		},
-	)
-
-	appParams.GetOrGenerate(OpWeightMsgDeleteAttribute, &weightMsgDeleteAttribute, nil,
-		func(_ *rand.Rand) {
-			weightMsgDeleteAttribute = simappparams.DefaultWeightMsgDeleteAttribute
-		},
-	)
-
-	appParams.GetOrGenerate(OpWeightMsgDeleteDistinctAttribute, &weightMsgDeleteDistinctAttribute, nil,
-		func(_ *rand.Rand) {
-			weightMsgDeleteDistinctAttribute = simappparams.DefaultWeightMsgDeleteDistinctAttribute
-		},
-	)
-
-	appParams.GetOrGenerate(OpWeightMsgSetAccountData, &weightMsgSetAccountDataRequest, nil,
-		func(_ *rand.Rand) {
-			weightMsgSetAccountDataRequest = simappparams.DefaultWeightMsgSetAccountData
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgAddAttribute, &wMsgAddAttribute, nil,
+		func(_ *rand.Rand) { wMsgAddAttribute = simappparams.DefaultWeightMsgAddAttribute })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateAttribute, &wMsgUpdateAttribute, nil,
+		func(_ *rand.Rand) { wMsgUpdateAttribute = simappparams.DefaultWeightMsgUpdateAttribute })
+	simState.AppParams.GetOrGenerate(OpWeightMsgDeleteAttribute, &wMsgDeleteAttribute, nil,
+		func(_ *rand.Rand) { wMsgDeleteAttribute = simappparams.DefaultWeightMsgDeleteAttribute })
+	simState.AppParams.GetOrGenerate(OpWeightMsgDeleteDistinctAttribute, &wMsgDeleteDistinctAttribute, nil,
+		func(_ *rand.Rand) { wMsgDeleteDistinctAttribute = simappparams.DefaultWeightMsgDeleteDistinctAttribute })
+	simState.AppParams.GetOrGenerate(OpWeightMsgSetAccountData, &wMsgSetAccountDataRequest, nil,
+		func(_ *rand.Rand) { wMsgSetAccountDataRequest = simappparams.DefaultWeightMsgSetAccountData })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgAddAttribute,
-			SimulateMsgAddAttribute(k, ak, bk, nk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgUpdateAttribute,
-			SimulateMsgUpdateAttribute(k, ak, bk, nk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgDeleteAttribute,
-			SimulateMsgDeleteAttribute(k, ak, bk, nk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgDeleteDistinctAttribute,
-			SimulateMsgDeleteDistinctAttribute(k, ak, bk, nk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgSetAccountDataRequest,
-			SimulateMsgSetAccountData(k, ak, bk),
-		),
+		simulation.NewWeightedOperation(wMsgAddAttribute, SimulateMsgAddAttribute(simState, k, ak, bk, nk)),
+		simulation.NewWeightedOperation(wMsgUpdateAttribute, SimulateMsgUpdateAttribute(simState, k, ak, bk, nk)),
+		simulation.NewWeightedOperation(wMsgDeleteAttribute, SimulateMsgDeleteAttribute(simState, k, ak, bk, nk)),
+		simulation.NewWeightedOperation(wMsgDeleteDistinctAttribute, SimulateMsgDeleteDistinctAttribute(simState, k, ak, bk, nk)),
+		simulation.NewWeightedOperation(wMsgSetAccountDataRequest, SimulateMsgSetAccountData(simState, k, ak, bk)),
 	}
 }
 
 // SimulateMsgAddAttribute will add an attribute under an account with a random type.
-func SimulateMsgAddAttribute(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
+func SimulateMsgAddAttribute(simState module.SimulationState, _ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		randomRecord, simAccount, found, err := getRandomNameRecord(r, ctx, &nk, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "iterator of existing name records failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "iterator of existing name records failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "no name records available to create under"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "no name records available to create under"), nil, nil
 		}
 
 		t := types.AttributeType(r.Intn(9))
@@ -125,21 +90,21 @@ func SimulateMsgAddAttribute(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 			getRandomValueOfType(r, t),
 		)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, simState, ak, bk, simAccount, chainID, msg)
 	}
 }
 
 // SimulateMsgUpdateAttribute will add an attribute under an account with a random type.
-func SimulateMsgUpdateAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
+func SimulateMsgUpdateAttribute(simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		randomAttribute, simAccount, found, err := getRandomAttribute(r, ctx, k, &nk, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "iterator of existing attributes failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "no attributes available to delete"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "no attributes available to delete"), nil, nil
 		}
 
 		t := types.AttributeType(r.Intn(9))
@@ -153,50 +118,50 @@ func SimulateMsgUpdateAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, b
 			t,
 		)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, simState, ak, bk, simAccount, chainID, msg)
 	}
 }
 
 // SimulateMsgDeleteAttribute will dispatch a delete attribute operation against a random record
-func SimulateMsgDeleteAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
+func SimulateMsgDeleteAttribute(simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		randomAttribute, simAccount, found, err := getRandomAttribute(r, ctx, k, &nk, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "iterator of existing attributes failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "no attributes available to delete"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteAttributeRequest{}), "no attributes available to delete"), nil, nil
 		}
 
 		msg := types.NewMsgDeleteAttributeRequest(randomAttribute.Address, simAccount.Address, randomAttribute.Name)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, simState, ak, bk, simAccount, chainID, msg)
 	}
 }
 
 // SimulateMsgDeleteDistinctAttribute will dispatch a delete attribute operation against a random record
-func SimulateMsgDeleteDistinctAttribute(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
+func SimulateMsgDeleteDistinctAttribute(simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		randomAttribute, simAccount, found, err := getRandomAttribute(r, ctx, k, &nk, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "iterator of existing attributes failed"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "iterator of existing attributes failed"), nil, err
 		}
 		if !found {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "no attributes available to delete distinct"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDeleteDistinctAttributeRequest{}), "no attributes available to delete distinct"), nil, nil
 		}
 
 		msg := types.NewMsgDeleteDistinctAttributeRequest(randomAttribute.Address, simAccount.Address, randomAttribute.Name, randomAttribute.Value)
 
-		return Dispatch(r, app, ctx, ak, bk, simAccount, chainID, msg)
+		return Dispatch(r, app, ctx, simState, ak, bk, simAccount, chainID, msg)
 	}
 }
 
 // SimulateMsgSetAccountData will dispatch a set account data operation for a random account.
-func SimulateMsgSetAccountData(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
+func SimulateMsgSetAccountData(simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -219,7 +184,7 @@ func SimulateMsgSetAccountData(k keeper.Keeper, ak authkeeper.AccountKeeperI, bk
 			Account: acc.Address.String(),
 		}
 
-		return Dispatch(r, app, ctx, ak, bk, acc, chainID, msg)
+		return Dispatch(r, app, ctx, simState, ak, bk, acc, chainID, msg)
 	}
 }
 
@@ -252,6 +217,7 @@ func Dispatch(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
 	ctx sdk.Context,
+	simState module.SimulationState,
 	ak authkeeper.AccountKeeperI,
 	bk bankkeeper.ViewKeeper,
 	from simtypes.Account,
@@ -270,10 +236,9 @@ func Dispatch(
 		return simtypes.NoOpMsg(types.ModuleName, fmt.Sprintf("%T", msg), "unable to generate fees"), nil, err
 	}
 
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
-		txGen,
+		simState.TxConfig,
 		[]sdk.Msg{msg},
 		fees,
 		simtestutil.DefaultGenTxGas,
@@ -283,12 +248,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, ""), nil, nil

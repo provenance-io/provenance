@@ -6,13 +6,18 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -46,7 +51,7 @@ var upgrades = map[string]appUpgrade{
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 
-			if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
 
@@ -54,6 +59,15 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
+
+			err = migrateBankParams(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
+			migrateAttributeParams(ctx, app)
+			migrateMarkerParams(ctx, app)
+			migrateMetadataOSLocatorParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -76,7 +90,7 @@ var upgrades = map[string]appUpgrade{
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
 
-			if err := pruneIBCExpiredConsensusStates(ctx, app); err != nil {
+			if err = pruneIBCExpiredConsensusStates(ctx, app); err != nil {
 				return nil, err
 			}
 
@@ -84,6 +98,15 @@ var upgrades = map[string]appUpgrade{
 			if err != nil {
 				return nil, err
 			}
+
+			err = migrateBankParams(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
+			migrateAttributeParams(ctx, app)
+			migrateMarkerParams(ctx, app)
+			migrateMetadataOSLocatorParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -188,7 +211,7 @@ var _ = runModuleMigrations
 // removeInactiveValidatorDelegations unbonds all delegations from inactive validators, triggering their removal from the validator set.
 // This should be applied in most upgrades.
 func removeInactiveValidatorDelegations(ctx sdk.Context, app *App) {
-	ctx.Logger().Info(fmt.Sprintf("Removing inactive validator delegations."))
+	ctx.Logger().Info("Removing inactive validator delegations.")
 
 	sParams, perr := app.StakingKeeper.GetParams(ctx)
 	if perr != nil {
@@ -251,7 +274,7 @@ func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Pruning expired consensus states for IBC.")
 	_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("unable to prune expired consensus states, error: %s.", err))
+		ctx.Logger().Error(fmt.Sprintf("Unable to prune expired consensus states, error: %s.", err))
 		return err
 	}
 	ctx.Logger().Info("Done pruning expired consensus states for IBC.")
@@ -276,9 +299,100 @@ func migrateBaseappParams(ctx sdk.Context, app *App) error {
 	legacyBaseAppSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 	err := baseapp.MigrateParams(ctx, legacyBaseAppSubspace, app.ConsensusParamsKeeper.ParamsStore)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("unable to migrate legacy params to ConsensusParamsKeeper, error: %s.", err))
+		ctx.Logger().Error(fmt.Sprintf("Unable to migrate legacy params to ConsensusParamsKeeper, error: %s.", err))
 		return err
 	}
 	ctx.Logger().Info("Done migrating legacy params.")
 	return nil
+}
+
+// migrateBankParams migrates the bank params from the params module to the bank module's state.
+// The SDK has this as part of their bank v4 migration, but we're already on v4, so that one
+// won't run on its own. This is the only part of that migration that we still need to have
+// done, and this brings us in-line with format the bank state on v4.
+// TODO: delete with the umber handlers.
+func migrateBankParams(ctx sdk.Context, app *App) (err error) {
+	ctx.Logger().Info("Migrating bank params.")
+	defer func() {
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Unable to migrate bank params, error: %s.", err))
+		}
+		ctx.Logger().Info("Done migrating bank params.")
+	}()
+
+	bankParamsSpace, ok := app.ParamsKeeper.GetSubspace(banktypes.ModuleName)
+	if !ok {
+		return fmt.Errorf("params subspace not found: %q", banktypes.ModuleName)
+	}
+	return app.BankKeeper.MigrateParamsProv(ctx, bankParamsSpace)
+}
+
+// migrateAttributeParams migrates to new Attribute Params store
+// TODO: Remove with the umber handlers.
+func migrateAttributeParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating attribute params.")
+	attributeParamSpace := app.ParamsKeeper.Subspace(attributetypes.ModuleName).WithKeyTable(attributetypes.ParamKeyTable())
+	maxValueLength := uint32(attributetypes.DefaultMaxValueLength)
+	// TODO: remove attributetypes.ParamStoreKeyMaxValueLength with the umber handlers.
+	if attributeParamSpace.Has(ctx, attributetypes.ParamStoreKeyMaxValueLength) {
+		attributeParamSpace.Get(ctx, attributetypes.ParamStoreKeyMaxValueLength, &maxValueLength)
+	}
+	app.AttributeKeeper.SetParams(ctx, attributetypes.Params{MaxValueLength: uint32(maxValueLength)})
+	ctx.Logger().Info("Done migrating attribute params.")
+}
+
+// migrateMarkerParams migrates to new Marker Params store
+// TODO: Remove with the umber handlers.
+func migrateMarkerParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating marker params.")
+	markerParamSpace := app.ParamsKeeper.Subspace(markertypes.ModuleName).WithKeyTable(markertypes.ParamKeyTable())
+
+	params := markertypes.DefaultParams()
+
+	// TODO: remove markertypes.ParamStoreKeyMaxTotalSupply with the umber handlers.
+	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyMaxTotalSupply) {
+		var maxTotalSupply uint64
+		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyMaxTotalSupply, &maxTotalSupply)
+		params.MaxTotalSupply = maxTotalSupply
+	}
+
+	// TODO: remove markertypes.ParamStoreKeyEnableGovernance with the umber handlers.
+	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyEnableGovernance) {
+		var enableGovernance bool
+		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyEnableGovernance, &enableGovernance)
+		params.EnableGovernance = enableGovernance
+	}
+
+	// TODO: remove markertypes.ParamStoreKeyUnrestrictedDenomRegex with the umber handlers.
+	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyUnrestrictedDenomRegex) {
+		var unrestrictedDenomRegex string
+		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyUnrestrictedDenomRegex, &unrestrictedDenomRegex)
+		params.UnrestrictedDenomRegex = unrestrictedDenomRegex
+	}
+
+	// TODO: remove markertypes.ParamStoreKeyMaxSupply with the umber handlers.
+	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyMaxSupply) {
+		var maxSupply string
+		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyMaxSupply, &maxSupply)
+		params.MaxSupply = markertypes.StringToBigInt(maxSupply)
+	}
+
+	app.MarkerKeeper.SetParams(ctx, params)
+
+	ctx.Logger().Info("Done migrating marker params.")
+}
+
+// migrateAttributeParams migrates to new Metadata Os Locator Params store
+// TODO: Remove with the umber handlers.
+func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating metadata os locator params.")
+	metadataParamSpace := app.ParamsKeeper.Subspace(metadatatypes.ModuleName).WithKeyTable(metadatatypes.ParamKeyTable())
+	maxValueLength := uint32(metadatatypes.DefaultMaxURILength)
+	// TODO: remove metadatatypes.ParamStoreKeyMaxValueLength with the umber handlers.
+	if metadataParamSpace.Has(ctx, metadatatypes.ParamStoreKeyMaxValueLength) {
+		metadataParamSpace.Get(ctx, metadatatypes.ParamStoreKeyMaxValueLength, &maxValueLength)
+	}
+	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: uint32(maxValueLength)})
+	ctx.Logger().Info("Done migrating metadata os locator params.")
+
 }

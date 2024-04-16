@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/sanction"
@@ -23,7 +24,6 @@ type IntegrationTestSuite struct {
 	clientCtx client.Context
 
 	commonArgs []string
-	val0       *network.Validator
 	valAddr    sdk.AccAddress
 	authority  string
 
@@ -44,10 +44,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.waitForHeight(1)
 
-	s.val0 = s.network.Validators[0]
 	s.clientCtx = s.network.Validators[0].ClientCtx
 	s.valAddr = s.network.Validators[0].Address
 
@@ -62,7 +60,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
+	testutil.CleanUp(s.network, s.T())
 }
 
 // assertErrorContents calls AssertErrorContents using this suite's t.
@@ -87,20 +85,27 @@ func (s *IntegrationTestSuite) appendCommonArgsTo(args ...string) []string {
 
 // getAuthority executes a query to get the address of the gov module account.
 func (s *IntegrationTestSuite) getAuthority() string {
-	acct := queries.GetModuleAccountByName(s.T(), s.val0, "gov")
+	acct := queries.GetModuleAccountByName(s.T(), s.network, "gov")
 	return acct.GetAddress().String()
 }
 
 func (s *IntegrationTestSuite) logHeight() int64 {
-	height, err := s.network.LatestHeight()
+	height, err := testutil.LatestHeight(s.network)
 	s.Require().NoError(err, "LatestHeight()")
 	s.T().Logf("Current height: %d", height)
 	return height
 }
 
 func (s *IntegrationTestSuite) waitForHeight(height int64) int64 {
-	rv, err := s.network.WaitForHeight(height)
+	rv, err := testutil.WaitForHeight(s.network, height)
 	s.Require().NoError(err, "WaitForHeight(%d)", height)
 	s.T().Logf("Current height: %d", rv)
 	return rv
+}
+
+func (s *IntegrationTestSuite) waitForNextBlock(msgAndArgs ...interface{}) {
+	if len(msgAndArgs) == 0 {
+		msgAndArgs = append(msgAndArgs, "WaitForNextBlock")
+	}
+	s.Require().NoError(testutil.WaitForNextBlock(s.network), msgAndArgs...)
 }

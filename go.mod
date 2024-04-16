@@ -8,7 +8,6 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.3.1
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/simapp v0.0.0-20231107193120-9814f684b9dd // TODO[1760]: Copy needed stuff out of simapp and remove this require.
 	cosmossdk.io/store v1.0.2
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.1.0
@@ -58,7 +57,6 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-beta.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/x/circuit v0.1.0 // indirect
-	cosmossdk.io/x/nft v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -216,8 +214,7 @@ replace (
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
 	// TODO[1760]: wasm: Put this CosmWasm/wasmd replace back with an updated version (or delete it).
 	// github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
-	// TODO[1760]: sdk: Put this replace back with an updated version of the sdk from our fork.
-	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-pio-2
+	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-pio-3
 
 	// TODO[1760]: Update once async-icq creates tag with our changes https://github.com/cosmos/ibc-apps/pull/168
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 => github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1

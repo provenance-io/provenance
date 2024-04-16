@@ -27,7 +27,7 @@ func (s *IntegrationTestSuite) assertGovPropMsg(propID string, msg sdk.Msg) bool
 		return false
 	}
 
-	prop := queries.GetGovProp(s.T(), s.val0, propID)
+	prop := queries.GetGovProp(s.T(), s.network, propID)
 	if !s.Assert().Len(prop.Messages, 1, "number of messages in proposal") {
 		return false
 	}
@@ -129,8 +129,8 @@ func (s *IntegrationTestSuite) TestTxSanctionCmd() {
 
 			var propID string
 			if len(tc.expErr) == 0 {
-				s.Require().NoError(s.network.WaitForNextBlock(), "wait for next")
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				s.waitForNextBlock()
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
 				if ok {
 					s.Assert().Equal(0, int(txResp.Code), "%s response code", cmdFuncName)
 				}
@@ -220,8 +220,8 @@ func (s *IntegrationTestSuite) TestTxUnsanctionCmd() {
 
 			var propID string
 			if len(tc.expErr) == 0 {
-				s.Require().NoError(s.network.WaitForNextBlock(), "wait for next")
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				s.waitForNextBlock()
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
 				if ok {
 					s.Assert().Equal(0, int(txResp.Code), "%s response code", cmdFuncName)
 				}
@@ -342,8 +342,8 @@ func (s *IntegrationTestSuite) TestTxUpdateParamsCmd() {
 
 			var propID string
 			if len(tc.expErr) == 0 {
-				s.Require().NoError(s.network.WaitForNextBlock(), "wait for next")
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.val0, []byte(out))
+				s.waitForNextBlock()
+				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
 				if ok {
 					s.Assert().Equal(0, int(txResp.Code), "%s response code", cmdFuncName)
 				}

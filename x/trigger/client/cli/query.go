@@ -57,7 +57,7 @@ func GetTriggersCmd() *cobra.Command {
 			}
 
 			var request types.QueryTriggersRequest
-			request.Pagination, err = client.ReadPageRequest(cmd.Flags()) // TODO[1760]: cli: ReadPageRequestWithPageKeyDecoded
+			request.Pagination, err = client.ReadPageRequestWithPageKeyDecoded(cmd.Flags())
 			if err != nil {
 				return err
 			}

@@ -12,6 +12,7 @@ const (
 )
 
 // ParamKeyTable for metadata module
+// TODO: remove with the umber (v1.19.x) handlers.
 func OSParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&OSLocatorParams{})
 }
@@ -28,6 +29,7 @@ func NewOSLocatorParams(maxURILength uint32) OSLocatorParams {
 
 // ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
 // pairs of auth module's parameters.
+// TODO: remove with the umber (v1.19.x) handlers.
 func (p *OSLocatorParams) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyMaxValueLength, &p.MaxUriLength, validateMaxURILength),

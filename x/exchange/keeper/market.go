@@ -11,11 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
-
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 // getLastAutoMarketID gets the last auto-selected market id.
@@ -1551,7 +1550,7 @@ func (k Keeper) WithdrawMarketFunds(ctx sdk.Context, marketID uint32, toAddr sdk
 	marketAddr := exchange.GetMarketAddress(marketID)
 	xferCtx := markertypes.WithTransferAgent(ctx, admin)
 	if toAddr.Equals(admin) {
-		// xferCtx = quarantine.WithBypass(xferCtx) // TODO[1760]: quarantine
+		xferCtx = quarantine.WithBypass(xferCtx)
 	}
 	err = k.bankKeeper.SendCoins(xferCtx, marketAddr, toAddr, amount)
 	if err != nil {

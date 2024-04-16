@@ -878,7 +878,7 @@ func TestBankInputOutputCoinsUsesSendRestrictionFn(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// err = app.BankKeeper.InputOutputCoins(ctx, []banktypes.Input{tc.input}, tc.outputs) // TODO[1760]: bank
+			err = app.BankKeeper.InputOutputCoins(ctx, tc.input, tc.outputs)
 			if len(tc.expErr) != 0 {
 				assert.EqualError(t, err, tc.expErr, "InputOutputCoins")
 			} else {
@@ -1085,7 +1085,7 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 
 	// Create two quarantined address: one with the required attributes, one without.
 	optIn := func(t *testing.T, addr sdk.AccAddress) {
-		// require.NoError(t, app.QuarantineKeeper.SetOptIn(ctx, addr), "SetOptIn(%q)", string(addr)) // TODO[1760]: quarantine
+		require.NoError(t, app.QuarantineKeeper.SetOptIn(ctx, addr), "SetOptIn(%q)", string(addr))
 	}
 	addrQWithAttr := sdk.AccAddress("addrQWithReqAttrs____")
 	addrQWithoutAttr := sdk.AccAddress("addrQWithoutReqAttrs____")
@@ -1181,16 +1181,13 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 				return
 			}
 
-			// TODO[1760]: quarantine: Uncomment once it's back.
-			/*
-				amt, acceptErr := app.QuarantineKeeper.AcceptQuarantinedFunds(ctx, tc.toAddr, tc.fromAddr)
-				if len(tc.expAcceptErr) != 0 {
-					require.EqualError(t, acceptErr, tc.expAcceptErr, "AcceptQuarantinedFunds")
-				} else {
-					require.NoError(t, acceptErr, "AcceptQuarantinedFunds")
-					assert.Equal(t, tc.amt.String(), amt.String(), "accepted quarantined funds")
-				}
-			*/
+			amt, acceptErr := app.QuarantineKeeper.AcceptQuarantinedFunds(ctx, tc.toAddr, tc.fromAddr)
+			if len(tc.expAcceptErr) != 0 {
+				require.EqualError(t, acceptErr, tc.expAcceptErr, "AcceptQuarantinedFunds")
+			} else {
+				require.NoError(t, acceptErr, "AcceptQuarantinedFunds")
+				assert.Equal(t, tc.amt.String(), amt.String(), "accepted quarantined funds")
+			}
 		})
 	}
 
@@ -1204,10 +1201,9 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 		require.NoError(t, sendErr, "SendCoins")
 		delErr := app.AttributeKeeper.DeleteAttribute(ctx, toAddr.String(), reqAttr, &attrVal, owner)
 		require.NoError(t, delErr, "DeleteAttribute")
-		// TODO[1760]: quarantine: Uncomment once it's back.
-		// expAcceptErr := noAttrErr(toAddr)
-		// _, acceptErr := app.QuarantineKeeper.AcceptQuarantinedFunds(ctx, toAddr, fromAddr)
-		// require.EqualError(t, acceptErr, expAcceptErr, "AcceptQuarantinedFunds")
+		expAcceptErr := noAttrErr(toAddr)
+		_, acceptErr := app.QuarantineKeeper.AcceptQuarantinedFunds(ctx, toAddr, fromAddr)
+		require.EqualError(t, acceptErr, expAcceptErr, "AcceptQuarantinedFunds")
 	})
 
 	t.Run("attr added after funds quarantined", func(t *testing.T) {
@@ -1218,12 +1214,9 @@ func TestQuarantineOfRestrictedCoins(t *testing.T) {
 		sendErr := app.BankKeeper.SendCoins(ctx, fromAddr, toAddr, amt)
 		require.NoError(t, sendErr, "SendCoins")
 		setAttr(t, toAddr)
-		// TODO[1760]: quarantine: Uncomment once it's back.
-		/*
-			acceptedAmt, acceptErr := app.QuarantineKeeper.AcceptQuarantinedFunds(ctx, toAddr, fromAddr)
-			require.NoError(t, acceptErr, "AcceptQuarantinedFunds error")
-			assert.Equal(t, amt.String(), acceptedAmt.String(), "AcceptQuarantinedFunds amount")
-		*/
+		acceptedAmt, acceptErr := app.QuarantineKeeper.AcceptQuarantinedFunds(ctx, toAddr, fromAddr)
+		require.NoError(t, acceptErr, "AcceptQuarantinedFunds error")
+		assert.Equal(t, amt.String(), acceptedAmt.String(), "AcceptQuarantinedFunds amount")
 	})
 
 	t.Run("marker restriction applied before quarantine", func(t *testing.T) {
