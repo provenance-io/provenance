@@ -10,10 +10,6 @@ import (
 
 func (s *KeeperTestSuite) TestUpdateOracle() {
 	authority := s.app.OracleKeeper.GetAuthority()
-	event := sdk.NewEvent(
-		sdk.EventTypeMessage,
-		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-	)
 
 	tests := []struct {
 		name  string
@@ -37,8 +33,7 @@ func (s *KeeperTestSuite) TestUpdateOracle() {
 				Address:   "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 				Authority: authority,
 			},
-			res:   &types.MsgUpdateOracleResponse{},
-			event: &event,
+			res: &types.MsgUpdateOracleResponse{},
 		},
 	}
 
@@ -67,11 +62,6 @@ func (s *KeeperTestSuite) TestUpdateOracle() {
 }
 
 func (s *KeeperTestSuite) TestSendQueryOracle() {
-	event := sdk.NewEvent(
-		sdk.EventTypeMessage,
-		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-	)
-
 	s.app.OracleKeeper = s.app.OracleKeeper.WithMockICS4Wrapper(keeper.MockICS4Wrapper{})
 	s.app.OracleKeeper = s.app.OracleKeeper.WithMockScopedKeeper(keeper.MockScopedKeeper{})
 
@@ -103,7 +93,6 @@ func (s *KeeperTestSuite) TestSendQueryOracle() {
 			res: &types.MsgSendQueryOracleResponse{
 				Sequence: 1,
 			},
-			event:       &event,
 			mockChannel: true,
 		},
 	}
