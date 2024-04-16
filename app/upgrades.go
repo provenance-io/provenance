@@ -15,6 +15,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -57,6 +58,8 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			migrateAttributeParams(ctx, app)
+
 			err = migrateBankParams(ctx, app)
 			if err != nil {
 				return nil, err
@@ -92,10 +95,13 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			migrateAttributeParams(ctx, app)
+
 			err = migrateBankParams(ctx, app)
 			if err != nil {
 				return nil, err
 			}
+
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
@@ -292,6 +298,20 @@ func migrateBaseappParams(ctx sdk.Context, app *App) error {
 	}
 	ctx.Logger().Info("Done migrating legacy params.")
 	return nil
+}
+
+// migrateAttributeParams migrates to new Attribute Params store
+// TODO: Remove with the umber handlers.
+func migrateAttributeParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating attribute params.")
+	attributeParamSpace := app.ParamsKeeper.Subspace(attributetypes.ModuleName).WithKeyTable(attributetypes.ParamKeyTable())
+	maxValueLength := uint32(attributetypes.DefaultMaxValueLength)
+	// TODO: remove attributetypes.ParamStoreKeyMaxValueLength with the umber handlers.
+	if attributeParamSpace.Has(ctx, attributetypes.ParamStoreKeyMaxValueLength) {
+		attributeParamSpace.Get(ctx, attributetypes.ParamStoreKeyMaxValueLength, &maxValueLength)
+	}
+	app.AttributeKeeper.SetParams(ctx, attributetypes.Params{MaxValueLength: uint32(maxValueLength)})
+	ctx.Logger().Info("Done migrating attribute params.")
 }
 
 // migrateBankParams migrates the bank params from the params module to the bank module's state.

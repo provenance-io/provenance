@@ -1361,11 +1361,10 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 
-	paramsKeeper.Subspace(metadatatypes.ModuleName)  // TODO[1760]: params: Migrate metadata params.
-	paramsKeeper.Subspace(markertypes.ModuleName)    // TODO[1760]: params: Migrate marker params.
-	paramsKeeper.Subspace(nametypes.ModuleName)      // TODO[1760]: params: Migrate name params.
-	paramsKeeper.Subspace(attributetypes.ModuleName) // TODO[1760]: params: Migrate attribute params.
-	paramsKeeper.Subspace(msgfeestypes.ModuleName)   // TODO[1760]: params: Migrate msgFees params.
+	paramsKeeper.Subspace(metadatatypes.ModuleName) // TODO[1760]: params: Migrate metadata params.
+	paramsKeeper.Subspace(markertypes.ModuleName)   // TODO[1760]: params: Migrate marker params.
+	paramsKeeper.Subspace(nametypes.ModuleName)     // TODO[1760]: params: Migrate name params.
+	paramsKeeper.Subspace(msgfeestypes.ModuleName)  // TODO[1760]: params: Migrate msgFees params.
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(triggertypes.ModuleName) // TODO[1760]: params: Migrate trigger params.
 

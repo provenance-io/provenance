@@ -14,6 +14,7 @@ const (
 )
 
 // Parameter store keys
+// TODO: remove with the umber (v1.19.x) handlers.
 var (
 	ParamStoreKeyMaxValueLength = []byte("MaxValueLength")
 )
@@ -25,6 +26,7 @@ func (params Params) String() string {
 }
 
 // ParamKeyTable for slashing module
+// TODO: remove with the umber (v1.19.x) handlers.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -39,6 +41,7 @@ func NewParams(
 }
 
 // ParamSetPairs - Implements params.ParamSet
+// TODO: remove with the umber (v1.19.x) handlers.
 func (params *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyMaxValueLength, &params.MaxValueLength, validateMaxValueLength),
