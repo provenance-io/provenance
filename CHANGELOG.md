@@ -56,7 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Removed `rewards` module [#1905](https://github.com/provenance-io/provenance/pull/1905).
 * Remove unused navs [#1920](https://github.com/provenance-io/provenance/issues/1920).
 * Migrate module params from param space to module store.
-* Attribute module param migration [#1927](https://github.com/provenance-io/provenance/pull/1927)
+  *  Attribute module param migration [#1927](https://github.com/provenance-io/provenance/pull/1927).
 * Remove emitting of EventTypeMessage [#1760](https://github.com/provenance-io/provenance/issues/1760).
 
 ### Dependencies
