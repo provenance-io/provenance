@@ -126,13 +126,6 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		}
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	return &types.MsgAddMarkerResponse{}, nil
 }
 
@@ -152,13 +145,6 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 			return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 		}
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
 
 	return &types.MsgAddAccessResponse{}, nil
 }
@@ -198,13 +184,6 @@ func (k msgServer) Finalize(goCtx context.Context, msg *types.MsgFinalizeRequest
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	return &types.MsgFinalizeResponse{}, nil
 }
 
@@ -220,13 +199,6 @@ func (k msgServer) Activate(goCtx context.Context, msg *types.MsgActivateRequest
 		ctx.Logger().Error("unable to activate marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
 
 	return &types.MsgActivateResponse{}, nil
 }
@@ -244,13 +216,6 @@ func (k msgServer) Cancel(goCtx context.Context, msg *types.MsgCancelRequest) (*
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	return &types.MsgCancelResponse{}, nil
 }
 
@@ -267,13 +232,6 @@ func (k msgServer) Delete(goCtx context.Context, msg *types.MsgDeleteRequest) (*
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	return &types.MsgDeleteResponse{}, nil
 }
 
@@ -289,13 +247,6 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 		ctx.Logger().Error("unable to mint coin for marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -330,13 +281,6 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*type
 		ctx.Logger().Error("unable to burn coin from marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -377,13 +321,6 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		ctx.Logger().Error("unable to withdraw coins from marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -438,13 +375,6 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, types.EventTelemetryKeyTransfer},
@@ -493,13 +423,6 @@ func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferR
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, types.EventTelemetryKeyIbcTransfer},
@@ -544,13 +467,6 @@ func (k msgServer) SetDenomMetadata(
 	if err != nil {
 		return nil, err
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
 
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }
@@ -610,13 +526,6 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		ctx.Logger().Error("unable to add, finalize and activate marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
 
 	return &types.MsgAddFinalizeActivateMarkerResponse{}, nil
 }
@@ -689,13 +598,6 @@ func (k msgServer) UpdateRequiredAttributes(goCtx context.Context, msg *types.Ms
 	m.SetRequiredAttributes(reqAttrs)
 	k.SetMarker(ctx, m)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	return &types.MsgUpdateRequiredAttributesResponse{}, nil
 }
 
@@ -725,13 +627,6 @@ func (k msgServer) UpdateForcedTransfer(goCtx context.Context, msg *types.MsgUpd
 
 	marker.SetAllowForcedTransfer(msg.AllowForcedTransfer)
 	k.SetMarker(ctx, marker)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
 
 	return &types.MsgUpdateForcedTransferResponse{}, nil
 }
@@ -807,13 +702,6 @@ func (k msgServer) UpdateSendDenyList(goCtx context.Context, msg *types.MsgUpdat
 		k.AddSendDeny(ctx, markerAddr, denyAddr)
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	return &types.MsgUpdateSendDenyListResponse{}, nil
 }
 
@@ -839,13 +727,6 @@ func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNet
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
 
 	return &types.MsgAddNetAssetValuesResponse{}, nil
 }

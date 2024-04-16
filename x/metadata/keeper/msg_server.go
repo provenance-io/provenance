@@ -761,12 +761,5 @@ func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNet
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	return &types.MsgAddNetAssetValuesResponse{}, nil
 }

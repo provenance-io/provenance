@@ -31,13 +31,6 @@ func (s msgServer) UpdateOracle(goCtx context.Context, msg *types.MsgUpdateOracl
 
 	s.Keeper.SetOracle(ctx, sdk.MustAccAddressFromBech32(msg.Address))
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
-
 	return &types.MsgUpdateOracleResponse{}, nil
 }
 
@@ -49,13 +42,6 @@ func (s msgServer) SendQueryOracle(goCtx context.Context, msg *types.MsgSendQuer
 	if err != nil {
 		return nil, err
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-	)
 
 	return &types.MsgSendQueryOracleResponse{
 		Sequence: seq,
