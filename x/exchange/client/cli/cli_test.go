@@ -39,6 +39,7 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/client/cli"
 	"github.com/provenance-io/provenance/x/hold"
@@ -574,7 +575,7 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 	args = append(args,
 		"--"+flags.FlagGas, gas,
 		"--"+flags.FlagFees, fees.String(),
-		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
+		"--"+flags.FlagBroadcastMode, flags.BroadcastSync,
 		"--"+flags.FlagSkipConfirmation,
 	)
 
@@ -604,14 +605,10 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 		}
 
 		if len(tc.expInErr) == 0 && err == nil {
-			var resp sdk.TxResponse
-			err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
-			if s.Assert().NoError(err, "UnmarshalJSON(command output) error") {
-				txResponse = &resp
-				s.Assert().Equal(int(tc.expectedCode), int(resp.Code), "response code")
-				for _, exp := range tc.expInRawLog {
-					s.Assert().Contains(resp.RawLog, exp, "TxResponse.RawLog should contain:\n%q", exp)
-				}
+			resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
+			s.Assert().Equal(int(tc.expectedCode), int(resp.Code), "response code")
+			for _, exp := range tc.expInRawLog {
+				s.Assert().Contains(resp.RawLog, exp, "TxResponse.RawLog should contain:\n%q", exp)
 			}
 		}
 	}
@@ -910,36 +907,19 @@ func (s *CmdTestSuite) assertGovPropMsg(propID string, msg sdk.Msg) bool {
 		return true
 	}
 
-	// TODO[1760]: gov: Uncomment once we figure out how to query for a gov proposal again.
-	return false
-	/*
-		if !s.Assert().NotEmpty(propID, "proposal id") {
-			return false
-		}
-		expPropMsgAny, err := codectypes.NewAnyWithValue(msg)
-		if !s.Assert().NoError(err, "NewAnyWithValue(%T)", msg) {
-			return false
-		}
+	if !s.Assert().NotEmpty(propID, "proposal id") {
+		return false
+	}
+	expPropMsgAny, err := codectypes.NewAnyWithValue(msg)
+	if !s.Assert().NoError(err, "NewAnyWithValue(%T)", msg) {
+		return false
+	}
 
-		clientCtx := s.getClientCtx()
-		getPropCmd := govcli.GetCmdQueryProposal()
-		propOutBW, err := clitestutil.ExecTestCLICmd(clientCtx, getPropCmd, []string{propID, "--output", "json"})
-		propOutBz := propOutBW.Bytes()
-		s.T().Logf("Query proposal %s output:\n%s", propID, string(propOutBz))
-		if !s.Assert().NoError(err, "GetCmdQueryProposal %s error", propID) {
-			return false
-		}
-
-		var prop govv1.Proposal
-		err = clientCtx.Codec.UnmarshalJSON(propOutBz, &prop)
-		if !s.Assert().NoError(err, "UnmarshalJSON on proposal %s response", propID) {
-			return false
-		}
-		if !s.Assert().Len(prop.Messages, 1, "number of messages in proposal %s", propID) {
-			return false
-		}
-		return s.Assert().Equal(expPropMsgAny, prop.Messages[0], "the message in proposal %s", propID)
-	*/
+	prop := queries.GetGovProp(s.T(), s.testnet, propID)
+	if !s.Assert().Len(prop.Messages, 1, "number of messages in proposal %s", propID) {
+		return false
+	}
+	return s.Assert().Equal(expPropMsgAny, prop.Messages[0], "the message in proposal %s", propID)
 }
 
 // govPropFollowup returns a followup function that identifies the new proposal id, looks it up,
@@ -1060,14 +1040,15 @@ func (s *CmdTestSuite) createOrder(order *exchange.Order, creationFee *sdk.Coin)
 	}
 	args = append(args,
 		"--"+flags.FlagFees, s.bondCoins(10).String(),
-		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
+		"--"+flags.FlagBroadcastMode, flags.BroadcastSync,
 		"--"+flags.FlagSkipConfirmation,
 	)
 
 	cmdName := cmd.Name()
+	failed := true
 	var outBz []byte
 	defer func() {
-		if s.T().Failed() {
+		if failed {
 			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
 		}
 	}()
@@ -1075,15 +1056,15 @@ func (s *CmdTestSuite) createOrder(order *exchange.Order, creationFee *sdk.Coin)
 	clientCtx := s.getClientCtx()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	outBz = out.Bytes()
-
 	s.Require().NoError(err, "ExecTestCLICmd error")
 
-	var resp sdk.TxResponse
-	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
-	s.Require().NoError(err, "UnmarshalJSON(command output) error")
+	resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
 	orderIDStr, err := s.findNewOrderID(&resp)
 	s.Require().NoError(err, "findNewOrderID")
-	return s.asOrderID(orderIDStr)
+
+	rv := s.asOrderID(orderIDStr)
+	failed = false
+	return rv
 }
 
 // commitFunds issues a command to commit funds.
@@ -1101,14 +1082,15 @@ func (s *CmdTestSuite) commitFunds(addr sdk.AccAddress, marketID uint32, amount 
 
 	args = append(args,
 		"--"+flags.FlagFees, s.bondCoins(10).String(),
-		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
+		"--"+flags.FlagBroadcastMode, flags.BroadcastSync,
 		"--"+flags.FlagSkipConfirmation,
 	)
 
 	cmdName := cmd.Name()
+	failed := true
 	var outBz []byte
 	defer func() {
-		if s.T().Failed() {
+		if failed {
 			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
 		}
 	}()
@@ -1116,13 +1098,11 @@ func (s *CmdTestSuite) commitFunds(addr sdk.AccAddress, marketID uint32, amount 
 	clientCtx := s.getClientCtx()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	outBz = out.Bytes()
-
 	s.Require().NoError(err, "ExecTestCLICmd error")
 
-	var resp sdk.TxResponse
-	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
-	s.Require().NoError(err, "UnmarshalJSON(command output) error")
-	s.Require().Equal(int(0), int(resp.Code), "response code:\n%v", resp)
+	resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
+	s.Require().Equal(0, int(resp.Code), "response code:\n%v", resp)
+	failed = false
 }
 
 // createPayment issues a command to create a payment.
@@ -1147,14 +1127,15 @@ func (s *CmdTestSuite) createPayment(payment *exchange.Payment) {
 	fees := s.bondCoins(10).Add(s.feeCoin(exchange.DefaultFeeCreatePaymentFlatAmount))
 	args = append(args,
 		"--"+flags.FlagFees, fees.String(),
-		"--"+flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
+		"--"+flags.FlagBroadcastMode, flags.BroadcastSync,
 		"--"+flags.FlagSkipConfirmation,
 	)
 
+	failed := true
 	cmdName := cmd.Name()
 	var outBz []byte
 	defer func() {
-		if s.T().Failed() {
+		if failed {
 			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
 		}
 	}()
@@ -1162,51 +1143,21 @@ func (s *CmdTestSuite) createPayment(payment *exchange.Payment) {
 	clientCtx := s.getClientCtx()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	outBz = out.Bytes()
-
 	s.Require().NoError(err, "ExecTestCLICmd error")
 
-	var resp sdk.TxResponse
-	err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
-	s.Require().NoError(err, "UnmarshalJSON(command output) error")
-	s.Require().Equal(int(0), int(resp.Code), "response code:\n%v", resp)
+	resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
+	s.Require().Equal(0, int(resp.Code), "response code:\n%v", resp)
+	failed = false
 }
 
 // queryBankBalances executes a bank query to get an account's balances.
 func (s *CmdTestSuite) queryBankBalances(addr string) sdk.Coins {
-	// TODO[1760]: bank: Uncomment once we know how to query for bank balances again.
-	return nil
-	/*
-		clientCtx := s.getClientCtx()
-		cmd := bankcli.GetBalancesCmd()
-		args := []string{addr, "--output", "json"}
-		outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-		s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
-		outBz := outBW.Bytes()
-
-		var resp banktypes.QueryAllBalancesResponse
-		err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
-		s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
-		return resp.Balances
-	*/
+	return queries.GetAllBalances(s.T(), s.testnet, addr)
 }
 
 // queryBankSpendableBalances executes a bank query to get an account's spendable balances.
 func (s *CmdTestSuite) queryBankSpendableBalances(addr string) sdk.Coins {
-	// TODO[1760]: bank: Put this back once we know how to query spendable balances again.
-	/*
-		clientCtx := s.getClientCtx()
-		cmd := bankcli.GetSpendableBalancesCmd()
-		args := []string{addr, "--output", "json"}
-		outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-		s.Require().NoError(err, "ExecTestCLICmd %s %q", cmd.Name(), args)
-		outBz := outBW.Bytes()
-
-		var resp banktypes.QuerySpendableBalancesResponse
-		err = clientCtx.Codec.UnmarshalJSON(outBz, &resp)
-		s.Require().NoError(err, "UnmarshalJSON(%q, %T)", string(outBz), &resp)
-		return resp.Balances
-	*/
-	return nil
+	return queries.GetSpendableBalances(s.T(), s.testnet, addr)
 }
 
 // execBankSend executes a bank send command.
@@ -1218,20 +1169,24 @@ func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 	args := []string{
 		fromAddr, toAddr, amount,
 		"--" + flags.FlagFees, s.bondCoins(10).String(),
-		"--" + flags.FlagBroadcastMode, flags.BroadcastSync, // TODO[1760]: broadcast
+		"--" + flags.FlagBroadcastMode, flags.BroadcastSync,
 		"--" + flags.FlagSkipConfirmation,
 	}
+
 	failed := true
-	var outStr string
+	var outBz []byte
 	defer func() {
 		if failed {
-			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, outStr)
+			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
 		}
 	}()
 
 	outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	outStr = outBW.String()
-	s.Require().NoError(err, "ExecTestCLICmd %s %q", cmdName, args)
+	outBz = outBW.Bytes()
+	s.Require().NoError(err, "ExecTestCLICmd error")
+
+	resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
+	s.Require().Equal(0, int(resp.Code), "response code:\n%v", resp)
 	failed = false
 }
 
