@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -108,9 +107,8 @@ type MetadataKeeperI interface {
 // Keeper is the concrete state-based API for the metadata module.
 type Keeper struct {
 	// Key to access the key-value store from sdk.Context
-	storeKey   storetypes.StoreKey
-	cdc        codec.BinaryCodec
-	paramSpace paramtypes.Subspace
+	storeKey storetypes.StoreKey
+	cdc      codec.BinaryCodec
 
 	// To check if accounts exist and set public keys.
 	authKeeper AuthKeeper
@@ -127,17 +125,12 @@ type Keeper struct {
 
 // NewKeeper creates new instances of the metadata Keeper.
 func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
-	authKeeper AuthKeeper, authzKeeper AuthzKeeper, attrKeeper AttrKeeper, markerKeeper MarkerKeeper,
+	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper AuthKeeper,
+	authzKeeper AuthzKeeper, attrKeeper AttrKeeper, markerKeeper MarkerKeeper,
 ) Keeper {
-	// set KeyTable if it has not already been set
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.OSParamKeyTable())
-	}
 	return Keeper{
 		storeKey:     key,
 		cdc:          cdc,
-		paramSpace:   paramSpace,
 		authKeeper:   authKeeper,
 		authzKeeper:  authzKeeper,
 		attrKeeper:   attrKeeper,

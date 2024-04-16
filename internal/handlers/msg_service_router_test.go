@@ -1125,10 +1125,6 @@ func CreateSendCoinEvents(fromAddress, toAddress string, amt sdk.Coins) []abci.E
 		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
 		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 	))
-	events = events.AppendEvent(sdk.NewEvent(
-		sdk.EventTypeMessage,
-		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
-	))
 
 	return events.ToABCIEvents()
 }

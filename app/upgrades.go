@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -58,12 +59,13 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			migrateAttributeParams(ctx, app)
-
 			err = migrateBankParams(ctx, app)
 			if err != nil {
 				return nil, err
 			}
+
+			migrateAttributeParams(ctx, app)
+			migrateMetadataOSLocatorParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -95,12 +97,13 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			migrateAttributeParams(ctx, app)
-
 			err = migrateBankParams(ctx, app)
 			if err != nil {
 				return nil, err
 			}
+
+			migrateAttributeParams(ctx, app)
+			migrateMetadataOSLocatorParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -300,20 +303,6 @@ func migrateBaseappParams(ctx sdk.Context, app *App) error {
 	return nil
 }
 
-// migrateAttributeParams migrates to new Attribute Params store
-// TODO: Remove with the umber handlers.
-func migrateAttributeParams(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Migrating attribute params.")
-	attributeParamSpace := app.ParamsKeeper.Subspace(attributetypes.ModuleName).WithKeyTable(attributetypes.ParamKeyTable())
-	maxValueLength := uint32(attributetypes.DefaultMaxValueLength)
-	// TODO: remove attributetypes.ParamStoreKeyMaxValueLength with the umber handlers.
-	if attributeParamSpace.Has(ctx, attributetypes.ParamStoreKeyMaxValueLength) {
-		attributeParamSpace.Get(ctx, attributetypes.ParamStoreKeyMaxValueLength, &maxValueLength)
-	}
-	app.AttributeKeeper.SetParams(ctx, attributetypes.Params{MaxValueLength: uint32(maxValueLength)})
-	ctx.Logger().Info("Done migrating attribute params.")
-}
-
 // migrateBankParams migrates the bank params from the params module to the bank module's state.
 // The SDK has this as part of their bank v4 migration, but we're already on v4, so that one
 // won't run on its own. This is the only part of that migration that we still need to have
@@ -333,4 +322,32 @@ func migrateBankParams(ctx sdk.Context, app *App) (err error) {
 		return fmt.Errorf("params subspace not found: %q", banktypes.ModuleName)
 	}
 	return app.BankKeeper.MigrateParamsProv(ctx, bankParamsSpace)
+}
+
+// migrateAttributeParams migrates to new Attribute Params store
+// TODO: Remove with the umber handlers.
+func migrateAttributeParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating attribute params.")
+	attributeParamSpace := app.ParamsKeeper.Subspace(attributetypes.ModuleName).WithKeyTable(attributetypes.ParamKeyTable())
+	maxValueLength := uint32(attributetypes.DefaultMaxValueLength)
+	// TODO: remove attributetypes.ParamStoreKeyMaxValueLength with the umber handlers.
+	if attributeParamSpace.Has(ctx, attributetypes.ParamStoreKeyMaxValueLength) {
+		attributeParamSpace.Get(ctx, attributetypes.ParamStoreKeyMaxValueLength, &maxValueLength)
+	}
+	app.AttributeKeeper.SetParams(ctx, attributetypes.Params{MaxValueLength: uint32(maxValueLength)})
+	ctx.Logger().Info("Done migrating attribute params.")
+}
+
+// migrateAttributeParams migrates to new Metadata Os Locator Params store
+// TODO: Remove with the umber handlers.
+func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating metadata os locator params.")
+	metadataParamSpace := app.ParamsKeeper.Subspace(metadatatypes.ModuleName).WithKeyTable(metadatatypes.ParamKeyTable())
+	maxValueLength := uint32(metadatatypes.DefaultMaxURILength)
+	// TODO: remove metadatatypes.ParamStoreKeyMaxValueLength with the umber handlers.
+	if metadataParamSpace.Has(ctx, metadatatypes.ParamStoreKeyMaxValueLength) {
+		metadataParamSpace.Get(ctx, metadatatypes.ParamStoreKeyMaxValueLength, &maxValueLength)
+	}
+	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: uint32(maxValueLength)})
+	ctx.Logger().Info("Done migrating metadata os locator params.")
 }

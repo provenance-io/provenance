@@ -113,10 +113,7 @@ func ownerPartyList(addresses ...string) []types.Party {
 }
 
 func (s *KeeperTestSuite) TestParams() {
-	s.T().Run("param tests", func(t *testing.T) {
-		p := s.app.MetadataKeeper.GetParams(s.ctx)
-		assert.NotNil(t, p)
-
+	s.T().Run("os param tests", func(t *testing.T) {
 		osp := s.app.MetadataKeeper.GetOSLocatorParams(s.ctx)
 		assert.NotNil(t, osp)
 		assert.Equal(t, osp.MaxUriLength, s.app.MetadataKeeper.GetMaxURILength(s.ctx))
