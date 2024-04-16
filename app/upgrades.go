@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -65,6 +66,7 @@ var upgrades = map[string]appUpgrade{
 			}
 
 			migrateAttributeParams(ctx, app)
+			migrateMarkerParams(ctx, app)
 			migrateMetadataOSLocatorParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
@@ -103,6 +105,7 @@ var upgrades = map[string]appUpgrade{
 			}
 
 			migrateAttributeParams(ctx, app)
+			migrateMarkerParams(ctx, app)
 			migrateMetadataOSLocatorParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
@@ -338,6 +341,47 @@ func migrateAttributeParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Done migrating attribute params.")
 }
 
+// migrateMarkerParams migrates to new Marker Params store
+// TODO: Remove with the umber handlers.
+func migrateMarkerParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating marker params.")
+	markerParamSpace := app.ParamsKeeper.Subspace(markertypes.ModuleName).WithKeyTable(markertypes.ParamKeyTable())
+
+	params := markertypes.DefaultParams()
+
+	// TODO: remove markertypes.ParamStoreKeyMaxTotalSupply with the umber handlers.
+	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyMaxTotalSupply) {
+		var maxTotalSupply uint64
+		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyMaxTotalSupply, &maxTotalSupply)
+		params.MaxTotalSupply = maxTotalSupply
+	}
+
+	// TODO: remove markertypes.ParamStoreKeyEnableGovernance with the umber handlers.
+	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyEnableGovernance) {
+		var enableGovernance bool
+		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyEnableGovernance, &enableGovernance)
+		params.EnableGovernance = enableGovernance
+	}
+
+	// TODO: remove markertypes.ParamStoreKeyUnrestrictedDenomRegex with the umber handlers.
+	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyUnrestrictedDenomRegex) {
+		var unrestrictedDenomRegex string
+		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyUnrestrictedDenomRegex, &unrestrictedDenomRegex)
+		params.UnrestrictedDenomRegex = unrestrictedDenomRegex
+	}
+
+	// TODO: remove markertypes.ParamStoreKeyMaxSupply with the umber handlers.
+	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyMaxSupply) {
+		var maxSupply string
+		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyMaxSupply, &maxSupply)
+		params.MaxSupply = markertypes.StringToBigInt(maxSupply)
+	}
+
+	app.MarkerKeeper.SetParams(ctx, params)
+
+	ctx.Logger().Info("Done migrating marker params.")
+}
+
 // migrateAttributeParams migrates to new Metadata Os Locator Params store
 // TODO: Remove with the umber handlers.
 func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
@@ -350,4 +394,5 @@ func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
 	}
 	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: uint32(maxValueLength)})
 	ctx.Logger().Info("Done migrating metadata os locator params.")
+
 }
