@@ -22,6 +22,7 @@ const (
 	DefaultUnrestrictedDenomRegex = `[a-zA-Z][a-zA-Z0-9\-\.]{2,83}`
 )
 
+// TODO: remove with the umber (v1.19.x) handlers.
 var (
 	// ParamStoreKeyEnableGovernance indicates if governance proposal management of markers is enabled
 	ParamStoreKeyEnableGovernance = []byte("EnableGovernance")
@@ -34,6 +35,7 @@ var (
 )
 
 // ParamKeyTable for marker module
+// TODO: remove with the umber (v1.19.x) handlers.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -54,6 +56,7 @@ func NewParams(
 }
 
 // ParamSetPairs - Implements params.ParamSet
+// TODO: remove with the umber (v1.19.x) handlers.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyEnableGovernance, &p.EnableGovernance, validateEnableGovernance),

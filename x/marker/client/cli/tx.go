@@ -21,12 +21,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-
-	// govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli" // TODO[1760]: gov-cli
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channelutils "github.com/cosmos/ibc-go/v8/modules/core/04-channel/client/utils"
 
+	"github.com/provenance-io/provenance/internal/provcli"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -461,7 +461,6 @@ func GetNewTransferCmd() *cobra.Command {
 
 // GetIbcTransferTxCmd returns the command to create a GetIbcTransferTxCmd transaction
 func GetIbcTransferTxCmd() *cobra.Command {
-	// TODO: refactor ibc-transfer usage comments to be provenance specific
 	cmd := &cobra.Command{
 		Use:   "ibc-transfer [src-port] [src-channel] [sender] [receiver] [amount]",
 		Short: "Transfer a restricted marker token through IBC",
@@ -949,13 +948,11 @@ func GetCmdUpdateForcedTransfer() *cobra.Command {
 				return err
 			}
 
-			// return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, cmd.Flags(), msg) // TODO[1760]: gov-cli
-			_, _ = msg, clientCtx
-			return fmt.Errorf("not yet updated")
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
-	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
+	govcli.AddGovPropFlagsToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -1224,7 +1221,7 @@ func ParseBoolStrict(input string) (bool, error) {
 // See also: generateOrBroadcastOptGovProp
 func addOptGovPropFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool(FlagGovProposal, false, "submit message as a gov proposal")
-	// govcli.AddGovPropFlagsToCmd(cmd) // TODO[1760]: gov-cli
+	govcli.AddGovPropFlagsToCmd(cmd)
 }
 
 // generateOrBroadcastOptGovProp either calls GenerateOrBroadcastTxCLIAsGovProp or GenerateOrBroadcastTxCLI
@@ -1245,8 +1242,7 @@ func generateOrBroadcastOptGovProp(clientCtx client.Context, flagSet *pflag.Flag
 	}
 
 	if isGov {
-		// return govcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg) // TODO[1760]: gov-cli
-		return fmt.Errorf("not yet updated")
+		return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 	}
 	return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 }

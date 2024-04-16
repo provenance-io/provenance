@@ -19,13 +19,11 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/log"
-	sdksim "cosmossdk.io/simapp"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
-	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -56,6 +54,7 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/sanction"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
@@ -71,7 +70,7 @@ type StoreKeysPrefixes struct {
 	Prefixes [][]byte
 }
 
-// ProvAppStateFn wraps the sdksim.AppStateFn and sets the ICA GenesisState if isn't yet defined in the appState.
+// ProvAppStateFn wraps the simtypes.AppStateFn and sets the ICA GenesisState if isn't yet defined in the appState.
 func ProvAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
 		appState, simAccs, chainID, genesisTimestamp := simtestutil.AppStateFn(cdc, simManager, genesisState)(r, accs, config)
@@ -201,7 +200,7 @@ func TestSimple(t *testing.T) {
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/provenance-io/provenance -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func TestAppImportExport(t *testing.T) {
 	// uncomment to run in ide without flags.
-	//sdksim.FlagEnabledValue = true
+	//simcli.FlagEnabledValue = true
 
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
@@ -257,7 +256,7 @@ func TestAppImportExport(t *testing.T) {
 
 	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
 
-	var genesisState sdksim.GenesisState
+	var genesisState map[string]json.RawMessage
 	err = json.Unmarshal(exported.AppState, &genesisState)
 	require.NoError(t, err)
 
@@ -295,7 +294,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
 		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
 		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{authzkeeper.GrantKey, authzkeeper.GrantQueuePrefix}},
-		// {app.keys[quarantine.StoreKey], newApp.keys[quarantine.StoreKey], [][]byte{}}, // TODO[1760]: quarantine
+		{app.keys[quarantine.StoreKey], newApp.keys[quarantine.StoreKey], [][]byte{}},
 		{app.keys[sanction.StoreKey], newApp.keys[sanction.StoreKey], [][]byte{}},
 
 		{app.keys[markertypes.StoreKey], newApp.keys[markertypes.StoreKey], [][]byte{}},
@@ -402,9 +401,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
 	// uncomment these to run in ide without flags.
-	//sdksim.FlagEnabledValue = true
-	//sdksim.FlagBlockSizeValue = 100
-	//sdksim.FlagNumBlocksValue = 50
+	//simcli.FlagEnabledValue = true
+	//simcli.FlagBlockSizeValue = 100
+	//simcli.FlagNumBlocksValue = 50
 
 	if !simcli.FlagEnabledValue {
 		t.Skip("skipping application simulation")

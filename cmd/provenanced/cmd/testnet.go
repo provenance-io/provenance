@@ -39,7 +39,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -368,10 +368,12 @@ func initGenFiles(
 	appGenState[crisistypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&crisisGenState)
 
 	// Set the gov depost denom
-	var govGenState govtypesv1beta1.GenesisState
+	// TODO[1760]: gov: Verify that these changes are okay and nothing else is needed.
+	var govGenState govtypesv1.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
-	govGenState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(chainDenom, 10000000))
-	govGenState.VotingParams.VotingPeriod, _ = time.ParseDuration("360s")
+	govGenState.Params.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(chainDenom, 10000000))
+	votingPeriod, _ := time.ParseDuration("360s")
+	govGenState.Params.VotingPeriod = &votingPeriod
 	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&govGenState)
 
 	// Set the mint module parameters to stop inflation on the BondDenom.

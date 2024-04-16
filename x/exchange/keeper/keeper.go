@@ -9,8 +9,6 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
-	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -19,6 +17,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/exchange"
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 var (
@@ -194,7 +193,7 @@ func (k Keeper) iterate(ctx sdk.Context, keyPrefix []byte, cb func(keySuffix, va
 func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error {
 	// We bypass the quarantine module here under the assumption that someone creating
 	// an order counts as acceptance of the stuff to receive (that they defined when creating the order).
-	ctx := ctxIn // quarantine.WithBypass(ctxIn) // TODO[1760]: quarantine
+	ctx := quarantine.WithBypass(ctxIn)
 	if len(inputs) == 1 && len(outputs) == 1 {
 		// If there's only one of each, we use SendCoins for the nicer events.
 		if !inputs[0].Coins.Equal(outputs[0].Coins) {
@@ -222,9 +221,7 @@ func (k Keeper) DoTransfer(ctxIn sdk.Context, inputs []banktypes.Input, outputs 
 		}
 	}
 
-	// TODO[1760]: exchange: Put this back once we have InputOutputCoins again.
-	// return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
-	return nil
+	return k.bankKeeper.InputOutputCoinsProv(ctx, inputs, outputs)
 }
 
 // CalculateExchangeSplit calculates the amount that the exchange will keep of the provided fee.
@@ -302,11 +299,9 @@ func (k Keeper) CollectFees(ctx sdk.Context, marketID uint32, inputs []banktypes
 
 	marketAddr := exchange.GetMarketAddress(marketID)
 	outputs := []banktypes.Output{{Address: marketAddr.String(), Coins: feeAmt}}
-	// TODO[1760]: exchange: Put this back once we have InputOutputCoins again.
-	_ = outputs
-	// if err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs); err != nil {
-	// 	return fmt.Errorf("error collecting fees for market %d: %w", marketID, err)
-	// }
+	if err := k.bankKeeper.InputOutputCoinsProv(ctx, inputs, outputs); err != nil {
+		return fmt.Errorf("error collecting fees for market %d: %w", marketID, err)
+	}
 	if !exchangeAmt.IsZero() {
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, marketAddr, k.feeCollectorName, exchangeAmt); err != nil {
 			return fmt.Errorf("error collecting exchange fee %s (based off %s) from market %d: %w", exchangeAmt, feeAmt, marketID, err)

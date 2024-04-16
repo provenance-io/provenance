@@ -27,7 +27,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, bankKeeper h
 		storeKey:   storeKey,
 		bankKeeper: bankKeeper,
 	}
-	// bankKeeper.AppendLockedCoinsGetter(rv.GetLockedCoins) // TODO[1760]: locked-coins
+	bankKeeper.AppendLockedCoinsGetter(rv.GetLockedCoins)
 	return rv
 }
 

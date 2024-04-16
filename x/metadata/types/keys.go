@@ -88,6 +88,9 @@ var (
 
 	// NetAssetValuePrefix prefix for net asset values of scopes
 	NetAssetValuePrefix = []byte{0x22}
+
+	// OSLocatorParamPrefix prefix for os locator params
+	OSLocatorParamPrefix = []byte{0x23}
 )
 
 // GetAddressScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address

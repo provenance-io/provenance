@@ -3809,7 +3809,7 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 			args: []string{
 				s.user3AddrStr,
 				"count",
-				// fmt.Sprintf("--%s=%d", authzcli.FlagAllowedAuthorizations, 1), // TODO[1760]: count-authz
+				fmt.Sprintf("--%s=%d", authzcli.FlagAllowedAuthorizations, 1),
 				fmt.Sprintf("--%s=%s", authzcli.FlagMsgType, metadatatypes.TypeURLMsgDeleteScopeRequest),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user1AddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -3836,7 +3836,7 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 			args: []string{
 				s.user3AddrStr,
 				"count",
-				// fmt.Sprintf("--%s=%d", authzcli.FlagAllowedAuthorizations, 2), // TODO[1760]: count-authz
+				fmt.Sprintf("--%s=%d", authzcli.FlagAllowedAuthorizations, 2),
 				fmt.Sprintf("--%s=%s", authzcli.FlagMsgType, metadatatypes.TypeURLMsgDeleteScopeRequest),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user2AddrStr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

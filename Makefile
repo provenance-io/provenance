@@ -132,7 +132,7 @@ install: go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
 build: validate-go-version go.sum
-	# TODO[1760]: Remove this delay once we're stable again.
+# TODO[1760]: Remove this delay once we're stable again.
 	@if [ -z "${ACK_50}" ]; then printf '\033[93mWARNING:\033[0m This branch is currently unstable and should not be built for use.\n         To bypass this 10 second delay: ACK_50=1 make build\n'; sleep 10; fi
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
@@ -330,28 +330,21 @@ PACKAGES               := $(shell $(GO) list ./... 2>/dev/null || true)
 PACKAGES_NOSIMULATION  := $(filter-out %/simulation%,$(PACKAGES))
 PACKAGES_SIMULATION    := $(filter     %/simulation%,$(PACKAGES))
 
-TEST_PACKAGES=./...
-TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
+TEST_PACKAGES ?= ./...
+TEST_TARGETS := test-unit test-unit-proto test-ledger-mock test-race test-ledger build-tests
 
 # Test runs-specific rules. To add a new test target, just add
 # a new rule, customise TAGS, ARGS and/or TEST_PACKAGES ad libitum, and
 # append the new rule to the TEST_TARGETS list.
 test-unit: TAGS+=cgo ledger test_ledger_mock norace
-test-unit-amino: TAGS+=ledger test_ledger_mock test_amino norace
+build-tests: TAGS+=cgo ledger test_ledger_mock norace
+build-tests: ARGS+=-run='ZYX_NOPE_NOPE_XYZ'
 test-ledger: TAGS+=cgo ledger norace
 test-ledger-mock: TAGS+=ledger test_ledger_mock norace
 test-race: ARGS+=-race
 test-race: TAGS+=cgo ledger test_ledger_mock
 test-race: TEST_PACKAGES=$(PACKAGES_NOSIMULATION)
 $(TEST_TARGETS): run-tests
-
-# check-* compiles and collects tests without running them
-# note: go test -c doesn't support multiple packages yet (https://github.com/golang/go/issues/15513)
-CHECK_TEST_TARGETS := check-test-unit check-test-unit-amino
-check-test-unit: TAGS+=cgo ledger test_ledger_mock norace
-check-test-unit-amino: TAGS+=ledger test_ledger_mock test_amino norace
-$(CHECK_TEST_TARGETS): ARGS+=-run=none
-$(CHECK_TEST_TARGETS): run-tests
 
 run-tests: go.sum
 ifneq (,$(shell which tparse 2>/dev/null))
@@ -360,20 +353,13 @@ else
 	$(GO) test -mod=readonly $(ARGS) -tags='$(TAGS)' $(TEST_PACKAGES)
 endif
 
-build-tests: go.sum
-ifneq (,$(shell which tparse 2>/dev/null))
-	$(GO) test -mod=readonly -json $(ARGS) -tags='$(TAGS)' -run='ZYX_NOPE_NOPE_XYZ' $(TEST_PACKAGES) | tparse
-else
-	$(GO) test -mod=readonly $(ARGS) -tags='$(TAGS)' -run='ZYX_NOPE_NOPE_XYZ' $(TEST_PACKAGES)
-endif
-
 test-cover:
 	export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 
 benchmark:
 	$(GO) test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 
-.PHONY: test test-all test-unit test-race test-cover benchmark run-tests build-tests $(TEST_TARGETS)
+.PHONY: test test-all test-cover benchmark run-tests build-tests $(TEST_TARGETS)
 
 ##############################
 # Test Network Targets

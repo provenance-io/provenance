@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add store for crisis module for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Add PreBlocker support for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Add the Sanction module back in [#1922](https://github.com/provenance-io/provenance/pull/1922).
+* Add the Quarantine module back in [#1926](https://github.com/provenance-io/provenance/pull/1926).
 
 ### Improvements
 
@@ -54,6 +55,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump the SDK to `v0.50.5-pio-1` (from an earlier ephemeral version) [#1897](https://github.com/provenance-io/provenance/pull/1897).
 * Removed `rewards` module [#1905](https://github.com/provenance-io/provenance/pull/1905).
 * Remove unused navs [#1920](https://github.com/provenance-io/provenance/issues/1920).
+* Remove emitting of EventTypeMessage [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Update genutil for sdk 50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Migrate module params from param space to module store.
+  *  Attribute module param migration [#1927](https://github.com/provenance-io/provenance/pull/1927)
+  *  Marker module param migration [#1934](https://github.com/provenance-io/provenance/pull/1934)
+  *  Metadata module param migration [#1932](https://github.com/provenance-io/provenance/pull/1932)
+* Restore the hold module [#1930](https://github.com/provenance-io/provenance/pull/1930).
+* Restore gov-prop cli commands and fix next key decoding [#1930](https://github.com/provenance-io/provenance/pull/1930).
+* Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
 
 ### Dependencies
 

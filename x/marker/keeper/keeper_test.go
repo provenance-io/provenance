@@ -14,8 +14,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 
-	// "github.com/cosmos/cosmos-sdk/x/quarantine" // TODO[1760]: quarantine
-
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -26,7 +24,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	simapp "github.com/provenance-io/provenance/app"
@@ -34,6 +31,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/quarantine"
 )
 
 func TestAccountMapperGetSet(t *testing.T) {
@@ -2885,7 +2883,7 @@ func TestReqAttrBypassAddrs(t *testing.T) {
 	// Tests both GetReqAttrBypassAddrs and IsReqAttrBypassAddr.
 	expectedNames := []string{
 		authtypes.FeeCollectorName,
-		// quarantine.ModuleName, // TODO[1760]: quarantine
+		quarantine.ModuleName,
 		govtypes.ModuleName,
 		distrtypes.ModuleName,
 		stakingtypes.BondedPoolName,
@@ -3030,7 +3028,7 @@ func TestBypassAddrsLocked(t *testing.T) {
 		sdk.AccAddress("addrs[4]____________"),
 	}
 
-	mk := markerkeeper.NewKeeper(nil, nil, paramtypes.NewSubspace(nil, nil, nil, nil, "test"), nil, &dummyBankKeeper{}, nil, nil, nil, nil, nil, addrs, nil)
+	mk := markerkeeper.NewKeeper(nil, nil, nil, &dummyBankKeeper{}, nil, nil, nil, nil, nil, addrs, nil)
 
 	// Now that the keeper has been created using the provided addresses, change the first byte of
 	// the first address to something else. Then, get the addresses back from the keeper and make

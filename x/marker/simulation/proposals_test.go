@@ -32,7 +32,6 @@ func TestProposalContents(t *testing.T) {
 		keeper.NewKeeper(
 			app.AppCodec(),
 			app.GetKey(types.ModuleName),
-			app.GetSubspace(types.ModuleName),
 			app.AccountKeeper,
 			app.BankKeeper,
 			app.AuthzKeeper,
