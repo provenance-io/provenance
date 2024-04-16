@@ -143,9 +143,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 
 // WeightedOperations returns simulation operations (i.e msgs) with their respective weight
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.keeper, am.accountKeeper, am.bankKeeper,
-	)
+	return simulation.WeightedOperations(simState, am.keeper, am.accountKeeper, am.bankKeeper)
 }
 
 // Name returns the trigger module's name.

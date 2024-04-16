@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -227,11 +228,19 @@ func (s *SimTestSuite) requireSanctionAddresses(addrs []sdk.AccAddress) {
 	})
 }
 
+// MakeTestSimState creates a new module.SimulationState struct with the fields needed by the functions being tested.
+func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
+	return module.SimulationState{
+		AppParams: make(simtypes.AppParams),
+		Cdc:       s.app.AppCodec(),
+		TxConfig:  s.app.GetTxConfig(),
+	}
+}
+
 // getWeightedOpsArgs creates a standard WeightedOpsArgs.
 func (s *SimTestSuite) getWeightedOpsArgs() simulation.WeightedOpsArgs {
 	return simulation.WeightedOpsArgs{
-		AppParams:  make(simtypes.AppParams),
-		JSONCodec:  s.app.AppCodec(),
+		SimState:   s.MakeTestSimState(),
 		ProtoCodec: codec.NewProtoCodec(s.app.InterfaceRegistry()),
 		AK:         s.app.AccountKeeper,
 		BK:         s.app.BankKeeper,
@@ -259,7 +268,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	}
 
 	weightedOps := simulation.WeightedOperations(
-		make(simtypes.AppParams), s.app.AppCodec(), codec.NewProtoCodec(s.app.InterfaceRegistry()),
+		s.MakeTestSimState(), codec.NewProtoCodec(s.app.InterfaceRegistry()),
 		s.app.AccountKeeper, s.app.BankKeeper, s.app.GovKeeper, s.app.SanctionKeeper,
 	)
 

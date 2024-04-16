@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"testing"
 
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -16,7 +18,6 @@ import (
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/provenance-io/provenance/x/ibcratelimit/simulation"
-	"github.com/provenance-io/provenance/x/trigger/types"
 )
 
 type SimTestSuite struct {
@@ -24,6 +25,10 @@ type SimTestSuite struct {
 
 	ctx sdk.Context
 	app *app.App
+}
+
+func TestSimTestSuite(t *testing.T) {
+	suite.Run(t, new(SimTestSuite))
 }
 
 func (s *SimTestSuite) SetupTest() {
@@ -50,11 +55,17 @@ func (s *SimTestSuite) LogOperationMsg(operationMsg simtypes.OperationMsg, msg s
 	)
 }
 
-func (s *SimTestSuite) TestWeightedOperations() {
-	cdc := s.app.AppCodec()
-	appParams := make(simtypes.AppParams)
+// MakeTestSimState creates a new module.SimulationState struct with the fields needed by the functions being tested.
+func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
+	return module.SimulationState{
+		AppParams: make(simtypes.AppParams),
+		Cdc:       s.app.AppCodec(),
+		TxConfig:  s.app.GetTxConfig(),
+	}
+}
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, *s.app.RateLimitingKeeper,
+func (s *SimTestSuite) TestWeightedOperations() {
+	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), *s.app.RateLimitingKeeper,
 		s.app.AccountKeeper, s.app.BankKeeper,
 	)
 
@@ -68,7 +79,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightGovUpdateParams, sdk.MsgTypeURL(&ibcratelimit.MsgGovUpdateParamsRequest{}), sdk.MsgTypeURL(&ibcratelimit.MsgGovUpdateParamsRequest{})},
+		{simappparams.DefaultWeightGovUpdateParams, ibcratelimit.ModuleName, sdk.MsgTypeURL(&ibcratelimit.MsgGovUpdateParamsRequest{})},
 	}
 
 	expNames := make([]string, len(expected))
@@ -103,7 +114,7 @@ func (s *SimTestSuite) TestSimulateMsgGovUpdateParams() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// execute operation
-	op := simulation.SimulateMsgGovUpdateParams(*s.app.RateLimitingKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgGovUpdateParams(s.MakeTestSimState(), *s.app.RateLimitingKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgGovUpdateParams op(...) error")
 	s.LogOperationMsg(operationMsg, "good")
@@ -113,7 +124,7 @@ func (s *SimTestSuite) TestSimulateMsgGovUpdateParams() {
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(types.RouterKey, operationMsg.Route, "operationMsg.Route")
+	s.Assert().Equal(ibcratelimit.ModuleName, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 

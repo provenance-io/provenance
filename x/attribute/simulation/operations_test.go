@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -24,6 +25,10 @@ type SimTestSuite struct {
 
 	ctx sdk.Context
 	app *app.App
+}
+
+func TestSimTestSuite(t *testing.T) {
+	suite.Run(t, new(SimTestSuite))
 }
 
 func (s *SimTestSuite) SetupTest() {
@@ -58,11 +63,17 @@ func (s *SimTestSuite) LogIfError(err error, format string, args ...interface{})
 	}
 }
 
-func (s *SimTestSuite) TestWeightedOperations() {
-	cdc := s.app.AppCodec()
-	appParams := make(simtypes.AppParams)
+// MakeTestSimState creates a new module.SimulationState struct with the fields needed by the functions being tested.
+func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
+	return module.SimulationState{
+		AppParams: make(simtypes.AppParams),
+		Cdc:       s.app.AppCodec(),
+		TxConfig:  s.app.GetTxConfig(),
+	}
+}
 
-	weightedOps := simulation.WeightedOperations(appParams, cdc, s.app.AttributeKeeper,
+func (s *SimTestSuite) TestWeightedOperations() {
+	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), s.app.AttributeKeeper,
 		s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper,
 	)
 
@@ -120,7 +131,7 @@ func (s *SimTestSuite) TestSimulateMsgAddAttribute() {
 	s.LogIfError(s.app.NameKeeper.SetNameRecord(s.ctx, name, accounts[0].Address, false), "SetNameRecord(%q) error", name)
 
 	// execute operation
-	op := simulation.SimulateMsgAddAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
+	op := simulation.SimulateMsgAddAttribute(s.MakeTestSimState(), s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgAddAttribute op(...) error")
 	s.LogOperationMsg(operationMsg)
@@ -152,7 +163,7 @@ func (s *SimTestSuite) TestSimulateMsgUpdateAttribute() {
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 
 	// execute operation
-	op := simulation.SimulateMsgUpdateAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
+	op := simulation.SimulateMsgUpdateAttribute(s.MakeTestSimState(), s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgUpdateAttribute op(...) error")
 	s.LogOperationMsg(operationMsg)
@@ -182,7 +193,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 
 	// execute operation
-	op := simulation.SimulateMsgDeleteAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
+	op := simulation.SimulateMsgDeleteAttribute(s.MakeTestSimState(), s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgDeleteAttribute op(...) error")
 	s.LogOperationMsg(operationMsg)
@@ -212,7 +223,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	s.LogIfError(s.app.AttributeKeeper.SetAttribute(s.ctx, attr, accounts[0].Address), "SetAttribute(%q) error", name)
 
 	// execute operation
-	op := simulation.SimulateMsgDeleteDistinctAttribute(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
+	op := simulation.SimulateMsgDeleteDistinctAttribute(s.MakeTestSimState(), s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.NameKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgDeleteDistinctAttribute op(...) error")
 	s.LogOperationMsg(operationMsg)
@@ -236,7 +247,7 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// execute operation
-	op := simulation.SimulateMsgSetAccountData(s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgSetAccountData(s.MakeTestSimState(), s.app.AttributeKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgDeleteDistinctAttribute op(...) error")
 	s.LogOperationMsg(operationMsg)
@@ -279,8 +290,4 @@ func GenerateRandomTime(minHours int) time.Time {
 	randomTime := currentTime.Add(randomDuration)
 
 	return randomTime
-}
-
-func TestSimTestSuite(t *testing.T) {
-	suite.Run(t, new(SimTestSuite))
 }

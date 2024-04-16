@@ -194,7 +194,7 @@ func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the marker module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, codec.NewProtoCodec(am.registry),
+		simState, codec.NewProtoCodec(am.registry),
 		am.keeper, am.accountKeeper, am.bankKeeper, am.govKeeper, am.attrKeeper,
 	)
 }

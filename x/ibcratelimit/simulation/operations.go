@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"math/rand"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -31,34 +30,28 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper,
+	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgUpdateParams int
+		wMsgUpdateParams int
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateParams = simappparams.DefaultWeightGovUpdateParams
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateParams, &wMsgUpdateParams, nil,
+		func(_ *rand.Rand) { wMsgUpdateParams = simappparams.DefaultWeightGovUpdateParams })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgUpdateParams,
-			SimulateMsgGovUpdateParams(k, ak, bk),
-		),
+		simulation.NewWeightedOperation(wMsgUpdateParams, SimulateMsgGovUpdateParams(simState, k, ak, bk)),
 	}
 }
 
 // SimulateMsgGovUpdateParams sends a MsgUpdateParams.
-func SimulateMsgGovUpdateParams(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgGovUpdateParams(simState module.SimulationState, _ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		raccs, err := RandomAccs(r, accs, uint64(len(accs)))
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&ibcratelimit.MsgGovUpdateParamsRequest{}), sdk.MsgTypeURL(&ibcratelimit.MsgGovUpdateParamsRequest{}), err.Error()), nil, nil
+			return simtypes.NoOpMsg(ibcratelimit.ModuleName, sdk.MsgTypeURL(&ibcratelimit.MsgGovUpdateParamsRequest{}), err.Error()), nil, nil
 		}
 
 		// 50% chance to be from the module's authority
@@ -67,7 +60,8 @@ func SimulateMsgGovUpdateParams(_ keeper.Keeper, ak authkeeper.AccountKeeperI, b
 
 		msg := ibcratelimit.NewMsgGovUpdateParamsRequest(from.Address.String(), to.Address.String())
 
-		return Dispatch(r, app, ctx, from, chainID, msg, ak, bk, nil)
+		// TODO[1760]: Refactor this to submit it as a gov prop and return futures for votes.
+		return Dispatch(r, app, ctx, simState, from, chainID, msg, ak, bk, nil)
 	}
 }
 
@@ -77,6 +71,7 @@ func Dispatch(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
 	ctx sdk.Context,
+	simState module.SimulationState,
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
@@ -93,19 +88,19 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(ibcratelimit.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 	err = testutil.FundAccount(ctx, bk, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 		Denom:  pioconfig.GetProvenanceConfig().BondDenom,
 		Amount: sdkmath.NewInt(1_000_000_000_000_000),
 	}))
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account"), nil, err
+		return simtypes.NoOpMsg(ibcratelimit.ModuleName, sdk.MsgTypeURL(msg), "unable to fund account"), nil, err
 	}
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
-		txGen,
+		simState.TxConfig,
 		[]sdk.Msg{msg},
 		fees,
 		simtestutil.DefaultGenTxGas,
@@ -115,12 +110,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(ibcratelimit.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(ibcratelimit.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, ""), futures, nil

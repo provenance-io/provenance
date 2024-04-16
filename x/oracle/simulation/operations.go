@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"math/rand"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -34,44 +33,32 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, ck channelkeeper.Keeper,
+	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, ck channelkeeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgUpdateOracle    int
-		weightMsgSendOracleQuery int
+		wMsgUpdateOracle    int
+		wMsgSendOracleQuery int
 	)
 
-	appParams.GetOrGenerate(OpWeightMsgUpdateOracle, &weightMsgUpdateOracle, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateOracle = simappparams.DefaultWeightUpdateOracle
-		},
-	)
-	appParams.GetOrGenerate(OpWeightMsgSendOracleQuery, &weightMsgSendOracleQuery, nil,
-		func(_ *rand.Rand) {
-			weightMsgSendOracleQuery = simappparams.DefaultWeightSendOracleQuery
-		},
-	)
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateOracle, &wMsgUpdateOracle, nil,
+		func(_ *rand.Rand) { wMsgUpdateOracle = simappparams.DefaultWeightUpdateOracle })
+	simState.AppParams.GetOrGenerate(OpWeightMsgSendOracleQuery, &wMsgSendOracleQuery, nil,
+		func(_ *rand.Rand) { wMsgSendOracleQuery = simappparams.DefaultWeightSendOracleQuery })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(
-			weightMsgUpdateOracle,
-			SimulateMsgUpdateOracle(k, ak, bk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgSendOracleQuery,
-			SimulateMsgSendQueryOracle(k, ak, bk, ck),
-		),
+		simulation.NewWeightedOperation(wMsgUpdateOracle, SimulateMsgUpdateOracle(simState, k, ak, bk)),
+		simulation.NewWeightedOperation(wMsgSendOracleQuery, SimulateMsgSendQueryOracle(simState, k, ak, bk, ck)),
 	}
 }
 
 // SimulateMsgUpdateOracle sends a MsgUpdateOracle.
-func SimulateMsgUpdateOracle(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+func SimulateMsgUpdateOracle(simState module.SimulationState, _ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		raccs, err := RandomAccs(r, accs, uint64(len(accs)))
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{}), sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{}), err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{}), err.Error()), nil, nil
 		}
 
 		// 50% chance to be from the module's authority
@@ -80,30 +67,30 @@ func SimulateMsgUpdateOracle(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk b
 
 		msg := types.NewMsgUpdateOracle(from.Address.String(), to.Address.String())
 
-		return Dispatch(r, app, ctx, from, chainID, msg, ak, bk, nil)
+		return Dispatch(r, app, ctx, simState, from, chainID, msg, ak, bk, nil)
 	}
 }
 
 // SimulateMsgSendQueryOracle sends a MsgSendQueryOracle.
-func SimulateMsgSendQueryOracle(_ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, ck channelkeeper.Keeper) simtypes.Operation {
+func SimulateMsgSendQueryOracle(simState module.SimulationState, _ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, ck channelkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		raccs, err := RandomAccs(r, accs, 1)
 
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil
 		}
 		addr := raccs[0]
 
 		channel, err := randomChannel(r, ctx, ck)
 		if err != nil {
-			return simtypes.NoOpMsg(sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil
 		}
 		query := randomQuery(r)
 
 		msg := types.NewMsgSendQueryOracle(addr.Address.String(), channel, query)
-		return Dispatch(r, app, ctx, addr, chainID, msg, ak, bk, nil)
+		return Dispatch(r, app, ctx, simState, addr, chainID, msg, ak, bk, nil)
 	}
 }
 
@@ -113,6 +100,7 @@ func Dispatch(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
 	ctx sdk.Context,
+	simState module.SimulationState,
 	from simtypes.Account,
 	chainID string,
 	msg sdk.Msg,
@@ -129,19 +117,19 @@ func Dispatch(
 
 	fees, err := simtypes.RandomFees(r, ctx, spendable)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 	}
 	err = testutil.FundAccount(ctx, bk, account.GetAddress(), sdk.NewCoins(sdk.Coin{
 		Denom:  pioconfig.GetProvenanceConfig().BondDenom,
 		Amount: sdkmath.NewInt(1_000_000_000_000_000),
 	}))
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to fund account"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to fund account"), nil, err
 	}
-	txGen := simappparams.MakeTestEncodingConfig().TxConfig
+
 	tx, err := simtestutil.GenSignedMockTx(
 		r,
-		txGen,
+		simState.TxConfig,
 		[]sdk.Msg{msg},
 		fees,
 		simtestutil.DefaultGenTxGas,
@@ -151,12 +139,12 @@ func Dispatch(
 		from.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 	}
 
 	return simtypes.NewOperationMsg(msg, true, ""), futures, nil

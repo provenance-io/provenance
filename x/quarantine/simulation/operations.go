@@ -5,15 +5,13 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/quarantine"
 	"github.com/provenance-io/provenance/x/quarantine/keeper"
 )
@@ -47,39 +45,38 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, _ codec.JSONCodec,
-	ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper, _ cdctypes.AnyUnpacker,
+	simState module.SimulationState, ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
-		weightMsgOptIn               int
-		weightMsgOptOut              int
-		weightMsgAccept              int
-		weightMsgDecline             int
-		weightMsgUpdateAutoResponses int
+		wMsgOptIn               int
+		wMsgOptOut              int
+		wMsgAccept              int
+		wMsgDecline             int
+		wMsgUpdateAutoResponses int
 	)
 
-	appParams.GetOrGenerate(OpMsgOptIn, &weightMsgOptIn, nil,
-		func(_ *rand.Rand) { weightMsgOptIn = WeightMsgOptIn })
-	appParams.GetOrGenerate(OpMsgOptOut, &weightMsgOptOut, nil,
-		func(_ *rand.Rand) { weightMsgOptOut = WeightMsgOptOut })
-	appParams.GetOrGenerate(OpMsgAccept, &weightMsgAccept, nil,
-		func(_ *rand.Rand) { weightMsgAccept = WeightMsgAccept })
-	appParams.GetOrGenerate(OpMsgDecline, &weightMsgDecline, nil,
-		func(_ *rand.Rand) { weightMsgDecline = WeightMsgDecline })
-	appParams.GetOrGenerate(OpMsgUpdateAutoResponses, &weightMsgUpdateAutoResponses, nil,
-		func(_ *rand.Rand) { weightMsgUpdateAutoResponses = WeightMsgUpdateAutoResponses })
+	simState.AppParams.GetOrGenerate(OpMsgOptIn, &wMsgOptIn, nil,
+		func(_ *rand.Rand) { wMsgOptIn = WeightMsgOptIn })
+	simState.AppParams.GetOrGenerate(OpMsgOptOut, &wMsgOptOut, nil,
+		func(_ *rand.Rand) { wMsgOptOut = WeightMsgOptOut })
+	simState.AppParams.GetOrGenerate(OpMsgAccept, &wMsgAccept, nil,
+		func(_ *rand.Rand) { wMsgAccept = WeightMsgAccept })
+	simState.AppParams.GetOrGenerate(OpMsgDecline, &wMsgDecline, nil,
+		func(_ *rand.Rand) { wMsgDecline = WeightMsgDecline })
+	simState.AppParams.GetOrGenerate(OpMsgUpdateAutoResponses, &wMsgUpdateAutoResponses, nil,
+		func(_ *rand.Rand) { wMsgUpdateAutoResponses = WeightMsgUpdateAutoResponses })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(weightMsgOptIn, SimulateMsgOptIn(ak, bk)),
-		simulation.NewWeightedOperation(weightMsgOptOut, SimulateMsgOptOut(ak, bk, k)),
-		simulation.NewWeightedOperation(weightMsgAccept, SimulateMsgAccept(ak, bk, k)),
-		simulation.NewWeightedOperation(weightMsgDecline, SimulateMsgDecline(ak, bk, k)),
-		simulation.NewWeightedOperation(weightMsgUpdateAutoResponses, SimulateMsgUpdateAutoResponses(ak, bk, k)),
+		simulation.NewWeightedOperation(wMsgOptIn, SimulateMsgOptIn(simState, ak, bk)),
+		simulation.NewWeightedOperation(wMsgOptOut, SimulateMsgOptOut(simState, ak, bk, k)),
+		simulation.NewWeightedOperation(wMsgAccept, SimulateMsgAccept(simState, ak, bk, k)),
+		simulation.NewWeightedOperation(wMsgDecline, SimulateMsgDecline(simState, ak, bk, k)),
+		simulation.NewWeightedOperation(wMsgUpdateAutoResponses, SimulateMsgUpdateAutoResponses(simState, ak, bk, k)),
 	}
 }
 
 // SimulateMsgOptIn opts an account into quarantine.
-func SimulateMsgOptIn(ak quarantine.AccountKeeper, bk quarantine.BankKeeper) simtypes.Operation {
+func SimulateMsgOptIn(simState module.SimulationState, ak quarantine.AccountKeeper, bk quarantine.BankKeeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -98,10 +95,9 @@ func SimulateMsgOptIn(ak quarantine.AccountKeeper, bk quarantine.BankKeeper) sim
 
 		account := ak.GetAccount(ctx, acct.Address)
 
-		encCfg := simappparams.MakeTestEncodingConfig()
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
-			encCfg.TxConfig,
+			simState.TxConfig,
 			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
@@ -114,7 +110,7 @@ func SimulateMsgOptIn(ak quarantine.AccountKeeper, bk quarantine.BankKeeper) sim
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx)
+		_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to deliver tx"), nil, err
 		}
@@ -124,7 +120,7 @@ func SimulateMsgOptIn(ak quarantine.AccountKeeper, bk quarantine.BankKeeper) sim
 }
 
 // SimulateMsgOptOut opts an account out of quarantine.
-func SimulateMsgOptOut(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgOptOut(simState module.SimulationState, ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -161,10 +157,9 @@ func SimulateMsgOptOut(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 
 		account := ak.GetAccount(ctx, acct.Address)
 
-		encCfg := simappparams.MakeTestEncodingConfig()
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
-			encCfg.TxConfig,
+			simState.TxConfig,
 			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
@@ -177,7 +172,7 @@ func SimulateMsgOptOut(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx)
+		_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to deliver tx"), nil, err
 		}
@@ -187,7 +182,7 @@ func SimulateMsgOptOut(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 }
 
 // SimulateMsgAccept accepts quarantined funds.
-func SimulateMsgAccept(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgAccept(simState module.SimulationState, ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -234,10 +229,9 @@ func SimulateMsgAccept(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 
 		account := ak.GetAccount(ctx, acct.Address)
 
-		encCfg := simappparams.MakeTestEncodingConfig()
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
-			encCfg.TxConfig,
+			simState.TxConfig,
 			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
@@ -250,7 +244,7 @@ func SimulateMsgAccept(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx)
+		_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to deliver tx"), nil, err
 		}
@@ -260,7 +254,7 @@ func SimulateMsgAccept(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k 
 }
 
 // SimulateMsgDecline declines quarantined funds.
-func SimulateMsgDecline(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgDecline(simState module.SimulationState, ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -307,10 +301,9 @@ func SimulateMsgDecline(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k
 
 		account := ak.GetAccount(ctx, acct.Address)
 
-		encCfg := simappparams.MakeTestEncodingConfig()
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
-			encCfg.TxConfig,
+			simState.TxConfig,
 			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
@@ -323,7 +316,7 @@ func SimulateMsgDecline(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx)
+		_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to deliver tx"), nil, err
 		}
@@ -333,7 +326,7 @@ func SimulateMsgDecline(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k
 }
 
 // SimulateMsgUpdateAutoResponses updates an accounts auto-responses
-func SimulateMsgUpdateAutoResponses(ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgUpdateAutoResponses(simState module.SimulationState, ak quarantine.AccountKeeper, bk quarantine.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -391,10 +384,9 @@ func SimulateMsgUpdateAutoResponses(ak quarantine.AccountKeeper, bk quarantine.B
 
 		account := ak.GetAccount(ctx, acct.Address)
 
-		encCfg := simappparams.MakeTestEncodingConfig()
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
-			encCfg.TxConfig,
+			simState.TxConfig,
 			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
@@ -407,7 +399,7 @@ func SimulateMsgUpdateAutoResponses(ak quarantine.AccountKeeper, bk quarantine.B
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.SimDeliver(encCfg.TxConfig.TxEncoder(), tx)
+		_, _, err = app.SimDeliver(simState.TxConfig.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(quarantine.ModuleName, msgType, "unable to deliver tx"), nil, err
 		}

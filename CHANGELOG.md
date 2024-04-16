@@ -64,6 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Restore the hold module [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Restore gov-prop cli commands and fix next key decoding [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
+* Use fields of the SimulationState for the encoders needed for simulations [#1931](https://github.com/provenance-io/provenance/pull/1931).
 
 ### Dependencies
 
