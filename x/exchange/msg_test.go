@@ -179,7 +179,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			smsg, ok := tc.msg.(HasGetSigners)
-			require.True(t, ok, "%T does not have a .GetSigners method.")
+			require.True(t, ok, "%T does not have a .GetSigners method.", tc.msg)
 
 			var signers []sdk.AccAddress
 			testFunc := func() {

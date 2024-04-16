@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/x/tx/signing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -844,4 +846,31 @@ func (m MsgGovUpdateParamsRequest) ValidateBasic() error {
 func (m MsgGovUpdateParamsRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}
+}
+
+// DefineCustomGetSigners registers all the exchange module custom GetSigners functions with the provided signing options.
+func DefineCustomGetSigners(options *signing.Options) {
+	// TODO[1760]: Uncomment this once we figure out how to make our msgs have the ProtoReflect method.
+	// options.DefineCustomGetSigners(proto.MessageName(&MsgCreatePaymentRequest{}), func(msg proto.Message) ([][]byte, error) {
+	// 	msgCP, ok := msg.(*MsgCreatePaymentRequest)
+	// 	if !ok {
+	// 		return nil, fmt.Errorf("incorrect message type, actual: %T, expected: %T", msg, &MsgCreatePaymentRequest{})
+	// 	}
+	// 	addr, err := options.AddressCodec.StringToBytes(msgCP.Payment.Source)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	return [][]byte{addr}, nil
+	// })
+	// options.DefineCustomGetSigners(proto.MessageName(&MsgAcceptPaymentRequest{}), func(msg proto.Message) ([][]byte, error) {
+	// 	msgCP, ok := msg.(*MsgAcceptPaymentRequest)
+	// 	if !ok {
+	// 		return nil, fmt.Errorf("incorrect message type, actual: %T, expected: %T", msg, &MsgAcceptPaymentRequest{})
+	// 	}
+	// 	addr, err := options.AddressCodec.StringToBytes(msgCP.Payment.Target)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	return [][]byte{addr}, nil
+	// })
 }
