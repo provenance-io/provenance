@@ -24,9 +24,6 @@ type Handler func(record types.Attribute) error
 
 // Keeper defines the attribute module Keeper
 type Keeper struct {
-	// The reference to the Paramstore to get and set attribute specific params
-	paramSpace paramtypes.Subspace
-
 	// Used to ensure accounts exist for addresses.
 	authKeeper types.AccountKeeper
 	// The keeper used for ensuring names resolve to owners.
@@ -51,13 +48,8 @@ func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
 	authKeeper types.AccountKeeper, nameKeeper types.NameKeeper,
 ) Keeper {
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
 	keeper := Keeper{
 		storeKey:   key,
-		paramSpace: paramSpace,
 		authKeeper: authKeeper,
 		nameKeeper: nameKeeper,
 		cdc:        cdc,
