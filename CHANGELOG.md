@@ -58,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update genutil for sdk 50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Migrate module params from param space to module store.
   *  Attribute module param migration [#1927](https://github.com/provenance-io/provenance/pull/1927)
+  *  Marker module param migration [#1934](https://github.com/provenance-io/provenance/pull/1934)
   *  Metadata module param migration [#1932](https://github.com/provenance-io/provenance/pull/1932)
 
 ### Dependencies
