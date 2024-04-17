@@ -53,24 +53,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GetParams returns the total set of the module's parameters.
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.IbcHooksParamStoreKey)
-	if bz == nil {
-		return types.DefaultParams()
-	}
-	k.cdc.MustUnmarshal(bz, &params)
-	return params
-}
-
-// SetParams sets the module's parameters with the provided parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&params)
-	store.Set(types.IbcHooksParamStoreKey, bz)
-}
-
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 }
