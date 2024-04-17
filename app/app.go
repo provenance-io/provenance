@@ -508,8 +508,8 @@ func New(
 
 	// Configure the hooks keeper
 	hooksKeeper := ibchookskeeper.NewKeeper(
+		appCodec,
 		keys[ibchookstypes.StoreKey],
-		app.GetSubspace(ibchookstypes.ModuleName),
 		app.IBCKeeper.ChannelKeeper,
 		nil,
 	)
@@ -1373,8 +1373,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
 	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
 
-	paramsKeeper.Subspace(icqtypes.ModuleName)      // TODO[1760]: params: Migrate icq params.
-	paramsKeeper.Subspace(ibchookstypes.ModuleName) // TODO[1760]: params: Migrate ibc-hooks params.
+	paramsKeeper.Subspace(icqtypes.ModuleName) // TODO[1760]: params: Migrate icq params.
 
 	return paramsKeeper
 }

@@ -15,3 +15,7 @@ const (
 
 	SenderPrefix = "ibc-wasm-hook-intermediary"
 )
+
+var (
+	ParamStoreKey = []byte{0x01}
+)
