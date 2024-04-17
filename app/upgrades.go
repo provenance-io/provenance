@@ -401,6 +401,7 @@ func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
 }
 
 // migrateMsgFeesParams migrates to new MsgFees Params store
+// TODO: Remove with the umber handlers.
 func migrateMsgFeesParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Migrating msgfees params.")
 	msgFeesParamSpace := app.ParamsKeeper.Subspace(msgfeestypes.ModuleName).WithKeyTable(msgfeestypes.ParamKeyTable())
