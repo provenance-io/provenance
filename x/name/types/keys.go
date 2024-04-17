@@ -25,6 +25,8 @@ var (
 	NameKeyPrefix = []byte{0x03}
 	// AddressKeyPrefix is a prefix added to keys for indexing name records by address.
 	AddressKeyPrefix = []byte{0x05}
+	// ParamsStoreKey key for marker module's params
+	ParamStoreKey = []byte{0x06}
 )
 
 // GetNameKeyPrefix converts a name into key format.
