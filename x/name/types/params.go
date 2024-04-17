@@ -10,7 +10,7 @@ import (
 const (
 	DefaultMinSegmentLength       = uint32(2)
 	DefaultMaxSegmentLength       = uint32(32)
-	DefaultMaxSegments            = uint32(16)
+	DefaultMaxNameLevels          = uint32(16)
 	DefaultAllowUnrestrictedNames = true
 )
 
@@ -61,7 +61,7 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultMaxSegmentLength,
 		DefaultMinSegmentLength,
-		DefaultMaxSegments,
+		DefaultMaxNameLevels,
 		DefaultAllowUnrestrictedNames,
 	)
 }
