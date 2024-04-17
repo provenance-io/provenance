@@ -145,7 +145,7 @@ linters-settings:
       - blank
       - dot
   govet:
-    check-shadowing: true
+    shadow: true
     settings:
       printf:
         funcs:
