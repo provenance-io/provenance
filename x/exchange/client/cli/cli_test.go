@@ -77,6 +77,7 @@ func TestCmdTestSuite(t *testing.T) {
 func (s *CmdTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	pioconfig.SetProvenanceConfig("", 0)
+	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.NumValidators = 1
 	s.cfg.ChainID = antewrapper.SimAppChainID
@@ -606,6 +607,7 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 
 		if len(tc.expInErr) == 0 && err == nil {
 			resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
+			txResponse = &resp
 			s.Assert().Equal(int(tc.expectedCode), int(resp.Code), "response code")
 			for _, exp := range tc.expInRawLog {
 				s.Assert().Contains(resp.RawLog, exp, "TxResponse.RawLog should contain:\n%q", exp)
@@ -1194,6 +1196,7 @@ func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 func (s *CmdTestSuite) untypeEvent(tev proto.Message) sdk.Event {
 	rv, err := sdk.TypedEventToEvent(tev)
 	s.Require().NoError(err, "TypedEventToEvent(%T)", tev)
+	rv.Attributes = append(rv.Attributes, abci.EventAttribute{Key: "msg_index", Value: "0", Index: true})
 	return rv
 }
 
