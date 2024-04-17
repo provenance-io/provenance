@@ -15,7 +15,6 @@ import (
 	cosmosauthtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -28,7 +27,6 @@ type baseAppSimulateFunc func(txBytes []byte) (sdk.GasInfo, *sdk.Result, sdk.Con
 type Keeper struct {
 	storeKey         storetypes.StoreKey
 	cdc              codec.BinaryCodec
-	paramSpace       paramtypes.Subspace
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 	defaultFeeDenom  string
 	simulateFunc     baseAppSimulateFunc
@@ -42,21 +40,15 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
-	paramSpace paramtypes.Subspace,
 	feeCollectorName string,
 	defaultFeeDenom string,
 	simulateFunc baseAppSimulateFunc,
 	txDecoder sdk.TxDecoder,
 	registry cdctypes.InterfaceRegistry,
 ) Keeper {
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return Keeper{
 		storeKey:         key,
 		cdc:              cdc,
-		paramSpace:       paramSpace,
 		feeCollectorName: feeCollectorName,
 		defaultFeeDenom:  defaultFeeDenom,
 		simulateFunc:     simulateFunc,
@@ -78,41 +70,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) GetFeeCollectorName() string {
 	return k.feeCollectorName
-}
-
-// GetFloorGasPrice returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
-func (k Keeper) GetFloorGasPrice(ctx sdk.Context) sdk.Coin {
-	min := types.DefaultFloorGasPrice()
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyFloorGasPrice) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyFloorGasPrice, &min)
-	}
-	return min
-}
-
-// GetNhashPerUsdMil returns the current nhash amount per usd mil.
-//
-// Conversions:
-//   - x nhash/usd-mil = 1,000,000/x usd/hash
-//   - y usd/hash = 1,000,000/y nhash/usd-mil
-//
-// Examples:
-//   - 40,000,000 nhash/usd-mil = 1,000,000/40,000,000 usd/hash = $0.025/hash,
-//   - $0.040/hash = 1,000,000/0.040 nhash/usd-mil = 25,000,000 nhash/usd-mil
-func (k Keeper) GetNhashPerUsdMil(ctx sdk.Context) uint64 {
-	rateInMils := types.DefaultParams().NhashPerUsdMil
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyNhashPerUsdMil) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyNhashPerUsdMil, &rateInMils)
-	}
-	return rateInMils
-}
-
-// GetConversionFeeDenom returns the conversion fee denom
-func (k Keeper) GetConversionFeeDenom(ctx sdk.Context) string {
-	conversionFeeDenom := types.DefaultParams().ConversionFeeDenom
-	if k.paramSpace.Has(ctx, types.ParamStoreKeyConversionFeeDenom) {
-		k.paramSpace.Get(ctx, types.ParamStoreKeyConversionFeeDenom, &conversionFeeDenom)
-	}
-	return conversionFeeDenom
 }
 
 // SetMsgFee sets the additional fee schedule for a Msg

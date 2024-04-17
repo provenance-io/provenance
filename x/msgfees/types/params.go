@@ -22,6 +22,7 @@ func DefaultFloorGasPrice() sdk.Coin {
 
 var DefaultNhashPerUsdMil = uint64(25_000_000)
 
+// TODO: remove with the umber (v1.19.x) handlers.
 var (
 	// ParamStoreKeyFloorGasPrice if msg fees are paid in the same denom as base default gas is paid, then use this to differentiate between base price
 	// and additional fees.
