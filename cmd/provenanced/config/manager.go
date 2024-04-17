@@ -6,9 +6,10 @@ import (
 	"os"
 	"time"
 
-	cmtconfig "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	cmtconfig "github.com/cometbft/cometbft/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

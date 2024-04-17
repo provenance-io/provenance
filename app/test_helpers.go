@@ -12,12 +12,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttmtypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"

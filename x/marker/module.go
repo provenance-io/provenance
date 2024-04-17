@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"math/rand"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/core/appmodule"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"

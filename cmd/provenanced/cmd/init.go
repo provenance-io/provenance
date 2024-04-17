@@ -9,10 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	cmtos "github.com/cometbft/cometbft/libs/os"
 	cmtrand "github.com/cometbft/cometbft/libs/rand"
 	cmttypes "github.com/cometbft/cometbft/types"
-	"github.com/spf13/cobra"
 
 	cerrs "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"

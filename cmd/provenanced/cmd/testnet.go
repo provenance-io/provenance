@@ -11,11 +11,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	cmtconfig "github.com/cometbft/cometbft/config"
 	cmtos "github.com/cometbft/cometbft/libs/os"
 	cmtrand "github.com/cometbft/cometbft/libs/rand"
 	cmttime "github.com/cometbft/cometbft/types/time"
-	"github.com/spf13/cobra"
 
 	sdkmath "cosmossdk.io/math"
 

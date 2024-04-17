@@ -9,12 +9,13 @@ import (
 	"path/filepath"
 	"time"
 
-	cmtconfig "github.com/cometbft/cometbft/config"
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	cmtconfig "github.com/cometbft/cometbft/config"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
