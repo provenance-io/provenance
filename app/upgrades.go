@@ -69,6 +69,7 @@ var upgrades = map[string]appUpgrade{
 			migrateAttributeParams(ctx, app)
 			migrateMarkerParams(ctx, app)
 			migrateMetadataOSLocatorParams(ctx, app)
+			migrateNameParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -108,6 +109,7 @@ var upgrades = map[string]appUpgrade{
 			migrateAttributeParams(ctx, app)
 			migrateMarkerParams(ctx, app)
 			migrateMetadataOSLocatorParams(ctx, app)
+			migrateNameParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
