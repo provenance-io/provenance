@@ -32,8 +32,8 @@ func GetMsgFeeKey(msgType string) []byte {
 var (
 	//MsgFeeKeyPrefix prefix for msgfee entry
 	MsgFeeKeyPrefix = []byte{0x00}
-	// ParamStoreKey key for msgfees module's params
-	ParamStoreKey = []byte{0x01}
+	// MsgFeesParamStoreKey key for msgfees module's params
+	MsgFeesParamStoreKey = []byte{0x01}
 )
 
 func GetCompositeKey(msgType string, recipient string) string {

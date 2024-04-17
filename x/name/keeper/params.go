@@ -10,7 +10,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	params = types.DefaultParams() // Assuming DefaultParams initializes all defaults
 
-	bz := store.Get(types.ParamStoreKey) // General key for all parameters
+	bz := store.Get(types.NameParamStoreKey) // General key for all parameters
 	if bz != nil {
 		k.cdc.MustUnmarshal(bz, &params) // Deserialize parameters from bytes
 	}
@@ -21,7 +21,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&params) // Serialize parameters to bytes
-	store.Set(types.ParamStoreKey, bz)
+	store.Set(types.NameParamStoreKey, bz)
 }
 
 // GetMaxNameLevels returns the current maximum number of name segments allowed.

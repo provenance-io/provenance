@@ -15,7 +15,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	params = types.DefaultParams() // Assuming a method that returns default parameters
 
 	// Deserialize parameters if they are set
-	if bz := store.Get(types.ParamStoreKey); bz != nil {
+	if bz := store.Get(types.MarkerParamStoreKey); bz != nil {
 		k.cdc.MustUnmarshal(bz, &params)
 	}
 
@@ -26,7 +26,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&params)
-	store.Set(types.ParamStoreKey, bz)
+	store.Set(types.MarkerParamStoreKey, bz)
 }
 
 // Deprecated: GetMaxTotalSupply is kept for backwards compatibility.
