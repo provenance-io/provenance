@@ -17,5 +17,6 @@ const (
 )
 
 var (
-	ParamStoreKey = []byte{0x01}
+	// IbcHooksParamStoreKey key for ibchooks module's params
+	IbcHooksParamStoreKey = []byte{0x01}
 )
