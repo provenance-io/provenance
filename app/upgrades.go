@@ -422,8 +422,6 @@ func migrateNameParams(ctx sdk.Context, app *App) {
 	if nameParamSpace.Has(ctx, nametypes.ParamStoreKeyAllowUnrestrictedNames) {
 		nameParamSpace.Get(ctx, nametypes.ParamStoreKeyAllowUnrestrictedNames, &params.AllowUnrestrictedNames)
 	}
-
-	// Set migrated params in the new store
 	app.NameKeeper.SetParams(ctx, params)
 
 	ctx.Logger().Info("Done migrating name params.")
