@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-
 	"github.com/cometbft/cometbft/crypto/tmhash"
 
 	sdkerrors "cosmossdk.io/errors"

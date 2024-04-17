@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	dbm "github.com/cometbft/cometbft-db"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	dbm "github.com/cometbft/cometbft-db"
 
 	storetypes "cosmossdk.io/store/types"
 

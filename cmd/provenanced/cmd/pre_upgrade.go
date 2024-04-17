@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	cmtconfig "github.com/cometbft/cometbft/config"
+	"github.com/spf13/cobra"
 
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 

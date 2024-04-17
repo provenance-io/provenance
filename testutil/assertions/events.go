@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/stretchr/testify/assert"
-
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
