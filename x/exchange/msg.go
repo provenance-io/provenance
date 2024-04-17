@@ -4,6 +4,10 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
 	"cosmossdk.io/x/tx/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -848,29 +852,45 @@ func (m MsgGovUpdateParamsRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
+// createPaymentGetSignersFunc returns a custom GetSigners function for a Msg that has a signer in a Payment.
+// The Payment must be in a field named "payment", and must not be nullable.
+// The provided getter will be used to get the string of the signer address,
+// which will be decoded using the decoder in the provided signing.Options.
+func createPaymentGetSignersFunc(options *signing.Options, fieldName string) signing.GetSignersFunc {
+	return func(msgIn proto.Message) (addrs [][]byte, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic (recovered) getting %s.payment.%s as a signer: %v", proto.MessageName(msgIn), fieldName, r)
+			}
+		}()
+
+		msg := msgIn.ProtoReflect()
+		pmtDesc := msg.Descriptor().Fields().ByName("payment")
+		if pmtDesc == nil {
+			return nil, fmt.Errorf("no payment field found in %s", proto.MessageName(msgIn))
+		}
+
+		pmt := msg.Get(pmtDesc).Message()
+		fieldDesc := pmt.Descriptor().Fields().ByName(protoreflect.Name(fieldName))
+		if fieldDesc == nil {
+			return nil, fmt.Errorf("no payment.%s field found in %s", fieldName, proto.MessageName(msgIn))
+		}
+
+		b32 := pmt.Get(fieldDesc).Interface().(string)
+		addr, err := options.AddressCodec.StringToBytes(b32)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding payment.%s address %q: %w", fieldName, b32, err)
+		}
+		return [][]byte{addr}, nil
+	}
+}
+
 // DefineCustomGetSigners registers all the exchange module custom GetSigners functions with the provided signing options.
 func DefineCustomGetSigners(options *signing.Options) {
-	// TODO[1760]: Uncomment this once we figure out how to make our msgs have the ProtoReflect method.
-	// options.DefineCustomGetSigners(proto.MessageName(&MsgCreatePaymentRequest{}), func(msg proto.Message) ([][]byte, error) {
-	// 	msgCP, ok := msg.(*MsgCreatePaymentRequest)
-	// 	if !ok {
-	// 		return nil, fmt.Errorf("incorrect message type, actual: %T, expected: %T", msg, &MsgCreatePaymentRequest{})
-	// 	}
-	// 	addr, err := options.AddressCodec.StringToBytes(msgCP.Payment.Source)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	return [][]byte{addr}, nil
-	// })
-	// options.DefineCustomGetSigners(proto.MessageName(&MsgAcceptPaymentRequest{}), func(msg proto.Message) ([][]byte, error) {
-	// 	msgCP, ok := msg.(*MsgAcceptPaymentRequest)
-	// 	if !ok {
-	// 		return nil, fmt.Errorf("incorrect message type, actual: %T, expected: %T", msg, &MsgAcceptPaymentRequest{})
-	// 	}
-	// 	addr, err := options.AddressCodec.StringToBytes(msgCP.Payment.Target)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	return [][]byte{addr}, nil
-	// })
+	options.DefineCustomGetSigners(
+		proto.MessageName(protoadapt.MessageV2Of(&MsgCreatePaymentRequest{})),
+		createPaymentGetSignersFunc(options, "source"))
+	options.DefineCustomGetSigners(
+		proto.MessageName(protoadapt.MessageV2Of(&MsgAcceptPaymentRequest{})),
+		createPaymentGetSignersFunc(options, "target"))
 }
