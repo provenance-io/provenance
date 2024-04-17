@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
@@ -45,7 +44,7 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryCodec, key storetypes.StoreKey,
 	authKeeper types.AccountKeeper, nameKeeper types.NameKeeper,
 ) Keeper {
 	keeper := Keeper{
