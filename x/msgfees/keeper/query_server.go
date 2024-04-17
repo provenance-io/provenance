@@ -19,10 +19,7 @@ var _ types.QueryServer = Keeper{}
 
 func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	c := sdk.UnwrapSDKContext(ctx)
-	var params types.Params
-	k.paramSpace.GetParamSet(c, &params)
-
-	return &types.QueryParamsResponse{Params: params}, nil
+	return &types.QueryParamsResponse{Params: k.GetParams(c)}, nil
 }
 
 func (k Keeper) QueryAllMsgFees(c context.Context, req *types.QueryAllMsgFeesRequest) (*types.QueryAllMsgFeesResponse, error) {
