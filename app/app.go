@@ -551,7 +551,7 @@ func New(
 	app.NameKeeper = namekeeper.NewKeeper(appCodec, keys[nametypes.StoreKey])
 
 	app.AttributeKeeper = attributekeeper.NewKeeper(
-		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, &app.NameKeeper,
+		appCodec, keys[attributetypes.StoreKey], app.AccountKeeper, &app.NameKeeper,
 	)
 
 	markerReqAttrBypassAddrs := []sdk.AccAddress{
