@@ -381,9 +381,7 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 				appState[exchange.ModuleName], err = cdc.MarshalJSON(tc.iniExGenState)
 				require.NoError(t, err, "setup: MarshalJSON exchange genesis state")
 			} else {
-				if _, found := appState[exchange.ModuleName]; found {
-					delete(appState, exchange.ModuleName)
-				}
+				delete(appState, exchange.ModuleName)
 			}
 
 			var authState authtypes.GenesisState
@@ -439,7 +437,7 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 				return
 			}
 
-			appState, genDoc, err = genutiltypes.GenesisStateFromGenFile(genFile)
+			appState, _, err = genutiltypes.GenesisStateFromGenFile(genFile)
 			require.NoError(t, err, "GenesisStateFromGenFile(%q)", genFile)
 			var actExGenState exchange.GenesisState
 			err = cdc.UnmarshalJSON(appState[exchange.ModuleName], &actExGenState)
@@ -713,9 +711,7 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 				appState[exchange.ModuleName], err = cdc.MarshalJSON(tc.iniExGenState)
 				require.NoError(t, err, "setup: MarshalJSON exchange genesis state")
 			} else {
-				if _, found := appState[exchange.ModuleName]; found {
-					delete(appState, exchange.ModuleName)
-				}
+				delete(appState, exchange.ModuleName)
 			}
 
 			genDoc.AppState, err = json.Marshal(appState)
@@ -743,7 +739,7 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 				return
 			}
 
-			appState, genDoc, err = genutiltypes.GenesisStateFromGenFile(genFile)
+			appState, _, err = genutiltypes.GenesisStateFromGenFile(genFile)
 			require.NoError(t, err, "GenesisStateFromGenFile(%q)", genFile)
 			var actExGenState exchange.GenesisState
 			err = cdc.UnmarshalJSON(appState[exchange.ModuleName], &actExGenState)
