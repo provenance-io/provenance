@@ -109,9 +109,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
+	testutil.Cleanup(s.network, s.T())
 }
 
 func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
@@ -188,10 +186,7 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
-
 			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
 			args := []string{
@@ -260,10 +255,7 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
-
 			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
 			args := []string{

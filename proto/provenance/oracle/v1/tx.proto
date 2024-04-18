@@ -1,6 +1,7 @@
 syntax = "proto3";
 package provenance.oracle.v1;
 
+import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
@@ -18,6 +19,8 @@ service Msg {
 
 // MsgSendQueryOracleRequest queries an oracle on another chain
 message MsgSendQueryOracleRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
   // Query contains the query data passed to the oracle.
   bytes query = 1 [(gogoproto.casttype) = "github.com/CosmWasm/wasmd/x/wasm/types.RawContractMessage"];
   // Channel is the channel to the oracle.
@@ -34,6 +37,7 @@ message MsgSendQueryOracleResponse {
 
 // MsgUpdateOracleRequest is the request type for updating an oracle's contract address
 message MsgUpdateOracleRequest {
+  option (cosmos.msg.v1.signer)       = "authority";
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;
 
