@@ -20,6 +20,7 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -71,6 +72,7 @@ var upgrades = map[string]appUpgrade{
 			migrateMarkerParams(ctx, app)
 			migrateMetadataOSLocatorParams(ctx, app)
 			migrateMsgFeesParams(ctx, app)
+			migrateNameParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -111,6 +113,7 @@ var upgrades = map[string]appUpgrade{
 			migrateMarkerParams(ctx, app)
 			migrateMetadataOSLocatorParams(ctx, app)
 			migrateMsgFeesParams(ctx, app)
+			migrateNameParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
@@ -398,6 +401,35 @@ func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
 	}
 	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: uint32(maxValueLength)})
 	ctx.Logger().Info("Done migrating metadata os locator params.")
+}
+
+// migrateNameParams migrates to new Name Params store
+// TODO: Remove with the umber handlers.
+func migrateNameParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating name params.")
+	nameParamSpace := app.ParamsKeeper.Subspace(nametypes.ModuleName)
+
+	params := nametypes.DefaultParams()
+
+	// TODO: all param keys from types/params with the umber handlers.
+	if nameParamSpace.Has(ctx, nametypes.ParamStoreKeyMaxNameLevels) {
+		nameParamSpace.Get(ctx, nametypes.ParamStoreKeyMaxNameLevels, &params.MaxNameLevels)
+	}
+
+	if nameParamSpace.Has(ctx, nametypes.ParamStoreKeyMaxSegmentLength) {
+		nameParamSpace.Get(ctx, nametypes.ParamStoreKeyMaxSegmentLength, &params.MaxSegmentLength)
+	}
+
+	if nameParamSpace.Has(ctx, nametypes.ParamStoreKeyMinSegmentLength) {
+		nameParamSpace.Get(ctx, nametypes.ParamStoreKeyMinSegmentLength, &params.MinSegmentLength)
+	}
+
+	if nameParamSpace.Has(ctx, nametypes.ParamStoreKeyAllowUnrestrictedNames) {
+		nameParamSpace.Get(ctx, nametypes.ParamStoreKeyAllowUnrestrictedNames, &params.AllowUnrestrictedNames)
+	}
+	app.NameKeeper.SetParams(ctx, params)
+
+	ctx.Logger().Info("Done migrating name params.")
 }
 
 // migrateMsgFeesParams migrates to new MsgFees Params store

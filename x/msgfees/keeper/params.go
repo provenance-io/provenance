@@ -11,7 +11,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	params = types.DefaultParams() // Initialize with defaults
 
-	bz := store.Get(types.ParamStoreKey)
+	bz := store.Get(types.MsgFeesParamStoreKey)
 	if bz != nil {
 		k.cdc.MustUnmarshal(bz, &params) // Deserialize parameters
 	}
@@ -22,7 +22,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&params) // Serialize parameters
-	store.Set(types.ParamStoreKey, bz)
+	store.Set(types.MsgFeesParamStoreKey, bz)
 }
 
 // GetFloorGasPrice returns the current minimum gas price in sdk.Coin used in calculations for charging additional fees
