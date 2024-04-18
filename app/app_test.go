@@ -287,7 +287,7 @@ func logAddrs(t *testing.T, addrs []sdk.AccAddress, name string) {
 	}
 }
 
-func assertNoDupeAccountNumbers(t *testing.T, ctx sdk.Context, app *App, accts []sdk.AccountI, name string) bool {
+func assertNoDupeAccountNumbers(t *testing.T, _ sdk.Context, _ *App, accts []sdk.AccountI, name string) bool {
 	t.Helper()
 	byAcctNum := map[uint64][]sdk.AccountI{}
 	acctNums := []uint64{}
