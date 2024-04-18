@@ -5,18 +5,17 @@ import (
 	"fmt"
 	"sort"
 
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
-	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/constraints"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/helpers"

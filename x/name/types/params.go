@@ -10,11 +10,12 @@ import (
 const (
 	DefaultMinSegmentLength       = uint32(2)
 	DefaultMaxSegmentLength       = uint32(32)
-	DefaultMaxSegments            = uint32(16)
+	DefaultMaxNameLevels          = uint32(16)
 	DefaultAllowUnrestrictedNames = true
 )
 
 // Parameter store keys
+// TODO: remove with the umber (v1.19.x) handlers.
 var (
 	// maximum length of name segment to allow
 	ParamStoreKeyMaxSegmentLength = []byte("MaxSegmentLength")
@@ -27,6 +28,7 @@ var (
 )
 
 // ParamKeyTable for slashing module
+// TODO: remove with the umber (v1.19.x) handlers.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -47,6 +49,7 @@ func NewParams(
 }
 
 // ParamSetPairs - Implements params.ParamSet
+// TODO: remove with the umber (v1.19.x) handlers.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyMaxSegmentLength, &p.MaxSegmentLength, validateIntParam),
@@ -61,7 +64,7 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultMaxSegmentLength,
 		DefaultMinSegmentLength,
-		DefaultMaxSegments,
+		DefaultMaxNameLevels,
 		DefaultAllowUnrestrictedNames,
 	)
 }

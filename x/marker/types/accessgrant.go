@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	proto "github.com/cosmos/gogoproto/proto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 var (

@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/log"
-
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
