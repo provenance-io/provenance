@@ -27,7 +27,6 @@ import (
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	"github.com/provenance-io/provenance/app"
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/mocks"
@@ -99,8 +98,6 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 }
 
 func TestAddGenesisMsgFeeCmd(t *testing.T) {
-	encCfg := app.MakeTestEncodingConfig(t)
-
 	tests := []struct {
 		name            string
 		msgType         string
@@ -158,7 +155,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 			cmd := provenancecmd.AddGenesisCustomFloorPriceDenomCmd(home)
-			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home, encCfg.InterfaceRegistry)
+			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home)
 			cmd.SetArgs([]string{
 				tc.msgFeeFloorCoin,
 				fmt.Sprintf("--%s=home", flags.FlagHome)})

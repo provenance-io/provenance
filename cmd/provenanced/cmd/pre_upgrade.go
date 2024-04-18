@@ -40,13 +40,13 @@ Exit code meanings:
 		SilenceUsage: true, // No need to print usage if the command fails.
 		// Cosmovisor doesn't provide any args, and none are expected. But we want an
 		// exit code of 30 here (instead of 1), so we're not using cobra.NoArgs.
-		Args: func(cmd *cobra.Command, args []string) error {
+		Args: func(_ *cobra.Command, args []string) error {
 			if len(args) != 0 {
 				return errors.Join(fmt.Errorf("expected 0 args, received %d", len(args)), ErrFail)
 			}
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			err := UpdateConfig(cmd)
 			if err != nil {
 				return errors.Join(fmt.Errorf("could not update config file(s): %w", err), ErrFail)
