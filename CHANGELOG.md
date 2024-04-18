@@ -115,6 +115,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Remove the startup warning issued when disable-iavl-fastnode is true (we recommend keeping it as true if you already have it that way) [PR 1874](https://github.com/provenance-io/provenance/pull/1874).
 * Switch to `github.com/cometbft/cometbft-db` `v0.7.0` (from `github.com/tendermint/tm-db` `v0.6.7`) [PR 1874](https://github.com/provenance-io/provenance/pull/1874).
 * Allow NAV volume to exceed a marker's supply [PR 1883](https://github.com/provenance-io/provenance/pull/1883).
+* Update linter settings and fix import ordering [PR 1938](https://github.com/provenance-io/provenance/pull/1938).
 
 ### Deprecated
 

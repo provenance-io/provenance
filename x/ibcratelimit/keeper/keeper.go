@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"github.com/cosmos/gogoproto/proto"
-
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -10,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )

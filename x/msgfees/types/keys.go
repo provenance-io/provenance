@@ -30,7 +30,7 @@ func GetMsgFeeKey(msgType string) []byte {
 }
 
 var (
-	//MsgFeeKeyPrefix prefix for msgfee entry
+	// MsgFeeKeyPrefix prefix for msgfee entry
 	MsgFeeKeyPrefix = []byte{0x00}
 	// MsgFeesParamStoreKey key for msgfees module's params
 	MsgFeesParamStoreKey = []byte{0x01}

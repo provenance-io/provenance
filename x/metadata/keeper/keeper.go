@@ -3,13 +3,12 @@ package keeper
 import (
 	"net/url"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
