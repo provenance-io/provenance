@@ -441,6 +441,7 @@ func migrateMsgFeesParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Migrating msgfees params.")
 	msgFeesParamSpace := app.ParamsKeeper.Subspace(msgfeestypes.ModuleName).WithKeyTable(msgfeestypes.ParamKeyTable())
 
+	// TODO: all param keys from types/params with the umber handlers.
 	var floorGasPrice sdk.Coin
 	if msgFeesParamSpace.Has(ctx, msgfeestypes.ParamStoreKeyFloorGasPrice) {
 		msgFeesParamSpace.Get(ctx, msgfeestypes.ParamStoreKeyFloorGasPrice, &floorGasPrice)
@@ -467,15 +468,20 @@ func migrateMsgFeesParams(ctx sdk.Context, app *App) {
 }
 
 // migrateIbcHooksParams migrates existing ibchooks parameters from paramSpace to a direct KVStore.
+// TODO: Remove with the umber handlers.
 func migrateIbcHooksParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Migrating ibchooks params.")
 	ibcHooksParamSpace := app.ParamsKeeper.Subspace(ibchookstypes.ModuleName)
 
 	params := ibchookstypes.DefaultParams()
 
-	if ibcHooksParamSpace.Has(ctx, ibchookstypes.IbcHooksParamStoreKey) {
-		ibcHooksParamSpace.Get(ctx, ibchookstypes.IbcHooksParamStoreKey, &params)
+	// TODO: all param keys from types/params with the umber handlers.
+	var allowlist []string
+	if ibcHooksParamSpace.Has(ctx, ibchookstypes.KeyAsyncAckAllowList) {
+		ibcHooksParamSpace.Get(ctx, ibchookstypes.KeyAsyncAckAllowList, &allowlist)
 	}
+	params.AllowedAsyncAckContracts = allowlist
+
 	app.IBCHooksKeeper.SetParams(ctx, params)
 
 	ctx.Logger().Info("Done migrating ibchooks params.")
