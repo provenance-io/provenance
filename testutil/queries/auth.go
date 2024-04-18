@@ -53,13 +53,13 @@ func AssertGetModuleAccountByName(t *testing.T, n *network.Network, moduleName s
 	return rv, true
 }
 
-// GetTxFromResponse extracts a tx hash from the provided txRespBz and executes a query for it,
-// requiring everything to be okay. Since the SDK got rid of block broadcast, we now need to query
-// for a tx after submitting it in order to find out what happened.
+// GetTxFromResponse gets the TxResponse from the provided ExecTestCLICmd output bytes.
+// If the provided output indicates a code other than 0, that is what is returned.
+// If the provided output has a code of 0, the tx hash is extracted from it, and queries
+// are executed to get the TxResponse for it. Three attempts are made to query for the tx,
+// waiting a block between each attempt.
 //
-// The provided txRespBz should be the bytes returned from submitting a Tx.
-//
-// In most cases, you'll have to wait for the next block after submitting your tx, and before calling this.
+// This requires that there are no problems getting the TxResponse.
 func GetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) sdk.TxResponse {
 	t.Helper()
 	rv, ok := AssertGetTxFromResponse(t, n, txRespBz)
@@ -69,13 +69,13 @@ func GetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) sdk.Tx
 	return rv
 }
 
-// AssertGetTxFromResponse extracts a tx hash from the provided txRespBz and executes a query for it,
-// asserting that everything is okay. Since the SDK got rid of block broadcast, we now need to query
-// for a tx after submitting it in order to find out what happened.
+// AssertGetTxFromResponse gets the TxResponse from the provided ExecTestCLICmd output bytes.
+// If the provided output indicates a code other than 0, that is what is returned.
+// If the provided output has a code of 0, the tx hash is extracted from it, and queries
+// are executed to get the TxResponse for it. Three attempts are made to query for the tx,
+// waiting a block between each attempt.
 //
-// The provided txRespBz should be the bytes returned from submitting a Tx.
-//
-// In most cases, you'll have to wait for the next block after submitting your tx, and before calling this.
+// This asserts that there are no problems getting the TxResponse, returning true if no assertions failed.
 func AssertGetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) (sdk.TxResponse, bool) {
 	t.Helper()
 	if !assert.NotEmpty(t, n.Validators, "Network.Validators") {
@@ -87,6 +87,9 @@ func AssertGetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) 
 	err := val.ClientCtx.Codec.UnmarshalJSON(txRespBz, &origResp)
 	if !assert.NoError(t, err, "UnmarshalJSON(%q, %T) (original tx response)", string(txRespBz), &origResp) {
 		return sdk.TxResponse{}, false
+	}
+	if origResp.Code != 0 {
+		return origResp, true
 	}
 	if !assert.NotEmpty(t, origResp.TxHash, "the tx hash") {
 		return sdk.TxResponse{}, false

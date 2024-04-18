@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -15,12 +19,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/stretchr/testify/suite"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/queries"
 	oraclecli "github.com/provenance-io/provenance/x/oracle/client/cli"
 	"github.com/provenance-io/provenance/x/oracle/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
@@ -49,6 +53,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	pioconfig.SetProvenanceConfig("", 0)
+	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
@@ -180,7 +185,8 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 		{
 			name:         "failure - unable to pass validate basic with bad address",
 			address:      "badaddress",
-			expectErrMsg: "msg: 0, err: invalid address for oracle: decoding bech32 failed: invalid separator index -1: invalid proposal message",
+			expectErrMsg: "invalid address for oracle: decoding bech32 failed: invalid separator index -1: invalid proposal message",
+			expectedCode: 12,
 			signer:       s.accountAddresses[0].String(),
 		},
 	}
@@ -189,28 +195,25 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
+			cmd := oraclecli.GetCmdOracleUpdate()
 			args := []string{
 				tc.address,
-			}
-			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				"--title", "Update the oracle", "--summary", "Update it real good",
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
-			args = append(args, flagArgs...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdOracleUpdate(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
-			var response sdk.TxResponse
-			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
-			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid OracleUpdate request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid OracleUpdate request")
-			} else {
-				s.Assert().NoError(err, "should have no error for valid OracleUpdate request")
-				s.Assert().NoError(marshalErr, out.String(), "should have no marshal error for valid OracleUpdate request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid OracleUpdate request")
-			}
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
+			s.Assert().NoError(err, "should have no error for valid OracleUpdate request")
+
+			txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
+			s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for valid OracleUpdate request")
+			s.Assert().Contains(txResp.RawLog, tc.expectErrMsg, "should have correct error for invalid OracleUpdate request")
 		})
 	}
 }
@@ -248,7 +251,7 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 		{
 			name:         "failure - invalid signer",
 			query:        "{}",
-			expectErrMsg: "abc.info: key not found",
+			expectErrMsg: "failed to convert address field to address: abc.info: key not found",
 			channel:      "channel-1",
 			signer:       "abc",
 		},
@@ -258,28 +261,27 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
+			cmd := oraclecli.GetCmdSendQuery()
 			args := []string{
 				tc.channel,
 				tc.query,
-			}
-			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
-			args = append(args, flagArgs...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, oraclecli.GetCmdSendQuery(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
-			var response sdk.TxResponse
-			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
+
 			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid SendQuery request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid SendQuery request")
+				s.Assert().ErrorContains(err, tc.expectErrMsg, "should have correct error for invalid SendQuery request")
 			} else {
 				s.Assert().NoError(err, "should have no error for valid SendQuery request")
-				s.Assert().NoError(marshalErr, out.String(), "should have no marshal error for valid SendQuery request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid SendQuery request")
+				txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
+				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for valid SendQuery request")
 			}
 		})
 	}
