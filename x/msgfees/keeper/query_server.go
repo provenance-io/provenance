@@ -32,7 +32,7 @@ func (k Keeper) QueryAllMsgFees(c context.Context, req *types.QueryAllMsgFeesReq
 	var msgFees []*types.MsgFee
 	store := ctx.KVStore(k.storeKey)
 	msgFeeStore := prefix.NewStore(store, types.MsgFeeKeyPrefix)
-	pageRes, err := query.Paginate(msgFeeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(msgFeeStore, req.Pagination, func(_ []byte, value []byte) error {
 		var msgFee types.MsgFee
 
 		if err := k.cdc.Unmarshal(value, &msgFee); err != nil {
