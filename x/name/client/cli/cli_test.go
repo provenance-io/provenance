@@ -8,10 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	sdkmath "cosmossdk.io/math"
 
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
@@ -21,10 +22,13 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/queries"
 	namecli "github.com/provenance-io/provenance/x/name/client/cli"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -61,6 +65,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.T().Log("setting up integration test suite")
 	pioconfig.SetProvenanceConfig("", 0)
+	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 
 	cfg := testutil.DefaultTestNetworkConfig()
 
@@ -210,8 +215,6 @@ min_segment_length: 1`,
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := namecli.QueryParamsCmd()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -247,8 +250,6 @@ func (s *IntegrationTestSuite) TestResolveNameCommand() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := namecli.ResolveNameCommand()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -291,8 +292,6 @@ func (s *IntegrationTestSuite) TestReverseLookupCommand() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := namecli.ReverseLookupCommand()
 			clientCtx := s.testnet.Validators[0].ClientCtx
@@ -305,7 +304,6 @@ func (s *IntegrationTestSuite) TestReverseLookupCommand() {
 }
 
 func (s *IntegrationTestSuite) TestGetBindNameCommand() {
-
 	testCases := []struct {
 		name         string
 		cmd          *cobra.Command
@@ -320,7 +318,7 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 			[]string{"bindnew", s.testnet.Validators[0].Address.String(), "attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
@@ -331,7 +329,7 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 			[]string{"bindnew", s.testnet.Validators[0].Address.String(), "",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			true, &sdk.TxResponse{}, 1,
@@ -342,7 +340,7 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 			[]string{"bindnew", s.testnet.Validators[0].Address.String(), "dne",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			false, &sdk.TxResponse{}, 18,
@@ -350,18 +348,18 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
 
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
+				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
 			}
 		})
 	}
@@ -382,7 +380,7 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 			[]string{"todelete", s.testnet.Validators[0].Address.String(), "attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
@@ -393,7 +391,7 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 			[]string{"todelete.attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
@@ -404,7 +402,7 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 			[]string{"dne",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			false, &sdk.TxResponse{}, 18,
@@ -415,7 +413,7 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 			[]string{"example.attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			false, &sdk.TxResponse{}, 4,
@@ -423,18 +421,18 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
 
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
+				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
 			}
 		})
 	}
@@ -455,7 +453,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 			args: []string{"tomodify", s.testnet.Validators[0].Address.String(), "attribute",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			errMsg:       "",
@@ -469,9 +467,10 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 				s.testnet.Validators[0].Address.String(),
 				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
 				fmt.Sprintf("--%s=%s", namecli.FlagGovProposal, "true"),
+				"--title", "Modify The Name", "--summary", "See Title",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			errMsg:       "",
@@ -488,7 +487,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "invalid"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			errMsg:       "invalid deposit: invalid decimal coin expression: invalid",
@@ -503,7 +502,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			errMsg:       "",
@@ -518,7 +517,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 				fmt.Sprintf("--%s", namecli.FlagUnrestricted),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			errMsg:       "name cannot be empty",
@@ -528,18 +527,18 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
 
 			if len(tc.errMsg) > 0 {
 				s.Assert().EqualError(err, tc.errMsg)
 			} else {
 				s.Assert().NoError(err)
-				s.Assert().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Assert().Equal(tc.expectedCode, txResp.Code)
+				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
+				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
 			}
 		})
 	}
@@ -617,7 +616,7 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
@@ -631,7 +630,7 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			false, &sdk.TxResponse{}, 0,
@@ -646,7 +645,7 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			true, &sdk.TxResponse{}, 1,
@@ -659,7 +658,7 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			true, &sdk.TxResponse{}, 1,
@@ -672,7 +671,7 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			true, &sdk.TxResponse{}, 1,
@@ -688,7 +687,7 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
 			true, &sdk.TxResponse{}, 1,
@@ -696,20 +695,20 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := s.testnet.Validators[0].ClientCtx
 			// because the cmd runs inside of the gov cmd (which adds flags) we register here so we can use it directly.
 			flags.AddTxFlagsToCmd(tc.cmd)
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
 
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
+				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
+				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
 			}
 		})
 	}
