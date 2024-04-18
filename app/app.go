@@ -548,9 +548,7 @@ func New(
 	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &app.HooksICS4Wrapper)
 	app.TransferStack = &hooksTransferModule
 
-	app.NameKeeper = namekeeper.NewKeeper(
-		appCodec, keys[nametypes.StoreKey], app.GetSubspace(nametypes.ModuleName),
-	)
+	app.NameKeeper = namekeeper.NewKeeper(appCodec, keys[nametypes.StoreKey])
 
 	app.AttributeKeeper = attributekeeper.NewKeeper(
 		appCodec, keys[attributetypes.StoreKey], app.GetSubspace(attributetypes.ModuleName), app.AccountKeeper, &app.NameKeeper,
@@ -1362,7 +1360,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 
-	paramsKeeper.Subspace(nametypes.ModuleName) // TODO[1760]: params: Migrate name params.
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	paramsKeeper.Subspace(triggertypes.ModuleName) // TODO[1760]: params: Migrate trigger params.
 
