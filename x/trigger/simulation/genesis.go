@@ -100,9 +100,9 @@ func NewRandomQueuedTrigger(r *rand.Rand, simState *module.SimulationState, accs
 }
 
 // RandomNewQueuedTriggers generates a random queued trigger for each provided id.
-func RandomNewQueuedTriggers(r *rand.Rand, simState *module.SimulationState, accs []simtypes.Account, queuedTriggerIds []uint64) []types.QueuedTrigger {
-	rv := make([]types.QueuedTrigger, len(queuedTriggerIds))
-	for i, id := range queuedTriggerIds {
+func RandomNewQueuedTriggers(r *rand.Rand, simState *module.SimulationState, accs []simtypes.Account, queuedTriggerIDs []uint64) []types.QueuedTrigger {
+	rv := make([]types.QueuedTrigger, len(queuedTriggerIDs))
+	for i, id := range queuedTriggerIDs {
 		rv[i] = NewRandomQueuedTrigger(r, simState, accs, id)
 	}
 	return rv

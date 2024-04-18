@@ -101,7 +101,7 @@ func GetCmdMarkerProposal() *cobra.Command {
 Please use 'gov proposal submit-proposal instead.
 `,
 		),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
 		},
 	}
@@ -676,9 +676,6 @@ func GetCmdRevokeAuthorization() *cobra.Command {
 			}
 
 			msg := authz.NewMsgRevoke(clientCtx.GetFromAddress(), grantee, action)
-			if err != nil {
-				return err
-			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},

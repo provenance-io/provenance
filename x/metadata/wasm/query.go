@@ -46,7 +46,7 @@ type GetRecordsParams struct {
 
 // Querier returns a smart contract querier for the metadata module.
 func Querier(keeper keeper.Keeper) provwasm.Querier {
-	return func(ctx sdk.Context, query json.RawMessage, version string) ([]byte, error) {
+	return func(ctx sdk.Context, query json.RawMessage, _ string) ([]byte, error) {
 		wrapper := struct {
 			Params *MetadataQueryParams `json:"metadata"`
 		}{}

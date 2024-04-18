@@ -37,7 +37,7 @@ func GetParamsCmd() *cobra.Command {
 		Short:   "Query the current ibcratelimit params",
 		Args:    cobra.NoArgs,
 		Example: fmt.Sprintf(`$ %s query ibcratelimit params`, version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

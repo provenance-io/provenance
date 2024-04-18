@@ -112,7 +112,7 @@ var (
 // hasFlatFee returns true if this market has any flat fee for a given type.
 func hasFlatFee(store storetypes.KVStore, marketID uint32, maker flatFeeKeyMakers) bool {
 	rv := false
-	iterate(store, maker.prefix(marketID), func(key, value []byte) bool {
+	iterate(store, maker.prefix(marketID), func(_, _ []byte) bool {
 		rv = true
 		return true
 	})
@@ -311,7 +311,7 @@ var (
 // hasFeeRatio returns true if this market has any fee ratios for a given type.
 func hasFeeRatio(store storetypes.KVStore, marketID uint32, maker ratioKeyMakers) bool {
 	rv := false
-	iterate(store, maker.prefix(marketID), func(key, value []byte) bool {
+	iterate(store, maker.prefix(marketID), func(_, _ []byte) bool {
 		rv = true
 		return true
 	})

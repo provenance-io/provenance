@@ -99,8 +99,8 @@ func CreateRecordKey(toAddr sdk.AccAddress, fromAddrs ...sdk.AccAddress) []byte 
 	// This is designed such that a known record suffix can be provided
 	// as a single "from address" to create the key with that suffix.
 	toAddrPreBz := CreateRecordToAddrPrefix(toAddr)
-	recordId := address.MustLengthPrefix(createRecordSuffix(fromAddrs))
-	return MakeKey(toAddrPreBz, recordId)
+	recordID := address.MustLengthPrefix(createRecordSuffix(fromAddrs))
+	return MakeKey(toAddrPreBz, recordID)
 }
 
 // createRecordSuffix creates a single "address" to use for the provided from addresses.
@@ -162,8 +162,8 @@ func CreateRecordIndexToAddrPrefix(toAddr sdk.AccAddress) []byte {
 // CreateRecordIndexKey creates the key for the quarantine record suffix index.
 func CreateRecordIndexKey(toAddr, fromAddr sdk.AccAddress) []byte {
 	toAddrPreBz := CreateRecordIndexToAddrPrefix(toAddr)
-	recordId := address.MustLengthPrefix(fromAddr)
-	return MakeKey(toAddrPreBz, recordId)
+	recordID := address.MustLengthPrefix(fromAddr)
+	return MakeKey(toAddrPreBz, recordID)
 }
 
 // ParseRecordIndexKey extracts the to address and from address from the provided quarantine record index key.

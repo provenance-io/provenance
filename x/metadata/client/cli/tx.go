@@ -468,10 +468,6 @@ func ModifyOsLocatorCmd() *cobra.Command {
 				fmt.Printf("failed to add locator for a given owner address, invalid address: %s\n", args[0])
 				return fmt.Errorf("invalid address: %w", errAddr)
 			}
-			if err != nil {
-				fmt.Printf("Invalid uuid for scope id: %s", args[0])
-				return err
-			}
 
 			objectStoreLocator := types.ObjectStoreLocator{
 				LocatorUri: args[1], Owner: args[0],
@@ -505,10 +501,10 @@ func WriteScopeSpecificationCmd() *cobra.Command {
 				return err
 			}
 
-			cSpecIds := strings.Split(args[3], ",")
-			contractSpecIds := make([]types.MetadataAddress, len(cSpecIds))
-			for i, cid := range cSpecIds {
-				contractSpecIds[i], err = types.MetadataAddressFromBech32(cid)
+			cSpecIDs := strings.Split(args[3], ",")
+			contractSpecIDs := make([]types.MetadataAddress, len(cSpecIDs))
+			for i, cid := range cSpecIDs {
+				contractSpecIDs[i], err = types.MetadataAddressFromBech32(cid)
 				if err != nil {
 					return err
 				}
@@ -529,7 +525,7 @@ func WriteScopeSpecificationCmd() *cobra.Command {
 				OwnerAddresses:  strings.Split(args[1], ","),
 				Description:     parseDescription(args[4:]),
 				PartiesInvolved: partyTypes,
-				ContractSpecIds: contractSpecIds,
+				ContractSpecIds: contractSpecIDs,
 			}
 
 			msg := types.NewMsgWriteScopeSpecificationRequest(scopeSpec, signers)

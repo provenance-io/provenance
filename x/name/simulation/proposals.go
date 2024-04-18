@@ -28,7 +28,7 @@ func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
 
 // SimulateCreateRootNameProposalContent generates random create-root-name proposal content
 func SimulateCreateRootNameProposalContent(_ keeper.Keeper) simtypes.ContentSimulatorFn {
-	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+	return func(r *rand.Rand, _ sdk.Context, accs []simtypes.Account) simtypes.Content {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		restricted := r.Intn(2) == 0
