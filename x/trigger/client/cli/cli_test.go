@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -19,13 +21,12 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	triggercli "github.com/provenance-io/provenance/x/trigger/client/cli"
-
-	"github.com/stretchr/testify/suite"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	"github.com/provenance-io/provenance/testutil/queries"
+	triggercli "github.com/provenance-io/provenance/x/trigger/client/cli"
 	"github.com/provenance-io/provenance/x/trigger/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
@@ -264,23 +265,26 @@ func (s *IntegrationTestSuite) TestQueryTriggers() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetTriggersCmd(), append(tc.args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
+			cmd := triggercli.GetTriggersCmd()
+			tc.args = append(tc.args, fmt.Sprintf("--%s=json", cmtcli.OutputFlag))
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), tc.args, string(outBz))
+
 			if len(tc.expectErrMsg) > 0 {
 				s.EqualError(err, tc.expectErrMsg, "should have correct error message for invalid QueryTriggers")
 			} else if tc.byId {
 				var response types.QueryTriggerByIDResponse
 				s.NoError(err, "should have no error message for valid QueryTriggerByID")
-				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
+				err = s.cfg.Codec.UnmarshalJSON(outBz, &response)
 				s.NoError(err, "should have no error message when unmarshalling response to QueryTriggerByID")
-				s.Equal(int(tc.expectedIds[0]), int(response.Trigger.Id), "should return correct trigger for QueryTriggerByID")
+				s.Equal(tc.expectedIds[0], int(response.Trigger.Id), "should return correct trigger for QueryTriggerByID")
 			} else {
 				var response types.QueryTriggersResponse
 				s.NoError(err, "should have no error message for valid QueryTriggers")
-				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
+				err = s.cfg.Codec.UnmarshalJSON(outBz, &response)
 				s.NoError(err, "should have no error message when unmarshalling response to QueryTriggers")
 				var triggerIDs []int
 				for _, rp := range response.Triggers {
@@ -382,8 +386,6 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
@@ -407,28 +409,27 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 
 			messageFile := sdktestutil.WriteToNewTempFile(s.T(), message)
 
+			cmd := triggercli.GetCmdAddBlockHeightTrigger()
 			args := []string{
 				tc.height,
 				messageFile.Name(),
-			}
-			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
-			args = append(args, flagArgs...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockHeightTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
-			var response sdk.TxResponse
-			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
+
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid AddBlockHeightTrigger request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid AddBlockHeightTrigger request")
 			} else {
 				s.Assert().NoError(err, "should have no error for valid AddBlockHeightTrigger request")
-				s.Assert().NoError(marshalErr, out.String(), "should have no error for marshaling request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for AddBlockHeightTrigger request")
+				txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
+				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for AddBlockHeightTrigger request")
 			}
 		})
 	}
@@ -516,8 +517,6 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
@@ -562,28 +561,27 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 			}
 			txEventFile := sdktestutil.WriteToNewTempFile(s.T(), txEvent)
 
+			cmd := triggercli.GetCmdAddTransactionTrigger()
 			args := []string{
 				txEventFile.Name(),
 				messageFile.Name(),
-			}
-			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
-			args = append(args, flagArgs...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddTransactionTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
-			var response sdk.TxResponse
-			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
+
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid AddTransactionTrigger request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid AddTransactionTrigger request")
 			} else {
 				s.Assert().NoError(err, "should have no error for valid AddTransactionTrigger request")
-				s.Assert().NoError(marshalErr, out.String(), "should have no marshalling error for valid AddTransactionTrigger request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid AddTransactionTrigger request")
+				txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
+				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for valid AddTransactionTrigger request")
 			}
 		})
 	}
@@ -679,8 +677,6 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
@@ -704,28 +700,27 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 
 			messageFile := sdktestutil.WriteToNewTempFile(s.T(), message)
 
+			cmd := triggercli.GetCmdAddBlockTimeTrigger()
 			args := []string{
 				tc.blockTime,
 				messageFile.Name(),
-			}
-			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
-			args = append(args, flagArgs...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdAddBlockTimeTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
-			var response sdk.TxResponse
-			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
+
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid AddBlockTimeTrigger request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid AddBlockTimeTrigger request")
 			} else {
 				s.Assert().NoError(err, "should have no error for valid AddBlockTimeTrigger request")
-				s.Assert().NoError(marshalErr, out.String(), "should have no marshal error for valid AddBlockTimeTrigger request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid AddBlockTimeTrigger request")
+				txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
+				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for valid AddBlockTimeTrigger request")
 			}
 		})
 	}
@@ -770,33 +765,29 @@ func (s *IntegrationTestSuite) TestDestroyTrigger() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
-
 			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
+			cmd := triggercli.GetCmdDestroyTrigger()
 			args := []string{
 				tc.triggerID,
-			}
-			flagArgs := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
-			args = append(args, flagArgs...)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, triggercli.GetCmdDestroyTrigger(), append(args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
-			var response sdk.TxResponse
-			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
+
 			if len(tc.expectErrMsg) > 0 {
 				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid DestroyTrigger request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid DestroyTrigger request")
 			} else {
 				s.Assert().NoError(err, "should have no error for valid DestroyTrigger request")
-				s.Assert().NoError(marshalErr, out.String(), "should have no marshal error for valid DestroyTrigger request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid DestroyTrigger request")
+				txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
+				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for valid DestroyTrigger request")
 			}
 		})
 	}

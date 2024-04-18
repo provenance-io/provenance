@@ -1123,6 +1123,7 @@ func New(
 	app.ScopedICQKeeper = scopedICQKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
 
+	simappparams.AppEncodingConfig = app.GetEncodingConfig()
 	return app
 }
 

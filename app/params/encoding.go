@@ -14,3 +14,7 @@ type EncodingConfig struct {
 	TxConfig          client.TxConfig
 	Amino             *codec.LegacyAmino
 }
+
+// AppEncodingConfig is a global encoding config made available for areas where we don't otherwise have access to it.
+// It's set (and updated) during app.New.
+var AppEncodingConfig EncodingConfig

@@ -96,7 +96,7 @@ func Cleanup(n *testnet.Network, t *testing.T) {
 	n.Cleanup()
 	// Give things a chance to finish closing up. Hopefully will prevent things like address collisions. 100ms chosen randomly.
 	time.Sleep(100 * time.Millisecond)
-	t.Log("Cleanup: done")
+	t.Log("Cleanup: Done.")
 }
 
 // queryCurrentHeight executes a query to get the current height in a separate process.

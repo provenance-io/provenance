@@ -160,7 +160,7 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	s.LogOperationMsg(operationMsg, "good")
 
 	var msg types.MsgDestroyTriggerRequest
-	s.Require().NoError(s.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "Unmarshal(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
