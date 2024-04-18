@@ -24,7 +24,7 @@ const defaultLimit = 100
 var _ types.QueryServer = Keeper{}
 
 // Params queries params of metadata module.
-func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Keeper) Params(_ context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "Params")
 	resp := &types.QueryParamsResponse{Params: types.Params{}}
 	if req != nil && req.IncludeRequest {
@@ -1101,7 +1101,7 @@ func (k Keeper) OSLocatorsByURI(ctx context.Context, request *types.OSLocatorsBy
 	uriStr := uri.String()
 
 	osLocatorStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.OSLocatorAddressKeyPrefix)
-	retval.Pagination, err = query.FilteredPaginate(osLocatorStore, request.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	retval.Pagination, err = query.FilteredPaginate(osLocatorStore, request.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		record := types.ObjectStoreLocator{}
 		if rerr := k.cdc.Unmarshal(value, &record); rerr != nil {
 			return false, rerr
@@ -1160,7 +1160,7 @@ func (k Keeper) OSAllLocators(ctx context.Context, request *types.OSAllLocatorsR
 
 	osLocatorStore := prefix.NewStore(sdk.UnwrapSDKContext(ctx).KVStore(k.storeKey), types.OSLocatorAddressKeyPrefix)
 	var err error
-	retval.Pagination, err = query.Paginate(osLocatorStore, request.Pagination, func(key []byte, value []byte) error {
+	retval.Pagination, err = query.Paginate(osLocatorStore, request.Pagination, func(_ []byte, value []byte) error {
 		record := types.ObjectStoreLocator{}
 		if rerr := k.cdc.Unmarshal(value, &record); rerr != nil {
 			return rerr

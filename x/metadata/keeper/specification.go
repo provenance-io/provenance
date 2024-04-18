@@ -335,7 +335,7 @@ func (k Keeper) indexContractSpecification(ctx sdk.Context, newSpec, oldSpec *ty
 // isContractSpecUsed checks to see if a contract spec is referenced by anything else (e.g. scope spec or session)
 func (k Keeper) isContractSpecUsed(ctx sdk.Context, contractSpecID types.MetadataAddress) bool {
 	contractSpecReferenceFound := false
-	itScopeSpecErr := k.IterateScopeSpecsForContractSpec(ctx, contractSpecID, func(scopeID types.MetadataAddress) (stop bool) {
+	itScopeSpecErr := k.IterateScopeSpecsForContractSpec(ctx, contractSpecID, func(types.MetadataAddress) (stop bool) {
 		contractSpecReferenceFound = true
 		return true
 	})
@@ -586,7 +586,7 @@ func (k Keeper) indexScopeSpecification(ctx sdk.Context, newSpec, oldSpec *types
 // isScopeSpecUsed checks to see if a scope exists that is defined by this scope spec.
 func (k Keeper) isScopeSpecUsed(ctx sdk.Context, scopeSpecID types.MetadataAddress) bool {
 	scopeSpecReferenceFound := false
-	err := k.IterateScopesForScopeSpec(ctx, scopeSpecID, func(scopeID types.MetadataAddress) (stop bool) {
+	err := k.IterateScopesForScopeSpec(ctx, scopeSpecID, func(types.MetadataAddress) (stop bool) {
 		scopeSpecReferenceFound = true
 		return true
 	})
