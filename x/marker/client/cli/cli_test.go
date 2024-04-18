@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,6 +29,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
@@ -301,12 +301,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
 
-	_, err = s.testnet.WaitForHeight(1)
+	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	testutil.CleanUp(s.testnet, s.T())
+	testutil.Cleanup(s.testnet, s.T())
 }
 
 // toWritten converts an integer to a written string version.

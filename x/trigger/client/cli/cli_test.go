@@ -166,14 +166,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "network.New")
 
-	_, err = s.network.WaitForHeight(6)
+	_, err = testutil.WaitForHeight(s.network, 6)
 	s.Require().NoError(err, "WaitForHeight")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
+	testutil.Cleanup(s.network, s.T())
 }
 
 func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {

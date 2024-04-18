@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
@@ -18,6 +17,7 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
@@ -135,12 +135,12 @@ func (s *IntegrationGRPCTestSuite) SetupSuite() {
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
 
-	_, err = s.testnet.WaitForHeight(1)
+	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationGRPCTestSuite) TearDownSuite() {
-	testutil.CleanUp(s.testnet, s.T())
+	testutil.Cleanup(s.testnet, s.T())
 }
 
 func TestIntegrationGRPCTestSuite(t *testing.T) {

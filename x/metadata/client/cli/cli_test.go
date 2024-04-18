@@ -494,12 +494,12 @@ owner: %s`,
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
 
-	_, err = s.testnet.WaitForHeight(1)
+	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationCLITestSuite) TearDownSuite() {
-	testutil.CleanUp(s.testnet, s.T())
+	testutil.Cleanup(s.testnet, s.T())
 }
 
 func (s *IntegrationCLITestSuite) generateAccountsWithKeyrings(number int) {

@@ -360,12 +360,12 @@ func (s *CmdTestSuite) SetupSuite() {
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "testnet.New(...)")
 
-	_, err = s.testnet.WaitForHeight(1)
+	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "s.testnet.WaitForHeight(1)")
 }
 
 func (s *CmdTestSuite) TearDownSuite() {
-	testutil.CleanUp(s.testnet, s.T())
+	testutil.Cleanup(s.testnet, s.T())
 }
 
 // generateAccountsWithKeyring creates a keyring and adds a number of keys to it.

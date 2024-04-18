@@ -80,19 +80,23 @@ func DefaultTestNetworkConfig() testnet.Config {
 	}
 }
 
-func CleanUp(n *testnet.Network, t *testing.T) {
+// Cleanup runs the standard cleanup for our test networks.
+func Cleanup(n *testnet.Network, t *testing.T) {
+	t.Log("Cleanup: Tearing down test network")
 	if n == nil {
-		t.Log("nothing to tear down")
+		t.Log("Cleanup: Nothing to tear down. Done.")
 		return
 	}
-	t.Log("teardown waiting for next block")
-	//nolint:errcheck // The test shouldn't fail because cleanup was a problem. So ignoring any error from this.
-	WaitForNextBlock(n)
-	t.Log("teardown cleaning up testnet")
+	t.Log("Cleanup: Waiting for next block.")
+	err := WaitForNextBlock(n)
+	if err != nil {
+		t.Logf("Cleanup: Error (ignored) waiting for next block: %v", err)
+	}
+	t.Log("Cleanup: Cleaning up testnet.")
 	n.Cleanup()
 	// Give things a chance to finish closing up. Hopefully will prevent things like address collisions. 100ms chosen randomly.
 	time.Sleep(100 * time.Millisecond)
-	t.Log("teardown done")
+	t.Log("Cleanup: done")
 }
 
 // queryCurrentHeight executes a query to get the current height in a separate process.

@@ -95,12 +95,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err, "creating testnet")
 
-	_, err = s.testnet.WaitForHeight(1)
+	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	testutil.CleanUp(s.testnet, s.T())
+	testutil.Cleanup(s.testnet, s.T())
 }
 
 // toWritten converts an integer to a written string version.

@@ -63,8 +63,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	testutil.CleanUp(s.network, s.T())
+	testutil.Cleanup(s.network, s.T())
 }
 
 func (s *IntegrationTestSuite) stopIfFailed() {
