@@ -80,7 +80,7 @@ func QueryCmdGetAllHolds() *cobra.Command {
 		Short:   "Get all funds on hold for all accounts",
 		Example: fmt.Sprintf("$ %s all", exampleQueryCmdBase),
 		Args:    cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

@@ -57,7 +57,7 @@ $ %s query ibchooks wasm-hooks-sender channel-7 pb12smx2wdlyttvyzvzg54y2vnqwq2qj
 			),
 		),
 		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			channelID := args[0]
 			originalSender := args[1]
 			// ToDo: Make this flexible as an arg

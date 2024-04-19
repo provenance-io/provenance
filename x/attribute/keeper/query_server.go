@@ -39,7 +39,7 @@ func (k Keeper) Attribute(c context.Context, req *types.QueryAttributeRequest) (
 	attributes := make([]types.Attribute, 0)
 	store := ctx.KVStore(k.storeKey)
 	attributeStore := prefix.NewStore(store, types.AddrStrAttributesNameKeyPrefix(req.Account, req.Name))
-	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.Attribute
 		err := k.cdc.Unmarshal(value, &result)
 		if err != nil {
@@ -74,7 +74,7 @@ func (k Keeper) Attributes(c context.Context, req *types.QueryAttributesRequest)
 	store := ctx.KVStore(k.storeKey)
 	attributeStore := prefix.NewStore(store, types.AddrStrAttributesKeyPrefix(req.Account))
 
-	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.Attribute
 		err := k.cdc.Unmarshal(value, &result)
 		if err != nil {
@@ -114,7 +114,7 @@ func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.Que
 	store := ctx.KVStore(k.storeKey)
 	attributeStore := prefix.NewStore(store, types.AddrStrAttributesKeyPrefix(req.Account))
 
-	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.Attribute
 		err := k.cdc.Unmarshal(value, &result)
 		if err != nil {
@@ -147,7 +147,7 @@ func (k Keeper) AttributeAccounts(c context.Context, req *types.QueryAttributeAc
 	keyPrefix := types.AttributeNameKeyPrefix(req.AttributeName)
 	attributeStore := prefix.NewStore(store, keyPrefix)
 
-	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(attributeStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		addressLength := int32(key[0])
 		address := sdk.AccAddress(key[1 : addressLength+1])
 		for _, account := range accounts {

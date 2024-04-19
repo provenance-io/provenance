@@ -80,16 +80,6 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 				return err
 			}
 
-			msgFee, err := clientCtx.InterfaceRegistry.Resolve(msgType)
-			if err != nil {
-				return err
-			}
-
-			_, ok := msgFee.(sdk.Msg)
-			if !ok {
-				return fmt.Errorf("message type is not a sdk message: %q", msgType)
-			}
-
 			var addFee sdk.Coin
 			if proposalType != "remove" {
 				additionalFee, errMinFee := cmd.Flags().GetString(FlagMinFee)

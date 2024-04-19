@@ -210,7 +210,7 @@ func (k Keeper) ReleaseCommitments(ctx sdk.Context, marketID uint32, toRelease [
 func (k Keeper) ReleaseAllCommitmentsForMarket(ctx sdk.Context, marketID uint32) {
 	var keySuffixes [][]byte
 	keyPrefix := GetKeyPrefixCommitmentsToMarket(marketID)
-	k.iterate(ctx, keyPrefix, func(keySuffix, value []byte) bool {
+	k.iterate(ctx, keyPrefix, func(keySuffix, _ []byte) bool {
 		keySuffixes = append(keySuffixes, keySuffix)
 		return false
 	})

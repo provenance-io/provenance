@@ -153,7 +153,7 @@ func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
 func OperationMsgVote(args *WeightedOpsArgs, voter simtypes.Account, govPropID uint64, vote govv1.VoteOption, comment string) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+		_ []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msg := govv1.NewMsgVote(voter.Address, govPropID, vote, "")
 

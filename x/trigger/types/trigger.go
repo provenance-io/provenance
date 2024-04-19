@@ -60,11 +60,11 @@ func (e TransactionEvent) Matches(other abci.Event) bool {
 
 // Matches checks if two Attributes have the same name and an equal value if one is specified.
 func (a Attribute) Matches(other abci.EventAttribute) bool {
-	if a.GetName() != string(other.GetKey()) {
+	if a.GetName() != other.GetKey() {
 		return false
 	}
 
-	if a.GetValue() != "" && a.GetValue() != string(other.GetValue()) {
+	if a.GetValue() != "" && a.GetValue() != other.GetValue() {
 		return false
 	}
 
