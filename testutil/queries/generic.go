@@ -5,10 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // AssertGetRequest does an HTTP get on the provided url and unmarshalls the response into the provided emptyResp.

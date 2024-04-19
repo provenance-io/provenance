@@ -49,8 +49,6 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	// rosettacmd "github.com/cosmos/rosetta/cmd" // TODO[1760]: rosetta
-
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
@@ -121,7 +119,8 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
 			// is only available if the client is online.
 			if !initClientCtx.Offline {
-				enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+				enabledSignModes := tx.DefaultSignModes
+				enabledSignModes = append(enabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
 				txConfigOpts := tx.ConfigOptions{
 					EnabledSignModes:           enabledSignModes,
 					TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
@@ -203,7 +202,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddRootDomainAccountCmd(app.DefaultNodeHome),
 		AddGenesisMarkerCmd(app.DefaultNodeHome),
-		AddGenesisMsgFeeCmd(app.DefaultNodeHome, encodingConfig.InterfaceRegistry),
+		AddGenesisMsgFeeCmd(app.DefaultNodeHome),
 		AddGenesisCustomFloorPriceDenomCmd(app.DefaultNodeHome),
 		AddGenesisDefaultMarketCmd(app.DefaultNodeHome),
 		AddGenesisCustomMarketCmd(app.DefaultNodeHome),

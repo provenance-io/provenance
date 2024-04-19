@@ -141,7 +141,7 @@ func (h WasmHooks) execWasmMsg(ctx sdktypes.Context, execMsg *wasmtypes.MsgExecu
 		return nil, fmt.Errorf(types.ErrBadExecutionMsg, err.Error())
 	}
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(h.ContractKeeper)
-	return wasmMsgServer.ExecuteContract(sdktypes.WrapSDKContext(ctx), execMsg)
+	return wasmMsgServer.ExecuteContract(ctx, execMsg)
 }
 
 func isIcs20Packet(data []byte) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {

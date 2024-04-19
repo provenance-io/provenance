@@ -15,10 +15,13 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
+	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 // appUpgrade is an internal structure for defining all things for an upgrade.
@@ -70,16 +73,15 @@ var upgrades = map[string]appUpgrade{
 			migrateMarkerParams(ctx, app)
 			migrateMetadataOSLocatorParams(ctx, app)
 			migrateMsgFeesParams(ctx, app)
+			migrateNameParams(ctx, app)
+			migrateIbcHooksParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
 			}
 
-			err = updateIBCClients(ctx, app)
-			if err != nil {
-				return nil, err
-			}
+			updateIBCClients(ctx, app)
 
 			removeInactiveValidatorDelegations(ctx, app)
 
@@ -110,16 +112,15 @@ var upgrades = map[string]appUpgrade{
 			migrateMarkerParams(ctx, app)
 			migrateMetadataOSLocatorParams(ctx, app)
 			migrateMsgFeesParams(ctx, app)
+			migrateNameParams(ctx, app)
+			migrateIbcHooksParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
 			if err != nil {
 				return nil, err
 			}
 
-			err = updateIBCClients(ctx, app)
-			if err != nil {
-				return nil, err
-			}
+			updateIBCClients(ctx, app)
 
 			removeInactiveValidatorDelegations(ctx, app)
 
@@ -286,13 +287,12 @@ func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
 
 // updateIBCClients updates the allowed clients for IBC.
 // TODO: Remove with the umber handlers.
-func updateIBCClients(ctx sdk.Context, app *App) error {
+func updateIBCClients(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating IBC AllowedClients.")
 	params := app.IBCKeeper.ClientKeeper.GetParams(ctx)
 	params.AllowedClients = append(params.AllowedClients, exported.Localhost)
 	app.IBCKeeper.ClientKeeper.SetParams(ctx, params)
 	ctx.Logger().Info("Done updating IBC AllowedClients.")
-	return nil
 }
 
 // migrateBaseappParams migrates to new ConsensusParamsKeeper
@@ -340,7 +340,7 @@ func migrateAttributeParams(ctx sdk.Context, app *App) {
 	if attributeParamSpace.Has(ctx, attributetypes.ParamStoreKeyMaxValueLength) {
 		attributeParamSpace.Get(ctx, attributetypes.ParamStoreKeyMaxValueLength, &maxValueLength)
 	}
-	app.AttributeKeeper.SetParams(ctx, attributetypes.Params{MaxValueLength: uint32(maxValueLength)})
+	app.AttributeKeeper.SetParams(ctx, attributetypes.Params{MaxValueLength: maxValueLength})
 	ctx.Logger().Info("Done migrating attribute params.")
 }
 
@@ -356,7 +356,7 @@ func migrateMarkerParams(ctx sdk.Context, app *App) {
 	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyMaxTotalSupply) {
 		var maxTotalSupply uint64
 		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyMaxTotalSupply, &maxTotalSupply)
-		params.MaxTotalSupply = maxTotalSupply
+		params.MaxTotalSupply = maxTotalSupply //nolint:staticcheck
 	}
 
 	// TODO: remove markertypes.ParamStoreKeyEnableGovernance with the umber handlers.
@@ -395,9 +395,37 @@ func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
 	if metadataParamSpace.Has(ctx, metadatatypes.ParamStoreKeyMaxValueLength) {
 		metadataParamSpace.Get(ctx, metadatatypes.ParamStoreKeyMaxValueLength, &maxValueLength)
 	}
-	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: uint32(maxValueLength)})
+	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: maxValueLength})
 	ctx.Logger().Info("Done migrating metadata os locator params.")
+}
 
+// migrateNameParams migrates to new Name Params store
+// TODO: Remove with the umber handlers.
+func migrateNameParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating name params.")
+	nameParamSpace := app.ParamsKeeper.Subspace(nametypes.ModuleName)
+
+	params := nametypes.DefaultParams()
+
+	// TODO: all param keys from types/params with the umber handlers.
+	if nameParamSpace.Has(ctx, nametypes.ParamStoreKeyMaxNameLevels) {
+		nameParamSpace.Get(ctx, nametypes.ParamStoreKeyMaxNameLevels, &params.MaxNameLevels)
+	}
+
+	if nameParamSpace.Has(ctx, nametypes.ParamStoreKeyMaxSegmentLength) {
+		nameParamSpace.Get(ctx, nametypes.ParamStoreKeyMaxSegmentLength, &params.MaxSegmentLength)
+	}
+
+	if nameParamSpace.Has(ctx, nametypes.ParamStoreKeyMinSegmentLength) {
+		nameParamSpace.Get(ctx, nametypes.ParamStoreKeyMinSegmentLength, &params.MinSegmentLength)
+	}
+
+	if nameParamSpace.Has(ctx, nametypes.ParamStoreKeyAllowUnrestrictedNames) {
+		nameParamSpace.Get(ctx, nametypes.ParamStoreKeyAllowUnrestrictedNames, &params.AllowUnrestrictedNames)
+	}
+	app.NameKeeper.SetParams(ctx, params)
+
+	ctx.Logger().Info("Done migrating name params.")
 }
 
 // migrateMsgFeesParams migrates to new MsgFees Params store
@@ -406,6 +434,7 @@ func migrateMsgFeesParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Migrating msgfees params.")
 	msgFeesParamSpace := app.ParamsKeeper.Subspace(msgfeestypes.ModuleName).WithKeyTable(msgfeestypes.ParamKeyTable())
 
+	// TODO: all param keys from types/params with the umber handlers.
 	var floorGasPrice sdk.Coin
 	if msgFeesParamSpace.Has(ctx, msgfeestypes.ParamStoreKeyFloorGasPrice) {
 		msgFeesParamSpace.Get(ctx, msgfeestypes.ParamStoreKeyFloorGasPrice, &floorGasPrice)
@@ -429,4 +458,24 @@ func migrateMsgFeesParams(ctx sdk.Context, app *App) {
 	app.MsgFeesKeeper.SetParams(ctx, migratedParams)
 
 	ctx.Logger().Info("Done migrating msgfees params.")
+}
+
+// migrateIbcHooksParams migrates existing ibchooks parameters from paramSpace to a direct KVStore.
+// TODO: Remove with the umber handlers.
+func migrateIbcHooksParams(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Migrating ibchooks params.")
+	ibcHooksParamSpace := app.ParamsKeeper.Subspace(ibchookstypes.ModuleName)
+
+	params := ibchookstypes.DefaultParams()
+
+	// TODO: all param keys from types/params with the umber handlers.
+	var allowlist []string
+	if ibcHooksParamSpace.Has(ctx, ibchookstypes.KeyAsyncAckAllowList) {
+		ibcHooksParamSpace.Get(ctx, ibchookstypes.KeyAsyncAckAllowList, &allowlist)
+	}
+	params.AllowedAsyncAckContracts = allowlist
+
+	app.IBCHooksKeeper.SetParams(ctx, params)
+
+	ctx.Logger().Info("Done migrating ibchooks params.")
 }

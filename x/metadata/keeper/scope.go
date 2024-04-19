@@ -3,11 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
 )

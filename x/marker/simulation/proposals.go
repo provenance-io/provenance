@@ -101,7 +101,7 @@ func SimulateCreateSupplyIncreaseProposalContent(k keeper.Keeper) simtypes.Conte
 
 // SimulateCreateSupplyDecreaseProposalContent generates random create-root-name proposal content
 func SimulateCreateSupplyDecreaseProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
-	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+	return func(r *rand.Rand, ctx sdk.Context, _ []simtypes.Account) simtypes.Content {
 		m := randomGovMarkerWithMaxStatus(r, ctx, k, types.StatusActive)
 		if m == nil {
 			return nil
@@ -154,7 +154,7 @@ func SimulateCreateRemoveAdministratorProposalContent(k keeper.Keeper) simtypes.
 
 // SimulateCreateChangeStatusProposalContent generates random create-root-name proposal content
 func SimulateCreateChangeStatusProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
-	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+	return func(r *rand.Rand, ctx sdk.Context, _ []simtypes.Account) simtypes.Content {
 		m := randomGovMarkerWithMaxStatus(r, ctx, k, types.StatusCancelled)
 		if m == nil {
 			return nil
@@ -170,7 +170,7 @@ func SimulateCreateChangeStatusProposalContent(k keeper.Keeper) simtypes.Content
 
 // SimulateSetDenomMetadataProposalContent generates random set denom metadata proposal content
 func SimulateSetDenomMetadataProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
-	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+	return func(r *rand.Rand, ctx sdk.Context, _ []simtypes.Account) simtypes.Content {
 		m := randomGovMarkerWithMaxStatus(r, ctx, k, types.StatusDestroyed)
 		if m == nil {
 			return nil

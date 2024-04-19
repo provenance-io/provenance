@@ -13,13 +13,8 @@ import (
 // TODO[1760]: marker: Migrate the legacy gov proposals.
 
 // HandleAddMsgFeeProposal handles an Add msg fees governance proposal request
-func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddMsgFeeProposal, registry codectypes.InterfaceRegistry) error {
+func HandleAddMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.AddMsgFeeProposal, _ codectypes.InterfaceRegistry) error {
 	if err := proposal.ValidateBasic(); err != nil {
-		return err
-	}
-
-	err := checkMsgTypeValid(registry, proposal.MsgTypeUrl)
-	if err != nil {
 		return err
 	}
 
@@ -63,26 +58,9 @@ func DetermineBips(recipient string, recipientBasisPoints string) (uint32, error
 	return bips, nil
 }
 
-func checkMsgTypeValid(registry codectypes.InterfaceRegistry, msgTypeURL string) error {
-	msgFee, err := registry.Resolve(msgTypeURL)
-	if err != nil {
-		return err
-	}
-
-	_, ok := msgFee.(sdk.Msg)
-	if !ok {
-		return fmt.Errorf("message type is not a sdk message: %v", msgTypeURL)
-	}
-	return err
-}
-
 // HandleUpdateMsgFeeProposal handles an Update of an existing msg fees governance proposal request
-func HandleUpdateMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateMsgFeeProposal, registry codectypes.InterfaceRegistry) error {
+func HandleUpdateMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateMsgFeeProposal, _ codectypes.InterfaceRegistry) error {
 	if err := proposal.ValidateBasic(); err != nil {
-		return err
-	}
-	err := checkMsgTypeValid(registry, proposal.MsgTypeUrl)
-	if err != nil {
 		return err
 	}
 	existing, err := k.GetMsgFee(ctx, proposal.MsgTypeUrl)
@@ -108,11 +86,8 @@ func HandleUpdateMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Updat
 }
 
 // HandleRemoveMsgFeeProposal handles a Remove of an existing msg fees governance proposal request
-func HandleRemoveMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.RemoveMsgFeeProposal, registry codectypes.InterfaceRegistry) error {
+func HandleRemoveMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.RemoveMsgFeeProposal, _ codectypes.InterfaceRegistry) error {
 	if err := proposal.ValidateBasic(); err != nil {
-		return err
-	}
-	if err := checkMsgTypeValid(registry, proposal.MsgTypeUrl); err != nil {
 		return err
 	}
 	existing, err := k.GetMsgFee(ctx, proposal.MsgTypeUrl)

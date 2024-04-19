@@ -45,7 +45,7 @@ func QueryParamsCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Example: strings.TrimSpace(
 			fmt.Sprintf(`$ %s query marker params`, version.AppName)),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

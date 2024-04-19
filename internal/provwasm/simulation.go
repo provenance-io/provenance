@@ -11,6 +11,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -159,7 +160,7 @@ func SimulateMsgBindName(simState module.SimulationState, ak authkeeper.AccountK
 
 func SimulateMsgAddMarker(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msg := markertypes.NewMsgAddMarkerRequest(
 			denom,
@@ -197,7 +198,7 @@ func SimulateMsgAddMarker(simState module.SimulationState, ak authkeeper.Account
 
 func SimulateMsgAddAccess(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		accessTypes := []markertypes.Access{markertypes.AccessByName("withdraw")}
 		grant := *markertypes.NewAccessGrant(node.Address, accessTypes)
@@ -212,7 +213,7 @@ func SimulateMsgAddAccess(simState module.SimulationState, ak authkeeper.Account
 
 func SimulateFinalizeMarker(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msg := markertypes.NewMsgFinalizeRequest(denom, node.Address)
 
@@ -226,7 +227,7 @@ func SimulateFinalizeMarker(simState module.SimulationState, ak authkeeper.Accou
 
 func SimulateActivateMarker(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msg := markertypes.NewMsgActivateRequest(denom, node.Address)
 
@@ -240,7 +241,7 @@ func SimulateActivateMarker(simState module.SimulationState, ak authkeeper.Accou
 
 func SimulateMsgWithdrawRequest(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		coins := []sdk.Coin{{
 			Denom:  denom,
@@ -257,7 +258,7 @@ func SimulateMsgWithdrawRequest(simState module.SimulationState, ak authkeeper.A
 
 func SimulateMsgStoreContract(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		code, err := os.ReadFile("./sim_contracts/tutorial.wasm")
 
@@ -280,7 +281,7 @@ func SimulateMsgStoreContract(simState module.SimulationState, ak authkeeper.Acc
 
 func SimulateMsgInstantiateContract(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, nk namekeeper.Keeper, node, feebucket, merchant, consumer simtypes.Account, name string) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		record, err := nk.GetRecordByName(ctx, name)
 
@@ -346,7 +347,7 @@ func SimulateMsgInstantiateContract(simState module.SimulationState, ak authkeep
 
 func SimulateMsgExecuteContract(simState module.SimulationState, ak authkeeper.AccountKeeperI, bk bankkeeper.ViewKeeper, _, consumer simtypes.Account, contractAddr string) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, _ []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		amount, _ := sdk.ParseCoinsNormalized(fmt.Sprintf("100%s", denom))
 		coins := bk.SpendableCoins(ctx, consumer.Address)
