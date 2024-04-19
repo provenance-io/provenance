@@ -14,9 +14,9 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
 	"github.com/provenance-io/provenance/x/ibchooks/types"
@@ -24,8 +24,8 @@ import (
 
 type (
 	Keeper struct {
-		storeKey   storetypes.StoreKey
-		paramSpace paramtypes.Subspace
+		cdc      codec.BinaryCodec
+		storeKey storetypes.StoreKey
 
 		channelKeeper  types.ChannelKeeper
 		ContractKeeper *wasmkeeper.PermissionedKeeper
@@ -34,17 +34,14 @@ type (
 
 // NewKeeper returns a new instance of the x/ibchooks keeper
 func NewKeeper(
+	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
-	paramSpace paramtypes.Subspace,
 	channelKeeper types.ChannelKeeper,
 	contractKeeper *wasmkeeper.PermissionedKeeper,
 ) Keeper {
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
 	keeper := Keeper{
+		cdc:            cdc,
 		storeKey:       storeKey,
-		paramSpace:     paramSpace,
 		channelKeeper:  channelKeeper,
 		ContractKeeper: contractKeeper,
 	}
@@ -54,17 +51,6 @@ func NewKeeper(
 // Logger returns a logger for the x/tokenfactory module
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-// GetParams returns the total set of the module's parameters.
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramSpace.GetParamSet(ctx, &params)
-	return params
-}
-
-// SetParams sets the module's parameters with the provided parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
 }
 
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
@@ -112,9 +98,7 @@ func (k Keeper) GetPacketCallback(ctx sdk.Context, channel string, packetSequenc
 
 // IsInAllowList checks the params to see if the contract is in the KeyAsyncAckAllowList param
 func (k Keeper) IsInAllowList(ctx sdk.Context, contract string) bool {
-	var allowList []string
-	k.paramSpace.GetIfExists(ctx, types.KeyAsyncAckAllowList, &allowList)
-	for _, addr := range allowList {
+	for _, addr := range k.GetParams(ctx).AllowedAsyncAckContracts {
 		if addr == contract {
 			return true
 		}

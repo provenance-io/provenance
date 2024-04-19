@@ -8,6 +8,7 @@ import (
 )
 
 // Parameter store keys.
+// TODO: remove with the umber (v1.19.x) handlers.
 var (
 	KeyAsyncAckAllowList = []byte("AsyncAckAllowList")
 
