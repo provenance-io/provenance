@@ -16,6 +16,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/provenance-io/provenance/testutil/assertions"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -36,6 +37,7 @@ func TestSimTestSuite(t *testing.T) {
 }
 
 func (s *SimTestSuite) SetupTest() {
+	govtypes.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false)
 }
@@ -127,9 +129,9 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	s.Require().Equal(expNames, actualNames, "operation message names")
 
 	for i := range expected {
-		s.Require().Equal(expected[i].weight, weightedOps[i].Weight(), "weightedOps[i].Weight", i)
-		s.Require().Equal(expected[i].opMsgRoute, opMsgs[i].Route, "opMsgs[i].Route", i)
-		s.Require().Equal(expected[i].opMsgName, opMsgs[i].Name, "opMsgs[i].Name", i)
+		s.Require().Equal(expected[i].weight, weightedOps[i].Weight(), "weightedOps[%d].Weight", i)
+		s.Require().Equal(expected[i].opMsgRoute, opMsgs[i].Route, "opMsgs[%d].Route", i)
+		s.Require().Equal(expected[i].opMsgName, opMsgs[i].Name, "opMsgs[%d].Name", i)
 	}
 }
 
@@ -316,7 +318,6 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	for _, tc := range tests {
 		resetParams(s.T(), s.ctx)
 		s.Run(tc.name, func() {
-
 			args := &simulation.SendGovMsgArgs{
 				WeightedOpsArgs: *s.getWeightedOpsArgs(),
 				R:               rand.New(rand.NewSource(1)),
@@ -328,15 +329,19 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 				Msg:             tc.msg,
 				Deposit:         tc.deposit,
 				Comment:         tc.comment,
+				Title:           "Add marker " + tc.name,
+				Summary:         "Create a marker for " + tc.name,
 			}
 
 			var skip bool
 			var opMsg simtypes.OperationMsg
-
+			var err error
 			testFunc := func() {
-				skip, opMsg, _ = simulation.SendGovMsg(args)
+				skip, opMsg, err = simulation.SendGovMsg(args)
 			}
 			s.Require().NotPanics(testFunc, "SendGovMsg")
+			s.LogOperationMsg(opMsg)
+			assertions.AssertErrorContents(s.T(), err, tc.expInErr)
 
 			s.Assert().Equal(tc.expSkip, skip, "SendGovMsg result skip bool")
 			s.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "SendGovMsg result op msg route")
@@ -485,15 +490,16 @@ func (s *SimTestSuite) getWeightedOpsArgs() *simulation.WeightedOpsArgs {
 
 // getLastGovProp gets the last gov prop to be submitted.
 func (s *SimTestSuite) getLastGovProp() *govtypes.Proposal {
-	// TODO[1760]: gov: Uncomment when you figure out how to get the last proposal again.
-	return nil
-	/*
-		props := s.app.GovKeeper.GetProposals(s.ctx)
-		if len(props) == 0 {
-			return nil
-		}
-		return props[len(props)-1]
-	*/
+	propID, err := s.app.GovKeeper.ProposalID.Peek(s.ctx)
+	if !s.Assert().NoError(err, "s.app.GovKeeper.ProposalID.Peek(s.ctx)") {
+		return nil
+	}
+	propID--
+	prop, err := s.app.GovKeeper.Proposals.Get(s.ctx, propID)
+	if !s.Assert().NoError(err, "s.app.GovKeeper.Proposals.Get(s.ctx, %d)", propID) {
+		return nil
+	}
+	return &prop
 }
 
 // freshCtx creates a new context and sets it to this SimTestSuite's ctx field.
