@@ -19,7 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/provenance-io/provenance/internal/helpers"
@@ -261,7 +260,7 @@ func (s *UpgradeTestSuite) CreateValidator(unbondedTime time.Time, status stakin
 func (s *UpgradeTestSuite) DelegateToValidator(valAddress sdk.ValAddress, delegatorAddress sdk.AccAddress, coin sdk.Coin) {
 	validator, err := s.app.StakingKeeper.GetValidator(s.ctx, valAddress)
 	s.Require().NoError(err, "GetValidator(%q)", valAddress.String())
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, delegatorAddress, coin.Amount, types.Unbonded, validator, true)
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, delegatorAddress, coin.Amount, stakingtypes.Unbonded, validator, true)
 	s.Require().NoError(err, "Delegate(%q, %q, unbonded, %q, true) error", delegatorAddress.String(), coin.String(), valAddress.String())
 }
 
@@ -387,6 +386,12 @@ func (s *UpgradeTestSuite) TestUmberRC1() {
 		"INF Done migrating marker params.",
 		"INF Migrating metadata os locator params.",
 		"INF Done migrating metadata os locator params.",
+		"INF Migrating msgfees params.",
+		"INF Done migrating msgfees params.",
+		"INF Migrating name params.",
+		"INF Done migrating name params.",
+		"INF Migrating ibchooks params.",
+		"INF Done migrating ibchooks params.",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Updating IBC AllowedClients.",
 		"INF Done updating IBC AllowedClients.",
@@ -412,6 +417,12 @@ func (s *UpgradeTestSuite) TestUmber() {
 		"INF Done migrating marker params.",
 		"INF Migrating metadata os locator params.",
 		"INF Done migrating metadata os locator params.",
+		"INF Migrating msgfees params.",
+		"INF Done migrating msgfees params.",
+		"INF Migrating name params.",
+		"INF Done migrating name params.",
+		"INF Migrating ibchooks params.",
+		"INF Done migrating ibchooks params.",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
 		"INF Updating IBC AllowedClients.",
 		"INF Done updating IBC AllowedClients.",

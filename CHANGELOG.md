@@ -57,10 +57,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Remove unused navs [#1920](https://github.com/provenance-io/provenance/issues/1920).
 * Remove emitting of EventTypeMessage [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Update genutil for sdk 50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
-* Migrate module params from param space to module store.
-  *  Attribute module param migration [#1927](https://github.com/provenance-io/provenance/pull/1927)
-  *  Marker module param migration [#1934](https://github.com/provenance-io/provenance/pull/1934)
-  *  Metadata module param migration [#1932](https://github.com/provenance-io/provenance/pull/1932)
+* Migrate module params from param space to module store.[#1760](https://github.com/provenance-io/provenance/issues/1935)
+  *  Attribute module param migration [#1927](https://github.com/provenance-io/provenance/pull/1927).
+  *  Marker module param migration [#1934](https://github.com/provenance-io/provenance/pull/1934).
+  *  Metadata module param migration [#1932](https://github.com/provenance-io/provenance/pull/1932).
+  *  Msgfees module param migration [#1936](https://github.com/provenance-io/provenance/pull/1936).
+  *  Name module param migration [#1937](https://github.com/provenance-io/provenance/pull/1937).
+  *  IbcHooks module param migration [#1939](https://github.com/provenance-io/provenance/pull/1939).
 * Restore the hold module [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Restore gov-prop cli commands and fix next key decoding [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
@@ -76,7 +79,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.6 ([#1912](https://github.com/provenance-io/provenance/pull/1912))
 - Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.1 ([#1913](https://github.com/provenance-io/provenance/pull/1913))
 - Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
-- Bump `peter-evans/create-pull-request` from 6.0.2 to 6.0.3 ([#1929](https://github.com/provenance-io/provenance/pull/1929))
+- Bump `peter-evans/create-pull-request` from 6.0.2 to 6.0.4 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940))
+- Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.2 ([#1928](https://github.com/provenance-io/provenance/pull/1928))
 
 ---
 
@@ -112,6 +116,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Remove the startup warning issued when disable-iavl-fastnode is true (we recommend keeping it as true if you already have it that way) [PR 1874](https://github.com/provenance-io/provenance/pull/1874).
 * Switch to `github.com/cometbft/cometbft-db` `v0.7.0` (from `github.com/tendermint/tm-db` `v0.6.7`) [PR 1874](https://github.com/provenance-io/provenance/pull/1874).
 * Allow NAV volume to exceed a marker's supply [PR 1883](https://github.com/provenance-io/provenance/pull/1883).
+* Update linter settings and fix import ordering [PR 1938](https://github.com/provenance-io/provenance/pull/1938).
 
 ### Deprecated
 

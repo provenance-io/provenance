@@ -10,9 +10,7 @@ import (
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	messages := make([]proto.Message, len(allRequestMsgs))
-	for i, msg := range allRequestMsgs {
-		messages[i] = msg
-	}
+	copy(messages, allRequestMsgs)
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

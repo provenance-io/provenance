@@ -41,7 +41,7 @@ func QueryParamsCmd() *cobra.Command {
 		Short:   "Query the current name parameters",
 		Args:    cobra.NoArgs,
 		Example: fmt.Sprintf(`$ %s query name params`, version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

@@ -12,16 +12,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
 // Keeper defines the name module Keeper
 type Keeper struct {
-	// The reference to the Paramstore to get and set account specific params
-	paramSpace paramtypes.Subspace
-
 	// Key to access the key-value store from sdk.Context.
 	storeKey storetypes.StoreKey
 
@@ -42,18 +38,11 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
-	paramSpace paramtypes.Subspace,
 ) Keeper {
-	// set KeyTable if it has not already been set
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return Keeper{
-		storeKey:   key,
-		paramSpace: paramSpace,
-		cdc:        cdc,
-		authority:  authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		storeKey:  key,
+		cdc:       cdc,
+		authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 }
 

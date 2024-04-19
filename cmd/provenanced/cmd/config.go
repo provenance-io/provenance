@@ -186,7 +186,7 @@ The directory that houses the configuration and data for the blockchain. This di
 		`,
 		Example: fmt.Sprintf(`$ %[1]s home`, configCmdStart),
 		Args:    cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runConfigHomeCmd(cmd)
 		},
 	}
@@ -207,7 +207,7 @@ Settings that are their default value will not be included.
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		Example: fmt.Sprintf(`$ %[1]s pack`, configCmdStart),
 		Args:    cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runConfigPackCmd(cmd)
 		},
 	}
@@ -231,7 +231,7 @@ This can also be used to update the config files using the current template so t
 `, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
 		Example: fmt.Sprintf(`$ %[1]s unpack`, configCmdStart),
 		Args:    cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runConfigUnpackCmd(cmd)
 		},
 	}

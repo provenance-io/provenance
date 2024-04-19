@@ -36,7 +36,7 @@ func GetQueryOracleAddressCmd() *cobra.Command {
 		Args:    cobra.ExactArgs(0),
 		Aliases: []string{"a"},
 		Example: fmt.Sprintf(`%[1]s q oracle address`, version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

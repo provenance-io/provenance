@@ -27,7 +27,6 @@ import (
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
-	"github.com/provenance-io/provenance/app"
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/mocks"
@@ -99,8 +98,6 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 }
 
 func TestAddGenesisMsgFeeCmd(t *testing.T) {
-	encCfg := app.MakeTestEncodingConfig(t)
-
 	tests := []struct {
 		name            string
 		msgType         string
@@ -158,7 +155,7 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 			cmd := provenancecmd.AddGenesisCustomFloorPriceDenomCmd(home)
-			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home, encCfg.InterfaceRegistry)
+			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home)
 			cmd.SetArgs([]string{
 				tc.msgFeeFloorCoin,
 				fmt.Sprintf("--%s=home", flags.FlagHome)})
@@ -384,9 +381,7 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 				appState[exchange.ModuleName], err = cdc.MarshalJSON(tc.iniExGenState)
 				require.NoError(t, err, "setup: MarshalJSON exchange genesis state")
 			} else {
-				if _, found := appState[exchange.ModuleName]; found {
-					delete(appState, exchange.ModuleName)
-				}
+				delete(appState, exchange.ModuleName)
 			}
 
 			var authState authtypes.GenesisState
@@ -442,7 +437,7 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 				return
 			}
 
-			appState, genDoc, err = genutiltypes.GenesisStateFromGenFile(genFile)
+			appState, _, err = genutiltypes.GenesisStateFromGenFile(genFile)
 			require.NoError(t, err, "GenesisStateFromGenFile(%q)", genFile)
 			var actExGenState exchange.GenesisState
 			err = cdc.UnmarshalJSON(appState[exchange.ModuleName], &actExGenState)
@@ -716,9 +711,7 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 				appState[exchange.ModuleName], err = cdc.MarshalJSON(tc.iniExGenState)
 				require.NoError(t, err, "setup: MarshalJSON exchange genesis state")
 			} else {
-				if _, found := appState[exchange.ModuleName]; found {
-					delete(appState, exchange.ModuleName)
-				}
+				delete(appState, exchange.ModuleName)
 			}
 
 			genDoc.AppState, err = json.Marshal(appState)
@@ -746,7 +739,7 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 				return
 			}
 
-			appState, genDoc, err = genutiltypes.GenesisStateFromGenFile(genFile)
+			appState, _, err = genutiltypes.GenesisStateFromGenFile(genFile)
 			require.NoError(t, err, "GenesisStateFromGenFile(%q)", genFile)
 			var actExGenState exchange.GenesisState
 			err = cdc.UnmarshalJSON(appState[exchange.ModuleName], &actExGenState)

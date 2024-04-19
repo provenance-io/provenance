@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -606,7 +605,7 @@ Currently, the denom and price defaults to 1905nhash
 }
 
 // AddGenesisMsgFeeCmd returns add-genesis-msg-fee cobra command.
-func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.InterfaceRegistry) *cobra.Command {
+func AddGenesisMsgFeeCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-genesis-msg-fee [msg-url] [additional-fee]",
 		Short: "Add a msg fee to genesis.json",
@@ -628,10 +627,6 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 
 			if msgType[0] != '/' {
 				msgType = "/" + msgType
-			}
-
-			if err := checkMsgTypeValid(interfaceRegistry, msgType); err != nil {
-				return err
 			}
 
 			additionalFee, err := sdk.ParseCoinNormalized(args[1])
@@ -679,19 +674,6 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string, interfaceRegistry types.Interfa
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
-}
-
-func checkMsgTypeValid(registry types.InterfaceRegistry, msgTypeURL string) error {
-	msg, err := registry.Resolve(msgTypeURL)
-	if err != nil {
-		return err
-	}
-
-	_, ok := msg.(sdk.Msg)
-	if !ok {
-		return fmt.Errorf("message type is not a sdk message: %v", msgTypeURL)
-	}
-	return err
 }
 
 // AddGenesisDefaultMarketCmd returns add-genesis-default-market cobra command.

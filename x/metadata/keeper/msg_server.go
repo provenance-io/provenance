@@ -516,11 +516,11 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	updateContractSpecIds := []types.MetadataAddress{}
+	updateContractSpecIDs := []types.MetadataAddress{}
 	found = false
 	for _, cSpecID := range scopeSpec.ContractSpecIds {
 		if !cSpecID.Equals(msg.ContractSpecificationId) {
-			updateContractSpecIds = append(updateContractSpecIds, cSpecID)
+			updateContractSpecIDs = append(updateContractSpecIDs, cSpecID)
 		} else {
 			found = true
 		}
@@ -529,7 +529,7 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 		return nil, sdkerrors.ErrNotFound.Wrapf("contract specification %s not found in scope specification %s", msg.ContractSpecificationId, msg.ScopeSpecificationId)
 	}
 
-	scopeSpec.ContractSpecIds = updateContractSpecIds
+	scopeSpec.ContractSpecIds = updateContractSpecIDs
 	k.SetScopeSpecification(ctx, scopeSpec)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecFromScopeSpec, msg.GetSignerStrs()))

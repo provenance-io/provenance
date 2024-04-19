@@ -25,7 +25,7 @@ func (k Keeper) DetectBlockEvents(ctx sdk.Context) {
 // detectTransactionEvents Detects triggers that have been activated by transaction events.
 func (k Keeper) detectTransactionEvents(ctx sdk.Context) (triggers []types.Trigger) {
 	detectedTriggers := map[uint64]bool{}
-	terminator := func(trigger types.Trigger, triggerEvent types.TriggerEventI) bool {
+	terminator := func(_ types.Trigger, _ types.TriggerEventI) bool {
 		return false
 	}
 

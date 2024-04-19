@@ -35,7 +35,7 @@ func AllMsgFeesCmd() *cobra.Command {
 		Aliases: []string{"ls", "l"},
 		Short:   "List all the msg fees on the Provenance Blockchain",
 		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -71,15 +71,12 @@ func ListParamsCmd() *cobra.Command {
 		Aliases: []string{"p"},
 		Short:   "List the msg fees params on the Provenance Blockchain",
 		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-			if err != nil {
-				return err
-			}
 
 			var response *types.QueryParamsResponse
 			if response, err = queryClient.Params(

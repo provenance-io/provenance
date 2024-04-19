@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	proto "github.com/cosmos/gogoproto/proto"
-
 	sdkmath "cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 var (

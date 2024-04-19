@@ -85,11 +85,29 @@ linters-settings:
 
           - cosmossdk.io/core
           - cosmossdk.io/errors
+          - cosmossdk.io/log
           - cosmossdk.io/math
           - cosmossdk.io/store
-          - github.com/cosmos/go-bip39
+          - cosmossdk.io/x/evidence
+          - cosmossdk.io/x/evidence/keeper
+          - cosmossdk.io/x/evidence/types
+          - cosmossdk.io/x/feegrant
+          - cosmossdk.io/x/feegrant/keeper
+          - cosmossdk.io/x/feegrant/module
+          - cosmossdk.io/x/tx/signing
+          - cosmossdk.io/x/upgrade
+          - cosmossdk.io/x/upgrade/keeper
+          - cosmossdk.io/x/upgrade/types
+          - github.com/cosmos/cosmos-db
           - github.com/cosmos/cosmos-sdk
-          - github.com/cosmos/ibc-go/v6
+          - github.com/cosmos/go-bip39
+          - github.com/cosmos/ibc-apps/modules/async-icq/v8
+          - github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper
+          - github.com/cosmos/ibc-apps/modules/async-icq/v8/types
+          - github.com/cosmos/ibc-go/modules/capability
+          - github.com/cosmos/ibc-go/modules/capability/keeper
+          - github.com/cosmos/ibc-go/modules/capability/types
+          - github.com/cosmos/ibc-go/v8
 
           - github.com/CosmWasm/wasmd
           - github.com/CosmWasm/wasmvm/types
@@ -107,6 +125,8 @@ linters-settings:
 
           - github.com/grpc-ecosystem/grpc-gateway
 
+          - github.com/hashicorp/go-metrics
+
           - github.com/provenance-io/provenance
 
           - github.com/rakyll/statik/fs 
@@ -120,6 +140,18 @@ linters-settings:
           - github.com/stretchr/testify/assert
           - github.com/stretchr/testify/suite
 
+          - github.com/cometbft/cometbft/abci/types
+          - github.com/cometbft/cometbft/config
+          - github.com/cometbft/cometbft/crypto
+          - github.com/cometbft/cometbft/crypto/tmhash
+          - github.com/cometbft/cometbft/libs/cli
+          - github.com/cometbft/cometbft/libs/json
+          - github.com/cometbft/cometbft/libs/os
+          - github.com/cometbft/cometbft/libs/rand
+          - github.com/cometbft/cometbft/proto/tendermint/types
+          - github.com/cometbft/cometbft/rpc/jsonrpc/types
+          - github.com/cometbft/cometbft/types
+          - github.com/cometbft/cometbft/types/time
           - github.com/cometbft/cometbft-db
 
           - github.com/tendermint/tendermint
@@ -138,14 +170,14 @@ linters-settings:
     sections:
       - standard
       - default
-      - prefix(github.com/tendermint)
+      - prefix(github.com/cometbft)
       - prefix(cosmossdk.io)
       - prefix(github.com/cosmos)
       - prefix(github.com/provenance-io)
       - blank
       - dot
   govet:
-    check-shadowing: true
+    shadow: true
     settings:
       printf:
         funcs:
