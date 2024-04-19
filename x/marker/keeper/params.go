@@ -26,6 +26,9 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 
 // SetParams sets the marker parameters to the store.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	if err := params.Validate(); err != nil {
+		panic(err)
+	}
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&params)
 	store.Set(types.MarkerParamStoreKey, bz)
