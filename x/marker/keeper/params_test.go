@@ -5,11 +5,12 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/suite"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/x/marker/types"
-	"github.com/stretchr/testify/suite"
 )
 
 type ParamTestSuite struct {
@@ -37,7 +38,7 @@ func (s *ParamTestSuite) TestGetSetParams() {
 
 	newMaxTotalSupply := uint64(2000000)
 	newEnableGovernance := false
-	newUnrestrictedDenomRegex := "^xyz.*$"
+	newUnrestrictedDenomRegex := "xyz.*"
 	newMaxSupply := "3000000"
 
 	newParams := types.Params{
