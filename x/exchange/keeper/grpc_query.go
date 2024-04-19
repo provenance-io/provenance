@@ -350,7 +350,7 @@ func (k QueryServer) GetAllMarkets(goCtx context.Context, req *exchange.QueryGet
 
 	resp := &exchange.QueryGetAllMarketsResponse{}
 	var pageErr error
-	resp.Pagination, pageErr = query.FilteredPaginate(store, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	resp.Pagination, pageErr = query.FilteredPaginate(store, pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		// If we can't get the market id from the key, just pretend like it doesn't exist.
 		marketID, ok := ParseKeySuffixKnownMarketID(key)
 		if !ok {

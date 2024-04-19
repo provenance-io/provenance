@@ -27,8 +27,7 @@ func (t GroupCheckerFunc) IsGroupAddress(ctx sdk.Context, account sdk.AccAddress
 func NewGroupCheckerFunc(querier GroupPolicyQuerier) GroupCheckerFunc {
 	return GroupCheckerFunc(func(ctx sdk.Context, account sdk.AccAddress) bool {
 		msg := &group.QueryGroupPolicyInfoRequest{Address: account.String()}
-		goCtx := sdk.WrapSDKContext(ctx)
-		_, err := querier.GroupPolicyInfo(goCtx, msg)
+		_, err := querier.GroupPolicyInfo(ctx, msg)
 		return err == nil
 	})
 }

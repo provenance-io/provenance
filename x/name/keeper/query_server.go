@@ -50,7 +50,7 @@ func (k Keeper) ReverseLookup(c context.Context, request *types.QueryReverseLook
 		return nil, types.ErrInvalidAddress
 	}
 	nameStore := prefix.NewStore(store, key)
-	pageRes, err := query.FilteredPaginate(nameStore, request.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+	pageRes, err := query.FilteredPaginate(nameStore, request.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		var record types.NameRecord
 		err = k.cdc.Unmarshal(value, &record)
 		if err != nil {

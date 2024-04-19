@@ -33,7 +33,7 @@ func (k Keeper) AllMarkers(c context.Context, req *types.QueryAllMarkersRequest)
 	markers := make([]*codectypes.Any, 0)
 	store := ctx.KVStore(k.storeKey)
 	markerStore := prefix.NewStore(store, types.MarkerStoreKeyPrefix)
-	pageRes, err := query.Paginate(markerStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(markerStore, req.Pagination, func(_ []byte, value []byte) error {
 		result, err := k.GetMarker(ctx, sdk.AccAddress(value))
 		if err == nil {
 			anyMsg, anyErr := codectypes.NewAnyWithValue(result)

@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
@@ -45,7 +44,7 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryCodec, key storetypes.StoreKey,
 	authKeeper types.AccountKeeper, nameKeeper types.NameKeeper,
 ) Keeper {
 	keeper := Keeper{
@@ -68,7 +67,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) GetAllAttributes(ctx sdk.Context, addr string) ([]types.Attribute, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get_all")
 
-	pred := func(s string) bool { return true }
+	pred := func(string) bool { return true }
 	return k.prefixScan(ctx, types.AddrStrAttributesKeyPrefix(addr), pred)
 }
 
@@ -76,7 +75,7 @@ func (k Keeper) GetAllAttributes(ctx sdk.Context, addr string) ([]types.Attribut
 func (k Keeper) GetAllAttributesAddr(ctx sdk.Context, addr []byte) ([]types.Attribute, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "keeper_method", "get_all")
 
-	pred := func(s string) bool { return true }
+	pred := func(string) bool { return true }
 	return k.prefixScan(ctx, types.AddrAttributesKeyPrefix(addr), pred)
 }
 

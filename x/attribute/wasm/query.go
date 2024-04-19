@@ -37,7 +37,7 @@ type GetAllAttributesParams struct {
 
 // Querier returns a smart contract querier for the attribute module.
 func Querier(keeper keeper.Keeper) provwasm.Querier {
-	return func(ctx sdk.Context, query json.RawMessage, version string) ([]byte, error) {
+	return func(ctx sdk.Context, query json.RawMessage, _ string) ([]byte, error) {
 		wrapper := struct {
 			Params *AttributeQueryParams `json:"attribute"`
 		}{}

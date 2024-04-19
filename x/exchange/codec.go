@@ -11,9 +11,7 @@ import (
 // RegisterInterfaces registers implementations for the tx messages
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	messages := make([]proto.Message, len(allRequestMsgs))
-	for i, msg := range allRequestMsgs {
-		messages[i] = msg
-	}
+	copy(messages, allRequestMsgs)
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 
 	registry.RegisterInterface(

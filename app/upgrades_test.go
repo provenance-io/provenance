@@ -19,7 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/provenance-io/provenance/internal/helpers"
@@ -261,7 +260,7 @@ func (s *UpgradeTestSuite) CreateValidator(unbondedTime time.Time, status stakin
 func (s *UpgradeTestSuite) DelegateToValidator(valAddress sdk.ValAddress, delegatorAddress sdk.AccAddress, coin sdk.Coin) {
 	validator, err := s.app.StakingKeeper.GetValidator(s.ctx, valAddress)
 	s.Require().NoError(err, "GetValidator(%q)", valAddress.String())
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, delegatorAddress, coin.Amount, types.Unbonded, validator, true)
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, delegatorAddress, coin.Amount, stakingtypes.Unbonded, validator, true)
 	s.Require().NoError(err, "Delegate(%q, %q, unbonded, %q, true) error", delegatorAddress.String(), coin.String(), valAddress.String())
 }
 

@@ -79,10 +79,7 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			err = updateIBCClients(ctx, app)
-			if err != nil {
-				return nil, err
-			}
+			updateIBCClients(ctx, app)
 
 			removeInactiveValidatorDelegations(ctx, app)
 
@@ -120,10 +117,7 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			err = updateIBCClients(ctx, app)
-			if err != nil {
-				return nil, err
-			}
+			updateIBCClients(ctx, app)
 
 			removeInactiveValidatorDelegations(ctx, app)
 
@@ -290,13 +284,12 @@ func pruneIBCExpiredConsensusStates(ctx sdk.Context, app *App) error {
 
 // updateIBCClients updates the allowed clients for IBC.
 // TODO: Remove with the umber handlers.
-func updateIBCClients(ctx sdk.Context, app *App) error {
+func updateIBCClients(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Updating IBC AllowedClients.")
 	params := app.IBCKeeper.ClientKeeper.GetParams(ctx)
 	params.AllowedClients = append(params.AllowedClients, exported.Localhost)
 	app.IBCKeeper.ClientKeeper.SetParams(ctx, params)
 	ctx.Logger().Info("Done updating IBC AllowedClients.")
-	return nil
 }
 
 // migrateBaseappParams migrates to new ConsensusParamsKeeper
@@ -344,7 +337,7 @@ func migrateAttributeParams(ctx sdk.Context, app *App) {
 	if attributeParamSpace.Has(ctx, attributetypes.ParamStoreKeyMaxValueLength) {
 		attributeParamSpace.Get(ctx, attributetypes.ParamStoreKeyMaxValueLength, &maxValueLength)
 	}
-	app.AttributeKeeper.SetParams(ctx, attributetypes.Params{MaxValueLength: uint32(maxValueLength)})
+	app.AttributeKeeper.SetParams(ctx, attributetypes.Params{MaxValueLength: maxValueLength})
 	ctx.Logger().Info("Done migrating attribute params.")
 }
 
@@ -360,7 +353,7 @@ func migrateMarkerParams(ctx sdk.Context, app *App) {
 	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyMaxTotalSupply) {
 		var maxTotalSupply uint64
 		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyMaxTotalSupply, &maxTotalSupply)
-		params.MaxTotalSupply = maxTotalSupply
+		params.MaxTotalSupply = maxTotalSupply //nolint:staticcheck
 	}
 
 	// TODO: remove markertypes.ParamStoreKeyEnableGovernance with the umber handlers.
@@ -399,7 +392,7 @@ func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
 	if metadataParamSpace.Has(ctx, metadatatypes.ParamStoreKeyMaxValueLength) {
 		metadataParamSpace.Get(ctx, metadatatypes.ParamStoreKeyMaxValueLength, &maxValueLength)
 	}
-	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: uint32(maxValueLength)})
+	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: maxValueLength})
 	ctx.Logger().Info("Done migrating metadata os locator params.")
 }
 
