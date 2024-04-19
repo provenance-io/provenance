@@ -88,7 +88,7 @@ func AssertGetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) 
 	if !assert.NoError(t, err, "UnmarshalJSON(%q, %T) (original tx response)", string(txRespBz), &origResp) {
 		return sdk.TxResponse{}, false
 	}
-	if origResp.Code != 0 {
+	if origResp.Code != 0 || len(origResp.RawLog) > 0 || origResp.Tx != nil {
 		return origResp, true
 	}
 	if !assert.NotEmpty(t, origResp.TxHash, "the tx hash") {
