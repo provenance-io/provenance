@@ -28,6 +28,7 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/attribute/client/cli"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -709,18 +710,10 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErr(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -1024,19 +1017,10 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			s.T().Logf("clientCtx: %#v", clientCtx)
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code))
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErr(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -1138,18 +1122,10 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code))
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErr(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -1230,18 +1206,10 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code))
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErr(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -1551,18 +1519,10 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if len(tc.expectErr) > 0 {
-				s.Require().EqualError(err, tc.expectErr)
-			} else {
-				s.Assert().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code))
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErrMsg(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }

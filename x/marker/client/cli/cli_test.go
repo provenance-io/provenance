@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -37,6 +38,7 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/testutil/queries"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -937,19 +939,10 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "txResp.Code")
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErr(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 
@@ -1071,8 +1064,6 @@ func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-
 			cmd := markercli.GetIbcTransferTxCmd()
 			args := []string{
 				tc.srcPort,
@@ -1096,22 +1087,20 @@ func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
 				args = append(args, fmt.Sprintf("--%s=%s", markercli.FlagMemo, tc.flagMemo))
 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-
-			if len(tc.expectedErr) > 0 {
-				s.Assert().EqualError(err, tc.expectedErr)
-			} else {
-				s.Assert().NoError(err, tc.name)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(0, int(txResp.Code), "txResp.Code")
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectedErr).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
+	curClientCtx := s.testnet.Validators[0].ClientCtx
+	defer func() {
+		s.testnet.Validators[0].ClientCtx = curClientCtx
+	}()
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+
 	testCases := []struct {
 		name         string
 		args         []string
@@ -1185,24 +1174,16 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
-
 			cmd := markercli.GetCmdGrantAuthorization()
-			tc.args = append(tc.args, fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation))
-			tc.args = append(tc.args, fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync))
-			tc.args = append(tc.args, fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()))
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, markercli.GetCmdGrantAuthorization(), tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), tc.args, string(outBz))
-
-			if len(tc.expectedErr) > 0 {
-				s.Assert().EqualError(err, tc.expectedErr)
-			} else {
-				s.Assert().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "txResp.Code")
-			}
+			tc.args = append(tc.args,
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			)
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectedErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -1284,15 +1265,10 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			p, err := os.CreateTemp("", "*")
-			tmpFile := p.Name()
-
-			s.Require().NoError(err)
-			_, err = p.WriteString(tc.proposal)
-			s.Require().NoError(err)
-			s.Require().NoError(p.Sync())
-			s.Require().NoError(p.Close())
+			tmpDir := s.T().TempDir()
+			tmpFile := filepath.Join(tmpDir, "proposal.json")
+			err := os.WriteFile(tmpFile, []byte(tc.proposal), 0o666)
+			s.Require().NoError(err, "writing proposal to %s", tmpFile)
 
 			cmd := markercli.GetCmdMarkerProposal()
 			args := []string{
@@ -1306,19 +1282,10 @@ func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
 				fmt.Sprintf("--%s=%s", flags.FlagGas, "500000"),
 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "txResp.Code")
-			}
-
-			s.Require().NoError(os.Remove(tmpFile))
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErr(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -1559,19 +1526,10 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "txResp.Code")
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErr(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -1642,19 +1600,9 @@ func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if len(tc.expectedError) > 0 {
-				s.Require().EqualError(err, tc.expectedError)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(0, int(txResp.Code), "txResp.Code")
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErrMsg(tc.expectedError).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -1674,13 +1622,7 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 		}
-		clientCtx := s.testnet.Validators[0].ClientCtx
-		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-		outBz := out.Bytes()
-		s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-		s.Require().NoError(err, "CmdAddFinalizeActivateMarker error")
-		txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-		s.Require().Equal(0, int(txResp.Code), "txResp.Code")
+		testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
 	})
 	if s.T().Failed() {
 		s.FailNow("Stopping due to setup error")
@@ -1730,51 +1672,39 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := markercli.GetCmdUpdateForcedTransfer()
+			txResp := testcli.NewCLITxExecutor(markercli.GetCmdUpdateForcedTransfer(), tc.args).
+				WithExpErrMsg(tc.expErr).
+				WithExpCode(tc.expCode).
+				Execute(s.T(), s.testnet)
 
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), tc.args, string(outBz))
+			if txResp != nil && txResp.Code == 0 {
+				expAttrs := []abci.EventAttribute{
+					{
+						Key:   "action",
+						Value: "/cosmos.gov.v1.MsgSubmitProposal",
+						Index: true,
+					},
+					{
+						Key:   "proposal_messages",
+						Value: ",/provenance.marker.v1.MsgUpdateForcedTransferRequest",
+						Index: true,
+					},
+				}
 
-			outStr := string(outBz)
-			if len(tc.expErr) > 0 {
-				s.Require().EqualError(err, tc.expErr, "CmdUpdateForcedTransfer error")
-				s.Require().Contains(outStr, tc.expErr, "CmdUpdateForcedTransfer output")
-			} else {
-				s.Require().NoError(err, "CmdUpdateForcedTransfer error")
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expCode), int(txResp.Code), "txResp.Code")
+				var actAttrs []abci.EventAttribute
+				for _, event := range txResp.Events {
+					actAttrs = append(actAttrs, event.Attributes...)
+				}
 
-				if tc.expCode == 0 {
-					expAttrs := []abci.EventAttribute{
-						{
-							Key:   "action",
-							Value: "/cosmos.gov.v1.MsgSubmitProposal",
-							Index: true,
-						},
-						{
-							Key:   "proposal_messages",
-							Value: ",/provenance.marker.v1.MsgUpdateForcedTransferRequest",
-							Index: true,
-						},
+				var missingAttrs []abci.EventAttribute
+				for _, exp := range expAttrs {
+					if !s.Assert().Contains(actAttrs, exp) {
+						missingAttrs = append(missingAttrs, exp)
 					}
-
-					var actAttrs []abci.EventAttribute
-					for _, event := range txResp.Events {
-						actAttrs = append(actAttrs, event.Attributes...)
-					}
-
-					var missingAttrs []abci.EventAttribute
-					for _, exp := range expAttrs {
-						if !s.Assert().Contains(actAttrs, exp) {
-							missingAttrs = append(missingAttrs, exp)
-						}
-					}
-					if len(missingAttrs) > 0 {
-						s.T().Logf("Events:\n%s", strings.Join(assertions.ABCIEventsToStrings(txResp.Events), "\n"))
-						s.T().Logf("Missing Expected Attributes:\n%s", strings.Join(assertions.AttrsToStrings(missingAttrs), "\n"))
-					}
+				}
+				if len(missingAttrs) > 0 {
+					s.T().Logf("Events:\n%s", strings.Join(assertions.ABCIEventsToStrings(txResp.Events), "\n"))
+					s.T().Logf("Missing Expected Attributes:\n%s", strings.Join(assertions.AttrsToStrings(missingAttrs), "\n"))
 				}
 			}
 		})
@@ -1801,15 +1731,7 @@ func (s *IntegrationTestSuite) TestGetCmdAddNetAssetValues() {
 			"--"+markercli.FlagSupplyFixed,
 			"--"+markercli.FlagAllowGovernanceControl,
 		)
-		clientCtx := s.testnet.Validators[0].ClientCtx
-
-		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-		outBz := out.Bytes()
-		s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-		s.Require().NoError(err, "CmdAddFinalizeActivateMarker error")
-
-		txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-		s.Require().Equal(0, int(txResp.Code), "txResp.Code")
+		testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
 	})
 	if s.T().Failed() {
 		s.FailNow("Stopping due to setup error")
@@ -1838,21 +1760,9 @@ func (s *IntegrationTestSuite) TestGetCmdAddNetAssetValues() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := markercli.GetCmdAddNetAssetValues()
-
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), tc.args, string(outBz))
-
-			if len(tc.expErr) > 0 {
-				s.Require().EqualError(err, tc.expErr, "GetCmdAddNetAssetValues error")
-				s.Require().Contains(string(outBz), tc.expErr, "GetCmdAddNetAssetValues output")
-			} else {
-				s.Require().NoError(err, "GetCmdAddNetAssetValues error")
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(0, int(txResp.Code), "txResp.Code")
-			}
+			testcli.NewCLITxExecutor(markercli.GetCmdAddNetAssetValues(), tc.args).
+				WithExpErrMsg(tc.expErr).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }

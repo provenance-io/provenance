@@ -39,6 +39,7 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/client/cli"
@@ -360,6 +361,8 @@ func (s *CmdTestSuite) SetupSuite() {
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "testnet.New(...)")
 
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+
 	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "s.testnet.WaitForHeight(1)")
 }
@@ -507,9 +510,7 @@ func contains[S ~[]E, E comparable](s S, v E) bool {
 
 // getClientCtx get a client context that knows about the suite's keyring.
 func (s *CmdTestSuite) getClientCtx() client.Context {
-	return s.testnet.Validators[0].ClientCtx.
-		WithKeyringDir(s.keyringDir).
-		WithKeyring(s.keyring)
+	return s.testnet.Validators[0].ClientCtx
 }
 
 // getAddrName tries to get the variable name (in this suite) of the provided address.
@@ -587,35 +588,16 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 			s.T().Skip("Skipping execution due to pre-run failure.")
 		}
 
-		cmdName := cmd.Name()
-		var outBz []byte
-		defer func() {
-			if s.T().Failed() {
-				s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
-				cmdFailed = true
-			}
-		}()
-
-		clientCtx := s.getClientCtx()
-		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-		outBz = out.Bytes()
-
-		s.assertErrorContents(err, tc.expInErr, "ExecTestCLICmd error")
-		for _, exp := range tc.expInErr {
-			s.Assert().Contains(string(outBz), exp, "command output should contain:\n%q", exp)
-		}
-
-		if len(tc.expInErr) == 0 && err == nil {
-			resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-			txResponse = &resp
-			s.Assert().Equal(int(tc.expectedCode), int(resp.Code), "response code")
-			for _, exp := range tc.expInRawLog {
-				s.Assert().Contains(resp.RawLog, exp, "TxResponse.RawLog should contain:\n%q", exp)
-			}
-		}
+		var cmdOk bool
+		txResponse, cmdOk = testcli.NewCLITxExecutor(cmd, args).
+			WithExpInErrMsg(tc.expInErr).
+			WithExpCode(tc.expectedCode).
+			WithExpInRawLog(tc.expInRawLog).
+			AssertExecute(s.T(), s.testnet)
+		cmdFailed = !cmdOk
 	}
 
-	if tc.preRun != nil {
+	if tc.preRun != nil || followup != nil {
 		s.Run("execute: "+tc.name, testRunner)
 	} else {
 		testRunner()
@@ -627,7 +609,7 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 				s.T().Skip("Skipping followup due to pre-run failure.")
 			}
 			if cmdFailed {
-				s.T().Skip("Skipping followup due to failure with command.")
+				s.T().Skip("Skipping followup due to execute failure.")
 			}
 			if s.Assert().NotNil(txResponse, "the TxResponse from the command output") {
 				followup(txResponse)
@@ -1046,27 +1028,12 @@ func (s *CmdTestSuite) createOrder(order *exchange.Order, creationFee *sdk.Coin)
 		"--"+flags.FlagSkipConfirmation,
 	)
 
-	cmdName := cmd.Name()
-	failed := true
-	var outBz []byte
-	defer func() {
-		if failed {
-			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
-		}
-	}()
-
-	clientCtx := s.getClientCtx()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	outBz = out.Bytes()
-	s.Require().NoError(err, "ExecTestCLICmd error")
-
-	resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-	orderIDStr, err := s.findNewOrderID(&resp)
+	resp := testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
+	s.Require().NotNil(resp, "TxResponse from creating order")
+	orderIDStr, err := s.findNewOrderID(resp)
 	s.Require().NoError(err, "findNewOrderID")
 
-	rv := s.asOrderID(orderIDStr)
-	failed = false
-	return rv
+	return s.asOrderID(orderIDStr)
 }
 
 // commitFunds issues a command to commit funds.
@@ -1088,23 +1055,7 @@ func (s *CmdTestSuite) commitFunds(addr sdk.AccAddress, marketID uint32, amount 
 		"--"+flags.FlagSkipConfirmation,
 	)
 
-	cmdName := cmd.Name()
-	failed := true
-	var outBz []byte
-	defer func() {
-		if failed {
-			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
-		}
-	}()
-
-	clientCtx := s.getClientCtx()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	outBz = out.Bytes()
-	s.Require().NoError(err, "ExecTestCLICmd error")
-
-	resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-	s.Require().Equal(0, int(resp.Code), "response code:\n%v", resp)
-	failed = false
+	testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
 }
 
 // createPayment issues a command to create a payment.
@@ -1133,23 +1084,7 @@ func (s *CmdTestSuite) createPayment(payment *exchange.Payment) {
 		"--"+flags.FlagSkipConfirmation,
 	)
 
-	failed := true
-	cmdName := cmd.Name()
-	var outBz []byte
-	defer func() {
-		if failed {
-			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
-		}
-	}()
-
-	clientCtx := s.getClientCtx()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	outBz = out.Bytes()
-	s.Require().NoError(err, "ExecTestCLICmd error")
-
-	resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-	s.Require().Equal(0, int(resp.Code), "response code:\n%v", resp)
-	failed = false
+	testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
 }
 
 // queryBankBalances executes a bank query to get an account's balances.
@@ -1164,32 +1099,15 @@ func (s *CmdTestSuite) queryBankSpendableBalances(addr string) sdk.Coins {
 
 // execBankSend executes a bank send command.
 func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
-	clientCtx := s.getClientCtx()
 	addrCdc := s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec()
 	cmd := bankcli.NewSendTxCmd(addrCdc)
-	cmdName := cmd.Name()
 	args := []string{
 		fromAddr, toAddr, amount,
 		"--" + flags.FlagFees, s.bondCoins(10).String(),
 		"--" + flags.FlagBroadcastMode, flags.BroadcastSync,
 		"--" + flags.FlagSkipConfirmation,
 	}
-
-	failed := true
-	var outBz []byte
-	defer func() {
-		if failed {
-			s.T().Logf("Command: %s\nArgs: %q\nOutput\n%s", cmdName, args, string(outBz))
-		}
-	}()
-
-	outBW, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	outBz = outBW.Bytes()
-	s.Require().NoError(err, "ExecTestCLICmd error")
-
-	resp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-	s.Require().Equal(0, int(resp.Code), "response code:\n%v", resp)
-	failed = false
+	testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
 }
 
 // untypeEvent calls untypeEvent and requires it to not return an error.

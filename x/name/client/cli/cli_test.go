@@ -28,7 +28,7 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
-	"github.com/provenance-io/provenance/testutil/queries"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	namecli "github.com/provenance-io/provenance/x/name/client/cli"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
@@ -349,18 +349,10 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErr(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -422,18 +414,10 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErr(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -528,18 +512,10 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if len(tc.errMsg) > 0 {
-				s.Assert().EqualError(err, tc.errMsg)
-			} else {
-				s.Assert().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErrMsg(tc.errMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -696,20 +672,12 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
 			// because the cmd runs inside of the gov cmd (which adds flags) we register here so we can use it directly.
 			flags.AddTxFlagsToCmd(tc.cmd)
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", tc.cmd.Name(), tc.args, string(outBz))
-
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
-			}
+			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+				WithExpErr(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }

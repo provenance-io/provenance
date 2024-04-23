@@ -24,7 +24,7 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
-	"github.com/provenance-io/provenance/testutil/queries"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	oraclecli "github.com/provenance-io/provenance/x/oracle/client/cli"
 	"github.com/provenance-io/provenance/x/oracle/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
@@ -55,59 +55,50 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	pioconfig.SetProvenanceConfig("", 0)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
-	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
-	s.Require().NoError(err)
-	s.accountAddr = addr
+	var addrErr error
+	s.accountAddr, addrErr = sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
+	s.Require().NoError(addrErr)
 
 	s.cfg = testutil.DefaultTestNetworkConfig()
-	genesisState := s.cfg.GenesisState
-
 	s.cfg.NumValidators = 1
+	s.cfg.ChainID = antewrapper.SimAppChainID
 	s.GenerateAccountsWithKeyrings(2)
 
-	var genBalances []banktypes.Balance
-	for i := range s.accountAddresses {
-		genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[i].String(), Coins: sdk.NewCoins(
-			sdk.NewInt64Coin("nhash", 100_000_000), sdk.NewInt64Coin(s.cfg.BondDenom, 100_000_000),
-		).Sort()})
-	}
-	var bankGenState banktypes.GenesisState
-	bankGenState.Params = banktypes.DefaultParams()
-	bankGenState.Balances = genBalances
-	bankDataBz, err := s.cfg.Codec.MarshalJSON(&bankGenState)
-	s.Require().NoError(err, "should be able to marshal bank genesis state when setting up suite")
-	genesisState[banktypes.ModuleName] = bankDataBz
+	testutil.MutateGenesisState(s.T(), &s.cfg, banktypes.ModuleName, &banktypes.GenesisState{}, func(bankGenState *banktypes.GenesisState) *banktypes.GenesisState {
+		for i := range s.accountAddresses {
+			bankGenState.Balances = append(bankGenState.Balances, banktypes.Balance{Address: s.accountAddresses[i].String(), Coins: sdk.NewCoins(
+				sdk.NewInt64Coin("nhash", 100_000_000), sdk.NewInt64Coin(s.cfg.BondDenom, 100_000_000),
+			).Sort()})
+		}
+		return bankGenState
+	})
 
-	var authData authtypes.GenesisState
-	var genAccounts []authtypes.GenesisAccount
-	authData.Params = authtypes.DefaultParams()
-	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0))
-	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[1], nil, 4, 0))
-	accounts, err := authtypes.PackAccounts(genAccounts)
-	s.Require().NoError(err, "should be able to pack accounts for genesis state when setting up suite")
-	authData.Accounts = accounts
-	authDataBz, err := s.cfg.Codec.MarshalJSON(&authData)
-	s.Require().NoError(err, "should be able to marshal auth genesis state when setting up suite")
-	genesisState[authtypes.ModuleName] = authDataBz
+	testutil.MutateGenesisState(s.T(), &s.cfg, authtypes.ModuleName, &authtypes.GenesisState{}, func(authData *authtypes.GenesisState) *authtypes.GenesisState {
+		var genAccounts []authtypes.GenesisAccount
+		genAccounts = append(genAccounts,
+			authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0),
+			authtypes.NewBaseAccount(s.accountAddresses[1], nil, 4, 0),
+		)
+		accounts, err := authtypes.PackAccounts(genAccounts)
+		s.Require().NoError(err, "should be able to pack accounts for genesis state when setting up suite")
+		authData.Accounts = accounts
+		return authData
+	})
 
 	s.port = oracletypes.PortID
 	s.oracle = "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"
 
-	oracleData := oracletypes.NewGenesisState(
-		s.port,
-		s.oracle,
-	)
+	testutil.MutateGenesisState(s.T(), &s.cfg, oracletypes.ModuleName, &oracletypes.GenesisState{}, func(oracleData *oracletypes.GenesisState) *oracletypes.GenesisState {
+		oracleData.PortId = s.port
+		oracleData.Oracle = s.oracle
+		return oracleData
+	})
 
-	oracleDataBz, err := s.cfg.Codec.MarshalJSON(oracleData)
-	s.Require().NoError(err, "should be able to marshal trigger genesis state when setting up suite")
-	genesisState[oracletypes.ModuleName] = oracleDataBz
-
-	s.cfg.GenesisState = genesisState
-
-	s.cfg.ChainID = antewrapper.SimAppChainID
-
+	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "network.New")
+
+	s.network.Validators[0].ClientCtx = s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
 	_, err = testutil.WaitForHeight(s.network, 6)
 	s.Require().NoError(err, "WaitForHeight")
@@ -193,8 +184,6 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
-
 			cmd := oraclecli.GetCmdOracleUpdate()
 			args := []string{
 				tc.address,
@@ -205,15 +194,10 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 				"--title", "Update the oracle", "--summary", "Update it real good",
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-			s.Assert().NoError(err, "should have no error for valid OracleUpdate request")
-
-			txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
-			s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for valid OracleUpdate request")
-			s.Assert().Contains(txResp.RawLog, tc.expectErrMsg, "should have correct error for invalid OracleUpdate request")
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpCode(tc.expectedCode).
+				WithExpInRawLog([]string{tc.expectErrMsg}).
+				Execute(s.T(), s.network)
 		})
 	}
 }
@@ -259,8 +243,6 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
-
 			cmd := oraclecli.GetCmdSendQuery()
 			args := []string{
 				tc.channel,
@@ -272,17 +254,10 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-
-			if len(tc.expectErrMsg) > 0 {
-				s.Assert().ErrorContains(err, tc.expectErrMsg, "should have correct error for invalid SendQuery request")
-			} else {
-				s.Assert().NoError(err, "should have no error for valid SendQuery request")
-				txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
-				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for valid SendQuery request")
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpInErrMsg([]string{tc.expectErrMsg}).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }

@@ -11,14 +11,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
-	"github.com/provenance-io/provenance/testutil/queries"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	msgfeescli "github.com/provenance-io/provenance/x/msgfees/client/cli"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -217,8 +216,6 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-
 			cmd := msgfeescli.GetCmdMsgFeesProposal()
 			args := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -238,17 +235,10 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 				args = append(args, tc.bips)
 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-
-			if len(tc.expectErrMsg) != 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -294,8 +284,6 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-
 			cmd := msgfeescli.GetUpdateNhashPerUsdMilProposal()
 			args := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -305,17 +293,10 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 			}
 			args = append(args, tc.name, tc.description, tc.rate, tc.deposit)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-
-			if len(tc.expectErrMsg) != 0 {
-				s.Require().EqualError(err, tc.expectErrMsg)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -352,8 +333,6 @@ func (s *IntegrationTestSuite) TestUpdateConversionFeeDenomProposal() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-
 			cmd := msgfeescli.GetUpdateConversionFeeDenomProposal()
 			args := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
@@ -363,17 +342,10 @@ func (s *IntegrationTestSuite) TestUpdateConversionFeeDenomProposal() {
 			}
 			args = append(args, tc.name, tc.description, tc.conversionFeeDenom, tc.deposit)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-
-			if len(tc.expectErrMsg) != 0 {
-				s.Require().EqualError(err, tc.expectErrMsg)
-			} else {
-				s.Require().NoError(err)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Require().Equal(int(tc.expectedCode), int(txResp.Code), "response code")
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }

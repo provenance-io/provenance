@@ -2,6 +2,8 @@ package cli_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -25,7 +27,7 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
-	"github.com/provenance-io/provenance/testutil/queries"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	triggercli "github.com/provenance-io/provenance/x/trigger/client/cli"
 	"github.com/provenance-io/provenance/x/trigger/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
@@ -166,6 +168,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "network.New")
+
+	s.network.Validators[0].ClientCtx = s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 
 	_, err = testutil.WaitForHeight(s.network, 6)
 	s.Require().NoError(err, "WaitForHeight")
@@ -387,10 +391,8 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
-
-			var message string
-			if len(tc.fileContent) == 0 {
+			message := tc.fileContent
+			if len(message) == 0 {
 				message = fmt.Sprintf(`
 				{
 						"@type": "/cosmos.bank.v1beta1.MsgSend",
@@ -403,16 +405,17 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 							}
 						]
 				}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
-			} else {
-				message = tc.fileContent
 			}
 
-			messageFile := sdktestutil.WriteToNewTempFile(s.T(), message)
+			tempDir := s.T().TempDir()
+			messageFile := filepath.Join(tempDir, "msg.json")
+			err := os.WriteFile(messageFile, []byte(message), 0o666)
+			s.Require().NoError(err, "WriteFile(%q, %q)", messageFile, message)
 
 			cmd := triggercli.GetCmdAddBlockHeightTrigger()
 			args := []string{
 				tc.height,
-				messageFile.Name(),
+				messageFile,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -420,17 +423,10 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-
-			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid AddBlockHeightTrigger request")
-			} else {
-				s.Assert().NoError(err, "should have no error for valid AddBlockHeightTrigger request")
-				txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
-				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for AddBlockHeightTrigger request")
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }
@@ -518,10 +514,8 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
-
-			var message string
-			if len(tc.fileContent) == 0 {
+			message := tc.fileContent
+			if len(message) == 0 {
 				message = fmt.Sprintf(`
 				{
 						"@type": "/cosmos.bank.v1beta1.MsgSend",
@@ -534,13 +528,14 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 							}
 						]
 				}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
-			} else {
-				message = tc.fileContent
 			}
-			messageFile := sdktestutil.WriteToNewTempFile(s.T(), message)
+			tempDir := s.T().TempDir()
+			messageFile := filepath.Join(tempDir, "message.json")
+			err := os.WriteFile(messageFile, []byte(message), 0o666)
+			s.Require().NoError(err, "WriteFile(%q, %q)", messageFile, message)
 
-			var txEvent string
-			if len(tc.txEvent) == 0 {
+			txEvent := tc.txEvent
+			if len(txEvent) == 0 {
 				txEvent = fmt.Sprintf(`
 				{
 					"name": "coin_received",
@@ -556,15 +551,15 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 					]
 				}
 				`, s.accountAddresses[0].String())
-			} else {
-				txEvent = tc.txEvent
 			}
-			txEventFile := sdktestutil.WriteToNewTempFile(s.T(), txEvent)
+			txEventFile := filepath.Join(tempDir, "tx-event.json")
+			err = os.WriteFile(txEventFile, []byte(txEvent), 0o666)
+			s.Require().NoError(err, "WriteFile(%q, %q)", txEventFile, txEvent)
 
 			cmd := triggercli.GetCmdAddTransactionTrigger()
 			args := []string{
-				txEventFile.Name(),
-				messageFile.Name(),
+				txEventFile,
+				messageFile,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddresses[0].String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -572,17 +567,10 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-
-			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid AddTransactionTrigger request")
-			} else {
-				s.Assert().NoError(err, "should have no error for valid AddTransactionTrigger request")
-				txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
-				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for valid AddTransactionTrigger request")
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }
@@ -678,10 +666,8 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
-
-			var message string
-			if len(tc.fileContent) == 0 {
+			message := tc.fileContent
+			if len(message) == 0 {
 				message = fmt.Sprintf(`
 				{
 						"@type": "/cosmos.bank.v1beta1.MsgSend",
@@ -694,8 +680,6 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 							}
 						]
 				}`, s.accountAddresses[0].String(), s.accountAddresses[1].String())
-			} else {
-				message = tc.fileContent
 			}
 
 			messageFile := sdktestutil.WriteToNewTempFile(s.T(), message)
@@ -711,17 +695,10 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-
-			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid AddBlockTimeTrigger request")
-			} else {
-				s.Assert().NoError(err, "should have no error for valid AddBlockTimeTrigger request")
-				txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
-				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for valid AddBlockTimeTrigger request")
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }
@@ -766,8 +743,6 @@ func (s *IntegrationTestSuite) TestDestroyTrigger() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
-
 			cmd := triggercli.GetCmdDestroyTrigger()
 			args := []string{
 				tc.triggerID,
@@ -778,17 +753,10 @@ func (s *IntegrationTestSuite) TestDestroyTrigger() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
-
-			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid DestroyTrigger request")
-			} else {
-				s.Assert().NoError(err, "should have no error for valid DestroyTrigger request")
-				txResp := queries.GetTxFromResponse(s.T(), s.network, outBz)
-				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "should have correct response code for valid DestroyTrigger request")
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }

@@ -31,9 +31,10 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
-	"github.com/provenance-io/provenance/testutil/queries"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/client/cli"
 	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -172,11 +173,24 @@ func (s *IntegrationCLITestSuite) SetupSuite() {
 	// Configure Genesis auth data for adding test accounts
 	testutil.MutateGenesisState(s.T(), &s.cfg, authtypes.ModuleName, &authtypes.GenesisState{}, func(authData *authtypes.GenesisState) *authtypes.GenesisState {
 		curCount := uint64(len(authData.Accounts))
+		marker := &markertypes.MarkerAccount{
+			BaseAccount: &authtypes.BaseAccount{
+				Address:       markertypes.MustGetMarkerAddress("jackthecat").String(),
+				AccountNumber: curCount,
+			},
+			Status:                 markertypes.StatusActive,
+			Denom:                  "jackthecat",
+			Supply:                 sdkmath.NewInt(0),
+			MarkerType:             markertypes.MarkerType_Coin,
+			SupplyFixed:            false,
+			AllowGovernanceControl: true,
+		}
 		genAccounts := []authtypes.GenesisAccount{
-			authtypes.NewBaseAccount(s.accountAddr, nil, curCount, 0),
-			authtypes.NewBaseAccount(s.user1Addr, nil, curCount+1, 1),
-			authtypes.NewBaseAccount(s.user2Addr, nil, curCount+2, 1),
-			authtypes.NewBaseAccount(s.user3Addr, nil, curCount+3, 0),
+			marker,
+			authtypes.NewBaseAccount(s.accountAddr, nil, curCount+1, 0),
+			authtypes.NewBaseAccount(s.user1Addr, nil, curCount+2, 1),
+			authtypes.NewBaseAccount(s.user2Addr, nil, curCount+3, 1),
+			authtypes.NewBaseAccount(s.user3Addr, nil, curCount+4, 0),
 		}
 		accounts, err := authtypes.PackAccounts(genAccounts)
 		s.Require().NoError(err, "PackAccounts")
@@ -483,6 +497,8 @@ owner: %s`,
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")
 
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+
 	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "waiting for height 1")
 }
@@ -590,7 +606,7 @@ func alternateCase(str string, startUpper bool) string {
 }
 
 func (s *IntegrationCLITestSuite) getClientCtx() client.Context {
-	return s.getClientCtxWithoutKeyring().WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+	return s.testnet.Validators[0].ClientCtx
 }
 
 func (s *IntegrationCLITestSuite) getClientCtxWithoutKeyring() client.Context {
@@ -620,7 +636,7 @@ func runQueryCmdTestCases(s *IntegrationCLITestSuite, cmdGen func() *cobra.Comma
 				}
 			}()
 
-			clientCtx := s.getClientCtxWithoutKeyring()
+			clientCtx := s.getClientCtx()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			outStr = out.String()
 
@@ -1786,7 +1802,7 @@ func (s *IntegrationCLITestSuite) TestGetAccountDataCmd() {
 
 type txCmdTestCase struct {
 	name         string
-	cmd          *cobra.Command
+	cmd          func() *cobra.Command
 	args         []string
 	expectErrMsg string
 	respType     proto.Message // You only need to define this if you're expecting something other than a TxResponse.
@@ -1797,19 +1813,10 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 	s.T().Helper()
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			cmdName := tc.cmd.Name()
-			clientCtx := s.getClientCtx()
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, tc.cmd, tc.args)
-			outBz := out.Bytes()
-			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmdName, tc.args, string(outBz))
-
-			if len(tc.expectErrMsg) > 0 {
-				s.Require().EqualError(err, tc.expectErrMsg, "%s expected error message", cmdName)
-			} else {
-				s.Require().NoError(err, "%s unexpected error", cmdName)
-				txResp := queries.GetTxFromResponse(s.T(), s.testnet, outBz)
-				s.Assert().Equal(int(tc.expectedCode), int(txResp.Code), "txResp.Code")
-			}
+			testcli.NewCLITxExecutor(tc.cmd(), tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -1820,7 +1827,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 	testCases := []txCmdTestCase{
 		{
 			name: "should successfully add scope specification for test setup",
-			cmd:  cli.WriteScopeSpecificationCmd(),
+			cmd:  cli.WriteScopeSpecificationCmd,
 			args: []string{
 				scopeSpecID,
 				s.accountAddrStr,
@@ -1835,7 +1842,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should successfully add metadata scope",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				scopeID,
 				scopeSpecID,
@@ -1851,7 +1858,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should successfully add metadata scope with signers flag",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				scopeSpecID,
@@ -1868,7 +1875,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should successfully add metadata scope with party rollup",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				scopeID,
 				scopeSpecID,
@@ -1885,7 +1892,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to add metadata scope, incorrect scope id",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				"not-a-uuid",
 				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
@@ -1901,7 +1908,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to add metadata scope, incorrect scope spec id",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				"not-a-uuid",
@@ -1917,7 +1924,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to add metadata scope, validate basic will err on owner format",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String(),
@@ -1933,7 +1940,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to remove metadata scope, invalid scopeid",
-			cmd:  cli.RemoveScopeCmd(),
+			cmd:  cli.RemoveScopeCmd,
 			args: []string{
 				"not-valid",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -1945,7 +1952,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to add/remove metadata scope data access, invalid scopeid",
-			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			cmd:  cli.AddRemoveScopeDataAccessCmd,
 			args: []string{
 				"add",
 				"not-valid",
@@ -1959,7 +1966,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to add/remove metadata scope data access, invalid command requires add or remove",
-			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			cmd:  cli.AddRemoveScopeDataAccessCmd,
 			args: []string{
 				"notaddorremove",
 				scopeID,
@@ -1973,7 +1980,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to add/remove metadata scope data access, not a scope id",
-			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			cmd:  cli.AddRemoveScopeDataAccessCmd,
 			args: []string{
 				"add",
 				scopeSpecID,
@@ -1987,7 +1994,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to add/remove metadata scope data access, validatebasic fails",
-			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			cmd:  cli.AddRemoveScopeDataAccessCmd,
 			args: []string{
 				"add",
 				scopeID,
@@ -2001,7 +2008,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should successfully add metadata scope data access",
-			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			cmd:  cli.AddRemoveScopeDataAccessCmd,
 			args: []string{
 				"add",
 				scopeID,
@@ -2015,7 +2022,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should successfully remove metadata scope data access",
-			cmd:  cli.AddRemoveScopeDataAccessCmd(),
+			cmd:  cli.AddRemoveScopeDataAccessCmd,
 			args: []string{
 				"remove",
 				scopeID,
@@ -2030,7 +2037,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 
 		{
 			name: "should fail to add/remove metadata scope owners, invalid scopeid",
-			cmd:  cli.AddRemoveScopeOwnersCmd(),
+			cmd:  cli.AddRemoveScopeOwnersCmd,
 			args: []string{
 				"add",
 				"not-valid",
@@ -2044,7 +2051,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to add/remove metadata scope owner, invalid command requires add or remove",
-			cmd:  cli.AddRemoveScopeOwnersCmd(),
+			cmd:  cli.AddRemoveScopeOwnersCmd,
 			args: []string{
 				"notaddorremove",
 				scopeID,
@@ -2058,7 +2065,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to add/remove metadata scope owner, not a scope id",
-			cmd:  cli.AddRemoveScopeOwnersCmd(),
+			cmd:  cli.AddRemoveScopeOwnersCmd,
 			args: []string{
 				"add",
 				scopeSpecID,
@@ -2072,7 +2079,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to add/remove metadata scope owner, validatebasic fails",
-			cmd:  cli.AddRemoveScopeOwnersCmd(),
+			cmd:  cli.AddRemoveScopeOwnersCmd,
 			args: []string{
 				"add",
 				scopeID,
@@ -2086,7 +2093,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should successfully remove metadata scope",
-			cmd:  cli.RemoveScopeCmd(),
+			cmd:  cli.RemoveScopeCmd,
 			args: []string{
 				scopeID,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -2098,7 +2105,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to delete metadata scope that no longer exists",
-			cmd:  cli.RemoveScopeCmd(),
+			cmd:  cli.RemoveScopeCmd,
 			args: []string{
 				scopeID,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -2110,7 +2117,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail to write scope with optional party but without rollup",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				scopeSpecID,
@@ -2126,7 +2133,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should fail write scope with invalid usd-mills",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				scopeSpecID,
@@ -2144,7 +2151,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 		},
 		{
 			name: "should successfully write scope with optional party and rollup",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				metadatatypes.ScopeMetadataAddress(uuid.New()).String(),
 				scopeSpecID,
@@ -2213,7 +2220,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 			txs: []txCmdTestCase{
 				{
 					name: "update: only 1 arg",
-					cmd:  cli.UpdateValueOwnersCmd(),
+					cmd:  cli.UpdateValueOwnersCmd,
 					args: []string{
 						s.user2AddrStr,
 						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
@@ -2222,7 +2229,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "update: invalid value owner",
-					cmd:  cli.UpdateValueOwnersCmd(),
+					cmd:  cli.UpdateValueOwnersCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						"notabech32", scopeID1, scopeID2,
@@ -2232,7 +2239,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "update: invalid scope id",
-					cmd:  cli.UpdateValueOwnersCmd(),
+					cmd:  cli.UpdateValueOwnersCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						s.user1AddrStr, scopeID1, scopeSpecID,
@@ -2241,7 +2248,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "update: invalid signers",
-					cmd:  cli.UpdateValueOwnersCmd(),
+					cmd:  cli.UpdateValueOwnersCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						s.user1AddrStr, scopeID1, scopeID2,
@@ -2252,7 +2259,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "migrate: only 1 arg",
-					cmd:  cli.MigrateValueOwnerCmd(),
+					cmd:  cli.MigrateValueOwnerCmd,
 					args: []string{
 						s.user2AddrStr,
 						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
@@ -2261,7 +2268,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "migrate: 3 args",
-					cmd:  cli.MigrateValueOwnerCmd(),
+					cmd:  cli.MigrateValueOwnerCmd,
 					args: []string{
 						s.user1AddrStr, s.user2AddrStr, s.user3AddrStr,
 						fromFlag(s.user1AddrStr), skipConfFlag, broadcastBlockFlag, feeFlag(10),
@@ -2270,7 +2277,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "migrate: invalid existing value owner",
-					cmd:  cli.MigrateValueOwnerCmd(),
+					cmd:  cli.MigrateValueOwnerCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						"notabech32", s.user2AddrStr,
@@ -2280,7 +2287,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "migrate: invalid proposed value owner",
-					cmd:  cli.MigrateValueOwnerCmd(),
+					cmd:  cli.MigrateValueOwnerCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						s.user2AddrStr, "notabech32",
@@ -2290,7 +2297,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "migrate: invalid signers",
-					cmd:  cli.MigrateValueOwnerCmd(),
+					cmd:  cli.MigrateValueOwnerCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						s.user1AddrStr, s.user2AddrStr,
@@ -2306,7 +2313,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 			txs: []txCmdTestCase{
 				{
 					name: "setup: write scope spec",
-					cmd:  cli.WriteScopeSpecificationCmd(),
+					cmd:  cli.WriteScopeSpecificationCmd,
 					// [specification-id] [owner-addresses] [responsible-parties] [contract-specification-ids] [description-name, optional] [description, optional] [website-url, optional] [icon-url, optional]
 					args: []string{
 						scopeSpecID, s.accountAddrStr, "owner", s.contractSpecID.String(),
@@ -2316,7 +2323,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "setup: write scope 1",
-					cmd:  cli.WriteScopeCmd(),
+					cmd:  cli.WriteScopeCmd,
 					// [scope-id] [spec-id] [owners] [data-access] [value-owner-address]
 					args: []string{
 						scopeID1, scopeSpecID,
@@ -2327,7 +2334,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "setup: write scope 2",
-					cmd:  cli.WriteScopeCmd(),
+					cmd:  cli.WriteScopeCmd,
 					// [scope-id] [spec-id] [owners] [data-access] [value-owner-address]
 					args: []string{
 						scopeID2, scopeSpecID,
@@ -2338,7 +2345,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "setup: write scope 3",
-					cmd:  cli.WriteScopeCmd(),
+					cmd:  cli.WriteScopeCmd,
 					// [scope-id] [spec-id] [owners] [data-access] [value-owner-address]
 					args: []string{
 						scopeID3, scopeSpecID,
@@ -2355,7 +2362,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 			txs: []txCmdTestCase{
 				{
 					name: "update: incorrect signer",
-					cmd:  cli.UpdateValueOwnersCmd(),
+					cmd:  cli.UpdateValueOwnersCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						s.accountAddrStr, scopeID1, scopeID2,
@@ -2365,7 +2372,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "update: missing signature",
-					cmd:  cli.UpdateValueOwnersCmd(),
+					cmd:  cli.UpdateValueOwnersCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						s.user2AddrStr, scopeID1, scopeID2, scopeID3,
@@ -2375,7 +2382,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "migrate: incorrect signer",
-					cmd:  cli.MigrateValueOwnerCmd(),
+					cmd:  cli.MigrateValueOwnerCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						s.user1AddrStr, s.user2AddrStr,
@@ -2389,7 +2396,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 			// A single update of two scopes.
 			txs: []txCmdTestCase{{
 				name: "update: scopes 1 and 2 to user 2",
-				cmd:  cli.UpdateValueOwnersCmd(),
+				cmd:  cli.UpdateValueOwnersCmd,
 				// <new value owner> <scope id> [<scope id 2> ...]
 				args: []string{
 					s.user2AddrStr, scopeID1, scopeID2,
@@ -2403,7 +2410,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 			// A single update of 3 scopes.
 			txs: []txCmdTestCase{{
 				name: "update: scopes 1 2 and 3 to user 3",
-				cmd:  cli.UpdateValueOwnersCmd(),
+				cmd:  cli.UpdateValueOwnersCmd,
 				// <new value owner> <scope id> [<scope id 2> ...]
 				args: []string{
 					s.user3AddrStr, scopeID1, scopeID2, scopeID3,
@@ -2418,7 +2425,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 			txs: []txCmdTestCase{
 				{
 					name: "update: scope 1 to user 1",
-					cmd:  cli.UpdateValueOwnersCmd(),
+					cmd:  cli.UpdateValueOwnersCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						s.user1AddrStr, scopeID1,
@@ -2428,7 +2435,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 				},
 				{
 					name: "update: scope 2 to user 2",
-					cmd:  cli.UpdateValueOwnersCmd(),
+					cmd:  cli.UpdateValueOwnersCmd,
 					// <new value owner> <scope id> [<scope id 2> ...]
 					args: []string{
 						s.user2AddrStr, scopeID2,
@@ -2443,7 +2450,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 			// A single migrate of 1 scope.
 			txs: []txCmdTestCase{{
 				name: "migrate: user 1 scope to user 2",
-				cmd:  cli.MigrateValueOwnerCmd(),
+				cmd:  cli.MigrateValueOwnerCmd,
 				// <new value owner> <scope id> [<scope id 2> ...]
 				args: []string{
 					s.user1AddrStr, s.user2AddrStr,
@@ -2457,7 +2464,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 			// A single migrate of 2 scopes.
 			txs: []txCmdTestCase{{
 				name: "migrate: user 2 scopes to user 3",
-				cmd:  cli.MigrateValueOwnerCmd(),
+				cmd:  cli.MigrateValueOwnerCmd,
 				// <new value owner> <scope id> [<scope id 2> ...]
 				args: []string{
 					s.user2AddrStr, s.user3AddrStr,
@@ -2494,8 +2501,8 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 }
 
 func (s *IntegrationCLITestSuite) TestScopeSpecificationTxCommands() {
-	addCommand := cli.WriteScopeSpecificationCmd()
-	removeCommand := cli.RemoveScopeSpecificationCmd()
+	addCommand := cli.WriteScopeSpecificationCmd
+	removeCommand := cli.RemoveScopeSpecificationCmd
 	specID := metadatatypes.ScopeSpecMetadataAddress(uuid.New())
 	testCases := []txCmdTestCase{
 		{
@@ -2625,7 +2632,7 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 	testCases := []txCmdTestCase{
 		{
 			name: "Should successfully add os locator",
-			cmd:  cli.BindOsLocatorCmd(),
+			cmd:  cli.BindOsLocatorCmd,
 			args: []string{
 				s.accountAddrStr,
 				userURI,
@@ -2638,7 +2645,7 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 		},
 		{
 			name: "Should successfully Modify os locator",
-			cmd:  cli.ModifyOsLocatorCmd(),
+			cmd:  cli.ModifyOsLocatorCmd,
 			args: []string{
 				s.accountAddrStr,
 				userURIMod,
@@ -2651,7 +2658,7 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 		},
 		{
 			name: "Should successfully delete os locator",
-			cmd:  cli.RemoveOsLocatorCmd(),
+			cmd:  cli.RemoveOsLocatorCmd,
 			args: []string{
 				s.accountAddrStr,
 				userURIMod,
@@ -2668,8 +2675,8 @@ func (s *IntegrationCLITestSuite) TestAddObjectLocatorCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
-	addCommand := cli.WriteContractSpecificationCmd()
-	removeCommand := cli.RemoveContractSpecificationCmd()
+	addCommand := cli.WriteContractSpecificationCmd
+	removeCommand := cli.RemoveContractSpecificationCmd
 	contractSpecUUID := uuid.New()
 	specificationID := metadatatypes.ContractSpecMetadataAddress(contractSpecUUID)
 	testCases := []txCmdTestCase{
@@ -2816,8 +2823,8 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationTxCommands() {
 }
 
 func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxCommands() {
-	addCommand := cli.AddContractSpecToScopeSpecCmd()
-	removeCommand := cli.RemoveContractSpecFromScopeSpecCmd()
+	addCommand := cli.AddContractSpecToScopeSpecCmd
+	removeCommand := cli.RemoveContractSpecFromScopeSpecCmd
 	contractSpecUUID := uuid.New()
 	specificationID := metadatatypes.ContractSpecMetadataAddress(contractSpecUUID)
 	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New())
@@ -2825,7 +2832,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 	testCases := []txCmdTestCase{
 		{
 			name: "should successfully add contract specification for test initialization",
-			cmd:  cli.WriteContractSpecificationCmd(),
+			cmd:  cli.WriteContractSpecificationCmd,
 			args: []string{
 				specificationID.String(),
 				s.accountAddrStr,
@@ -2841,7 +2848,7 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 		},
 		{
 			name: "should successfully add scope specification for test setup",
-			cmd:  cli.WriteScopeSpecificationCmd(),
+			cmd:  cli.WriteScopeSpecificationCmd,
 			args: []string{
 				scopeSpecID.String(),
 				s.accountAddrStr,
@@ -2990,9 +2997,9 @@ func (s *IntegrationCLITestSuite) TestContractSpecificationScopeSpecAddRemoveTxC
 }
 
 func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
-	cmd := cli.WriteRecordSpecificationCmd()
-	addConractSpecCmd := cli.WriteContractSpecificationCmd()
-	deleteRecordSpecCmd := cli.RemoveRecordSpecificationCmd()
+	cmd := cli.WriteRecordSpecificationCmd
+	addConractSpecCmd := cli.WriteContractSpecificationCmd
+	deleteRecordSpecCmd := cli.RemoveRecordSpecificationCmd
 	recordName := "testrecordspecid"
 	contractSpecUUID := uuid.New()
 	contractSpecID := metadatatypes.ContractSpecMetadataAddress(contractSpecUUID)
@@ -3191,7 +3198,7 @@ func (s *IntegrationCLITestSuite) TestRecordSpecificationTxCommands() {
 
 func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 	userAddress := s.accountAddrStr
-	addRecordCmd := cli.WriteRecordCmd()
+	addRecordCmd := cli.WriteRecordCmd
 	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New())
 	scopeUUID := uuid.New()
 	scopeID := metadatatypes.ScopeMetadataAddress(scopeUUID)
@@ -3207,7 +3214,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 	testCases := []txCmdTestCase{
 		{
 			name: "should successfully add contract specification with resource hash for test setup",
-			cmd:  cli.WriteContractSpecificationCmd(),
+			cmd:  cli.WriteContractSpecificationCmd,
 			args: []string{
 				contractSpecID.String(),
 				userAddress,
@@ -3223,7 +3230,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 		},
 		{
 			name: "should successfully add scope specification for test setup",
-			cmd:  cli.WriteScopeSpecificationCmd(),
+			cmd:  cli.WriteScopeSpecificationCmd,
 			args: []string{
 				scopeSpecID.String(),
 				userAddress,
@@ -3238,7 +3245,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 		},
 		{
 			name: "should successfully add metadata scope for test setup",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				scopeID.String(),
 				scopeSpecID.String(),
@@ -3254,7 +3261,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 		},
 		{
 			name: "should successfully add record specification for test setup",
-			cmd:  cli.WriteRecordSpecificationCmd(),
+			cmd:  cli.WriteRecordSpecificationCmd,
 			args: []string{
 				recSpecID.String(),
 				recordName,
@@ -3423,7 +3430,7 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 		},
 		{
 			name: "should successfully remove record",
-			cmd:  cli.RemoveRecordCmd(),
+			cmd:  cli.RemoveRecordCmd,
 			args: []string{
 				recordId.String(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.accountAddrStr),
@@ -3438,14 +3445,13 @@ func (s *IntegrationCLITestSuite) TestRecordTxCommands() {
 }
 
 func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
-	cmd := cli.WriteSessionCmd()
+	cmd := cli.WriteSessionCmd
 
 	owner := s.accountAddrStr
 	sender := s.accountAddrStr
 	scopeUUID := uuid.New()
 	scopeID := metadatatypes.ScopeMetadataAddress(scopeUUID)
 
-	ctx := s.getClientCtx()
 	writeScopeCmd := cli.WriteScopeCmd()
 	scopeArgs := []string{
 		scopeID.String(),
@@ -3458,12 +3464,7 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 	}
-	scopeOut, scopeErr := clitestutil.ExecTestCLICmd(ctx, writeScopeCmd, scopeArgs)
-	scopeOutBz := scopeOut.Bytes()
-	s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", writeScopeCmd.Name(), scopeArgs, string(scopeOutBz))
-	s.Require().NoError(scopeErr, "adding base scope")
-	scopeResp := queries.GetTxFromResponse(s.T(), s.testnet, scopeOutBz)
-	s.Require().Equal(0, int(scopeResp.Code), "write-scope response code")
+	testcli.NewCLITxExecutor(writeScopeCmd, scopeArgs).Execute(s.T(), s.testnet)
 
 	testCases := []txCmdTestCase{
 		{
@@ -3612,9 +3613,7 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestSetAccountDataCmd() {
-	cmd := func() *cobra.Command {
-		return cli.SetAccountDataCmd()
-	}
+	cmd := cli.SetAccountDataCmd
 
 	scopeUUID := uuid.New()
 	scopeID := metadatatypes.ScopeMetadataAddress(scopeUUID)
@@ -3654,19 +3653,19 @@ func (s *IntegrationCLITestSuite) TestSetAccountDataCmd() {
 	tests := []txCmdTestCase{
 		{
 			name:         "invalid address",
-			cmd:          cmd(),
+			cmd:          cmd,
 			args:         stdFlagsPlus("notanaddr"),
 			expectErrMsg: `invalid metadata address "notanaddr": decoding bech32 failed: invalid separator index -1`,
 		},
 		{
 			name:         "no value",
-			cmd:          cmd(),
+			cmd:          cmd,
 			args:         stdFlagsPlus(scopeIDStr),
 			expectErrMsg: "exactly one of these must be provided: " + attrcli.AccountDataFlagsUse,
 		},
 		{
 			name: "invalid signers",
-			cmd:  cmd(),
+			cmd:  cmd,
 			args: stdFlagsPlus(
 				scopeIDStr,
 				"--"+attrcli.FlagValue, "Some new value.",
@@ -3676,7 +3675,7 @@ func (s *IntegrationCLITestSuite) TestSetAccountDataCmd() {
 		},
 		{
 			name: "incorrect signer",
-			cmd:  cmd(),
+			cmd:  cmd,
 			args: []string{
 				scopeIDStr,
 				"--" + attrcli.FlagValue, "Some new value.",
@@ -3689,7 +3688,7 @@ func (s *IntegrationCLITestSuite) TestSetAccountDataCmd() {
 		},
 		{
 			name: "all okay",
-			cmd:  cmd(),
+			cmd:  cmd,
 			args: stdFlagsPlus(
 				scopeIDStr,
 				"--"+attrcli.FlagValue, "This is the account data for a test scope.",
@@ -3742,7 +3741,7 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 	testCases := []txCmdTestCase{
 		{
 			name: "should successfully add scope specification for test setup",
-			cmd:  cli.WriteScopeSpecificationCmd(),
+			cmd:  cli.WriteScopeSpecificationCmd,
 			args: []string{
 				scopeSpecID,
 				s.accountAddrStr,
@@ -3757,7 +3756,7 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 		},
 		{
 			name: "should successfully add metadata scope with two owners - owner 1 as value owner",
-			cmd:  cli.WriteScopeCmd(),
+			cmd:  cli.WriteScopeCmd,
 			args: []string{
 				scopeID,
 				scopeSpecID,
@@ -3773,7 +3772,9 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 		},
 		{
 			name: "should successfully add count authorization from owner 1 to signer 3",
-			cmd:  authzcli.NewCmdGrantAuthorization(s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec()),
+			cmd: func() *cobra.Command {
+				return authzcli.NewCmdGrantAuthorization(s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec())
+			},
 			args: []string{
 				s.user3AddrStr,
 				"count",
@@ -3788,7 +3789,7 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 		},
 		{
 			name: "should fail to remove metadata scope with signer 3 due to missing authz grant from owner 2",
-			cmd:  cli.RemoveScopeCmd(),
+			cmd:  cli.RemoveScopeCmd,
 			args: []string{
 				scopeID,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user3AddrStr),
@@ -3800,7 +3801,9 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 		},
 		{
 			name: "should successfully add count authorization from owner 2 to signer 3",
-			cmd:  authzcli.NewCmdGrantAuthorization(s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec()),
+			cmd: func() *cobra.Command {
+				return authzcli.NewCmdGrantAuthorization(s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec())
+			},
 			args: []string{
 				s.user3AddrStr,
 				"count",
@@ -3815,7 +3818,7 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 		},
 		{
 			name: "should successfully remove metadata scope with signer 3, found grants for owner 1 & 2",
-			cmd:  cli.RemoveScopeCmd(),
+			cmd:  cli.RemoveScopeCmd,
 			args: []string{
 				scopeID,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user3AddrStr),
@@ -3831,10 +3834,10 @@ func (s *IntegrationCLITestSuite) TestCountAuthorizationIntactTxCommands() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
-	scopeID := "scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"
+	scopeID := s.scopeID.String()
 	argsWStdFlags := func(args ...string) []string {
 		return append(args,
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, s.user1AddrStr),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdkmath.NewInt(10))).String()),
@@ -3850,7 +3853,7 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 		{
 			name:   "invalid net asset string",
 			args:   argsWStdFlags(scopeID, "invalid"),
-			expErr: ("invalid net asset value coin : invalid"),
+			expErr: "invalid net asset value coin : invalid",
 		},
 		{
 			name:   "address not meta address",
@@ -3874,19 +3877,9 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdAddNetAssetValues()
-
-			clientCtx := s.testnet.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			outBz := out.Bytes()
-			outStr := string(outBz)
-
-			if len(tc.expErr) > 0 {
-				s.Require().EqualError(err, tc.expErr, "GetCmdAddNetAssetValues error")
-				s.Require().Contains(outStr, tc.expErr, "GetCmdAddNetAssetValues output")
-			} else {
-				s.Require().NoError(err, "GetCmdAddNetAssetValues error")
-			}
+			testcli.NewCLITxExecutor(cli.GetCmdAddNetAssetValues(), tc.args).
+				WithExpErrMsg(tc.expErr).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -3956,8 +3949,6 @@ func (s *IntegrationCLITestSuite) TestParseNetAssertValueString() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			result, err := cli.ParseNetAssetValueString(tc.netAssetValues)
 			if len(tc.expErr) > 0 {
