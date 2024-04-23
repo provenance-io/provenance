@@ -207,8 +207,9 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 		name         string
 		query        string
 		channel      string
-		expectErrMsg string
+		expectErrMsg []string
 		expectedCode uint32
+		expInRawLog  []string
 		signer       string
 	}{
 		{
@@ -216,26 +217,27 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 			query:        "{}",
 			channel:      "channel-1",
 			expectedCode: 9,
+			expInRawLog:  []string{"module does not own channel capability", "channel capability not found"},
 			signer:       s.accountAddresses[0].String(),
 		},
 		{
 			name:         "failure - invalid query data",
 			query:        "abc",
-			expectErrMsg: "query data must be json",
+			expectErrMsg: []string{"query data must be json"},
 			channel:      "channel-1",
 			signer:       s.accountAddresses[0].String(),
 		},
 		{
 			name:         "failure - invalid channel format",
 			query:        "{}",
-			expectErrMsg: "invalid channel id",
+			expectErrMsg: []string{"invalid channel id"},
 			channel:      "a",
 			signer:       s.accountAddresses[0].String(),
 		},
 		{
 			name:         "failure - invalid signer",
 			query:        "{}",
-			expectErrMsg: "failed to convert address field to address: abc.info: key not found",
+			expectErrMsg: []string{"failed to convert address field to address: abc.info: key not found"},
 			channel:      "channel-1",
 			signer:       "abc",
 		},
@@ -255,8 +257,9 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 			}
 
 			testcli.NewCLITxExecutor(cmd, args).
-				WithExpInErrMsg([]string{tc.expectErrMsg}).
+				WithExpInErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
+				WithExpInRawLog(tc.expInRawLog).
 				Execute(s.T(), s.network)
 		})
 	}
