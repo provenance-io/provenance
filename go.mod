@@ -212,7 +212,6 @@ replace (
 	// Use cosmos fork of keyring (because the SDK does).
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
-	// TODO[1760]: wasm: Put this CosmWasm/wasmd replace back with an updated version (or delete it).
 	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.50.0-pio-1
 	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-pio-3
 
