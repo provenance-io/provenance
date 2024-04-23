@@ -20,7 +20,9 @@ func AssertErrorContents(t TB, theError error, contains []string, msgAndArgs ...
 	if !assert.Error(t, theError, msgAndArgs...) {
 		// Also output what it was expected to have.
 		if len(contains) == 1 {
-			t.Logf("Error was expected to contain: %q", contains[0])
+			if len(contains[0]) > 0 {
+				t.Logf("Error was expected to contain: %q", contains[0])
+			}
 		} else {
 			var sb strings.Builder
 			for _, c := range contains {
