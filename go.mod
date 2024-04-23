@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/x/feegrant v0.1.0
 	cosmossdk.io/x/tx v0.13.2
 	cosmossdk.io/x/upgrade v0.1.1
-	github.com/CosmWasm/wasmd v0.50.0
+	github.com/CosmWasm/wasmd v0.51.0
 	github.com/CosmWasm/wasmvm v1.5.0
 	github.com/cometbft/cometbft v0.38.6
 	github.com/cometbft/cometbft-db v0.9.1
@@ -213,7 +213,8 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
 	// TODO[1760]: wasm: Put this CosmWasm/wasmd replace back with an updated version (or delete it).
-	// github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
+	//github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.30.0-pio-5
+	github.com/CosmWasm/wasmd => /Users/mwitkowski/Work/provenance-io/wasmd
 	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.5-pio-3
 
 	// TODO[1760]: Update once async-icq creates tag with our changes https://github.com/cosmos/ibc-apps/pull/168
