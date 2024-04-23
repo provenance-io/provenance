@@ -21,8 +21,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
+	"github.com/provenance-io/provenance/app"
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -35,6 +36,8 @@ type ConfigTestSuite struct {
 	ClientContext *client.Context
 	ServerContext *server.Context
 	Context       *context.Context
+
+	EncodingConfig simappparams.EncodingConfig
 
 	HeaderStrApp    string
 	HeaderStrTM     string
@@ -51,9 +54,9 @@ func (s *ConfigTestSuite) SetupTest() {
 
 	pioconfig.SetProvenanceConfig("confcoin", 5)
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	s.EncodingConfig = app.MakeTestEncodingConfig(s.T())
 	clientCtx := client.Context{}.
-		WithCodec(encodingConfig.Codec).
+		WithCodec(s.EncodingConfig.Marshaler).
 		WithHomeDir(s.Home)
 	clientCtx.Viper = viper.New()
 	serverCtx := server.NewContext(clientCtx.Viper, provconfig.DefaultTmConfig(), log.NewNopLogger())

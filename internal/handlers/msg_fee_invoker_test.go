@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	simapp "github.com/provenance-io/provenance/app"
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -29,6 +30,20 @@ import (
 const (
 	NHash = "nhash"
 )
+
+// HandlerTestSuite is a test suite for these handler tests.
+type HandlerTestSuite struct {
+	suite.Suite
+
+	app       *simapp.App
+	ctx       sdk.Context
+	clientCtx client.Context
+	txBuilder client.TxBuilder
+}
+
+func TestHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(HandlerTestSuite))
+}
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	encodingConfig, err := setUpApp(s, "atom", 100)
@@ -171,14 +186,14 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 		BankKeeper:     s.app.BankKeeper,
 		FeegrantKeeper: s.app.FeeGrantKeeper,
 		MsgFeesKeeper:  s.app.MsgFeesKeeper,
-		Decoder:        moduletestutil.MakeTestEncodingConfig().TxConfig.TxDecoder(),
+		Decoder:        moduletestutil.MakeTestTxConfig().TxDecoder(),
 	})
 	s.Require().NoError(err)
 	s.Require().Panics(func() { feeChargeFn(s.ctx, false) }, "Bad decoder while setting up app.")
 
 }
 
-func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (moduletestutil.TestEncodingConfig, error) {
+func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (simappparams.EncodingConfig, error) {
 	pioconfig.SetProvenanceConfig("", 0)
 	encodingConfig := s.SetupTest(s.T()) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -254,12 +269,12 @@ func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coin
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func (s *HandlerTestSuite) SetupTest(t *testing.T) moduletestutil.TestEncodingConfig {
+func (s *HandlerTestSuite) SetupTest(t *testing.T) simappparams.EncodingConfig {
 	s.app, s.ctx = createTestApp(t)
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	encodingConfig := s.app.GetEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
@@ -328,18 +343,4 @@ func (s *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []u
 	}
 
 	return s.txBuilder.GetTx(), nil
-}
-
-// AnteTestSuite is a test s to be used with ante handler tests.
-type HandlerTestSuite struct {
-	suite.Suite
-
-	app       *simapp.App
-	ctx       sdk.Context
-	clientCtx client.Context
-	txBuilder client.TxBuilder
-}
-
-func TestHandlerTestSuite(t *testing.T) {
-	suite.Run(t, new(HandlerTestSuite))
 }

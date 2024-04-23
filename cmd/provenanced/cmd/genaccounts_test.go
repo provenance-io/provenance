@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"testing"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,13 +23,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
+	"github.com/provenance-io/provenance/app"
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
+	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/mocks"
 	"github.com/provenance-io/provenance/x/exchange"
@@ -36,6 +39,7 @@ import (
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
 
 func TestAddGenesisAccountCmd(t *testing.T) {
+	appCodec := app.MakeTestEncodingConfig(t).Marshaler
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	tests := []struct {
 		name      string
@@ -64,14 +68,12 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
-			appCodec := moduletestutil.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
@@ -87,6 +89,8 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 				tc.addr,
 				tc.denom,
 				fmt.Sprintf("--%s=home", flags.FlagHome)})
+			cmd.SetOut(io.Discard)
+			cmd.SetErr(io.Discard)
 
 			if tc.expectErr {
 				require.Error(t, cmd.ExecuteContext(ctx))
@@ -98,6 +102,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 }
 
 func TestAddGenesisMsgFeeCmd(t *testing.T) {
+	appCodec := app.MakeTestEncodingConfig(t).Marshaler
 	tests := []struct {
 		name            string
 		msgType         string
@@ -136,14 +141,12 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err)
 
-			appCodec := moduletestutil.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
@@ -154,22 +157,26 @@ func TestAddGenesisMsgFeeCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := provenancecmd.AddGenesisCustomFloorPriceDenomCmd(home)
-			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home)
-			cmd.SetArgs([]string{
+			cmdFloorPrice := provenancecmd.AddGenesisCustomFloorPriceDenomCmd(home)
+			cmdFloorPrice.SetArgs([]string{
 				tc.msgFeeFloorCoin,
 				fmt.Sprintf("--%s=home", flags.FlagHome)})
+			cmdFloorPrice.SetOut(io.Discard)
+			cmdFloorPrice.SetErr(io.Discard)
+
+			cmdFee := provenancecmd.AddGenesisMsgFeeCmd(home)
 			cmdFee.SetArgs([]string{
 				tc.msgType,
 				tc.fee,
 				fmt.Sprintf("--%s=home", flags.FlagHome)})
+			cmdFee.SetOut(io.Discard)
+			cmdFee.SetErr(io.Discard)
 
 			if len(tc.expectErrMsg) > 0 {
 				err = cmdFee.ExecuteContext(ctx)
-				require.Error(t, err)
-				require.Equal(t, tc.expectErrMsg, err.Error())
+				require.EqualError(t, err, tc.expectErrMsg)
 			} else {
-				require.NoError(t, cmd.ExecuteContext(ctx))
+				require.NoError(t, cmdFloorPrice.ExecuteContext(ctx))
 				require.NoError(t, cmdFee.ExecuteContext(ctx))
 			}
 		})
@@ -262,6 +269,8 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 }
 
 func TestAddGenesisDefaultMarketCmd(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
+	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	expDefaultMarket := func(marketID uint32, denom string, addrs ...string) exchange.Market {
 		rv := provenancecmd.MakeDefaultMarket(denom, addrs)
 		rv.MarketId = marketID
@@ -365,7 +374,6 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 			home := t.TempDir()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err, "setup: CreateDefaultCometConfig(%q)", home)
-			cdc := moduletestutil.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, cdc)
 			require.NoError(t, err, "setup: ExecInitCmd")
 
@@ -589,6 +597,8 @@ func TestMakeDefaultMarket(t *testing.T) {
 }
 
 func TestAddGenesisCustomMarketCmd(t *testing.T) {
+	cdc := app.MakeTestEncodingConfig(t).Marshaler
+
 	tests := []struct {
 		name          string
 		iniExGenState *exchange.GenesisState
@@ -696,7 +706,6 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 			home := t.TempDir()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err, "setup: CreateDefaultCometConfig(%q)", home)
-			cdc := moduletestutil.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, cdc)
 			require.NoError(t, err, "setup: ExecInitCmd")
 
@@ -750,6 +759,7 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 }
 
 func TestAddMarketsToAppState(t *testing.T) {
+	appCdc := app.MakeTestEncodingConfig(t).Marshaler
 	askOrder := *exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
 		MarketId: 1,
 		Seller:   sdk.AccAddress("seller______________").String(),
@@ -852,7 +862,6 @@ func TestAddMarketsToAppState(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			fixEmptiesInExchangeGenState(&tc.expExGenState)
 
-			appCdc := moduletestutil.MakeTestEncodingConfig().Codec
 			egsBz, err := appCdc.MarshalJSON(&tc.exGenState)
 			require.NoError(t, err, "MarshalJSON initial exchange genesis state")
 			appState := map[string]json.RawMessage{exchange.ModuleName: egsBz}
