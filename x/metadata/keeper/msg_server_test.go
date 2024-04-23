@@ -1360,7 +1360,7 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 				},
 				Signers: []string{user2},
 			},
-			expErr: fmt.Sprintf("missing signature: %v: tx intended signer does not match the given signer", user1),
+			expErr: fmt.Sprintf("missing signature: %v: unauthorized", user1),
 		},
 		{
 			name: "successfully set nav",
