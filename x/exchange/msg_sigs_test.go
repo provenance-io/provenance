@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
+	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/protoadapt"
 
 	"cosmossdk.io/x/tx/signing"
@@ -355,7 +355,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 
 	for _, tc := range tests {
 		msgV2 := protoadapt.MessageV2Of(tc.msg)
-		name := proto.MessageName(msgV2)
+		name := protov2.MessageName(msgV2)
 		expected := [][]byte{tc.exp}
 
 		// Make sure the custom entries are added to the map, and that they work as expected.

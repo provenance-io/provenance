@@ -14,6 +14,7 @@ import (
 //
 // G is the type of the specific genesis state struct being used here.
 func MutateGenesisState[G proto.Message](t *testing.T, cfg *testnet.Config, moduleName string, emptyState G, mutator func(state G) G) {
+	t.Helper()
 	err := cfg.Codec.UnmarshalJSON(cfg.GenesisState[moduleName], emptyState)
 	if err != nil {
 		t.Logf("initial %s genesis state:\n%s", moduleName, string(cfg.GenesisState[moduleName]))

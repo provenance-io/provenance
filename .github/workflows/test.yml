@@ -48,8 +48,7 @@ jobs:
         # The next longest running is x/metadata/client/cli at 2.5ish minutes.
         # So take x/marker/simulation out of the list, split the list into 3 parts and create a 4th part
         # with just the x/marker/simulation test.
-        # Temporarily, several tests are known to still fail, so we make them all part 3,
-        # and split the rest among 0-2.
+        # Temporarily, several tests are known to still fail, so we make them all part 3, and split the rest among 0-2.
         # TODO[1760]: Re-analyze how long tests tests take and change the splitting back to be based on speed.
         run: |
           grep -vF \
