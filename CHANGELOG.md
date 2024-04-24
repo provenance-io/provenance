@@ -81,6 +81,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
 - Bump `peter-evans/create-pull-request` from 6.0.2 to 6.0.4 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940))
 - Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.2 ([#1928](https://github.com/provenance-io/provenance/pull/1928))
+- Bump `cosmwasm-std` from 1.4.1 to 1.4.4 ([#1950](https://github.com/provenance-io/provenance/pull/1950))
 
 ---
 
