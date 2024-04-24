@@ -49,14 +49,6 @@ type BankKeeper interface {
 
 	GetDenomMetaData(context context.Context, denom string) (banktypes.Metadata, bool)
 	SetDenomMetaData(context context.Context, denomMetaData banktypes.Metadata)
-
-	// TODO[1760]: bank: Delete the below entries when no longer needed (or change this back to a regular TODO).
-
-	// IterateAllBalances only used in GetAllMarkerHolders used by the unneeded querier.
-	// The Holding query just uses the DenomOwners query endpoint.
-	IterateAllBalances(context context.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
-	// GetAllSendEnabledEntries only needed by RemoveIsSendEnabledEntries in the quicksilver upgrade.
-	GetAllSendEnabledEntries(context context.Context) []banktypes.SendEnabled
 }
 
 // FeeGrantKeeper defines the fee-grant functionality needed by the marker module.

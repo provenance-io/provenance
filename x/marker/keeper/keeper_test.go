@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -33,6 +34,17 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/quarantine"
 )
+
+// getAllMarkerHolders executes the Holding query to get all the accounts holding a given denom.
+func getAllMarkerHolders(t *testing.T, ctx context.Context, app *simapp.App, denomOrAddr string) []types.Balance {
+	req := &types.QueryHoldingRequest{
+		Id:         denomOrAddr,
+		Pagination: &query.PageRequest{Limit: 10000},
+	}
+	resp, err := app.MarkerKeeper.Holding(ctx, req)
+	require.NoError(t, err, "MarkerKeeper.Holding(%q)", denomOrAddr)
+	return resp.Balances
+}
 
 func TestAccountMapperGetSet(t *testing.T) {
 	app := simapp.Setup(t)
@@ -80,7 +92,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 	acc = app.AccountKeeper.GetAccount(ctx, addr)
 	require.Nil(t, acc)
 
-	require.Empty(t, app.MarkerKeeper.GetAllMarkerHolders(ctx, "testcoin"))
+	require.Empty(t, getAllMarkerHolders(t, ctx, app, "testcoin"))
 
 	// check for error on invaid marker denom
 	_, err := app.MarkerKeeper.GetMarkerByDenom(ctx, "doesntexist")
@@ -406,13 +418,13 @@ func TestMintBurnCoins(t *testing.T) {
 	require.Error(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
 
 	// two a user and the marker
-	require.Equal(t, 2, len(app.MarkerKeeper.GetAllMarkerHolders(ctx, "testcoin")))
+	require.Equal(t, 2, len(getAllMarkerHolders(t, ctx, app, "testcoin")))
 
 	// put the coins back in the types.
 	require.NoError(t, app.BankKeeper.SendCoins(ctx, user, addr, sdk.NewCoins(sdk.NewInt64Coin("testcoin", 50))))
 
 	// one, only the marker
-	require.Equal(t, 1, len(app.MarkerKeeper.GetAllMarkerHolders(ctx, "testcoin")))
+	require.Equal(t, 1, len(getAllMarkerHolders(t, ctx, app, "testcoin")))
 
 	// succeeds because marker has all its supply
 	require.NoError(t, app.MarkerKeeper.CancelMarker(ctx, user, "testcoin"))
@@ -437,7 +449,7 @@ func TestMintBurnCoins(t *testing.T) {
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
 
 	// none, marker has been deleted
-	require.Equal(t, 0, len(app.MarkerKeeper.GetAllMarkerHolders(ctx, "testcoin")))
+	require.Equal(t, 0, len(getAllMarkerHolders(t, ctx, app, "testcoin")))
 
 	// verify status is destroyed and supply is zero.
 	m, err = app.MarkerKeeper.GetMarker(ctx, addr)
