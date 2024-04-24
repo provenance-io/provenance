@@ -48,10 +48,29 @@ jobs:
         # The next longest running is x/metadata/client/cli at 2.5ish minutes.
         # So take x/marker/simulation out of the list, split the list into 3 parts and create a 4th part
         # with just the x/marker/simulation test.
+        # Temporarily, several tests are known to still fail, so we make them all part 3,
+        # and split the rest among 0-2.
+        # TODO[1760]: Re-analyze how long tests tests take and change the splitting back to be based on speed.
         run: |
-          grep -vF -e 'github.com/provenance-io/provenance/x/marker/simulation' pkgs.txt > pkgs.txt.tmp
+          grep -vF \
+            -e 'github.com/provenance-io/provenance/app' \
+            -e 'github.com/provenance-io/provenance/cmd/provenanced/cmd' \
+            -e 'github.com/provenance-io/provenance/internal/antewrapper' \
+            -e 'github.com/provenance-io/provenance/x/ibchooks' \
+            -e 'github.com/provenance-io/provenance/x/ibcratelimit/module' \
+            -e 'github.com/provenance-io/provenance/x/ibcratelimit/simulation' \
+            -e 'github.com/provenance-io/provenance/x/oracle/simulation' \
+            pkgs.txt > pkgs.txt.tmp
           split -d -n l/3 pkgs.txt.tmp pkgs.txt.part.
-          printf 'github.com/provenance-io/provenance/x/marker/simulation\n' > pkgs.txt.part.03
+          printf '%s\n' \
+            'github.com/provenance-io/provenance/app' \
+            'github.com/provenance-io/provenance/cmd/provenanced/cmd' \
+            'github.com/provenance-io/provenance/internal/antewrapper' \
+            'github.com/provenance-io/provenance/x/ibchooks' \
+            'github.com/provenance-io/provenance/x/ibcratelimit/module' \
+            'github.com/provenance-io/provenance/x/ibcratelimit/simulation' \
+            'github.com/provenance-io/provenance/x/oracle/simulation' \
+            > pkgs.txt.part.03
       - uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.00"
