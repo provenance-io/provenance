@@ -31,7 +31,7 @@ import (
 	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
 
-const blocksPerVotingPeriod = 5
+const blocksPerVotingPeriod = 6
 
 func TestIntegrationTestSuite(t *testing.T) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
@@ -205,12 +205,14 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	// block after each vote. We'll check all of them manually once they're submitted.
 	voteOutBzs := make([][]byte, len(allVoteArgs))
 	for i, voteArgs := range allVoteArgs {
+		s.logHeight()
 		voteArgs[0] = propID
 		voteOutBW, err := cli.ExecTestCLICmd(s.clientCtx, voteCmd, voteArgs)
 		s.Require().NoError(err, "[%d]: ExecTestCLICmd tx gov vote", i)
 		voteOutBzs[i] = voteOutBW.Bytes()
 		s.T().Logf("[%d]: tx gov vote output:\n%s", i, voteOutBzs[i])
 	}
+	s.logHeight()
 	// And now, we check that the votes happened as expected.
 	for i, voteOutBz := range voteOutBzs {
 		txResp := queries.GetTxFromResponse(s.T(), s.network, voteOutBz)
