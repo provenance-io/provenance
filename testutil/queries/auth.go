@@ -72,7 +72,7 @@ func GetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) sdk.Tx
 // AssertGetTxFromResponse gets the TxResponse from the provided ExecTestCLICmd output bytes.
 // If the provided output indicates a code other than 0, that is what is returned.
 // If the provided output has a code of 0, the tx hash is extracted from it, and queries
-// are executed to get the TxResponse for it. Three attempts are made to query for the tx,
+// are executed to get the TxResponse for it. Four attempts are made to query for the tx,
 // waiting a block between each attempt.
 //
 // This asserts that there are no problems getting the TxResponse, returning true if no assertions failed.
@@ -98,21 +98,20 @@ func AssertGetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) 
 	cmd := authcli.QueryTxCmd()
 	args := []string{origResp.TxHash, "--output", "json"}
 	var outBZ []byte
-	tries := 3
-	for i := 1; i <= tries; i++ {
+	tries := 4
+	var i int
+	for i = 1; i <= tries; i++ {
 		out, cmdErr := cli.ExecTestCLICmd(val.ClientCtx, cmd, args)
 		outBZ = out.Bytes()
-		t.Logf("Tx %s result (try %d of %d):\n%s", origResp.TxHash, i, tries, string(outBZ))
 		err = cmdErr
-		if err == nil || !strings.Contains(err.Error(), fmt.Sprintf("tx (%s) not found", origResp.TxHash)) {
+		if i == tries || err == nil || !strings.Contains(err.Error(), fmt.Sprintf("tx (%s) not found", origResp.TxHash)) {
 			break
 		}
-		if i != tries {
-			if !assert.NoError(t, testutil.WaitForNextBlock(n), "WaitForNextBlock after try %d of %d", i, tries) {
-				return sdk.TxResponse{}, false
-			}
+		if !assert.NoError(t, testutil.WaitForNextBlock(n), "WaitForNextBlock after try %d of %d", i, tries) {
+			return sdk.TxResponse{}, false
 		}
 	}
+	t.Logf("Tx %s result (try %d of %d):\n%s", origResp.TxHash, i, tries, outBZ)
 	if !assert.NoError(t, err, "ExecTestCLICmd QueryTxCmd %v", args) {
 		return sdk.TxResponse{}, false
 	}
