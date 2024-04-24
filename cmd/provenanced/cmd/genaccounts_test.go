@@ -784,12 +784,12 @@ func TestAddMarketsToAppState(t *testing.T) {
 	}{
 		{
 			name:   "error unmarshalling exchange gen state",
-			codec:  mocks.NewMockCodec().WithUnmarshalJSONErrs("injected error message"),
+			codec:  mocks.NewMockCodec(appCdc).WithUnmarshalJSONErrs("injected error message"),
 			expErr: "could not extract exchange genesis state: injected error message",
 		},
 		{
 			name:   "error marshalling exchange gen state",
-			codec:  mocks.NewMockCodec().WithMarshalJSONErrs("another injected error message"),
+			codec:  mocks.NewMockCodec(appCdc).WithMarshalJSONErrs("another injected error message"),
 			expErr: "failed to marshal exchange genesis state: another injected error message",
 		},
 		{
