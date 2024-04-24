@@ -45,7 +45,7 @@ type Wrapper struct {
 	nk   namekeeper.Keeper
 }
 
-func NewWrapper(cdc codec.Codec, keeper *wasmkeeper.Keeper, validatorSetSource wasmkeeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, router *baseapp.MsgServiceRouter, ss exported.Subspace) *Wrapper {
+func NewWrapper(cdc codec.Codec, keeper *wasmkeeper.Keeper, validatorSetSource wasmkeeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, router wasmkeeper.MessageRouter, ss exported.Subspace) *Wrapper {
 	return &Wrapper{
 		cdc:  cdc,
 		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, ss),
