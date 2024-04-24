@@ -31,11 +31,14 @@ import (
 	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
 
+const blocksPerVotingPeriod = 5
+
 func TestIntegrationTestSuite(t *testing.T) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 5
+	// cfg.TimeoutCommit = time.Millisecond * msPerBlock
 
 	// Define some stuff in the sanction genesis state.
 	sanctionedAddr1 := sdk.AccAddress("1_sanctioned_address_")
@@ -79,9 +82,9 @@ func TestIntegrationTestSuite(t *testing.T) {
 		cfg.Codec.MustUnmarshalJSON(govGenBz, &govGen)
 	}
 	govGen.Params.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(cfg.BondDenom, 6))
-	twoSeconds := time.Second * 2
-	govGen.Params.MaxDepositPeriod = &twoSeconds
-	govGen.Params.VotingPeriod = &twoSeconds
+	votingPeriod := cfg.TimeoutCommit * blocksPerVotingPeriod
+	govGen.Params.MaxDepositPeriod = &votingPeriod
+	govGen.Params.VotingPeriod = &votingPeriod
 	cfg.GenesisState[gov.ModuleName] = cfg.Codec.MustMarshalJSON(&govGen)
 
 	suite.Run(t, NewIntegrationTestSuite(cfg, &sanctionGen))
@@ -221,11 +224,10 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 		}
 	}
 
-	// We configured 1/2 second per block, and a 2-second voting period.
-	// So wait for 4 blocks after the proposal block.
+	// Wait for the proposal to pass.
 	s.logHeight()
 	s.T().Log("waiting for voting period to end")
-	s.waitForHeight(propHeight + 4)
+	s.waitForHeight(propHeight + blocksPerVotingPeriod)
 
 	// Check that the proposal passed.
 	finalProp := queries.GetGovProp(s.T(), s.network, propID)
