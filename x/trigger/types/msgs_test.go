@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	fmt "fmt"
@@ -10,6 +10,10 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+
+	"github.com/provenance-io/provenance/app"
+
+	. "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 func TestNewCreateTriggerRequest(t *testing.T) {
@@ -39,6 +43,8 @@ func TestNewDestroyTriggerRequest(t *testing.T) {
 }
 
 func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
+	// Call MakeTestEncodingConfig because it calls app.New which sets the global AppEncodingConfig needed here.
+	app.MakeTestEncodingConfig(t)
 	tests := []struct {
 		name        string
 		authorities []string
@@ -86,7 +92,7 @@ func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 			authorities: []string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"},
 			event:       &BlockHeightEvent{},
 			msgs:        []sdk.Msg{&MsgDestroyTriggerRequest{Authority: "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4", Id: 1}},
-			err:         "action: 0: signers[0] \"cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4\" is not a signer of the request message",
+			err:         "action: 0: *types.MsgDestroyTriggerRequest signers[0] \"cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4\" is not a signer of the request message",
 		},
 		{
 			name:        "valid - the action's signer must be in authorities subset",

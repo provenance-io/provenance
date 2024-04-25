@@ -6,9 +6,9 @@ import (
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/quarantine"
 	client "github.com/provenance-io/provenance/x/quarantine/client/cli"
@@ -21,7 +21,7 @@ func (s *IntegrationTestSuite) TestTxOptInCmd() {
 		name    string
 		args    []string
 		expErr  []string
-		expCode int
+		expCode uint32
 	}{
 		{
 			name:   "empty addr",
@@ -42,25 +42,10 @@ func (s *IntegrationTestSuite) TestTxOptInCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := client.TxOptInCmd()
-			cmdFuncName := "TxOptInCmd"
-			args := append(tc.args, s.commonFlags...)
-			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
-			out := outBW.String()
-			s.T().Logf("Output:\n%s", out)
-			s.assertErrorContents(err, tc.expErr, "%s error", cmdFuncName)
-			for _, expErr := range tc.expErr {
-				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
-			}
-			if len(tc.expErr) == 0 {
-				var txResp sdk.TxResponse
-				testFuncUn := func() {
-					err = s.clientCtx.Codec.UnmarshalJSON([]byte(out), &txResp)
-				}
-				if s.Assert().NotPanics(testFuncUn, "UnmarshalJSON output") {
-					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
-				}
-			}
+			testcli.NewCLITxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(tc.args...)).
+				WithExpInErrMsg(tc.expErr).
+				WithExpCode(tc.expCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }
@@ -72,7 +57,7 @@ func (s *IntegrationTestSuite) TestTxOptOutCmd() {
 		name    string
 		args    []string
 		expErr  []string
-		expCode int
+		expCode uint32
 	}{
 		{
 			name:   "empty addr",
@@ -93,25 +78,10 @@ func (s *IntegrationTestSuite) TestTxOptOutCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := client.TxOptOutCmd()
-			cmdFuncName := "TxOptOutCmd"
-			args := append(tc.args, s.commonFlags...)
-			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
-			out := outBW.String()
-			s.T().Logf("Output:\n%s", out)
-			s.assertErrorContents(err, tc.expErr, "%s error", cmdFuncName)
-			for _, expErr := range tc.expErr {
-				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
-			}
-			if len(tc.expErr) == 0 {
-				var txResp sdk.TxResponse
-				testFuncUn := func() {
-					err = s.clientCtx.Codec.UnmarshalJSON([]byte(out), &txResp)
-				}
-				if s.Assert().NotPanics(testFuncUn, "UnmarshalJSON output") {
-					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
-				}
-			}
+			testcli.NewCLITxExecutor(client.TxOptOutCmd(), s.appendCommonFlagsTo(tc.args...)).
+				WithExpInErrMsg(tc.expErr).
+				WithExpCode(tc.expCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }
@@ -128,7 +98,7 @@ func (s *IntegrationTestSuite) TestTxAcceptCmd() {
 		name    string
 		args    []string
 		expErr  []string
-		expCode int
+		expCode uint32
 	}{
 		{
 			name:   "empty to address",
@@ -194,22 +164,10 @@ func (s *IntegrationTestSuite) TestTxAcceptCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := client.TxAcceptCmd()
-			cmdFuncName := "TxAcceptCmd"
-			args := append(tc.args, s.commonFlags...)
-			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
-			out := outBW.String()
-			s.T().Logf("Output:\n%s", out)
-			s.assertErrorContents(err, tc.expErr, "%s error", cmdFuncName)
-			for _, expErr := range tc.expErr {
-				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
-			}
-			if len(tc.expErr) == 0 {
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
-				if ok {
-					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
-				}
-			}
+			testcli.NewCLITxExecutor(client.TxAcceptCmd(), s.appendCommonFlagsTo(tc.args...)).
+				WithExpInErrMsg(tc.expErr).
+				WithExpCode(tc.expCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }
@@ -226,7 +184,7 @@ func (s *IntegrationTestSuite) TestTxDeclineCmd() {
 		name    string
 		args    []string
 		expErr  []string
-		expCode int
+		expCode uint32
 	}{
 		{
 			name:   "empty to address",
@@ -292,22 +250,10 @@ func (s *IntegrationTestSuite) TestTxDeclineCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := client.TxDeclineCmd()
-			cmdFuncName := "TxDeclineCmd"
-			args := append(tc.args, s.commonFlags...)
-			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
-			out := outBW.String()
-			s.T().Logf("Output:\n%s", out)
-			s.assertErrorContents(err, tc.expErr, "%s error", cmdFuncName)
-			for _, expErr := range tc.expErr {
-				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
-			}
-			if len(tc.expErr) == 0 {
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
-				if ok {
-					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
-				}
-			}
+			testcli.NewCLITxExecutor(client.TxDeclineCmd(), s.appendCommonFlagsTo(tc.args...)).
+				WithExpInErrMsg(tc.expErr).
+				WithExpCode(tc.expCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }
@@ -323,7 +269,7 @@ func (s *IntegrationTestSuite) TestTxUpdateAutoResponsesCmd() {
 		name    string
 		args    []string
 		expErr  []string
-		expCode int
+		expCode uint32
 	}{
 		{
 			name:   "empty to address",
@@ -362,22 +308,10 @@ func (s *IntegrationTestSuite) TestTxUpdateAutoResponsesCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := client.TxUpdateAutoResponsesCmd()
-			cmdFuncName := "TxUpdateAutoResponsesCmd"
-			args := append(tc.args, s.commonFlags...)
-			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
-			out := outBW.String()
-			s.T().Logf("Output:\n%s", out)
-			s.assertErrorContents(err, tc.expErr, "%s error", cmdFuncName)
-			for _, expErr := range tc.expErr {
-				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
-			}
-			if len(tc.expErr) == 0 {
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
-				if ok {
-					s.Assert().Equal(tc.expCode, int(txResp.Code), "%s response code", cmdFuncName)
-				}
-			}
+			testcli.NewCLITxExecutor(client.TxUpdateAutoResponsesCmd(), s.appendCommonFlagsTo(tc.args...)).
+				WithExpInErrMsg(tc.expErr).
+				WithExpCode(tc.expCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }
@@ -397,14 +331,10 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 	asJSONFlag := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
 
 	s.Run("opt toAddr into quarantine", func() {
-		outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.TxOptInCmd(), s.appendCommonFlagsTo(toAddr))
-		out := outBW.String()
-		s.T().Logf("TxOptInCmd Output:\n%s", out)
-		s.Require().NoError(err, "TxOptInCmd error")
-		s.waitForTx([]byte(out))
+		testcli.NewCLITxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(toAddr)).Execute(s.T(), s.network)
 
-		outBW, err = cli.ExecTestCLICmd(s.clientCtx, client.QueryIsQuarantinedCmd(), []string{toAddr, asJSONFlag})
-		out = outBW.String()
+		outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.QueryIsQuarantinedCmd(), []string{toAddr, asJSONFlag})
+		out := outBW.String()
 		s.T().Logf("QueryIsQuarantinedCmd Output:\n%s", out)
 		s.Require().NoError(err, "QueryIsQuarantinedCmd error")
 		resp := &quarantine.QueryIsQuarantinedResponse{}
@@ -418,20 +348,8 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 	s.stopIfFailed()
 
 	s.Run("do two sends from different addresses", func() {
-		outBW, err := clitestutil.MsgSendExec(s.clientCtx,
-			asStringer(fromAddr1), asStringer(toAddr), s.bondCoins(amt1),
-			s.addrCodec, s.commonFlags...,
-		)
-		s.T().Logf("MsgSendExec 1 Output:\n%s", outBW.String())
-		s.Require().NoError(err, "MsgSendExec 1")
-
-		outBW, err = clitestutil.MsgSendExec(s.clientCtx,
-			asStringer(fromAddr2), asStringer(toAddr), s.bondCoins(amt2),
-			s.addrCodec, s.commonFlags...,
-		)
-		s.T().Logf("MsgSendExec 2 Output:\n%s", outBW.String())
-		s.Require().NoError(err, "MsgSendExec 2")
-		s.waitForTx(outBW.Bytes(), "MsgSendExec")
+		s.execBankSend(fromAddr1, toAddr, s.bondCoins(amt1).String())
+		s.execBankSend(fromAddr2, toAddr, s.bondCoins(amt2).String())
 
 		expFunds := []*quarantine.QuarantinedFunds{
 			{
@@ -447,10 +365,12 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 				Declined:                false,
 			},
 		}
-		outBW, err = cli.ExecTestCLICmd(s.clientCtx, client.QueryQuarantinedFundsCmd(), []string{toAddr, asJSONFlag})
+
+		outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.QueryQuarantinedFundsCmd(), []string{toAddr, asJSONFlag})
 		out := outBW.String()
 		s.T().Logf("QueryQuarantinedFundsCmd Output:\n%s", out)
 		s.Require().NoError(err, "QueryQuarantinedFundsCmd error")
+
 		resp := &quarantine.QueryQuarantinedFundsResponse{}
 		s.Require().NotPanics(func() {
 			err = s.clientCtx.Codec.UnmarshalJSON([]byte(out), resp)
@@ -462,12 +382,10 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 	s.stopIfFailed()
 
 	s.Run("accept the quarantined funds", func() {
-		outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.TxAcceptCmd(), s.appendCommonFlagsTo(toAddr, fromAddr2, fromAddr1))
-		s.T().Logf("TxAcceptCmd Output:\n%s", outBW.String())
-		s.Require().NoError(err, "TxAcceptCmd error")
-		s.waitForTx(outBW.Bytes(), "TxAcceptCmd")
+		testcli.NewCLITxExecutor(client.TxAcceptCmd(), s.appendCommonFlagsTo(toAddr, fromAddr2, fromAddr1)).
+			Execute(s.T(), s.network)
 
-		outBW, err = cli.ExecTestCLICmd(s.clientCtx, client.QueryQuarantinedFundsCmd(), []string{toAddr, asJSONFlag})
+		outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.QueryQuarantinedFundsCmd(), []string{toAddr, asJSONFlag})
 		out := outBW.String()
 		s.T().Logf("QueryQuarantinedFundsCmd Output:\n%s", out)
 		s.Require().NoError(err, "QueryQuarantinedFundsCmd error")

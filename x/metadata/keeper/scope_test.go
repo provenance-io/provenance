@@ -78,7 +78,7 @@ func (s *ScopeKeeperTestSuite) SetupTest() {
 
 	s.scUserAddr = sdk.AccAddress("smart_contract_addr_")
 	s.scUser = s.scUserAddr.String()
-	s.app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(s.scUserAddr, nil, 0, 0))
+	s.app.AccountKeeper.SetAccount(ctx, s.app.AccountKeeper.NewAccount(ctx, authtypes.NewBaseAccount(s.scUserAddr, nil, 0, 0)))
 
 	s.scopeUUID = uuid.New()
 	s.scopeID = types.ScopeMetadataAddress(s.scopeUUID)
@@ -2447,7 +2447,7 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 func (s *ScopeKeeperTestSuite) TestAddSetNetAssetValues() {
 	markerDenom := "jackthecat"
 	mAccount := authtypes.NewBaseAccount(markertypes.MustGetMarkerAddress(markerDenom), nil, 0, 0)
-	s.app.MarkerKeeper.SetMarker(s.FreshCtx(), markertypes.NewMarkerAccount(mAccount, sdk.NewInt64Coin(markerDenom, 1000), s.user1Addr, []markertypes.AccessGrant{{Address: s.user1, Permissions: []markertypes.Access{markertypes.Access_Transfer}}}, markertypes.StatusFinalized, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{}))
+	s.app.MarkerKeeper.SetMarker(s.FreshCtx(), s.app.MarkerKeeper.NewMarker(s.FreshCtx(), markertypes.NewMarkerAccount(mAccount, sdk.NewInt64Coin(markerDenom, 1000), s.user1Addr, []markertypes.AccessGrant{{Address: s.user1, Permissions: []markertypes.Access{markertypes.Access_Transfer}}}, markertypes.StatusFinalized, markertypes.MarkerType_RestrictedCoin, true, true, false, []string{})))
 	scopeID := types.ScopeMetadataAddress(uuid.New())
 	tests := []struct {
 		name           string

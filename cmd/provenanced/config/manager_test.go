@@ -22,15 +22,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
+	"github.com/provenance-io/provenance/app"
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
 type ConfigManagerTestSuite struct {
 	suite.Suite
 
-	Home string
+	Home           string
+	EncodingConfig simappparams.EncodingConfig
 }
 
 func TestConfigManagerTestSuite(t *testing.T) {
@@ -40,13 +42,13 @@ func TestConfigManagerTestSuite(t *testing.T) {
 func (s *ConfigManagerTestSuite) SetupTest() {
 	s.Home = s.T().TempDir()
 	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
+	s.EncodingConfig = app.MakeTestEncodingConfig(s.T())
 }
 
 // makeDummyCmd creates a dummy command with a context in it that can be used to test all the manager stuff.
 func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.
-		WithCodec(encodingConfig.Codec).
+		WithCodec(s.EncodingConfig.Marshaler).
 		WithHomeDir(s.Home)
 	clientCtx.Viper = viper.New()
 	serverCtx := server.NewContext(clientCtx.Viper, DefaultTmConfig(), log.NewNopLogger())

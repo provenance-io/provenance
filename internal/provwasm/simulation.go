@@ -8,6 +8,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmsimulation "github.com/CosmWasm/wasmd/x/wasm/simulation"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
 	sdkmath "cosmossdk.io/math"
@@ -43,15 +44,17 @@ type Wrapper struct {
 	ak   authkeeper.AccountKeeperI
 	bk   bankkeeper.Keeper
 	nk   namekeeper.Keeper
+	wk   *wasmkeeper.Keeper
 }
 
-func NewWrapper(cdc codec.Codec, keeper *wasmkeeper.Keeper, validatorSetSource wasmkeeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, router *baseapp.MsgServiceRouter, ss exported.Subspace) *Wrapper {
+func NewWrapper(cdc codec.Codec, keeper *wasmkeeper.Keeper, validatorSetSource wasmkeeper.ValidatorSetSource, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, nk namekeeper.Keeper, router wasmkeeper.MessageRouter, ss exported.Subspace) *Wrapper {
 	return &Wrapper{
 		cdc:  cdc,
 		wasm: wasm.NewAppModule(cdc, keeper, validatorSetSource, ak, bk, router, ss),
 		ak:   ak,
 		bk:   bk,
 		nk:   nk,
+		wk:   keeper,
 	}
 }
 
@@ -82,9 +85,8 @@ func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (pw Wrapper) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	// return pw.wasm.ProposalContents(simState) // TODO[1760]: wasm: Find replacement for this or delete it.
-	return nil
+func (pw Wrapper) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return wasmsimulation.ProposalMsgs(pw.bk, pw.wk)
 }
 
 // RandomizedParams returns empty list as the params don't change

@@ -166,8 +166,13 @@ func deleteAll(store storetypes.KVStore, pre []byte) {
 // The callback should return false to continue iteration, or true to stop.
 func iterate(store storetypes.KVStore, keyPrefix []byte, cb func(keySuffix, value []byte) bool) {
 	// Using an open iterator on a prefixed store here so that iter.Key() doesn't contain the prefix.
-	pStore := prefix.NewStore(store, keyPrefix)
-	iter := pStore.Iterator(nil, nil)
+	var iter storetypes.Iterator
+	if len(keyPrefix) > 0 {
+		pStore := prefix.NewStore(store, keyPrefix)
+		iter = pStore.Iterator(nil, nil)
+	} else {
+		iter = store.Iterator(nil, nil)
+	}
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {

@@ -739,7 +739,7 @@ func (k msgServer) SetAccountData(
 
 // AddNetAssetValues adds net asset values to a scope
 func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNetAssetValuesRequest) (*types.MsgAddNetAssetValuesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := UnwrapMetadataContext(goCtx)
 
 	scopeID, err := types.MetadataAddressFromBech32(msg.ScopeId)
 	if err != nil {
@@ -753,7 +753,7 @@ func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNet
 
 	_, err = k.validateAllRequiredSigned(ctx, scope.GetAllOwnerAddresses(), msg)
 	if err != nil {
-		return nil, sdkerrors.ErrorInvalidSigner.Wrap(err.Error())
+		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
 
 	err = k.AddSetNetAssetValues(ctx, scopeID, msg.NetAssetValues, types.ModuleName)

@@ -3,16 +3,16 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	simapp "github.com/provenance-io/provenance/app"
-
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/marker/types"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 type DenomTestSuite struct {
@@ -34,9 +34,9 @@ func TestDenomTestSuite(t *testing.T) {
 }
 func (s *DenomTestSuite) TestInvalidDenomExpression() {
 	s.T().Run("invalid denom expression", func(t *testing.T) {
-		assert.Panics(t,
+		assertions.AssertPanicContents(t,
 			func() { s.app.MarkerKeeper.SetParams(s.ctx, types.Params{UnrestrictedDenomRegex: `(invalid`}) },
-			"value from ParamSetPair is invalid: error parsing regexp: missing closing ): `^(invalid$`",
+			[]string{"error parsing regexp: missing closing ): `^(invalid$`"},
 		)
 	})
 }

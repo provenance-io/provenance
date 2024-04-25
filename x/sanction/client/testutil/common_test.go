@@ -55,12 +55,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, s.bondCoins(10).String()),
 	}
-
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	testutil.CleanUp(s.network, s.T())
+	testutil.Cleanup(s.network, s.T())
 }
 
 // assertErrorContents calls AssertErrorContents using this suite's t.

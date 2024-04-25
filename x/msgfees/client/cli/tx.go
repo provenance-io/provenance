@@ -70,6 +70,11 @@ $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nha
 				return err
 			}
 
+			_, err = clientCtx.InterfaceRegistry.Resolve(msgType)
+			if err != nil {
+				return err
+			}
+
 			recipient, err := cmd.Flags().GetString(FlagRecipient)
 			if err != nil {
 				return err

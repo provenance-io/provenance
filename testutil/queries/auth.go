@@ -53,13 +53,13 @@ func AssertGetModuleAccountByName(t *testing.T, n *network.Network, moduleName s
 	return rv, true
 }
 
-// GetTxFromResponse extracts a tx hash from the provided txRespBz and executes a query for it,
-// requiring everything to be okay. Since the SDK got rid of block broadcast, we now need to query
-// for a tx after submitting it in order to find out what happened.
+// GetTxFromResponse gets the TxResponse from the provided ExecTestCLICmd output bytes.
+// If the provided output indicates a code other than 0, that is what is returned.
+// If the provided output has a code of 0, the tx hash is extracted from it, and queries
+// are executed to get the TxResponse for it. Three attempts are made to query for the tx,
+// waiting a block between each attempt.
 //
-// The provided txRespBz should be the bytes returned from submitting a Tx.
-//
-// In most cases, you'll have to wait for the next block after submitting your tx, and before calling this.
+// This requires that there are no problems getting the TxResponse.
 func GetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) sdk.TxResponse {
 	t.Helper()
 	rv, ok := AssertGetTxFromResponse(t, n, txRespBz)
@@ -69,13 +69,13 @@ func GetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) sdk.Tx
 	return rv
 }
 
-// AssertGetTxFromResponse extracts a tx hash from the provided txRespBz and executes a query for it,
-// asserting that everything is okay. Since the SDK got rid of block broadcast, we now need to query
-// for a tx after submitting it in order to find out what happened.
+// AssertGetTxFromResponse gets the TxResponse from the provided ExecTestCLICmd output bytes.
+// If the provided output indicates a code other than 0, that is what is returned.
+// If the provided output has a code of 0, the tx hash is extracted from it, and queries
+// are executed to get the TxResponse for it. Four attempts are made to query for the tx,
+// waiting a block between each attempt.
 //
-// The provided txRespBz should be the bytes returned from submitting a Tx.
-//
-// In most cases, you'll have to wait for the next block after submitting your tx, and before calling this.
+// This asserts that there are no problems getting the TxResponse, returning true if no assertions failed.
 func AssertGetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) (sdk.TxResponse, bool) {
 	t.Helper()
 	if !assert.NotEmpty(t, n.Validators, "Network.Validators") {
@@ -88,6 +88,9 @@ func AssertGetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) 
 	if !assert.NoError(t, err, "UnmarshalJSON(%q, %T) (original tx response)", string(txRespBz), &origResp) {
 		return sdk.TxResponse{}, false
 	}
+	if origResp.Code != 0 || len(origResp.RawLog) > 0 || origResp.Tx != nil {
+		return origResp, true
+	}
 	if !assert.NotEmpty(t, origResp.TxHash, "the tx hash") {
 		return sdk.TxResponse{}, false
 	}
@@ -95,21 +98,20 @@ func AssertGetTxFromResponse(t *testing.T, n *network.Network, txRespBz []byte) 
 	cmd := authcli.QueryTxCmd()
 	args := []string{origResp.TxHash, "--output", "json"}
 	var outBZ []byte
-	tries := 3
-	for i := 1; i <= tries; i++ {
+	tries := 4
+	var i int
+	for i = 1; i <= tries; i++ {
 		out, cmdErr := cli.ExecTestCLICmd(val.ClientCtx, cmd, args)
 		outBZ = out.Bytes()
-		t.Logf("Tx %s result (try %d of %d):\n%s", origResp.TxHash, i, tries, string(outBZ))
 		err = cmdErr
-		if err == nil || !strings.Contains(err.Error(), fmt.Sprintf("tx (%s) not found", origResp.TxHash)) {
+		if i == tries || err == nil || !strings.Contains(err.Error(), fmt.Sprintf("tx (%s) not found", origResp.TxHash)) {
 			break
 		}
-		if i != tries {
-			if !assert.NoError(t, testutil.WaitForNextBlock(n), "WaitForNextBlock after try %d of %d", i, tries) {
-				return sdk.TxResponse{}, false
-			}
+		if !assert.NoError(t, testutil.WaitForNextBlock(n), "WaitForNextBlock after try %d of %d", i, tries) {
+			return sdk.TxResponse{}, false
 		}
 	}
+	t.Logf("Tx %s result (try %d of %d):\n%s", origResp.TxHash, i, tries, outBZ)
 	if !assert.NoError(t, err, "ExecTestCLICmd QueryTxCmd %v", args) {
 		return sdk.TxResponse{}, false
 	}
