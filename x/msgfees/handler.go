@@ -17,8 +17,6 @@ func NewProposalHandler(k keeper.Keeper, registry cdctypes.InterfaceRegistry) go
 		switch c := content.(type) {
 		case *types.AddMsgFeeProposal:
 			return keeper.HandleAddMsgFeeProposal(ctx, k, c, registry)
-		case *types.UpdateMsgFeeProposal:
-			return keeper.HandleUpdateMsgFeeProposal(ctx, k, c, registry)
 		default:
 			return sdkerrors.ErrUnknownRequest.Wrapf("unrecognized marker proposal content type: %T", c)
 		}

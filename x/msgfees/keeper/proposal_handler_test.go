@@ -130,8 +130,6 @@ func (s *IntegrationTestSuite) TestMsgFeeProposals() {
 			switch c := tc.prop.(type) {
 			case *msgfeestypes.AddMsgFeeProposal:
 				err = msgfeeskeeper.HandleAddMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
-			case *msgfeestypes.UpdateMsgFeeProposal:
-				err = msgfeeskeeper.HandleUpdateMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}
