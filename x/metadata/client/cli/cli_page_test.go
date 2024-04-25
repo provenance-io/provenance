@@ -307,14 +307,14 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")
 
-	_, err = s.testnet.WaitForHeight(1)
+	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "calling s.testnet.WaitForHeight(1)")
 	s.Require().NoError(s.testnet.Validators[0].ClientCtx.Keyring.ImportPrivKey(s.accountAddr.String(), crypto.EncryptArmorPrivKey(s.accountKey, "pasSword0", "secp256k1"), "pasSword0"), "adding s.accountKey to keyring")
 	s.T().Log("done setting up integration test suite")
 }
 
 func (s *IntegrationCLIPageTestSuite) TearDownSuite() {
-	testutil.CleanUp(s.testnet, s.T())
+	testutil.Cleanup(s.testnet, s.T())
 }
 
 var titleCaser = cases.Title(language.English)

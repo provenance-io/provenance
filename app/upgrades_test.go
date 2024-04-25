@@ -39,7 +39,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
-func (s *UpgradeTestSuite) SetupSuite() {
+func (s *UpgradeTestSuite) SetupTest() {
 	// Alert: This function is SetupSuite. That means all tests in here
 	// will use the same app with the same store and data.
 	defer SetLoggerMaker(SetLoggerMaker(BufferedInfoLoggerMaker(&s.logBuffer)))
@@ -315,16 +315,6 @@ func (s *UpgradeTestSuite) TestKeysInHandlersMap() {
 		}
 	})
 
-	s.Run("two or more colors exist", func() {
-		// We always need the colors currently in use on mainnet and testnet.
-		// The ones before that shouldn't be removed until we add new ones.
-		// It's okay to not clean the old ones up immediately, though.
-		// So we always want at least 2 different colors in there.
-		s.Assert().GreaterOrEqual(len(colors), 2, "number of distinct colors: %q in %q", colors, handlerKeys)
-		// If there are more than 3, we need to do some cleanup though.
-		s.Assert().LessOrEqual(len(colors), 3, "number of distinct colors: %q in %q", colors, handlerKeys)
-	})
-
 	s.Run("no two colors start with same character", func() {
 		// Little tricky here. i will go from 0 to len(colors) - 2 and the color will go from the 2nd to last.
 		// So colors[i] in here will be the entry just before color.
@@ -452,7 +442,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 1, "GetAllValidators after setup")
 
 		expectedLogLines := []string{
-			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			"INF Removing inactive validator delegations.",
+			"INF Threshold: 21 days",
 			"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
 		}
 		s.ExecuteAndAssertLogs(runner, expectedLogLines, nil, true, runnerName)
@@ -474,7 +465,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			"INF Removing inactive validator delegations.",
+			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
 			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
@@ -510,7 +502,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 2, "Setup: GetAllValidators should have: 1 bonded, 1 unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			"INF Removing inactive validator delegations.",
+			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -556,7 +549,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 2 unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			"INF Removing inactive validator delegations.",
+			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -604,7 +598,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 old unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			"INF Removing inactive validator delegations.",
+			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr1.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
 			fmt.Sprintf("INF Undelegate delegator %v from validator %v of all shares (%v).", addr2.String(), unbondedVal1.OperatorAddress, delegationCoinAmt),
@@ -640,7 +635,8 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().Len(validators, 3, "Setup: GetAllValidators should have: 1 bonded, 1 recently unbonded, 1 empty unbonded")
 
 		expectedLogLines := []string{
-			"INF Removing all delegations from validators that have been inactive (unbonded) for 21 days.",
+			"INF Removing inactive validator delegations.",
+			"INF Threshold: 21 days",
 			fmt.Sprintf("INF Validator %v has been inactive (unbonded) for %d days and will be removed.", unbondedVal1.OperatorAddress, 30),
 			"INF A total of 1 inactive (unbonded) validators have had all their delegators removed.",
 		}

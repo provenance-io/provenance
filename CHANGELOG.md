@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add PreBlocker support for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Add the Sanction module back in [#1922](https://github.com/provenance-io/provenance/pull/1922).
 * Add the Quarantine module back in [#1926](https://github.com/provenance-io/provenance/pull/1926).
+* Bump wasmd to `v0.50.0` [#1760](https://github.com/provenance-io/provenance/issues/1760).
 
 ### Improvements
 
@@ -68,6 +69,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Restore gov-prop cli commands and fix next key decoding [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Use fields of the SimulationState for the encoders needed for simulations [#1931](https://github.com/provenance-io/provenance/pull/1931).
+* Fix most of the failing unit tests [#1943](https://github.com/provenance-io/provenance/pull/1943)
 
 ### Dependencies
 
@@ -82,6 +84,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `peter-evans/create-pull-request` from 6.0.2 to 6.0.4 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940))
 - Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.2 ([#1928](https://github.com/provenance-io/provenance/pull/1928))
 - Bump `cosmwasm-std` from 1.4.1 to 1.4.4 ([#1950](https://github.com/provenance-io/provenance/pull/1950))
+- Bump `golangci/golangci-lint-action` from 4 to 5 ([#1951](https://github.com/provenance-io/provenance/pull/1951))
 
 ---
 

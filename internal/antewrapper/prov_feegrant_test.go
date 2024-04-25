@@ -163,8 +163,7 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 		},
 	}
 
-	for _, stc := range cases {
-		tc := stc // to make scopelint happy
+	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			fee := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, tc.fee))
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}

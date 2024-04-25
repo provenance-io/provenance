@@ -104,7 +104,7 @@ func TestValidateWrapper(t *testing.T) {
 		{
 			name: "bad config",
 			appOpts: MockAppOptions{
-				db: "cleveldb",
+				pruning: "10000",
 			},
 			expLogMsgs: true,
 			expSleep:   true,
@@ -112,7 +112,7 @@ func TestValidateWrapper(t *testing.T) {
 		{
 			name: "bad config no sleep",
 			appOpts: MockAppOptions{
-				db: "cleveldb",
+				pruning: "10000",
 			},
 			pioAckWarn: true,
 			expLogMsgs: true,
@@ -235,11 +235,11 @@ func TestIssueConfigWarnings(t *testing.T) {
 			name: "bad db",
 			appOpts: MockAppOptions{
 				pruning: "10",
-				db:      "cleveldb",
+				db:      "otherdb",
 				indexer: "null",
 			},
 			expLogLines: []string{
-				"ERR cleveldb IS NO LONGER SUPPORTED. MIGRATE TO goleveldb.",
+				"ERR otherdb IS NO LONGER SUPPORTED. MIGRATE TO goleveldb.",
 				sleepErr1,
 				sleepErr2,
 			},
@@ -249,13 +249,13 @@ func TestIssueConfigWarnings(t *testing.T) {
 			name: "all bad with sleep",
 			appOpts: MockAppOptions{
 				pruning: "1001",
-				db:      "badgerdb",
+				db:      "thisdb",
 				indexer: "psql",
 			},
 			expLogLines: []string{
 				"ERR pruning-interval 1001 EXCEEDS 999 AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS.",
 				"ERR indexer \"psql\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"null\".",
-				"ERR badgerdb IS NO LONGER SUPPORTED. MIGRATE TO goleveldb.",
+				"ERR thisdb IS NO LONGER SUPPORTED. MIGRATE TO goleveldb.",
 				sleepErr1,
 				sleepErr2,
 			},
@@ -265,14 +265,14 @@ func TestIssueConfigWarnings(t *testing.T) {
 			name: "all bad no sleep",
 			appOpts: MockAppOptions{
 				pruning: "1001",
-				db:      "badgerdb",
+				db:      "thatdb",
 				indexer: "psql",
 			},
 			pioAckWarn: "1",
 			expLogLines: []string{
 				"ERR pruning-interval 1001 EXCEEDS 999 AND IS NOT RECOMMENDED, AS IT CAN LEAD TO MISSED BLOCKS ON VALIDATORS.",
 				"ERR indexer \"psql\" IS NOT RECOMMENDED, AND IT IS RECOMMENDED TO USE \"null\".",
-				"ERR badgerdb IS NO LONGER SUPPORTED. MIGRATE TO goleveldb.",
+				"ERR thatdb IS NO LONGER SUPPORTED. MIGRATE TO goleveldb.",
 			},
 			expSleep: false,
 		},

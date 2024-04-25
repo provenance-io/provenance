@@ -1220,10 +1220,6 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 			}
 
 			msg := types.NewMsgAddNetAssetValuesRequest(scopeID.String(), signers, netAssetValues)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

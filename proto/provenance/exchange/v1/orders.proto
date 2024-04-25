@@ -7,6 +7,7 @@ option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
@@ -27,6 +28,7 @@ message Order {
 
 // AskOrder represents someone's desire to sell something at a minimum price.
 message AskOrder {
+  option (cosmos.msg.v1.signer)      = "seller";
   option (gogoproto.goproto_getters) = false;
 
   // market_id identifies the market that this order belongs to.
@@ -54,6 +56,7 @@ message AskOrder {
 
 // BidOrder represents someone's desire to buy something at a specific price.
 message BidOrder {
+  option (cosmos.msg.v1.signer)      = "buyer";
   option (gogoproto.goproto_getters) = false;
 
   // market_id identifies the market that this order belongs to.

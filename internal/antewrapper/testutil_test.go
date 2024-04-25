@@ -11,7 +11,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -19,6 +18,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
@@ -39,6 +39,8 @@ type AnteTestSuite struct {
 	ctx         sdk.Context
 	clientCtx   client.Context
 	txBuilder   client.TxBuilder
+
+	encodingConfig simappparams.EncodingConfig
 }
 
 // returns context and app with params set on account keeper
@@ -65,20 +67,20 @@ func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	s.encodingConfig = s.app.GetEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
-	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
-	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	s.encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
+	testdata.RegisterInterfaces(s.encodingConfig.InterfaceRegistry)
 
 	s.clientCtx = client.Context{}.
-		WithTxConfig(encodingConfig.TxConfig)
+		WithTxConfig(s.encodingConfig.TxConfig)
 
 	anteHandler, err := antewrapper.NewAnteHandler(
 		antewrapper.HandlerOptions{
 			AccountKeeper:       s.app.AccountKeeper,
 			BankKeeper:          s.app.BankKeeper,
 			FeegrantKeeper:      s.app.FeeGrantKeeper,
-			TxSigningHandlerMap: encodingConfig.TxConfig.SignModeHandler(),
+			TxSigningHandlerMap: s.encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:      ante.DefaultSigVerificationGasConsumer,
 			MsgFeesKeeper:       s.app.MsgFeesKeeper,
 		},

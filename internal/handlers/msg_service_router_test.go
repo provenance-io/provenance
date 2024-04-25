@@ -23,7 +23,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -34,6 +33,7 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	piosimapp "github.com/provenance-io/provenance/app"
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -176,7 +176,7 @@ func TestRegisterMsgService(t *testing.T) {
 	db := dbm.NewMemDB()
 
 	// Create an encoding config that doesn't register testdata Msg services.
-	encCfg := moduletestutil.MakeTestEncodingConfig()
+	encCfg := piosimapp.MakeTestEncodingConfig(t)
 	log.NewTestLogger(t)
 	app := baseapp.NewBaseApp("test", log.NewTestLogger(t), db, encCfg.TxConfig.TxDecoder())
 	router := handlers.NewPioMsgServiceRouter(encCfg.TxConfig.TxDecoder())
@@ -202,7 +202,7 @@ func TestRegisterMsgService(t *testing.T) {
 func TestRegisterMsgServiceTwice(t *testing.T) {
 	// Setup baseapp.
 	db := dbm.NewMemDB()
-	encCfg := moduletestutil.MakeTestEncodingConfig()
+	encCfg := piosimapp.MakeTestEncodingConfig(t)
 	app := baseapp.NewBaseApp("test", log.NewTestLogger(t), db, encCfg.TxConfig.TxDecoder())
 	router := handlers.NewPioMsgServiceRouter(encCfg.TxConfig.TxDecoder())
 	router.SetInterfaceRegistry(encCfg.InterfaceRegistry)
@@ -227,7 +227,6 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 }
 
 func TestFailedTx(tt *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig()
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1) // will create a gas fee of 1stake * gas
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
@@ -237,6 +236,7 @@ func TestFailedTx(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
+	encCfg := app.GetEncodingConfig()
 	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	require.NoError(tt, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "Setting default account params")
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
@@ -334,7 +334,6 @@ func TestFailedTx(tt *testing.T) {
 
 func TestMsgService(tt *testing.T) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1) // set denom as stake and floor gas price as 1 stake.
-	encCfg := moduletestutil.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
@@ -343,6 +342,7 @@ func TestMsgService(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
+	encCfg := app.GetEncodingConfig()
 	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	require.NoError(tt, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "Setting default account params")
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
@@ -492,7 +492,6 @@ func TestMsgService(tt *testing.T) {
 
 func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
-	encCfg := moduletestutil.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
@@ -502,6 +501,7 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
+	encCfg := app.GetEncodingConfig()
 	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	require.NoError(t, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "Setting default account params")
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
@@ -562,7 +562,6 @@ func TestMsgServiceMsgFeeWithRecipient(t *testing.T) {
 
 func TestMsgServiceAuthz(tt *testing.T) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 1)
-	encCfg := moduletestutil.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	_, _, addr3 := testdata.KeyTestPubAddr()
@@ -575,6 +574,7 @@ func TestMsgServiceAuthz(tt *testing.T) {
 		banktypes.Balance{Address: addr1.String(), Coins: initBalance},
 		banktypes.Balance{Address: addr2.String(), Coins: initBalance},
 	)
+	encCfg := app.GetEncodingConfig()
 	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	require.NoError(tt, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "Setting default account params")
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
@@ -718,7 +718,6 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 	pioconfig.SetProvenanceConfig("", 0)
 	pioconfig.ChangeMsgFeeFloorDenom(1, sdk.DefaultBondDenom)
 
-	encCfg := moduletestutil.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
@@ -731,6 +730,7 @@ func TestMsgServiceAssessMsgFee(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
+	encCfg := app.GetEncodingConfig()
 	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	require.NoError(tt, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "Setting default account params")
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
@@ -806,7 +806,6 @@ func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
 	pioconfig.SetProvenanceConfig("", 0)
 	pioconfig.ChangeMsgFeeFloorDenom(1, sdk.DefaultBondDenom)
 
-	encCfg := moduletestutil.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
@@ -819,6 +818,7 @@ func TestMsgServiceAssessMsgFeeWithBips(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
+	encCfg := app.GetEncodingConfig()
 	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	require.NoError(tt, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "Setting default account params")
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
@@ -895,7 +895,6 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 	pioconfig.SetProvenanceConfig("", 0)
 	pioconfig.ChangeMsgFeeFloorDenom(1, sdk.DefaultBondDenom)
 
-	encCfg := moduletestutil.MakeTestEncodingConfig()
 	priv, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	acct1 := authtypes.NewBaseAccount(addr1, priv.PubKey(), 0, 0)
@@ -908,6 +907,7 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 		[]authtypes.GenesisAccount{acct1},
 		banktypes.Balance{Address: addr1.String(), Coins: acct1Balance},
 	)
+	encCfg := app.GetEncodingConfig()
 	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{ChainID: "msgfee-testing"})
 	require.NoError(tt, app.AccountKeeper.Params.Set(ctx, authtypes.DefaultParams()), "Setting default account params")
 	feeModuleAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
@@ -1000,7 +1000,7 @@ func signAndGenTx(
 	ctx sdk.Context,
 	gaslimit uint64,
 	fees sdk.Coins,
-	encCfg moduletestutil.TestEncodingConfig,
+	encCfg simappparams.EncodingConfig,
 	pubKey cryptotypes.PubKey,
 	privKey cryptotypes.PrivKey,
 	acct authtypes.BaseAccount,
@@ -1058,7 +1058,7 @@ func SignTxAndGetBytes(
 	ctx sdk.Context,
 	gaslimit uint64,
 	fees sdk.Coins,
-	encCfg moduletestutil.TestEncodingConfig,
+	encCfg simappparams.EncodingConfig,
 	pubKey cryptotypes.PubKey,
 	privKey cryptotypes.PrivKey,
 	acct authtypes.BaseAccount,
@@ -1081,7 +1081,7 @@ func SignTx(
 	ctx sdk.Context,
 	gaslimit uint64,
 	fees sdk.Coins,
-	encCfg moduletestutil.TestEncodingConfig,
+	encCfg simappparams.EncodingConfig,
 	pubKey cryptotypes.PubKey,
 	privKey cryptotypes.PrivKey,
 	acct authtypes.BaseAccount,

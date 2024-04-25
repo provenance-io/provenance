@@ -35,6 +35,13 @@ import (
 	"github.com/provenance-io/provenance/x/quarantine"
 )
 
+// setNewAccount updates the account's number, then stores the account.
+func setNewAccount(app *simapp.App, ctx sdk.Context, acc sdk.AccountI) sdk.AccountI {
+	newAcc := app.AccountKeeper.NewAccount(ctx, acc)
+	app.AccountKeeper.SetAccount(ctx, newAcc)
+	return newAcc
+}
+
 // getAllMarkerHolders executes the Holding query to get all the accounts holding a given denom.
 func getAllMarkerHolders(t *testing.T, ctx context.Context, app *simapp.App, denomOrAddr string) []types.Balance {
 	req := &types.QueryHoldingRequest{
@@ -71,7 +78,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 	// set some values on the account and save it
 	require.NoError(t, mac.GrantAccess(types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})))
 
-	app.AccountKeeper.SetAccount(ctx, mac)
+	setNewAccount(app, ctx, acc)
 
 	// check the new values
 	acc = app.AccountKeeper.GetAccount(ctx, addr)
@@ -111,7 +118,7 @@ func TestExistingAccounts(t *testing.T) {
 	existingBalance := sdk.NewInt64Coin("coin", 1000)
 
 	// prefund the marker address so an account gets created before the marker does.
-	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
+	newAcc := setNewAccount(app, ctx, app.AccountKeeper.NewAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0)))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, addr, sdk.NewCoins(existingBalance)), "funding account")
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
@@ -127,7 +134,9 @@ func TestExistingAccounts(t *testing.T) {
 	require.Error(t, err, "fails because marker already exists")
 
 	// replace existing test account with a new copy that has a positive sequence number
-	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
+	err = newAcc.SetSequence(10)
+	require.NoError(t, err, "newAcc.SetSequence(10)")
+	app.AccountKeeper.SetAccount(ctx, newAcc)
 
 	// Creating a marker over an existing account with a positive sequence number fails.
 	_, err = server.AddMarker(ctx, types.NewMsgAddMarkerRequest("testcoin", sdkmath.NewInt(30), user, manager, types.MarkerType_Coin, true, true, false, []string{}, 0, 0))
@@ -841,7 +850,7 @@ func TestInsufficientExisting(t *testing.T) {
 
 	// setup an existing account with an existing balance (and matching supply)
 	existingSupply := sdk.NewInt64Coin("testcoin", 10000)
-	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
+	setNewAccount(app, ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
 
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, user, sdk.NewCoins(existingSupply)), "funding account")
 
@@ -1613,7 +1622,7 @@ func TestCanForceTransferFrom(t *testing.T) {
 			Supply:      sdkmath.NewInt(0),
 			MarkerType:  types.MarkerType_RestrictedCoin,
 		}
-		app.AccountKeeper.SetAccount(ctx, acc)
+		setNewAccount(app, ctx, acc)
 		return addr
 	}
 
@@ -1624,7 +1633,7 @@ func TestCanForceTransferFrom(t *testing.T) {
 			MarketId:      97531,
 			MarketDetails: exchange.MarketDetails{},
 		}
-		app.AccountKeeper.SetAccount(ctx, acc)
+		setNewAccount(app, ctx, acc)
 		return addr
 	}
 
@@ -1682,7 +1691,7 @@ func TestMarkerFeeGrant(t *testing.T) {
 	// set some values on the account and save it
 	require.NoError(t, mac.GrantAccess(types.NewAccessGrant(user, []types.Access{types.Access_Mint, types.Access_Admin})))
 
-	app.AccountKeeper.SetAccount(ctx, mac)
+	setNewAccount(app, ctx, mac)
 
 	existingSupply := sdk.NewInt64Coin("testcoin", 10000)
 	require.NoError(t, testutil.FundAccount(types.WithBypass(ctx), app.BankKeeper, user, sdk.NewCoins(existingSupply)), "funding accont")
@@ -1715,7 +1724,7 @@ func TestAddFinalizeActivateMarker(t *testing.T) {
 	existingBalance := sdk.NewInt64Coin("coin", 1000)
 
 	// prefund the marker address so an account gets created before the marker does.
-	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
+	setNewAccount(app, ctx, authtypes.NewBaseAccount(user, pubkey, 0, 0))
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, addr, sdk.NewCoins(existingBalance)), "funding account")
 	require.Equal(t, existingBalance, app.BankKeeper.GetBalance(ctx, addr, "coin"), "account balance must be set")
 
@@ -1787,7 +1796,7 @@ func TestInvalidAccount(t *testing.T) {
 	manager := testUserAddress("manager")
 
 	// replace existing test account with a new copy that has a positive sequence number
-	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
+	setNewAccount(app, ctx, authtypes.NewBaseAccount(user, pubkey, 0, 10))
 
 	_, err := server.AddFinalizeActivateMarker(ctx, types.NewMsgAddFinalizeActivateMarkerRequest(
 		"testcoin",
@@ -2110,7 +2119,7 @@ func TestMsgUpdateRequiredAttributesRequest(t *testing.T) {
 	reqAttr := []string{"foo.provenance.io", "*.provenance.io", "bar.provenance.io"}
 	rMarkerDenom := "restricted-marker"
 	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 0, 0)
-	app.MarkerKeeper.SetMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), transferAuthUser, []types.AccessGrant{{Address: transferAuthUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, reqAttr))
+	app.MarkerKeeper.SetNewMarker(ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), transferAuthUser, []types.AccessGrant{{Address: transferAuthUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, reqAttr))
 
 	testCases := []struct {
 		name             string

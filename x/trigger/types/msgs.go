@@ -1,12 +1,17 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
+
+	"google.golang.org/protobuf/protoadapt"
+
+	"cosmossdk.io/x/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/helpers"
 )
 
@@ -70,14 +75,14 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 		authorities[string(addr)] = true
 	}
 
+	sigCtx := simappparams.AppEncodingConfig.InterfaceRegistry.SigningContext()
 	for idx, action := range actions {
 		if err = helpers.ValidateBasic(action); err != nil {
 			return fmt.Errorf("action: %d: %w", idx, err)
 		}
-		// TODO[1760]: signers: getting signers now requies a context, so it can' live in this MsgCreateTriggerRequest ValidateBasic().
-		// if err = hasSigners(authorities, action.GetSigners()); err != nil {
-		// 	return fmt.Errorf("action: %d: %w", idx, err)
-		// }
+		if err = hasSigners(sigCtx, authorities, action); err != nil {
+			return fmt.Errorf("action: %d: %w", idx, err)
+		}
 	}
 	return nil
 }
@@ -89,10 +94,14 @@ func (msg MsgCreateTriggerRequest) GetSigners() []sdk.AccAddress {
 
 // hasSigners checks if the signers are all in the set of the entries
 // The keys in the available map are a cast of an AccAddress to a string. It is not the result of AccAddress.String().
-func hasSigners(available map[string]bool, signers []sdk.AccAddress) error {
+func hasSigners(sigCtx *signing.Context, available map[string]bool, action sdk.Msg) error {
+	signers, err := sigCtx.GetSigners(protoadapt.MessageV2Of(action))
+	if err != nil {
+		return fmt.Errorf("could not get signers of %T: %w", action, err)
+	}
 	for i, signer := range signers {
 		if !available[string(signer)] {
-			return fmt.Errorf("signers[%d] %q is not a signer of the request message", i, signer.String())
+			return fmt.Errorf("%T signers[%d] %q is not a signer of the request message", action, i, sdk.AccAddress(signer).String())
 		}
 	}
 	return nil

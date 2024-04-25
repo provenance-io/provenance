@@ -326,16 +326,18 @@ func New(
 	homePath string, invCheckPeriod uint,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
-	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		SigningOptions: signing.Options{
-			AddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-			},
-			ValidatorAddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-			},
+	signingOptions := signing.Options{
+		AddressCodec: address.Bech32Codec{
+			Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		},
+		ValidatorAddressCodec: address.Bech32Codec{
+			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+		},
+	}
+	exchange.DefineCustomGetSigners(&signingOptions)
+	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		ProtoFiles:     proto.HybridResolver,
+		SigningOptions: signingOptions,
 	})
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 	legacyAmino := codec.NewLegacyAmino()
@@ -694,7 +696,7 @@ func New(
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		// AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, wasm.EnableAllProposals)).  // TODO[1760]: wasm
+		AddRoute(wasm.RouterKey, wasmkeeper.NewLegacyWasmProposalHandler(app.WasmKeeper, wasmtypes.EnableAllProposals)). // TODO[1760]: gov: Can probably remove with gov v1
 		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
 		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
 		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
@@ -1016,7 +1018,7 @@ func New(
 		oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper, app.IBCKeeper.ChannelKeeper),
 		holdmodule.NewAppModule(appCodec, app.HoldKeeper),
 		exchangemodule.NewAppModule(appCodec, app.ExchangeKeeper),
-		provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper, nil, app.GetSubspace(wasmtypes.ModuleName)), // TODO[1760]: Need to pass router instead of nil
+		provwasm.NewWrapper(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper, pioMessageRouter, app.GetSubspace(wasmtypes.ModuleName)),
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
@@ -1118,6 +1120,7 @@ func New(
 	app.ScopedICQKeeper = scopedICQKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
 
+	simappparams.AppEncodingConfig = app.GetEncodingConfig()
 	return app
 }
 

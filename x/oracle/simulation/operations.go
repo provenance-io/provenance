@@ -65,6 +65,7 @@ func SimulateMsgUpdateOracle(simState module.SimulationState, _ keeper.Keeper, a
 		from := raccs[0]
 		to := raccs[1]
 
+		// TODO[1760]: Submit this as a gov prop and also return futures for the votes.
 		msg := types.NewMsgUpdateOracle(from.Address.String(), to.Address.String())
 
 		return Dispatch(r, app, ctx, simState, from, chainID, msg, ak, bk, nil)

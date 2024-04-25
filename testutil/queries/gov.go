@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -78,4 +79,9 @@ func AssertGetGovProp(t *testing.T, n *network.Network, propID string) (*govv1.P
 		}
 	}
 	return resp.Proposal, true
+}
+
+// CmdGetAllGovProps returns a cobra.Command that will execute a query to get all governance proposals.
+func CmdGetAllGovProps(n *network.Network) *cobra.Command {
+	return createQueryCmd(n, "get-all-gov-props", "/cosmos/gov/v1/proposals?limit=10000", &govv1.QueryProposalsResponse{})
 }

@@ -6,16 +6,15 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
-	ibcratelimitmodule "github.com/provenance-io/provenance/x/ibcratelimit/module"
 	"github.com/provenance-io/provenance/x/ibcratelimit/simulation"
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(ibcratelimitmodule.AppModuleBasic{}).Codec
+	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 	params := func(contract string) []byte {
 		p := ibcratelimit.NewParams("contract a")
