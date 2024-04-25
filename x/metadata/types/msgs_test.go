@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"encoding/hex"
@@ -14,15 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
 
-func ownerPartyList(addresses ...string) []Party {
-	retval := make([]Party, len(addresses))
-	for i, addr := range addresses {
-		retval[i] = Party{Address: addr, Role: PartyType_PARTY_TYPE_OWNER}
-	}
-	return retval
-}
+	"github.com/provenance-io/provenance/testutil"
+
+	. "github.com/provenance-io/provenance/x/metadata/types"
+)
 
 // getTypeName gets just the type name of the provided thing e.g "MsgWriteScopeRequest".
 func getTypeName(thing interface{}) string {
@@ -35,196 +31,52 @@ func getTypeName(thing interface{}) string {
 }
 
 func TestAllMsgsGetSigners(t *testing.T) {
-	addr1 := sdk.AccAddress("addr1_______________")
-	addr2 := sdk.AccAddress("addr2_______________")
-	addr3 := sdk.AccAddress("addr3_______________")
-
-	badAddrStr := "badaddr"
-	badAddrErr := "decoding bech32 failed: invalid bech32 string length 7"
-	emptyAddrErr := "empty address string is not allowed"
-
-	multiSignerMsgMakers := []func(signers []string) MetadataMsg{
-		func(signers []string) MetadataMsg { return &MsgWriteScopeRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgDeleteScopeRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgAddScopeDataAccessRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgDeleteScopeDataAccessRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgAddScopeOwnerRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgDeleteScopeOwnerRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgUpdateValueOwnersRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgMigrateValueOwnerRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgWriteSessionRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgWriteRecordRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgDeleteRecordRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgWriteScopeSpecificationRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgDeleteScopeSpecificationRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgWriteContractSpecificationRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgDeleteContractSpecificationRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgAddContractSpecToScopeSpecRequest{Signers: signers} },
-		func(signers []string) MetadataMsg {
-			return &MsgDeleteContractSpecFromScopeSpecRequest{Signers: signers}
-		},
-		func(signers []string) MetadataMsg { return &MsgWriteRecordSpecificationRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgDeleteRecordSpecificationRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgSetAccountDataRequest{Signers: signers} },
-		func(signers []string) MetadataMsg { return &MsgAddNetAssetValuesRequest{Signers: signers} },
-	}
-
-	singleSignerMsgMakers := []func(signer string) MetadataMsg{
-		func(signer string) MetadataMsg {
+	singleSignerMsgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg {
 			return &MsgBindOSLocatorRequest{Locator: ObjectStoreLocator{Owner: signer}}
 		},
-		func(signer string) MetadataMsg {
+		func(signer string) sdk.Msg {
 			return &MsgDeleteOSLocatorRequest{Locator: ObjectStoreLocator{Owner: signer}}
 		},
-		func(signer string) MetadataMsg {
+		func(signer string) sdk.Msg {
 			return &MsgModifyOSLocatorRequest{Locator: ObjectStoreLocator{Owner: signer}}
 		},
 	}
 
-	multiSignerCases := []struct {
-		name       string
-		msgSigners []string
-		expSigners []sdk.AccAddress
-		expPanic   string
-	}{
-		{
-			name:       "no signers",
-			msgSigners: []string{},
-			expSigners: []sdk.AccAddress{},
+	multiSignerMsgMakers := []testutil.MsgMakerMulti{
+		func(signers []string) sdk.Msg { return &MsgWriteScopeRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgDeleteScopeRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgAddScopeDataAccessRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgDeleteScopeDataAccessRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgAddScopeOwnerRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgDeleteScopeOwnerRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgUpdateValueOwnersRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgMigrateValueOwnerRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgWriteSessionRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgWriteRecordRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgDeleteRecordRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgWriteScopeSpecificationRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgDeleteScopeSpecificationRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgWriteContractSpecificationRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgDeleteContractSpecificationRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgAddContractSpecToScopeSpecRequest{Signers: signers} },
+		func(signers []string) sdk.Msg {
+			return &MsgDeleteContractSpecFromScopeSpecRequest{Signers: signers}
 		},
-		{
-			name:       "one good signer",
-			msgSigners: []string{addr1.String()},
-			expSigners: []sdk.AccAddress{addr1},
-		},
-		{
-			name:       "one bad signer",
-			msgSigners: []string{badAddrStr},
-			expPanic:   badAddrErr,
-		},
-		{
-			name:       "three good signers",
-			msgSigners: []string{addr1.String(), addr2.String(), addr3.String()},
-			expSigners: []sdk.AccAddress{addr1, addr2, addr3},
-		},
-		{
-			name:       "three signers 1st bad",
-			msgSigners: []string{badAddrStr, addr2.String(), addr3.String()},
-			expPanic:   badAddrErr,
-		},
-		{
-			name:       "three signers 2nd bad",
-			msgSigners: []string{addr1.String(), badAddrStr, addr3.String()},
-			expPanic:   badAddrErr,
-		},
-		{
-			name:       "three signers 3rd bad",
-			msgSigners: []string{addr1.String(), addr2.String(), badAddrStr},
-			expPanic:   badAddrErr,
-		},
+		func(signers []string) sdk.Msg { return &MsgWriteRecordSpecificationRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgDeleteRecordSpecificationRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgSetAccountDataRequest{Signers: signers} },
+		func(signers []string) sdk.Msg { return &MsgAddNetAssetValuesRequest{Signers: signers} },
 	}
 
-	singleSignerCases := []struct {
-		name       string
-		msgSigner  string
-		expSigners []sdk.AccAddress
-		expPanic   string
-	}{
-		{
-			name:      "no signer",
-			msgSigner: "",
-			expPanic:  emptyAddrErr,
-		},
-		{
-			name:       "good signer",
-			msgSigner:  addr1.String(),
-			expSigners: []sdk.AccAddress{addr1},
-		},
-		{
-			name:      "bad signer",
-			msgSigner: badAddrStr,
-			expPanic:  badAddrErr,
-		},
-	}
-
-	type testCase struct {
-		name           string
-		msg            MetadataMsg
-		expSigners     []sdk.AccAddress
-		expPanic       string
-		expSignersStrs []string
-	}
-
-	var tests []testCase
-	hasMaker := make(map[string]bool)
-
-	for _, msgMaker := range multiSignerMsgMakers {
-		typeName := getTypeName(msgMaker(nil))
-		hasMaker[typeName] = true
-		for _, tc := range multiSignerCases {
-			tests = append(tests, testCase{
-				name:           typeName + " " + tc.name,
-				msg:            msgMaker(tc.msgSigners),
-				expSigners:     tc.expSigners,
-				expPanic:       tc.expPanic,
-				expSignersStrs: tc.msgSigners,
-			})
-		}
-	}
-
-	for _, msgMaker := range singleSignerMsgMakers {
-		typeName := getTypeName(msgMaker(""))
-		hasMaker[typeName] = true
-		for _, tc := range singleSignerCases {
-			tests = append(tests, testCase{
-				name:           typeName + " " + tc.name,
-				msg:            msgMaker(tc.msgSigner),
-				expSigners:     tc.expSigners,
-				expPanic:       tc.expPanic,
-				expSignersStrs: []string{tc.msgSigner},
-			})
-		}
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var signers []sdk.AccAddress
-			testGetSigners := func() {
-				signers = tc.msg.GetSigners()
-			}
-			if len(tc.expPanic) > 0 {
-				require.PanicsWithError(t, tc.expPanic, testGetSigners, "GetSigners")
-			} else {
-				require.NotPanics(t, testGetSigners, "GetSigners")
-				assert.Equal(t, tc.expSigners, signers, "GetSigners")
-			}
-
-			var signersStrs []string
-			testGetSignerStrs := func() {
-				signersStrs = tc.msg.GetSignerStrs()
-			}
-			require.NotPanics(t, testGetSignerStrs, "GetSignerStrs")
-			assert.Equal(t, tc.expSignersStrs, signersStrs, "GetSignerStrs")
-		})
-	}
-
-	// Make sure all of the GetSigners and GetSignerStrs funcs are tested.
-	t.Run("all msgs have test case", func(t *testing.T) {
-		for _, msg := range AllRequestMsgs {
-			typeName := getTypeName(msg)
-			// If this fails, a maker needs to be defined above for the missing msg type.
-			if !assert.True(t, hasMaker[typeName], "hasMaker[%q]", typeName) {
-				t.Logf("Also make sure that a TypeURL%s is defined in msgs.go = %q", typeName, sdk.MsgTypeURL(msg))
-			}
-		}
-	})
+	testutil.RunGetSignersTests(t, AllRequestMsgs, singleSignerMsgMakers, multiSignerMsgMakers)
 }
 
 func TestWriteScopeRoute(t *testing.T) {
 	var scope = &Scope{
 		ScopeId:           ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		SpecificationId:   ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		Owners:            ownerPartyList("data_owner"),
+		Owners:            OwnerPartyList("data_owner"),
 		DataAccess:        []string{"data_accessor"},
 		ValueOwnerAddress: "value_owner",
 	}
@@ -260,7 +112,7 @@ func TestWriteScopeValidation(t *testing.T) {
 	var scope = &Scope{
 		ScopeId:           ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		SpecificationId:   ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		Owners:            ownerPartyList("data_owner"),
+		Owners:            OwnerPartyList("data_owner"),
 		DataAccess:        []string{"data_accessor"},
 		ValueOwnerAddress: "value_owner",
 	}
@@ -286,7 +138,7 @@ func TestWriteScopeValidation(t *testing.T) {
 	msg.Scope = Scope{
 		ScopeId:         ScopeMetadataAddress(uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")),
 		SpecificationId: ScopeSpecMetadataAddress(uuid.MustParse("22fc17a6-40dd-4d68-a95b-ec94e7572a09")),
-		Owners:          ownerPartyList("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"),
+		Owners:          OwnerPartyList("cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"),
 		DataAccess:      []string{},
 	}
 	msg.Signers = []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}
