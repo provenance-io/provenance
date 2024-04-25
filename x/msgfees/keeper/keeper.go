@@ -242,3 +242,10 @@ func sortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
 	})
 	return keys
 }
+
+// UpdateConversionFeeDenomProposal updates the conversion fee denom
+func (k Keeper) UpdateConversionFeeDenomProposal(ctx sdk.Context, conversionFeeDenom string) {
+	params := k.GetParams(ctx)
+	params.ConversionFeeDenom = conversionFeeDenom
+	k.SetParams(ctx, params)
+}

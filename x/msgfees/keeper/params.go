@@ -9,11 +9,11 @@ import (
 // GetParams returns the total set of distribution parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	params = types.DefaultParams() // Initialize with defaults
+	params = types.DefaultParams()
 
 	bz := store.Get(types.MsgFeesParamStoreKey)
 	if bz != nil {
-		k.cdc.MustUnmarshal(bz, &params) // Deserialize parameters
+		k.cdc.MustUnmarshal(bz, &params)
 	}
 	return params
 }
@@ -21,7 +21,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the account parameters to the store.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&params) // Serialize parameters
+	bz := k.cdc.MustMarshal(&params)
 	store.Set(types.MsgFeesParamStoreKey, bz)
 }
 

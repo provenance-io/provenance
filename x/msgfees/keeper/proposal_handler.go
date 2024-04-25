@@ -111,14 +111,3 @@ func HandleUpdateNhashPerUsdMilProposal(ctx sdk.Context, k Keeper, proposal *typ
 	k.SetParams(ctx, params)
 	return nil
 }
-
-// HandleUpdateConversionFeeDenomProposal handles update of conversion fee denom
-func HandleUpdateConversionFeeDenomProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateConversionFeeDenomProposal) error {
-	if err := proposal.ValidateBasic(); err != nil {
-		return err
-	}
-	params := k.GetParams(ctx)
-	params.ConversionFeeDenom = proposal.ConversionFeeDenom
-	k.SetParams(ctx, params)
-	return nil
-}

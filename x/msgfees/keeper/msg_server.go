@@ -142,16 +142,7 @@ func (m msgServer) UpdateConversionFeeDenomProposal(goCtx context.Context, req *
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	prop := types.UpdateConversionFeeDenomProposal{
-		Title:              "UpdateConversionFeeDenomProposal",
-		Description:        "UpdateConversionFeeDenomProposal",
-		ConversionFeeDenom: req.ConversionFeeDenom,
-	}
-
-	err := HandleUpdateConversionFeeDenomProposal(ctx, m.Keeper, &prop)
-	if err != nil {
-		return nil, err
-	}
+	m.Keeper.UpdateConversionFeeDenomProposal(ctx, req.ConversionFeeDenom)
 
 	return &types.MsgUpdateConversionFeeDenomProposalResponse{}, nil
 }
