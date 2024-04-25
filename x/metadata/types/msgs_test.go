@@ -214,7 +214,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 			typeName := getTypeName(msg)
 			// If this fails, a maker needs to be defined above for the missing msg type.
 			if !assert.True(t, hasMaker[typeName], "hasMaker[%q]", typeName) {
-				t.Logf("Also make sure that a TypeURL%s is defined in msg.go = %q", typeName, sdk.MsgTypeURL(msg))
+				t.Logf("Also make sure that a TypeURL%s is defined in msgs.go = %q", typeName, sdk.MsgTypeURL(msg))
 			}
 		}
 	})
@@ -1002,7 +1002,7 @@ func TestMsgSetAccountDataRequest_ValidateBasic(t *testing.T) {
 }
 
 // TestPrintMessageTypeStrings just prints out all the MsgTypeURLs.
-// The output can be copy/pasted into the const area in msg.go
+// The output can be copy/pasted into the const area in msgs.go
 func TestPrintMessageTypeStrings(t *testing.T) {
 	var sb strings.Builder
 	sb.WriteString("const (\n")
@@ -1023,7 +1023,7 @@ func TestPrintMessageTypeStrings(t *testing.T) {
 func TestRegisterInterfaces(t *testing.T) {
 	// This test is mostly just a demonstration that the entries in allRequestMsgs can be
 	// defined using the (*MsgWriteScopeRequest)(nil) pattern instead of &MsgWriteScopeRequest{}.
-	// That's why this is in msg_test.go instead of codec_test.go.
+	// That's why this is in msgs_test.go instead of codec_test.go.
 
 	registry := cdctypes.NewInterfaceRegistry()
 	RegisterInterfaces(registry)

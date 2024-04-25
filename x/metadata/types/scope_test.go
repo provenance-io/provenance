@@ -21,7 +21,7 @@ type ScopeTestSuite struct {
 	Addr string
 }
 
-// func ownerPartyList is defined in msg_test.go
+// func ownerPartyList is defined in msgs_test.go
 
 func TestScopeTestSuite(t *testing.T) {
 	suite.Run(t, new(ScopeTestSuite))
