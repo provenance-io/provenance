@@ -26,6 +26,6 @@ func (m MsgEmitIBCAck) GetSignBytes() []byte {
 }
 
 func (m MsgEmitIBCAck) GetSigners() []sdk.AccAddress {
-	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	sender := sdk.MustAccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
 }
