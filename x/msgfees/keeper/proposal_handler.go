@@ -100,14 +100,3 @@ func HandleRemoveMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Remov
 
 	return k.RemoveMsgFee(ctx, proposal.MsgTypeUrl)
 }
-
-// HandleUpdateNhashPerUsdMilProposal handles update of nhash per usd mil governance proposal request
-func HandleUpdateNhashPerUsdMilProposal(ctx sdk.Context, k Keeper, proposal *types.UpdateNhashPerUsdMilProposal) error {
-	if err := proposal.ValidateBasic(); err != nil {
-		return err
-	}
-	params := k.GetParams(ctx)
-	params.NhashPerUsdMil = proposal.NhashPerUsdMil
-	k.SetParams(ctx, params)
-	return nil
-}

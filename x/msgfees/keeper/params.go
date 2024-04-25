@@ -50,3 +50,17 @@ func (k Keeper) GetConversionFeeDenom(ctx sdk.Context) string {
 	params := k.GetParams(ctx)
 	return params.ConversionFeeDenom
 }
+
+// UpdateConversionFeeDenomParam updates the conversion fee denom param
+func (k Keeper) UpdateConversionFeeDenomParam(ctx sdk.Context, conversionFeeDenom string) {
+	params := k.GetParams(ctx)
+	params.ConversionFeeDenom = conversionFeeDenom
+	k.SetParams(ctx, params)
+}
+
+// UpdateNhashPerUsdMilParam updates nhash per usd mil param
+func (k Keeper) UpdateNhashPerUsdMilParam(ctx sdk.Context, nhashPerUsdMil uint64) {
+	params := k.GetParams(ctx)
+	params.NhashPerUsdMil = nhashPerUsdMil
+	k.SetParams(ctx, params)
+}

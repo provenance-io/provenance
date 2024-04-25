@@ -119,18 +119,7 @@ func (m msgServer) UpdateNhashPerUsdMilProposal(goCtx context.Context, req *type
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	prop := types.UpdateNhashPerUsdMilProposal{
-		Title:          "UpdateNhashPerUsdMilProposal",
-		Description:    "UpdateNhashPerUsdMilProposal",
-		NhashPerUsdMil: req.NhashPerUsdMil,
-	}
-
-	err := HandleUpdateNhashPerUsdMilProposal(ctx, m.Keeper, &prop)
-	if err != nil {
-		return nil, err
-	}
+	m.Keeper.UpdateNhashPerUsdMilParam(sdk.UnwrapSDKContext(goCtx), req.NhashPerUsdMil)
 
 	return &types.MsgUpdateNhashPerUsdMilProposalResponse{}, nil
 }
@@ -140,9 +129,7 @@ func (m msgServer) UpdateConversionFeeDenomProposal(goCtx context.Context, req *
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	m.Keeper.UpdateConversionFeeDenomProposal(ctx, req.ConversionFeeDenom)
+	m.Keeper.UpdateConversionFeeDenomParam(sdk.UnwrapSDKContext(goCtx), req.ConversionFeeDenom)
 
 	return &types.MsgUpdateConversionFeeDenomProposalResponse{}, nil
 }
