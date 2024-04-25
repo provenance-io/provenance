@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -13,9 +13,39 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+
+	"github.com/provenance-io/provenance/testutil"
+
+	. "github.com/provenance-io/provenance/x/marker/types"
 )
+
+func TestAllMsgsGetSigners(t *testing.T) {
+	msgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg { return &MsgAddMarkerRequest{FromAddress: signer} },
+		func(signer string) sdk.Msg { return &MsgAddAccessRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgDeleteAccessRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgFinalizeRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgActivateRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgCancelRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgDeleteRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgMintRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgBurnRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgWithdrawRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgTransferRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgIbcTransferRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgGrantAllowanceRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgAddFinalizeActivateMarkerRequest{FromAddress: signer} },
+		func(signer string) sdk.Msg { return &MsgSupplyIncreaseProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateRequiredAttributesRequest{TransferAuthority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateForcedTransferRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgSetAccountDataRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateSendDenyListRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgAddNetAssetValuesRequest{Administrator: signer} },
+	}
+
+	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
+}
 
 func TestMsgGrantAllowance(t *testing.T) {
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
@@ -79,9 +109,6 @@ func TestMsgGrantAllowance(t *testing.T) {
 
 		if tc.valid {
 			require.NoError(t, err)
-
-			addrSlice := msg.GetSigners()
-			require.Equal(t, tc.administrator.String(), addrSlice[0].String())
 
 			allowance, err := msg.GetFeeAllowanceI()
 			require.NoError(t, err)
@@ -419,21 +446,6 @@ func TestMsgAddFinalizeActivateMarkerRequestValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgSupplyIncreaseProposalRequestGetSigners(t *testing.T) {
-	authority := sdk.AccAddress("input111111111111111")
-	targetAddress := sdk.AccAddress("input22222222222")
-	amount :=
-		sdk.Coin{
-			Amount: sdkmath.NewInt(100),
-			Denom:  "chocolate",
-		}
-
-	msg := NewMsgSupplyIncreaseProposalRequest(amount, targetAddress.String(), authority.String())
-	res := msg.GetSigners()
-	exp := []sdk.AccAddress{authority}
-	require.Equal(t, exp, res, "GetSigners")
-}
-
 func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("input111111111111111").String()
 	targetAddress := sdk.AccAddress("input22222222222").String()
@@ -609,33 +621,6 @@ func TestMsgUpdateForcedTransferRequestValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgUpdateForcedTransferRequestGetSigners(t *testing.T) {
-	t.Run("good authority", func(t *testing.T) {
-		msg := MsgUpdateForcedTransferRequest{
-			Authority: sdk.AccAddress("good_address________").String(),
-		}
-		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
-
-		var signers []sdk.AccAddress
-		testFunc := func() {
-			signers = msg.GetSigners()
-		}
-		require.NotPanics(t, testFunc, "GetSigners")
-		assert.Equal(t, exp, signers, "GetSigners")
-	})
-
-	t.Run("bad authority", func(t *testing.T) {
-		msg := MsgUpdateForcedTransferRequest{
-			Authority: "bad_address________",
-		}
-
-		testFunc := func() {
-			_ = msg.GetSigners()
-		}
-		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
-	})
-}
-
 func TestMsgSetAccountDataRequestValidateBasic(t *testing.T) {
 	addr := sdk.AccAddress("addr________________").String()
 	denom := "somedenom"
@@ -682,33 +667,6 @@ func TestMsgSetAccountDataRequestValidateBasic(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMsgSetAccountDataRequestGetSigners(t *testing.T) {
-	t.Run("good signer", func(t *testing.T) {
-		msg := MsgSetAccountDataRequest{
-			Signer: sdk.AccAddress("good_address________").String(),
-		}
-		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
-
-		var signers []sdk.AccAddress
-		testFunc := func() {
-			signers = msg.GetSigners()
-		}
-		require.NotPanics(t, testFunc, "GetSigners")
-		assert.Equal(t, exp, signers, "GetSigners")
-	})
-
-	t.Run("bad signer", func(t *testing.T) {
-		msg := MsgSetAccountDataRequest{
-			Signer: "bad_address________",
-		}
-
-		testFunc := func() {
-			_ = msg.GetSigners()
-		}
-		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
-	})
 }
 
 func TestMsgUpdateSendDenyListRequestValidateBasic(t *testing.T) {
@@ -775,33 +733,6 @@ func TestMsgUpdateSendDenyListRequestValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgUpdateSendDenyListRequestGetSigners(t *testing.T) {
-	t.Run("good signer", func(t *testing.T) {
-		msg := MsgUpdateSendDenyListRequest{
-			Authority: sdk.AccAddress("good_address________").String(),
-		}
-		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
-
-		var signers []sdk.AccAddress
-		testFunc := func() {
-			signers = msg.GetSigners()
-		}
-		require.NotPanics(t, testFunc, "GetSigners")
-		assert.Equal(t, exp, signers, "GetSigners")
-	})
-
-	t.Run("bad signer", func(t *testing.T) {
-		msg := MsgUpdateSendDenyListRequest{
-			Authority: "bad_address________",
-		}
-
-		testFunc := func() {
-			_ = msg.GetSigners()
-		}
-		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
-	})
-}
-
 func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 	addr := sdk.AccAddress("addr________________").String()
 	denom := "somedenom"
@@ -861,31 +792,4 @@ func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMsgAddNetAssetValuesRequestGetSigners(t *testing.T) {
-	t.Run("good signer", func(t *testing.T) {
-		msg := MsgAddNetAssetValuesRequest{
-			Administrator: sdk.AccAddress("good_address________").String(),
-		}
-		exp := []sdk.AccAddress{sdk.AccAddress("good_address________")}
-
-		var signers []sdk.AccAddress
-		testFunc := func() {
-			signers = msg.GetSigners()
-		}
-		require.NotPanics(t, testFunc, "GetSigners")
-		assert.Equal(t, exp, signers, "GetSigners")
-	})
-
-	t.Run("bad signer", func(t *testing.T) {
-		msg := MsgAddNetAssetValuesRequest{
-			Administrator: "bad_address________",
-		}
-
-		testFunc := func() {
-			_ = msg.GetSigners()
-		}
-		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
-	})
 }

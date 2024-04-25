@@ -151,7 +151,7 @@ message MsgActivateResponse {}
 
 // MsgCancelRequest defines the Msg/Cancel request type
 message MsgCancelRequest {
-  option (cosmos.msg.v1.signer) = "reward_address";
+  option (cosmos.msg.v1.signer) = "administrator";
 
   string denom         = 1;
   string administrator = 2;
