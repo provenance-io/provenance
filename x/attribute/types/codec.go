@@ -8,9 +8,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
+// RegisterInterfaces registers concrete implementations for this module.
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	messages := make([]proto.Message, len(allRequestMsgs))
-	copy(messages, allRequestMsgs)
+	messages := make([]proto.Message, len(AllRequestMsgs))
+	copy(messages, AllRequestMsgs)
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

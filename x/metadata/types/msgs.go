@@ -50,8 +50,8 @@ type MetadataMsg interface {
 	GetSignerStrs() []string
 }
 
-// allRequestMsgs defines all the Msg*Request messages.
-var allRequestMsgs = []MetadataMsg{
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []MetadataMsg{
 	(*MsgWriteScopeRequest)(nil),
 	(*MsgDeleteScopeRequest)(nil),
 	(*MsgAddScopeDataAccessRequest)(nil),

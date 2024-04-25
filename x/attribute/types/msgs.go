@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// allRequestMsgs defines all the Msg*Request messages.
-var allRequestMsgs = []sdk.Msg{
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
 	(*MsgAddAttributeRequest)(nil),
 	(*MsgUpdateAttributeRequest)(nil),
 	(*MsgUpdateAttributeExpirationRequest)(nil),

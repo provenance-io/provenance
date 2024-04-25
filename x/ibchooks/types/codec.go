@@ -5,17 +5,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgEmitIBCAck{}, "provenance/ibchooks/v1/emit-ibc-ack", nil)
 }
 
+// RegisterInterfaces registers concrete implementations for this module.
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterImplementations(
-		(*sdk.Msg)(nil),
-		&MsgEmitIBCAck{},
-	)
+	messages := make([]proto.Message, len(AllRequestMsgs))
+	copy(messages, AllRequestMsgs)
+	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

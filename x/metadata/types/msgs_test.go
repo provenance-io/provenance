@@ -210,7 +210,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 
 	// Make sure all of the GetSigners and GetSignerStrs funcs are tested.
 	t.Run("all msgs have test case", func(t *testing.T) {
-		for _, msg := range allRequestMsgs {
+		for _, msg := range AllRequestMsgs {
 			typeName := getTypeName(msg)
 			// If this fails, a maker needs to be defined above for the missing msg type.
 			if !assert.True(t, hasMaker[typeName], "hasMaker[%q]", typeName) {
@@ -1006,7 +1006,7 @@ func TestMsgSetAccountDataRequest_ValidateBasic(t *testing.T) {
 func TestPrintMessageTypeStrings(t *testing.T) {
 	var sb strings.Builder
 	sb.WriteString("const (\n")
-	for _, msg := range allRequestMsgs {
+	for _, msg := range AllRequestMsgs {
 		typeName := getTypeName(msg) // e.g. "*types.MsgWriteScopeRequest"
 		typeURL := sdk.MsgTypeURL(msg)
 		// Note: 41 comes from the length of the longest Msg name: MsgDeleteContractSpecFromScopeSpecRequest
@@ -1021,7 +1021,7 @@ func TestPrintMessageTypeStrings(t *testing.T) {
 }
 
 func TestRegisterInterfaces(t *testing.T) {
-	// This test is mostly just a demonstration that the entries in allRequestMsgs can be
+	// This test is mostly just a demonstration that the entries in AllRequestMsgs can be
 	// defined using the (*MsgWriteScopeRequest)(nil) pattern instead of &MsgWriteScopeRequest{}.
 	// That's why this is in msgs_test.go instead of codec_test.go.
 
@@ -1029,7 +1029,7 @@ func TestRegisterInterfaces(t *testing.T) {
 	RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
 
-	for _, msg := range allRequestMsgs {
+	for _, msg := range AllRequestMsgs {
 		msgT := fmt.Sprintf("%T", msg)
 		t.Run(msgT, func(t *testing.T) {
 			msgTypeURL := sdk.MsgTypeURL(msg)

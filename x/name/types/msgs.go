@@ -8,8 +8,13 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// Compile time interface checks.
-var _, _, _, _ sdk.Msg = &MsgBindNameRequest{}, &MsgDeleteNameRequest{}, &MsgModifyNameRequest{}, &MsgCreateRootNameRequest{}
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
+	(*MsgBindNameRequest)(nil),
+	(*MsgDeleteNameRequest)(nil),
+	(*MsgModifyNameRequest)(nil),
+	(*MsgCreateRootNameRequest)(nil),
+}
 
 // NewMsgBindNameRequest creates a new bind name request
 func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {

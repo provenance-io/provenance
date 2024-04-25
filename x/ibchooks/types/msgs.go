@@ -9,7 +9,10 @@ const (
 	TypeMsgEmitIBCAck = "emit-ibc-ack"
 )
 
-var _ sdk.Msg = &MsgEmitIBCAck{}
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
+	(*MsgEmitIBCAck)(nil),
+}
 
 func (m MsgEmitIBCAck) Route() string { return RouterKey }
 func (m MsgEmitIBCAck) Type() string  { return TypeMsgEmitIBCAck }

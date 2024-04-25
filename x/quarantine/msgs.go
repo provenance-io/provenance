@@ -9,7 +9,14 @@ import (
 	qerrors "github.com/provenance-io/provenance/x/quarantine/errors"
 )
 
-var _ sdk.Msg = &MsgOptIn{}
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
+	(*MsgOptIn)(nil),
+	(*MsgOptOut)(nil),
+	(*MsgAccept)(nil),
+	(*MsgDecline)(nil),
+	(*MsgUpdateAutoResponses)(nil),
+}
 
 // NewMsgOptIn creates a new msg to opt in to account quarantine.
 func NewMsgOptIn(toAddr sdk.AccAddress) *MsgOptIn {
@@ -32,8 +39,6 @@ func (msg MsgOptIn) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-var _ sdk.Msg = &MsgOptOut{}
-
 // NewMsgOptOut creates a new msg to opt out of account quarantine.
 func NewMsgOptOut(toAddr sdk.AccAddress) *MsgOptOut {
 	return &MsgOptOut{
@@ -54,8 +59,6 @@ func (msg MsgOptOut) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(msg.ToAddress)
 	return []sdk.AccAddress{addr}
 }
-
-var _ sdk.Msg = &MsgAccept{}
 
 // NewMsgAccept creates a new msg to accept quarantined funds.
 func NewMsgAccept(toAddr sdk.AccAddress, fromAddrsStrs []string, permanent bool) *MsgAccept {
@@ -88,8 +91,6 @@ func (msg MsgAccept) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-var _ sdk.Msg = &MsgDecline{}
-
 // NewMsgDecline creates a new msg to decline quarantined funds.
 func NewMsgDecline(toAddr sdk.AccAddress, fromAddrsStrs []string, permanent bool) *MsgDecline {
 	return &MsgDecline{
@@ -120,8 +121,6 @@ func (msg MsgDecline) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(msg.ToAddress)
 	return []sdk.AccAddress{addr}
 }
-
-var _ sdk.Msg = &MsgUpdateAutoResponses{}
 
 // NewMsgUpdateAutoResponses creates a new msg to update quarantined auto-responses.
 func NewMsgUpdateAutoResponses(toAddr sdk.AccAddress, updates []*AutoResponseUpdate) *MsgUpdateAutoResponses {

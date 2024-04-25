@@ -7,10 +7,11 @@ import (
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 )
 
-var (
-	_ sdk.Msg = &MsgUpdateOracleRequest{}
-	_ sdk.Msg = &MsgSendQueryOracleRequest{}
-)
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
+	(*MsgUpdateOracleRequest)(nil),
+	(*MsgSendQueryOracleRequest)(nil),
+}
 
 // NewMsgSendQueryOracle creates a new MsgSendQueryOracleRequest
 func NewMsgSendQueryOracle(creator, channelID string, query []byte) *MsgSendQueryOracleRequest {

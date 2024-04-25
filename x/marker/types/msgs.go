@@ -16,8 +16,8 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 )
 
-// allRequestMsgs defines all the Msg*Request messages.
-var allRequestMsgs = []sdk.Msg{
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
 	(*MsgAddMarkerRequest)(nil),
 	(*MsgAddAccessRequest)(nil),
 	(*MsgDeleteAccessRequest)(nil),

@@ -17,8 +17,8 @@ const (
 	AssessCustomMsgFeeBips = 10_000
 )
 
-// allRequestMsgs defines all the Msg*Request messages.
-var allRequestMsgs = []sdk.Msg{
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
 	(*MsgAssessCustomMsgFeeRequest)(nil),
 	(*MsgAddMsgFeeProposalRequest)(nil),
 	(*MsgUpdateMsgFeeProposalRequest)(nil),

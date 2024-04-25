@@ -8,10 +8,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// RegisterInterfaces registers implementations for the tx messages
+// RegisterInterfaces registers concrete implementations for this module.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	messages := make([]proto.Message, len(allRequestMsgs))
-	for i, msg := range allRequestMsgs {
+	messages := make([]proto.Message, len(AllRequestMsgs))
+	for i, msg := range AllRequestMsgs {
 		messages[i] = msg
 	}
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)

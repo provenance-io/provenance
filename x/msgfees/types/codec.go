@@ -8,11 +8,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// ignoring RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
-// double check
+// RegisterInterfaces registers concrete implementations for this module.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	messages := make([]proto.Message, len(allRequestMsgs))
-	copy(messages, allRequestMsgs)
+	messages := make([]proto.Message, len(AllRequestMsgs))
+	copy(messages, AllRequestMsgs)
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 
 	registry.RegisterImplementations(

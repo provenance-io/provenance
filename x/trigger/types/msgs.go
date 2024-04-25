@@ -15,8 +15,12 @@ import (
 	"github.com/provenance-io/provenance/internal/helpers"
 )
 
-var _ sdk.Msg = &MsgCreateTriggerRequest{}
-var _ sdk.Msg = &MsgDestroyTriggerRequest{}
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
+	(*MsgCreateTriggerRequest)(nil),
+	(*MsgDestroyTriggerRequest)(nil),
+}
+
 var _ codectypes.UnpackInterfacesMessage = (*MsgCreateTriggerRequest)(nil)
 
 // NewCreateTriggerRequest Creates a new trigger create request
