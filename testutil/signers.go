@@ -149,7 +149,11 @@ func (tc *sigTestCase) GetLegacyTestRunner() func(t *testing.T) {
 			signers = smsg.GetSigners()
 		}
 
-		assertions.RequirePanicEquals(t, testFunc, tc.ExpPanic, "GetSigners")
+		var expPanic []string
+		if len(tc.ExpPanic) > 0 {
+			expPanic = append(expPanic, tc.ExpPanic)
+		}
+		assertions.RequirePanicContents(t, testFunc, expPanic, "GetSigners")
 		assert.Equal(t, tc.ExpSigners, signers, "GetSigners")
 	}
 }
