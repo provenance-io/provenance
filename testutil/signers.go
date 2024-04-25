@@ -113,7 +113,7 @@ type hasGetSignersStrs interface {
 type sigTestCase struct {
 	Name           string
 	Msg            sdk.Msg
-	ExpPanic       string
+	ExpInErr       []string
 	ExpSigners     []sdk.AccAddress
 	ExpSignersBz   [][]byte
 	ExpSignersStrs []string
@@ -129,11 +129,7 @@ func (tc *sigTestCase) GetGenericTestRunner(sigCtx *signing.Context) func(t *tes
 			actualBZ, err = sigCtx.GetSigners(msgV2)
 		}
 		require.NotPanics(t, testFunc, "sigCtx.GetSigners(msgV2)")
-		if len(tc.ExpPanic) > 0 {
-			assert.ErrorContains(t, err, tc.ExpPanic, "sigCtx.GetSigners(msgV2) error")
-		} else {
-			assert.NoError(t, err, "sigCtx.GetSigners(msgV2) error")
-		}
+		assertions.AssertErrorContents(t, err, tc.ExpInErr, "sigCtx.GetSigners(msgV2) error")
 		assert.Equal(t, tc.ExpSignersBz, actualBZ, "sigCtx.GetSigners(msgV2) result")
 	}
 }
@@ -149,11 +145,7 @@ func (tc *sigTestCase) GetLegacyTestRunner() func(t *testing.T) {
 			signers = smsg.GetSigners()
 		}
 
-		var expPanic []string
-		if len(tc.ExpPanic) > 0 {
-			expPanic = append(expPanic, tc.ExpPanic)
-		}
-		assertions.RequirePanicContents(t, testFunc, expPanic, "GetSigners")
+		assertions.RequirePanicContents(t, testFunc, tc.ExpInErr, "GetSigners")
 		assert.Equal(t, tc.ExpSigners, signers, "GetSigners")
 	}
 }
@@ -193,10 +185,14 @@ func newMsgTestCasesSingle(msgMaker MsgMaker) *msgTestCases {
 		if len(tc.ExpSigner) > 0 {
 			expSigners = []sdk.AccAddress{copyAccAddr(tc.ExpSigner)}
 		}
+		var expInErr []string
+		if len(tc.ExpErr) > 0 {
+			expInErr = []string{tc.ExpErr}
+		}
 		rv.TestCases = append(rv.TestCases, &sigTestCase{
 			Name:           tc.Name,
 			Msg:            msgMaker(tc.MsgSigner),
-			ExpPanic:       tc.ExpPanic,
+			ExpInErr:       expInErr,
 			ExpSigners:     expSigners,
 			ExpSignersBz:   addrsToBZs(expSigners),
 			ExpSignersStrs: []string{tc.MsgSigner},
@@ -214,10 +210,14 @@ func newMsgTestCasesMulti(msgMakerMulti MsgMakerMulti) *msgTestCases {
 	_, rv.HasStrs = msg.(hasGetSignersStrs)
 
 	for _, tc := range multiSignerCases {
+		var expInErr []string
+		if len(tc.ExpErr) > 0 {
+			expInErr = []string{tc.ExpErr}
+		}
 		rv.TestCases = append(rv.TestCases, &sigTestCase{
 			Name:           tc.Name,
 			Msg:            msgMakerMulti(copyStrs(tc.MsgSigners)),
-			ExpPanic:       tc.ExpPanic,
+			ExpInErr:       expInErr,
 			ExpSigners:     copyAccAddrs(tc.ExpSigners),
 			ExpSignersBz:   addrsToBZs(tc.ExpSigners),
 			ExpSignersStrs: copyStrs(tc.MsgSigners),
@@ -232,7 +232,7 @@ type singleSignerCase struct {
 	Name      string
 	MsgSigner string
 	ExpSigner sdk.AccAddress
-	ExpPanic  string
+	ExpErr    string
 }
 
 // multiSignerCase is the definition of a test case involving multiple signers. It's used for all multi-signer msg types.
@@ -240,7 +240,7 @@ type multiSignerCase struct {
 	Name       string
 	MsgSigners []string
 	ExpSigners []sdk.AccAddress
-	ExpPanic   string
+	ExpErr     string
 }
 
 const (
@@ -257,15 +257,15 @@ var (
 	badAddrErr = bech32Err + "invalid bech32 string length 7"
 
 	singleSignerCases = []singleSignerCase{
-		{Name: "no signer", MsgSigner: "", ExpPanic: emptyAddrErr},
+		{Name: "no signer", MsgSigner: "", ExpErr: emptyAddrErr},
 		{Name: "good signer", MsgSigner: testAddr.String(), ExpSigner: testAddr},
-		{Name: "bad signer", MsgSigner: badAddrStr, ExpPanic: badAddrErr},
+		{Name: "bad signer", MsgSigner: badAddrStr, ExpErr: badAddrErr},
 	}
 
 	multiSignerCases = []multiSignerCase{
 		{Name: "no signers", MsgSigners: []string{}, ExpSigners: []sdk.AccAddress{}},
 		{Name: "one good signer", MsgSigners: []string{addr1.String()}, ExpSigners: []sdk.AccAddress{addr1}},
-		{Name: "one bad signer", MsgSigners: []string{badAddrStr}, ExpPanic: badAddrErr},
+		{Name: "one bad signer", MsgSigners: []string{badAddrStr}, ExpErr: badAddrErr},
 		{
 			Name:       "three good signers",
 			MsgSigners: []string{addr1.String(), addr2.String(), addr3.String()},
@@ -274,17 +274,17 @@ var (
 		{
 			Name:       "three signers 1st bad",
 			MsgSigners: []string{badAddrStr, addr2.String(), addr3.String()},
-			ExpPanic:   badAddrErr,
+			ExpErr:     badAddrErr,
 		},
 		{
 			Name:       "three signers 2nd bad",
 			MsgSigners: []string{addr1.String(), badAddrStr, addr3.String()},
-			ExpPanic:   badAddrErr,
+			ExpErr:     badAddrErr,
 		},
 		{
 			Name:       "three signers 3rd bad",
 			MsgSigners: []string{addr1.String(), addr2.String(), badAddrStr},
-			ExpPanic:   badAddrErr,
+			ExpErr:     badAddrErr,
 		},
 	}
 )
