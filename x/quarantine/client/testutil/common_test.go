@@ -13,14 +13,13 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
-	"github.com/provenance-io/provenance/testutil/queries"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -63,8 +62,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	testutil.CleanUp(s.network, s.T())
+	testutil.Cleanup(s.network, s.T())
 }
 
 func (s *IntegrationTestSuite) stopIfFailed() {
@@ -106,19 +104,7 @@ func (s *IntegrationTestSuite) addAccountToKeyring(index, count int) string {
 // createAndFundAccount creates an account, adding the key to the keyring, funded with the provided amount of bond-denom coins.
 func (s *IntegrationTestSuite) createAndFundAccount(bondCoinAmt int64) string {
 	addr := s.addAccountToKeyring(1, 1)
-	out, err := clitestutil.MsgSendExec(
-		s.clientCtx,
-		s.valAddr,
-		asStringer(addr),
-		s.bondCoins(bondCoinAmt),
-		s.addrCodec,
-		s.commonFlags...,
-	)
-	s.Require().NoError(err, "MsgSendExec")
-	outBz := out.Bytes()
-	s.T().Logf("MsgSendExec response:\n%s", string(outBz))
-	s.waitForTx(outBz, "MsgSendExec")
-
+	s.execBankSend(s.valAddr.String(), addr, s.bondCoins(bondCoinAmt).String())
 	return addr
 }
 
@@ -138,11 +124,7 @@ func (s *IntegrationTestSuite) createAndFundAccounts(count int, bondCoinAmt int6
 	args = append(args, amount)
 	args = s.appendCommonFlagsTo(args...)
 
-	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
-	s.Require().NoError(err, "ExecTestCLICmd bank multisend")
-	outBZ := out.Bytes()
-	s.T().Logf("Multisend response:\n%s", string(outBZ))
-	s.waitForTx(outBZ, "Multisend")
+	testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.network)
 
 	return addrs
 }
@@ -177,19 +159,12 @@ func (s *IntegrationTestSuite) waitForNextBlock(msgAndArgs ...interface{}) {
 	s.Require().NoErrorf(testutil.WaitForNextBlock(s.network), "WaitForNextBlock "+msg, args...)
 }
 
-// waitForTx calls GetTxFromResponse and makes sure the result code is 0.
-func (s *IntegrationTestSuite) waitForTx(respBz []byte, msgAndArgs ...interface{}) {
-	s.T().Helper()
-	msg, args := s.splitMsgAndArgs(msgAndArgs)
-	if len(msg) == 0 {
-		msg = "tx response code."
-	} else {
-		msg = msg + " tx response code."
-	}
-	msg = msg + " Tx response:\n%#v"
-	resp := queries.GetTxFromResponse(s.T(), s.network, respBz)
-	args = append(args, resp)
-	s.Require().Equalf(0, int(resp.Code), msg, args...)
+// execBankSend executes a bank send command.
+func (s *IntegrationTestSuite) execBankSend(fromAddr, toAddr, amount string) {
+	addrCdc := s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec()
+	cmd := bankcli.NewSendTxCmd(addrCdc)
+	args := s.appendCommonFlagsTo(fromAddr, toAddr, amount)
+	testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.network)
 }
 
 var _ fmt.Stringer = asStringer("")

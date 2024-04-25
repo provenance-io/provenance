@@ -1,6 +1,7 @@
 syntax = "proto3";
 package provenance.metadata.v1;
 
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "provenance/metadata/v1/metadata.proto";
 import "provenance/metadata/v1/objectstore.proto";
@@ -89,6 +90,7 @@ service Msg {
 
 // MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
 message MsgWriteScopeRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -123,6 +125,7 @@ message MsgWriteScopeResponse {
 
 // MsgDeleteScopeRequest is the request type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -141,6 +144,7 @@ message MsgDeleteScopeResponse {}
 
 // MsgAddScopeDataAccessRequest is the request to add data access AccAddress to scope
 message MsgAddScopeDataAccessRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -163,6 +167,7 @@ message MsgAddScopeDataAccessResponse {}
 
 // MsgDeleteScopeDataAccessRequest is the request to remove data access AccAddress to scope
 message MsgDeleteScopeDataAccessRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -185,6 +190,7 @@ message MsgDeleteScopeDataAccessResponse {}
 
 // MsgAddScopeOwnerRequest is the request to add owner AccAddress to scope
 message MsgAddScopeOwnerRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -207,6 +213,7 @@ message MsgAddScopeOwnerResponse {}
 
 // MsgDeleteScopeOwnerRequest is the request to remove owner AccAddresses to scope
 message MsgDeleteScopeOwnerRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -229,6 +236,7 @@ message MsgDeleteScopeOwnerResponse {}
 
 // MsgUpdateValueOwnersRequest is the request to update the value owner addresses in one or more scopes.
 message MsgUpdateValueOwnersRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -250,6 +258,7 @@ message MsgUpdateValueOwnersResponse {}
 
 // MsgMigrateValueOwnerRequest is the request to migrate all scopes with one value owner to another value owner.
 message MsgMigrateValueOwnerRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -267,6 +276,7 @@ message MsgMigrateValueOwnerResponse {}
 
 // MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.
 message MsgWriteSessionRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -313,6 +323,7 @@ message MsgWriteSessionResponse {
 
 // MsgWriteRecordRequest is the request type for the Msg/WriteRecord RPC method.
 message MsgWriteRecordRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -351,6 +362,7 @@ message MsgWriteRecordResponse {
 
 // MsgDeleteRecordRequest is the request type for the Msg/DeleteRecord RPC method.
 message MsgDeleteRecordRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -369,6 +381,7 @@ message MsgDeleteRecordResponse {}
 
 // MsgWriteScopeSpecificationRequest is the request type for the Msg/WriteScopeSpecification RPC method.
 message MsgWriteScopeSpecificationRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -395,6 +408,7 @@ message MsgWriteScopeSpecificationResponse {
 
 // MsgDeleteScopeSpecificationRequest is the request type for the Msg/DeleteScopeSpecification RPC method.
 message MsgDeleteScopeSpecificationRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -413,6 +427,7 @@ message MsgDeleteScopeSpecificationResponse {}
 
 // MsgWriteContractSpecificationRequest is the request type for the Msg/WriteContractSpecification RPC method.
 message MsgWriteContractSpecificationRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -440,6 +455,7 @@ message MsgWriteContractSpecificationResponse {
 
 // MsgAddContractSpecToScopeSpecRequest is the request type for the Msg/AddContractSpecToScopeSpec RPC method.
 message MsgAddContractSpecToScopeSpecRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -465,6 +481,7 @@ message MsgAddContractSpecToScopeSpecResponse {}
 
 // MsgDeleteContractSpecFromScopeSpecRequest is the request type for the Msg/DeleteContractSpecFromScopeSpec RPC method.
 message MsgDeleteContractSpecFromScopeSpecRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -491,6 +508,7 @@ message MsgDeleteContractSpecFromScopeSpecResponse {}
 
 // MsgDeleteContractSpecificationRequest is the request type for the Msg/DeleteContractSpecification RPC method.
 message MsgDeleteContractSpecificationRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -509,6 +527,7 @@ message MsgDeleteContractSpecificationResponse {}
 
 // MsgWriteRecordSpecificationRequest is the request type for the Msg/WriteRecordSpecification RPC method.
 message MsgWriteRecordSpecificationRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -536,6 +555,7 @@ message MsgWriteRecordSpecificationResponse {
 
 // MsgDeleteRecordSpecificationRequest is the request type for the Msg/DeleteRecordSpecification RPC method.
 message MsgDeleteRecordSpecificationRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -554,6 +574,7 @@ message MsgDeleteRecordSpecificationResponse {}
 
 // MsgBindOSLocatorRequest is the request type for the Msg/BindOSLocator RPC method.
 message MsgBindOSLocatorRequest {
+  option (cosmos.msg.v1.signer)      = "locator";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
   // The object locator to bind the address to bind to the URI.
@@ -567,6 +588,7 @@ message MsgBindOSLocatorResponse {
 
 // MsgDeleteOSLocatorRequest is the request type for the Msg/DeleteOSLocator RPC method.
 message MsgDeleteOSLocatorRequest {
+  option (cosmos.msg.v1.signer)      = "locator";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -581,6 +603,7 @@ message MsgDeleteOSLocatorResponse {
 
 // MsgModifyOSLocatorRequest is the request type for the Msg/ModifyOSLocator RPC method.
 message MsgModifyOSLocatorRequest {
+  option (cosmos.msg.v1.signer)      = "locator";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
   // The object locator to bind the address to bind to the URI.
@@ -594,6 +617,7 @@ message MsgModifyOSLocatorResponse {
 
 // MsgSetAccountDataRequest is the request to set/update/delete a scope's account data.
 message MsgSetAccountDataRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;
@@ -658,6 +682,7 @@ message MsgP8eMemorializeContractResponse {
 
 // MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 message MsgAddNetAssetValuesRequest {
+  option (cosmos.msg.v1.signer)       = "signers";
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = true;
   option (gogoproto.goproto_getters)  = false;

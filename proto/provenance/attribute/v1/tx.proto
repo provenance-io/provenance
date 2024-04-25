@@ -35,7 +35,7 @@ service Msg {
 // MsgAddAttributeRequest defines an sdk.Msg type that is used to add a new attribute to an account.
 // Attributes may only be set in an account by the account that the attribute name resolves to.
 message MsgAddAttributeRequest {
-  option (cosmos.msg.v1.signer) = "account";
+  option (cosmos.msg.v1.signer) = "owner";
 
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_stringer) = false;

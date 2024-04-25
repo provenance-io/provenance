@@ -141,7 +141,7 @@ func (s *SimTestSuite) TestSimulateMsgSendQueryOracle() {
 	s.Require().NoError(err, "SimulateMsgSendQueryOracle op(...) error")
 	s.LogOperationMsg(operationMsg, "good")
 
-	var msg types.MsgUpdateOracleRequest
+	var msg types.MsgSendQueryOracleRequest
 	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")

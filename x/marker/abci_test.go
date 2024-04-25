@@ -30,7 +30,7 @@ func TestBeginBlocker(t *testing.T) {
 		Supply:      sdkmath.NewInt(100),
 	}
 
-	app.MarkerKeeper.SetMarker(ctx, testmint)
+	app.MarkerKeeper.SetMarker(ctx, app.MarkerKeeper.NewMarker(ctx, testmint))
 
 	// Initial supply of testmint must be zero.
 	require.Equal(t, app.BankKeeper.GetSupply(ctx, "testmint").Amount, sdkmath.NewInt(0))

@@ -530,11 +530,11 @@ func (s *MsgServerTestSuite) TestUpdateSendDenyList() {
 
 	rMarkerDenom := "restricted-marker"
 	rMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerDenom), nil, 0, 0)
-	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+	s.app.MarkerKeeper.SetNewMarker(s.ctx, types.NewMarkerAccount(rMarkerAcct, sdk.NewInt64Coin(rMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
 
 	rMarkerGovDenom := "restricted-marker-gov"
 	rMarkerGovAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(rMarkerGovDenom), nil, 0, 0)
-	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(rMarkerGovAcct, sdk.NewInt64Coin(rMarkerGovDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{}))
+	s.app.MarkerKeeper.SetNewMarker(s.ctx, types.NewMarkerAccount(rMarkerGovAcct, sdk.NewInt64Coin(rMarkerGovDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, true, false, []string{}))
 
 	denyAddrToRemove := testUserAddress("denyAddrToRemove")
 	s.app.MarkerKeeper.AddSendDeny(s.ctx, rMarkerAcct.GetAddress(), denyAddrToRemove)
@@ -626,14 +626,14 @@ func (s *MsgServerTestSuite) TestAddNetAssetValue() {
 
 	markerDenom := "jackthecat"
 	markerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(markerDenom), nil, 0, 0)
-	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(markerAcct, sdk.NewInt64Coin(markerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+	s.app.MarkerKeeper.SetNewMarker(s.ctx, types.NewMarkerAccount(markerAcct, sdk.NewInt64Coin(markerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
 
 	valueAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(types.UsdDenom), nil, 0, 0)
-	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(valueAcct, sdk.NewInt64Coin(types.UsdDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+	s.app.MarkerKeeper.SetNewMarker(s.ctx, types.NewMarkerAccount(valueAcct, sdk.NewInt64Coin(types.UsdDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusProposed, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
 
 	finalizedMarkerDenom := "finalizedjackthecat"
 	finalizedMarkerAcct := authtypes.NewBaseAccount(types.MustGetMarkerAddress(finalizedMarkerDenom), nil, 1, 0)
-	s.app.MarkerKeeper.SetMarker(s.ctx, types.NewMarkerAccount(finalizedMarkerAcct, sdk.NewInt64Coin(finalizedMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
+	s.app.MarkerKeeper.SetNewMarker(s.ctx, types.NewMarkerAccount(finalizedMarkerAcct, sdk.NewInt64Coin(finalizedMarkerDenom, 1000), authUser, []types.AccessGrant{{Address: authUser.String(), Permissions: []types.Access{types.Access_Transfer}}}, types.StatusFinalized, types.MarkerType_RestrictedCoin, true, false, false, []string{}))
 
 	testCases := []struct {
 		name   string

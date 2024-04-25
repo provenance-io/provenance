@@ -7,16 +7,15 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/hold/keeper"
-	holdmodule "github.com/provenance-io/provenance/x/hold/module"
 	"github.com/provenance-io/provenance/x/hold/simulation"
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(holdmodule.AppModuleBasic{}).Codec
+	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	addr0 := sdk.AccAddress("addr0_______________")
