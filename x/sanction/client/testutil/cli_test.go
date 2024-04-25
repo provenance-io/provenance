@@ -25,16 +25,20 @@ import (
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/sanction"
 	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
+
+const blocksPerVotingPeriod = 6
 
 func TestIntegrationTestSuite(t *testing.T) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
 	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	cfg := testutil.DefaultTestNetworkConfig()
 	cfg.NumValidators = 5
+	// cfg.TimeoutCommit = time.Millisecond * msPerBlock
 
 	// Define some stuff in the sanction genesis state.
 	sanctionedAddr1 := sdk.AccAddress("1_sanctioned_address_")
@@ -78,9 +82,9 @@ func TestIntegrationTestSuite(t *testing.T) {
 		cfg.Codec.MustUnmarshalJSON(govGenBz, &govGen)
 	}
 	govGen.Params.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(cfg.BondDenom, 6))
-	twoSeconds := time.Second * 2
-	govGen.Params.MaxDepositPeriod = &twoSeconds
-	govGen.Params.VotingPeriod = &twoSeconds
+	votingPeriod := cfg.TimeoutCommit * blocksPerVotingPeriod
+	govGen.Params.MaxDepositPeriod = &votingPeriod
+	govGen.Params.VotingPeriod = &votingPeriod
 	cfg.GenesisState[gov.ModuleName] = cfg.Codec.MustMarshalJSON(&govGen)
 
 	suite.Run(t, NewIntegrationTestSuite(cfg, &sanctionGen))
@@ -176,15 +180,11 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 
 	// Finally, wait for the next block.
 	s.waitForNextBlock("wait for next block 2")
-	startHeight := s.logHeight()
 
 	// Submit the proposal.
 	s.T().Logf("Proposal: %s\n%s", propFile, propMsgBz)
-	propOutBW, err := cli.ExecTestCLICmd(s.clientCtx, propCmd, propArgs)
-	s.Require().NoError(err, "ExecTestCLICmd tx gov submit-proposal")
-	propOutBz := propOutBW.Bytes()
-	s.T().Logf("tx gov submit-proposal output:\n%s", propOutBz)
-	propHeight := s.waitForHeight(startHeight + 1)
+	testcli.NewCLITxExecutor(propCmd, propArgs).Execute(s.T(), s.network)
+	propHeight := s.logHeight()
 
 	// Find the last proposal (assuming it's the one just submitted above).
 	lastProp := queries.GetLastGovProp(s.T(), s.network)
@@ -201,20 +201,35 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	s.Require().NoError(err, "Unmarshal QueryIsSanctionedResponse (first time)")
 	s.Assert().True(isSanctOut1.IsSanctioned, "is sanctioned (first time)")
 
-	// Cast votes on it.
+	// Cast votes on it. We don't use a CLITxExecutor because we can't wait for a new
+	// block after each vote. We'll check all of them manually once they're submitted.
+	voteOutBzs := make([][]byte, len(allVoteArgs))
 	for i, voteArgs := range allVoteArgs {
+		s.logHeight()
 		voteArgs[0] = propID
 		voteOutBW, err := cli.ExecTestCLICmd(s.clientCtx, voteCmd, voteArgs)
 		s.Require().NoError(err, "[%d]: ExecTestCLICmd tx gov vote", i)
-		voteOutBz := voteOutBW.Bytes()
-		s.T().Logf("[%d]: tx gov vote output:\n%s", i, voteOutBz)
+		voteOutBzs[i] = voteOutBW.Bytes()
+		s.T().Logf("[%d]: tx gov vote output:\n%s", i, voteOutBzs[i])
+	}
+	s.logHeight()
+	// And now, we check that the votes happened as expected.
+	for i, voteOutBz := range voteOutBzs {
+		txResp := queries.GetTxFromResponse(s.T(), s.network, voteOutBz)
+		if i != sanctionValI {
+			s.Assert().Equal(0, int(txResp.Code), "vote[%d] response code", i)
+		} else {
+			s.Assert().Equal(5, int(txResp.Code), "vote[%d] response code", i)
+			s.Assert().Contains(txResp.RawLog, "cannot send from "+s.network.Validators[i].Address.String(), "vote[%d] Raw Log")
+			s.Assert().Contains(txResp.RawLog, "account is sanctioned", "vote[%d] Raw Log")
+			s.Assert().Contains(txResp.RawLog, "insufficient funds", "vote[%d] Raw Log")
+		}
 	}
 
-	// We configured 1/2 second per block, and a 2-second voting period.
-	// So wait for 4 blocks after the proposal block.
+	// Wait for the proposal to pass.
 	s.logHeight()
 	s.T().Log("waiting for voting period to end")
-	s.waitForHeight(propHeight + 4)
+	s.waitForHeight(propHeight + blocksPerVotingPeriod)
 
 	// Check that the proposal passed.
 	finalProp := queries.GetGovProp(s.T(), s.network, propID)
@@ -230,11 +245,11 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	s.Require().NoError(err, "Unmarshal QueryIsSanctionedResponse (second time)")
 	s.Assert().True(isSanctOut2.IsSanctioned, "is sanctioned (second time)")
 
-	// Wait 10 more blocks to make sure nothing unravels.
+	// Wait 5 more blocks to make sure nothing unravels.
 	lastHeight := s.logHeight()
-	s.T().Log("waiting 10 blocks before final checks")
-	_, err = testutil.WaitForHeightWithTimeout(s.network, lastHeight+10, 30*time.Second)
-	s.Require().NoError(err, "waiting for block %d (or 30 seconds)", lastHeight+10)
+	s.T().Log("waiting 5 blocks before final checks")
+	_, err = testutil.WaitForHeightWithTimeout(s.network, lastHeight+5, 30*time.Second)
+	s.Require().NoError(err, "waiting for block %d (or 30 seconds)", lastHeight+5)
 	s.logHeight()
 
 	// Check that that validator is still sanctioned one last time.

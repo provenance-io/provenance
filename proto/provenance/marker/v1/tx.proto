@@ -67,6 +67,8 @@ service Msg {
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
 // successful a feegrant is recorded where the marker account itself is the grantor
 message MsgGrantAllowanceRequest {
+  option (cosmos.msg.v1.signer) = "administrator";
+
   string denom         = 1;
   string administrator = 2;
 

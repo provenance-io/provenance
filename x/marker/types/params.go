@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -115,6 +116,16 @@ func (p *Params) Equal(that interface{}) bool {
 		return false
 	}
 	return true
+}
+
+func (p Params) Validate() error {
+	errs := []error{
+		validateEnableGovernance(p.EnableGovernance),
+		validateIntParam(p.MaxTotalSupply),
+		validateRegexParam(p.UnrestrictedDenomRegex),
+		validateBigIntParam(p.MaxSupply),
+	}
+	return errors.Join(errs...)
 }
 
 func validateIntParam(i interface{}) error {

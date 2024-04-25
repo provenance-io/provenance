@@ -122,7 +122,6 @@ func (k Keeper) OnAcknowledgementPacket(
 			k.Logger(ctx).Error("interchain query ack response was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
 			return err
 		}
-		return cerrs.Wrapf(sdkerrors.ErrNotSupported, "not yet updated")
 	case *channeltypes.Acknowledgement_Error:
 		err := ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryError{
 			SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
