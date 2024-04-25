@@ -7,15 +7,19 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	msgfeescli "github.com/provenance-io/provenance/x/msgfees/client/cli"
+	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
 type IntegrationTestSuite struct {
@@ -50,25 +54,31 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.T().Log("setting up integration test suite")
 	pioconfig.SetProvenanceConfig("atom", 0)
+	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 
-	cfg := testutil.DefaultTestNetworkConfig()
-	cfg.TimeoutCommit = 500 * time.Millisecond
+	s.cfg = testutil.DefaultTestNetworkConfig()
+	s.cfg.TimeoutCommit = 500 * time.Millisecond
+	s.cfg.NumValidators = 1
 
-	genesisState := cfg.GenesisState
-	cfg.NumValidators = 1
+	var msgfeeGen types.GenesisState
+	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[types.ModuleName], &msgfeeGen)
+	s.Require().NoError(err, "UnmarshalJSON msgfee gen state")
+	msgfeeGen.MsgFees = append(msgfeeGen.MsgFees, types.MsgFee{
+		MsgTypeUrl:    "/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
+		AdditionalFee: sdk.NewInt64Coin(s.cfg.BondDenom, 3),
+	})
+	s.cfg.GenesisState[types.ModuleName], err = s.cfg.Codec.MarshalJSON(&msgfeeGen)
+	s.Require().NoError(err, "MarshalJSON msgfee gen state")
 
-	cfg.GenesisState = genesisState
-
-	s.cfg = cfg
-	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), cfg)
+	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")
 
-	_, err = s.testnet.WaitForHeight(1)
+	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "waiting for height 1")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	testutil.CleanUp(s.testnet, s.T())
+	testutil.Cleanup(s.testnet, s.T())
 }
 
 func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
@@ -156,7 +166,7 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 			title:         "test update msg based fee",
 			description:   "description",
 			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			msgType:       "--msg-type=/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
 			additionalFee: fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 12)).String()),
 			recipient:     "",
 			bips:          "",
@@ -169,7 +179,7 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 			title:         "test update msg based fee",
 			description:   "description",
 			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			msgType:       "--msg-type=/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
 			additionalFee: fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 12)).String()),
 			recipient:     fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
 			bips:          "",
@@ -182,7 +192,7 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 			title:         "test update msg based fee",
 			description:   "description",
 			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			msgType:       "--msg-type=/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
 			additionalFee: fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 12)).String()),
 			recipient:     fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
 			bips:          fmt.Sprintf("--bips=%s", "5001"),
@@ -195,7 +205,7 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 			title:         "test update msg based fee",
 			description:   "description",
 			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			msgType:       "--msg-type=/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
 			additionalFee: "",
 			recipient:     "",
 			bips:          "",
@@ -205,15 +215,12 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
-
+			cmd := msgfeescli.GetCmdMsgFeesProposal()
 			args := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
 
@@ -228,14 +235,10 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 				args = append(args, tc.bips)
 			}
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetCmdMsgFeesProposal(), args)
-			if len(tc.expectErrMsg) != 0 {
-				s.Require().Error(err)
-				s.Assert().Equal(tc.expectErrMsg, err.Error())
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -280,26 +283,20 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
+			cmd := msgfeescli.GetUpdateNhashPerUsdMilProposal()
 			args := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
 			args = append(args, tc.name, tc.description, tc.rate, tc.deposit)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetUpdateNhashPerUsdMilProposal(), args)
-			if len(tc.expectErrMsg) != 0 {
-				s.Require().Error(err)
-				s.Assert().Equal(tc.expectErrMsg, err.Error())
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }
@@ -335,26 +332,20 @@ func (s *IntegrationTestSuite) TestUpdateConversionFeeDenomProposal() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
-			clientCtx := s.testnet.Validators[0].ClientCtx
+			cmd := msgfeescli.GetUpdateConversionFeeDenomProposal()
 			args := []string{
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			}
 			args = append(args, tc.name, tc.description, tc.conversionFeeDenom, tc.deposit)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, msgfeescli.GetUpdateConversionFeeDenomProposal(), args)
-			if len(tc.expectErrMsg) != 0 {
-				s.Require().Error(err)
-				s.Assert().Equal(tc.expectErrMsg, err.Error())
-			} else {
-				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &sdk.TxResponse{}), out.String())
-			}
+			testcli.NewCLITxExecutor(cmd, args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }

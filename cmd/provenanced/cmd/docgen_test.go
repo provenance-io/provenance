@@ -3,25 +3,29 @@ package cmd_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 
+	"github.com/provenance-io/provenance/app"
 	provenancecmd "github.com/provenance-io/provenance/cmd/provenanced/cmd"
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 func TestDocGen(t *testing.T) {
+	appCodec := app.MakeTestEncodingConfig(t).Marshaler
 	tests := []struct {
 		name         string
 		target       string
@@ -118,7 +122,7 @@ func TestDocGen(t *testing.T) {
 			target:       "tmp2",
 			createTarget: false,
 			flags:        []string{"--yaml"},
-			extensions:   []string{".md", ".yaml"},
+			extensions:   []string{".yaml"},
 		},
 	}
 
@@ -131,14 +135,10 @@ func TestDocGen(t *testing.T) {
 				require.NoError(t, os.Mkdir(targetPath, 0755), "Mkdir successfully created directory")
 			}
 
-			logger := log.NewNopLogger()
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
 			require.NoError(t, err, "Created default tendermint config")
 
-			appCodec := moduletestutil.MakeTestEncodingConfig().Codec
-			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
-			require.NoError(t, err, "Executed init command")
-
+			logger := log.NewNopLogger()
 			serverCtx := server.NewContext(viper.New(), cfg, logger)
 			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home)
 
@@ -149,39 +149,50 @@ func TestDocGen(t *testing.T) {
 			cmd := provenancecmd.GetDocGenCmd()
 			args := append([]string{targetPath}, tc.flags...)
 			cmd.SetArgs(args)
+			cmd.SetOut(io.Discard)
+			cmd.SetErr(io.Discard)
+
+			if strings.Contains(tc.err, "%s") {
+				tc.err = fmt.Sprintf(tc.err, targetPath)
+			}
+
+			err = cmd.ExecuteContext(ctx)
+			assertions.AssertErrorValue(t, err, tc.err, "cmd %q %q error", cmd.Name(), args)
 
 			if len(tc.err) > 0 {
-				err := cmd.ExecuteContext(ctx)
-				require.Error(t, err, "should throw an error")
-				expected := tc.err
-				if strings.Contains(expected, "%s") {
-					expected = fmt.Sprintf(expected, targetPath)
-				}
-				require.Equal(t, expected, err.Error(), "should return the correct error")
-				files, err := os.ReadDir(targetPath)
-				if err != nil {
-					require.Equal(t, 0, len(files), "should not generate files when failed")
-				}
+				files, _ := os.ReadDir(targetPath)
+				assert.Equal(t, 0, len(files), "should not generate files when failed")
 			} else {
-				err := cmd.ExecuteContext(ctx)
-				require.NoError(t, err, "should not return an error")
-
 				files, err := os.ReadDir(targetPath)
 				require.NoError(t, err, "ReadDir should not return an error")
-				require.NotZero(t, len(files), "should generate files when successful")
+				require.NotEmpty(t, files, "should generate files when successful")
 
-				for _, file := range files {
-					ext := filepath.Ext(file.Name())
+				filenames := make([]string, len(files))
+				exts := make([]string, len(files))
+				for i, file := range files {
+					filenames[i] = file.Name()
+					exts[i] = filepath.Ext(filenames[i])
+				}
 
+				missingExt := false
+				for _, extension := range tc.extensions {
 					contains := false
-					for _, extension := range tc.extensions {
-						contains = contains || ext == extension
+					for _, ext := range exts {
+						if ext == extension {
+							contains = true
+							break
+						}
 					}
-					require.True(t, contains, "should generate files with correct extension")
+					if !assert.True(t, contains, "should generate a file with the extension %q", extension) {
+						missingExt = true
+					}
+				}
+				if missingExt {
+					t.Logf("Files in %s\n%s", targetPath, strings.Join(filenames, "\n"))
 				}
 			}
 
-			if _, err := os.Stat(targetPath); err != nil {
+			if _, err = os.Stat(targetPath); err != nil {
 				require.NoError(t, os.RemoveAll(targetPath), "RemoveAll should be able to remove the temporary target directory")
 			}
 		})

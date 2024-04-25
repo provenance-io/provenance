@@ -277,6 +277,8 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 			Msg:             msg,
 			Deposit:         govMinDep,
 			Comment:         "marker",
+			Title:           fmt.Sprintf("Add Marker %s", denom),
+			Summary:         fmt.Sprintf("Create the %q marker.", denom),
 		}
 
 		skip, opMsg, err := SendGovMsg(msgArgs)
@@ -559,6 +561,9 @@ type SendGovMsgArgs struct {
 	Msg     sdk.Msg
 	Deposit sdk.Coins
 	Comment string
+
+	Title   string
+	Summary string
 }
 
 // SendGovMsg sends a msg as a gov prop.
@@ -586,6 +591,8 @@ func SendGovMsg(args *SendGovMsgArgs) (bool, simtypes.OperationMsg, error) {
 		InitialDeposit: args.Deposit,
 		Proposer:       args.Sender.Address.String(),
 		Metadata:       "",
+		Title:          args.Title,
+		Summary:        args.Summary,
 	}
 
 	txCtx := simulation.OperationInput{

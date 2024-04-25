@@ -14,7 +14,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -175,7 +174,7 @@ func TestBankSend(tt *testing.T) {
 }
 
 func ConstructAndSendTx(tt *testing.T, app piosimapp.App, ctx sdk.Context, acct *authtypes.BaseAccount, priv cryptotypes.PrivKey, msg sdk.Msg, expectedCode uint32, expectedError string) {
-	encCfg := moduletestutil.MakeTestEncodingConfig()
+	encCfg := app.GetEncodingConfig()
 	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(NewTestGasLimit())))
 	acct = app.AccountKeeper.GetAccount(ctx, acct.GetAddress()).(*authtypes.BaseAccount)
 	txBytes, err := SignTxAndGetBytes(ctx, NewTestGasLimit(), fees, encCfg, priv.PubKey(), priv, *acct, ctx.ChainID(), msg)

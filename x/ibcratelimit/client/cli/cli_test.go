@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -15,12 +19,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/stretchr/testify/suite"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	ibcratelimitcli "github.com/provenance-io/provenance/x/ibcratelimit/client/cli"
 )
@@ -47,6 +51,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *TestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	pioconfig.SetProvenanceConfig("", 0)
+	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
@@ -97,14 +102,13 @@ func (s *TestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "network.New")
 
-	_, err = s.network.WaitForHeight(6)
+	s.network.Validators[0].ClientCtx = s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+	_, err = testutil.WaitForHeight(s.network, 6)
 	s.Require().NoError(err, "WaitForHeight")
 }
 
 func (s *TestSuite) TearDownSuite() {
-	s.Require().NoError(s.network.WaitForNextBlock(), "WaitForNextBlock")
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
+	testutil.Cleanup(s.network, s.T())
 }
 
 func (s *TestSuite) GenerateAccountsWithKeyrings(number int) {
@@ -140,17 +144,21 @@ func (s *TestSuite) TestGetParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			clientCtx := s.network.Validators[0].ClientCtx
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, ibcratelimitcli.GetParamsCmd(), []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)})
+			cmd := ibcratelimitcli.GetParamsCmd()
+			args := []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			outBz := out.Bytes()
+			s.T().Logf("ExecTestCLICmd %q %q\nOutput:\n%s", cmd.Name(), args, string(outBz))
+
 			if len(tc.expectErrMsg) > 0 {
 				s.EqualError(err, tc.expectErrMsg, "should have correct error message for invalid Params request")
 			} else {
 				var response ibcratelimit.Params
 				s.NoError(err, "should have no error message for valid Params request")
-				err = s.cfg.Codec.UnmarshalJSON(out.Bytes(), &response)
+				err = s.cfg.Codec.UnmarshalJSON(outBz, &response)
 				s.NoError(err, "should have no error message when unmarshalling response to Params request")
 				s.Equal(tc.expectedAddress, response.ContractAddress, "should have the correct ratelimit address")
 			}
@@ -181,31 +189,21 @@ func (s *TestSuite) TestParamsUpdate() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
-
-			clientCtx := s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
-
-			flagArgs := []string{
+			cmd := ibcratelimitcli.GetCmdParamsUpdate()
+			tc.args = append(tc.args,
+				"--title", "Update ibc-rate-limit params", "--summary", "See title.",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // TODO[1760]: broadcast
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
-			}
-			tc.args = append(tc.args, flagArgs...)
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, ibcratelimitcli.GetCmdParamsUpdate(), append(tc.args, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)}...))
-			var response sdk.TxResponse
-			marshalErr := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response)
-			if len(tc.expectErrMsg) > 0 {
-				s.Assert().EqualError(err, tc.expectErrMsg, "should have correct error for invalid ParamsUpdate request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for invalid ParamsUpdate request")
-			} else {
-				s.Assert().NoError(err, "should have no error for valid ParamsUpdate request")
-				s.Assert().NoError(marshalErr, out.String(), "should have no marshal error for valid ParamsUpdate request")
-				s.Assert().Equal(tc.expectedCode, response.Code, "should have correct response code for valid ParamsUpdate request")
-			}
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.network)
 		})
 	}
 }
