@@ -98,15 +98,7 @@ func (m msgServer) RemoveMsgFeeProposal(goCtx context.Context, req *types.MsgRem
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	prop := types.RemoveMsgFeeProposal{
-		Title:       "RemoveMsgFeeProposal",
-		Description: "RemoveMsgFeeProposal",
-		MsgTypeUrl:  req.MsgTypeUrl,
-	}
-
-	err := HandleRemoveMsgFeeProposal(ctx, m.Keeper, &prop, m.registry)
+	err := m.Keeper.RemoveMsgFee(sdk.UnwrapSDKContext(goCtx), req.MsgTypeUrl)
 	if err != nil {
 		return nil, err
 	}

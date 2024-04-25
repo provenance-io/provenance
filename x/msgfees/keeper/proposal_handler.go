@@ -84,19 +84,3 @@ func HandleUpdateMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.Updat
 
 	return nil
 }
-
-// HandleRemoveMsgFeeProposal handles a Remove of an existing msg fees governance proposal request
-func HandleRemoveMsgFeeProposal(ctx sdk.Context, k Keeper, proposal *types.RemoveMsgFeeProposal, _ codectypes.InterfaceRegistry) error {
-	if err := proposal.ValidateBasic(); err != nil {
-		return err
-	}
-	existing, err := k.GetMsgFee(ctx, proposal.MsgTypeUrl)
-	if err != nil {
-		return err
-	}
-	if existing == nil {
-		return types.ErrMsgFeeDoesNotExist
-	}
-
-	return k.RemoveMsgFee(ctx, proposal.MsgTypeUrl)
-}

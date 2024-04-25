@@ -132,8 +132,6 @@ func (s *IntegrationTestSuite) TestMsgFeeProposals() {
 				err = msgfeeskeeper.HandleAddMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			case *msgfeestypes.UpdateMsgFeeProposal:
 				err = msgfeeskeeper.HandleUpdateMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
-			case *msgfeestypes.RemoveMsgFeeProposal:
-				err = msgfeeskeeper.HandleRemoveMsgFeeProposal(s.ctx, s.k, c, s.app.InterfaceRegistry())
 			default:
 				panic("invalid proposal type")
 			}
