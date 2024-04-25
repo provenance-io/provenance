@@ -1,4 +1,4 @@
-package exchange
+package exchange_test
 
 import (
 	"fmt"
@@ -7,19 +7,269 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/x/tx/signing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
+
+	. "github.com/provenance-io/provenance/x/exchange"
 )
 
 const (
 	emptyAddrErr = "empty address string is not allowed"
 	bech32Err    = "decoding bech32 failed: "
 )
+
+func TestAllMsgsGetSigners(t *testing.T) {
+	msgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg {
+			return &MsgCreateAskRequest{AskOrder: AskOrder{Seller: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCreateBidRequest{BidOrder: BidOrder{Buyer: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCommitFundsRequest{Account: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCancelOrderRequest{Signer: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgFillBidsRequest{Seller: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgFillAsksRequest{Buyer: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketSettleRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketCommitmentSettleRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketReleaseCommitmentsRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketSetOrderExternalIDRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketWithdrawRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateDetailsRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateEnabledRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateAcceptingOrdersRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateUserSettleRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateAcceptingCommitmentsRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketUpdateIntermediaryDenomRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketManagePermissionsRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgMarketManageReqAttrsRequest{Admin: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCreatePaymentRequest{Payment: Payment{Source: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgAcceptPaymentRequest{Payment: Payment{Target: signer}}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgRejectPaymentRequest{Target: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgRejectPaymentsRequest{Target: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgCancelPaymentsRequest{Source: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgChangePaymentTargetRequest{Source: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgGovCreateMarketRequest{Authority: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgGovManageFeesRequest{Authority: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgGovCloseMarketRequest{Authority: signer}
+		},
+		func(signer string) sdk.Msg {
+			return &MsgGovUpdateParamsRequest{Authority: signer}
+		},
+	}
+
+	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
+}
+
+func TestCreatePaymentGetSignersFunc(t *testing.T) {
+	encCfg := app.MakeTestEncodingConfig(t)
+	sigCtx := encCfg.InterfaceRegistry.SigningContext()
+	opts := &signing.Options{
+		AddressCodec:          sigCtx.AddressCodec(),
+		ValidatorAddressCodec: sigCtx.ValidatorAddressCodec(),
+	}
+
+	tests := []struct {
+		name      string
+		fieldName string
+		msg       sdk.Msg
+		expAddrs  [][]byte
+		expInErr  []string
+	}{
+		{
+			name:      "msg without a payment field",
+			fieldName: "whatever",
+			msg:       &MsgCreateAskRequest{},
+			expInErr:  []string{"no payment field found in provenance.exchange.v1.MsgCreateAskRequest"},
+		},
+		{
+			name:      "no such field in the payment",
+			fieldName: "no_such_thing",
+			msg:       &MsgCreatePaymentRequest{},
+			expInErr:  []string{"no payment.no_such_thing field found in provenance.exchange.v1.MsgCreatePaymentRequest"},
+		},
+		{
+			name:      "field is not a string",
+			fieldName: "source_amount",
+			msg:       &MsgCreatePaymentRequest{},
+			expInErr: []string{"panic (recovered) getting provenance.exchange.v1.MsgCreatePaymentRequest.payment.source_amount as a signer",
+				"interface conversion", "not string"},
+		},
+		{
+			name:      "field is empty",
+			fieldName: "source",
+			msg:       &MsgCreatePaymentRequest{},
+			expInErr:  []string{"error decoding payment.source address \"\"", emptyAddrErr},
+		},
+		{
+			name:      "invalid bech32",
+			fieldName: "source",
+			msg:       &MsgCreatePaymentRequest{Payment: Payment{Source: "not_an_address"}},
+			expInErr:  []string{"error decoding payment.source address \"not_an_address\"", bech32Err},
+		},
+		{
+			name:      "all good: create and source",
+			fieldName: "source",
+			msg: &MsgCreatePaymentRequest{
+				Payment: Payment{Source: sdk.AccAddress("source_address______").String()},
+			},
+			expAddrs: [][]byte{[]byte("source_address______")},
+		},
+		{
+			name:      "all good: accept and target",
+			fieldName: "target",
+			msg: &MsgAcceptPaymentRequest{
+				Payment: Payment{Target: sdk.AccAddress("target_address______").String()},
+			},
+			expAddrs: [][]byte{[]byte("target_address______")},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var getSignersFn signing.GetSignersFunc
+			testMaker := func() {
+				getSignersFn = CreatePaymentGetSignersFunc(opts, tc.fieldName)
+			}
+			require.NotPanics(t, testMaker, "CreatePaymentGetSignersFunc(%q)", tc.fieldName)
+
+			var actAddrs [][]byte
+			var actErr error
+			testGetter := func() {
+				msgV2 := protoadapt.MessageV2Of(tc.msg)
+				actAddrs, actErr = getSignersFn(msgV2)
+			}
+			require.NotPanics(t, testGetter, "custom GetSigners function")
+			assertions.AssertErrorContents(t, actErr, tc.expInErr, "custom GetSigners function error")
+			assert.Equal(t, tc.expAddrs, actAddrs, "custom GetSigners function addresses")
+		})
+	}
+}
+
+func TestDefineCustomGetSigners(t *testing.T) {
+	encCfg := app.MakeTestEncodingConfig(t)
+	sigCtx := encCfg.InterfaceRegistry.SigningContext()
+
+	sigOpts := signing.Options{
+		AddressCodec:          sigCtx.AddressCodec(),
+		ValidatorAddressCodec: sigCtx.ValidatorAddressCodec(),
+	}
+
+	testFunc := func() {
+		DefineCustomGetSigners(&sigOpts)
+	}
+	require.NotPanics(t, testFunc, "DefineCustomGetSigners")
+	assert.Len(t, sigOpts.CustomGetSigners, 2, "CustomGetSigners")
+
+	tests := []struct {
+		msg sdk.Msg
+		exp []byte
+	}{
+		{
+			msg: &MsgCreatePaymentRequest{Payment: Payment{Source: sdk.AccAddress("source______________").String()}},
+			exp: []byte("source______________"),
+		},
+		{
+			msg: &MsgAcceptPaymentRequest{Payment: Payment{Target: sdk.AccAddress("target______________").String()}},
+			exp: []byte("target______________"),
+		},
+	}
+
+	for _, tc := range tests {
+		msgV2 := protoadapt.MessageV2Of(tc.msg)
+		name := protov2.MessageName(msgV2)
+		expected := [][]byte{tc.exp}
+
+		// Make sure the custom entries are added to the map, and that they work as expected.
+		t.Run(string(name)+" CustomGetSigners", func(t *testing.T) {
+			getSignersFn := sigOpts.CustomGetSigners[name]
+			if assert.NotNil(t, getSignersFn, "sigOpts.CustomGetSigners[%q]", name) {
+				var actual [][]byte
+				var err error
+				testGetSigners := func() {
+					actual, err = getSignersFn(msgV2)
+				}
+				require.NotPanics(t, testGetSigners, "getSignersFn", name)
+				assert.NoError(t, err, "getSignersFn error", name)
+				assert.Equal(t, expected, actual, "getSignersFn result", name)
+			}
+		})
+
+		// Make sure the custom entries are added to the encoder and that that works as expected.
+		t.Run(string(name)+"GetSigners", func(t *testing.T) {
+			var actual [][]byte
+			var err error
+			testGetSigners := func() {
+				actual, err = sigCtx.GetSigners(msgV2)
+			}
+			require.NotPanics(t, testGetSigners, "sigCtx.GetSigners(msg)")
+			assert.NoError(t, err, "sigCtx.GetSigners(msg) error")
+			assert.Equal(t, expected, actual, "sigCtx.GetSigners(msg) result")
+		})
+	}
+}
 
 func testValidateBasic(t *testing.T, msg sdk.Msg, expErr []string) {
 	t.Helper()
