@@ -31,93 +31,35 @@ const (
 
 func TestAllMsgsGetSigners(t *testing.T) {
 	msgMakers := []testutil.MsgMaker{
-		func(signer string) sdk.Msg {
-			return &MsgCreateAskRequest{AskOrder: AskOrder{Seller: signer}}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgCreateBidRequest{BidOrder: BidOrder{Buyer: signer}}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgCommitFundsRequest{Account: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgCancelOrderRequest{Signer: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgFillBidsRequest{Seller: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgFillAsksRequest{Buyer: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketSettleRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketCommitmentSettleRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketReleaseCommitmentsRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketSetOrderExternalIDRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketWithdrawRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketUpdateDetailsRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketUpdateEnabledRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketUpdateAcceptingOrdersRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketUpdateUserSettleRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketUpdateAcceptingCommitmentsRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketUpdateIntermediaryDenomRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketManagePermissionsRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgMarketManageReqAttrsRequest{Admin: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgCreatePaymentRequest{Payment: Payment{Source: signer}}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgAcceptPaymentRequest{Payment: Payment{Target: signer}}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgRejectPaymentRequest{Target: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgRejectPaymentsRequest{Target: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgCancelPaymentsRequest{Source: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgChangePaymentTargetRequest{Source: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgGovCreateMarketRequest{Authority: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgGovManageFeesRequest{Authority: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgGovCloseMarketRequest{Authority: signer}
-		},
-		func(signer string) sdk.Msg {
-			return &MsgGovUpdateParamsRequest{Authority: signer}
-		},
+		func(signer string) sdk.Msg { return &MsgCreateAskRequest{AskOrder: AskOrder{Seller: signer}} },
+		func(signer string) sdk.Msg { return &MsgCreateBidRequest{BidOrder: BidOrder{Buyer: signer}} },
+		func(signer string) sdk.Msg { return &MsgCommitFundsRequest{Account: signer} },
+		func(signer string) sdk.Msg { return &MsgCancelOrderRequest{Signer: signer} },
+		func(signer string) sdk.Msg { return &MsgFillBidsRequest{Seller: signer} },
+		func(signer string) sdk.Msg { return &MsgFillAsksRequest{Buyer: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketSettleRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketCommitmentSettleRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketReleaseCommitmentsRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketSetOrderExternalIDRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketWithdrawRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketUpdateDetailsRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketUpdateEnabledRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketUpdateAcceptingOrdersRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketUpdateUserSettleRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketUpdateAcceptingCommitmentsRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketUpdateIntermediaryDenomRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketManagePermissionsRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgMarketManageReqAttrsRequest{Admin: signer} },
+		func(signer string) sdk.Msg { return &MsgCreatePaymentRequest{Payment: Payment{Source: signer}} },
+		func(signer string) sdk.Msg { return &MsgAcceptPaymentRequest{Payment: Payment{Target: signer}} },
+		func(signer string) sdk.Msg { return &MsgRejectPaymentRequest{Target: signer} },
+		func(signer string) sdk.Msg { return &MsgRejectPaymentsRequest{Target: signer} },
+		func(signer string) sdk.Msg { return &MsgCancelPaymentsRequest{Source: signer} },
+		func(signer string) sdk.Msg { return &MsgChangePaymentTargetRequest{Source: signer} },
+		func(signer string) sdk.Msg { return &MsgGovCreateMarketRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgGovManageFeesRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgGovCloseMarketRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgGovUpdateParamsRequest{Authority: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
