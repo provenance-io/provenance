@@ -1,6 +1,9 @@
 syntax = "proto3";
 package provenance.metadata.v1;
+
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
+
 option go_package = "github.com/provenance-io/provenance/x/metadata/types";
 
 option java_package        = "io.provenance.metadata.v1";
@@ -9,6 +12,8 @@ option java_multiple_files = true;
 // Defines an Locator object stored on chain, which represents a owner( blockchain address) associated with a endpoint
 // uri for it's associated object store.
 message ObjectStoreLocator {
+  option (cosmos.msg.v1.signer) = "owner";
+
   // account address the endpoint is owned by
   string owner = 1;
   // locator endpoint uri

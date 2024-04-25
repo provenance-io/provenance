@@ -10,16 +10,19 @@ import (
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	simapp "github.com/provenance-io/provenance/app"
+	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -29,6 +32,20 @@ import (
 const (
 	NHash = "nhash"
 )
+
+// HandlerTestSuite is a test suite for these handler tests.
+type HandlerTestSuite struct {
+	suite.Suite
+
+	app       *simapp.App
+	ctx       sdk.Context
+	clientCtx client.Context
+	txBuilder client.TxBuilder
+}
+
+func TestHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(HandlerTestSuite))
+}
 
 func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	encodingConfig, err := setUpApp(s, "atom", 100)
@@ -61,13 +78,13 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedNoRemainingBaseFee() {
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 900_000))), "fund account")
+	s.Require().NoError(banktestutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 900_000))), "fund account")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().ErrorContains(err, "900000nhash is smaller than 1000000nhash: insufficient funds: insufficient funds", "feeChargeFn 2")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 2")
 
-	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 100_000))), "fund account again")
+	s.Require().NoError(banktestutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 100_000))), "fund account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().NoError(err, "feeChargeFn 3")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
@@ -102,13 +119,13 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerFeeChargedWithRemainingBaseFee() {
 	})
 	s.Require().NoError(err, "NewAdditionalMsgFeeHandler")
 
-	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
+	s.Require().NoError(banktestutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
 	coins, _, err := feeChargeFn(s.ctx, false)
 	s.Require().ErrorContains(err, "spendable balance 0atom is smaller than 20000atom: insufficient funds", "feeChargeFn 1")
 	// fee gas meter has nothing to charge, so nothing should have been charged.
 	s.Require().True(coins.IsZero(), "coins.IsZero() 1")
 
-	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(NHash, 1000000))), "funding account again")
+	s.Require().NoError(banktestutil.FundAccount(s.ctx, s.app.BankKeeper, acct1.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin("atom", 20000), sdk.NewInt64Coin(NHash, 1000000))), "funding account again")
 	coins, _, err = feeChargeFn(s.ctx, false)
 	s.Require().Nil(err, "Got error when should have successfully paid all msg fees and swept remaining base fees")
 	s.Require().True(coins.Equal(sdk.Coins{sdk.NewInt64Coin(NHash, 1000000), sdk.NewInt64Coin("atom", 20000)}))
@@ -166,19 +183,20 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.NewTestLogger(s.T()), storetypes.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 
+	emptyTxCfg := tx.NewTxConfig(codec.NewProtoCodec(codectestutil.CodecOptions{}.NewInterfaceRegistry()), tx.DefaultSignModes)
+
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  s.app.AccountKeeper,
 		BankKeeper:     s.app.BankKeeper,
 		FeegrantKeeper: s.app.FeeGrantKeeper,
 		MsgFeesKeeper:  s.app.MsgFeesKeeper,
-		Decoder:        moduletestutil.MakeTestEncodingConfig().TxConfig.TxDecoder(),
+		Decoder:        emptyTxCfg.TxDecoder(),
 	})
 	s.Require().NoError(err)
 	s.Require().Panics(func() { feeChargeFn(s.ctx, false) }, "Bad decoder while setting up app.")
-
 }
 
-func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (moduletestutil.TestEncodingConfig, error) {
+func setUpApp(s *HandlerTestSuite, additionalFeeCoinDenom string, additionalFeeCoinAmt int64) (simappparams.EncodingConfig, error) {
 	pioconfig.SetProvenanceConfig("", 0)
 	encodingConfig := s.SetupTest(s.T()) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
@@ -246,7 +264,7 @@ func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coin
 	})
 	s.txBuilder.SetFeeGranter(acct2.GetAddress())
 
-	s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, acct2.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
+	s.Require().NoError(banktestutil.FundAccount(s.ctx, s.app.BankKeeper, acct2.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(NHash, 1_000_000))), "funding account")
 
 	testTx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
 	s.Require().NoError(err, "CreateTestTx")
@@ -254,12 +272,12 @@ func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coin
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func (s *HandlerTestSuite) SetupTest(t *testing.T) moduletestutil.TestEncodingConfig {
+func (s *HandlerTestSuite) SetupTest(t *testing.T) simappparams.EncodingConfig {
 	s.app, s.ctx = createTestApp(t)
 	s.ctx = s.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+	encodingConfig := s.app.GetEncodingConfig()
 	// We're using TestMsg encoding in some tests, so register it here.
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
@@ -328,18 +346,4 @@ func (s *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []u
 	}
 
 	return s.txBuilder.GetTx(), nil
-}
-
-// AnteTestSuite is a test s to be used with ante handler tests.
-type HandlerTestSuite struct {
-	suite.Suite
-
-	app       *simapp.App
-	ctx       sdk.Context
-	clientCtx client.Context
-	txBuilder client.TxBuilder
-}
-
-func TestHandlerTestSuite(t *testing.T) {
-	suite.Run(t, new(HandlerTestSuite))
 }

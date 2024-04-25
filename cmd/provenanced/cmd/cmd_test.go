@@ -2,6 +2,7 @@ package cmd_test
 
 import (
 	"fmt"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,8 @@ func TestInitCmd(t *testing.T) {
 		"simapp-test", // Moniker
 		fmt.Sprintf("--%s=%s", cli.FlagOverwrite, "true"), // Overwrite genesis.json, in case it already exists
 	})
+	rootCmd.SetOut(io.Discard)
+	rootCmd.SetErr(io.Discard)
 
 	err := cmd.Execute(rootCmd)
 	require.NoError(t, err)
@@ -73,6 +76,9 @@ func TestGenAutoCompleteCmd(t *testing.T) {
 
 			rootCmd, _ := cmd.NewRootCmd(false)
 			rootCmd.SetArgs(args)
+			rootCmd.SetOut(io.Discard)
+			rootCmd.SetErr(io.Discard)
+
 			err := cmd.Execute(rootCmd)
 			assertions.AssertErrorValue(t, err, tc.err, "should have the correct output value")
 		})

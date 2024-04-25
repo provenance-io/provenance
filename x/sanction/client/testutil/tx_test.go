@@ -2,11 +2,11 @@ package testutil
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
 	"github.com/provenance-io/provenance/internal/provcli"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/testutil/queries"
 	"github.com/provenance-io/provenance/x/sanction"
 	client "github.com/provenance-io/provenance/x/sanction/client/cli"
@@ -41,6 +41,9 @@ func (s *IntegrationTestSuite) assertGovPropMsg(propID string, msg sdk.Msg) bool
 // findProposalID looks through the provided response to find a governance proposal id.
 // If one is found, it's returned (as a string). Otherwise, an empty string is returned.
 func (s *IntegrationTestSuite) findProposalID(resp *sdk.TxResponse) string {
+	if resp == nil {
+		return ""
+	}
 	for _, event := range resp.Events {
 		if event.Type == "submit_proposal" {
 			for _, attr := range event.Attributes {
@@ -114,30 +117,14 @@ func (s *IntegrationTestSuite) TestTxSanctionCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := client.TxSanctionCmd()
-			cmdFuncName := "TxSanctionCmd"
 			args := s.appendCommonArgsTo(tc.args...)
-			args = append(args, "--title", cmdFuncName, "--summary", tc.name)
-
-			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
-			out := outBW.String()
-			s.T().Logf("Output:\n%s", out)
-			s.assertErrorContents(err, tc.expErr, "%s error", cmdFuncName)
-			for _, expErr := range tc.expErr {
-				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
-			}
-
-			var propID string
-			if len(tc.expErr) == 0 {
-				s.waitForNextBlock()
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
-				if ok {
-					s.Assert().Equal(0, int(txResp.Code), "%s response code", cmdFuncName)
-				}
-				propID = s.findProposalID(&txResp)
-			}
+			args = append(args, "--title", "TxSanctionCmd", "--summary", tc.name)
+			txResp := testcli.NewCLITxExecutor(client.TxSanctionCmd(), args).
+				WithExpInErrMsg(tc.expErr).
+				Execute(s.T(), s.network)
 
 			if tc.expPropMsg != nil {
+				propID := s.findProposalID(txResp)
 				s.assertGovPropMsg(propID, tc.expPropMsg)
 			}
 		})
@@ -205,30 +192,14 @@ func (s *IntegrationTestSuite) TestTxUnsanctionCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := client.TxUnsanctionCmd()
-			cmdFuncName := "TxUnsanctionCmd"
 			args := s.appendCommonArgsTo(tc.args...)
-			args = append(args, "--title", cmdFuncName, "--summary", tc.name)
-
-			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
-			out := outBW.String()
-			s.T().Logf("Output:\n%s", out)
-			s.assertErrorContents(err, tc.expErr, "%s error", cmdFuncName)
-			for _, expErr := range tc.expErr {
-				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
-			}
-
-			var propID string
-			if len(tc.expErr) == 0 {
-				s.waitForNextBlock()
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
-				if ok {
-					s.Assert().Equal(0, int(txResp.Code), "%s response code", cmdFuncName)
-				}
-				propID = s.findProposalID(&txResp)
-			}
+			args = append(args, "--title", "TxUnsanctionCmd", "--summary", tc.name)
+			txResp := testcli.NewCLITxExecutor(client.TxUnsanctionCmd(), args).
+				WithExpInErrMsg(tc.expErr).
+				Execute(s.T(), s.network)
 
 			if tc.expPropMsg != nil {
+				propID := s.findProposalID(txResp)
 				s.assertGovPropMsg(propID, tc.expPropMsg)
 			}
 		})
@@ -327,30 +298,14 @@ func (s *IntegrationTestSuite) TestTxUpdateParamsCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cmd := client.TxUpdateParamsCmd()
-			cmdFuncName := "TxUpdateParamsCmd"
 			args := s.appendCommonArgsTo(tc.args...)
-			args = append(args, "--title", cmdFuncName, "--summary", tc.name)
-
-			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
-			out := outBW.String()
-			s.T().Logf("Output:\n%s", out)
-			s.assertErrorContents(err, tc.expErr, "%s error", cmdFuncName)
-			for _, expErr := range tc.expErr {
-				s.Assert().Contains(out, expErr, "%s output with error", cmdFuncName)
-			}
-
-			var propID string
-			if len(tc.expErr) == 0 {
-				s.waitForNextBlock()
-				txResp, ok := queries.AssertGetTxFromResponse(s.T(), s.network, []byte(out))
-				if ok {
-					s.Assert().Equal(0, int(txResp.Code), "%s response code", cmdFuncName)
-				}
-				propID = s.findProposalID(&txResp)
-			}
+			args = append(args, "--title", "TxUpdateParamsCmd", "--summary", tc.name)
+			txResp := testcli.NewCLITxExecutor(client.TxUpdateParamsCmd(), args).
+				WithExpInErrMsg(tc.expErr).
+				Execute(s.T(), s.network)
 
 			if tc.expPropMsg != nil {
+				propID := s.findProposalID(txResp)
 				s.assertGovPropMsg(propID, tc.expPropMsg)
 			}
 		})

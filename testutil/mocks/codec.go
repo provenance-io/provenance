@@ -4,8 +4,6 @@ import (
 	"errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/gogoproto/proto"
 )
 
@@ -23,8 +21,8 @@ type MockCodec struct {
 var _ codec.Codec = (*MockCodec)(nil)
 
 // NewMockCodec creates a new mock codec based on the standard test encoding config codec.
-func NewMockCodec(modules ...module.AppModuleBasic) *MockCodec {
-	return &MockCodec{Codec: moduletestutil.MakeTestEncodingConfig(modules...).Codec}
+func NewMockCodec(baseCdc codec.Codec) *MockCodec {
+	return &MockCodec{Codec: baseCdc}
 }
 
 // WithMarshalJSONErrs adds the given errors to be returned from MarshalJSON or MustMarshalJSON.

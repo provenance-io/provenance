@@ -28,6 +28,18 @@ func EventsToStrings(events sdk.Events) []string {
 	return rv
 }
 
+// ABCIEventsToStrings converts abci Events to strings representing the events, one line per attribute.
+func ABCIEventsToStrings(events []abci.Event) []string {
+	var sdkEvents sdk.Events
+	if events != nil {
+		sdkEvents = make(sdk.Events, len(events))
+		for i, event := range events {
+			sdkEvents[i] = sdk.Event(event)
+		}
+	}
+	return EventsToStrings(sdkEvents)
+}
+
 // EventToStrings converts a single event to strings, one string per attribute.
 func EventToStrings(event sdk.Event) []string {
 	if len(event.Attributes) == 0 {

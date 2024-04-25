@@ -21,10 +21,11 @@ import (
 
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 
+	"github.com/provenance-io/provenance/app"
 	cmderrors "github.com/provenance-io/provenance/cmd/errors"
 	"github.com/provenance-io/provenance/cmd/provenanced/cmd"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
@@ -181,10 +182,9 @@ func assertContainsAll(t *testing.T, actual string, expected []string, msgAndArg
 }
 
 // makeDummyCmd creates a dummy command with a context in it that can be used to test all the config stuff.
-func makeDummyCmd(t *testing.T, home string) *cobra.Command {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig()
+func makeDummyCmd(t *testing.T, cdc codec.Codec, home string) *cobra.Command {
 	clientCtx := client.Context{}.
-		WithCodec(encodingConfig.Codec).
+		WithCodec(cdc).
 		WithHomeDir(home)
 	clientCtx.Viper = viper.New()
 	serverCtx := server.NewContext(clientCtx.Viper, config.DefaultTmConfig(), log.NewNopLogger())
@@ -212,6 +212,8 @@ func makeDummyCmd(t *testing.T, home string) *cobra.Command {
 
 func TestPreUpgradeCmd(t *testing.T) {
 	pioconfig.SetProvenanceConfig("", 0)
+	encodingConfig := app.MakeTestEncodingConfig(t)
+	cdc := encodingConfig.Marshaler
 
 	tmpDir := t.TempDir()
 
@@ -225,7 +227,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			return home, false
 		}
 
-		dummyCmd := makeDummyCmd(t, home)
+		dummyCmd := makeDummyCmd(t, cdc, home)
 		success := assert.NotPanics(t, func() { config.SaveConfigs(dummyCmd, appCfg, tmCfg, clientCfg, false) }, "SaveConfigs")
 		return home, success
 	}
@@ -236,7 +238,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			return home, success
 		}
 
-		dummyCmd := makeDummyCmd(t, home)
+		dummyCmd := makeDummyCmd(t, cdc, home)
 		success = assert.NoError(t, config.PackConfig(dummyCmd), "PackConfig")
 		return home, success
 	}
@@ -392,7 +394,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 					return home, nil, success
 				}
 
-				dummyCmd := makeDummyCmd(t, home)
+				dummyCmd := makeDummyCmd(t, cdc, home)
 				unwritableFile := config.GetFullPathToPackedConf(dummyCmd)
 				success = assert.NoError(t, os.Chmod(unwritableFile, 0o444), "Chmod")
 				deferrable := func() {
@@ -464,7 +466,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 					return home, nil, success
 				}
 
-				dummyCmd := makeDummyCmd(t, home)
+				dummyCmd := makeDummyCmd(t, cdc, home)
 				unwritableFile := config.GetFullPathToPackedConf(dummyCmd)
 				success = assert.NoError(t, os.Chmod(unwritableFile, 0o444), "Chmod")
 				deferrable := func() {
@@ -507,7 +509,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 				return
 			}
 
-			dummyCmd := makeDummyCmd(t, home)
+			dummyCmd := makeDummyCmd(t, cdc, home)
 			appCfg, err := config.ExtractAppConfig(dummyCmd)
 			if assert.NoError(t, err, "ExtractAppConfig") {
 				assert.Equal(t, tc.expAppCfg, appCfg, "app config")

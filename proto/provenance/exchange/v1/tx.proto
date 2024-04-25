@@ -115,7 +115,7 @@ service Msg {
 
 // MsgCreateAskRequest is a request message for the CreateAsk endpoint.
 message MsgCreateAskRequest {
-  option (cosmos.msg.v1.signer) = "ask_order.seller";
+  option (cosmos.msg.v1.signer) = "ask_order";
 
   // ask_order is the details of the order being created.
   AskOrder ask_order = 1 [(gogoproto.nullable) = false];
@@ -131,7 +131,7 @@ message MsgCreateAskResponse {
 
 // MsgCreateBidRequest is a request message for the CreateBid endpoint.
 message MsgCreateBidRequest {
-  option (cosmos.msg.v1.signer) = "bid_order.buyer";
+  option (cosmos.msg.v1.signer) = "bid_order";
 
   // bid_order is the details of the order being created.
   BidOrder bid_order = 1 [(gogoproto.nullable) = false];
@@ -490,7 +490,8 @@ message MsgMarketManageReqAttrsResponse {}
 
 // MsgCreatePaymentRequest is a request message for the CreatePayment endpoint.
 message MsgCreatePaymentRequest {
-  option (cosmos.msg.v1.signer) = "payment.source";
+  // The signer is the payment.source, but we can't define that using the cosmos.msg.v1.signer option.
+  // So signers for this msg are defined in code using a custom get-signers function.
 
   // payment is the details of the payment to create.
   Payment payment = 1 [(gogoproto.nullable) = false];
@@ -501,7 +502,8 @@ message MsgCreatePaymentResponse {}
 
 // MsgAcceptPaymentRequest is a request message for the AcceptPayment endpoint.
 message MsgAcceptPaymentRequest {
-  option (cosmos.msg.v1.signer) = "payment.target";
+  // The signer is the payment.target, but we can't define that using the cosmos.msg.v1.signer option.
+  // So signers for this msg are defined in code using a custom get-signers function.
 
   // payment is the details of the payment to accept.
   Payment payment = 1 [(gogoproto.nullable) = false];

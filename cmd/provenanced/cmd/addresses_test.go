@@ -155,6 +155,7 @@ func (s *MetaaddressTestSuite) TestAddMetaAddressDecoder() {
 			command.SetArgs(tc.args)
 			b := bytes.NewBufferString("")
 			command.SetOut(b)
+			command.SetErr(b)
 			err := command.Execute()
 			if len(tc.err) > 0 {
 				require.EqualErrorf(t, err, tc.err, "%s - expected error", command.Name())
@@ -369,6 +370,7 @@ func (s *MetaaddressTestSuite) TestAddMetaAddressEncoder() {
 			command.SetArgs(tc.args)
 			b := bytes.NewBufferString("")
 			command.SetOut(b)
+			command.SetErr(b)
 			err := command.Execute()
 			if len(tc.err) > 0 {
 				require.EqualErrorf(t, err, tc.err, "%s - expected error", command.Name())
