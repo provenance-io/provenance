@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
-
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,15 +42,23 @@ func setNewAccount(app *simapp.App, ctx sdk.Context, acc sdk.AccountI) sdk.Accou
 	return newAcc
 }
 
-// getAllMarkerHolders executes the Holding query to get all the accounts holding a given denom.
-func getAllMarkerHolders(t *testing.T, ctx context.Context, app *simapp.App, denomOrAddr string) []types.Balance {
-	req := &types.QueryHoldingRequest{
-		Id:         denomOrAddr,
+// getAllMarkerHolders gets all the accounts holding a given denom, and the amount they each hold.
+func getAllMarkerHolders(t *testing.T, ctx context.Context, app *simapp.App, denom string) []types.Balance {
+	req := &banktypes.QueryDenomOwnersRequest{
+		Denom:      denom,
 		Pagination: &query.PageRequest{Limit: 10000},
 	}
-	resp, err := app.MarkerKeeper.Holding(ctx, req)
-	require.NoError(t, err, "MarkerKeeper.Holding(%q)", denomOrAddr)
-	return resp.Balances
+	resp, err := app.BankKeeper.DenomOwners(ctx, req)
+	require.NoError(t, err, "BankKeeper.DenomOwners(%q)", denom)
+	if len(resp.DenomOwners) == 0 {
+		return nil
+	}
+	rv := make([]types.Balance, len(resp.DenomOwners))
+	for i, owner := range resp.DenomOwners {
+		rv[i].Address = owner.Address
+		rv[i].Coins = sdk.Coins{owner.Balance}
+	}
+	return rv
 }
 
 func TestAccountMapperGetSet(t *testing.T) {
