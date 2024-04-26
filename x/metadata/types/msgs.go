@@ -3,7 +3,6 @@ package types
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/google/uuid"
@@ -89,18 +88,6 @@ var (
 	_ sdk.Msg = (*MsgP8EMemorializeContractRequest)(nil)
 )
 
-// stringsToAccAddresses converts an array of strings into an array of Acc Addresses.
-// Panics if it can't convert one.
-func stringsToAccAddresses(strings []string) []sdk.AccAddress {
-	retval := make([]sdk.AccAddress, len(strings))
-
-	for i, str := range strings {
-		retval[i] = sdk.MustAccAddressFromBech32(str)
-	}
-
-	return retval
-}
-
 // ------------------  MsgWriteScopeRequest  ------------------
 
 // NewMsgWriteScopeRequest creates a new msg instance
@@ -159,6 +146,12 @@ func (msg *MsgWriteScopeRequest) ConvertOptionalFields() error {
 		msg.SpecUuid = ""
 	}
 	return nil
+}
+
+func NewMsgWriteScopeResponse(scopeID MetadataAddress) *MsgWriteScopeResponse {
+	return &MsgWriteScopeResponse{
+		ScopeIdInfo: GetScopeIDInfo(scopeID),
+	}
 }
 
 // ------------------  NewMsgDeleteScopeRequest  ------------------
@@ -455,6 +448,12 @@ func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+func NewMsgWriteSessionResponse(sessionID MetadataAddress) *MsgWriteSessionResponse {
+	return &MsgWriteSessionResponse{
+		SessionIdInfo: GetSessionIDInfo(sessionID),
+	}
+}
+
 // ------------------  MsgWriteRecordRequest  ------------------
 
 // NewMsgWriteRecordRequest creates a new msg instance
@@ -513,6 +512,12 @@ func (msg *MsgWriteRecordRequest) ConvertOptionalFields() error {
 		msg.ContractSpecUuid = ""
 	}
 	return nil
+}
+
+func NewMsgWriteRecordResponse(recordID MetadataAddress) *MsgWriteRecordResponse {
+	return &MsgWriteRecordResponse{
+		RecordIdInfo: GetRecordIDInfo(recordID),
+	}
 }
 
 // ------------------  MsgDeleteRecordRequest  ------------------
@@ -578,6 +583,12 @@ func (msg *MsgWriteScopeSpecificationRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+func NewMsgWriteScopeSpecificationResponse(scopeSpecID MetadataAddress) *MsgWriteScopeSpecificationResponse {
+	return &MsgWriteScopeSpecificationResponse{
+		ScopeSpecIdInfo: GetScopeSpecIDInfo(scopeSpecID),
+	}
+}
+
 // ------------------  MsgDeleteScopeSpecificationRequest  ------------------
 
 // NewMsgDeleteScopeSpecificationRequest creates a new msg instance
@@ -639,6 +650,12 @@ func (msg *MsgWriteContractSpecificationRequest) ConvertOptionalFields() error {
 		msg.SpecUuid = ""
 	}
 	return nil
+}
+
+func NewMsgWriteContractSpecificationResponse(contractSpecID MetadataAddress) *MsgWriteContractSpecificationResponse {
+	return &MsgWriteContractSpecificationResponse{
+		ContractSpecIdInfo: GetContractSpecIDInfo(contractSpecID),
+	}
 }
 
 // ------------------  MsgDeleteContractSpecificationRequest  ------------------
@@ -759,6 +776,12 @@ func (msg *MsgWriteRecordSpecificationRequest) ConvertOptionalFields() error {
 	return nil
 }
 
+func NewMsgWriteRecordSpecificationResponse(recordSpecID MetadataAddress) *MsgWriteRecordSpecificationResponse {
+	return &MsgWriteRecordSpecificationResponse{
+		RecordSpecIdInfo: GetRecordSpecIDInfo(recordSpecID),
+	}
+}
+
 // ------------------  MsgDeleteRecordSpecificationRequest  ------------------
 
 // NewMsgDeleteRecordSpecificationRequest creates a new msg instance
@@ -800,18 +823,18 @@ func NewMsgBindOSLocatorRequest(obj ObjectStoreLocator) *MsgBindOSLocatorRequest
 	}
 }
 
+// GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
+func (msg MsgBindOSLocatorRequest) GetSignerStrs() []string {
+	return []string{msg.Locator.Owner}
+}
+
 // ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgBindOSLocatorRequest) ValidateBasic() error {
-	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.EncryptionKey, msg.Locator.LocatorUri)
+	err := msg.Locator.Validate()
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-// GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
-func (msg MsgBindOSLocatorRequest) GetSignerStrs() []string {
-	return []string{msg.Locator.Owner}
 }
 
 // ------------------  MsgDeleteOSLocatorRequest  ------------------
@@ -822,47 +845,18 @@ func NewMsgDeleteOSLocatorRequest(obj ObjectStoreLocator) *MsgDeleteOSLocatorReq
 	}
 }
 
-// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
-func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
-	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.EncryptionKey, msg.Locator.LocatorUri)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgDeleteOSLocatorRequest) GetSignerStrs() []string {
 	return []string{msg.Locator.Owner}
 }
 
-// ValidateOSLocatorObj Validates OSLocatorObj data
-func ValidateOSLocatorObj(ownerAddr, encryptionKey string, uri string) error {
-	if strings.TrimSpace(ownerAddr) == "" {
-		return fmt.Errorf("owner address cannot be empty")
+// ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
+func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
+	err := msg.Locator.Validate()
+	if err != nil {
+		return err
 	}
 
-	if _, err := sdk.AccAddressFromBech32(ownerAddr); err != nil {
-		return fmt.Errorf("failed to add locator for a given owner address,"+
-			" invalid address: %s", ownerAddr)
-	}
-
-	if strings.TrimSpace(uri) == "" {
-		return fmt.Errorf("uri cannot be empty")
-	}
-
-	if _, err := url.Parse(uri); err != nil {
-		return fmt.Errorf("failed to add locator for a given"+
-			" owner address, invalid uri: %s", uri)
-	}
-
-	if strings.TrimSpace(encryptionKey) != "" {
-		if _, err := sdk.AccAddressFromBech32(encryptionKey); err != nil {
-			return fmt.Errorf("failed to add locator for a given owner address: %s,"+
-				" invalid encryption key address: %s", ownerAddr, encryptionKey)
-		}
-	}
 	return nil
 }
 
@@ -874,19 +868,19 @@ func NewMsgModifyOSLocatorRequest(obj ObjectStoreLocator) *MsgModifyOSLocatorReq
 	}
 }
 
+// GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
+func (msg MsgModifyOSLocatorRequest) GetSignerStrs() []string {
+	return []string{msg.Locator.Owner}
+}
+
 // ValidateBasic performs as much validation as possible without outside info. Implements sdk.Msg interface.
 func (msg MsgModifyOSLocatorRequest) ValidateBasic() error {
-	err := ValidateOSLocatorObj(msg.Locator.Owner, msg.Locator.EncryptionKey, msg.Locator.LocatorUri)
+	err := msg.Locator.Validate()
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
-func (msg MsgModifyOSLocatorRequest) GetSignerStrs() []string {
-	return []string{msg.Locator.Owner}
 }
 
 // ------------------  MsgSetAccountDataRequest  ------------------
@@ -912,146 +906,7 @@ func (msg MsgSetAccountDataRequest) GetSignerStrs() []string {
 	return msg.Signers
 }
 
-// ------------------  SessionIdComponents  ------------------
-
-func (msg *SessionIdComponents) GetSessionAddr() (MetadataAddress, error) {
-	var scopeUUID, sessionUUID *uuid.UUID
-	if len(msg.SessionUuid) > 0 {
-		uid, err := uuid.Parse(msg.SessionUuid)
-		if err != nil {
-			return nil, fmt.Errorf("invalid session uuid: %w", err)
-		}
-		sessionUUID = &uid
-	}
-	if msgScopeUUID := msg.GetScopeUuid(); len(msgScopeUUID) > 0 {
-		uid, err := uuid.Parse(msgScopeUUID)
-		if err != nil {
-			return nil, fmt.Errorf("invalid scope uuid: %w", err)
-		}
-		scopeUUID = &uid
-	} else if msgScopeAddr := msg.GetScopeAddr(); len(msgScopeAddr) > 0 {
-		addr, addrErr := MetadataAddressFromBech32(msgScopeAddr)
-		if addrErr != nil {
-			return nil, fmt.Errorf("invalid scope addr: %w", addrErr)
-		}
-		uid, err := addr.ScopeUUID()
-		if err != nil {
-			return nil, fmt.Errorf("invalid scope addr: %w", err)
-		}
-		scopeUUID = &uid
-	}
-	if scopeUUID == nil && sessionUUID == nil {
-		return nil, nil
-	}
-	if scopeUUID == nil {
-		return nil, errors.New("session uuid provided but missing scope uuid or addr")
-	}
-	if sessionUUID == nil {
-		return nil, errors.New("scope uuid or addr provided but missing session uuid")
-	}
-	ma := SessionMetadataAddress(*scopeUUID, *sessionUUID)
-	return ma, nil
-}
-
-// ------------------  Response Message Constructors  ------------------
-
-func NewMsgWriteScopeResponse(scopeID MetadataAddress) *MsgWriteScopeResponse {
-	return &MsgWriteScopeResponse{
-		ScopeIdInfo: GetScopeIDInfo(scopeID),
-	}
-}
-
-func NewMsgDeleteScopeResponse() *MsgDeleteScopeResponse {
-	return &MsgDeleteScopeResponse{}
-}
-
-func NewMsgAddScopeDataAccessResponse() *MsgAddScopeDataAccessResponse {
-	return &MsgAddScopeDataAccessResponse{}
-}
-
-func NewMsgDeleteScopeDataAccessResponse() *MsgDeleteScopeDataAccessResponse {
-	return &MsgDeleteScopeDataAccessResponse{}
-}
-
-func NewMsgAddScopeOwnerResponse() *MsgAddScopeOwnerResponse {
-	return &MsgAddScopeOwnerResponse{}
-}
-
-func NewMsgDeleteScopeOwnerResponse() *MsgDeleteScopeOwnerResponse {
-	return &MsgDeleteScopeOwnerResponse{}
-}
-
-func NewMsgWriteSessionResponse(sessionID MetadataAddress) *MsgWriteSessionResponse {
-	return &MsgWriteSessionResponse{
-		SessionIdInfo: GetSessionIDInfo(sessionID),
-	}
-}
-
-func NewMsgWriteRecordResponse(recordID MetadataAddress) *MsgWriteRecordResponse {
-	return &MsgWriteRecordResponse{
-		RecordIdInfo: GetRecordIDInfo(recordID),
-	}
-}
-
-func NewMsgDeleteRecordResponse() *MsgDeleteRecordResponse {
-	return &MsgDeleteRecordResponse{}
-}
-
-func NewMsgWriteScopeSpecificationResponse(scopeSpecID MetadataAddress) *MsgWriteScopeSpecificationResponse {
-	return &MsgWriteScopeSpecificationResponse{
-		ScopeSpecIdInfo: GetScopeSpecIDInfo(scopeSpecID),
-	}
-}
-
-func NewMsgDeleteScopeSpecificationResponse() *MsgDeleteScopeSpecificationResponse {
-	return &MsgDeleteScopeSpecificationResponse{}
-}
-
-func NewMsgWriteContractSpecificationResponse(contractSpecID MetadataAddress) *MsgWriteContractSpecificationResponse {
-	return &MsgWriteContractSpecificationResponse{
-		ContractSpecIdInfo: GetContractSpecIDInfo(contractSpecID),
-	}
-}
-
-func NewMsgDeleteContractSpecificationResponse() *MsgDeleteContractSpecificationResponse {
-	return &MsgDeleteContractSpecificationResponse{}
-}
-
-func NewMsgAddContractSpecToScopeSpecResponse() *MsgAddContractSpecToScopeSpecResponse {
-	return &MsgAddContractSpecToScopeSpecResponse{}
-}
-
-func NewMsgDeleteContractSpecFromScopeSpecResponse() *MsgDeleteContractSpecFromScopeSpecResponse {
-	return &MsgDeleteContractSpecFromScopeSpecResponse{}
-}
-
-func NewMsgWriteRecordSpecificationResponse(recordSpecID MetadataAddress) *MsgWriteRecordSpecificationResponse {
-	return &MsgWriteRecordSpecificationResponse{
-		RecordSpecIdInfo: GetRecordSpecIDInfo(recordSpecID),
-	}
-}
-
-func NewMsgDeleteRecordSpecificationResponse() *MsgDeleteRecordSpecificationResponse {
-	return &MsgDeleteRecordSpecificationResponse{}
-}
-
-func NewMsgBindOSLocatorResponse(objectStoreLocator ObjectStoreLocator) *MsgBindOSLocatorResponse {
-	return &MsgBindOSLocatorResponse{
-		Locator: objectStoreLocator,
-	}
-}
-
-func NewMsgDeleteOSLocatorResponse(objectStoreLocator ObjectStoreLocator) *MsgDeleteOSLocatorResponse {
-	return &MsgDeleteOSLocatorResponse{
-		Locator: objectStoreLocator,
-	}
-}
-
-func NewMsgModifyOSLocatorResponse(objectStoreLocator ObjectStoreLocator) *MsgModifyOSLocatorResponse {
-	return &MsgModifyOSLocatorResponse{
-		Locator: objectStoreLocator,
-	}
-}
+// ------------------  MsgAddNetAssetValuesRequest  ------------------
 
 func NewMsgAddNetAssetValuesRequest(scopeID string, signers []string, netAssetValues []NetAssetValue) *MsgAddNetAssetValuesRequest {
 	return &MsgAddNetAssetValuesRequest{
@@ -1059,6 +914,11 @@ func NewMsgAddNetAssetValuesRequest(scopeID string, signers []string, netAssetVa
 		NetAssetValues: netAssetValues,
 		Signers:        signers,
 	}
+}
+
+// GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
+func (msg MsgAddNetAssetValuesRequest) GetSignerStrs() []string {
+	return msg.Signers
 }
 
 func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
@@ -1100,7 +960,43 @@ func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
-func (msg MsgAddNetAssetValuesRequest) GetSignerStrs() []string {
-	return msg.Signers
+// ------------------  SessionIdComponents  ------------------
+
+func (msg *SessionIdComponents) GetSessionAddr() (MetadataAddress, error) {
+	var scopeUUID, sessionUUID *uuid.UUID
+	if len(msg.SessionUuid) > 0 {
+		uid, err := uuid.Parse(msg.SessionUuid)
+		if err != nil {
+			return nil, fmt.Errorf("invalid session uuid: %w", err)
+		}
+		sessionUUID = &uid
+	}
+	if msgScopeUUID := msg.GetScopeUuid(); len(msgScopeUUID) > 0 {
+		uid, err := uuid.Parse(msgScopeUUID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid scope uuid: %w", err)
+		}
+		scopeUUID = &uid
+	} else if msgScopeAddr := msg.GetScopeAddr(); len(msgScopeAddr) > 0 {
+		addr, addrErr := MetadataAddressFromBech32(msgScopeAddr)
+		if addrErr != nil {
+			return nil, fmt.Errorf("invalid scope addr: %w", addrErr)
+		}
+		uid, err := addr.ScopeUUID()
+		if err != nil {
+			return nil, fmt.Errorf("invalid scope addr: %w", err)
+		}
+		scopeUUID = &uid
+	}
+	if scopeUUID == nil && sessionUUID == nil {
+		return nil, nil
+	}
+	if scopeUUID == nil {
+		return nil, errors.New("session uuid provided but missing scope uuid or addr")
+	}
+	if sessionUUID == nil {
+		return nil, errors.New("scope uuid or addr provided but missing session uuid")
+	}
+	ma := SessionMetadataAddress(*scopeUUID, *sessionUUID)
+	return ma, nil
 }

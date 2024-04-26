@@ -73,7 +73,7 @@ func (k msgServer) DeleteScope(
 	k.RemoveNetAssetValues(ctx, msg.ScopeId)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, msg.GetSignerStrs()))
-	return types.NewMsgDeleteScopeResponse(), nil
+	return &types.MsgDeleteScopeResponse{}, nil
 }
 
 // AddScopeDataAccess adds data access AccAddress to scope
@@ -98,7 +98,7 @@ func (k msgServer) AddScopeDataAccess(
 	k.SetScope(ctx, existing)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeDataAccess, msg.GetSignerStrs()))
-	return types.NewMsgAddScopeDataAccessResponse(), nil
+	return &types.MsgAddScopeDataAccessResponse{}, nil
 }
 
 // DeleteScopeDataAccess removes data access AccAddress from scope
@@ -123,7 +123,7 @@ func (k msgServer) DeleteScopeDataAccess(
 	k.SetScope(ctx, existing)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeDataAccess, msg.GetSignerStrs()))
-	return types.NewMsgDeleteScopeDataAccessResponse(), nil
+	return &types.MsgDeleteScopeDataAccessResponse{}, nil
 }
 
 // AddScopeOwner adds new owner parties to a scope
@@ -156,7 +156,7 @@ func (k msgServer) AddScopeOwner(
 	k.SetScope(ctx, proposed)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeOwner, msg.GetSignerStrs()))
-	return types.NewMsgAddScopeOwnerResponse(), nil
+	return &types.MsgAddScopeOwnerResponse{}, nil
 }
 
 // DeleteScopeOwner removes owner parties (by addresses) from a scope
@@ -189,7 +189,7 @@ func (k msgServer) DeleteScopeOwner(
 	k.SetScope(ctx, proposed)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeOwner, msg.GetSignerStrs()))
-	return types.NewMsgDeleteScopeOwnerResponse(), nil
+	return &types.MsgDeleteScopeOwnerResponse{}, nil
 }
 
 // UpdateValueOwners sets the value owner of one or more scopes.
@@ -336,7 +336,7 @@ func (k msgServer) DeleteRecord(
 	k.RemoveRecord(ctx, msg.RecordId)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecord, msg.GetSignerStrs()))
-	return types.NewMsgDeleteRecordResponse(), nil
+	return &types.MsgDeleteRecordResponse{}, nil
 }
 
 // WriteScopeSpecification adds or updates a scope specification.
@@ -388,7 +388,7 @@ func (k msgServer) DeleteScopeSpecification(
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeSpecification, msg.GetSignerStrs()))
-	return types.NewMsgDeleteScopeSpecificationResponse(), nil
+	return &types.MsgDeleteScopeSpecificationResponse{}, nil
 }
 
 // WriteContractSpecification adds or updates a contract specification.
@@ -465,7 +465,7 @@ func (k msgServer) DeleteContractSpecification(
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecification, msg.GetSignerStrs()))
-	return types.NewMsgDeleteContractSpecificationResponse(), nil
+	return &types.MsgDeleteContractSpecificationResponse{}, nil
 }
 
 // AddContractSpecToScopeSpec adds contract specification to a scope specification.
@@ -498,7 +498,7 @@ func (k msgServer) AddContractSpecToScopeSpec(
 	k.SetScopeSpecification(ctx, scopeSpec)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddContractSpecToScopeSpec, msg.GetSignerStrs()))
-	return types.NewMsgAddContractSpecToScopeSpecResponse(), nil
+	return &types.MsgAddContractSpecToScopeSpecResponse{}, nil
 }
 
 // DeleteContractSpecFromScopeSpec deletes a contract specification from a scope specification.
@@ -534,7 +534,7 @@ func (k msgServer) DeleteContractSpecFromScopeSpec(
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteContractSpecFromScopeSpec, msg.GetSignerStrs()))
 
-	return types.NewMsgDeleteContractSpecFromScopeSpecResponse(), nil
+	return &types.MsgDeleteContractSpecFromScopeSpecResponse{}, nil
 }
 
 // WriteRecordSpecification adds or updates a record specification.
@@ -606,7 +606,7 @@ func (k msgServer) DeleteRecordSpecification(
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteRecordSpecification, msg.GetSignerStrs()))
-	return types.NewMsgDeleteRecordSpecificationResponse(), nil
+	return &types.MsgDeleteRecordSpecificationResponse{}, nil
 }
 
 // BindOSLocator binds an owner address to a uri.
@@ -640,7 +640,7 @@ func (k msgServer) BindOSLocator(
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_BindOSLocator, msg.GetSignerStrs()))
-	return types.NewMsgBindOSLocatorResponse(msg.Locator), nil
+	return &types.MsgBindOSLocatorResponse{Locator: msg.Locator}, nil
 }
 
 // DeleteOSLocator deletes an existing ObjectStoreLocator record.
@@ -676,7 +676,7 @@ func (k msgServer) DeleteOSLocator(
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteOSLocator, msg.GetSignerStrs()))
-	return types.NewMsgDeleteOSLocatorResponse(msg.Locator), nil
+	return &types.MsgDeleteOSLocatorResponse{Locator: msg.Locator}, nil
 }
 
 // ModifyOSLocator updates an ObjectStoreLocator record by the current owner.
@@ -715,7 +715,7 @@ func (k msgServer) ModifyOSLocator(
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_ModifyOSLocator, msg.GetSignerStrs()))
-	return types.NewMsgModifyOSLocatorResponse(msg.Locator), nil
+	return &types.MsgModifyOSLocatorResponse{Locator: msg.Locator}, nil
 }
 
 // SetAccountData associates some basic data with a metadata address.
