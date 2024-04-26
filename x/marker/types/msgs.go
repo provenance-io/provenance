@@ -104,15 +104,6 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgAddMarkerRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
 // NewAddAccessRequest
 func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest {
 	return &MsgAddAccessRequest{
@@ -128,11 +119,6 @@ func (msg MsgAddAccessRequest) ValidateBasic() error {
 		return err
 	}
 	return ValidateGrants(msg.Access...)
-}
-
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgAddAccessRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewDeleteAccessRequest
@@ -153,11 +139,6 @@ func (msg MsgDeleteAccessRequest) ValidateBasic() error {
 	return err
 }
 
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgDeleteAccessRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
-}
-
 // NewMsgFinalizeRequest
 func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest {
 	return &MsgFinalizeRequest{
@@ -169,11 +150,6 @@ func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeReque
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgFinalizeRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
-}
-
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgFinalizeRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgActivateRequest
@@ -189,11 +165,6 @@ func (msg MsgActivateRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
 }
 
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgActivateRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
-}
-
 // NewMsgCancelRequest
 func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
 	return &MsgCancelRequest{
@@ -207,11 +178,6 @@ func (msg MsgCancelRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
 }
 
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgCancelRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
-}
-
 // NewMsgDeleteRequest
 func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
 	return &MsgDeleteRequest{
@@ -223,11 +189,6 @@ func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
-}
-
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgDeleteRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgMintRequest creates a mint supply message
@@ -246,11 +207,6 @@ func (msg MsgMintRequest) ValidateBasic() error {
 	return msg.Amount.Validate()
 }
 
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgMintRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
-}
-
 // NewMsgBurnRequest creates a burn supply message
 func NewMsgBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest {
 	return &MsgBurnRequest{
@@ -266,11 +222,6 @@ func (msg MsgBurnRequest) ValidateBasic() error {
 	}
 
 	return msg.Amount.Validate()
-}
-
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgBurnRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgWithdrawRequest
@@ -305,11 +256,6 @@ func (msg MsgWithdrawRequest) ValidateBasic() error {
 	return msg.Amount.Validate()
 }
 
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgWithdrawRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
-}
-
 // NewMsgTransferRequest
 func NewMsgTransferRequest(
 	admin, fromAddress, toAddress sdk.AccAddress, amount sdk.Coin,
@@ -334,16 +280,6 @@ func (msg MsgTransferRequest) ValidateBasic() error {
 		return err
 	}
 	return msg.Amount.Validate()
-}
-
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgTransferRequest) GetSigners() []sdk.AccAddress {
-	adminAddr, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		panic(err)
-	}
-
-	return []sdk.AccAddress{adminAddr}
 }
 
 // NewIbcMsgTransferRequest
@@ -381,11 +317,6 @@ func (msg MsgIbcTransferRequest) ValidateBasic() error {
 	return msg.Transfer.ValidateBasic()
 }
 
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgIbcTransferRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
-}
-
 // NewSetDenomMetadataRequest  creates a new marker in a proposed state with a given total supply a denomination
 func NewSetDenomMetadataRequest(
 	metadata banktypes.Metadata, admin sdk.AccAddress,
@@ -408,11 +339,6 @@ func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid set denom metadata request: %w", err)
 	}
 	return nil
-}
-
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgSetDenomMetadataRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
@@ -470,11 +396,6 @@ func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	}
 
 	return allowance.ValidateBasic()
-}
-
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgGrantAllowanceRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Administrator)}
 }
 
 // NewMsgAddFinalizeActivateMarkerRequest creates a new MsgAddFinalizeActivateMarkerRequest.
@@ -548,12 +469,6 @@ func (msg MsgAddFinalizeActivateMarkerRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// GetSigners indicates that the message must have been signed by the address provided.
-func (msg MsgAddFinalizeActivateMarkerRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{addr}
-}
-
 func NewMsgSupplyIncreaseProposalRequest(amount sdk.Coin, targetAddress string, authority string) *MsgSupplyIncreaseProposalRequest {
 	return &MsgSupplyIncreaseProposalRequest{
 		Amount:        amount,
@@ -579,11 +494,6 @@ func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg *MsgSupplyIncreaseProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
 }
 
 // NewMsgUpdateRequiredAttributesRequest creates a MsgUpdateRequiredAttributesRequest
@@ -619,11 +529,6 @@ func (msg MsgUpdateRequiredAttributesRequest) ValidateBasic() error {
 	return err
 }
 
-func (msg *MsgUpdateRequiredAttributesRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.TransferAuthority)
-	return []sdk.AccAddress{addr}
-}
-
 func NewMsgUpdateForcedTransferRequest(denom string, allowForcedTransfer bool, authority sdk.AccAddress) *MsgUpdateForcedTransferRequest {
 	return &MsgUpdateForcedTransferRequest{
 		Denom:               denom,
@@ -642,11 +547,6 @@ func (msg MsgUpdateForcedTransferRequest) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgUpdateForcedTransferRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return fmt.Errorf("invalid signer: %w", err)
@@ -655,11 +555,6 @@ func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 		return errors.New("invalid denom: empty denom string is not allowed")
 	}
 	return sdk.ValidateDenom(msg.Denom)
-}
-
-func (msg MsgSetAccountDataRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Signer)
-	return []sdk.AccAddress{addr}
 }
 
 // NewMsgUpdateSendDenyListRequest creates a NewMsgUpdateSendDenyListRequest
@@ -698,11 +593,6 @@ func (msg MsgUpdateSendDenyListRequest) ValidateBasic() error {
 	return err
 }
 
-func (msg *MsgUpdateSendDenyListRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func NewMsgAddNetAssetValuesRequest(denom, administrator string, netAssetValues []NetAssetValue) *MsgAddNetAssetValuesRequest {
 	return &MsgAddNetAssetValuesRequest{
 		Denom:          denom,
@@ -738,9 +628,4 @@ func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 
 	_, err := sdk.AccAddressFromBech32(msg.Administrator)
 	return err
-}
-
-func (msg *MsgAddNetAssetValuesRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Administrator)
-	return []sdk.AccAddress{addr}
 }
