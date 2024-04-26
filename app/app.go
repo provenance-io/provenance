@@ -154,7 +154,6 @@ import (
 	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	metadatawasm "github.com/provenance-io/provenance/x/metadata/wasm"
-	"github.com/provenance-io/provenance/x/msgfees"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -698,8 +697,7 @@ func New(
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(wasm.RouterKey, wasmkeeper.NewLegacyWasmProposalHandler(app.WasmKeeper, wasmtypes.EnableAllProposals)). // TODO[1760]: gov: Can probably remove with gov v1
 		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
-		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
-		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
+		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper))
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AccountKeeper, app.BankKeeper,
 		app.StakingKeeper, app.DistrKeeper, app.BaseApp.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000}, govAuthority,
