@@ -44,8 +44,6 @@ type MetadataMsg interface {
 
 	// ValidateBasic runs stateless validation on a Msg.
 	ValidateBasic() error
-	// GetSigners returns the addresses of the signers of a Msg.
-	GetSigners() []sdk.AccAddress
 	// GetSignerStrs returns the bech32 address(es) that signed.
 	GetSignerStrs() []string
 }
@@ -114,11 +112,6 @@ func NewMsgWriteScopeRequest(scope Scope, signers []string, usdMills uint64) *Ms
 	}
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgWriteScopeRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgWriteScopeRequest) GetSignerStrs() []string {
 	return msg.Signers
@@ -178,11 +171,6 @@ func NewMsgDeleteScopeRequest(scopeID MetadataAddress, signers []string) *MsgDel
 	}
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgDeleteScopeRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgDeleteScopeRequest) GetSignerStrs() []string {
 	return msg.Signers
@@ -208,11 +196,6 @@ func NewMsgAddScopeDataAccessRequest(scopeID MetadataAddress, dataAccessAddrs []
 		DataAccess: dataAccessAddrs,
 		Signers:    signers,
 	}
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgAddScopeDataAccessRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -251,11 +234,6 @@ func NewMsgDeleteScopeDataAccessRequest(scopeID MetadataAddress, dataAccessAddrs
 	}
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgDeleteScopeDataAccessRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgDeleteScopeDataAccessRequest) GetSignerStrs() []string {
 	return msg.Signers
@@ -292,11 +270,6 @@ func NewMsgAddScopeOwnerRequest(scopeID MetadataAddress, owners []Party, signers
 	}
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgAddScopeOwnerRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgAddScopeOwnerRequest) GetSignerStrs() []string {
 	return msg.Signers
@@ -325,11 +298,6 @@ func NewMsgDeleteScopeOwnerRequest(scopeID MetadataAddress, owners []string, sig
 		Owners:  owners,
 		Signers: signers,
 	}
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgDeleteScopeOwnerRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -366,11 +334,6 @@ func NewMsgUpdateValueOwnersRequest(scopeIDs []MetadataAddress, valueOwner sdk.A
 		ValueOwnerAddress: valueOwner.String(),
 		Signers:           signers,
 	}
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgUpdateValueOwnersRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -412,11 +375,6 @@ func NewMsgMigrateValueOwnerRequest(existing, proposed sdk.AccAddress, signers [
 	}
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgMigrateValueOwnerRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgMigrateValueOwnerRequest) GetSignerStrs() []string {
 	return msg.Signers
@@ -445,11 +403,6 @@ func (msg MsgMigrateValueOwnerRequest) ValidateBasic() error {
 // NewMsgWriteSessionRequest creates a new msg instance
 func NewMsgWriteSessionRequest(session Session, signers []string) *MsgWriteSessionRequest {
 	return &MsgWriteSessionRequest{Session: session, Signers: signers}
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgWriteSessionRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -507,11 +460,6 @@ func (msg *MsgWriteSessionRequest) ConvertOptionalFields() error {
 // NewMsgWriteRecordRequest creates a new msg instance
 func NewMsgWriteRecordRequest(record Record, sessionIDComponents *SessionIdComponents, contractSpecUUID string, signers []string, parties []Party) *MsgWriteRecordRequest {
 	return &MsgWriteRecordRequest{Record: record, Parties: parties, Signers: signers, SessionIdComponents: sessionIDComponents, ContractSpecUuid: contractSpecUUID}
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgWriteRecordRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -574,11 +522,6 @@ func NewMsgDeleteRecordRequest(recordID MetadataAddress, signers []string) *MsgD
 	return &MsgDeleteRecordRequest{RecordId: recordID, Signers: signers}
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgDeleteRecordRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgDeleteRecordRequest) GetSignerStrs() []string {
 	return msg.Signers
@@ -597,11 +540,6 @@ func (msg MsgDeleteRecordRequest) ValidateBasic() error {
 // NewMsgWriteScopeSpecificationRequest creates a new msg instance
 func NewMsgWriteScopeSpecificationRequest(specification ScopeSpecification, signers []string) *MsgWriteScopeSpecificationRequest {
 	return &MsgWriteScopeSpecificationRequest{Specification: specification, Signers: signers}
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgWriteScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -647,11 +585,6 @@ func NewMsgDeleteScopeSpecificationRequest(specificationID MetadataAddress, sign
 	return &MsgDeleteScopeSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgDeleteScopeSpecificationRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgDeleteScopeSpecificationRequest) GetSignerStrs() []string {
 	return msg.Signers
@@ -670,11 +603,6 @@ func (msg MsgDeleteScopeSpecificationRequest) ValidateBasic() error {
 // NewMsgWriteContractSpecificationRequest creates a new msg instance
 func NewMsgWriteContractSpecificationRequest(specification ContractSpecification, signers []string) *MsgWriteContractSpecificationRequest {
 	return &MsgWriteContractSpecificationRequest{Specification: specification, Signers: signers}
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgWriteContractSpecificationRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -720,11 +648,6 @@ func NewMsgDeleteContractSpecificationRequest(specificationID MetadataAddress, s
 	return &MsgDeleteContractSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgDeleteContractSpecificationRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgDeleteContractSpecificationRequest) GetSignerStrs() []string {
 	return msg.Signers
@@ -743,11 +666,6 @@ func (msg MsgDeleteContractSpecificationRequest) ValidateBasic() error {
 // NewMsgAddContractSpecToScopeSpecRequest creates a new msg instance
 func NewMsgAddContractSpecToScopeSpecRequest(contractSpecID MetadataAddress, scopeSpecID MetadataAddress, signers []string) *MsgAddContractSpecToScopeSpecRequest {
 	return &MsgAddContractSpecToScopeSpecRequest{ContractSpecificationId: contractSpecID, ScopeSpecificationId: scopeSpecID, Signers: signers}
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgAddContractSpecToScopeSpecRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -776,11 +694,6 @@ func NewMsgDeleteContractSpecFromScopeSpecRequest(contractSpecID MetadataAddress
 	return &MsgDeleteContractSpecFromScopeSpecRequest{ContractSpecificationId: contractSpecID, ScopeSpecificationId: scopeSpecID, Signers: signers}
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgDeleteContractSpecFromScopeSpecRequest) GetSignerStrs() []string {
 	return msg.Signers
@@ -805,11 +718,6 @@ func (msg MsgDeleteContractSpecFromScopeSpecRequest) ValidateBasic() error {
 // NewMsgWriteRecordSpecificationRequest creates a new msg instance
 func NewMsgWriteRecordSpecificationRequest(recordSpecification RecordSpecification, signers []string) *MsgWriteRecordSpecificationRequest {
 	return &MsgWriteRecordSpecificationRequest{Specification: recordSpecification, Signers: signers}
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgWriteRecordSpecificationRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -858,11 +766,6 @@ func NewMsgDeleteRecordSpecificationRequest(specificationID MetadataAddress, sig
 	return &MsgDeleteRecordSpecificationRequest{SpecificationId: specificationID, Signers: signers}
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgDeleteRecordSpecificationRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgDeleteRecordSpecificationRequest) GetSignerStrs() []string {
 	return msg.Signers
@@ -878,19 +781,11 @@ func (msg MsgDeleteRecordSpecificationRequest) ValidateBasic() error {
 
 // ------------------  MsgWriteP8EContractSpecRequest  ------------------
 
-func (msg MsgWriteP8EContractSpecRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
-}
-
 func (msg MsgWriteP8EContractSpecRequest) ValidateBasic() error {
 	return errors.New("deprecated and unusable")
 }
 
 // ------------------  MsgP8EMemorializeContractRequest  ------------------
-
-func (msg MsgP8EMemorializeContractRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Invoker)}
-}
 
 func (msg MsgP8EMemorializeContractRequest) ValidateBasic() error {
 	return errors.New("deprecated and unusable")
@@ -914,11 +809,6 @@ func (msg MsgBindOSLocatorRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgBindOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Locator.Owner)}
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgBindOSLocatorRequest) GetSignerStrs() []string {
 	return []string{msg.Locator.Owner}
@@ -940,11 +830,6 @@ func (msg MsgDeleteOSLocatorRequest) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgDeleteOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Locator.Owner)}
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -999,11 +884,6 @@ func (msg MsgModifyOSLocatorRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgModifyOSLocatorRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Locator.Owner)}
-}
-
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
 func (msg MsgModifyOSLocatorRequest) GetSignerStrs() []string {
 	return []string{msg.Locator.Owner}
@@ -1025,11 +905,6 @@ func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgSetAccountDataRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.
@@ -1223,11 +1098,6 @@ func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSigners returns the address(es) that signed. Implements sdk.Msg interface.
-func (msg MsgAddNetAssetValuesRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.Signers)
 }
 
 // GetSignerStrs returns the bech32 address(es) that signed. Implements MetadataMsg interface.

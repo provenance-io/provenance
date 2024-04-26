@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
@@ -119,7 +118,6 @@ func TestWriteScopeValidation(t *testing.T) {
 	var msg = NewMsgWriteScopeRequest(*scope, []string{"invalid"}, 0)
 	err := msg.ValidateBasic()
 	require.EqualError(t, err, "invalid scope owners: invalid party address [data_owner]: decoding bech32 failed: invalid separator index -1")
-	require.Panics(t, func() { msg.GetSigners() }, "panics due to invalid addresses")
 
 	err = msg.Scope.ValidateBasic()
 	require.Error(t, err, "invalid addresses")
@@ -144,11 +142,6 @@ func TestWriteScopeValidation(t *testing.T) {
 	msg.Signers = []string{"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"}
 	err = msg.Scope.ValidateBasic()
 	require.NoError(t, err, "valid add scope request")
-	requiredSigners := msg.GetSigners()
-	require.Equal(t, 1, len(requiredSigners))
-	x, err := hex.DecodeString("85EA54E8598B27EC37EAEEEEA44F1E78A9B5E671")
-	require.NoError(t, err)
-	require.Equal(t, sdk.AccAddress(x), requiredSigners[0])
 }
 
 func TestAddScopeDataAccessValidateBasic(t *testing.T) {
@@ -725,8 +718,7 @@ func TestBindOSLocator(t *testing.T) {
 
 	err := bindRequestMsg.ValidateBasic()
 	require.NoError(t, err)
-	signers := bindRequestMsg.GetSigners()
-	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
+
 	require.Equal(t, "/provenance.metadata.v1.MsgBindOSLocatorRequest", sdk.MsgTypeURL(bindRequestMsg))
 
 	bz, _ := ModuleCdc.MarshalJSON(bindRequestMsg)
@@ -738,8 +730,7 @@ func TestModifyOSLocator(t *testing.T) {
 
 	err := modifyRequest.ValidateBasic()
 	require.NoError(t, err)
-	signers := modifyRequest.GetSigners()
-	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
+
 	require.Equal(t, "/provenance.metadata.v1.MsgModifyOSLocatorRequest", sdk.MsgTypeURL(modifyRequest))
 
 	bz, _ := ModuleCdc.MarshalJSON(modifyRequest)
@@ -752,8 +743,6 @@ func TestDeleteOSLocator(t *testing.T) {
 	err := deleteRequest.ValidateBasic()
 	require.NoError(t, err)
 
-	signers := deleteRequest.GetSigners()
-	require.Equal(t, "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", signers[0].String())
 	require.Equal(t, "/provenance.metadata.v1.MsgDeleteOSLocatorRequest", sdk.MsgTypeURL(deleteRequest))
 
 	bz, _ := ModuleCdc.MarshalJSON(deleteRequest)
