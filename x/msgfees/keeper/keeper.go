@@ -247,6 +247,10 @@ func sortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
 
 // AddMsgFee adds a new msg fees
 func (k Keeper) AddMsgFee(ctx sdk.Context, msgTypeUrl, recipient, basisPoints string, additionalFee sdk.Coin) error {
+	if msgTypeUrl == "" {
+		return types.ErrEmptyMsgType
+	}
+
 	existing, err := k.GetMsgFee(ctx, msgTypeUrl)
 	if err != nil {
 		return err
@@ -271,6 +275,10 @@ func (k Keeper) AddMsgFee(ctx sdk.Context, msgTypeUrl, recipient, basisPoints st
 
 // UpdateMsgFee updates  an existing msg fees
 func (k Keeper) UpdateMsgFee(ctx sdk.Context, msgTypeUrl, recipient, basisPoints string, additionalFee sdk.Coin) error {
+	if msgTypeUrl == "" {
+		return types.ErrEmptyMsgType
+	}
+
 	existing, err := k.GetMsgFee(ctx, msgTypeUrl)
 	if err != nil {
 		return err
