@@ -26,9 +26,3 @@ func (m MsgGovUpdateParamsRequest) ValidateBasic() error {
 	}
 	return m.Params.Validate()
 }
-
-// GetSigners indicates that the message must have been signed by the address provided.
-func (m MsgGovUpdateParamsRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(m.Authority)
-	return []sdk.AccAddress{addr}
-}

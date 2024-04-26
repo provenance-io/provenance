@@ -77,15 +77,6 @@ func (msg MsgAssessCustomMsgFeeRequest) GetBips() (uint32, error) {
 	return uint32(bips), err
 }
 
-// GetSignBytes encodes the message for signing
-func (msg MsgAssessCustomMsgFeeRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.From)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
 func NewMsgAddMsgFeeProposalRequest(msgTypeURL string, additionalFee sdk.Coin, recipient string, recipientBasisPoints string, authority string) *MsgAddMsgFeeProposalRequest {
 	return &MsgAddMsgFeeProposalRequest{
 		MsgTypeUrl:           msgTypeURL,
@@ -136,11 +127,6 @@ func (msg *MsgAddMsgFeeProposalRequest) ValidateBasic() error {
 	return nil
 }
 
-func (msg *MsgAddMsgFeeProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func NewMsgUpdateMsgFeeProposalRequest(msgTypeURL string, additionalFee sdk.Coin, recipient string, recipientBasisPoints string, authority string) *MsgUpdateMsgFeeProposalRequest {
 	return &MsgUpdateMsgFeeProposalRequest{
 		MsgTypeUrl:           msgTypeURL,
@@ -183,11 +169,6 @@ func (msg *MsgUpdateMsgFeeProposalRequest) ValidateBasic() error {
 	return nil
 }
 
-func (msg *MsgUpdateMsgFeeProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func NewMsgRemoveMsgFeeProposalRequest(msgTypeURL string, authority string) *MsgRemoveMsgFeeProposalRequest {
 	return &MsgRemoveMsgFeeProposalRequest{
 		MsgTypeUrl: msgTypeURL,
@@ -206,11 +187,6 @@ func (msg *MsgRemoveMsgFeeProposalRequest) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg *MsgRemoveMsgFeeProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
 }
 
 func NewMsgUpdateNhashPerUsdMilProposalRequest(nhashPerUsdMil uint64, authority string) *MsgUpdateNhashPerUsdMilProposalRequest {
@@ -233,11 +209,6 @@ func (msg *MsgUpdateConversionFeeDenomProposalRequest) ValidateBasic() error {
 	return nil
 }
 
-func (msg *MsgUpdateConversionFeeDenomProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func NewMsgUpdateConversionFeeDenomProposalRequest(conversionFeeDenom string, authority string) *MsgUpdateConversionFeeDenomProposalRequest {
 	return &MsgUpdateConversionFeeDenomProposalRequest{
 		ConversionFeeDenom: conversionFeeDenom,
@@ -256,9 +227,4 @@ func (msg *MsgUpdateNhashPerUsdMilProposalRequest) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-func (msg *MsgUpdateNhashPerUsdMilProposalRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
 }

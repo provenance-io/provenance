@@ -38,11 +38,6 @@ func (m MsgSanction) ValidateBasic() error {
 	return nil
 }
 
-func (m MsgSanction) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(m.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func NewMsgUnsanction(authority string, addrs ...sdk.AccAddress) *MsgUnsanction {
 	rv := &MsgUnsanction{
 		Authority: authority,
@@ -65,11 +60,6 @@ func (m MsgUnsanction) ValidateBasic() error {
 		}
 	}
 	return nil
-}
-
-func (m MsgUnsanction) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(m.Authority)
-	return []sdk.AccAddress{addr}
 }
 
 func NewMsgUpdateParams(authority string, minDepSanction, minDepUnsanction sdk.Coins) *MsgUpdateParams {
@@ -95,9 +85,4 @@ func (m MsgUpdateParams) ValidateBasic() error {
 		}
 	}
 	return nil
-}
-
-func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(m.Authority)
-	return []sdk.AccAddress{addr}
 }

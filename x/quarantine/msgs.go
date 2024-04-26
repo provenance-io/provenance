@@ -33,12 +33,6 @@ func (msg MsgOptIn) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners returns the addresses of required signers of this Msg.
-func (msg MsgOptIn) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.ToAddress)
-	return []sdk.AccAddress{addr}
-}
-
 // NewMsgOptOut creates a new msg to opt out of account quarantine.
 func NewMsgOptOut(toAddr sdk.AccAddress) *MsgOptOut {
 	return &MsgOptOut{
@@ -52,12 +46,6 @@ func (msg MsgOptOut) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
 	}
 	return nil
-}
-
-// GetSigners returns the addresses of required signers of this Msg.
-func (msg MsgOptOut) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.ToAddress)
-	return []sdk.AccAddress{addr}
 }
 
 // NewMsgAccept creates a new msg to accept quarantined funds.
@@ -85,12 +73,6 @@ func (msg MsgAccept) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners returns the addresses of required signers of this Msg.
-func (msg MsgAccept) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.ToAddress)
-	return []sdk.AccAddress{addr}
-}
-
 // NewMsgDecline creates a new msg to decline quarantined funds.
 func NewMsgDecline(toAddr sdk.AccAddress, fromAddrsStrs []string, permanent bool) *MsgDecline {
 	return &MsgDecline{
@@ -116,12 +98,6 @@ func (msg MsgDecline) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners returns the addresses of required signers of this Msg.
-func (msg MsgDecline) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.ToAddress)
-	return []sdk.AccAddress{addr}
-}
-
 // NewMsgUpdateAutoResponses creates a new msg to update quarantined auto-responses.
 func NewMsgUpdateAutoResponses(toAddr sdk.AccAddress, updates []*AutoResponseUpdate) *MsgUpdateAutoResponses {
 	return &MsgUpdateAutoResponses{
@@ -144,10 +120,4 @@ func (msg MsgUpdateAutoResponses) ValidateBasic() error {
 		}
 	}
 	return nil
-}
-
-// GetSigners returns the addresses of required signers of this Msg.
-func (msg MsgUpdateAutoResponses) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.ToAddress)
-	return []sdk.AccAddress{addr}
 }

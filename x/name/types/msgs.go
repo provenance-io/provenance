@@ -44,15 +44,6 @@ func (msg MsgBindNameRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners indicates that the message must have been signed by the parent.
-func (msg MsgBindNameRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Parent.Address)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
-}
-
 // NewMsgDeleteNameRequest creates a new Delete Name Request
 func NewMsgDeleteNameRequest(record NameRecord) *MsgDeleteNameRequest {
 	return &MsgDeleteNameRequest{
@@ -69,15 +60,6 @@ func (msg MsgDeleteNameRequest) ValidateBasic() error {
 		return fmt.Errorf("address cannot be empty")
 	}
 	return nil
-}
-
-// GetSigners indicates that the message must have been signed by the record owner.
-func (msg MsgDeleteNameRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Record.Address)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
 }
 
 // NewMsgCreateRootNameRequest creates a new Create Root Name Request
@@ -114,12 +96,6 @@ func (msg MsgCreateRootNameRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners Implements Msg.
-func (msg MsgCreateRootNameRequest) GetSigners() []sdk.AccAddress {
-	fromAddress := sdk.MustAccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{fromAddress}
-}
-
 func (msg MsgModifyNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Record.Name) == "" {
 		return fmt.Errorf("name cannot be empty")
@@ -131,13 +107,4 @@ func (msg MsgModifyNameRequest) ValidateBasic() error {
 		return govtypes.ErrInvalidSigner
 	}
 	return nil
-}
-
-// GetSigners indicates that the message must have been signed by the gov module.
-func (msg MsgModifyNameRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.GetAuthority())
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{addr}
 }

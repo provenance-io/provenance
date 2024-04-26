@@ -24,8 +24,3 @@ func (m MsgEmitIBCAck) ValidateBasic() error {
 func (m MsgEmitIBCAck) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
-
-func (m MsgEmitIBCAck) GetSigners() []sdk.AccAddress {
-	sender := sdk.MustAccAddressFromBech32(m.Sender)
-	return []sdk.AccAddress{sender}
-}

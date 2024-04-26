@@ -91,11 +91,6 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners indicates that the message must have been signed by the parent.
-func (msg MsgCreateTriggerRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.GetAuthorities())
-}
-
 // hasSigners checks if the signers are all in the set of the entries
 // The keys in the available map are a cast of an AccAddress to a string. It is not the result of AccAddress.String().
 func hasSigners(sigCtx *signing.Context, available map[string]bool, action sdk.Msg) error {
@@ -166,9 +161,4 @@ func (msg MsgDestroyTriggerRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid id for trigger")
 	}
 	return nil
-}
-
-// GetSigners indicates that the message must have been signed by the parent.
-func (msg MsgDestroyTriggerRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.GetAuthority())}
 }

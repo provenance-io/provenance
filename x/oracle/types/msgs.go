@@ -22,11 +22,6 @@ func NewMsgSendQueryOracle(creator, channelID string, query []byte) *MsgSendQuer
 	}
 }
 
-// GetSigners indicates that the message must have been signed by the parent.
-func (msg MsgSendQueryOracleRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Authority)}
-}
-
 // ValidateBasic runs stateless validation checks on the message.
 func (msg MsgSendQueryOracleRequest) ValidateBasic() error {
 	if err := host.ChannelIdentifierValidator(msg.Channel); err != nil {
@@ -47,11 +42,6 @@ func NewMsgUpdateOracle(creator, addr string) *MsgUpdateOracleRequest {
 		Authority: creator,
 		Address:   addr,
 	}
-}
-
-// GetSigners indicates that the message must have been signed by the parent.
-func (msg MsgUpdateOracleRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Authority)}
 }
 
 // ValidateBasic runs stateless validation checks on the message.
