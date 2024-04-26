@@ -385,3 +385,120 @@ func (s *TestSuite) TestCalculateAdditionalFeesToBePaid() {
 		assertEqualDist(s.T(), expected, actual)
 	})
 }
+
+func (s *TestSuite) TestAddMsgFee() {
+	testCases := []struct {
+		name          string
+		msgTypeURL    string
+		recipient     string
+		basisPoints   string
+		additionalFee sdk.Coin
+		expectError   bool
+		errorMsg      string
+	}{
+		{
+			name:          "successful addition",
+			msgTypeURL:    "testTypeURL",
+			recipient:     "testRecipient",
+			basisPoints:   "100",
+			additionalFee: sdk.NewInt64Coin("nhash", 1000),
+			expectError:   false,
+		},
+		{
+			name:          "duplicate msgTypeURL",
+			msgTypeURL:    "testTypeURL",
+			recipient:     "testRecipient",
+			basisPoints:   "100",
+			additionalFee: sdk.NewInt64Coin("nhash", 1000),
+			expectError:   true,
+			errorMsg:      "fee for type already exists",
+		},
+		{
+			name:          "empty msgTypeURL",
+			msgTypeURL:    "",
+			recipient:     "testRecipient",
+			basisPoints:   "100",
+			additionalFee: sdk.NewInt64Coin("nhash", 1000),
+			expectError:   true,
+			errorMsg:      "msg type is empty",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			err := s.app.MsgFeesKeeper.AddMsgFee(s.ctx, tc.msgTypeURL, tc.recipient, tc.basisPoints, tc.additionalFee)
+			if tc.expectError {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.errorMsg)
+			} else {
+				s.Require().NoError(err)
+				msgFee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, tc.msgTypeURL)
+				s.Require().NoError(err)
+				s.Require().NotNil(msgFee)
+				s.Require().Equal(msgFee.MsgTypeUrl, tc.msgTypeURL)
+				s.Require().Equal(msgFee.AdditionalFee, tc.additionalFee)
+				s.Require().Equal(msgFee.Recipient, tc.recipient)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestUpdateMsgFee() {
+	s.Require().NoError(s.app.MsgFeesKeeper.AddMsgFee(s.ctx, "updateTypeURL", "initialRecipient", "500", sdk.NewInt64Coin("nhash", 2000)))
+
+	testCases := []struct {
+		name          string
+		msgTypeURL    string
+		recipient     string
+		basisPoints   string
+		additionalFee sdk.Coin
+		expectError   bool
+		errorMsg      string
+	}{
+		{
+			name:          "successful update",
+			msgTypeURL:    "updateTypeURL",
+			recipient:     "updatedRecipient",
+			basisPoints:   "1000",
+			additionalFee: sdk.NewInt64Coin("nhash", 3000),
+			expectError:   false,
+		},
+		{
+			name:          "non-existing msgTypeURL",
+			msgTypeURL:    "nonExistingTypeURL",
+			recipient:     "anyRecipient",
+			basisPoints:   "100",
+			additionalFee: sdk.NewInt64Coin("nhash", 1000),
+			expectError:   true,
+			errorMsg:      "fee for type does not exist",
+		},
+		{
+			name:          "empty msgTypeURL",
+			msgTypeURL:    "",
+			recipient:     "anyRecipient",
+			basisPoints:   "100",
+			additionalFee: sdk.NewInt64Coin("nhash", 1000),
+			expectError:   true,
+			errorMsg:      "msg type is empty",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			err := s.app.MsgFeesKeeper.UpdateMsgFee(s.ctx, tc.msgTypeURL, tc.recipient, tc.basisPoints, tc.additionalFee)
+			if tc.expectError {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.errorMsg)
+			} else {
+				s.Require().NoError(err)
+				msgFee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, tc.msgTypeURL)
+				s.Require().NoError(err)
+				s.Require().NotNil(msgFee)
+				s.Require().Equal(msgFee.MsgTypeUrl, tc.msgTypeURL)
+				s.Require().Equal(msgFee.AdditionalFee, tc.additionalFee)
+				s.Require().Equal(msgFee.Recipient, tc.recipient)
+				s.Require().Equal(msgFee.RecipientBasisPoints, uint32(1000))
+			}
+		})
+	}
+}
