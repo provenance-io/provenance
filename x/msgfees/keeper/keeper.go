@@ -246,12 +246,12 @@ func sortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
 }
 
 // AddMsgFee adds a new msg fees
-func (k Keeper) AddMsgFee(ctx sdk.Context, msgTypeUrl, recipient, basisPoints string, additionalFee sdk.Coin) error {
-	if msgTypeUrl == "" {
+func (k Keeper) AddMsgFee(ctx sdk.Context, msgTypeURL, recipient, basisPoints string, additionalFee sdk.Coin) error {
+	if msgTypeURL == "" {
 		return types.ErrEmptyMsgType
 	}
 
-	existing, err := k.GetMsgFee(ctx, msgTypeUrl)
+	existing, err := k.GetMsgFee(ctx, msgTypeURL)
 	if err != nil {
 		return err
 	}
@@ -263,7 +263,7 @@ func (k Keeper) AddMsgFee(ctx sdk.Context, msgTypeUrl, recipient, basisPoints st
 		return err
 	}
 
-	msgFees := types.NewMsgFee(msgTypeUrl, additionalFee, recipient, bips)
+	msgFees := types.NewMsgFee(msgTypeURL, additionalFee, recipient, bips)
 
 	err = k.SetMsgFee(ctx, msgFees)
 	if err != nil {
@@ -274,12 +274,12 @@ func (k Keeper) AddMsgFee(ctx sdk.Context, msgTypeUrl, recipient, basisPoints st
 }
 
 // UpdateMsgFee updates  an existing msg fees
-func (k Keeper) UpdateMsgFee(ctx sdk.Context, msgTypeUrl, recipient, basisPoints string, additionalFee sdk.Coin) error {
-	if msgTypeUrl == "" {
+func (k Keeper) UpdateMsgFee(ctx sdk.Context, msgTypeURL, recipient, basisPoints string, additionalFee sdk.Coin) error {
+	if msgTypeURL == "" {
 		return types.ErrEmptyMsgType
 	}
 
-	existing, err := k.GetMsgFee(ctx, msgTypeUrl)
+	existing, err := k.GetMsgFee(ctx, msgTypeURL)
 	if err != nil {
 		return err
 	}
@@ -291,7 +291,7 @@ func (k Keeper) UpdateMsgFee(ctx sdk.Context, msgTypeUrl, recipient, basisPoints
 		return err
 	}
 
-	msgFees := types.NewMsgFee(msgTypeUrl, additionalFee, recipient, bips)
+	msgFees := types.NewMsgFee(msgTypeURL, additionalFee, recipient, bips)
 
 	err = k.SetMsgFee(ctx, msgFees)
 	if err != nil {
