@@ -22,18 +22,19 @@ import (
 
 func TestAllMsgsGetSigners(t *testing.T) {
 	msgMakers := []testutil.MsgMaker{
-		func(signer string) sdk.Msg { return &MsgAddMarkerRequest{FromAddress: signer} },
-		func(signer string) sdk.Msg { return &MsgAddAccessRequest{Administrator: signer} },
-		func(signer string) sdk.Msg { return &MsgDeleteAccessRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgFinalizeRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgActivateRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgCancelRequest{Administrator: signer} },
-		func(signer string) sdk.Msg { return &MsgDeleteRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgDeleteAccessRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgMintRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgBurnRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgAddAccessRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgDeleteRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgWithdrawRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgAddMarkerRequest{FromAddress: signer} },
 		func(signer string) sdk.Msg { return &MsgTransferRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgIbcTransferRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgSetDenomMetadataRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgGrantAllowanceRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgAddFinalizeActivateMarkerRequest{FromAddress: signer} },
 		func(signer string) sdk.Msg { return &MsgSupplyIncreaseProposalRequest{Authority: signer} },
@@ -132,7 +133,7 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 	}{
 		{
 			"should fail to validate basic, invalid admin address",
-			*NewIbcMsgTransferRequest(
+			*NewMsgIbcTransferRequest(
 				"notvalidaddress",
 				"transfer",
 				"channel-1",
@@ -147,7 +148,7 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 		},
 		{
 			"should fail to validate basic, invalid ibctransfertypes.MsgTransfer ",
-			*NewIbcMsgTransferRequest(
+			*NewMsgIbcTransferRequest(
 				validAddress,
 				"transfer",
 				"channel-1",
@@ -162,7 +163,7 @@ func TestMsgIbcTransferRequestValidateBasic(t *testing.T) {
 		},
 		{
 			"should succeed",
-			*NewIbcMsgTransferRequest(
+			*NewMsgIbcTransferRequest(
 				validAddress,
 				"transfer",
 				"channel-1",

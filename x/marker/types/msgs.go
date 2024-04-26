@@ -18,18 +18,19 @@ import (
 
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
-	(*MsgAddMarkerRequest)(nil),
-	(*MsgAddAccessRequest)(nil),
-	(*MsgDeleteAccessRequest)(nil),
 	(*MsgFinalizeRequest)(nil),
 	(*MsgActivateRequest)(nil),
 	(*MsgCancelRequest)(nil),
-	(*MsgDeleteRequest)(nil),
+	(*MsgDeleteAccessRequest)(nil),
 	(*MsgMintRequest)(nil),
 	(*MsgBurnRequest)(nil),
+	(*MsgAddAccessRequest)(nil),
+	(*MsgDeleteRequest)(nil),
 	(*MsgWithdrawRequest)(nil),
+	(*MsgAddMarkerRequest)(nil),
 	(*MsgTransferRequest)(nil),
 	(*MsgIbcTransferRequest)(nil),
+	(*MsgSetDenomMetadataRequest)(nil),
 	(*MsgGrantAllowanceRequest)(nil),
 	(*MsgAddFinalizeActivateMarkerRequest)(nil),
 	(*MsgSupplyIncreaseProposalRequest)(nil),
@@ -40,7 +41,140 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgAddNetAssetValuesRequest)(nil),
 }
 
-// NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
+func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest {
+	return &MsgFinalizeRequest{
+		Denom:         denom,
+		Administrator: admin.String(),
+	}
+}
+
+func (msg MsgFinalizeRequest) ValidateBasic() error {
+	return sdk.ValidateDenom(msg.Denom)
+}
+
+func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest {
+	return &MsgActivateRequest{
+		Denom:         denom,
+		Administrator: admin.String(),
+	}
+}
+
+func (msg MsgActivateRequest) ValidateBasic() error {
+	return sdk.ValidateDenom(msg.Denom)
+}
+
+func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
+	return &MsgCancelRequest{
+		Denom:         denom,
+		Administrator: admin.String(),
+	}
+}
+
+func (msg MsgCancelRequest) ValidateBasic() error {
+	return sdk.ValidateDenom(msg.Denom)
+}
+
+func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
+	return &MsgDeleteRequest{
+		Denom:         denom,
+		Administrator: admin.String(),
+	}
+}
+
+func (msg MsgDeleteRequest) ValidateBasic() error {
+	return sdk.ValidateDenom(msg.Denom)
+}
+
+func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest {
+	return &MsgMintRequest{
+		Administrator: admin.String(),
+		Amount:        amount,
+	}
+}
+
+func (msg MsgMintRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
+		return err
+	}
+	return msg.Amount.Validate()
+}
+
+func NewMsgBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest {
+	return &MsgBurnRequest{
+		Administrator: admin.String(),
+		Amount:        amount,
+	}
+}
+
+func (msg MsgBurnRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
+		return err
+	}
+
+	return msg.Amount.Validate()
+}
+
+func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest {
+	return &MsgAddAccessRequest{
+		Denom:         denom,
+		Administrator: admin.String(),
+		Access:        []AccessGrant{access},
+	}
+}
+
+func (msg MsgAddAccessRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	return ValidateGrants(msg.Access...)
+}
+
+func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccAddress) *MsgDeleteAccessRequest {
+	return &MsgDeleteAccessRequest{
+		Denom:          denom,
+		Administrator:  admin.String(),
+		RemovedAddress: removed.String(),
+	}
+}
+
+func (msg MsgDeleteAccessRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	_, err := sdk.AccAddressFromBech32(msg.RemovedAddress)
+	return err
+}
+
+func NewMsgWithdrawRequest(
+	admin sdk.AccAddress, toAddress sdk.AccAddress, denom string, amount sdk.Coins,
+) *MsgWithdrawRequest {
+	if toAddress.Empty() {
+		toAddress = admin
+	}
+	return &MsgWithdrawRequest{
+		Denom:         denom,
+		Administrator: admin.String(),
+		ToAddress:     toAddress.String(),
+		Amount:        amount,
+	}
+}
+
+func (msg MsgWithdrawRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
+		return err
+	}
+	if msg.ToAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
+			return err
+		}
+	}
+
+	return msg.Amount.Validate()
+}
+
 func NewMsgAddMarkerRequest(
 	denom string,
 	totalSupply sdkmath.Int,
@@ -69,7 +203,6 @@ func NewMsgAddMarkerRequest(
 	}
 }
 
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	// A proposed marker must have a manager assigned to allow updates to be made by the caller.
 	if len(msg.Manager) == 0 && msg.Status == StatusProposed {
@@ -104,159 +237,6 @@ func (msg MsgAddMarkerRequest) ValidateBasic() error {
 	return nil
 }
 
-// NewAddAccessRequest
-func NewMsgAddAccessRequest(denom string, admin sdk.AccAddress, access AccessGrant) *MsgAddAccessRequest {
-	return &MsgAddAccessRequest{
-		Denom:         denom,
-		Administrator: admin.String(),
-		Access:        []AccessGrant{access},
-	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgAddAccessRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return err
-	}
-	return ValidateGrants(msg.Access...)
-}
-
-// NewDeleteAccessRequest
-func NewDeleteAccessRequest(denom string, admin sdk.AccAddress, removed sdk.AccAddress) *MsgDeleteAccessRequest {
-	return &MsgDeleteAccessRequest{
-		Denom:          denom,
-		Administrator:  admin.String(),
-		RemovedAddress: removed.String(),
-	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgDeleteAccessRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return err
-	}
-	_, err := sdk.AccAddressFromBech32(msg.RemovedAddress)
-	return err
-}
-
-// NewMsgFinalizeRequest
-func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest {
-	return &MsgFinalizeRequest{
-		Denom:         denom,
-		Administrator: admin.String(),
-	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgFinalizeRequest) ValidateBasic() error {
-	return sdk.ValidateDenom(msg.Denom)
-}
-
-// NewMsgActivateRequest
-func NewMsgActivateRequest(denom string, admin sdk.AccAddress) *MsgActivateRequest {
-	return &MsgActivateRequest{
-		Denom:         denom,
-		Administrator: admin.String(),
-	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgActivateRequest) ValidateBasic() error {
-	return sdk.ValidateDenom(msg.Denom)
-}
-
-// NewMsgCancelRequest
-func NewMsgCancelRequest(denom string, admin sdk.AccAddress) *MsgCancelRequest {
-	return &MsgCancelRequest{
-		Denom:         denom,
-		Administrator: admin.String(),
-	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgCancelRequest) ValidateBasic() error {
-	return sdk.ValidateDenom(msg.Denom)
-}
-
-// NewMsgDeleteRequest
-func NewMsgDeleteRequest(denom string, admin sdk.AccAddress) *MsgDeleteRequest {
-	return &MsgDeleteRequest{
-		Denom:         denom,
-		Administrator: admin.String(),
-	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgDeleteRequest) ValidateBasic() error {
-	return sdk.ValidateDenom(msg.Denom)
-}
-
-// NewMsgMintRequest creates a mint supply message
-func NewMsgMintRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgMintRequest {
-	return &MsgMintRequest{
-		Administrator: admin.String(),
-		Amount:        amount,
-	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgMintRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
-		return err
-	}
-	return msg.Amount.Validate()
-}
-
-// NewMsgBurnRequest creates a burn supply message
-func NewMsgBurnRequest(admin sdk.AccAddress, amount sdk.Coin) *MsgBurnRequest {
-	return &MsgBurnRequest{
-		Administrator: admin.String(),
-		Amount:        amount,
-	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgBurnRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
-		return err
-	}
-
-	return msg.Amount.Validate()
-}
-
-// NewMsgWithdrawRequest
-func NewMsgWithdrawRequest(
-	admin sdk.AccAddress, toAddress sdk.AccAddress, denom string, amount sdk.Coins,
-) *MsgWithdrawRequest {
-	if toAddress.Empty() {
-		toAddress = admin
-	}
-	return &MsgWithdrawRequest{
-		Denom:         denom,
-		Administrator: admin.String(),
-		ToAddress:     toAddress.String(),
-		Amount:        amount,
-	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgWithdrawRequest) ValidateBasic() error {
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return err
-	}
-	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
-		return err
-	}
-	if msg.ToAddress != "" {
-		if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
-			return err
-		}
-	}
-
-	return msg.Amount.Validate()
-}
-
-// NewMsgTransferRequest
 func NewMsgTransferRequest(
 	admin, fromAddress, toAddress sdk.AccAddress, amount sdk.Coin,
 ) *MsgTransferRequest {
@@ -268,7 +248,6 @@ func NewMsgTransferRequest(
 	}
 }
 
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgTransferRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Administrator); err != nil {
 		return err
@@ -282,8 +261,7 @@ func (msg MsgTransferRequest) ValidateBasic() error {
 	return msg.Amount.Validate()
 }
 
-// NewIbcMsgTransferRequest
-func NewIbcMsgTransferRequest(
+func NewMsgIbcTransferRequest(
 	administrator string,
 	sourcePort,
 	sourceChannel string,
@@ -317,7 +295,6 @@ func (msg MsgIbcTransferRequest) ValidateBasic() error {
 	return msg.Transfer.ValidateBasic()
 }
 
-// NewSetDenomMetadataRequest  creates a new marker in a proposed state with a given total supply a denomination
 func NewSetDenomMetadataRequest(
 	metadata banktypes.Metadata, admin sdk.AccAddress,
 ) *MsgSetDenomMetadataRequest {
@@ -327,7 +304,6 @@ func NewSetDenomMetadataRequest(
 	}
 }
 
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
 	if len(msg.Administrator) == 0 {
 		return errors.New("invalid set denom metadata request: administrator cannot be empty")
@@ -341,17 +317,6 @@ func (msg MsgSetDenomMetadataRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetFeeAllowanceI returns unpacked FeeAllowance
-func (msg MsgGrantAllowanceRequest) GetFeeAllowanceI() (feegranttypes.FeeAllowanceI, error) {
-	allowance, ok := msg.Allowance.GetCachedValue().(feegranttypes.FeeAllowanceI)
-	if !ok {
-		return nil, feegranttypes.ErrNoAllowance.Wrap("failed to get allowance")
-	}
-
-	return allowance, nil
-}
-
-// NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
 func NewMsgGrantAllowance(
 	denom string, admin sdk.AccAddress, grantee sdk.AccAddress, allowance feegranttypes.FeeAllowanceI,
 ) (*MsgGrantAllowanceRequest, error) {
@@ -372,13 +337,6 @@ func NewMsgGrantAllowance(
 	}, nil
 }
 
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgGrantAllowanceRequest) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var allowance feegranttypes.FeeAllowanceI
-	return unpacker.UnpackAny(msg.Allowance, &allowance)
-}
-
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	if msg.Denom == "" {
 		return sdkerrors.ErrInvalidRequest.Wrap("missing marker denom")
@@ -398,7 +356,22 @@ func (msg MsgGrantAllowanceRequest) ValidateBasic() error {
 	return allowance.ValidateBasic()
 }
 
-// NewMsgAddFinalizeActivateMarkerRequest creates a new MsgAddFinalizeActivateMarkerRequest.
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces for this MsgGrantAllowanceRequest.
+func (msg MsgGrantAllowanceRequest) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var allowance feegranttypes.FeeAllowanceI
+	return unpacker.UnpackAny(msg.Allowance, &allowance)
+}
+
+// GetFeeAllowanceI returns the unpacked FeeAllowance.
+func (msg MsgGrantAllowanceRequest) GetFeeAllowanceI() (feegranttypes.FeeAllowanceI, error) {
+	allowance, ok := msg.Allowance.GetCachedValue().(feegranttypes.FeeAllowanceI)
+	if !ok {
+		return nil, feegranttypes.ErrNoAllowance.Wrap("failed to get allowance")
+	}
+
+	return allowance, nil
+}
+
 func NewMsgAddFinalizeActivateMarkerRequest(
 	denom string,
 	totalSupply sdkmath.Int,
@@ -428,10 +401,6 @@ func NewMsgAddFinalizeActivateMarkerRequest(
 	}
 }
 
-// Route returns the name of the module.
-func (msg MsgAddFinalizeActivateMarkerRequest) Route() string { return ModuleName }
-
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 	markerCoin := sdk.Coin{
 		Denom:  msg.Amount.Denom,
@@ -463,12 +432,6 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes encodes the message for signing.
-func (msg MsgAddFinalizeActivateMarkerRequest) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
-}
-
 func NewMsgSupplyIncreaseProposalRequest(amount sdk.Coin, targetAddress string, authority string) *MsgSupplyIncreaseProposalRequest {
 	return &MsgSupplyIncreaseProposalRequest{
 		Amount:        amount,
@@ -496,7 +459,6 @@ func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgUpdateRequiredAttributesRequest creates a MsgUpdateRequiredAttributesRequest
 func NewMsgUpdateRequiredAttributesRequest(denom string, transferAuthority sdk.AccAddress, removeRequiredAttributes, addRequiredAttributes []string) *MsgUpdateRequiredAttributesRequest {
 	return &MsgUpdateRequiredAttributesRequest{
 		Denom:                    denom,
@@ -547,6 +509,14 @@ func (msg MsgUpdateForcedTransferRequest) ValidateBasic() error {
 	return nil
 }
 
+func NewMsgSetAccountDataRequest(denom, value string, signer sdk.AccAddress) *MsgSetAccountDataRequest {
+	return &MsgSetAccountDataRequest{
+		Denom:  denom,
+		Value:  value,
+		Signer: signer.String(),
+	}
+}
+
 func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Signer); err != nil {
 		return fmt.Errorf("invalid signer: %w", err)
@@ -557,7 +527,6 @@ func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 	return sdk.ValidateDenom(msg.Denom)
 }
 
-// NewMsgUpdateSendDenyListRequest creates a NewMsgUpdateSendDenyListRequest
 func NewMsgUpdateSendDenyListRequest(denom string, authority sdk.AccAddress, removeDenyAddresses, addDenyAddresses []string) *MsgUpdateSendDenyListRequest {
 	return &MsgUpdateSendDenyListRequest{
 		Denom:                 denom,
