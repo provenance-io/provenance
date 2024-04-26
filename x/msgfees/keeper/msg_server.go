@@ -50,18 +50,7 @@ func (m msgServer) AddMsgFeeProposal(goCtx context.Context, req *types.MsgAddMsg
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	prop := types.AddMsgFeeProposal{
-		Title:                "AddMsgFeeProposal",
-		Description:          "AddMsgFeeProposal",
-		MsgTypeUrl:           req.MsgTypeUrl,
-		AdditionalFee:        req.AdditionalFee,
-		Recipient:            req.Recipient,
-		RecipientBasisPoints: req.RecipientBasisPoints,
-	}
-
-	err := HandleAddMsgFeeProposal(ctx, m.Keeper, &prop, m.registry)
+	err := m.Keeper.AddMsgFee(sdk.UnwrapSDKContext(goCtx), req.MsgTypeUrl, req.Recipient, req.RecipientBasisPoints, req.AdditionalFee)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +63,7 @@ func (m msgServer) UpdateMsgFeeProposal(goCtx context.Context, req *types.MsgUpd
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
 	}
 
-	err := m.Keeper.UpdateMsgFee(sdk.UnwrapSDKContext(goCtx), req.Recipient, req.RecipientBasisPoints, req.MsgTypeUrl, req.AdditionalFee)
+	err := m.Keeper.UpdateMsgFee(sdk.UnwrapSDKContext(goCtx), req.MsgTypeUrl, req.Recipient, req.RecipientBasisPoints, req.AdditionalFee)
 	if err != nil {
 		return nil, err
 	}

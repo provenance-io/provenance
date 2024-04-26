@@ -2,17 +2,13 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
@@ -57,90 +53,8 @@ For add, update, and removal of msg fees amount and min fee and/or rate fee must
 $ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash --recipient=pb... --bips=5000
 $ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
 `, version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			proposalType := args[0]
-
-			msgType, err := cmd.Flags().GetString(FlagMsgType)
-			if err != nil {
-				return err
-			}
-
-			_, err = clientCtx.InterfaceRegistry.Resolve(msgType)
-			if err != nil {
-				return err
-			}
-
-			recipient, err := cmd.Flags().GetString(FlagRecipient)
-			if err != nil {
-				return err
-			}
-
-			bips, err := cmd.Flags().GetString(FlagBips)
-			if err != nil {
-				return err
-			}
-
-			var addFee sdk.Coin
-			if proposalType != "remove" {
-				additionalFee, errMinFee := cmd.Flags().GetString(FlagMinFee)
-				if errMinFee != nil {
-					return err
-				}
-				if additionalFee != "" {
-					addFee, err = sdk.ParseCoinNormalized(additionalFee)
-					if err != nil {
-						return err
-					}
-				}
-			}
-
-			var proposal govtypesv1beta1.Content
-
-			switch args[0] {
-			case "add":
-				proposal = &types.AddMsgFeeProposal{
-					Title:                args[1],
-					Description:          args[2],
-					MsgTypeUrl:           msgType,
-					AdditionalFee:        addFee,
-					Recipient:            recipient,
-					RecipientBasisPoints: bips,
-				}
-			case "update":
-				proposal = &types.UpdateMsgFeeProposal{
-					Title:                args[1],
-					Description:          args[2],
-					MsgTypeUrl:           msgType,
-					AdditionalFee:        addFee,
-					Recipient:            recipient,
-					RecipientBasisPoints: bips,
-				}
-			case "remove":
-				proposal = &types.RemoveMsgFeeProposal{
-					Title:       args[1],
-					Description: args[2],
-					MsgTypeUrl:  msgType,
-				}
-			default:
-				return fmt.Errorf("unknown proposal type %q", args[0])
-			}
-
-			deposit, err := sdk.ParseCoinsNormalized(args[3])
-			if err != nil {
-				return err
-			}
-
-			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
-			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %w", err)
-			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -163,27 +77,8 @@ The nhash per usd mil is the number of nhash that will be multiplied by the usd 
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"  1234 1000000000nhash
 $ %[1]s tx msgfees npum "updating nhash to usd mil" "changes the nhash per mil to 1234nhash" 1234 1000000000nhash
 `, version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			title, description, nhash, depositArg := args[0], args[1], args[2], args[3]
-			rate, err := strconv.ParseUint(nhash, 0, 64)
-			if err != nil {
-				return fmt.Errorf("unable to parse nhash value: %s", nhash)
-			}
-			proposal := types.NewUpdateNhashPerUsdMilProposal(title, description, rate)
-			deposit, err := sdk.ParseCoinsNormalized(depositArg)
-			if err != nil {
-				return err
-			}
-			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
-			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %w", err)
-			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -201,23 +96,8 @@ The custom fee denom is the denom that usd will be converted to for fees with us
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees conversion-fee-denom "updating conversion fee denom" "changes the conversion fee denom to customcoin"  customcoin 1000000000nhash
 $ %[1]s tx msgfees cfd "updating conversion fee denom" "changes the conversion fee denom to customcoin"  customcoin 1000000000nhash
 `, version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			title, description, customCoin, depositArg := args[0], args[1], args[2], args[3]
-			proposal := types.NewUpdateConversionFeeDenomProposal(title, description, customCoin)
-			deposit, err := sdk.ParseCoinsNormalized(depositArg)
-			if err != nil {
-				return err
-			}
-			callerAddr := clientCtx.GetFromAddress()
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(proposal, deposit, callerAddr)
-			if err != nil {
-				return fmt.Errorf("invalid governance proposal. Error: %w", err)
-			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
