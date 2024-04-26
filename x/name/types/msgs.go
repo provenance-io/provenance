@@ -16,7 +16,6 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateRootNameRequest)(nil),
 }
 
-// NewMsgBindNameRequest creates a new bind name request
 func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
 	return &MsgBindNameRequest{
 		Parent: parent,
@@ -24,7 +23,6 @@ func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
 	}
 }
 
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgBindNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Parent.Name) == "" {
 		return fmt.Errorf("parent name cannot be empty")
@@ -44,14 +42,12 @@ func (msg MsgBindNameRequest) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgDeleteNameRequest creates a new Delete Name Request
 func NewMsgDeleteNameRequest(record NameRecord) *MsgDeleteNameRequest {
 	return &MsgDeleteNameRequest{
 		Record: record,
 	}
 }
 
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Record.Name) == "" {
 		return fmt.Errorf("name cannot be empty")
@@ -62,38 +58,11 @@ func (msg MsgDeleteNameRequest) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgCreateRootNameRequest creates a new Create Root Name Request
-func NewMsgCreateRootNameRequest(authority string, name string, address string, restricted bool) *MsgCreateRootNameRequest {
-	return &MsgCreateRootNameRequest{
-		Authority: authority,
-		Record: &NameRecord{
-			Name:       name,
-			Address:    address,
-			Restricted: restricted,
-		},
-	}
-}
-
-// NewMsgModifyNameRequest modifies an existing name record
 func NewMsgModifyNameRequest(authority string, name string, owner sdk.AccAddress, restricted bool) *MsgModifyNameRequest {
 	return &MsgModifyNameRequest{
 		Authority: authority,
 		Record:    NewNameRecord(name, owner, restricted),
 	}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
-func (msg MsgCreateRootNameRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return ErrInvalidAddress
-	}
-
-	err := msg.Record.Validate()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (msg MsgModifyNameRequest) ValidateBasic() error {
@@ -106,5 +75,29 @@ func (msg MsgModifyNameRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.GetAuthority()) == "" {
 		return govtypes.ErrInvalidSigner
 	}
+	return nil
+}
+
+func NewMsgCreateRootNameRequest(authority string, name string, address string, restricted bool) *MsgCreateRootNameRequest {
+	return &MsgCreateRootNameRequest{
+		Authority: authority,
+		Record: &NameRecord{
+			Name:       name,
+			Address:    address,
+			Restricted: restricted,
+		},
+	}
+}
+
+func (msg MsgCreateRootNameRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return ErrInvalidAddress
+	}
+
+	err := msg.Record.Validate()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
