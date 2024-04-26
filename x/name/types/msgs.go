@@ -116,7 +116,7 @@ func (msg MsgCreateRootNameRequest) ValidateBasic() error {
 
 // GetSigners Implements Msg.
 func (msg MsgCreateRootNameRequest) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
+	fromAddress := sdk.MustAccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{fromAddress}
 }
 
