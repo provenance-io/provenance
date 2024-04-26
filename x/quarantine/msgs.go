@@ -35,7 +35,7 @@ func (msg MsgOptIn) ValidateBasic() error {
 
 // GetSigners returns the addresses of required signers of this Msg.
 func (msg MsgOptIn) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.ToAddress)
+	addr := sdk.MustAccAddressFromBech32(msg.ToAddress)
 	return []sdk.AccAddress{addr}
 }
 
@@ -56,7 +56,7 @@ func (msg MsgOptOut) ValidateBasic() error {
 
 // GetSigners returns the addresses of required signers of this Msg.
 func (msg MsgOptOut) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.ToAddress)
+	addr := sdk.MustAccAddressFromBech32(msg.ToAddress)
 	return []sdk.AccAddress{addr}
 }
 
@@ -87,7 +87,7 @@ func (msg MsgAccept) ValidateBasic() error {
 
 // GetSigners returns the addresses of required signers of this Msg.
 func (msg MsgAccept) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.ToAddress)
+	addr := sdk.MustAccAddressFromBech32(msg.ToAddress)
 	return []sdk.AccAddress{addr}
 }
 
@@ -118,7 +118,7 @@ func (msg MsgDecline) ValidateBasic() error {
 
 // GetSigners returns the addresses of required signers of this Msg.
 func (msg MsgDecline) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.ToAddress)
+	addr := sdk.MustAccAddressFromBech32(msg.ToAddress)
 	return []sdk.AccAddress{addr}
 }
 
@@ -148,6 +148,6 @@ func (msg MsgUpdateAutoResponses) ValidateBasic() error {
 
 // GetSigners returns the addresses of required signers of this Msg.
 func (msg MsgUpdateAutoResponses) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.ToAddress)
+	addr := sdk.MustAccAddressFromBech32(msg.ToAddress)
 	return []sdk.AccAddress{addr}
 }
