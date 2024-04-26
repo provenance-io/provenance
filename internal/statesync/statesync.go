@@ -1,23 +1,23 @@
 package statesync
 
 import (
-	cmtrpccore "github.com/cometbft/cometbft/rpc/core"       // TODO[1760]: sync-info
-	server "github.com/cometbft/cometbft/rpc/jsonrpc/server" // TODO[1760]: sync-info
+	cmtrpccore "github.com/cometbft/cometbft/rpc/core"
+	server "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	cmtrpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-func RegisterSyncStatus(env cmtrpccore.Environment) {
-	routes := env.GetRoutes()
-	routes["sync_info"] = server.NewRPCFunc(GetSyncInfoAtBlock, "height")
+type ProvenanceEnvironment struct {
+	cmtrpccore.Environment
 }
 
-func GetSyncInfoAtBlock(ctx *cmtrpctypes.Context, height *int64) (*GetSyncInfo, error) {
-	// TODO[1760]: sync-info: Figure out the new way to get the current block.
-	// How do we get env?
-	var env cmtrpccore.Environment
+func RegisterSyncStatus(env cmtrpccore.Environment) {
+	routes := env.GetRoutes()
+	routes["sync_info"] = server.NewRPCFunc(env.Header, "height")
+}
 
+func (env *ProvenanceEnvironment) GetSyncInfoAtBlock(ctx *cmtrpctypes.Context, height *int64) (*GetSyncInfo, error) {
 	block, err := env.Block(ctx, height)
 	if err != nil {
 		return nil, err
