@@ -38,23 +38,15 @@ message ScopeSpecification {
   option (gogoproto.goproto_stringer) = false;
 
   // unique identifier for this specification on chain
-  bytes specification_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"specification_id\""
-  ];
+  bytes specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // General information about this scope specification.
   Description description = 2;
   // Addresses of the owners of this scope specification.
-  repeated string owner_addresses = 3 [(gogoproto.moretags) = "yaml:\"owner_addresses\""];
+  repeated string owner_addresses = 3;
   // A list of parties that must be present on a scope (and their associated roles)
-  repeated PartyType parties_involved = 4 [(gogoproto.moretags) = "yaml:\"parties_involved\""];
+  repeated PartyType parties_involved = 4;
   // A list of contract specification ids allowed for a scope based on this specification.
-  repeated bytes contract_spec_ids = 5 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"contract_spec_ids\""
-  ];
+  repeated bytes contract_spec_ids = 5 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
 }
 
 // ContractSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
@@ -62,30 +54,23 @@ message ContractSpecification {
   option (gogoproto.goproto_stringer) = false;
 
   // unique identifier for this specification on chain
-  bytes specification_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"specification_id\""
-  ];
+  bytes specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // Description information for this contract specification
   Description description = 2;
   // Address of the account that owns this specificaiton
-  repeated string owner_addresses = 3 [(gogoproto.moretags) = "yaml:\"owner_addresses\""];
+  repeated string owner_addresses = 3;
   // a list of party roles that must be fullfilled when signing a transaction for this contract specification
-  repeated PartyType parties_involved = 4 [(gogoproto.moretags) = "yaml:\"parties_involved\""];
+  repeated PartyType parties_involved = 4;
   // Reference to a metadata record with a hash and type information for the instance of code that will process this
   // contract
   oneof source {
     // the address of a record on chain that represents this contract
-    bytes resource_id = 5 [
-      (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress",
-      (gogoproto.moretags) = "yaml:\"resource_id\""
-    ];
+    bytes resource_id = 5 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     // the hash of contract binary (off-chain instance)
     string hash = 6;
   }
   // name of the class/type of this contract executable
-  string class_name = 7 [(gogoproto.moretags) = "yaml:\"class_name\""];
+  string class_name = 7;
 }
 
 // RecordSpecification defines the specification for a Record including allowed/required inputs/outputs
@@ -93,21 +78,17 @@ message RecordSpecification {
   option (gogoproto.goproto_stringer) = false;
 
   // unique identifier for this specification on chain
-  bytes specification_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"specification_id\""
-  ];
+  bytes specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // Name of Record that will be created when this specification is used
   string name = 2;
   // A set of inputs that must be satisified to apply this RecordSpecification and create a Record
   repeated InputSpecification inputs = 3;
   // A type name for data associated with this record (typically a class or proto name)
-  string type_name = 4 [(gogoproto.moretags) = "yaml:\"type_name\""];
+  string type_name = 4;
   // Type of result for this record specification (must be RECORD or RECORD_LIST)
-  DefinitionType result_type = 5 [(gogoproto.moretags) = "yaml:\"result_type\""];
+  DefinitionType result_type = 5;
   // Type of party responsible for this record
-  repeated PartyType responsible_parties = 6 [(gogoproto.moretags) = "yaml:\"responsible_parties\""];
+  repeated PartyType responsible_parties = 6;
 }
 
 // InputSpecification defines a name, type_name, and source reference (either on or off chain) to define an input
@@ -118,11 +99,11 @@ message InputSpecification {
   // name for this input
   string name = 1;
   // a type_name (typically a proto name or class_name)
-  string type_name = 2 [(gogoproto.moretags) = "yaml:\"type_name\""];
+  string type_name = 2;
   // source is either on chain (record_id) or off-chain (hash)
   oneof source {
     // the address of a record on chain (For Established Records)
-    bytes record_id = 3 [(gogoproto.customtype) = "MetadataAddress", (gogoproto.moretags) = "yaml:\"record_id\""];
+    bytes record_id = 3 [(gogoproto.customtype) = "MetadataAddress"];
     // the hash of an off-chain piece of information (For Proposed Records)
     string hash = 4;
   }
@@ -137,9 +118,9 @@ message Description {
   // A description of this thing.
   string description = 3;
   // URL to find even more info.
-  string website_url = 4 [(gogoproto.moretags) = "yaml:\"website_url\""];
+  string website_url = 4;
   // URL of an icon.
-  string icon_url = 5 [(gogoproto.moretags) = "yaml:\"icon_url\""];
+  string icon_url = 5;
 }
 
 // DefinitionType indicates the required definition type for this value

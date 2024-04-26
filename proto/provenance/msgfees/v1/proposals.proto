@@ -24,11 +24,8 @@ message AddMsgFeeProposal {
   string msg_type_url = 3;
 
   // additional fee for msg type
-  cosmos.base.v1beta1.Coin additional_fee = 4 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"additional_fee\""
-  ];
+  cosmos.base.v1beta1.Coin additional_fee = 4
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // optional recipient to recieve basis points
   string recipient = 5;

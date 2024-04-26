@@ -17,115 +17,91 @@ message Params {
 // ScopeIdInfo contains various info regarding a scope id.
 message ScopeIdInfo {
   // scope_id is the raw bytes of the scope address.
-  bytes scope_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"scope_id\""
-  ];
+  bytes scope_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // scope_id_prefix is the prefix portion of the scope_id.
-  bytes scope_id_prefix = 2 [(gogoproto.moretags) = "yaml:\"scope_id_prefix\""];
+  bytes scope_id_prefix = 2;
   // scope_id_scope_uuid is the scope_uuid portion of the scope_id.
-  bytes scope_id_scope_uuid = 3 [(gogoproto.moretags) = "yaml:\"scope_id_scope_uuid\""];
+  bytes scope_id_scope_uuid = 3;
   // scope_addr is the bech32 string version of the scope_id.
-  string scope_addr = 4 [(gogoproto.moretags) = "yaml:\"scope_addr\""];
+  string scope_addr = 4;
   // scope_uuid is the uuid hex string of the scope_id_scope_uuid.
-  string scope_uuid = 5 [(gogoproto.moretags) = "yaml:\"scope_uuid\""];
+  string scope_uuid = 5;
 }
 
 // SessionIdInfo contains various info regarding a session id.
 message SessionIdInfo {
   // session_id is the raw bytes of the session address.
-  bytes session_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"session_id\""
-  ];
+  bytes session_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // session_id_prefix is the prefix portion of the session_id.
-  bytes session_id_prefix = 2 [(gogoproto.moretags) = "yaml:\"session_id_prefix\""];
+  bytes session_id_prefix = 2;
   // session_id_scope_uuid is the scope_uuid portion of the session_id.
-  bytes session_id_scope_uuid = 3 [(gogoproto.moretags) = "yaml:\"session_id_scope_uuid\""];
+  bytes session_id_scope_uuid = 3;
   // session_id_session_uuid is the session_uuid portion of the session_id.
-  bytes session_id_session_uuid = 4 [(gogoproto.moretags) = "yaml:\"session_id_session_uuid\""];
+  bytes session_id_session_uuid = 4;
   // session_addr is the bech32 string version of the session_id.
-  string session_addr = 5 [(gogoproto.moretags) = "yaml:\"session_addr\""];
+  string session_addr = 5;
   // session_uuid is the uuid hex string of the session_id_session_uuid.
-  string session_uuid = 6 [(gogoproto.moretags) = "yaml:\"session_uuid\""];
+  string session_uuid = 6;
   // scope_id_info is information about the scope id referenced in the session_id.
-  ScopeIdInfo scope_id_info = 7 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+  ScopeIdInfo scope_id_info = 7;
 }
 
 // RecordIdInfo contains various info regarding a record id.
 message RecordIdInfo {
   // record_id is the raw bytes of the record address.
-  bytes record_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"record_id\""
-  ];
+  bytes record_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // record_id_prefix is the prefix portion of the record_id.
-  bytes record_id_prefix = 2 [(gogoproto.moretags) = "yaml:\"record_id_prefix\""];
+  bytes record_id_prefix = 2;
   // record_id_scope_uuid is the scope_uuid portion of the record_id.
-  bytes record_id_scope_uuid = 3 [(gogoproto.moretags) = "yaml:\"record_id_scope_uuid\""];
+  bytes record_id_scope_uuid = 3;
   // record_id_hashed_name is the hashed name portion of the record_id.
-  bytes record_id_hashed_name = 4 [(gogoproto.moretags) = "yaml:\"record_id_hashed_name\""];
+  bytes record_id_hashed_name = 4;
   // record_addr is the bech32 string version of the record_id.
-  string record_addr = 5 [(gogoproto.moretags) = "yaml:\"record_addr\""];
+  string record_addr = 5;
   // scope_id_info is information about the scope id referenced in the record_id.
-  ScopeIdInfo scope_id_info = 6 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+  ScopeIdInfo scope_id_info = 6;
 }
 
 // ScopeSpecIdInfo contains various info regarding a scope specification id.
 message ScopeSpecIdInfo {
   // scope_spec_id is the raw bytes of the scope specification address.
-  bytes scope_spec_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"scope_spec_id\""
-  ];
+  bytes scope_spec_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // scope_spec_id_prefix is the prefix portion of the scope_spec_id.
-  bytes scope_spec_id_prefix = 2 [(gogoproto.moretags) = "yaml:\"scope_spec_id_prefix\""];
+  bytes scope_spec_id_prefix = 2;
   // scope_spec_id_scope_spec_uuid is the scope_spec_uuid portion of the scope_spec_id.
-  bytes scope_spec_id_scope_spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"scope_spec_id_scope_spec_uuid\""];
+  bytes scope_spec_id_scope_spec_uuid = 3;
   // scope_spec_addr is the bech32 string version of the scope_spec_id.
-  string scope_spec_addr = 4 [(gogoproto.moretags) = "yaml:\"scope_spec_addr\""];
+  string scope_spec_addr = 4;
   // scope_spec_uuid is the uuid hex string of the scope_spec_id_scope_spec_uuid.
-  string scope_spec_uuid = 5 [(gogoproto.moretags) = "yaml:\"scope_spec_uuid\""];
+  string scope_spec_uuid = 5;
 }
 
 // ContractSpecIdInfo contains various info regarding a contract specification id.
 message ContractSpecIdInfo {
   // contract_spec_id is the raw bytes of the contract specification address.
-  bytes contract_spec_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"contract_spec_id\""
-  ];
+  bytes contract_spec_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // contract_spec_id_prefix is the prefix portion of the contract_spec_id.
-  bytes contract_spec_id_prefix = 2 [(gogoproto.moretags) = "yaml:\"contract_spec_id_prefix\""];
+  bytes contract_spec_id_prefix = 2;
   // contract_spec_id_contract_spec_uuid is the contract_spec_uuid portion of the contract_spec_id.
-  bytes contract_spec_id_contract_spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"contract_spec_id_contract_spec_uuid\""];
+  bytes contract_spec_id_contract_spec_uuid = 3;
   // contract_spec_addr is the bech32 string version of the contract_spec_id.
-  string contract_spec_addr = 4 [(gogoproto.moretags) = "yaml:\"contract_spec_addr\""];
+  string contract_spec_addr = 4;
   // contract_spec_uuid is the uuid hex string of the contract_spec_id_contract_spec_uuid.
-  string contract_spec_uuid = 5 [(gogoproto.moretags) = "yaml:\"contract_spec_uuid\""];
+  string contract_spec_uuid = 5;
 }
 
 // RecordSpecIdInfo contains various info regarding a record specification id.
 message RecordSpecIdInfo {
   // record_spec_id is the raw bytes of the record specification address.
-  bytes record_spec_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"record_spec_id\""
-  ];
+  bytes record_spec_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // record_spec_id_prefix is the prefix portion of the record_spec_id.
-  bytes record_spec_id_prefix = 2 [(gogoproto.moretags) = "yaml:\"record_spec_id_prefix\""];
+  bytes record_spec_id_prefix = 2;
   // record_spec_id_contract_spec_uuid is the contract_spec_uuid portion of the record_spec_id.
-  bytes record_spec_id_contract_spec_uuid = 3 [(gogoproto.moretags) = "yaml:\"record_spec_id_contract_spec_uuid\""];
+  bytes record_spec_id_contract_spec_uuid = 3;
   // record_spec_id_hashed_name is the hashed name portion of the record_spec_id.
-  bytes record_spec_id_hashed_name = 4 [(gogoproto.moretags) = "yaml:\"record_spec_id_hashed_name\""];
+  bytes record_spec_id_hashed_name = 4;
   // record_spec_addr is the bech32 string version of the record_spec_id.
-  string record_spec_addr = 5 [(gogoproto.moretags) = "yaml:\"record_spec_addr\""];
+  string record_spec_addr = 5;
   // contract_spec_id_info is information about the contract spec id referenced in the record_spec_id.
-  ContractSpecIdInfo contract_spec_id_info = 6 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
+  ContractSpecIdInfo contract_spec_id_info = 6;
 }

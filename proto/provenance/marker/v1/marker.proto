@@ -24,11 +24,7 @@ message Params {
   // requests are only subject to platform coin validation denom expression)
   string unrestricted_denom_regex = 3;
   // maximum amount of supply to allow a marker to be created with
-  string max_supply = 4 [
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (gogoproto.moretags)   = "json:\"max_supply\" yaml:\"max_supply\""
-  ];
+  string max_supply = 4 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
 }
 
 // MarkerAccount holds the marker configuration information in addition to a base account structure.
@@ -38,11 +34,10 @@ message MarkerAccount {
   option (cosmos_proto.implements_interface) = "MarkerAccountI";
 
   // base cosmos account information including address and coin holdings.
-  cosmos.auth.v1beta1.BaseAccount base_account = 1
-      [(gogoproto.embed) = true, (gogoproto.moretags) = "yaml:\"base_account\""];
+  cosmos.auth.v1beta1.BaseAccount base_account = 1 [(gogoproto.embed) = true];
   // Address that owns the marker configuration.  This account must sign any requests
   // to change marker config (only valid for statuses prior to finalization)
-  string manager = 2 [(gogoproto.moretags) = "json:\"manager,omitempty\""];
+  string manager = 2;
   // Access control lists
   repeated AccessGrant access_control = 3 [(gogoproto.nullable) = false];
   // Indicates the current status of this marker record.
@@ -50,13 +45,9 @@ message MarkerAccount {
   // value denomination and total supply for the token.
   string denom = 5;
   // the total supply expected for a marker.  This is the amount that is minted when a marker is created.
-  string supply = 6 [
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false,
-    (gogoproto.moretags)   = "json:\"total_supply\" yaml:\"total_supply\""
-  ];
+  string supply = 6 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
   // Marker type information
-  MarkerType marker_type = 7 [(gogoproto.moretags) = "json:\"marker_type,omitempty\""];
+  MarkerType marker_type = 7;
   // A fixed supply will mint additional coin automatically if the total supply decreases below a set value.  This
   // may occur if the coin is burned or an account holding the coin is slashed. (default: true)
   bool supply_fixed = 8;
