@@ -24,7 +24,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.12
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
-	github.com/cosmos/ibc-go/v8 v8.2.0
+	github.com/cosmos/ibc-go/v8 v8.2.1
 	// github.com/cosmos/rosetta v0.50.2 // TODO[1760]: rosetta
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/protobuf v1.5.4
