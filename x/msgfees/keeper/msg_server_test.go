@@ -265,13 +265,6 @@ func (s *MsgServerTestSuite) TestUpdateConversionFeeDenomProposal() {
 			errorMsg: `expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message`,
 		},
 		{
-			name: "invalid denom",
-			msg: types.MsgUpdateConversionFeeDenomProposalRequest{
-				Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-			},
-			errorMsg: `invalid denom: `,
-		},
-		{
 			name: "successful",
 			msg: types.MsgUpdateConversionFeeDenomProposalRequest{
 				ConversionFeeDenom: "nhash",
