@@ -20,6 +20,7 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -428,23 +429,23 @@ func (s *TestSuite) TestAddMsgFee() {
 		s.Run(tc.name, func() {
 			err := s.app.MsgFeesKeeper.AddMsgFee(s.ctx, tc.msgTypeURL, tc.recipient, tc.basisPoints, tc.additionalFee)
 			if tc.expectError {
-				s.Require().Error(err)
+				s.Require().Error(err, "test was expected to fail")
 				s.Require().Contains(err.Error(), tc.errorMsg)
 			} else {
-				s.Require().NoError(err)
+				s.Require().NoError(err, "test was expected succeed")
 				msgFee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, tc.msgTypeURL)
-				s.Require().NoError(err)
-				s.Require().NotNil(msgFee)
-				s.Require().Equal(msgFee.MsgTypeUrl, tc.msgTypeURL)
-				s.Require().Equal(msgFee.AdditionalFee, tc.additionalFee)
-				s.Require().Equal(msgFee.Recipient, tc.recipient)
+				s.Require().NoError(err, "GetMsgFee() should not error")
+				s.Require().NotNil(msgFee, "GetMsgFee() should have result")
+				s.Require().Equal(msgFee.MsgTypeUrl, tc.msgTypeURL, "msg type mis-match")
+				s.Require().Equal(msgFee.AdditionalFee, tc.additionalFee, "additional fee mis-match")
+				s.Require().Equal(msgFee.Recipient, tc.recipient, "recipient mis-match")
 			}
 		})
 	}
 }
 
 func (s *TestSuite) TestUpdateMsgFee() {
-	s.Require().NoError(s.app.MsgFeesKeeper.AddMsgFee(s.ctx, "updateTypeURL", "initialRecipient", "500", sdk.NewInt64Coin("nhash", 2000)))
+	s.Require().NoError(s.app.MsgFeesKeeper.AddMsgFee(s.ctx, "updateTypeURL", "initialRecipient", "500", sdk.NewInt64Coin("nhash", 2000)), "AddMsgFee() failed test setup")
 
 	testCases := []struct {
 		name          string
@@ -487,17 +488,70 @@ func (s *TestSuite) TestUpdateMsgFee() {
 		s.Run(tc.name, func() {
 			err := s.app.MsgFeesKeeper.UpdateMsgFee(s.ctx, tc.msgTypeURL, tc.recipient, tc.basisPoints, tc.additionalFee)
 			if tc.expectError {
+				s.Require().Error(err, "test was expected to fail")
+				s.Require().Contains(err.Error(), tc.errorMsg)
+			} else {
+				s.Require().NoError(err, "test was expected succeed")
+				msgFee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, tc.msgTypeURL)
+				s.Require().NoError(err, "GetMsgFee() should not error")
+				s.Require().NotNil(msgFee, "GetMsgFee() should have result")
+				s.Require().Equal(msgFee.MsgTypeUrl, tc.msgTypeURL, "msg type mis-match")
+				s.Require().Equal(msgFee.AdditionalFee, tc.additionalFee, "additional fee mis-match")
+				s.Require().Equal(msgFee.Recipient, tc.recipient, "recipient mis-match")
+				s.Require().Equal(msgFee.RecipientBasisPoints, uint32(1000), "basis points incorrect")
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestDetermineBips() {
+	testCases := []struct {
+		name                 string
+		recipient            string
+		recipientBasisPoints string
+		expectedBips         uint32
+		expectError          bool
+		errorMsg             string
+	}{
+		{
+			name:                 "valid basis points",
+			recipient:            "testRecipient",
+			recipientBasisPoints: "2500",
+			expectedBips:         2500,
+			expectError:          false,
+		},
+		{
+			name:                 "default basis points when empty",
+			recipient:            "testRecipient",
+			recipientBasisPoints: "",
+			expectedBips:         types.DefaultMsgFeeBips,
+			expectError:          false,
+		},
+		{
+			name:                 "error on invalid numeric value",
+			recipient:            "testRecipient",
+			recipientBasisPoints: "invalid",
+			expectError:          true,
+			errorMsg:             "invalid syntax",
+		},
+		{
+			name:                 "error on excessive basis points",
+			recipient:            "testRecipient",
+			recipientBasisPoints: "15000",
+			expectError:          true,
+			errorMsg:             "basis points can only be between 0 and 10,000",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			bips, err := msgfeeskeeper.DetermineBips(tc.recipient, tc.recipientBasisPoints)
+			if tc.expectError {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.errorMsg)
 			} else {
 				s.Require().NoError(err)
-				msgFee, err := s.app.MsgFeesKeeper.GetMsgFee(s.ctx, tc.msgTypeURL)
-				s.Require().NoError(err)
-				s.Require().NotNil(msgFee)
-				s.Require().Equal(msgFee.MsgTypeUrl, tc.msgTypeURL)
-				s.Require().Equal(msgFee.AdditionalFee, tc.additionalFee)
-				s.Require().Equal(msgFee.Recipient, tc.recipient)
-				s.Require().Equal(msgFee.RecipientBasisPoints, uint32(1000))
+				s.Require().Equal(tc.expectedBips, bips)
 			}
 		})
 	}
