@@ -538,17 +538,28 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	proposal := types.SupplyIncreaseProposal{
-		Amount:        msg.Amount,
-		TargetAddress: msg.TargetAddress,
-	}
-
-	// HandleSupplyIncreaseProposal performs the basic validation
-	err := HandleSupplyIncreaseProposal(ctx, k.Keeper, &proposal)
+	err := k.Keeper.SupplyIncreaseProposal(ctx, msg.Amount, msg.TargetAddress)
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.MsgSupplyIncreaseProposalResponse{}, nil
+}
+
+// DecreaseIncreaseProposal can only be called via gov proposal
+func (k msgServer) SupplyDecreaseProposal(goCtx context.Context, msg *types.MsgSupplyDecreaseProposalRequest) (*types.MsgSupplyDecreaseProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.HandleSupplyDecreaseProposal(ctx, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSupplyDecreaseProposalResponse{}, nil
 }
 
 // UpdateRequiredAttributes will only succeed if signer has transfer authority

@@ -8,10 +8,10 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-// HandleSupplyIncreaseProposal handles a SupplyIncrease governance proposal request
-func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncreaseProposal) error {
+// SupplyIncreaseProposal handles a SupplyIncrease governance proposal request
+func (k Keeper) SupplyIncreaseProposal(ctx sdk.Context, amount sdk.Coin, targetAddress string) error {
 	logger := k.Logger(ctx)
-	addr, err := types.MarkerAddress(c.Amount.Denom)
+	addr, err := types.MarkerAddress(amount.Denom)
 	if err != nil {
 		return err
 	}
@@ -20,14 +20,14 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Amount.Denom)
+		return fmt.Errorf("%s marker does not exist", amount.Denom)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Amount.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", amount.Denom)
 	}
 
 	if m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized {
-		total := m.GetSupply().Add(c.Amount)
+		total := m.GetSupply().Add(amount)
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
@@ -35,36 +35,36 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 			return err
 		}
 		k.SetMarker(ctx, m)
-		logger.Info("marker configured supply increased", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
+		logger.Info("marker configured supply increased", "marker", amount.Denom, "amount", amount.Amount.String())
 		return nil
 	} else if m.GetStatus() != types.StatusActive {
 		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
 	}
 
-	if err := k.IncreaseSupply(ctx, m, c.Amount); err != nil {
+	if err := k.IncreaseSupply(ctx, m, amount); err != nil {
 		return err
 	}
 
-	logger.Info("marker total supply increased", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
+	logger.Info("marker total supply increased", "marker", amount.Denom, "amount", amount.Amount.String())
 
 	// If a target address for minted coins is given then send them there.
-	if len(c.TargetAddress) > 0 {
-		recipient, err := sdk.AccAddressFromBech32(c.TargetAddress)
+	if len(targetAddress) > 0 {
+		recipient, err := sdk.AccAddressFromBech32(targetAddress)
 		if err != nil {
 			return err
 		}
-		if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), addr, recipient, sdk.NewCoins(c.Amount)); err != nil {
+		if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), addr, recipient, sdk.NewCoins(amount)); err != nil {
 			return err
 		}
-		logger.Info("transferred escrowed coin from marker", "marker", c.Amount.Denom, "amount", c.Amount.String(), "recipient", c.TargetAddress)
+		logger.Info("transferred escrowed coin from marker", "marker", amount.Denom, "amount", amount.String(), "recipient", targetAddress)
 	}
 
 	return nil
 }
 
 // HandleSupplyDecreaseProposal handles a SupplyDecrease governance proposal request
-func HandleSupplyDecreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyDecreaseProposal) error {
-	addr, err := types.MarkerAddress(c.Amount.Denom)
+func (k Keeper) HandleSupplyDecreaseProposal(ctx sdk.Context, amount sdk.Coin) error {
+	addr, err := types.MarkerAddress(amount.Denom)
 	if err != nil {
 		return err
 	}
@@ -73,19 +73,19 @@ func HandleSupplyDecreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyDecr
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Amount.Denom)
+		return fmt.Errorf("%s marker does not exist", amount.Denom)
 	}
 
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Amount.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", amount.Denom)
 	}
 
-	if err := k.DecreaseSupply(ctx, m, c.Amount); err != nil {
+	if err := k.DecreaseSupply(ctx, m, amount); err != nil {
 		return err
 	}
 
 	logger := k.Logger(ctx)
-	logger.Info("marker total supply reduced", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
+	logger.Info("marker total supply reduced", "marker", amount.Denom, "amount", amount.Amount.String())
 
 	return nil
 }

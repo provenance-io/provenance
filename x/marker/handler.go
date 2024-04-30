@@ -14,10 +14,6 @@ import (
 func NewProposalHandler(k keeper.Keeper) govtypesv1beta1.Handler {
 	return func(ctx sdk.Context, content govtypesv1beta1.Content) error {
 		switch c := content.(type) {
-		case *types.SupplyIncreaseProposal:
-			return keeper.HandleSupplyIncreaseProposal(ctx, k, c)
-		case *types.SupplyDecreaseProposal:
-			return keeper.HandleSupplyDecreaseProposal(ctx, k, c)
 		case *types.SetAdministratorProposal:
 			return keeper.HandleSetAdministratorProposal(ctx, k, c)
 		case *types.RemoveAdministratorProposal:
