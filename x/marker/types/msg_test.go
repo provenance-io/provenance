@@ -1066,3 +1066,64 @@ func TestMsgRemoveAdministratorProposalRequestValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgChangeStatusProposalRequestValidateBasic(t *testing.T) {
+	validAuthority := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAuthority := "invalidauth0000"
+	validDenom := "validcoin"
+	invalidDenom := "1invalid"
+
+	testCases := []struct {
+		name          string
+		denom         string
+		authority     string
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name:        "valid case",
+			denom:       validDenom,
+			authority:   validAuthority,
+			expectError: false,
+		},
+		{
+			name:          "invalid authority address",
+			denom:         validDenom,
+			authority:     invalidAuthority,
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "invalid denom",
+			denom:         invalidDenom,
+			authority:     validAuthority,
+			expectError:   true,
+			expectedError: "invalid denom: 1invalid",
+		},
+		{
+			name:          "both authority and denom are invalid",
+			denom:         invalidDenom,
+			authority:     invalidAuthority,
+			expectError:   true,
+			expectedError: "invalid denom: 1invalid",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := MsgChangeStatusProposalRequest{
+				Denom:     tc.denom,
+				Authority: tc.authority,
+			}
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}

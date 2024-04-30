@@ -805,3 +805,19 @@ func (msg MsgRemoveAdministratorProposalRequest) ValidateBasic() error {
 	}
 	return nil
 }
+
+func NewMsgChangeStatusProposalRequest(denom string, status MarkerStatus, authority string) *MsgChangeStatusProposalRequest {
+	return &MsgChangeStatusProposalRequest{
+		Denom:     denom,
+		NewStatus: status,
+		Authority: authority,
+	}
+}
+
+func (msg MsgChangeStatusProposalRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	return err
+}
