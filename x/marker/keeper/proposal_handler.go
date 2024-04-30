@@ -122,9 +122,9 @@ func (k Keeper) SetAdministratorProposal(ctx sdk.Context, denom string, accessGr
 	return nil
 }
 
-// HandleRemoveAdministratorProposal handles a RemoveAdministrator governance proposal request
-func HandleRemoveAdministratorProposal(ctx sdk.Context, k Keeper, c *types.RemoveAdministratorProposal) error {
-	addr, err := types.MarkerAddress(c.Denom)
+// RemoveAdministratorProposal handles a RemoveAdministrator governance proposal request
+func (k Keeper) RemoveAdministratorProposal(ctx sdk.Context, denom string, removedAddress []string) error {
+	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
 	}
@@ -133,12 +133,12 @@ func HandleRemoveAdministratorProposal(ctx sdk.Context, k Keeper, c *types.Remov
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Denom)
+		return fmt.Errorf("%s marker does not exist", denom)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
-	for _, a := range c.RemovedAddress {
+	for _, a := range removedAddress {
 		addr, err := sdk.AccAddressFromBech32(a)
 		if err != nil {
 			return err
@@ -155,7 +155,7 @@ func HandleRemoveAdministratorProposal(ctx sdk.Context, k Keeper, c *types.Remov
 	k.SetMarker(ctx, m)
 
 	logger := k.Logger(ctx)
-	logger.Info("marker access revoked", "marker", c.Denom, "administrator", c.RemovedAddress)
+	logger.Info("marker access revoked", "marker", denom, "administrator", removedAddress)
 
 	return nil
 }

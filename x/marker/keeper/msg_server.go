@@ -757,3 +757,19 @@ func (k msgServer) SetAdministratorProposal(goCtx context.Context, msg *types.Ms
 
 	return &types.MsgSetAdministratorProposalResponse{}, nil
 }
+
+// RemoveAdministratorProposal can only be called via gov proposal
+func (k msgServer) RemoveAdministratorProposal(goCtx context.Context, msg *types.MsgRemoveAdministratorProposalRequest) (*types.MsgRemoveAdministratorProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.RemoveAdministratorProposal(ctx, msg.Denom, msg.RemovedAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRemoveAdministratorProposalResponse{}, nil
+}
