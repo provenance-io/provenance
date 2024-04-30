@@ -17,8 +17,9 @@ option java_multiple_files = true;
 // backwards compatibility (e.g. looking up old governance proposals).
 // It is replaced by providing a MsgAddMarkerRequest in a governance proposal.
 message AddMarkerProposal {
-  option deprecated        = true;
-  option (gogoproto.equal) = true;
+  option deprecated                   = true;
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
 
   string title       = 1;
   string description = 2;
@@ -37,7 +38,7 @@ message AddMarkerProposal {
 // through minting coin and placing it within the marker or assigning it directly to an account
 message SupplyIncreaseProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string                   title       = 1;
   string                   description = 2;
@@ -50,7 +51,7 @@ message SupplyIncreaseProposal {
 // burning coin held within the marker
 message SupplyDecreaseProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string                   title       = 1;
   string                   description = 2;
@@ -62,7 +63,7 @@ message SupplyDecreaseProposal {
 // access on the marker
 message SetAdministratorProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string               title       = 1;
   string               description = 2;
@@ -74,7 +75,7 @@ message SetAdministratorProposal {
 // given address
 message RemoveAdministratorProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string          title           = 1;
   string          description     = 2;
@@ -85,7 +86,7 @@ message RemoveAdministratorProposal {
 // ChangeStatusProposal defines a governance proposal to administer a marker to change its status
 message ChangeStatusProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string       title       = 1;
   string       description = 2;
@@ -96,7 +97,7 @@ message ChangeStatusProposal {
 // WithdrawEscrowProposal defines a governance proposal to withdraw escrow coins from a marker
 message WithdrawEscrowProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string   title                           = 1;
   string   description                     = 2;
@@ -108,7 +109,7 @@ message WithdrawEscrowProposal {
 
 // SetDenomMetadataProposal defines a governance proposal to set the metadata for a denom
 message SetDenomMetadataProposal {
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
   string                       title       = 1;
   string                       description = 2;

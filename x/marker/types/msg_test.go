@@ -889,3 +889,56 @@ func TestMsgAddNetAssetValuesRequestGetSigners(t *testing.T) {
 		require.PanicsWithError(t, "decoding bech32 failed: invalid separator index -1", testFunc, "GetSigners")
 	})
 }
+
+func TestMsgSupplyDecreaseProposalRequestValidateBasic(t *testing.T) {
+	validAddress := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAddress := "invalidaddr0000"
+
+	testCases := []struct {
+		name          string
+		authority     string
+		amount        sdk.Coin
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name:          "valid input",
+			authority:     validAddress,
+			amount:        sdk.NewInt64Coin("testcoin", 100),
+			expectError:   false,
+			expectedError: "",
+		},
+		{
+			name:          "negative amount",
+			authority:     validAddress,
+			amount:        sdk.Coin{Denom: "testcoin", Amount: sdkmath.NewInt(-100)},
+			expectError:   true,
+			expectedError: "amount to decrease must be greater than zero",
+		},
+		{
+			name:          "invalid authority address",
+			authority:     invalidAddress,
+			amount:        sdk.NewInt64Coin("testcoin", 100),
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := MsgSupplyDecreaseProposalRequest{
+				Authority: tc.authority,
+				Amount:    tc.amount,
+			}
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}

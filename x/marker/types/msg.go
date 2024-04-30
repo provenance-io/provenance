@@ -38,6 +38,8 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgSetAccountDataRequest)(nil),
 	(*MsgUpdateSendDenyListRequest)(nil),
 	(*MsgAddNetAssetValuesRequest)(nil),
+
+	(*MsgSupplyDecreaseProposalRequest)(nil),
 }
 
 // NewMsgAddMarkerRequest creates a new marker in a proposed state with a given total supply a denomination
@@ -743,4 +745,22 @@ func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 func (msg *MsgAddNetAssetValuesRequest) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Administrator)
 	return []sdk.AccAddress{addr}
+}
+
+func NewMsgSupplyDecreaseProposalRequest(amount sdk.Coin, authority string) *MsgSupplyDecreaseProposalRequest {
+	return &MsgSupplyDecreaseProposalRequest{
+		Amount:    amount,
+		Authority: authority,
+	}
+}
+
+func (msg MsgSupplyDecreaseProposalRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return err
+	}
+	if msg.Amount.IsNegative() {
+		return fmt.Errorf("amount to decrease must be greater than zero")
+	}
+	return nil
 }

@@ -3,8 +3,6 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -1182,108 +1180,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 			)
 			testcli.NewCLITxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectedErr).
-				WithExpCode(tc.expectedCode).
-				Execute(s.T(), s.testnet)
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
-	testCases := []struct {
-		name         string
-		proposaltype string
-		proposal     string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
-	}{
-		{
-			"invalid proposal type",
-			"Invalid",
-			"",
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"invalid proposal json",
-			"Invalid",
-			`{"title":"test add marker","description"`,
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"mint marker proposal",
-			"IncreaseSupply",
-			fmt.Sprintf(`{"title":"test mint marker","description":"description","manager":"%s",
-			"amount":{"denom":"propcoin","amount":"10"}}`, s.testnet.Validators[0].Address.String()),
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"burn marker proposal",
-			"DecreaseSupply",
-			fmt.Sprintf(`{"title":"test burn marker","description":"description","manager":"%s",
-			"amount":{"denom":"propcoin","amount":"10"}}`, s.testnet.Validators[0].Address.String()),
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"change status marker proposal",
-			"ChangeStatus",
-			`{"title":"test change marker status","description":"description","denom":"propcoin",
-			"new_status":"MARKER_STATUS_CANCELLED"}`,
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"add admin marker proposal",
-			"SetAdministrator",
-			fmt.Sprintf(`{"title":"test add admin to marker","description":"description",
-			"denom":"propcoin","access":[{"address":"%s", "permissions": [1,2,3,4,5,6]}]}`,
-				s.testnet.Validators[0].Address.String()),
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"remove admin marker proposal",
-			"RemoveAdministrator",
-			fmt.Sprintf(`{"title":"test remove marker admin","description":"description",
-			"denom":"propcoin","removed_address":["%s"]}`,
-				s.testnet.Validators[0].Address.String()),
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"withdraw escrow marker proposal",
-			"WithdrawEscrow",
-			fmt.Sprintf(`{"title":"test withdraw marker","description":"description","target_address":"%s",
-			"denom":"%s", "amount":[{"denom":"%s","amount":"1"}]}`, s.testnet.Validators[0].Address.String(),
-				s.cfg.BondDenom, s.cfg.BondDenom),
-			true, &sdk.TxResponse{}, 0x5,
-			// The gov module now has its own set of errors.
-			// This /should/ fail due to insufficient funds, and it does, but then the gov module erroneously wraps it again.
-			// Insufficient funds is 0x5 in the main SDK's set of errors.
-			// However, the governance module erroneously wraps this error in a 0x9, "no handler exists for proposal type"
-			// So we're looking for a 0x9 here.
-			// Here's the expected error (from the rawlog):
-			// 	0stake is smaller than 1stake: insufficient funds: invalid proposal content: no handler exists for proposal type
-		},
-	}
-
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			tmpDir := s.T().TempDir()
-			tmpFile := filepath.Join(tmpDir, "proposal.json")
-			err := os.WriteFile(tmpFile, []byte(tc.proposal), 0o666)
-			s.Require().NoError(err, "writing proposal to %s", tmpFile)
-
-			cmd := markercli.GetCmdMarkerProposal()
-			args := []string{
-				tc.proposaltype,
-				tmpFile,
-				sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, "500000"),
-			}
-
-			testcli.NewCLITxExecutor(cmd, args).
-				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
 		})
