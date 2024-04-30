@@ -160,9 +160,9 @@ func (k Keeper) RemoveAdministratorProposal(ctx sdk.Context, denom string, remov
 	return nil
 }
 
-// HandleChangeStatusProposal handles a ChangeStatus governance proposal request
-func HandleChangeStatusProposal(ctx sdk.Context, k Keeper, c *types.ChangeStatusProposal) error {
-	addr, err := types.MarkerAddress(c.Denom)
+// ChangeStatusProposal handles a ChangeStatus governance proposal request
+func (k Keeper) ChangeStatusProposal(ctx sdk.Context, denom string, status types.MarkerStatus) error {
+	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
 	}
@@ -171,36 +171,36 @@ func HandleChangeStatusProposal(ctx sdk.Context, k Keeper, c *types.ChangeStatus
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Denom)
+		return fmt.Errorf("%s marker does not exist", denom)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
-	if c.NewStatus == types.StatusUndefined {
+	if status == types.StatusUndefined {
 		return fmt.Errorf("error invalid marker status undefined")
 	}
-	if int(m.GetStatus()) > int(c.NewStatus) {
-		return fmt.Errorf("invalid status transition %s precedes existing status of %s", c.NewStatus, m.GetStatus())
+	if int(m.GetStatus()) > int(status) {
+		return fmt.Errorf("invalid status transition %s precedes existing status of %s", status, m.GetStatus())
 	}
 
 	// activate (must be pending, finalized currently)
-	if c.NewStatus == types.StatusActive {
+	if status == types.StatusActive {
 		if err = k.AdjustCirculation(ctx, m, m.GetSupply()); err != nil {
 			return fmt.Errorf("could not create marker supply: %w", err)
 		}
 	}
 
 	// delete (must be cancelled currently)
-	if c.NewStatus == types.StatusDestroyed {
+	if status == types.StatusDestroyed {
 		if m.GetStatus() != types.StatusCancelled {
 			return fmt.Errorf("only cancelled markers can be deleted")
 		}
-		if err = k.AdjustCirculation(ctx, m, sdk.NewInt64Coin(c.Denom, 0)); err != nil {
+		if err = k.AdjustCirculation(ctx, m, sdk.NewInt64Coin(denom, 0)); err != nil {
 			return fmt.Errorf("could not dispose of marker supply: %w", err)
 		}
 	}
 
-	if err := m.SetStatus(c.NewStatus); err != nil {
+	if err := m.SetStatus(status); err != nil {
 		return err
 	}
 
@@ -211,7 +211,7 @@ func HandleChangeStatusProposal(ctx sdk.Context, k Keeper, c *types.ChangeStatus
 	k.SetMarker(ctx, m)
 
 	logger := k.Logger(ctx)
-	logger.Info("changed marker status", "marker", c.Denom, "stats", c.NewStatus.String())
+	logger.Info("changed marker status", "marker", denom, "stats", status.String())
 
 	return nil
 }

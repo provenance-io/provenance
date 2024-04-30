@@ -69,6 +69,8 @@ service Msg {
   // RemoveAdministratorProposal removes administrators with specific access on the marker
   rpc RemoveAdministratorProposal(MsgRemoveAdministratorProposalRequest)
       returns (MsgRemoveAdministratorProposalResponse);
+  // ChangeStatusProposal is a governance proposal change marker status
+  rpc ChangeStatusProposal(MsgChangeStatusProposalRequest) returns (MsgChangeStatusProposalResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -386,7 +388,7 @@ message MsgAddNetAssetValuesRequest {
 // MsgAddNetAssetValuesResponse defines the Msg/AddNetAssetValue response type
 message MsgAddNetAssetValuesResponse {}
 
-// MsgSetAdministratorProposalRequest defines the Msg/SetAdministratorProposal response type
+// MsgSetAdministratorProposalRequest defines the Msg/SetAdministratorProposal request type
 message MsgSetAdministratorProposalRequest {
   option (gogoproto.equal)      = true;
   option (cosmos.msg.v1.signer) = "authority";
@@ -400,7 +402,7 @@ message MsgSetAdministratorProposalRequest {
 // MsgSetAdministratorProposalResponse defines the Msg/SetAdministratorProposal response type
 message MsgSetAdministratorProposalResponse {}
 
-// MsgRemoveAdministratorProposalRequest defines the Msg/RemoveAdministratorProposal response type
+// MsgRemoveAdministratorProposalRequest defines the Msg/RemoveAdministratorProposal request type
 message MsgRemoveAdministratorProposalRequest {
   option (gogoproto.equal)      = true;
   option (cosmos.msg.v1.signer) = "authority";
@@ -413,3 +415,17 @@ message MsgRemoveAdministratorProposalRequest {
 
 // MsgRemoveAdministratorProposalResponse defines the Msg/RemoveAdministratorProposal response type
 message MsgRemoveAdministratorProposalResponse {}
+
+// MsgChangeStatusProposalRequest defines the Msg/ChangeStatusProposal request type
+message MsgChangeStatusProposalRequest {
+  option (gogoproto.equal)      = true;
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string       denom      = 1;
+  MarkerStatus new_status = 2;
+  // The signer of the message.  Must have admin authority to marker or be governance module account address.
+  string authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgChangeStatusProposalResponse defines the Msg/ChangeStatusProposal response type
+message MsgChangeStatusProposalResponse {}

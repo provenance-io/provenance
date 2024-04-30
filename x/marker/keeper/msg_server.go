@@ -773,3 +773,19 @@ func (k msgServer) RemoveAdministratorProposal(goCtx context.Context, msg *types
 
 	return &types.MsgRemoveAdministratorProposalResponse{}, nil
 }
+
+// ChangeStatusProposal can only be called via gov proposal
+func (k msgServer) ChangeStatusProposal(goCtx context.Context, msg *types.MsgChangeStatusProposalRequest) (*types.MsgChangeStatusProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.ChangeStatusProposal(ctx, msg.Denom, msg.NewStatus)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgChangeStatusProposalResponse{}, nil
+}

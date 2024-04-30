@@ -331,8 +331,6 @@ func (s *IntegrationTestSuite) TestMarkerProposals() {
 
 			var err error
 			switch c := tc.prop.(type) {
-			case *markertypes.ChangeStatusProposal:
-				err = markerkeeper.HandleChangeStatusProposal(s.ctx, s.k, c)
 			case *markertypes.WithdrawEscrowProposal:
 				err = markerkeeper.HandleWithdrawEscrowProposal(s.ctx, s.k, c)
 			case *markertypes.SetDenomMetadataProposal:
