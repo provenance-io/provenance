@@ -846,3 +846,18 @@ func (msg MsgWithdrawEscrowProposalRequest) ValidateBasic() error {
 	_, err = sdk.AccAddressFromBech32(msg.Authority)
 	return err
 }
+
+func NewMsgSetDenomMetadataProposalRequest(metadata banktypes.Metadata, authority string) *MsgSetDenomMetadataProposalRequest {
+	return &MsgSetDenomMetadataProposalRequest{
+		Metadata:  metadata,
+		Authority: authority,
+	}
+}
+
+func (msg MsgSetDenomMetadataProposalRequest) ValidateBasic() error {
+	if err := msg.Metadata.Validate(); err != nil {
+		return err
+	}
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	return err
+}

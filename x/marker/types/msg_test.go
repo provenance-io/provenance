@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 )
@@ -1192,6 +1193,77 @@ func TestMsgWithdrawEscrowProposalRequestValidateBasic(t *testing.T) {
 				Amount:        tc.amount,
 				TargetAddress: tc.targetAddress,
 				Authority:     tc.authority,
+			}
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgSetDenomMetadataProposalRequestValidateBasic(t *testing.T) {
+	validAuthority := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAuthority := "invalidauth0000"
+	hotdogDenom := "hotdog"
+
+	validMetadata := banktypes.Metadata{
+		Description: "a description",
+		DenomUnits: []*banktypes.DenomUnit{
+			{Denom: fmt.Sprintf("n%s", hotdogDenom), Exponent: 0, Aliases: []string{fmt.Sprintf("nano%s", hotdogDenom)}},
+			{Denom: fmt.Sprintf("u%s", hotdogDenom), Exponent: 3, Aliases: []string{}},
+			{Denom: hotdogDenom, Exponent: 9, Aliases: []string{}},
+			{Denom: fmt.Sprintf("mega%s", hotdogDenom), Exponent: 15, Aliases: []string{}},
+		},
+		Base:    fmt.Sprintf("n%s", hotdogDenom),
+		Display: hotdogDenom,
+		Name:    "hotdogName",
+		Symbol:  "WIFI",
+	}
+	invalidMetadata := banktypes.Metadata{
+		Name:        "",
+		Description: "Description.",
+	}
+
+	testCases := []struct {
+		name          string
+		metadata      banktypes.Metadata
+		authority     string
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name:        "valid case",
+			metadata:    validMetadata,
+			authority:   validAuthority,
+			expectError: false,
+		},
+		{
+			name:          "invalid metadata",
+			metadata:      invalidMetadata,
+			authority:     validAuthority,
+			expectError:   true,
+			expectedError: "name field cannot be blank",
+		},
+		{
+			name:          "invalid authority address",
+			metadata:      validMetadata,
+			authority:     invalidAuthority,
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := MsgSetDenomMetadataProposalRequest{
+				Metadata:  tc.metadata,
+				Authority: tc.authority,
 			}
 
 			err := msg.ValidateBasic()
