@@ -821,3 +821,28 @@ func (msg MsgChangeStatusProposalRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Authority)
 	return err
 }
+
+func NewMsgWithdrawEscrowProposalRequest(denom string, amount sdk.Coins, targetAddress, authority string) *MsgWithdrawEscrowProposalRequest {
+	return &MsgWithdrawEscrowProposalRequest{
+		Denom:         denom,
+		Amount:        amount,
+		TargetAddress: targetAddress,
+		Authority:     authority,
+	}
+}
+
+func (msg MsgWithdrawEscrowProposalRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	if !msg.Amount.IsValid() {
+		return fmt.Errorf("amount is invalid: %v", msg.Amount)
+	}
+	_, err := sdk.AccAddressFromBech32(msg.TargetAddress)
+	if err != nil {
+		return err
+	}
+
+	_, err = sdk.AccAddressFromBech32(msg.Authority)
+	return err
+}

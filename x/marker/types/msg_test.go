@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -1123,6 +1124,82 @@ func TestMsgChangeStatusProposalRequestValidateBasic(t *testing.T) {
 				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
 			} else {
 				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgWithdrawEscrowProposalRequestValidateBasic(t *testing.T) {
+	validAuthority := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAuthority := "invalidauth0000"
+	validTargetAddress := "cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl"
+	invalidTargetAddress := "invalidtarget0000"
+	validDenom := "validcoin"
+	validAmount := sdk.NewCoins(sdk.NewInt64Coin(validDenom, 100))
+	invalidAmount := sdk.Coins{sdk.Coin{Denom: validDenom, Amount: sdkmath.NewInt(-100)}} // Negative amount
+
+	testCases := []struct {
+		name          string
+		denom         string
+		amount        sdk.Coins
+		targetAddress string
+		authority     string
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name:          "valid case",
+			denom:         validDenom,
+			amount:        validAmount,
+			targetAddress: validTargetAddress,
+			authority:     validAuthority,
+			expectError:   false,
+		},
+		{
+			name:          "invalid amount",
+			denom:         validDenom,
+			amount:        invalidAmount,
+			targetAddress: validTargetAddress,
+			authority:     validAuthority,
+			expectError:   true,
+			expectedError: fmt.Sprintf("amount is invalid: %v", invalidAmount),
+		},
+		{
+			name:          "invalid target address",
+			denom:         validDenom,
+			amount:        validAmount,
+			targetAddress: invalidTargetAddress,
+			authority:     validAuthority,
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "invalid authority address",
+			denom:         validDenom,
+			amount:        validAmount,
+			targetAddress: validTargetAddress,
+			authority:     invalidAuthority,
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := MsgWithdrawEscrowProposalRequest{
+				Denom:         tc.denom,
+				Amount:        tc.amount,
+				TargetAddress: tc.targetAddress,
+				Authority:     tc.authority,
+			}
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError)
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}
