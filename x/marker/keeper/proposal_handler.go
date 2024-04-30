@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -246,9 +247,9 @@ func (k Keeper) WithdrawEscrowProposal(ctx sdk.Context, denom, targetAddress str
 	return nil
 }
 
-// HandleSetDenomMetadataProposal handles a Set Denom Metadata governance proposal request
-func HandleSetDenomMetadataProposal(ctx sdk.Context, k Keeper, c *types.SetDenomMetadataProposal) error {
-	addr, err := types.MarkerAddress(c.Metadata.Base)
+// SetDenomMetadataProposal handles a Set Denom Metadata governance proposal request
+func (k Keeper) SetDenomMetadataProposal(ctx sdk.Context, metadata banktypes.Metadata) error {
+	addr, err := types.MarkerAddress(metadata.Base)
 	if err != nil {
 		return err
 	}
@@ -257,14 +258,14 @@ func HandleSetDenomMetadataProposal(ctx sdk.Context, k Keeper, c *types.SetDenom
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Metadata.Base)
+		return fmt.Errorf("%s marker does not exist", metadata.Base)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Metadata.Base)
+		return fmt.Errorf("%s marker does not allow governance control", metadata.Base)
 	}
 
-	k.bankKeeper.SetDenomMetaData(ctx, c.Metadata)
+	k.bankKeeper.SetDenomMetaData(ctx, metadata)
 
-	k.Logger(ctx).Info("denom metadata set for marker", "marker", c.Metadata.Base, "denom metadata", c.Metadata.String())
+	k.Logger(ctx).Info("denom metadata set for marker", "marker", metadata.Base, "denom metadata", metadata.String())
 	return nil
 }

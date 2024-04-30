@@ -805,3 +805,19 @@ func (k msgServer) WithdrawEscrowProposal(goCtx context.Context, msg *types.MsgW
 
 	return &types.MsgWithdrawEscrowProposalResponse{}, nil
 }
+
+// SetDenomMetaDataProposal can only be called via gov proposal
+func (k msgServer) SetDenomMetadataProposal(goCtx context.Context, msg *types.MsgSetDenomMetadataProposalRequest) (*types.MsgSetDenomMetadataProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.SetDenomMetadataProposal(ctx, msg.Metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetDenomMetadataProposalResponse{}, nil
+}
