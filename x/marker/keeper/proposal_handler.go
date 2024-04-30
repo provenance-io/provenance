@@ -90,9 +90,9 @@ func (k Keeper) HandleSupplyDecreaseProposal(ctx sdk.Context, amount sdk.Coin) e
 	return nil
 }
 
-// HandleSetAdministratorProposal handles a SetAdministrator governance proposal request
-func HandleSetAdministratorProposal(ctx sdk.Context, k Keeper, c *types.SetAdministratorProposal) error {
-	addr, err := types.MarkerAddress(c.Denom)
+// SetAdministratorProposal handles a SetAdministrator governance proposal request
+func (k Keeper) SetAdministratorProposal(ctx sdk.Context, denom string, accessGrants []types.AccessGrant) error {
+	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
 	}
@@ -101,17 +101,17 @@ func HandleSetAdministratorProposal(ctx sdk.Context, k Keeper, c *types.SetAdmin
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Denom)
+		return fmt.Errorf("%s marker does not exist", denom)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
-	for _, a := range c.Access {
+	for _, a := range accessGrants {
 		if err := m.GrantAccess(types.NewAccessGrant(a.GetAddress(), a.Permissions)); err != nil {
 			return err
 		}
 		logger := k.Logger(ctx)
-		logger.Info("controlling access to marker assigned ", "marker", c.Denom, "access", a.String())
+		logger.Info("controlling access to marker assigned ", "marker", denom, "access", a.String())
 	}
 
 	if err := m.Validate(); err != nil {

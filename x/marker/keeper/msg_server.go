@@ -741,3 +741,19 @@ func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNet
 
 	return &types.MsgAddNetAssetValuesResponse{}, nil
 }
+
+// SetAdministratorProposal can only be called via gov proposal
+func (k msgServer) SetAdministratorProposal(goCtx context.Context, msg *types.MsgSetAdministratorProposalRequest) (*types.MsgSetAdministratorProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.SetAdministratorProposal(ctx, msg.Denom, msg.Access)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetAdministratorProposalResponse{}, nil
+}
