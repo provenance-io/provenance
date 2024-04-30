@@ -85,6 +85,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.3 ([#1928](https://github.com/provenance-io/provenance/pull/1928), [#1944](https://github.com/provenance-io/provenance/pull/1944))
 - Bump `cosmwasm-std` from 1.4.1 to 1.4.4 ([#1950](https://github.com/provenance-io/provenance/pull/1950))
 - Bump `golangci/golangci-lint-action` from 4 to 5 ([#1951](https://github.com/provenance-io/provenance/pull/1951))
+- Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.0 ([#1960](https://github.com/provenance-io/provenance/pull/1960))
 
 ---
 
