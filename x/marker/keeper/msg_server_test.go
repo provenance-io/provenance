@@ -1460,3 +1460,125 @@ func (s *MsgServerTestSuite) TestSetAdministratorProposal() {
 		})
 	}
 }
+
+func (s *MsgServerTestSuite) TestSupplyIncreaseProposal() {
+	hotdogMarker := types.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress("hotdog")),
+		sdk.NewInt64Coin("hotdog", 1000),
+		s.owner1Addr,
+		[]types.AccessGrant{
+			{Address: s.owner1Addr.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Mint}},
+		},
+		types.StatusActive,
+		types.MarkerType_Coin,
+		true,
+		true,
+		false,
+		[]string{},
+	)
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, hotdogMarker), "Failed to add 'hotdog' marker for tests")
+
+	testCases := []struct {
+		name   string
+		msg    *types.MsgSupplyIncreaseProposalRequest
+		expErr string
+	}{
+		{
+			name: "success case",
+			msg: &types.MsgSupplyIncreaseProposalRequest{
+				Amount:        sdk.NewInt64Coin("hotdog", 1000),
+				TargetAddress: s.owner1,
+				Authority:     s.app.MarkerKeeper.GetAuthority(),
+			},
+		},
+		{
+			name: "failed authority",
+			msg: &types.MsgSupplyIncreaseProposalRequest{
+				Amount:        sdk.NewInt64Coin("hotdog", 1000),
+				TargetAddress: s.owner1,
+				Authority:     "wrongauthority",
+			},
+			expErr: "expected gov account as only signer for proposal message",
+		},
+		{
+			name: "failed handler",
+			msg: &types.MsgSupplyIncreaseProposalRequest{
+				Amount:        sdk.NewInt64Coin("nonexistent", 1000),
+				TargetAddress: s.owner1,
+				Authority:     s.app.MarkerKeeper.GetAuthority(),
+			},
+			expErr: "nonexistent marker does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.SupplyIncreaseProposal(s.ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().Error(err, tc.expErr, "SupplyIncreaseProposal() error incorrect.")
+			} else {
+				s.Assert().NoError(err, "SupplyIncreaseProposal() should have no error for valid request.")
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestSupplyDecreaseProposal() {
+	hotdogMarker := types.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress("hotdog")),
+		sdk.NewInt64Coin("hotdog", 1000),
+		s.owner1Addr,
+		[]types.AccessGrant{
+			{Address: s.owner1Addr.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Mint, types.Access_Burn}},
+		},
+		types.StatusProposed,
+		types.MarkerType_Coin,
+		true,
+		true,
+		false,
+		[]string{},
+	)
+	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hotdogMarker, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1)}, types.ModuleName), "Failed to add navs to 'hotdog' marker for tests")
+	s.Require().NoError(s.app.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, hotdogMarker), "Failed to add 'hotdog' marker for tests")
+
+	testCases := []struct {
+		name   string
+		msg    *types.MsgSupplyDecreaseProposalRequest
+		expErr string
+	}{
+		{
+			name: "success case",
+			msg: &types.MsgSupplyDecreaseProposalRequest{
+				Amount:    sdk.NewInt64Coin("hotdog", 100),
+				Authority: s.app.MarkerKeeper.GetAuthority(),
+			},
+		},
+		{
+			name: "failed authority",
+			msg: &types.MsgSupplyDecreaseProposalRequest{
+				Amount:    sdk.NewInt64Coin("hotdog", 500),
+				Authority: "wrongauthority",
+			},
+			expErr: "expected gov account as only signer for proposal message",
+		},
+		{
+			name: "failed handler",
+			msg: &types.MsgSupplyDecreaseProposalRequest{
+				Amount:    sdk.NewInt64Coin("nonexistent", 500),
+				Authority: s.app.MarkerKeeper.GetAuthority(),
+			},
+			expErr: "nonexistent marker does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.SupplyDecreaseProposal(s.ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().Error(err, tc.expErr, "SupplyDecreaseProposal() error incorrect.")
+			} else {
+				s.Assert().NoError(err, "SupplyDecreaseProposal() should have no error for valid request.")
+			}
+		})
+	}
+}
