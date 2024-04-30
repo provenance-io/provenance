@@ -1398,3 +1398,65 @@ func (s *MsgServerTestSuite) TestMsgSetAccountDataRequest() {
 		})
 	}
 }
+
+func (s *MsgServerTestSuite) TestSetAdministratorProposal() {
+	hotdogMarker := types.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress("hotdog")),
+		sdk.NewInt64Coin("hotdog", 1000),
+		s.owner1Addr,
+		[]types.AccessGrant{
+			{Address: s.owner1Addr.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Mint}},
+		},
+		types.StatusActive,
+		types.MarkerType_Coin,
+		true,
+		true,
+		false,
+		[]string{},
+	)
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, hotdogMarker), "Failed to add 'hotdog' marker for tests")
+
+	testCases := []struct {
+		name   string
+		msg    *types.MsgSetAdministratorProposalRequest
+		expErr string
+	}{
+		{
+			name: "success case",
+			msg: &types.MsgSetAdministratorProposalRequest{
+				Denom:     "hotdog",
+				Access:    []types.AccessGrant{{Address: s.owner1, Permissions: types.AccessList{types.Access_Mint}}},
+				Authority: s.app.MarkerKeeper.GetAuthority(),
+			},
+		},
+		{
+			name: "failed authority",
+			msg: &types.MsgSetAdministratorProposalRequest{
+				Denom:     "hotdog",
+				Access:    []types.AccessGrant{{Address: s.owner1, Permissions: types.AccessList{types.Access_Mint}}},
+				Authority: "wrongauthority",
+			},
+			expErr: "expected gov account as only signer for proposal message",
+		},
+		{
+			name: "failed handler",
+			msg: &types.MsgSetAdministratorProposalRequest{
+				Denom:     "nonexistent",
+				Access:    []types.AccessGrant{{Address: s.owner1, Permissions: types.AccessList{types.Access_Mint}}},
+				Authority: s.app.MarkerKeeper.GetAuthority(),
+			},
+			expErr: "nonexistent marker does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.SetAdministratorProposal(s.ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().Error(err, tc.expErr, "SetAdministratorProposal() error incorrect.")
+			} else {
+				s.Assert().NoError(err, "SetAdministratorProposal() should have no error for valid request.")
+			}
+		})
+	}
+}
