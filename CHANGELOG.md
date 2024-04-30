@@ -78,7 +78,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `bufbuild/buf-breaking-action` from 1.1.3 to 1.1.4 ([#1894](https://github.com/provenance-io/provenance/pull/1894))
 - Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
 - Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.31.0 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949))
-- Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.6 ([#1912](https://github.com/provenance-io/provenance/pull/1912))
+- Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.7 ([#1912](https://github.com/provenance-io/provenance/pull/1912), [#1959](https://github.com/provenance-io/provenance/pull/1959))
 - Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.1 ([#1913](https://github.com/provenance-io/provenance/pull/1913))
 - Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
 - Bump `peter-evans/create-pull-request` from 6.0.2 to 6.0.4 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940))
