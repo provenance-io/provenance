@@ -764,3 +764,24 @@ func (msg MsgSupplyDecreaseProposalRequest) ValidateBasic() error {
 	}
 	return nil
 }
+
+func NewMsgSetAdministratorProposalRequest(denom string, accessGrant []AccessGrant, authority string) *MsgSetAdministratorProposalRequest {
+	return &MsgSetAdministratorProposalRequest{
+		Denom:     denom,
+		Access:    accessGrant,
+		Authority: authority,
+	}
+}
+
+func (msg MsgSetAdministratorProposalRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return err
+	}
+	for _, a := range msg.Access {
+		if err := a.Validate(); err != nil {
+			return fmt.Errorf("invalid access grant for administrator: %w", err)
+		}
+	}
+	return nil
+}

@@ -942,3 +942,65 @@ func TestMsgSupplyDecreaseProposalRequestValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgSetAdministratorProposalRequestValidateBasic(t *testing.T) {
+	validAddress := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAddress := "invalidaddr0000"
+
+	validAccessGrant := AccessGrant{
+		Address:     validAddress,
+		Permissions: []Access{Access_Admin},
+	}
+	invalidAccessGrant := AccessGrant{
+		Address:     "invalidaddress",
+		Permissions: []Access{Access_Admin},
+	}
+
+	testCases := []struct {
+		name          string
+		denom         string
+		accessGrant   []AccessGrant
+		authority     string
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name:        "valid case",
+			denom:       "testcoin",
+			accessGrant: []AccessGrant{validAccessGrant},
+			authority:   validAddress,
+			expectError: false,
+		},
+		{
+			name:          "invalid authority address",
+			denom:         "testcoin",
+			accessGrant:   []AccessGrant{validAccessGrant},
+			authority:     invalidAddress,
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "invalid access grant",
+			denom:         "testcoin",
+			accessGrant:   []AccessGrant{invalidAccessGrant},
+			authority:     validAddress,
+			expectError:   true,
+			expectedError: "invalid access grant for administrator: invalid address: decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc // capture range variable
+		t.Run(tc.name, func(t *testing.T) {
+			msg := NewMsgSetAdministratorProposalRequest(tc.denom, tc.accessGrant, tc.authority)
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
