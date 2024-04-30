@@ -71,6 +71,8 @@ service Msg {
       returns (MsgRemoveAdministratorProposalResponse);
   // ChangeStatusProposal is a governance proposal change marker status
   rpc ChangeStatusProposal(MsgChangeStatusProposalRequest) returns (MsgChangeStatusProposalResponse);
+  // WithdrawEscrowProposal is a governance proposal to withdraw escrow coins from a marker
+  rpc WithdrawEscrowProposal(MsgWithdrawEscrowProposalRequest) returns (MsgWithdrawEscrowProposalResponse);
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
@@ -429,3 +431,19 @@ message MsgChangeStatusProposalRequest {
 
 // MsgChangeStatusProposalResponse defines the Msg/ChangeStatusProposal response type
 message MsgChangeStatusProposalResponse {}
+
+// MsgWithdrawEscrowProposalRequest defines the Msg/WithdrawEscrowProposal request type
+message MsgWithdrawEscrowProposalRequest {
+  option (gogoproto.equal)      = true;
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string   denom                           = 1;
+  repeated cosmos.base.v1beta1.Coin amount = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  string target_address = 3;
+  // The signer of the message.  Must have admin authority to marker or be governance module account address.
+  string authority = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawEscrowProposalResponse defines the Msg/WithdrawEscrowProposal response type
+message MsgWithdrawEscrowProposalResponse {}

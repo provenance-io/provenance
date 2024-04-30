@@ -216,9 +216,9 @@ func (k Keeper) ChangeStatusProposal(ctx sdk.Context, denom string, status types
 	return nil
 }
 
-// HandleWithdrawEscrowProposal handles a Withdraw escrowed coins governance proposal request
-func HandleWithdrawEscrowProposal(ctx sdk.Context, k Keeper, c *types.WithdrawEscrowProposal) error {
-	addr, err := types.MarkerAddress(c.Denom)
+// WithdrawEscrowProposal handles a Withdraw escrowed coins governance proposal request
+func (k Keeper) WithdrawEscrowProposal(ctx sdk.Context, denom, targetAddress string, amount sdk.Coins) error {
+	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
 	}
@@ -227,21 +227,21 @@ func HandleWithdrawEscrowProposal(ctx sdk.Context, k Keeper, c *types.WithdrawEs
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Denom)
+		return fmt.Errorf("%s marker does not exist", denom)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
 
-	recipient, err := sdk.AccAddressFromBech32(c.TargetAddress)
+	recipient, err := sdk.AccAddressFromBech32(targetAddress)
 	if err != nil {
 		return err
 	}
-	if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), addr, recipient, c.Amount); err != nil {
+	if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), addr, recipient, amount); err != nil {
 		return err
 	}
 	logger := k.Logger(ctx)
-	logger.Info("transferred escrowed coin from marker", "marker", c.Denom, "amount", c.Amount.String(), "recipient", c.TargetAddress)
+	logger.Info("transferred escrowed coin from marker", "marker", denom, "amount", amount, "recipient", targetAddress)
 
 	return nil
 }

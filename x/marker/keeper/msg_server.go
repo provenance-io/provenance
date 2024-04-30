@@ -789,3 +789,19 @@ func (k msgServer) ChangeStatusProposal(goCtx context.Context, msg *types.MsgCha
 
 	return &types.MsgChangeStatusProposalResponse{}, nil
 }
+
+// WithdrawEscrowProposal can only be called via gov proposal
+func (k msgServer) WithdrawEscrowProposal(goCtx context.Context, msg *types.MsgWithdrawEscrowProposalRequest) (*types.MsgWithdrawEscrowProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.WithdrawEscrowProposal(ctx, msg.Denom, msg.TargetAddress, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgWithdrawEscrowProposalResponse{}, nil
+}

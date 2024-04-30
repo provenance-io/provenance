@@ -14,8 +14,6 @@ import (
 func NewProposalHandler(k keeper.Keeper) govtypesv1beta1.Handler {
 	return func(ctx sdk.Context, content govtypesv1beta1.Content) error {
 		switch c := content.(type) {
-		case *types.WithdrawEscrowProposal:
-			return keeper.HandleWithdrawEscrowProposal(ctx, k, c)
 		case *types.SetDenomMetadataProposal:
 			return keeper.HandleSetDenomMetadataProposal(ctx, k, c)
 		default:
