@@ -9,8 +9,8 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-// SupplyIncreaseProposal handles a SupplyIncrease governance proposal request
-func (k Keeper) SupplyIncreaseProposal(ctx sdk.Context, amount sdk.Coin, targetAddress string) error {
+// HandleSupplyIncreaseProposal handles a SupplyIncrease governance proposal request
+func (k Keeper) HandleSupplyIncreaseProposal(ctx sdk.Context, amount sdk.Coin, targetAddress string) error {
 	logger := k.Logger(ctx)
 	addr, err := types.MarkerAddress(amount.Denom)
 	if err != nil {
@@ -91,8 +91,8 @@ func (k Keeper) HandleSupplyDecreaseProposal(ctx sdk.Context, amount sdk.Coin) e
 	return nil
 }
 
-// SetAdministratorProposal handles a SetAdministrator governance proposal request
-func (k Keeper) SetAdministratorProposal(ctx sdk.Context, denom string, accessGrants []types.AccessGrant) error {
+// HandleSetAdministratorProposal handles a SetAdministrator governance proposal request
+func (k Keeper) HandleSetAdministratorProposal(ctx sdk.Context, denom string, accessGrants []types.AccessGrant) error {
 	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
@@ -123,8 +123,8 @@ func (k Keeper) SetAdministratorProposal(ctx sdk.Context, denom string, accessGr
 	return nil
 }
 
-// RemoveAdministratorProposal handles a RemoveAdministrator governance proposal request
-func (k Keeper) RemoveAdministratorProposal(ctx sdk.Context, denom string, removedAddress []string) error {
+// HandleRemoveAdministratorProposal handles a RemoveAdministrator governance proposal request
+func (k Keeper) HandleRemoveAdministratorProposal(ctx sdk.Context, denom string, removedAddress []string) error {
 	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
@@ -161,8 +161,8 @@ func (k Keeper) RemoveAdministratorProposal(ctx sdk.Context, denom string, remov
 	return nil
 }
 
-// ChangeStatusProposal handles a ChangeStatus governance proposal request
-func (k Keeper) ChangeStatusProposal(ctx sdk.Context, denom string, status types.MarkerStatus) error {
+// HandleChangeStatusProposal handles a ChangeStatus governance proposal request
+func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status types.MarkerStatus) error {
 	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
@@ -217,8 +217,8 @@ func (k Keeper) ChangeStatusProposal(ctx sdk.Context, denom string, status types
 	return nil
 }
 
-// WithdrawEscrowProposal handles a Withdraw escrowed coins governance proposal request
-func (k Keeper) WithdrawEscrowProposal(ctx sdk.Context, denom, targetAddress string, amount sdk.Coins) error {
+// HandleWithdrawEscrowProposal handles a Withdraw escrowed coins governance proposal request
+func (k Keeper) HandleWithdrawEscrowProposal(ctx sdk.Context, denom, targetAddress string, amount sdk.Coins) error {
 	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
@@ -247,8 +247,8 @@ func (k Keeper) WithdrawEscrowProposal(ctx sdk.Context, denom, targetAddress str
 	return nil
 }
 
-// SetDenomMetadataProposal handles a Set Denom Metadata governance proposal request
-func (k Keeper) SetDenomMetadataProposal(ctx sdk.Context, metadata banktypes.Metadata) error {
+// HandleSetDenomMetadataProposal handles a Set Denom Metadata governance proposal request
+func (k Keeper) HandleSetDenomMetadataProposal(ctx sdk.Context, metadata banktypes.Metadata) error {
 	addr, err := types.MarkerAddress(metadata.Base)
 	if err != nil {
 		return err

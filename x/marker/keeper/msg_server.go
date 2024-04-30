@@ -538,7 +538,7 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.SupplyIncreaseProposal(ctx, msg.Amount, msg.TargetAddress)
+	err := k.Keeper.HandleSupplyIncreaseProposal(ctx, msg.Amount, msg.TargetAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -750,7 +750,7 @@ func (k msgServer) SetAdministratorProposal(goCtx context.Context, msg *types.Ms
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.SetAdministratorProposal(ctx, msg.Denom, msg.Access)
+	err := k.Keeper.HandleSetAdministratorProposal(ctx, msg.Denom, msg.Access)
 	if err != nil {
 		return nil, err
 	}
@@ -766,7 +766,7 @@ func (k msgServer) RemoveAdministratorProposal(goCtx context.Context, msg *types
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.RemoveAdministratorProposal(ctx, msg.Denom, msg.RemovedAddress)
+	err := k.Keeper.HandleRemoveAdministratorProposal(ctx, msg.Denom, msg.RemovedAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -782,7 +782,7 @@ func (k msgServer) ChangeStatusProposal(goCtx context.Context, msg *types.MsgCha
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.ChangeStatusProposal(ctx, msg.Denom, msg.NewStatus)
+	err := k.Keeper.HandleChangeStatusProposal(ctx, msg.Denom, msg.NewStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -798,7 +798,7 @@ func (k msgServer) WithdrawEscrowProposal(goCtx context.Context, msg *types.MsgW
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.WithdrawEscrowProposal(ctx, msg.Denom, msg.TargetAddress, msg.Amount)
+	err := k.Keeper.HandleWithdrawEscrowProposal(ctx, msg.Denom, msg.TargetAddress, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -814,7 +814,7 @@ func (k msgServer) SetDenomMetadataProposal(goCtx context.Context, msg *types.Ms
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	err := k.Keeper.SetDenomMetadataProposal(ctx, msg.Metadata)
+	err := k.Keeper.HandleSetDenomMetadataProposal(ctx, msg.Metadata)
 	if err != nil {
 		return nil, err
 	}
