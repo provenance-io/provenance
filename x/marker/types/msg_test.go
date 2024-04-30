@@ -990,9 +990,71 @@ func TestMsgSetAdministratorProposalRequestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc // capture range variable
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			msg := NewMsgSetAdministratorProposalRequest(tc.denom, tc.accessGrant, tc.authority)
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgRemoveAdministratorProposalRequestValidateBasic(t *testing.T) {
+	validAuthority := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAuthority := "invalidauth0000"
+
+	validRemovedAddress := "cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl"
+	invalidRemovedAddress := "invalidremoved000"
+
+	testCases := []struct {
+		name           string
+		authority      string
+		removedAddress []string
+		expectError    bool
+		expectedError  string
+	}{
+		{
+			name:           "valid case",
+			authority:      validAuthority,
+			removedAddress: []string{validRemovedAddress},
+			expectError:    false,
+		},
+		{
+			name:           "invalid authority address",
+			authority:      invalidAuthority,
+			removedAddress: []string{validRemovedAddress},
+			expectError:    true,
+			expectedError:  "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:           "invalid removed address",
+			authority:      validAuthority,
+			removedAddress: []string{invalidRemovedAddress},
+			expectError:    true,
+			expectedError:  "administrator account address is invalid: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:           "multiple removed addresses with an invalid one",
+			authority:      validAuthority,
+			removedAddress: []string{validRemovedAddress, invalidRemovedAddress},
+			expectError:    true,
+			expectedError:  "administrator account address is invalid: decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := MsgRemoveAdministratorProposalRequest{
+				Authority:      tc.authority,
+				RemovedAddress: tc.removedAddress,
+			}
 
 			err := msg.ValidateBasic()
 			if tc.expectError {

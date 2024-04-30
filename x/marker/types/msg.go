@@ -785,3 +785,23 @@ func (msg MsgSetAdministratorProposalRequest) ValidateBasic() error {
 	}
 	return nil
 }
+
+func NewMsgRemoveAdministratorProposalRequest(denom string, removedAddress []string) *MsgRemoveAdministratorProposalRequest {
+	return &MsgRemoveAdministratorProposalRequest{
+		Denom:          denom,
+		RemovedAddress: removedAddress,
+	}
+}
+
+func (msg MsgRemoveAdministratorProposalRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return err
+	}
+	for _, ra := range msg.RemovedAddress {
+		if _, err := sdk.AccAddressFromBech32(ra); err != nil {
+			return fmt.Errorf("administrator account address is invalid: %w", err)
+		}
+	}
+	return nil
+}
