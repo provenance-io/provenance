@@ -1582,3 +1582,266 @@ func (s *MsgServerTestSuite) TestSupplyDecreaseProposal() {
 		})
 	}
 }
+
+func (s *MsgServerTestSuite) TestRemoveAdministratorProposal() {
+	hotdogMarker := types.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress("hotdog")),
+		sdk.NewInt64Coin("hotdog", 1000),
+		s.owner1Addr,
+		[]types.AccessGrant{
+			{Address: s.owner1Addr.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Mint}},
+		},
+		types.StatusActive,
+		types.MarkerType_Coin,
+		true,
+		true,
+		false,
+		[]string{},
+	)
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, hotdogMarker), "Failed to add 'hotdog' marker for tests")
+
+	testCases := []struct {
+		name   string
+		msg    *types.MsgRemoveAdministratorProposalRequest
+		expErr string
+	}{
+		{
+			name: "success case",
+			msg: &types.MsgRemoveAdministratorProposalRequest{
+				Denom:          "hotdog",
+				RemovedAddress: []string{s.owner1},
+				Authority:      s.app.MarkerKeeper.GetAuthority(),
+			},
+		},
+		{
+			name: "failed authority",
+			msg: &types.MsgRemoveAdministratorProposalRequest{
+				Denom:          "hotdog",
+				RemovedAddress: []string{s.owner1},
+				Authority:      "wrongauthority",
+			},
+			expErr: "expected gov account as only signer for proposal message",
+		},
+		{
+			name: "failed handler",
+			msg: &types.MsgRemoveAdministratorProposalRequest{
+				Denom:          "nonexistent",
+				RemovedAddress: []string{s.owner1},
+				Authority:      s.app.MarkerKeeper.GetAuthority(),
+			},
+			expErr: "nonexistent marker does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.RemoveAdministratorProposal(s.ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().Error(err, "RemoveAdministratorProposal() error incorrect.")
+			} else {
+				s.Assert().NoError(err, "RemoveAdministratorProposal() should have no error for valid request.")
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestChangeStatusProposal() {
+	hotdogMarker := types.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress("hotdog")),
+		sdk.NewInt64Coin("hotdog", 1000),
+		s.owner1Addr,
+		[]types.AccessGrant{
+			{Address: s.owner1Addr.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Mint}},
+		},
+		types.StatusFinalized,
+		types.MarkerType_Coin,
+		true,
+		true,
+		false,
+		[]string{},
+	)
+	s.Require().NoError(s.app.MarkerKeeper.AddMarkerAccount(s.ctx, hotdogMarker), "Failed to add 'hotdog' marker for tests")
+
+	testCases := []struct {
+		name   string
+		msg    *types.MsgChangeStatusProposalRequest
+		expErr string
+	}{
+		{
+			name: "success case",
+			msg: &types.MsgChangeStatusProposalRequest{
+				Denom:     "hotdog",
+				NewStatus: types.StatusActive,
+				Authority: s.app.MarkerKeeper.GetAuthority(),
+			},
+		},
+		{
+			name: "failed authority",
+			msg: &types.MsgChangeStatusProposalRequest{
+				Denom:     "hotdog",
+				NewStatus: types.StatusActive,
+				Authority: "wrongauthority",
+			},
+			expErr: "expected gov account as only signer for proposal message",
+		},
+		{
+			name: "failed handler",
+			msg: &types.MsgChangeStatusProposalRequest{
+				Denom:     "nonexistent",
+				NewStatus: types.StatusActive,
+				Authority: s.app.MarkerKeeper.GetAuthority(),
+			},
+			expErr: "nonexistent marker does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.ChangeStatusProposal(s.ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().Error(err, "ChangeStatusProposal() error incorrect.")
+			} else {
+				s.Assert().NoError(err, "ChangeStatusProposal() should have no error for valid request.")
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestWithdrawEscrowProposal() {
+	hotdogMarker := types.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress("hotdog")),
+		sdk.NewInt64Coin("hotdog", 1000),
+		s.owner1Addr,
+		[]types.AccessGrant{
+			{Address: s.owner1Addr.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Mint}},
+		},
+		types.StatusProposed,
+		types.MarkerType_Coin,
+		true,
+		true,
+		false,
+		[]string{},
+	)
+	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hotdogMarker, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1)}, types.ModuleName), "Failed to add navs to 'hotdog' marker for tests")
+	s.Require().NoError(s.app.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, hotdogMarker), "Failed to add 'hotdog' marker for tests")
+
+	testCases := []struct {
+		name   string
+		msg    *types.MsgWithdrawEscrowProposalRequest
+		expErr string
+	}{
+		{
+			name: "success case",
+			msg: &types.MsgWithdrawEscrowProposalRequest{
+				Denom:         "hotdog",
+				TargetAddress: s.owner2Addr.String(),
+				Amount:        sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500)),
+				Authority:     s.app.MarkerKeeper.GetAuthority(),
+			},
+		},
+		{
+			name: "failed authority",
+			msg: &types.MsgWithdrawEscrowProposalRequest{
+				Denom:         "hotdog",
+				TargetAddress: s.owner2Addr.String(),
+				Amount:        sdk.NewCoins(sdk.NewInt64Coin("hotdog", 500)),
+				Authority:     "wrongauthority",
+			},
+			expErr: "expected gov account as only signer for proposal message",
+		},
+		{
+			name: "failed handler",
+			msg: &types.MsgWithdrawEscrowProposalRequest{
+				Denom:         "nonexistent",
+				TargetAddress: s.owner2Addr.String(),
+				Amount:        sdk.NewCoins(sdk.NewInt64Coin("nonexistent", 500)),
+				Authority:     s.app.MarkerKeeper.GetAuthority(),
+			},
+			expErr: "nonexistent marker does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.WithdrawEscrowProposal(s.ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().Error(err, tc.expErr, "WithdrawEscrowProposal() error incorrect.")
+			} else {
+				s.Assert().NoError(err, "WithdrawEscrowProposal() should have no error for valid request.")
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestSetDenomMetadataProposal() {
+	hotdogMarker := types.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress("hotdog")),
+		sdk.NewInt64Coin("hotdog", 1000),
+		s.owner1Addr,
+		[]types.AccessGrant{
+			{Address: s.owner1Addr.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Mint}},
+		},
+		types.StatusProposed,
+		types.MarkerType_Coin,
+		true,
+		true,
+		false,
+		[]string{},
+	)
+	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, hotdogMarker, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1)}, types.ModuleName), "Failed to add navs to 'hotdog' marker for tests")
+	s.Require().NoError(s.app.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, hotdogMarker), "Failed to add 'hotdog' marker for tests")
+
+	hotdogMetadata := banktypes.Metadata{
+		Description: "Hotdog Coin",
+		DenomUnits: []*banktypes.DenomUnit{
+			{Denom: "uhotdog", Exponent: 0, Aliases: []string{"microhotdog"}},
+			{Denom: "mhotdog", Exponent: 3, Aliases: []string{}},
+			{Denom: "hotdog", Exponent: 6, Aliases: []string{}},
+		},
+		Base:    "hotdog",
+		Display: "hotdog",
+		Name:    "Hotdog",
+		Symbol:  "HOTDOG",
+	}
+
+	testCases := []struct {
+		name   string
+		msg    *types.MsgSetDenomMetadataProposalRequest
+		expErr string
+	}{
+		{
+			name: "success case",
+			msg: &types.MsgSetDenomMetadataProposalRequest{
+				Metadata:  hotdogMetadata,
+				Authority: s.app.MarkerKeeper.GetAuthority(),
+			},
+		},
+		{
+			name: "failed authority",
+			msg: &types.MsgSetDenomMetadataProposalRequest{
+				Metadata:  hotdogMetadata,
+				Authority: "wrongauthority",
+			},
+			expErr: "expected gov account as only signer for proposal message",
+		},
+		{
+			name: "failed handler",
+			msg: &types.MsgSetDenomMetadataProposalRequest{
+				Metadata:  banktypes.Metadata{Base: "nonexistent"},
+				Authority: s.app.MarkerKeeper.GetAuthority(),
+			},
+			expErr: "nonexistent marker does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.SetDenomMetadataProposal(s.ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Assert().Error(err, tc.expErr, "SetDenomMetadataProposal() error incorrect.")
+			} else {
+				s.Assert().NoError(err, "SetDenomMetadataProposal() should have no error for valid request.")
+			}
+		})
+	}
+}
