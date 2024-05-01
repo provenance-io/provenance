@@ -70,7 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Use fields of the SimulationState for the encoders needed for simulations [#1931](https://github.com/provenance-io/provenance/pull/1931).
 * Fix most of the failing unit tests [#1943](https://github.com/provenance-io/provenance/pull/1943)
-* Remove `name` legacy gov proposals [#1953](https://github.com/provenance-io/provenance/pull/1953).
+* Remove `name` legacy gov proposals [#1963](https://github.com/provenance-io/provenance/pull/1963).
 
 ### Dependencies
 
