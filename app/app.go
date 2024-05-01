@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -17,11 +16,8 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
-	cmtDbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtos "github.com/cometbft/cometbft/libs/os"
-	cmtrpccore "github.com/cometbft/cometbft/rpc/core"
-	"github.com/cometbft/cometbft/store"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -330,16 +326,18 @@ func New(
 	homePath string, invCheckPeriod uint,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
-	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		SigningOptions: signing.Options{
-			AddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-			},
-			ValidatorAddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-			},
+	signingOptions := signing.Options{
+		AddressCodec: address.Bech32Codec{
+			Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		},
+		ValidatorAddressCodec: address.Bech32Codec{
+			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+		},
+	}
+	exchange.DefineCustomGetSigners(&signingOptions)
+	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		ProtoFiles:     proto.HybridResolver,
+		SigningOptions: signingOptions,
 	})
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 	legacyAmino := codec.NewLegacyAmino()
@@ -405,15 +403,7 @@ func New(
 	}
 
 	// Register helpers for state-sync status.
-	if appOpts.Get("db_backend") != nil {
-		dbBackend := fmt.Sprintf("%v", appOpts.Get("db_backend"))
-		dbDir := fmt.Sprintf("%v", appOpts.Get("db_dir"))
-		dbType := cmtDbm.BackendType(dbBackend)
-		blockStoreDB, _ := cmtDbm.NewDB("blockstore", dbType, dbDir)
-		blockStore := store.NewBlockStore(blockStoreDB)
-		env := cmtrpccore.Environment{BlockStore: blockStore}
-		statesync.RegisterSyncStatus(env)
-	}
+	statesync.RegisterSyncStatus()
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
@@ -1130,6 +1120,7 @@ func New(
 	app.ScopedICQKeeper = scopedICQKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
 
+	simappparams.AppEncodingConfig = app.GetEncodingConfig()
 	return app
 }
 
