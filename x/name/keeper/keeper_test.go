@@ -60,6 +60,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	var nameData nametypes.GenesisState
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("name", s.user1Addr, false))
 	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("example.name", s.user1Addr, false))
+	nameData.Bindings = append(nameData.Bindings, nametypes.NewNameRecord("test.root", s.user1Addr, false))
 	nameData.Params.AllowUnrestrictedNames = false
 	nameData.Params.MaxNameLevels = 16
 	nameData.Params.MinSegmentLength = 2
@@ -557,6 +558,92 @@ func TestDeleteInvalidAddressIndexEntries(t *testing.T) {
 			require.NoError(t, err, "GetRecordsByAddress(addr2)")
 			addr2ActNames := getRecordNames(addr2ActRecords)
 			require.ElementsMatch(t, tc.expAddr2Names, addr2ActNames, "addr2 names: expected (A) vs actual (B)")
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateRootNameProposals() {
+
+	testCases := []struct {
+		testName   string
+		name       string
+		owner      sdk.AccAddress
+		restricted bool
+		err        error
+	}{
+		{
+			testName:   "add root name - valid",
+			name:       "root",
+			owner:      s.user1Addr,
+			restricted: false,
+		},
+		{
+			testName:   "add root name - valid full domain",
+			name:       "example.provenance.io",
+			owner:      s.user1Addr,
+			restricted: false,
+		},
+		{
+			testName:   "add root name - valid new sub domain",
+			name:       "another.provenance.io",
+			owner:      s.user1Addr,
+			restricted: false,
+		},
+		{
+			testName:   "add root name - invalid address",
+			name:       "badroot",
+			owner:      sdk.AccAddress("bad1address"),
+			restricted: false,
+		},
+		{
+			testName:   "add root name - fails duplicate",
+			name:       "root",
+			owner:      s.user1Addr,
+			restricted: false,
+			err:        fmt.Errorf("name is already bound to an address"),
+		},
+		{
+			testName:   "add root name - fails duplicate sub domain",
+			name:       "provenance.io",
+			owner:      s.user1Addr,
+			restricted: false,
+			err:        fmt.Errorf("name is already bound to an address"),
+		},
+		{
+			testName:   "add root name - fails duplicate third level domain",
+			name:       "example.provenance.io",
+			owner:      s.user1Addr,
+			restricted: false,
+			err:        fmt.Errorf("name is already bound to an address"),
+		},
+		{
+			testName:   "add root name - fails another duplicate third level domain",
+			name:       "another.provenance.io",
+			owner:      s.user1Addr,
+			restricted: false,
+			err:        fmt.Errorf("name is already bound to an address"),
+		},
+		{
+			testName:   "add root name - fails invalid name",
+			name:       "..badroot",
+			owner:      s.user1Addr,
+			restricted: false,
+			err:        fmt.Errorf("segment of name is too short"),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.testName, func() {
+			err := s.app.NameKeeper.CreateRootName(s.ctx, tc.name, tc.owner.String(), tc.restricted)
+
+			if err != nil {
+				s.Require().Error(err)
+				s.Require().Equal(tc.err.Error(), err.Error())
+			} else {
+				s.Require().NoError(err)
+			}
 		})
 	}
 }

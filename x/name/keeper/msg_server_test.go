@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
@@ -16,11 +17,13 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	simapp "github.com/provenance-io/provenance/app"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/name/keeper"
 	"github.com/provenance-io/provenance/x/name/types"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
 type MsgServerTestSuite struct {
@@ -320,6 +323,47 @@ func (s *MsgServerTestSuite) TestModifyName() {
 		s.Run(tc.name, func() {
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			_, err := s.msgServer.ModifyName(s.ctx, tc.msg)
+			if tc.expectedError != nil {
+				s.Require().EqualError(err, tc.expectedError.Error())
+			} else {
+				s.Require().NoError(err)
+			}
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Require().True(result, fmt.Sprintf("Expected typed event was not found: %v", tc.expectedEvent))
+			}
+		})
+	}
+}
+
+func (s *MsgServerTestSuite) TestCreateRootName() {
+	tests := []struct {
+		name          string
+		expectedError error
+		msg           *types.MsgCreateRootNameRequest
+		expectedEvent proto.Message
+	}{
+		{
+			name:          "invalid authority",
+			msg:           types.NewMsgCreateRootNameRequest("invalid-authority", "example", s.owner1, false),
+			expectedError: errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", s.app.NameKeeper.GetAuthority(), "invalid-authority"),
+		},
+		{
+			name:          "valid authority with invalid root name",
+			msg:           types.NewMsgCreateRootNameRequest(s.app.NameKeeper.GetAuthority(), "name", s.owner1, false),
+			expectedError: nametypes.ErrNameAlreadyBound,
+		},
+		{
+			name:          "valid authority with valid root name",
+			msg:           types.NewMsgCreateRootNameRequest(s.app.NameKeeper.GetAuthority(), "example", s.owner1, false),
+			expectedEvent: types.NewEventNameBound(s.owner1, "example", false),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := s.msgServer.CreateRootName(s.ctx, tc.msg)
 			if tc.expectedError != nil {
 				s.Require().EqualError(err, tc.expectedError.Error())
 			} else {

@@ -357,3 +357,37 @@ func (k Keeper) DeleteInvalidAddressIndexEntries(ctx sdk.Context) {
 
 	logger.Info(fmt.Sprintf("Done checking address -> name index entries. Deleted %d invalid entries and kept %d valid entries.", len(toDelete), keepCount))
 }
+
+func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted bool) error {
+	// err is suppressed because it returns an error on not found.  TODO - Remove use of error for not found
+	existing, _ := k.GetRecordByName(ctx, name)
+	if existing != nil {
+		return types.ErrNameAlreadyBound
+	}
+	addr, err := sdk.AccAddressFromBech32(owner)
+	if err != nil {
+		return err
+	}
+	logger := k.Logger(ctx)
+
+	// Because the proposal can contain a full domain we need to ensure all intermediate pieces are create correctly
+	n := ""
+	segments := strings.Split(name, ".")
+	for i := len(segments) - 1; i >= 0; i-- {
+		n = strings.Join([]string{segments[i], n}, ".")
+		n = strings.TrimRight(n, ".")
+
+		// Ensure there is not an existing record with this name that we might be over writing
+		existing, _ = k.GetRecordByName(ctx, n)
+		if existing == nil {
+			if err = k.SetNameRecord(ctx, n, addr, restricted); err != nil {
+				return err
+			}
+			logger.Info(fmt.Sprintf("create root name proposal: created %s and set the owner as %s", n, owner))
+		} else {
+			logger.Info(fmt.Sprintf("create root name proposal: intermediate domain %s exists, skipping", n))
+		}
+	}
+
+	return nil
+}
