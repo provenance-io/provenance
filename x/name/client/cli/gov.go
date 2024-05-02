@@ -5,15 +5,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
-	"github.com/provenance-io/provenance/x/name/types"
 )
 
 const (
@@ -55,57 +48,7 @@ $ %s tx gov submit-legacy-proposal \
 				version.AppName)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			proposalTitle, err := cmd.Flags().GetString(FlagTitle)
-			if err != nil {
-				return fmt.Errorf("proposal title: %w", err)
-			}
-			proposalDescr, err := cmd.Flags().GetString(FlagDescription)
-			if err != nil {
-				return fmt.Errorf("proposal description: %w", err)
-			}
-			proposalOwner, err := cmd.Flags().GetString(FlagOwner)
-			if err != nil {
-				return fmt.Errorf("proposal root name owner: %w", err)
-			}
-			if len(proposalOwner) < 1 {
-				proposalOwner = clientCtx.GetFromAddress().String()
-			}
-			_, err = sdk.AccAddressFromBech32(proposalOwner)
-			if err != nil {
-				return err
-			}
-			depositArg, err := cmd.Flags().GetString(FlagDeposit)
-			if err != nil {
-				return err
-			}
-			deposit, err := sdk.ParseCoinsNormalized(depositArg)
-			if err != nil {
-				return err
-			}
-
-			content := types.CreateRootNameProposal{
-				Title:       proposalTitle,
-				Description: proposalDescr,
-				Name:        strings.ToLower(args[0]),
-				Owner:       proposalOwner,
-				Restricted:  !viper.GetBool(FlagUnrestricted),
-			}
-			err = content.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			msg, err := govtypesv1beta1.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
 		},
 	}
 

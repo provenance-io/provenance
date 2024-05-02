@@ -152,10 +152,12 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the name content functions used to
+// ProposalContents returns all the v1beta1 name content functions used to
 // simulate governance proposals.
-func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return simulation.ProposalContents(am.keeper)
+func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	// This is for stuff that uses the v1beta1 gov module's Content interface.
+	// This module use the v1 gov pattern and no longer needs this.
+	return []simtypes.WeightedProposalMsg{}
 }
 
 // RandomizedParams creates randomized name param changes for the simulator.
