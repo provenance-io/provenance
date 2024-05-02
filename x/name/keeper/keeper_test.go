@@ -94,6 +94,9 @@ func (s *KeeperTestSuite) TestSetup() {
   maxnamelevels: 16
   allowunrestrictednames: false
 bindings:
+- name: test.root
+  address: %[1]s
+  restricted: false
 - name: name
   address: %[1]s
   restricted: false
@@ -303,6 +306,7 @@ func (s *KeeperTestSuite) TestModifyRecord() {
 
 		expUser1Recs := nametypes.NameRecords{
 			{Name: jackthecat, Address: s.user1Addr.String(), Restricted: true},
+			{Name: "test.root", Address: s.user1Addr.String(), Restricted: false},
 			{Name: "name", Address: s.user1Addr.String(), Restricted: false},
 			{Name: "example.name", Address: s.user1Addr.String(), Restricted: false},
 		}
@@ -350,6 +354,7 @@ func (s *KeeperTestSuite) TestGetAuthority() {
 func (s *KeeperTestSuite) TestIterateRecord() {
 	s.Run("iterate name's", func() {
 		expRecords := nametypes.NameRecords{
+			nametypes.NewNameRecord("test.root", s.user1Addr, false),
 			nametypes.NewNameRecord("name", s.user1Addr, false),
 			nametypes.NewNameRecord("example.name", s.user1Addr, false),
 			nametypes.NewNameRecord(attrtypes.AccountDataName, authtypes.NewModuleAddress(attrtypes.ModuleName), true),
