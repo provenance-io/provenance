@@ -47,7 +47,7 @@ $ %s tx gov submit-legacy-proposal \
 			`,
 				version.AppName)),
 		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
 		},
 	}
@@ -58,5 +58,6 @@ $ %s tx gov submit-legacy-proposal \
 	cmd.Flags().String(FlagTitle, "", "Title of proposal")
 	cmd.Flags().String(FlagDescription, "", "Description of proposal")
 	cmd.Flags().String(FlagDeposit, "", "Deposit of proposal")
+	cmd.Hidden = true
 	return cmd
 }

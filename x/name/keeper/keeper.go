@@ -370,7 +370,7 @@ func (k Keeper) CreateRootName(ctx sdk.Context, name, owner string, restricted b
 	}
 	logger := k.Logger(ctx)
 
-	// Because the proposal can contain a full domain we need to ensure all intermediate pieces are create correctly
+	// Because the proposal can contain a full domain we need to ensure all intermediate pieces are created correctly
 	n := ""
 	segments := strings.Split(name, ".")
 	for i := len(segments) - 1; i >= 0; i-- {
