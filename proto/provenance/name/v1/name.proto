@@ -36,6 +36,26 @@ message NameRecord {
   bool restricted = 3;
 }
 
+// CreateRootNameProposal details a proposal to create a new root name
+// that is controlled by a given owner and optionally restricted to the owner
+// for the sole creation of sub names.
+message CreateRootNameProposal {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  // proposal title
+  string title = 1;
+  // proposal description
+  string description = 2;
+  // the bound name
+  string name = 3;
+  // the address the name will resolve to
+  string owner = 4;
+  // a flag that indicates if an owner signature is required to add sub-names
+  bool restricted = 5;
+}
+
 // Event emitted when name is bound.
 message EventNameBound {
   string address    = 1;
