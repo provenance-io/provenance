@@ -152,8 +152,8 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 }
 
 func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper msgfeestypes.FeegrantKeeper, feeTx sdk.FeeTx, fee sdk.Coins, msgs []sdk.Msg) (sdk.AccAddress, error) {
-	feePayer := feeTx.FeePayer()
-	feeGranter := feeTx.FeeGranter()
+	feePayer := sdk.AccAddress(feeTx.FeePayer())
+	feeGranter := sdk.AccAddress(feeTx.FeeGranter())
 	deductFeesFrom := feePayer
 
 	// if feegranter set deduct base fee from feegranter account.
