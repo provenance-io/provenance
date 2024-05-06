@@ -10,8 +10,7 @@ option java_multiple_files = true;
 
 // Params defines the set of params for the msgfees module.
 message Params {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.equal) = false;
   // floor_gas_price is the constant used to calculate fees when gas fees shares denom with msg fee.
   //
   // Conversions:

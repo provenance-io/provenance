@@ -90,10 +90,9 @@ service Msg {
 
 // MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.
 message MsgWriteScopeRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // scope is the Scope you want added or updated.
   Scope scope = 1 [(gogoproto.nullable) = false];
@@ -125,10 +124,9 @@ message MsgWriteScopeResponse {
 
 // MsgDeleteScopeRequest is the request type for the Msg/DeleteScope RPC method.
 message MsgDeleteScopeRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // Unique ID for the scope to delete
   bytes           scope_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -140,10 +138,9 @@ message MsgDeleteScopeResponse {}
 
 // MsgAddScopeDataAccessRequest is the request to add data access AccAddress to scope
 message MsgAddScopeDataAccessRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // scope MetadataAddress for updating data access
   bytes scope_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -159,10 +156,9 @@ message MsgAddScopeDataAccessResponse {}
 
 // MsgDeleteScopeDataAccessRequest is the request to remove data access AccAddress to scope
 message MsgDeleteScopeDataAccessRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // scope MetadataAddress for removing data access
   bytes scope_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -178,10 +174,9 @@ message MsgDeleteScopeDataAccessResponse {}
 
 // MsgAddScopeOwnerRequest is the request to add owner AccAddress to scope
 message MsgAddScopeOwnerRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // scope MetadataAddress for updating data access
   bytes scope_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -197,10 +192,9 @@ message MsgAddScopeOwnerResponse {}
 
 // MsgDeleteScopeOwnerRequest is the request to remove owner AccAddresses to scope
 message MsgDeleteScopeOwnerRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // scope MetadataAddress for removing data access
   bytes scope_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -216,10 +210,9 @@ message MsgDeleteScopeOwnerResponse {}
 
 // MsgUpdateValueOwnersRequest is the request to update the value owner addresses in one or more scopes.
 message MsgUpdateValueOwnersRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // scope_ids are the scope metadata addresses of all scopes to be updated.
   repeated bytes scope_ids = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -234,10 +227,9 @@ message MsgUpdateValueOwnersResponse {}
 
 // MsgMigrateValueOwnerRequest is the request to migrate all scopes with one value owner to another value owner.
 message MsgMigrateValueOwnerRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // existing is the value owner address that is being migrated.
   string existing = 1;
@@ -252,10 +244,9 @@ message MsgMigrateValueOwnerResponse {}
 
 // MsgWriteSessionRequest is the request type for the Msg/WriteSession RPC method.
 message MsgWriteSessionRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // session is the Session you want added or updated.
   Session session = 1 [(gogoproto.nullable) = false];
@@ -299,10 +290,9 @@ message MsgWriteSessionResponse {
 
 // MsgWriteRecordRequest is the request type for the Msg/WriteRecord RPC method.
 message MsgWriteRecordRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // record is the Record you want added or updated.
   Record record = 1 [(gogoproto.nullable) = false];
@@ -338,10 +328,9 @@ message MsgWriteRecordResponse {
 
 // MsgDeleteRecordRequest is the request type for the Msg/DeleteRecord RPC method.
 message MsgDeleteRecordRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   bytes record_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
 
@@ -353,10 +342,9 @@ message MsgDeleteRecordResponse {}
 
 // MsgWriteScopeSpecificationRequest is the request type for the Msg/WriteScopeSpecification RPC method.
 message MsgWriteScopeSpecificationRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // specification is the ScopeSpecification you want added or updated.
   ScopeSpecification specification = 1 [(gogoproto.nullable) = false];
@@ -380,10 +368,9 @@ message MsgWriteScopeSpecificationResponse {
 
 // MsgDeleteScopeSpecificationRequest is the request type for the Msg/DeleteScopeSpecification RPC method.
 message MsgDeleteScopeSpecificationRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // MetadataAddress for the scope specification to delete.
   bytes           specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -395,10 +382,9 @@ message MsgDeleteScopeSpecificationResponse {}
 
 // MsgWriteContractSpecificationRequest is the request type for the Msg/WriteContractSpecification RPC method.
 message MsgWriteContractSpecificationRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // specification is the ContractSpecification you want added or updated.
   ContractSpecification specification = 1 [(gogoproto.nullable) = false];
@@ -423,10 +409,9 @@ message MsgWriteContractSpecificationResponse {
 
 // MsgAddContractSpecToScopeSpecRequest is the request type for the Msg/AddContractSpecToScopeSpec RPC method.
 message MsgAddContractSpecToScopeSpecRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // MetadataAddress for the contract specification to add.
   bytes contract_specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -441,10 +426,9 @@ message MsgAddContractSpecToScopeSpecResponse {}
 
 // MsgDeleteContractSpecFromScopeSpecRequest is the request type for the Msg/DeleteContractSpecFromScopeSpec RPC method.
 message MsgDeleteContractSpecFromScopeSpecRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // MetadataAddress for the contract specification to add.
   bytes contract_specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -460,10 +444,9 @@ message MsgDeleteContractSpecFromScopeSpecResponse {}
 
 // MsgDeleteContractSpecificationRequest is the request type for the Msg/DeleteContractSpecification RPC method.
 message MsgDeleteContractSpecificationRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // MetadataAddress for the contract specification to delete.
   bytes           specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -475,10 +458,9 @@ message MsgDeleteContractSpecificationResponse {}
 
 // MsgWriteRecordSpecificationRequest is the request type for the Msg/WriteRecordSpecification RPC method.
 message MsgWriteRecordSpecificationRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // specification is the RecordSpecification you want added or updated.
   RecordSpecification specification = 1 [(gogoproto.nullable) = false];
@@ -503,10 +485,9 @@ message MsgWriteRecordSpecificationResponse {
 
 // MsgDeleteRecordSpecificationRequest is the request type for the Msg/DeleteRecordSpecification RPC method.
 message MsgDeleteRecordSpecificationRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // MetadataAddress for the record specification to delete.
   bytes           specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -561,10 +542,9 @@ message MsgModifyOSLocatorResponse {
 
 // MsgSetAccountDataRequest is the request to set/update/delete a scope's account data.
 message MsgSetAccountDataRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // The identifier to associate the data with.
   // Currently, only scope ids are supported.
@@ -622,10 +602,9 @@ message MsgP8eMemorializeContractResponse {
 
 // MsgAddNetAssetValuesRequest defines the Msg/AddNetAssetValues request type
 message MsgAddNetAssetValuesRequest {
-  option (cosmos.msg.v1.signer)       = "signers";
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = true;
-  option (gogoproto.goproto_getters)  = false;
+  option (cosmos.msg.v1.signer)      = "signers";
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   string                 scope_id         = 1;
   repeated string        signers          = 2;
