@@ -164,6 +164,8 @@ func (m *NameRecord) GetRestricted() bool {
 // CreateRootNameProposal details a proposal to create a new root name
 // that is controlled by a given owner and optionally restricted to the owner
 // for the sole creation of sub names.
+// Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
+// proposals, see MsgCreateRootNameRequest.
 type CreateRootNameProposal struct {
 	// proposal title
 	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
