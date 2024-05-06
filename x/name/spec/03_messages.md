@@ -3,7 +3,6 @@
 In this section we describe the processing of the staking messages and the corresponding updates to the state.
 
 <!-- TOC -->
-- [Messages](#messages)
   - [MsgBindNameRequest](#msgbindnamerequest)
   - [MsgDeleteNameRequest](#msgdeletenamerequest)
   - [MsgModifyNameRequest](#msgmodifynamerequest)
