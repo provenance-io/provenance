@@ -3,6 +3,7 @@
 In this section we describe the processing of the staking messages and the corresponding updates to the state.
 
 <!-- TOC -->
+- [Messages](#messages)
   - [MsgBindNameRequest](#msgbindnamerequest)
   - [MsgDeleteNameRequest](#msgdeletenamerequest)
   - [MsgModifyNameRequest](#msgmodifynamerequest)
@@ -86,6 +87,7 @@ If successful a name record will be updated with the new address and restriction
 ## CreateRootNameProposal
 
 The create root name proposal is a governance proposal that allows new root level names to be established after the genesis of the blockchain.
+This legacy proposal is deprecated in favor of message based gov proposals, see MsgCreateRootNameRequest.
 
 ```proto
 message CreateRootNameProposal {
