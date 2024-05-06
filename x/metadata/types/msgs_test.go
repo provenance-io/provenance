@@ -8,12 +8,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil"
 
 	. "github.com/provenance-io/provenance/x/metadata/types"
@@ -27,6 +28,19 @@ func getTypeName(thing interface{}) string {
 		return rv
 	}
 	return rv[lastDot+1:]
+}
+
+// cdc holds a fully built codec.
+// Do not use this variable directly, instead use the GetCdc function to get it.
+var cdc *codec.ProtoCodec
+
+// GetCdc returns the codec, creating it if needed.
+func GetCdc(t *testing.T) *codec.ProtoCodec {
+	if cdc == nil {
+		encCfg := app.MakeTestEncodingConfig(t)
+		cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
+	}
+	return cdc
 }
 
 func TestAllMsgsGetSigners(t *testing.T) {
@@ -82,29 +96,45 @@ func TestWriteScopeRoute(t *testing.T) {
 	var msg = NewMsgWriteScopeRequest(*scope, []string{}, 0)
 
 	require.Equal(t, sdk.MsgTypeURL(msg), "/provenance.metadata.v1.MsgWriteScopeRequest")
+
+	expectedJSON := "{" +
+		"\"scope\":{" +
+		"\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\"," +
+		"\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\"," +
+		"\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}]," +
+		"\"data_access\":[\"data_accessor\"]," +
+		"\"value_owner_address\":\"value_owner\"," +
+		"\"require_party_rollup\":false" +
+		"}," +
+		"\"signers\":[]," +
+		"\"scope_uuid\":\"\"," +
+		"\"spec_uuid\":\"\"," +
+		"\"usd_mills\":\"0\"" +
+		"}"
+
 	expectedYaml := `scope:
-  scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
-  specification_id: scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3
-  owners:
-  - address: data_owner
-    role: 5
-    optional: false
   data_access:
   - data_accessor
-  value_owner_address: value_owner
+  owners:
+  - address: data_owner
+    optional: false
+    role: PARTY_TYPE_OWNER
   require_party_rollup: false
-signers: []
+  scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
+  specification_id: scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3
+  value_owner_address: value_owner
 scope_uuid: ""
+signers: []
 spec_uuid: ""
-usdmills: 0
+usd_mills: "0"
 `
-	bz, err := yaml.Marshal(msg)
-	require.NoError(t, err, "yaml.Marshal(msg)")
-	assert.Equal(t, expectedYaml, string(bz), "scope as yaml")
+	jsonBZ, err := GetCdc(t).MarshalJSON(msg)
+	require.NoError(t, err, "MarshalJSON(msg)")
+	assert.Equal(t, expectedJSON, string(jsonBZ), "scope as json")
 
-	bz, err = ModuleCdc.MarshalJSON(msg)
-	require.NoError(t, err, "ModuleCdc.MarshalJSON(msg)")
-	assert.Equal(t, "{\"scope\":{\"scope_id\":\"scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp\",\"specification_id\":\"scopespec1qs30c9axgrw5669ft0kffe6h9gysfe58v3\",\"owners\":[{\"address\":\"data_owner\",\"role\":\"PARTY_TYPE_OWNER\",\"optional\":false}],\"data_access\":[\"data_accessor\"],\"value_owner_address\":\"value_owner\",\"require_party_rollup\":false},\"signers\":[],\"scope_uuid\":\"\",\"spec_uuid\":\"\",\"usd_mills\":\"0\"}", string(bz))
+	yamlBZ, err := yaml.JSONToYAML(jsonBZ)
+	require.NoError(t, err, "yaml.JSONToYAML(jsonBZ)")
+	assert.Equal(t, expectedYaml, string(yamlBZ), "scope as yaml")
 }
 
 func TestWriteScopeValidation(t *testing.T) {
@@ -721,7 +751,7 @@ func TestBindOSLocator(t *testing.T) {
 
 	require.Equal(t, "/provenance.metadata.v1.MsgBindOSLocatorRequest", sdk.MsgTypeURL(bindRequestMsg))
 
-	bz, _ := ModuleCdc.MarshalJSON(bindRequestMsg)
+	bz, _ := GetCdc(t).MarshalJSON(bindRequestMsg)
 	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\",\"encryption_key\":\"\"}}", string(bz))
 }
 
@@ -733,7 +763,7 @@ func TestModifyOSLocator(t *testing.T) {
 
 	require.Equal(t, "/provenance.metadata.v1.MsgModifyOSLocatorRequest", sdk.MsgTypeURL(modifyRequest))
 
-	bz, _ := ModuleCdc.MarshalJSON(modifyRequest)
+	bz, _ := GetCdc(t).MarshalJSON(modifyRequest)
 	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\",\"encryption_key\":\"\"}}", string(bz))
 }
 
@@ -745,7 +775,7 @@ func TestDeleteOSLocator(t *testing.T) {
 
 	require.Equal(t, "/provenance.metadata.v1.MsgDeleteOSLocatorRequest", sdk.MsgTypeURL(deleteRequest))
 
-	bz, _ := ModuleCdc.MarshalJSON(deleteRequest)
+	bz, _ := GetCdc(t).MarshalJSON(deleteRequest)
 	require.Equal(t, "{\"locator\":{\"owner\":\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\",\"locator_uri\":\"http://foo.com\",\"encryption_key\":\"\"}}", string(bz))
 }
 

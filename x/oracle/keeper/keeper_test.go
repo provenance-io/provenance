@@ -10,6 +10,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +26,7 @@ type KeeperTestSuite struct {
 
 	app         *simapp.App
 	ctx         sdk.Context
+	cdc         *codec.ProtoCodec
 	queryClient types.QueryClient
 	msgServer   types.MsgServer
 
@@ -47,6 +49,7 @@ func (s *KeeperTestSuite) CreateAccounts(number int) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
+	s.cdc = codec.NewProtoCodec(s.app.GetEncodingConfig().InterfaceRegistry)
 	s.CreateAccounts(4)
 	s.msgServer = keeper.NewMsgServerImpl(&s.app.OracleKeeper)
 	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now().UTC()})
