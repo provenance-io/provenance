@@ -1,6 +1,7 @@
 syntax = "proto3";
 package provenance.msgfees.v1;
 
+import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -61,8 +62,12 @@ message MsgAddMsgFeeProposalRequest {
   string msg_type_url = 1;
 
   // additional fee for msg type
-  cosmos.base.v1beta1.Coin additional_fee = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  cosmos.base.v1beta1.Coin additional_fee = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 
   // optional recipient to receive basis points
   string recipient = 3;
@@ -83,9 +88,13 @@ message MsgUpdateMsgFeeProposalRequest {
   string msg_type_url = 1;
 
   // additional fee for msg type
-  cosmos.base.v1beta1.Coin additional_fee = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  // optional recipient to recieve basis points
+  cosmos.base.v1beta1.Coin additional_fee = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
+  // optional recipient to receive basis points
   string recipient = 3;
   // basis points to use when recipient is present (1 - 10,000)
   string recipient_basis_points = 4;
