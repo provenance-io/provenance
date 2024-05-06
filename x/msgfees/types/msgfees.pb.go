@@ -96,18 +96,23 @@ func (m *Params) GetConversionFeeDenom() string {
 	return ""
 }
 
-// MsgFee is the core of what gets stored on the blockchain
-// it consists of four parts
-// 1. the msg type url, i.e. /cosmos.bank.v1beta1.MsgSend
-// 2. minimum additional fees(can be of any denom)
-// 3. optional recipient of fee based on `recipient_basis_points`
-// 4. if recipient is declared they will recieve the basis points of the fee (0-10,000)
+// MsgFee is the core of what gets stored on the blockchain to define a msg-based fee.
 type MsgFee struct {
+	// msg_type_url is the type-url of the message with the added fee, e.g. "/cosmos.bank.v1beta1.MsgSend".
 	MsgTypeUrl string `protobuf:"bytes,1,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
-	// additional_fee can pay in any Coin( basically a Denom and Amount, Amount can be zero)
-	AdditionalFee        types.Coin `protobuf:"bytes,2,opt,name=additional_fee,json=additionalFee,proto3" json:"additional_fee"`
-	Recipient            string     `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty"`
-	RecipientBasisPoints uint32     `protobuf:"varint,4,opt,name=recipient_basis_points,json=recipientBasisPoints,proto3" json:"recipient_basis_points,omitempty"`
+	// additional_fee is the extra fee that is required for the given message type (can be in any denom).
+	AdditionalFee types.Coin `protobuf:"bytes,2,opt,name=additional_fee,json=additionalFee,proto3" json:"additional_fee"`
+	// recipient is an option address that will receive a portion of the additional fee.
+	// There can only be a recipient if the recipient_basis_points is not zero.
+	Recipient string `protobuf:"bytes,3,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	// recipient_basis_points is an optional portion of the additional fee to be sent to the recipient.
+	// Must be between 0 and 10,000 (inclusive).
+	//
+	// If there is a recipient, this must not be zero. If there is not a recipient, this must be zero.
+	//
+	// The recipient will receive additional_fee * recipient_basis_points / 10,000.
+	// The fee collector will receive the rest, i.e. additional_fee * (10,000 - recipient_basis_points) / 10,000.
+	RecipientBasisPoints uint32 `protobuf:"varint,4,opt,name=recipient_basis_points,json=recipientBasisPoints,proto3" json:"recipient_basis_points,omitempty"`
 }
 
 func (m *MsgFee) Reset()         { *m = MsgFee{} }

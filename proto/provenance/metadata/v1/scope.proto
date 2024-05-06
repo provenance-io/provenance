@@ -101,7 +101,7 @@ message Session {
   // parties is the set of identities that signed this contract
   repeated Party parties = 3 [(gogoproto.nullable) = false];
   // name to associate with this session execution context, typically classname
-  string name = 4 [(gogoproto.jsontag) = "type", (gogoproto.moretags) = "yaml:\"type\""];
+  string name = 4;
   // context is a field for storing client specific data associated with a session.
   bytes context = 5;
   // Created by, updated by, timestamps, version number, and related info.
@@ -113,7 +113,7 @@ message Record {
   option (gogoproto.goproto_stringer) = false;
 
   // name/identifier for this record.  Value must be unique within the scope.  Also known as a Fact name
-  string name = 1 [(gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
+  string name = 1;
   // id of the session context that was used to create this record (use with filtered kvprefix iterator)
   bytes session_id = 2 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // process contain information used to uniquely identify an execution on or off chain that generated this record
