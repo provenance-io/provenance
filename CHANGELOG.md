@@ -72,6 +72,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Removes sync-info code for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Fix most of the failing unit tests [#1943](https://github.com/provenance-io/provenance/pull/1943)
 * Clean up ReadFromClient [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Remove all `GetSigners()` methods [#1957](https://github.com/provenance-io/provenance/pull/1957).
+* Ensure all `Msg`s have correctly identified `signer` fields [#1957](https://github.com/provenance-io/provenance/pull/1957).
+* Clean up all the module codecs [#1957](https://github.com/provenance-io/provenance/pull/1957).
+* Switch to auto-generated `String` and `Equal` methods for most proto messages [#1957](https://github.com/provenance-io/provenance/pull/1957).
 
 ### Dependencies
 
