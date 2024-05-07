@@ -69,6 +69,9 @@ Indexes (special kvstore records for efficient cross reference/queries)
 
 // Scope defines a root reference for a collection of records owned by one or more parties.
 message Scope {
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = true;
+
   // Unique ID for this scope.  Implements sdk.Address interface for use where addresses are required in Cosmos
   bytes scope_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // the scope specification that contains the specifications for data elements allowed within this scope
@@ -91,6 +94,9 @@ message Scope {
 //
 // NOTE: When there are no more Records within a Scope that reference a Session, the Session is removed.
 message Session {
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = true;
+
   bytes session_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // unique id of the contract specification that was used to create this session.
   bytes specification_id = 2 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
@@ -107,6 +113,7 @@ message Session {
 // A record (of fact) is attached to a session or each consideration output from a contract
 message Record {
   option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = true;
 
   // name/identifier for this record.  Value must be unique within the scope.  Also known as a Fact name
   string name = 1;

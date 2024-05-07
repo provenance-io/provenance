@@ -3,7 +3,6 @@ package types
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -294,17 +293,6 @@ func (r Record) ValidateBasic() error {
 		return fmt.Errorf("invalid record process: %w", err)
 	}
 	return nil
-}
-
-// String implements stringer interface
-func (r Record) String() string {
-	out := fmt.Sprintf("%s (%s) Results [", r.Name, r.SessionId)
-	for _, o := range r.Outputs {
-		out += fmt.Sprintf("%s - %s, ", o.Status, o.Hash)
-	}
-	out = strings.TrimRight(out, ", ")
-	out += fmt.Sprintf("] (%s/%s)", r.Process.Name, r.Process.Method)
-	return out
 }
 
 // GetRecordAddress returns the address for this record, or an empty MetadataAddress if it cannot be constructed.

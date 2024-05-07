@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/hex"
-	"fmt"
 	"testing"
 	"time"
 
@@ -476,27 +475,28 @@ func (s *ScopeTestSuite) TestScopeHasOwnerAddress() {
 }
 
 func (s *ScopeTestSuite) TestScopeString() {
-	s.T().Run("scope string", func(t *testing.T) {
-		scopeUUID := uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
-		sessionUUID := uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
-		scope := &Scope{
-			ScopeId:         ScopeMetadataAddress(scopeUUID),
-			SpecificationId: ScopeSpecMetadataAddress(sessionUUID),
-			Owners:          OwnerPartyList(s.Addr),
-			DataAccess:      []string{},
-		}
-		require.Equal(t, `scope_id: scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp
-specification_id: scopespec1qnp9c775ccu5xeaggtmylf0uesvsqyrkq8
-owners:
-- address: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
-  role: 5
-  optional: false
-data_access: []
-value_owner_address: ""
-require_party_rollup: false
-`,
-			scope.String())
-	})
+	scopeUUID := uuid.MustParse("8d80b25a-c089-4446-956e-5d08cfe3e1a5")
+	specUUID := uuid.MustParse("c25c7bd4-c639-4367-a842-f64fa5fccc19")
+	scope := &Scope{
+		ScopeId:         ScopeMetadataAddress(scopeUUID),
+		SpecificationId: ScopeSpecMetadataAddress(specUUID),
+		Owners:          OwnerPartyList(s.Addr),
+		DataAccess:      []string{},
+	}
+	expected := "&Scope{" +
+		"ScopeId:scope1qzxcpvj6czy5g354dews3nlruxjsahhnsp," +
+		"SpecificationId:scopespec1qnp9c775ccu5xeaggtmylf0uesvsqyrkq8," +
+		"Owners:[]Party{cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck - PARTY_TYPE_OWNER,}," +
+		"DataAccess:[]," +
+		"ValueOwnerAddress:," +
+		"RequirePartyRollup:false," +
+		"}"
+	var actual string
+	testFunc := func() {
+		actual = scope.String()
+	}
+	s.Require().NotPanics(testFunc, "scope.String()")
+	s.Assert().Equal(expected, actual, "scope.String() result")
 }
 
 func (s *ScopeTestSuite) TestRecordValidateBasic() {
@@ -761,33 +761,103 @@ func (s *ScopeTestSuite) TestSessionValidateBasic() {
 }
 
 func (s *ScopeTestSuite) TestSessionString() {
-
-	scopeUUID := uuid.New()
-	sessionUUID := uuid.New()
+	scopeUUID := uuid.MustParse("382b6eed-e61e-469b-933e-e4d0210c77f6")
+	sessionUUID := uuid.MustParse("c120ba2a-b13d-4678-8e5a-7459d92c3e90")
 	sessionID := SessionMetadataAddress(scopeUUID, sessionUUID)
-	contractSpec := ContractSpecMetadataAddress(uuid.New())
-	session := NewSession("name", sessionID, contractSpec, []Party{
-		{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE}},
-		&AuditFields{CreatedBy: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
-			Message: "message",
-		})
+	contractSpecUUID := uuid.MustParse("888B0DAB-61ED-4074-B9B6-0F35CDFA4F0D")
+	contractSpecID := ContractSpecMetadataAddress(contractSpecUUID)
 
-	// println(session.String())
-	s.T().Run("session string", func(t *testing.T) {
-		require.Equal(t, fmt.Sprintf(`session_id: %s
-specification_id: %s
-parties:
-- address: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
-  role: 6
-  optional: false
-type: name
-context: []
-audit:
-  created_by: cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
-  message: message
-`, session.SessionId.String(), session.SpecificationId.String()),
-			session.String())
-	})
+	session := &Session{
+		SessionId:       sessionID,
+		SpecificationId: contractSpecID,
+		Parties: []Party{
+			{Address: "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck", Role: PartyType_PARTY_TYPE_AFFILIATE},
+		},
+		Name:    "whatever",
+		Context: []byte("moredata"),
+		Audit: &AuditFields{
+			CreatedDate: time.Unix(0, 0),
+			CreatedBy:   "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			UpdatedDate: time.Unix(0, 0),
+			Message:     "message",
+		},
+	}
+
+	expected := "&Session{" +
+		"SessionId:session1qyuzkmhduc0ydxun8mjdqggvwlmvzg9692cn63nc3ed8gkwe9slfq747zd8," +
+		"SpecificationId:contractspec1qwygkrdtv8k5qa9ekc8ntn06fuxsj02zcg," +
+		"Parties:[]Party{cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck - PARTY_TYPE_AFFILIATE,}," +
+		"Name:whatever," +
+		"Context:[109 111 114 101 100 97 116 97]," +
+		"Audit:created_date:<> created_by:\"cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck\" updated_date:<> message:\"message\" ," +
+		"}"
+
+	var actual string
+	testFunc := func() {
+		actual = session.String()
+	}
+	s.Require().NotPanics(testFunc, "session.String()")
+	s.Assert().Equal(expected, actual, "session.String() result")
+}
+
+func (s *ScopeTestSuite) TestRecordString() {
+	scopeUUID := uuid.MustParse("382b6eed-e61e-469b-933e-e4d0210c77f6")
+	sessionUUID := uuid.MustParse("c120ba2a-b13d-4678-8e5a-7459d92c3e90")
+	sessionID := SessionMetadataAddress(scopeUUID, sessionUUID)
+	contractSpecUUID := uuid.MustParse("888B0DAB-61ED-4074-B9B6-0F35CDFA4F0D")
+	name := "something"
+	recSpecID := RecordSpecMetadataAddress(contractSpecUUID, name)
+	otherUUID := uuid.MustParse("37b553b7-c36e-4e4a-9e72-aef0b3689ce8")
+
+	record := &Record{
+		Name:      name,
+		SessionId: sessionID,
+		Process: Process{
+			ProcessId: &Process_Hash{Hash: "5075140835d0bc504791c76b04c33d2b"},
+			Name:      "runner",
+			Method:    "UsainBolt",
+		},
+		Inputs: []RecordInput{
+			{
+				Name:     "incoming",
+				Source:   &RecordInput_Hash{Hash: "d48f944ac6c78b97d544f98b89b506ca"},
+				TypeName: "thingy",
+				Status:   RecordInputStatus_Record,
+			},
+			{
+				Name:     "notacomeback",
+				Source:   &RecordInput_RecordId{RecordId: RecordMetadataAddress(otherUUID, "beenhere")},
+				TypeName: "widget",
+				Status:   RecordInputStatus_Proposed,
+			},
+		},
+		Outputs: []RecordOutput{
+			{
+				Hash:   "fba028e9ebb6ae55787d676995306e06",
+				Status: ResultStatus_RESULT_STATUS_PASS,
+			},
+		},
+		SpecificationId: recSpecID,
+	}
+
+	expected := "&Record{" +
+		"Name:something," +
+		"SessionId:session1qyuzkmhduc0ydxun8mjdqggvwlmvzg9692cn63nc3ed8gkwe9slfq747zd8," +
+		"Process:runner - UsainBolt - {5075140835d0bc504791c76b04c33d2b}," +
+		"Inputs:[]RecordInput{" +
+		"incoming (thingy) - RECORD_INPUT_STATUS_RECORD d48f944ac6c78b97d544f98b89b506ca," +
+		"notacomeback (widget) - RECORD_INPUT_STATUS_PROPOSED record1qgmm25ahcdhyuj57w2h0pvmgnn5v78sxmz4r9998fpk9zhc9yzexw8p9exn," +
+		"}," +
+		"Outputs:[]RecordOutput{fba028e9ebb6ae55787d676995306e06 - RESULT_STATUS_PASS,}," +
+		"SpecificationId:recspec1qkygkrdtv8k5qa9ekc8ntn06fuxnljdk39ze6uu03jy28fy2483n25phf7m," +
+		"}"
+
+	var actual string
+	testFunc := func() {
+		actual = record.String()
+	}
+	s.Require().NotPanics(testFunc, "record.String()")
+	s.Assert().Equal(expected, actual, "record.String() result")
 }
 
 func (s *ScopeTestSuite) TestMetadataAuditUpdate() {

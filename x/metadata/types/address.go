@@ -626,15 +626,30 @@ func (ma MetadataAddress) ContractSpecRecordSpecIteratorPrefix() ([]byte, error)
 	return append(RecordSpecificationKeyPrefix, ma[1:17]...), nil
 }
 
-// Format implements fmt.Format interface
+// Format implements fmt.Formatter interface for a MetadataAddress.
 func (ma MetadataAddress) Format(s fmt.State, verb rune) {
+	var out string
 	switch verb {
-	case 's':
-		s.Write([]byte(ma.String()))
-	case 'p':
-		s.Write([]byte(fmt.Sprintf("%p", ma)))
+	case 's', 'q':
+		out = fmt.Sprintf(fmt.FormatString(s, verb), ma.String())
+	case 'v':
+		if s.Flag('#') {
+			out = fmt.Sprintf(fmt.FormatString(s, verb), []byte(ma))
+			out = "MetadataAddress" + strings.TrimPrefix(out, "[]byte")
+		} else {
+			// The auto-generated gogoproto.stringer methods use "%v" for the MetadataAddress fields.
+			// So here, we return the bech32 for "%v" so that those other strings look right.
+			out = fmt.Sprintf(fmt.FormatString(s, verb), ma.String())
+		}
+	case 'p', 'T':
+		out = fmt.Sprintf(fmt.FormatString(s, verb), ma)
 	default:
-		s.Write([]byte(fmt.Sprintf("%X", []byte(ma))))
+		out = fmt.Sprintf(fmt.FormatString(s, verb), []byte(ma))
+	}
+
+	_, err := s.Write([]byte(out))
+	if err != nil {
+		panic(err)
 	}
 }
 
