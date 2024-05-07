@@ -69,7 +69,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Restore gov-prop cli commands and fix next key decoding [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Use fields of the SimulationState for the encoders needed for simulations [#1931](https://github.com/provenance-io/provenance/pull/1931).
+* Removes sync-info code for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Fix most of the failing unit tests [#1943](https://github.com/provenance-io/provenance/pull/1943)
+* Clean up ReadFromClient [#1760](https://github.com/provenance-io/provenance/issues/1760).
 
 ### Dependencies
 
@@ -84,8 +86,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `peter-evans/create-pull-request` from 6.0.2 to 6.0.5 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940), [#1955](https://github.com/provenance-io/provenance/pull/1955))
 - Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.3 ([#1928](https://github.com/provenance-io/provenance/pull/1928), [#1944](https://github.com/provenance-io/provenance/pull/1944))
 - Bump `cosmwasm-std` from 1.4.1 to 1.4.4 ([#1950](https://github.com/provenance-io/provenance/pull/1950))
-- Bump `golangci/golangci-lint-action` from 4 to 5 ([#1951](https://github.com/provenance-io/provenance/pull/1951))
-- Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.0 ([#1960](https://github.com/provenance-io/provenance/pull/1960))
+- Bump `golangci/golangci-lint-action` from 4 to 6 ([#1951](https://github.com/provenance-io/provenance/pull/1951), [#1965](https://github.com/provenance-io/provenance/pull/1965))
+- Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.1 ([#1960](https://github.com/provenance-io/provenance/pull/1960), [#1966](https://github.com/provenance-io/provenance/pull/1966))
 - Bump `github.com/hashicorp/go-getter` from 1.7.3 to 1.7.4 ([#1958](https://github.com/provenance-io/provenance/pull/1958))
 - Bump `golang.org/x/text` from 0.14.0 to 0.15.0 ([#1964](https://github.com/provenance-io/provenance/pull/1964))
 
