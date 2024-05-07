@@ -46,6 +46,49 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgGovUpdateParamsRequest)(nil),
 }
 
+// createPaymentGetSignersFunc returns a custom GetSigners function for a Msg that has a signer in a Payment.
+// The Payment must be in a field named "payment", and must not be nullable.
+// The provided getter will be used to get the string of the signer address,
+// which will be decoded using the decoder in the provided signing.Options.
+func createPaymentGetSignersFunc(options *signing.Options, fieldName string) signing.GetSignersFunc {
+	return func(msgIn protov2.Message) (addrs [][]byte, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic (recovered) getting %s.payment.%s as a signer: %v", protov2.MessageName(msgIn), fieldName, r)
+			}
+		}()
+
+		msg := msgIn.ProtoReflect()
+		pmtDesc := msg.Descriptor().Fields().ByName("payment")
+		if pmtDesc == nil {
+			return nil, fmt.Errorf("no payment field found in %s", protov2.MessageName(msgIn))
+		}
+
+		pmt := msg.Get(pmtDesc).Message()
+		fieldDesc := pmt.Descriptor().Fields().ByName(protoreflect.Name(fieldName))
+		if fieldDesc == nil {
+			return nil, fmt.Errorf("no payment.%s field found in %s", fieldName, protov2.MessageName(msgIn))
+		}
+
+		b32 := pmt.Get(fieldDesc).Interface().(string)
+		addr, err := options.AddressCodec.StringToBytes(b32)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding payment.%s address %q: %w", fieldName, b32, err)
+		}
+		return [][]byte{addr}, nil
+	}
+}
+
+// DefineCustomGetSigners registers all the exchange module custom GetSigners functions with the provided signing options.
+func DefineCustomGetSigners(options *signing.Options) {
+	options.DefineCustomGetSigners(
+		protov2.MessageName(protoadapt.MessageV2Of(&MsgCreatePaymentRequest{})),
+		createPaymentGetSignersFunc(options, "source"))
+	options.DefineCustomGetSigners(
+		protov2.MessageName(protoadapt.MessageV2Of(&MsgAcceptPaymentRequest{})),
+		createPaymentGetSignersFunc(options, "target"))
+}
+
 func (m MsgCreateAskRequest) ValidateBasic() error {
 	if err := m.AskOrder.Validate(); err != nil {
 		return err
@@ -706,47 +749,4 @@ func (m MsgGovUpdateParamsRequest) ValidateBasic() error {
 	}
 	errs = append(errs, m.Params.Validate())
 	return errors.Join(errs...)
-}
-
-// createPaymentGetSignersFunc returns a custom GetSigners function for a Msg that has a signer in a Payment.
-// The Payment must be in a field named "payment", and must not be nullable.
-// The provided getter will be used to get the string of the signer address,
-// which will be decoded using the decoder in the provided signing.Options.
-func createPaymentGetSignersFunc(options *signing.Options, fieldName string) signing.GetSignersFunc {
-	return func(msgIn protov2.Message) (addrs [][]byte, err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				err = fmt.Errorf("panic (recovered) getting %s.payment.%s as a signer: %v", protov2.MessageName(msgIn), fieldName, r)
-			}
-		}()
-
-		msg := msgIn.ProtoReflect()
-		pmtDesc := msg.Descriptor().Fields().ByName("payment")
-		if pmtDesc == nil {
-			return nil, fmt.Errorf("no payment field found in %s", protov2.MessageName(msgIn))
-		}
-
-		pmt := msg.Get(pmtDesc).Message()
-		fieldDesc := pmt.Descriptor().Fields().ByName(protoreflect.Name(fieldName))
-		if fieldDesc == nil {
-			return nil, fmt.Errorf("no payment.%s field found in %s", fieldName, protov2.MessageName(msgIn))
-		}
-
-		b32 := pmt.Get(fieldDesc).Interface().(string)
-		addr, err := options.AddressCodec.StringToBytes(b32)
-		if err != nil {
-			return nil, fmt.Errorf("error decoding payment.%s address %q: %w", fieldName, b32, err)
-		}
-		return [][]byte{addr}, nil
-	}
-}
-
-// DefineCustomGetSigners registers all the exchange module custom GetSigners functions with the provided signing options.
-func DefineCustomGetSigners(options *signing.Options) {
-	options.DefineCustomGetSigners(
-		protov2.MessageName(protoadapt.MessageV2Of(&MsgCreatePaymentRequest{})),
-		createPaymentGetSignersFunc(options, "source"))
-	options.DefineCustomGetSigners(
-		protov2.MessageName(protoadapt.MessageV2Of(&MsgAcceptPaymentRequest{})),
-		createPaymentGetSignersFunc(options, "target"))
 }
