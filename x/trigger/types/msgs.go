@@ -106,18 +106,6 @@ func hasSigners(sigCtx *signing.Context, available map[string]bool, action sdk.M
 	return nil
 }
 
-// stringsToAccAddresses converts an array of strings into an array of Acc Addresses.
-// Panics if it can't convert one.
-func stringsToAccAddresses(strings []string) []sdk.AccAddress {
-	retval := make([]sdk.AccAddress, len(strings))
-
-	for i, str := range strings {
-		retval[i] = sdk.MustAccAddressFromBech32(str)
-	}
-
-	return retval
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgCreateTriggerRequest) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if msg.Event != nil {
