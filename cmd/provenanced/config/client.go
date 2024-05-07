@@ -5,6 +5,9 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 // Default constants
@@ -91,6 +94,27 @@ func ApplyClientConfigToContext(ctx client.Context, config *ClientConfig) (clien
 	ctx = ctx.WithNodeURI(config.Node).
 		WithClient(clnt).
 		WithBroadcastMode(config.BroadcastMode)
+
+	// This needs to go after ReadFromClientConfig, as that function
+	// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
+	// is only available if the client is online.
+	if !ctx.Offline {
+		enabledSignModes := tx.DefaultSignModes
+		enabledSignModes = append(enabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
+		txConfigOpts := tx.ConfigOptions{
+			EnabledSignModes:           enabledSignModes,
+			TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(ctx),
+		}
+		txConfig, err := tx.NewTxConfigWithOptions(
+			ctx.Codec,
+			txConfigOpts,
+		)
+		if err != nil {
+			return ctx, err
+		}
+
+		ctx = ctx.WithTxConfig(txConfig)
+	}
 
 	return ctx, nil
 }
