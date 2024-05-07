@@ -159,7 +159,6 @@ import (
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	msgfeeswasm "github.com/provenance-io/provenance/x/msgfees/wasm"
 	"github.com/provenance-io/provenance/x/name"
-	nameclient "github.com/provenance-io/provenance/x/name/client"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
@@ -793,7 +792,6 @@ func New(
 				append(
 					[]govclient.ProposalHandler{},
 					paramsclient.ProposalHandler,
-					nameclient.RootNameProposalHandler,
 				),
 			),
 		})
