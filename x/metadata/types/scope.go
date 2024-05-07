@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -84,12 +82,6 @@ func (s Scope) ValidateOwnersBasic() error {
 		return fmt.Errorf("invalid scope owners: %w", err)
 	}
 	return ValidateOptionalParties(s.RequirePartyRollup, s.Owners)
-}
-
-// String implements stringer interface
-func (s Scope) String() string {
-	out, _ := yaml.Marshal(s)
-	return string(out)
 }
 
 func (s *Scope) RemoveDataAccess(addresses []string) {
@@ -239,12 +231,6 @@ func (s Session) ValidateBasic() error {
 			maxAuditMessageLength, len(s.Audit.Message))
 	}
 	return nil
-}
-
-// String implements stringer interface
-func (s Session) String() string {
-	out, _ := yaml.Marshal(s)
-	return string(out)
 }
 
 // GetAllPartyAddresses gets the addresses of all of the parties. Each address can only appear once in the return value.

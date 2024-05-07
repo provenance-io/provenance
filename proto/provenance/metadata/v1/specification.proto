@@ -35,8 +35,6 @@ option java_multiple_files = true;
 
 // ScopeSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
 message ScopeSpecification {
-  option (gogoproto.goproto_stringer) = false;
-
   // unique identifier for this specification on chain
   bytes specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // General information about this scope specification.
@@ -51,8 +49,6 @@ message ScopeSpecification {
 
 // ContractSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
 message ContractSpecification {
-  option (gogoproto.goproto_stringer) = false;
-
   // unique identifier for this specification on chain
   bytes specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // Description information for this contract specification
@@ -75,8 +71,6 @@ message ContractSpecification {
 
 // RecordSpecification defines the specification for a Record including allowed/required inputs/outputs
 message RecordSpecification {
-  option (gogoproto.goproto_stringer) = false;
-
   // unique identifier for this specification on chain
   bytes specification_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // Name of Record that will be created when this specification is used
@@ -94,8 +88,6 @@ message RecordSpecification {
 // InputSpecification defines a name, type_name, and source reference (either on or off chain) to define an input
 // parameter
 message InputSpecification {
-  option (gogoproto.goproto_stringer) = false;
-
   // name for this input
   string name = 1;
   // a type_name (typically a proto name or class_name)
@@ -111,8 +103,6 @@ message InputSpecification {
 
 // Description holds general information that is handy to associate with a structure.
 message Description {
-  option (gogoproto.goproto_stringer) = false;
-
   // A Name for this thing.
   string name = 1;
   // A description of this thing.

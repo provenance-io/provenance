@@ -13,11 +13,9 @@ option java_multiple_files = true;
 
 // Params defines the set of params for the account module.
 message Params {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-
+  option (gogoproto.equal) = true;
   // Deprecated: Prefer to use `max_supply` instead. Maximum amount of supply to allow a marker to be created with
-  uint64 max_total_supply = 1 [(gogoproto.customtype) = "uint64", (gogoproto.nullable) = false, deprecated = true];
+  uint64 max_total_supply = 1 [deprecated = true];
   // indicates if governance based controls of markers is allowed.
   bool enable_governance = 2;
   // a regular expression used to validate marker denom values from normal create requests (governance

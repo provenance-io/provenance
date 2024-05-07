@@ -69,8 +69,6 @@ Indexes (special kvstore records for efficient cross reference/queries)
 
 // Scope defines a root reference for a collection of records owned by one or more parties.
 message Scope {
-  option (gogoproto.goproto_stringer) = false;
-
   // Unique ID for this scope.  Implements sdk.Address interface for use where addresses are required in Cosmos
   bytes scope_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // the scope specification that contains the specifications for data elements allowed within this scope
@@ -93,8 +91,6 @@ message Scope {
 //
 // NOTE: When there are no more Records within a Scope that reference a Session, the Session is removed.
 message Session {
-  option (gogoproto.goproto_stringer) = false;
-
   bytes session_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // unique id of the contract specification that was used to create this session.
   bytes specification_id = 2 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
