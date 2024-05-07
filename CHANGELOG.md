@@ -85,8 +85,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `peter-evans/create-pull-request` from 6.0.2 to 6.0.5 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940), [#1955](https://github.com/provenance-io/provenance/pull/1955))
 - Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.3 ([#1928](https://github.com/provenance-io/provenance/pull/1928), [#1944](https://github.com/provenance-io/provenance/pull/1944))
 - Bump `cosmwasm-std` from 1.4.1 to 1.4.4 ([#1950](https://github.com/provenance-io/provenance/pull/1950))
-- Bump `golangci/golangci-lint-action` from 4 to 5 ([#1951](https://github.com/provenance-io/provenance/pull/1951))
-- Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.0 ([#1960](https://github.com/provenance-io/provenance/pull/1960))
+- Bump `golangci/golangci-lint-action` from 4 to 6 ([#1951](https://github.com/provenance-io/provenance/pull/1951), [#1965](https://github.com/provenance-io/provenance/pull/1965))
+- Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.1 ([#1960](https://github.com/provenance-io/provenance/pull/1960), [#1966](https://github.com/provenance-io/provenance/pull/1966))
 - Bump `github.com/hashicorp/go-getter` from 1.7.3 to 1.7.4 ([#1958](https://github.com/provenance-io/provenance/pull/1958))
 - Bump `golang.org/x/text` from 0.14.0 to 0.15.0 ([#1964](https://github.com/provenance-io/provenance/pull/1964))
 
