@@ -35,15 +35,15 @@ func UnpackConfig(cmd *cobra.Command) error {
 	if appConfErr != nil {
 		return fmt.Errorf("could not get app config values: %w", appConfErr)
 	}
-	tmConfig, tmConfErr := ExtractTmConfig(cmd)
-	if tmConfErr != nil {
-		return fmt.Errorf("could not get tendermint config values: %w", tmConfErr)
+	cmtConfig, cmtConfErr := ExtractCmtConfig(cmd)
+	if cmtConfErr != nil {
+		return fmt.Errorf("could not get cometbft config values: %w", cmtConfErr)
 	}
 	clientConfig, clientConfErr := ExtractClientConfig(cmd)
 	if clientConfErr != nil {
 		return fmt.Errorf("could not get client config values: %w", clientConfErr)
 	}
-	writeUnpackedConfig(cmd, appConfig, tmConfig, clientConfig, true)
+	writeUnpackedConfig(cmd, appConfig, cmtConfig, clientConfig, true)
 	err := deletePackedConfig(cmd, true)
 	return err
 }
@@ -91,12 +91,12 @@ func DefaultAppConfig() *serverconfig.Config {
 	return rv
 }
 
-// ExtractTmConfig creates a tendermint config from the command context.
-func ExtractTmConfig(cmd *cobra.Command) (*cmtconfig.Config, error) {
+// ExtractCmtConfig creates a cometbft config from the command context.
+func ExtractCmtConfig(cmd *cobra.Command) (*cmtconfig.Config, error) {
 	v := server.GetServerContextFromCmd(cmd).Viper
-	conf := DefaultTmConfig()
+	conf := DefaultCmtConfig()
 	if err := v.Unmarshal(conf); err != nil {
-		return nil, fmt.Errorf("error extracting tendermint config: %w", err)
+		return nil, fmt.Errorf("error extracting cometbft config: %w", err)
 	}
 	conf.SetRoot(GetHomeDir(cmd))
 	// When the RPCServers value is "", it gets read as []string{}.
@@ -109,34 +109,34 @@ func ExtractTmConfig(cmd *cobra.Command) (*cmtconfig.Config, error) {
 	return conf, nil
 }
 
-// ExtractTmConfigAndMap from the command context, creates a tendermint config and related string->value map.
-func ExtractTmConfigAndMap(cmd *cobra.Command) (*cmtconfig.Config, FieldValueMap, error) {
-	conf, err := ExtractTmConfig(cmd)
+// ExtractCmtConfigAndMap from the command context, creates a cometbft config and related string->value map.
+func ExtractCmtConfigAndMap(cmd *cobra.Command) (*cmtconfig.Config, FieldValueMap, error) {
+	conf, err := ExtractCmtConfig(cmd)
 	if err != nil {
 		return nil, nil, err
 	}
 	fields := MakeFieldValueMap(conf, true)
-	removeUndesirableTmConfigEntries(fields)
+	removeUndesirableCmtConfigEntries(fields)
 	return conf, fields, nil
 }
 
-func DefaultTmConfig() *cmtconfig.Config {
+func DefaultCmtConfig() *cmtconfig.Config {
 	rv := cmtconfig.DefaultConfig()
 	rv.Consensus.TimeoutCommit = DefaultConsensusTimeoutCommit
 	rv.TxIndex.Indexer = "null"
 	return rv
 }
 
-// removeUndesirableTmConfigEntries deletes some keys from the provided fields map that we don't want included.
+// removeUndesirableCmtConfigEntries deletes some keys from the provided fields map that we don't want included.
 // The provided map is altered during this call. It is also returned from this func.
-// There are several fields in the tendermint config struct that don't correspond to entries in the config files.
+// There are several fields in the cometbft config struct that don't correspond to entries in the config files.
 // None of the "home" keys have entries in the config files:
 // "home", "consensus.home", "mempool.home", "p2p.home", "rpc.home"
 // There are several "p2p.test_" fields that should be ignored too.
 // "p2p.test_dial_fail", "p2p.test_fuzz",
 // "p2p.test_fuzz_config.*" ("maxdelay", "mode", "probdropconn", "probdroprw", "probsleep")
 // This info is accurate in Cosmos SDK 0.43 (on 2021-08-16).
-func removeUndesirableTmConfigEntries(fields FieldValueMap) FieldValueMap {
+func removeUndesirableCmtConfigEntries(fields FieldValueMap) FieldValueMap {
 	delete(fields, "home")
 	for k := range fields {
 		if (len(k) > 5 && k[len(k)-5:] == ".home") || (len(k) > 9 && k[:9] == "p2p.test_") {
@@ -171,7 +171,7 @@ func GetAllConfigDefaults() FieldValueMap {
 	rv := FieldValueMap{}
 	rv.AddEntriesFrom(
 		MakeFieldValueMap(DefaultAppConfig(), false),
-		removeUndesirableTmConfigEntries(MakeFieldValueMap(DefaultTmConfig(), false)),
+		removeUndesirableCmtConfigEntries(MakeFieldValueMap(DefaultCmtConfig(), false)),
 		MakeFieldValueMap(DefaultClientConfig(), false),
 	)
 	return rv
@@ -184,14 +184,14 @@ func GetAllConfigDefaults() FieldValueMap {
 func SaveConfigs(
 	cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *cmtconfig.Config,
+	cmtConfig *cmtconfig.Config,
 	clientConfig *ClientConfig,
 	verbose bool,
 ) {
 	if IsPacked(cmd) {
-		generateAndWritePackedConfig(cmd, appConfig, tmConfig, clientConfig, verbose)
+		generateAndWritePackedConfig(cmd, appConfig, cmtConfig, clientConfig, verbose)
 	} else {
-		writeUnpackedConfig(cmd, appConfig, tmConfig, clientConfig, verbose)
+		writeUnpackedConfig(cmd, appConfig, cmtConfig, clientConfig, verbose)
 	}
 }
 
@@ -201,7 +201,7 @@ func SaveConfigs(
 func writeUnpackedConfig(
 	cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *cmtconfig.Config,
+	cmtConfig *cmtconfig.Config,
 	clientConfig *ClientConfig,
 	verbose bool,
 ) {
@@ -216,12 +216,12 @@ func writeUnpackedConfig(
 			cmd.Printf("Done.\n")
 		}
 	}
-	if tmConfig != nil {
-		confFile := GetFullPathToTmConf(cmd)
+	if cmtConfig != nil {
+		confFile := GetFullPathToCmtConf(cmd)
 		if verbose {
-			cmd.Printf("Writing tendermint config to: %s ... ", confFile)
+			cmd.Printf("Writing cometbft config to: %s ... ", confFile)
 		}
-		cmtconfig.WriteConfigFile(confFile, tmConfig)
+		cmtconfig.WriteConfigFile(confFile, cmtConfig)
 		if verbose {
 			cmd.Printf("Done.\n")
 		}
@@ -245,7 +245,7 @@ func writeUnpackedConfig(
 func deleteUnpackedConfig(cmd *cobra.Command, verbose bool) error {
 	configFiles := []string{
 		GetFullPathToAppConf(cmd),
-		GetFullPathToTmConf(cmd),
+		GetFullPathToCmtConf(cmd),
 		GetFullPathToClientConf(cmd),
 	}
 	var rvErr error
@@ -267,12 +267,12 @@ func deleteUnpackedConfig(cmd *cobra.Command, verbose bool) error {
 func generateAndWritePackedConfig(
 	cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *cmtconfig.Config,
+	cmtConfig *cmtconfig.Config,
 	clientConfig *ClientConfig,
 	verbose bool,
 ) {
 	mustEnsureConfigDir(cmd)
-	var appConfMap, tmConfMap, clientConfMap FieldValueMap
+	var appConfMap, cmtConfMap, clientConfMap FieldValueMap
 	if appConfig == nil {
 		var err error
 		_, appConfMap, err = ExtractAppConfigAndMap(cmd)
@@ -282,14 +282,14 @@ func generateAndWritePackedConfig(
 	} else {
 		appConfMap = MakeFieldValueMap(appConfig, false)
 	}
-	if tmConfig == nil {
+	if cmtConfig == nil {
 		var err error
-		_, tmConfMap, err = ExtractTmConfigAndMap(cmd)
+		_, cmtConfMap, err = ExtractCmtConfigAndMap(cmd)
 		if err != nil {
-			panic(fmt.Errorf("could not extract tm config values: %w", err))
+			panic(fmt.Errorf("could not extract cometbft config values: %w", err))
 		}
 	} else {
-		tmConfMap = MakeFieldValueMap(tmConfig, false)
+		cmtConfMap = MakeFieldValueMap(cmtConfig, false)
 	}
 	if clientConfig == nil {
 		var err error
@@ -301,7 +301,7 @@ func generateAndWritePackedConfig(
 		clientConfMap = MakeFieldValueMap(clientConfig, false)
 	}
 	allConf := FieldValueMap{}
-	allConf.AddEntriesFrom(appConfMap, tmConfMap, clientConfMap)
+	allConf.AddEntriesFrom(appConfMap, cmtConfMap, clientConfMap)
 	defaultConf := GetAllConfigDefaults()
 	packed := map[string]string{}
 	for key, info := range MakeUpdatedFieldMap(defaultConf, allConf, true) {
@@ -421,27 +421,27 @@ func loadUnmanagedConfig(cmd *cobra.Command) error {
 // loadUnpackedConfig attempts to read the unpacked config files and apply them to the appropriate contexts.
 func loadUnpackedConfig(cmd *cobra.Command) error {
 	appConfFile := GetFullPathToAppConf(cmd)
-	tmConfFile := GetFullPathToTmConf(cmd)
+	cmtConfFile := GetFullPathToCmtConf(cmd)
 	clientConfFile := GetFullPathToClientConf(cmd)
 
 	// Both the server context and client context should be using the same Viper, so this is good for both.
 	vpr := server.GetServerContextFromCmd(cmd).Viper
 
-	// Load the tendermint config defaults, then file if it exists.
-	tdErr := addFieldMapToViper(vpr, MakeFieldValueMap(DefaultTmConfig(), false))
+	// Load the cometbft config defaults, then file if it exists.
+	tdErr := addFieldMapToViper(vpr, MakeFieldValueMap(DefaultCmtConfig(), false))
 	if tdErr != nil {
-		return fmt.Errorf("tendermint config defaults load error: %w", tdErr)
+		return fmt.Errorf("cometbft config defaults load error: %w", tdErr)
 	}
-	switch _, err := os.Stat(tmConfFile); {
+	switch _, err := os.Stat(cmtConfFile); {
 	case os.IsNotExist(err):
 		// Do nothing.
 	case err != nil:
-		return fmt.Errorf("tendermint config file stat error: %w", err)
+		return fmt.Errorf("cometbft config file stat error: %w", err)
 	default:
-		vpr.SetConfigFile(tmConfFile)
+		vpr.SetConfigFile(cmtConfFile)
 		rerr := vpr.MergeInConfig()
 		if rerr != nil {
-			return fmt.Errorf("tendermint config file read error: %w", rerr)
+			return fmt.Errorf("cometbft config file read error: %w", rerr)
 		}
 	}
 
@@ -505,7 +505,7 @@ func loadPackedConfig(cmd *cobra.Command) error {
 
 	// Start with the defaults
 	appConfigMap := MakeFieldValueMap(DefaultAppConfig(), false)
-	tmConfigMap := MakeFieldValueMap(DefaultTmConfig(), false)
+	cmtConfigMap := MakeFieldValueMap(DefaultCmtConfig(), false)
 	clientConfigMap := MakeFieldValueMap(DefaultClientConfig(), false)
 
 	// Apply the packed config entries to the defaults.
@@ -519,11 +519,11 @@ func loadPackedConfig(cmd *cobra.Command) error {
 				rvErr = appendError(rvErr, fmt.Errorf("app config key: %s, value: %s, err: %w", k, v, err))
 			}
 		}
-		if tmConfigMap.Has(k) {
+		if cmtConfigMap.Has(k) {
 			found = true
-			err := tmConfigMap.SetFromString(k, v)
+			err := cmtConfigMap.SetFromString(k, v)
 			if err != nil {
-				rvErr = appendError(rvErr, fmt.Errorf("tendermint config key: %s, value: %s, err: %w", k, v, err))
+				rvErr = appendError(rvErr, fmt.Errorf("cometbft config key: %s, value: %s, err: %w", k, v, err))
 			}
 		}
 		if clientConfigMap.Has(k) {
@@ -546,8 +546,8 @@ func loadPackedConfig(cmd *cobra.Command) error {
 	// and a set value takes precedence over flags. So I guess defaults are what we go with.
 	// The server and client should both have the same viper, so we only need the one.
 	vpr := server.GetServerContextFromCmd(cmd).Viper
-	if lerr := addFieldMapToViper(vpr, tmConfigMap); lerr != nil {
-		return fmt.Errorf("tendermint packed config load error: %w", lerr)
+	if lerr := addFieldMapToViper(vpr, cmtConfigMap); lerr != nil {
+		return fmt.Errorf("cometbft packed config load error: %w", lerr)
 	}
 	if lerr := addFieldMapToViper(vpr, appConfigMap); lerr != nil {
 		return fmt.Errorf("app packed config load error: %w", lerr)
@@ -564,8 +564,8 @@ func addFieldMapToViper(vpr *viper.Viper, fvmap FieldValueMap) error {
 	if err != nil {
 		return err
 	}
-	// The TM BaseConfig struct has a RootDir field with the mapstruct name "home".
-	// So the fvmap created from a TM config struct will have a "home" entry with a value of "".
+	// The CometBFT BaseConfig struct has a RootDir field with the mapstruct name "home".
+	// So the fvmap created from a CometBFT config struct will have a "home" entry with a value of "".
 	// If we were to then include that when calling MergeConfigMap, it would tell viper that the "home" value is "".
 	// This prevents the default value (defined with the --home flag) from being used.
 	// Since the "home" value defines where the config files are, it's safe to assume none of the config
@@ -596,11 +596,11 @@ func applyConfigsToContexts(cmd *cobra.Command) error {
 
 	// Set the server context's config to what Viper has now.
 	serverCtx := server.GetServerContextFromCmd(cmd)
-	tmConfig, err := ExtractTmConfig(cmd)
+	cmtConfig, err := ExtractCmtConfig(cmd)
 	if err != nil {
 		return err
 	}
-	serverCtx.Config = tmConfig
+	serverCtx.Config = cmtConfig
 	serverCtx.Config.SetRoot(clientCtx.HomeDir)
 
 	// Set the server context's logger using what Viper has now.

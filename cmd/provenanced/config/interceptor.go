@@ -25,7 +25,7 @@ const (
 // It will finish setting up the client context and create the server context.
 // It will create a Viper literal and the configs will be read and parsed or created from defaults.
 // The viper literal is used to read and parse configurations. Command handlers can
-// fetch the server or client contexts to get the Tendermint, App/Cosmos, or Client
+// fetch the server or client contexts to get the CometBFT, App/Cosmos, or Client
 // configurations, or to get access to viper.
 func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	// The result of client.GetClientContextFromCmd(cmd) is not a pointer.
@@ -43,7 +43,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	SetPioConfigFromFlags(cmd.Flags())
 
 	// Create a new Server context with the same viper as the client context, a default config, and no logger.
-	serverCtx := server.NewContext(vpr, DefaultTmConfig(), nil)
+	serverCtx := server.NewContext(vpr, DefaultCmtConfig(), nil)
 	if err := server.SetCmdServerContext(cmd, serverCtx); err != nil {
 		return err
 	}

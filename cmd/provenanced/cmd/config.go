@@ -61,8 +61,8 @@ func ConfigGetCmd() *cobra.Command {
     Or they can be a type of config file:
         "cosmos", "app" -> %[2]s configuration values.
             e.g. %[1]s get app
-        "tendermint", "tm", "config" -> %[3]s configuration values.
-            e.g. %[1]s get tm
+        "cometbft", "comet", "cmt", "config" -> %[3]s configuration values.
+            e.g. %[1]s get cmt
         "client" -> %[4]s configuration values.
             e.g. %[1]s get client
     Or they can be the word "all" to get all configuration values.
@@ -71,11 +71,11 @@ func ConfigGetCmd() *cobra.Command {
 
     Displayed values will reflect settings defined through environment variables.
 
-`, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+`, configCmdStart, provconfig.AppConfFilename, provconfig.CmtConfFilename, provconfig.ClientConfFilename),
 		Example: fmt.Sprintf(`$ %[1]s get telemetry.service-name moniker \
 $ %[1]s get api consensus \
 $ %[1]s get app \
-$ %[1]s get tm \
+$ %[1]s get cmt \
 $ %[1]s get client \
 $ %[1]s get all \
 			`, configCmdStart),
@@ -147,8 +147,8 @@ Get just the configuration entries that are not default values: %[1]s changed [<
     Or they can be a type of config file:
         "cosmos", "app" -> %[2]s configuration values.
             e.g. %[1]s get app
-        "tendermint", "tm", "config" -> %[3]s configuration values.
-            e.g. %[1]s get tm
+        "cometbft", "comet", "cmt", "config" -> %[3]s configuration values.
+            e.g. %[1]s get cmt
         "client" -> %[4]s configuration values.
             e.g. %[1]s get client
     Or they can be the word "all" to get all configuration values.
@@ -158,7 +158,7 @@ Get just the configuration entries that are not default values: %[1]s changed [<
 
     Displayed values will reflect settings defined through environment variables.
 
-`, configCmdStart, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+`, configCmdStart, provconfig.AppConfFilename, provconfig.CmtConfFilename, provconfig.ClientConfFilename),
 		Example: fmt.Sprintf(`$ %[1]s changed \
 $ %[1]s changed telemetry.service-name`, configCmdStart),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -204,7 +204,7 @@ Combines the %[2]s, %[3]s, and %[4]s files into %[1]s.
 Settings defined through environment variables will be included in the packed file.
 Settings that are their default value will not be included.
 
-`, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+`, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.CmtConfFilename, provconfig.ClientConfFilename),
 		Example: fmt.Sprintf(`$ %[1]s pack`, configCmdStart),
 		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -228,7 +228,7 @@ Default values are filled in appropriately.
 
 This can also be used to update the config files using the current template so they include all current fields.
 
-`, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.TmConfFilename, provconfig.ClientConfFilename),
+`, provconfig.PackedConfFilename, provconfig.AppConfFilename, provconfig.CmtConfFilename, provconfig.ClientConfFilename),
 		Example: fmt.Sprintf(`$ %[1]s unpack`, configCmdStart),
 		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -244,9 +244,9 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 	if acerr != nil {
 		return fmt.Errorf("could not get app config fields: %w", acerr)
 	}
-	_, tmFields, tmcerr := provconfig.ExtractTmConfigAndMap(cmd)
-	if tmcerr != nil {
-		return fmt.Errorf("could not get tendermint config fields: %w", tmcerr)
+	_, cmtFields, cmtcerr := provconfig.ExtractCmtConfigAndMap(cmd)
+	if cmtcerr != nil {
+		return fmt.Errorf("could not get cometbft config fields: %w", cmtcerr)
 	}
 	_, clientFields, ccerr := provconfig.ExtractClientConfigAndMap(cmd)
 	if ccerr != nil {
@@ -258,19 +258,23 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	appToOutput := provconfig.FieldValueMap{}
-	tmToOutput := provconfig.FieldValueMap{}
+	cmtToOutput := provconfig.FieldValueMap{}
 	clientToOutput := provconfig.FieldValueMap{}
 	unknownKeyMap := provconfig.FieldValueMap{}
 	for _, key := range args {
 		switch key {
 		case "all":
 			appToOutput.AddEntriesFrom(appFields)
-			tmToOutput.AddEntriesFrom(tmFields)
+			cmtToOutput.AddEntriesFrom(cmtFields)
 			clientToOutput.AddEntriesFrom(clientFields)
 		case "app", "cosmos":
 			appToOutput.AddEntriesFrom(appFields)
-		case "config", "tendermint", "tm":
-			tmToOutput.AddEntriesFrom(tmFields)
+		case "tendermint", "tm":
+			cmd.Printf("The %q option is deprecated and will be removed in a future version.\n", key)
+			cmd.Println("Use one of \"cometbft\", \"comet\", or \"cmt\" instead.")
+			fallthrough
+		case "config", "cometbft", "comet", "cmt":
+			cmtToOutput.AddEntriesFrom(cmtFields)
 		case "client":
 			clientToOutput.AddEntriesFrom(clientFields)
 		default:
@@ -280,9 +284,9 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 				appToOutput.AddEntriesFrom(fvm)
 			}
 
-			if fvm, ok := tmFields.FindEntries(key); ok {
+			if fvm, ok := cmtFields.FindEntries(key); ok {
 				found = true
-				tmToOutput.AddEntriesFrom(fvm)
+				cmtToOutput.AddEntriesFrom(fvm)
 			}
 
 			if fvm, ok := clientFields.FindEntries(key); ok {
@@ -300,15 +304,15 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 		cmd.Println(makeAppConfigHeader(cmd, "", isPacked).String())
 		cmd.Println(makeFieldMapString(appToOutput))
 	}
-	if len(tmToOutput) > 0 {
-		cmd.Println(makeTmConfigHeader(cmd, "", isPacked).String())
-		cmd.Println(makeFieldMapString(tmToOutput))
+	if len(cmtToOutput) > 0 {
+		cmd.Println(makeCmtConfigHeader(cmd, "", isPacked).String())
+		cmd.Println(makeFieldMapString(cmtToOutput))
 	}
 	if len(clientToOutput) > 0 {
 		cmd.Println(makeClientConfigHeader(cmd, "", isPacked).String())
 		cmd.Println(makeFieldMapString(clientToOutput))
 	}
-	if isPacked && (len(appToOutput) > 0 || len(tmToOutput) > 0 || len(clientToOutput) > 0) {
+	if isPacked && (len(appToOutput) > 0 || len(cmtToOutput) > 0 || len(clientToOutput) > 0) {
 		cmd.Println(makeConfigIsPackedLine(cmd))
 	}
 	if len(unknownKeyMap) > 0 {
@@ -353,9 +357,9 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	if acerr != nil {
 		return false, fmt.Errorf("couldn't get app config: %w", acerr)
 	}
-	tmConfig, tmFields, tmcerr := provconfig.ExtractTmConfigAndMap(cmd)
-	if tmcerr != nil {
-		return false, fmt.Errorf("couldn't get tendermint config: %w", tmcerr)
+	cmtConfig, cmtFields, cmtcerr := provconfig.ExtractCmtConfigAndMap(cmd)
+	if cmtcerr != nil {
+		return false, fmt.Errorf("couldn't get cometbft config: %w", cmtcerr)
 	}
 	clientConfig, clientFields, ccerr := provconfig.ExtractClientConfigAndMap(cmd)
 	if ccerr != nil {
@@ -371,12 +375,12 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	}
 	issueFound := false
 	appUpdates := provconfig.UpdatedFieldMap{}
-	tmUpdates := provconfig.UpdatedFieldMap{}
+	cmtUpdates := provconfig.UpdatedFieldMap{}
 	clientUpdates := provconfig.UpdatedFieldMap{}
 	for i, key := range keys {
 		var confMap provconfig.FieldValueMap
 		foundIn := entryNotFound
-		for fvmi, fvm := range []provconfig.FieldValueMap{appFields, tmFields, clientFields} {
+		for fvmi, fvm := range []provconfig.FieldValueMap{appFields, cmtFields, clientFields} {
 			if fvm.Has(key) {
 				confMap = fvm
 				foundIn = fvmi
@@ -400,7 +404,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		case 0:
 			appUpdates.AddOrUpdate(key, was, isNow)
 		case 1:
-			tmUpdates.AddOrUpdate(key, was, isNow)
+			cmtUpdates.AddOrUpdate(key, was, isNow)
 		case 2:
 			clientUpdates.AddOrUpdate(key, was, isNow)
 		}
@@ -412,9 +416,9 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 				issueFound = true
 			}
 		}
-		if len(tmUpdates) > 0 {
-			if err := tmConfig.ValidateBasic(); err != nil {
-				cmd.Printf("Tendermint config validation error: %v\n", err)
+		if len(cmtUpdates) > 0 {
+			if err := cmtConfig.ValidateBasic(); err != nil {
+				cmd.Printf("cometbft config validation error: %v\n", err)
 				issueFound = true
 			}
 		}
@@ -432,27 +436,27 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 	if len(appUpdates) == 0 {
 		appConfig = nil
 	}
-	if len(tmUpdates) == 0 {
-		tmConfig = nil
+	if len(cmtUpdates) == 0 {
+		cmtConfig = nil
 	}
 	if len(clientUpdates) == 0 {
 		clientConfig = nil
 	}
-	provconfig.SaveConfigs(cmd, appConfig, tmConfig, clientConfig, false)
+	provconfig.SaveConfigs(cmd, appConfig, cmtConfig, clientConfig, false)
 	isPacked := provconfig.IsPacked(cmd)
 	if len(appUpdates) > 0 {
 		cmd.Println(makeAppConfigHeader(cmd, addedLeadUpdated, isPacked).WithoutEnv().String())
 		cmd.Println(makeUpdatedFieldMapString(appUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
-	if len(tmUpdates) > 0 {
-		cmd.Println(makeTmConfigHeader(cmd, addedLeadUpdated, isPacked).WithoutEnv().String())
-		cmd.Println(makeUpdatedFieldMapString(tmUpdates, provconfig.UpdatedField.StringAsUpdate))
+	if len(cmtUpdates) > 0 {
+		cmd.Println(makeCmtConfigHeader(cmd, addedLeadUpdated, isPacked).WithoutEnv().String())
+		cmd.Println(makeUpdatedFieldMapString(cmtUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
 	if len(clientUpdates) > 0 {
 		cmd.Println(makeClientConfigHeader(cmd, addedLeadUpdated, isPacked).WithoutEnv().String())
 		cmd.Println(makeUpdatedFieldMapString(clientUpdates, provconfig.UpdatedField.StringAsUpdate))
 	}
-	if isPacked && (len(appUpdates) > 0 || len(tmUpdates) > 0 || len(clientUpdates) > 0) {
+	if isPacked && (len(appUpdates) > 0 || len(cmtUpdates) > 0 || len(clientUpdates) > 0) {
 		cmd.Println(makeConfigIsPackedLine(cmd))
 	}
 	return false, nil
@@ -464,9 +468,9 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	if acerr != nil {
 		return fmt.Errorf("couldn't get app config: %w", acerr)
 	}
-	_, tmFields, tmcerr := provconfig.ExtractTmConfigAndMap(cmd)
-	if tmcerr != nil {
-		return fmt.Errorf("couldn't get tendermint config: %w", tmcerr)
+	_, cmtFields, cmtcerr := provconfig.ExtractCmtConfigAndMap(cmd)
+	if cmtcerr != nil {
+		return fmt.Errorf("couldn't get cometbft config: %w", cmtcerr)
 	}
 	_, clientFields, ccerr := provconfig.ExtractClientConfigAndMap(cmd)
 	if ccerr != nil {
@@ -478,24 +482,28 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	allDefaults := provconfig.GetAllConfigDefaults()
-	showApp, showTm, showClient := false, false, false
+	showApp, showCmt, showClient := false, false, false
 	appDiffs := provconfig.UpdatedFieldMap{}
-	tmDiffs := provconfig.UpdatedFieldMap{}
+	cmtDiffs := provconfig.UpdatedFieldMap{}
 	clientDiffs := provconfig.UpdatedFieldMap{}
 	unknownKeyMap := provconfig.FieldValueMap{}
 	for _, key := range args {
 		switch key {
 		case "all":
-			showApp, showTm, showClient = true, true, true
+			showApp, showCmt, showClient = true, true, true
 			appDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, appFields, true))
-			tmDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, tmFields, true))
+			cmtDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, cmtFields, true))
 			clientDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, clientFields, true))
 		case "app", "cosmos":
 			showApp = true
 			appDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, appFields, true))
-		case "config", "tendermint", "tm":
-			showTm = true
-			tmDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, tmFields, true))
+		case "tendermint", "tm":
+			cmd.Printf("The %q option is deprecated and will be removed in a future version.\n", key)
+			cmd.Println("Use one of \"cometbft\", \"comet\", or \"cmt\" instead.")
+			fallthrough
+		case "config", "cometbft", "comet", "cmt":
+			showCmt = true
+			cmtDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, cmtFields, true))
 		case "client":
 			showClient = true
 			clientDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, clientFields, true))
@@ -507,10 +515,10 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 				appDiffs.AddOrUpdateEntriesFrom(changes)
 			}
 
-			if fvm, ok := tmFields.FindEntries(key); ok {
-				showTm, found = true, true
+			if fvm, ok := cmtFields.FindEntries(key); ok {
+				showCmt, found = true, true
 				changes := provconfig.MakeUpdatedFieldMap(allDefaults, fvm, false)
-				tmDiffs.AddOrUpdateEntriesFrom(changes)
+				cmtDiffs.AddOrUpdateEntriesFrom(changes)
 			}
 
 			if fvm, ok := clientFields.FindEntries(key); ok {
@@ -537,12 +545,12 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if showTm {
-		cmd.Println(makeTmConfigHeader(cmd, addedLeadChanged, isPacked).String())
-		if len(tmDiffs) > 0 {
-			cmd.Println(makeUpdatedFieldMapString(tmDiffs, provconfig.UpdatedField.StringAsDefault))
+	if showCmt {
+		cmd.Println(makeCmtConfigHeader(cmd, addedLeadChanged, isPacked).String())
+		if len(cmtDiffs) > 0 {
+			cmd.Println(makeUpdatedFieldMapString(cmtDiffs, provconfig.UpdatedField.StringAsDefault))
 		} else {
-			cmd.Println("All tendermint config values equal the default config values.")
+			cmd.Println("All cometbft config values equal the default config values.")
 			cmd.Println("")
 		}
 	}
@@ -557,7 +565,7 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if isPacked && (showApp || showTm || showClient) {
+	if isPacked && (showApp || showCmt || showClient) {
 		cmd.Println(makeConfigIsPackedLine(cmd))
 	}
 
@@ -670,12 +678,12 @@ func makeAppConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) *s
 	}
 }
 
-// makeTmConfigHeader creates a section header string for tendermint config stuff.
-func makeTmConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) *sectionHeader {
+// makeCmtConfigHeader creates a section header string for cometbft config stuff.
+func makeCmtConfigHeader(cmd *cobra.Command, addedLead string, isPacked bool) *sectionHeader {
 	return &sectionHeader{
-		lead:      "Tendermint Config",
+		lead:      "CometBFT Config",
 		addedLead: addedLead,
-		filename:  provconfig.GetFullPathToTmConf(cmd),
+		filename:  provconfig.GetFullPathToCmtConf(cmd),
 		isPacked:  isPacked,
 		env:       true,
 	}

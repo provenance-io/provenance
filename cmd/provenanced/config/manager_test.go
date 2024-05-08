@@ -51,7 +51,7 @@ func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
 		WithCodec(s.EncodingConfig.Marshaler).
 		WithHomeDir(s.Home)
 	clientCtx.Viper = viper.New()
-	serverCtx := server.NewContext(clientCtx.Viper, DefaultTmConfig(), log.NewNopLogger())
+	serverCtx := server.NewContext(clientCtx.Viper, DefaultCmtConfig(), log.NewNopLogger())
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -125,7 +125,7 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadDefaults() {
 	dCmd := s.makeDummyCmd()
 
 	appConfig := DefaultAppConfig()
-	tmConfig := DefaultTmConfig()
+	tmConfig := DefaultCmtConfig()
 	clientConfig := DefaultClientConfig()
 	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
 	s.Require().NoError(loadPackedConfig(dCmd))
@@ -145,7 +145,7 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadGlobalLabels() {
 	appConfig := serverconfig.DefaultConfig()
 	appConfig.Telemetry.GlobalLabels = append(appConfig.Telemetry.GlobalLabels, []string{"key1", "value1"})
 	appConfig.Telemetry.GlobalLabels = append(appConfig.Telemetry.GlobalLabels, []string{"key2", "value2"})
-	tmConfig := DefaultTmConfig()
+	tmConfig := DefaultCmtConfig()
 	clientConfig := DefaultClientConfig()
 	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
 	s.Require().NoError(loadPackedConfig(dCmd))
@@ -184,13 +184,13 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		vpr := ctx.Viper
 		actual := vpr.GetString("db_backend")
 		assert.Equal(t, "still bananas", actual, "unmanaged field value")
-		assert.NotEqual(t, DefaultTmConfig().DBBackend, actual, "unmanaged field default value")
+		assert.NotEqual(t, DefaultCmtConfig().DBBackend, actual, "unmanaged field default value")
 	})
 
 	s.T().Run("unmanaged config is read with unpacked files", func(t *testing.T) {
 		dCmd := s.makeDummyCmd()
 		uFile := GetFullPathToUnmanagedConf(dCmd)
-		SaveConfigs(dCmd, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
+		SaveConfigs(dCmd, DefaultAppConfig(), DefaultCmtConfig(), DefaultClientConfig(), false)
 		require.NoError(t, os.WriteFile(uFile, []byte("my-custom-entry = \"stuff\"\n"), 0o644), "writing unmanaged config")
 		require.NoError(t, LoadConfigFromFiles(dCmd))
 		ctx := client.GetClientContextFromCmd(dCmd)
@@ -203,7 +203,7 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		dCmd := s.makeDummyCmd()
 		uFile := GetFullPathToUnmanagedConf(dCmd)
 		pFile := GetFullPathToPackedConf(dCmd)
-		SaveConfigs(dCmd, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
+		SaveConfigs(dCmd, DefaultAppConfig(), DefaultCmtConfig(), DefaultClientConfig(), false)
 		require.NoError(t, os.WriteFile(uFile, []byte("my-custom-entry = \"stuff\"\n"), 0o644), "writing unmanaged config")
 		require.NoError(t, os.WriteFile(pFile, []byte("kl234508923u5jl"), 0o644), "writing invalid data to packed config")
 		require.EqualError(t, LoadConfigFromFiles(dCmd), "packed config file parse error: invalid character 'k' looking for beginning of value", "should throw error with invalid packed config")
@@ -214,7 +214,7 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 		dCmd := s.makeDummyCmd()
 		uFile := GetFullPathToUnmanagedConf(dCmd)
 		pFile := GetFullPathToAppConf(dCmd)
-		SaveConfigs(dCmd, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
+		SaveConfigs(dCmd, DefaultAppConfig(), DefaultCmtConfig(), DefaultClientConfig(), false)
 		require.NoError(t, os.WriteFile(uFile, []byte("my-custom-entry = \"stuff\"\n"), 0o644), "writing unmanaged config")
 		require.NoError(t, os.WriteFile(pFile, []byte("kl234508923u5jl"), 0o644), "writing invalid data to app config")
 		require.EqualError(t, LoadConfigFromFiles(dCmd), "app config file merge error: While parsing config: toml: expected = after a key, but the document ends there", "should throw error with invalid packed config")
@@ -223,7 +223,7 @@ func (s *ConfigManagerTestSuite) TestUnmanagedConfig() {
 	s.T().Run("unmanaged config is read with packed config", func(t *testing.T) {
 		dCmd := s.makeDummyCmd()
 		uFile := GetFullPathToUnmanagedConf(dCmd)
-		SaveConfigs(dCmd, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
+		SaveConfigs(dCmd, DefaultAppConfig(), DefaultCmtConfig(), DefaultClientConfig(), false)
 		require.NoError(t, PackConfig(dCmd), "packing config")
 		require.NoError(t, os.WriteFile(uFile, []byte("other-custom-entry = 8\n"), 0o644), "writing unmanaged config")
 		require.NoError(t, LoadConfigFromFiles(dCmd))
@@ -283,7 +283,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 
 	s.Run("tm and client files but no app file", func() {
 		cmd1 := s.makeDummyCmd()
-		SaveConfigs(cmd1, nil, DefaultTmConfig(), DefaultClientConfig(), false)
+		SaveConfigs(cmd1, nil, DefaultCmtConfig(), DefaultClientConfig(), false)
 		appCfgFile := GetFullPathToAppConf(cmd1)
 		_, err := os.Stat(appCfgFile)
 		fileExists := !os.IsNotExist(err)
@@ -301,7 +301,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 		cmd1 := s.makeDummyCmd()
 		appCfg := DefaultAppConfig()
 		appCfg.MinGasPrices = ""
-		SaveConfigs(cmd1, appCfg, DefaultTmConfig(), DefaultClientConfig(), false)
+		SaveConfigs(cmd1, appCfg, DefaultCmtConfig(), DefaultClientConfig(), false)
 		appCfgFile := GetFullPathToAppConf(cmd1)
 		_, err := os.Stat(appCfgFile)
 		fileExists := !os.IsNotExist(err)
@@ -319,7 +319,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 		cmd1 := s.makeDummyCmd()
 		appCfg := DefaultAppConfig()
 		appCfg.MinGasPrices = "something else"
-		SaveConfigs(cmd1, appCfg, DefaultTmConfig(), DefaultClientConfig(), false)
+		SaveConfigs(cmd1, appCfg, DefaultCmtConfig(), DefaultClientConfig(), false)
 		appCfgFile := GetFullPathToAppConf(cmd1)
 		_, err := os.Stat(appCfgFile)
 		fileExists := !os.IsNotExist(err)
@@ -335,7 +335,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 
 	s.Run("packed config without min-gas-prices", func() {
 		cmd1 := s.makeDummyCmd()
-		SaveConfigs(cmd1, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
+		SaveConfigs(cmd1, DefaultAppConfig(), DefaultCmtConfig(), DefaultClientConfig(), false)
 		s.Require().NoError(PackConfig(cmd1), "PackConfig")
 		packedCfgFile := GetFullPathToPackedConf(cmd1)
 		_, err := os.Stat(packedCfgFile)
@@ -355,7 +355,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 
 	s.Run("packed config with min-gas-prices", func() {
 		cmd1 := s.makeDummyCmd()
-		SaveConfigs(cmd1, DefaultAppConfig(), DefaultTmConfig(), DefaultClientConfig(), false)
+		SaveConfigs(cmd1, DefaultAppConfig(), DefaultCmtConfig(), DefaultClientConfig(), false)
 		s.Require().NoError(PackConfig(cmd1), "PackConfig")
 		packedCfgFile := GetFullPathToPackedConf(cmd1)
 		_, err := os.Stat(packedCfgFile)
@@ -375,7 +375,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 }
 
 func (s *ConfigManagerTestSuite) TestDefaultTmConfig() {
-	cfg := DefaultTmConfig()
+	cfg := DefaultCmtConfig()
 
 	s.Run("consensus.commit_timeout", func() {
 		exp := 1500 * time.Millisecond
@@ -389,7 +389,7 @@ func (s *ConfigManagerTestSuite) TestPackedConfigTmLoadDefaults() {
 	dCmd.Flags().String("home", s.Home, "home dir")
 
 	appConfig := DefaultAppConfig()
-	tmConfig := DefaultTmConfig()
+	tmConfig := DefaultCmtConfig()
 	tmConfig.SetRoot(s.Home)
 	clientConfig := DefaultClientConfig()
 	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
@@ -406,13 +406,13 @@ func (s *ConfigManagerTestSuite) TestPackedConfigTmLoadDefaults() {
 		s.Assert().Equal(tmConfig, tmConfig2)
 	})
 
-	s.Run("ExtractTmConfig", func() {
+	s.Run("ExtractCmtConfig", func() {
 		var tmConfig2 *cmtconfig.Config
 		var err error
 		s.Require().NotPanics(func() {
-			tmConfig2, err = ExtractTmConfig(dCmd)
+			tmConfig2, err = ExtractCmtConfig(dCmd)
 		})
-		s.Require().NoError(err, "ExtractTmConfig")
+		s.Require().NoError(err, "ExtractCmtConfig")
 		s.Assert().Equal(tmConfig, tmConfig2)
 	})
 }

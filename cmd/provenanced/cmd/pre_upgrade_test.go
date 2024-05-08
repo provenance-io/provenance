@@ -187,7 +187,7 @@ func makeDummyCmd(t *testing.T, cdc codec.Codec, home string) *cobra.Command {
 		WithCodec(cdc).
 		WithHomeDir(home)
 	clientCtx.Viper = viper.New()
-	serverCtx := server.NewContext(clientCtx.Viper, config.DefaultTmConfig(), log.NewNopLogger())
+	serverCtx := server.NewContext(clientCtx.Viper, config.DefaultCmtConfig(), log.NewNopLogger())
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -244,16 +244,16 @@ func TestPreUpgradeCmd(t *testing.T) {
 	}
 
 	appCfgD := config.DefaultAppConfig()
-	tmCfgD := config.DefaultTmConfig()
+	tmCfgD := config.DefaultCmtConfig()
 	clientCfgD := config.DefaultClientConfig()
 
 	appCfgC := config.DefaultAppConfig()
 	appCfgC.API.Enable = true
 	appCfgC.API.Swagger = true
-	tmCfgLower := config.DefaultTmConfig()
+	tmCfgLower := config.DefaultCmtConfig()
 	tmCfgLower.Consensus.TimeoutCommit = tmCfgD.Consensus.TimeoutCommit - 500*time.Millisecond
 	tmCfgLower.LogLevel = "debug"
-	tmCfgHigher := config.DefaultTmConfig()
+	tmCfgHigher := config.DefaultCmtConfig()
 	tmCfgHigher.Consensus.TimeoutCommit = tmCfgD.Consensus.TimeoutCommit + 500*time.Millisecond
 	tmCfgHigher.LogLevel = "debug"
 	clientCfgC := config.DefaultClientConfig()
@@ -262,7 +262,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 	clientCfgMainnetC.Output = "json"
 	clientCfgMainnetC.ChainID = "pio-mainnet-1"
 
-	tmCfgCFixed := config.DefaultTmConfig()
+	tmCfgCFixed := config.DefaultCmtConfig()
 	tmCfgCFixed.LogLevel = "debug"
 
 	successMsg := "pre-upgrade successful"
@@ -514,9 +514,9 @@ func TestPreUpgradeCmd(t *testing.T) {
 			if assert.NoError(t, err, "ExtractAppConfig") {
 				assert.Equal(t, tc.expAppCfg, appCfg, "app config")
 			}
-			tmCfg, err := config.ExtractTmConfig(dummyCmd)
+			tmCfg, err := config.ExtractCmtConfig(dummyCmd)
 			tmCfg.SetRoot("")
-			if assert.NoError(t, err, "ExtractTmConfig") {
+			if assert.NoError(t, err, "ExtractCmtConfig") {
 				assert.Equal(t, tc.expTmCfg, tmCfg, "tm config")
 			}
 			clientCfg, err := config.ExtractClientConfig(dummyCmd)
