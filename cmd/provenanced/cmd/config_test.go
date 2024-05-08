@@ -243,13 +243,13 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		{"app header", regexp.MustCompile(`(?m)^App Config: .*/config/` + s.BaseFNApp + ` \(or env\)$`)},
 		{"app halt-height", regexp.MustCompile(`(?m)^halt-height=0$`)},
 		{"app api.swagger", regexp.MustCompile(`(?m)^api.swagger=false$`)},
-		{"app grpc.address", regexp.MustCompile(`(?m)^grpc.address="0.0.0.0:9090"$`)},
+		{"app grpc.address", regexp.MustCompile(`(?m)^grpc.address="localhost:9090"$`)},
 		{"app telemetry.enabled", regexp.MustCompile(`(?m)^telemetry.enabled=false$`)},
-		{"app rosetta.enable", regexp.MustCompile(`(?m)^rosetta.enable=false$`)},
+		{"app statesync.enable", regexp.MustCompile(`(?m)^statesync.enable=false$`)},
 
 		// Tendermint header and a few entries.
 		{"tendermint header", regexp.MustCompile(`(?m)^Tendermint Config: .*/config/` + s.BaseFNTM + ` \(or env\)$`)},
-		{"tendermint fast_sync", regexp.MustCompile(`(?m)^fast_sync=true$`)},
+		{"tendermint db_dir", regexp.MustCompile(`(?m)^db_dir="data"$`)},
 		{"tendermint consensus.timeout_commit", regexp.MustCompile(`(?m)^consensus.timeout_commit=` + fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit) + `$`)},
 		{"tendermint mempool.size", regexp.MustCompile(`(?m)^mempool.size=5000$`)},
 		{"tendermint statesync.trust_period", regexp.MustCompile(`(?m)^statesync.trust_period="168h0m0s"$`)},
@@ -337,12 +337,12 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 	}{
 		{
 			name: "three app config keys",
-			keys: []string{"min-retain-blocks", "rosetta.retries", "grpc.address"},
+			keys: []string{"min-retain-blocks", "mempool.max-txs", "grpc.address"},
 			expected: s.makeMultiLine(
 				s.makeAppConfigHeaderLines(),
 				`min-retain-blocks=0`,
-				`grpc.address="0.0.0.0:9090"`,
-				`rosetta.retries=3`,
+				`grpc.address="localhost:9090"`,
+				`mempool.max-txs=5000`,
 				""),
 		},
 		{
@@ -367,11 +367,11 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 		},
 		{
 			name: "two from each",
-			keys: []string{"rpc.cors_allowed_origins", "pruning", "node", "rosetta.offline", "chain-id", "priv_validator_state_file"},
+			keys: []string{"rpc.cors_allowed_origins", "pruning", "node", "api.enable", "chain-id", "priv_validator_state_file"},
 			expected: s.makeMultiLine(
 				s.makeAppConfigHeaderLines(),
 				`pruning="default"`,
-				`rosetta.offline=false`,
+				`api.enable=false`,
 				"",
 				s.makeTMConfigHeaderLines(),
 				`priv_validator_state_file="data/priv_validator_state.json"`,
