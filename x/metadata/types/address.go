@@ -634,16 +634,18 @@ func (ma MetadataAddress) Format(s fmt.State, verb rune) {
 		out = fmt.Sprintf(fmt.FormatString(s, verb), ma.String())
 	case 'v':
 		if s.Flag('#') {
+			// We can't provide the same MetadataAddress arg back to Sprintf here (infinite recursion).
+			// So we cast it as a byte slice, string that, then change the "[]byte" part to "MetadataAddress".
 			out = fmt.Sprintf(fmt.FormatString(s, verb), []byte(ma))
 			out = "MetadataAddress" + strings.TrimPrefix(out, "[]byte")
 		} else {
 			// The auto-generated gogoproto.stringer methods use "%v" for the MetadataAddress fields.
-			// So here, we return the bech32 for "%v" so that those other strings look right.
+			// So here, we return the bech32 for "%v" so that MetadataAddress fields look right in those strings.
 			out = fmt.Sprintf(fmt.FormatString(s, verb), ma.String())
 		}
-	case 'p', 'T':
-		out = fmt.Sprintf(fmt.FormatString(s, verb), ma)
 	default:
+		// The 'p' (pointer) and 'T' (type) verbs are never processed using this Format method.
+		// That's how %T returns the correct type even though it would actually return "[]byte" if run through this.
 		out = fmt.Sprintf(fmt.FormatString(s, verb), []byte(ma))
 	}
 

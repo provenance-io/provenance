@@ -1717,6 +1717,7 @@ func (s *AddressTestSuite) TestContractSpecAddressConverters() {
 	}
 }
 
+// mockState satisfies the fmt.State interface, but always returns an error from Write, and doesn't do anything else.
 type mockState struct {
 	err string
 }
