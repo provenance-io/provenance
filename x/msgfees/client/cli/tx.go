@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -45,8 +46,8 @@ func NewTxCmd() *cobra.Command {
 
 func GetCmdMsgFeesProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "proposal {add|update|remove} <title> <description> <deposit>",
-		Args:    cobra.ExactArgs(4),
+		Use:     "proposal {add|update|remove}",
+		Args:    cobra.ExactArgs(1),
 		Aliases: []string{"p"},
 		Short:   "Submit a msg based fee proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a msg fees proposal along with an initial deposit.
@@ -141,9 +142,9 @@ $ %[1]s tx msgfees remove --msg-type=/provenance.metadata.v1.MsgWriteRecordReque
 
 func GetUpdateNhashPerUsdMilProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "nhash-per-usd-mil <title> <description> <nhash-per-usd-mil> <deposit>",
+		Use:     "nhash-per-usd-mil <nhash-per-usd-mil>",
 		Aliases: []string{"npum", "n-p-u-m"},
-		Args:    cobra.ExactArgs(4),
+		Args:    cobra.ExactArgs(1),
 		Short:   "Submit a nhash per usd mil update proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a nhash per usd mil update proposal along with an initial deposit.
 The nhash per usd mil is the number of nhash that will be multiplied by the usd mil amount.  Example: $1.000 usd where 1 mil equals 2000nhash will equate to 1000 * 2000 = 2000000nhash
@@ -151,10 +152,24 @@ The nhash per usd mil is the number of nhash that will be multiplied by the usd 
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"  1234 1000000000nhash
 $ %[1]s tx msgfees npum "updating nhash to usd mil" "changes the nhash per mil to 1234nhash" 1234 1000000000nhash
 `, version.AppName),
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			if err != nil {
+				return err
+			}
+			nhash := args[0]
+			rate, err := strconv.ParseUint(nhash, 0, 64)
+			if err != nil {
+				return fmt.Errorf("unable to parse nhash value: %s", nhash)
+			}
+			msg := &types.MsgUpdateNhashPerUsdMilProposalRequest{NhashPerUsdMil: rate, Authority: authority}
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
 	}
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
