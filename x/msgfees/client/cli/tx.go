@@ -8,8 +8,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
+	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -49,15 +52,86 @@ func GetCmdMsgFeesProposal() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a msg fees proposal along with an initial deposit.
 For add, update, and removal of msg fees amount and min fee and/or rate fee must be set.
 `),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees add "adding" "adding MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash --recipient=pb... --bips=5000
-$ %[1]s tx msgfees update "updating" "updating MsgWriterRecordRequest fee"  10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash --recipient=pb... --bips=5000
-$ %[1]s tx msgfees remove "removing" "removing MsgWriterRecordRequest fee" 10nhash --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees add --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash --recipient=pb... --bips=5000
+$ %[1]s tx msgfees update --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash --recipient=pb... --bips=5000
+$ %[1]s tx msgfees remove --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
 `, version.AppName),
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			proposalType := args[0]
+
+			msgType, err := cmd.Flags().GetString(FlagMsgType)
+			if err != nil {
+				return err
+			}
+
+			_, err = clientCtx.InterfaceRegistry.Resolve(msgType)
+			if err != nil {
+				return err
+			}
+
+			recipient, err := flagSet.GetString(FlagRecipient)
+			if err != nil {
+				return err
+			}
+
+			bips, err := flagSet.GetString(FlagBips)
+			if err != nil {
+				return err
+			}
+
+			var addFee sdk.Coin
+			if proposalType != "remove" {
+				additionalFee, errMinFee := flagSet.GetString(FlagMinFee)
+				if errMinFee != nil {
+					return err
+				}
+				if additionalFee != "" {
+					addFee, err = sdk.ParseCoinNormalized(additionalFee)
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			var msg sdk.Msg
+			switch args[0] {
+			case "add":
+				msg = &types.MsgAddMsgFeeProposalRequest{
+					MsgTypeUrl:           msgType,
+					AdditionalFee:        addFee,
+					Recipient:            recipient,
+					RecipientBasisPoints: bips,
+					Authority:            authority,
+				}
+			case "update":
+				msg = &types.MsgUpdateMsgFeeProposalRequest{
+					MsgTypeUrl:           msgType,
+					AdditionalFee:        addFee,
+					Recipient:            recipient,
+					RecipientBasisPoints: bips,
+					Authority:            authority,
+				}
+			case "remove":
+				msg = &types.MsgRemoveMsgFeeProposalRequest{
+					MsgTypeUrl: msgType,
+					Authority:  authority,
+				}
+			default:
+				return fmt.Errorf("unknown proposal type %q", args[0])
+			}
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 	cmd.Flags().String(FlagMsgType, "", "proto type url for msg type")
 	cmd.Flags().String(FlagMinFee, "", "additional fee for msg based fee")
 	cmd.Flags().String(FlagRecipient, "", "optional recipient address for receiving partial fee based on basis points")
