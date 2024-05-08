@@ -149,14 +149,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the v1beta1 msgfees content functions used to
-// simulate governance proposals.
-func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
-	// This is for stuff that uses the v1beta1 gov module's Content interface.
-	// This module use the v1 gov pattern and no longer needs this.
-	return []simtypes.WeightedProposalMsg{}
-}
-
 // RandomizedParams creates randomized msgfees param changes for the simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.LegacyParamChange {
 	return simulation.ParamChanges(r)
