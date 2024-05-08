@@ -176,19 +176,33 @@ $ %[1]s tx msgfees npum "updating nhash to usd mil" "changes the nhash per mil t
 
 func GetUpdateConversionFeeDenomProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "conversion-fee-denom <title> <description> <conversion-fee-denom> <deposit>",
+		Use:     "conversion-fee-denom <conversion-fee-denom>",
 		Aliases: []string{"cfd", "c-f-d"},
-		Args:    cobra.ExactArgs(4),
+		Args:    cobra.ExactArgs(1),
 		Short:   "Submit a conversion fee denom update proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a conversion fee denom update proposal along with an initial deposit.
 The custom fee denom is the denom that usd will be converted to for fees with usd as denom type.`),
 		Example: fmt.Sprintf(`$ %[1]s tx msgfees conversion-fee-denom "updating conversion fee denom" "changes the conversion fee denom to customcoin"  customcoin 1000000000nhash
 $ %[1]s tx msgfees cfd "updating conversion fee denom" "changes the conversion fee denom to customcoin"  customcoin 1000000000nhash
 `, version.AppName),
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+
+			if err != nil {
+				return err
+			}
+			customCoin := args[0]
+			msg := types.NewMsgUpdateConversionFeeDenomProposalRequest(customCoin, authority)
+			if err != nil {
+				return err
+			}
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 	return cmd
 }
