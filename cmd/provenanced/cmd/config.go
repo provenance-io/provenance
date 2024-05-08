@@ -274,15 +274,23 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 		case "client":
 			clientToOutput.AddEntriesFrom(clientFields)
 		default:
-			entries, foundIn := findEntries(key, appFields, tmFields, clientFields)
-			switch foundIn {
-			case 0:
-				appToOutput.AddEntriesFrom(entries)
-			case 1:
-				tmToOutput.AddEntriesFrom(entries)
-			case 2:
-				clientToOutput.AddEntriesFrom(entries)
-			default:
+			var found bool
+			if fvm, ok := appFields.FindEntries(key); ok {
+				found = true
+				appToOutput.AddEntriesFrom(fvm)
+			}
+
+			if fvm, ok := tmFields.FindEntries(key); ok {
+				found = true
+				tmToOutput.AddEntriesFrom(fvm)
+			}
+
+			if fvm, ok := clientFields.FindEntries(key); ok {
+				found = true
+				clientToOutput.AddEntriesFrom(fvm)
+			}
+
+			if !found {
 				unknownKeyMap.SetToNil(key)
 			}
 		}
@@ -492,19 +500,26 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 			showClient = true
 			clientDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, clientFields, true))
 		default:
-			entries, foundIn := findEntries(key, appFields, tmFields, clientFields)
-			changes := provconfig.MakeUpdatedFieldMap(allDefaults, entries, false)
-			switch foundIn {
-			case 0:
-				showApp = true
+			var found bool
+			if fvm, ok := appFields.FindEntries(key); ok {
+				showApp, found = true, true
+				changes := provconfig.MakeUpdatedFieldMap(allDefaults, fvm, false)
 				appDiffs.AddOrUpdateEntriesFrom(changes)
-			case 1:
-				showTm = true
+			}
+
+			if fvm, ok := tmFields.FindEntries(key); ok {
+				showTm, found = true, true
+				changes := provconfig.MakeUpdatedFieldMap(allDefaults, fvm, false)
 				tmDiffs.AddOrUpdateEntriesFrom(changes)
-			case 2:
-				showClient = true
+			}
+
+			if fvm, ok := clientFields.FindEntries(key); ok {
+				showClient, found = true, true
+				changes := provconfig.MakeUpdatedFieldMap(allDefaults, fvm, false)
 				clientDiffs.AddOrUpdateEntriesFrom(changes)
-			default:
+			}
+
+			if !found {
 				unknownKeyMap.SetToNil(key)
 			}
 		}
@@ -572,21 +587,6 @@ func runConfigPackCmd(cmd *cobra.Command) error {
 // runConfigUnpackCmd converts a single config json file into the individual toml files.
 func runConfigUnpackCmd(cmd *cobra.Command) error {
 	return provconfig.UnpackConfig(cmd)
-}
-
-// findEntries gets all entries that match a given key from the provided maps.
-// If the key doesn't end in a period, findEntry is used first to find an exact match.
-// If an exact match isn't found, a period is appended to the key (unless already there) and sub-entry matches are looked for.
-// Maps are searched in the order provided and results are returned when they're first found.
-// The second return value is the index of the provided map that the entries were found in (starting with 0).
-// If it's equal to entryNotFound, no entries were found.
-func findEntries(key string, maps ...provconfig.FieldValueMap) (provconfig.FieldValueMap, int) {
-	for i, m := range maps {
-		if fvm, ok := m.FindEntries(key); ok {
-			return fvm, i
-		}
-	}
-	return provconfig.FieldValueMap{}, entryNotFound
 }
 
 // makeFieldMapString makes a multi-line string with all the keys and values in the provided map.

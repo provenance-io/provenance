@@ -382,6 +382,28 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 				`node="tcp://localhost:26657"`,
 				""),
 		},
+		{
+			name: "one category that is in two files",
+			keys: []string{"mempool"},
+			expected: s.makeMultiLine(
+				s.makeAppConfigHeaderLines(),
+				`mempool.max-txs=5000`,
+				"",
+				s.makeTMConfigHeaderLines(),
+				`mempool.broadcast=true`,
+				`mempool.cache_size=10000`,
+				`mempool.experimental_max_gossip_connections_to_non_persistent_peers=0`,
+				`mempool.experimental_max_gossip_connections_to_persistent_peers=0`,
+				`mempool.keep-invalid-txs-in-cache=false`,
+				`mempool.max_batch_bytes=0`,
+				`mempool.max_tx_bytes=1048576`,
+				`mempool.max_txs_bytes=1073741824`,
+				`mempool.recheck=true`,
+				`mempool.size=5000`,
+				`mempool.type="flood"`,
+				`mempool.wal_dir=""`,
+				""),
+		},
 	}
 
 	for _, tc := range tests {
@@ -499,7 +521,31 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 				"",
 			),
 		},
+		{
+			name: "changed mempool",
+			args: []string{"changed", "mempool"},
+			out: s.makeMultiLine(
+				s.makeAppDiffHeaderLines(),
+				`mempool.max-txs=5000 (same as default)`,
+				"",
+				s.makeTMDiffHeaderLines(),
+				`mempool.broadcast=true (same as default)`,
+				`mempool.cache_size=10000 (same as default)`,
+				`mempool.experimental_max_gossip_connections_to_non_persistent_peers=0 (same as default)`,
+				`mempool.experimental_max_gossip_connections_to_persistent_peers=0 (same as default)`,
+				`mempool.keep-invalid-txs-in-cache=false (same as default)`,
+				`mempool.max_batch_bytes=0 (same as default)`,
+				`mempool.max_tx_bytes=1048576 (same as default)`,
+				`mempool.max_txs_bytes=1073741824 (same as default)`,
+				`mempool.recheck=true (same as default)`,
+				`mempool.size=5000 (same as default)`,
+				`mempool.type="flood" (same as default)`,
+				`mempool.wal_dir="" (same as default)`,
+				"",
+			),
+		},
 	}
+
 	for _, tc := range equalAllTests {
 		s.T().Run(tc.name, func(t *testing.T) {
 			configCmd := s.getConfigCmd()
