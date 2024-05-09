@@ -24,7 +24,7 @@ import (
 
 var (
 	DefaultChainID        = ""
-	DefaultKeyringBackend = "test"
+	DefaultKeyringBackend = "os"
 	DefaultOutput         = "text"
 	DefaultNode           = "tcp://localhost:26657"
 	DefaultBroadcastMode  = "sync"

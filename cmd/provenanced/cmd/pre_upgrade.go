@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -82,7 +81,7 @@ func UpdateConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	if strings.ToLower(clientCfg.BroadcastMode) == "block" {
+	if clientCfg.BroadcastMode == "block" {
 		cmd.Printf("Updating the broadcast_mode config value to \"sync\" (from %q, which is no longer an option).\n", clientCfg.BroadcastMode)
 		clientCfg.BroadcastMode = "sync"
 	}

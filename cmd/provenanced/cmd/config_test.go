@@ -88,21 +88,14 @@ func TestConfigTestSuite(t *testing.T) {
 // Test setup above. Test helpers below.
 //
 
+// getConfigCmd gets the config command with the default config values loaded into viper.
+// This is similar to the context the cmd would have when executed via the root command.
 func (s *ConfigTestSuite) getConfigCmd() *cobra.Command {
-	// What I really need here is a cobra.Command
-	// that already has a context.
-	// So I'm going to call --help on the config command
-	// while setting the context and getting the command back.
 	configCmd := cmd.ConfigCmd()
-	configCmd.SetArgs([]string{"--help"})
-	applyMockIODiscardOutErr(configCmd)
-	configCmd, err := configCmd.ExecuteContextC(*s.Context)
-	s.Require().NoError(err, "config help command to set context")
-	// Now this should work to load the defaults (or files) into the cmd.
-	s.Require().NoError(
-		provconfig.LoadConfigFromFiles(configCmd),
-		"loading config from files",
-	)
+	configCmd.SetOut(io.Discard)
+	configCmd.SetErr(io.Discard)
+	configCmd.SetContext(*s.Context)
+	s.Require().NoError(provconfig.LoadConfigFromFiles(configCmd), "loading config from files")
 	return configCmd
 }
 
@@ -122,13 +115,17 @@ func (s *ConfigTestSuite) ensureConfigFiles() {
 
 // executeConfigCmd executes the config command with the provided args, returning the command's output.
 func (s *ConfigTestSuite) executeConfigCmd(args ...string) string {
-	configCmd := s.getConfigCmd()
-	configCmd.SetArgs(args)
-	b := applyMockIOOutErr(configCmd)
-	err := configCmd.Execute()
-	s.Require().NoError(err, "unexpected error executing %s %q", configCmd.Name(), args)
+	return s.executeCmd(s.getConfigCmd(), args...)
+}
+
+// executeCmd executes the provided command with the provided args, returning the command's output.
+func (s *ConfigTestSuite) executeCmd(cmd *cobra.Command, args ...string) string {
+	cmd.SetArgs(args)
+	b := applyMockIOOutErr(cmd)
+	err := cmd.Execute()
+	s.Require().NoError(err, "unexpected error executing %s %q", cmd.Name(), args)
 	out, err := io.ReadAll(b)
-	s.Require().NoError(err, "unexpected error reading %s %q output", configCmd.Name(), args)
+	s.Require().NoError(err, "unexpected error reading %s %q output", cmd.Name(), args)
 	return string(out)
 }
 
@@ -193,18 +190,25 @@ func (s *ConfigTestSuite) makeKeyUpdatedLine(key, oldVal, newVal string) string 
 	return fmt.Sprintf("%s Was: %s, Is Now: %s", key, oldVal, newVal)
 }
 
-func applyMockIODiscardOutErr(c *cobra.Command) *bytes.Buffer {
-	b := bytes.NewBufferString("")
-	c.SetOut(io.Discard)
-	c.SetErr(io.Discard)
-	return b
-}
-
 func applyMockIOOutErr(c *cobra.Command) *bytes.Buffer {
 	b := bytes.NewBufferString("")
 	c.SetOut(b)
 	c.SetErr(b)
 	return b
+}
+
+// setDefaultKeyringBackend updates the global DefaultKeyringBackend value
+// and returns a deferrable that will change it back.
+//
+// Standard usage: defer s.setDefaultKeyringBackend("test")()
+func (s *ConfigTestSuite) setDefaultKeyringBackend(val string) func() {
+	oldVal := provconfig.DefaultKeyringBackend
+	s.T().Logf("Changing DefaultKeyringBackend to %q (from %q).", val, oldVal)
+	provconfig.DefaultKeyringBackend = val
+	return func() {
+		s.T().Logf("Changing DefaultKeyringBackend back to %q (from %q).", oldVal, val)
+		provconfig.DefaultKeyringBackend = oldVal
+	}
 }
 
 //
@@ -387,9 +391,9 @@ tx_index.indexer="null"
 tx_index.psql-conn=""`,
 			"",
 			s.makeClientConfigHeaderLines(),
-			`broadcast-mode="block"
+			`broadcast-mode="sync"
 chain-id=""
-keyring-backend="test"
+keyring-backend="os"
 node="tcp://localhost:26657"
 output="text"`,
 			"",
@@ -461,8 +465,8 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			keys: []string{"keyring-backend", "broadcast-mode", "output"},
 			expected: s.makeMultiLine(
 				s.makeClientConfigHeaderLines(),
-				`broadcast-mode="block"`,
-				`keyring-backend="test"`,
+				`broadcast-mode="sync"`,
+				`keyring-backend="os"`,
 				`output="text"`,
 				""),
 		},
@@ -653,6 +657,20 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 			s.Assert().Equal(tc.out, outStr)
 		})
 	}
+
+	s.Run("diff default keyring backend", func() {
+		defer s.setDefaultKeyringBackend("test")()
+
+		expOut := s.makeMultiLine(
+			s.makeClientDiffHeaderLines(),
+			"keyring-backend=\"os\" (default=\"test\")",
+			"",
+		)
+
+		args := []string{"changed", "keyring-backend"}
+		actOut := s.executeConfigCmd(args...)
+		s.Assert().Equal(expOut, actOut, "output of config %q", args)
+	})
 }
 
 func (s *ConfigTestSuite) TestConfigSetValidation() {
@@ -790,14 +808,14 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 		},
 		{
 			name:    "broadcast-mode",
-			oldVal:  `"block"`,
-			newVal:  `"sync"`,
+			oldVal:  `"sync"`,
+			newVal:  `"async"`,
 			toMatch: []*regexp.Regexp{reClientConfigUpdated},
 		},
 		{
 			name:    "keyring-backend",
-			oldVal:  `"test"`,
-			newVal:  `"os"`,
+			oldVal:  `"os"`,
+			newVal:  `"file"`,
 			toMatch: []*regexp.Regexp{reClientConfigUpdated},
 		},
 	}
@@ -897,60 +915,59 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 }
 
 func (s *ConfigTestSuite) TestPackUnpack() {
-	s.T().Run("pack", func(t *testing.T) {
+	s.Run("pack", func() {
 		expectedPacked := map[string]string{}
 		expectedPackedJSON, jerr := json.MarshalIndent(expectedPacked, "", "  ")
-		require.NoError(t, jerr, "making expected json")
+		s.Require().NoError(jerr, "making expected json")
 		expectedPackedJSONStr := string(expectedPackedJSON)
-		configCmd := s.getConfigCmd()
-		args := []string{"pack"}
-		configCmd.SetArgs(args)
-		b := applyMockIOOutErr(configCmd)
-		err := configCmd.Execute()
-		require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), args)
-		out, rerr := io.ReadAll(b)
-		require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), args)
-		outStr := string(out)
 
-		assert.Contains(t, outStr, expectedPackedJSONStr, "packed json")
+		configCmd := s.getConfigCmd()
+		outStr := s.executeCmd(configCmd, "pack")
+
+		s.Assert().Contains(outStr, expectedPackedJSONStr, "packed json")
 		packedFile := provconfig.GetFullPathToPackedConf(configCmd)
 
-		assert.Contains(t, outStr, packedFile, "packed filename")
-		assert.True(t, provconfig.FileExists(packedFile), "file exists: packed")
+		s.Assert().Contains(outStr, packedFile, "packed filename")
+		s.Assert().True(provconfig.FileExists(packedFile), "file exists: packed")
 		appFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, appFile, "app filename")
-		assert.False(t, provconfig.FileExists(appFile), "file exists: app")
+		s.Assert().Contains(outStr, appFile, "app filename")
+		s.Assert().False(provconfig.FileExists(appFile), "file exists: app")
 		cmtFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, cmtFile, "cometbft filename")
-		assert.False(t, provconfig.FileExists(cmtFile), "file exists: cometbft")
+		s.Assert().Contains(outStr, cmtFile, "cometbft filename")
+		s.Assert().False(provconfig.FileExists(cmtFile), "file exists: cometbft")
 		clientFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, clientFile, "client filename")
-		assert.False(t, provconfig.FileExists(clientFile), "file exists: client")
+		s.Assert().Contains(outStr, clientFile, "client filename")
+		s.Assert().False(provconfig.FileExists(clientFile), "file exists: client")
 	})
 
-	s.T().Run("unpack", func(t *testing.T) {
+	s.Run("unpack", func() {
 		configCmd := s.getConfigCmd()
-		args := []string{"unpack"}
-		configCmd.SetArgs(args)
-		b := applyMockIOOutErr(configCmd)
-		err := configCmd.Execute()
-		require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), args)
-		out, rerr := io.ReadAll(b)
-		require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), args)
-		outStr := string(out)
+		outStr := s.executeCmd(configCmd, "unpack")
 
 		packedFile := provconfig.GetFullPathToPackedConf(configCmd)
-		assert.Contains(t, outStr, packedFile, "packed filename")
-		assert.False(t, provconfig.FileExists(packedFile), "file exists: packed")
+		s.Assert().Contains(outStr, packedFile, "packed filename")
+		s.Assert().False(provconfig.FileExists(packedFile), "file exists: packed")
 		appFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, appFile, "app filename")
-		assert.True(t, provconfig.FileExists(appFile), "file exists: app")
+		s.Assert().Contains(outStr, appFile, "app filename")
+		s.Assert().True(provconfig.FileExists(appFile), "file exists: app")
 		cmtFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, cmtFile, "cometbft filename")
-		assert.True(t, provconfig.FileExists(cmtFile), "file exists: cometbft")
+		s.Assert().Contains(outStr, cmtFile, "cometbft filename")
+		s.Assert().True(provconfig.FileExists(cmtFile), "file exists: cometbft")
 		clientFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, clientFile, "client filename")
-		assert.True(t, provconfig.FileExists(clientFile), "file exists: client")
+		s.Assert().Contains(outStr, clientFile, "client filename")
+		s.Assert().True(provconfig.FileExists(clientFile), "file exists: client")
+	})
+
+	s.Run("diff default keyring backend pack", func() {
+		defer s.setDefaultKeyringBackend("test")()
+
+		expectedPacked := map[string]string{"keyring-backend": "os"}
+		expectedPackedJSON, jerr := json.MarshalIndent(expectedPacked, "", "  ")
+		s.Require().NoError(jerr, "making expected json")
+		expectedPackedJSONStr := string(expectedPackedJSON)
+
+		outStr := s.executeConfigCmd("pack")
+		s.Assert().Contains(outStr, expectedPackedJSONStr, "packed json should be in the output")
 	})
 }
 
