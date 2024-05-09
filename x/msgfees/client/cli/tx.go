@@ -149,8 +149,8 @@ func GetUpdateNhashPerUsdMilProposal() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a nhash per usd mil update proposal along with an initial deposit.
 The nhash per usd mil is the number of nhash that will be multiplied by the usd mil amount.  Example: $1.000 usd where 1 mil equals 2000nhash will equate to 1000 * 2000 = 2000000nhash
 `),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees nhash-per-usd-mil "updating nhash to usd mil" "changes the nhash per mil to 1234nhash"  1234 1000000000nhash
-$ %[1]s tx msgfees npum "updating nhash to usd mil" "changes the nhash per mil to 1234nhash" 1234 1000000000nhash
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees nhash-per-usd-mil 1234 --deposit 1000000000nhash
+$ %[1]s tx msgfees npum 1234 --deposit 1000000000nhash
 `, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -164,7 +164,7 @@ $ %[1]s tx msgfees npum "updating nhash to usd mil" "changes the nhash per mil t
 			if err != nil {
 				return fmt.Errorf("unable to parse nhash value: %s", nhash)
 			}
-			msg := &types.MsgUpdateNhashPerUsdMilProposalRequest{NhashPerUsdMil: rate, Authority: authority}
+			msg := types.NewMsgUpdateNhashPerUsdMilProposalRequest(rate, authority)
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
 	}
