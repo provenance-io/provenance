@@ -182,8 +182,8 @@ func GetUpdateConversionFeeDenomProposal() *cobra.Command {
 		Short:   "Submit a conversion fee denom update proposal along with an initial deposit",
 		Long: strings.TrimSpace(`Submit a conversion fee denom update proposal along with an initial deposit.
 The custom fee denom is the denom that usd will be converted to for fees with usd as denom type.`),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees conversion-fee-denom "updating conversion fee denom" "changes the conversion fee denom to customcoin"  customcoin 1000000000nhash
-$ %[1]s tx msgfees cfd "updating conversion fee denom" "changes the conversion fee denom to customcoin"  customcoin 1000000000nhash
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees conversion-fee-denom customcoin --deposit 1000000000nhash
+$ %[1]s tx msgfees cfd customcoin --deposit 1000000000nhash
 `, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
