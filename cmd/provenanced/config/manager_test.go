@@ -125,9 +125,9 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadDefaults() {
 	dCmd := s.makeDummyCmd()
 
 	appConfig := DefaultAppConfig()
-	tmConfig := DefaultCmtConfig()
+	cmtConfig := DefaultCmtConfig()
 	clientConfig := DefaultClientConfig()
-	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
+	generateAndWritePackedConfig(dCmd, appConfig, cmtConfig, clientConfig, false)
 	s.Require().NoError(loadPackedConfig(dCmd))
 
 	ctx := client.GetClientContextFromCmd(dCmd)
@@ -145,9 +145,9 @@ func (s *ConfigManagerTestSuite) TestPackedConfigCosmosLoadGlobalLabels() {
 	appConfig := serverconfig.DefaultConfig()
 	appConfig.Telemetry.GlobalLabels = append(appConfig.Telemetry.GlobalLabels, []string{"key1", "value1"})
 	appConfig.Telemetry.GlobalLabels = append(appConfig.Telemetry.GlobalLabels, []string{"key2", "value2"})
-	tmConfig := DefaultCmtConfig()
+	cmtConfig := DefaultCmtConfig()
 	clientConfig := DefaultClientConfig()
-	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
+	generateAndWritePackedConfig(dCmd, appConfig, cmtConfig, clientConfig, false)
 	s.Require().NoError(loadPackedConfig(dCmd))
 
 	ctx := client.GetClientContextFromCmd(dCmd)
@@ -281,7 +281,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 		s.Assert().Equal(defaultMinGasPrices, actual, "MinGasPrices")
 	})
 
-	s.Run("tm and client files but no app file", func() {
+	s.Run("cmt and client files but no app file", func() {
 		cmd1 := s.makeDummyCmd()
 		SaveConfigs(cmd1, nil, DefaultCmtConfig(), DefaultClientConfig(), false)
 		appCfgFile := GetFullPathToAppConf(cmd1)
@@ -389,30 +389,30 @@ func (s *ConfigManagerTestSuite) TestPackedConfigTmLoadDefaults() {
 	dCmd.Flags().String("home", s.Home, "home dir")
 
 	appConfig := DefaultAppConfig()
-	tmConfig := DefaultCmtConfig()
-	tmConfig.SetRoot(s.Home)
+	cmtConfig := DefaultCmtConfig()
+	cmtConfig.SetRoot(s.Home)
 	clientConfig := DefaultClientConfig()
-	generateAndWritePackedConfig(dCmd, appConfig, tmConfig, clientConfig, false)
+	generateAndWritePackedConfig(dCmd, appConfig, cmtConfig, clientConfig, false)
 	s.logFile(GetFullPathToPackedConf(dCmd))
 	s.Require().NoError(loadPackedConfig(dCmd), "loadPackedConfig")
 
 	s.Run("cmtcmds.ParseConfig", func() {
-		var tmConfig2 *cmtconfig.Config
+		var cmtConfig2 *cmtconfig.Config
 		var err error
 		s.Require().NotPanics(func() {
-			tmConfig2, err = cmtcmds.ParseConfig(dCmd)
+			cmtConfig2, err = cmtcmds.ParseConfig(dCmd)
 		})
 		s.Require().NoError(err, "cmtcmds.ParseConfig")
-		s.Assert().Equal(tmConfig, tmConfig2)
+		s.Assert().Equal(cmtConfig, cmtConfig2)
 	})
 
 	s.Run("ExtractCmtConfig", func() {
-		var tmConfig2 *cmtconfig.Config
+		var cmtConfig2 *cmtconfig.Config
 		var err error
 		s.Require().NotPanics(func() {
-			tmConfig2, err = ExtractCmtConfig(dCmd)
+			cmtConfig2, err = ExtractCmtConfig(dCmd)
 		})
 		s.Require().NoError(err, "ExtractCmtConfig")
-		s.Assert().Equal(tmConfig, tmConfig2)
+		s.Assert().Equal(cmtConfig, cmtConfig2)
 	})
 }
