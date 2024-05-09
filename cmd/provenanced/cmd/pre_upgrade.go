@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -81,14 +82,9 @@ func UpdateConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	if clientCfg.ChainID == "pio-mainnet-1" {
-		// Update the timeout commit.
-		timeoutCommit := config.DefaultConsensusTimeoutCommit
-		if cmtCfg.Consensus.TimeoutCommit != timeoutCommit {
-			cmd.Printf("Updating consensus.timeout_commit config value to %q (from %q)\n",
-				timeoutCommit, cmtCfg.Consensus.TimeoutCommit)
-			cmtCfg.Consensus.TimeoutCommit = timeoutCommit
-		}
+	if strings.ToLower(clientCfg.BroadcastMode) == "block" {
+		cmd.Printf("Updating the broadcast_mode config value to \"sync\" (from %q, which is no longer an option).\n", clientCfg.BroadcastMode)
+		clientCfg.BroadcastMode = "sync"
 	}
 
 	return SafeSaveConfigs(cmd, appCfg, cmtCfg, clientCfg, true)

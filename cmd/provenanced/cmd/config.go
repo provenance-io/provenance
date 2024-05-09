@@ -418,7 +418,7 @@ func runConfigSetCmd(cmd *cobra.Command, args []string) (bool, error) {
 		}
 		if len(cmtUpdates) > 0 {
 			if err := cmtConfig.ValidateBasic(); err != nil {
-				cmd.Printf("cometbft config validation error: %v\n", err)
+				cmd.Printf("CometBFT config validation error: %v\n", err)
 				issueFound = true
 			}
 		}

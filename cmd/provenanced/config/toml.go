@@ -2,16 +2,22 @@ package config
 
 import (
 	"bytes"
+	"os"
 	"text/template"
-
-	cmtos "github.com/cometbft/cometbft/libs/os"
 )
+
+// This is similar to the content in the SDK's client/config/toml.go file.
+// The only difference in the defaultConfigTemplate is the fixed header border.
+// This primarily exists, though, because the SDK's version isn't public,
+// so we can't use that stuff to just write the file.
+// Our WriteConfigToFile also panics instead of returning an error because
+// the other two config file writers behave that way too.
 
 const defaultConfigTemplate = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
 ###############################################################################
-###                           Client Configuration                            ###
+###                           Client Configuration                          ###
 ###############################################################################
 
 # The network chain ID
@@ -45,5 +51,7 @@ func WriteConfigToFile(configFilePath string, config *ClientConfig) {
 		panic(err)
 	}
 
-	cmtos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
+	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0644); err != nil {
+		panic(err)
+	}
 }
