@@ -48,6 +48,13 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 		return err
 	}
 
+	// If the testnet flag was provided (or env var set), set a different default keyring backend.
+	// This needs to be done before we load the config files for the cases when:
+	//  1. The files don't exist yet, and we're loading the defaults.
+	//  2. The config is packed and we're filling in the missing with defaults.
+	if vpr.GetBool("testnet") {
+		DefaultKeyringBackend = "test"
+	}
 	// Read the configs into viper and the contexts.
 	return LoadConfigFromFiles(cmd)
 }

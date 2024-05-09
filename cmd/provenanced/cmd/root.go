@@ -116,9 +116,6 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			vpr := server.GetServerContextFromCmd(cmd).Viper
 			testnet := vpr.GetBool(EnvTypeFlag)
 			app.SetConfig(testnet, sealConfig)
-			if testnet {
-				config.DefaultKeyringBackend = "test"
-			}
 
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
