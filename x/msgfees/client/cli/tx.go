@@ -53,9 +53,9 @@ func GetCmdMsgFeesProposal() *cobra.Command {
 		Long: strings.TrimSpace(`Submit a msg fees proposal along with an initial deposit.
 For add, update, and removal of msg fees amount and min fee and/or rate fee must be set.
 `),
-		Example: fmt.Sprintf(`$ %[1]s tx msgfees add --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash --recipient=pb... --bips=5000
-$ %[1]s tx msgfees update --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash --recipient=pb... --bips=5000
-$ %[1]s tx msgfees remove --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest
+		Example: fmt.Sprintf(`$ %[1]s tx msgfees add --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612nhash --recipient=pb... --bips=5000 --deposit 1000000000nhash
+$ %[1]s tx msgfees update --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --additional-fee=612000nhash --recipient=pb... --bips=5000 --deposit 1000000000nhash
+$ %[1]s tx msgfees remove --msg-type=/provenance.metadata.v1.MsgWriteRecordRequest --deposit 1000000000nhash
 `, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -104,26 +104,11 @@ $ %[1]s tx msgfees remove --msg-type=/provenance.metadata.v1.MsgWriteRecordReque
 			var msg sdk.Msg
 			switch args[0] {
 			case "add":
-				msg = &types.MsgAddMsgFeeProposalRequest{
-					MsgTypeUrl:           msgType,
-					AdditionalFee:        addFee,
-					Recipient:            recipient,
-					RecipientBasisPoints: bips,
-					Authority:            authority,
-				}
+				msg = types.NewMsgAddMsgFeeProposalRequest(msgType, addFee, recipient, bips, authority)
 			case "update":
-				msg = &types.MsgUpdateMsgFeeProposalRequest{
-					MsgTypeUrl:           msgType,
-					AdditionalFee:        addFee,
-					Recipient:            recipient,
-					RecipientBasisPoints: bips,
-					Authority:            authority,
-				}
+				msg = types.NewMsgUpdateMsgFeeProposalRequest(msgType, addFee, recipient, bips, authority)
 			case "remove":
-				msg = &types.MsgRemoveMsgFeeProposalRequest{
-					MsgTypeUrl: msgType,
-					Authority:  authority,
-				}
+				msg = types.NewMsgRemoveMsgFeeProposalRequest(msgType, authority)
 			default:
 				return fmt.Errorf("unknown proposal type %q", args[0])
 			}
