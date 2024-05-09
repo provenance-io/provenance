@@ -27,6 +27,10 @@ import (
 )
 
 func Test_TestnetCmd(t *testing.T) {
+	// We need to disable address caching in here because this test goes a couple
+	// address conversions using a different HRP from most of the other tests in
+	// this package. With address caching on, those tests can randomly fail if
+	// they end up running after this test.
 	origCache := sdk.IsAddrCacheEnabled()
 	defer sdk.SetAddrCacheEnabled(origCache)
 	sdk.SetAddrCacheEnabled(false)
