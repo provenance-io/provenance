@@ -242,71 +242,188 @@ func (s *ConfigTestSuite) TestConfigBadArgs() {
 func (s *ConfigTestSuite) TestConfigCmdGet() {
 	noArgsOut := s.executeConfigCmd("get")
 
-	// Only spot-checking instead of checking the entire 100+ lines exactly because I don't want this to needlessly break
-	// if comsos or cometbft adds a new configuration field/section.
-	expectedRegexpMatches := []struct {
-		name string
-		re   *regexp.Regexp
-	}{
-		// App config header and a few entries.
-		{"app header", regexp.MustCompile(`(?m)^App Config: .*/config/` + s.BaseFNApp + ` \(or env\)$`)},
-		{"app halt-height", regexp.MustCompile(`(?m)^halt-height=0$`)},
-		{"app api.swagger", regexp.MustCompile(`(?m)^api.swagger=false$`)},
-		{"app grpc.address", regexp.MustCompile(`(?m)^grpc.address="localhost:9090"$`)},
-		{"app telemetry.enabled", regexp.MustCompile(`(?m)^telemetry.enabled=false$`)},
-		{"app statesync.enable", regexp.MustCompile(`(?m)^statesync.enable=false$`)},
+	s.Run("all fields and defaults", func() {
+		expectedAll := s.makeMultiLine(
+			s.makeAppConfigHeaderLines(),
+			`app-db-backend=""
+halt-height=0
+halt-time=0
+iavl-cache-size=781250
+iavl-disable-fastnode=true
+index-events=[]
+inter-block-cache=true
+min-retain-blocks=0
+minimum-gas-prices="5confcoin"
+pruning="default"
+pruning-interval="0"
+pruning-keep-recent="0"
+query-gas-limit=0
+api.address="tcp://localhost:1317"
+api.enable=false
+api.enabled-unsafe-cors=false
+api.max-open-connections=1000
+api.rpc-max-body-bytes=1000000
+api.rpc-read-timeout=10
+api.rpc-write-timeout=0
+api.swagger=false
+grpc-web.enable=true
+grpc.address="localhost:9090"
+grpc.enable=true
+grpc.max-recv-msg-size=10485760
+grpc.max-send-msg-size=2147483647
+mempool.max-txs=5000
+state-sync.snapshot-interval=0
+state-sync.snapshot-keep-recent=2
+streaming.abci.keys=[]
+streaming.abci.plugin=""
+streaming.abci.stop-node-on-err=true
+telemetry.datadog-hostname=""
+telemetry.enable-hostname=false
+telemetry.enable-hostname-label=false
+telemetry.enable-service-label=false
+telemetry.enabled=false
+telemetry.global-labels=[]
+telemetry.metrics-sink=""
+telemetry.prometheus-retention-time=0
+telemetry.service-name=""
+telemetry.statsd-addr=""`,
+			"",
+			s.makeCMTConfigHeaderLines(),
+			`abci="socket"
+db_backend="goleveldb"
+db_dir="data"
+filter_peers=false
+genesis_file="config/genesis.json"
+log_format="plain"
+log_level="info"
+moniker="F0796.localdomain"
+node_key_file="config/node_key.json"
+priv_validator_key_file="config/priv_validator_key.json"
+priv_validator_laddr=""
+priv_validator_state_file="data/priv_validator_state.json"
+proxy_app="tcp://127.0.0.1:26658"
+version="0.38.7"
+blocksync.version="v0"
+consensus.create_empty_blocks=true
+consensus.create_empty_blocks_interval="0s"
+consensus.double_sign_check_height=0
+consensus.peer_gossip_sleep_duration="100ms"
+consensus.peer_query_maj23_sleep_duration="2s"
+consensus.skip_timeout_commit=false
+consensus.timeout_commit="1.5s"
+consensus.timeout_precommit="1s"
+consensus.timeout_precommit_delta="500ms"
+consensus.timeout_prevote="1s"
+consensus.timeout_prevote_delta="500ms"
+consensus.timeout_propose="3s"
+consensus.timeout_propose_delta="500ms"
+consensus.wal_file="data/cs.wal/wal"
+instrumentation.max_open_connections=3
+instrumentation.namespace="cometbft"
+instrumentation.prometheus=false
+instrumentation.prometheus_listen_addr=":26660"
+mempool.broadcast=true
+mempool.cache_size=10000
+mempool.experimental_max_gossip_connections_to_non_persistent_peers=0
+mempool.experimental_max_gossip_connections_to_persistent_peers=0
+mempool.keep-invalid-txs-in-cache=false
+mempool.max_batch_bytes=0
+mempool.max_tx_bytes=1048576
+mempool.max_txs_bytes=1073741824
+mempool.recheck=true
+mempool.size=5000
+mempool.type="flood"
+mempool.wal_dir=""
+p2p.addr_book_file="config/addrbook.json"
+p2p.addr_book_strict=true
+p2p.allow_duplicate_ip=false
+p2p.dial_timeout="3s"
+p2p.external_address=""
+p2p.flush_throttle_timeout="100ms"
+p2p.handshake_timeout="20s"
+p2p.laddr="tcp://0.0.0.0:26656"
+p2p.max_num_inbound_peers=40
+p2p.max_num_outbound_peers=10
+p2p.max_packet_msg_payload_size=1024
+p2p.persistent_peers=""
+p2p.persistent_peers_max_dial_period="0s"
+p2p.pex=true
+p2p.private_peer_ids=""
+p2p.recv_rate=5120000
+p2p.seed_mode=false
+p2p.seeds=""
+p2p.send_rate=5120000
+p2p.unconditional_peer_ids=""
+rpc.cors_allowed_headers=["Origin", "Accept", "Content-Type", "X-Requested-With", "X-Server-Time"]
+rpc.cors_allowed_methods=["HEAD", "GET", "POST"]
+rpc.cors_allowed_origins=[]
+rpc.experimental_close_on_slow_client=false
+rpc.experimental_subscription_buffer_size=200
+rpc.experimental_websocket_write_buffer_size=200
+rpc.grpc_laddr=""
+rpc.grpc_max_open_connections=900
+rpc.laddr="tcp://127.0.0.1:26657"
+rpc.max_body_bytes=1000000
+rpc.max_header_bytes=1048576
+rpc.max_open_connections=900
+rpc.max_subscription_clients=100
+rpc.max_subscriptions_per_client=5
+rpc.pprof_laddr=""
+rpc.timeout_broadcast_tx_commit="10s"
+rpc.tls_cert_file=""
+rpc.tls_key_file=""
+rpc.unsafe=false
+statesync.chunk_fetchers=4
+statesync.chunk_request_timeout="10s"
+statesync.discovery_time="15s"
+statesync.enable=false
+statesync.rpc_servers=[]
+statesync.temp_dir=""
+statesync.trust_hash=""
+statesync.trust_height=0
+statesync.trust_period="168h0m0s"
+storage.discard_abci_responses=false
+tx_index.indexer="null"
+tx_index.psql-conn=""`,
+			"",
+			s.makeClientConfigHeaderLines(),
+			`broadcast-mode="block"
+chain-id=""
+keyring-backend="test"
+node="tcp://localhost:26657"
+output="text"`,
+			"",
+		)
 
-		// CometBFT header and a few entries.
-		{"cometbft header", regexp.MustCompile(`(?m)^CometBFT Config: .*/config/` + s.BaseFNCMT + ` \(or env\)$`)},
-		{"cometbft db_dir", regexp.MustCompile(`(?m)^db_dir="data"$`)},
-		{"cometbft consensus.timeout_commit", regexp.MustCompile(`(?m)^consensus.timeout_commit=` + fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit) + `$`)},
-		{"cometbft mempool.size", regexp.MustCompile(`(?m)^mempool.size=5000$`)},
-		{"cometbft statesync.trust_period", regexp.MustCompile(`(?m)^statesync.trust_period="168h0m0s"$`)},
-		{"cometbft p2p.recv_rate", regexp.MustCompile(`(?m)^p2p.recv_rate=5120000$`)},
+		// This test compares the no-args output to a previously known result.
+		// If this test fails unexpectedly, we'll probably want to discuss how those changes
+		// affect us, and whether we'll need to make further changes to accommodate the updates.
+		s.Assert().Equal(expectedAll, noArgsOut)
+	})
 
-		// Client config header all the entries.
-		{"client header", regexp.MustCompile(`(?m)^Client Config: .*/config/` + s.baseFNClient + ` \(or env\)$`)},
-		{"client broadcast-mode", regexp.MustCompile(`(?m)^broadcast-mode="block"$`)},
-		{"client chain-id", regexp.MustCompile(`(?m)^chain-id=""$`)},
-		{"client keyring-backend", regexp.MustCompile(`(?m)^keyring-backend="test"$`)},
-		{"client node", regexp.MustCompile(`(?m)^node="tcp://localhost:26657"$`)},
-		{"client output", regexp.MustCompile(`(?m)^output="text"$`)},
-	}
-
-	for _, tc := range expectedRegexpMatches {
-		s.Run(tc.name, func() {
-			isMatch := tc.re.MatchString(noArgsOut)
-			s.Assert().True(isMatch, "`%s` matching:\n%s", tc.re.String(), noArgsOut)
-		})
-	}
-
-	s.Run("with args get all", func() {
+	s.Run("get all", func() {
 		allOutStr := s.executeConfigCmd("get", "all")
 		s.Assert().Equal(noArgsOut, allOutStr, "output of get vs output of get all")
 	})
 
-	inOutTests := []string{
-		"app",
-		"cosmos",
-		"config",
-		"cometbft",
-		"comet",
-		"cmt",
-		"client",
-	}
-
-	for _, opt := range inOutTests {
+	// Test that the various sub-sections are in the no-args output.
+	var cmtOut string
+	for _, opt := range []string{"app", "cosmos", "config", "cometbft", "comet", "cmt", "client"} {
 		args := []string{"get", opt}
 		s.Run(strings.Join(args, " "), func() {
 			outStr := s.executeConfigCmd(args...)
 			s.Assert().Contains(noArgsOut, outStr, "output of get vs output of %q", args)
+			if opt == "cometbft" {
+				cmtOut = outStr
+			}
 		})
 	}
 
+	// Test that the deprecated tendermint and tm options have both the deprecation message and the section content.
 	for _, opt := range []string{"tendermint", "tm"} {
 		args := []string{"get", opt}
 		s.Run(strings.Join(args, " "), func() {
-			expTMOut := s.makeTmDeprecatedLines(opt) + s.executeConfigCmd("get", "cmt")
+			expTMOut := s.makeTmDeprecatedLines(opt) + cmtOut
 			outStr := s.executeConfigCmd(args...)
 			s.Assert().Equal(expTMOut, outStr)
 		})
