@@ -11,7 +11,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttypes "github.com/cometbft/cometbft/types"
 
 	"cosmossdk.io/log"
 
@@ -19,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,9 +27,6 @@ import (
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
 	piosimapp "github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -160,16 +155,6 @@ func msgFeesEventJSON(msg_type string, count int, amount int, denom string, reci
 
 func jsonArrayJoin(entries ...string) string {
 	return "[" + strings.Join(entries, ",") + "]"
-}
-
-func getLastProposal(t *testing.T, ctx sdk.Context, app *piosimapp.App) *govtypesv1.Proposal {
-	propID, err := app.GovKeeper.ProposalID.Peek(ctx)
-	require.NoError(t, err, "app.GovKeeper.ProposalID.Peek(ctx)")
-	propID--
-	require.NotEqual(t, 0, propID, "last proposal id")
-	rv, err := app.GovKeeper.Proposals.Get(ctx, propID)
-	require.NoError(t, err, "app.GovKeeper.Proposals.Get(ctx, %d)", propID)
-	return &rv
 }
 
 func TestRegisterMsgService(t *testing.T) {
@@ -975,27 +960,6 @@ func TestMsgServiceAssessMsgFeeNoRecipient(tt *testing.T) {
 	})
 }
 
-// ContentFromProposalType returns a Content object based on the proposal type.
-func ContentFromProposalType(title, desc, ty string) govtypesv1beta1.Content {
-	switch ty {
-	case govtypesv1beta1.ProposalTypeText:
-		return govtypesv1beta1.NewTextProposal(title, desc)
-
-	default:
-		return nil
-	}
-}
-
-func createValSet(t *testing.T, pubKeys ...cryptotypes.PubKey) *cmttypes.ValidatorSet {
-	validators := make([]*cmttypes.Validator, len(pubKeys))
-	for i, key := range pubKeys {
-		pk, err := cryptocodec.ToTmPubKeyInterface(key)
-		require.NoError(t, err, "ToTmPubKeyInterface")
-		validators[i] = cmttypes.NewValidator(pk, 1)
-	}
-	return cmttypes.NewValidatorSet(validators)
-}
-
 func signAndGenTx(
 	ctx sdk.Context,
 	gaslimit uint64,
@@ -1075,25 +1039,6 @@ func SignTxAndGetBytes(
 		return nil, err
 	}
 	return txBytes, nil
-}
-
-func SignTx(
-	ctx sdk.Context,
-	gaslimit uint64,
-	fees sdk.Coins,
-	encCfg simappparams.EncodingConfig,
-	pubKey cryptotypes.PubKey,
-	privKey cryptotypes.PrivKey,
-	acct authtypes.BaseAccount,
-	chainId string,
-	msg ...sdk.Msg,
-) (sdk.Tx, error) {
-	txBuilder, err := signAndGenTx(ctx, gaslimit, fees, encCfg, pubKey, privKey, acct, chainId, msg)
-	if err != nil {
-		return nil, err
-	}
-	// Send the tx to the app
-	return txBuilder.GetTx(), nil
 }
 
 // NewTestGasLimit is a test fee gas limit.
