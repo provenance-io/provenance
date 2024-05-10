@@ -278,27 +278,29 @@ func runConfigGetCmd(cmd *cobra.Command, args []string) error {
 		case "client":
 			clientToOutput.AddEntriesFrom(clientFields)
 		default:
-			var found bool
-			if fvm, ok := appFields.FindEntries(key); ok {
-				found = true
-				appToOutput.AddEntriesFrom(fvm)
-			}
+			appFVM, appFound, appExact := appFields.FindEntries(key)
+			cmtFVM, cmtFound, cmtExact := cmtFields.FindEntries(key)
+			clientFVM, clientFound, clientExact := clientFields.FindEntries(key)
 
-			if fvm, ok := cmtFields.FindEntries(key); ok {
-				found = true
-				cmtToOutput.AddEntriesFrom(fvm)
-			}
-
-			if fvm, ok := clientFields.FindEntries(key); ok {
-				found = true
-				clientToOutput.AddEntriesFrom(fvm)
-			}
-
+			found := appFound || cmtFound || clientFound
 			if !found {
 				unknownKeyMap.SetToNil(key)
+				continue
+			}
+
+			haveExact := appExact || cmtExact || clientExact
+			if appFound && (!haveExact || appExact) {
+				appToOutput.AddEntriesFrom(appFVM)
+			}
+			if cmtFound && (!haveExact || cmtExact) {
+				cmtToOutput.AddEntriesFrom(cmtFVM)
+			}
+			if clientFound && (!haveExact || clientExact) {
+				clientToOutput.AddEntriesFrom(clientFVM)
 			}
 		}
 	}
+
 	isPacked := provconfig.IsPacked(cmd)
 	if len(appToOutput) > 0 {
 		cmd.Println(makeAppConfigHeader(cmd, "", isPacked).String())
@@ -508,27 +510,31 @@ func runConfigChangedCmd(cmd *cobra.Command, args []string) error {
 			showClient = true
 			clientDiffs.AddOrUpdateEntriesFrom(provconfig.MakeUpdatedFieldMap(allDefaults, clientFields, true))
 		default:
-			var found bool
-			if fvm, ok := appFields.FindEntries(key); ok {
-				showApp, found = true, true
-				changes := provconfig.MakeUpdatedFieldMap(allDefaults, fvm, false)
-				appDiffs.AddOrUpdateEntriesFrom(changes)
-			}
+			appFVM, appFound, appExact := appFields.FindEntries(key)
+			cmtFVM, cmtFound, cmtExact := cmtFields.FindEntries(key)
+			clientFVM, clientFound, clientExact := clientFields.FindEntries(key)
 
-			if fvm, ok := cmtFields.FindEntries(key); ok {
-				showCmt, found = true, true
-				changes := provconfig.MakeUpdatedFieldMap(allDefaults, fvm, false)
-				cmtDiffs.AddOrUpdateEntriesFrom(changes)
-			}
-
-			if fvm, ok := clientFields.FindEntries(key); ok {
-				showClient, found = true, true
-				changes := provconfig.MakeUpdatedFieldMap(allDefaults, fvm, false)
-				clientDiffs.AddOrUpdateEntriesFrom(changes)
-			}
-
+			found := appFound || cmtFound || clientFound
 			if !found {
 				unknownKeyMap.SetToNil(key)
+				continue
+			}
+
+			haveExact := appExact || cmtExact || clientExact
+			if appFound && (!haveExact || appExact) {
+				showApp = true
+				changes := provconfig.MakeUpdatedFieldMap(allDefaults, appFVM, false)
+				appDiffs.AddOrUpdateEntriesFrom(changes)
+			}
+			if cmtFound && (!haveExact || cmtExact) {
+				showCmt = true
+				changes := provconfig.MakeUpdatedFieldMap(allDefaults, cmtFVM, false)
+				cmtDiffs.AddOrUpdateEntriesFrom(changes)
+			}
+			if clientFound && (!haveExact || clientExact) {
+				showClient = true
+				changes := provconfig.MakeUpdatedFieldMap(allDefaults, clientFVM, false)
+				clientDiffs.AddOrUpdateEntriesFrom(changes)
 			}
 		}
 	}

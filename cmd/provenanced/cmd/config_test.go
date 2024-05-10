@@ -509,6 +509,45 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 				`mempool.wal_dir=""`,
 				""),
 		},
+		{
+			name: "multiple sub-fields with same name",
+			keys: []string{"enable"},
+			expected: s.makeMultiLine(
+				s.makeAppConfigHeaderLines(),
+				`api.enable=false`,
+				`grpc-web.enable=true`,
+				`grpc.enable=true`,
+				"",
+				s.makeCMTConfigHeaderLines(),
+				`statesync.enable=false`,
+				"",
+			),
+		},
+		{
+			name: "exact match in one but loose match on others",
+			keys: []string{"node"},
+			expected: s.makeMultiLine(
+				s.makeClientConfigHeaderLines(),
+				`node="tcp://localhost:26657"`,
+				"",
+			),
+		},
+		{
+			name: "loose match",
+			keys: []string{"nod"},
+			expected: s.makeMultiLine(
+				s.makeAppConfigHeaderLines(),
+				`iavl-disable-fastnode=true`,
+				`streaming.abci.stop-node-on-err=true`,
+				"",
+				s.makeCMTConfigHeaderLines(),
+				`node_key_file="config/node_key.json"`,
+				"",
+				s.makeClientConfigHeaderLines(),
+				`node="tcp://localhost:26657"`,
+				"",
+			),
+		},
 	}
 
 	for _, tc := range tests {
@@ -646,6 +685,42 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 				`mempool.size=5000 (same as default)`,
 				`mempool.type="flood" (same as default)`,
 				`mempool.wal_dir="" (same as default)`,
+				"",
+			),
+		},
+		{
+			args: []string{"changed", "enable"},
+			out: s.makeMultiLine(
+				s.makeAppDiffHeaderLines(),
+				`api.enable=false (same as default)`,
+				`grpc-web.enable=true (same as default)`,
+				`grpc.enable=true (same as default)`,
+				"",
+				s.makeCMTDiffHeaderLines(),
+				`statesync.enable=false (same as default)`,
+				"",
+			),
+		},
+		{
+			args: []string{"changed", "node"},
+			out: s.makeMultiLine(
+				s.makeClientDiffHeaderLines(),
+				`node="tcp://localhost:26657" (same as default)`,
+				"",
+			),
+		},
+		{
+			args: []string{"changed", "nod"},
+			out: s.makeMultiLine(
+				s.makeAppDiffHeaderLines(),
+				`iavl-disable-fastnode=true (same as default)`,
+				`streaming.abci.stop-node-on-err=true (same as default)`,
+				"",
+				s.makeCMTDiffHeaderLines(),
+				`node_key_file="config/node_key.json" (same as default)`,
+				"",
+				s.makeClientDiffHeaderLines(),
+				`node="tcp://localhost:26657" (same as default)`,
 				"",
 			),
 		},

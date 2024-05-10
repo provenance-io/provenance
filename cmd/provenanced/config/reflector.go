@@ -140,34 +140,96 @@ func (m FieldValueMap) GetSortedKeys() []string {
 }
 
 // FindEntries looks for entries in this map that match the provided key.
-// First, if the key doesn't end in a period, an exact entry match is looked for.
-// If such an entry is found, only that entry will be returned.
-// If no such entry is found, a period is added to the end of the key (if not already there).
-// E.g. Providing "filter_peers" will get just the "filter_peers" entry.
-// Providing "consensus." will bypass the exact key lookup, and return all fields that start with "consensus.".
-// Providing "consensus" will look first for a field specifically called "consensus",
-// then, if/when not found, will return all fields that start with "consensus.".
-// Then, all entries with keys that start with the desired key are returned.
-// The second return value indicates whether or not anything was found.
-func (m FieldValueMap) FindEntries(key string) (FieldValueMap, bool) {
+// The first returned boolean is true if one or more matches are found, false if zero.
+// The second returned boolean is true if an exact match was found.
+//
+// This looks for matches in the following order:
+//  1. A field that exactly equals the provided key.
+//  2. Sections equal to the provided key.
+//  3. Fields named the provided key in any section.
+//  4. Fields with the provided key as a substring.
+//
+// When matches are found, they are returned, skipping any of the searches that would come after it.
+// For example, if an exact field match is found, searches 2, 3, and 4 are skipped.
+//
+// Only one exact match is ever returned, but if there isn't an exact match, multiple entries can be returned.
+// E.g. if there's a field named "corn" and a section named "corn", and the provided key is "corn",
+// only the field named "corn" will be returned. If you want the section in this case, provide the key as "corn.".
+// Or if you only want fields named "corn" that are in a section, provide ".corn".
+//
+// Examples:
+// Providing "consensus":
+//  1. First look for a field specifically named "consensus".
+//  2. If nothing is found yet, it'll look for fields that start with "consensus.".
+//  3. If nothing is found yet, it'll look for fields that end with ".consensus".
+//  4. If nothing is found yet, it'll look for fields with "consensus" in them somewhere.
+//
+// Providing "consensus.":
+//  1. First look for a field specifically named "consensus." (probably not going to find it).
+//  2. If nothing is found yet, it'll look for fields that start with "consensus.".
+//  3. Skip looking for fields that end with ".consensus." (no fields end with a period).
+//  4. If nothing is found yet, it'll look for fields with "consensus." in them somewhere.
+//
+// Providing ".consensus":
+//  1. First look for a field specifically named ".consensus" (probably not going to find it).
+//  2. Skip looking for fields that start with ".consensus." (no fields start with a period).
+//  3. If nothing is found yet, it'll look for fields that end with ".consensus".
+//  4. If nothing is found yet, it'll look for fields with ".consensus" in them somewhere.
+func (m FieldValueMap) FindEntries(key string) (FieldValueMap, bool, bool) {
 	rv := FieldValueMap{}
 	if len(key) == 0 {
-		return rv, false
+		return rv, false, false
 	}
-	if key[len(key)-1:] != "." {
-		if val, ok := m[key]; ok {
-			rv[key] = val
-			return rv, true
+
+	// Look for an exact entry.
+	if val, ok := m[key]; ok {
+		rv[key] = val
+		return rv, true, true
+	}
+
+	startDot := strings.HasPrefix(key, ".")
+	endDot := strings.HasSuffix(key, ".")
+
+	// Now look for section entries.
+	if !startDot {
+		sectKey := key
+		if !endDot {
+			sectKey += "."
 		}
-		key += "."
+		for k, v := range m {
+			if strings.HasPrefix(k, sectKey) {
+				rv[k] = v
+			}
+		}
+		if len(rv) > 0 {
+			return rv, true, false
+		}
 	}
-	keylen := len(key)
+
+	// Now look for the field in any section.
+	if !endDot {
+		fieldKey := key
+		if !startDot {
+			fieldKey = "." + fieldKey
+		}
+		for k, v := range m {
+			if strings.HasSuffix(k, fieldKey) {
+				rv[k] = v
+			}
+		}
+		if len(rv) > 0 {
+			return rv, true, false
+		}
+	}
+
+	// Still nothing found, just look for the key as a substring.
 	for k, v := range m {
-		if len(k) > keylen && k[:keylen] == key {
+		if strings.Contains(k, key) {
 			rv[k] = v
 		}
 	}
-	return rv, len(rv) > 0
+
+	return rv, len(rv) > 0, false
 }
 
 // GetStringOf gets a string representation of the value with the given key.
