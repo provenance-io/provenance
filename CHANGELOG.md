@@ -72,6 +72,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Removes sync-info code for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Fix most of the failing unit tests [#1943](https://github.com/provenance-io/provenance/pull/1943)
 * Clean up ReadFromClient [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Enhance the config get and changed commands to make it easier to find fields [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* Change the default keyring backend to "os", but leave it as "test" for testnets [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* Change the default broadcast mode to "sync" [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* The pre-upgrade command now updates the client config's broadcast mode to "sync" if it's set to "block" [#1968](https://github.com/provenance-io/provenance/pull/1968).
+
+### Deprecated
+
+* In the config commands, the "tendermint" and "tm" options are deprecated, replaced with "cometbft", "comet", and "cmt" [#1968](https://github.com/provenance-io/provenance/pull/1968).
 
 ### Dependencies
 
