@@ -53,7 +53,6 @@ jobs:
         run: |
           grep -vF \
             -e 'github.com/provenance-io/provenance/app' \
-            -e 'github.com/provenance-io/provenance/cmd/provenanced/cmd' \
             -e 'github.com/provenance-io/provenance/internal/antewrapper' \
             -e 'github.com/provenance-io/provenance/x/ibchooks' \
             -e 'github.com/provenance-io/provenance/x/ibcratelimit/module' \
@@ -63,7 +62,6 @@ jobs:
           split -d -n l/3 pkgs.txt.tmp pkgs.txt.part.
           printf '%s\n' \
             'github.com/provenance-io/provenance/app' \
-            'github.com/provenance-io/provenance/cmd/provenanced/cmd' \
             'github.com/provenance-io/provenance/internal/antewrapper' \
             'github.com/provenance-io/provenance/x/ibchooks' \
             'github.com/provenance-io/provenance/x/ibcratelimit/module' \
