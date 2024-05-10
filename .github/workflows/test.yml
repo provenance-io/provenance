@@ -54,7 +54,6 @@ jobs:
           grep -vF \
             -e 'github.com/provenance-io/provenance/app' \
             -e 'github.com/provenance-io/provenance/cmd/provenanced/cmd' \
-            -e 'github.com/provenance-io/provenance/internal/antewrapper' \
             -e 'github.com/provenance-io/provenance/x/ibchooks' \
             -e 'github.com/provenance-io/provenance/x/ibcratelimit/module' \
             -e 'github.com/provenance-io/provenance/x/ibcratelimit/simulation' \
@@ -64,7 +63,6 @@ jobs:
           printf '%s\n' \
             'github.com/provenance-io/provenance/app' \
             'github.com/provenance-io/provenance/cmd/provenanced/cmd' \
-            'github.com/provenance-io/provenance/internal/antewrapper' \
             'github.com/provenance-io/provenance/x/ibchooks' \
             'github.com/provenance-io/provenance/x/ibcratelimit/module' \
             'github.com/provenance-io/provenance/x/ibcratelimit/simulation' \
