@@ -53,6 +53,7 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
 
 	pioconfig.SetProvenanceConfig("confcoin", 5)
+	provconfig.DefaultKeyringBackend = "os"
 
 	s.EncodingConfig = app.MakeTestEncodingConfig(s.T())
 	clientCtx := client.Context{}.

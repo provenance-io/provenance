@@ -98,6 +98,9 @@ type cmdResult struct {
 }
 
 func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
+	// Ensure the keyring backend doesn't get changed when we run this command.
+	t.Setenv("PIO_TESTNET", "false")
+
 	rv := &cmdResult{Home: home}
 
 	cmdArgs = append([]string{"--home", home}, cmdArgs...)
@@ -202,10 +205,7 @@ func makeDummyCmd(t *testing.T, cdc codec.Codec, home string) *cobra.Command {
 	}
 	dummyCmd.SetOut(io.Discard)
 	dummyCmd.SetErr(io.Discard)
-	dummyCmd.SetArgs([]string{})
-	var err error
-	dummyCmd, err = dummyCmd.ExecuteContextC(ctx)
-	require.NoError(t, err, "dummy command execution")
+	dummyCmd.SetContext(ctx)
 	require.NoError(t, config.LoadConfigFromFiles(dummyCmd), "LoadConfigFromFiles")
 	return dummyCmd
 }
