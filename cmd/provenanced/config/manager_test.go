@@ -66,10 +66,7 @@ func (s *ConfigManagerTestSuite) makeDummyCmd() *cobra.Command {
 	}
 	dummyCmd.SetOut(io.Discard)
 	dummyCmd.SetErr(io.Discard)
-	dummyCmd.SetArgs([]string{})
-	var err error
-	dummyCmd, err = dummyCmd.ExecuteContextC(ctx)
-	s.Require().NoError(err, "dummy command execution")
+	dummyCmd.SetContext(ctx)
 	return dummyCmd
 }
 
@@ -415,4 +412,35 @@ func (s *ConfigManagerTestSuite) TestPackedConfigTmLoadDefaults() {
 		s.Require().NoError(err, "ExtractCmtConfig")
 		s.Assert().Equal(cmtConfig, cmtConfig2)
 	})
+}
+
+func (s *ConfigManagerTestSuite) TestEntryUniqueness() {
+	// This test is basically a canary.
+	// In the config commands, we've taken advantage of the fact that no two config files have a field with the same name.
+	// If this test fails, it means that that is not the case anymore, and we'll need to make changes to accommodate.
+	// That'd be pretty bad for us (and probably the SDK) since everything gets loaded into viper which can only have one entry for a field.
+
+	dummyCmd := s.makeDummyCmd()
+	_, appMap, err := ExtractAppConfigAndMap(dummyCmd)
+	s.Require().NoError(err, "ExtractAppConfigAndMap")
+	_, cmtMap, err := ExtractCmtConfigAndMap(dummyCmd)
+	s.Require().NoError(err, "ExtractCmtConfigAndMap")
+	_, clientMap, err := ExtractClientConfigAndMap(dummyCmd)
+	s.Require().NoError(err, "ExtractClientConfigAndMap")
+
+	// key = field name, value = list of config type names that have that value
+	allMap := make(map[string][]string)
+	for k := range appMap {
+		allMap[k] = append(allMap[k], "app")
+	}
+	for k := range cmtMap {
+		allMap[k] = append(allMap[k], "cometbft")
+	}
+	for k := range clientMap {
+		allMap[k] = append(allMap[k], "client")
+	}
+
+	for field, configs := range allMap {
+		s.Assert().Len(configs, 1, "configs with field name = %q", field)
+	}
 }
