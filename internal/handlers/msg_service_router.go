@@ -218,7 +218,6 @@ func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler in
 		if err != nil {
 			panic(err)
 		}
-		// TODO[1760]: msg-service-router: Do we need to add the registration of this?
 		err = msr.registerHybridHandler(sd, method, handler)
 		if err != nil {
 			panic(err)
