@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -139,7 +140,7 @@ func DefaultCmtConfig() *cmtconfig.Config {
 func removeUndesirableCmtConfigEntries(fields FieldValueMap) FieldValueMap {
 	delete(fields, "home")
 	for k := range fields {
-		if (len(k) > 5 && k[len(k)-5:] == ".home") || (len(k) > 9 && k[:9] == "p2p.test_") {
+		if strings.HasSuffix(k, ".home") || strings.HasPrefix(k, "p2p.test_") {
 			delete(fields, k)
 		}
 	}
