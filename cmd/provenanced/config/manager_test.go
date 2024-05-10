@@ -371,7 +371,7 @@ func (s *ConfigManagerTestSuite) TestConfigMinGasPrices() {
 	})
 }
 
-func (s *ConfigManagerTestSuite) TestDefaultTmConfig() {
+func (s *ConfigManagerTestSuite) TestDefaultCmtConfig() {
 	cfg := DefaultCmtConfig()
 
 	s.Run("consensus.commit_timeout", func() {
@@ -381,7 +381,7 @@ func (s *ConfigManagerTestSuite) TestDefaultTmConfig() {
 	})
 }
 
-func (s *ConfigManagerTestSuite) TestPackedConfigTmLoadDefaults() {
+func (s *ConfigManagerTestSuite) TestPackedConfigCmtLoadDefaults() {
 	dCmd := s.makeDummyCmd()
 	dCmd.Flags().String("home", s.Home, "home dir")
 

@@ -271,7 +271,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 		expInStderr  []string
 		expNot       []string
 		expAppCfg    *serverconfig.Config
-		expTmCfg     *cmtconfig.Config
+		expCmtCfg    *cmtconfig.Config
 		expClientCfg *config.ClientConfig
 	}{
 		{
@@ -282,7 +282,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expExitCode:  0,
 			expInStdout:  []string{successMsg},
 			expAppCfg:    appCfgD,
-			expTmCfg:     cmtCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgD,
 		},
 		{
@@ -303,7 +303,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expExitCode:  0,
 			expInStdout:  []string{successMsg},
 			expAppCfg:    appCfgD,
-			expTmCfg:     cmtCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgD,
 		},
 		{
@@ -315,7 +315,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expExitCode:  0,
 			expInStdout:  []string{successMsg},
 			expAppCfg:    appCfgD,
-			expTmCfg:     cmtCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgD,
 		},
 		{
@@ -348,7 +348,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expExitCode:  0,
 			expInStdout:  []string{updatingBlocksyncMsg, successMsg},
 			expAppCfg:    appCfgD,
-			expTmCfg:     cmtCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgD,
 		},
 		{
@@ -363,7 +363,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expInStdout:  []string{successMsg},
 			expNot:       []string{updatingBlocksyncMsg},
 			expAppCfg:    appCfgD,
-			expTmCfg:     cmtCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgD,
 		},
 		{
@@ -378,7 +378,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expInStdout:  []string{successMsg},
 			expNot:       []string{updatingBlocksyncMsg},
 			expAppCfg:    appCfgD,
-			expTmCfg:     cmtCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgAsync,
 		},
 		{
@@ -392,7 +392,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expExitCode:  0,
 			expInStdout:  []string{updatingBlocksyncMsg, successMsg},
 			expAppCfg:    appCfgD,
-			expTmCfg:     cmtCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgD,
 		},
 		{
@@ -407,7 +407,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expInStdout:  []string{successMsg},
 			expNot:       []string{updatingBlocksyncMsg},
 			expAppCfg:    appCfgD,
-			expTmCfg:     cmtCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgD,
 		},
 		{
@@ -422,7 +422,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			expInStdout:  []string{successMsg},
 			expNot:       []string{updatingBlocksyncMsg},
 			expAppCfg:    appCfgD,
-			expTmCfg:     cmtCfgD,
+			expCmtCfg:    cmtCfgD,
 			expClientCfg: clientCfgAsync,
 		},
 	}
@@ -465,7 +465,7 @@ func TestPreUpgradeCmd(t *testing.T) {
 			cmtCfg, err := config.ExtractCmtConfig(dummyCmd)
 			cmtCfg.SetRoot("")
 			if assert.NoError(t, err, "ExtractCmtConfig") {
-				assert.Equal(t, tc.expTmCfg, cmtCfg, "cmt config")
+				assert.Equal(t, tc.expCmtCfg, cmtCfg, "cmt config")
 			}
 			clientCfg, err := config.ExtractClientConfig(dummyCmd)
 			if assert.NoError(t, err, "ExtractClientConfig") {
