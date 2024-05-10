@@ -248,6 +248,12 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 	noArgsOut := s.executeConfigCmd("get")
 
 	s.Run("all fields and defaults", func() {
+		// The moniker is different on different computers. We don't really care what it is though, just that it's there.
+		// We do care about the other values though.
+		monikerLineMatch := regexp.MustCompile(`(?m)^moniker="([^"]*)"$`).FindStringSubmatch(noArgsOut)
+		s.Require().Len(monikerLineMatch, 2, "moniker line regexp sub-matches")
+		moniker := monikerLineMatch[1]
+
 		expectedAll := s.makeMultiLine(
 			s.makeAppConfigHeaderLines(),
 			`app-db-backend=""
@@ -300,9 +306,9 @@ db_dir="data"
 filter_peers=false
 genesis_file="config/genesis.json"
 log_format="plain"
-log_level="info"
-moniker="F0796.localdomain"
-node_key_file="config/node_key.json"
+log_level="info"`,
+			fmt.Sprintf("moniker=%q", moniker),
+			`node_key_file="config/node_key.json"
 priv_validator_key_file="config/priv_validator_key.json"
 priv_validator_laddr=""
 priv_validator_state_file="data/priv_validator_state.json"
