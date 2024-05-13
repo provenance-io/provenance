@@ -1,6 +1,7 @@
 syntax = "proto3";
 package provenance.marker.v1;
 
+import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -133,8 +134,12 @@ message QueryEscrowRequest {
 }
 // QueryEscrowResponse is the response type for the Query/MarkerEscrow method.
 message QueryEscrowResponse {
-  repeated cosmos.base.v1beta1.Coin escrow = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin escrow = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 }
 
 // QueryAccessRequest is the request type for the Query/MarkerAccess method.
@@ -176,8 +181,12 @@ message Balance {
   string address = 1;
 
   // coins defines the different coins this balance holds.
-  repeated cosmos.base.v1beta1.Coin coins = 2
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 }
 
 // QueryNetAssetValuesRequest is the request type for the Query/NetAssetValues method.

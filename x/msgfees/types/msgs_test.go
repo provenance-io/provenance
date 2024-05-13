@@ -1,14 +1,30 @@
-package types
+package types_test
 
 import (
 	"testing"
 
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/provenance-io/provenance/testutil"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+
+	. "github.com/provenance-io/provenance/x/msgfees/types"
 )
+
+func TestAllMsgsGetSigners(t *testing.T) {
+	msgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg { return &MsgAssessCustomMsgFeeRequest{From: signer} },
+		func(signer string) sdk.Msg { return &MsgAddMsgFeeProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateMsgFeeProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgRemoveMsgFeeProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateConversionFeeDenomProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateNhashPerUsdMilProposalRequest{Authority: signer} },
+	}
+
+	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
+}
 
 func TestMsgAssessCustomMsgFeeValidateBasic(t *testing.T) {
 	validAddress := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
@@ -254,20 +270,6 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgAddMsgFeeProposalRequestGetSigners(t *testing.T) {
-	authority := sdk.AccAddress("input111111111111111")
-	msg := MsgAddMsgFeeProposalRequest{
-		MsgTypeUrl:           "msgType",
-		AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
-		Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
-		RecipientBasisPoints: "10",
-		Authority:            authority.String(),
-	}
-	res := msg.GetSigners()
-	require.Equal(t, 1, len(res))
-	require.True(t, authority.Equals(res[0]))
-}
-
 func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 	authority := sdk.AccAddress("input111111111111111").String()
@@ -370,20 +372,6 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgUpdateMsgFeeProposalRequestGetSigners(t *testing.T) {
-	authority := sdk.AccAddress("input111111111111111")
-	msg := MsgUpdateMsgFeeProposalRequest{
-		MsgTypeUrl:           "msgType",
-		AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
-		Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
-		RecipientBasisPoints: "10",
-		Authority:            authority.String(),
-	}
-	res := msg.GetSigners()
-	require.Equal(t, 1, len(res))
-	require.True(t, authority.Equals(res[0]))
-}
-
 func TestMsgRemoveMsgFeeProposalRequestValidateBasic(t *testing.T) {
 	msgType := sdk.MsgTypeURL(&metadatatypes.MsgWriteRecordRequest{})
 
@@ -432,17 +420,6 @@ func TestMsgRemoveMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMsgRemoveMsgFeeProposalRequestGetSigners(t *testing.T) {
-	authority := sdk.AccAddress("input111111111111111")
-	msg := MsgRemoveMsgFeeProposalRequest{
-		MsgTypeUrl: "msgtype",
-		Authority:  authority.String(),
-	}
-	res := msg.GetSigners()
-	require.Equal(t, 1, len(res))
-	require.True(t, authority.Equals(res[0]))
 }
 
 func TestMsgUpdateNhashPerUsdMilProposalRequestValidateBasic(t *testing.T) {
@@ -494,17 +471,6 @@ func TestMsgUpdateNhashPerUsdMilProposalRequestValidateBasic(t *testing.T) {
 
 }
 
-func TestMsgUpdateNhashPerUsdMilProposalRequestGetSigners(t *testing.T) {
-	authority := sdk.AccAddress("input111111111111111")
-	msg := MsgUpdateNhashPerUsdMilProposalRequest{
-		NhashPerUsdMil: 70,
-		Authority:      authority.String(),
-	}
-	res := msg.GetSigners()
-	require.Equal(t, 1, len(res))
-	require.True(t, authority.Equals(res[0]))
-}
-
 func TestUpdateConversionFeeDenomProposalRequestValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("input111111111111111").String()
 
@@ -552,17 +518,6 @@ func TestUpdateConversionFeeDenomProposalRequestValidateBasic(t *testing.T) {
 		})
 	}
 
-}
-
-func TestUpdateConversionFeeDenomProposalRequestGetSigners(t *testing.T) {
-	authority := sdk.AccAddress("input111111111111111")
-	msg := MsgUpdateConversionFeeDenomProposalRequest{
-		ConversionFeeDenom: "some-denom",
-		Authority:          authority.String(),
-	}
-	res := msg.GetSigners()
-	require.Equal(t, 1, len(res))
-	require.True(t, authority.Equals(res[0]))
 }
 
 func TestValidateBips(t *testing.T) {

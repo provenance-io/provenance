@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.quarantine.v1beta1;
 
+import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
@@ -14,8 +15,12 @@ message QuarantinedFunds {
   // unaccepted_from_addresses are the senders that have not been part of an accept yet for these coins.
   repeated string unaccepted_from_addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // coins is the amount currently in quarantined for the two addresses.
-  repeated cosmos.base.v1beta1.Coin coins = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // declined is true if these funds were previously declined.
   bool declined = 4;
 }
@@ -61,8 +66,12 @@ message QuarantineRecord {
   // accepted_from_addresses are the senders that have already been part of an accept for these coins.
   repeated bytes accepted_from_addresses = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   // coins is the amount that has been quarantined.
-  repeated cosmos.base.v1beta1.Coin coins = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin coins = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // declined is whether these funds have been declined.
   bool declined = 4;
 }

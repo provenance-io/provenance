@@ -138,7 +138,7 @@ func (am AppModule) OnAcknowledgementPacket(
 	_ sdk.AccAddress,
 ) error {
 	var ack channeltypes.Acknowledgement
-	if err := types.ModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
+	if err := am.cdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
 		return cerrs.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal packet acknowledgement: %v", err)
 	}
 

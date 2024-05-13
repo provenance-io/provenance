@@ -70,30 +70,23 @@ Indexes (special kvstore records for efficient cross reference/queries)
 // Scope defines a root reference for a collection of records owned by one or more parties.
 message Scope {
   option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = true;
 
   // Unique ID for this scope.  Implements sdk.Address interface for use where addresses are required in Cosmos
-  bytes scope_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"scope_id\""
-  ];
+  bytes scope_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // the scope specification that contains the specifications for data elements allowed within this scope
-  bytes specification_id = 2 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"specification_id\""
-  ];
+  bytes specification_id = 2 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // These parties represent top level owners of the records within.  These parties must sign any requests that modify
   // the data within the scope.  These addresses are in union with parties listed on the sessions.
   repeated Party owners = 3 [(gogoproto.nullable) = false];
   // Addresses in this list are authorized to receive off-chain data associated with this scope.
-  repeated string data_access = 4 [(gogoproto.moretags) = "yaml:\"data_access\""];
+  repeated string data_access = 4;
   // An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
   // are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
-  string value_owner_address = 5 [(gogoproto.moretags) = "yaml:\"value_owner_address\""];
+  string value_owner_address = 5;
   // Whether all parties in this scope and its sessions must be present in this scope's owners field.
   // This also enables use of optional=true scope owners and session parties.
-  bool require_party_rollup = 6 [(gogoproto.moretags) = "yaml:\"require_party_rollup\""];
+  bool require_party_rollup = 6;
 }
 
 // Session defines an execution context against a specific specification instance.
@@ -102,40 +95,30 @@ message Scope {
 // NOTE: When there are no more Records within a Scope that reference a Session, the Session is removed.
 message Session {
   option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = true;
 
-  bytes session_id = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"session_id\""
-  ];
+  bytes session_id = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // unique id of the contract specification that was used to create this session.
-  bytes specification_id = 2 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"specification_id\""
-  ];
+  bytes specification_id = 2 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // parties is the set of identities that signed this contract
   repeated Party parties = 3 [(gogoproto.nullable) = false];
   // name to associate with this session execution context, typically classname
-  string name = 4 [(gogoproto.jsontag) = "type", (gogoproto.moretags) = "yaml:\"type\""];
+  string name = 4;
   // context is a field for storing client specific data associated with a session.
   bytes context = 5;
   // Created by, updated by, timestamps, version number, and related info.
-  AuditFields audit = 99 [(gogoproto.moretags) = "yaml:\"audit,omitempty\""];
+  AuditFields audit = 99;
 }
 
 // A record (of fact) is attached to a session or each consideration output from a contract
 message Record {
   option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = true;
 
   // name/identifier for this record.  Value must be unique within the scope.  Also known as a Fact name
-  string name = 1 [(gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
+  string name = 1;
   // id of the session context that was used to create this record (use with filtered kvprefix iterator)
-  bytes session_id = 2 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"session_id\""
-  ];
+  bytes session_id = 2 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
   // process contain information used to uniquely identify an execution on or off chain that generated this record
   Process process = 3 [(gogoproto.nullable) = false];
   // inputs used with the process to achieve the output on this record
@@ -143,11 +126,7 @@ message Record {
   // output(s) is the results of executing the process on the given process indicated in this record
   repeated RecordOutput outputs = 5 [(gogoproto.nullable) = false];
   // specification_id is the id of the record specification that was used to create this record.
-  bytes specification_id = 6 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"specification_id\""
-  ];
+  bytes specification_id = 6 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
 }
 
 // Process contains information used to uniquely identify what was used to generate this record
@@ -174,12 +153,12 @@ message RecordInput {
   // data source
   oneof source {
     // the address of a record on chain (For Established Records)
-    bytes record_id = 2 [(gogoproto.customtype) = "MetadataAddress", (gogoproto.moretags) = "yaml:\"record_id\""];
+    bytes record_id = 2 [(gogoproto.customtype) = "MetadataAddress"];
     // the hash of an off-chain piece of information (For Proposed Records)
     string hash = 3;
   }
   // from proposed fact structure to unmarshal
-  string type_name = 4 [(gogoproto.moretags) = "yaml:\"type_name\""];
+  string type_name = 4;
   // Indicates if this input was a recorded fact on chain or just a given hashed input
   RecordInputStatus status = 5;
 }
@@ -231,27 +210,17 @@ message Party {
 // AuditFields capture information about the last account to make modifications and when they were made
 message AuditFields {
   // the date/time when this entry was created
-  google.protobuf.Timestamp created_date = 1 [
-    (gogoproto.stdtime)  = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "created_date,omitempty",
-    (gogoproto.moretags) = "yaml:\"created_date,omitempty\""
-  ];
+  google.protobuf.Timestamp created_date = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   // the address of the account that created this record
-  string created_by = 2 [(gogoproto.moretags) = "yaml:\"created_by,omitempty\""];
+  string created_by = 2;
   // the date/time when this entry was last updated
-  google.protobuf.Timestamp updated_date = 3 [
-    (gogoproto.stdtime)  = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "updated_date,omitempty",
-    (gogoproto.moretags) = "yaml:\"updated_date,omitempty\""
-  ];
+  google.protobuf.Timestamp updated_date = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   // the address of the account that modified this record
-  string updated_by = 4 [(gogoproto.moretags) = "yaml:\"updated_by,omitempty\""];
+  string updated_by = 4;
   // an optional version number that is incremented with each update
-  uint32 version = 5 [(gogoproto.moretags) = "yaml:\"version,omitempty\""];
+  uint32 version = 5;
   // an optional message associated with the creation/update event
-  string message = 6 [(gogoproto.moretags) = "yaml:\"message,omitempty\""];
+  string message = 6;
 }
 
 // NetAssetValue defines a scope's net asset value
