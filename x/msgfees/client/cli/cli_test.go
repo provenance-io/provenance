@@ -253,4 +253,46 @@ func (s *IntegrationTestSuite) TestUpdateNhashPerUsdMilProposal() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestUpdateConversionFeeDenomProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name:         "success - valid denom update",
+			args:         []string{"customcoin"},
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name:         "failure - too many arguments",
+			args:         []string{"customcoin", "unexpected"},
+			expectErrMsg: "accepts 1 arg(s), received 2",
+			signer:       s.accountAddresses[0].String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetUpdateConversionFeeDenomProposal()
+			tc.args = append(tc.args,
+				"--title", "Update conversion fee denom proposal", "--summary", "Updates the conversion fee denom.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
 // TODO: Add query tests

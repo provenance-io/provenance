@@ -180,9 +180,6 @@ $ %[1]s tx msgfees cfd customcoin --deposit 1000000000nhash
 			}
 			customCoin := args[0]
 			msg := types.NewMsgUpdateConversionFeeDenomProposalRequest(customCoin, authority)
-			if err != nil {
-				return err
-			}
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
 	}
