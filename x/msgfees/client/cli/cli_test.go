@@ -109,6 +109,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")
 
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "waiting for height 1")
 }
@@ -122,11 +123,9 @@ func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
 	for i := 0; i < number; i++ {
 		keyId := fmt.Sprintf("test_key%v", i)
 		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-		s.Require().NoError(err, "Keyring.NewMneomonic")
+		s.Require().NoError(err, "Keyring.NewMnemonic")
 		addr, err := info.GetAddress()
-		if err != nil {
-			panic(err)
-		}
+		s.Require().NoError(err, "GetAddress")
 		s.accountAddresses = append(s.accountAddresses, addr)
 	}
 }
@@ -181,7 +180,7 @@ func (s *IntegrationTestSuite) TestMsgFeesProposal() {
 		{
 			name:         "failure - invalid proposal type",
 			args:         []string{"invalid-type"},
-			expectErrMsg: "unknown proposal type",
+			expectErrMsg: "unable to resolve type URL ",
 			signer:       s.accountAddresses[0].String(),
 		},
 	}
@@ -190,6 +189,7 @@ func (s *IntegrationTestSuite) TestMsgFeesProposal() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdMsgFeesProposal()
 			tc.args = append(tc.args,
+				"--title", "msg fees proposal", "--summary", "See title.",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
