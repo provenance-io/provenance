@@ -205,4 +205,52 @@ func (s *IntegrationTestSuite) TestMsgFeesProposal() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestUpdateNhashPerUsdMilProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name:         "success - valid update",
+			args:         []string{"1234"},
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name:         "failure - invalid nhash value",
+			args:         []string{"invalid-nhash-value"},
+			expectErrMsg: "unable to parse nhash value: invalid-nhash-value",
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name:         "failure - no nhash value",
+			args:         []string{},
+			expectErrMsg: "accepts 1 arg(s), received 0",
+			signer:       s.accountAddresses[0].String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.GetUpdateNhashPerUsdMilProposal()
+			tc.args = append(tc.args,
+				"--title", "Update nhash per usd mil proposal", "--summary", "Updates the nhash per usd mil rate.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
 // TODO: Add query tests
