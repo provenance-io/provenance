@@ -1,11 +1,25 @@
-package types
+package types_test
 
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil"
+
+	. "github.com/provenance-io/provenance/x/oracle/types"
 )
+
+func TestAllMsgsGetSigners(t *testing.T) {
+	msgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg { return &MsgUpdateOracleRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgSendQueryOracleRequest{Authority: signer} },
+	}
+
+	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
+}
 
 func TestNewMsgQueryOracle(t *testing.T) {
 	authority := "creator"
@@ -25,15 +39,6 @@ func TestNewMsgUpdateOracle(t *testing.T) {
 	msg := NewMsgUpdateOracle(authority, address)
 	assert.Equal(t, authority, msg.Authority, "must have the correct authority")
 	assert.Equal(t, address, msg.Address, "must have the correct address")
-}
-
-func TestMsgUpdateOracleRequestGetSigners(t *testing.T) {
-	authority := sdk.MustAccAddressFromBech32("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma")
-	address := "address"
-
-	msg := NewMsgUpdateOracle(authority.String(), address)
-	signers := msg.GetSigners()
-	assert.Equal(t, []sdk.AccAddress{authority}, signers, "must have the correct signers")
 }
 
 func TestMsgUpdateOracleRequestValidateBasic(t *testing.T) {
@@ -68,16 +73,6 @@ func TestMsgUpdateOracleRequestValidateBasic(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMsgSendQueryOracleRequestGetSigners(t *testing.T) {
-	authority := sdk.MustAccAddressFromBech32("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma")
-	channel := "channel-1"
-	query := []byte{0x01, 0x02, 0x04}
-
-	msg := NewMsgSendQueryOracle(authority.String(), channel, query)
-	signers := msg.GetSigners()
-	assert.Equal(t, []sdk.AccAddress{authority}, signers, "must have the correct signers")
 }
 
 func TestMsgSendQueryOracleRequestValidateBasic(t *testing.T) {

@@ -5,13 +5,11 @@ import (
 	"strings"
 	time "time"
 
-	"gopkg.in/yaml.v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// allRequestMsgs defines all the Msg*Request messages.
-var allRequestMsgs = []sdk.Msg{
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
 	(*MsgAddAttributeRequest)(nil),
 	(*MsgUpdateAttributeRequest)(nil),
 	(*MsgUpdateAttributeExpirationRequest)(nil),
@@ -20,7 +18,6 @@ var allRequestMsgs = []sdk.Msg{
 	(*MsgSetAccountDataRequest)(nil),
 }
 
-// NewMsgAddAttributeRequest creates a new add attribute message
 func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest {
 	return &MsgAddAttributeRequest{
 		Account:       account,
@@ -31,7 +28,6 @@ func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string
 	}
 }
 
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgAddAttributeRequest) ValidateBasic() error {
 	if len(msg.Owner) == 0 {
 		return fmt.Errorf("empty owner address")
@@ -43,22 +39,6 @@ func (msg MsgAddAttributeRequest) ValidateBasic() error {
 	return a.ValidateBasic()
 }
 
-// GetSigners indicates that the message must have been signed by the name owner.
-func (msg MsgAddAttributeRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Owner)
-	if err != nil {
-		panic(fmt.Errorf("invalid owner value on message: %w", err))
-	}
-	return []sdk.AccAddress{addr}
-}
-
-// String implements stringer interface
-func (msg MsgAddAttributeRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// NewMsgUpdateAttributeRequest creates a new add attribute message
 func NewMsgUpdateAttributeRequest(account string, owner sdk.AccAddress, name string, originalValue []byte, updateValue []byte, origAttrType AttributeType, updatedAttrType AttributeType) *MsgUpdateAttributeRequest {
 	return &MsgUpdateAttributeRequest{
 		Account:               account,
@@ -71,7 +51,6 @@ func NewMsgUpdateAttributeRequest(account string, owner sdk.AccAddress, name str
 	}
 }
 
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
 	if len(msg.Owner) == 0 {
 		return fmt.Errorf("empty owner address")
@@ -83,22 +62,6 @@ func (msg MsgUpdateAttributeRequest) ValidateBasic() error {
 	return a.ValidateBasic()
 }
 
-// GetSigners indicates that the message must have been signed by the name owner.
-func (msg MsgUpdateAttributeRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Owner)
-	if err != nil {
-		panic(fmt.Errorf("invalid owner value on message: %w", err))
-	}
-	return []sdk.AccAddress{addr}
-}
-
-// String implements stringer interface
-func (msg MsgUpdateAttributeRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// NewMsgUpdateAttributeRequest creates a new add attribute message
 func NewMsgUpdateAttributeExpirationRequest(account, name, value string, expirationDate *time.Time, owner sdk.AccAddress) *MsgUpdateAttributeExpirationRequest {
 	return &MsgUpdateAttributeExpirationRequest{
 		Account:        account,
@@ -109,7 +72,6 @@ func NewMsgUpdateAttributeExpirationRequest(account, name, value string, expirat
 	}
 }
 
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgUpdateAttributeExpirationRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
 		return err
@@ -128,13 +90,6 @@ func (msg MsgUpdateAttributeExpirationRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners indicates that the message must have been signed by the name owner.
-func (msg MsgUpdateAttributeExpirationRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Owner)
-	return []sdk.AccAddress{addr}
-}
-
-// NewMsgDeleteAttributeRequest deletes all attributes with specific name
 func NewMsgDeleteAttributeRequest(account string, owner sdk.AccAddress, name string) *MsgDeleteAttributeRequest {
 	return &MsgDeleteAttributeRequest{
 		Account: account,
@@ -143,7 +98,6 @@ func NewMsgDeleteAttributeRequest(account string, owner sdk.AccAddress, name str
 	}
 }
 
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteAttributeRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Name) == "" {
 		return fmt.Errorf("empty name")
@@ -160,22 +114,6 @@ func (msg MsgDeleteAttributeRequest) ValidateBasic() error {
 	return nil
 }
 
-// String implements stringer interface
-func (msg MsgDeleteAttributeRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// GetSigners indicates that the message must have been signed by the name owner.
-func (msg MsgDeleteAttributeRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Owner)
-	if err != nil {
-		panic(fmt.Errorf("invalid owner value on message: %w", err))
-	}
-	return []sdk.AccAddress{addr}
-}
-
-// NewMsgDeleteDistinctAttributeRequest deletes a attribute with specific value and type
 func NewMsgDeleteDistinctAttributeRequest(account string, owner sdk.AccAddress, name string, value []byte) *MsgDeleteDistinctAttributeRequest {
 	return &MsgDeleteDistinctAttributeRequest{
 		Account: account,
@@ -185,7 +123,6 @@ func NewMsgDeleteDistinctAttributeRequest(account string, owner sdk.AccAddress, 
 	}
 }
 
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgDeleteDistinctAttributeRequest) ValidateBasic() error {
 	if strings.TrimSpace(msg.Name) == "" {
 		return fmt.Errorf("empty name")
@@ -205,32 +142,10 @@ func (msg MsgDeleteDistinctAttributeRequest) ValidateBasic() error {
 	return nil
 }
 
-// String implements stringer interface
-func (msg MsgDeleteDistinctAttributeRequest) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
-// GetSigners indicates that the message must have been signed by the name owner.
-func (msg MsgDeleteDistinctAttributeRequest) GetSigners() []sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(msg.Owner)
-	if err != nil {
-		panic(fmt.Errorf("invalid owner value on message: %w", err))
-	}
-	return []sdk.AccAddress{addr}
-}
-
-// ValidateBasic runs stateless validation checks on the message.
 func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 	// This message is only for regular account addresses. No need to allow for scopes or others.
 	if _, err := sdk.AccAddressFromBech32(msg.Account); err != nil {
 		return fmt.Errorf("invalid account: %w", err)
 	}
 	return nil
-}
-
-// GetSigners indicates that the message must have been signed by the account.
-func (msg MsgSetAccountDataRequest) GetSigners() []sdk.AccAddress {
-	addr := sdk.MustAccAddressFromBech32(msg.Account)
-	return []sdk.AccAddress{addr}
 }

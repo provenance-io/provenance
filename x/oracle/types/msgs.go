@@ -7,10 +7,11 @@ import (
 	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 )
 
-var (
-	_ sdk.Msg = &MsgUpdateOracleRequest{}
-	_ sdk.Msg = &MsgSendQueryOracleRequest{}
-)
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
+	(*MsgUpdateOracleRequest)(nil),
+	(*MsgSendQueryOracleRequest)(nil),
+}
 
 // NewMsgSendQueryOracle creates a new MsgSendQueryOracleRequest
 func NewMsgSendQueryOracle(creator, channelID string, query []byte) *MsgSendQueryOracleRequest {
@@ -19,11 +20,6 @@ func NewMsgSendQueryOracle(creator, channelID string, query []byte) *MsgSendQuer
 		Channel:   channelID,
 		Query:     query,
 	}
-}
-
-// GetSigners indicates that the message must have been signed by the parent.
-func (msg MsgSendQueryOracleRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Authority)}
 }
 
 // ValidateBasic runs stateless validation checks on the message.
@@ -46,11 +42,6 @@ func NewMsgUpdateOracle(creator, addr string) *MsgUpdateOracleRequest {
 		Authority: creator,
 		Address:   addr,
 	}
-}
-
-// GetSigners indicates that the message must have been signed by the parent.
-func (msg MsgUpdateOracleRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Authority)}
 }
 
 // ValidateBasic runs stateless validation checks on the message.

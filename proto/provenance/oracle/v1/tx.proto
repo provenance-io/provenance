@@ -37,9 +37,8 @@ message MsgSendQueryOracleResponse {
 
 // MsgUpdateOracleRequest is the request type for updating an oracle's contract address
 message MsgUpdateOracleRequest {
-  option (cosmos.msg.v1.signer)       = "authority";
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option (cosmos.msg.v1.signer) = "authority";
+  option (gogoproto.equal)      = true;
 
   // The address of the oracle's contract
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

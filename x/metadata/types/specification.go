@@ -6,8 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"gopkg.in/yaml.v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -96,13 +94,7 @@ func (s ScopeSpecification) ValidateBasic() error {
 	return nil
 }
 
-// String implements stringer interface
-func (s ScopeSpecification) String() string {
-	out, _ := yaml.Marshal(s)
-	return string(out)
-}
-
-// NewScopeSpecification creates a new ScopeSpecification instance.
+// NewContractSpecification creates a new ContractSpecification instance.
 func NewContractSpecification(
 	specificationID MetadataAddress,
 	description *Description,
@@ -183,12 +175,6 @@ func (s ContractSpecification) ValidateBasic() error {
 	return nil
 }
 
-// String implements stringer interface
-func (s ContractSpecification) String() string {
-	out, _ := yaml.Marshal(s)
-	return string(out)
-}
-
 // NewRecordSpecification creates a new RecordSpecification instance
 func NewRecordSpecification(
 	specificationID MetadataAddress,
@@ -254,12 +240,6 @@ func (s RecordSpecification) ValidateBasic() error {
 	return nil
 }
 
-// String implements stringer interface
-func (s RecordSpecification) String() string {
-	out, _ := yaml.Marshal(s)
-	return string(out)
-}
-
 // NewInputSpecification creates a new InputSpecification instance
 func NewInputSpecification(
 	name string,
@@ -322,12 +302,6 @@ func (s InputSpecification) ValidateBasic() error {
 	return nil
 }
 
-// String implements stringer interface
-func (s InputSpecification) String() string {
-	out, _ := yaml.Marshal(s)
-	return string(out)
-}
-
 // NewDescription creates a new Description instance.
 func NewDescription(name, description, websiteURL, iconURL string) *Description {
 	return &Description{
@@ -364,12 +338,6 @@ func (d Description) ValidateBasic(path string) error {
 		return err
 	}
 	return nil
-}
-
-// String implements stringer interface
-func (d Description) String() string {
-	out, _ := yaml.Marshal(d)
-	return string(out)
 }
 
 func (x PartyType) IsValid() bool {

@@ -1,6 +1,7 @@
 syntax = "proto3";
 package provenance.marker.v1;
 
+import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -15,8 +16,12 @@ message MarkerTransferAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 
   // transfer_limit is the total amount the grantee can transfer
-  repeated cosmos.base.v1beta1.Coin transfer_limit = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin transfer_limit = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 
   // allow_list specifies an optional list of addresses to whom the grantee can send restricted coins on behalf of the
   // granter. If omitted, any recipient is allowed.
