@@ -6,14 +6,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	protov2 "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 )
 
@@ -48,41 +51,53 @@ func (t NonFeeTx) GetMsgsV2() ([]protov2.Message, error) {
 	return nil, nil
 }
 
-var _ sdk.Tx = &FeeTxWrapper{}
+var _ sdk.Tx = (*FeeTxWrapper)(nil)
+var _ sdk.FeeTx = (*FeeTxWrapper)(nil)
 
 // FeeTxWrapper is a wrapper on a txtypes.Tx that also has the GetMsgsV2 func so it satisfies the sdk.Tx interface.
 type FeeTxWrapper struct {
 	txtypes.Tx
+	Codec codec.Codec
 }
 
 func (t FeeTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
-	return nil, nil
+	msgs := t.Tx.GetMsgs()
+	rv := make([]protov2.Message, len(msgs))
+	for i, msg := range msgs {
+		rv[i] = protoadapt.MessageV2Of(msg)
+	}
+	return rv, nil
 }
 
-func NewFeeTxWrapper(tx txtypes.Tx) *FeeTxWrapper {
-	return &FeeTxWrapper{Tx: tx}
+func (t FeeTxWrapper) FeePayer() []byte {
+	return t.Tx.FeePayer(t.Codec)
 }
 
-func NewFeeTx(gasLimit uint64, fee sdk.Coins) sdk.Tx {
-	return NewFeeTxWrapper(txtypes.Tx{
-		AuthInfo: &txtypes.AuthInfo{
-			Fee: &txtypes.Fee{
-				Amount:   fee,
-				GasLimit: gasLimit,
-			},
-		},
-	})
+func (t FeeTxWrapper) FeeGranter() []byte {
+	return t.Tx.FeeGranter(t.Codec)
 }
 
-func TestAnteHandle(tt *testing.T) {
+func NewFeeTxWrapper(tx txtypes.Tx, codec codec.Codec) *FeeTxWrapper {
+	return &FeeTxWrapper{Tx: tx, Codec: codec}
+}
+
+func NewFeeTx(gasLimit uint64, fee sdk.Coins, codec codec.Codec) sdk.Tx {
+	tx := txtypes.Tx{AuthInfo: &txtypes.AuthInfo{Fee: &txtypes.Fee{Amount: fee, GasLimit: gasLimit}}}
+	return NewFeeTxWrapper(tx, codec)
+}
+
+func TestAnteHandle(t *testing.T) {
 	var dummyTx sdk.Tx
 	dummyTx = &NonFeeTx{}
 	_, ok := dummyTx.(sdk.FeeTx)
-	require.False(tt, ok, "NonFeeTx should not implement FeeTx.")
+	require.False(t, ok, "NonFeeTx should not implement FeeTx.")
 
 	testSkipMinGasPrices := sdk.NewDecCoins(sdk.NewInt64DecCoin("simfoo", 1000))
 	testSkipGas := uint64(5)
 	testSkipFee := sdk.NewCoins(sdk.NewInt64Coin("simfoo", 4999))
+
+	encCfg := app.MakeTestEncodingConfig(t)
+	codec := encCfg.Marshaler
 
 	tests := []struct {
 		name            string
@@ -99,7 +114,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        true,
 			isCheckTx:       true,
 			minGasPrices:    testSkipMinGasPrices,
-			tx:              NewFeeTx(testSkipGas, testSkipFee),
+			tx:              NewFeeTx(testSkipGas, testSkipFee, codec),
 			expectedInError: nil,
 		},
 		{
@@ -107,7 +122,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       false,
 			minGasPrices:    testSkipMinGasPrices,
-			tx:              NewFeeTx(testSkipGas, testSkipFee),
+			tx:              NewFeeTx(testSkipGas, testSkipFee, codec),
 			expectedInError: nil,
 		},
 		{
@@ -115,7 +130,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    testSkipMinGasPrices,
-			tx:              NewFeeTx(testSkipGas, testSkipFee),
+			tx:              NewFeeTx(testSkipGas, testSkipFee, codec),
 			expectedInError: []string{"insufficient fee", "min-gas-prices not met", "got: 4999simfoo", "required: 5000simfoo"},
 		},
 		// end of skip tests.
@@ -125,7 +140,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("gascoin", 100)),
-			tx:              NewFeeTx(5, sdk.NewCoins(sdk.NewInt64Coin("feecoin", 500_000))),
+			tx:              NewFeeTx(5, sdk.NewCoins(sdk.NewInt64Coin("feecoin", 500_000)), codec),
 			expectedInError: []string{"insufficient fee", "min-gas-prices not met", "got: 500000feecoin", "required: 500gascoin"},
 		},
 		{
@@ -133,7 +148,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("onefoo", 10), sdk.NewInt64DecCoin("twofoo", 100)),
-			tx:              NewFeeTx(5, sdk.NewCoins(sdk.NewInt64Coin("onefoo", 49))),
+			tx:              NewFeeTx(5, sdk.NewCoins(sdk.NewInt64Coin("onefoo", 49)), codec),
 			expectedInError: []string{"insufficient fee", "min-gas-prices not met", "got: 49onefoo", "required: 50onefoo,500twofoo"},
 		},
 		{
@@ -141,7 +156,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("threefoo", 10), sdk.NewInt64DecCoin("fourfoo", 100)),
-			tx:              NewFeeTx(5, sdk.NewCoins(sdk.NewInt64Coin("threefoo", 50))),
+			tx:              NewFeeTx(5, sdk.NewCoins(sdk.NewInt64Coin("threefoo", 50)), codec),
 			expectedInError: nil,
 		},
 		{
@@ -149,7 +164,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("fivefoo", 10), sdk.NewInt64DecCoin("sixfoo", 100)),
-			tx:              NewFeeTx(5, sdk.NewCoins(sdk.NewInt64Coin("sixfoo", 499))),
+			tx:              NewFeeTx(5, sdk.NewCoins(sdk.NewInt64Coin("sixfoo", 499)), codec),
 			expectedInError: []string{"insufficient fee", "min-gas-prices not met", "got: 499sixfoo", "required: 50fivefoo,500sixfoo"},
 		},
 		{
@@ -157,7 +172,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("sevenfoo", 10), sdk.NewInt64DecCoin("eightfoo", 100)),
-			tx:              NewFeeTx(5, sdk.NewCoins(sdk.NewInt64Coin("eightfoo", 500))),
+			tx:              NewFeeTx(5, sdk.NewCoins(sdk.NewInt64Coin("eightfoo", 500)), codec),
 			expectedInError: nil,
 		},
 		{
@@ -165,7 +180,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("ninefoo", 10), sdk.NewInt64DecCoin("tenfoo", 100)),
-			tx:              NewFeeTx(10, sdk.NewCoins(sdk.NewInt64Coin("ninefoo", 99), sdk.NewInt64Coin("tenfoo", 999))),
+			tx:              NewFeeTx(10, sdk.NewCoins(sdk.NewInt64Coin("ninefoo", 99), sdk.NewInt64Coin("tenfoo", 999)), codec),
 			expectedInError: []string{"insufficient fee", "min-gas-prices not met", "got: 99ninefoo,999tenfoo", "required: 100ninefoo,1000tenfoo"},
 		},
 		{
@@ -173,7 +188,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("elevenfoo", 10), sdk.NewInt64DecCoin("twelvefoo", 100)),
-			tx:              NewFeeTx(10, sdk.NewCoins(sdk.NewInt64Coin("elevenfoo", 99), sdk.NewInt64Coin("twelvefoo", 1000))),
+			tx:              NewFeeTx(10, sdk.NewCoins(sdk.NewInt64Coin("elevenfoo", 99), sdk.NewInt64Coin("twelvefoo", 1000)), codec),
 			expectedInError: nil,
 		},
 		{
@@ -181,7 +196,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("thirteenfoo", 10), sdk.NewInt64DecCoin("fourteenfoo", 100)),
-			tx:              NewFeeTx(10, sdk.NewCoins(sdk.NewInt64Coin("thirteenfoo", 100), sdk.NewInt64Coin("fourteenfoo", 999))),
+			tx:              NewFeeTx(10, sdk.NewCoins(sdk.NewInt64Coin("thirteenfoo", 100), sdk.NewInt64Coin("fourteenfoo", 999)), codec),
 			expectedInError: nil,
 		},
 		{
@@ -189,7 +204,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("fifteenfoo", 10)),
-			tx:              NewFeeTx(7, sdk.NewCoins(sdk.NewInt64Coin("fifteenfoo", 69), sdk.NewInt64Coin("sixteenfoo", 420))),
+			tx:              NewFeeTx(7, sdk.NewCoins(sdk.NewInt64Coin("fifteenfoo", 69), sdk.NewInt64Coin("sixteenfoo", 420)), codec),
 			expectedInError: []string{"insufficient fee", "min-gas-prices not met", "got: 69fifteenfoo,420sixteenfoo", "required: 70fifteenfoo"},
 		},
 		{
@@ -197,7 +212,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("seventeenfoo", 10)),
-			tx:              NewFeeTx(1, sdk.NewCoins(sdk.NewInt64Coin("seventeenfoo", 420), sdk.NewInt64Coin("eighteenfoo", 69))),
+			tx:              NewFeeTx(1, sdk.NewCoins(sdk.NewInt64Coin("seventeenfoo", 420), sdk.NewInt64Coin("eighteenfoo", 69)), codec),
 			expectedInError: nil,
 		},
 		{
@@ -205,7 +220,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("nineteenfoo", 50)),
-			tx:              NewFeeTx(2, sdk.NewCoins(sdk.NewInt64Coin("nineteenfoo", 1_000_000))),
+			tx:              NewFeeTx(2, sdk.NewCoins(sdk.NewInt64Coin("nineteenfoo", 1_000_000)), codec),
 			expectedInError: nil,
 		},
 		{
@@ -213,7 +228,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewInt64DecCoin("twentyfoo", 0), sdk.NewInt64DecCoin("twentybar", 0)),
-			tx:              NewFeeTx(100, sdk.NewCoins()),
+			tx:              NewFeeTx(100, sdk.NewCoins(), codec),
 			expectedInError: nil,
 		},
 		{
@@ -221,7 +236,7 @@ func TestAnteHandle(tt *testing.T) {
 			simulate:        false,
 			isCheckTx:       true,
 			minGasPrices:    sdk.NewDecCoins(sdk.NewDecCoinFromDec("pcoin", sdkmath.LegacyMustNewDecFromStr("0.15"))),
-			tx:              NewFeeTx(7, sdk.NewCoins(sdk.NewInt64Coin("pcoin", 1))),
+			tx:              NewFeeTx(7, sdk.NewCoins(sdk.NewInt64Coin("pcoin", 1)), codec),
 			expectedInError: []string{"required: 2pcoin"},
 		},
 
@@ -261,7 +276,7 @@ func TestAnteHandle(tt *testing.T) {
 	}
 
 	for _, tc := range tests {
-		tt.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			ctx := sdk.NewContext(nil, cmtproto.Header{}, tc.isCheckTx, nil).WithMinGasPrices(tc.minGasPrices)
 			terminator := NewTestTerminator()
 			decorator := antewrapper.NewMinGasPricesDecorator()
