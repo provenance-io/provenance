@@ -3,10 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
-
-	"gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -84,12 +81,6 @@ func (s Scope) ValidateOwnersBasic() error {
 		return fmt.Errorf("invalid scope owners: %w", err)
 	}
 	return ValidateOptionalParties(s.RequirePartyRollup, s.Owners)
-}
-
-// String implements stringer interface
-func (s Scope) String() string {
-	out, _ := yaml.Marshal(s)
-	return string(out)
 }
 
 func (s *Scope) RemoveDataAccess(addresses []string) {
@@ -241,12 +232,6 @@ func (s Session) ValidateBasic() error {
 	return nil
 }
 
-// String implements stringer interface
-func (s Session) String() string {
-	out, _ := yaml.Marshal(s)
-	return string(out)
-}
-
 // GetAllPartyAddresses gets the addresses of all of the parties. Each address can only appear once in the return value.
 func (s Session) GetAllPartyAddresses() []string {
 	return GetPartyAddresses(s.Parties)
@@ -308,17 +293,6 @@ func (r Record) ValidateBasic() error {
 		return fmt.Errorf("invalid record process: %w", err)
 	}
 	return nil
-}
-
-// String implements stringer interface
-func (r Record) String() string {
-	out := fmt.Sprintf("%s (%s) Results [", r.Name, r.SessionId)
-	for _, o := range r.Outputs {
-		out += fmt.Sprintf("%s - %s, ", o.Status, o.Hash)
-	}
-	out = strings.TrimRight(out, ", ")
-	out += fmt.Sprintf("] (%s/%s)", r.Process.Name, r.Process.Method)
-	return out
 }
 
 // GetRecordAddress returns the address for this record, or an empty MetadataAddress if it cannot be constructed.

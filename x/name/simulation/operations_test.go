@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -24,6 +25,7 @@ type SimTestSuite struct {
 
 	ctx sdk.Context
 	app *app.App
+	cdc codec.BinaryCodec
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -33,6 +35,7 @@ func TestSimTestSuite(t *testing.T) {
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false)
+	s.cdc = s.app.GetEncodingConfig().Marshaler
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -134,7 +137,7 @@ func (s *SimTestSuite) TestSimulateMsgBindName() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgBindNameRequest
-	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.cdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Record.Address, "msg.Record.Address")
@@ -165,7 +168,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteName() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgDeleteNameRequest
-	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.cdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address, "msg.Record.Address")
@@ -194,7 +197,7 @@ func (s *SimTestSuite) TestSimulateMsgModifyName() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgModifyNameRequest
-	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.cdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Record.Address, "msg.Record.Address")

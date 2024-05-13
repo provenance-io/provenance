@@ -12,9 +12,22 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil"
 
 	. "github.com/provenance-io/provenance/x/trigger/types"
 )
+
+func TestAllMsgsGetSigners(t *testing.T) {
+	singleSignerMsgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg { return &MsgDestroyTriggerRequest{Authority: signer} },
+	}
+
+	multiSignerMsgMakers := []testutil.MsgMakerMulti{
+		func(signers []string) sdk.Msg { return &MsgCreateTriggerRequest{Authorities: signers} },
+	}
+
+	testutil.RunGetSignersTests(t, AllRequestMsgs, singleSignerMsgMakers, multiSignerMsgMakers)
+}
 
 func TestNewCreateTriggerRequest(t *testing.T) {
 	authorities := []string{"addr1", "addr2"}
@@ -112,34 +125,6 @@ func TestMsgCreateTriggerRequestValidateBasic(t *testing.T) {
 			} else {
 				assert.NoError(t, err, "should have no error in successful ValidateBasic")
 			}
-		})
-	}
-}
-
-func TestMsgCreateTriggerRequestGetSigners(t *testing.T) {
-	tests := []struct {
-		name    string
-		msg     *MsgCreateTriggerRequest
-		signers []sdk.AccAddress
-	}{
-		{
-			name: "valid - Get signers returns the correct signers",
-			msg: MustNewCreateTriggerRequest(
-				[]string{"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h", "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4"},
-				&BlockHeightEvent{},
-				[]sdk.Msg{},
-			),
-			signers: []sdk.AccAddress{
-				sdk.MustAccAddressFromBech32("cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h"),
-				sdk.MustAccAddressFromBech32("cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2m6sx4"),
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			signers := tc.msg.GetSigners()
-			assert.Equal(t, tc.signers, signers, "should receive the correct signers from GetSigners")
 		})
 	}
 }
@@ -257,42 +242,6 @@ func TestMsgDestroyTriggerRequestValidateBasic(t *testing.T) {
 				assert.Error(t, err, "should receive correct error for failed ValidateBasic")
 			} else {
 				assert.NoError(t, err, "should receive no error for successful ValidateBasic")
-			}
-		})
-	}
-}
-
-func TestMsgDestroyTriggerRequestGetSigners(t *testing.T) {
-	tests := []struct {
-		name         string
-		authority    string
-		id           uint64
-		panicMessage string
-	}{
-		{
-			name:         "valid - success",
-			authority:    "cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
-			id:           1,
-			panicMessage: "",
-		},
-		{
-			name:         "invalid - bad addr",
-			authority:    "badaddr",
-			id:           1,
-			panicMessage: "decoding bech32 failed: invalid bech32 string length 7",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			msg := NewDestroyTriggerRequest(tc.authority, tc.id)
-			if len(tc.panicMessage) > 0 {
-				assert.PanicsWithError(t, tc.panicMessage, func() {
-					msg.GetSigners()
-				})
-			} else {
-				signers := msg.GetSigners()
-				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(tc.authority)}, signers, "should only contain authority in GetSigners")
 			}
 		})
 	}

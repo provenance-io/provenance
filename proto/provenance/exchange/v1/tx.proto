@@ -6,6 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/exchange";
 option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
+import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
@@ -154,8 +155,12 @@ message MsgCommitFundsRequest {
   // market_id is the numerical identifier of the market the funds will be committed to.
   uint32 market_id = 2;
   // amount is the funds being committed to the market.
-  repeated cosmos.base.v1beta1.Coin amount = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // creation_fee is the fee that is being paid to create this commitment.
   cosmos.base.v1beta1.Coin creation_fee = 4;
   // event_tag is a string that is included in the funds-committed event. Max length is 100 characters.
@@ -191,8 +196,12 @@ message MsgFillBidsRequest {
   uint32 market_id = 2;
   // total_assets are the things that the seller wishes to sell.
   // It must be the sum of all bid order assets.
-  repeated cosmos.base.v1beta1.Coin total_assets = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin total_assets = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // bid_order_ids are the ids of the bid orders that you are trying to fill.
   // All ids must be for bid orders, and must be in the same market as the market_id.
   repeated uint64 bid_order_ids = 4;
@@ -222,8 +231,12 @@ message MsgFillAsksRequest {
   repeated uint64 ask_order_ids = 4;
   // buyer_settlement_fees are the fees (both flat and proportional) that the buyer will pay (in addition to the price)
   // for this settlement.
-  repeated cosmos.base.v1beta1.Coin buyer_settlement_fees = 5
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin buyer_settlement_fees = 5 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // bid_order_creation_fee is the fee that is being paid to create this order (which is immediately then settled).
   cosmos.base.v1beta1.Coin bid_order_creation_fee = 6;
 }
@@ -327,8 +340,12 @@ message MsgMarketWithdrawRequest {
   // to_address is the address that will receive the funds.
   string to_address = 3;
   // amount is the funds to withdraw.
-  repeated cosmos.base.v1beta1.Coin amount = 4
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 }
 
 // MsgMarketWithdrawResponse is a response message for the MarketWithdraw endpoint.
