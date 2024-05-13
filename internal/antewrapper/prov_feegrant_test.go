@@ -20,6 +20,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sdksigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -90,32 +91,37 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 			signer:    addr1,
 			fee:       defaultGas,
 			expInErr:  []string{"10stake", defaultGasStr, "insufficient funds"},
-		}, {
+		},
+		{
 			name:      "paying with good funds",
 			signerKey: priv2,
 			signer:    addr2,
 			fee:       defaultGas,
 			expInErr:  nil,
-		}, {
+		},
+		{
 			name:      "paying with no account",
 			signerKey: priv3,
 			signer:    addr3,
 			fee:       defaultGas,
 			expInErr:  []string{"0stake", defaultGasStr, "insufficient funds"},
-		}, {
+		},
+		{
 			name:      "no fee with no account",
 			signerKey: priv5,
 			signer:    addr5,
 			fee:       0,
 			expInErr:  []string{"fee payer address", addr5.String(), "does not exist"},
-		}, {
+		},
+		{
 			name:       "valid fee grant without account",
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
 			fee:        defaultGas,
 			expInErr:   nil,
-		}, {
+		},
+		{
 			name:       "no fee grant",
 			signerKey:  priv3,
 			signer:     addr3,
@@ -127,10 +133,11 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 				fmt.Sprintf("granter: %s", addr1),
 				fmt.Sprintf("grantee: %s", addr3),
 				fmt.Sprintf(`fee: "%s"`, defaultGasStr),
-				`msgs: ["/testdata.TestMsg"]`,
+				`msgs: ["/testpb.TestMsg"]`,
 				"fee-grant not found",
 			},
-		}, {
+		},
+		{
 			name:       "allowance smaller than requested fee",
 			signerKey:  priv4,
 			signer:     addr4,
@@ -142,10 +149,11 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 				fmt.Sprintf("granter: %s", addr2),
 				fmt.Sprintf("grantee: %s", addr4),
 				fmt.Sprintf(`fee: "%s"`, defaultGasStr),
-				`msgs: ["/testdata.TestMsg"]`,
+				`msgs: ["/testpb.TestMsg"]`,
 				"fee limit exceeded",
 			},
-		}, {
+		},
+		{
 			name:       "granter cannot cover allowed fee grant",
 			signerKey:  priv4,
 			signer:     addr4,
@@ -157,7 +165,7 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 				fmt.Sprintf("granter: %s", addr1),
 				fmt.Sprintf("grantee: %s", addr4),
 				fmt.Sprintf(`fee: "%s"`, defaultGasStr),
-				`msgs: ["/testdata.TestMsg"]`,
+				`msgs: ["/testpb.TestMsg"]`,
 				"fee-grant not found",
 			},
 		},
@@ -169,7 +177,8 @@ func (s *AnteTestSuite) TestDeductFeesNoDelegation() {
 			msgs := []sdk.Msg{testdata.NewTestMsg(tc.signer)}
 
 			acc := app.AccountKeeper.GetAccount(ctx, tc.signer)
-			privs, accNums, seqs := []cryptotypes.PrivKey{tc.signerKey}, []uint64{0}, []uint64{0}
+			privs := []cryptotypes.PrivKey{tc.signerKey}
+			accNums, seqs := []uint64{0}, []uint64{0}
 			if acc != nil {
 				accNums, seqs = []uint64{acc.GetAccountNumber()}, []uint64{acc.GetSequence()}
 			}
@@ -243,19 +252,25 @@ func genTxWithFeeGranter(ctx context.Context, gen client.TxConfig, msgs []sdk.Ms
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		txData := signing.TxData{} // TODO[1760]: signing: Base this off of txb.GetTx().
+
+		theTx := txb.GetTx()
+		adaptableTx, ok := theTx.(authsigning.V2AdaptableTx)
+		if !ok {
+			return nil, fmt.Errorf("%T does not implement the authsigning.V2AdaptableTx interface", theTx)
+		}
+		txData := adaptableTx.GetSigningTxData()
 		signBytes, err := gen.SignModeHandler().GetSignBytes(ctx, signMode, signerData, txData)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		sig, err := p.Sign(signBytes)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		sigs[i].Data.(*sdksigning.SingleSignatureData).Signature = sig
 		err = txb.SetSignatures(sigs...)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
 
