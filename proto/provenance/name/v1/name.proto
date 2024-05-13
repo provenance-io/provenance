@@ -42,6 +42,7 @@ message NameRecord {
 // Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
 // proposals, see MsgCreateRootNameRequest.
 message CreateRootNameProposal {
+  option deprecated                   = true;
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
