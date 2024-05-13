@@ -15,8 +15,12 @@ import (
 	"github.com/provenance-io/provenance/internal/helpers"
 )
 
-var _ sdk.Msg = &MsgCreateTriggerRequest{}
-var _ sdk.Msg = &MsgDestroyTriggerRequest{}
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
+	(*MsgCreateTriggerRequest)(nil),
+	(*MsgDestroyTriggerRequest)(nil),
+}
+
 var _ codectypes.UnpackInterfacesMessage = (*MsgCreateTriggerRequest)(nil)
 
 // NewCreateTriggerRequest Creates a new trigger create request
@@ -87,11 +91,6 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners indicates that the message must have been signed by the parent.
-func (msg MsgCreateTriggerRequest) GetSigners() []sdk.AccAddress {
-	return stringsToAccAddresses(msg.GetAuthorities())
-}
-
 // hasSigners checks if the signers are all in the set of the entries
 // The keys in the available map are a cast of an AccAddress to a string. It is not the result of AccAddress.String().
 func hasSigners(sigCtx *signing.Context, available map[string]bool, action sdk.Msg) error {
@@ -105,18 +104,6 @@ func hasSigners(sigCtx *signing.Context, available map[string]bool, action sdk.M
 		}
 	}
 	return nil
-}
-
-// stringsToAccAddresses converts an array of strings into an array of Acc Addresses.
-// Panics if it can't convert one.
-func stringsToAccAddresses(strings []string) []sdk.AccAddress {
-	retval := make([]sdk.AccAddress, len(strings))
-
-	for i, str := range strings {
-		retval[i] = sdk.MustAccAddressFromBech32(str)
-	}
-
-	return retval
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -162,9 +149,4 @@ func (msg MsgDestroyTriggerRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid id for trigger")
 	}
 	return nil
-}
-
-// GetSigners indicates that the message must have been signed by the parent.
-func (msg MsgDestroyTriggerRequest) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.GetAuthority())}
 }

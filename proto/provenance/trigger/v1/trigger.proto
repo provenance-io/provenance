@@ -12,8 +12,7 @@ option java_multiple_files = true;
 
 // Trigger
 message Trigger {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.equal) = true;
 
   // An integer to uniquely identify the trigger.
   uint64 id = 1;
@@ -27,8 +26,7 @@ message Trigger {
 
 // QueuedTrigger
 message QueuedTrigger {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.equal) = true;
 
   // The block height the trigger was detected and queued.
   uint64 block_height = 1;
@@ -41,7 +39,6 @@ message QueuedTrigger {
 // BlockHeightEvent
 message BlockHeightEvent {
   option (gogoproto.equal)                   = true;
-  option (gogoproto.goproto_stringer)        = true;
   option (cosmos_proto.implements_interface) = "TriggerEventI";
 
   // The height that the trigger should fire at.
@@ -51,7 +48,6 @@ message BlockHeightEvent {
 // BlockTimeEvent
 message BlockTimeEvent {
   option (gogoproto.equal)                   = true;
-  option (gogoproto.goproto_stringer)        = true;
   option (cosmos_proto.implements_interface) = "TriggerEventI";
 
   // The time the trigger should fire at.
@@ -61,7 +57,6 @@ message BlockTimeEvent {
 // TransactionEvent
 message TransactionEvent {
   option (gogoproto.equal)                   = true;
-  option (gogoproto.goproto_stringer)        = true;
   option (cosmos_proto.implements_interface) = "TriggerEventI";
 
   // The name of the event for a match.
@@ -72,8 +67,7 @@ message TransactionEvent {
 
 // Attribute
 message Attribute {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.equal) = true;
 
   // The name of the attribute that the event must have to be considered a match.
   string name = 1;

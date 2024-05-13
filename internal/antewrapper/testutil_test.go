@@ -8,12 +8,13 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
@@ -117,7 +118,7 @@ func (s *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
+func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (authsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -125,7 +126,7 @@ func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				// SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), // TODO[1760]: signing: same type name diff packages.
+				SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -140,24 +141,21 @@ func (s *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint
 
 	// Second round: all signer infos are set, so each signer can sign.
 	sigsV2 = []signing.SignatureV2{}
-	// TODO[1760]: signing: SignWithPrivKey: Uncomment these lines.
-	/*
-		for i, priv := range privs {
-			signerData := xauthsigning.SignerData{
-				ChainID:       chainID,
-				AccountNumber: accNums[i],
-				Sequence:      accSeqs[i],
-			}
-			sigV2, err := tx.SignWithPrivKey(
-				s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
-				s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
-			if err != nil {
-				return nil, err
-			}
-
-			sigsV2 = append(sigsV2, sigV2)
+	for i, priv := range privs {
+		signerData := authsigning.SignerData{
+			ChainID:       chainID,
+			AccountNumber: accNums[i],
+			Sequence:      accSeqs[i],
 		}
-	*/
+		sigV2, err := tx.SignWithPrivKey(s.ctx,
+			signing.SignMode_SIGN_MODE_DIRECT, signerData,
+			s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
+		if err != nil {
+			return nil, err
+		}
+
+		sigsV2 = append(sigsV2, sigV2)
+	}
 	err = s.txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, err

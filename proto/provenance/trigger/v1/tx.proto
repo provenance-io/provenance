@@ -21,9 +21,7 @@ service Msg {
 // MsgCreateTriggerRequest is the request type for creating a trigger RPC
 message MsgCreateTriggerRequest {
   option (cosmos.msg.v1.signer) = "authorities";
-
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.equal)      = true;
 
   // The signing authorities for the request
   repeated string authorities = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -42,9 +40,7 @@ message MsgCreateTriggerResponse {
 // MsgDestroyTriggerRequest is the request type for creating a trigger RPC
 message MsgDestroyTriggerRequest {
   option (cosmos.msg.v1.signer) = "authority";
-
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.equal)      = true;
 
   // the id of the trigger to destroy.
   uint64 id = 1;
