@@ -26,7 +26,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -39,10 +38,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -107,33 +103,6 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
-			}
-
-			// TODO[1760]: client: Check impact that this has on our custom client config.
-			initClientCtx, err = clientconfig.ReadFromClientConfig(initClientCtx)
-			if err != nil {
-				return err
-			}
-
-			// This needs to go after ReadFromClientConfig, as that function
-			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
-			// is only available if the client is online.
-			if !initClientCtx.Offline {
-				enabledSignModes := tx.DefaultSignModes
-				enabledSignModes = append(enabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-				txConfigOpts := tx.ConfigOptions{
-					EnabledSignModes:           enabledSignModes,
-					TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(initClientCtx),
-				}
-				txConfig, err := tx.NewTxConfigWithOptions(
-					initClientCtx.Codec,
-					txConfigOpts,
-				)
-				if err != nil {
-					return err
-				}
-
-				initClientCtx = initClientCtx.WithTxConfig(txConfig)
 			}
 
 			if err := client.SetCmdClientContext(cmd, initClientCtx); err != nil {

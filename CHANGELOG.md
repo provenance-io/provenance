@@ -72,6 +72,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Removes sync-info code for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Fix most of the failing unit tests [#1943](https://github.com/provenance-io/provenance/pull/1943)
 * Remove `name` legacy gov proposals [#1963](https://github.com/provenance-io/provenance/pull/1963).
+* Clean up ReadFromClient [#1760](https://github.com/provenance-io/provenance/issues/1760).
 
 ### Dependencies
 
