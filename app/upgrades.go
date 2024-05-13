@@ -314,20 +314,18 @@ func migrateBaseappParams(ctx sdk.Context, app *App) error {
 // won't run on its own. This is the only part of that migration that we still need to have
 // done, and this brings us in-line with format the bank state on v4.
 // TODO: delete with the umber handlers.
-func migrateBankParams(ctx sdk.Context, app *App) (err error) {
+func migrateBankParams(ctx sdk.Context, app *App) error {
 	ctx.Logger().Info("Migrating bank params.")
-	defer func() {
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("Unable to migrate bank params, error: %s.", err))
-		}
-		ctx.Logger().Info("Done migrating bank params.")
-	}()
 
-	bankParamsSpace, ok := app.ParamsKeeper.GetSubspace(banktypes.ModuleName)
-	if !ok {
-		return fmt.Errorf("params subspace not found: %q", banktypes.ModuleName)
+	bankParams := banktypes.Params{DefaultSendEnabled: true}
+	err := app.BankKeeper.SetParams(ctx, bankParams)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Unable to migrate bank params, error: %s.", err))
+		return fmt.Errorf("could not store new bank params: %w", err)
 	}
-	return app.BankKeeper.MigrateParamsProv(ctx, bankParamsSpace)
+
+	ctx.Logger().Info("Done migrating bank params.")
+	return nil
 }
 
 // migrateAttributeParams migrates to new Attribute Params store
