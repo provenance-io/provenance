@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v2"
-
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -18,12 +16,6 @@ const (
 var (
 	ParamStoreKeyMaxValueLength = []byte("MaxValueLength")
 )
-
-// String implements stringer interface
-func (params Params) String() string {
-	out, _ := yaml.Marshal(params)
-	return string(out)
-}
 
 // ParamKeyTable for slashing module
 // TODO: remove with the umber (v1.19.x) handlers.

@@ -77,6 +77,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Change the default keyring backend to "os", but leave it as "test" for testnets [#1968](https://github.com/provenance-io/provenance/pull/1968).
 * Change the default broadcast mode to "sync" [#1968](https://github.com/provenance-io/provenance/pull/1968).
 * The pre-upgrade command now updates the client config's broadcast mode to "sync" if it's set to "block" [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* Remove all `GetSigners()` methods [#1957](https://github.com/provenance-io/provenance/pull/1957).
+* Ensure all `Msg`s have correctly identified `signer` fields [#1957](https://github.com/provenance-io/provenance/pull/1957).
+* Clean up all the module codecs [#1957](https://github.com/provenance-io/provenance/pull/1957).
+* Switch to auto-generated `String` and `Equal` methods for most proto messages [#1957](https://github.com/provenance-io/provenance/pull/1957).
 
 ### Deprecated
 

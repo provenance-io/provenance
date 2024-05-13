@@ -17,29 +17,34 @@ The msgfee module supports addition, update, and deletion of Msg Type which are 
 
 AddMsgFeeProposal defines a governance proposal to create a new msgfee entry for a specific `MsgType`.
 
-Add proposal [AddMsgFeeProposal](../../../proto/provenance/msgfees/v1/proposals.proto#L19-L34):
+Add proposal [AddMsgFeeProposal](../../../proto/provenance/msgfees/v1/proposals.proto#L13-L34):
+
 ```protobuf
 // AddMsgFeeProposal defines a governance proposal to add additional msg based fee
 message AddMsgFeeProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
-  string title       = 1;
+  // propsal title
+  string title = 1;
+  // propsal description
   string description = 2;
 
+  // type url of msg to add fee
   string msg_type_url = 3;
 
-  cosmos.base.v1beta1.Coin additional_fee = 4 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"additional_fee\""
-  ];
-  string recipient              = 5;
-  uint32 recipient_basis_points = 6;
-}
+  // additional fee for msg type
+  cosmos.base.v1beta1.Coin additional_fee = 4
+  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
+  // optional recipient to recieve basis points
+  string recipient = 5;
+  // basis points to use when recipient is present (1 - 10,000)
+  string recipient_basis_points = 6;
+}
 ```
-sample command to add an additional fee locally 
+
+Sample command to add an additional fee locally:
 
 ```bash
   ${PROVENANCE_DEV_DIR}/build/provenanced -t tx msgfees proposal add "adding" "adding bank send addition fee" 10000000000nhash \
@@ -54,42 +59,49 @@ sample command to add an additional fee locally
     --yes \
     --testnet
 ```
+
 ## Update MsgFee Proposal
 
-Update proposal [UpdateMsgFeeProposal](../../../proto/provenance/msgfees/v1/proposals.proto#L36-L51):
+Update proposal [UpdateMsgFeeProposal](../../../proto/provenance/msgfees/v1/proposals.proto#L36-L55):
+
 ```protobuf
 // UpdateMsgFeeProposal defines a governance proposal to update a current msg based fee
 message UpdateMsgFeeProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
-  string title       = 1;
+  // propsal title
+  string title = 1;
+  // propsal description
   string description = 2;
-
+  // type url of msg to update fee
   string msg_type_url = 3;
 
-  cosmos.base.v1beta1.Coin additional_fee = 4 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"additional_fee\""
-  ];
-  string recipient              = 5;
-  uint32 recipient_basis_points = 6;
+  // additional fee for msg type
+  cosmos.base.v1beta1.Coin additional_fee = 4
+  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // optional recipient to recieve basis points
+  string recipient = 5;
+  // basis points to use when recipient is present (1 - 10,000)
+  string recipient_basis_points = 6;
 }
 ```
 
 ## Remove MsgFee Proposal
 
-Remove proposal [RemoveMsgFeeProposal](../../../proto/provenance/msgfees/v1/proposals.proto#L53-L62):
+Remove proposal [RemoveMsgFeeProposal](../../../proto/provenance/msgfees/v1/proposals.proto#L57-L68):
+
 ```protobuf
 // RemoveMsgFeeProposal defines a governance proposal to delete a current msg based fee
 message RemoveMsgFeeProposal {
   option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_stringer) = true;
 
-  string title       = 1;
+  // propsal title
+  string title = 1;
+  // propsal description
   string description = 2;
-
+  // type url of msg fee to remove
   string msg_type_url = 3;
 }
 ```

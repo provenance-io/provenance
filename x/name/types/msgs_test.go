@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -6,16 +6,21 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil"
+
+	. "github.com/provenance-io/provenance/x/name/types"
 )
 
-func TestMsgCreateRootNameRequestGetSigners(t *testing.T) {
-	authority := sdk.AccAddress("input111111111111111")
-	name := "human-readable-name"
-	owner := "owner"
-	msg := NewMsgCreateRootNameRequest(authority.String(), name, owner, false)
-	res := msg.GetSigners()
-	require.Equal(t, 1, len(res))
-	require.True(t, authority.Equals(res[0]))
+func TestAllMsgsGetSigners(t *testing.T) {
+	msgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg { return &MsgBindNameRequest{Parent: NameRecord{Address: signer}} },
+		func(signer string) sdk.Msg { return &MsgDeleteNameRequest{Record: NameRecord{Address: signer}} },
+		func(signer string) sdk.Msg { return &MsgModifyNameRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgCreateRootNameRequest{Authority: signer} },
+	}
+
+	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
 }
 
 func TestMsgCreateRootNameRequestValidateBasic(t *testing.T) {

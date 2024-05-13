@@ -1,6 +1,7 @@
 syntax = "proto3";
 package cosmos.sanction.v1beta1;
 
+import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
@@ -13,15 +14,23 @@ message Params {
   // If this is zero, immediate sanctioning is not available.
   // Otherwise, if a sanction governance proposal is issued with a deposit at least this large, a temporary sanction
   // will be immediately issued that will expire when voting ends on the governance proposal.
-  repeated cosmos.base.v1beta1.Coin immediate_sanction_min_deposit = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin immediate_sanction_min_deposit = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 
   // immediate_unsanction_min_deposit is the minimum deposit for an unsanction to happen immediately.
   // If this is zero, immediate unsanctioning is not available.
   // Otherwise, if an unsanction governance proposal is issued with a deposit at least this large, a temporary
   // unsanction will be immediately issued that will expire when voting ends on the governance proposal.
-  repeated cosmos.base.v1beta1.Coin immediate_unsanction_min_deposit = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin immediate_unsanction_min_deposit = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 }
 
 // TemporaryEntry defines the information involved in a temporary sanction or unsanction.

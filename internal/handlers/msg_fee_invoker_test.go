@@ -10,14 +10,15 @@ import (
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
@@ -183,7 +184,7 @@ func (s *HandlerTestSuite) TestMsgFeeHandlerBadDecoder() {
 	feeGasMeter := antewrapper.NewFeeGasMeterWrapper(log.NewTestLogger(s.T()), storetypes.NewGasMeter(100), false).(*antewrapper.FeeGasMeter)
 	s.ctx = s.ctx.WithGasMeter(feeGasMeter)
 
-	emptyTxCfg := tx.NewTxConfig(codec.NewProtoCodec(codectestutil.CodecOptions{}.NewInterfaceRegistry()), tx.DefaultSignModes)
+	emptyTxCfg := authtx.NewTxConfig(codec.NewProtoCodec(codectestutil.CodecOptions{}.NewInterfaceRegistry()), authtx.DefaultSignModes)
 
 	feeChargeFn, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  s.app.AccountKeeper,
@@ -218,7 +219,7 @@ func createTestApp(t *testing.T) (*simapp.App, sdk.Context) {
 	return app, ctx
 }
 
-func createTestTx(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, sdk.AccountI) {
+func createTestTx(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (authsigning.Tx, sdk.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
@@ -238,7 +239,7 @@ func createTestTx(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsig
 	return testTx, acct1
 }
 
-func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (xauthsigning.Tx, sdk.AccountI) {
+func createTestTxWithFeeGrant(s *HandlerTestSuite, err error, feeAmount sdk.Coins) (authsigning.Tx, sdk.AccountI) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	acct1 := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr1)
@@ -299,7 +300,7 @@ func (s *HandlerTestSuite) CreateMsgFee(fee sdk.Coin, msgs ...sdk.Msg) error {
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (s *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
+func (s *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (authsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -307,7 +308,7 @@ func (s *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []u
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				// SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), // TODO[1760]: signing: same type name diff packages.
+				SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -322,24 +323,21 @@ func (s *HandlerTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []u
 
 	// Second round: all signer infos are set, so each signer can sign.
 	sigsV2 = []signing.SignatureV2{}
-	// TODO[1760]: signing: SignWithPrivKey: Uncomment these lines.
-	/*
-		for i, priv := range privs {
-			signerData := xauthsigning.SignerData{
-				ChainID:       chainID,
-				AccountNumber: accNums[i],
-				Sequence:      accSeqs[i],
-			}
-			sigV2, err := tx.SignWithPrivKey(
-				s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
-				s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
-			if err != nil {
-				return nil, err
-			}
-
-			sigsV2 = append(sigsV2, sigV2)
+	for i, priv := range privs {
+		signerData := authsigning.SignerData{
+			ChainID:       chainID,
+			AccountNumber: accNums[i],
+			Sequence:      accSeqs[i],
 		}
-	*/
+		sigV2, err := tx.SignWithPrivKey(s.ctx,
+			signing.SignMode_SIGN_MODE_DIRECT, signerData,
+			s.txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
+		if err != nil {
+			return nil, err
+		}
+
+		sigsV2 = append(sigsV2, sigV2)
+	}
 	err = s.txBuilder.SetSignatures(sigsV2...)
 	if err != nil {
 		return nil, err

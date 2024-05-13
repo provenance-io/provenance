@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -8,6 +8,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/testutil"
+
+	. "github.com/provenance-io/provenance/x/attribute/types"
 )
 
 var (
@@ -18,6 +22,19 @@ var (
 		sdk.AccAddress(priv2.PubKey().Address()),
 	}
 )
+
+func TestAllMsgsGetSigners(t *testing.T) {
+	msgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg { return &MsgAddAttributeRequest{Owner: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateAttributeRequest{Owner: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateAttributeExpirationRequest{Owner: signer} },
+		func(signer string) sdk.Msg { return &MsgDeleteAttributeRequest{Owner: signer} },
+		func(signer string) sdk.Msg { return &MsgDeleteDistinctAttributeRequest{Owner: signer} },
+		func(signer string) sdk.Msg { return &MsgSetAccountDataRequest{Account: signer} },
+	}
+
+	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
+}
 
 // test ValidateBasic for TestMsgAddAttribute
 func TestMsgAddAttribute(t *testing.T) {
@@ -139,41 +156,6 @@ func TestMsgSetAccountDataRequest_ValidateBasic(t *testing.T) {
 			} else {
 				assert.NoError(t, err, "ValidateBasic error")
 			}
-		})
-	}
-}
-
-func TestMsgSetAccountDataRequest_GetSigners(t *testing.T) {
-	tests := []struct {
-		name string
-		msg  MsgSetAccountDataRequest
-		exp  []sdk.AccAddress
-		expP string
-	}{
-		{
-			name: "good account",
-			msg:  MsgSetAccountDataRequest{Account: sdk.AccAddress("good account").String()},
-			exp:  []sdk.AccAddress{sdk.AccAddress("good account")},
-		},
-		{
-			name: "bad account",
-			msg:  MsgSetAccountDataRequest{Account: "bad account"},
-			expP: "decoding bech32 failed: invalid character in string: ' '",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var signers []sdk.AccAddress
-			testFunc := func() {
-				signers = tc.msg.GetSigners()
-			}
-			if len(tc.expP) > 0 {
-				require.PanicsWithError(t, tc.expP, testFunc, "GetSigners")
-			} else {
-				require.NotPanics(t, testFunc, "GetSigners")
-			}
-			assert.Equal(t, tc.exp, signers, "GetSigners result")
 		})
 	}
 }
