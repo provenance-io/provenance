@@ -72,39 +72,37 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg.NumValidators = 1
 	s.GenerateAccountsWithKeyrings(1)
 
-	var genBalances []banktypes.Balance
-	for i := range s.accountAddresses {
-		genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[i].String(), Coins: sdk.NewCoins(
-			sdk.NewInt64Coin("nhash", 100_000_000), sdk.NewInt64Coin(s.cfg.BondDenom, 100_000_000),
-		).Sort()})
-	}
-	var bankGenState banktypes.GenesisState
-	bankGenState.Params = banktypes.DefaultParams()
-	bankGenState.Balances = genBalances
-	bankDataBz, err := s.cfg.Codec.MarshalJSON(&bankGenState)
-	s.Require().NoError(err, "should be able to marshal bank genesis state when setting up suite")
-	s.cfg.GenesisState[banktypes.ModuleName] = bankDataBz
-
-	var authData authtypes.GenesisState
-	var genAccounts []authtypes.GenesisAccount
-	authData.Params = authtypes.DefaultParams()
-	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0))
-	accounts, err := authtypes.PackAccounts(genAccounts)
-	s.Require().NoError(err, "should be able to pack accounts for genesis state when setting up suite")
-	authData.Accounts = accounts
-	authDataBz, err := s.cfg.Codec.MarshalJSON(&authData)
-	s.Require().NoError(err, "should be able to marshal auth genesis state when setting up suite")
-	s.cfg.GenesisState[authtypes.ModuleName] = authDataBz
-
-	var msgfeeGen types.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[types.ModuleName], &msgfeeGen)
-	s.Require().NoError(err, "UnmarshalJSON msgfee gen state")
-	msgfeeGen.MsgFees = append(msgfeeGen.MsgFees, types.MsgFee{
-		MsgTypeUrl:    "/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
-		AdditionalFee: sdk.NewInt64Coin(s.cfg.BondDenom, 3),
+	testutil.MutateGenesisState(s.T(), &s.cfg, banktypes.ModuleName, &banktypes.GenesisState{}, func(bankGenState *banktypes.GenesisState) *banktypes.GenesisState {
+		var genBalances []banktypes.Balance
+		for i := range s.accountAddresses {
+			genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[i].String(), Coins: sdk.NewCoins(
+				sdk.NewInt64Coin("nhash", 100_000_000), sdk.NewInt64Coin(s.cfg.BondDenom, 100_000_000),
+			).Sort()})
+		}
+		bankGenState.Params = banktypes.DefaultParams()
+		bankGenState.Balances = genBalances
+		return bankGenState
 	})
-	s.cfg.GenesisState[types.ModuleName], err = s.cfg.Codec.MarshalJSON(&msgfeeGen)
-	s.Require().NoError(err, "MarshalJSON msgfee gen state")
+
+	testutil.MutateGenesisState(s.T(), &s.cfg, authtypes.ModuleName, &authtypes.GenesisState{}, func(authData *authtypes.GenesisState) *authtypes.GenesisState {
+		var genAccounts []authtypes.GenesisAccount
+		authData.Params = authtypes.DefaultParams()
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0))
+		accounts, err := authtypes.PackAccounts(genAccounts)
+		s.Require().NoError(err, "should be able to pack accounts for genesis state when setting up suite")
+		authData.Accounts = accounts
+		return authData
+	})
+
+	testutil.MutateGenesisState(s.T(), &s.cfg, types.ModuleName, &types.GenesisState{}, func(msgfeeGen *types.GenesisState) *types.GenesisState {
+		err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[types.ModuleName], msgfeeGen)
+		s.Require().NoError(err, "UnmarshalJSON msgfee gen state")
+		msgfeeGen.MsgFees = append(msgfeeGen.MsgFees, types.MsgFee{
+			MsgTypeUrl:    "/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
+			AdditionalFee: sdk.NewInt64Coin(s.cfg.BondDenom, 3),
+		})
+		return msgfeeGen
+	})
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")
