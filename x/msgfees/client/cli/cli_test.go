@@ -200,6 +200,16 @@ func (s *IntegrationTestSuite) TestMsgFeesProposal() {
 			signer:       s.accountAddresses[0].String(),
 		},
 		{
+			name: "failure - invalid fee format",
+			args: []string{
+				"add",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=invalid-fee",
+			},
+			expectErrMsg: "invalid decimal coin expression: invalid-fee",
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
 			name: "success - update msg fee with recipient and bips",
 			args: []string{
 				"update",
