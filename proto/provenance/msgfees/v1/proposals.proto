@@ -15,9 +15,7 @@ option java_multiple_files = true;
 // backwards compatibility (e.g. looking up old governance proposals).
 // It is replaced by providing a MsgAddMsgFeeProposalRequest in a governance proposal.
 message AddMsgFeeProposal {
-  option deprecated                   = true;
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option deprecated = true;
 
   // propsal title
   string title = 1;
@@ -41,9 +39,7 @@ message AddMsgFeeProposal {
 // backwards compatibility (e.g. looking up old governance proposals).
 // It is replaced by providing a MsgUpdateMsgFeeProposalRequest in a governance proposal.
 message UpdateMsgFeeProposal {
-  option deprecated                   = true;
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option deprecated = true;
 
   // propsal title
   string title = 1;
@@ -65,9 +61,7 @@ message UpdateMsgFeeProposal {
 // backwards compatibility (e.g. looking up old governance proposals).
 // It is replaced by providing a MsgRemoveMsgFeeProposalRequest in a governance proposal.
 message RemoveMsgFeeProposal {
-  option deprecated                   = true;
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option deprecated = true;
 
   // propsal title
   string title = 1;
@@ -82,9 +76,7 @@ message RemoveMsgFeeProposal {
 // backwards compatibility (e.g. looking up old governance proposals).
 // It is replaced by providing a MsgUpdateNhashPerUsdMilProposalRequest in a governance proposal.
 message UpdateNhashPerUsdMilProposal {
-  option deprecated                   = true;
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option deprecated = true;
 
   string title       = 1; // proposal title
   string description = 2; // proposal description
@@ -97,9 +89,7 @@ message UpdateNhashPerUsdMilProposal {
 // backwards compatibility (e.g. looking up old governance proposals).
 // It is replaced by providing a MsgUpdateConversionFeeDenomProposalRequest in a governance proposal.
 message UpdateConversionFeeDenomProposal {
-  option deprecated                   = true;
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option deprecated = true;
 
   string title       = 1; // proposal title
   string description = 2; // proposal description
