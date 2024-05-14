@@ -269,11 +269,13 @@ func queryCommand(basicManager module.BasicManager) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		// authcmd.GetAccountCmd(), // TODO[1760]: auto-cli: Figure out how to still have this.
 		rpc.ValidatorCommand(),
-		// rpc.BlockCommand(), // TODO[1760]: auto-cli: Figure out how to still have this.
+		rpc.QueryEventForTxCmd(),
+		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
+		server.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
+		server.QueryBlockResultsCmd(),
 	)
 
 	basicManager.AddQueryCommands(cmd)
@@ -295,6 +297,7 @@ func txCommand(basicManager module.BasicManager) *cobra.Command {
 		authcmd.GetSignCommand(),
 		authcmd.GetSignBatchCommand(),
 		authcmd.GetMultiSignCommand(),
+		authcmd.GetMultiSignBatchCmd(),
 		authcmd.GetValidateSignaturesCommand(),
 		flags.LineBreak,
 		authcmd.GetBroadcastCommand(),
