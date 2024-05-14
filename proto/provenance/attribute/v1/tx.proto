@@ -37,11 +37,6 @@ service Msg {
 message MsgAddAttributeRequest {
   option (cosmos.msg.v1.signer) = "owner";
 
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-
   // The attribute name.
   string name = 1;
   // The attribute value.
@@ -63,11 +58,6 @@ message MsgAddAttributeResponse {}
 // Attributes may only be set in an account by the account that the attribute name resolves to.
 message MsgUpdateAttributeRequest {
   option (cosmos.msg.v1.signer) = "owner";
-
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
 
   // The attribute name.
   string name = 1;
@@ -93,10 +83,6 @@ message MsgUpdateAttributeResponse {}
 message MsgUpdateAttributeExpirationRequest {
   option (cosmos.msg.v1.signer) = "owner";
 
-  option (gogoproto.equal)            = true;
-  option (gogoproto.stringer)         = true;
-  option (gogoproto.goproto_stringer) = false;
-
   // The attribute name.
   string name = 1;
   // The original attribute value.
@@ -117,11 +103,6 @@ message MsgUpdateAttributeExpirationResponse {}
 message MsgDeleteAttributeRequest {
   option (cosmos.msg.v1.signer) = "owner";
 
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
-
   // The attribute name.
   string name = 1;
   // The account to add the attribute to.
@@ -137,11 +118,6 @@ message MsgDeleteAttributeResponse {}
 // an account. Attributes may only be removed from an account by the account that the attribute name resolves to.
 message MsgDeleteDistinctAttributeRequest {
   option (cosmos.msg.v1.signer) = "owner";
-
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
 
   // The attribute name.
   string name = 1;

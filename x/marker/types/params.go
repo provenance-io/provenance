@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"regexp"
 
-	yaml "gopkg.in/yaml.v2"
-
 	sdkmath "cosmossdk.io/math"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -75,47 +73,6 @@ func DefaultParams() Params {
 		DefaultUnrestrictedDenomRegex,
 		StringToBigInt(DefaultMaxSupply),
 	)
-}
-
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
-}
-
-// Equal returns true if the given value is equivalent to the current instance of params
-func (p *Params) Equal(that interface{}) bool {
-	if that == nil {
-		return p == nil
-	}
-
-	that1, ok := that.(*Params)
-	if !ok {
-		that2, ok := that.(Params)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return p == nil
-	} else if p == nil {
-		return false
-	}
-	if p.MaxTotalSupply != that1.MaxTotalSupply {
-		return false
-	}
-	if !p.MaxSupply.Equal(that1.MaxSupply) {
-		return false
-	}
-	if p.EnableGovernance != that1.EnableGovernance {
-		return false
-	}
-	if p.UnrestrictedDenomRegex != that1.UnrestrictedDenomRegex {
-		return false
-	}
-	return true
 }
 
 func (p Params) Validate() error {

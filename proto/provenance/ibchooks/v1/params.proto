@@ -10,5 +10,5 @@ option java_multiple_files = true;
 
 // Params defines the allowed async ack contracts
 message Params {
-  repeated string allowed_async_ack_contracts = 1 [(gogoproto.moretags) = "yaml:\"allowed_async_ack_contracts\""];
+  repeated string allowed_async_ack_contracts = 1;
 }

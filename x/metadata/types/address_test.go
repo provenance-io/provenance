@@ -1717,80 +1717,131 @@ func (s *AddressTestSuite) TestContractSpecAddressConverters() {
 	}
 }
 
+// mockState satisfies the fmt.State interface, but always returns an error from Write, and doesn't do anything else.
+type mockState struct {
+	err string
+}
+
+var _ fmt.State = (*mockState)(nil)
+
+func (s mockState) Write(b []byte) (n int, err error) {
+	return 0, errors.New(s.err)
+}
+
+func (s mockState) Width() (int, bool) {
+	return 0, false
+}
+
+func (s mockState) Precision() (int, bool) {
+	return 0, false
+}
+
+func (s mockState) Flag(c int) bool {
+	return false
+}
+
 func (s *AddressTestSuite) TestFormat() {
-	scopeID := ScopeMetadataAddress(s.scopeUUID)
-	emptyID := MetadataAddress{}
+	someUUIDStr := "97263339-CFAA-41D9-809E-82CD78C84F02"
+	someUUID, err := uuid.Parse(someUUIDStr)
+	s.Require().NoError(err, "uuid.Parse(%q)", someUUIDStr)
+
+	type namedMetadataAddress struct {
+		name string
+		id   MetadataAddress
+	}
+
+	scopeID := namedMetadataAddress{name: "scope", id: ScopeMetadataAddress(someUUID)}
+	contractSpecID := namedMetadataAddress{name: "contract spec", id: ContractSpecMetadataAddress(someUUID)}
+	emptyID := namedMetadataAddress{name: "empty", id: MetadataAddress{}}
+	nilID := namedMetadataAddress{name: "nil", id: nil}
+	invalidID := namedMetadataAddress{name: "invalid", id: MetadataAddress("do not create MetadataAddresses this way")}
 
 	tests := []struct {
-		name     string
-		id       MetadataAddress
-		format   string
-		expected string
+		id  namedMetadataAddress
+		fmt string
+		exp string
 	}{
-		{
-			"format using %s",
-			scopeID,
-			"%s",
-			s.scopeBech32,
-		},
-		{
-			// %p is for the address (in memory). Can't hard-code it.
-			"format using %p",
-			scopeID,
-			"%p",
-			fmt.Sprintf("%p", scopeID),
-		},
-		{
-			"format using %d - should use default %X",
-			scopeID,
-			"%d",
-			"008D80B25AC0894446956E5D08CFE3E1A5",
-		},
-		{
-			"format using %v - should use default %X",
-			scopeID,
-			"%v",
-			"008D80B25AC0894446956E5D08CFE3E1A5",
-		},
-		{
-			"format empty using %s",
-			emptyID,
-			"%s",
-			"",
-		},
-		{
-			// %p is for the address (in memory). Can't hard-code it.
-			"format using %p",
-			emptyID,
-			"%p",
-			fmt.Sprintf("%p", emptyID),
-		},
-		{
-			"format empty using %d - should use default %X",
-			emptyID,
-			"%d",
-			"",
-		},
-		{
-			"format empty using %v - should use default %X",
-			emptyID,
-			"%v",
-			"",
-		},
-		{
-			"format %s is equal to .String() which fails on bad addresses",
-			MetadataAddress("do not create MetadataAddresses this way"),
-			"%s",
-			"%!s(PANIC=Format method: invalid metadata address type: 100)",
-		},
+		{id: scopeID, fmt: "%s", exp: "scope1qztjvveee74yrkvqn6pv67xgfupqyumx55"},
+		{id: scopeID, fmt: "%20s", exp: "scope1qztjvveee74yrkvqn6pv67xgfupqyumx55"},
+		{id: scopeID, fmt: "%-20s", exp: "scope1qztjvveee74yrkvqn6pv67xgfupqyumx55"},
+		{id: scopeID, fmt: "%50s", exp: "          scope1qztjvveee74yrkvqn6pv67xgfupqyumx55"},
+		{id: scopeID, fmt: "%-50s", exp: "scope1qztjvveee74yrkvqn6pv67xgfupqyumx55          "},
+		{id: scopeID, fmt: "%q", exp: `"scope1qztjvveee74yrkvqn6pv67xgfupqyumx55"`},
+		{id: scopeID, fmt: "%20q", exp: `"scope1qztjvveee74yrkvqn6pv67xgfupqyumx55"`},
+		{id: scopeID, fmt: "%-20q", exp: `"scope1qztjvveee74yrkvqn6pv67xgfupqyumx55"`},
+		{id: scopeID, fmt: "%50q", exp: `        "scope1qztjvveee74yrkvqn6pv67xgfupqyumx55"`},
+		{id: scopeID, fmt: "%-50q", exp: `"scope1qztjvveee74yrkvqn6pv67xgfupqyumx55"        `},
+		{id: scopeID, fmt: "%v", exp: "scope1qztjvveee74yrkvqn6pv67xgfupqyumx55"},
+		{id: scopeID, fmt: "%#v", exp: "MetadataAddress{0x0, 0x97, 0x26, 0x33, 0x39, 0xcf, 0xaa, 0x41, 0xd9, 0x80, 0x9e, 0x82, 0xcd, 0x78, 0xc8, 0x4f, 0x2}"},
+		{id: scopeID, fmt: "%p", exp: fmt.Sprintf("%p", []byte(scopeID.id))},   // e.g. 0x14000d95818
+		{id: scopeID, fmt: "%#p", exp: fmt.Sprintf("%#p", []byte(scopeID.id))}, // e.g. 14000d95818
+		{id: scopeID, fmt: "%T", exp: "types.MetadataAddress"},
+		{id: scopeID, fmt: "%d", exp: "[0 151 38 51 57 207 170 65 217 128 158 130 205 120 200 79 2]"},
+		{id: scopeID, fmt: "%x", exp: "0097263339cfaa41d9809e82cd78c84f02"},
+		{id: scopeID, fmt: "%#x", exp: "0x0097263339cfaa41d9809e82cd78c84f02"},
+		{id: scopeID, fmt: "%X", exp: "0097263339CFAA41D9809E82CD78C84F02"},
+		{id: scopeID, fmt: "%#X", exp: "0X0097263339CFAA41D9809E82CD78C84F02"},
+		{id: contractSpecID, fmt: "%s", exp: "contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh"},
+		{id: contractSpecID, fmt: "%20s", exp: "contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh"},
+		{id: contractSpecID, fmt: "%-20s", exp: "contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh"},
+		{id: contractSpecID, fmt: "%50s", exp: "   contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh"},
+		{id: contractSpecID, fmt: "%-50s", exp: "contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh   "},
+		{id: contractSpecID, fmt: "%q", exp: `"contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh"`},
+		{id: contractSpecID, fmt: "%20q", exp: `"contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh"`},
+		{id: contractSpecID, fmt: "%-20q", exp: `"contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh"`},
+		{id: contractSpecID, fmt: "%50q", exp: ` "contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh"`},
+		{id: contractSpecID, fmt: "%-50q", exp: `"contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh" `},
+		{id: contractSpecID, fmt: "%v", exp: "contractspec1qwtjvveee74yrkvqn6pv67xgfupqghravh"},
+		{id: contractSpecID, fmt: "%#v", exp: "MetadataAddress{0x3, 0x97, 0x26, 0x33, 0x39, 0xcf, 0xaa, 0x41, 0xd9, 0x80, 0x9e, 0x82, 0xcd, 0x78, 0xc8, 0x4f, 0x2}"},
+		{id: contractSpecID, fmt: "%p", exp: fmt.Sprintf("%p", []byte(contractSpecID.id))},   // e.g. 0x14000d95818
+		{id: contractSpecID, fmt: "%#p", exp: fmt.Sprintf("%#p", []byte(contractSpecID.id))}, // e.g. 14000d95818
+		{id: contractSpecID, fmt: "%T", exp: "types.MetadataAddress"},
+		{id: contractSpecID, fmt: "%d", exp: "[3 151 38 51 57 207 170 65 217 128 158 130 205 120 200 79 2]"},
+		{id: contractSpecID, fmt: "%x", exp: "0397263339cfaa41d9809e82cd78c84f02"},
+		{id: contractSpecID, fmt: "%#x", exp: "0x0397263339cfaa41d9809e82cd78c84f02"},
+		{id: contractSpecID, fmt: "%X", exp: "0397263339CFAA41D9809E82CD78C84F02"},
+		{id: contractSpecID, fmt: "%#X", exp: "0X0397263339CFAA41D9809E82CD78C84F02"},
+		{id: emptyID, fmt: "%s", exp: ""},
+		{id: emptyID, fmt: "%q", exp: `""`},
+		{id: emptyID, fmt: "%v", exp: ""},
+		{id: emptyID, fmt: "%#v", exp: "MetadataAddress{}"},
+		{id: emptyID, fmt: "%T", exp: "types.MetadataAddress"},
+		{id: emptyID, fmt: "%x", exp: ""},
+		{id: nilID, fmt: "%s", exp: ""},
+		{id: nilID, fmt: "%q", exp: `""`},
+		{id: nilID, fmt: "%v", exp: ""},
+		{id: nilID, fmt: "%#v", exp: "MetadataAddress(nil)"},
+		{id: nilID, fmt: "%T", exp: "types.MetadataAddress"},
+		{id: nilID, fmt: "%x", exp: ""},
+		{id: invalidID, fmt: "%s", exp: "%!s(PANIC=Format method: invalid metadata address type: 100)"},
+		{id: invalidID, fmt: "%q", exp: "%!q(PANIC=Format method: invalid metadata address type: 100)"},
+		{id: invalidID, fmt: "%v", exp: "%!v(PANIC=Format method: invalid metadata address type: 100)"},
+		{id: invalidID, fmt: "%#v", exp: "MetadataAddress{0x64, 0x6f, 0x20, 0x6e, 0x6f, 0x74, 0x20, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x20, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65, 0x73, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20, 0x77, 0x61, 0x79}"},
+		{id: invalidID, fmt: "%T", exp: "types.MetadataAddress"},
+		{id: invalidID, fmt: "%x", exp: "646f206e6f7420637265617465204d65746164617461416464726573736573207468697320776179"},
 	}
 
 	for _, test := range tests {
-		s.T().Run(test.name, func(t *testing.T) {
-			actual := fmt.Sprintf(test.format, test.id)
-			assert.Equal(t, test.expected, actual, test.name)
+		s.Run(test.id.name+" "+test.fmt, func() {
+			var actual string
+			testFunc := func() {
+				actual = fmt.Sprintf(test.fmt, test.id.id)
+			}
+			s.Require().NotPanics(testFunc, "Sprintf(%q, ...)", test.fmt)
+			s.Assert().Equal(test.exp, actual)
 		})
 	}
+
+	s.Run("write error", func() {
+		expPanic := "injected write error"
+		state := &mockState{err: expPanic}
+		verb := 's'
+		addr := ScopeMetadataAddress(s.scopeUUID)
+		testFunc := func() {
+			addr.Format(state, verb)
+		}
+		s.Require().PanicsWithError(expPanic, testFunc, "Format")
+	})
 }
 
 func (s *AddressTestSuite) TestGenerateExamples() {

@@ -252,7 +252,7 @@ service Query {
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
@@ -268,22 +268,22 @@ message QueryParamsResponse {
 message ScopeRequest {
   // scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g.
   // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
-  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string scope_id = 1;
   // session_addr is a bech32 session address, e.g.
   // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr.
-  string session_addr = 2 [(gogoproto.moretags) = "yaml:\"session_addr\""];
+  string session_addr = 2;
   // record_addr is a bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
-  string record_addr = 3 [(gogoproto.moretags) = "yaml:\"record_addr\""];
+  string record_addr = 3;
 
   // include_sessions is a flag for whether to include the sessions of the scope in the response.
-  bool include_sessions = 10 [(gogoproto.moretags) = "yaml:\"include_sessions\""];
+  bool include_sessions = 10;
   // include_records is a flag for whether to include the records of the scope in the response.
-  bool include_records = 11 [(gogoproto.moretags) = "yaml:\"include_records\""];
+  bool include_records = 11;
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // ScopeResponse is the response type for the Query/Scope RPC method.
@@ -291,9 +291,9 @@ message ScopeResponse {
   // scope is the wrapped scope result.
   ScopeWrapper scope = 1;
   // sessions is any number of wrapped sessions in this scope (if requested).
-  repeated SessionWrapper sessions = 2 [(gogoproto.moretags) = "yaml:\"sessions,omitempty\""];
+  repeated SessionWrapper sessions = 2;
   // records is any number of wrapped records in this scope (if requested).
-  repeated RecordWrapper records = 3 [(gogoproto.moretags) = "yaml:\"records,omitempty\""];
+  repeated RecordWrapper records = 3;
 
   // request is a copy of the request that generated these results.
   ScopeRequest request = 98;
@@ -304,18 +304,18 @@ message ScopeWrapper {
   // scope is the on-chain scope message.
   Scope scope = 1;
   // scope_id_info contains information about the id/address of the scope.
-  ScopeIdInfo scope_id_info = 2 [(gogoproto.moretags) = "yaml:\"scope_id_info\""];
+  ScopeIdInfo scope_id_info = 2;
   // scope_spec_id_info contains information about the id/address of the scope specification.
-  ScopeSpecIdInfo scope_spec_id_info = 3 [(gogoproto.moretags) = "yaml:\"scope_spec_id_info\""];
+  ScopeSpecIdInfo scope_spec_id_info = 3;
 }
 
 // ScopesAllRequest is the request type for the Query/ScopesAll RPC method.
 message ScopesAllRequest {
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -335,35 +335,35 @@ message ScopesAllResponse {
 message SessionsRequest {
   // scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g.
   // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
-  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string scope_id = 1;
   // session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address, e.g.
   // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. This can only be a uuid if a scope_id is also
   // provided.
-  string session_id = 2 [(gogoproto.moretags) = "yaml:\"session_id\""];
+  string session_id = 2;
   // record_addr is a bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
-  string record_addr = 3 [(gogoproto.moretags) = "yaml:\"record_addr\""];
+  string record_addr = 3;
   // record_name is the name of the record to find the session for in the provided scope.
-  string record_name = 4 [(gogoproto.moretags) = "yaml:\"record_name\""];
+  string record_name = 4;
 
   // include_scope is a flag for whether to include the scope containing these sessions in the response.
-  bool include_scope = 10 [(gogoproto.moretags) = "yaml:\"include_scope\""];
+  bool include_scope = 10;
   // include_records is a flag for whether to include the records of these sessions in the response.
-  bool include_records = 11 [(gogoproto.moretags) = "yaml:\"include_records\""];
+  bool include_records = 11;
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // SessionsResponse is the response type for the Query/Sessions RPC method.
 message SessionsResponse {
   // scope is the wrapped scope that holds these sessions (if requested).
-  ScopeWrapper scope = 1 [(gogoproto.moretags) = "yaml:\"scope,omitempty\""];
+  ScopeWrapper scope = 1;
   // sessions is any number of wrapped session results.
   repeated SessionWrapper sessions = 2;
   // records is any number of wrapped records contained in these sessions (if requested).
-  repeated RecordWrapper records = 3 [(gogoproto.moretags) = "yaml:\"records,omitempty\""];
+  repeated RecordWrapper records = 3;
 
   // request is a copy of the request that generated these results.
   SessionsRequest request = 98;
@@ -374,18 +374,18 @@ message SessionWrapper {
   // session is the on-chain session message.
   Session session = 1;
   // session_id_info contains information about the id/address of the session.
-  SessionIdInfo session_id_info = 2 [(gogoproto.moretags) = "yaml:\"session_id_info\""];
+  SessionIdInfo session_id_info = 2;
   // contract_spec_id_info contains information about the id/address of the contract specification.
-  ContractSpecIdInfo contract_spec_id_info = 3 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
+  ContractSpecIdInfo contract_spec_id_info = 3;
 }
 
 // SessionsAllRequest is the request type for the Query/SessionsAll RPC method.
 message SessionsAllRequest {
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -404,34 +404,34 @@ message SessionsAllResponse {
 // RecordsRequest is the request type for the Query/Records RPC method.
 message RecordsRequest {
   // record_addr is a bech32 record address, e.g. record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3.
-  string record_addr = 1 [(gogoproto.moretags) = "yaml:\"record_addr\""];
+  string record_addr = 1;
   // scope_id can either be a uuid, e.g. 91978ba2-5f35-459a-86a7-feca1b0512e0 or a bech32 scope address, e.g.
   // scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel.
-  string scope_id = 2 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string scope_id = 2;
   // session_id can either be a uuid, e.g. 5803f8bc-6067-4eb5-951f-2121671c2ec0 or a bech32 session address, e.g.
   // session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr. This can only be a uuid if a scope_id is also
   // provided.
-  string session_id = 3 [(gogoproto.moretags) = "yaml:\"session_id\""];
+  string session_id = 3;
   // name is the name of the record to look for
   string name = 4;
 
   // include_scope is a flag for whether to include the the scope containing these records in the response.
-  bool include_scope = 10 [(gogoproto.moretags) = "yaml:\"include_scope\""];
+  bool include_scope = 10;
   // include_sessions is a flag for whether to include the sessions containing these records in the response.
-  bool include_sessions = 11 [(gogoproto.moretags) = "yaml:\"include_sessions\""];
+  bool include_sessions = 11;
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // RecordsResponse is the response type for the Query/Records RPC method.
 message RecordsResponse {
   // scope is the wrapped scope that holds these records (if requested).
-  ScopeWrapper scope = 1 [(gogoproto.moretags) = "yaml:\"scope,omitempty\""];
+  ScopeWrapper scope = 1;
   // sessions is any number of wrapped sessions that hold these records (if requested).
-  repeated SessionWrapper sessions = 2 [(gogoproto.moretags) = "yaml:\"sessions,omitempty\""];
+  repeated SessionWrapper sessions = 2;
   // records is any number of wrapped record results.
   repeated RecordWrapper records = 3;
 
@@ -444,18 +444,18 @@ message RecordWrapper {
   // record is the on-chain record message.
   Record record = 1;
   // record_id_info contains information about the id/address of the record.
-  RecordIdInfo record_id_info = 2 [(gogoproto.moretags) = "yaml:\"record_id_info\""];
+  RecordIdInfo record_id_info = 2;
   // record_spec_id_info contains information about the id/address of the record specification.
-  RecordSpecIdInfo record_spec_id_info = 3 [(gogoproto.moretags) = "yaml:\"record_spec_id_info\""];
+  RecordSpecIdInfo record_spec_id_info = 3;
 }
 
 // RecordsAllRequest is the request type for the Query/RecordsAll RPC method.
 message RecordsAllRequest {
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -476,7 +476,7 @@ message OwnershipRequest {
   string address = 1;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -484,7 +484,7 @@ message OwnershipRequest {
 // OwnershipResponse is the response type for the Query/Ownership RPC method.
 message OwnershipResponse {
   // A list of scope ids (uuid) associated with the given address.
-  repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
+  repeated string scope_uuids = 1;
 
   // request is a copy of the request that generated these results.
   OwnershipRequest request = 98;
@@ -497,7 +497,7 @@ message ValueOwnershipRequest {
   string address = 1;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -505,7 +505,7 @@ message ValueOwnershipRequest {
 // ValueOwnershipResponse is the response type for the Query/ValueOwnership RPC method.
 message ValueOwnershipResponse {
   // A list of scope ids (uuid) associated with the given address.
-  repeated string scope_uuids = 1 [(gogoproto.moretags) = "yaml:\"scope_uuids\""];
+  repeated string scope_uuids = 1;
 
   // request is a copy of the request that generated these results.
   ValueOwnershipRequest request = 98;
@@ -517,29 +517,29 @@ message ValueOwnershipResponse {
 message ScopeSpecificationRequest {
   // specification_id can either be a uuid, e.g. dc83ea70-eacd-40fe-9adf-1cf6148bf8a2 or a bech32 scope specification
   // address, e.g. scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m.
-  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
+  string specification_id = 1;
 
   // include_contract_specs is a flag for whether to include the contract specifications of the scope specification in
   // the response.
-  bool include_contract_specs = 10 [(gogoproto.moretags) = "yaml:\"include_contract_specs\""];
+  bool include_contract_specs = 10;
   // include_record_specs is a flag for whether to include the record specifications of the scope specification in the
   // response.
-  bool include_record_specs = 11 [(gogoproto.moretags) = "yaml:\"include_record_specs\""];
+  bool include_record_specs = 11;
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // ScopeSpecificationResponse is the response type for the Query/ScopeSpecification RPC method.
 message ScopeSpecificationResponse {
   // scope_specification is the wrapped scope specification.
-  ScopeSpecificationWrapper scope_specification = 1 [(gogoproto.moretags) = "yaml:\"scope_specification\""];
+  ScopeSpecificationWrapper scope_specification = 1;
   // contract_specs is any number of wrapped contract specifications in this scope specification (if requested).
-  repeated ContractSpecificationWrapper contract_specs = 2 [(gogoproto.moretags) = "yaml:\"contract_specs,omitempty\""];
+  repeated ContractSpecificationWrapper contract_specs = 2;
   // record_specs is any number of wrapped record specifications in this scope specification (if requested).
-  repeated RecordSpecificationWrapper record_specs = 3 [(gogoproto.moretags) = "yaml:\"record_specs,omitempty\""];
+  repeated RecordSpecificationWrapper record_specs = 3;
 
   // request is a copy of the request that generated these results.
   ScopeSpecificationRequest request = 98;
@@ -550,16 +550,16 @@ message ScopeSpecificationWrapper {
   // specification is the on-chain scope specification message.
   ScopeSpecification specification = 1;
   // scope_spec_id_info contains information about the id/address of the scope specification.
-  ScopeSpecIdInfo scope_spec_id_info = 2 [(gogoproto.moretags) = "yaml:\"scope_spec_id_info\""];
+  ScopeSpecIdInfo scope_spec_id_info = 2;
 }
 
 // ScopeSpecificationsAllRequest is the request type for the Query/ScopeSpecificationsAll RPC method.
 message ScopeSpecificationsAllRequest {
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -567,7 +567,7 @@ message ScopeSpecificationsAllRequest {
 // ScopeSpecificationsAllResponse is the response type for the Query/ScopeSpecificationsAll RPC method.
 message ScopeSpecificationsAllResponse {
   // scope_specifications are the wrapped scope specifications.
-  repeated ScopeSpecificationWrapper scope_specifications = 1 [(gogoproto.moretags) = "yaml:\"scope_specifications\""];
+  repeated ScopeSpecificationWrapper scope_specifications = 1;
 
   // request is a copy of the request that generated these results.
   ScopeSpecificationsAllRequest request = 98;
@@ -581,26 +581,25 @@ message ContractSpecificationRequest {
   // address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn.
   // It can also be a record specification address, e.g.
   // recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
-  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
+  string specification_id = 1;
 
   // include_record_specs is a flag for whether to include the the record specifications of this contract specification
   // in the response.
-  bool include_record_specs = 10 [(gogoproto.moretags) = "yaml:\"include_record_specs\""];
+  bool include_record_specs = 10;
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // ContractSpecificationResponse is the response type for the Query/ContractSpecification RPC method.
 message ContractSpecificationResponse {
   // contract_specification is the wrapped contract specification.
-  ContractSpecificationWrapper contract_specification = 1 [(gogoproto.moretags) = "yaml:\"contract_specification\""];
+  ContractSpecificationWrapper contract_specification = 1;
   // record_specifications is any number or wrapped record specifications associated with this contract_specification
   // (if requested).
-  repeated RecordSpecificationWrapper record_specifications = 3
-      [(gogoproto.moretags) = "yaml:\"record_specifications,omitempty\""];
+  repeated RecordSpecificationWrapper record_specifications = 3;
 
   // request is a copy of the request that generated these results.
   ContractSpecificationRequest request = 98;
@@ -611,16 +610,16 @@ message ContractSpecificationWrapper {
   // specification is the on-chain contract specification message.
   ContractSpecification specification = 1;
   // contract_spec_id_info contains information about the id/address of the contract specification.
-  ContractSpecIdInfo contract_spec_id_info = 2 [(gogoproto.moretags) = "yaml:\"contract_spec_id_info\""];
+  ContractSpecIdInfo contract_spec_id_info = 2;
 }
 
 // ContractSpecificationsAllRequest is the request type for the Query/ContractSpecificationsAll RPC method.
 message ContractSpecificationsAllRequest {
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -628,8 +627,7 @@ message ContractSpecificationsAllRequest {
 // ContractSpecificationsAllResponse is the response type for the Query/ContractSpecificationsAll RPC method.
 message ContractSpecificationsAllResponse {
   // contract_specifications are the wrapped contract specifications.
-  repeated ContractSpecificationWrapper contract_specifications = 1
-      [(gogoproto.moretags) = "yaml:\"contract_specifications\""];
+  repeated ContractSpecificationWrapper contract_specifications = 1;
 
   // request is a copy of the request that generated these results.
   ContractSpecificationsAllRequest request = 98;
@@ -644,25 +642,24 @@ message RecordSpecificationsForContractSpecificationRequest {
   // address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn.
   // It can also be a record specification address, e.g.
   // recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
-  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
+  string specification_id = 1;
 
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // RecordSpecificationsForContractSpecificationResponse is the response type for the
 // Query/RecordSpecificationsForContractSpecification RPC method.
 message RecordSpecificationsForContractSpecificationResponse {
   // record_specifications is any number of wrapped record specifications associated with this contract_specification.
-  repeated RecordSpecificationWrapper record_specifications = 1
-      [(gogoproto.moretags) = "yaml:\"record_specifications\""];
+  repeated RecordSpecificationWrapper record_specifications = 1;
   // contract_specification_uuid is the uuid of this contract specification.
-  string contract_specification_uuid = 2 [(gogoproto.moretags) = "yaml:\"contract_specification_uuid\""];
+  string contract_specification_uuid = 2;
   // contract_specification_addr is the contract specification address as a bech32 encoded string.
-  string contract_specification_addr = 3 [(gogoproto.moretags) = "yaml:\"contract_specification_addr\""];
+  string contract_specification_addr = 3;
 
   // request is a copy of the request that generated these results.
   RecordSpecificationsForContractSpecificationRequest request = 98;
@@ -674,23 +671,23 @@ message RecordSpecificationRequest {
   // address, e.g. contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn.
   // It can also be a record specification address, e.g.
   // recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44.
-  string specification_id = 1 [(gogoproto.moretags) = "yaml:\"specification_id\""];
+  string specification_id = 1;
   // name is the name of the record to look up.
   // It is required if the specification_id is a uuid or contract specification address.
   // It is ignored if the specification_id is a record specification address.
   string name = 2;
 
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // RecordSpecificationResponse is the response type for the Query/RecordSpecification RPC method.
 message RecordSpecificationResponse {
   // record_specification is the wrapped record specification.
-  RecordSpecificationWrapper record_specification = 1 [(gogoproto.moretags) = "yaml:\"record_specification\""];
+  RecordSpecificationWrapper record_specification = 1;
 
   // request is a copy of the request that generated these results.
   RecordSpecificationRequest request = 98;
@@ -701,16 +698,16 @@ message RecordSpecificationWrapper {
   // specification is the on-chain record specification message.
   RecordSpecification specification = 1;
   // record_spec_id_info contains information about the id/address of the record specification.
-  RecordSpecIdInfo record_spec_id_info = 2 [(gogoproto.moretags) = "yaml:\"record_spec_id_info\""];
+  RecordSpecIdInfo record_spec_id_info = 2;
 }
 
 // RecordSpecificationsAllRequest is the request type for the Query/RecordSpecificationsAll RPC method.
 message RecordSpecificationsAllRequest {
   // exclude_id_info is a flag for whether to exclude the id info from the response.
-  bool exclude_id_info = 12 [(gogoproto.moretags) = "yaml:\"exclude_id_info\""];
+  bool exclude_id_info = 12;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -718,8 +715,7 @@ message RecordSpecificationsAllRequest {
 // RecordSpecificationsAllResponse is the response type for the Query/RecordSpecificationsAll RPC method.
 message RecordSpecificationsAllResponse {
   // record_specifications are the wrapped record specifications.
-  repeated RecordSpecificationWrapper record_specifications = 1
-      [(gogoproto.moretags) = "yaml:\"record_specifications\""];
+  repeated RecordSpecificationWrapper record_specifications = 1;
 
   // request is a copy of the request that generated these results.
   RecordSpecificationsAllRequest request = 98;
@@ -736,25 +732,25 @@ message GetByAddrRequest {
 // GetByAddrResponse is the response type for the Query/GetByAddr RPC method.
 message GetByAddrResponse {
   // scopes contains any scopes that were requested and found.
-  repeated Scope scopes = 1 [(gogoproto.moretags) = "yaml:\"scopes,omitempty\""];
+  repeated Scope scopes = 1;
   // sessions contains any sessions that were requested and found.
-  repeated Session sessions = 2 [(gogoproto.moretags) = "yaml:\"sessions,omitempty\""];
+  repeated Session sessions = 2;
   // records contains any records that were requested and found.
-  repeated Record records = 3 [(gogoproto.moretags) = "yaml:\"records,omitempty\""];
+  repeated Record records = 3;
   // scope_specs contains any scope specifications that were requested and found.
-  repeated ScopeSpecification scope_specs = 4 [(gogoproto.moretags) = "yaml:\"scope_specs,omitempty\""];
+  repeated ScopeSpecification scope_specs = 4;
   // contract_specs contains any contract specifications that were requested and found.
-  repeated ContractSpecification contract_specs = 5 [(gogoproto.moretags) = "yaml:\"contract_specs,omitempty\""];
+  repeated ContractSpecification contract_specs = 5;
   // record_specs contains any record specifications that were requested and found.
-  repeated RecordSpecification record_specs = 6 [(gogoproto.moretags) = "yaml:\"record_specs,omitempty\""];
+  repeated RecordSpecification record_specs = 6;
   // not_found contains any addrs requested but not found.
-  repeated string not_found = 7 [(gogoproto.moretags) = "yaml:\"not_found,omitempty\""];
+  repeated string not_found = 7;
 }
 
 // OSLocatorParamsRequest is the request type for the Query/OSLocatorParams RPC method.
 message OSLocatorParamsRequest {
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // OSLocatorParamsResponse is the response type for the Query/OSLocatorParams RPC method.
@@ -771,7 +767,7 @@ message OSLocatorRequest {
   string owner = 1;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // OSLocatorResponse is the response type for the Query/OSLocator RPC method.
@@ -787,7 +783,7 @@ message OSLocatorsByURIRequest {
   string uri = 1;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -804,10 +800,10 @@ message OSLocatorsByURIResponse {
 
 // OSLocatorsByScopeRequest is the request type for the Query/OSLocatorsByScope RPC method.
 message OSLocatorsByScopeRequest {
-  string scope_id = 1 [(gogoproto.moretags) = "yaml:\"scope_id\""];
+  string scope_id = 1;
 
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
 }
 
 // OSLocatorsByScopeResponse is the response type for the Query/OSLocatorsByScope RPC method.
@@ -821,7 +817,7 @@ message OSLocatorsByScopeResponse {
 // OSAllLocatorsRequest is the request type for the Query/OSAllLocators RPC method.
 message OSAllLocatorsRequest {
   // include_request is a flag for whether to include this request in your result.
-  bool include_request = 98 [(gogoproto.moretags) = "yaml:\"include_request\""];
+  bool include_request = 98;
   // pagination defines optional pagination parameters for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 99;
 }
@@ -840,11 +836,7 @@ message OSAllLocatorsResponse {
 message AccountDataRequest {
   // The metadata address to look up.
   // Currently, only scope ids are supported.
-  bytes metadata_addr = 1 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.customtype) = "MetadataAddress",
-    (gogoproto.moretags)   = "yaml:\"scope_id\""
-  ];
+  bytes metadata_addr = 1 [(gogoproto.nullable) = false, (gogoproto.customtype) = "MetadataAddress"];
 }
 
 // AccountDataResponse is the response type for the Query/AccountData RPC method.

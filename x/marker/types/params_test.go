@@ -41,12 +41,13 @@ func TestDefaultParams(t *testing.T) {
 }
 
 func TestParamString(t *testing.T) {
+	expected := `max_total_supply:100000000000 ` +
+		`enable_governance:true ` +
+		`unrestricted_denom_regex:"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}" ` +
+		`max_supply:"100000000000000000000" `
 	p := DefaultParams()
-	require.Equal(t, `maxtotalsupply: 100000000000
-enablegovernance: true
-unrestricteddenomregex: '[a-zA-Z][a-zA-Z0-9\-\.]{2,83}'
-max_supply: "100000000000000000000"
-`, p.String())
+	actual := p.String()
+	require.Equal(t, expected, actual)
 }
 
 func TestParamSetPairs(t *testing.T) {

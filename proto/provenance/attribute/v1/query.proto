@@ -55,9 +55,6 @@ message QueryParamsResponse {
 
 // QueryAttributeRequest is the request type for the Query/Attribute method.
 message QueryAttributeRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
   // account defines the address to query for.
   string account = 1;
   // name is the attribute name to query for
@@ -79,9 +76,6 @@ message QueryAttributeResponse {
 
 // QueryAttributesRequest is the request type for the Query/Attributes method.
 message QueryAttributesRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
   // account defines the address to query for.
   string account = 1;
 
@@ -101,9 +95,6 @@ message QueryAttributesResponse {
 
 // QueryScanRequest is the request type for the Query/Scan method.
 message QueryScanRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
   // account defines the address to query for.
   string account = 1;
 

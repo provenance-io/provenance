@@ -10,10 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"cosmossdk.io/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,6 +31,7 @@ type KeeperTestSuite struct {
 
 	app *app.App
 	ctx sdk.Context
+	cdc *codec.ProtoCodec
 
 	pubkey1   cryptotypes.PubKey
 	user1     string
@@ -48,6 +50,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
+	s.cdc = codec.NewProtoCodec(s.app.GetEncodingConfig().InterfaceRegistry)
 	s.ctx = s.app.BaseApp.NewContext(false)
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
 	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
@@ -88,31 +91,33 @@ func (s *KeeperTestSuite) TestSetup() {
 		s.Require().Equal(uint32(16), p.MaxSegmentLength)
 	})
 
-	expOut := fmt.Sprintf(`params:
-  maxsegmentlength: 16
-  minsegmentlength: 2
-  maxnamelevels: 16
-  allowunrestrictednames: false
-bindings:
-- name: test.root
-  address: %[1]s
+	expOut := fmt.Sprintf(`bindings:
+- address: %[1]s
+  name: test.root
   restricted: false
-- name: name
-  address: %[1]s
+- address: %[1]s
+  name: name
   restricted: false
-- name: example.name
-  address: %[1]s
+- address: %[1]s
+  name: example.name
   restricted: false
-- name: %[2]s
-  address: %[3]s
+- address: %[3]s
+  name: %[2]s
   restricted: true
+params:
+  allow_unrestricted_names: false
+  max_name_levels: 16
+  max_segment_length: 16
+  min_segment_length: 2
 `,
 		s.user1Addr.String(), attrtypes.AccountDataName, authtypes.NewModuleAddress(attrtypes.ModuleName).String())
 
 	gen := s.app.NameKeeper.ExportGenesis(s.ctx)
-	out, err := yaml.Marshal(gen)
-	s.Require().NoError(err)
-	s.Require().Equal(expOut, string(out))
+	genJSON, err := s.cdc.MarshalJSON(gen)
+	s.Require().NoError(err, "MarshalJSON name genesis")
+	genYAML, err := yaml.JSONToYAML(genJSON)
+	s.Require().NoError(err, "JSONToYAML name genesis")
+	s.Require().Equal(expOut, string(genYAML))
 }
 
 func (s *KeeperTestSuite) TestNameNormalization() {

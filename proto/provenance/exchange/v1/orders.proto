@@ -6,6 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/exchange";
 option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
+import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
@@ -70,8 +71,12 @@ message BidOrder {
   cosmos.base.v1beta1.Coin price = 4 [(gogoproto.nullable) = false];
   // buyer_settlement_fees are the fees (both flat and proportional) that the buyer will pay (in addition to the price)
   // when the order is settled. A hold is placed on this until the order is filled or cancelled.
-  repeated cosmos.base.v1beta1.Coin buyer_settlement_fees = 5
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin buyer_settlement_fees = 5 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // allow_partial should be true if partial fulfillment of this order should be allowed, and should be false if the
   // order must be either filled in full or not filled at all.
   bool allow_partial = 6;
