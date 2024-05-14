@@ -79,9 +79,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Switch to auto-generated `String` and `Equal` methods for most proto messages [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Clean up the marker module's expected BankKeeper interface [#1954](https://github.com/provenance-io/provenance/pull/1954).
 
-### Deprecated
+### Client Breaking
 
 * The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` TODO: Add link.
+* The genesis-related commands have been moved to the `provenanced genesis` sub-command (from the root `provenanced` command) TODO: Add link.
+  * Moved sub-commands: `add-genesis-custom-floor` `add-genesis-custom-market` `add-genesis-default-market` `add-genesis-marker` `add-genesis-msg-fee` `add-genesis-root-name` `collect-gentxs` `gentx`
+  * The `provenanced validate-genesis` command is now `provenanced genesis validate`.
 
 ### Dependencies
 
