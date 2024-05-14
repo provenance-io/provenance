@@ -43,9 +43,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
@@ -94,6 +91,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 		WithHomeDir(app.DefaultNodeHome).
 		WithViper("PIO")
 	sdk.SetCoinDenomRegex(app.SdkCoinDenomRegex)
+
 	rootCmd := &cobra.Command{
 		Use:   "provenanced",
 		Short: "Provenance Blockchain App",
@@ -127,7 +125,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			return nil
 		},
 	}
-	genAutoCompleteCmd(rootCmd)
+
 	initRootCmd(rootCmd, encodingConfig, tempApp.BasicModuleManager)
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        "",
@@ -176,17 +174,7 @@ func Execute(rootCmd *cobra.Command) error {
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, basicManager module.BasicManager) {
 	rootCmd.AddCommand(
 		InitCmd(basicManager),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator, encodingConfig.InterfaceRegistry.SigningContext().ValidatorAddressCodec()),
-		genutilcli.GenTxCmd(basicManager, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, encodingConfig.InterfaceRegistry.SigningContext().ValidatorAddressCodec()),
-		genutilcli.ValidateGenesisCmd(basicManager),
-		AddGenesisAccountCmd(app.DefaultNodeHome),
-		AddRootDomainAccountCmd(app.DefaultNodeHome),
-		AddGenesisMarkerCmd(app.DefaultNodeHome),
-		AddGenesisMsgFeeCmd(app.DefaultNodeHome),
-		AddGenesisCustomFloorPriceDenomCmd(app.DefaultNodeHome),
-		AddGenesisDefaultMarketCmd(app.DefaultNodeHome),
-		AddGenesisCustomMarketCmd(app.DefaultNodeHome),
-		cmtcli.NewCompletionCmd(rootCmd, true),
+		GenesisCmd(encodingConfig.TxConfig, basicManager, app.DefaultNodeHome),
 		testnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		ConfigCmd(),
@@ -194,6 +182,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 		snapshot.Cmd(newApp),
 		GetPreUpgradeCmd(),
 		GetDocGenCmd(),
+		pruning.Cmd(newApp, app.DefaultNodeHome),
 	)
 
 	fixDebugPubkeyRawTypeFlag(rootCmd)
@@ -206,11 +195,11 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 		queryCommand(basicManager),
 		txCommand(basicManager),
 		keys.Commands(),
+		genAutoCompleteCmd(),
 	)
 
 	// Add Rosetta command
 	// rootCmd.AddCommand(rosettacmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler)) // TODO[1760]: rosetta
-	rootCmd.AddCommand(pruning.Cmd(newApp, app.DefaultNodeHome))
 	// Disable usage when the start command returns an error.
 	startCmd, _, err := rootCmd.Find([]string{"start"})
 	if err != nil {
@@ -220,8 +209,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 }
 
 // genAutoCompleteCmd creates the command for autocomplete.
-func genAutoCompleteCmd(rootCmd *cobra.Command) {
-	rootCmd.AddCommand(&cobra.Command{
+func genAutoCompleteCmd() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "enable-cli-autocomplete [bash|zsh|fish|powershell]",
 		Short: "Generates autocomplete scripts for the provenanced binary",
 		Long: `To configure your shell to load completions for each session, add to your profile:
@@ -251,7 +240,9 @@ source ~/.zshrc
 
 			return fmt.Errorf("shell %s is not supported", args[0])
 		},
-	})
+	}
+
+	return cmd
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
