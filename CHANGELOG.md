@@ -78,11 +78,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Clean up all the module codecs [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Switch to auto-generated `String` and `Equal` methods for most proto messages [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Clean up the marker module's expected BankKeeper interface [#1954](https://github.com/provenance-io/provenance/pull/1954).
+* Add the auto-cli commands and a few others newly added by the SDK [#1971](https://github.com/provenance-io/provenance/pull/1971).
 
 ### Client Breaking
 
-* The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` TODO: Add link.
-* The genesis-related commands have been moved to the `provenanced genesis` sub-command TODO: Add link.
+* The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` [#1971](https://github.com/provenance-io/provenance/pull/1971).
+* The genesis-related commands have been moved to the `provenanced genesis` sub-command [#1971](https://github.com/provenance-io/provenance/pull/1971).
   * | Old invocation                           | New invocation                           |
     |------------------------------------------|------------------------------------------|
     | `provenanced add-genesis-account`        | `provenanced genesis add-account`        |
@@ -95,7 +96,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     | `provenanced collect-gentxs`             | `provenanced genesis collect-gentxs`     |
     | `provenanced gentx`                      | `provenanced genesis gentx`              |
     | `provenanced validate-genesis`           | `provenanced genesis validate`           |
-* Many of the SDK's query commands have had their usage altered TODO: Add link.
+* Many of the SDK's query commands have had their usage altered [#1971](https://github.com/provenance-io/provenance/pull/1971).
 
 ### Dependencies
 
