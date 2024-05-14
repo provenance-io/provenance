@@ -93,7 +93,7 @@ func (k Keeper) OnAcknowledgementPacket(
 	switch resp := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Result:
 		var ackData icqtypes.InterchainQueryPacketAck
-		if err := icqtypes.ModuleCdc.UnmarshalJSON(resp.Result, &ackData); err != nil {
+		if err := k.cdc.UnmarshalJSON(resp.Result, &ackData); err != nil {
 			return cerrs.Wrap(err, "failed to unmarshal interchain query packet ack")
 		}
 		resps, err := icqtypes.DeserializeCosmosResponse(ackData.Data)

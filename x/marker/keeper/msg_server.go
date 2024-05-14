@@ -138,9 +138,11 @@ func (k msgServer) AddAccess(goCtx context.Context, msg *types.MsgAddAccessReque
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+
 	for i := range msg.Access {
 		access := msg.Access[i]
-		if err := k.Keeper.AddAccess(ctx, msg.GetSigners()[0], msg.Denom, &access); err != nil {
+		if err := k.Keeper.AddAccess(ctx, admin, msg.Denom, &access); err != nil {
 			ctx.Logger().Error("unable to add access grant to marker", "err", err)
 			return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 		}
@@ -158,12 +160,10 @@ func (k msgServer) DeleteAccess(goCtx context.Context, msg *types.MsgDeleteAcces
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	addr, err := sdk.AccAddressFromBech32(msg.RemovedAddress)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrap(err.Error())
-	}
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+	addr := sdk.MustAccAddressFromBech32(msg.RemovedAddress)
 
-	if err := k.Keeper.RemoveAccess(ctx, msg.GetSigners()[0], msg.Denom, addr); err != nil {
+	if err := k.Keeper.RemoveAccess(ctx, admin, msg.Denom, addr); err != nil {
 		ctx.Logger().Error("unable to remove access grant from marker", "err", err)
 		return nil, sdkerrors.ErrUnauthorized.Wrap(err.Error())
 	}
@@ -179,7 +179,10 @@ func (k msgServer) Finalize(goCtx context.Context, msg *types.MsgFinalizeRequest
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if err := k.Keeper.FinalizeMarker(ctx, msg.GetSigners()[0], msg.Denom); err != nil {
+
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+
+	if err := k.Keeper.FinalizeMarker(ctx, admin, msg.Denom); err != nil {
 		ctx.Logger().Error("unable to finalize marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -195,7 +198,10 @@ func (k msgServer) Activate(goCtx context.Context, msg *types.MsgActivateRequest
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if err := k.Keeper.ActivateMarker(ctx, msg.GetSigners()[0], msg.Denom); err != nil {
+
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+
+	if err := k.Keeper.ActivateMarker(ctx, admin, msg.Denom); err != nil {
 		ctx.Logger().Error("unable to activate marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -211,7 +217,10 @@ func (k msgServer) Cancel(goCtx context.Context, msg *types.MsgCancelRequest) (*
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if err := k.Keeper.CancelMarker(ctx, msg.GetSigners()[0], msg.Denom); err != nil {
+
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+
+	if err := k.Keeper.CancelMarker(ctx, admin, msg.Denom); err != nil {
 		ctx.Logger().Error("unable to cancel marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -227,7 +236,10 @@ func (k msgServer) Delete(goCtx context.Context, msg *types.MsgDeleteRequest) (*
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if err := k.Keeper.DeleteMarker(ctx, msg.GetSigners()[0], msg.Denom); err != nil {
+
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+
+	if err := k.Keeper.DeleteMarker(ctx, admin, msg.Denom); err != nil {
 		ctx.Logger().Error("unable to delete marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -243,7 +255,10 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMintRequest) (*type
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if err := k.Keeper.MintCoin(ctx, msg.GetSigners()[0], msg.Amount); err != nil {
+
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+
+	if err := k.Keeper.MintCoin(ctx, admin, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to mint coin for marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -277,7 +292,10 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurnRequest) (*type
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
-	if err := k.Keeper.BurnCoin(ctx, msg.GetSigners()[0], msg.Amount); err != nil {
+
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+
+	if err := k.Keeper.BurnCoin(ctx, admin, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to burn coin from marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -312,12 +330,10 @@ func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, err
-	}
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+	to := sdk.MustAccAddressFromBech32(msg.ToAddress)
 
-	if err := k.Keeper.WithdrawCoins(ctx, msg.GetSigners()[0], to, msg.Denom, msg.Amount); err != nil {
+	if err := k.Keeper.WithdrawCoins(ctx, admin, to, msg.Denom, msg.Amount); err != nil {
 		ctx.Logger().Error("unable to withdraw coins from marker", "err", err)
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -357,20 +373,11 @@ func (k msgServer) Transfer(goCtx context.Context, msg *types.MsgTransferRequest
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		return nil, err
-	}
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, err
-	}
-	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		return nil, err
-	}
+	from := sdk.MustAccAddressFromBech32(msg.FromAddress)
+	to := sdk.MustAccAddressFromBech32(msg.ToAddress)
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 
-	err = k.TransferCoin(ctx, from, to, admin, msg.Amount)
+	err := k.TransferCoin(ctx, from, to, admin, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -409,16 +416,10 @@ func (k msgServer) IbcTransfer(goCtx context.Context, msg *types.MsgIbcTransferR
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	from, err := sdk.AccAddressFromBech32(msg.Transfer.Sender)
-	if err != nil {
-		return nil, err
-	}
-	admin, err := sdk.AccAddressFromBech32(msg.Administrator)
-	if err != nil {
-		return nil, err
-	}
+	from := sdk.MustAccAddressFromBech32(msg.Transfer.Sender)
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 
-	err = k.IbcTransferCoin(ctx, msg.Transfer.SourcePort, msg.Transfer.SourceChannel, msg.Transfer.Token, from, admin, msg.Transfer.Receiver, msg.Transfer.TimeoutHeight, msg.Transfer.TimeoutTimestamp, msg.Transfer.Memo)
+	err := k.IbcTransferCoin(ctx, msg.Transfer.SourcePort, msg.Transfer.SourceChannel, msg.Transfer.Token, from, admin, msg.Transfer.Receiver, msg.Transfer.TimeoutHeight, msg.Transfer.TimeoutTimestamp, msg.Transfer.Memo)
 	if err != nil {
 		return nil, err
 	}
@@ -458,10 +459,7 @@ func (k msgServer) SetDenomMetadata(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	admin, addrErr := sdk.AccAddressFromBech32(msg.Administrator)
-	if addrErr != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(addrErr.Error())
-	}
+	admin := sdk.MustAccAddressFromBech32(msg.Administrator)
 
 	err := k.SetMarkerDenomMetadata(ctx, msg.Metadata, admin)
 	if err != nil {
@@ -728,7 +726,8 @@ func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNet
 	isGovProp := marker.HasGovernanceEnabled() && msg.Administrator == k.GetAuthority()
 
 	if !isGovProp {
-		hasGrants := types.GrantsForAddress(msg.GetSigners()[0], marker.GetAccessList()...).GetAccessList()
+		admin := sdk.MustAccAddressFromBech32(msg.Administrator)
+		hasGrants := types.GrantsForAddress(admin, marker.GetAccessList()...).GetAccessList()
 		if len(hasGrants) == 0 {
 			return nil, fmt.Errorf("signer %v does not have permission to add net asset value for %q", msg.Administrator, marker.GetDenom())
 		}

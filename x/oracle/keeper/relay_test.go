@@ -84,7 +84,7 @@ func (s *KeeperTestSuite) TestOnAcknowledgementPacket() {
 		},
 		{
 			name:   "success - success event is emitted on ack",
-			ack:    channeltypes.NewResultAcknowledgement(createICQResponse(s.app.AppCodec(), "{}")),
+			ack:    channeltypes.NewResultAcknowledgement(s.createICQResponse(s.app.AppCodec(), "{}")),
 			packet: channeltypes.Packet{Sequence: 5, DestinationChannel: "oracle-channel"},
 			event: &types.EventOracleQuerySuccess{
 				SequenceId: strconv.FormatUint(5, 10),
@@ -101,21 +101,21 @@ func (s *KeeperTestSuite) TestOnAcknowledgementPacket() {
 		},
 		{
 			name:   "failure - invalid cosmos response in icq packet ack",
-			ack:    channeltypes.NewResultAcknowledgement(createInvalidICQPacketAck()),
+			ack:    channeltypes.NewResultAcknowledgement(s.createInvalidICQPacketAck()),
 			packet: channeltypes.Packet{Sequence: 5},
 			event:  nil,
 			err:    "could not deserialize data to cosmos response: unexpected EOF",
 		},
 		{
 			name:   "failure - empty cosmos response in icq packet ack",
-			ack:    channeltypes.NewResultAcknowledgement(createEmptyICQPacketAck()),
+			ack:    channeltypes.NewResultAcknowledgement(s.createEmptyICQPacketAck()),
 			packet: channeltypes.Packet{Sequence: 5},
 			event:  nil,
 			err:    "no responses in interchain query packet ack: invalid request",
 		},
 		{
 			name:   "failure - invalid query response in cosmos response",
-			ack:    channeltypes.NewResultAcknowledgement(createInvalidCosmosResponse()),
+			ack:    channeltypes.NewResultAcknowledgement(s.createInvalidCosmosResponse()),
 			packet: channeltypes.Packet{Sequence: 5},
 			event:  nil,
 			err:    "failed to unmarshal interchain query response to type *types.Acknowledgement_Result: unexpected EOF",
@@ -151,7 +151,7 @@ func (s *KeeperTestSuite) TestOnTimeoutPacket() {
 	s.Assert().Equal(event, emitted[0], "timeout event should be emitted")
 }
 
-func createICQResponse(cdc codec.Codec, response string) []byte {
+func (s *KeeperTestSuite) createICQResponse(cdc codec.Codec, response string) []byte {
 	oracleResponse := types.QueryOracleResponse{
 		Data: []byte("{}"),
 	}
@@ -163,30 +163,30 @@ func createICQResponse(cdc codec.Codec, response string) []byte {
 	icqPacket := icqtypes.InterchainQueryPacketAck{
 		Data: bytes,
 	}
-	icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
+	icqBytes, _ := s.cdc.MarshalJSON(&icqPacket)
 	return icqBytes
 }
 
-func createInvalidICQPacketAck() []byte {
+func (s *KeeperTestSuite) createInvalidICQPacketAck() []byte {
 	icqPacket := icqtypes.InterchainQueryPacketAck{
 		Data: []byte("abc"),
 	}
-	icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
+	icqBytes, _ := s.cdc.MarshalJSON(&icqPacket)
 	return icqBytes
 }
 
-func createEmptyICQPacketAck() []byte {
+func (s *KeeperTestSuite) createEmptyICQPacketAck() []byte {
 	bytes, _ := icqtypes.SerializeCosmosResponse([]abci.ResponseQuery{})
 
 	icqPacket := icqtypes.InterchainQueryPacketAck{
 		Data: bytes,
 	}
 
-	icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
+	icqBytes, _ := s.cdc.MarshalJSON(&icqPacket)
 	return icqBytes
 }
 
-func createInvalidCosmosResponse() []byte {
+func (s *KeeperTestSuite) createInvalidCosmosResponse() []byte {
 	bytes, _ := icqtypes.SerializeCosmosResponse([]abci.ResponseQuery{{
 		Value: []byte("baddata"),
 	}})
@@ -194,6 +194,6 @@ func createInvalidCosmosResponse() []byte {
 	icqPacket := icqtypes.InterchainQueryPacketAck{
 		Data: bytes,
 	}
-	icqBytes, _ := icqtypes.ModuleCdc.MarshalJSON(&icqPacket)
+	icqBytes, _ := s.cdc.MarshalJSON(&icqPacket)
 	return icqBytes
 }

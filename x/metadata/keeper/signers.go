@@ -378,7 +378,15 @@ func (k Keeper) validateSmartContractSigners(ctx sdk.Context, usedSigners UsedSi
 	// already, or must be authorized by all signers after it.
 	// The wasm encoders (hopefully) put the smart contract as the first signer
 	// followed by other signers. That's why we only check the signers after it.
-	signerAccs := msg.GetSigners()
+	signerStrs := msg.GetSignerStrs()
+	signerAccs := make([]sdk.AccAddress, len(signerStrs))
+	for i, signerStr := range signerStrs {
+		var err error
+		signerAccs[i], err = sdk.AccAddressFromBech32(signerStr)
+		if err != nil {
+			return fmt.Errorf("invalid signer[%d] %q: %w", i, signerStr, err)
+		}
+	}
 	canBeWasm := true
 	for i, signer := range signerAccs {
 		signerStr := signer.String()

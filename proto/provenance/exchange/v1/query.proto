@@ -6,6 +6,7 @@ option go_package = "github.com/provenance-io/provenance/x/exchange";
 option java_package        = "io.provenance.exchange.v1";
 option java_multiple_files = true;
 
+import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -301,8 +302,12 @@ message QueryGetCommitmentRequest {
 // QueryGetCommitmentResponse is a response message for the GetCommitment query.
 message QueryGetCommitmentResponse {
   // amount is the total funds committed to the market by the account.
-  repeated cosmos.base.v1beta1.Coin amount = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 }
 
 // QueryGetAccountCommitmentsRequest is a request message for the GetAccountCommitments query.
@@ -403,14 +408,26 @@ message QueryCommitmentSettlementFeeCalcRequest {
 // QueryCommitmentSettlementFeeCalcResponse is a response message for the CommitmentSettlementFeeCalc query.
 message QueryCommitmentSettlementFeeCalcResponse {
   // exchange_fees is the total that the exchange would currently pay for the provided settlement.
-  repeated cosmos.base.v1beta1.Coin exchange_fees = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin exchange_fees = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // input_total is the sum of all the inputs in the provided settlement.
-  repeated cosmos.base.v1beta1.Coin input_total = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin input_total = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // converted_total is the input_total converted to a single intermediary denom or left as the fee denom.
-  repeated cosmos.base.v1beta1.Coin converted_total = 3
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin converted_total = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // conversion_navs are the NAVs used to convert the input_total to the converted_total.
   repeated NetAssetPrice conversion_navs = 4 [(gogoproto.nullable) = false];
   // to_fee_nav is the NAV used to convert the converted_total into the fee denom.
@@ -539,9 +556,17 @@ message QueryPaymentFeeCalcRequest {
 // QueryPaymentFeeCalcResponse is a response message for the PaymentFeeCalc query.
 message QueryPaymentFeeCalcResponse {
   // fee_create is the fee required to create the provided payment.
-  repeated cosmos.base.v1beta1.Coin fee_create = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin fee_create = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
   // fee_accept is the fee required to accept the provided payment.
-  repeated cosmos.base.v1beta1.Coin fee_accept = 2
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin fee_accept = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
 }

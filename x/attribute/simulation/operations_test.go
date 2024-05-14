@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -25,6 +26,7 @@ type SimTestSuite struct {
 
 	ctx sdk.Context
 	app *app.App
+	cdc codec.BinaryCodec
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -34,6 +36,7 @@ func TestSimTestSuite(t *testing.T) {
 func (s *SimTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false)
+	s.cdc = s.app.GetEncodingConfig().Marshaler
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -137,7 +140,7 @@ func (s *SimTestSuite) TestSimulateMsgAddAttribute() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgAddAttributeRequest
-	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.cdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal("cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3", msg.Account, "msg.Account")
@@ -169,7 +172,7 @@ func (s *SimTestSuite) TestSimulateMsgUpdateAttribute() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgUpdateAttributeRequest
-	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.cdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
@@ -199,7 +202,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteAttribute() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgDeleteAttributeRequest
-	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.cdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
@@ -229,7 +232,7 @@ func (s *SimTestSuite) TestSimulateMsgDeleteDistinctAttribute() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgDeleteDistinctAttributeRequest
-	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.cdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
@@ -253,7 +256,7 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 	s.LogOperationMsg(operationMsg)
 
 	var msg types.MsgSetAccountDataRequest
-	s.Require().NoError(types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	s.Require().NoError(s.cdc.Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")

@@ -81,13 +81,6 @@ func TestNewEmptyMarkerValidate(t *testing.T) {
 		m.SetSupply(sdk.NewInt64Coin("other", 1000)), "expected failure setting supply to invalid denom of coin")
 	require.EqualValues(t, m.GetSupply(), sdk.NewInt64Coin("test", 1), "supply should be still be one")
 
-	// TODO[1760]: yaml: Decide if we still want this yaml convertion tested.
-	/*
-		yaml, merr := m.MarshalYAML()
-		require.NoError(t, merr, "marshall of yaml should succeed without error")
-		require.Equal(t, yaml, m.String(), "should use yaml for string() view")
-	*/
-
 	if err != nil {
 		t.Fatalf("expect no errors from marker validation: %s", err)
 	}

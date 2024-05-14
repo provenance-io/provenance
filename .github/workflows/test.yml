@@ -52,9 +52,7 @@ jobs:
         # TODO[1760]: Re-analyze how long tests tests take and change the splitting back to be based on speed.
         run: |
           grep -vF \
-            -e 'github.com/provenance-io/provenance/app' \
             -e 'github.com/provenance-io/provenance/cmd/provenanced/cmd' \
-            -e 'github.com/provenance-io/provenance/internal/antewrapper' \
             -e 'github.com/provenance-io/provenance/x/ibchooks' \
             -e 'github.com/provenance-io/provenance/x/ibcratelimit/module' \
             -e 'github.com/provenance-io/provenance/x/ibcratelimit/simulation' \
@@ -62,9 +60,7 @@ jobs:
             pkgs.txt > pkgs.txt.tmp
           split -d -n l/3 pkgs.txt.tmp pkgs.txt.part.
           printf '%s\n' \
-            'github.com/provenance-io/provenance/app' \
             'github.com/provenance-io/provenance/cmd/provenanced/cmd' \
-            'github.com/provenance-io/provenance/internal/antewrapper' \
             'github.com/provenance-io/provenance/x/ibchooks' \
             'github.com/provenance-io/provenance/x/ibcratelimit/module' \
             'github.com/provenance-io/provenance/x/ibcratelimit/simulation' \

@@ -24,9 +24,5 @@ message ObjectStoreLocator {
 
 // Params defines the parameters for the metadata-locator module methods.
 message OSLocatorParams {
-  uint32 max_uri_length = 1 [
-    (gogoproto.customtype) = "uint32",
-    (gogoproto.nullable)   = false,
-    (gogoproto.moretags)   = "yaml:\"max_uri_length\""
-  ];
+  uint32 max_uri_length = 1 [(gogoproto.customtype) = "uint32", (gogoproto.nullable) = false];
 }

@@ -1148,22 +1148,24 @@ func (s *SpecificationTestSuite) TestScopeSpecString() {
 		[]PartyType{PartyType_PARTY_TYPE_OWNER},
 		[]MetadataAddress{ContractSpecMetadataAddress(contractSpecUuid)},
 	)
-	expected := `specification_id: scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6
-description:
-  name: TestScopeSpecString Description
-  description: This is a description of a description used in a unit test.
-  website_url: https://figure.com/
-  icon_url: https://figure.com/favicon.png
-owner_addresses:
-- cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
-parties_involved:
-- 5
-contract_spec_ids:
-- contractspec1qd2qmt038k7yc0azq46htdlhgwzqg6cr9l
-`
-	actual := scopeSpec.String()
-	// fmt.Printf("Actual:\n%s\n-----\n", actual)
-	require.Equal(s.T(), expected, actual)
+	expected := "&ScopeSpecification{" +
+		"SpecificationId:scopespec1qnpqwjsrdak5q2dlutp6t6m7dzcscd7ff6," +
+		"Description:" +
+		"name:\"TestScopeSpecString Description\" " +
+		"description:\"This is a description of a description used in a unit test.\" " +
+		"website_url:\"https://figure.com/\" " +
+		"icon_url:\"https://figure.com/favicon.png\" ," +
+		"OwnerAddresses:[cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck]," +
+		"PartiesInvolved:[PARTY_TYPE_OWNER]," +
+		"ContractSpecIds:[contractspec1qd2qmt038k7yc0azq46htdlhgwzqg6cr9l]," +
+		"}"
+
+	var actual string
+	testFunc := func() {
+		actual = scopeSpec.String()
+	}
+	s.Require().NotPanics(testFunc, "scopeSpec.String()")
+	s.Assert().Equal(expected, actual, "scopeSpec.String() result")
 }
 
 func (s *SpecificationTestSuite) TestContractSpecString() {
@@ -1181,22 +1183,25 @@ func (s *SpecificationTestSuite) TestContractSpecString() {
 		nil,
 		"CS 201: Intro to Blockchain",
 	)
-	expected := `specification_id: contractspec1qd2qmt038k7yc0azq46htdlhgwzqg6cr9l
-description:
-  name: TestContractSpecString Description
-  description: This is a description of a description used in a unit test.
-  website_url: https://figure.com/
-  icon_url: https://figure.com/favicon.png
-owner_addresses:
-- cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck
-parties_involved:
-- 5
-source: null
-class_name: 'CS 201: Intro to Blockchain'
-`
-	actual := contractSpec.String()
-	// fmt.Printf("Actual:\n%s\n-----\n", actual)
-	require.Equal(s.T(), expected, actual)
+
+	expected := "&ContractSpecification{" +
+		"SpecificationId:contractspec1qd2qmt038k7yc0azq46htdlhgwzqg6cr9l," +
+		"Description:" +
+		"name:\"TestContractSpecString Description\" " +
+		"description:\"This is a description of a description used in a unit test.\" " +
+		"website_url:\"https://figure.com/\" " +
+		"icon_url:\"https://figure.com/favicon.png\" ," +
+		"OwnerAddresses:[cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck]," +
+		"PartiesInvolved:[PARTY_TYPE_OWNER]," +
+		"Source:<nil>," +
+		"ClassName:CS 201: Intro to Blockchain," +
+		"}"
+	var actual string
+	testFunc := func() {
+		actual = contractSpec.String()
+	}
+	s.Require().NotPanics(testFunc, "contractSpec.String()")
+	s.Assert().Equal(expected, actual, "contractSpec.String() result")
 }
 
 func (s *SpecificationTestSuite) TestRecordSpecString() {
@@ -1224,39 +1229,35 @@ func (s *SpecificationTestSuite) TestRecordSpecString() {
 		DefinitionType_DEFINITION_TYPE_RECORD,
 		[]PartyType{PartyType_PARTY_TYPE_CUSTODIAN, PartyType_PARTY_TYPE_INVESTOR},
 	)
-	expected := `specification_id: recspec1q42qmt038k7yc0azq46htdlhgwzg5052mucgmerfku3gf5e7t3ej5fjh7rr
-name: somename
-inputs:
-- name: inputSpecName1
-  type_name: inputSpecTypeName1
-  source:
-    hash: inputSpecSourceHash1
-- name: inputSpecName2
-  type_name: inputSpecTypeName2
-  source:
-    record_id: record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4cv4ure3
-type_name: sometype
-result_type: 2
-responsible_parties:
-- 4
-- 3
-`
-	actual := recordSpec.String()
-	// fmt.Printf("Actual:\n%s\n-----\n", actual)
-	require.Equal(s.T(), expected, actual)
+	expected := "&RecordSpecification{" +
+		"SpecificationId:recspec1q42qmt038k7yc0azq46htdlhgwzg5052mucgmerfku3gf5e7t3ej5fjh7rr," +
+		"Name:somename," +
+		"Inputs:[]*InputSpecification{" +
+		"&InputSpecification{Name:inputSpecName1,TypeName:inputSpecTypeName1,Source:&InputSpecification_Hash{Hash:inputSpecSourceHash1,},}," +
+		"&InputSpecification{Name:inputSpecName2,TypeName:inputSpecTypeName2,Source:&InputSpecification_RecordId{RecordId:record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4cv4ure3,},}," +
+		"}," +
+		"TypeName:sometype," +
+		"ResultType:DEFINITION_TYPE_RECORD," +
+		"ResponsibleParties:[PARTY_TYPE_CUSTODIAN PARTY_TYPE_INVESTOR]," +
+		"}"
+
+	var actual string
+	testFunc := func() {
+		actual = recordSpec.String()
+	}
+	s.Require().NotPanics(testFunc, "recordSpec.String()")
+	s.Assert().Equal(expected, actual, "recordSpec.String() result")
 }
 
 func (s *SpecificationTestSuite) TestInputSpecString() {
 	tests := []struct {
-		name         string
-		outputActual bool
-		spec         *InputSpecification
-		expected     string
+		name     string
+		spec     *InputSpecification
+		expected string
 	}{
 		{
-			"source is record id",
-			false,
-			NewInputSpecification(
+			name: "source is record id",
+			spec: NewInputSpecification(
 				"inputSpecRecordIdSource",
 				"inputSpecRecordIdSourceTypeName",
 				NewInputSpecificationSourceRecordID(RecordMetadataAddress(
@@ -1264,36 +1265,35 @@ func (s *SpecificationTestSuite) TestInputSpecString() {
 					"inputSpecRecordIdSource",
 				)),
 			),
-			`name: inputSpecRecordIdSource
-type_name: inputSpecRecordIdSourceTypeName
-source:
-  record_id: record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4cv4ure3
-`,
+			expected: "&InputSpecification{" +
+				"Name:inputSpecRecordIdSource," +
+				"TypeName:inputSpecRecordIdSourceTypeName," +
+				"Source:&InputSpecification_RecordId{RecordId:record1qgtcftnewlc5y892l8k2fhteu4ceth857yw3fprr4lvhfptn5gg4cv4ure3,}," +
+				"}",
 		},
 		{
-			"source is hash",
-			false,
-			NewInputSpecification(
+			name: "source is hash",
+			spec: NewInputSpecification(
 				"inputSpecHashSource",
 				"inputSpecHashSourceTypeName",
 				NewInputSpecificationSourceHash("somehash"),
 			),
-			`name: inputSpecHashSource
-type_name: inputSpecHashSourceTypeName
-source:
-  hash: somehash
-`,
+			expected: "&InputSpecification{" +
+				"Name:inputSpecHashSource," +
+				"TypeName:inputSpecHashSourceTypeName," +
+				"Source:&InputSpecification_Hash{Hash:somehash,}," +
+				"}",
 		},
 	}
 
-	for _, tt := range tests {
-		tt := tt
-		s.T().Run(tt.name, func(t *testing.T) {
-			actual := tt.spec.String()
-			if tt.outputActual {
-				fmt.Printf("Actual [%s]:\n%s\n-----\n", tt.name, actual)
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var actual string
+			testFunc := func() {
+				actual = tc.spec.String()
 			}
-			require.Equal(t, tt.expected, actual)
+			s.Require().NotPanics(testFunc, "inputSpec.String()")
+			s.Assert().Equal(tc.expected, actual, "inputSpec.String() result")
 		})
 	}
 }
@@ -1305,12 +1305,15 @@ func (s *SpecificationTestSuite) TestDescriptionString() {
 		"https://provenance.io",
 		"https://provenance.io/ico.png",
 	)
-	expected := `name: TestDescriptionString
-description: This is a description of a description used in a unit test.
-website_url: https://provenance.io
-icon_url: https://provenance.io/ico.png
-`
-	actual := description.String()
-	// fmt.Printf("Actual:\n%s\n-----\n", actual)
-	require.Equal(s.T(), expected, actual)
+	expected := "name:\"TestDescriptionString\" " +
+		"description:\"This is a description of a description used in a unit test.\" " +
+		"website_url:\"https://provenance.io\" " +
+		"icon_url:\"https://provenance.io/ico.png\" "
+
+	var actual string
+	testFunc := func() {
+		actual = description.String()
+	}
+	s.Require().NotPanics(testFunc, "description.String()")
+	s.Assert().Equal(expected, actual, "description.String() result")
 }

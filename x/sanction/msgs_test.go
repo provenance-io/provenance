@@ -8,22 +8,34 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
-	"github.com/provenance-io/provenance/x/sanction"
+
+	. "github.com/provenance-io/provenance/x/sanction"
 )
+
+func TestAllMsgsGetSigners(t *testing.T) {
+	msgMakers := []testutil.MsgMaker{
+		func(signer string) sdk.Msg { return &MsgSanction{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUnsanction{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateParams{Authority: signer} },
+	}
+
+	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
+}
 
 func TestNewMsgSanction(t *testing.T) {
 	tests := []struct {
 		name      string
 		authority string
 		addrs     []sdk.AccAddress
-		exp       *sanction.MsgSanction
+		exp       *MsgSanction
 	}{
 		{
 			name:      "empty nil",
 			authority: "",
 			addrs:     nil,
-			exp: &sanction.MsgSanction{
+			exp: &MsgSanction{
 				Addresses: nil,
 				Authority: "",
 			},
@@ -32,7 +44,7 @@ func TestNewMsgSanction(t *testing.T) {
 			name:      "empty empty",
 			authority: "",
 			addrs:     []sdk.AccAddress{},
-			exp: &sanction.MsgSanction{
+			exp: &MsgSanction{
 				Addresses: nil,
 				Authority: "",
 			},
@@ -41,7 +53,7 @@ func TestNewMsgSanction(t *testing.T) {
 			name:      "just authority provided",
 			authority: "cartman",
 			addrs:     nil,
-			exp: &sanction.MsgSanction{
+			exp: &MsgSanction{
 				Addresses: nil,
 				Authority: "cartman",
 			},
@@ -54,7 +66,7 @@ func TestNewMsgSanction(t *testing.T) {
 				sdk.AccAddress("testaddr1___________"),
 				sdk.AccAddress("testaddr2___________"),
 			},
-			exp: &sanction.MsgSanction{
+			exp: &MsgSanction{
 				Addresses: []string{
 					sdk.AccAddress("testaddr0___________").String(),
 					sdk.AccAddress("testaddr1___________").String(),
@@ -67,9 +79,9 @@ func TestNewMsgSanction(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var msg *sanction.MsgSanction
+			var msg *MsgSanction
 			testFunc := func() {
-				msg = sanction.NewMsgSanction(tc.authority, tc.addrs...)
+				msg = NewMsgSanction(tc.authority, tc.addrs...)
 			}
 			require.NotPanics(t, testFunc, "NewMsgSanction")
 			assert.Equal(t, tc.exp, msg, "NewMsgSanction result")
@@ -80,12 +92,12 @@ func TestNewMsgSanction(t *testing.T) {
 func TestMsgSanction_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  *sanction.MsgSanction
+		msg  *MsgSanction
 		exp  []string
 	}{
 		{
 			name: "control",
-			msg: &sanction.MsgSanction{
+			msg: &MsgSanction{
 				Addresses: []string{
 					sdk.AccAddress("addr0_______________").String(),
 					sdk.AccAddress("addr1_______________").String(),
@@ -99,7 +111,7 @@ func TestMsgSanction_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty authority",
-			msg: &sanction.MsgSanction{
+			msg: &MsgSanction{
 				Addresses: []string{
 					sdk.AccAddress("addr0_______________").String(),
 					sdk.AccAddress("addr1_______________").String(),
@@ -113,7 +125,7 @@ func TestMsgSanction_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad authority",
-			msg: &sanction.MsgSanction{
+			msg: &MsgSanction{
 				Addresses: []string{
 					sdk.AccAddress("addr0_______________").String(),
 					sdk.AccAddress("addr1_______________").String(),
@@ -127,7 +139,7 @@ func TestMsgSanction_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad first addr",
-			msg: &sanction.MsgSanction{
+			msg: &MsgSanction{
 				Addresses: []string{
 					"bad1firstaddr",
 					sdk.AccAddress("addr1_______________").String(),
@@ -141,7 +153,7 @@ func TestMsgSanction_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad third addr",
-			msg: &sanction.MsgSanction{
+			msg: &MsgSanction{
 				Addresses: []string{
 					sdk.AccAddress("addr0_______________").String(),
 					sdk.AccAddress("addr1_______________").String(),
@@ -155,7 +167,7 @@ func TestMsgSanction_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad first addr",
-			msg: &sanction.MsgSanction{
+			msg: &MsgSanction{
 				Addresses: []string{
 					sdk.AccAddress("addr0_______________").String(),
 					sdk.AccAddress("addr1_______________").String(),
@@ -181,58 +193,18 @@ func TestMsgSanction_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgSanction_GetSigners(t *testing.T) {
-	tests := []struct {
-		name  string
-		msg   *sanction.MsgSanction
-		exp   []sdk.AccAddress
-		panic string
-	}{
-		{
-			name:  "empty authority",
-			msg:   &sanction.MsgSanction{Authority: ""},
-			panic: "empty address string is not allowed",
-		},
-		{
-			name:  "bad authority",
-			msg:   &sanction.MsgSanction{Authority: "nope1notauthority"},
-			panic: "decoding bech32 failed: invalid character not part of charset: 111",
-		},
-		{
-			name: "good authority",
-			msg:  &sanction.MsgSanction{Authority: sdk.AccAddress("testauthority_______").String()},
-			exp:  []sdk.AccAddress{sdk.AccAddress("testauthority_______")},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var actual []sdk.AccAddress
-			testFunc := func() {
-				actual = tc.msg.GetSigners()
-			}
-			if len(tc.panic) > 0 {
-				require.PanicsWithError(t, tc.panic, testFunc, "GetSigners()")
-			} else {
-				require.NotPanics(t, testFunc, "GetSigners()")
-				assert.Equal(t, tc.exp, actual, "GetSigners result")
-			}
-		})
-	}
-}
-
 func TestNewMsgUnsanction(t *testing.T) {
 	tests := []struct {
 		name      string
 		authority string
 		addrs     []sdk.AccAddress
-		exp       *sanction.MsgUnsanction
+		exp       *MsgUnsanction
 	}{
 		{
 			name:      "empty nil",
 			authority: "",
 			addrs:     nil,
-			exp: &sanction.MsgUnsanction{
+			exp: &MsgUnsanction{
 				Addresses: nil,
 				Authority: "",
 			},
@@ -241,7 +213,7 @@ func TestNewMsgUnsanction(t *testing.T) {
 			name:      "empty empty",
 			authority: "",
 			addrs:     []sdk.AccAddress{},
-			exp: &sanction.MsgUnsanction{
+			exp: &MsgUnsanction{
 				Addresses: nil,
 				Authority: "",
 			},
@@ -250,7 +222,7 @@ func TestNewMsgUnsanction(t *testing.T) {
 			name:      "just authority provided",
 			authority: "cartman",
 			addrs:     nil,
-			exp: &sanction.MsgUnsanction{
+			exp: &MsgUnsanction{
 				Addresses: nil,
 				Authority: "cartman",
 			},
@@ -263,7 +235,7 @@ func TestNewMsgUnsanction(t *testing.T) {
 				sdk.AccAddress("testaddr1___________"),
 				sdk.AccAddress("testaddr2___________"),
 			},
-			exp: &sanction.MsgUnsanction{
+			exp: &MsgUnsanction{
 				Addresses: []string{
 					sdk.AccAddress("testaddr0___________").String(),
 					sdk.AccAddress("testaddr1___________").String(),
@@ -276,9 +248,9 @@ func TestNewMsgUnsanction(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var msg *sanction.MsgUnsanction
+			var msg *MsgUnsanction
 			testFunc := func() {
-				msg = sanction.NewMsgUnsanction(tc.authority, tc.addrs...)
+				msg = NewMsgUnsanction(tc.authority, tc.addrs...)
 			}
 			require.NotPanics(t, testFunc, "NewMsgUnsanction")
 			assert.Equal(t, tc.exp, msg, "NewMsgUnsanction result")
@@ -289,12 +261,12 @@ func TestNewMsgUnsanction(t *testing.T) {
 func TestMsgUnsanction_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  *sanction.MsgUnsanction
+		msg  *MsgUnsanction
 		exp  []string
 	}{
 		{
 			name: "control",
-			msg: &sanction.MsgUnsanction{
+			msg: &MsgUnsanction{
 				Addresses: []string{
 					sdk.AccAddress("addr0_______________").String(),
 					sdk.AccAddress("addr1_______________").String(),
@@ -308,7 +280,7 @@ func TestMsgUnsanction_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty authority",
-			msg: &sanction.MsgUnsanction{
+			msg: &MsgUnsanction{
 				Addresses: []string{
 					sdk.AccAddress("addr0_______________").String(),
 					sdk.AccAddress("addr1_______________").String(),
@@ -322,7 +294,7 @@ func TestMsgUnsanction_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad authority",
-			msg: &sanction.MsgUnsanction{
+			msg: &MsgUnsanction{
 				Addresses: []string{
 					sdk.AccAddress("addr0_______________").String(),
 					sdk.AccAddress("addr1_______________").String(),
@@ -336,7 +308,7 @@ func TestMsgUnsanction_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad first addr",
-			msg: &sanction.MsgUnsanction{
+			msg: &MsgUnsanction{
 				Addresses: []string{
 					"bad1firstaddr",
 					sdk.AccAddress("addr1_______________").String(),
@@ -350,7 +322,7 @@ func TestMsgUnsanction_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad third addr",
-			msg: &sanction.MsgUnsanction{
+			msg: &MsgUnsanction{
 				Addresses: []string{
 					sdk.AccAddress("addr0_______________").String(),
 					sdk.AccAddress("addr1_______________").String(),
@@ -364,7 +336,7 @@ func TestMsgUnsanction_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad first addr",
-			msg: &sanction.MsgUnsanction{
+			msg: &MsgUnsanction{
 				Addresses: []string{
 					sdk.AccAddress("addr0_______________").String(),
 					sdk.AccAddress("addr1_______________").String(),
@@ -386,46 +358,6 @@ func TestMsgUnsanction_ValidateBasic(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "ValidateBasic")
 			assertions.AssertErrorContents(t, err, tc.exp, "ValidateBasic result.")
-		})
-	}
-}
-
-func TestMsgUnsanction_GetSigners(t *testing.T) {
-	tests := []struct {
-		name  string
-		msg   *sanction.MsgUnsanction
-		exp   []sdk.AccAddress
-		panic string
-	}{
-		{
-			name:  "empty authority",
-			msg:   &sanction.MsgUnsanction{Authority: ""},
-			panic: "empty address string is not allowed",
-		},
-		{
-			name:  "bad authority",
-			msg:   &sanction.MsgUnsanction{Authority: "nope1notauthority"},
-			panic: "decoding bech32 failed: invalid character not part of charset: 111",
-		},
-		{
-			name: "good authority",
-			msg:  &sanction.MsgUnsanction{Authority: sdk.AccAddress("testauthority_______").String()},
-			exp:  []sdk.AccAddress{sdk.AccAddress("testauthority_______")},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var actual []sdk.AccAddress
-			testFunc := func() {
-				actual = tc.msg.GetSigners()
-			}
-			if len(tc.panic) > 0 {
-				require.PanicsWithError(t, tc.panic, testFunc, "GetSigners()")
-			} else {
-				require.NotPanics(t, testFunc, "GetSigners()")
-				assert.Equal(t, tc.exp, actual, "GetSigners result")
-			}
 		})
 	}
 }
@@ -443,15 +375,15 @@ func TestNewMsgUpdateParams(t *testing.T) {
 		authority        string
 		minDepSanction   sdk.Coins
 		minDepUnsanction sdk.Coins
-		expected         *sanction.MsgUpdateParams
+		expected         *MsgUpdateParams
 	}{
 		{
 			name:             "control",
 			authority:        "auth-str",
 			minDepSanction:   cz("1acoin,2bcoin"),
 			minDepUnsanction: cz("5acoin,3bcoin,1ccoin"),
-			expected: &sanction.MsgUpdateParams{
-				Params: &sanction.Params{
+			expected: &MsgUpdateParams{
+				Params: &Params{
 					ImmediateSanctionMinDeposit:   cz("1acoin,2bcoin"),
 					ImmediateUnsanctionMinDeposit: cz("5acoin,3bcoin,1ccoin"),
 				},
@@ -463,8 +395,8 @@ func TestNewMsgUpdateParams(t *testing.T) {
 			authority:        "",
 			minDepSanction:   cz("1acoin,2bcoin"),
 			minDepUnsanction: cz("5acoin,3bcoin,1ccoin"),
-			expected: &sanction.MsgUpdateParams{
-				Params: &sanction.Params{
+			expected: &MsgUpdateParams{
+				Params: &Params{
 					ImmediateSanctionMinDeposit:   cz("1acoin,2bcoin"),
 					ImmediateUnsanctionMinDeposit: cz("5acoin,3bcoin,1ccoin"),
 				},
@@ -476,8 +408,8 @@ func TestNewMsgUpdateParams(t *testing.T) {
 			authority:        "auth-str",
 			minDepSanction:   nil,
 			minDepUnsanction: cz("5acoin,3bcoin,1ccoin"),
-			expected: &sanction.MsgUpdateParams{
-				Params: &sanction.Params{
+			expected: &MsgUpdateParams{
+				Params: &Params{
 					ImmediateSanctionMinDeposit:   nil,
 					ImmediateUnsanctionMinDeposit: cz("5acoin,3bcoin,1ccoin"),
 				},
@@ -489,8 +421,8 @@ func TestNewMsgUpdateParams(t *testing.T) {
 			authority:        "auth-str",
 			minDepSanction:   sdk.Coins{},
 			minDepUnsanction: cz("5acoin,3bcoin,1ccoin"),
-			expected: &sanction.MsgUpdateParams{
-				Params: &sanction.Params{
+			expected: &MsgUpdateParams{
+				Params: &Params{
 					ImmediateSanctionMinDeposit:   sdk.Coins{},
 					ImmediateUnsanctionMinDeposit: cz("5acoin,3bcoin,1ccoin"),
 				},
@@ -502,8 +434,8 @@ func TestNewMsgUpdateParams(t *testing.T) {
 			authority:        "auth-str",
 			minDepSanction:   cz("1acoin,2bcoin"),
 			minDepUnsanction: nil,
-			expected: &sanction.MsgUpdateParams{
-				Params: &sanction.Params{
+			expected: &MsgUpdateParams{
+				Params: &Params{
 					ImmediateSanctionMinDeposit:   cz("1acoin,2bcoin"),
 					ImmediateUnsanctionMinDeposit: nil,
 				},
@@ -515,8 +447,8 @@ func TestNewMsgUpdateParams(t *testing.T) {
 			authority:        "auth-str",
 			minDepSanction:   cz("1acoin,2bcoin"),
 			minDepUnsanction: sdk.Coins{},
-			expected: &sanction.MsgUpdateParams{
-				Params: &sanction.Params{
+			expected: &MsgUpdateParams{
+				Params: &Params{
 					ImmediateSanctionMinDeposit:   cz("1acoin,2bcoin"),
 					ImmediateUnsanctionMinDeposit: sdk.Coins{},
 				},
@@ -527,9 +459,9 @@ func TestNewMsgUpdateParams(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var actual *sanction.MsgUpdateParams
+			var actual *MsgUpdateParams
 			testFunc := func() {
-				actual = sanction.NewMsgUpdateParams(tc.authority, tc.minDepSanction, tc.minDepUnsanction)
+				actual = NewMsgUpdateParams(tc.authority, tc.minDepSanction, tc.minDepUnsanction)
 			}
 			require.NotPanics(t, testFunc, "NewMsgUpdateParams")
 			if !assert.Equal(t, tc.expected, actual, "NewMsgUpdateParams result") && actual != nil {
@@ -556,13 +488,13 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 
 	tests := []struct {
 		name string
-		msg  *sanction.MsgUpdateParams
+		msg  *MsgUpdateParams
 		exp  []string
 	}{
 		{
 			name: "control",
-			msg: &sanction.MsgUpdateParams{
-				Params: &sanction.Params{
+			msg: &MsgUpdateParams{
+				Params: &Params{
 					ImmediateSanctionMinDeposit:   cz("5dolla"),
 					ImmediateUnsanctionMinDeposit: cz("50cent"),
 				},
@@ -572,8 +504,8 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "empty authority",
-			msg: &sanction.MsgUpdateParams{
-				Params: &sanction.Params{
+			msg: &MsgUpdateParams{
+				Params: &Params{
 					ImmediateSanctionMinDeposit:   cz("5dolla"),
 					ImmediateUnsanctionMinDeposit: cz("50cent"),
 				},
@@ -583,8 +515,8 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad authority",
-			msg: &sanction.MsgUpdateParams{
-				Params: &sanction.Params{
+			msg: &MsgUpdateParams{
+				Params: &Params{
 					ImmediateSanctionMinDeposit:   cz("5dolla"),
 					ImmediateUnsanctionMinDeposit: cz("50cent"),
 				},
@@ -594,8 +526,8 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad params",
-			msg: &sanction.MsgUpdateParams{
-				Params: &sanction.Params{
+			msg: &MsgUpdateParams{
+				Params: &Params{
 					ImmediateSanctionMinDeposit:   sdk.Coins{sdk.NewInt64Coin("dcoin", 1), sdk.NewInt64Coin("dcoin", 2)},
 					ImmediateUnsanctionMinDeposit: cz("50cent"),
 				},
@@ -613,46 +545,6 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "ValidateBasic")
 			assertions.AssertErrorContents(t, err, tc.exp, "ValidateBasic result.")
-		})
-	}
-}
-
-func TestMsgUpdateParams_GetSigners(t *testing.T) {
-	tests := []struct {
-		name  string
-		msg   *sanction.MsgUpdateParams
-		exp   []sdk.AccAddress
-		panic string
-	}{
-		{
-			name:  "empty authority",
-			msg:   &sanction.MsgUpdateParams{Authority: ""},
-			panic: "empty address string is not allowed",
-		},
-		{
-			name:  "bad authority",
-			msg:   &sanction.MsgUpdateParams{Authority: "nope1notauthority"},
-			panic: "decoding bech32 failed: invalid character not part of charset: 111",
-		},
-		{
-			name: "good authority",
-			msg:  &sanction.MsgUpdateParams{Authority: sdk.AccAddress("testauthority_______").String()},
-			exp:  []sdk.AccAddress{sdk.AccAddress("testauthority_______")},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var actual []sdk.AccAddress
-			testFunc := func() {
-				actual = tc.msg.GetSigners()
-			}
-			if len(tc.panic) > 0 {
-				require.PanicsWithError(t, tc.panic, testFunc, "GetSigners()")
-			} else {
-				require.NotPanics(t, testFunc, "GetSigners()")
-				assert.Equal(t, tc.exp, actual, "GetSigners result")
-			}
 		})
 	}
 }

@@ -31,6 +31,7 @@ type SimTestSuite struct {
 
 	ctx sdk.Context
 	app *app.App
+	cdc *codec.ProtoCodec
 }
 
 func TestSimTestSuite(t *testing.T) {
@@ -41,6 +42,7 @@ func (s *SimTestSuite) SetupTest() {
 	govtypes.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
 	s.app = app.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false)
+	s.cdc = codec.NewProtoCodec(s.app.GetEncodingConfig().InterfaceRegistry)
 }
 
 // LogOperationMsg logs all fields of the provided operationMsg.
@@ -150,7 +152,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarker() {
 	s.Require().NoError(err)
 
 	var msg types.MsgAddMarkerRequest
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	s.cdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	s.Require().True(operationMsg.OK, operationMsg.String())
 	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)
@@ -172,7 +174,7 @@ func (s *SimTestSuite) TestSimulateMsgAddActivateFinalizeMarker() {
 	s.Require().NoError(err)
 
 	var msg types.MsgAddFinalizeActivateMarkerRequest
-	types.ModuleCdc.Unmarshal(operationMsg.Msg, &msg)
+	s.cdc.Unmarshal(operationMsg.Msg, &msg)
 
 	s.Require().True(operationMsg.OK, operationMsg.String())
 	s.Require().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name)

@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -626,15 +626,32 @@ func (ma MetadataAddress) ContractSpecRecordSpecIteratorPrefix() ([]byte, error)
 	return append(RecordSpecificationKeyPrefix, ma[1:17]...), nil
 }
 
-// Format implements fmt.Format interface
+// Format implements fmt.Formatter interface for a MetadataAddress.
 func (ma MetadataAddress) Format(s fmt.State, verb rune) {
+	var out string
 	switch verb {
-	case 's':
-		s.Write([]byte(ma.String()))
-	case 'p':
-		s.Write([]byte(fmt.Sprintf("%p", ma)))
+	case 's', 'q':
+		out = fmt.Sprintf(fmt.FormatString(s, verb), ma.String())
+	case 'v':
+		if s.Flag('#') {
+			// We can't provide the same MetadataAddress arg back to Sprintf here (infinite recursion).
+			// So we cast it as a byte slice, string that, then change the "[]byte" part to "MetadataAddress".
+			out = fmt.Sprintf(fmt.FormatString(s, verb), []byte(ma))
+			out = "MetadataAddress" + strings.TrimPrefix(out, "[]byte")
+		} else {
+			// The auto-generated gogoproto.stringer methods use "%v" for the MetadataAddress fields.
+			// So here, we return the bech32 for "%v" so that MetadataAddress fields look right in those strings.
+			out = fmt.Sprintf(fmt.FormatString(s, verb), ma.String())
+		}
 	default:
-		s.Write([]byte(fmt.Sprintf("%X", []byte(ma))))
+		// The 'p' (pointer) and 'T' (type) verbs are never processed using this Format method.
+		// That's how %T returns the correct type even though it would actually return "[]byte" if run through this.
+		out = fmt.Sprintf(fmt.FormatString(s, verb), []byte(ma))
+	}
+
+	_, err := s.Write([]byte(out))
+	if err != nil {
+		panic(err)
 	}
 }
 

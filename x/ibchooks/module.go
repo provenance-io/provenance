@@ -45,9 +45,7 @@ func (AppModuleBasic) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the ibchooks module's types on the given LegacyAmino codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterCodec(cdc)
-}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the module's interface types
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {

@@ -16,24 +16,6 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-// GetAllMarkerHolders returns an array of all account addresses holding the given denom (and the amount)
-func (k Keeper) GetAllMarkerHolders(ctx sdk.Context, denom string) []types.Balance {
-	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "get_all_marker_holders")
-
-	var results []types.Balance
-	k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
-		if coin.Denom == denom && !coin.Amount.IsZero() {
-			results = append(results,
-				types.Balance{
-					Address: addr.String(),
-					Coins:   sdk.NewCoins(coin),
-				})
-		}
-		return false // do not stop iterating
-	})
-	return results
-}
-
 // GetMarkerByDenom looks up marker with the given denom
 func (k Keeper) GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAccountI, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "get_marker_by_denom")

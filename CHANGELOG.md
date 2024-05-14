@@ -65,26 +65,37 @@ Ref: https://keepachangelog.com/en/1.0.0/
   *  Msgfees module param migration [#1936](https://github.com/provenance-io/provenance/pull/1936).
   *  Name module param migration [#1937](https://github.com/provenance-io/provenance/pull/1937).
   *  IbcHooks module param migration [#1939](https://github.com/provenance-io/provenance/pull/1939).
+  *  Bank module param migration [#1967](https://github.com/provenance-io/provenance/pull/1967).
 * Restore the hold module [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Restore gov-prop cli commands and fix next key decoding [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Use fields of the SimulationState for the encoders needed for simulations [#1931](https://github.com/provenance-io/provenance/pull/1931).
-* Fix most of the failing unit tests [#1943](https://github.com/provenance-io/provenance/pull/1943)
+* Removes sync-info code for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Fix most of the failing unit tests [#1943](https://github.com/provenance-io/provenance/pull/1943).
+* Clean up ReadFromClient [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Remove all `GetSigners()` methods [#1957](https://github.com/provenance-io/provenance/pull/1957).
+* Ensure all `Msg`s have correctly identified `signer` fields [#1957](https://github.com/provenance-io/provenance/pull/1957).
+* Clean up all the module codecs [#1957](https://github.com/provenance-io/provenance/pull/1957).
+* Switch to auto-generated `String` and `Equal` methods for most proto messages [#1957](https://github.com/provenance-io/provenance/pull/1957).
+* Clean up the marker module's expected BankKeeper interface [#1954](https://github.com/provenance-io/provenance/pull/1954).
 
 ### Dependencies
 
-- Bump `github.com/cosmos/ibc-go/v8` from 8.0.0 to 8.2.0 ([#1910](https://github.com/provenance-io/provenance/pull/1910))
+- Bump `github.com/cosmos/ibc-go/v8` from 8.0.0 to 8.2.1 ([#1910](https://github.com/provenance-io/provenance/pull/1910), [#1956](https://github.com/provenance-io/provenance/pull/1956))
 - Bump `google.golang.org/grpc` from 1.62.1 to 1.63.2 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918))
 - Bump `bufbuild/buf-breaking-action` from 1.1.3 to 1.1.4 ([#1894](https://github.com/provenance-io/provenance/pull/1894))
 - Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
 - Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.31.0 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949))
-- Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.6 ([#1912](https://github.com/provenance-io/provenance/pull/1912))
+- Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.7 ([#1912](https://github.com/provenance-io/provenance/pull/1912), [#1959](https://github.com/provenance-io/provenance/pull/1959))
 - Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.1 ([#1913](https://github.com/provenance-io/provenance/pull/1913))
 - Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
-- Bump `peter-evans/create-pull-request` from 6.0.2 to 6.0.4 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940))
+- Bump `peter-evans/create-pull-request` from 6.0.2 to 6.0.5 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940), [#1955](https://github.com/provenance-io/provenance/pull/1955))
 - Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.3 ([#1928](https://github.com/provenance-io/provenance/pull/1928), [#1944](https://github.com/provenance-io/provenance/pull/1944))
 - Bump `cosmwasm-std` from 1.4.1 to 1.4.4 ([#1950](https://github.com/provenance-io/provenance/pull/1950))
-- Bump `golangci/golangci-lint-action` from 4 to 5 ([#1951](https://github.com/provenance-io/provenance/pull/1951))
+- Bump `golangci/golangci-lint-action` from 4 to 6 ([#1951](https://github.com/provenance-io/provenance/pull/1951), [#1965](https://github.com/provenance-io/provenance/pull/1965))
+- Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.1 ([#1960](https://github.com/provenance-io/provenance/pull/1960), [#1966](https://github.com/provenance-io/provenance/pull/1966))
+- Bump `github.com/hashicorp/go-getter` from 1.7.3 to 1.7.4 ([#1958](https://github.com/provenance-io/provenance/pull/1958))
+- Bump `golang.org/x/text` from 0.14.0 to 0.15.0 ([#1964](https://github.com/provenance-io/provenance/pull/1964))
 
 ---
 
