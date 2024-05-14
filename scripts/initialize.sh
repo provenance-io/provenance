@@ -79,24 +79,24 @@ fi
 set -ex
 $PROV_CMD init testing --custom-denom "$DENOM" $arg_timeout_commit $arg_chain_id
 $PROV_CMD keys add validator $arg_keyring
-$PROV_CMD add-genesis-root-name validator pio $arg_keyring
-$PROV_CMD add-genesis-root-name validator pb --restrict=false $arg_keyring
-$PROV_CMD add-genesis-root-name validator io --restrict $arg_keyring
-$PROV_CMD add-genesis-root-name validator provenance $arg_keyring
-$PROV_CMD add-genesis-account validator "100000000000000000000$DENOM" $arg_keyring
-$PROV_CMD gentx validator "1000000000000000$DENOM" $arg_chain_id $arg_keyring
-$PROV_CMD add-genesis-marker "100000000000000000000$DENOM" \
+$PROV_CMD genesis add-genesis-root-name validator pio $arg_keyring
+$PROV_CMD genesis add-genesis-root-name validator pb --restrict=false $arg_keyring
+$PROV_CMD genesis add-genesis-root-name validator io --restrict $arg_keyring
+$PROV_CMD genesis add-genesis-root-name validator provenance $arg_keyring
+$PROV_CMD genesis add-genesis-account validator "100000000000000000000$DENOM" $arg_keyring
+$PROV_CMD genesis gentx validator "1000000000000000$DENOM" $arg_chain_id $arg_keyring
+$PROV_CMD genesis add-genesis-marker "100000000000000000000$DENOM" \
     --manager validator \
     --access mint,burn,admin,withdraw,deposit \
     $arg_keyring \
     --activate
-$PROV_CMD add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest "10000000000$DENOM"
-$PROV_CMD add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest "100000000000$DENOM"
-$PROV_CMD add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest "10000000000$DENOM"
-$PROV_CMD add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest "10000000000$DENOM"
-$PROV_CMD add-genesis-custom-floor "${MIN_FLOOR_PRICE}${DENOM}"
-$PROV_CMD add-genesis-default-market --denom "$DENOM"
-$PROV_CMD collect-gentxs
+$PROV_CMD genesis add-genesis-msg-fee /provenance.name.v1.MsgBindNameRequest "10000000000$DENOM"
+$PROV_CMD genesis add-genesis-msg-fee /provenance.marker.v1.MsgAddMarkerRequest "100000000000$DENOM"
+$PROV_CMD genesis add-genesis-msg-fee /provenance.attribute.v1.MsgAddAttributeRequest "10000000000$DENOM"
+$PROV_CMD genesis add-genesis-msg-fee /provenance.metadata.v1.MsgWriteScopeRequest "10000000000$DENOM"
+$PROV_CMD genesis add-genesis-custom-floor "${MIN_FLOOR_PRICE}${DENOM}"
+$PROV_CMD genesis add-genesis-default-market --denom "$DENOM"
+$PROV_CMD genesis collect-gentxs
 $PROV_CMD config set minimum-gas-prices "${MIN_FLOOR_PRICE}${DENOM}"
 set +ex
 
