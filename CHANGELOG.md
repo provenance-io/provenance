@@ -83,19 +83,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking
 
 * The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` [#1971](https://github.com/provenance-io/provenance/pull/1971).
-* The genesis-related commands have been moved to the `provenanced genesis` sub-command [#1971](https://github.com/provenance-io/provenance/pull/1971).
-  * | Old invocation                           | New invocation                           |
-    |------------------------------------------|------------------------------------------|
-    | `provenanced add-genesis-account`        | `provenanced genesis add-account`        |
-    | `provenanced add-genesis-custom-floor`   | `provenanced genesis add-custom-floor`   |
-    | `provenanced add-genesis-custom-market`  | `provenanced genesis add-custom-market`  |
-    | `provenanced add-genesis-default-market` | `provenanced genesis add-default-market` |
-    | `provenanced add-genesis-marker`         | `provenanced genesis add-marker`         |
-    | `provenanced add-genesis-msg-fee`        | `provenanced genesis add-msg-fee`        |
-    | `provenanced add-genesis-root-name`      | `provenanced genesis add-root-name`      |
-    | `provenanced collect-gentxs`             | `provenanced genesis collect-gentxs`     |
-    | `provenanced gentx`                      | `provenanced genesis gentx`              |
-    | `provenanced validate-genesis`           | `provenanced genesis validate`           |
+* Move the genesis-related commands into a new `genesis` sub-command, and remove the `genesis-` parts of their names [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Many of the SDK's query commands have had their usage altered [#1971](https://github.com/provenance-io/provenance/pull/1971).
 
 ### Dependencies
