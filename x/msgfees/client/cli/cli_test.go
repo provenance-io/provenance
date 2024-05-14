@@ -178,9 +178,64 @@ func (s *IntegrationTestSuite) TestMsgFeesProposal() {
 			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:         "failure - invalid proposal type",
-			args:         []string{"invalid-type"},
-			expectErrMsg: "unable to resolve type URL ",
+			name: "failure - invalid proposal type",
+			args: []string{
+				"invalid-type",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			},
+			expectErrMsg: `unknown proposal type "invalid-type"`,
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name: "success - add msg fee with recipient and bips",
+			args: []string{
+				"add",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=612nhash",
+				fmt.Sprintf("--recipient=%v", s.account2Addr.String()),
+				"--bips=100",
+				"--deposit=1000000stake",
+			},
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name: "success - update msg fee with recipient and bips",
+			args: []string{
+				"update",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=612000nhash",
+				fmt.Sprintf("--recipient=%v", s.account2Addr.String()),
+				"--bips=100",
+				"--deposit=1000000stake",
+			},
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name: "failure - invalid recipient format",
+			args: []string{
+				"add",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=612nhash",
+				"--recipient=invalid-recipient",
+				"--bips=100",
+				"--deposit=1000000stake",
+			},
+			expectErrMsg: "error validating basis points args: decoding bech32 failed: invalid separator index -1",
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name: "failure - bips out of range",
+			args: []string{
+				"add",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=612nhash",
+				fmt.Sprintf("--recipient=%v", s.account2Addr.String()),
+				"--bips=10001",
+				"--deposit=1000000stake",
+			},
+			expectErrMsg: "error validating basis points args: recipient basis points can only be between 0 and 10,000 : 10001",
 			signer:       s.accountAddresses[0].String(),
 		},
 	}
@@ -189,7 +244,7 @@ func (s *IntegrationTestSuite) TestMsgFeesProposal() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdMsgFeesProposal()
 			tc.args = append(tc.args,
-				"--title", "msg fees proposal", "--summary", "See title.",
+				"--title", "Update nhash per usd mil proposal", "--summary", "Updates the nhash per usd mil rate.",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
