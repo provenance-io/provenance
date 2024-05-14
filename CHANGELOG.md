@@ -82,9 +82,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Client Breaking
 
 * The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` TODO: Add link.
-* The genesis-related commands have been moved to the `provenanced genesis` sub-command (from the root `provenanced` command) TODO: Add link.
-  * Moved sub-commands: `add-genesis-custom-floor` `add-genesis-custom-market` `add-genesis-default-market` `add-genesis-marker` `add-genesis-msg-fee` `add-genesis-root-name` `collect-gentxs` `gentx`
-  * The `provenanced validate-genesis` command is now `provenanced genesis validate`.
+* The genesis-related commands have been moved to the `provenanced genesis` sub-command TODO: Add link.
+  * | Old invocation                           | New invocation                           |
+    |------------------------------------------|------------------------------------------|
+    | `provenanced add-genesis-account`        | `provenanced genesis add-account`        |
+    | `provenanced add-genesis-custom-floor`   | `provenanced genesis add-custom-floor`   |
+    | `provenanced add-genesis-custom-market`  | `provenanced genesis add-custom-market`  |
+    | `provenanced add-genesis-default-market` | `provenanced genesis add-default-market` |
+    | `provenanced add-genesis-marker`         | `provenanced genesis add-marker`         |
+    | `provenanced add-genesis-msg-fee`        | `provenanced genesis add-msg-fee`        |
+    | `provenanced add-genesis-root-name`      | `provenanced genesis add-root-name`      |
+    | `provenanced collect-gentxs`             | `provenanced genesis collect-gentxs`     |
+    | `provenanced gentx`                      | `provenanced genesis gentx`              |
+    | `provenanced validate-genesis`           | `provenanced genesis validate`           |
+* Many of the SDK's query commands have had their usage altered TODO: Add link.
 
 ### Dependencies
 

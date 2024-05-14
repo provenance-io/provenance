@@ -60,12 +60,17 @@ func GenesisCmd(txConfig client.TxConfig, moduleBasics module.BasicManager, defa
 
 	gentxModule := moduleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 
+	// Change the "add-genesis-account" command to just "add-account" since it's under the genesis command already.
+	addGenesisAcctCmd := genutilcli.AddGenesisAccountCmd(defaultNodeHome, txConfig.SigningContext().AddressCodec())
+	if strings.HasPrefix(addGenesisAcctCmd.Use, "add-genesis-account") {
+		addGenesisAcctCmd.Use = "add-account" + strings.TrimPrefix(addGenesisAcctCmd.Use, "add-genesis-account")
+	}
+
 	cmd.AddCommand(
 		genutilcli.GenTxCmd(moduleBasics, txConfig, banktypes.GenesisBalancesIterator{}, defaultNodeHome, txConfig.SigningContext().ValidatorAddressCodec()),
-		// migrate genesis?
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, defaultNodeHome, gentxModule.GenTxValidator, txConfig.SigningContext().ValidatorAddressCodec()),
 		genutilcli.ValidateGenesisCmd(moduleBasics),
-		genutilcli.AddGenesisAccountCmd(defaultNodeHome, txConfig.SigningContext().AddressCodec()),
+		addGenesisAcctCmd,
 		AddRootDomainAccountCmd(defaultNodeHome),
 		AddGenesisMarkerCmd(defaultNodeHome),
 		AddGenesisMsgFeeCmd(defaultNodeHome),
@@ -122,17 +127,17 @@ func updateGenesisFileRunE(updater appStateUpdater) func(*cobra.Command, []strin
 	}
 }
 
-// AddRootDomainAccountCmd returns add-genesis-root-name cobra command.
+// AddRootDomainAccountCmd returns add-root-name cobra command.
 func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-root-name [address_or_key_name] [root-name]",
+		Use:   "add-root-name [address_or_key_name] [root-name]",
 		Short: "Add a name binding to genesis.json",
 		Long: `Add a name binding to genesis.json. The provided account must specify
 	the account address or key name and domain-name to bind. If a key name is given,
 	the address will be looked up in the local Keybase.  The restricted flag can optionally be
 	included to lock or unlock an entry to child names.
 	`,
-		Example: fmt.Sprintf(`$ %[1]s add-genesis-root-name mykey rootname`, genCmdStart),
+		Example: fmt.Sprintf(`$ %[1]s add-root-name mykey rootname`, genCmdStart),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -213,10 +218,10 @@ func AddRootDomainAccountCmd(defaultNodeHome string) *cobra.Command {
 	return cmd
 }
 
-// AddGenesisMarkerCmd configures a marker account and adds it to the list of genesis accounts
+// AddGenesisMarkerCmd returns add-marker cobra command.
 func AddGenesisMarkerCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-marker [coin] --manager [address_or_key_name] --access [grant][,[grant]] --escrow [coin][, [coin]] --finalize --activate --type [COIN] --required-attributes=attr.one,*.attr.two,...",
+		Use:   "add-marker [coin] --manager [address_or_key_name] --access [grant][,[grant]] --escrow [coin][, [coin]] --finalize --activate --type [COIN] --required-attributes=attr.one,*.attr.two,...",
 		Short: "Adds a marker to genesis.json",
 		Long: `Adds a marker to genesis.json. The provided parameters must specify
 the marker supply and denom as a coin.  A managing account may be added as a key name or address. An accessgrant
@@ -225,7 +230,7 @@ a marker account is activated any unassigned marker supply must be provided as e
 a manager address assigned that can activate the marker after genesis.  Activated markers will have supply invariants
 enforced immediately.  An optional type flag can be provided or the default of COIN will be used.
 `,
-		Example: fmt.Sprintf(`$ %[1]s add-genesis-marker 1000000000funcoins --manager validator --access withdraw --escrow 100funcoins --finalize --type COIN --required-attributes=attr.one,*.attr.two,...`, genCmdStart),
+		Example: fmt.Sprintf(`$ %[1]s add-marker 1000000000funcoins --manager validator --access withdraw --escrow 100funcoins --finalize --type COIN --required-attributes=attr.one,*.attr.two,...`, genCmdStart),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -414,15 +419,15 @@ enforced immediately.  An optional type flag can be provided or the default of C
 	return cmd
 }
 
-// AddGenesisCustomFloorPriceDenomCmd returns add-genesis-msg-fee cobra command.
+// AddGenesisCustomFloorPriceDenomCmd returns add-msg-fee cobra command.
 func AddGenesisCustomFloorPriceDenomCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-custom-floor [coin]",
+		Use:   "add-custom-floor [coin]",
 		Short: "Add a floor price denom and amount to genesis.json",
 		Long: `Add a floor price denom and amount to genesis.json. This will create a custom floor price denom and amount for calculating additional message costs.
 Currently, the denom and price defaults to 1905nhash
 		`,
-		Example: fmt.Sprintf(`$ %[1]s add-genesis-custom-floor 0vspn`, genCmdStart),
+		Example: fmt.Sprintf(`$ %[1]s add-custom-floor 0vspn`, genCmdStart),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -465,15 +470,15 @@ Currently, the denom and price defaults to 1905nhash
 	return cmd
 }
 
-// AddGenesisMsgFeeCmd returns add-genesis-msg-fee cobra command.
+// AddGenesisMsgFeeCmd returns add-msg-fee cobra command.
 func AddGenesisMsgFeeCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-msg-fee [msg-url] [additional-fee]",
+		Use:   "add-msg-fee [msg-url] [additional-fee]",
 		Short: "Add a msg fee to genesis.json",
 		Long: `Add a msg fee to to genesis.json. This will create a msg based fee for an sdk msg type.  The command will validate
 		that the msg-url is a valid sdk.msg and that the fee is a valid amount and coin.
 	`,
-		Example: fmt.Sprintf(`$ %[1]s add-genesis-msg-fee /cosmos.bank.v1beta1.MsgSend 10000000000nhash`, genCmdStart),
+		Example: fmt.Sprintf(`$ %[1]s add-msg-fee /cosmos.bank.v1beta1.MsgSend 10000000000nhash`, genCmdStart),
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -553,10 +558,10 @@ func checkMsgTypeValid(registry types.InterfaceRegistry, msgTypeURL string) erro
 	return err
 }
 
-// AddGenesisDefaultMarketCmd returns add-genesis-default-market cobra command.
+// AddGenesisDefaultMarketCmd returns add-default-market cobra command.
 func AddGenesisDefaultMarketCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: `add-genesis-default-market [--denom <denom>]
+		Use: `add-default-market [--denom <denom>]
 
 All base accounts already in the genesis file will be given all permissions on this market.
 An error is returned if no such accounts are in the existing genesis file.
@@ -565,7 +570,7 @@ If --denom <denom> is not provided, the staking bond denom is used.
 If no staking bond denom is defined either, then nhash is used.
 
 This command is equivalent to the following command:
-$ ` + genCmdStart + ` add-genesis-custom-market \
+$ ` + genCmdStart + ` add-custom-market \
     --name 'Default <denom> Market' \
     --create-ask 100<denom> --create-bid 100<denom> \
     --seller-flat 500<denom> --buyer-flat 500<denom> \
@@ -667,10 +672,10 @@ func makeDefaultMarket(feeDenom string, addrs []string) exchange.Market {
 	return market
 }
 
-// AddGenesisCustomMarketCmd returns add-genesis-custom-market cobra command.
+// AddGenesisCustomMarketCmd returns add-custom-market cobra command.
 func AddGenesisCustomMarketCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-genesis-custom-market",
+		Use:   "add-custom-market",
 		Short: "Add a market to the genesis file",
 		RunE: updateGenesisFileRunE(func(clientCtx client.Context, cmd *cobra.Command, args []string, appState map[string]json.RawMessage) error {
 			msg, err := exchangecli.MakeMsgGovCreateMarket(clientCtx, cmd.Flags(), args)
