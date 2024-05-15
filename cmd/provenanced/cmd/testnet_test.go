@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -26,6 +27,13 @@ import (
 )
 
 func Test_TestnetCmd(t *testing.T) {
+	// We need to disable address caching in here because this test goes a couple
+	// address conversions using a different HRP from most of the other tests in
+	// this package. With address caching on, those tests can randomly fail if
+	// they end up running after this test.
+	origCache := sdk.IsAddrCacheEnabled()
+	defer sdk.SetAddrCacheEnabled(origCache)
+	sdk.SetAddrCacheEnabled(false)
 	home := t.TempDir()
 	pioconfig.SetProvenanceConfig("", 0)
 	logger := log.NewNopLogger()

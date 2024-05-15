@@ -3,7 +3,7 @@ package testutil
 import (
 	"fmt"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -328,7 +328,7 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 	expFromAddr1Amt := 2000 - amt1 - 10
 	expFromAddr2Amt := 2000 - amt2 - 10
 
-	asJSONFlag := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
+	asJSONFlag := fmt.Sprintf("--%s=json", cmtcli.OutputFlag)
 
 	s.Run("opt toAddr into quarantine", func() {
 		testcli.NewCLITxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(toAddr)).Execute(s.T(), s.network)

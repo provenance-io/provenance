@@ -14,7 +14,7 @@ endif
 
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null)
 BRANCH_PRETTY := $(subst /,-,$(BRANCH))
-TM_VERSION := $(shell $(GO) list -m github.com/tendermint/tendermint 2> /dev/null | sed 's:.* ::') # grab everything after the space in "github.com/tendermint/tendermint v0.34.7"
+export CMTVERSION := $(shell $(GO) list -m github.com/cometbft/cometbft 2> /dev/null | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%h' 2> /dev/null)
 # don't override user values
 ifeq (,$(VERSION))
@@ -108,7 +108,7 @@ ldflags = -w -s \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
-	-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TM_VERSION)
+	-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
 
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))

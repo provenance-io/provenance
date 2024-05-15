@@ -72,7 +72,7 @@ func UpdateConfig(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	tmCfg, err := config.ExtractTmConfig(cmd)
+	cmtCfg, err := config.ExtractCmtConfig(cmd)
 	if err != nil {
 		return err
 	}
@@ -81,23 +81,18 @@ func UpdateConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	if clientCfg.ChainID == "pio-mainnet-1" {
-		// Update the timeout commit.
-		timeoutCommit := config.DefaultConsensusTimeoutCommit
-		if tmCfg.Consensus.TimeoutCommit != timeoutCommit {
-			cmd.Printf("Updating consensus.timeout_commit config value to %q (from %q)\n",
-				timeoutCommit, tmCfg.Consensus.TimeoutCommit)
-			tmCfg.Consensus.TimeoutCommit = timeoutCommit
-		}
+	if clientCfg.BroadcastMode == "block" {
+		cmd.Printf("Updating the broadcast_mode config value to \"sync\" (from %q, which is no longer an option).\n", clientCfg.BroadcastMode)
+		clientCfg.BroadcastMode = "sync"
 	}
 
-	return SafeSaveConfigs(cmd, appCfg, tmCfg, clientCfg, true)
+	return SafeSaveConfigs(cmd, appCfg, cmtCfg, clientCfg, true)
 }
 
 // SafeSaveConfigs calls config.SaveConfigs but returns an error instead of panicking.
 func SafeSaveConfigs(cmd *cobra.Command,
 	appConfig *serverconfig.Config,
-	tmConfig *cmtconfig.Config,
+	cmtConfig *cmtconfig.Config,
 	clientConfig *config.ClientConfig,
 	verbose bool,
 ) (err error) {
@@ -110,6 +105,6 @@ func SafeSaveConfigs(cmd *cobra.Command,
 			}
 		}
 	}()
-	config.SaveConfigs(cmd, appConfig, tmConfig, clientConfig, verbose)
+	config.SaveConfigs(cmd, appConfig, cmtConfig, clientConfig, verbose)
 	return nil
 }
