@@ -107,7 +107,7 @@ func exists(dir string) bool {
 func GetTreeCmd() *cobra.Command {
 	aliasesFlag := "aliases"
 	cmd := &cobra.Command{
-		Use:    "tree [sub-command]",
+		Use:    "tree [sub-command] [--" + aliasesFlag + "]",
 		Short:  "Get a tree of the commands optionally limited to a specific sub-command",
 		Hidden: true,
 		Args:   cobra.ArbitraryArgs,
@@ -121,6 +121,7 @@ func GetTreeCmd() *cobra.Command {
 			cmd.Printf(strings.Join(cmds, "\n") + "\n")
 			return nil
 		},
+		DisableFlagsInUseLine: true,
 	}
 	cmd.Flags().Bool(aliasesFlag, false, "Include command aliases in the output")
 
