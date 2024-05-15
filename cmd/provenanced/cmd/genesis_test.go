@@ -38,6 +38,10 @@ import (
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
 
 func TestAddGenesisMsgFeeCmd(t *testing.T) {
+	origCache := sdk.IsAddrCacheEnabled()
+	defer sdk.SetAddrCacheEnabled(origCache)
+	sdk.SetAddrCacheEnabled(false)
+
 	appCodec := app.MakeTestEncodingConfig(t).Marshaler
 	tests := []struct {
 		name            string
@@ -205,6 +209,10 @@ func fixEmptiesInExchangeGenState(exGenState *exchange.GenesisState) {
 }
 
 func TestAddGenesisDefaultMarketCmd(t *testing.T) {
+	origCache := sdk.IsAddrCacheEnabled()
+	defer sdk.SetAddrCacheEnabled(origCache)
+	sdk.SetAddrCacheEnabled(false)
+
 	pioconfig.SetProvenanceConfig("", 0)
 	cdc := app.MakeTestEncodingConfig(t).Marshaler
 	expDefaultMarket := func(marketID uint32, denom string, addrs ...string) exchange.Market {
@@ -392,6 +400,10 @@ func TestAddGenesisDefaultMarketCmd(t *testing.T) {
 }
 
 func TestMakeDefaultMarket(t *testing.T) {
+	origCache := sdk.IsAddrCacheEnabled()
+	defer sdk.SetAddrCacheEnabled(origCache)
+	sdk.SetAddrCacheEnabled(false)
+
 	addrs := []string{
 		"one_________________",
 		"two_________________",
@@ -699,6 +711,10 @@ func TestAddGenesisCustomMarketCmd(t *testing.T) {
 }
 
 func TestAddMarketsToAppState(t *testing.T) {
+	origCache := sdk.IsAddrCacheEnabled()
+	defer sdk.SetAddrCacheEnabled(origCache)
+	sdk.SetAddrCacheEnabled(false)
+
 	appCdc := app.MakeTestEncodingConfig(t).Marshaler
 	askOrder := *exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
 		MarketId: 1,
@@ -826,6 +842,10 @@ func TestAddMarketsToAppState(t *testing.T) {
 }
 
 func TestGetNextAvailableMarketID(t *testing.T) {
+	origCache := sdk.IsAddrCacheEnabled()
+	defer sdk.SetAddrCacheEnabled(origCache)
+	sdk.SetAddrCacheEnabled(false)
+
 	tests := []struct {
 		name       string
 		exGenState exchange.GenesisState

@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/app"
 	cmderrors "github.com/provenance-io/provenance/cmd/errors"
@@ -211,6 +212,10 @@ func makeDummyCmd(t *testing.T, cdc codec.Codec, home string) *cobra.Command {
 }
 
 func TestPreUpgradeCmd(t *testing.T) {
+	origCache := sdk.IsAddrCacheEnabled()
+	defer sdk.SetAddrCacheEnabled(origCache)
+	sdk.SetAddrCacheEnabled(false)
+
 	pioconfig.SetProvenanceConfig("", 0)
 	encodingConfig := app.MakeTestEncodingConfig(t)
 	cdc := encodingConfig.Marshaler
