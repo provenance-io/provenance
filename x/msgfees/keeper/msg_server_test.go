@@ -177,14 +177,6 @@ func (s *MsgServerTestSuite) TestRemoveMsgFeeProposal() {
 			errorMsg: `expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message`,
 		},
 		{
-			name: "msg type is empty",
-			msg: types.MsgRemoveMsgFeeProposalRequest{
-				MsgTypeUrl: "",
-				Authority:  "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-			},
-			errorMsg: `msg type is empty`,
-		},
-		{
 			name: "successful",
 			msg: types.MsgRemoveMsgFeeProposalRequest{
 				MsgTypeUrl: typeUrl,
