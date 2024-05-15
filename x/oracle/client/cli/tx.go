@@ -21,7 +21,6 @@ import (
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Aliases:                    []string{"t"},
 		Short:                      "Transaction commands for the oracle module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
