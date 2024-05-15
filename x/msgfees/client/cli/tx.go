@@ -89,7 +89,7 @@ $ %[1]s tx msgfees remove --msg-type=/provenance.metadata.v1.MsgWriteRecordReque
 
 			if len(recipient) > 0 || len(bips) > 0 {
 				if err := types.ValidateBips(recipient, bips); err != nil {
-					return fmt.Errorf("error validating basis points args: %v", err)
+					return fmt.Errorf("error validating basis points args: %w", err)
 				}
 
 			}
