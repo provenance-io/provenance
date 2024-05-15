@@ -3,10 +3,11 @@
 The `x/quarantine` module emits the following events.
 
 <!-- TOC -->
-  - [EventOptIn](#eventoptin)
-  - [EventOptOut](#eventoptout)
-  - [EventFundsQuarantined](#eventfundsquarantined)
-  - [EventFundsReleased](#eventfundsreleased)
+
+- [EventOptIn](#eventoptin)
+- [EventOptOut](#eventoptout)
+- [EventFundsQuarantined](#eventfundsquarantined)
+- [EventFundsReleased](#eventfundsreleased)
 
 ## EventOptIn
 
@@ -14,9 +15,9 @@ This event is emitted when an account opts into quarantine.
 
 `@Type`: `/cosmos.quarantine.v1beta1.EventOptIn`
 
-| Attribute Key | Attribute Value                      |
-|---------------|--------------------------------------|
-| to_address    | {bech32 string of account opting in} |
+| Attribute Key | Attribute Value                        |
+| ------------- | -------------------------------------- |
+| to_address    | \{bech32 string of account opting in\} |
 
 ## EventOptOut
 
@@ -24,9 +25,9 @@ This event is emitted when an account opts out of quarantine.
 
 `@Type`: `/cosmos.quarantine.v1beta1.EventOptOut`
 
-| Attribute Key | Attribute Value                       |
-|---------------|---------------------------------------|
-| to_address    | {bech32 string of account opting out} |
+| Attribute Key | Attribute Value                         |
+| ------------- | --------------------------------------- |
+| to_address    | \{bech32 string of account opting out\} |
 
 ## EventFundsQuarantined
 
@@ -35,10 +36,10 @@ The following event is also emitted.
 
 `@Type`: `/cosmos.quarantine.v1beta1.EventFundsQuarantined`
 
-| Attribute Key | Attribute Value                       |
-|---------------|---------------------------------------|
-| to_address    | {bech32 string of intended recipient} |
-| coins         | {sdk.Coins of funds quarantined}      |
+| Attribute Key | Attribute Value                         |
+| ------------- | --------------------------------------- |
+| to_address    | \{bech32 string of intended recipient\} |
+| coins         | \{sdk.Coins of funds quarantined\}      |
 
 ## EventFundsReleased
 
@@ -46,7 +47,7 @@ This event is emitted when funds are fully accepted and sent from the quarantine
 
 `@Type`: `/cosmos.quarantine.v1beta1.EventFundsReleased`
 
-| Attribute Key | Attribute Value               |
-|---------------|-------------------------------|
-| to_address    | {bech32 string of recipient}  |
-| coins         | {sdk.Coins of funds released} |
+| Attribute Key | Attribute Value                 |
+| ------------- | ------------------------------- |
+| to_address    | \{bech32 string of recipient\}  |
+| coins         | \{sdk.Coins of funds released\} |
