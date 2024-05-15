@@ -185,6 +185,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 		snapshot.Cmd(newApp),
 		GetPreUpgradeCmd(),
 		GetDocGenCmd(),
+		GetTreeCmd(),
 		pruning.Cmd(newApp, app.DefaultNodeHome),
 	)
 
