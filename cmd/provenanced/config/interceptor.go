@@ -25,7 +25,7 @@ const (
 // It will finish setting up the client context and create the server context.
 // It will create a Viper literal and the configs will be read and parsed or created from defaults.
 // The viper literal is used to read and parse configurations. Command handlers can
-// fetch the server or client contexts to get the Tendermint, App/Cosmos, or Client
+// fetch the server or client contexts to get the CometBFT, App/Cosmos, or Client
 // configurations, or to get access to viper.
 func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	// The result of client.GetClientContextFromCmd(cmd) is not a pointer.
@@ -43,11 +43,18 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	SetPioConfigFromFlags(cmd.Flags())
 
 	// Create a new Server context with the same viper as the client context, a default config, and no logger.
-	serverCtx := server.NewContext(vpr, DefaultTmConfig(), nil)
+	serverCtx := server.NewContext(vpr, DefaultCmtConfig(), nil)
 	if err := server.SetCmdServerContext(cmd, serverCtx); err != nil {
 		return err
 	}
 
+	// If the testnet flag was provided (or env var set), set a different default keyring backend.
+	// This needs to be done before we load the config files for the cases when:
+	//  1. The files don't exist yet, and we're loading the defaults.
+	//  2. The config is packed and we're filling in the missing with defaults.
+	if vpr.GetBool("testnet") {
+		DefaultKeyringBackend = "test"
+	}
 	// Read the configs into viper and the contexts.
 	return LoadConfigFromFiles(cmd)
 }

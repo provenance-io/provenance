@@ -13,7 +13,7 @@ Please report security vulnerabilities to
 The Provenance team will send a response indicating the next steps in handling your
 report. After the initial reply to your report, the team will keep you informed
 of the progress towards remediation and may ask for additional
-information or guidance.  For critical problems you may encrypt your report using the public key below.
+information or guidance. For critical problems you may encrypt your report using the public key below.
 
 In addition, please include the following information along with your report:
 
@@ -27,7 +27,7 @@ an email to **[security@provenance.io](mailto:security@provenance.io)**. The ema
 a short description of why it should be handled according to this security
 policy.
 
-If you have found an issue with the Cosmos SDK or Tendermint modules not found in this repo you can report them through links found here. https://tendermint.com/security/
+If you have found an issue with the Cosmos SDK or CometBFT modules not found in this repo you can report them through links found here: <https://github.com/cometbft/cometbft/blob/main/SECURITY.md>.
 
 ## Disclosure Policy
 
