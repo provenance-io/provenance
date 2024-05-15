@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -142,6 +143,8 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
+
+	fixTxWasmInstantiate2Aliases(rootCmd)
 
 	return rootCmd, encodingConfig
 }
@@ -398,6 +401,23 @@ func fixDebugPubkeyRawTypeFlag(rootCmd *cobra.Command) {
 		}
 		debugCmd.Flags().AddFlag(f)
 	})
+}
+
+// fixTxWasmInstantiate2Aliases fixes the tx wasm instantiate2 aliases so that they're different
+// from the instantiate aliases by adding a 2 to the end (if it doesn't yet have one).
+func fixTxWasmInstantiate2Aliases(rootCmd *cobra.Command) {
+	cmd, _, err := rootCmd.Find([]string{"tx", "wasm", "instantiate2"})
+	if err != nil || cmd == nil {
+		// If the command doesn't exist, there's nothing to do.
+		return
+	}
+
+	// Go through all the aliases and makes sure they end with a "2"
+	for i, alias := range cmd.Aliases {
+		if !strings.HasSuffix(alias, "2") {
+			cmd.Aliases[i] = alias + "2"
+		}
+	}
 }
 
 func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
