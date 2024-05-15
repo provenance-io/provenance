@@ -16,6 +16,7 @@ import (
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
+		Aliases:                    []string{"mf", "mfees", "mbf"},
 		Short:                      "Querying commands for the msgfees module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
