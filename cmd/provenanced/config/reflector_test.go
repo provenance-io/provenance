@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -38,12 +39,19 @@ type SubThing2 struct {
 	SomeStrings []string `mapstructure:"some-strings"`
 }
 
+type SubThing3 struct {
+	SubSubThing1 *SubThing1
+	Thing        string
+}
+
 type MainThing struct {
 	SquashedThing `mapstructure:",squash"`
 	SThing1       SubThing1 `mapstructure:"main-sub-thing"`
 	PSThing2      *SubThing2
 	DeepThing     ******SubThing2
 	MainInt       int `mapstructure:"main-int"`
+	AUint         uint
+	ST3           SubThing3
 }
 
 const (
@@ -54,6 +62,8 @@ const (
 	mainSubThingAnInt       = -5
 	mainSubThingAUint       = uint(5)
 	mainInt                 = 2
+	mainAUint               = uint(13)
+	subThing1Other          = "samesame"
 )
 
 func DefaultMainThing() MainThing {
@@ -73,6 +83,11 @@ func DefaultMainThing() MainThing {
 		PSThing2:  nil,
 		DeepThing: nil,
 		MainInt:   mainInt,
+		AUint:     mainAUint,
+		ST3: SubThing3{
+			SubSubThing1: nil,
+			Thing:        subThing1Other,
+		},
 	}
 }
 
@@ -431,5 +446,131 @@ func (s *ReflectorTestSuit) TestAsConfigMapLotsMoreTimes() {
 		if s.T().Failed() {
 			break
 		}
+	}
+}
+
+func (s *ReflectorTestSuit) TestFieldValueMap_FindEntries() {
+	thing := DefaultMainThing()
+	thingMap := MakeFieldValueMap(&thing, true)
+	s.T().Logf("All MainThing Keys:\n%s", strings.Join(thingMap.GetSortedKeys(), "\n"))
+	// All MainThing Keys:
+	// 	auint
+	// 	exported-field
+	// 	main-int
+	// 	deepthing.a-string
+	// 	deepthing.some-strings
+	// 	main-sub-thing.anint
+	// 	main-sub-thing.auint
+	// 	psthing2.a-string
+	// 	psthing2.some-strings
+	// 	squashed-sub-thing-1.anint
+	// 	squashed-sub-thing-1.auint
+	// 	st3.other
+	// 	st3.subsubthing1.anint
+	// 	st3.subsubthing1.auint
+
+	tests := []struct {
+		name     string
+		key      string
+		expKeys  []string
+		expExact bool
+	}{
+		{
+			name:     "exact entry unique base",
+			key:      "main-int",
+			expKeys:  []string{"main-int"},
+			expExact: true,
+		},
+		{
+			name:     "exact entry unique in section",
+			key:      "deepthing.some-strings",
+			expKeys:  []string{"deepthing.some-strings"},
+			expExact: true,
+		},
+		{
+			name:     "exact entry equal to some sub-entries",
+			key:      "auint",
+			expKeys:  []string{"auint"},
+			expExact: true,
+		},
+		{
+			name:    "a section without period",
+			key:     "deepthing",
+			expKeys: []string{"deepthing.a-string", "deepthing.some-strings"},
+		},
+		{
+			name:    "a section with period",
+			key:     "deepthing.",
+			expKeys: []string{"deepthing.a-string", "deepthing.some-strings"},
+		},
+		{
+			name: "a field in multiple sections anint",
+			key:  "anint",
+			expKeys: []string{
+				"main-sub-thing.anint",
+				"squashed-sub-thing-1.anint",
+				"st3.subsubthing1.anint",
+			},
+		},
+		{
+			name: "a field in multiple sections ignoring exact match",
+			key:  ".auint",
+			expKeys: []string{
+				"main-sub-thing.auint",
+				"squashed-sub-thing-1.auint",
+				"st3.subsubthing1.auint",
+			},
+		},
+		{
+			name: "only rough matches",
+			key:  "thin",
+			expKeys: []string{
+				"deepthing.a-string",
+				"deepthing.some-strings",
+				"main-sub-thing.anint",
+				"main-sub-thing.auint",
+				"psthing2.a-string",
+				"psthing2.some-strings",
+				"squashed-sub-thing-1.anint",
+				"squashed-sub-thing-1.auint",
+				"st3.subsubthing1.anint",
+				"st3.subsubthing1.auint",
+				"st3.thing",
+			},
+		},
+		{
+			name:    "non-exact single match",
+			key:     "exported",
+			expKeys: []string{"exported-field"},
+		},
+		{
+			name:    "single sub-field",
+			key:     "thing",
+			expKeys: []string{"st3.thing"},
+		},
+		{
+			name:    "nothing found",
+			key:     "thingy",
+			expKeys: []string{},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			expFound := len(tc.expKeys) > 0
+
+			var fvm FieldValueMap
+			var found bool
+			var exact bool
+			testFunc := func() {
+				fvm, found, exact = thingMap.FindEntries(tc.key)
+			}
+			s.Require().NotPanics(testFunc, "FindEntries(%q)", tc.key)
+
+			actKeys := fvm.GetSortedKeys()
+			s.Assert().Equal(tc.expKeys, actKeys, "FindEntries(%q) result keys", tc.key)
+			s.Assert().Equal(expFound, found, "FindEntries(%q) found bool", tc.key)
+			s.Assert().Equal(tc.expExact, exact, "FindEntries(%q) exact bool", tc.key)
+		})
 	}
 }

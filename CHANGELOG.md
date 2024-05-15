@@ -71,13 +71,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Use fields of the SimulationState for the encoders needed for simulations [#1931](https://github.com/provenance-io/provenance/pull/1931).
 * Removes sync-info code for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Remove `name` legacy gov proposals [#1963](https://github.com/provenance-io/provenance/pull/1963).
 * Fix most of the failing unit tests [#1943](https://github.com/provenance-io/provenance/pull/1943).
 * Clean up ReadFromClient [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Enhance the config get and changed commands to make it easier to find fields [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* Change the default keyring backend to "os", but leave it as "test" for testnets [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* Change the default broadcast mode to "sync" [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* The pre-upgrade command now updates the client config's broadcast mode to "sync" if it's set to "block" [#1968](https://github.com/provenance-io/provenance/pull/1968).
 * Remove all `GetSigners()` methods [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Ensure all `Msg`s have correctly identified `signer` fields [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Clean up all the module codecs [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Switch to auto-generated `String` and `Equal` methods for most proto messages [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Clean up the marker module's expected BankKeeper interface [#1954](https://github.com/provenance-io/provenance/pull/1954).
+
+### Deprecated
+
+* In the config commands, the "tendermint" and "tm" options are deprecated, replaced with "cometbft", "comet", and "cmt" [#1968](https://github.com/provenance-io/provenance/pull/1968).
 
 ### Dependencies
 

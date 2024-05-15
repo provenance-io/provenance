@@ -45,8 +45,7 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
-// DefaultConsensusParams defines the default Tendermint consensus params used in
-// SimApp testing.
+// DefaultConsensusParams defines the default consensus params used in SimApp testing.
 var DefaultConsensusParams = &cmttmtypes.ConsensusParams{
 	Block: &cmttmtypes.BlockParams{
 		MaxBytes: 200000,
