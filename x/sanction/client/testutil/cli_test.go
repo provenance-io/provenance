@@ -31,7 +31,7 @@ import (
 	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
 
-const blocksPerVotingPeriod = 6
+const blocksPerVotingPeriod = 8
 
 func TestIntegrationTestSuite(t *testing.T) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
