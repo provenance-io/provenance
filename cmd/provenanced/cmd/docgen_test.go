@@ -136,7 +136,7 @@ func TestDocGen(t *testing.T) {
 			}
 
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
-			require.NoError(t, err, "Created default tendermint config")
+			require.NoError(t, err, "Created default cometbft config")
 
 			logger := log.NewNopLogger()
 			serverCtx := server.NewContext(viper.New(), cfg, logger)

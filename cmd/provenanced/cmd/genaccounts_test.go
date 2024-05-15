@@ -41,6 +41,7 @@ var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
 func TestAddGenesisAccountCmd(t *testing.T) {
 	appCodec := app.MakeTestEncodingConfig(t).Marshaler
 	_, _, addr1 := testdata.KeyTestPubAddr()
+
 	tests := []struct {
 		name      string
 		addr      string
@@ -597,6 +598,10 @@ func TestMakeDefaultMarket(t *testing.T) {
 }
 
 func TestAddGenesisCustomMarketCmd(t *testing.T) {
+	origCache := sdk.IsAddrCacheEnabled()
+	defer sdk.SetAddrCacheEnabled(origCache)
+	sdk.SetAddrCacheEnabled(false)
+
 	cdc := app.MakeTestEncodingConfig(t).Marshaler
 
 	tests := []struct {
