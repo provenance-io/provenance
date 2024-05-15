@@ -119,7 +119,6 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
@@ -162,7 +161,6 @@ import (
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	msgfeeswasm "github.com/provenance-io/provenance/x/msgfees/wasm"
 	"github.com/provenance-io/provenance/x/name"
-	nameclient "github.com/provenance-io/provenance/x/name/client"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
@@ -694,9 +692,6 @@ func New(
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(wasm.RouterKey, wasmkeeper.NewLegacyWasmProposalHandler(app.WasmKeeper, wasmtypes.EnableAllProposals)). // TODO[1760]: gov: Can probably remove with gov v1
-		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
 		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
 		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
 	govKeeper := govkeeper.NewKeeper(
@@ -796,7 +791,6 @@ func New(
 				append(
 					[]govclient.ProposalHandler{},
 					paramsclient.ProposalHandler,
-					nameclient.RootNameProposalHandler,
 				),
 			),
 		})
@@ -1299,7 +1293,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig serverconfig.API
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
-	// Register new tendermint queries routes from grpc-gateway.
+	// Register new queries routes from grpc-gateway.
 	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register node gRPC service for grpc-gateway.

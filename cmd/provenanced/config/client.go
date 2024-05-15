@@ -10,13 +10,24 @@ import (
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
-// Default constants
-const (
-	chainID        = ""
-	keyringBackend = "test"
-	output         = "text"
-	node           = "tcp://localhost:26657"
-	broadcastMode  = "block"
+// This is similar to the content in the SDK's client/config/config.go file.
+// Key Differences:
+//   - Our version allows us to change the defaults for testnets.
+//   - We have a validation method (like the other configs).
+//   - We can't use the SDK's ReadFromClientConfig:
+//   - That is restricted to only the client.toml file, which doesn't work with a packed config.
+//   - That writes the client.toml file if it doesn't exist, which we don't want.
+//   - We have the ApplyClientConfigToContext function which is mostly extracted from
+//     the SDK's ReadFromClientConfig with the addition of the signing mode.
+//   - The SDK's file writing stuff is all private, and they don't give a way to just write the file.
+//   - The way the SDK loads the config into viper stomps on previously loades stuff.
+
+var (
+	DefaultChainID        = ""
+	DefaultKeyringBackend = "os"
+	DefaultOutput         = "text"
+	DefaultNode           = "tcp://localhost:26657"
+	DefaultBroadcastMode  = "sync"
 )
 
 type ClientConfig struct {
@@ -29,7 +40,13 @@ type ClientConfig struct {
 
 // DefaultClientConfig returns the reference to ClientConfig with default values.
 func DefaultClientConfig() *ClientConfig {
-	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode}
+	return &ClientConfig{
+		ChainID:        DefaultChainID,
+		KeyringBackend: DefaultKeyringBackend,
+		Output:         DefaultOutput,
+		Node:           DefaultNode,
+		BroadcastMode:  DefaultBroadcastMode,
+	}
 }
 
 func (c *ClientConfig) SetChainID(chainID string) {
@@ -64,7 +81,7 @@ func (c ClientConfig) ValidateBasic() error {
 		return errors.New("unknown output (must be 'text' or 'json')")
 	}
 	switch c.BroadcastMode {
-	case "sync", "async", "block":
+	case "sync", "async":
 	default:
 		return errors.New("unknown broadcast-mode (must be one of 'sync' 'async' 'block')")
 	}
@@ -78,26 +95,26 @@ func ApplyClientConfigToContext(ctx client.Context, config *ClientConfig) (clien
 		WithChainID(config.ChainID).
 		WithKeyringDir(ctx.HomeDir)
 
-	keyring, krerr := client.NewKeyringFromBackend(ctx, config.KeyringBackend)
-	if krerr != nil {
-		return ctx, fmt.Errorf("couldn't get key ring backend %s: %w", config.KeyringBackend, krerr)
+	keyring, err := client.NewKeyringFromBackend(ctx, config.KeyringBackend)
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't get keyring with backend %q: %w", config.KeyringBackend, err)
 	}
 
 	ctx = ctx.WithKeyring(keyring)
 
 	// https://github.com/cosmos/cosmos-sdk/issues/8986
-	clnt, nerr := client.NewClientFromNode(config.Node)
-	if nerr != nil {
-		return ctx, fmt.Errorf("couldn't get client from nodeURI: %w", nerr)
+	clnt, err := client.NewClientFromNode(config.Node)
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't get client from nodeURI: %w", err)
 	}
 
 	ctx = ctx.WithNodeURI(config.Node).
 		WithClient(clnt).
 		WithBroadcastMode(config.BroadcastMode)
 
-	// This needs to go after ReadFromClientConfig, as that function
-	// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
-	// is only available if the client is online.
+	// This needs to go after the client has been set in the context.
+	// That client is needed for SIGN_MODE_TEXTUAL.
+	// This sign mode is only available if the client is online.
 	if !ctx.Offline {
 		enabledSignModes := tx.DefaultSignModes
 		enabledSignModes = append(enabledSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
@@ -105,7 +122,9 @@ func ApplyClientConfigToContext(ctx client.Context, config *ClientConfig) (clien
 			EnabledSignModes:           enabledSignModes,
 			TextualCoinMetadataQueryFn: txmodule.NewGRPCCoinMetadataQueryFn(ctx),
 		}
-		txConfig, err := tx.NewTxConfigWithOptions(
+
+		var txConfig client.TxConfig
+		txConfig, err = tx.NewTxConfigWithOptions(
 			ctx.Codec,
 			txConfigOpts,
 		)

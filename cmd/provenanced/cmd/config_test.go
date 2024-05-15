@@ -40,11 +40,11 @@ type ConfigTestSuite struct {
 	EncodingConfig simappparams.EncodingConfig
 
 	HeaderStrApp    string
-	HeaderStrTM     string
+	HeaderStrCMT    string
 	HeaderStrClient string
 
 	BaseFNApp    string
-	BaseFNTM     string
+	BaseFNCMT    string
 	baseFNClient string
 }
 
@@ -53,13 +53,14 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
 
 	pioconfig.SetProvenanceConfig("confcoin", 5)
+	provconfig.DefaultKeyringBackend = "os"
 
 	s.EncodingConfig = app.MakeTestEncodingConfig(s.T())
 	clientCtx := client.Context{}.
 		WithCodec(s.EncodingConfig.Marshaler).
 		WithHomeDir(s.Home)
 	clientCtx.Viper = viper.New()
-	serverCtx := server.NewContext(clientCtx.Viper, provconfig.DefaultTmConfig(), log.NewNopLogger())
+	serverCtx := server.NewContext(clientCtx.Viper, provconfig.DefaultCmtConfig(), log.NewNopLogger())
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
@@ -70,11 +71,11 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.Context = &ctx
 
 	s.HeaderStrApp = "App"
-	s.HeaderStrTM = "Tendermint"
+	s.HeaderStrCMT = "CometBFT"
 	s.HeaderStrClient = "Client"
 
 	s.BaseFNApp = "app.toml"
-	s.BaseFNTM = "config.toml"
+	s.BaseFNCMT = "config.toml"
 	s.baseFNClient = "client.toml"
 
 	s.ensureConfigFiles()
@@ -88,21 +89,14 @@ func TestConfigTestSuite(t *testing.T) {
 // Test setup above. Test helpers below.
 //
 
+// getConfigCmd gets the config command with the default config values loaded into viper.
+// This is similar to the context the cmd would have when executed via the root command.
 func (s *ConfigTestSuite) getConfigCmd() *cobra.Command {
-	// What I really need here is a cobra.Command
-	// that already has a context.
-	// So I'm going to call --help on the config command
-	// while setting the context and getting the command back.
 	configCmd := cmd.ConfigCmd()
-	configCmd.SetArgs([]string{"--help"})
-	applyMockIODiscardOutErr(configCmd)
-	configCmd, err := configCmd.ExecuteContextC(*s.Context)
-	s.Require().NoError(err, "config help command to set context")
-	// Now this should work to load the defaults (or files) into the cmd.
-	s.Require().NoError(
-		provconfig.LoadConfigFromFiles(configCmd),
-		"loading config from files",
-	)
+	configCmd.SetOut(io.Discard)
+	configCmd.SetErr(io.Discard)
+	configCmd.SetContext(*s.Context)
+	s.Require().NoError(provconfig.LoadConfigFromFiles(configCmd), "loading config from files")
 	return configCmd
 }
 
@@ -111,13 +105,29 @@ func (s *ConfigTestSuite) ensureConfigFiles() {
 	// Extract the individual config objects.
 	appConfig, aerr := provconfig.ExtractAppConfig(configCmd)
 	s.Require().NoError(aerr, "extracting app config")
-	tmConfig, terr := provconfig.ExtractTmConfig(configCmd)
-	s.Require().NoError(terr, "extracting tendermint config")
+	cmtConfig, terr := provconfig.ExtractCmtConfig(configCmd)
+	s.Require().NoError(terr, "extracting cometbft config")
 	clientConfig, cerr := provconfig.ExtractClientConfig(configCmd)
 	s.Require().NoError(cerr, "extracting client config")
 	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
 	// And then save them.
-	provconfig.SaveConfigs(configCmd, appConfig, tmConfig, clientConfig, false)
+	provconfig.SaveConfigs(configCmd, appConfig, cmtConfig, clientConfig, false)
+}
+
+// executeConfigCmd executes the config command with the provided args, returning the command's output.
+func (s *ConfigTestSuite) executeConfigCmd(args ...string) string {
+	return s.executeCmd(s.getConfigCmd(), args...)
+}
+
+// executeCmd executes the provided command with the provided args, returning the command's output.
+func (s *ConfigTestSuite) executeCmd(cmd *cobra.Command, args ...string) string {
+	cmd.SetArgs(args)
+	b := applyMockIOOutErr(cmd)
+	err := cmd.Execute()
+	s.Require().NoError(err, "unexpected error executing %s %q", cmd.Name(), args)
+	out, err := io.ReadAll(b)
+	s.Require().NoError(err, "unexpected error reading %s %q output", cmd.Name(), args)
+	return string(out)
 }
 
 func (s *ConfigTestSuite) makeConfigHeaderLine(t, fn string) string {
@@ -128,8 +138,8 @@ func (s *ConfigTestSuite) makeAppConfigHeaderLines() string {
 	return s.makeConfigHeaderLine(s.HeaderStrApp, s.BaseFNApp) + "\n----------------"
 }
 
-func (s *ConfigTestSuite) makeTMConfigHeaderLines() string {
-	return s.makeConfigHeaderLine(s.HeaderStrTM, s.BaseFNTM) + "\n-----------------------"
+func (s *ConfigTestSuite) makeCMTConfigHeaderLines() string {
+	return s.makeConfigHeaderLine(s.HeaderStrCMT, s.BaseFNCMT) + "\n---------------------"
 }
 
 func (s *ConfigTestSuite) makeClientConfigHeaderLines() string {
@@ -144,8 +154,8 @@ func (s *ConfigTestSuite) makeAppConfigUpdateLines() string {
 	return s.makeConfigUpdatedLine(s.HeaderStrApp, s.BaseFNApp) + "\n------------------------"
 }
 
-func (s *ConfigTestSuite) makeTMConfigUpdateLines() string {
-	return s.makeConfigUpdatedLine(s.HeaderStrTM, s.BaseFNTM) + "\n-------------------------------"
+func (s *ConfigTestSuite) makeCMTConfigUpdateLines() string {
+	return s.makeConfigUpdatedLine(s.HeaderStrCMT, s.BaseFNCMT) + "\n-----------------------------"
 }
 
 func (s *ConfigTestSuite) makeClientConfigUpdateLines() string {
@@ -160,12 +170,17 @@ func (s *ConfigTestSuite) makeAppDiffHeaderLines() string {
 	return s.makeConfigDiffHeaderLine(s.HeaderStrApp, s.BaseFNApp) + "\n------------------------------------------"
 }
 
-func (s *ConfigTestSuite) makeTMDiffHeaderLines() string {
-	return s.makeConfigDiffHeaderLine(s.HeaderStrTM, s.BaseFNTM) + "\n-------------------------------------------------"
+func (s *ConfigTestSuite) makeCMTDiffHeaderLines() string {
+	return s.makeConfigDiffHeaderLine(s.HeaderStrCMT, s.BaseFNCMT) + "\n-----------------------------------------------"
 }
 
 func (s *ConfigTestSuite) makeClientDiffHeaderLines() string {
 	return s.makeConfigDiffHeaderLine(s.HeaderStrClient, s.baseFNClient) + "\n---------------------------------------------"
+}
+
+func (s *ConfigTestSuite) makeTmDeprecatedLines(opt string) string {
+	return "The \"" + opt + "\" option is deprecated and will be removed in a future version.\n" +
+		"Use one of \"cometbft\", \"comet\", or \"cmt\" instead.\n"
 }
 
 func (s *ConfigTestSuite) makeMultiLine(lines ...string) string {
@@ -176,18 +191,25 @@ func (s *ConfigTestSuite) makeKeyUpdatedLine(key, oldVal, newVal string) string 
 	return fmt.Sprintf("%s Was: %s, Is Now: %s", key, oldVal, newVal)
 }
 
-func applyMockIODiscardOutErr(c *cobra.Command) *bytes.Buffer {
-	b := bytes.NewBufferString("")
-	c.SetOut(io.Discard)
-	c.SetErr(io.Discard)
-	return b
-}
-
 func applyMockIOOutErr(c *cobra.Command) *bytes.Buffer {
 	b := bytes.NewBufferString("")
 	c.SetOut(b)
 	c.SetErr(b)
 	return b
+}
+
+// setDefaultKeyringBackend updates the global DefaultKeyringBackend value
+// and returns a deferrable that will change it back.
+//
+// Standard usage: defer s.setDefaultKeyringBackend("test")()
+func (s *ConfigTestSuite) setDefaultKeyringBackend(val string) func() {
+	oldVal := provconfig.DefaultKeyringBackend
+	s.T().Logf("Changing DefaultKeyringBackend to %q (from %q).", val, oldVal)
+	provconfig.DefaultKeyringBackend = val
+	return func() {
+		s.T().Logf("Changing DefaultKeyringBackend back to %q (from %q).", oldVal, val)
+		provconfig.DefaultKeyringBackend = oldVal
+	}
 }
 
 //
@@ -223,108 +245,198 @@ func (s *ConfigTestSuite) TestConfigBadArgs() {
 }
 
 func (s *ConfigTestSuite) TestConfigCmdGet() {
-	configCmd := s.getConfigCmd()
+	noArgsOut := s.executeConfigCmd("get")
 
-	configCmd.SetArgs([]string{"get"})
-	b := applyMockIOOutErr(configCmd)
-	err := configCmd.Execute()
-	s.Require().NoError(err, "%s - unexpected error executing configCmd", configCmd.Name())
-	out, err := io.ReadAll(b)
-	s.Require().NoError(err, "%s - unexpected error reading configCmd output", configCmd.Name())
-	outStr := string(out)
+	s.Run("all fields and defaults", func() {
+		// The moniker is different on different computers. We don't really care what it is though, just that it's there.
+		// We do care about the other values though.
+		monikerLineMatch := regexp.MustCompile(`(?m)^moniker="([^"]*)"$`).FindStringSubmatch(noArgsOut)
+		s.Require().Len(monikerLineMatch, 2, "moniker line regexp sub-matches")
+		moniker := monikerLineMatch[1]
 
-	// Only spot-checking instead of checking the entire 100+ lines exactly because I don't want this to needlessly break
-	// if comsos or tendermint adds a new configuration field/section.
-	expectedRegexpMatches := []struct {
-		name string
-		re   *regexp.Regexp
-	}{
-		// App config header and a few entries.
-		{"app header", regexp.MustCompile(`(?m)^App Config: .*/config/` + s.BaseFNApp + ` \(or env\)$`)},
-		{"app halt-height", regexp.MustCompile(`(?m)^halt-height=0$`)},
-		{"app api.swagger", regexp.MustCompile(`(?m)^api.swagger=false$`)},
-		{"app grpc.address", regexp.MustCompile(`(?m)^grpc.address="0.0.0.0:9090"$`)},
-		{"app telemetry.enabled", regexp.MustCompile(`(?m)^telemetry.enabled=false$`)},
-		{"app rosetta.enable", regexp.MustCompile(`(?m)^rosetta.enable=false$`)},
+		expectedAll := s.makeMultiLine(
+			s.makeAppConfigHeaderLines(),
+			`app-db-backend=""
+halt-height=0
+halt-time=0
+iavl-cache-size=781250
+iavl-disable-fastnode=true
+index-events=[]
+inter-block-cache=true
+min-retain-blocks=0
+minimum-gas-prices="5confcoin"
+pruning="default"
+pruning-interval="0"
+pruning-keep-recent="0"
+query-gas-limit=0
+api.address="tcp://localhost:1317"
+api.enable=false
+api.enabled-unsafe-cors=false
+api.max-open-connections=1000
+api.rpc-max-body-bytes=1000000
+api.rpc-read-timeout=10
+api.rpc-write-timeout=0
+api.swagger=false
+grpc-web.enable=true
+grpc.address="localhost:9090"
+grpc.enable=true
+grpc.max-recv-msg-size=10485760
+grpc.max-send-msg-size=2147483647
+mempool.max-txs=5000
+state-sync.snapshot-interval=0
+state-sync.snapshot-keep-recent=2
+streaming.abci.keys=[]
+streaming.abci.plugin=""
+streaming.abci.stop-node-on-err=true
+telemetry.datadog-hostname=""
+telemetry.enable-hostname=false
+telemetry.enable-hostname-label=false
+telemetry.enable-service-label=false
+telemetry.enabled=false
+telemetry.global-labels=[]
+telemetry.metrics-sink=""
+telemetry.prometheus-retention-time=0
+telemetry.service-name=""
+telemetry.statsd-addr=""`,
+			"",
+			s.makeCMTConfigHeaderLines(),
+			`abci="socket"
+db_backend="goleveldb"
+db_dir="data"
+filter_peers=false
+genesis_file="config/genesis.json"
+log_format="plain"
+log_level="info"`,
+			fmt.Sprintf("moniker=%q", moniker),
+			`node_key_file="config/node_key.json"
+priv_validator_key_file="config/priv_validator_key.json"
+priv_validator_laddr=""
+priv_validator_state_file="data/priv_validator_state.json"
+proxy_app="tcp://127.0.0.1:26658"
+version="0.38.7"
+blocksync.version="v0"
+consensus.create_empty_blocks=true
+consensus.create_empty_blocks_interval="0s"
+consensus.double_sign_check_height=0
+consensus.peer_gossip_sleep_duration="100ms"
+consensus.peer_query_maj23_sleep_duration="2s"
+consensus.skip_timeout_commit=false
+consensus.timeout_commit="1.5s"
+consensus.timeout_precommit="1s"
+consensus.timeout_precommit_delta="500ms"
+consensus.timeout_prevote="1s"
+consensus.timeout_prevote_delta="500ms"
+consensus.timeout_propose="3s"
+consensus.timeout_propose_delta="500ms"
+consensus.wal_file="data/cs.wal/wal"
+instrumentation.max_open_connections=3
+instrumentation.namespace="cometbft"
+instrumentation.prometheus=false
+instrumentation.prometheus_listen_addr=":26660"
+mempool.broadcast=true
+mempool.cache_size=10000
+mempool.experimental_max_gossip_connections_to_non_persistent_peers=0
+mempool.experimental_max_gossip_connections_to_persistent_peers=0
+mempool.keep-invalid-txs-in-cache=false
+mempool.max_batch_bytes=0
+mempool.max_tx_bytes=1048576
+mempool.max_txs_bytes=1073741824
+mempool.recheck=true
+mempool.size=5000
+mempool.type="flood"
+mempool.wal_dir=""
+p2p.addr_book_file="config/addrbook.json"
+p2p.addr_book_strict=true
+p2p.allow_duplicate_ip=false
+p2p.dial_timeout="3s"
+p2p.external_address=""
+p2p.flush_throttle_timeout="100ms"
+p2p.handshake_timeout="20s"
+p2p.laddr="tcp://0.0.0.0:26656"
+p2p.max_num_inbound_peers=40
+p2p.max_num_outbound_peers=10
+p2p.max_packet_msg_payload_size=1024
+p2p.persistent_peers=""
+p2p.persistent_peers_max_dial_period="0s"
+p2p.pex=true
+p2p.private_peer_ids=""
+p2p.recv_rate=5120000
+p2p.seed_mode=false
+p2p.seeds=""
+p2p.send_rate=5120000
+p2p.unconditional_peer_ids=""
+rpc.cors_allowed_headers=["Origin", "Accept", "Content-Type", "X-Requested-With", "X-Server-Time"]
+rpc.cors_allowed_methods=["HEAD", "GET", "POST"]
+rpc.cors_allowed_origins=[]
+rpc.experimental_close_on_slow_client=false
+rpc.experimental_subscription_buffer_size=200
+rpc.experimental_websocket_write_buffer_size=200
+rpc.grpc_laddr=""
+rpc.grpc_max_open_connections=900
+rpc.laddr="tcp://127.0.0.1:26657"
+rpc.max_body_bytes=1000000
+rpc.max_header_bytes=1048576
+rpc.max_open_connections=900
+rpc.max_subscription_clients=100
+rpc.max_subscriptions_per_client=5
+rpc.pprof_laddr=""
+rpc.timeout_broadcast_tx_commit="10s"
+rpc.tls_cert_file=""
+rpc.tls_key_file=""
+rpc.unsafe=false
+statesync.chunk_fetchers=4
+statesync.chunk_request_timeout="10s"
+statesync.discovery_time="15s"
+statesync.enable=false
+statesync.rpc_servers=[]
+statesync.temp_dir=""
+statesync.trust_hash=""
+statesync.trust_height=0
+statesync.trust_period="168h0m0s"
+storage.discard_abci_responses=false
+tx_index.indexer="null"
+tx_index.psql-conn=""`,
+			"",
+			s.makeClientConfigHeaderLines(),
+			`broadcast-mode="sync"
+chain-id=""
+keyring-backend="os"
+node="tcp://localhost:26657"
+output="text"`,
+			"",
+		)
 
-		// Tendermint header and a few entries.
-		{"tendermint header", regexp.MustCompile(`(?m)^Tendermint Config: .*/config/` + s.BaseFNTM + ` \(or env\)$`)},
-		{"tendermint fast_sync", regexp.MustCompile(`(?m)^fast_sync=true$`)},
-		{"tendermint consensus.timeout_commit", regexp.MustCompile(`(?m)^consensus.timeout_commit=` + fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit) + `$`)},
-		{"tendermint mempool.size", regexp.MustCompile(`(?m)^mempool.size=5000$`)},
-		{"tendermint statesync.trust_period", regexp.MustCompile(`(?m)^statesync.trust_period="168h0m0s"$`)},
-		{"tendermint p2p.recv_rate", regexp.MustCompile(`(?m)^p2p.recv_rate=5120000$`)},
+		// This test compares the no-args output to a previously known result.
+		// If this test fails unexpectedly, we'll probably want to discuss how those changes
+		// affect us, and whether we'll need to make further changes to accommodate the updates.
+		s.Assert().Equal(expectedAll, noArgsOut)
+	})
 
-		// Client config header all the entries.
-		{"client header", regexp.MustCompile(`(?m)^Client Config: .*/config/` + s.baseFNClient + ` \(or env\)$`)},
-		{"client broadcast-mode", regexp.MustCompile(`(?m)^broadcast-mode="block"$`)},
-		{"client chain-id", regexp.MustCompile(`(?m)^chain-id=""$`)},
-		{"client keyring-backend", regexp.MustCompile(`(?m)^keyring-backend="test"$`)},
-		{"client node", regexp.MustCompile(`(?m)^node="tcp://localhost:26657"$`)},
-		{"client output", regexp.MustCompile(`(?m)^output="text"$`)},
-	}
+	s.Run("get all", func() {
+		allOutStr := s.executeConfigCmd("get", "all")
+		s.Assert().Equal(noArgsOut, allOutStr, "output of get vs output of get all")
+	})
 
-	for _, tc := range expectedRegexpMatches {
-		s.T().Run(tc.name, func(t *testing.T) {
-			isMatch := tc.re.Match(out)
-			assert.True(t, isMatch, "`%s` matching:\n%s", tc.re.String(), out)
+	// Test that the various sub-sections are in the no-args output.
+	var cmtOut string
+	for _, opt := range []string{"app", "cosmos", "config", "cometbft", "comet", "cmt", "client"} {
+		args := []string{"get", opt}
+		s.Run(strings.Join(args, " "), func() {
+			outStr := s.executeConfigCmd(args...)
+			s.Assert().Contains(noArgsOut, outStr, "output of get vs output of %q", args)
+			if opt == "cometbft" {
+				cmtOut = outStr
+			}
 		})
 	}
 
-	s.T().Run("with args get all", func(t *testing.T) {
-		configCmd2 := s.getConfigCmd()
-		args := []string{"get", "all"}
-		configCmd2.SetArgs(args)
-		b2 := applyMockIOOutErr(configCmd2)
-		err2 := configCmd2.Execute()
-		require.NoError(t, err2, "%s - unexpected error executing configCmd", configCmd2.Name())
-		out2, err2 := io.ReadAll(b2)
-		require.NoError(t, err2, "%s - unexpected error reading configCmd output", configCmd2.Name())
-		out2Str := string(out2)
-		require.Equal(t, outStr, out2Str, "output of no-args vs output of %s", args)
-	})
-
-	inOutTests := []struct {
-		name string
-		args []string
-	}{
-		{
-			name: "get app",
-			args: []string{"get", "app"},
-		},
-		{
-			name: "get cosmos",
-			args: []string{"get", "cosmos"},
-		},
-		{
-			name: "get config",
-			args: []string{"get", "config"},
-		},
-		{
-			name: "get tendermint",
-			args: []string{"get", "tendermint"},
-		},
-		{
-			name: "get tm",
-			args: []string{"get", "tm"},
-		},
-		{
-			name: "get client",
-			args: []string{"get", "client"},
-		},
-	}
-
-	for _, tc := range inOutTests {
-		s.T().Run(tc.name, func(t *testing.T) {
-			configCmd3 := s.getConfigCmd()
-			configCmd3.SetArgs(tc.args)
-			b3 := applyMockIOOutErr(configCmd3)
-			err3 := configCmd3.Execute()
-			require.NoError(t, err3, "%s - unexpected error executing configCmd", configCmd3.Name())
-			out3, rerr3 := io.ReadAll(b3)
-			require.NoError(t, rerr3, "%s - unexpected error reading configCmd output", configCmd3.Name())
-			out3Str := string(out3)
-			require.Contains(t, outStr, out3Str, "output of no-args vs output of %s", tc.args)
+	// Test that the deprecated tendermint and tm options have both the deprecation message and the section content.
+	for _, opt := range []string{"tendermint", "tm"} {
+		args := []string{"get", opt}
+		s.Run(strings.Join(args, " "), func() {
+			expTMOut := s.makeTmDeprecatedLines(opt) + cmtOut
+			outStr := s.executeConfigCmd(args...)
+			s.Assert().Equal(expTMOut, outStr)
 		})
 	}
 }
@@ -337,19 +449,19 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 	}{
 		{
 			name: "three app config keys",
-			keys: []string{"min-retain-blocks", "rosetta.retries", "grpc.address"},
+			keys: []string{"min-retain-blocks", "mempool.max-txs", "grpc.address"},
 			expected: s.makeMultiLine(
 				s.makeAppConfigHeaderLines(),
 				`min-retain-blocks=0`,
-				`grpc.address="0.0.0.0:9090"`,
-				`rosetta.retries=3`,
+				`grpc.address="localhost:9090"`,
+				`mempool.max-txs=5000`,
 				""),
 		},
 		{
-			name: "three tendermint config keys",
+			name: "three cometbft config keys",
 			keys: []string{"p2p.send_rate", "genesis_file", "consensus.timeout_propose"},
 			expected: s.makeMultiLine(
-				s.makeTMConfigHeaderLines(),
+				s.makeCMTConfigHeaderLines(),
 				`genesis_file="config/genesis.json"`,
 				`consensus.timeout_propose="3s"`,
 				`p2p.send_rate=5120000`,
@@ -360,20 +472,20 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			keys: []string{"keyring-backend", "broadcast-mode", "output"},
 			expected: s.makeMultiLine(
 				s.makeClientConfigHeaderLines(),
-				`broadcast-mode="block"`,
-				`keyring-backend="test"`,
+				`broadcast-mode="sync"`,
+				`keyring-backend="os"`,
 				`output="text"`,
 				""),
 		},
 		{
 			name: "two from each",
-			keys: []string{"rpc.cors_allowed_origins", "pruning", "node", "rosetta.offline", "chain-id", "priv_validator_state_file"},
+			keys: []string{"rpc.cors_allowed_origins", "pruning", "node", "api.enable", "chain-id", "priv_validator_state_file"},
 			expected: s.makeMultiLine(
 				s.makeAppConfigHeaderLines(),
 				`pruning="default"`,
-				`rosetta.offline=false`,
+				`api.enable=false`,
 				"",
-				s.makeTMConfigHeaderLines(),
+				s.makeCMTConfigHeaderLines(),
 				`priv_validator_state_file="data/priv_validator_state.json"`,
 				`rpc.cors_allowed_origins=[]`,
 				"",
@@ -381,6 +493,67 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 				`chain-id=""`,
 				`node="tcp://localhost:26657"`,
 				""),
+		},
+		{
+			name: "one category that is in two files",
+			keys: []string{"mempool"},
+			expected: s.makeMultiLine(
+				s.makeAppConfigHeaderLines(),
+				`mempool.max-txs=5000`,
+				"",
+				s.makeCMTConfigHeaderLines(),
+				`mempool.broadcast=true`,
+				`mempool.cache_size=10000`,
+				`mempool.experimental_max_gossip_connections_to_non_persistent_peers=0`,
+				`mempool.experimental_max_gossip_connections_to_persistent_peers=0`,
+				`mempool.keep-invalid-txs-in-cache=false`,
+				`mempool.max_batch_bytes=0`,
+				`mempool.max_tx_bytes=1048576`,
+				`mempool.max_txs_bytes=1073741824`,
+				`mempool.recheck=true`,
+				`mempool.size=5000`,
+				`mempool.type="flood"`,
+				`mempool.wal_dir=""`,
+				""),
+		},
+		{
+			name: "multiple sub-fields with same name",
+			keys: []string{"enable"},
+			expected: s.makeMultiLine(
+				s.makeAppConfigHeaderLines(),
+				`api.enable=false`,
+				`grpc-web.enable=true`,
+				`grpc.enable=true`,
+				"",
+				s.makeCMTConfigHeaderLines(),
+				`statesync.enable=false`,
+				"",
+			),
+		},
+		{
+			name: "exact match in one but loose match on others",
+			keys: []string{"node"},
+			expected: s.makeMultiLine(
+				s.makeClientConfigHeaderLines(),
+				`node="tcp://localhost:26657"`,
+				"",
+			),
+		},
+		{
+			name: "loose match",
+			keys: []string{"nod"},
+			expected: s.makeMultiLine(
+				s.makeAppConfigHeaderLines(),
+				`iavl-disable-fastnode=true`,
+				`streaming.abci.stop-node-on-err=true`,
+				"",
+				s.makeCMTConfigHeaderLines(),
+				`node_key_file="config/node_key.json"`,
+				"",
+				s.makeClientConfigHeaderLines(),
+				`node="tcp://localhost:26657"`,
+				"",
+			),
 		},
 	}
 
@@ -431,7 +604,7 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			s.makeAppConfigHeaderLines(),
 			`grpc.enable=true`,
 			"",
-			s.makeTMConfigHeaderLines(),
+			s.makeCMTConfigHeaderLines(),
 			`consensus.create_empty_blocks_interval="0s"`,
 			"",
 		) + "Error: " + expectedError + "\n"
@@ -458,9 +631,9 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 		allEqual("app"),
 		"",
 	}
-	expectedTMOutLines := []string{
-		s.makeTMDiffHeaderLines(),
-		allEqual("tendermint"),
+	expectedCMTOutLines := []string{
+		s.makeCMTDiffHeaderLines(),
+		allEqual("cometbft"),
 		"",
 	}
 	expectedClientOutLines := []string{
@@ -470,28 +643,29 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 	}
 	var expectedAllOutLines []string
 	expectedAllOutLines = append(expectedAllOutLines, expectedAppOutLines...)
-	expectedAllOutLines = append(expectedAllOutLines, expectedTMOutLines...)
+	expectedAllOutLines = append(expectedAllOutLines, expectedCMTOutLines...)
 	expectedAllOutLines = append(expectedAllOutLines, expectedClientOutLines...)
 	expectedAppOut := s.makeMultiLine(expectedAppOutLines...)
-	expectedTMOut := s.makeMultiLine(expectedTMOutLines...)
+	expectedCMTOut := s.makeMultiLine(expectedCMTOutLines...)
 	expectedClientOut := s.makeMultiLine(expectedClientOutLines...)
 	expectedAll := s.makeMultiLine(expectedAllOutLines...)
 
 	equalAllTests := []struct {
-		name string
 		args []string
 		out  string
 	}{
-		{"changed", []string{"changed"}, expectedAll},
-		{"changed all", []string{"changed", "all"}, expectedAll},
-		{"changed app", []string{"changed", "app"}, expectedAppOut},
-		{"changed cosmos", []string{"changed", "cosmos"}, expectedAppOut},
-		{"changed config", []string{"changed", "config"}, expectedTMOut},
-		{"changed tm", []string{"changed", "tm"}, expectedTMOut},
-		{"changed tendermint", []string{"changed", "tendermint"}, expectedTMOut},
-		{"changed client", []string{"changed", "client"}, expectedClientOut},
+		{args: []string{"changed"}, out: expectedAll},
+		{args: []string{"changed", "all"}, out: expectedAll},
+		{args: []string{"changed", "app"}, out: expectedAppOut},
+		{args: []string{"changed", "cosmos"}, out: expectedAppOut},
+		{args: []string{"changed", "config"}, out: expectedCMTOut},
+		{args: []string{"changed", "tm"}, out: s.makeTmDeprecatedLines("tm") + expectedCMTOut},
+		{args: []string{"changed", "tendermint"}, out: s.makeTmDeprecatedLines("tendermint") + expectedCMTOut},
+		{args: []string{"changed", "cometbft"}, out: expectedCMTOut},
+		{args: []string{"changed", "comet"}, out: expectedCMTOut},
+		{args: []string{"changed", "cmt"}, out: expectedCMTOut},
+		{args: []string{"changed", "client"}, out: expectedClientOut},
 		{
-			name: "changed output",
 			args: []string{"changed", "output"},
 			out: s.makeMultiLine(
 				s.makeClientDiffHeaderLines(),
@@ -499,20 +673,86 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 				"",
 			),
 		},
+		{
+			args: []string{"changed", "mempool"},
+			out: s.makeMultiLine(
+				s.makeAppDiffHeaderLines(),
+				`mempool.max-txs=5000 (same as default)`,
+				"",
+				s.makeCMTDiffHeaderLines(),
+				`mempool.broadcast=true (same as default)`,
+				`mempool.cache_size=10000 (same as default)`,
+				`mempool.experimental_max_gossip_connections_to_non_persistent_peers=0 (same as default)`,
+				`mempool.experimental_max_gossip_connections_to_persistent_peers=0 (same as default)`,
+				`mempool.keep-invalid-txs-in-cache=false (same as default)`,
+				`mempool.max_batch_bytes=0 (same as default)`,
+				`mempool.max_tx_bytes=1048576 (same as default)`,
+				`mempool.max_txs_bytes=1073741824 (same as default)`,
+				`mempool.recheck=true (same as default)`,
+				`mempool.size=5000 (same as default)`,
+				`mempool.type="flood" (same as default)`,
+				`mempool.wal_dir="" (same as default)`,
+				"",
+			),
+		},
+		{
+			args: []string{"changed", "enable"},
+			out: s.makeMultiLine(
+				s.makeAppDiffHeaderLines(),
+				`api.enable=false (same as default)`,
+				`grpc-web.enable=true (same as default)`,
+				`grpc.enable=true (same as default)`,
+				"",
+				s.makeCMTDiffHeaderLines(),
+				`statesync.enable=false (same as default)`,
+				"",
+			),
+		},
+		{
+			args: []string{"changed", "node"},
+			out: s.makeMultiLine(
+				s.makeClientDiffHeaderLines(),
+				`node="tcp://localhost:26657" (same as default)`,
+				"",
+			),
+		},
+		{
+			args: []string{"changed", "nod"},
+			out: s.makeMultiLine(
+				s.makeAppDiffHeaderLines(),
+				`iavl-disable-fastnode=true (same as default)`,
+				`streaming.abci.stop-node-on-err=true (same as default)`,
+				"",
+				s.makeCMTDiffHeaderLines(),
+				`node_key_file="config/node_key.json" (same as default)`,
+				"",
+				s.makeClientDiffHeaderLines(),
+				`node="tcp://localhost:26657" (same as default)`,
+				"",
+			),
+		},
 	}
+
 	for _, tc := range equalAllTests {
-		s.T().Run(tc.name, func(t *testing.T) {
-			configCmd := s.getConfigCmd()
-			configCmd.SetArgs(tc.args)
-			b := applyMockIOOutErr(configCmd)
-			err := configCmd.Execute()
-			require.NoError(t, err, "%s %s - unexpected error executing configCmd", configCmd.Name(), tc.args)
-			out, err := io.ReadAll(b)
-			require.NoError(t, err, "%s %s - unexpected error reading configCmd output", configCmd.Name(), tc.args)
-			outStr := string(out)
-			assert.Equal(t, tc.out, outStr, "%s %s - output", configCmd.Name(), tc.args)
+		s.Run(strings.Join(tc.args, " "), func() {
+			outStr := s.executeConfigCmd(tc.args...)
+			s.Assert().Equal(tc.out, outStr)
 		})
 	}
+
+	s.Run("diff default keyring backend", func() {
+		defer s.setDefaultKeyringBackend("test")()
+
+		expOut := s.makeMultiLine(
+			s.makeClientDiffHeaderLines(),
+			"keyring-backend=\"os\" (default=\"test\")",
+			"",
+		)
+
+		args := []string{"changed", "keyring-backend"}
+		actOut := s.executeConfigCmd(args...)
+		s.Assert().Equal(expOut, actOut, "output of config %q", args)
+	})
 }
 
 func (s *ConfigTestSuite) TestConfigSetValidation() {
@@ -527,9 +767,9 @@ func (s *ConfigTestSuite) TestConfigSetValidation() {
 			out:  `App config validation error: set min gas price in app.toml or flag or env variable: error in app.toml [cosmos/cosmos-sdk@v0.43.0/types/errors/errors.go:269]`,
 		},
 		{
-			name: "set tendermint fails validation",
+			name: "set cometbft fails validation",
 			args: []string{"set", "log_format", "crazy"},
-			out:  `Tendermint config validation error: unknown log_format (must be 'plain' or 'json')`,
+			out:  `CometBFT config validation error: unknown log_format (must be 'plain' or 'json')`,
 		},
 		{
 			name: "set client fails validation",
@@ -556,7 +796,7 @@ func (s *ConfigTestSuite) TestConfigSetValidation() {
 
 func (s *ConfigTestSuite) TestConfigCmdSet() {
 	reAppConfigUpdated := regexp.MustCompile(`(?m)^App Config Updated: .*/config/` + s.BaseFNApp + `$`)
-	reTMConfigUpdated := regexp.MustCompile(`(?m)^Tendermint Config Updated: .*/config/` + s.BaseFNTM + `$`)
+	reCMTConfigUpdated := regexp.MustCompile(`(?m)^CometBFT Config Updated: .*/config/` + s.BaseFNCMT + `$`)
 	reClientConfigUpdated := regexp.MustCompile(`(?m)^Client Config Updated: .*/config/` + s.baseFNClient + `$`)
 
 	positiveTests := []struct {
@@ -597,36 +837,36 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 			toMatch: []*regexp.Regexp{reAppConfigUpdated},
 		},
 
-		// tendermint fields
+		// cometbft fields
 		{
 			name:    "filter_peers",
 			oldVal:  `false`,
 			newVal:  `true`,
-			toMatch: []*regexp.Regexp{reTMConfigUpdated},
+			toMatch: []*regexp.Regexp{reCMTConfigUpdated},
 		},
 		{
 			name:    "proxy_app",
 			oldVal:  `"tcp://127.0.0.1:26658"`,
 			newVal:  `"tcp://localhost:26658"`,
-			toMatch: []*regexp.Regexp{reTMConfigUpdated},
+			toMatch: []*regexp.Regexp{reCMTConfigUpdated},
 		},
 		{
 			name:    "consensus.timeout_commit",
 			oldVal:  fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit),
 			newVal:  `"2s"`,
-			toMatch: []*regexp.Regexp{reTMConfigUpdated},
+			toMatch: []*regexp.Regexp{reCMTConfigUpdated},
 		},
 		{
 			name:    "mempool.cache_size",
 			oldVal:  `10000`,
 			newVal:  `10005`,
-			toMatch: []*regexp.Regexp{reTMConfigUpdated},
+			toMatch: []*regexp.Regexp{reCMTConfigUpdated},
 		},
 		{
 			name:    "rpc.cors_allowed_methods",
 			oldVal:  `["HEAD", "GET", "POST"]`,
 			newVal:  `["POST", "HEAD", "GET"]`,
-			toMatch: []*regexp.Regexp{reTMConfigUpdated},
+			toMatch: []*regexp.Regexp{reCMTConfigUpdated},
 		},
 
 		// Client fields
@@ -650,14 +890,14 @@ func (s *ConfigTestSuite) TestConfigCmdSet() {
 		},
 		{
 			name:    "broadcast-mode",
-			oldVal:  `"block"`,
-			newVal:  `"sync"`,
+			oldVal:  `"sync"`,
+			newVal:  `"async"`,
 			toMatch: []*regexp.Regexp{reClientConfigUpdated},
 		},
 		{
 			name:    "keyring-backend",
-			oldVal:  `"test"`,
-			newVal:  `"os"`,
+			oldVal:  `"os"`,
+			newVal:  `"file"`,
 			toMatch: []*regexp.Regexp{reClientConfigUpdated},
 		},
 	}
@@ -699,10 +939,10 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 				""),
 		},
 		{
-			name: "two tendermint entries",
+			name: "two cometbft entries",
 			args: []string{"set", "log_format", "json", "consensus.timeout_commit", "950ms"},
 			out: s.makeMultiLine(
-				s.makeTMConfigUpdateLines(),
+				s.makeCMTConfigUpdateLines(),
 				s.makeKeyUpdatedLine("log_format", `"plain"`, `"json"`),
 				s.makeKeyUpdatedLine("consensus.timeout_commit", fmt.Sprintf("%q", provconfig.DefaultConsensusTimeoutCommit), `"950ms"`),
 				""),
@@ -730,7 +970,7 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 				s.makeKeyUpdatedLine("api.swagger", "false", "true"),
 				s.makeKeyUpdatedLine("telemetry.service-name", `"blocky"`, `"blocky2"`),
 				"",
-				s.makeTMConfigUpdateLines(),
+				s.makeCMTConfigUpdateLines(),
 				s.makeKeyUpdatedLine("log_format", `"json"`, `"plain"`),
 				s.makeKeyUpdatedLine("consensus.timeout_commit", `"950ms"`, `"951ms"`),
 				"",
@@ -757,60 +997,59 @@ func (s *ConfigTestSuite) TestConfigSetMulti() {
 }
 
 func (s *ConfigTestSuite) TestPackUnpack() {
-	s.T().Run("pack", func(t *testing.T) {
+	s.Run("pack", func() {
 		expectedPacked := map[string]string{}
 		expectedPackedJSON, jerr := json.MarshalIndent(expectedPacked, "", "  ")
-		require.NoError(t, jerr, "making expected json")
+		s.Require().NoError(jerr, "making expected json")
 		expectedPackedJSONStr := string(expectedPackedJSON)
-		configCmd := s.getConfigCmd()
-		args := []string{"pack"}
-		configCmd.SetArgs(args)
-		b := applyMockIOOutErr(configCmd)
-		err := configCmd.Execute()
-		require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), args)
-		out, rerr := io.ReadAll(b)
-		require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), args)
-		outStr := string(out)
 
-		assert.Contains(t, outStr, expectedPackedJSONStr, "packed json")
+		configCmd := s.getConfigCmd()
+		outStr := s.executeCmd(configCmd, "pack")
+
+		s.Assert().Contains(outStr, expectedPackedJSONStr, "packed json")
 		packedFile := provconfig.GetFullPathToPackedConf(configCmd)
 
-		assert.Contains(t, outStr, packedFile, "packed filename")
-		assert.True(t, provconfig.FileExists(packedFile), "file exists: packed")
+		s.Assert().Contains(outStr, packedFile, "packed filename")
+		s.Assert().True(provconfig.FileExists(packedFile), "file exists: packed")
 		appFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, appFile, "app filename")
-		assert.False(t, provconfig.FileExists(appFile), "file exists: app")
-		tmFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, tmFile, "tendermint filename")
-		assert.False(t, provconfig.FileExists(tmFile), "file exists: tendermint")
+		s.Assert().Contains(outStr, appFile, "app filename")
+		s.Assert().False(provconfig.FileExists(appFile), "file exists: app")
+		cmtFile := provconfig.GetFullPathToAppConf(configCmd)
+		s.Assert().Contains(outStr, cmtFile, "cometbft filename")
+		s.Assert().False(provconfig.FileExists(cmtFile), "file exists: cometbft")
 		clientFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, clientFile, "client filename")
-		assert.False(t, provconfig.FileExists(clientFile), "file exists: client")
+		s.Assert().Contains(outStr, clientFile, "client filename")
+		s.Assert().False(provconfig.FileExists(clientFile), "file exists: client")
 	})
 
-	s.T().Run("unpack", func(t *testing.T) {
+	s.Run("unpack", func() {
 		configCmd := s.getConfigCmd()
-		args := []string{"unpack"}
-		configCmd.SetArgs(args)
-		b := applyMockIOOutErr(configCmd)
-		err := configCmd.Execute()
-		require.NoError(t, err, "%s %s - unexpected error in execution", configCmd.Name(), args)
-		out, rerr := io.ReadAll(b)
-		require.NoError(t, rerr, "%s %s - unexpected error in reading", configCmd.Name(), args)
-		outStr := string(out)
+		outStr := s.executeCmd(configCmd, "unpack")
 
 		packedFile := provconfig.GetFullPathToPackedConf(configCmd)
-		assert.Contains(t, outStr, packedFile, "packed filename")
-		assert.False(t, provconfig.FileExists(packedFile), "file exists: packed")
+		s.Assert().Contains(outStr, packedFile, "packed filename")
+		s.Assert().False(provconfig.FileExists(packedFile), "file exists: packed")
 		appFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, appFile, "app filename")
-		assert.True(t, provconfig.FileExists(appFile), "file exists: app")
-		tmFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, tmFile, "tendermint filename")
-		assert.True(t, provconfig.FileExists(tmFile), "file exists: tendermint")
+		s.Assert().Contains(outStr, appFile, "app filename")
+		s.Assert().True(provconfig.FileExists(appFile), "file exists: app")
+		cmtFile := provconfig.GetFullPathToAppConf(configCmd)
+		s.Assert().Contains(outStr, cmtFile, "cometbft filename")
+		s.Assert().True(provconfig.FileExists(cmtFile), "file exists: cometbft")
 		clientFile := provconfig.GetFullPathToAppConf(configCmd)
-		assert.Contains(t, outStr, clientFile, "client filename")
-		assert.True(t, provconfig.FileExists(clientFile), "file exists: client")
+		s.Assert().Contains(outStr, clientFile, "client filename")
+		s.Assert().True(provconfig.FileExists(clientFile), "file exists: client")
+	})
+
+	s.Run("diff default keyring backend pack", func() {
+		defer s.setDefaultKeyringBackend("test")()
+
+		expectedPacked := map[string]string{"keyring-backend": "os"}
+		expectedPackedJSON, jerr := json.MarshalIndent(expectedPacked, "", "  ")
+		s.Require().NoError(jerr, "making expected json")
+		expectedPackedJSONStr := string(expectedPackedJSON)
+
+		outStr := s.executeConfigCmd("pack")
+		s.Assert().Contains(outStr, expectedPackedJSONStr, "packed json should be in the output")
 	})
 }
 
@@ -851,12 +1090,12 @@ func (s *ConfigTestSuite) TestUpdate() {
 	configCmd := s.getConfigCmd()
 	configDir := provconfig.GetFullPathToConfigDir(configCmd)
 	uFile := provconfig.GetFullPathToUnmanagedConf(configCmd)
-	tFile := provconfig.GetFullPathToTmConf(configCmd)
+	tFile := provconfig.GetFullPathToCmtConf(configCmd)
 	aFile := provconfig.GetFullPathToAppConf(configCmd)
 	cFile := provconfig.GetFullPathToClientConf(configCmd)
 	s.Require().NoError(os.MkdirAll(configDir, 0o755), "making config dir")
 	s.Require().NoError(os.WriteFile(uFile, []byte(uFileContents), 0o644), "writing unmanaged config")
-	s.Require().NoError(os.WriteFile(tFile, []byte(tFileContents), 0o644), "writing tm config")
+	s.Require().NoError(os.WriteFile(tFile, []byte(tFileContents), 0o644), "writing cometbft config")
 	s.Require().NoError(os.WriteFile(aFile, []byte(aFileContents), 0o644), "writing app config")
 	s.Require().NoError(os.WriteFile(cFile, []byte(cFileContents), 0o644), "writing client config")
 
@@ -878,12 +1117,12 @@ func (s *ConfigTestSuite) TestUpdate() {
 		s.Assert().Equal(uFileContents, string(actualUFileContents), "unmanaged file contents")
 	})
 
-	s.Run("tm file has been updated", func() {
+	s.Run("cometbft file has been updated", func() {
 		actualTFileContents, err := os.ReadFile(tFile)
-		s.Require().NoError(err, "reading tm file: %s", tFile)
-		s.Assert().NotEqual(tFileContents, string(actualTFileContents), "tm file contents")
+		s.Require().NoError(err, "reading cometbft file: %s", tFile)
+		s.Assert().NotEqual(tFileContents, string(actualTFileContents), "cometbft file contents")
 		lines := strings.Split(string(actualTFileContents), "\n")
-		s.Assert().Greater(len(lines), 2, "number of lines in tm file.")
+		s.Assert().Greater(len(lines), 2, "number of lines in cometbft file.")
 	})
 
 	s.Run("app file has been updated", func() {
@@ -905,10 +1144,10 @@ func (s *ConfigTestSuite) TestUpdate() {
 	err = provconfig.LoadConfigFromFiles(configCmd)
 	s.Require().NoError(err, "loading config from files")
 
-	s.Run("tm db_backend value unchanged", func() {
-		tmConfig, err := provconfig.ExtractTmConfig(configCmd)
-		s.Require().NoError(err, "ExtractTmConfig")
-		actual := tmConfig.DBBackend
+	s.Run("cometbft db_backend value unchanged", func() {
+		cmtConfig, err := provconfig.ExtractCmtConfig(configCmd)
+		s.Require().NoError(err, "ExtractCmtConfig")
+		actual := cmtConfig.DBBackend
 		s.Assert().Equal(dbBackend, actual, "DBBackend")
 	})
 

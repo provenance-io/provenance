@@ -17,8 +17,8 @@ const (
 	ConfigSubDir = "config"
 	// AppConfFilename is the filename of the app/cosmos configuration file.
 	AppConfFilename = "app.toml"
-	// TmConfFilename is the filename of the tendermint configuration file.
-	TmConfFilename = "config.toml"
+	// CmtConfFilename is the filename of the cometbft configuration file.
+	CmtConfFilename = "config.toml"
 	// ClientConfFilename is the filename of the client configuration file.
 	ClientConfFilename = "client.toml"
 	// UnmanagedConfFilename is the filename of the unmanaged configuration file.
@@ -45,9 +45,9 @@ func GetFullPathToAppConf(cmd *cobra.Command) string {
 	return filepath.Join(GetHomeDir(cmd), ConfigSubDir, AppConfFilename)
 }
 
-// GetFullPathToTmConf gets the full path to the tendermint config file.
-func GetFullPathToTmConf(cmd *cobra.Command) string {
-	return filepath.Join(GetHomeDir(cmd), ConfigSubDir, TmConfFilename)
+// GetFullPathToCmtConf gets the full path to the cometbft config file.
+func GetFullPathToCmtConf(cmd *cobra.Command) string {
+	return filepath.Join(GetHomeDir(cmd), ConfigSubDir, CmtConfFilename)
 }
 
 // GetFullPathToClientConf gets the full path to the client config file.

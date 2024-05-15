@@ -154,9 +154,6 @@ linters-settings:
           - github.com/cometbft/cometbft/types/time
           - github.com/cometbft/cometbft-db
 
-          - github.com/tendermint/tendermint
-          - github.com/tendermint/tm-db
-
           - github.com/rs/zerolog
       test:
         files:

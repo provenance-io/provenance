@@ -533,6 +533,10 @@ func TestMakeDefaultMarket(t *testing.T) {
 }
 
 func TestAddGenesisCustomMarketCmd(t *testing.T) {
+	origCache := sdk.IsAddrCacheEnabled()
+	defer sdk.SetAddrCacheEnabled(origCache)
+	sdk.SetAddrCacheEnabled(false)
+
 	cdc := app.MakeTestEncodingConfig(t).Marshaler
 
 	tests := []struct {
