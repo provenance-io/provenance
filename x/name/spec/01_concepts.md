@@ -1,6 +1,6 @@
 # Concepts
 
-The name service builds up a heirarchy of names similar to DNS using dot separated strings. Each level in the heirarchy
+The name service builds up a hierarchy of names similar to DNS using dot separated strings. Each level in the heirarchy
 can be setup with an account that "owns" the name. This owner must sign transactions that seek to add new names under
 this level. Names created under another name can have a new owner thus transfering control from one account to another.
 
