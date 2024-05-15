@@ -412,7 +412,7 @@ func fixTxWasmInstantiate2Aliases(rootCmd *cobra.Command) {
 		return
 	}
 
-	// Go through all the aliases and makes sure they end with a "2"
+	// Go through all the aliases and make sure they end with a "2"
 	for i, alias := range cmd.Aliases {
 		if !strings.HasSuffix(alias, "2") {
 			cmd.Aliases[i] = alias + "2"
