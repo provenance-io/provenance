@@ -6,4 +6,4 @@
 fn='./build/run/provenanced/config/genesis.json'
 json="$( cat "$fn" )"
 jq --arg vp "${VOTING_PERIOD:-21s}" ' .app_state.gov.params.voting_period=$vp | .app_state.gov.params.expedited_voting_period=$vp' <<< "$json" > "$fn"
-cat "$fn" | grep voting_period
+grep voting_period "$fn"
