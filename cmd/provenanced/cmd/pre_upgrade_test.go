@@ -104,7 +104,9 @@ func executeRootCmd(t *testing.T, home string, cmdArgs ...string) *cmdResult {
 
 	rv := &cmdResult{Home: home}
 
-	cmdArgs = append([]string{"--home", home}, cmdArgs...)
+	if len(home) > 0 {
+		cmdArgs = append([]string{"--home", home}, cmdArgs...)
+	}
 
 	// Use our own buffers for the output so we can capture it.
 	var outBuf, errBuf bytes.Buffer
