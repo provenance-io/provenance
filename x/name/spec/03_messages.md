@@ -6,7 +6,6 @@ In this section we describe the processing of the staking messages and the corre
   - [MsgBindNameRequest](#msgbindnamerequest)
   - [MsgDeleteNameRequest](#msgdeletenamerequest)
   - [MsgModifyNameRequest](#msgmodifynamerequest)
-  - [CreateRootNameProposal](#createrootnameproposal)
   - [MsgCreateRootNameRequest](#msgcreaterootnamerequest)
 
 ## MsgBindNameRequest
@@ -82,29 +81,6 @@ This message is expected to fail if:
 - The authority does not match the gov module or the name owner.
 
 If successful a name record will be updated with the new address and restriction.
-
-## CreateRootNameProposal
-
-The create root name proposal is a governance proposal that allows new root level names to be established after the genesis of the blockchain.
-
-```proto
-message CreateRootNameProposal {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
-
-  string title       = 1;
-  string description = 2;
-  string name        = 3;
-  string owner       = 4;
-  bool   restricted  = 5;
-}
-```
-
-This message is expected to fail if:
-- The name already exists
-- Insuffient length of name
-- Excessive length of name
 
 ## MsgCreateRootNameRequest
 
