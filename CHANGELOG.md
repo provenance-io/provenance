@@ -91,7 +91,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Dependencies
 
 - Bump `github.com/cosmos/ibc-go/v8` from 8.0.0 to 8.2.1 ([#1910](https://github.com/provenance-io/provenance/pull/1910), [#1956](https://github.com/provenance-io/provenance/pull/1956))
-- Bump `google.golang.org/grpc` from 1.62.1 to 1.63.2 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918))
+- Bump `google.golang.org/grpc` from 1.62.1 to 1.64.0 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918), [#1972](https://github.com/provenance-io/provenance/pull/1972))
 - Bump `bufbuild/buf-breaking-action` from 1.1.3 to 1.1.4 ([#1894](https://github.com/provenance-io/provenance/pull/1894))
 - Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
 - Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.31.0 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949))
