@@ -95,7 +95,7 @@ func Init(
 	if err != nil {
 		return err
 	}
-	tmConfig, err := provconfig.ExtractTmConfig(cmd)
+	cmtConfig, err := provconfig.ExtractCmtConfig(cmd)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func Init(
 	}
 
 	// Stop now if the genesis file already exists and an overwrite wasn't requested.
-	genFile := tmConfig.GenesisFile()
+	genFile := cmtConfig.GenesisFile()
 	if !doOverwrite && cmtos.FileExists(genFile) {
 		return fmt.Errorf("genesis file already exists: %v", genFile)
 	}
@@ -113,7 +113,7 @@ func Init(
 	// Set a few things in the configs.
 	appConfig.MinGasPrices = pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices
 
-	tmConfig.Moniker = moniker
+	cmtConfig.Moniker = moniker
 	if len(chainID) == 0 {
 		chainID = "provenance-chain-" + cmtrand.NewRand().Str(6)
 		cmd.Printf("chain id: %s\n", chainID)
@@ -125,7 +125,7 @@ func Init(
 		timeoutCommit = 1 * time.Second
 	}
 	if timeoutCommit > 0 {
-		tmConfig.Consensus.TimeoutCommit = timeoutCommit
+		cmtConfig.Consensus.TimeoutCommit = timeoutCommit
 	}
 
 	// Gather the bip39 mnemonic if a recover was requested.
@@ -143,19 +143,19 @@ func Init(
 	}
 
 	// Create and write the node validator files (node_key.json and priv_validator_key.json).
-	nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(tmConfig, mnemonic)
+	nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtConfig, mnemonic)
 	if err != nil {
 		return err
 	}
 	cmd.Printf("node id: %s\n", nodeID)
-	clientConfig.Node = tmConfig.RPC.ListenAddress
+	clientConfig.Node = cmtConfig.RPC.ListenAddress
 
 	// Create and write the genenis file.
 	if err = createAndExportGenesisFile(cmd, client.GetClientContextFromCmd(cmd).Codec, mbm, isTestnet, chainID, genFile); err != nil {
 		return err
 	}
 	// Save the configs.
-	provconfig.SaveConfigs(cmd, appConfig, tmConfig, clientConfig, true)
+	provconfig.SaveConfigs(cmd, appConfig, cmtConfig, clientConfig, true)
 
 	return nil
 }

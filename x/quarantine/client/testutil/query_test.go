@@ -3,7 +3,7 @@ package testutil
 import (
 	"fmt"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -104,7 +104,7 @@ func (s *IntegrationTestSuite) TestQueryQuarantinedFundsCmd() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			cmd := client.QueryQuarantinedFundsCmd()
-			args := append(tc.args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args := append(tc.args, fmt.Sprintf("--%s=json", cmtcli.OutputFlag))
 			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			outBz := outBW.Bytes()
 			s.T().Logf("Output:\n%s", string(outBz))
@@ -163,7 +163,7 @@ func (s *IntegrationTestSuite) TestQueryIsQuarantinedCmd() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			cmd := client.QueryIsQuarantinedCmd()
-			args := append(tc.args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args := append(tc.args, fmt.Sprintf("--%s=json", cmtcli.OutputFlag))
 			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			out := outBW.String()
 			s.T().Logf("Output:\n%s", out)
@@ -275,7 +275,7 @@ func (s *IntegrationTestSuite) TestQueryAutoResponsesCmd() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			cmd := client.QueryAutoResponsesCmd()
-			args := append(tc.args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args := append(tc.args, fmt.Sprintf("--%s=json", cmtcli.OutputFlag))
 			outBW, err := cli.ExecTestCLICmd(s.clientCtx, cmd, args)
 			out := outBW.String()
 			s.T().Logf("Output:\n%s", out)
