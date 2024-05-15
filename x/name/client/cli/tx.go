@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -18,11 +19,16 @@ import (
 	"github.com/provenance-io/provenance/x/name/types"
 )
 
-// FlagUnrestricted is the flag for creating unrestricted names
-const FlagUnrestricted = "unrestrict"
+const (
+	// FlagOwner is the flag for the owner address of a name record.
+	FlagOwner = "owner"
 
-// FlagGovProposal is the flag to specify that the command should be run as a gov proposal
-const FlagGovProposal = "gov-proposal"
+	// FlagGovProposal is the flag to specify that the command should be run as a gov proposal
+	FlagGovProposal = "gov-proposal"
+
+	// FlagUnrestricted is the flag for creating unrestricted names
+	FlagUnrestricted = "unrestrict"
+)
 
 // NewTxCmd is the top-level command for name CLI transactions.
 func NewTxCmd() *cobra.Command {
@@ -37,6 +43,7 @@ func NewTxCmd() *cobra.Command {
 		GetBindNameCmd(),
 		GetDeleteNameCmd(),
 		GetModifyNameCmd(),
+		GetGovRootNameCmd(),
 	)
 	return txCmd
 }
@@ -158,4 +165,69 @@ $ %s tx name modify-name \
 	provcli.AddAuthorityFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+// GetRootNameProposalCmd returns a command for registration with the gov module
+func GetGovRootNameCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "gov-root-name [name] (--owner [address]) (--unrestrict) [flags]",
+		Short: "Submit a root name creation governance proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a root name creation governance proposal.
+
+IMPORTANT: The created root name will restrict the creation of sub-names by default unless the
+unrestrict flag is included. The proposer will be the default owner that must approve
+all child name creation unless an alterate owner is provided.
+
+Example:
+$ %s tx name gov-root-name \
+	<root name> \
+	--unrestrict  \ 
+	--owner <key_or_address> \
+	--from <key_or_address>
+			`,
+				version.AppName)),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			flagSet := cmd.Flags()
+			owner, err := owner(clientCtx, flagSet)
+			if err != nil {
+				return err
+			}
+			authority := provcli.GetAuthority(flagSet)
+			name := strings.ToLower(args[0])
+			restricted := !viper.GetBool(FlagUnrestricted)
+			msg := types.NewMsgCreateRootNameRequest(authority, name, owner, restricted)
+
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+
+	cmd.Flags().String(FlagOwner, "", "The owner of the new name, optional (defaults to from address)")
+	cmd.Flags().BoolP(FlagUnrestricted, "u", false, "Allow child name creation by everyone")
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+// owner returns the proposal owner
+func owner(ctx client.Context, flags *pflag.FlagSet) (string, error) {
+	proposalOwner, err := flags.GetString(FlagOwner)
+	if err != nil {
+		return "", fmt.Errorf("proposal root name owner: %w", err)
+	}
+	if len(proposalOwner) < 1 {
+		proposalOwner = ctx.GetFromAddress().String()
+	}
+	_, err = sdk.AccAddressFromBech32(proposalOwner)
+	if err != nil {
+		return "", err
+	}
+
+	return proposalOwner, nil
 }
