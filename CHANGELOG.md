@@ -85,12 +85,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Switch to auto-generated `String` and `Equal` methods for most proto messages [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Clean up the marker module's expected BankKeeper interface [#1954](https://github.com/provenance-io/provenance/pull/1954).
 * Add the auto-cli commands and a few others newly added by the SDK [#1971](https://github.com/provenance-io/provenance/pull/1971).
+* Fix unit tests for ibcratelimit [#1971](https://github.com/provenance-io/provenance/pull/1971).
 
 ### Client Breaking
 
 * The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Move the genesis-related commands into a new `genesis` sub-command, and remove the `genesis-` parts of their names [#1971](https://github.com/provenance-io/provenance/pull/1971).
-* Many of the SDK's query commands have had their usage altered [#1971](https://github.com/provenance-io/provenance/pull/1971).
+* Many of the SDK's query commands have had their usage altered [#1977](https://github.com/provenance-io/provenance/pull/1977).
 
 ### Deprecated
 
