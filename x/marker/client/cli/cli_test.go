@@ -2397,3 +2397,65 @@ func (s *IntegrationTestSuite) TestChangeStatusProposal() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestWithdrawEscrowProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit withdraw escrow proposal",
+			args: []string{
+				"mycoin",
+				"100stake",
+				s.accountAddresses[1].String(),
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid amount",
+			args: []string{
+				"mycoin",
+				"invalidamount",
+				s.accountAddresses[1].String(),
+			},
+			expectErrMsg: "invalid amount invalidamount: invalid decimal coin expression: invalidamount",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid target address",
+			args: []string{
+				"mycoin",
+				"100stake",
+				"invalidaddress",
+			},
+			expectErrMsg: "invalid target address invalidaddress: decoding bech32 failed: invalid separator index -1",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdWithdrawEscrowProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}

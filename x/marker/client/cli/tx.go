@@ -1307,6 +1307,43 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 	return grants
 }
 
+func GetCmdWithdrawEscrowProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "withdraw-escrow-proposal <denom> <amount> <target-address>",
+		Aliases: []string{"wep", "w-e-p"},
+		Args:    cobra.ExactArgs(3),
+		Short:   "Submit a withdraw escrow proposal for a marker along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a withdraw escrow proposal for a marker along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker withdraw-escrow-proposal mycoin 100stake pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --title "My Title" --summary "My summary" --deposit 1000000000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			denom := args[0]
+
+			coins, err := sdk.ParseCoinsNormalized(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid amount %s: %v", args[1], err)
+			}
+
+			targetAddress := args[2]
+			if _, err = sdk.AccAddressFromBech32(targetAddress); err != nil {
+				return fmt.Errorf("invalid target address %v: %w", targetAddress, err)
+			}
+
+			msg := types.NewMsgWithdrawEscrowProposalRequest(denom, coins, targetAddress, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
 // ParseNetAssetValueString splits string (example 1hotdog,1;2jackthecat100,...) to list of NetAssetValue's
 func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
 	navs := strings.Split(netAssetValuesString, ";")
