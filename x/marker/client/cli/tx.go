@@ -1145,6 +1145,54 @@ $ %[1]s tx marker sdp 100stake --target-address pb1gghjut3ccd8ay0zduzj64hwre2fxs
 	return cmd
 }
 
+func GetCmdSetAdministratorProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "set-administrator-proposal <denom> <access-grants>",
+		Aliases: []string{"sap", "s-a-p"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Submit a set administrator proposal along with a title, summary, and deposit",
+		Long: strings.TrimSpace(`Submit a set administrator proposal along with a title, summary, and deposit.
+<denom> is the marker denomination.
+<access-grants> is a comma-separated list of access grants in the format address,permissions;address,permissions.
+Example: pb1...,mint,burn;pb2...,admin,transfer
+`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker set-administrator-proposal mycoin "pb1...,mint,burn;pb2...,admin,transfer" --title "My Title" --summary "My summary" --deposit 1000000000nhash
+$ %[1]s tx marker sap mycoin "pb1...,mint,burn" --title "My Title" --summary "My summary" --deposit 1000000000nhash
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+
+			denom := args[0]
+			accessGrantsStr := args[1]
+			var accessGrants []types.AccessGrant
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("invalid access grants %s: %v", accessGrantsStr, r)
+					}
+				}()
+				accessGrants = ParseAccessGrantFromString(accessGrantsStr)
+			}()
+
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgSetAdministratorProposalRequest(denom, accessGrants, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
 func getPeriodReset(duration int64) time.Time {
 	return time.Now().Add(getPeriod(duration))
 }

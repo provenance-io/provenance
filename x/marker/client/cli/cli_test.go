@@ -2238,3 +2238,53 @@ func (s *IntegrationTestSuite) TestSupplyIncreaseProposal() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestSetAdministratorProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit set administrator proposal",
+			args: []string{
+				"mycoin",
+				fmt.Sprintf("%s,admin,mint;%s,transfer", s.accountAddresses[0].String(), s.accountAddresses[1].String()),
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid access grant format",
+			args: []string{
+				"mycoin",
+				"invalidaccessgrant",
+			},
+			expectErrMsg: "invalid access grants invalidaccessgrant: at least one grant should be provided with address",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdSetAdministratorProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
