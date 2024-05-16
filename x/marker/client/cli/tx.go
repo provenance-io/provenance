@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
@@ -92,6 +93,8 @@ func NewTxCmd() *cobra.Command {
 		GetCmdSupplyIncreaseProposal(),
 		GetCmdSetAdministratorProposal(),
 		GetCmdRemoveAdministratorProposal(),
+		GetCmdChangeStatusProposal(),
+		GetCmdWithdrawEscrowProposal(),
 	)
 	return txCmd
 }
@@ -1335,6 +1338,60 @@ func GetCmdWithdrawEscrowProposal() *cobra.Command {
 			}
 
 			msg := types.NewMsgWithdrawEscrowProposalRequest(denom, coins, targetAddress, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+func GetCmdSetDenomMetadataProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "set-denom-metadata-proposal <denom> <name> <symbol> <description> <display> <exponent>",
+		Aliases: []string{"sdmp", "s-d-m-p"},
+		Args:    cobra.ExactArgs(6),
+		Short:   "Submit a set denom metadata proposal along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a set denom metadata proposal along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker set-denom-metadata-proposal mycoin "My Coin" "MYC" "My coin description" "myc" 6 --title "My Title" --summary "My summary" --deposit 1000000000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+
+			denom := args[0]
+			name := args[1]
+			symbol := args[2]
+			description := args[3]
+			display := args[4]
+			exponent, err := strconv.ParseUint(args[5], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid exponent: %v", args[5])
+			}
+
+			metadata := banktypes.Metadata{
+				Description: description,
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    denom,
+						Exponent: 0,
+					},
+					{
+						Denom:    display,
+						Exponent: uint32(exponent),
+					},
+				},
+				Base:    denom,
+				Display: display,
+				Name:    name,
+				Symbol:  symbol,
+			}
+
+			msg := types.NewMsgSetDenomMetadataProposalRequest(metadata, authority)
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
 	}

@@ -2459,3 +2459,51 @@ func (s *IntegrationTestSuite) TestWithdrawEscrowProposal() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestSetDenomMetadataProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit set denom metadata proposal",
+			args: []string{
+				"mycoin", "My Coin", "MYC", "My coin description", "myc", "6",
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid exponent",
+			args: []string{
+				"mycoin", "My Coin", "MYC", "My coin description", "myc", "invalidexponent",
+			},
+			expectErrMsg: "invalid exponent: invalidexponent",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdSetDenomMetadataProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
