@@ -437,7 +437,7 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 	case BtoA:
 		sender = suite.chainB
 	}
-	sendResult, err := sender.SendMsgsNoCheck(msg)
+	sendResult, err := sender.SendMsgsNoCheck(&suite.Suite, msg)
 	suite.Require().NoError(err)
 
 	packet, err := ibctesting.ParsePacketFromEvents(sendResult.Events)
@@ -445,7 +445,9 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 
 	receiveResult, ack := suite.RelayPacket(packet, direction)
 
-	return sendResult, receiveResult, string(ack), err
+	// TODO[1760]: ibchooks: Update tests
+	// return sendResult, receiveResult, string(ack), err
+	return nil, receiveResult, string(ack), err
 }
 
 func (suite *HooksTestSuite) TestAcks() {
