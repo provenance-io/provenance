@@ -2288,3 +2288,53 @@ func (s *IntegrationTestSuite) TestSetAdministratorProposal() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestRemoveAdministratorProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit remove administrator proposal",
+			args: []string{
+				"mycoin",
+				fmt.Sprintf("%s,%s", s.accountAddresses[0].String(), s.accountAddresses[1].String()),
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid address format",
+			args: []string{
+				"mycoin",
+				"invalidaddress",
+			},
+			expectErrMsg: "invalid address invalidaddress: decoding bech32 failed: invalid separator index -1",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdRemoveAdministratorProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}

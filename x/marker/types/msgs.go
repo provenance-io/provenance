@@ -642,10 +642,11 @@ func (msg MsgSetAdministratorProposalRequest) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgRemoveAdministratorProposalRequest(denom string, removedAddress []string) *MsgRemoveAdministratorProposalRequest {
+func NewMsgRemoveAdministratorProposalRequest(denom string, removedAddress []string, authority string) *MsgRemoveAdministratorProposalRequest {
 	return &MsgRemoveAdministratorProposalRequest{
 		Denom:          denom,
 		RemovedAddress: removedAddress,
+		Authority:      authority,
 	}
 }
 

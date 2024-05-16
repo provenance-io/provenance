@@ -90,6 +90,8 @@ func NewTxCmd() *cobra.Command {
 		GetCmdAddNetAssetValues(),
 		GetCmdSupplyDecreaseProposal(),
 		GetCmdSupplyIncreaseProposal(),
+		GetCmdSetAdministratorProposal(),
+		GetCmdRemoveAdministratorProposal(),
 	)
 	return txCmd
 }
@@ -1184,6 +1186,42 @@ $ %[1]s tx marker sap mycoin "pb1...,mint,burn" --title "My Title" --summary "My
 			}
 
 			msg := types.NewMsgSetAdministratorProposalRequest(denom, accessGrants, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+func GetCmdRemoveAdministratorProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "remove-administrator-proposal <denom> <removed-addresses>",
+		Aliases: []string{"rap", "r-a-p"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Submit a remove administrator proposal for a marker along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a remove administrator proposal for a marker along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker remove-administrator-proposal mycoin "address1,address2" --title "My Title" --summary "My summary" --deposit 1000000000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			denom := args[0]
+			removedAddressesStr := args[1]
+
+			removedAddresses := strings.Split(removedAddressesStr, ",")
+			for _, addr := range removedAddresses {
+				_, err := sdk.AccAddressFromBech32(addr)
+				if err != nil {
+					return fmt.Errorf("invalid address %s: %w", addr, err)
+				}
+			}
+
+			msg := types.NewMsgRemoveAdministratorProposalRequest(denom, removedAddresses, authority)
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
 	}
