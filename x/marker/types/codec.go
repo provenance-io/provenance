@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/gogoproto/proto"
 )
 
@@ -14,6 +15,18 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	messages := make([]proto.Message, len(AllRequestMsgs))
 	copy(messages, AllRequestMsgs)
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
+
+	registry.RegisterImplementations(
+		(*govtypesv1beta1.Content)(nil),
+		&AddMarkerProposal{},
+		&SupplyIncreaseProposal{},
+		&SupplyDecreaseProposal{},
+		&SetAdministratorProposal{},
+		&RemoveAdministratorProposal{},
+		&ChangeStatusProposal{},
+		&WithdrawEscrowProposal{},
+		&SetDenomMetadataProposal{},
+	)
 
 	registry.RegisterImplementations(
 		(*authz.Authorization)(nil),
