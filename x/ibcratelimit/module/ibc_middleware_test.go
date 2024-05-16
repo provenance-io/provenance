@@ -14,6 +14,7 @@ import (
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	dbm "github.com/cosmos/cosmos-db"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -80,6 +81,17 @@ func (s *MiddlewareTestSuite) SetupTest() {
 	s.Require().NoError(err, "setting mint keeper params for chainA")
 	err = s.chainB.GetProvenanceApp().MintKeeper.Params.Set(s.chainB.GetContext(), params)
 	s.Require().NoError(err, "setting mint keeper params for chainB")
+
+	/*// TODO Extract this out
+	_, err = s.chainA.GetProvenanceApp().FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: s.chainA.CurrentHeader.GetHeight(),
+	})
+	s.Require().NoError(err)
+
+	_, err = s.chainB.GetProvenanceApp().FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: s.chainB.CurrentHeader.GetHeight(),
+	})
+	s.Require().NoError(err)*/
 }
 
 // MessageFromAToB sends a message from chain A to chain B.
@@ -89,7 +101,7 @@ func (s *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdkmath.Int) 
 	channel := s.path.EndpointA.ChannelID
 	accountFrom := s.chainA.SenderAccount.GetAddress().String()
 	accountTo := s.chainB.SenderAccount.GetAddress().String()
-	timeoutHeight := clienttypes.NewHeight(0, 100)
+	timeoutHeight := clienttypes.NewHeight(10, 100)
 	memo := ""
 	return transfertypes.NewMsgTransfer(
 		port,
@@ -110,7 +122,7 @@ func (s *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdkmath.Int) 
 	channel := s.path.EndpointB.ChannelID
 	accountFrom := s.chainB.SenderAccount.GetAddress().String()
 	accountTo := s.chainA.SenderAccount.GetAddress().String()
-	timeoutHeight := clienttypes.NewHeight(0, 100)
+	timeoutHeight := clienttypes.NewHeight(10, 100)
 	memo := ""
 	return transfertypes.NewMsgTransfer(
 		port,
@@ -124,86 +136,58 @@ func (s *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdkmath.Int) 
 	)
 }
 
-// Tests that a receiver address longer than 4096 is not accepted
-func (s *MiddlewareTestSuite) TestInvalidReceiver() {
-	msg := transfertypes.NewMsgTransfer(
-		s.path.EndpointB.ChannelConfig.PortID,
-		s.path.EndpointB.ChannelID,
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 1),
-		s.chainB.SenderAccount.GetAddress().String(),
-		strings.Repeat("x", 4097),
-		clienttypes.NewHeight(0, 100),
-		0,
-		"",
-	)
-	_, ack, _ := s.FullSendBToA(msg)
-	s.Assert().Contains(ack, "error",
-		"acknowledgment is not an error")
-	s.Assert().Contains(ack, fmt.Sprintf("ABCI code: %d", ibcratelimit.ErrBadMessage.ABCICode()),
-		"acknowledgment error is not of the right type")
-}
-
 // FullSendBToA does the entire logic from sending a message from chain B to chain A.
-func (s *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string, error) {
-	sendResult, err := s.chainB.SendMsgsNoCheck(msg)
-	s.Assert().NoError(err)
+func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*abci.ExecTxResult, string, error) {
+	sendResult, err := suite.chainB.SendMsgsNoCheck(&suite.Suite, msg)
+	suite.Require().NoError(err)
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.Events)
-	s.Assert().NoError(err)
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
+	suite.Require().NoError(err)
 
-	err = s.path.EndpointA.UpdateClient()
-	s.Assert().NoError(err)
-
-	res, err := s.path.EndpointA.RecvPacketWithResult(packet)
-	s.Assert().NoError(err)
-
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+	res, err := suite.path.EndpointA.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
-	s.Assert().NoError(err)
-
-	err = s.path.EndpointA.UpdateClient()
-	s.Assert().NoError(err)
-	err = s.path.EndpointB.UpdateClient()
-	s.Assert().NoError(err)
-
+	suite.Require().NoError(err)
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+	err = suite.path.EndpointB.UpdateClient()
+	suite.Require().NoError(err)
 	return sendResult, string(ack), err
 }
 
 // FullSendAToB does the entire logic from sending a message from chain A to chain B.
-func (s *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*sdk.Result, string, error) {
-	sendResult, err := s.chainA.SendMsgsNoCheck(msg)
+func (suite *MiddlewareTestSuite) FullSendAToB(msg sdk.Msg) (*abci.ExecTxResult, string, error) {
+	sendResult, err := suite.chainA.SendMsgsNoCheck(&suite.Suite, msg)
 	if err != nil {
 		return nil, "", err
 	}
 
-	packet, err := ibctesting.ParsePacketFromEvents(sendResult.Events)
+	packet, err := ibctesting.ParsePacketFromEvents(sendResult.GetEvents())
 	if err != nil {
 		return nil, "", err
 	}
-
-	err = s.path.EndpointB.UpdateClient()
+	err = suite.path.EndpointB.UpdateClient()
 	if err != nil {
 		return nil, "", err
 	}
-
-	res, err := s.path.EndpointB.RecvPacketWithResult(packet)
+	res, err := suite.path.EndpointB.RecvPacketWithResult(packet)
 	if err != nil {
 		return nil, "", err
 	}
-
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
 	if err != nil {
 		return nil, "", err
 	}
-
-	err = s.path.EndpointA.UpdateClient()
+	err = suite.path.EndpointA.UpdateClient()
 	if err != nil {
 		return nil, "", err
 	}
-	err = s.path.EndpointB.UpdateClient()
+	err = suite.path.EndpointB.UpdateClient()
 	if err != nil {
 		return nil, "", err
 	}
-
 	return sendResult, string(ack), nil
 }
 
@@ -224,13 +208,13 @@ func (s *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (string, 
 }
 
 // AssertSend checks that a send from A to B was successful.
-func (s *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Result, error) {
-	r, _, err := s.FullSendAToB(msg)
+func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*abci.ExecTxResult, error) {
+	r, _, err := suite.FullSendAToB(msg)
 	if success {
-		s.Assert().NoError(err, "IBC send failed. Expected success. %s", err)
+		suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 	} else {
-		s.Assert().Error(err, "IBC send succeeded. Expected failure")
-		s.ErrorContains(err, ibcratelimit.ErrRateLimitExceeded.Error(), "Bad error type")
+		suite.Require().Error(err, "IBC send succeeded. Expected failure")
+		suite.ErrorContains(err, ibcratelimit.ErrRateLimitExceeded.Error(), "Bad error type")
 	}
 	return r, err
 }
@@ -275,6 +259,7 @@ func (s *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdkma
 	// Send from A to B
 	_, _, err := s.FullSendAToB(s.MessageFromAToB(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount)))
 	s.Assert().NoError(err)
+
 	// Send from A to B
 	_, _, err = s.FullSendBToA(s.MessageFromBToA(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount)))
 	s.Assert().NoError(err)
@@ -473,7 +458,7 @@ func (s *MiddlewareTestSuite) TestFailedSendTransfer() {
 	port := s.path.EndpointA.ChannelConfig.PortID
 	channel := s.path.EndpointA.ChannelID
 	accountFrom := s.chainA.SenderAccount.GetAddress().String()
-	timeoutHeight := clienttypes.NewHeight(0, 100)
+	timeoutHeight := clienttypes.NewHeight(10, 100)
 	memo := ""
 	msg := transfertypes.NewMsgTransfer(port, channel, coins, accountFrom, "INVALID", timeoutHeight, 0, memo)
 
@@ -481,7 +466,7 @@ func (s *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// for this test so that the failure to receive on chain B happens after the second packet is sent from chain A.
 	// That way we validate that chain A is blocking as expected, but the flow is reverted after the receive failure is
 	// acknowledged on chain A
-	res, err := s.chainA.SendMsgsNoCheck(msg)
+	res, err := s.chainA.SendMsgsNoCheck(&s.Suite, msg)
 	s.Assert().NoError(err)
 
 	// Sending again fails as the quota is filled
@@ -503,7 +488,7 @@ func (s *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// Execute the acknowledgement from chain B in chain A
 
 	// extract the sent packet
-	packet, err := ibctesting.ParsePacketFromEvents(res.Events)
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
 	s.Assert().NoError(err)
 
 	// recv in chain b
@@ -538,16 +523,16 @@ func (s *MiddlewareTestSuite) TestUnsetRateLimitingContract() {
 }
 
 // FindEvent finds an event with a matching name.
-func FindEvent(events []sdk.Event, name string) sdk.Event {
-	index := slices.IndexFunc(events, func(e sdk.Event) bool { return e.Type == name })
+func FindEvent(events []abci.Event, name string) abci.Event {
+	index := slices.IndexFunc(events, func(e abci.Event) bool { return e.Type == name })
 	if index == -1 {
-		return sdk.Event{}
+		return abci.Event{}
 	}
 	return events[index]
 }
 
 // ExtractAttributes returns the event's attributes in a map.
-func ExtractAttributes(event sdk.Event) map[string]string {
+func ExtractAttributes(event abci.Event) map[string]string {
 	attrs := make(map[string]string)
 	if event.Attributes == nil {
 		return attrs

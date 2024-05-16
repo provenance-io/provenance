@@ -122,6 +122,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -779,6 +780,7 @@ func New(
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icqModule,
 		icaModule,
+		ibctm.AppModule{},
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -955,6 +957,7 @@ func New(
 		paramstypes.ModuleName,
 		slashingtypes.ModuleName,
 		stakingtypes.ModuleName,
+		ibctm.ModuleName,
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
