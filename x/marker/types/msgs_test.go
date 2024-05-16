@@ -478,13 +478,44 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 				Amount: sdkmath.NewInt(100),
 				Denom:  "bbq-hotdog",
 			},
-			targetAddress: "",
+			targetAddress: "invalidaddress",
 			authority:     authority,
 			shouldFail:    true,
-			expectedError: "empty address string is not allowed",
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "valid with target address",
+			amount: sdk.Coin{
+				Amount: sdkmath.NewInt(100),
+				Denom:  "bbq-hotdog",
+			},
+			targetAddress: targetAddress,
+			authority:     authority,
+			shouldFail:    false,
+		},
+		{
+			name: "valid without target address",
+			amount: sdk.Coin{
+				Amount: sdkmath.NewInt(100),
+				Denom:  "bbq-hotdog",
+			},
+			targetAddress: "",
+			authority:     authority,
+			shouldFail:    false,
 		},
 		{
 			name: "invalid authority",
+			amount: sdk.Coin{
+				Amount: sdkmath.NewInt(100),
+				Denom:  "bbq-hotdog",
+			},
+			targetAddress: targetAddress,
+			authority:     "invalidaddress",
+			shouldFail:    true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "empty authority",
 			amount: sdk.Coin{
 				Amount: sdkmath.NewInt(100),
 				Denom:  "bbq-hotdog",
