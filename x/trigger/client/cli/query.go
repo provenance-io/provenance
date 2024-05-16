@@ -21,6 +21,7 @@ var cmdStart = fmt.Sprintf("%s query trigger", version.AppName)
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
+		Aliases:                    []string{"t"},
 		Short:                      "Querying commands for the triggers module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,

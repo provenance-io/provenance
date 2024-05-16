@@ -189,18 +189,7 @@ func TestMsgAddMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			errorMsg: "invalid fee amount",
 		},
 		{
-			name: "Invalid proposal recipient address",
-			msg: MsgAddMsgFeeProposalRequest{
-				MsgTypeUrl:           "msgType",
-				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
-				Recipient:            "invalid",
-				RecipientBasisPoints: "",
-				Authority:            authority,
-			},
-			errorMsg: "decoding bech32 failed: invalid bech32 string length 7",
-		},
-		{
-			name: "Invalid proposal invalid basis points for address",
+			name: "Invalid proposal invalid basis points for address failed ValidateBips",
 			msg: MsgAddMsgFeeProposalRequest{
 				MsgTypeUrl:           "msgType",
 				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
@@ -313,7 +302,7 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 			errorMsg: "invalid fee amount",
 		},
 		{
-			name: "Invalid proposal recipient address",
+			name: "Invalid proposal recipient address fail ValidateBips",
 			msg: MsgUpdateMsgFeeProposalRequest{
 				MsgTypeUrl:           msgType,
 				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
@@ -322,17 +311,6 @@ func TestMsgUpdateMsgFeeProposalRequestValidateBasic(t *testing.T) {
 				Authority:            authority,
 			},
 			errorMsg: "decoding bech32 failed: invalid bech32 string length 7",
-		},
-		{
-			name: "Invalid proposal invalid basis points for address",
-			msg: MsgUpdateMsgFeeProposalRequest{
-				MsgTypeUrl:           msgType,
-				AdditionalFee:        sdk.NewInt64Coin("hotdog", 10),
-				Recipient:            "cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27",
-				RecipientBasisPoints: "10001",
-				Authority:            authority,
-			},
-			errorMsg: "recipient basis points can only be between 0 and 10,000 : 10001",
 		},
 		{
 			name: "Valid proposal without recipient",
@@ -540,4 +518,62 @@ func TestUpdateConversionFeeDenomProposalRequestValidateBasic(t *testing.T) {
 		})
 	}
 
+}
+
+func TestValidateBips(t *testing.T) {
+	cases := []struct {
+		name                 string
+		recipient            string
+		recipientBasisPoints string
+		expectedError        string
+	}{
+		{
+			name:                 "valid recipient and basis points",
+			recipient:            "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			recipientBasisPoints: "5000",
+			expectedError:        "",
+		},
+		{
+			name:                 "valid recipient without basis points",
+			recipient:            "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			recipientBasisPoints: "",
+			expectedError:        "",
+		},
+		{
+			name:                 "invalid recipient with basis points",
+			recipient:            "invalid",
+			recipientBasisPoints: "1000",
+			expectedError:        "decoding bech32 failed: invalid bech32 string length 7",
+		},
+		{
+			name:                 "valid recipient with basis points too high",
+			recipient:            "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			recipientBasisPoints: "10001",
+			expectedError:        "recipient basis points can only be between 0 and 10,000 : 10001",
+		},
+		{
+			name:                 "valid recipient with invalid basis points format",
+			recipient:            "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck",
+			recipientBasisPoints: "invalid_bips",
+			expectedError:        `strconv.ParseUint: parsing "invalid_bips": invalid syntax`,
+		},
+		{
+			name:                 "basis points without recipient",
+			recipient:            "",
+			recipientBasisPoints: "1000",
+			expectedError:        "recipient basis points provided without a recipient",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateBips(tc.recipient, tc.recipientBasisPoints)
+			if tc.expectedError != "" {
+				require.EqualError(t, err, tc.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
