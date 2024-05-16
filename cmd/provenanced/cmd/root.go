@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -32,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -42,9 +44,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/cmd/provenanced/config"
@@ -93,6 +92,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 		WithHomeDir(app.DefaultNodeHome).
 		WithViper("PIO")
 	sdk.SetCoinDenomRegex(app.SdkCoinDenomRegex)
+
 	rootCmd := &cobra.Command{
 		Use:   "provenanced",
 		Short: "Provenance Blockchain App",
@@ -126,13 +126,25 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 			return nil
 		},
 	}
-	genAutoCompleteCmd(rootCmd)
+
 	initRootCmd(rootCmd, encodingConfig, tempApp.BasicModuleManager)
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        "",
 		flags.FlagKeyringBackend: "test",
 		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
 	})
+
+	// add keyring to autocli opts
+	autoCliOpts := tempApp.AutoCliOpts()
+	initClientCtx, _ = config.ApplyClientConfigToContext(initClientCtx, config.DefaultClientConfig())
+	autoCliOpts.Keyring, _ = keyring.NewAutoCLIKeyring(initClientCtx.Keyring)
+	autoCliOpts.ClientCtx = initClientCtx
+
+	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
+		panic(err)
+	}
+
+	fixTxWasmInstantiate2Aliases(rootCmd)
 
 	return rootCmd, encodingConfig
 }
@@ -165,17 +177,7 @@ func Execute(rootCmd *cobra.Command) error {
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, basicManager module.BasicManager) {
 	rootCmd.AddCommand(
 		InitCmd(basicManager),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator, encodingConfig.InterfaceRegistry.SigningContext().ValidatorAddressCodec()),
-		genutilcli.GenTxCmd(basicManager, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, encodingConfig.InterfaceRegistry.SigningContext().ValidatorAddressCodec()),
-		genutilcli.ValidateGenesisCmd(basicManager),
-		AddGenesisAccountCmd(app.DefaultNodeHome),
-		AddRootDomainAccountCmd(app.DefaultNodeHome),
-		AddGenesisMarkerCmd(app.DefaultNodeHome),
-		AddGenesisMsgFeeCmd(app.DefaultNodeHome),
-		AddGenesisCustomFloorPriceDenomCmd(app.DefaultNodeHome),
-		AddGenesisDefaultMarketCmd(app.DefaultNodeHome),
-		AddGenesisCustomMarketCmd(app.DefaultNodeHome),
-		cmtcli.NewCompletionCmd(rootCmd, true),
+		GenesisCmd(encodingConfig.TxConfig, basicManager, app.DefaultNodeHome),
 		testnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		ConfigCmd(),
@@ -183,6 +185,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 		snapshot.Cmd(newApp),
 		GetPreUpgradeCmd(),
 		GetDocGenCmd(),
+		GetTreeCmd(),
+		pruning.Cmd(newApp, app.DefaultNodeHome),
 	)
 
 	fixDebugPubkeyRawTypeFlag(rootCmd)
@@ -192,14 +196,13 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		server.StatusCommand(),
-		queryCommand(basicManager),
-		txCommand(basicManager),
+		queryCommand(),
+		txCommand(),
 		keys.Commands(),
 	)
 
 	// Add Rosetta command
 	// rootCmd.AddCommand(rosettacmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler)) // TODO[1760]: rosetta
-	rootCmd.AddCommand(pruning.Cmd(newApp, app.DefaultNodeHome))
 	// Disable usage when the start command returns an error.
 	startCmd, _, err := rootCmd.Find([]string{"start"})
 	if err != nil {
@@ -208,46 +211,11 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig, b
 	startCmd.SilenceUsage = true
 }
 
-// genAutoCompleteCmd creates the command for autocomplete.
-func genAutoCompleteCmd(rootCmd *cobra.Command) {
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "enable-cli-autocomplete [bash|zsh|fish|powershell]",
-		Short: "Generates autocomplete scripts for the provenanced binary",
-		Long: `To configure your shell to load completions for each session, add to your profile:
-
-# bash example
-echo '. <(provenanced enable-cli-autocomplete bash)' >> ~/.bash_profile
-source ~/.bash_profile
-
-# zsh example
-echo '. <(provenanced enable-cli-autocomplete zsh)' >> ~/.zshrc
-source ~/.zshrc
-`,
-		DisableFlagsInUseLine: true,
-		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
-		Args:                  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			switch args[0] {
-			case "bash":
-				return cmd.Root().GenBashCompletion(cmd.OutOrStdout())
-			case "zsh":
-				return cmd.Root().GenZshCompletion(cmd.OutOrStdout())
-			case "fish":
-				return cmd.Root().GenFishCompletion(cmd.OutOrStdout(), true)
-			case "powershell":
-				return cmd.Root().GenPowerShellCompletionWithDesc(cmd.OutOrStdout())
-			}
-
-			return fmt.Errorf("shell %s is not supported", args[0])
-		},
-	})
-}
-
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 }
 
-func queryCommand(basicManager module.BasicManager) *cobra.Command {
+func queryCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",
 		Aliases:                    []string{"q"},
@@ -258,20 +226,21 @@ func queryCommand(basicManager module.BasicManager) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		// authcmd.GetAccountCmd(), // TODO[1760]: auto-cli: Figure out how to still have this.
 		rpc.ValidatorCommand(),
-		// rpc.BlockCommand(), // TODO[1760]: auto-cli: Figure out how to still have this.
+		rpc.QueryEventForTxCmd(),
+		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
+		server.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
+		server.QueryBlockResultsCmd(),
 	)
 
-	basicManager.AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
 
-func txCommand(basicManager module.BasicManager) *cobra.Command {
+func txCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -284,16 +253,14 @@ func txCommand(basicManager module.BasicManager) *cobra.Command {
 		authcmd.GetSignCommand(),
 		authcmd.GetSignBatchCommand(),
 		authcmd.GetMultiSignCommand(),
+		authcmd.GetMultiSignBatchCmd(),
 		authcmd.GetValidateSignaturesCommand(),
-		flags.LineBreak,
 		authcmd.GetBroadcastCommand(),
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
 		GetCmdPioSimulateTx(),
-		flags.LineBreak,
 	)
 
-	basicManager.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -435,6 +402,23 @@ func fixDebugPubkeyRawTypeFlag(rootCmd *cobra.Command) {
 		}
 		debugCmd.Flags().AddFlag(f)
 	})
+}
+
+// fixTxWasmInstantiate2Aliases fixes the tx wasm instantiate2 aliases so that they're different
+// from the instantiate aliases by adding a 2 to the end (if it doesn't yet have one).
+func fixTxWasmInstantiate2Aliases(rootCmd *cobra.Command) {
+	cmd, _, err := rootCmd.Find([]string{"tx", "wasm", "instantiate2"})
+	if err != nil || cmd == nil {
+		// If the command doesn't exist, there's nothing to do.
+		return
+	}
+
+	// Go through all the aliases and make sure they end with a "2"
+	for i, alias := range cmd.Aliases {
+		if !strings.HasSuffix(alias, "2") {
+			cmd.Aliases[i] = alias + "2"
+		}
+	}
 }
 
 func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {

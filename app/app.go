@@ -19,6 +19,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtos "github.com/cometbft/cometbft/libs/os"
 
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -42,6 +44,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -116,7 +119,6 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
@@ -153,13 +155,11 @@ import (
 	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	metadatawasm "github.com/provenance-io/provenance/x/metadata/wasm"
-	"github.com/provenance-io/provenance/x/msgfees"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	msgfeeswasm "github.com/provenance-io/provenance/x/msgfees/wasm"
 	"github.com/provenance-io/provenance/x/name"
-	nameclient "github.com/provenance-io/provenance/x/name/client"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	namewasm "github.com/provenance-io/provenance/x/name/wasm"
@@ -690,11 +690,7 @@ func New(
 	// register the proposal types
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(wasm.RouterKey, wasmkeeper.NewLegacyWasmProposalHandler(app.WasmKeeper, wasmtypes.EnableAllProposals)). // TODO[1760]: gov: Can probably remove with gov v1
-		AddRoute(nametypes.ModuleName, name.NewProposalHandler(app.NameKeeper)).
-		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AccountKeeper, app.BankKeeper,
 		app.StakingKeeper, app.DistrKeeper, app.BaseApp.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000}, govAuthority,
@@ -792,7 +788,6 @@ func New(
 				append(
 					[]govclient.ProposalHandler{},
 					paramsclient.ProposalHandler,
-					nameclient.RootNameProposalHandler,
 				),
 			),
 		})
@@ -1323,6 +1318,28 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 // RegisterNodeService registers the node query server.
 func (app *App) RegisterNodeService(clientCtx client.Context, cfg serverconfig.Config) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
+}
+
+// AutoCliOpts returns the autocli options for the app.
+func (app *App) AutoCliOpts() autocli.AppOptions {
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range app.mm.Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	cfg := sdk.GetConfig()
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.mm.Modules),
+		AddressCodec:          authcodec.NewBech32Codec(cfg.GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(cfg.GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(cfg.GetBech32ConsensusAddrPrefix()),
+	}
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

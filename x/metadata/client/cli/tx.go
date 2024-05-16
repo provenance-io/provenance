@@ -30,7 +30,7 @@ const (
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Aliases:                    []string{"m"},
+		Aliases:                    []string{"md"},
 		Short:                      "Transaction commands for the metadata module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,

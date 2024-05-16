@@ -39,9 +39,14 @@ type SimulateTestSuite struct {
 	account2Addr sdk.AccAddress
 
 	floorGasPrice sdk.Coin
+
+	origAddrCacheEnabled bool
 }
 
 func (s *SimulateTestSuite) SetupTest() {
+	s.origAddrCacheEnabled = sdk.IsAddrCacheEnabled()
+	sdk.SetAddrCacheEnabled(false)
+
 	s.accountKey = secp256k1.GenPrivKeyFromSecret([]byte("acc2"))
 	addr, err := sdk.AccAddressFromHexUnsafe(s.accountKey.PubKey().Address().String())
 	s.Require().NoError(err)
@@ -85,6 +90,7 @@ func (s *SimulateTestSuite) SetupTest() {
 
 func (s *SimulateTestSuite) TearDownTest() {
 	testutil.Cleanup(s.testnet, s.T())
+	sdk.SetAddrCacheEnabled(s.origAddrCacheEnabled)
 }
 
 func TestSimulateTestSuite(t *testing.T) {
