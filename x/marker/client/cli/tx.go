@@ -53,6 +53,7 @@ const (
 	FlagGovProposal            = "gov-proposal"
 	FlagUsdMills               = "usd-mills"
 	FlagVolume                 = "volume"
+	FlagTargetAddress          = "target-address"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -87,6 +88,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdSetAccountData(),
 		GetCmdUpdateSendDenyListRequest(),
 		GetCmdAddNetAssetValues(),
+		GetCmdSupplyDecreaseProposal(),
 	)
 	return txCmd
 }
@@ -1065,6 +1067,80 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetCmdSupplyDecreaseProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "supply-decrease-proposal <amount>",
+		Aliases: []string{"sdp", "s-d-p"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Submit a supply decrease proposal of amount to decrease supply by along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a supply decrease proposal of amount to decrease supply by along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker supply-decrease-proposal 1000mycoin --title "My Title" --summary "My summary" --deposit 1000000000nhash 
+$ %[1]s tx marker sdp 100stake --title "My Title" --summary "My summary" --deposit 1000000000nhash
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			coin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid coin %s", args[0])
+			}
+			msg := types.NewMsgSupplyDecreaseProposalRequest(coin, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+func GetCmdSupplyIncreaseProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "supply-increase-proposal <amount>",
+		Aliases: []string{"sip", "s-i-p"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Submit a supply increase proposal of amount to increase supply by along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a supply increase proposal of amount to decrease supply by along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker supply-increase-proposal 1000mycoin --title "My Title" --summary "My summary" --deposit 1000000000nhash 
+$ %[1]s tx marker sdp 100stake --title "My Title" --summary "My summary" --deposit 1000000000nhash
+$ %[1]s tx marker sdp 100stake --target-address pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --title "My Title" --summary "My summary" --deposit 1000000000nhash
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			coin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid coin %s", args[0])
+			}
+			targetAddress, err := flagSet.GetString(FlagTargetAddress)
+			if err != nil {
+				return err
+			}
+			if len(targetAddress) > 0 {
+				_, err = sdk.AccAddressFromBech32(targetAddress)
+				if err != nil {
+					return fmt.Errorf("invalid target address %v: %w", targetAddress, err)
+				}
+			}
+			msg := types.NewMsgSupplyIncreaseProposalRequest(coin, targetAddress, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	cmd.Flags().String(FlagTargetAddress, "", "optional address to send minted coins")
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 	return cmd
 }
 

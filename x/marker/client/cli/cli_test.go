@@ -2124,3 +2124,117 @@ func TestParseBoolStrict(t *testing.T) {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestSupplyDecreaseProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit supply decrease proposal",
+			args: []string{
+				"1000stake",
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid amount",
+			args: []string{
+				"invalidamountstake",
+			},
+			expectErrMsg: "invalid coin invalidamountstake",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdSupplyDecreaseProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestSupplyIncreaseProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit supply increase proposal",
+			args: []string{
+				"1000stake",
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "success - submit supply increase proposal with target address",
+			args: []string{
+				"1000stake",
+				"--target-address=" + s.accountAddresses[1].String(),
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid amount",
+			args: []string{
+				"invalidamountstake",
+			},
+			expectErrMsg: "invalid coin invalidamountstake",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid target address",
+			args: []string{
+				"1000stake",
+				"--target-address=invalidaddress",
+			},
+			expectErrMsg: "invalid target address invalidaddress: decoding bech32 failed: invalid separator index -1",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdSupplyIncreaseProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
