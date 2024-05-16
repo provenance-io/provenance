@@ -1076,6 +1076,7 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 	return cmd
 }
 
+// GetCmdSupplyDecreaseProposal returns a CLI command for submitting a supply decrease proposal.
 func GetCmdSupplyDecreaseProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "supply-decrease-proposal <amount>",
@@ -1107,6 +1108,7 @@ $ %[1]s tx marker sdp 100stake --title "My Title" --summary "My summary" --depos
 	return cmd
 }
 
+// GetCmdSupplyIncreaseProposal returns a CLI command for submitting a supply increase proposal.
 func GetCmdSupplyIncreaseProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "supply-increase-proposal <amount>",
@@ -1150,6 +1152,7 @@ $ %[1]s tx marker sdp 100stake --target-address pb1gghjut3ccd8ay0zduzj64hwre2fxs
 	return cmd
 }
 
+// GetCmdSetAdministratorProposal returns a CLI command for submitting a set administrator proposal.
 func GetCmdSetAdministratorProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "set-administrator-proposal <denom> <access-grants>",
@@ -1198,6 +1201,7 @@ $ %[1]s tx marker sap mycoin "pb1...,mint,burn" --title "My Title" --summary "My
 	return cmd
 }
 
+// GetCmdRemoveAdministratorProposal returns a CLI command for submitting a remove administrator proposal.
 func GetCmdRemoveAdministratorProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "remove-administrator-proposal <denom> <removed-addresses>",
@@ -1234,6 +1238,7 @@ func GetCmdRemoveAdministratorProposal() *cobra.Command {
 	return cmd
 }
 
+// GetCmdChangeStatusProposal returns a CLI command for submitting a change status proposal.
 func GetCmdChangeStatusProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "change-status-proposal <denom> <new-status>",
@@ -1310,6 +1315,7 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 	return grants
 }
 
+// GetCmdWithdrawEscrowProposal returns a CLI command for submitting a withdraw escrow proposal.
 func GetCmdWithdrawEscrowProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "withdraw-escrow-proposal <denom> <amount> <target-address>",
@@ -1347,6 +1353,7 @@ func GetCmdWithdrawEscrowProposal() *cobra.Command {
 	return cmd
 }
 
+// GetCmdSetDenomMetadataProposal returns a CLI command for submitting a set denom metadata proposal.
 func GetCmdSetDenomMetadataProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "set-denom-metadata-proposal <denom> <name> <symbol> <description> <display> <exponent>",
