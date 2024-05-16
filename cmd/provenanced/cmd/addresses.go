@@ -102,8 +102,9 @@ Excess (hex): %s
 // AddMetaAddressEncoder returns metadata address encoder cobra Command.
 func AddMetaAddressEncoder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "encode [type] [uuid] [uuid|name]",
-		Short: "Encodes metadata uuids to bech32 address for specific type",
+		Use:     "encode [type] [uuid] [uuid|name]",
+		Aliases: []string{"e"},
+		Short:   "Encodes metadata uuids to bech32 address for specific type",
 		Long: fmt.Sprintf(`Encodes metadata uuids to bech32 address for specific type.
 
 %[1]s encode type uuid [uuid|name]

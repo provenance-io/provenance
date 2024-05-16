@@ -573,7 +573,7 @@ func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 	})
 }
 
-func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
+func (s *IntegrationTestSuite) TestGovRootNameCmd() {
 	testCases := []struct {
 		name         string
 		cmd          *cobra.Command
@@ -581,83 +581,112 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 		expectErr    bool
 		respType     proto.Message
 		expectedCode uint32
+		errorMessage string
 	}{
 		{
-			"should create a root name proposal",
-			namecli.GetRootNameProposalCmd(),
-			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
-				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
+			name: "should create a root name proposal",
+			cmd:  namecli.GetGovRootNameCmd(),
+			args: []string{"rootprop",
+				fmt.Sprintf("--%s=%s", govcli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", govcli.FlagSummary, "description"),
+				fmt.Sprintf("--%s=%s%s", govcli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should succeed with missing deposit",
-			namecli.GetRootNameProposalCmd(),
-			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
+			name: "should fail for missing arg",
+			cmd:  namecli.GetGovRootNameCmd(),
+			args: []string{
+				fmt.Sprintf("--%s=%s", govcli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", govcli.FlagSummary, "description"),
+				fmt.Sprintf("--%s=%s%s", govcli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
-			false, &sdk.TxResponse{}, 0,
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
+			errorMessage: "accepts 1 arg(s), received 0",
 		},
 		{
-			"should fail for bad deposit",
-			namecli.GetRootNameProposalCmd(),
-			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
-				fmt.Sprintf("--%s=%s", namecli.FlagDeposit, "10"),
+			name: "should succeed with missing deposit",
+			cmd:  namecli.GetGovRootNameCmd(),
+			args: []string{"rootprop",
+				fmt.Sprintf("--%s=%s", govcli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", govcli.FlagSummary, "description"),
 				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
-			true, &sdk.TxResponse{}, 1,
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 0,
 		},
 		{
-			"should fail for empty title",
-			namecli.GetRootNameProposalCmd(),
-			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", namecli.FlagDescription, "description"),
-				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
+			name: "should fail for bad deposit",
+			cmd:  namecli.GetGovRootNameCmd(),
+			args: []string{"rootprop",
+				fmt.Sprintf("--%s=%s", govcli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s", govcli.FlagSummary, "description"),
+				fmt.Sprintf("--%s=%s", govcli.FlagDeposit, "10"),
+				fmt.Sprintf("--%s=%s", "owner", s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
-			true, &sdk.TxResponse{}, 1,
+			expectErr:    true,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 1,
 		},
 		{
-			"should fail for empty description",
-			namecli.GetRootNameProposalCmd(),
-			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
+			name: "should fail for empty title",
+			cmd:  namecli.GetGovRootNameCmd(),
+			args: []string{"rootprop",
+				fmt.Sprintf("--%s=%s", govcli.FlagSummary, "description"),
+				fmt.Sprintf("--%s=%s%s", govcli.FlagDeposit, "10", s.cfg.BondDenom),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
-			true, &sdk.TxResponse{}, 1,
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 18,
 		},
 		{
-			"should fail for bad owner",
-			namecli.GetRootNameProposalCmd(),
-			[]string{"rootprop",
-				fmt.Sprintf("--%s=%s", namecli.FlagTitle, "title"),
-				fmt.Sprintf("--%s=%s%s", namecli.FlagDeposit, "10", s.cfg.BondDenom),
+			name: "should fail for empty summary",
+			cmd:  namecli.GetGovRootNameCmd(),
+			args: []string{"rootprop",
+				fmt.Sprintf("--%s=%s", govcli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s%s", govcli.FlagDeposit, "10", s.cfg.BondDenom),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			},
+			expectErr:    false,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 18,
+		},
+		{
+			name: "should fail for bad owner",
+			cmd:  namecli.GetGovRootNameCmd(),
+			args: []string{"rootprop",
+				fmt.Sprintf("--%s=%s", govcli.FlagTitle, "title"),
+				fmt.Sprintf("--%s=%s%s", govcli.FlagDeposit, "10", s.cfg.BondDenom),
 
 				fmt.Sprintf("--%s=%s", "owner", "asdf"),
 
@@ -666,7 +695,9 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			},
-			true, &sdk.TxResponse{}, 1,
+			expectErr:    true,
+			respType:     &sdk.TxResponse{},
+			expectedCode: 1,
 		},
 	}
 
@@ -677,6 +708,7 @@ func (s *IntegrationTestSuite) TestCreateRootNameCmd() {
 			testcli.NewCLITxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
+				WithExpErrMsg(tc.errorMessage).
 				Execute(s.T(), s.testnet)
 		})
 	}

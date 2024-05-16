@@ -66,23 +66,40 @@ Ref: https://keepachangelog.com/en/1.0.0/
   *  Name module param migration [#1937](https://github.com/provenance-io/provenance/pull/1937).
   *  IbcHooks module param migration [#1939](https://github.com/provenance-io/provenance/pull/1939).
   *  Bank module param migration [#1967](https://github.com/provenance-io/provenance/pull/1967).
+* Remove `msgfees` legacy gov proposals [#1953](https://github.com/provenance-io/provenance/pull/1953).
 * Restore the hold module [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Restore gov-prop cli commands and fix next key decoding [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Use fields of the SimulationState for the encoders needed for simulations [#1931](https://github.com/provenance-io/provenance/pull/1931).
 * Removes sync-info code for sdk v0.50 [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Remove `name` legacy gov proposals [#1963](https://github.com/provenance-io/provenance/pull/1963).
 * Fix most of the failing unit tests [#1943](https://github.com/provenance-io/provenance/pull/1943).
 * Clean up ReadFromClient [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Enhance the config get and changed commands to make it easier to find fields [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* Change the default keyring backend to "os", but leave it as "test" for testnets [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* Change the default broadcast mode to "sync" [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* The pre-upgrade command now updates the client config's broadcast mode to "sync" if it's set to "block" [#1968](https://github.com/provenance-io/provenance/pull/1968).
 * Remove all `GetSigners()` methods [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Ensure all `Msg`s have correctly identified `signer` fields [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Clean up all the module codecs [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Switch to auto-generated `String` and `Equal` methods for most proto messages [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Clean up the marker module's expected BankKeeper interface [#1954](https://github.com/provenance-io/provenance/pull/1954).
+* Add the auto-cli commands and a few others newly added by the SDK [#1971](https://github.com/provenance-io/provenance/pull/1971).
+
+### Client Breaking
+
+* The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` [#1971](https://github.com/provenance-io/provenance/pull/1971).
+* Move the genesis-related commands into a new `genesis` sub-command, and remove the `genesis-` parts of their names [#1971](https://github.com/provenance-io/provenance/pull/1971).
+* Many of the SDK's query commands have had their usage altered [#1971](https://github.com/provenance-io/provenance/pull/1971).
+
+### Deprecated
+
+* In the config commands, the "tendermint" and "tm" options are deprecated, replaced with "cometbft", "comet", and "cmt" [#1968](https://github.com/provenance-io/provenance/pull/1968).
 
 ### Dependencies
 
 - Bump `github.com/cosmos/ibc-go/v8` from 8.0.0 to 8.2.1 ([#1910](https://github.com/provenance-io/provenance/pull/1910), [#1956](https://github.com/provenance-io/provenance/pull/1956))
-- Bump `google.golang.org/grpc` from 1.62.1 to 1.63.2 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918))
+- Bump `google.golang.org/grpc` from 1.62.1 to 1.64.0 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918), [#1972](https://github.com/provenance-io/provenance/pull/1972))
 - Bump `bufbuild/buf-breaking-action` from 1.1.3 to 1.1.4 ([#1894](https://github.com/provenance-io/provenance/pull/1894))
 - Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
 - Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.31.0 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949))

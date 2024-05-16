@@ -18,17 +18,17 @@ if ! [ -f ${PIO_HOME}/config/genesis.json ]; then
       key_name=$(basename $f .txt)
       echo "Adding account $key_name from mnemonic file $f with 100000000000000000000nhash"
       "${BINARY}" -t --home "${PIO_HOME}" keys add $key_name --recover --keyring-backend test < "$f"
-      "${BINARY}" -t --home "${PIO_HOME}" add-genesis-account $key_name 100000000000000000000nhash --keyring-backend test
+      "${BINARY}" -t --home "${PIO_HOME}" genesis add-account $key_name 100000000000000000000nhash --keyring-backend test
       let num_accounts=num_accounts+1
   done
-  "${BINARY}" -t --home "${PIO_HOME}" add-genesis-root-name validator pio --keyring-backend test
-  "${BINARY}" -t --home "${PIO_HOME}" add-genesis-root-name validator pb --restrict=false --keyring-backend test
-  "${BINARY}" -t --home "${PIO_HOME}" add-genesis-root-name validator io --restrict --keyring-backend test
-  "${BINARY}" -t --home "${PIO_HOME}" add-genesis-root-name validator provenance --keyring-backend test
-  "${BINARY}" -t --home "${PIO_HOME}" add-genesis-marker ${num_accounts}00000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test
-  "${BINARY}" -t --home "${PIO_HOME}" gentx validator 100000000000000nhash --keyring-backend test --chain-id=chain-dev
-  "${BINARY}" -t --home "${PIO_HOME}" add-genesis-default-market
-  "${BINARY}" -t --home "${PIO_HOME}" collect-gentxs
+  "${BINARY}" -t --home "${PIO_HOME}" genesis add-root-name validator pio --keyring-backend test
+  "${BINARY}" -t --home "${PIO_HOME}" genesis add-root-name validator pb --restrict=false --keyring-backend test
+  "${BINARY}" -t --home "${PIO_HOME}" genesis add-root-name validator io --restrict --keyring-backend test
+  "${BINARY}" -t --home "${PIO_HOME}" genesis add-root-name validator provenance --keyring-backend test
+  "${BINARY}" -t --home "${PIO_HOME}" genesis add-marker ${num_accounts}00000000000000000000nhash --manager validator --access mint,burn,admin,withdraw,deposit --activate --keyring-backend test
+  "${BINARY}" -t --home "${PIO_HOME}" genesis gentx validator 100000000000000nhash --keyring-backend test --chain-id=chain-dev
+  "${BINARY}" -t --home "${PIO_HOME}" genesis add-default-market
+  "${BINARY}" -t --home "${PIO_HOME}" genesis collect-gentxs
   "${BINARY}" -t --home "${PIO_HOME}" config set rpc.laddr tcp://0.0.0.0:26657
   "${BINARY}" -t --home "${PIO_HOME}" config set api.enable true
   "${BINARY}" -t --home "${PIO_HOME}" config set api.swagger true

@@ -100,23 +100,8 @@ func (msg *MsgAddMsgFeeProposalRequest) ValidateBasic() error {
 		return err
 	}
 
-	if len(msg.Recipient) != 0 {
-		_, err := sdk.AccAddressFromBech32(msg.Recipient)
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(msg.RecipientBasisPoints) > 0 && len(msg.Recipient) > 0 {
-		bips, err := strconv.ParseUint(msg.RecipientBasisPoints, 0, 64)
-		if err != nil {
-			return err
-		}
-		if bips > 10_000 {
-			return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", msg.RecipientBasisPoints)
-		}
-	} else if len(msg.RecipientBasisPoints) > 0 && len(msg.Recipient) == 0 {
-		return fmt.Errorf("")
+	if err := ValidateBips(msg.Recipient, msg.RecipientBasisPoints); err != nil {
+		return err
 	}
 
 	_, err := sdk.AccAddressFromBech32(msg.Authority)
@@ -124,6 +109,28 @@ func (msg *MsgAddMsgFeeProposalRequest) ValidateBasic() error {
 		return err
 	}
 
+	return nil
+}
+
+func ValidateBips(recipient, recipientBasisPoints string) error {
+	if len(recipient) != 0 {
+		_, err := sdk.AccAddressFromBech32(recipient)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(recipientBasisPoints) > 0 && len(recipient) > 0 {
+		bips, err := strconv.ParseUint(recipientBasisPoints, 0, 64)
+		if err != nil {
+			return err
+		}
+		if bips > 10_000 {
+			return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", recipientBasisPoints)
+		}
+	} else if len(recipientBasisPoints) > 0 && len(recipient) == 0 {
+		return fmt.Errorf("recipient basis points provided without a recipient")
+	}
 	return nil
 }
 
@@ -146,21 +153,10 @@ func (msg *MsgUpdateMsgFeeProposalRequest) ValidateBasic() error {
 		return ErrInvalidFee
 	}
 
-	if len(msg.Recipient) != 0 {
-		_, err := sdk.AccAddressFromBech32(msg.Recipient)
-		if err != nil {
-			return err
-		}
+	if err := ValidateBips(msg.Recipient, msg.RecipientBasisPoints); err != nil {
+		return err
 	}
-	if len(msg.RecipientBasisPoints) > 0 {
-		bips, err := strconv.ParseUint(msg.RecipientBasisPoints, 0, 64)
-		if err != nil {
-			return err
-		}
-		if bips > 10_000 {
-			return fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", msg.RecipientBasisPoints)
-		}
-	}
+
 	_, err := sdk.AccAddressFromBech32(msg.Authority)
 	if err != nil {
 		return err

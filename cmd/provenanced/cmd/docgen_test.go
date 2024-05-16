@@ -17,6 +17,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 
 	"github.com/provenance-io/provenance/app"
@@ -25,6 +26,10 @@ import (
 )
 
 func TestDocGen(t *testing.T) {
+	origCache := sdk.IsAddrCacheEnabled()
+	defer sdk.SetAddrCacheEnabled(origCache)
+	sdk.SetAddrCacheEnabled(false)
+
 	appCodec := app.MakeTestEncodingConfig(t).Marshaler
 	tests := []struct {
 		name         string
@@ -136,7 +141,7 @@ func TestDocGen(t *testing.T) {
 			}
 
 			cfg, err := genutiltest.CreateDefaultCometConfig(home)
-			require.NoError(t, err, "Created default tendermint config")
+			require.NoError(t, err, "Created default cometbft config")
 
 			logger := log.NewNopLogger()
 			serverCtx := server.NewContext(viper.New(), cfg, logger)

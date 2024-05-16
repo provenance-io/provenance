@@ -17,6 +17,7 @@ import (
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        ibcratelimit.ModuleName,
+		Aliases:                    []string{"rl"},
 		Short:                      "Querying commands for the ibcratelimit module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,

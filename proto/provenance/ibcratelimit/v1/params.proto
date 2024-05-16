@@ -1,8 +1,6 @@
 syntax = "proto3";
 package provenance.ibcratelimit.v1;
 
-import "gogoproto/gogo.proto";
-
 option go_package          = "github.com/provenance-io/provenance/x/ibcratelimit";
 option java_package        = "io.provenance.ibcratelimit.v1";
 option java_multiple_files = true;
