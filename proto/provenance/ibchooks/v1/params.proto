@@ -1,8 +1,6 @@
 syntax = "proto3";
 package provenance.ibchooks.v1;
 
-import "gogoproto/gogo.proto";
-
 option go_package = "github.com/provenance-io/provenance/x/ibchooks/types";
 
 option java_package        = "io.provenance.ibchooks.v1";

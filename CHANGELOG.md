@@ -66,6 +66,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   *  Name module param migration [#1937](https://github.com/provenance-io/provenance/pull/1937).
   *  IbcHooks module param migration [#1939](https://github.com/provenance-io/provenance/pull/1939).
   *  Bank module param migration [#1967](https://github.com/provenance-io/provenance/pull/1967).
+* Remove `msgfees` legacy gov proposals [#1953](https://github.com/provenance-io/provenance/pull/1953).
 * Restore the hold module [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Restore gov-prop cli commands and fix next key decoding [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).

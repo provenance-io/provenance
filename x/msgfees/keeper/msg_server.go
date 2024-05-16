@@ -50,18 +50,7 @@ func (m msgServer) AddMsgFeeProposal(goCtx context.Context, req *types.MsgAddMsg
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	prop := types.AddMsgFeeProposal{
-		Title:                "AddMsgFeeProposal",
-		Description:          "AddMsgFeeProposal",
-		MsgTypeUrl:           req.MsgTypeUrl,
-		AdditionalFee:        req.AdditionalFee,
-		Recipient:            req.Recipient,
-		RecipientBasisPoints: req.RecipientBasisPoints,
-	}
-
-	err := HandleAddMsgFeeProposal(ctx, m.Keeper, &prop, m.registry)
+	err := m.Keeper.AddMsgFee(sdk.UnwrapSDKContext(goCtx), req.MsgTypeUrl, req.Recipient, req.RecipientBasisPoints, req.AdditionalFee)
 	if err != nil {
 		return nil, err
 	}
@@ -74,18 +63,7 @@ func (m msgServer) UpdateMsgFeeProposal(goCtx context.Context, req *types.MsgUpd
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	prop := types.UpdateMsgFeeProposal{
-		Title:                "UpdateMsgFeeProposal",
-		Description:          "UpdateMsgFeeProposal",
-		MsgTypeUrl:           req.MsgTypeUrl,
-		AdditionalFee:        req.AdditionalFee,
-		Recipient:            req.Recipient,
-		RecipientBasisPoints: req.RecipientBasisPoints,
-	}
-
-	err := HandleUpdateMsgFeeProposal(ctx, m.Keeper, &prop, m.registry)
+	err := m.Keeper.UpdateMsgFee(sdk.UnwrapSDKContext(goCtx), req.MsgTypeUrl, req.Recipient, req.RecipientBasisPoints, req.AdditionalFee)
 	if err != nil {
 		return nil, err
 	}
@@ -98,15 +76,7 @@ func (m msgServer) RemoveMsgFeeProposal(goCtx context.Context, req *types.MsgRem
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	prop := types.RemoveMsgFeeProposal{
-		Title:       "RemoveMsgFeeProposal",
-		Description: "RemoveMsgFeeProposal",
-		MsgTypeUrl:  req.MsgTypeUrl,
-	}
-
-	err := HandleRemoveMsgFeeProposal(ctx, m.Keeper, &prop, m.registry)
+	err := m.Keeper.RemoveMsgFee(sdk.UnwrapSDKContext(goCtx), req.MsgTypeUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -119,18 +89,7 @@ func (m msgServer) UpdateNhashPerUsdMilProposal(goCtx context.Context, req *type
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	prop := types.UpdateNhashPerUsdMilProposal{
-		Title:          "UpdateNhashPerUsdMilProposal",
-		Description:    "UpdateNhashPerUsdMilProposal",
-		NhashPerUsdMil: req.NhashPerUsdMil,
-	}
-
-	err := HandleUpdateNhashPerUsdMilProposal(ctx, m.Keeper, &prop)
-	if err != nil {
-		return nil, err
-	}
+	m.Keeper.UpdateNhashPerUsdMilParam(sdk.UnwrapSDKContext(goCtx), req.NhashPerUsdMil)
 
 	return &types.MsgUpdateNhashPerUsdMilProposalResponse{}, nil
 }
@@ -140,18 +99,7 @@ func (m msgServer) UpdateConversionFeeDenomProposal(goCtx context.Context, req *
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", m.GetAuthority(), req.Authority)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	prop := types.UpdateConversionFeeDenomProposal{
-		Title:              "UpdateConversionFeeDenomProposal",
-		Description:        "UpdateConversionFeeDenomProposal",
-		ConversionFeeDenom: req.ConversionFeeDenom,
-	}
-
-	err := HandleUpdateConversionFeeDenomProposal(ctx, m.Keeper, &prop)
-	if err != nil {
-		return nil, err
-	}
+	m.Keeper.UpdateConversionFeeDenomParam(sdk.UnwrapSDKContext(goCtx), req.ConversionFeeDenom)
 
 	return &types.MsgUpdateConversionFeeDenomProposalResponse{}, nil
 }
