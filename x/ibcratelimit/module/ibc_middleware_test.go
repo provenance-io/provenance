@@ -21,6 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
@@ -81,17 +82,6 @@ func (s *MiddlewareTestSuite) SetupTest() {
 	s.Require().NoError(err, "setting mint keeper params for chainA")
 	err = s.chainB.GetProvenanceApp().MintKeeper.Params.Set(s.chainB.GetContext(), params)
 	s.Require().NoError(err, "setting mint keeper params for chainB")
-
-	/*// TODO Extract this out
-	_, err = s.chainA.GetProvenanceApp().FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: s.chainA.CurrentHeader.GetHeight(),
-	})
-	s.Require().NoError(err)
-
-	_, err = s.chainB.GetProvenanceApp().FinalizeBlock(&abci.RequestFinalizeBlock{
-		Height: s.chainB.CurrentHeader.GetHeight(),
-	})
-	s.Require().NoError(err)*/
 }
 
 // MessageFromAToB sends a message from chain A to chain B.
@@ -227,6 +217,28 @@ func (s *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string, dur
 }
 
 // Tests
+
+// Test rate limits are reverted if a "send" fails
+func (suite *MiddlewareTestSuite) TestNonICS20() {
+	suite.initializeEscrow()
+	// Setup contract
+	suite.chainA.StoreContractRateLimiterDirect(&suite.Suite)
+	quotas := suite.BuildChannelQuota("weekly", "channel-0", sdk.DefaultBondDenom, 604800, 1, 1)
+
+	initMsg := CreateRateLimiterInitMessage(suite.chainA, quotas)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, initMsg, 1)
+	suite.chainA.RegisterRateLimiterContract(&suite.Suite, addr)
+
+	provApp := suite.chainA.GetProvenanceApp()
+
+	data := []byte("{}")
+	_, err := provApp.RateLimitMiddleware.SendPacket(suite.chainA.GetContext(), capabilitytypes.NewCapability(1), "wasm.cosmos14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s4hmalr", "channel-0", clienttypes.NewHeight(0, 0), 1, data)
+
+	suite.Require().Error(err)
+	// This will error out, but not because of rate limiting
+	suite.Require().NotContains(err.Error(), "rate limit")
+	suite.Require().Contains(err.Error(), "channel not found")
+}
 
 // Test that Sending IBC messages works when the middleware isn't configured
 func (s *MiddlewareTestSuite) TestSendTransferNoContract() {

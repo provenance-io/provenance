@@ -288,11 +288,12 @@ type App struct {
 	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
 	ScopedOracleKeeper   capabilitykeeper.ScopedKeeper
 
-	TransferStack    *ibchooks.IBCMiddleware
-	Ics20WasmHooks   *ibchooks.WasmHooks
-	Ics20MarkerHooks *ibchooks.MarkerHooks
-	IbcHooks         *ibchooks.IbcHooks
-	HooksICS4Wrapper ibchooks.ICS4Middleware
+	TransferStack       *ibchooks.IBCMiddleware
+	Ics20WasmHooks      *ibchooks.WasmHooks
+	Ics20MarkerHooks    *ibchooks.MarkerHooks
+	IbcHooks            *ibchooks.IbcHooks
+	HooksICS4Wrapper    ibchooks.ICS4Middleware
+	RateLimitMiddleware porttypes.Middleware
 
 	// the module manager
 	mm                 *module.Manager
@@ -543,8 +544,8 @@ func New(
 	)
 	app.TransferKeeper = &transferKeeper
 	transferModule := ibctransfer.NewIBCModule(*app.TransferKeeper)
-	rateLimitingTransferModule = *rateLimitingTransferModule.WithIBCModule(transferModule)
-	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &app.HooksICS4Wrapper)
+	app.RateLimitMiddleware = rateLimitingTransferModule.WithIBCModule(transferModule)
+	hooksTransferModule := ibchooks.NewIBCMiddleware(app.RateLimitMiddleware, &app.HooksICS4Wrapper)
 	app.TransferStack = &hooksTransferModule
 
 	app.NameKeeper = namekeeper.NewKeeper(appCodec, keys[nametypes.StoreKey])
