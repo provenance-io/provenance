@@ -1231,6 +1231,50 @@ func GetCmdRemoveAdministratorProposal() *cobra.Command {
 	return cmd
 }
 
+func GetCmdChangeStatusProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "change-status-proposal <denom> <new-status>",
+		Aliases: []string{"csp", "c-s-p"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Submit a change status proposal for a marker along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a change status proposal for a marker along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker change-status-proposal mycoin ACTIVE --title "My Title" --summary "My summary" --deposit 1000000000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			denom := args[0]
+			newStatusStr := strings.ToUpper(args[1])
+
+			var newStatus types.MarkerStatus
+			switch newStatusStr {
+			case "PROPOSED":
+				newStatus = types.StatusProposed
+			case "FINALIZED":
+				newStatus = types.StatusFinalized
+			case "ACTIVE":
+				newStatus = types.StatusActive
+			case "CANCELLED":
+				newStatus = types.StatusCancelled
+			case "DESTROYED":
+				newStatus = types.StatusDestroyed
+			default:
+				return fmt.Errorf("invalid status: %v", args[1])
+			}
+
+			msg := types.NewMsgChangeStatusProposalRequest(denom, newStatus, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
 func getPeriodReset(duration int64) time.Time {
 	return time.Now().Add(getPeriod(duration))
 }
