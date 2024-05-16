@@ -1335,7 +1335,7 @@ func GetCmdWithdrawEscrowProposal() *cobra.Command {
 
 			coins, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
-				return fmt.Errorf("invalid amount %s: %v", args[1], err)
+				return fmt.Errorf("invalid amount %s: %w", args[1], err)
 			}
 
 			targetAddress := args[2]
