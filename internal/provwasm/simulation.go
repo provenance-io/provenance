@@ -84,8 +84,8 @@ func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(&wasmGenesis)
 }
 
-// ProposalContents doesn't return any content functions for governance proposals.
-func (pw Wrapper) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+// ProposalMsgs returns the wasm weighted proposal messages.
+func (pw Wrapper) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return wasmsimulation.ProposalMsgs(pw.bk, pw.wk)
 }
 

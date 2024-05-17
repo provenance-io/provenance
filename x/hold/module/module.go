@@ -133,12 +133,6 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the hold content functions used to
-// simulate governance proposals, of which there are none for the hold module.
-func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
 // RandomizedParams returns randomized hold param changes for the simulator,
 // of which there are none since this module doesn't use the params module.
 func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange { return nil }
