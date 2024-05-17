@@ -32,6 +32,11 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
+var (
+	_ module.AppModuleSimulation = (*Wrapper)(nil)
+	_ module.HasProposalMsgs     = (*Wrapper)(nil)
+)
+
 const (
 	denom      = "coinfortestingsmartc" // must be a string of length 20
 	namePrefix = "scsnameprefix"        // must be a string of length 13
