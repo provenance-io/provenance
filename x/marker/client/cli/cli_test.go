@@ -937,7 +937,7 @@ func (s *IntegrationTestSuite) TestMarkerTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -1085,7 +1085,7 @@ func (s *IntegrationTestSuite) TestMarkerIbcTransfer() {
 				args = append(args, fmt.Sprintf("--%s=%s", markercli.FlagMemo, tc.flagMemo))
 			}
 
-			testcli.NewCLITxExecutor(cmd, args).
+			testcli.NewTxExecutor(cmd, args).
 				WithExpErrMsg(tc.expectedErr).
 				Execute(s.T(), s.testnet)
 		})
@@ -1178,7 +1178,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 			)
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectedErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -1422,7 +1422,7 @@ func (s *IntegrationTestSuite) TestAddFinalizeActivateMarkerTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -1496,7 +1496,7 @@ func (s *IntegrationTestSuite) TestUpdateRequiredAttributesTxCommand() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErrMsg(tc.expectedError).
 				Execute(s.T(), s.testnet)
 		})
@@ -1518,7 +1518,7 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 		}
-		testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
+		testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
 	})
 	if s.T().Failed() {
 		s.FailNow("Stopping due to setup error")
@@ -1568,7 +1568,7 @@ func (s *IntegrationTestSuite) TestGetCmdUpdateForcedTransfer() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			txResp := testcli.NewCLITxExecutor(markercli.GetCmdUpdateForcedTransfer(), tc.args).
+			txResp := testcli.NewTxExecutor(markercli.GetCmdUpdateForcedTransfer(), tc.args).
 				WithExpErrMsg(tc.expErr).
 				WithExpCode(tc.expCode).
 				Execute(s.T(), s.testnet)
@@ -1627,7 +1627,7 @@ func (s *IntegrationTestSuite) TestGetCmdAddNetAssetValues() {
 			"--"+markercli.FlagSupplyFixed,
 			"--"+markercli.FlagAllowGovernanceControl,
 		)
-		testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
+		testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
 	})
 	if s.T().Failed() {
 		s.FailNow("Stopping due to setup error")
@@ -1656,7 +1656,7 @@ func (s *IntegrationTestSuite) TestGetCmdAddNetAssetValues() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(markercli.GetCmdAddNetAssetValues(), tc.args).
+			testcli.NewTxExecutor(markercli.GetCmdAddNetAssetValues(), tc.args).
 				WithExpErrMsg(tc.expErr).
 				Execute(s.T(), s.testnet)
 		})
@@ -2165,7 +2165,7 @@ func (s *IntegrationTestSuite) TestSupplyDecreaseProposal() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -2231,7 +2231,7 @@ func (s *IntegrationTestSuite) TestSupplyIncreaseProposal() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -2281,7 +2281,7 @@ func (s *IntegrationTestSuite) TestSetAdministratorProposal() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -2331,7 +2331,7 @@ func (s *IntegrationTestSuite) TestRemoveAdministratorProposal() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -2390,7 +2390,7 @@ func (s *IntegrationTestSuite) TestChangeStatusProposal() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -2452,7 +2452,7 @@ func (s *IntegrationTestSuite) TestWithdrawEscrowProposal() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -2500,7 +2500,7 @@ func (s *IntegrationTestSuite) TestSetDenomMetadataProposal() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)

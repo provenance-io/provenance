@@ -710,7 +710,7 @@ func (s *IntegrationTestSuite) TestAttributeTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -1017,7 +1017,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -1122,7 +1122,7 @@ func (s *IntegrationTestSuite) TestDeleteDistinctAccountAttributeTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -1206,7 +1206,7 @@ func (s *IntegrationTestSuite) TestDeleteAccountAttributeTxCommands() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -1519,7 +1519,7 @@ func (s *IntegrationTestSuite) TestUpdateAccountAttributeExpirationCmd() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErrMsg(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
