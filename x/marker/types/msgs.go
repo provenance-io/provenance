@@ -33,14 +33,18 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgSetDenomMetadataRequest)(nil),
 	(*MsgGrantAllowanceRequest)(nil),
 	(*MsgAddFinalizeActivateMarkerRequest)(nil),
-	(*MsgSupplyIncreaseProposalRequest)(nil),
 	(*MsgUpdateRequiredAttributesRequest)(nil),
 	(*MsgUpdateForcedTransferRequest)(nil),
 	(*MsgSetAccountDataRequest)(nil),
 	(*MsgUpdateSendDenyListRequest)(nil),
 	(*MsgAddNetAssetValuesRequest)(nil),
 
+	(*MsgSupplyIncreaseProposalRequest)(nil),
 	(*MsgSupplyDecreaseProposalRequest)(nil),
+	(*MsgChangeStatusProposalRequest)(nil),
+	(*MsgSetDenomMetadataProposalRequest)(nil),
+	(*MsgSetAdministratorProposalRequest)(nil),
+	(*MsgRemoveAdministratorProposalRequest)(nil),
 }
 
 func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest {
