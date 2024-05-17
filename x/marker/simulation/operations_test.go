@@ -220,18 +220,13 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	govMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 3))
 	depositPeriod := 1 * time.Second
 
-	resetParams := func(t *testing.T, ctx sdk.Context) {
-		// TODO[1760]: gov: Figure out how to set just the deposit params and uncomment this.
-		_, _ = govMinDep, depositPeriod
-		/*
-			require.NotPanics(s.T(), func() {
-				s.app.GovKeeper.SetDepositParams(s.ctx, govtypes.DepositParams{
-					MinDeposit:       govMinDep,
-					MaxDepositPeriod: &depositPeriod,
-				})
-			}, "gov SetDepositParams")
-
-		*/
+	resetParams := func() {
+		params := govtypes.DefaultParams()
+		params.MinDeposit = govMinDep
+		params.MaxDepositPeriod = &depositPeriod
+		assertions.RequireNotPanicsNoError(s.T(), func() error {
+			return s.app.GovKeeper.Params.Set(s.ctx, params)
+		}, "reset gov params")
 	}
 
 	access := types.AccessGrant{
@@ -319,7 +314,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	}
 
 	for _, tc := range tests {
-		resetParams(s.T(), s.ctx)
+		resetParams()
 		s.Run(tc.name, func() {
 			args := &simulation.SendGovMsgArgs{
 				WeightedOpsArgs: *s.getWeightedOpsArgs(),
