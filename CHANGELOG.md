@@ -86,7 +86,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Clean up the marker module's expected BankKeeper interface [#1954](https://github.com/provenance-io/provenance/pull/1954).
 * Add the auto-cli commands and a few others newly added by the SDK [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Fix unit tests for ibcratelimit [#1977](https://github.com/provenance-io/provenance/pull/1977).
-* * Fix unit tests for ibchooks [#1978](https://github.com/provenance-io/provenance/pull/1978).
+* * Fix unit tests for ibchooks [#1980](https://github.com/provenance-io/provenance/pull/1980).
 
 ### Client Breaking
 
