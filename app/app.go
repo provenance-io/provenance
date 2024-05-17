@@ -960,7 +960,7 @@ func New(
 		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
-		consensusparamtypes.ModuleName, // TODO[1760]: Is this the correct placement?
+		consensusparamtypes.ModuleName,
 
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,

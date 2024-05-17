@@ -53,7 +53,7 @@ func createQueryCmd[T proto.Message](n *network.Network, cmdName, url string, em
 		Use:          "generic-" + cmdName,
 		Args:         cobra.NoArgs,
 		SilenceUsage: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

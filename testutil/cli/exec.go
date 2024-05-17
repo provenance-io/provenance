@@ -9,6 +9,7 @@ import (
 	sdkcli "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/queries"
 )

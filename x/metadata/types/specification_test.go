@@ -860,7 +860,7 @@ func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 				"",
 			),
-			fmt.Sprintf("description Name cannot be empty"),
+			"description Name cannot be empty",
 		},
 		{
 			"invalid name - too long",
@@ -954,7 +954,7 @@ func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 				"www.test.com",
 				"",
 			),
-			fmt.Sprintf("url WebsiteUrl must use the http, https, or data protocol"),
+			"url WebsiteUrl must use the http, https, or data protocol",
 		},
 		{
 			"valid website url - http",
@@ -1046,7 +1046,7 @@ func (s *SpecificationTestSuite) TestDescriptionValidateBasic() {
 				"",
 				"www.test.com",
 			),
-			fmt.Sprintf("url IconUrl must use the http, https, or data protocol"),
+			"url IconUrl must use the http, https, or data protocol",
 		},
 		{
 			"valid icon url - http",

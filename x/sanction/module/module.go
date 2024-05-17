@@ -143,15 +143,6 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the sanction content functions used to
-// simulate governance proposals.
-func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	// This is for stuff that uses the v1beta1 gov module's Content interface.
-	// This module use the v1 gov stuff, though, so there's nothing to do here.
-	// It's all handled in the WeightedOperations.
-	return nil
-}
-
 // RandomizedParams creates randomized sanction param changes for the simulator.
 func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 	// While the x/sanction module does have "Params", it doesn't use the x/params module.

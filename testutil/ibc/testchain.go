@@ -158,7 +158,7 @@ func (chain *TestChain) commitBlock(suite *suite.Suite, res *abci.ResponseFinali
 // from ibctesting
 func SignAndDeliver(
 	txCfg client.TxConfig, app *baseapp.BaseApp, msgs []sdk.Msg,
-	chainID string, accNums, accSeqs []uint64, expPass bool, blockTime time.Time, nextValHash []byte, priv ...cryptotypes.PrivKey,
+	chainID string, accNums, accSeqs []uint64, _ bool, blockTime time.Time, nextValHash []byte, priv ...cryptotypes.PrivKey,
 ) (*abci.ResponseFinalizeBlock, error) {
 	// tb.Helper()
 	tx, err := simtestutil.GenSignedMockTx(
