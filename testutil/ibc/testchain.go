@@ -2,12 +2,14 @@ package ibc
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -81,26 +83,37 @@ func (chain *TestChain) RegisterRateLimiterContract(suite *suite.Suite, addr []b
 }
 
 // SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
-func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
+func (chain *TestChain) SendMsgsNoCheck(suite *suite.Suite, msgs ...sdk.Msg) (*abci.ExecTxResult, error) {
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
 
-	_, r, err := SignAndDeliver(
+	resp, err := SignAndDeliver(
+		// chain.TB,
 		chain.TxConfig,
 		chain.App.GetBaseApp(),
-		chain.GetContext().BlockHeader(),
 		msgs,
 		chain.ChainID,
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
+		true,
+		chain.CurrentHeader.GetTime(),
+		chain.NextVals.Hash(),
 		chain.SenderPrivKey,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	// SignAndDeliver calls app.Commit()
-	chain.NextBlock()
+	chain.commitBlock(suite, resp)
+
+	chain.Coordinator.IncrementTime()
+
+	suite.Require().Len(resp.TxResults, 1)
+	txResult := resp.TxResults[0]
+
+	if txResult.Code != 0 {
+		return txResult, fmt.Errorf("%s/%d: %q", txResult.Codespace, txResult.Code, txResult.Log)
+	}
 
 	// increment sequence for successful transaction execution
 	err = chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
@@ -110,20 +123,49 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 
 	chain.Coordinator.IncrementTime()
 
-	return r, nil
+	return txResult, nil
+}
+
+// Copied from ibctesting because it's private
+func (chain *TestChain) commitBlock(suite *suite.Suite, res *abci.ResponseFinalizeBlock) {
+	_, err := chain.App.Commit()
+	suite.Require().NoError(err)
+
+	// set the last header to the current header
+	// use nil trusted fields
+	chain.LastHeader = chain.CurrentTMClientHeader()
+
+	// val set changes returned from previous block get applied to the next validators
+	// of this block. See tendermint spec for details.
+	chain.Vals = chain.NextVals
+	chain.NextVals = ibctesting.ApplyValSetChanges(chain, chain.Vals, res.ValidatorUpdates)
+
+	// increment the current header
+	chain.CurrentHeader = cmtproto.Header{
+		ChainID: chain.ChainID,
+		Height:  chain.App.LastBlockHeight() + 1,
+		AppHash: chain.App.LastCommitID().Hash,
+		// NOTE: the time is increased by the coordinator to maintain time synchrony amongst
+		// chains.
+		Time:               chain.CurrentHeader.Time,
+		ValidatorsHash:     chain.Vals.Hash(),
+		NextValidatorsHash: chain.NextVals.Hash(),
+		ProposerAddress:    chain.CurrentHeader.ProposerAddress,
+	}
 }
 
 // SignAndDeliver signs and delivers a transaction without asserting the results. This overrides the function
 // from ibctesting
 func SignAndDeliver(
-	txCfg client.TxConfig, app *baseapp.BaseApp, _ cmtproto.Header, msgs []sdk.Msg,
-	chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey,
-) (sdk.GasInfo, *sdk.Result, error) {
-	tx, _ := simtestutil.GenSignedMockTx(
+	txCfg client.TxConfig, app *baseapp.BaseApp, msgs []sdk.Msg,
+	chainID string, accNums, accSeqs []uint64, expPass bool, blockTime time.Time, nextValHash []byte, priv ...cryptotypes.PrivKey,
+) (*abci.ResponseFinalizeBlock, error) {
+	// tb.Helper()
+	tx, err := simtestutil.GenSignedMockTx(
 		rand.New(rand.NewSource(time.Now().UnixNano())),
 		txCfg,
 		msgs,
-		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
 		simtestutil.DefaultGenTxGas,
 		chainID,
 		accNums,
@@ -131,10 +173,21 @@ func SignAndDeliver(
 		priv...,
 	)
 
-	// Simulate a sending a transaction and committing a block
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
+	if err != nil {
+		return nil, err
+	}
 
-	return gInfo, res, err
+	txBytes, err := txCfg.TxEncoder()(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height:             app.LastBlockHeight() + 1,
+		Time:               blockTime,
+		NextValidatorsHash: nextValHash,
+		Txs:                [][]byte{txBytes},
+	})
 }
 
 // GetProvenanceApp returns the current chain's app as an ProvenanceApp
