@@ -3,7 +3,7 @@
 use crate::packet::Packet;
 use crate::{contract::*, test_msg_recv, test_msg_send, ContractError};
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, Addr, Attribute, Uint256};
+use cosmwasm_std::{from_json, Addr, Attribute, Uint256};
 
 use crate::helpers::tests::verify_query_response;
 use crate::msg::{InstantiateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
@@ -29,8 +29,8 @@ fn proper_instantiation() {
     assert_eq!(0, res.messages.len());
 
     // The ibc and gov modules are properly stored
-    assert_eq!(IBCMODULE.load(deps.as_ref().storage).unwrap(), IBC_ADDR);
-    assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap(), GOV_ADDR);
+    assert_eq!(IBCMODULE.load(deps.as_ref().storage).unwrap().as_str(), IBC_ADDR);
+    assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap().as_str(), GOV_ADDR);
 }
 
 #[test] // Tests that when a packet is transferred, the peropper allowance is consummed
@@ -241,7 +241,7 @@ fn query_state() {
     };
 
     let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
-    let value: Vec<RateLimit> = from_binary(&res).unwrap();
+    let value: Vec<RateLimit> = from_json(&res).unwrap();
     assert_eq!(value[0].quota.name, "weekly");
     assert_eq!(value[0].quota.max_percentage_send, 10);
     assert_eq!(value[0].quota.max_percentage_recv, 10);
@@ -271,7 +271,7 @@ fn query_state() {
 
     // Query
     let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
-    let value: Vec<RateLimit> = from_binary(&res).unwrap();
+    let value: Vec<RateLimit> = from_json(&res).unwrap();
     verify_query_response(
         &value[0],
         "weekly",
@@ -311,7 +311,7 @@ fn bad_quotas() {
         denom: format!("denom"),
     };
     let res = query(deps.as_ref(), env.clone(), query_msg).unwrap();
-    let value: Vec<RateLimit> = from_binary(&res).unwrap();
+    let value: Vec<RateLimit> = from_json(&res).unwrap();
     verify_query_response(
         &value[0],
         "bad_quota",
