@@ -40,16 +40,17 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgGrantAllowanceRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgAddFinalizeActivateMarkerRequest{FromAddress: signer} },
 		func(signer string) sdk.Msg { return &MsgSupplyIncreaseProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgSupplyDecreaseProposalRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateRequiredAttributesRequest{TransferAuthority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateForcedTransferRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgSetAccountDataRequest{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateSendDenyListRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgAddNetAssetValuesRequest{Administrator: signer} },
-		func(signer string) sdk.Msg { return &MsgSupplyDecreaseProposalRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgChangeStatusProposalRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgSetDenomMetadataProposalRequest{Authority: signer} },
-		func(signer string) sdk.Msg { return &MsgRemoveAdministratorProposalRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgSetAdministratorProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgRemoveAdministratorProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgChangeStatusProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgWithdrawEscrowProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgSetDenomMetadataProposalRequest{Authority: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
