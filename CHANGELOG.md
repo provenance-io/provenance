@@ -93,6 +93,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Move the genesis-related commands into a new `genesis` sub-command, and remove the `genesis-` parts of their names [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Many of the SDK's query commands have had their usage altered [#1971](https://github.com/provenance-io/provenance/pull/1971).
+* Rosetta has been removed from the `provenanced` executable [#1981](https://github.com/provenance-io/provenance/pull/1981).
+  It is now a stand-alone service. See: <https://github.com/cosmos/rosetta> for more info.
 
 ### Deprecated
 
