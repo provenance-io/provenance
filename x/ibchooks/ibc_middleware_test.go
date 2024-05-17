@@ -205,7 +205,7 @@ func (suite *HooksTestSuite) makeMockPacket(receiver, memo string, prevSequence 
 		suite.path.EndpointB.ChannelID,
 		suite.path.EndpointA.ChannelConfig.PortID,
 		suite.path.EndpointA.ChannelID,
-		clienttypes.NewHeight(0, 100),
+		clienttypes.NewHeight(1, 100),
 		0,
 	)
 }
@@ -379,7 +379,7 @@ func NewMsgTransfer(
 		Token:            token,
 		Sender:           sender,
 		Receiver:         receiver,
-		TimeoutHeight:    clienttypes.NewHeight(0, 100),
+		TimeoutHeight:    clienttypes.NewHeight(1, 500),
 		TimeoutTimestamp: 0,
 		Memo:             memo,
 	}
@@ -429,7 +429,7 @@ func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction D
 	return receiveResult, ack
 }
 
-func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Result, *abci.ExecTxResult, string, error) {
+func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*abci.ExecTxResult, *abci.ExecTxResult, string, error) {
 	var sender *testutil.TestChain
 	switch direction {
 	case AtoB:
@@ -437,7 +437,7 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 	case BtoA:
 		sender = suite.chainB
 	}
-	sendResult, err := sender.SendMsgsNoCheck(msg)
+	sendResult, err := sender.SendMsgsNoCheck(&suite.Suite, msg)
 	suite.Require().NoError(err)
 
 	packet, err := ibctesting.ParsePacketFromEvents(sendResult.Events)
