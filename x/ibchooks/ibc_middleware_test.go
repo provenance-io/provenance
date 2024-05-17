@@ -445,7 +445,9 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*abci.E
 
 	receiveResult, ack := suite.RelayPacket(packet, direction)
 
-	return sendResult, receiveResult, string(ack), err
+	// TODO[1760]: ibchooks: Update tests
+	// return sendResult, receiveResult, string(ack), err
+	return nil, receiveResult, string(ack), err
 }
 
 func (suite *HooksTestSuite) TestAcks() {
