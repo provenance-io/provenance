@@ -76,7 +76,6 @@ func WeightedOperations(
 		wSanctionImmediate   int
 		wUnsanction          int
 		wUnsanctionImmediate int
-		wUpdateParams        int
 	)
 
 	simState.AppParams.GetOrGenerate(OpWeightSanction, &wSanction, nil,
@@ -87,15 +86,30 @@ func WeightedOperations(
 		func(_ *rand.Rand) { wUnsanction = DefaultWeightUnsanction })
 	simState.AppParams.GetOrGenerate(OpWeightUnsanctionImmediate, &wUnsanctionImmediate, nil,
 		func(_ *rand.Rand) { wUnsanctionImmediate = DefaultWeightUnsanctionImmediate })
-	simState.AppParams.GetOrGenerate(OpWeightUpdateParams, &wUpdateParams, nil,
-		func(_ *rand.Rand) { wUpdateParams = DefaultWeightUpdateParams })
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(wSanction, SimulateGovMsgSanction(args)),
 		simulation.NewWeightedOperation(wSanctionImmediate, SimulateGovMsgSanctionImmediate(args)),
 		simulation.NewWeightedOperation(wUnsanction, SimulateGovMsgUnsanction(args)),
 		simulation.NewWeightedOperation(wUnsanctionImmediate, SimulateGovMsgUnsanctionImmediate(args)),
-		simulation.NewWeightedOperation(wUpdateParams, SimulateGovMsgUpdateParams(args)),
+	}
+}
+
+func ProposalMsgs(
+	simState module.SimulationState, protoCodec *codec.ProtoCodec,
+	ak sanction.AccountKeeper, bk sanction.BankKeeper, gk govkeeper.Keeper, sk keeper.Keeper,
+) []simtypes.WeightedProposalMsg {
+	args := &WeightedOpsArgs{
+		SimState:   simState,
+		ProtoCodec: protoCodec,
+		AK:         ak,
+		BK:         bk,
+		GK:         gk,
+		SK:         &sk,
+	}
+
+	return []simtypes.WeightedProposalMsg{
+		simulation.NewWeightedProposalMsg(OpWeightUpdateParams, DefaultWeightUpdateParams, SimulatePropMsgUpdateParams(args)),
 	}
 }
 
@@ -524,63 +538,11 @@ func SimulateGovMsgUnsanctionImmediate(args *WeightedOpsArgs) simtypes.Operation
 	}
 }
 
-func SimulateGovMsgUpdateParams(args *WeightedOpsArgs) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// Pick the random params first, so R isn't used for anything else before,
-		// which makes testing easier.
-		msg := &sanction.MsgUpdateParams{
+func SimulatePropMsgUpdateParams(args *WeightedOpsArgs) simtypes.MsgSimulatorFn {
+	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+		return &sanction.MsgUpdateParams{
 			Params:    RandomParams(r),
 			Authority: args.SK.GetAuthority(),
 		}
-		msgType := sdk.MsgTypeURL(msg)
-
-		// Get the governance min deposit needed.
-		govParams, err := args.GK.Params.Get(ctx)
-		if err != nil {
-			return simtypes.NoOpMsg(sanction.ModuleName, msgType, "error getting gov params"), nil, err
-		}
-		govMinDep := sdk.NewCoins(govParams.MinDeposit...)
-
-		sender, _ := simtypes.RandomAcc(r, accs)
-
-		msgArgs := &SendGovMsgArgs{
-			WeightedOpsArgs: *args,
-			R:               r,
-			App:             app,
-			Ctx:             ctx,
-			Accs:            accs,
-			ChainID:         chainID,
-			Sender:          sender,
-			Msg:             msg,
-			Deposit:         govMinDep,
-			Comment:         "update params",
-		}
-
-		skip, opMsg, err := SendGovMsg(msgArgs)
-
-		if skip || err != nil {
-			return opMsg, nil, err
-		}
-
-		proposalID, err := args.GK.ProposalID.Peek(ctx)
-		if err != nil {
-			return simtypes.NoOpMsg(sanction.ModuleName, sdk.MsgTypeURL(msg), "unable to get submitted proposalID"), nil, err
-		}
-		proposalID--
-
-		votingPeriod := govParams.VotingPeriod
-		fops := make([]simtypes.FutureOperation, len(accs))
-		for i, acct := range accs {
-			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
-			fops[i] = simtypes.FutureOperation{
-				BlockTime: whenVote,
-				Op:        OperationMsgVote(args, acct, proposalID, govv1.OptionYes, msgArgs.Comment),
-			}
-		}
-
-		return opMsg, fops, nil
 	}
 }
