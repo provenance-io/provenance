@@ -18,8 +18,7 @@ option java_multiple_files = true;
 // backwards compatibility (e.g. looking up old governance proposals).
 // It is replaced by providing a MsgAddMarkerRequest in a governance proposal.
 message AddMarkerProposal {
-  option deprecated        = true;
-  option (gogoproto.equal) = true;
+  option deprecated = true;
 
   string title       = 1;
   string description = 2;
@@ -35,9 +34,11 @@ message AddMarkerProposal {
 
 // SupplyIncreaseProposal defines a governance proposal to administer a marker and increase total supply of the marker
 // through minting coin and placing it within the marker or assigning it directly to an account
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by providing a MsgSupplyIncreaseProposalRequest in a governance proposal.
 message SupplyIncreaseProposal {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option deprecated = true;
 
   string                   title          = 1;
   string                   description    = 2;
@@ -47,9 +48,11 @@ message SupplyIncreaseProposal {
 
 // SupplyDecreaseProposal defines a governance proposal to administer a marker and decrease the total supply through
 // burning coin held within the marker
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by providing a MsgSupplyDecreaseProposalRequest in a governance proposal.
 message SupplyDecreaseProposal {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option deprecated = true;
 
   string                   title       = 1;
   string                   description = 2;
@@ -58,9 +61,11 @@ message SupplyDecreaseProposal {
 
 // SetAdministratorProposal defines a governance proposal to administer a marker and set administrators with specific
 // access on the marker
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by providing a MsgSetAdministratorProposalRequest in a governance proposal.
 message SetAdministratorProposal {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option deprecated = true;
 
   string               title       = 1;
   string               description = 2;
@@ -70,9 +75,11 @@ message SetAdministratorProposal {
 
 // RemoveAdministratorProposal defines a governance proposal to administer a marker and remove all permissions for a
 // given address
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by providing a MsgRemoveAdministratorProposalRequest in a governance proposal.
 message RemoveAdministratorProposal {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option deprecated = true;
 
   string          title           = 1;
   string          description     = 2;
@@ -81,9 +88,11 @@ message RemoveAdministratorProposal {
 }
 
 // ChangeStatusProposal defines a governance proposal to administer a marker to change its status
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by providing a MsgChangeStatusProposalRequest in a governance proposal.
 message ChangeStatusProposal {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option deprecated = true;
 
   string       title       = 1;
   string       description = 2;
@@ -92,9 +101,11 @@ message ChangeStatusProposal {
 }
 
 // WithdrawEscrowProposal defines a governance proposal to withdraw escrow coins from a marker
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by providing a MsgWithdrawEscrowProposalRequest in a governance proposal.
 message WithdrawEscrowProposal {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option deprecated = true;
 
   string   title                           = 1;
   string   description                     = 2;
@@ -109,8 +120,11 @@ message WithdrawEscrowProposal {
 }
 
 // SetDenomMetadataProposal defines a governance proposal to set the metadata for a denom
+// Deprecated: This message is no longer usable. It is only still included for
+// backwards compatibility (e.g. looking up old governance proposals).
+// It is replaced by providing a MsgSetDenomMetadataProposalRequest in a governance proposal.
 message SetDenomMetadataProposal {
-  option (gogoproto.goproto_stringer) = false;
+  option deprecated = true;
 
   string                       title       = 1;
   string                       description = 2;

@@ -1,366 +1,559 @@
 package keeper_test
 
 import (
-	"errors"
-	"fmt"
 	"testing"
+	"time"
 
-	"github.com/stretchr/testify/require"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
-	provenance "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/marker/types"
+
+	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-type IntegrationTestSuite struct {
+type KeeperTestSuite struct {
 	suite.Suite
 
-	app *provenance.App
+	app *app.App
 	ctx sdk.Context
-	k   markerkeeper.Keeper
 
-	accountAddr sdk.AccAddress
+	startBlockTime time.Time
+
+	pubkey1   cryptotypes.PubKey
+	user1     string
+	user1Addr sdk.AccAddress
+
+	pubkey2   cryptotypes.PubKey
+	user2     string
+	user2Addr sdk.AccAddress
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.app = provenance.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false)
-	s.k = markerkeeper.NewKeeper(s.app.AppCodec(), s.app.GetKey(markertypes.ModuleName), s.app.AccountKeeper, s.app.BankKeeper, s.app.AuthzKeeper, s.app.FeeGrantKeeper, s.app.AttributeKeeper, s.app.NameKeeper, s.app.TransferKeeper, nil, nil)
-	s.accountAddr = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+func TestKeeperTestSuite(t *testing.T) {
+	pioconfig.SetProvenanceConfig("", 0)
+	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *KeeperTestSuite) SetupTest() {
+	s.app = app.Setup(s.T())
+	s.startBlockTime = time.Now()
+	s.ctx = s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: s.startBlockTime})
+
+	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
+	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
+	s.user1 = s.user1Addr.String()
+
+	s.pubkey2 = secp256k1.GenPrivKey().PubKey()
+	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
+	s.user2 = s.user2Addr.String()
 }
 
-func (s *IntegrationTestSuite) TestMarkerProposals() {
-	// Add markers for tests
-	newMsgAddMarker := func(denom string, manager string, status markertypes.MarkerStatus,
-		markerType markertypes.MarkerType, allowGov bool,
-	) *markertypes.MsgAddMarkerRequest {
-		return &markertypes.MsgAddMarkerRequest{
-			Amount:                 sdk.NewInt64Coin(denom, 100),
-			Manager:                manager,
-			FromAddress:            s.app.MarkerKeeper.GetAuthority(),
-			Status:                 status,
-			MarkerType:             markerType,
-			AccessList:             []markertypes.AccessGrant{},
-			SupplyFixed:            true,
-			AllowGovernanceControl: allowGov,
-			AllowForcedTransfer:    false,
-			RequiredAttributes:     nil,
-		}
-	}
+func (s *KeeperTestSuite) TestSupplyIncreaseProposal() {
+	hotdogMarker := s.createTestMarker("hotdog")
+	nonGovernanceMarker := s.createTestMarker("nonGovernanceMarker")
+	nonActiveMarker := s.createTestMarker("nonActiveMarker")
+	invalidDenom := "invaliddenom"
 
-	coin := markertypes.MarkerType_Coin
-	restricted := markertypes.MarkerType_RestrictedCoin
+	nonGovernanceMarker.AllowGovernanceControl = false
+	s.app.MarkerKeeper.SetMarker(s.ctx, nonGovernanceMarker)
 
-	active := markertypes.StatusActive
-	finalized := markertypes.StatusFinalized
+	nonActiveMarker.SetStatus(types.StatusCancelled)
+	s.app.MarkerKeeper.SetMarker(s.ctx, nonActiveMarker)
 
-	server := markerkeeper.NewMsgServerImpl(s.app.MarkerKeeper)
-
-	_, err := server.AddMarker(s.ctx, newMsgAddMarker("test1", "", active, coin, true))
-	s.Require().NoError(err, "AddMarker test1")
-
-	_, err = server.AddMarker(s.ctx, newMsgAddMarker("testnogov", "", active, coin, false))
-	s.Require().NoError(err, "AddMarker testnogov")
-
-	_, err = server.AddMarker(s.ctx, newMsgAddMarker("pending", s.accountAddr.String(), finalized, coin, true))
-	s.Require().NoError(err, "AddMarker pending")
-
-	_, err = server.AddMarker(s.ctx, newMsgAddMarker("testrestricted", s.accountAddr.String(), finalized, restricted, true))
-	s.Require().NoError(err, "AddMarker testrestricted")
-
-	testCases := []struct {
-		name string
-		prop govtypesv1beta1.Content
-		err  error
+	tests := []struct {
+		name       string
+		amount     sdk.Coin
+		targetAddr string
+		marker     types.MarkerAccountI
+		expectErr  string
 	}{
-		// INCREASE SUPPLY PROPOSALS
 		{
-			"supply increase - valid",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("test1", 100), s.accountAddr.String()),
-			nil,
+			name:   "successful increase",
+			amount: sdk.NewCoin(hotdogMarker.Denom, sdkmath.NewInt(1000)),
+			marker: hotdogMarker,
 		},
 		{
-			"supply increase - on finalized marker",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("pending", 100), s.accountAddr.String()),
-			nil,
+			name:       "successful increase with target address",
+			amount:     sdk.NewCoin(hotdogMarker.Denom, sdkmath.NewInt(1000)),
+			targetAddr: s.user1Addr.String(),
+			marker:     hotdogMarker,
 		},
 		{
-			"supply increase - marker doesn't exist",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("test", 100), s.accountAddr.String()),
-			fmt.Errorf("test marker does not exist"),
+			name:       "invalid target address",
+			amount:     sdk.NewCoin(hotdogMarker.Denom, sdkmath.NewInt(1000)),
+			targetAddr: "invalidaddress",
+			marker:     hotdogMarker,
 		},
 		{
-			"supply increase - no governance allowed",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("testnogov", 100), s.accountAddr.String()),
-			fmt.Errorf("testnogov marker does not allow governance control"),
+			name:       "marker does not exist",
+			amount:     sdk.NewCoin(invalidDenom, sdkmath.NewInt(1000)),
+			targetAddr: s.user1Addr.String(),
+			expectErr:  "invaliddenom marker does not exist",
 		},
 		{
-			"supply increase - valid no target",
-			markertypes.NewSupplyIncreaseProposal("title", "description", sdk.NewInt64Coin("test1", 100), ""),
-			nil,
-		},
-
-		// DECREASE SUPPLY PROPOSALS
-		{
-			"supply decrease - valid",
-			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewInt64Coin("test1", 100)),
-			nil,
+			name:       "marker does not allow governance control",
+			amount:     sdk.NewCoin(nonGovernanceMarker.GetDenom(), sdkmath.NewInt(1000)),
+			targetAddr: s.user1Addr.String(),
+			marker:     nonGovernanceMarker,
+			expectErr:  "nonGovernanceMarker marker does not allow governance control",
 		},
 		{
-			"supply decrease - no governance allowed",
-			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewInt64Coin("testnogov", 100)),
-			fmt.Errorf("testnogov marker does not allow governance control"),
-		},
-		{
-			"supply decrease - marker doesnot exist",
-			markertypes.NewSupplyDecreaseProposal("title", "description", sdk.NewInt64Coin("test", 100)),
-			fmt.Errorf("test marker does not exist"),
-		},
-
-		// WITHDRAW PROPOSALS
-		{
-			"withdraw - valid",
-			markertypes.NewWithdrawEscrowProposal("title", "description", "test1", sdk.NewCoins(sdk.NewInt64Coin("test1", 10)), s.accountAddr.String()),
-			nil,
-		},
-		{
-			"withdraw - no governance",
-			markertypes.NewWithdrawEscrowProposal("title", "description", "testnogov", sdk.NewCoins(sdk.NewInt64Coin("testnogov", 1)), ""),
-			fmt.Errorf("testnogov marker does not allow governance control"),
-		},
-		{
-			"withdraw - marker doesnot exist",
-			markertypes.NewWithdrawEscrowProposal("title", "description", "test", sdk.NewCoins(sdk.NewInt64Coin("test", 100)), ""),
-			fmt.Errorf("test marker does not exist"),
-		},
-		{
-			"withdraw - invalid recpient",
-			markertypes.NewWithdrawEscrowProposal("title", "description", "test1", sdk.NewCoins(sdk.NewInt64Coin("test1", 100)), "bad1address"),
-			fmt.Errorf("decoding bech32 failed: invalid checksum (expected dpg8tu got ddress)"),
-		},
-
-		// STATUS CHANGE PROPOSALS
-		{
-			"status change - no governance",
-			markertypes.NewChangeStatusProposal("title", "description", "testnogov", markertypes.StatusActive),
-			fmt.Errorf("testnogov marker does not allow governance control"),
-		},
-		{
-			"status change - marker doesnot exist",
-			markertypes.NewChangeStatusProposal("title", "description", "test", markertypes.StatusActive),
-			fmt.Errorf("test marker does not exist"),
-		},
-		{
-			"status change - invalid status",
-			markertypes.NewChangeStatusProposal("title", "description", "pending", markertypes.StatusUndefined),
-			fmt.Errorf("error invalid marker status undefined"),
-		},
-		{
-			"status change - invalid status order",
-			markertypes.NewChangeStatusProposal("title", "description", "test1", markertypes.StatusProposed),
-			fmt.Errorf("invalid status transition proposed precedes existing status of active"),
-		},
-		{
-			"status change - valid",
-			markertypes.NewChangeStatusProposal("title", "description", "pending", markertypes.StatusActive),
-			nil,
-		},
-		{
-			"status change - invalid destroy",
-			markertypes.NewChangeStatusProposal("title", "description", "pending", markertypes.StatusDestroyed),
-			fmt.Errorf("only cancelled markers can be deleted"),
-		},
-		{
-			"status change - valid cancel",
-			markertypes.NewChangeStatusProposal("title", "description", "pending", markertypes.StatusCancelled),
-			nil,
-		},
-		{
-			"status change - valid destroy",
-			markertypes.NewChangeStatusProposal("title", "description", "pending", markertypes.StatusDestroyed),
-			nil,
-		},
-
-		// ADD ACCESS
-		{
-			"add access - no governance",
-			markertypes.NewSetAdministratorProposal("title", "description", "testnogov", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn")}}),
-			fmt.Errorf("testnogov marker does not allow governance control"),
-		},
-		{
-			"add access - marker doesnot exist",
-			markertypes.NewSetAdministratorProposal("title", "description", "test", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn")}}),
-			fmt.Errorf("test marker does not exist"),
-		},
-		{
-			"add access - transfer only on restricted",
-			markertypes.NewSetAdministratorProposal("title", "description", "test1", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn, transfer")}}),
-			fmt.Errorf("invalid access privileges granted: ACCESS_TRANSFER is not supported for marker type MARKER_TYPE_COIN"),
-		},
-		{
-			"add access - valid",
-			markertypes.NewSetAdministratorProposal("title", "description", "test1", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn")}}),
-			nil,
-		},
-		{
-			"add access - valid restricted",
-			markertypes.NewSetAdministratorProposal("title", "description", "testrestricted", []markertypes.AccessGrant{{Address: s.accountAddr.String(), Permissions: markertypes.AccessListByNames("mint, burn, transfer")}}),
-			nil,
-		},
-
-		// REMOVE ACCESS
-		{
-			"remove access - no governance",
-			markertypes.NewRemoveAdministratorProposal("title", "description", "testnogov", []string{s.accountAddr.String()}),
-			fmt.Errorf("testnogov marker does not allow governance control"),
-		},
-		{
-			"remove access - marker doesnot exist",
-			markertypes.NewRemoveAdministratorProposal("title", "description", "test", []string{s.accountAddr.String()}),
-			fmt.Errorf("test marker does not exist"),
-		},
-		{
-			"remove access - marker doesnot exist",
-			markertypes.NewRemoveAdministratorProposal("title", "description", "test1", []string{"bad1address"}),
-			fmt.Errorf("decoding bech32 failed: invalid checksum (expected dpg8tu got ddress)"),
-		},
-		{
-			"remove access - valid",
-			markertypes.NewRemoveAdministratorProposal("title", "description", "test1", []string{s.accountAddr.String()}),
-			nil,
-		},
-
-		// SET DENOM METADATA PROPOSALS
-		{
-			"set denom metadata - bad denom",
-			markertypes.NewSetDenomMetadataProposal("title", "description",
-				banktypes.Metadata{
-					Description: "some denom description",
-					Base:        "bad$char",
-					Display:     "badchar",
-					Name:        "Bad Char",
-					Symbol:      "BC",
-					DenomUnits: []*banktypes.DenomUnit{
-						{
-							Denom:    "bad$char",
-							Exponent: 0,
-							Aliases:  nil,
-						},
-					},
-				},
-			),
-			errors.New("invalid denom: bad$char"),
-		},
-		{
-			"set denom metadata - marker does not exist",
-			markertypes.NewSetDenomMetadataProposal("title", "description",
-				banktypes.Metadata{
-					Description: "another denom description",
-					Base:        "doesnotexist",
-					Display:     "doesnotexist",
-					Name:        "Does Not Exist",
-					Symbol:      "DNE",
-					DenomUnits: []*banktypes.DenomUnit{
-						{
-							Denom:    "doesnotexist",
-							Exponent: 0,
-							Aliases:  nil,
-						},
-					},
-				},
-			),
-			errors.New("doesnotexist marker does not exist"),
-		},
-		{
-			"set denom metadata - no governance",
-			markertypes.NewSetDenomMetadataProposal("title", "description",
-				banktypes.Metadata{
-					Description: "the best denom description",
-					Base:        "testnogov",
-					Display:     "testnogov",
-					Name:        "Test No Governance",
-					Symbol:      "TNG",
-					DenomUnits: []*banktypes.DenomUnit{
-						{
-							Denom:    "testnogov",
-							Exponent: 0,
-							Aliases:  []string{"thenextgeneration"},
-						},
-					},
-				},
-			),
-			errors.New("testnogov marker does not allow governance control"),
-		},
-		{
-			"set denom metadata - valid",
-			markertypes.NewSetDenomMetadataProposal("title", "description",
-				banktypes.Metadata{
-					Description: "the best denom description",
-					Base:        "test1",
-					Display:     "test1",
-					Name:        "Test One",
-					Symbol:      "TONE",
-					DenomUnits: []*banktypes.DenomUnit{
-						{
-							Denom:    "test1",
-							Exponent: 0,
-							Aliases:  []string{"tone"},
-						},
-					},
-				},
-			),
-			nil,
+			name:       "marker not in active status",
+			amount:     sdk.NewCoin(nonActiveMarker.GetDenom(), sdkmath.NewInt(1000)),
+			targetAddr: s.user1Addr.String(),
+			marker:     nonActiveMarker,
+			expectErr:  "cannot mint coin for a marker that is not in Active status",
 		},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-
-		s.T().Run(tc.name, func(t *testing.T) {
-
-			var err error
-			switch c := tc.prop.(type) {
-			case *markertypes.SupplyIncreaseProposal:
-				err = markerkeeper.HandleSupplyIncreaseProposal(s.ctx, s.k, c)
-			case *markertypes.SupplyDecreaseProposal:
-				err = markerkeeper.HandleSupplyDecreaseProposal(s.ctx, s.k, c)
-			case *markertypes.SetAdministratorProposal:
-				err = markerkeeper.HandleSetAdministratorProposal(s.ctx, s.k, c)
-			case *markertypes.RemoveAdministratorProposal:
-				err = markerkeeper.HandleRemoveAdministratorProposal(s.ctx, s.k, c)
-			case *markertypes.ChangeStatusProposal:
-				err = markerkeeper.HandleChangeStatusProposal(s.ctx, s.k, c)
-			case *markertypes.WithdrawEscrowProposal:
-				err = markerkeeper.HandleWithdrawEscrowProposal(s.ctx, s.k, c)
-			case *markertypes.SetDenomMetadataProposal:
-				err = markerkeeper.HandleSetDenomMetadataProposal(s.ctx, s.k, c)
-			default:
-				panic("invalid proposal type")
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.marker != nil {
+				s.app.MarkerKeeper.SetMarker(s.ctx, tc.marker)
 			}
-
-			if tc.err != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.err.Error(), err.Error())
+			err := s.app.MarkerKeeper.HandleSupplyIncreaseProposal(s.ctx, tc.amount, tc.targetAddr)
+			if len(tc.expectErr) > 0 {
+				assert.Error(s.T(), err, "expected an error in test case: %s", tc.name)
+				assert.Contains(s.T(), err.Error(), tc.expectErr, "unexpected error message in test case: %s", tc.name)
 			} else {
-				require.NoError(t, err)
+				assert.NoError(s.T(), err, "did not expect an error in test case: %s", tc.name)
 			}
 		})
 	}
-
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig("", 0)
-	suite.Run(t, new(IntegrationTestSuite))
+func (s *KeeperTestSuite) TestSupplyDecreaseProposal() {
+	hotdogMarker := s.createTestMarker("hotdog")
+	nonGovernanceMarker := s.createTestMarker("nonGovernanceMarker")
+	invalidDenom := "invaliddenom"
+
+	nonGovernanceMarker.AllowGovernanceControl = false
+	s.app.MarkerKeeper.SetMarker(s.ctx, nonGovernanceMarker)
+
+	tests := []struct {
+		name      string
+		amount    sdk.Coin
+		marker    types.MarkerAccountI
+		expectErr string
+	}{
+		{
+			name:   "successful decrease",
+			amount: sdk.NewCoin(hotdogMarker.Denom, sdkmath.NewInt(500)),
+			marker: hotdogMarker,
+		},
+		{
+			name:      "marker does not exist",
+			amount:    sdk.NewCoin(invalidDenom, sdkmath.NewInt(500)),
+			expectErr: "invaliddenom marker does not exist",
+		},
+		{
+			name:      "marker does not allow governance control",
+			amount:    sdk.NewCoin(nonGovernanceMarker.GetDenom(), sdkmath.NewInt(500)),
+			marker:    nonGovernanceMarker,
+			expectErr: "nonGovernanceMarker marker does not allow governance control",
+		},
+		{
+			name:      "decrease amount more than supply",
+			amount:    sdk.NewCoin(hotdogMarker.Denom, sdkmath.NewInt(2000)),
+			marker:    hotdogMarker,
+			expectErr: "cannot reduce marker total supply below zero hotdog, 2000",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.marker != nil {
+				s.app.MarkerKeeper.SetMarker(s.ctx, tc.marker)
+			}
+			err := s.app.MarkerKeeper.HandleSupplyDecreaseProposal(s.ctx, tc.amount)
+			if len(tc.expectErr) > 0 {
+				assert.Error(s.T(), err, "expected an error in test case: %s", tc.name)
+				assert.Contains(s.T(), err.Error(), tc.expectErr, "unexpected error message in test case: %s", tc.name)
+			} else {
+				assert.NoError(s.T(), err, "did not expect an error in test case: %s", tc.name)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetAdministratorProposal() {
+	hotdogMarker := s.createTestMarker("hotdog")
+	nonGovernanceMarker := s.createTestMarker("nonGovernanceMarker")
+	invalidDenom := "invaliddenom"
+
+	nonGovernanceMarker.AllowGovernanceControl = false
+	s.app.MarkerKeeper.SetMarker(s.ctx, nonGovernanceMarker)
+
+	tests := []struct {
+		name         string
+		denom        string
+		accessGrants []types.AccessGrant
+		marker       types.MarkerAccountI
+		expectErr    string
+	}{
+		{
+			name:         "successful set administrator",
+			denom:        hotdogMarker.Denom,
+			accessGrants: []types.AccessGrant{{Address: s.user2Addr.String(), Permissions: types.AccessList{types.Access_Admin}}},
+			marker:       hotdogMarker,
+		},
+		{
+			name:         "marker does not exist",
+			denom:        invalidDenom,
+			accessGrants: []types.AccessGrant{{Address: s.user2Addr.String(), Permissions: types.AccessList{types.Access_Admin}}},
+			expectErr:    "invaliddenom marker does not exist",
+		},
+		{
+			name:         "marker does not allow governance control",
+			denom:        nonGovernanceMarker.Denom,
+			accessGrants: []types.AccessGrant{{Address: s.user2Addr.String(), Permissions: types.AccessList{types.Access_Admin}}},
+			marker:       nonGovernanceMarker,
+			expectErr:    "nonGovernanceMarker marker does not allow governance control",
+		},
+		{
+			name:         "invalid access grants",
+			denom:        hotdogMarker.Denom,
+			accessGrants: []types.AccessGrant{{Address: s.user2Addr.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Admin}}},
+			marker:       hotdogMarker,
+			expectErr:    "access list contains duplicate entry",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.marker != nil {
+				s.app.MarkerKeeper.SetMarker(s.ctx, tc.marker)
+			}
+			err := s.app.MarkerKeeper.HandleSetAdministratorProposal(s.ctx, tc.denom, tc.accessGrants)
+			if len(tc.expectErr) > 0 {
+				assert.Error(s.T(), err, "expected an error in test case: %s", tc.name)
+				assert.Contains(s.T(), err.Error(), tc.expectErr, "unexpected error message in test case: %s", tc.name)
+			} else {
+				assert.NoError(s.T(), err, "did not expect an error in test case: %s", tc.name)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestRemoveAdministratorProposal() {
+	hotdogMarker := s.createTestMarker("hotdog")
+	nonGovernanceMarker := s.createTestMarker("nonGovernanceMarker")
+	invalidDenom := "invaliddenom"
+
+	nonGovernanceMarker.AllowGovernanceControl = false
+	s.app.MarkerKeeper.SetMarker(s.ctx, nonGovernanceMarker)
+
+	tests := []struct {
+		name           string
+		denom          string
+		removedAddress []string
+		marker         types.MarkerAccountI
+		expectErr      string
+	}{
+		{
+			name:           "successful remove administrator",
+			denom:          hotdogMarker.Denom,
+			removedAddress: []string{s.user1Addr.String()},
+			marker:         hotdogMarker,
+		},
+		{
+			name:           "marker does not exist",
+			denom:          invalidDenom,
+			removedAddress: []string{s.user1Addr.String()},
+			expectErr:      "invaliddenom marker does not exist",
+		},
+		{
+			name:           "marker does not allow governance control",
+			denom:          nonGovernanceMarker.Denom,
+			removedAddress: []string{s.user1Addr.String()},
+			marker:         nonGovernanceMarker,
+			expectErr:      "nonGovernanceMarker marker does not allow governance control",
+		},
+		{
+			name:           "invalid address format",
+			denom:          hotdogMarker.Denom,
+			removedAddress: []string{"invalidaddress"},
+			marker:         hotdogMarker,
+			expectErr:      "decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.marker != nil {
+				s.app.MarkerKeeper.SetMarker(s.ctx, tc.marker)
+			}
+			err := s.app.MarkerKeeper.HandleRemoveAdministratorProposal(s.ctx, tc.denom, tc.removedAddress)
+			if len(tc.expectErr) > 0 {
+				assert.Error(s.T(), err, "expected an error in test case: %s", tc.name)
+				assert.Contains(s.T(), err.Error(), tc.expectErr, "unexpected error message in test case: %s", tc.name)
+			} else {
+				assert.NoError(s.T(), err, "did not expect an error in test case: %s", tc.name)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestChangeStatusProposal() {
+	hotdogMarker := s.createTestMarker("hotdog")
+	nonGovernanceMarker := s.createTestMarker("nonGovernanceMarker")
+	invalidDenom := "invaliddenom"
+
+	nonGovernanceMarker.AllowGovernanceControl = false
+	s.app.MarkerKeeper.SetMarker(s.ctx, nonGovernanceMarker)
+
+	pendingMarker := s.createTestMarker("pendingMarker")
+	pendingMarker.SetStatus(types.StatusProposed)
+	s.app.MarkerKeeper.SetMarker(s.ctx, pendingMarker)
+
+	cancelledMarker := s.createTestMarker("cancelledMarker")
+	cancelledMarker.SetStatus(types.StatusCancelled)
+	s.app.MarkerKeeper.SetMarker(s.ctx, cancelledMarker)
+
+	tests := []struct {
+		name      string
+		denom     string
+		status    types.MarkerStatus
+		marker    types.MarkerAccountI
+		expectErr string
+	}{
+		{
+			name:   "successful status change to active",
+			denom:  hotdogMarker.Denom,
+			status: types.StatusActive,
+			marker: pendingMarker,
+		},
+		{
+			name:   "successful status change to destroyed",
+			denom:  cancelledMarker.Denom,
+			status: types.StatusDestroyed,
+			marker: cancelledMarker,
+		},
+		{
+			name:      "marker does not exist",
+			denom:     invalidDenom,
+			status:    types.StatusActive,
+			expectErr: "invaliddenom marker does not exist",
+		},
+		{
+			name:      "marker does not allow governance control",
+			denom:     nonGovernanceMarker.Denom,
+			status:    types.StatusActive,
+			marker:    nonGovernanceMarker,
+			expectErr: "nonGovernanceMarker marker does not allow governance control",
+		},
+		{
+			name:      "invalid marker status undefined",
+			denom:     hotdogMarker.Denom,
+			status:    types.StatusUndefined,
+			marker:    hotdogMarker,
+			expectErr: "error invalid marker status undefined",
+		},
+		{
+			name:      "invalid status transition",
+			denom:     cancelledMarker.Denom,
+			status:    types.StatusProposed,
+			marker:    cancelledMarker,
+			expectErr: "invalid status transition proposed precedes existing status of cancelled",
+		},
+		{
+			name:      "cannot delete non-cancelled marker",
+			denom:     hotdogMarker.Denom,
+			status:    types.StatusDestroyed,
+			marker:    hotdogMarker,
+			expectErr: "only cancelled markers can be deleted",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.marker != nil {
+				s.app.MarkerKeeper.SetMarker(s.ctx, tc.marker)
+			}
+			err := s.app.MarkerKeeper.HandleChangeStatusProposal(s.ctx, tc.denom, tc.status)
+			if len(tc.expectErr) > 0 {
+				assert.Error(s.T(), err, "expected an error in test case: %s", tc.name)
+				assert.Contains(s.T(), err.Error(), tc.expectErr, "unexpected error message in test case: %s", tc.name)
+			} else {
+				assert.NoError(s.T(), err, "did not expect an error in test case: %s", tc.name)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestWithdrawEscrowProposal() {
+	hotdogMarker := s.createTestMarker("hotdog")
+	nonGovernanceMarker := s.createTestMarker("nonGovernanceMarker")
+	invalidDenom := "invaliddenom"
+
+	nonGovernanceMarker.AllowGovernanceControl = false
+	s.app.MarkerKeeper.SetMarker(s.ctx, nonGovernanceMarker)
+
+	tests := []struct {
+		name          string
+		denom         string
+		targetAddress string
+		amount        sdk.Coins
+		marker        types.MarkerAccountI
+		expectErr     string
+	}{
+		{
+			name:          "successful withdraw",
+			denom:         hotdogMarker.Denom,
+			targetAddress: s.user1Addr.String(),
+			amount:        sdk.NewCoins(sdk.NewCoin(hotdogMarker.Denom, sdkmath.NewInt(100))),
+			marker:        hotdogMarker,
+			expectErr:     "",
+		},
+		{
+			name:          "marker does not exist",
+			denom:         invalidDenom,
+			targetAddress: s.user1Addr.String(),
+			expectErr:     "invaliddenom marker does not exist",
+			amount:        sdk.NewCoins(sdk.NewCoin(invalidDenom, sdkmath.NewInt(100))),
+		},
+		{
+			name:          "marker does not allow governance control",
+			denom:         nonGovernanceMarker.Denom,
+			targetAddress: s.user1Addr.String(),
+			amount:        sdk.NewCoins(sdk.NewCoin(nonGovernanceMarker.Denom, sdkmath.NewInt(100))),
+			marker:        nonGovernanceMarker,
+			expectErr:     "nonGovernanceMarker marker does not allow governance control",
+		},
+		{
+			name:          "invalid target address format",
+			denom:         hotdogMarker.Denom,
+			targetAddress: "invalidaddress",
+			amount:        sdk.NewCoins(sdk.NewCoin(hotdogMarker.Denom, sdkmath.NewInt(100))),
+			marker:        hotdogMarker,
+			expectErr:     "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "insufficient funds",
+			denom:         hotdogMarker.Denom,
+			targetAddress: s.user1Addr.String(),
+			amount:        sdk.NewCoins(sdk.NewCoin(hotdogMarker.Denom, sdkmath.NewInt(2000))),
+			marker:        hotdogMarker,
+			expectErr:     "insufficient funds",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.marker != nil {
+				s.app.MarkerKeeper.SetMarker(s.ctx, tc.marker)
+			}
+			err := s.app.MarkerKeeper.HandleWithdrawEscrowProposal(s.ctx, tc.denom, tc.targetAddress, tc.amount)
+			if len(tc.expectErr) > 0 {
+				assert.Error(s.T(), err, "expected an error in test case: %s", tc.name)
+				assert.Contains(s.T(), err.Error(), tc.expectErr, "unexpected error message in test case: %s", tc.name)
+			} else {
+				assert.NoError(s.T(), err, "did not expect an error in test case: %s", tc.name)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetDenomMetadataProposal() {
+	hotdogMarker := s.createTestMarker("hotdog")
+	nonGovernanceMarker := s.createTestMarker("nonGovernanceMarker")
+	invalidDenom := "invaliddenom"
+
+	nonGovernanceMarker.AllowGovernanceControl = false
+	s.app.MarkerKeeper.SetMarker(s.ctx, nonGovernanceMarker)
+
+	tests := []struct {
+		name      string
+		metadata  banktypes.Metadata
+		marker    types.MarkerAccountI
+		expectErr string
+	}{
+		{
+			name: "successful set denom metadata",
+			metadata: banktypes.Metadata{
+				Description: "Hotdog token metadata",
+				Base:        hotdogMarker.Denom,
+				Display:     "Hotdog",
+				Name:        "Hotdog Token",
+				Symbol:      "HDG",
+				DenomUnits: []*banktypes.DenomUnit{
+					{Denom: "hotdog", Exponent: 0},
+				},
+			},
+			marker:    hotdogMarker,
+			expectErr: "",
+		},
+		{
+			name: "marker does not exist",
+			metadata: banktypes.Metadata{
+				Description: "Invalid token metadata",
+				Base:        invalidDenom,
+				Display:     "Invalid",
+				Name:        "Invalid Token",
+				Symbol:      "INV",
+				DenomUnits: []*banktypes.DenomUnit{
+					{Denom: "invalid", Exponent: 0},
+				},
+			},
+			expectErr: "invaliddenom marker does not exist",
+		},
+		{
+			name: "marker does not allow governance control",
+			metadata: banktypes.Metadata{
+				Description: "Non-governance token metadata",
+				Base:        nonGovernanceMarker.Denom,
+				Display:     "NonGov",
+				Name:        "Non-Gov Token",
+				Symbol:      "NGT",
+				DenomUnits: []*banktypes.DenomUnit{
+					{Denom: "nonGovernanceMarker", Exponent: 0},
+				},
+			},
+			marker:    nonGovernanceMarker,
+			expectErr: "nonGovernanceMarker marker does not allow governance control",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.marker != nil {
+				s.app.MarkerKeeper.SetMarker(s.ctx, tc.marker)
+			}
+			err := s.app.MarkerKeeper.HandleSetDenomMetadataProposal(s.ctx, tc.metadata)
+			if len(tc.expectErr) > 0 {
+				assert.Error(s.T(), err, "expected an error in test case: %s", tc.name)
+				assert.Contains(s.T(), err.Error(), tc.expectErr, "unexpected error message in test case: %s", tc.name)
+			} else {
+				assert.NoError(s.T(), err, "did not expect an error in test case: %s", tc.name)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) createTestMarker(denom string) *types.MarkerAccount {
+	marker := types.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(types.MustGetMarkerAddress(denom)),
+		sdk.NewInt64Coin(denom, 1000),
+		s.user1Addr,
+		[]types.AccessGrant{
+			{Address: s.user1Addr.String(), Permissions: types.AccessList{types.Access_Admin, types.Access_Mint}},
+		},
+		types.StatusProposed,
+		types.MarkerType_Coin,
+		true,
+		true,
+		false,
+		[]string{},
+	)
+	s.Require().NoError(s.app.MarkerKeeper.AddSetNetAssetValues(s.ctx, marker, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, 1), 1)}, types.ModuleName), "Failed to add navs to marker for tests")
+	s.Require().NoError(s.app.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker), "Failed to add marker for tests")
+	return marker
 }

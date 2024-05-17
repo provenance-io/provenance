@@ -3,8 +3,6 @@ package cli_test
 import (
 	"encoding/base64"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -1188,108 +1186,6 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestMarkerTxGovProposals() {
-	testCases := []struct {
-		name         string
-		proposaltype string
-		proposal     string
-		expectErr    bool
-		respType     proto.Message
-		expectedCode uint32
-	}{
-		{
-			"invalid proposal type",
-			"Invalid",
-			"",
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"invalid proposal json",
-			"Invalid",
-			`{"title":"test add marker","description"`,
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"mint marker proposal",
-			"IncreaseSupply",
-			fmt.Sprintf(`{"title":"test mint marker","description":"description","manager":"%s",
-			"amount":{"denom":"propcoin","amount":"10"}}`, s.testnet.Validators[0].Address.String()),
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"burn marker proposal",
-			"DecreaseSupply",
-			fmt.Sprintf(`{"title":"test burn marker","description":"description","manager":"%s",
-			"amount":{"denom":"propcoin","amount":"10"}}`, s.testnet.Validators[0].Address.String()),
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"change status marker proposal",
-			"ChangeStatus",
-			`{"title":"test change marker status","description":"description","denom":"propcoin",
-			"new_status":"MARKER_STATUS_CANCELLED"}`,
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"add admin marker proposal",
-			"SetAdministrator",
-			fmt.Sprintf(`{"title":"test add admin to marker","description":"description",
-			"denom":"propcoin","access":[{"address":"%s", "permissions": [1,2,3,4,5,6]}]}`,
-				s.testnet.Validators[0].Address.String()),
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"remove admin marker proposal",
-			"RemoveAdministrator",
-			fmt.Sprintf(`{"title":"test remove marker admin","description":"description",
-			"denom":"propcoin","removed_address":["%s"]}`,
-				s.testnet.Validators[0].Address.String()),
-			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"withdraw escrow marker proposal",
-			"WithdrawEscrow",
-			fmt.Sprintf(`{"title":"test withdraw marker","description":"description","target_address":"%s",
-			"denom":"%s", "amount":[{"denom":"%s","amount":"1"}]}`, s.testnet.Validators[0].Address.String(),
-				s.cfg.BondDenom, s.cfg.BondDenom),
-			true, &sdk.TxResponse{}, 0x5,
-			// The gov module now has its own set of errors.
-			// This /should/ fail due to insufficient funds, and it does, but then the gov module erroneously wraps it again.
-			// Insufficient funds is 0x5 in the main SDK's set of errors.
-			// However, the governance module erroneously wraps this error in a 0x9, "no handler exists for proposal type"
-			// So we're looking for a 0x9 here.
-			// Here's the expected error (from the rawlog):
-			// 	0stake is smaller than 1stake: insufficient funds: invalid proposal content: no handler exists for proposal type
-		},
-	}
-
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			tmpDir := s.T().TempDir()
-			tmpFile := filepath.Join(tmpDir, "proposal.json")
-			err := os.WriteFile(tmpFile, []byte(tc.proposal), 0o666)
-			s.Require().NoError(err, "writing proposal to %s", tmpFile)
-
-			cmd := markercli.GetCmdMarkerProposal()
-			args := []string{
-				tc.proposaltype,
-				tmpFile,
-				sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, "500000"),
-			}
-
-			testcli.NewCLITxExecutor(cmd, args).
-				WithExpErr(tc.expectErr).
-				WithExpCode(tc.expectedCode).
-				Execute(s.T(), s.testnet)
-		})
-	}
-}
-
 func (s *IntegrationTestSuite) TestPaginationWithPageKey() {
 	asJson := fmt.Sprintf("--%s=json", cmtcli.OutputFlag)
 
@@ -2225,6 +2121,389 @@ func TestParseBoolStrict(t *testing.T) {
 				assert.NoError(t, err, "ParseBoolStrict(%q) error", tc.input)
 			}
 			assert.Equal(t, tc.exp, actual, "ParseBoolStrict(%q) value", tc.input)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestSupplyDecreaseProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit supply decrease proposal",
+			args: []string{
+				"1000stake",
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid amount",
+			args: []string{
+				"invalidamountstake",
+			},
+			expectErrMsg: "invalid coin invalidamountstake",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdSupplyDecreaseProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestSupplyIncreaseProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit supply increase proposal",
+			args: []string{
+				"1000stake",
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "success - submit supply increase proposal with target address",
+			args: []string{
+				"1000stake",
+				"--target-address=" + s.accountAddresses[1].String(),
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid amount",
+			args: []string{
+				"invalidamountstake",
+			},
+			expectErrMsg: "invalid coin invalidamountstake",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid target address",
+			args: []string{
+				"1000stake",
+				"--target-address=invalidaddress",
+			},
+			expectErrMsg: "invalid target address invalidaddress: decoding bech32 failed: invalid separator index -1",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdSupplyIncreaseProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestSetAdministratorProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit set administrator proposal",
+			args: []string{
+				"mycoin",
+				fmt.Sprintf("%s,admin,mint;%s,transfer", s.accountAddresses[0].String(), s.accountAddresses[1].String()),
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid access grant format",
+			args: []string{
+				"mycoin",
+				"invalidaccessgrant",
+			},
+			expectErrMsg: "invalid access grants invalidaccessgrant: at least one grant should be provided with address",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdSetAdministratorProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestRemoveAdministratorProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit remove administrator proposal",
+			args: []string{
+				"mycoin",
+				fmt.Sprintf("%s,%s", s.accountAddresses[0].String(), s.accountAddresses[1].String()),
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid address format",
+			args: []string{
+				"mycoin",
+				"invalidaddress",
+			},
+			expectErrMsg: "invalid address invalidaddress: decoding bech32 failed: invalid separator index -1",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdRemoveAdministratorProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestChangeStatusProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit change status proposal to active",
+			args: []string{
+				"mycoin",
+				"ACTIVE",
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "success - submit change status proposal to proposed",
+			args: []string{
+				"mycoin",
+				"proposed",
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid marker status",
+			args: []string{
+				"mycoin",
+				"INVALIDSTATUS",
+			},
+			expectErrMsg: "invalid status: INVALIDSTATUS",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdChangeStatusProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestWithdrawEscrowProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit withdraw escrow proposal",
+			args: []string{
+				"mycoin",
+				"100stake",
+				s.accountAddresses[1].String(),
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid amount",
+			args: []string{
+				"mycoin",
+				"invalidamount",
+				s.accountAddresses[1].String(),
+			},
+			expectErrMsg: "invalid amount invalidamount: invalid decimal coin expression: invalidamount",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid target address",
+			args: []string{
+				"mycoin",
+				"100stake",
+				"invalidaddress",
+			},
+			expectErrMsg: "invalid target address invalidaddress: decoding bech32 failed: invalid separator index -1",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdWithdrawEscrowProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestSetDenomMetadataProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name: "success - submit set denom metadata proposal",
+			args: []string{
+				"mycoin", "My Coin", "MYC", "My coin description", "myc", "6",
+			},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name: "failure - invalid exponent",
+			args: []string{
+				"mycoin", "My Coin", "MYC", "My coin description", "myc", "invalidexponent",
+			},
+			expectErrMsg: "invalid exponent: invalidexponent",
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := markercli.GetCmdSetDenomMetadataProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewCLITxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
 		})
 	}
 }

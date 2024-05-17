@@ -1711,6 +1711,89 @@ func (m *MsgSupplyIncreaseProposalResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSupplyIncreaseProposalResponse proto.InternalMessageInfo
 
+// MsgSupplyDecreaseProposalRequest defines a governance proposal to decrease total supply of the marker
+type MsgSupplyDecreaseProposalRequest struct {
+	Amount    github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,1,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
+	Authority string                                  `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgSupplyDecreaseProposalRequest) Reset()         { *m = MsgSupplyDecreaseProposalRequest{} }
+func (m *MsgSupplyDecreaseProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgSupplyDecreaseProposalRequest) ProtoMessage()    {}
+func (*MsgSupplyDecreaseProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{32}
+}
+func (m *MsgSupplyDecreaseProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSupplyDecreaseProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSupplyDecreaseProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSupplyDecreaseProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSupplyDecreaseProposalRequest.Merge(m, src)
+}
+func (m *MsgSupplyDecreaseProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSupplyDecreaseProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSupplyDecreaseProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSupplyDecreaseProposalRequest proto.InternalMessageInfo
+
+func (m *MsgSupplyDecreaseProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgSupplyIncreaseProposalResponse defines the Msg/SupplyDecreaseProposal response type
+type MsgSupplyDecreaseProposalResponse struct {
+}
+
+func (m *MsgSupplyDecreaseProposalResponse) Reset()         { *m = MsgSupplyDecreaseProposalResponse{} }
+func (m *MsgSupplyDecreaseProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSupplyDecreaseProposalResponse) ProtoMessage()    {}
+func (*MsgSupplyDecreaseProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{33}
+}
+func (m *MsgSupplyDecreaseProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSupplyDecreaseProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSupplyDecreaseProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSupplyDecreaseProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSupplyDecreaseProposalResponse.Merge(m, src)
+}
+func (m *MsgSupplyDecreaseProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSupplyDecreaseProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSupplyDecreaseProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSupplyDecreaseProposalResponse proto.InternalMessageInfo
+
 // MsgUpdateRequiredAttributesRequest defines a msg to update/add/remove required attributes from a resticted marker
 // signer must have transfer authority to change attributes, to update attribute add current to remove list and new to
 // add list
@@ -1729,7 +1812,7 @@ func (m *MsgUpdateRequiredAttributesRequest) Reset()         { *m = MsgUpdateReq
 func (m *MsgUpdateRequiredAttributesRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateRequiredAttributesRequest) ProtoMessage()    {}
 func (*MsgUpdateRequiredAttributesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{32}
+	return fileDescriptor_bcb203fb73175ed3, []int{34}
 }
 func (m *MsgUpdateRequiredAttributesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1794,7 +1877,7 @@ func (m *MsgUpdateRequiredAttributesResponse) Reset()         { *m = MsgUpdateRe
 func (m *MsgUpdateRequiredAttributesResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateRequiredAttributesResponse) ProtoMessage()    {}
 func (*MsgUpdateRequiredAttributesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{33}
+	return fileDescriptor_bcb203fb73175ed3, []int{35}
 }
 func (m *MsgUpdateRequiredAttributesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1838,7 +1921,7 @@ func (m *MsgUpdateForcedTransferRequest) Reset()         { *m = MsgUpdateForcedT
 func (m *MsgUpdateForcedTransferRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateForcedTransferRequest) ProtoMessage()    {}
 func (*MsgUpdateForcedTransferRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{34}
+	return fileDescriptor_bcb203fb73175ed3, []int{36}
 }
 func (m *MsgUpdateForcedTransferRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1896,7 +1979,7 @@ func (m *MsgUpdateForcedTransferResponse) Reset()         { *m = MsgUpdateForced
 func (m *MsgUpdateForcedTransferResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateForcedTransferResponse) ProtoMessage()    {}
 func (*MsgUpdateForcedTransferResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{35}
+	return fileDescriptor_bcb203fb73175ed3, []int{37}
 }
 func (m *MsgUpdateForcedTransferResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1940,7 +2023,7 @@ func (m *MsgSetAccountDataRequest) Reset()         { *m = MsgSetAccountDataReque
 func (m *MsgSetAccountDataRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgSetAccountDataRequest) ProtoMessage()    {}
 func (*MsgSetAccountDataRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{36}
+	return fileDescriptor_bcb203fb73175ed3, []int{38}
 }
 func (m *MsgSetAccountDataRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1998,7 +2081,7 @@ func (m *MsgSetAccountDataResponse) Reset()         { *m = MsgSetAccountDataResp
 func (m *MsgSetAccountDataResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSetAccountDataResponse) ProtoMessage()    {}
 func (*MsgSetAccountDataResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{37}
+	return fileDescriptor_bcb203fb73175ed3, []int{39}
 }
 func (m *MsgSetAccountDataResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2044,7 +2127,7 @@ func (m *MsgUpdateSendDenyListRequest) Reset()         { *m = MsgUpdateSendDenyL
 func (m *MsgUpdateSendDenyListRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateSendDenyListRequest) ProtoMessage()    {}
 func (*MsgUpdateSendDenyListRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{38}
+	return fileDescriptor_bcb203fb73175ed3, []int{40}
 }
 func (m *MsgUpdateSendDenyListRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2109,7 +2192,7 @@ func (m *MsgUpdateSendDenyListResponse) Reset()         { *m = MsgUpdateSendDeny
 func (m *MsgUpdateSendDenyListResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateSendDenyListResponse) ProtoMessage()    {}
 func (*MsgUpdateSendDenyListResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{39}
+	return fileDescriptor_bcb203fb73175ed3, []int{41}
 }
 func (m *MsgUpdateSendDenyListResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2149,7 +2232,7 @@ func (m *MsgAddNetAssetValuesRequest) Reset()         { *m = MsgAddNetAssetValue
 func (m *MsgAddNetAssetValuesRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgAddNetAssetValuesRequest) ProtoMessage()    {}
 func (*MsgAddNetAssetValuesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{40}
+	return fileDescriptor_bcb203fb73175ed3, []int{42}
 }
 func (m *MsgAddNetAssetValuesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2207,7 +2290,7 @@ func (m *MsgAddNetAssetValuesResponse) Reset()         { *m = MsgAddNetAssetValu
 func (m *MsgAddNetAssetValuesResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAddNetAssetValuesResponse) ProtoMessage()    {}
 func (*MsgAddNetAssetValuesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bcb203fb73175ed3, []int{41}
+	return fileDescriptor_bcb203fb73175ed3, []int{43}
 }
 func (m *MsgAddNetAssetValuesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2235,6 +2318,496 @@ func (m *MsgAddNetAssetValuesResponse) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_MsgAddNetAssetValuesResponse proto.InternalMessageInfo
+
+// MsgSetAdministratorProposalRequest defines the Msg/SetAdministratorProposal request type
+type MsgSetAdministratorProposalRequest struct {
+	Denom  string        `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	Access []AccessGrant `protobuf:"bytes,2,rep,name=access,proto3" json:"access"`
+	// The signer of the message.  Must have admin authority to marker or be governance module account address.
+	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgSetAdministratorProposalRequest) Reset()         { *m = MsgSetAdministratorProposalRequest{} }
+func (m *MsgSetAdministratorProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgSetAdministratorProposalRequest) ProtoMessage()    {}
+func (*MsgSetAdministratorProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{44}
+}
+func (m *MsgSetAdministratorProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetAdministratorProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetAdministratorProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetAdministratorProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetAdministratorProposalRequest.Merge(m, src)
+}
+func (m *MsgSetAdministratorProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetAdministratorProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetAdministratorProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetAdministratorProposalRequest proto.InternalMessageInfo
+
+func (m *MsgSetAdministratorProposalRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *MsgSetAdministratorProposalRequest) GetAccess() []AccessGrant {
+	if m != nil {
+		return m.Access
+	}
+	return nil
+}
+
+func (m *MsgSetAdministratorProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgSetAdministratorProposalResponse defines the Msg/SetAdministratorProposal response type
+type MsgSetAdministratorProposalResponse struct {
+}
+
+func (m *MsgSetAdministratorProposalResponse) Reset()         { *m = MsgSetAdministratorProposalResponse{} }
+func (m *MsgSetAdministratorProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetAdministratorProposalResponse) ProtoMessage()    {}
+func (*MsgSetAdministratorProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{45}
+}
+func (m *MsgSetAdministratorProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetAdministratorProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetAdministratorProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetAdministratorProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetAdministratorProposalResponse.Merge(m, src)
+}
+func (m *MsgSetAdministratorProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetAdministratorProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetAdministratorProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetAdministratorProposalResponse proto.InternalMessageInfo
+
+// MsgRemoveAdministratorProposalRequest defines the Msg/RemoveAdministratorProposal request type
+type MsgRemoveAdministratorProposalRequest struct {
+	Denom          string   `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	RemovedAddress []string `protobuf:"bytes,2,rep,name=removed_address,json=removedAddress,proto3" json:"removed_address,omitempty"`
+	// The signer of the message.  Must have admin authority to marker or be governance module account address.
+	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgRemoveAdministratorProposalRequest) Reset()         { *m = MsgRemoveAdministratorProposalRequest{} }
+func (m *MsgRemoveAdministratorProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveAdministratorProposalRequest) ProtoMessage()    {}
+func (*MsgRemoveAdministratorProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{46}
+}
+func (m *MsgRemoveAdministratorProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveAdministratorProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveAdministratorProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveAdministratorProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveAdministratorProposalRequest.Merge(m, src)
+}
+func (m *MsgRemoveAdministratorProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveAdministratorProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveAdministratorProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveAdministratorProposalRequest proto.InternalMessageInfo
+
+func (m *MsgRemoveAdministratorProposalRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *MsgRemoveAdministratorProposalRequest) GetRemovedAddress() []string {
+	if m != nil {
+		return m.RemovedAddress
+	}
+	return nil
+}
+
+func (m *MsgRemoveAdministratorProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgRemoveAdministratorProposalResponse defines the Msg/RemoveAdministratorProposal response type
+type MsgRemoveAdministratorProposalResponse struct {
+}
+
+func (m *MsgRemoveAdministratorProposalResponse) Reset() {
+	*m = MsgRemoveAdministratorProposalResponse{}
+}
+func (m *MsgRemoveAdministratorProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveAdministratorProposalResponse) ProtoMessage()    {}
+func (*MsgRemoveAdministratorProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{47}
+}
+func (m *MsgRemoveAdministratorProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveAdministratorProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveAdministratorProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveAdministratorProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveAdministratorProposalResponse.Merge(m, src)
+}
+func (m *MsgRemoveAdministratorProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveAdministratorProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveAdministratorProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveAdministratorProposalResponse proto.InternalMessageInfo
+
+// MsgChangeStatusProposalRequest defines the Msg/ChangeStatusProposal request type
+type MsgChangeStatusProposalRequest struct {
+	Denom     string       `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	NewStatus MarkerStatus `protobuf:"varint,2,opt,name=new_status,json=newStatus,proto3,enum=provenance.marker.v1.MarkerStatus" json:"new_status,omitempty"`
+	// The signer of the message.  Must have admin authority to marker or be governance module account address.
+	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgChangeStatusProposalRequest) Reset()         { *m = MsgChangeStatusProposalRequest{} }
+func (m *MsgChangeStatusProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgChangeStatusProposalRequest) ProtoMessage()    {}
+func (*MsgChangeStatusProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{48}
+}
+func (m *MsgChangeStatusProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgChangeStatusProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgChangeStatusProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgChangeStatusProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgChangeStatusProposalRequest.Merge(m, src)
+}
+func (m *MsgChangeStatusProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgChangeStatusProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgChangeStatusProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgChangeStatusProposalRequest proto.InternalMessageInfo
+
+func (m *MsgChangeStatusProposalRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *MsgChangeStatusProposalRequest) GetNewStatus() MarkerStatus {
+	if m != nil {
+		return m.NewStatus
+	}
+	return StatusUndefined
+}
+
+func (m *MsgChangeStatusProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgChangeStatusProposalResponse defines the Msg/ChangeStatusProposal response type
+type MsgChangeStatusProposalResponse struct {
+}
+
+func (m *MsgChangeStatusProposalResponse) Reset()         { *m = MsgChangeStatusProposalResponse{} }
+func (m *MsgChangeStatusProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgChangeStatusProposalResponse) ProtoMessage()    {}
+func (*MsgChangeStatusProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{49}
+}
+func (m *MsgChangeStatusProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgChangeStatusProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgChangeStatusProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgChangeStatusProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgChangeStatusProposalResponse.Merge(m, src)
+}
+func (m *MsgChangeStatusProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgChangeStatusProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgChangeStatusProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgChangeStatusProposalResponse proto.InternalMessageInfo
+
+// MsgWithdrawEscrowProposalRequest defines the Msg/WithdrawEscrowProposal request type
+type MsgWithdrawEscrowProposalRequest struct {
+	Denom         string                                   `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	Amount        github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	TargetAddress string                                   `protobuf:"bytes,3,opt,name=target_address,json=targetAddress,proto3" json:"target_address,omitempty"`
+	// The signer of the message.  Must have admin authority to marker or be governance module account address.
+	Authority string `protobuf:"bytes,4,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgWithdrawEscrowProposalRequest) Reset()         { *m = MsgWithdrawEscrowProposalRequest{} }
+func (m *MsgWithdrawEscrowProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawEscrowProposalRequest) ProtoMessage()    {}
+func (*MsgWithdrawEscrowProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{50}
+}
+func (m *MsgWithdrawEscrowProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawEscrowProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawEscrowProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawEscrowProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawEscrowProposalRequest.Merge(m, src)
+}
+func (m *MsgWithdrawEscrowProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawEscrowProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawEscrowProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawEscrowProposalRequest proto.InternalMessageInfo
+
+func (m *MsgWithdrawEscrowProposalRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *MsgWithdrawEscrowProposalRequest) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Amount
+	}
+	return nil
+}
+
+func (m *MsgWithdrawEscrowProposalRequest) GetTargetAddress() string {
+	if m != nil {
+		return m.TargetAddress
+	}
+	return ""
+}
+
+func (m *MsgWithdrawEscrowProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgWithdrawEscrowProposalResponse defines the Msg/WithdrawEscrowProposal response type
+type MsgWithdrawEscrowProposalResponse struct {
+}
+
+func (m *MsgWithdrawEscrowProposalResponse) Reset()         { *m = MsgWithdrawEscrowProposalResponse{} }
+func (m *MsgWithdrawEscrowProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawEscrowProposalResponse) ProtoMessage()    {}
+func (*MsgWithdrawEscrowProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{51}
+}
+func (m *MsgWithdrawEscrowProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawEscrowProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawEscrowProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawEscrowProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawEscrowProposalResponse.Merge(m, src)
+}
+func (m *MsgWithdrawEscrowProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawEscrowProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawEscrowProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawEscrowProposalResponse proto.InternalMessageInfo
+
+// MsgSetDenomMetadataProposalRequest defines the Msg/SetDenomMetadataProposal request type
+type MsgSetDenomMetadataProposalRequest struct {
+	Metadata github_com_cosmos_cosmos_sdk_x_bank_types.Metadata `protobuf:"bytes,1,opt,name=metadata,proto3,customtype=github.com/cosmos/cosmos-sdk/x/bank/types.Metadata" json:"metadata"`
+	// The signer of the message.  Must have admin authority to marker or be governance module account address.
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgSetDenomMetadataProposalRequest) Reset()         { *m = MsgSetDenomMetadataProposalRequest{} }
+func (m *MsgSetDenomMetadataProposalRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgSetDenomMetadataProposalRequest) ProtoMessage()    {}
+func (*MsgSetDenomMetadataProposalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{52}
+}
+func (m *MsgSetDenomMetadataProposalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetDenomMetadataProposalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetDenomMetadataProposalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetDenomMetadataProposalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetDenomMetadataProposalRequest.Merge(m, src)
+}
+func (m *MsgSetDenomMetadataProposalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetDenomMetadataProposalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetDenomMetadataProposalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetDenomMetadataProposalRequest proto.InternalMessageInfo
+
+func (m *MsgSetDenomMetadataProposalRequest) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgSetDenomMetadataProposalResponse defines the Msg/SetDenomMetadataProposal response type
+type MsgSetDenomMetadataProposalResponse struct {
+}
+
+func (m *MsgSetDenomMetadataProposalResponse) Reset()         { *m = MsgSetDenomMetadataProposalResponse{} }
+func (m *MsgSetDenomMetadataProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetDenomMetadataProposalResponse) ProtoMessage()    {}
+func (*MsgSetDenomMetadataProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bcb203fb73175ed3, []int{53}
+}
+func (m *MsgSetDenomMetadataProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetDenomMetadataProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetDenomMetadataProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetDenomMetadataProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetDenomMetadataProposalResponse.Merge(m, src)
+}
+func (m *MsgSetDenomMetadataProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetDenomMetadataProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetDenomMetadataProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetDenomMetadataProposalResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*MsgGrantAllowanceRequest)(nil), "provenance.marker.v1.MsgGrantAllowanceRequest")
@@ -2269,6 +2842,8 @@ func init() {
 	proto.RegisterType((*MsgAddFinalizeActivateMarkerResponse)(nil), "provenance.marker.v1.MsgAddFinalizeActivateMarkerResponse")
 	proto.RegisterType((*MsgSupplyIncreaseProposalRequest)(nil), "provenance.marker.v1.MsgSupplyIncreaseProposalRequest")
 	proto.RegisterType((*MsgSupplyIncreaseProposalResponse)(nil), "provenance.marker.v1.MsgSupplyIncreaseProposalResponse")
+	proto.RegisterType((*MsgSupplyDecreaseProposalRequest)(nil), "provenance.marker.v1.MsgSupplyDecreaseProposalRequest")
+	proto.RegisterType((*MsgSupplyDecreaseProposalResponse)(nil), "provenance.marker.v1.MsgSupplyDecreaseProposalResponse")
 	proto.RegisterType((*MsgUpdateRequiredAttributesRequest)(nil), "provenance.marker.v1.MsgUpdateRequiredAttributesRequest")
 	proto.RegisterType((*MsgUpdateRequiredAttributesResponse)(nil), "provenance.marker.v1.MsgUpdateRequiredAttributesResponse")
 	proto.RegisterType((*MsgUpdateForcedTransferRequest)(nil), "provenance.marker.v1.MsgUpdateForcedTransferRequest")
@@ -2279,137 +2854,166 @@ func init() {
 	proto.RegisterType((*MsgUpdateSendDenyListResponse)(nil), "provenance.marker.v1.MsgUpdateSendDenyListResponse")
 	proto.RegisterType((*MsgAddNetAssetValuesRequest)(nil), "provenance.marker.v1.MsgAddNetAssetValuesRequest")
 	proto.RegisterType((*MsgAddNetAssetValuesResponse)(nil), "provenance.marker.v1.MsgAddNetAssetValuesResponse")
+	proto.RegisterType((*MsgSetAdministratorProposalRequest)(nil), "provenance.marker.v1.MsgSetAdministratorProposalRequest")
+	proto.RegisterType((*MsgSetAdministratorProposalResponse)(nil), "provenance.marker.v1.MsgSetAdministratorProposalResponse")
+	proto.RegisterType((*MsgRemoveAdministratorProposalRequest)(nil), "provenance.marker.v1.MsgRemoveAdministratorProposalRequest")
+	proto.RegisterType((*MsgRemoveAdministratorProposalResponse)(nil), "provenance.marker.v1.MsgRemoveAdministratorProposalResponse")
+	proto.RegisterType((*MsgChangeStatusProposalRequest)(nil), "provenance.marker.v1.MsgChangeStatusProposalRequest")
+	proto.RegisterType((*MsgChangeStatusProposalResponse)(nil), "provenance.marker.v1.MsgChangeStatusProposalResponse")
+	proto.RegisterType((*MsgWithdrawEscrowProposalRequest)(nil), "provenance.marker.v1.MsgWithdrawEscrowProposalRequest")
+	proto.RegisterType((*MsgWithdrawEscrowProposalResponse)(nil), "provenance.marker.v1.MsgWithdrawEscrowProposalResponse")
+	proto.RegisterType((*MsgSetDenomMetadataProposalRequest)(nil), "provenance.marker.v1.MsgSetDenomMetadataProposalRequest")
+	proto.RegisterType((*MsgSetDenomMetadataProposalResponse)(nil), "provenance.marker.v1.MsgSetDenomMetadataProposalResponse")
 }
 
 func init() { proto.RegisterFile("provenance/marker/v1/tx.proto", fileDescriptor_bcb203fb73175ed3) }
 
 var fileDescriptor_bcb203fb73175ed3 = []byte{
-	// 1988 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x59, 0xcd, 0x6f, 0x1c, 0x49,
-	0x15, 0x4f, 0xfb, 0x2b, 0x9e, 0x37, 0x89, 0x13, 0x57, 0xfc, 0xd1, 0xee, 0xe0, 0xf1, 0xd8, 0xf9,
-	0xd8, 0xd9, 0xb0, 0x9e, 0x8e, 0x67, 0x21, 0x9b, 0xb5, 0x90, 0xd0, 0xd8, 0xc6, 0x21, 0x82, 0x41,
-	0xab, 0xf1, 0x02, 0x82, 0xcb, 0xa8, 0xa7, 0xbb, 0xdc, 0x69, 0x79, 0xa6, 0x6b, 0xd2, 0x55, 0x33,
-	0xc9, 0xac, 0xc4, 0x85, 0x3d, 0xed, 0x09, 0xd8, 0x03, 0x07, 0xb8, 0x70, 0x42, 0x88, 0xd3, 0x1e,
-	0x56, 0xfc, 0x01, 0x9c, 0x16, 0x10, 0x68, 0x05, 0x17, 0xc4, 0x61, 0x41, 0x89, 0x44, 0x10, 0x7f,
-	0x04, 0xa0, 0xfa, 0xe8, 0x9e, 0xe9, 0x99, 0xee, 0xb6, 0x1d, 0x3b, 0x62, 0x2f, 0x89, 0xab, 0xde,
-	0xe7, 0xef, 0xbd, 0x57, 0x55, 0xef, 0xf5, 0xc0, 0x6a, 0x27, 0x20, 0x3d, 0xec, 0x5b, 0xbe, 0x8d,
-	0xcd, 0xb6, 0x15, 0x1c, 0xe1, 0xc0, 0xec, 0x6d, 0x99, 0xec, 0x69, 0xb9, 0x13, 0x10, 0x46, 0xd0,
-	0xc2, 0x80, 0x5c, 0x96, 0xe4, 0x72, 0x6f, 0xcb, 0x98, 0xb7, 0xda, 0x9e, 0x4f, 0x4c, 0xf1, 0xaf,
-	0x64, 0x34, 0x56, 0x5c, 0x42, 0xdc, 0x16, 0x36, 0xc5, 0xaa, 0xd9, 0x3d, 0x34, 0x2d, 0xbf, 0x1f,
-	0x92, 0x6c, 0x42, 0xdb, 0x84, 0x36, 0xc4, 0xca, 0x94, 0x0b, 0x45, 0x5a, 0x70, 0x89, 0x4b, 0xe4,
-	0x3e, 0xff, 0x4b, 0xed, 0x16, 0x24, 0x8f, 0xd9, 0xb4, 0x28, 0x36, 0x7b, 0x5b, 0x4d, 0xcc, 0xac,
-	0x2d, 0xd3, 0x26, 0x9e, 0x3f, 0x46, 0xf7, 0x8f, 0x22, 0x3a, 0x5f, 0x28, 0xfa, 0xb2, 0xa2, 0xb7,
-	0xa9, 0xcb, 0xc1, 0xb4, 0xa9, 0xab, 0x08, 0xb7, 0xbc, 0xa6, 0x6d, 0x5a, 0x9d, 0x4e, 0xcb, 0xb3,
-	0x2d, 0xe6, 0x11, 0x9f, 0x9a, 0x2c, 0xb0, 0x7c, 0x7a, 0x18, 0x07, 0x6d, 0xac, 0x27, 0xc6, 0x44,
-	0xc1, 0x97, 0x2c, 0xb7, 0x13, 0x59, 0x2c, 0xdb, 0xc6, 0x94, 0xba, 0x81, 0xe5, 0x33, 0xc9, 0xb7,
-	0xf1, 0x07, 0x0d, 0xf4, 0x1a, 0x75, 0x1f, 0xf0, 0xad, 0x6a, 0xab, 0x45, 0x9e, 0x70, 0x89, 0x3a,
-	0x7e, 0xdc, 0xc5, 0x94, 0xa1, 0x05, 0x98, 0x76, 0xb0, 0x4f, 0xda, 0xba, 0x56, 0xd4, 0x4a, 0xb9,
-	0xba, 0x5c, 0xa0, 0x9b, 0x70, 0xd9, 0x72, 0xda, 0x9e, 0xef, 0x51, 0x16, 0x58, 0x8c, 0x04, 0xfa,
-	0x84, 0xa0, 0xc6, 0x37, 0x91, 0x0e, 0x17, 0x85, 0x1d, 0x8c, 0xf5, 0x49, 0x41, 0x0f, 0x97, 0xe8,
-	0x6b, 0x90, 0xb3, 0x42, 0x4b, 0xfa, 0x54, 0x51, 0x2b, 0xe5, 0x2b, 0x0b, 0x65, 0x99, 0x9d, 0x72,
-	0x98, 0x9d, 0x72, 0xd5, 0xef, 0xef, 0xcc, 0xff, 0xfe, 0xe3, 0xcd, 0xcb, 0xfb, 0x18, 0x47, 0x7e,
-	0x3d, 0xac, 0x0f, 0x24, 0xb7, 0xd1, 0x0f, 0x5f, 0x7c, 0x74, 0x27, 0x6e, 0x74, 0xe3, 0x3a, 0xac,
-	0x24, 0x80, 0xa1, 0x1d, 0xe2, 0x53, 0xbc, 0xf1, 0xdf, 0x29, 0xb8, 0x56, 0xa3, 0x6e, 0xd5, 0x71,
-	0x6a, 0x22, 0x20, 0x21, 0xca, 0xb7, 0x60, 0xc6, 0x6a, 0x93, 0xae, 0xcf, 0x04, 0xcc, 0x7c, 0x65,
-	0xa5, 0xac, 0x4a, 0x80, 0xa7, 0xb7, 0xac, 0xd2, 0x57, 0xde, 0x25, 0x9e, 0xbf, 0x33, 0xf5, 0xc9,
-	0x67, 0x6b, 0x17, 0xea, 0x8a, 0x9d, 0x43, 0x6c, 0x5b, 0xbe, 0xe5, 0xe2, 0x20, 0x84, 0xa8, 0x96,
-	0x68, 0x1d, 0x2e, 0x1d, 0x06, 0xa4, 0xdd, 0xb0, 0x1c, 0x27, 0xc0, 0x94, 0x0a, 0x94, 0xb9, 0x7a,
-	0x9e, 0xef, 0x55, 0xe5, 0x16, 0xda, 0x86, 0x19, 0xca, 0x2c, 0xd6, 0xa5, 0xfa, 0x74, 0x51, 0x2b,
-	0xcd, 0x55, 0x36, 0xca, 0x49, 0x95, 0x5c, 0x96, 0xae, 0x1e, 0x08, 0xce, 0xba, 0x92, 0x40, 0x55,
-	0xc8, 0x4b, 0x8e, 0x06, 0xeb, 0x77, 0xb0, 0x3e, 0x23, 0x14, 0x14, 0xb3, 0x14, 0xbc, 0xdb, 0xef,
-	0xe0, 0x3a, 0xb4, 0xa3, 0xbf, 0xd1, 0xd7, 0x21, 0x2f, 0x8b, 0xa1, 0xd1, 0xf2, 0x28, 0xd3, 0x2f,
-	0x16, 0x27, 0x4b, 0xf9, 0xca, 0x7a, 0xb2, 0x8a, 0xaa, 0x60, 0x14, 0x51, 0x55, 0x11, 0x00, 0x29,
-	0xfb, 0x4d, 0x8f, 0x32, 0x8e, 0x95, 0x76, 0x3b, 0x9d, 0x56, 0xbf, 0x71, 0xe8, 0x3d, 0xc5, 0x8e,
-	0x3e, 0x5b, 0xd4, 0x4a, 0xb3, 0xf5, 0xbc, 0xdc, 0xdb, 0xe7, 0x5b, 0xe8, 0x3e, 0xe8, 0x22, 0x6f,
-	0x0d, 0x97, 0xf4, 0x70, 0x20, 0xd4, 0x37, 0x6c, 0xe2, 0xb3, 0x80, 0xb4, 0xf4, 0x9c, 0x60, 0x5f,
-	0x12, 0xf4, 0x07, 0x11, 0x79, 0x57, 0x52, 0x51, 0x05, 0x16, 0xa5, 0xe4, 0x21, 0x09, 0x6c, 0xec,
-	0x34, 0xc2, 0xe3, 0xa0, 0x83, 0x10, 0xbb, 0x26, 0x88, 0xfb, 0x82, 0xf6, 0xae, 0x22, 0x21, 0x13,
-	0xae, 0x05, 0xf8, 0x71, 0xd7, 0x0b, 0xb0, 0xd3, 0xb0, 0x18, 0x0b, 0xbc, 0x66, 0x97, 0x61, 0xaa,
-	0xe7, 0x8b, 0x93, 0xa5, 0x5c, 0x1d, 0x85, 0xa4, 0x6a, 0x44, 0x41, 0x6b, 0x90, 0xeb, 0x52, 0xa7,
-	0x61, 0x63, 0x9f, 0x51, 0xfd, 0x52, 0x51, 0x2b, 0x4d, 0xed, 0x4c, 0xe8, 0x5a, 0x7d, 0xb6, 0x4b,
-	0x9d, 0x5d, 0xbe, 0x87, 0x96, 0x60, 0xa6, 0x47, 0x5a, 0xdd, 0x36, 0xd6, 0x2f, 0x73, 0x6a, 0x5d,
-	0xad, 0xd0, 0x75, 0x29, 0xd8, 0xf6, 0x5a, 0x2d, 0xaa, 0xcf, 0x09, 0x12, 0x17, 0xaa, 0xf1, 0xf5,
-	0xf6, 0x3c, 0xaf, 0xcf, 0x58, 0x19, 0x6c, 0x2c, 0xc1, 0x42, 0xbc, 0x00, 0x55, 0x65, 0xfe, 0x52,
-	0x0b, 0x2b, 0x53, 0x86, 0xfa, 0x3c, 0xce, 0xdf, 0x57, 0x61, 0x46, 0x26, 0x49, 0x9f, 0x3c, 0x5d,
-	0x6e, 0x95, 0x58, 0xe2, 0xf9, 0x8a, 0x00, 0x84, 0x7e, 0x2a, 0x00, 0x3f, 0xd1, 0x60, 0xa9, 0x46,
-	0xdd, 0x3d, 0xdc, 0xc2, 0x0c, 0x9f, 0x1f, 0x86, 0xd7, 0xe0, 0x4a, 0x80, 0xdb, 0xa4, 0xc7, 0x13,
-	0xa9, 0x4e, 0x92, 0x3c, 0x68, 0x73, 0x6a, 0x5b, 0x1d, 0xa6, 0x44, 0x5f, 0x57, 0x60, 0x79, 0xcc,
-	0x25, 0xe5, 0xae, 0x03, 0xa8, 0x46, 0xdd, 0x7d, 0xcf, 0xb7, 0x5a, 0xde, 0x7b, 0xe7, 0x71, 0xdb,
-	0x25, 0x3a, 0xb0, 0x28, 0x92, 0x3a, 0xb0, 0x12, 0x33, 0x5e, 0xb5, 0x99, 0xd7, 0xb3, 0xd8, 0x2b,
-	0x36, 0x3e, 0xb0, 0xa2, 0x8c, 0x37, 0xe1, 0x6a, 0x8d, 0xba, 0xbb, 0xbc, 0x08, 0x5a, 0xaf, 0xca,
-	0xf4, 0x35, 0x98, 0x1f, 0xb2, 0x11, 0x33, 0x2c, 0xb3, 0xf1, 0x6a, 0x0d, 0x87, 0x36, 0x94, 0xe1,
-	0xf7, 0x35, 0x98, 0xab, 0x51, 0xb7, 0xe6, 0xf9, 0xec, 0xcc, 0x17, 0xfe, 0xcb, 0xbb, 0x36, 0x0f,
-	0x57, 0x22, 0x27, 0xe2, 0x8e, 0xed, 0x74, 0x03, 0xff, 0xff, 0xee, 0x98, 0x74, 0x42, 0x39, 0xf6,
-	0x1f, 0x4d, 0x54, 0xe8, 0x77, 0x3d, 0xf6, 0xc8, 0x09, 0xac, 0x27, 0xe7, 0x71, 0x90, 0x57, 0x01,
-	0x18, 0x19, 0x39, 0xc3, 0x39, 0x46, 0xc2, 0xb7, 0xb0, 0x1f, 0xe1, 0x9e, 0x12, 0x77, 0x55, 0x06,
-	0xee, 0x7d, 0x8e, 0xfb, 0xd7, 0x7f, 0x5f, 0x2b, 0xb9, 0x1e, 0x7b, 0xd4, 0x6d, 0x96, 0x6d, 0xd2,
-	0x56, 0x1d, 0x9b, 0xfa, 0x6f, 0x93, 0x3a, 0x47, 0x26, 0x7f, 0x16, 0xa9, 0x10, 0xa0, 0x3f, 0xe3,
-	0xb7, 0x70, 0x0b, 0xbb, 0x96, 0xdd, 0x6f, 0xf0, 0x16, 0x8d, 0xfe, 0xea, 0xc5, 0x47, 0x77, 0xb4,
-	0x30, 0x72, 0x19, 0x67, 0x67, 0x80, 0x5f, 0xc5, 0xe5, 0x77, 0x32, 0x2e, 0xe1, 0x3b, 0x73, 0xfe,
-	0x49, 0x9b, 0x4c, 0x0a, 0xdd, 0x09, 0x5a, 0x89, 0x78, 0x74, 0xa7, 0x47, 0xa2, 0x9b, 0x01, 0x71,
-	0x00, 0x45, 0x41, 0xfc, 0xa7, 0x06, 0x8b, 0x35, 0xea, 0x3e, 0x6c, 0xda, 0xa3, 0x28, 0x3f, 0xd4,
-	0x60, 0x36, 0x7a, 0x7c, 0x25, 0xd0, 0xd7, 0xcb, 0x5e, 0xd3, 0x2e, 0x0f, 0x77, 0xab, 0xe5, 0x90,
-	0x43, 0x34, 0x1e, 0x03, 0xfd, 0x3b, 0xdf, 0xe0, 0xc0, 0xff, 0xf6, 0xd9, 0xda, 0xee, 0x78, 0xd6,
-	0xbc, 0xa6, 0xbd, 0xe9, 0x12, 0xb3, 0x77, 0xdf, 0x6c, 0x13, 0xa7, 0xdb, 0xc2, 0x94, 0xf7, 0xbf,
-	0x43, 0x7d, 0xaf, 0x4c, 0xe5, 0xb0, 0xb3, 0x91, 0x1f, 0x67, 0x28, 0x7b, 0x5d, 0xbc, 0x57, 0x31,
-	0x9c, 0x2a, 0x04, 0x7f, 0xd4, 0xc0, 0xa8, 0x51, 0xf7, 0x00, 0xb3, 0x3d, 0x5e, 0xe0, 0x35, 0xcc,
-	0x2c, 0xc7, 0x62, 0x56, 0x18, 0x87, 0x2e, 0xcc, 0xb6, 0xd5, 0x96, 0x0a, 0xc3, 0xea, 0x20, 0xdf,
-	0xfe, 0x51, 0x94, 0xef, 0x50, 0x6e, 0x67, 0x5b, 0x41, 0xaf, 0x64, 0x16, 0xec, 0x53, 0x39, 0x2b,
-	0x28, 0xb0, 0xa1, 0xcd, 0xc8, 0xd4, 0x19, 0x90, 0xae, 0xc2, 0xf5, 0x44, 0x38, 0x0a, 0xee, 0x5f,
-	0xa6, 0xe0, 0x86, 0x7c, 0xd2, 0xc3, 0x87, 0x2a, 0x7c, 0x33, 0x3e, 0x0f, 0x4d, 0xf2, 0x48, 0xa3,
-	0x3b, 0x7d, 0xf6, 0x46, 0x77, 0xe6, 0xfc, 0x1a, 0xdd, 0x8b, 0xa7, 0x6b, 0x74, 0x67, 0x5f, 0xae,
-	0xd1, 0xcd, 0x9d, 0xba, 0xd1, 0x85, 0x93, 0x35, 0xba, 0xf9, 0xcc, 0x46, 0xf7, 0x52, 0x7a, 0xa3,
-	0x7b, 0xf9, 0xf8, 0x46, 0xf7, 0x36, 0xdc, 0xcc, 0x2e, 0x2a, 0x55, 0x7d, 0x7f, 0xd2, 0xa0, 0xc8,
-	0xab, 0x53, 0x84, 0xf0, 0xa1, 0x6f, 0x07, 0xd8, 0xa2, 0xf8, 0x9d, 0x80, 0x74, 0x08, 0xb5, 0x5a,
-	0x67, 0x2e, 0xbd, 0x5b, 0x30, 0xc7, 0xac, 0xc0, 0xc5, 0x2c, 0x2a, 0x31, 0x75, 0x6a, 0xe4, 0x6e,
-	0x58, 0x64, 0xf7, 0x20, 0x67, 0x75, 0xd9, 0x23, 0x12, 0x78, 0xac, 0x2f, 0x6b, 0x74, 0x47, 0xff,
-	0xf3, 0xc7, 0x9b, 0x0b, 0xca, 0x8a, 0x62, 0x3b, 0x60, 0x81, 0xe7, 0xbb, 0xf5, 0x01, 0xeb, 0x36,
-	0xfa, 0xd7, 0x2f, 0xd6, 0x34, 0x8e, 0x7d, 0xb0, 0xb7, 0x71, 0x03, 0xd6, 0x33, 0xf0, 0x28, 0xd4,
-	0x3f, 0x9d, 0x80, 0x8d, 0x1a, 0x75, 0xbf, 0xdd, 0x71, 0x54, 0x03, 0x18, 0x4f, 0x53, 0xf6, 0x83,
-	0xfb, 0x15, 0x30, 0x64, 0xf3, 0xdb, 0x48, 0xca, 0xfd, 0x84, 0xc8, 0xbd, 0x2e, 0x39, 0xc6, 0x55,
-	0xa3, 0x7b, 0xb0, 0x6c, 0x39, 0x4e, 0xa2, 0xe8, 0xa4, 0x10, 0x5d, 0xb4, 0x1c, 0x27, 0x41, 0xee,
-	0x01, 0xa0, 0xb0, 0x22, 0x1b, 0x83, 0x60, 0x4d, 0x1d, 0x13, 0xac, 0xf9, 0x50, 0xa6, 0x1a, 0x05,
-	0xed, 0x7a, 0x18, 0xb4, 0x04, 0x7d, 0x1b, 0xb7, 0xc4, 0x5d, 0x94, 0x1e, 0x17, 0x15, 0xbf, 0xdf,
-	0x68, 0x50, 0x88, 0xf8, 0xe2, 0x67, 0x22, 0x3b, 0x76, 0xa9, 0x87, 0x6c, 0x22, 0xfd, 0x90, 0x9d,
-	0x67, 0x75, 0xac, 0xc3, 0x5a, 0xaa, 0xdf, 0x0a, 0xdb, 0x07, 0xf2, 0x7b, 0xcc, 0x01, 0x66, 0x55,
-	0xdb, 0xe6, 0x55, 0xbc, 0x37, 0xf4, 0xf8, 0x24, 0xa3, 0x5a, 0x80, 0xe9, 0x9e, 0xd5, 0xea, 0x62,
-	0x55, 0xdd, 0x72, 0x81, 0xee, 0xc2, 0x0c, 0xf5, 0x5c, 0x3f, 0xbc, 0x76, 0x33, 0x9c, 0x56, 0x7c,
-	0xdb, 0x57, 0x42, 0x8f, 0xd5, 0x86, 0xfa, 0x9a, 0x32, 0xea, 0x8a, 0x72, 0xf4, 0xdf, 0x1a, 0x7c,
-	0x21, 0x02, 0x73, 0x80, 0x7d, 0x67, 0x0f, 0xfb, 0x7d, 0x7e, 0x4f, 0x66, 0x3b, 0x7b, 0x0f, 0x96,
-	0x55, 0xf9, 0x3a, 0xd8, 0xf7, 0x06, 0x83, 0x5d, 0x54, 0xbb, 0x8b, 0x92, 0xbc, 0x27, 0xa8, 0xd5,
-	0x90, 0x88, 0xee, 0xc2, 0x02, 0x2f, 0xdc, 0x31, 0x21, 0x59, 0xb5, 0xc8, 0x72, 0x9c, 0x51, 0x89,
-	0x58, 0xe2, 0xa6, 0xce, 0x96, 0xb8, 0x35, 0x58, 0x4d, 0xc1, 0xaa, 0xa2, 0xf1, 0x5b, 0x4d, 0x3c,
-	0xb3, 0x55, 0xc7, 0xf9, 0x16, 0x66, 0x55, 0x4a, 0x31, 0xfb, 0x0e, 0xcf, 0xc2, 0xb9, 0x4c, 0xc1,
-	0x07, 0x70, 0xd5, 0xe7, 0x77, 0x18, 0xd7, 0xda, 0x10, 0xc9, 0x0d, 0x67, 0xfa, 0x1b, 0xc9, 0xcf,
-	0x58, 0xcc, 0x05, 0x75, 0x27, 0xce, 0xf9, 0x31, 0xbf, 0x12, 0x5b, 0x85, 0x82, 0xc8, 0x68, 0x02,
-	0x06, 0x09, 0xb2, 0xf2, 0x73, 0x04, 0x93, 0x35, 0xea, 0xa2, 0x06, 0xcc, 0x86, 0xf7, 0x3a, 0x2a,
-	0xa5, 0x3c, 0xc6, 0x63, 0xe3, 0xb5, 0xf1, 0xfa, 0x09, 0x38, 0xa5, 0x21, 0x6e, 0x20, 0x7c, 0x30,
-	0x32, 0x0c, 0x8c, 0x8c, 0xd0, 0x19, 0x06, 0x46, 0xc7, 0x60, 0xf4, 0x3d, 0x98, 0x91, 0xf3, 0x29,
-	0xba, 0x9d, 0x2a, 0x14, 0x1b, 0x92, 0x8d, 0xd7, 0x8e, 0xe5, 0x1b, 0xa8, 0x96, 0x13, 0x68, 0x86,
-	0xea, 0xd8, 0x18, 0x9c, 0xa1, 0x3a, 0x3e, 0xca, 0xa2, 0x03, 0x98, 0xe2, 0x13, 0x24, 0xba, 0x99,
-	0x2a, 0x30, 0x34, 0xe5, 0x1a, 0xb7, 0x8e, 0xe1, 0x1a, 0x28, 0xe5, 0xd3, 0x5f, 0x86, 0xd2, 0xa1,
-	0x09, 0x35, 0x43, 0xe9, 0xf0, 0x08, 0x89, 0x9a, 0x90, 0x8b, 0x3e, 0x12, 0xa1, 0x8c, 0xbc, 0x8c,
-	0x7c, 0xf0, 0x32, 0xee, 0x9c, 0x84, 0x55, 0xd9, 0x38, 0x82, 0x4b, 0xc3, 0x1f, 0x77, 0xd0, 0x1b,
-	0xc7, 0x84, 0x31, 0x6e, 0x69, 0xf3, 0x84, 0xdc, 0x83, 0x8a, 0x0c, 0xe7, 0xc1, 0x8c, 0x8a, 0x1c,
-	0x19, 0x99, 0x33, 0x2a, 0x72, 0x74, 0xb8, 0x54, 0x11, 0x93, 0xed, 0x51, 0x76, 0xc4, 0x62, 0x7d,
-	0x79, 0x76, 0xc4, 0xe2, 0xdd, 0x16, 0x07, 0x11, 0x3d, 0x6b, 0xe9, 0x20, 0x46, 0x9e, 0xd2, 0x0c,
-	0x10, 0xa3, 0x8f, 0x17, 0x7a, 0x04, 0xf9, 0xa1, 0x91, 0x0a, 0x7d, 0x31, 0x55, 0x72, 0x7c, 0xc0,
-	0x34, 0xde, 0x38, 0x19, 0xb3, 0xb2, 0xf4, 0x04, 0xae, 0x8e, 0x8e, 0x34, 0xe8, 0x6e, 0xaa, 0x86,
-	0x94, 0x61, 0xce, 0xd8, 0x3a, 0x85, 0x84, 0x32, 0xfc, 0x18, 0xe6, 0xe2, 0x3f, 0x2f, 0xa0, 0x72,
-	0xaa, 0x92, 0xc4, 0x1f, 0x55, 0x0c, 0xf3, 0xc4, 0xfc, 0xca, 0xe4, 0x87, 0x1a, 0xac, 0xa4, 0xb6,
-	0xd2, 0xe8, 0xed, 0xac, 0x02, 0xc8, 0x9c, 0xe9, 0x8c, 0xed, 0x97, 0x11, 0x55, 0x4e, 0x7d, 0xa0,
-	0xc1, 0x52, 0x72, 0x9b, 0x8b, 0xee, 0xa5, 0x47, 0x35, 0xab, 0xcf, 0x37, 0xde, 0x3a, 0xb5, 0x9c,
-	0xf2, 0xe5, 0x47, 0x1a, 0xe8, 0x69, 0x4d, 0x23, 0xba, 0x9f, 0xaa, 0xf5, 0x98, 0xfe, 0xdb, 0x78,
-	0xfb, 0x25, 0x24, 0x95, 0x47, 0xef, 0x6b, 0xb0, 0x90, 0xd4, 0xe6, 0xa1, 0x2f, 0x1d, 0xa3, 0x33,
-	0xb1, 0x9b, 0x35, 0xbe, 0x7c, 0x4a, 0xa9, 0x41, 0xad, 0xc6, 0x9b, 0xb7, 0x8c, 0x5a, 0x4d, 0x6c,
-	0x38, 0x33, 0x6a, 0x35, 0xb9, 0x2b, 0x44, 0x3f, 0x00, 0x34, 0xde, 0x25, 0xa1, 0xca, 0x31, 0xfe,
-	0x27, 0xb4, 0x8f, 0xc6, 0x9b, 0xa7, 0x92, 0x51, 0xe6, 0xdf, 0x83, 0xf9, 0xb1, 0xf6, 0x05, 0x6d,
-	0x65, 0x95, 0x79, 0x62, 0xbb, 0x66, 0x54, 0x4e, 0x23, 0x22, 0x6d, 0xef, 0xb8, 0x9f, 0x3c, 0x2b,
-	0x68, 0x9f, 0x3e, 0x2b, 0x68, 0xff, 0x78, 0x56, 0xd0, 0x7e, 0xfc, 0xbc, 0x70, 0xe1, 0xd3, 0xe7,
-	0x85, 0x0b, 0x7f, 0x7d, 0x5e, 0xb8, 0x00, 0xcb, 0x1e, 0x49, 0xd4, 0xf7, 0x8e, 0xf6, 0xfd, 0xe1,
-	0xaf, 0x42, 0x03, 0x96, 0x4d, 0x8f, 0x0c, 0xad, 0xcc, 0xa7, 0xe1, 0x2f, 0xb8, 0xe2, 0xf3, 0x50,
-	0x73, 0x46, 0xfc, 0x48, 0xfa, 0xe6, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0x23, 0x58, 0xa2, 0xd4,
-	0x1a, 0x1f, 0x00, 0x00,
+	// 2289 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x5a, 0xcf, 0x6f, 0x1b, 0xc7,
+	0xf5, 0xf7, 0x52, 0xb4, 0x2c, 0x3e, 0xda, 0xb2, 0x35, 0xd6, 0x8f, 0xd5, 0xea, 0xab, 0x9f, 0xb6,
+	0x6c, 0xc6, 0xdf, 0x88, 0x6b, 0x29, 0xad, 0xe3, 0xa8, 0x01, 0x0a, 0x4a, 0x8a, 0x5c, 0xa3, 0x65,
+	0x11, 0x50, 0x69, 0x8b, 0xf6, 0x42, 0x2c, 0x77, 0x47, 0xab, 0x85, 0xc8, 0x5d, 0x7a, 0x67, 0x48,
+	0x59, 0x01, 0x7a, 0x69, 0x4e, 0x39, 0x35, 0xcd, 0xa1, 0x28, 0x7a, 0xea, 0xa9, 0x28, 0x7a, 0x0a,
+	0x8a, 0xa0, 0x7f, 0x40, 0x81, 0xa2, 0x69, 0x8b, 0x16, 0x41, 0x7a, 0x29, 0x7a, 0x48, 0x0b, 0x1b,
+	0x68, 0x8a, 0xfe, 0x05, 0x3d, 0xb5, 0xc5, 0xce, 0xcc, 0x2e, 0xb9, 0xe4, 0xee, 0x90, 0x92, 0x68,
+	0xa4, 0x97, 0x44, 0x3b, 0xef, 0xbd, 0x79, 0xef, 0xf3, 0xe6, 0xbd, 0x99, 0xf7, 0x1e, 0x0d, 0x8b,
+	0x4d, 0xdf, 0x6b, 0x63, 0xd7, 0x70, 0x4d, 0xac, 0x37, 0x0c, 0xff, 0x18, 0xfb, 0x7a, 0x7b, 0x53,
+	0xa7, 0x4f, 0x8b, 0x4d, 0xdf, 0xa3, 0x1e, 0x9a, 0xee, 0x90, 0x8b, 0x9c, 0x5c, 0x6c, 0x6f, 0x6a,
+	0x53, 0x46, 0xc3, 0x71, 0x3d, 0x9d, 0xfd, 0x97, 0x33, 0x6a, 0xf3, 0xb6, 0xe7, 0xd9, 0x75, 0xac,
+	0xb3, 0xaf, 0x5a, 0xeb, 0x50, 0x37, 0xdc, 0xd3, 0x90, 0x64, 0x7a, 0xa4, 0xe1, 0x91, 0x2a, 0xfb,
+	0xd2, 0xf9, 0x87, 0x20, 0x4d, 0xdb, 0x9e, 0xed, 0xf1, 0xf5, 0xe0, 0x2f, 0xb1, 0xba, 0xc4, 0x79,
+	0xf4, 0x9a, 0x41, 0xb0, 0xde, 0xde, 0xac, 0x61, 0x6a, 0x6c, 0xea, 0xa6, 0xe7, 0xb8, 0x7d, 0x74,
+	0xf7, 0x38, 0xa2, 0x07, 0x1f, 0x82, 0x3e, 0x27, 0xe8, 0x0d, 0x62, 0x07, 0x60, 0x1a, 0xc4, 0x16,
+	0x84, 0x75, 0xa7, 0x66, 0xea, 0x46, 0xb3, 0x59, 0x77, 0x4c, 0x83, 0x3a, 0x9e, 0x4b, 0x74, 0xea,
+	0x1b, 0x2e, 0x39, 0x8c, 0x83, 0xd6, 0x56, 0x13, 0x7d, 0x22, 0xe0, 0x73, 0x96, 0x3b, 0x89, 0x2c,
+	0x86, 0x69, 0x62, 0x42, 0x6c, 0xdf, 0x70, 0x29, 0xe7, 0x5b, 0xfb, 0xbd, 0x02, 0x6a, 0x99, 0xd8,
+	0x8f, 0x82, 0xa5, 0x52, 0xbd, 0xee, 0x9d, 0x04, 0x12, 0x15, 0xfc, 0xa4, 0x85, 0x09, 0x45, 0xd3,
+	0x70, 0xd9, 0xc2, 0xae, 0xd7, 0x50, 0x95, 0x15, 0xa5, 0x90, 0xab, 0xf0, 0x0f, 0x74, 0x1b, 0xae,
+	0x19, 0x56, 0xc3, 0x71, 0x1d, 0x42, 0x7d, 0x83, 0x7a, 0xbe, 0x9a, 0x61, 0xd4, 0xf8, 0x22, 0x52,
+	0xe1, 0x0a, 0xd3, 0x83, 0xb1, 0x3a, 0xc6, 0xe8, 0xe1, 0x27, 0x7a, 0x03, 0x72, 0x46, 0xa8, 0x49,
+	0xcd, 0xae, 0x28, 0x85, 0xfc, 0xd6, 0x74, 0x91, 0x9f, 0x4e, 0x31, 0x3c, 0x9d, 0x62, 0xc9, 0x3d,
+	0xdd, 0x99, 0xfa, 0xdd, 0x87, 0x1b, 0xd7, 0xf6, 0x31, 0x8e, 0xec, 0x7a, 0x5c, 0xe9, 0x48, 0x6e,
+	0xa3, 0xef, 0x7d, 0xf6, 0xc1, 0xbd, 0xb8, 0xd2, 0xb5, 0x05, 0x98, 0x4f, 0x00, 0x43, 0x9a, 0x9e,
+	0x4b, 0xf0, 0xda, 0x7f, 0xb2, 0x70, 0xb3, 0x4c, 0xec, 0x92, 0x65, 0x95, 0x99, 0x43, 0x42, 0x94,
+	0xaf, 0xc2, 0xb8, 0xd1, 0xf0, 0x5a, 0x2e, 0x65, 0x30, 0xf3, 0x5b, 0xf3, 0x45, 0x11, 0x02, 0xc1,
+	0xf1, 0x16, 0xc5, 0xf1, 0x15, 0x77, 0x3d, 0xc7, 0xdd, 0xc9, 0x7e, 0xf4, 0xe9, 0xf2, 0xa5, 0x8a,
+	0x60, 0x0f, 0x20, 0x36, 0x0c, 0xd7, 0xb0, 0xb1, 0x1f, 0x42, 0x14, 0x9f, 0x68, 0x15, 0xae, 0x1e,
+	0xfa, 0x5e, 0xa3, 0x6a, 0x58, 0x96, 0x8f, 0x09, 0x61, 0x28, 0x73, 0x95, 0x7c, 0xb0, 0x56, 0xe2,
+	0x4b, 0x68, 0x1b, 0xc6, 0x09, 0x35, 0x68, 0x8b, 0xa8, 0x97, 0x57, 0x94, 0xc2, 0xe4, 0xd6, 0x5a,
+	0x31, 0x29, 0x92, 0x8b, 0xdc, 0xd4, 0x03, 0xc6, 0x59, 0x11, 0x12, 0xa8, 0x04, 0x79, 0xce, 0x51,
+	0xa5, 0xa7, 0x4d, 0xac, 0x8e, 0xb3, 0x0d, 0x56, 0x64, 0x1b, 0xbc, 0x75, 0xda, 0xc4, 0x15, 0x68,
+	0x44, 0x7f, 0xa3, 0xaf, 0x40, 0x9e, 0x07, 0x43, 0xb5, 0xee, 0x10, 0xaa, 0x5e, 0x59, 0x19, 0x2b,
+	0xe4, 0xb7, 0x56, 0x93, 0xb7, 0x28, 0x31, 0x46, 0xe6, 0x55, 0xe1, 0x01, 0xe0, 0xb2, 0x5f, 0x73,
+	0x08, 0x0d, 0xb0, 0x92, 0x56, 0xb3, 0x59, 0x3f, 0xad, 0x1e, 0x3a, 0x4f, 0xb1, 0xa5, 0x4e, 0xac,
+	0x28, 0x85, 0x89, 0x4a, 0x9e, 0xaf, 0xed, 0x07, 0x4b, 0xe8, 0x21, 0xa8, 0xec, 0xdc, 0xaa, 0xb6,
+	0xd7, 0xc6, 0x3e, 0xdb, 0xbe, 0x6a, 0x7a, 0x2e, 0xf5, 0xbd, 0xba, 0x9a, 0x63, 0xec, 0xb3, 0x8c,
+	0xfe, 0x28, 0x22, 0xef, 0x72, 0x2a, 0xda, 0x82, 0x19, 0x2e, 0x79, 0xe8, 0xf9, 0x26, 0xb6, 0xaa,
+	0x61, 0x3a, 0xa8, 0xc0, 0xc4, 0x6e, 0x32, 0xe2, 0x3e, 0xa3, 0xbd, 0x25, 0x48, 0x48, 0x87, 0x9b,
+	0x3e, 0x7e, 0xd2, 0x72, 0x7c, 0x6c, 0x55, 0x0d, 0x4a, 0x7d, 0xa7, 0xd6, 0xa2, 0x98, 0xa8, 0xf9,
+	0x95, 0xb1, 0x42, 0xae, 0x82, 0x42, 0x52, 0x29, 0xa2, 0xa0, 0x65, 0xc8, 0xb5, 0x88, 0x55, 0x35,
+	0xb1, 0x4b, 0x89, 0x7a, 0x75, 0x45, 0x29, 0x64, 0x77, 0x32, 0xaa, 0x52, 0x99, 0x68, 0x11, 0x6b,
+	0x37, 0x58, 0x43, 0xb3, 0x30, 0xde, 0xf6, 0xea, 0xad, 0x06, 0x56, 0xaf, 0x05, 0xd4, 0x8a, 0xf8,
+	0x42, 0x0b, 0x5c, 0xb0, 0xe1, 0xd4, 0xeb, 0x44, 0x9d, 0x64, 0xa4, 0x40, 0xa8, 0x1c, 0x7c, 0x6f,
+	0x4f, 0x05, 0xf1, 0x19, 0x0b, 0x83, 0xb5, 0x59, 0x98, 0x8e, 0x07, 0xa0, 0x88, 0xcc, 0x9f, 0x2a,
+	0x61, 0x64, 0x72, 0x57, 0x8f, 0x22, 0xff, 0xbe, 0x0c, 0xe3, 0xfc, 0x90, 0xd4, 0xb1, 0xb3, 0x9d,
+	0xad, 0x10, 0x4b, 0xcc, 0xaf, 0x08, 0x40, 0x68, 0xa7, 0x00, 0xf0, 0x03, 0x05, 0x66, 0xcb, 0xc4,
+	0xde, 0xc3, 0x75, 0x4c, 0xf1, 0xe8, 0x30, 0xdc, 0x85, 0xeb, 0x3e, 0x6e, 0x78, 0xed, 0xe0, 0x20,
+	0x45, 0x26, 0xf1, 0x44, 0x9b, 0x14, 0xcb, 0x22, 0x99, 0x12, 0x6d, 0x9d, 0x87, 0xb9, 0x3e, 0x93,
+	0x84, 0xb9, 0x16, 0xa0, 0x32, 0xb1, 0xf7, 0x1d, 0xd7, 0xa8, 0x3b, 0x6f, 0x8f, 0xe2, 0xb6, 0x4b,
+	0x34, 0x60, 0x86, 0x1d, 0x6a, 0x47, 0x4b, 0x4c, 0x79, 0xc9, 0xa4, 0x4e, 0xdb, 0xa0, 0x2f, 0x58,
+	0x79, 0x47, 0x8b, 0x50, 0x5e, 0x83, 0x1b, 0x65, 0x62, 0xef, 0x06, 0x41, 0x50, 0x7f, 0x51, 0xaa,
+	0x6f, 0xc2, 0x54, 0x97, 0x8e, 0x98, 0x62, 0x7e, 0x1a, 0x2f, 0x56, 0x71, 0xa8, 0x43, 0x28, 0x7e,
+	0x47, 0x81, 0xc9, 0x32, 0xb1, 0xcb, 0x8e, 0x4b, 0x2f, 0x7c, 0xe1, 0x9f, 0xdf, 0xb4, 0x29, 0xb8,
+	0x1e, 0x19, 0x11, 0x37, 0x6c, 0xa7, 0xe5, 0xbb, 0x9f, 0xbb, 0x61, 0xdc, 0x08, 0x61, 0xd8, 0xbf,
+	0x15, 0x16, 0xa1, 0xdf, 0x72, 0xe8, 0x91, 0xe5, 0x1b, 0x27, 0xa3, 0x48, 0xe4, 0x45, 0x00, 0xea,
+	0xf5, 0xe4, 0x70, 0x8e, 0x7a, 0xe1, 0x5b, 0x78, 0x1a, 0xe1, 0xce, 0xb2, 0xbb, 0x4a, 0x82, 0x7b,
+	0x3f, 0xc0, 0xfd, 0xf3, 0xbf, 0x2e, 0x17, 0x6c, 0x87, 0x1e, 0xb5, 0x6a, 0x45, 0xd3, 0x6b, 0x88,
+	0x8a, 0x4d, 0xfc, 0x6f, 0x83, 0x58, 0xc7, 0x7a, 0xf0, 0x2c, 0x12, 0x26, 0x40, 0x7e, 0x1c, 0xdc,
+	0xc2, 0x75, 0x6c, 0x1b, 0xe6, 0x69, 0x35, 0x28, 0xd1, 0xc8, 0xcf, 0x3e, 0xfb, 0xe0, 0x9e, 0x12,
+	0x7a, 0x4e, 0x92, 0x3b, 0x1d, 0xfc, 0xc2, 0x2f, 0xbf, 0xe5, 0x7e, 0x09, 0xdf, 0x99, 0xd1, 0x1f,
+	0xda, 0x58, 0x92, 0xeb, 0x86, 0x28, 0x25, 0xe2, 0xde, 0xbd, 0xdc, 0xe3, 0x5d, 0x09, 0xc4, 0x0e,
+	0x14, 0x01, 0xf1, 0xef, 0x0a, 0xcc, 0x94, 0x89, 0xfd, 0xb8, 0x66, 0xf6, 0xa2, 0x7c, 0x5f, 0x81,
+	0x89, 0xe8, 0xf1, 0xe5, 0x40, 0x5f, 0x2a, 0x3a, 0x35, 0xb3, 0xd8, 0x5d, 0xad, 0x16, 0x43, 0x0e,
+	0x56, 0x78, 0x74, 0xf6, 0xdf, 0xf9, 0x6a, 0x00, 0xfc, 0x2f, 0x9f, 0x2e, 0xef, 0xf6, 0x9f, 0x9a,
+	0x53, 0x33, 0x37, 0x6c, 0x4f, 0x6f, 0x3f, 0xd4, 0x1b, 0x9e, 0xd5, 0xaa, 0x63, 0x12, 0xd4, 0xbf,
+	0x5d, 0x75, 0x2f, 0x3f, 0xca, 0x6e, 0x63, 0x23, 0x3b, 0x2e, 0x10, 0xf6, 0x2a, 0x7b, 0xaf, 0x62,
+	0x38, 0x85, 0x0b, 0xfe, 0xa0, 0x80, 0x56, 0x26, 0xf6, 0x01, 0xa6, 0x7b, 0x41, 0x80, 0x97, 0x31,
+	0x35, 0x2c, 0x83, 0x1a, 0xa1, 0x1f, 0x5a, 0x30, 0xd1, 0x10, 0x4b, 0xc2, 0x0d, 0x8b, 0x9d, 0xf3,
+	0x76, 0x8f, 0xa3, 0xf3, 0x0e, 0xe5, 0x76, 0xb6, 0x05, 0xf4, 0x2d, 0x69, 0xc0, 0x3e, 0xe5, 0xbd,
+	0x82, 0x00, 0x1b, 0xea, 0x8c, 0x54, 0x5d, 0x00, 0xe9, 0x22, 0x2c, 0x24, 0xc2, 0x11, 0x70, 0xff,
+	0x94, 0x85, 0x5b, 0xfc, 0x49, 0x0f, 0x1f, 0xaa, 0xf0, 0xcd, 0xf8, 0x5f, 0x28, 0x92, 0x7b, 0x0a,
+	0xdd, 0xcb, 0x17, 0x2f, 0x74, 0xc7, 0x47, 0x57, 0xe8, 0x5e, 0x39, 0x5b, 0xa1, 0x3b, 0x71, 0xbe,
+	0x42, 0x37, 0x77, 0xe6, 0x42, 0x17, 0x86, 0x2b, 0x74, 0xf3, 0xd2, 0x42, 0xf7, 0x6a, 0x7a, 0xa1,
+	0x7b, 0x6d, 0x70, 0xa1, 0x7b, 0x07, 0x6e, 0xcb, 0x83, 0x4a, 0x44, 0xdf, 0x1f, 0x15, 0x58, 0x09,
+	0xa2, 0x93, 0xb9, 0xf0, 0xb1, 0x6b, 0xfa, 0xd8, 0x20, 0xf8, 0x4d, 0xdf, 0x6b, 0x7a, 0xc4, 0xa8,
+	0x5f, 0x38, 0xf4, 0xd6, 0x61, 0x92, 0x1a, 0xbe, 0x8d, 0x69, 0x14, 0x62, 0x22, 0x6b, 0xf8, 0x6a,
+	0x18, 0x64, 0x0f, 0x20, 0x67, 0xb4, 0xe8, 0x91, 0xe7, 0x3b, 0xf4, 0x94, 0xc7, 0xe8, 0x8e, 0xfa,
+	0xc9, 0x87, 0x1b, 0xd3, 0x42, 0x8b, 0x60, 0x3b, 0xa0, 0xbe, 0xe3, 0xda, 0x95, 0x0e, 0xeb, 0x36,
+	0xfa, 0xc7, 0x4f, 0x96, 0x95, 0x00, 0x7b, 0x67, 0x6d, 0xed, 0x16, 0xac, 0x4a, 0xf0, 0x08, 0xd4,
+	0x9f, 0x74, 0xa3, 0xde, 0xc3, 0xc9, 0xa8, 0x6b, 0xc3, 0xa3, 0xd6, 0xc5, 0x15, 0x73, 0x77, 0xc8,
+	0x37, 0x31, 0x72, 0x50, 0x0c, 0x79, 0x66, 0x74, 0xc8, 0xfb, 0x31, 0x09, 0xe4, 0x3f, 0xcc, 0xc0,
+	0x5a, 0x99, 0xd8, 0xdf, 0x68, 0x5a, 0xa2, 0xf4, 0x8d, 0x07, 0xa8, 0xbc, 0xd4, 0x78, 0x1d, 0x34,
+	0x5e, 0xf6, 0x57, 0x93, 0xa2, 0x3e, 0xc3, 0xa2, 0x5e, 0xe5, 0x1c, 0xfd, 0x5b, 0xa3, 0x07, 0x30,
+	0x67, 0x58, 0x56, 0xa2, 0xe8, 0x18, 0x13, 0x9d, 0x31, 0x2c, 0x2b, 0x41, 0xee, 0x11, 0xa0, 0x30,
+	0x17, 0xab, 0x1d, 0x67, 0x65, 0x07, 0x38, 0x6b, 0x2a, 0x94, 0x29, 0x45, 0x4e, 0x5b, 0x08, 0x9d,
+	0x96, 0xb0, 0xdf, 0xda, 0x3a, 0xbb, 0x85, 0xd3, 0xfd, 0x22, 0xfc, 0xf7, 0x4b, 0x05, 0x96, 0x22,
+	0xbe, 0xf8, 0x6d, 0x20, 0xf7, 0x5d, 0xea, 0xf5, 0x92, 0x49, 0xbf, 0x5e, 0x46, 0x99, 0x17, 0xab,
+	0xb0, 0x9c, 0x6a, 0xb7, 0xc0, 0xf6, 0x2e, 0x9f, 0x44, 0x1d, 0x60, 0x5a, 0x32, 0xcd, 0x20, 0x3c,
+	0xf7, 0xba, 0x9e, 0xdd, 0x64, 0x54, 0xd3, 0x70, 0xb9, 0x6d, 0xd4, 0x5b, 0x58, 0xe4, 0x35, 0xff,
+	0x40, 0xf7, 0x61, 0x9c, 0x38, 0xb6, 0x1b, 0x3e, 0x38, 0x12, 0xa3, 0x05, 0xdf, 0xf6, 0xf5, 0xd0,
+	0x62, 0xb1, 0x20, 0xe6, 0x48, 0xbd, 0xa6, 0x08, 0x43, 0xff, 0xa9, 0xc0, 0xff, 0x45, 0x60, 0x0e,
+	0xb0, 0x6b, 0xed, 0x61, 0xf7, 0x34, 0x78, 0x21, 0xe4, 0xc6, 0x3e, 0x80, 0x39, 0x11, 0xbe, 0x16,
+	0x76, 0x9d, 0x4e, 0x4b, 0x1b, 0xc5, 0xee, 0x0c, 0x27, 0xef, 0x31, 0x6a, 0x29, 0x24, 0xa2, 0xfb,
+	0x30, 0x1d, 0x04, 0x6e, 0x9f, 0x10, 0x8f, 0x5a, 0x64, 0x58, 0x56, 0xaf, 0x44, 0xec, 0xe0, 0xb2,
+	0x17, 0x3b, 0xb8, 0x65, 0x58, 0x4c, 0xc1, 0x2a, 0xbc, 0xf1, 0x2b, 0x85, 0x15, 0x18, 0x25, 0xcb,
+	0xfa, 0x3a, 0xa6, 0x25, 0x42, 0x30, 0xfd, 0x66, 0x70, 0x0a, 0x23, 0xe9, 0xff, 0x0f, 0xe0, 0x86,
+	0x1b, 0xdc, 0xde, 0xc1, 0xae, 0x55, 0x76, 0xb8, 0xe1, 0x34, 0xe3, 0x56, 0xf2, 0x03, 0x1e, 0x33,
+	0x41, 0xbc, 0x06, 0x93, 0x6e, 0xcc, 0xae, 0xc4, 0x22, 0x69, 0x89, 0x9d, 0x68, 0x02, 0x06, 0x01,
+	0xf2, 0x37, 0x0a, 0xbb, 0xb7, 0x82, 0x80, 0xe8, 0x96, 0xeb, 0xbd, 0xb3, 0x93, 0xb1, 0x76, 0x26,
+	0x31, 0x99, 0x73, 0x4d, 0x62, 0x46, 0x9a, 0x88, 0xfc, 0xa2, 0x49, 0x07, 0x22, 0x00, 0xff, 0x42,
+	0x81, 0xf5, 0x32, 0xb1, 0x2b, 0x2c, 0x22, 0xcf, 0x81, 0x39, 0x61, 0x72, 0xc3, 0x83, 0xbc, 0x67,
+	0x72, 0x33, 0x52, 0x6c, 0x05, 0xb8, 0x33, 0xc8, 0x66, 0x01, 0xef, 0xd7, 0xfc, 0x1e, 0xdd, 0x3d,
+	0x32, 0x5c, 0x1b, 0xf3, 0xe1, 0xea, 0x70, 0xb8, 0x4a, 0x00, 0x2e, 0x3e, 0xa9, 0x8a, 0xc9, 0x6d,
+	0x66, 0xe8, 0xc9, 0x6d, 0xce, 0xc5, 0x27, 0xfc, 0xcf, 0x17, 0x70, 0xad, 0x26, 0xc3, 0x10, 0x50,
+	0xdf, 0xcb, 0xb0, 0x62, 0x23, 0xec, 0x66, 0xdf, 0x20, 0xa6, 0xef, 0x9d, 0x0c, 0x07, 0xd6, 0x8c,
+	0x4a, 0x90, 0xcc, 0xa0, 0xb6, 0xfc, 0xfe, 0x59, 0xdb, 0x72, 0x49, 0x91, 0x36, 0x36, 0xb0, 0x48,
+	0xcb, 0x8e, 0xa2, 0x54, 0x49, 0xf3, 0x88, 0xf0, 0xdb, 0xf3, 0x28, 0xe5, 0x63, 0x8d, 0x53, 0xaf,
+	0xe7, 0x3e, 0xa7, 0x7e, 0xf0, 0xbc, 0x95, 0xdb, 0x64, 0xda, 0x75, 0x90, 0x02, 0x92, 0x3b, 0x63,
+	0xeb, 0x5f, 0x2a, 0x8c, 0x95, 0x89, 0x8d, 0xaa, 0x30, 0x11, 0x56, 0xf4, 0xa8, 0x90, 0x12, 0xf6,
+	0x7d, 0x83, 0x55, 0xed, 0xa5, 0x21, 0x38, 0xb9, 0xa2, 0x40, 0x41, 0xd8, 0x2a, 0x48, 0x14, 0xf4,
+	0x0c, 0x4f, 0x25, 0x0a, 0x7a, 0x07, 0xa0, 0xe8, 0xdb, 0x30, 0xce, 0x27, 0x93, 0xe8, 0x4e, 0xaa,
+	0x50, 0x6c, 0x3c, 0xaa, 0xdd, 0x1d, 0xc8, 0xd7, 0xd9, 0x9a, 0xcf, 0x1e, 0x25, 0x5b, 0xc7, 0x06,
+	0xa0, 0x92, 0xad, 0xe3, 0x43, 0x4c, 0x74, 0x00, 0xd9, 0xb2, 0xe3, 0x52, 0x74, 0x3b, 0x55, 0xa0,
+	0x6b, 0xbe, 0xa9, 0xad, 0x0f, 0xe0, 0xea, 0x6c, 0xba, 0xd3, 0xf2, 0x5d, 0xc9, 0xa6, 0x5d, 0xb3,
+	0x49, 0xc9, 0xa6, 0xdd, 0xc3, 0x43, 0x54, 0x83, 0x5c, 0xf4, 0xf3, 0x00, 0x92, 0x9c, 0x4b, 0xcf,
+	0x4f, 0x1d, 0xda, 0xbd, 0x61, 0x58, 0x85, 0x8e, 0x63, 0xb8, 0xda, 0x3d, 0xd6, 0x47, 0x2f, 0x0f,
+	0x70, 0x63, 0x5c, 0xd3, 0xc6, 0x90, 0xdc, 0x9d, 0x88, 0x0c, 0x6f, 0x0a, 0x49, 0x44, 0xf6, 0x0c,
+	0x4b, 0x25, 0x11, 0xd9, 0x3b, 0x56, 0x14, 0x1e, 0xe3, 0xaf, 0x85, 0xdc, 0x63, 0xb1, 0x89, 0x8c,
+	0xdc, 0x63, 0xf1, 0x3e, 0x3b, 0x00, 0x11, 0x95, 0xf5, 0xe9, 0x20, 0x7a, 0x5a, 0x09, 0x09, 0x88,
+	0xde, 0xe2, 0x1d, 0x1d, 0x41, 0xbe, 0x6b, 0x98, 0x86, 0xfe, 0x3f, 0x55, 0xb2, 0x7f, 0xb4, 0xa8,
+	0xbd, 0x3c, 0x1c, 0xb3, 0xd0, 0x74, 0x02, 0x37, 0x7a, 0xaf, 0x2b, 0x74, 0x3f, 0x75, 0x87, 0x94,
+	0x31, 0x9e, 0xb6, 0x79, 0x06, 0x09, 0xa1, 0xf8, 0x09, 0x4c, 0xc6, 0x7f, 0x58, 0x46, 0xc5, 0xd4,
+	0x4d, 0x12, 0x7f, 0x4e, 0xd7, 0xf4, 0xa1, 0xf9, 0x85, 0xca, 0xf7, 0x15, 0x98, 0x4f, 0x1d, 0xa2,
+	0xa0, 0xd7, 0x64, 0x01, 0x20, 0x9d, 0xe6, 0x69, 0xdb, 0xe7, 0x11, 0x15, 0x46, 0xbd, 0xab, 0xc0,
+	0x6c, 0xf2, 0x80, 0x03, 0x3d, 0x48, 0xf7, 0xaa, 0x6c, 0xc2, 0xa3, 0xbd, 0x7a, 0x66, 0xb9, 0x3e,
+	0x5b, 0x7a, 0x47, 0x0e, 0x03, 0x6d, 0x49, 0x99, 0xbb, 0x0c, 0xb4, 0x25, 0x6d, 0xb6, 0x81, 0xbe,
+	0xaf, 0x80, 0x9a, 0xd6, 0xc0, 0xa3, 0x87, 0xa9, 0xbb, 0x0e, 0x98, 0x85, 0x68, 0xaf, 0x9d, 0x43,
+	0x52, 0x58, 0xf4, 0x8e, 0x02, 0xd3, 0x49, 0x2d, 0x37, 0xfa, 0xc2, 0x80, 0x3d, 0x13, 0x27, 0x0b,
+	0xda, 0x17, 0xcf, 0x28, 0xd5, 0xc9, 0x9b, 0x78, 0x23, 0x2d, 0xc9, 0x9b, 0xc4, 0xe6, 0x5f, 0x92,
+	0x37, 0xc9, 0x1d, 0x3a, 0xfa, 0x2e, 0xa0, 0xfe, 0x8e, 0x15, 0x6d, 0x0d, 0xb0, 0x3f, 0xa1, 0x95,
+	0xd7, 0x5e, 0x39, 0x93, 0x8c, 0x50, 0xff, 0x36, 0x4c, 0xf5, 0xb5, 0x92, 0x68, 0x53, 0x96, 0x72,
+	0x89, 0xad, 0xb3, 0xb6, 0x75, 0x16, 0x91, 0xae, 0x28, 0x4c, 0xeb, 0xee, 0x24, 0x51, 0x38, 0xa0,
+	0xb3, 0x95, 0x44, 0xe1, 0xa0, 0x56, 0x12, 0xfd, 0x48, 0x81, 0x05, 0x49, 0x4f, 0x86, 0xbe, 0x94,
+	0xba, 0xf5, 0xe0, 0xee, 0x53, 0x7b, 0xfd, 0x7c, 0xc2, 0x5d, 0x09, 0x92, 0xd4, 0x3c, 0x49, 0x12,
+	0x44, 0xd2, 0x32, 0x4a, 0x12, 0x44, 0xd6, 0xa1, 0xb1, 0x4b, 0x2c, 0xb9, 0x19, 0x91, 0x5c, 0x62,
+	0xd2, 0x7e, 0x4e, 0x72, 0x89, 0xc9, 0xbb, 0x9e, 0x30, 0x7c, 0x12, 0xbb, 0x01, 0x79, 0xf8, 0xc8,
+	0xba, 0x24, 0x79, 0xf8, 0x48, 0x5b, 0x8f, 0x1d, 0xfb, 0xa3, 0x67, 0x4b, 0xca, 0xc7, 0xcf, 0x96,
+	0x94, 0xbf, 0x3d, 0x5b, 0x52, 0xde, 0x7b, 0xbe, 0x74, 0xe9, 0xe3, 0xe7, 0x4b, 0x97, 0xfe, 0xfc,
+	0x7c, 0xe9, 0x12, 0xcc, 0x39, 0x5e, 0xe2, 0xb6, 0x6f, 0x2a, 0xdf, 0xe9, 0x6e, 0xae, 0x3a, 0x2c,
+	0x1b, 0x8e, 0xd7, 0xf5, 0xa5, 0x3f, 0x0d, 0xff, 0x61, 0x1c, 0xeb, 0xb2, 0x6a, 0xe3, 0xec, 0xdf,
+	0x9e, 0xbd, 0xf2, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x11, 0x35, 0x56, 0x5b, 0x71, 0x28, 0x00,
+	0x00,
 }
 
 func (this *MsgSupplyIncreaseProposalRequest) Equal(that interface{}) bool {
@@ -2435,6 +3039,33 @@ func (this *MsgSupplyIncreaseProposalRequest) Equal(that interface{}) bool {
 		return false
 	}
 	if this.TargetAddress != that1.TargetAddress {
+		return false
+	}
+	if this.Authority != that1.Authority {
+		return false
+	}
+	return true
+}
+func (this *MsgSupplyDecreaseProposalRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgSupplyDecreaseProposalRequest)
+	if !ok {
+		that2, ok := that.(MsgSupplyDecreaseProposalRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Amount.Equal(that1.Amount) {
 		return false
 	}
 	if this.Authority != that1.Authority {
@@ -2588,6 +3219,144 @@ func (this *MsgUpdateSendDenyListRequest) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *MsgSetAdministratorProposalRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgSetAdministratorProposalRequest)
+	if !ok {
+		that2, ok := that.(MsgSetAdministratorProposalRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Denom != that1.Denom {
+		return false
+	}
+	if len(this.Access) != len(that1.Access) {
+		return false
+	}
+	for i := range this.Access {
+		if !this.Access[i].Equal(&that1.Access[i]) {
+			return false
+		}
+	}
+	if this.Authority != that1.Authority {
+		return false
+	}
+	return true
+}
+func (this *MsgRemoveAdministratorProposalRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgRemoveAdministratorProposalRequest)
+	if !ok {
+		that2, ok := that.(MsgRemoveAdministratorProposalRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Denom != that1.Denom {
+		return false
+	}
+	if len(this.RemovedAddress) != len(that1.RemovedAddress) {
+		return false
+	}
+	for i := range this.RemovedAddress {
+		if this.RemovedAddress[i] != that1.RemovedAddress[i] {
+			return false
+		}
+	}
+	if this.Authority != that1.Authority {
+		return false
+	}
+	return true
+}
+func (this *MsgChangeStatusProposalRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgChangeStatusProposalRequest)
+	if !ok {
+		that2, ok := that.(MsgChangeStatusProposalRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Denom != that1.Denom {
+		return false
+	}
+	if this.NewStatus != that1.NewStatus {
+		return false
+	}
+	if this.Authority != that1.Authority {
+		return false
+	}
+	return true
+}
+func (this *MsgWithdrawEscrowProposalRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*MsgWithdrawEscrowProposalRequest)
+	if !ok {
+		that2, ok := that.(MsgWithdrawEscrowProposalRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Denom != that1.Denom {
+		return false
+	}
+	if len(this.Amount) != len(that1.Amount) {
+		return false
+	}
+	for i := range this.Amount {
+		if !this.Amount[i].Equal(&that1.Amount[i]) {
+			return false
+		}
+	}
+	if this.TargetAddress != that1.TargetAddress {
+		return false
+	}
+	if this.Authority != that1.Authority {
+		return false
+	}
+	return true
+}
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
@@ -2635,6 +3404,8 @@ type MsgClient interface {
 	AddFinalizeActivateMarker(ctx context.Context, in *MsgAddFinalizeActivateMarkerRequest, opts ...grpc.CallOption) (*MsgAddFinalizeActivateMarkerResponse, error)
 	// SupplyIncreaseProposal can only be called via gov proposal
 	SupplyIncreaseProposal(ctx context.Context, in *MsgSupplyIncreaseProposalRequest, opts ...grpc.CallOption) (*MsgSupplyIncreaseProposalResponse, error)
+	// SupplyDecreaseProposal can only be called via gov proposal
+	SupplyDecreaseProposal(ctx context.Context, in *MsgSupplyDecreaseProposalRequest, opts ...grpc.CallOption) (*MsgSupplyDecreaseProposalResponse, error)
 	// UpdateRequiredAttributes will only succeed if signer has transfer authority
 	UpdateRequiredAttributes(ctx context.Context, in *MsgUpdateRequiredAttributesRequest, opts ...grpc.CallOption) (*MsgUpdateRequiredAttributesResponse, error)
 	// UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal.
@@ -2645,6 +3416,16 @@ type MsgClient interface {
 	UpdateSendDenyList(ctx context.Context, in *MsgUpdateSendDenyListRequest, opts ...grpc.CallOption) (*MsgUpdateSendDenyListResponse, error)
 	// AddNetAssetValues set the net asset value for a marker
 	AddNetAssetValues(ctx context.Context, in *MsgAddNetAssetValuesRequest, opts ...grpc.CallOption) (*MsgAddNetAssetValuesResponse, error)
+	// SetAdministratorProposal sets administrators with specific access on the marker
+	SetAdministratorProposal(ctx context.Context, in *MsgSetAdministratorProposalRequest, opts ...grpc.CallOption) (*MsgSetAdministratorProposalResponse, error)
+	// RemoveAdministratorProposal removes administrators with specific access on the marker
+	RemoveAdministratorProposal(ctx context.Context, in *MsgRemoveAdministratorProposalRequest, opts ...grpc.CallOption) (*MsgRemoveAdministratorProposalResponse, error)
+	// ChangeStatusProposal is a governance proposal change marker status
+	ChangeStatusProposal(ctx context.Context, in *MsgChangeStatusProposalRequest, opts ...grpc.CallOption) (*MsgChangeStatusProposalResponse, error)
+	// WithdrawEscrowProposal is a governance proposal to withdraw escrow coins from a marker
+	WithdrawEscrowProposal(ctx context.Context, in *MsgWithdrawEscrowProposalRequest, opts ...grpc.CallOption) (*MsgWithdrawEscrowProposalResponse, error)
+	// SetDenomMetadataProposal is a governance proposal to set marker metadata
+	SetDenomMetadataProposal(ctx context.Context, in *MsgSetDenomMetadataProposalRequest, opts ...grpc.CallOption) (*MsgSetDenomMetadataProposalResponse, error)
 }
 
 type msgClient struct {
@@ -2799,6 +3580,15 @@ func (c *msgClient) SupplyIncreaseProposal(ctx context.Context, in *MsgSupplyInc
 	return out, nil
 }
 
+func (c *msgClient) SupplyDecreaseProposal(ctx context.Context, in *MsgSupplyDecreaseProposalRequest, opts ...grpc.CallOption) (*MsgSupplyDecreaseProposalResponse, error) {
+	out := new(MsgSupplyDecreaseProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.marker.v1.Msg/SupplyDecreaseProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) UpdateRequiredAttributes(ctx context.Context, in *MsgUpdateRequiredAttributesRequest, opts ...grpc.CallOption) (*MsgUpdateRequiredAttributesResponse, error) {
 	out := new(MsgUpdateRequiredAttributesResponse)
 	err := c.cc.Invoke(ctx, "/provenance.marker.v1.Msg/UpdateRequiredAttributes", in, out, opts...)
@@ -2844,6 +3634,51 @@ func (c *msgClient) AddNetAssetValues(ctx context.Context, in *MsgAddNetAssetVal
 	return out, nil
 }
 
+func (c *msgClient) SetAdministratorProposal(ctx context.Context, in *MsgSetAdministratorProposalRequest, opts ...grpc.CallOption) (*MsgSetAdministratorProposalResponse, error) {
+	out := new(MsgSetAdministratorProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.marker.v1.Msg/SetAdministratorProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) RemoveAdministratorProposal(ctx context.Context, in *MsgRemoveAdministratorProposalRequest, opts ...grpc.CallOption) (*MsgRemoveAdministratorProposalResponse, error) {
+	out := new(MsgRemoveAdministratorProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.marker.v1.Msg/RemoveAdministratorProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ChangeStatusProposal(ctx context.Context, in *MsgChangeStatusProposalRequest, opts ...grpc.CallOption) (*MsgChangeStatusProposalResponse, error) {
+	out := new(MsgChangeStatusProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.marker.v1.Msg/ChangeStatusProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawEscrowProposal(ctx context.Context, in *MsgWithdrawEscrowProposalRequest, opts ...grpc.CallOption) (*MsgWithdrawEscrowProposalResponse, error) {
+	out := new(MsgWithdrawEscrowProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.marker.v1.Msg/WithdrawEscrowProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SetDenomMetadataProposal(ctx context.Context, in *MsgSetDenomMetadataProposalRequest, opts ...grpc.CallOption) (*MsgSetDenomMetadataProposalResponse, error) {
+	out := new(MsgSetDenomMetadataProposalResponse)
+	err := c.cc.Invoke(ctx, "/provenance.marker.v1.Msg/SetDenomMetadataProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// Finalize
@@ -2880,6 +3715,8 @@ type MsgServer interface {
 	AddFinalizeActivateMarker(context.Context, *MsgAddFinalizeActivateMarkerRequest) (*MsgAddFinalizeActivateMarkerResponse, error)
 	// SupplyIncreaseProposal can only be called via gov proposal
 	SupplyIncreaseProposal(context.Context, *MsgSupplyIncreaseProposalRequest) (*MsgSupplyIncreaseProposalResponse, error)
+	// SupplyDecreaseProposal can only be called via gov proposal
+	SupplyDecreaseProposal(context.Context, *MsgSupplyDecreaseProposalRequest) (*MsgSupplyDecreaseProposalResponse, error)
 	// UpdateRequiredAttributes will only succeed if signer has transfer authority
 	UpdateRequiredAttributes(context.Context, *MsgUpdateRequiredAttributesRequest) (*MsgUpdateRequiredAttributesResponse, error)
 	// UpdateForcedTransfer updates the allow_forced_transfer field of a marker via governance proposal.
@@ -2890,6 +3727,16 @@ type MsgServer interface {
 	UpdateSendDenyList(context.Context, *MsgUpdateSendDenyListRequest) (*MsgUpdateSendDenyListResponse, error)
 	// AddNetAssetValues set the net asset value for a marker
 	AddNetAssetValues(context.Context, *MsgAddNetAssetValuesRequest) (*MsgAddNetAssetValuesResponse, error)
+	// SetAdministratorProposal sets administrators with specific access on the marker
+	SetAdministratorProposal(context.Context, *MsgSetAdministratorProposalRequest) (*MsgSetAdministratorProposalResponse, error)
+	// RemoveAdministratorProposal removes administrators with specific access on the marker
+	RemoveAdministratorProposal(context.Context, *MsgRemoveAdministratorProposalRequest) (*MsgRemoveAdministratorProposalResponse, error)
+	// ChangeStatusProposal is a governance proposal change marker status
+	ChangeStatusProposal(context.Context, *MsgChangeStatusProposalRequest) (*MsgChangeStatusProposalResponse, error)
+	// WithdrawEscrowProposal is a governance proposal to withdraw escrow coins from a marker
+	WithdrawEscrowProposal(context.Context, *MsgWithdrawEscrowProposalRequest) (*MsgWithdrawEscrowProposalResponse, error)
+	// SetDenomMetadataProposal is a governance proposal to set marker metadata
+	SetDenomMetadataProposal(context.Context, *MsgSetDenomMetadataProposalRequest) (*MsgSetDenomMetadataProposalResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -2944,6 +3791,9 @@ func (*UnimplementedMsgServer) AddFinalizeActivateMarker(ctx context.Context, re
 func (*UnimplementedMsgServer) SupplyIncreaseProposal(ctx context.Context, req *MsgSupplyIncreaseProposalRequest) (*MsgSupplyIncreaseProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SupplyIncreaseProposal not implemented")
 }
+func (*UnimplementedMsgServer) SupplyDecreaseProposal(ctx context.Context, req *MsgSupplyDecreaseProposalRequest) (*MsgSupplyDecreaseProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SupplyDecreaseProposal not implemented")
+}
 func (*UnimplementedMsgServer) UpdateRequiredAttributes(ctx context.Context, req *MsgUpdateRequiredAttributesRequest) (*MsgUpdateRequiredAttributesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRequiredAttributes not implemented")
 }
@@ -2958,6 +3808,21 @@ func (*UnimplementedMsgServer) UpdateSendDenyList(ctx context.Context, req *MsgU
 }
 func (*UnimplementedMsgServer) AddNetAssetValues(ctx context.Context, req *MsgAddNetAssetValuesRequest) (*MsgAddNetAssetValuesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddNetAssetValues not implemented")
+}
+func (*UnimplementedMsgServer) SetAdministratorProposal(ctx context.Context, req *MsgSetAdministratorProposalRequest) (*MsgSetAdministratorProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAdministratorProposal not implemented")
+}
+func (*UnimplementedMsgServer) RemoveAdministratorProposal(ctx context.Context, req *MsgRemoveAdministratorProposalRequest) (*MsgRemoveAdministratorProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveAdministratorProposal not implemented")
+}
+func (*UnimplementedMsgServer) ChangeStatusProposal(ctx context.Context, req *MsgChangeStatusProposalRequest) (*MsgChangeStatusProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeStatusProposal not implemented")
+}
+func (*UnimplementedMsgServer) WithdrawEscrowProposal(ctx context.Context, req *MsgWithdrawEscrowProposalRequest) (*MsgWithdrawEscrowProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawEscrowProposal not implemented")
+}
+func (*UnimplementedMsgServer) SetDenomMetadataProposal(ctx context.Context, req *MsgSetDenomMetadataProposalRequest) (*MsgSetDenomMetadataProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetDenomMetadataProposal not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -3252,6 +4117,24 @@ func _Msg_SupplyIncreaseProposal_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SupplyDecreaseProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSupplyDecreaseProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SupplyDecreaseProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.marker.v1.Msg/SupplyDecreaseProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SupplyDecreaseProposal(ctx, req.(*MsgSupplyDecreaseProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_UpdateRequiredAttributes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateRequiredAttributesRequest)
 	if err := dec(in); err != nil {
@@ -3342,6 +4225,96 @@ func _Msg_AddNetAssetValues_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetAdministratorProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetAdministratorProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetAdministratorProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.marker.v1.Msg/SetAdministratorProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetAdministratorProposal(ctx, req.(*MsgSetAdministratorProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RemoveAdministratorProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveAdministratorProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RemoveAdministratorProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.marker.v1.Msg/RemoveAdministratorProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RemoveAdministratorProposal(ctx, req.(*MsgRemoveAdministratorProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ChangeStatusProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgChangeStatusProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ChangeStatusProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.marker.v1.Msg/ChangeStatusProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ChangeStatusProposal(ctx, req.(*MsgChangeStatusProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawEscrowProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawEscrowProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawEscrowProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.marker.v1.Msg/WithdrawEscrowProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawEscrowProposal(ctx, req.(*MsgWithdrawEscrowProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SetDenomMetadataProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetDenomMetadataProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetDenomMetadataProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provenance.marker.v1.Msg/SetDenomMetadataProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetDenomMetadataProposal(ctx, req.(*MsgSetDenomMetadataProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.marker.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -3411,6 +4384,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_SupplyIncreaseProposal_Handler,
 		},
 		{
+			MethodName: "SupplyDecreaseProposal",
+			Handler:    _Msg_SupplyDecreaseProposal_Handler,
+		},
+		{
 			MethodName: "UpdateRequiredAttributes",
 			Handler:    _Msg_UpdateRequiredAttributes_Handler,
 		},
@@ -3429,6 +4406,26 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddNetAssetValues",
 			Handler:    _Msg_AddNetAssetValues_Handler,
+		},
+		{
+			MethodName: "SetAdministratorProposal",
+			Handler:    _Msg_SetAdministratorProposal_Handler,
+		},
+		{
+			MethodName: "RemoveAdministratorProposal",
+			Handler:    _Msg_RemoveAdministratorProposal_Handler,
+		},
+		{
+			MethodName: "ChangeStatusProposal",
+			Handler:    _Msg_ChangeStatusProposal_Handler,
+		},
+		{
+			MethodName: "WithdrawEscrowProposal",
+			Handler:    _Msg_WithdrawEscrowProposal_Handler,
+		},
+		{
+			MethodName: "SetDenomMetadataProposal",
+			Handler:    _Msg_SetDenomMetadataProposal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -4666,6 +5663,69 @@ func (m *MsgSupplyIncreaseProposalResponse) MarshalToSizedBuffer(dAtA []byte) (i
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSupplyDecreaseProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSupplyDecreaseProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSupplyDecreaseProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSupplyDecreaseProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSupplyDecreaseProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSupplyDecreaseProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func (m *MsgUpdateRequiredAttributesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -5026,6 +6086,358 @@ func (m *MsgAddNetAssetValuesResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgAddNetAssetValuesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetAdministratorProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetAdministratorProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetAdministratorProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Access) > 0 {
+		for iNdEx := len(m.Access) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Access[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetAdministratorProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetAdministratorProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetAdministratorProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveAdministratorProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveAdministratorProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveAdministratorProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.RemovedAddress) > 0 {
+		for iNdEx := len(m.RemovedAddress) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.RemovedAddress[iNdEx])
+			copy(dAtA[i:], m.RemovedAddress[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.RemovedAddress[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveAdministratorProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveAdministratorProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveAdministratorProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgChangeStatusProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgChangeStatusProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgChangeStatusProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.NewStatus != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.NewStatus))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgChangeStatusProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgChangeStatusProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgChangeStatusProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawEscrowProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawEscrowProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawEscrowProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.TargetAddress) > 0 {
+		i -= len(m.TargetAddress)
+		copy(dAtA[i:], m.TargetAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.TargetAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Amount) > 0 {
+		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawEscrowProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawEscrowProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawEscrowProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetDenomMetadataProposalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetDenomMetadataProposalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetDenomMetadataProposalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.Metadata.Size()
+		i -= size
+		if _, err := m.Metadata.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetDenomMetadataProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetDenomMetadataProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetDenomMetadataProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -5561,6 +6973,30 @@ func (m *MsgSupplyIncreaseProposalResponse) Size() (n int) {
 	return n
 }
 
+func (m *MsgSupplyDecreaseProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSupplyDecreaseProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgUpdateRequiredAttributesRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -5720,6 +7156,159 @@ func (m *MsgAddNetAssetValuesRequest) Size() (n int) {
 }
 
 func (m *MsgAddNetAssetValuesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetAdministratorProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Access) > 0 {
+		for _, e := range m.Access {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSetAdministratorProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRemoveAdministratorProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.RemovedAddress) > 0 {
+		for _, s := range m.RemovedAddress {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgRemoveAdministratorProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgChangeStatusProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.NewStatus != 0 {
+		n += 1 + sovTx(uint64(m.NewStatus))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgChangeStatusProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgWithdrawEscrowProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Amount) > 0 {
+		for _, e := range m.Amount {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	l = len(m.TargetAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgWithdrawEscrowProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetDenomMetadataProposalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Metadata.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSetDenomMetadataProposalResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -9149,6 +10738,171 @@ func (m *MsgSupplyIncreaseProposalResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MsgSupplyDecreaseProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSupplyDecreaseProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSupplyDecreaseProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSupplyDecreaseProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSupplyDecreaseProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSupplyDecreaseProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MsgUpdateRequiredAttributesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -10160,6 +11914,978 @@ func (m *MsgAddNetAssetValuesResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgAddNetAssetValuesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetAdministratorProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetAdministratorProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetAdministratorProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Access", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Access = append(m.Access, AccessGrant{})
+			if err := m.Access[len(m.Access)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetAdministratorProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetAdministratorProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetAdministratorProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveAdministratorProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveAdministratorProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveAdministratorProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RemovedAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RemovedAddress = append(m.RemovedAddress, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveAdministratorProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveAdministratorProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveAdministratorProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgChangeStatusProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgChangeStatusProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgChangeStatusProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewStatus", wireType)
+			}
+			m.NewStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NewStatus |= MarkerStatus(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgChangeStatusProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgChangeStatusProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgChangeStatusProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawEscrowProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawEscrowProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawEscrowProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = append(m.Amount, types1.Coin{})
+			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TargetAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TargetAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawEscrowProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawEscrowProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawEscrowProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetDenomMetadataProposalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetDenomMetadataProposalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetDenomMetadataProposalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Metadata.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetDenomMetadataProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetDenomMetadataProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetDenomMetadataProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

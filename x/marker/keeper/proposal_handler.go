@@ -4,14 +4,15 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
 // HandleSupplyIncreaseProposal handles a SupplyIncrease governance proposal request
-func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncreaseProposal) error {
+func (k Keeper) HandleSupplyIncreaseProposal(ctx sdk.Context, amount sdk.Coin, targetAddress string) error {
 	logger := k.Logger(ctx)
-	addr, err := types.MarkerAddress(c.Amount.Denom)
+	addr, err := types.MarkerAddress(amount.Denom)
 	if err != nil {
 		return err
 	}
@@ -20,14 +21,14 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Amount.Denom)
+		return fmt.Errorf("%s marker does not exist", amount.Denom)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Amount.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", amount.Denom)
 	}
 
 	if m.GetStatus() == types.StatusProposed || m.GetStatus() == types.StatusFinalized {
-		total := m.GetSupply().Add(c.Amount)
+		total := m.GetSupply().Add(amount)
 		if err = m.SetSupply(total); err != nil {
 			return err
 		}
@@ -35,36 +36,36 @@ func HandleSupplyIncreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyIncr
 			return err
 		}
 		k.SetMarker(ctx, m)
-		logger.Info("marker configured supply increased", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
+		logger.Info("marker configured supply increased", "marker", amount.Denom, "amount", amount.Amount.String())
 		return nil
 	} else if m.GetStatus() != types.StatusActive {
 		return fmt.Errorf("cannot mint coin for a marker that is not in Active status")
 	}
 
-	if err := k.IncreaseSupply(ctx, m, c.Amount); err != nil {
+	if err := k.IncreaseSupply(ctx, m, amount); err != nil {
 		return err
 	}
 
-	logger.Info("marker total supply increased", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
+	logger.Info("marker total supply increased", "marker", amount.Denom, "amount", amount.Amount.String())
 
 	// If a target address for minted coins is given then send them there.
-	if len(c.TargetAddress) > 0 {
-		recipient, err := sdk.AccAddressFromBech32(c.TargetAddress)
+	if len(targetAddress) > 0 {
+		recipient, err := sdk.AccAddressFromBech32(targetAddress)
 		if err != nil {
 			return err
 		}
-		if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), addr, recipient, sdk.NewCoins(c.Amount)); err != nil {
+		if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), addr, recipient, sdk.NewCoins(amount)); err != nil {
 			return err
 		}
-		logger.Info("transferred escrowed coin from marker", "marker", c.Amount.Denom, "amount", c.Amount.String(), "recipient", c.TargetAddress)
+		logger.Info("transferred escrowed coin from marker", "marker", amount.Denom, "amount", amount.String(), "recipient", targetAddress)
 	}
 
 	return nil
 }
 
 // HandleSupplyDecreaseProposal handles a SupplyDecrease governance proposal request
-func HandleSupplyDecreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyDecreaseProposal) error {
-	addr, err := types.MarkerAddress(c.Amount.Denom)
+func (k Keeper) HandleSupplyDecreaseProposal(ctx sdk.Context, amount sdk.Coin) error {
+	addr, err := types.MarkerAddress(amount.Denom)
 	if err != nil {
 		return err
 	}
@@ -73,26 +74,26 @@ func HandleSupplyDecreaseProposal(ctx sdk.Context, k Keeper, c *types.SupplyDecr
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Amount.Denom)
+		return fmt.Errorf("%s marker does not exist", amount.Denom)
 	}
 
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Amount.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", amount.Denom)
 	}
 
-	if err := k.DecreaseSupply(ctx, m, c.Amount); err != nil {
+	if err := k.DecreaseSupply(ctx, m, amount); err != nil {
 		return err
 	}
 
 	logger := k.Logger(ctx)
-	logger.Info("marker total supply reduced", "marker", c.Amount.Denom, "amount", c.Amount.Amount.String())
+	logger.Info("marker total supply reduced", "marker", amount.Denom, "amount", amount.Amount.String())
 
 	return nil
 }
 
 // HandleSetAdministratorProposal handles a SetAdministrator governance proposal request
-func HandleSetAdministratorProposal(ctx sdk.Context, k Keeper, c *types.SetAdministratorProposal) error {
-	addr, err := types.MarkerAddress(c.Denom)
+func (k Keeper) HandleSetAdministratorProposal(ctx sdk.Context, denom string, accessGrants []types.AccessGrant) error {
+	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
 	}
@@ -101,17 +102,17 @@ func HandleSetAdministratorProposal(ctx sdk.Context, k Keeper, c *types.SetAdmin
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Denom)
+		return fmt.Errorf("%s marker does not exist", denom)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
-	for _, a := range c.Access {
+	for _, a := range accessGrants {
 		if err := m.GrantAccess(types.NewAccessGrant(a.GetAddress(), a.Permissions)); err != nil {
 			return err
 		}
 		logger := k.Logger(ctx)
-		logger.Info("controlling access to marker assigned ", "marker", c.Denom, "access", a.String())
+		logger.Info("controlling access to marker assigned ", "marker", denom, "access", a.String())
 	}
 
 	if err := m.Validate(); err != nil {
@@ -123,8 +124,8 @@ func HandleSetAdministratorProposal(ctx sdk.Context, k Keeper, c *types.SetAdmin
 }
 
 // HandleRemoveAdministratorProposal handles a RemoveAdministrator governance proposal request
-func HandleRemoveAdministratorProposal(ctx sdk.Context, k Keeper, c *types.RemoveAdministratorProposal) error {
-	addr, err := types.MarkerAddress(c.Denom)
+func (k Keeper) HandleRemoveAdministratorProposal(ctx sdk.Context, denom string, removedAddress []string) error {
+	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
 	}
@@ -133,12 +134,12 @@ func HandleRemoveAdministratorProposal(ctx sdk.Context, k Keeper, c *types.Remov
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Denom)
+		return fmt.Errorf("%s marker does not exist", denom)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
-	for _, a := range c.RemovedAddress {
+	for _, a := range removedAddress {
 		addr, err := sdk.AccAddressFromBech32(a)
 		if err != nil {
 			return err
@@ -155,14 +156,14 @@ func HandleRemoveAdministratorProposal(ctx sdk.Context, k Keeper, c *types.Remov
 	k.SetMarker(ctx, m)
 
 	logger := k.Logger(ctx)
-	logger.Info("marker access revoked", "marker", c.Denom, "administrator", c.RemovedAddress)
+	logger.Info("marker access revoked", "marker", denom, "administrator", removedAddress)
 
 	return nil
 }
 
 // HandleChangeStatusProposal handles a ChangeStatus governance proposal request
-func HandleChangeStatusProposal(ctx sdk.Context, k Keeper, c *types.ChangeStatusProposal) error {
-	addr, err := types.MarkerAddress(c.Denom)
+func (k Keeper) HandleChangeStatusProposal(ctx sdk.Context, denom string, status types.MarkerStatus) error {
+	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
 	}
@@ -171,36 +172,36 @@ func HandleChangeStatusProposal(ctx sdk.Context, k Keeper, c *types.ChangeStatus
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Denom)
+		return fmt.Errorf("%s marker does not exist", denom)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
-	if c.NewStatus == types.StatusUndefined {
+	if status == types.StatusUndefined {
 		return fmt.Errorf("error invalid marker status undefined")
 	}
-	if int(m.GetStatus()) > int(c.NewStatus) {
-		return fmt.Errorf("invalid status transition %s precedes existing status of %s", c.NewStatus, m.GetStatus())
+	if int(m.GetStatus()) > int(status) {
+		return fmt.Errorf("invalid status transition %s precedes existing status of %s", status, m.GetStatus())
 	}
 
 	// activate (must be pending, finalized currently)
-	if c.NewStatus == types.StatusActive {
+	if status == types.StatusActive {
 		if err = k.AdjustCirculation(ctx, m, m.GetSupply()); err != nil {
 			return fmt.Errorf("could not create marker supply: %w", err)
 		}
 	}
 
 	// delete (must be cancelled currently)
-	if c.NewStatus == types.StatusDestroyed {
+	if status == types.StatusDestroyed {
 		if m.GetStatus() != types.StatusCancelled {
 			return fmt.Errorf("only cancelled markers can be deleted")
 		}
-		if err = k.AdjustCirculation(ctx, m, sdk.NewInt64Coin(c.Denom, 0)); err != nil {
+		if err = k.AdjustCirculation(ctx, m, sdk.NewInt64Coin(denom, 0)); err != nil {
 			return fmt.Errorf("could not dispose of marker supply: %w", err)
 		}
 	}
 
-	if err := m.SetStatus(c.NewStatus); err != nil {
+	if err := m.SetStatus(status); err != nil {
 		return err
 	}
 
@@ -211,14 +212,14 @@ func HandleChangeStatusProposal(ctx sdk.Context, k Keeper, c *types.ChangeStatus
 	k.SetMarker(ctx, m)
 
 	logger := k.Logger(ctx)
-	logger.Info("changed marker status", "marker", c.Denom, "stats", c.NewStatus.String())
+	logger.Info("changed marker status", "marker", denom, "stats", status.String())
 
 	return nil
 }
 
 // HandleWithdrawEscrowProposal handles a Withdraw escrowed coins governance proposal request
-func HandleWithdrawEscrowProposal(ctx sdk.Context, k Keeper, c *types.WithdrawEscrowProposal) error {
-	addr, err := types.MarkerAddress(c.Denom)
+func (k Keeper) HandleWithdrawEscrowProposal(ctx sdk.Context, denom, targetAddress string, amount sdk.Coins) error {
+	addr, err := types.MarkerAddress(denom)
 	if err != nil {
 		return err
 	}
@@ -227,28 +228,28 @@ func HandleWithdrawEscrowProposal(ctx sdk.Context, k Keeper, c *types.WithdrawEs
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Denom)
+		return fmt.Errorf("%s marker does not exist", denom)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Denom)
+		return fmt.Errorf("%s marker does not allow governance control", denom)
 	}
 
-	recipient, err := sdk.AccAddressFromBech32(c.TargetAddress)
+	recipient, err := sdk.AccAddressFromBech32(targetAddress)
 	if err != nil {
 		return err
 	}
-	if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), addr, recipient, c.Amount); err != nil {
+	if err := k.bankKeeper.SendCoins(types.WithBypass(ctx), addr, recipient, amount); err != nil {
 		return err
 	}
 	logger := k.Logger(ctx)
-	logger.Info("transferred escrowed coin from marker", "marker", c.Denom, "amount", c.Amount.String(), "recipient", c.TargetAddress)
+	logger.Info("transferred escrowed coin from marker", "marker", denom, "amount", amount, "recipient", targetAddress)
 
 	return nil
 }
 
 // HandleSetDenomMetadataProposal handles a Set Denom Metadata governance proposal request
-func HandleSetDenomMetadataProposal(ctx sdk.Context, k Keeper, c *types.SetDenomMetadataProposal) error {
-	addr, err := types.MarkerAddress(c.Metadata.Base)
+func (k Keeper) HandleSetDenomMetadataProposal(ctx sdk.Context, metadata banktypes.Metadata) error {
+	addr, err := types.MarkerAddress(metadata.Base)
 	if err != nil {
 		return err
 	}
@@ -257,14 +258,14 @@ func HandleSetDenomMetadataProposal(ctx sdk.Context, k Keeper, c *types.SetDenom
 		return err
 	}
 	if m == nil {
-		return fmt.Errorf("%s marker does not exist", c.Metadata.Base)
+		return fmt.Errorf("%s marker does not exist", metadata.Base)
 	}
 	if !m.HasGovernanceEnabled() {
-		return fmt.Errorf("%s marker does not allow governance control", c.Metadata.Base)
+		return fmt.Errorf("%s marker does not allow governance control", metadata.Base)
 	}
 
-	k.bankKeeper.SetDenomMetaData(ctx, c.Metadata)
+	k.bankKeeper.SetDenomMetaData(ctx, metadata)
 
-	k.Logger(ctx).Info("denom metadata set for marker", "marker", c.Metadata.Base, "denom metadata", c.Metadata.String())
+	k.Logger(ctx).Info("denom metadata set for marker", "marker", metadata.Base, "denom metadata", metadata.String())
 	return nil
 }

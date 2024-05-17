@@ -30,7 +30,7 @@ var (
 func (p AddMsgFeeProposal) ProposalRoute() string { return RouterKey }
 func (p AddMsgFeeProposal) ProposalType() string  { return ProposalTypeAddMsgFee }
 func (p AddMsgFeeProposal) ValidateBasic() error {
-	return errors.New("proposal msg no longer supported")
+	return errors.New("deprecated and unusable")
 }
 
 func (p UpdateMsgFeeProposal) ProposalRoute() string { return RouterKey }
@@ -38,7 +38,7 @@ func (p UpdateMsgFeeProposal) ProposalRoute() string { return RouterKey }
 func (p UpdateMsgFeeProposal) ProposalType() string { return ProposalTypeUpdateMsgFee }
 
 func (p UpdateMsgFeeProposal) ValidateBasic() error {
-	return errors.New("proposal msg no longer supported")
+	return errors.New("deprecated and unusable")
 }
 
 func (p RemoveMsgFeeProposal) ProposalRoute() string { return RouterKey }
@@ -46,7 +46,7 @@ func (p RemoveMsgFeeProposal) ProposalRoute() string { return RouterKey }
 func (p RemoveMsgFeeProposal) ProposalType() string { return ProposalTypeRemoveMsgFee }
 
 func (p RemoveMsgFeeProposal) ValidateBasic() error {
-	return errors.New("proposal msg no longer supported")
+	return errors.New("deprecated and unusable")
 }
 
 func (p UpdateNhashPerUsdMilProposal) ProposalRoute() string { return RouterKey }
@@ -56,7 +56,7 @@ func (p UpdateNhashPerUsdMilProposal) ProposalType() string {
 }
 
 func (p UpdateNhashPerUsdMilProposal) ValidateBasic() error {
-	return errors.New("proposal msg no longer supported")
+	return errors.New("deprecated and unusable")
 }
 
 func (p UpdateConversionFeeDenomProposal) ProposalRoute() string { return RouterKey }
@@ -66,5 +66,5 @@ func (p UpdateConversionFeeDenomProposal) ProposalType() string {
 }
 
 func (p UpdateConversionFeeDenomProposal) ValidateBasic() error {
-	return errors.New("proposal msg no longer supported")
+	return errors.New("deprecated and unusable")
 }

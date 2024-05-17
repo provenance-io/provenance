@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 
 	"github.com/provenance-io/provenance/testutil"
@@ -38,11 +40,17 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgGrantAllowanceRequest{Administrator: signer} },
 		func(signer string) sdk.Msg { return &MsgAddFinalizeActivateMarkerRequest{FromAddress: signer} },
 		func(signer string) sdk.Msg { return &MsgSupplyIncreaseProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgSupplyDecreaseProposalRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateRequiredAttributesRequest{TransferAuthority: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateForcedTransferRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgSetAccountDataRequest{Signer: signer} },
 		func(signer string) sdk.Msg { return &MsgUpdateSendDenyListRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgAddNetAssetValuesRequest{Administrator: signer} },
+		func(signer string) sdk.Msg { return &MsgSetAdministratorProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgRemoveAdministratorProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgChangeStatusProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgWithdrawEscrowProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgSetDenomMetadataProposalRequest{Authority: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
@@ -476,13 +484,44 @@ func TestMsgSupplyIncreaseProposalRequestValidateBasic(t *testing.T) {
 				Amount: sdkmath.NewInt(100),
 				Denom:  "bbq-hotdog",
 			},
-			targetAddress: "",
+			targetAddress: "invalidaddress",
 			authority:     authority,
 			shouldFail:    true,
-			expectedError: "empty address string is not allowed",
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "valid with target address",
+			amount: sdk.Coin{
+				Amount: sdkmath.NewInt(100),
+				Denom:  "bbq-hotdog",
+			},
+			targetAddress: targetAddress,
+			authority:     authority,
+			shouldFail:    false,
+		},
+		{
+			name: "valid without target address",
+			amount: sdk.Coin{
+				Amount: sdkmath.NewInt(100),
+				Denom:  "bbq-hotdog",
+			},
+			targetAddress: "",
+			authority:     authority,
+			shouldFail:    false,
 		},
 		{
 			name: "invalid authority",
+			amount: sdk.Coin{
+				Amount: sdkmath.NewInt(100),
+				Denom:  "bbq-hotdog",
+			},
+			targetAddress: targetAddress,
+			authority:     "invalidaddress",
+			shouldFail:    true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "empty authority",
 			amount: sdk.Coin{
 				Amount: sdkmath.NewInt(100),
 				Denom:  "bbq-hotdog",
@@ -790,6 +829,391 @@ func TestMsgAddNetAssetValueValidateBasic(t *testing.T) {
 				require.EqualErrorf(t, err, tc.expErr, "ValidateBasic error")
 			} else {
 				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgSupplyDecreaseProposalRequestValidateBasic(t *testing.T) {
+	validAddress := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAddress := "invalidaddr0000"
+
+	testCases := []struct {
+		name          string
+		authority     string
+		amount        sdk.Coin
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name:          "valid input",
+			authority:     validAddress,
+			amount:        sdk.NewInt64Coin("testcoin", 100),
+			expectError:   false,
+			expectedError: "",
+		},
+		{
+			name:          "negative amount",
+			authority:     validAddress,
+			amount:        sdk.Coin{Denom: "testcoin", Amount: sdkmath.NewInt(-100)},
+			expectError:   true,
+			expectedError: "amount to decrease must be greater than zero",
+		},
+		{
+			name:          "invalid authority address",
+			authority:     invalidAddress,
+			amount:        sdk.NewInt64Coin("testcoin", 100),
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := MsgSupplyDecreaseProposalRequest{
+				Authority: tc.authority,
+				Amount:    tc.amount,
+			}
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgSetAdministratorProposalRequestValidateBasic(t *testing.T) {
+	validAddress := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAddress := "invalidaddr0000"
+
+	validAccessGrant := AccessGrant{
+		Address:     validAddress,
+		Permissions: []Access{Access_Admin},
+	}
+	invalidAccessGrant := AccessGrant{
+		Address:     "invalidaddress",
+		Permissions: []Access{Access_Admin},
+	}
+
+	testCases := []struct {
+		name          string
+		denom         string
+		accessGrant   []AccessGrant
+		authority     string
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name:        "valid case",
+			denom:       "testcoin",
+			accessGrant: []AccessGrant{validAccessGrant},
+			authority:   validAddress,
+			expectError: false,
+		},
+		{
+			name:          "invalid authority address",
+			denom:         "testcoin",
+			accessGrant:   []AccessGrant{validAccessGrant},
+			authority:     invalidAddress,
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "invalid access grant",
+			denom:         "testcoin",
+			accessGrant:   []AccessGrant{invalidAccessGrant},
+			authority:     validAddress,
+			expectError:   true,
+			expectedError: "invalid access grant for administrator: invalid address: decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := NewMsgSetAdministratorProposalRequest(tc.denom, tc.accessGrant, tc.authority)
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgRemoveAdministratorProposalRequestValidateBasic(t *testing.T) {
+	validAuthority := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAuthority := "invalidauth0000"
+
+	validRemovedAddress := "cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl"
+	invalidRemovedAddress := "invalidremoved000"
+
+	testCases := []struct {
+		name           string
+		authority      string
+		removedAddress []string
+		expectError    bool
+		expectedError  string
+	}{
+		{
+			name:           "valid case",
+			authority:      validAuthority,
+			removedAddress: []string{validRemovedAddress},
+			expectError:    false,
+		},
+		{
+			name:           "invalid authority address",
+			authority:      invalidAuthority,
+			removedAddress: []string{validRemovedAddress},
+			expectError:    true,
+			expectedError:  "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:           "invalid removed address",
+			authority:      validAuthority,
+			removedAddress: []string{invalidRemovedAddress},
+			expectError:    true,
+			expectedError:  "administrator account address is invalid: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:           "multiple removed addresses with an invalid one",
+			authority:      validAuthority,
+			removedAddress: []string{validRemovedAddress, invalidRemovedAddress},
+			expectError:    true,
+			expectedError:  "administrator account address is invalid: decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := MsgRemoveAdministratorProposalRequest{
+				Authority:      tc.authority,
+				RemovedAddress: tc.removedAddress,
+			}
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgChangeStatusProposalRequestValidateBasic(t *testing.T) {
+	validAuthority := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAuthority := "invalidauth0000"
+	validDenom := "validcoin"
+	invalidDenom := "1invalid"
+
+	testCases := []struct {
+		name          string
+		denom         string
+		authority     string
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name:        "valid case",
+			denom:       validDenom,
+			authority:   validAuthority,
+			expectError: false,
+		},
+		{
+			name:          "invalid authority address",
+			denom:         validDenom,
+			authority:     invalidAuthority,
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "invalid denom",
+			denom:         invalidDenom,
+			authority:     validAuthority,
+			expectError:   true,
+			expectedError: "invalid denom: 1invalid",
+		},
+		{
+			name:          "both authority and denom are invalid",
+			denom:         invalidDenom,
+			authority:     invalidAuthority,
+			expectError:   true,
+			expectedError: "invalid denom: 1invalid",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := MsgChangeStatusProposalRequest{
+				Denom:     tc.denom,
+				Authority: tc.authority,
+			}
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgWithdrawEscrowProposalRequestValidateBasic(t *testing.T) {
+	validAuthority := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAuthority := "invalidauth0000"
+	validTargetAddress := "cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl"
+	invalidTargetAddress := "invalidtarget0000"
+	validDenom := "validcoin"
+	validAmount := sdk.NewCoins(sdk.NewInt64Coin(validDenom, 100))
+	invalidAmount := sdk.Coins{sdk.Coin{Denom: validDenom, Amount: sdkmath.NewInt(-100)}} // Negative amount
+
+	testCases := []struct {
+		name          string
+		denom         string
+		amount        sdk.Coins
+		targetAddress string
+		authority     string
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name:          "valid case",
+			denom:         validDenom,
+			amount:        validAmount,
+			targetAddress: validTargetAddress,
+			authority:     validAuthority,
+			expectError:   false,
+		},
+		{
+			name:          "invalid amount",
+			denom:         validDenom,
+			amount:        invalidAmount,
+			targetAddress: validTargetAddress,
+			authority:     validAuthority,
+			expectError:   true,
+			expectedError: fmt.Sprintf("amount is invalid: %v", invalidAmount),
+		},
+		{
+			name:          "invalid target address",
+			denom:         validDenom,
+			amount:        validAmount,
+			targetAddress: invalidTargetAddress,
+			authority:     validAuthority,
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "invalid authority address",
+			denom:         validDenom,
+			amount:        validAmount,
+			targetAddress: validTargetAddress,
+			authority:     invalidAuthority,
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := MsgWithdrawEscrowProposalRequest{
+				Denom:         tc.denom,
+				Amount:        tc.amount,
+				TargetAddress: tc.targetAddress,
+				Authority:     tc.authority,
+			}
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError, "ValidateBasic error")
+			} else {
+				require.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgSetDenomMetadataProposalRequestValidateBasic(t *testing.T) {
+	validAuthority := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAuthority := "invalidauth0000"
+	hotdogDenom := "hotdog"
+
+	validMetadata := banktypes.Metadata{
+		Description: "a description",
+		DenomUnits: []*banktypes.DenomUnit{
+			{Denom: fmt.Sprintf("n%s", hotdogDenom), Exponent: 0, Aliases: []string{fmt.Sprintf("nano%s", hotdogDenom)}},
+			{Denom: fmt.Sprintf("u%s", hotdogDenom), Exponent: 3, Aliases: []string{}},
+			{Denom: hotdogDenom, Exponent: 9, Aliases: []string{}},
+			{Denom: fmt.Sprintf("mega%s", hotdogDenom), Exponent: 15, Aliases: []string{}},
+		},
+		Base:    fmt.Sprintf("n%s", hotdogDenom),
+		Display: hotdogDenom,
+		Name:    "hotdogName",
+		Symbol:  "WIFI",
+	}
+	invalidMetadata := banktypes.Metadata{
+		Name:        "",
+		Description: "Description.",
+	}
+
+	testCases := []struct {
+		name          string
+		metadata      banktypes.Metadata
+		authority     string
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name:        "valid case",
+			metadata:    validMetadata,
+			authority:   validAuthority,
+			expectError: false,
+		},
+		{
+			name:          "invalid metadata",
+			metadata:      invalidMetadata,
+			authority:     validAuthority,
+			expectError:   true,
+			expectedError: "name field cannot be blank",
+		},
+		{
+			name:          "invalid authority address",
+			metadata:      validMetadata,
+			authority:     invalidAuthority,
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := MsgSetDenomMetadataProposalRequest{
+				Metadata:  tc.metadata,
+				Authority: tc.authority,
+			}
+
+			err := msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError)
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}
