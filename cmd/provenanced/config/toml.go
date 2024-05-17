@@ -51,7 +51,8 @@ func WriteConfigToFile(configFilePath string, config *ClientConfig) {
 		panic(err)
 	}
 
-	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0o600); err != nil {
+	//nolint:gosec
+	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0o644); err != nil {
 		panic(err)
 	}
 }
