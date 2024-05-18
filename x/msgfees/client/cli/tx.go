@@ -91,7 +91,6 @@ $ %[1]s tx msgfees remove --msg-type=/provenance.metadata.v1.MsgWriteRecordReque
 				if err := types.ValidateBips(recipient, bips); err != nil {
 					return fmt.Errorf("error validating basis points args: %w", err)
 				}
-
 			}
 
 			var addFee sdk.Coin

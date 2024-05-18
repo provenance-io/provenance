@@ -42,7 +42,7 @@ func (s *IntegrationTestSuite) TestTxOptInCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(tc.args...)).
+			testcli.NewTxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(tc.args...)).
 				WithExpInErrMsg(tc.expErr).
 				WithExpCode(tc.expCode).
 				Execute(s.T(), s.network)
@@ -78,7 +78,7 @@ func (s *IntegrationTestSuite) TestTxOptOutCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(client.TxOptOutCmd(), s.appendCommonFlagsTo(tc.args...)).
+			testcli.NewTxExecutor(client.TxOptOutCmd(), s.appendCommonFlagsTo(tc.args...)).
 				WithExpInErrMsg(tc.expErr).
 				WithExpCode(tc.expCode).
 				Execute(s.T(), s.network)
@@ -164,7 +164,7 @@ func (s *IntegrationTestSuite) TestTxAcceptCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(client.TxAcceptCmd(), s.appendCommonFlagsTo(tc.args...)).
+			testcli.NewTxExecutor(client.TxAcceptCmd(), s.appendCommonFlagsTo(tc.args...)).
 				WithExpInErrMsg(tc.expErr).
 				WithExpCode(tc.expCode).
 				Execute(s.T(), s.network)
@@ -250,7 +250,7 @@ func (s *IntegrationTestSuite) TestTxDeclineCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(client.TxDeclineCmd(), s.appendCommonFlagsTo(tc.args...)).
+			testcli.NewTxExecutor(client.TxDeclineCmd(), s.appendCommonFlagsTo(tc.args...)).
 				WithExpInErrMsg(tc.expErr).
 				WithExpCode(tc.expCode).
 				Execute(s.T(), s.network)
@@ -308,7 +308,7 @@ func (s *IntegrationTestSuite) TestTxUpdateAutoResponsesCmd() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(client.TxUpdateAutoResponsesCmd(), s.appendCommonFlagsTo(tc.args...)).
+			testcli.NewTxExecutor(client.TxUpdateAutoResponsesCmd(), s.appendCommonFlagsTo(tc.args...)).
 				WithExpInErrMsg(tc.expErr).
 				WithExpCode(tc.expCode).
 				Execute(s.T(), s.network)
@@ -331,7 +331,7 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 	asJSONFlag := fmt.Sprintf("--%s=json", cmtcli.OutputFlag)
 
 	s.Run("opt toAddr into quarantine", func() {
-		testcli.NewCLITxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(toAddr)).Execute(s.T(), s.network)
+		testcli.NewTxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(toAddr)).Execute(s.T(), s.network)
 
 		outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.QueryIsQuarantinedCmd(), []string{toAddr, asJSONFlag})
 		out := outBW.String()
@@ -382,7 +382,7 @@ func (s *IntegrationTestSuite) TestSendAndAcceptQuarantinedFunds() {
 	s.stopIfFailed()
 
 	s.Run("accept the quarantined funds", func() {
-		testcli.NewCLITxExecutor(client.TxAcceptCmd(), s.appendCommonFlagsTo(toAddr, fromAddr2, fromAddr1)).
+		testcli.NewTxExecutor(client.TxAcceptCmd(), s.appendCommonFlagsTo(toAddr, fromAddr2, fromAddr1)).
 			Execute(s.T(), s.network)
 
 		outBW, err := cli.ExecTestCLICmd(s.clientCtx, client.QueryQuarantinedFundsCmd(), []string{toAddr, asJSONFlag})

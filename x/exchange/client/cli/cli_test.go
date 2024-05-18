@@ -589,7 +589,7 @@ func (s *CmdTestSuite) runTxCmdTestCase(tc txCmdTestCase) {
 		}
 
 		var cmdOk bool
-		txResponse, cmdOk = testcli.NewCLITxExecutor(cmd, args).
+		txResponse, cmdOk = testcli.NewTxExecutor(cmd, args).
 			WithExpInErrMsg(tc.expInErr).
 			WithExpCode(tc.expectedCode).
 			WithExpInRawLog(tc.expInRawLog).
@@ -1028,7 +1028,7 @@ func (s *CmdTestSuite) createOrder(order *exchange.Order, creationFee *sdk.Coin)
 		"--"+flags.FlagSkipConfirmation,
 	)
 
-	resp := testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
+	resp := testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
 	s.Require().NotNil(resp, "TxResponse from creating order")
 	orderIDStr, err := s.findNewOrderID(resp)
 	s.Require().NoError(err, "findNewOrderID")
@@ -1055,7 +1055,7 @@ func (s *CmdTestSuite) commitFunds(addr sdk.AccAddress, marketID uint32, amount 
 		"--"+flags.FlagSkipConfirmation,
 	)
 
-	testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
+	testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
 }
 
 // createPayment issues a command to create a payment.
@@ -1084,7 +1084,7 @@ func (s *CmdTestSuite) createPayment(payment *exchange.Payment) {
 		"--"+flags.FlagSkipConfirmation,
 	)
 
-	testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
+	testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
 }
 
 // queryBankBalances executes a bank query to get an account's balances.
@@ -1107,7 +1107,7 @@ func (s *CmdTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 		"--" + flags.FlagBroadcastMode, flags.BroadcastSync,
 		"--" + flags.FlagSkipConfirmation,
 	}
-	testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.testnet)
+	testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
 }
 
 // untypeEvent calls untypeEvent and requires it to not return an error.

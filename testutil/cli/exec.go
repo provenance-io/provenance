@@ -9,11 +9,12 @@ import (
 	sdkcli "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/testutil/queries"
 )
 
-// CLITxExecutor helps facilitate the execution and testing of a CLI command.
+// TxExecutor helps facilitate the execution and testing of a CLI command.
 //
 // The command will be executed when either .Execute() or .AssertExecute() are called.
 // The former will halt the test upon failure, the latter will allow test execution to continue.
@@ -26,9 +27,9 @@ import (
 //
 // The result code and raw log are only checked if a Tx result is available.
 // It's considered a failure if the command did not return an error, but the Tx result is not available.
-type CLITxExecutor struct {
+type TxExecutor struct {
 	// Name is the name of the test. It's not actually used in here, but included
-	// in case you want to use []CLITxExecutor to define your test cases.
+	// in case you want to use []TxExecutor to define your test cases.
 	Name string
 	// Cmd is the cobra.Command to execute.
 	Cmd *cobra.Command
@@ -56,64 +57,64 @@ type CLITxExecutor struct {
 	ExpInRawLog []string
 }
 
-// NewCLITxExecutor creates a new CLITxExecutor with the provided command and args.
-func NewCLITxExecutor(cmd *cobra.Command, args []string) CLITxExecutor {
-	return CLITxExecutor{
+// NewTxExecutor creates a new TxExecutor with the provided command and args.
+func NewTxExecutor(cmd *cobra.Command, args []string) TxExecutor {
+	return TxExecutor{
 		Cmd:  cmd,
 		Args: args,
 	}
 }
 
-// WithName returns a copy of this CLITxExecutor that has the provided Name.
-func (c CLITxExecutor) WithName(name string) CLITxExecutor {
+// WithName returns a copy of this TxExecutor that has the provided Name.
+func (c TxExecutor) WithName(name string) TxExecutor {
 	c.Name = name
 	return c
 }
 
-// WithCmd returns a copy of this CLITxExecutor that has the provided Cmd.
-func (c CLITxExecutor) WithCmd(cmd *cobra.Command) CLITxExecutor {
+// WithCmd returns a copy of this TxExecutor that has the provided Cmd.
+func (c TxExecutor) WithCmd(cmd *cobra.Command) TxExecutor {
 	c.Cmd = cmd
 	return c
 }
 
-// WithArgs returns a copy of this CLITxExecutor that has the provided Args.
-func (c CLITxExecutor) WithArgs(args []string) CLITxExecutor {
+// WithArgs returns a copy of this TxExecutor that has the provided Args.
+func (c TxExecutor) WithArgs(args []string) TxExecutor {
 	c.Args = args
 	return c
 }
 
-// WithExpErr returns a copy of this CLITxExecutor that has the provided ExpErr.
-func (c CLITxExecutor) WithExpErr(expErr bool) CLITxExecutor {
+// WithExpErr returns a copy of this TxExecutor that has the provided ExpErr.
+func (c TxExecutor) WithExpErr(expErr bool) TxExecutor {
 	c.ExpErr = expErr
 	return c
 }
 
-// WithExpErrMsg returns a copy of this CLITxExecutor that has the provided ExpErrMsg.
-func (c CLITxExecutor) WithExpErrMsg(expErrMsg string) CLITxExecutor {
+// WithExpErrMsg returns a copy of this TxExecutor that has the provided ExpErrMsg.
+func (c TxExecutor) WithExpErrMsg(expErrMsg string) TxExecutor {
 	c.ExpErrMsg = expErrMsg
 	return c
 }
 
-// WithExpInErrMsg returns a copy of this CLITxExecutor that has the provided ExpInErrMsg.
-func (c CLITxExecutor) WithExpInErrMsg(expInErrMsg []string) CLITxExecutor {
+// WithExpInErrMsg returns a copy of this TxExecutor that has the provided ExpInErrMsg.
+func (c TxExecutor) WithExpInErrMsg(expInErrMsg []string) TxExecutor {
 	c.ExpInErrMsg = expInErrMsg
 	return c
 }
 
-// WithExpCode returns a copy of this CLITxExecutor that has the provided ExpCode.
-func (c CLITxExecutor) WithExpCode(expCode uint32) CLITxExecutor {
+// WithExpCode returns a copy of this TxExecutor that has the provided ExpCode.
+func (c TxExecutor) WithExpCode(expCode uint32) TxExecutor {
 	c.ExpCode = expCode
 	return c
 }
 
-// WithExpRawLog returns a copy of this CLITxExecutor that has the provided ExpRawLog.
-func (c CLITxExecutor) WithExpRawLog(expRawLog string) CLITxExecutor {
+// WithExpRawLog returns a copy of this TxExecutor that has the provided ExpRawLog.
+func (c TxExecutor) WithExpRawLog(expRawLog string) TxExecutor {
 	c.ExpRawLog = expRawLog
 	return c
 }
 
-// WithExpInRawLog returns a copy of this CLITxExecutor that has the provided ExpInRawLog.
-func (c CLITxExecutor) WithExpInRawLog(expInRawLog []string) CLITxExecutor {
+// WithExpInRawLog returns a copy of this TxExecutor that has the provided ExpInRawLog.
+func (c TxExecutor) WithExpInRawLog(expInRawLog []string) TxExecutor {
 	c.ExpInRawLog = expInRawLog
 	return c
 }
@@ -123,7 +124,7 @@ func (c CLITxExecutor) WithExpInRawLog(expInRawLog []string) CLITxExecutor {
 // It is possible for everything to be as expected, and still get a nil TxResponse from this.
 //
 // To allow test execution to continue on a failure, use AssertExecute.
-func (c CLITxExecutor) Execute(t *testing.T, n *network.Network) *sdk.TxResponse {
+func (c TxExecutor) Execute(t *testing.T, n *network.Network) *sdk.TxResponse {
 	t.Helper()
 	rv, ok := c.AssertExecute(t, n)
 	if !ok {
@@ -138,9 +139,9 @@ func (c CLITxExecutor) Execute(t *testing.T, n *network.Network) *sdk.TxResponse
 // The returned bool is true if everything is as expected, false otherwise.
 //
 // To halt test execution on failure, use Execute.
-func (c CLITxExecutor) AssertExecute(t *testing.T, n *network.Network) (*sdk.TxResponse, bool) {
+func (c TxExecutor) AssertExecute(t *testing.T, n *network.Network) (*sdk.TxResponse, bool) {
 	t.Helper()
-	if !assert.NotNil(t, c.Cmd, "CLITxExecutor.Cmd cannot be nil") {
+	if !assert.NotNil(t, c.Cmd, "TxExecutor.Cmd cannot be nil") {
 		return nil, false
 	}
 	if !assert.NotEmpty(t, n.Validators, "Network.Validators") {

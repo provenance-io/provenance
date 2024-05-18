@@ -134,12 +134,6 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the exchange content functions used to
-// simulate governance proposals, of which there are none for the exchange module.
-func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
 // RandomizedParams returns randomized exchange param changes for the simulator,
 // of which there are none since this module doesn't use the params module.
 func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange { return nil }

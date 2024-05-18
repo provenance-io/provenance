@@ -194,7 +194,7 @@ func (s *IntegrationTestSuite) TestOracleUpdate() {
 				"--title", "Update the oracle", "--summary", "Update it real good",
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
-			testcli.NewCLITxExecutor(cmd, args).
+			testcli.NewTxExecutor(cmd, args).
 				WithExpCode(tc.expectedCode).
 				WithExpInRawLog([]string{tc.expectErrMsg}).
 				Execute(s.T(), s.network)
@@ -256,7 +256,7 @@ func (s *IntegrationTestSuite) TestSendQuery() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
 
-			testcli.NewCLITxExecutor(cmd, args).
+			testcli.NewTxExecutor(cmd, args).
 				WithExpInErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				WithExpInRawLog(tc.expInRawLog).

@@ -101,14 +101,8 @@ func (k Keeper) IterateRecords(ctx sdk.Context, prefix []byte, handle Handler) e
 	for ; iterator.Valid(); iterator.Next() {
 		record := types.Attribute{}
 		// get proto objects for legacy prefix with legacy amino codec.
-		if bytes.Equal(types.AttributeKeyPrefixAmino, prefix) {
-			if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
-				return err
-			}
-		} else {
-			if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
-				return err
-			}
+		if err := k.cdc.Unmarshal(iterator.Value(), &record); err != nil {
+			return err
 		}
 		if err := handle(record); err != nil {
 			return err
