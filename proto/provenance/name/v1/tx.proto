@@ -24,6 +24,8 @@ service Msg {
 
   // CreateRootName defines a governance method for creating a root name.
   rpc CreateRootName(MsgCreateRootNameRequest) returns (MsgCreateRootNameResponse);
+
+  // TODO: add update params
 }
 
 // MsgBindNameRequest defines an sdk.Msg type that is used to add an address/name binding under an optional parent name.

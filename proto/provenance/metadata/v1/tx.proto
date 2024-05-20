@@ -86,6 +86,8 @@ service Msg {
 
   // AddNetAssetValues set the net asset value for a scope
   rpc AddNetAssetValues(MsgAddNetAssetValuesRequest) returns (MsgAddNetAssetValuesResponse);
+
+  // TODO: add update params
 }
 
 // MsgWriteScopeRequest is the request type for the Msg/WriteScope RPC method.

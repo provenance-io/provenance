@@ -37,28 +37,28 @@ func WeightedOperations(
 	)
 
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateParams, &wMsgUpdateParams, nil,
-		func(_ *rand.Rand) { wMsgUpdateParams = simappparams.DefaultWeightGovUpdateParams })
+		func(_ *rand.Rand) { wMsgUpdateParams = simappparams.DefaultWeightUpdateParams })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(wMsgUpdateParams, SimulateMsgGovUpdateParams(simState, k, ak, bk)),
+		simulation.NewWeightedOperation(wMsgUpdateParams, SimulateMsgUpdateParams(simState, k, ak, bk)),
 	}
 }
 
-// SimulateMsgGovUpdateParams sends a MsgUpdateParams.
-func SimulateMsgGovUpdateParams(simState module.SimulationState, _ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
+// SimulateMsgUpdateParams sends a MsgUpdateParams.
+func SimulateMsgUpdateParams(simState module.SimulationState, _ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		raccs, err := RandomAccs(r, accs, uint64(len(accs)))
 		if err != nil {
-			return simtypes.NoOpMsg(ibcratelimit.ModuleName, sdk.MsgTypeURL(&ibcratelimit.MsgGovUpdateParamsRequest{}), err.Error()), nil, nil
+			return simtypes.NoOpMsg(ibcratelimit.ModuleName, sdk.MsgTypeURL(&ibcratelimit.MsgUpdateParamsRequest{}), err.Error()), nil, nil
 		}
 
 		// 50% chance to be from the module's authority
 		from := raccs[0]
 		to := raccs[1]
 
-		msg := ibcratelimit.NewMsgGovUpdateParamsRequest(from.Address.String(), to.Address.String())
+		msg := ibcratelimit.NewUpdateParamsRequest(from.Address.String(), to.Address.String())
 
 		// TODO[1760]: Refactor this to submit it as a gov prop and return futures for votes.
 		return Dispatch(r, app, ctx, simState, from, chainID, msg, ak, bk, nil)

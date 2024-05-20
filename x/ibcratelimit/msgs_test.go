@@ -15,21 +15,22 @@ import (
 func TestAllMsgsGetSigners(t *testing.T) {
 	msgMakers := []testutil.MsgMaker{
 		func(signer string) sdk.Msg { return &MsgGovUpdateParamsRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateParamsRequest{Authority: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
 }
 
 func TestNewMsgGovUpdateParamsRequest(t *testing.T) {
-	expected := &MsgGovUpdateParamsRequest{
+	expected := &MsgUpdateParamsRequest{
 		Authority: "authority",
 		Params:    NewParams("contract"),
 	}
-	event := NewMsgGovUpdateParamsRequest(expected.Authority, expected.Params.ContractAddress)
+	event := NewUpdateParamsRequest(expected.Authority, expected.Params.ContractAddress)
 	assert.Equal(t, expected, event, "should create the correct with correct content")
 }
 
-func TestNewMsgGovUpdateParamsValidateBasic(t *testing.T) {
+func TestNewMsgUpdateParamsValidateBasic(t *testing.T) {
 	tests := []struct {
 		name      string
 		authority string
@@ -62,7 +63,7 @@ func TestNewMsgGovUpdateParamsValidateBasic(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewMsgGovUpdateParamsRequest(tc.authority, tc.contract)
+			msg := NewUpdateParamsRequest(tc.authority, tc.contract)
 			err := msg.ValidateBasic()
 
 			if len(tc.err) > 0 {
