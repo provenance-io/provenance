@@ -23,6 +23,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/provenance-io/provenance/x/exchange"
 	exchangecli "github.com/provenance-io/provenance/x/exchange/client/cli"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"

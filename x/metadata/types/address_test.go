@@ -559,6 +559,7 @@ func (s *AddressTestSuite) TestMetadataAddressWithInvalidData() {
 	scopeID := ScopeMetadataAddress(s.scopeUUID)
 	padded := make([]byte, 20)
 	length, err := scopeID.MarshalTo(padded)
+	require.NoError(t, err, "must marshal to metadata address")
 	require.EqualValues(t, 17, length)
 
 	_, err = VerifyMetadataAddressFormat(padded)
@@ -721,7 +722,7 @@ func (s *AddressTestSuite) TestScopeMetadataAddress() {
 
 	// Check the string formatter for the scopeID
 	require.Equal(t, s.scopeBech32, fmt.Sprintf("%s", scopeID))
-	require.Equal(t, fmt.Sprintf("%s", s.scopeHex), fmt.Sprintf("%X", scopeID))
+	require.Equal(t, s.scopeHex, fmt.Sprintf("%X", scopeID))
 
 	// Ensure a second instance is equal to the first
 	scopeID2 := ScopeMetadataAddress(s.scopeUUID)

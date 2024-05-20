@@ -200,7 +200,7 @@ func (s *TestSuite) TestParamsUpdate() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.network)

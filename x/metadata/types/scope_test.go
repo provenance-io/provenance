@@ -1063,7 +1063,7 @@ func (s *ScopeTestSuite) TestValidateOptionalParties() {
 }
 
 func (s *ScopeTestSuite) TestValidatePartiesAreUnique() {
-	oneCapParty := make([]Party, 1, 1)
+	oneCapParty := make([]Party, 1)
 	oneCapParty[0] = Party{Address: "one", Role: 1}
 
 	tests := []struct {
