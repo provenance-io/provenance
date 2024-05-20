@@ -27,7 +27,7 @@ jobs:
   heighliner-docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # - uses: actions/checkout@v4
 
       - uses: docker/setup-buildx-action@v3
 
@@ -52,9 +52,11 @@ jobs:
       - uses: strangelove-ventures/heighliner-build-action@main
         with:
           heighliner-tag: v1.5.5
+          git-ref: v1.18.0
           chain: provenance
-          local: true
-          tag: ${{ steps.meta.outputs.version }}
+          # local: true
+          # tag: ${{ steps.meta.outputs.version }}
+          tag: heighliner-v1.18.0
           registry: provenanceio
           dockerfile: cosmos
           build-target: |
@@ -62,6 +64,8 @@ jobs:
             make install
           binaries: |
             - /go/bin/provenanced
+          libraries: |
+            - /lib/libwasmvm_muslc.a
           build-env: |
             - "WITH_LEDGER=false"
             - "WITH_CLEVELDB=false"
