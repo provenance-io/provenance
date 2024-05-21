@@ -6,7 +6,7 @@ Names created under another name can have a new owner, thus transferring control
 
 ## Delegating Control
 
-Every label in a name is owned by an address. Starting from the root address each level can be configured to allow any user to add a new child or for the exclusive control of the creator to add child names. The `Restricted` flag is used to indicate the permission requirements for adding child nodes.
+Every label in a name is owned by an address. Starting from the root address, each level can be configured to allow any user to add a new child or for the exclusive control of the creator to add child names. The `Restricted` flag is used to indicate the permission requirements for adding child nodes.
 
 ```proto
 // NameRecord is a structure used to bind ownership of a name heirarchy to a collection of addresses
