@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -553,7 +552,8 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string) *cobra.Command {
 				msgType = "/" + msgType
 			}
 
-			if err := checkMsgTypeValid(cdc.InterfaceRegistry(), msgType); err != nil {
+			_, err := cdc.InterfaceRegistry().Resolve(msgType)
+			if err != nil {
 				return err
 			}
 
@@ -602,19 +602,6 @@ func AddGenesisMsgFeeCmd(defaultNodeHome string) *cobra.Command {
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
-}
-
-func checkMsgTypeValid(registry types.InterfaceRegistry, msgTypeURL string) error {
-	msg, err := registry.Resolve(msgTypeURL)
-	if err != nil {
-		return err
-	}
-
-	_, ok := msg.(sdk.Msg)
-	if !ok {
-		return fmt.Errorf("message type is not a sdk message: %v", msgTypeURL)
-	}
-	return err
 }
 
 // AddGenesisDefaultMarketCmd returns add-default-market cobra command.
