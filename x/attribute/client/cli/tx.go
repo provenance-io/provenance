@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/base64"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,7 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 
+	"github.com/provenance-io/provenance/internal/provcli"
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
 
@@ -310,6 +313,38 @@ $ %[1]s tx attribute account-data --%s
 	}
 
 	AddAccountDataFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewUpdateParamsCmd creates a command to update the attribute module's params via governance proposal.
+func NewUpdateParamsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-params <max-value-length>",
+		Short:   "Update the attribute module's params via governance proposal",
+		Long:    "Submit an update params via governance proposal along with an initial deposit.",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`%[1]s tx attribute update-params 100 --deposit 50000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			maxValueLength, err := strconv.ParseUint(args[0], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid max value length: %w", err)
+			}
+			msg := types.NewMsgUpdateParamsRequest(authority, uint32(maxValueLength))
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
