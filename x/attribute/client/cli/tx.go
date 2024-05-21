@@ -36,6 +36,7 @@ func NewTxCmd() *cobra.Command {
 		NewDeleteAccountAttributeCmd(),
 		NewSetAccountDataCmd(),
 		NewUpdateAccountAttributeExpirationCmd(),
+		NewUpdateParamsCmd(),
 	)
 	return txCmd
 }

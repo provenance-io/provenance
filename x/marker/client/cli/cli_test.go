@@ -38,6 +38,7 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/testutil/queries"
+	"github.com/provenance-io/provenance/x/attribute/client/cli"
 	attrcli "github.com/provenance-io/provenance/x/attribute/client/cli"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markercli "github.com/provenance-io/provenance/x/marker/client/cli"
@@ -2489,6 +2490,50 @@ func (s *IntegrationTestSuite) TestSetDenomMetadataProposal() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			cmd := markercli.GetCmdSetDenomMetadataProposal()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewTxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestUpdateParamsProposal() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
+	}{
+		{
+			name:         "success - submit update params proposal",
+			args:         []string{"100"},
+			expectedCode: 0,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+		{
+			name:         "failure - invalid max value length",
+			args:         []string{"invalidlength"},
+			expectErrMsg: `invalid max value length: strconv.ParseUint: parsing "invalidlength": invalid syntax`,
+			signer:       s.testnet.Validators[0].Address.String(),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := cli.NewUpdateParamsCmd()
 			tc.args = append(tc.args,
 				"--title", fmt.Sprintf("title: %v", tc.name),
 				"--summary", fmt.Sprintf("summary: %v", tc.name),
