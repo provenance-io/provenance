@@ -65,15 +65,15 @@ jobs:
             make install
           binaries: |
             - /go/bin/provenanced
-          libraries: |
-            - "/usr/aarch64-linux-musl/lib/libwasmvm_muslc.a"
-            - "/usr/x86_64-linux-musl/lib/libwasmvm_muslc.a"
+              # libraries: |
+              #   - "/usr/aarch64-linux-musl/lib/libwasmvm_muslc.a"
+              #   - "/usr/x86_64-linux-musl/lib/libwasmvm_muslc.a"
           build-env: |
             - "WITH_LEDGER=false"
             - "WITH_CLEVELDB=false"
             - "BUILD_TAGS=muslc musl dynamic"
           additional-args: "--alpine-version 3.18"
-          # skip: ${{ github.event_name == 'pull_request' }}
+          skip: ${{ github.event_name == 'pull_request' }}
 
   docker:
     runs-on: ubuntu-latest
