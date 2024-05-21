@@ -63,11 +63,12 @@ jobs:
           build-target: |
             cd ..
             make install
+          # libraries: |
+          #   - "/lib/libwasmvm_muslc.a"
+          #   - "/usr/aarch64-linux-musl/lib/libwasmvm_muslc.a"
+          #   - "/usr/x86_64-linux-musl/lib/libwasmvm_muslc.a"
           binaries: |
             - /go/bin/provenanced
-              # libraries: |
-              #   - "/usr/aarch64-linux-musl/lib/libwasmvm_muslc.a"
-              #   - "/usr/x86_64-linux-musl/lib/libwasmvm_muslc.a"
           build-env: |
             - "WITH_LEDGER=false"
             - "WITH_CLEVELDB=false"
