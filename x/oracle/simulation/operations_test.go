@@ -185,15 +185,16 @@ func (s *SimTestSuite) TestSimulateMsgSendQueryOracle() {
 	op := SimulateMsgSendQueryOracle(s.MakeTestSimState(), s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgSendQueryOracle op(...) error")
-	s.LogOperationMsg(operationMsg, "good")
+	s.LogOperationMsg(operationMsg, "no channel")
 
 	var msg types.MsgSendQueryOracleRequest
 	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
-	s.Assert().True(operationMsg.OK, "operationMsg.OK")
+	s.Assert().False(operationMsg.OK, "operationMsg.OK")
 	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
 	s.Assert().Equal(types.ModuleName, operationMsg.Route, "operationMsg.Route")
 	s.Assert().Len(futureOperations, 0, "futureOperations")
+	s.Assert().Equal("cannot get random channel because none exist", operationMsg.Comment, "operationMsg.Comment")
 }
 
 func (s *SimTestSuite) TestRandomAccs() {
