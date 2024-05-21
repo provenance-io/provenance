@@ -16,8 +16,9 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
-	"github.com/provenance-io/provenance/x/oracle/simulation"
 	"github.com/provenance-io/provenance/x/oracle/types"
+
+	. "github.com/provenance-io/provenance/x/oracle/simulation"
 )
 
 type SimTestSuite struct {
@@ -65,7 +66,7 @@ func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
 }
 
 func (s *SimTestSuite) TestWeightedOperations() {
-	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), s.app.OracleKeeper,
+	weightedOps := WeightedOperations(s.MakeTestSimState(), s.app.OracleKeeper,
 		s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper,
 	)
 
@@ -79,7 +80,6 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{weight: simappparams.DefaultWeightUpdateOracle, opMsgRoute: types.ModuleName, opMsgName: sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{})},
 		{weight: simappparams.DefaultWeightSendOracleQuery, opMsgRoute: types.ModuleName, opMsgName: sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{})},
 	}
 
@@ -108,25 +108,71 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	}
 }
 
-func (s *SimTestSuite) TestSimulateMsgUpdateOracle() {
-	// setup 3 accounts
-	source := rand.NewSource(1)
-	r := rand.New(source)
-	accounts := s.getTestingAccounts(r, 3)
+func (s *SimTestSuite) TestProposalMsgs() {
+	expected := []struct {
+		key     string
+		weight  int
+		msgType sdk.Msg
+	}{
+		{
+			key:     OpWeightMsgUpdateOracle,
+			weight:  simappparams.DefaultWeightUpdateOracle,
+			msgType: &types.MsgUpdateOracleRequest{},
+		},
+	}
 
-	// execute operation
-	op := simulation.SimulateMsgUpdateOracle(s.MakeTestSimState(), s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper)
-	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err, "SimulateMsgUpdateOracle op(...) error")
-	s.LogOperationMsg(operationMsg, "good")
+	simState := s.MakeTestSimState()
+	var propMsgs []simtypes.WeightedProposalMsg
+	testGetPropMsgs := func() {
+		propMsgs = ProposalMsgs(simState, s.app.OracleKeeper)
+	}
+	s.Require().NotPanics(testGetPropMsgs, "ProposalMsgs")
+	s.Require().Len(propMsgs, len(expected), "ProposalMsgs")
 
-	var msg types.MsgUpdateOracleRequest
-	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
+	r := rand.New(rand.NewSource(1))
+	accs := s.getTestingAccounts(r, 10)
 
-	s.Assert().True(operationMsg.OK, "operationMsg.OK")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(types.ModuleName, operationMsg.Route, "operationMsg.Route")
-	s.Assert().Len(futureOperations, 0, "futureOperations")
+	for i, propMsg := range propMsgs {
+		exp := expected[i]
+		s.Run(exp.key, func() {
+			expMsgType := fmt.Sprintf("%T", exp.msgType)
+
+			s.Assert().Equal(exp.key, propMsg.AppParamsKey(), "AppParamsKey()")
+			s.Assert().Equal(exp.weight, propMsg.DefaultWeight(), "DefaultWeight()")
+			s.Require().NotNil(propMsg.MsgSimulatorFn(), "MsgSimulatorFn()")
+
+			var msg sdk.Msg
+			testPropMsg := func() {
+				msg = propMsg.MsgSimulatorFn()(r, s.ctx, accs)
+			}
+			s.Require().NotPanics(testPropMsg, "calling the propMsg.MsgSimulatorFn()")
+			s.Require().NotNil(msg, "msg result")
+			actMsgType := fmt.Sprintf("%T", msg)
+			s.Assert().Equal(expMsgType, actMsgType, "msg result")
+		})
+	}
+}
+
+func (s *SimTestSuite) TestSimulatePropMsgUpdateOracle() {
+	r := rand.New(rand.NewSource(1))
+	expMsg := &types.MsgUpdateOracleRequest{
+		Address:   "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3",
+		Authority: s.app.OracleKeeper.GetAuthority(),
+	}
+
+	var msgSimFn simtypes.MsgSimulatorFn
+	testFnMaker := func() {
+		msgSimFn = SimulatePropMsgUpdateOracle(s.app.OracleKeeper)
+	}
+	s.Require().NotPanics(testFnMaker, "SimulatePropMsgUpdateOracle")
+	s.Require().NotNil(msgSimFn, "SimulatePropMsgUpdateOracle resulting MsgSimulationFn")
+
+	var actMsg sdk.Msg
+	testSimFn := func() {
+		actMsg = msgSimFn(r, s.ctx, nil)
+	}
+	s.Require().NotPanics(testSimFn, "executing the SimulatePropMsgUpdateOracle resulting MsgSimulationFn")
+	s.Assert().Equal(expMsg, actMsg)
 }
 
 func (s *SimTestSuite) TestSimulateMsgSendQueryOracle() {
@@ -136,7 +182,7 @@ func (s *SimTestSuite) TestSimulateMsgSendQueryOracle() {
 	accounts := s.getTestingAccounts(r, 3)
 
 	// execute operation
-	op := simulation.SimulateMsgSendQueryOracle(s.MakeTestSimState(), s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper)
+	op := SimulateMsgSendQueryOracle(s.MakeTestSimState(), s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
 	s.Require().NoError(err, "SimulateMsgSendQueryOracle op(...) error")
 	s.LogOperationMsg(operationMsg, "good")
@@ -197,7 +243,7 @@ func (s *SimTestSuite) TestRandomAccs() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			raccs, err := simulation.RandomAccs(r, tc.accs, tc.count)
+			raccs, err := RandomAccs(r, tc.accs, tc.count)
 			if len(tc.err) == 0 {
 				s.Require().NoError(err, "should have no error for successful RandomAccs")
 				s.Require().Equal(tc.expected, raccs, "should have correct output for successful RandomAccs")
