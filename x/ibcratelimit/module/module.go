@@ -20,9 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	ibcratelimitcli "github.com/provenance-io/provenance/x/ibcratelimit/client/cli"
 	"github.com/provenance-io/provenance/x/ibcratelimit/keeper"
@@ -32,6 +29,7 @@ import (
 var (
 	_ module.AppModuleBasic      = (*AppModule)(nil)
 	_ module.AppModuleSimulation = (*AppModule)(nil)
+	_ module.HasProposalMsgs     = (*AppModule)(nil)
 
 	_ appmodule.AppModule = (*AppModule)(nil)
 )
@@ -93,18 +91,14 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper        keeper.Keeper
-	accountKeeper authkeeper.AccountKeeper
-	bankKeeper    bankkeeper.Keeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
 	}
 }
 
@@ -130,8 +124,13 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns simulation operations (i.e msgs) with their respective weight
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(simState, am.keeper, am.accountKeeper, am.bankKeeper)
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return nil
+}
+
+// ProposalMsgs returns all the msgs to execute as governance proposals.
+func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
+	return simulation.ProposalMsgs(simState, &am.keeper)
 }
 
 // Name returns the ibcratelimit module's name.

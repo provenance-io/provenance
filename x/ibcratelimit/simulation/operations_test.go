@@ -13,11 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
-	"github.com/provenance-io/provenance/x/ibcratelimit/simulation"
+
+	. "github.com/provenance-io/provenance/x/ibcratelimit/simulation"
 )
 
 type SimTestSuite struct {
@@ -64,68 +64,74 @@ func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
 	}
 }
 
-func (s *SimTestSuite) TestWeightedOperations() {
-	weightedOps := simulation.WeightedOperations(s.MakeTestSimState(), *s.app.RateLimitingKeeper,
-		s.app.AccountKeeper, s.app.BankKeeper,
-	)
-
-	// setup 3 accounts
-	source := rand.NewSource(1)
-	r := rand.New(source)
-	accs := s.getTestingAccounts(r, 3)
-
+func (s *SimTestSuite) TestProposalMsgs() {
 	expected := []struct {
-		weight     int
-		opMsgRoute string
-		opMsgName  string
+		key     string
+		weight  int
+		msgType sdk.Msg
 	}{
-		{simappparams.DefaultWeightUpdateParams, ibcratelimit.ModuleName, sdk.MsgTypeURL(&ibcratelimit.MsgUpdateParamsRequest{})},
+		{
+			key:     OpWeightMsgUpdateParams,
+			weight:  simappparams.DefaultWeightIBCRLUpdateParams,
+			msgType: &ibcratelimit.MsgUpdateParamsRequest{},
+		},
 	}
 
-	expNames := make([]string, len(expected))
-	for i, exp := range expected {
-		expNames[i] = exp.opMsgName
+	simState := s.MakeTestSimState()
+	var propMsgs []simtypes.WeightedProposalMsg
+	testGetPropMsgs := func() {
+		propMsgs = ProposalMsgs(simState, s.app.RateLimitingKeeper)
 	}
+	s.Require().NotPanics(testGetPropMsgs, "ProposalMsgs")
+	s.Require().Len(propMsgs, len(expected), "ProposalMsgs")
 
-	// Run all the ops and get the operation messages and their names.
-	opMsgs := make([]simtypes.OperationMsg, len(weightedOps))
-	actualNames := make([]string, len(weightedOps))
-	for i, w := range weightedOps {
-		opMsgs[i], _, _ = w.Op()(r, s.app.BaseApp, s.ctx, accs, "")
-		actualNames[i] = opMsgs[i].Name
-	}
+	r := rand.New(rand.NewSource(1))
+	accs := s.getTestingAccounts(r, 10)
 
-	// First, make sure the op names are as expected since a failure there probably means the rest will fail.
-	// And it's probably easier to address when you've got a nice list comparison of names and their orderings.
-	s.Require().Equal(expNames, actualNames, "operation message names")
+	for i, propMsg := range propMsgs {
+		exp := expected[i]
+		s.Run(exp.key, func() {
+			expMsgType := fmt.Sprintf("%T", exp.msgType)
 
-	// Now assert that each entry was as expected.
-	for i := range expected {
-		s.Assert().Equal(expected[i].weight, weightedOps[i].Weight(), "weightedOps[%d].Weight", i)
-		s.Assert().Equal(expected[i].opMsgRoute, opMsgs[i].Route, "weightedOps[%d] operationMsg.Route", i)
-		s.Assert().Equal(expected[i].opMsgName, opMsgs[i].Name, "weightedOps[%d] operationMsg.Name", i)
+			s.Assert().Equal(exp.key, propMsg.AppParamsKey(), "AppParamsKey()")
+			s.Assert().Equal(exp.weight, propMsg.DefaultWeight(), "DefaultWeight()")
+			s.Require().NotNil(propMsg.MsgSimulatorFn(), "MsgSimulatorFn()")
+
+			var msg sdk.Msg
+			testPropMsg := func() {
+				msg = propMsg.MsgSimulatorFn()(r, s.ctx, accs)
+			}
+			s.Require().NotPanics(testPropMsg, "calling the propMsg.MsgSimulatorFn()")
+			s.Require().NotNil(msg, "msg result")
+			actMsgType := fmt.Sprintf("%T", msg)
+			s.Assert().Equal(expMsgType, actMsgType, "msg result")
+			s.Assert().IsType(exp.msgType, msg, "msg")
+		})
 	}
 }
 
-func (s *SimTestSuite) TestSimulateMsgUpdateParams() {
-	// setup 3 accounts
-	source := rand.NewSource(1)
-	r := rand.New(source)
-	accounts := s.getTestingAccounts(r, 3)
+func (s *SimTestSuite) TestSimulatePropMsgUpdateOracle() {
+	r := rand.New(rand.NewSource(1))
+	expMsg := &ibcratelimit.MsgUpdateParamsRequest{
+		Authority: s.app.OracleKeeper.GetAuthority(),
+		Params: ibcratelimit.Params{
+			ContractAddress: "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3",
+		},
+	}
 
-	// execute operation
-	op := simulation.SimulateMsgUpdateParams(s.MakeTestSimState(), *s.app.RateLimitingKeeper, s.app.AccountKeeper, s.app.BankKeeper)
-	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err, "SimulateMsgUpdateParams op(...) error")
-	s.LogOperationMsg(operationMsg, "good")
+	var msgSimFn simtypes.MsgSimulatorFn
+	testFnMaker := func() {
+		msgSimFn = SimulatePropMsgUpdateParams(s.app.RateLimitingKeeper)
+	}
+	s.Require().NotPanics(testFnMaker, "SimulatePropMsgUpdateParams")
+	s.Require().NotNil(msgSimFn, "SimulatePropMsgUpdateParams resulting MsgSimulationFn")
 
-	var msg ibcratelimit.MsgUpdateParamsRequest
-	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
-
-	s.Assert().True(operationMsg.OK, "operationMsg.OK")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(ibcratelimit.ModuleName, operationMsg.Route, "operationMsg.Route")
-	s.Assert().Len(futureOperations, 0, "futureOperations")
+	var actMsg sdk.Msg
+	testSimFn := func() {
+		actMsg = msgSimFn(r, s.ctx, nil)
+	}
+	s.Require().NotPanics(testSimFn, "executing the SimulatePropMsgUpdateParams resulting MsgSimulationFn")
+	s.Assert().Equal(expMsg, actMsg)
 }
 
 func (s *SimTestSuite) TestRandomAccs() {
@@ -175,7 +181,7 @@ func (s *SimTestSuite) TestRandomAccs() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			raccs, err := simulation.RandomAccs(r, tc.accs, tc.count)
+			raccs, err := RandomAccs(r, tc.accs, tc.count)
 			if len(tc.err) == 0 {
 				s.Require().NoError(err, "should have no error for successful RandomAccs")
 				s.Require().Equal(tc.expected, raccs, "should have correct output for successful RandomAccs")

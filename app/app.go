@@ -770,7 +770,7 @@ func New(
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
-		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper, app.AccountKeeper, app.BankKeeper),
+		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icqModule,
@@ -1015,7 +1015,7 @@ func New(
 
 		// IBC
 		ibc.NewAppModule(app.IBCKeeper),
-		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper, app.AccountKeeper, app.BankKeeper),
+		ibcratelimitmodule.NewAppModule(appCodec, *app.RateLimitingKeeper),
 		ibchooks.NewAppModule(app.AccountKeeper, *app.IBCHooksKeeper),
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icaModule,

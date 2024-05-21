@@ -41,5 +41,5 @@ const (
 	DefaultWeightUpdateOracle    int = 25
 	DefaultWeightSendOracleQuery int = 75
 	// Ibc Rate Limiter
-	DefaultWeightUpdateParams int = 100
+	DefaultWeightIBCRLUpdateParams int = 100
 )
