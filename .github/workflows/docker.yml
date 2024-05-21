@@ -27,7 +27,9 @@ jobs:
   heighliner-docker:
     runs-on: ubuntu-latest
     steps:
-      # - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: v1.18.0
 
       - uses: docker/setup-buildx-action@v3
 
@@ -51,11 +53,13 @@ jobs:
 
       - uses: strangelove-ventures/heighliner-build-action@main
         with:
+          # libraries: |
+          #   - "/lib/libwasmvm_muslc.a"
+          #   - "/usr/aarch64-linux-musl/lib/libwasmvm_muslc.a"
+          #   - "/usr/x86_64-linux-musl/lib/libwasmvm_muslc.a"
           heighliner-tag: v1.5.5
-          git-ref: v1.18.0
           chain: provenance
-          # local: true
-          local: false
+          local: true
           # tag: ${{ steps.meta.outputs.version }}
           tag: heighliner-v1.18.0
           registry: provenanceio
@@ -63,10 +67,6 @@ jobs:
           build-target: |
             cd ..
             make install
-          # libraries: |
-          #   - "/lib/libwasmvm_muslc.a"
-          #   - "/usr/aarch64-linux-musl/lib/libwasmvm_muslc.a"
-          #   - "/usr/x86_64-linux-musl/lib/libwasmvm_muslc.a"
           binaries: |
             - /go/bin/provenanced
           build-env: |
