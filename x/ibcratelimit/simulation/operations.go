@@ -58,7 +58,7 @@ func SimulateMsgUpdateParams(simState module.SimulationState, _ keeper.Keeper, a
 		from := raccs[0]
 		to := raccs[1]
 
-		msg := ibcratelimit.NewUpdateParamsRequest(from.Address.String(), to.Address.String())
+		msg := ibcratelimit.NewMsgUpdateParamsRequest(from.Address.String(), to.Address.String())
 
 		// TODO[1760]: Refactor this to submit it as a gov prop and return futures for votes.
 		return Dispatch(r, app, ctx, simState, from, chainID, msg, ak, bk, nil)

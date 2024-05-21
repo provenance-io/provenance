@@ -18,8 +18,8 @@ func (m MsgGovUpdateParamsRequest) ValidateBasic() error {
 	return errors.New("deprecated and unusable")
 }
 
-// NewUpdateParamsRequest creates a new GovUpdateParams message.
-func NewUpdateParamsRequest(authority, ratelimiter string) *MsgUpdateParamsRequest {
+// NewMsgUpdateParamsRequest creates a new GovUpdateParams message.
+func NewMsgUpdateParamsRequest(authority, ratelimiter string) *MsgUpdateParamsRequest {
 	return &MsgUpdateParamsRequest{
 		Authority: authority,
 		Params:    NewParams(ratelimiter),

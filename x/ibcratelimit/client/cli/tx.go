@@ -49,7 +49,7 @@ func GetCmdParamsUpdate() *cobra.Command {
 
 			flagSet := cmd.Flags()
 			authority := provcli.GetAuthority(flagSet)
-			msg := ibcratelimit.NewUpdateParamsRequest(authority, args[0])
+			msg := ibcratelimit.NewMsgUpdateParamsRequest(authority, args[0])
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
 	}

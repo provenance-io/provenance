@@ -36,8 +36,6 @@ service Msg {
   // UpdateConversionFeeDenomProposal defines a governance proposal to update the msg fee conversion denom
   rpc UpdateConversionFeeDenomProposal(MsgUpdateConversionFeeDenomProposalRequest)
       returns (MsgUpdateConversionFeeDenomProposalResponse);
-
-  // TODO: add update params
 }
 
 // MsgAssessCustomMsgFeeRequest defines an sdk.Msg type

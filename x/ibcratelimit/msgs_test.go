@@ -26,7 +26,7 @@ func TestNewMsgGovUpdateParamsRequest(t *testing.T) {
 		Authority: "authority",
 		Params:    NewParams("contract"),
 	}
-	event := NewUpdateParamsRequest(expected.Authority, expected.Params.ContractAddress)
+	event := NewMsgUpdateParamsRequest(expected.Authority, expected.Params.ContractAddress)
 	assert.Equal(t, expected, event, "should create the correct with correct content")
 }
 
@@ -63,7 +63,7 @@ func TestNewMsgUpdateParamsValidateBasic(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			msg := NewUpdateParamsRequest(tc.authority, tc.contract)
+			msg := NewMsgUpdateParamsRequest(tc.authority, tc.contract)
 			err := msg.ValidateBasic()
 
 			if len(tc.err) > 0 {
