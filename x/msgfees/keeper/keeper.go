@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"fmt"
 	"sort"
+	"strconv"
 
 	"golang.org/x/exp/constraints"
 
@@ -241,4 +243,78 @@ func sortedKeys[K constraints.Ordered, V any](m map[K]V) []K {
 		return keys[i] < keys[j]
 	})
 	return keys
+}
+
+// AddMsgFee adds a new msg fees
+func (k Keeper) AddMsgFee(ctx sdk.Context, msgTypeURL, recipient, basisPoints string, additionalFee sdk.Coin) error {
+	if msgTypeURL == "" {
+		return types.ErrEmptyMsgType
+	}
+
+	existing, err := k.GetMsgFee(ctx, msgTypeURL)
+	if err != nil {
+		return err
+	}
+	if existing != nil {
+		return types.ErrMsgFeeAlreadyExists
+	}
+	bips, err := DetermineBips(recipient, basisPoints)
+	if err != nil {
+		return err
+	}
+
+	msgFees := types.NewMsgFee(msgTypeURL, additionalFee, recipient, bips)
+
+	err = k.SetMsgFee(ctx, msgFees)
+	if err != nil {
+		return types.ErrInvalidFeeProposal
+	}
+
+	return nil
+}
+
+// UpdateMsgFee updates  an existing msg fees
+func (k Keeper) UpdateMsgFee(ctx sdk.Context, msgTypeURL, recipient, basisPoints string, additionalFee sdk.Coin) error {
+	if msgTypeURL == "" {
+		return types.ErrEmptyMsgType
+	}
+
+	existing, err := k.GetMsgFee(ctx, msgTypeURL)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return types.ErrMsgFeeDoesNotExist
+	}
+	bips, err := DetermineBips(recipient, basisPoints)
+	if err != nil {
+		return err
+	}
+
+	msgFees := types.NewMsgFee(msgTypeURL, additionalFee, recipient, bips)
+
+	err = k.SetMsgFee(ctx, msgFees)
+	if err != nil {
+		return types.ErrInvalidFeeProposal
+	}
+
+	return nil
+}
+
+// DetermineBips converts basis point string to uint32
+func DetermineBips(recipient string, recipientBasisPoints string) (uint32, error) {
+	var bips uint32
+	if len(recipientBasisPoints) > 0 && len(recipient) > 0 {
+		bips64, err := strconv.ParseUint(recipientBasisPoints, 10, 32)
+		if err != nil {
+			return bips, types.ErrInvalidBipsValue.Wrap(err.Error())
+		}
+		bips = uint32(bips64)
+		if bips > 10_000 {
+			return 0, types.ErrInvalidBipsValue.Wrap(fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", recipientBasisPoints).Error())
+		}
+	} else if len(recipientBasisPoints) == 0 && len(recipient) > 0 {
+		bips = types.DefaultMsgFeeBips
+	}
+	return bips, nil
 }

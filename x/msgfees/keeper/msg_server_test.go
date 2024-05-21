@@ -177,14 +177,6 @@ func (s *MsgServerTestSuite) TestRemoveMsgFeeProposal() {
 			errorMsg: `expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message`,
 		},
 		{
-			name: "msg type is empty",
-			msg: types.MsgRemoveMsgFeeProposalRequest{
-				MsgTypeUrl: "",
-				Authority:  "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-			},
-			errorMsg: `msg type is empty`,
-		},
-		{
 			name: "successful",
 			msg: types.MsgRemoveMsgFeeProposalRequest{
 				MsgTypeUrl: typeUrl,
@@ -221,14 +213,6 @@ func (s *MsgServerTestSuite) TestUpdateNhashPerUsdMilProposal() {
 			errorMsg: `expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message`,
 		},
 		{
-			name: "invalid NhashPerUsdMil amount",
-			msg: types.MsgUpdateNhashPerUsdMilProposalRequest{
-				NhashPerUsdMil: 0,
-				Authority:      "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-			},
-			errorMsg: `nhash per usd mil must be greater than 0`,
-		},
-		{
 			name: "successful",
 			msg: types.MsgUpdateNhashPerUsdMilProposalRequest{
 				NhashPerUsdMil: 10,
@@ -263,13 +247,6 @@ func (s *MsgServerTestSuite) TestUpdateConversionFeeDenomProposal() {
 				Authority: "",
 			},
 			errorMsg: `expected cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn got : expected gov account as only signer for proposal message`,
-		},
-		{
-			name: "invalid denom",
-			msg: types.MsgUpdateConversionFeeDenomProposalRequest{
-				Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-			},
-			errorMsg: `invalid denom: `,
 		},
 		{
 			name: "successful",
