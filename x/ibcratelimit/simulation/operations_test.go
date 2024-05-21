@@ -79,7 +79,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightGovUpdateParams, ibcratelimit.ModuleName, sdk.MsgTypeURL(&ibcratelimit.MsgGovUpdateParamsRequest{})},
+		{simappparams.DefaultWeightUpdateParams, ibcratelimit.ModuleName, sdk.MsgTypeURL(&ibcratelimit.MsgUpdateParamsRequest{})},
 	}
 
 	expNames := make([]string, len(expected))
@@ -107,19 +107,19 @@ func (s *SimTestSuite) TestWeightedOperations() {
 	}
 }
 
-func (s *SimTestSuite) TestSimulateMsgGovUpdateParams() {
+func (s *SimTestSuite) TestSimulateMsgUpdateParams() {
 	// setup 3 accounts
 	source := rand.NewSource(1)
 	r := rand.New(source)
 	accounts := s.getTestingAccounts(r, 3)
 
 	// execute operation
-	op := simulation.SimulateMsgGovUpdateParams(s.MakeTestSimState(), *s.app.RateLimitingKeeper, s.app.AccountKeeper, s.app.BankKeeper)
+	op := simulation.SimulateMsgUpdateParams(s.MakeTestSimState(), *s.app.RateLimitingKeeper, s.app.AccountKeeper, s.app.BankKeeper)
 	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err, "SimulateMsgGovUpdateParams op(...) error")
+	s.Require().NoError(err, "SimulateMsgUpdateParams op(...) error")
 	s.LogOperationMsg(operationMsg, "good")
 
-	var msg ibcratelimit.MsgGovUpdateParamsRequest
+	var msg ibcratelimit.MsgUpdateParamsRequest
 	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
 
 	s.Assert().True(operationMsg.OK, "operationMsg.OK")
