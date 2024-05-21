@@ -56,9 +56,16 @@ jobs:
           local: true
           tag: ${{ steps.meta.outputs.version }}
           registry: provenanceio
+          dockerfile: cosmos
           build-target: |
             cd ..
             make install
+          binaries: |
+            - /go/bin/provenanced
+          build-env: |
+            - "WITH_LEDGER=false"
+            - "WITH_CLEVELDB=false"
+            - "BUILD_TAGS=muslc musl dynamic"
           additional-args: "--alpine-version 3.18"
           skip: ${{ github.event_name == 'pull_request' }}
 
