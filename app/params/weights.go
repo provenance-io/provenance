@@ -40,6 +40,6 @@ const (
 	// Oracle
 	DefaultWeightUpdateOracle    int = 25
 	DefaultWeightSendOracleQuery int = 75
-	// Rate Limiter
-	DefaultWeightGovUpdateParams int = 100
+	// Ibc Rate Limiter
+	DefaultWeightUpdateParams int = 100
 )

@@ -76,6 +76,8 @@ service Msg {
   rpc WithdrawEscrowProposal(MsgWithdrawEscrowProposalRequest) returns (MsgWithdrawEscrowProposalResponse);
   // SetDenomMetadataProposal is a governance proposal to set marker metadata
   rpc SetDenomMetadataProposal(MsgSetDenomMetadataProposalRequest) returns (MsgSetDenomMetadataProposalResponse);
+
+  // TODO: UpdateParams
 }
 
 // MsgGrantAllowanceRequest validates permission to create a fee grant based on marker admin access. If
