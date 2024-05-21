@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // The maximum querier result size allowed, ~10MB.
@@ -43,15 +44,15 @@ func (qr *QuerierRegistry) RegisterQuerier(route string, querier Querier) {
 }
 
 // QueryPlugins provides provenance query support for smart contracts.
-func QueryPlugins(registry *QuerierRegistry, queryRouter baseapp.GRPCQueryRouter, codec codec.Codec) *wasm.QueryPlugins {
-	return &wasm.QueryPlugins{
+func QueryPlugins(registry *QuerierRegistry, queryRouter baseapp.GRPCQueryRouter, codec codec.Codec) *wasmkeeper.QueryPlugins {
+	return &wasmkeeper.QueryPlugins{
 		Custom:   customPlugins(registry),
 		Stargate: StargateQuerier(queryRouter, codec),
 	}
 }
 
 // Custom provenance queriers for CosmWasm integration.
-func customPlugins(registry *QuerierRegistry) wasm.CustomQuerier {
+func customPlugins(registry *QuerierRegistry) wasmkeeper.CustomQuerier {
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 		req := QueryRequest{}
 		if err := json.Unmarshal(request, &req); err != nil {
@@ -114,7 +115,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 // ConvertProtoToJsonMarshal  unmarshals the given bytes into a proto message and then marshals it to json.
 // This is done so that clients calling stargate queries do not need to define their own proto unmarshalers,
 // being able to use response directly by json marshaling, which is supported in cosmwasm.
-func ConvertProtoToJSONMarshal(protoResponseType codec.ProtoMarshaler, bz []byte, cdc codec.Codec) ([]byte, error) {
+func ConvertProtoToJSONMarshal(protoResponseType proto.Message, bz []byte, cdc codec.Codec) ([]byte, error) {
 	// unmarshal binary into stargate response data structure
 	err := cdc.Unmarshal(bz, protoResponseType)
 	if err != nil {
