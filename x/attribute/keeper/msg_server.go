@@ -266,7 +266,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	k.SetParams(ctx, msg.Params)
-	// k.emitEvent(ctx, ibcratelimit.NewEventParamsUpdated())
+	ctx.EventManager().EmitTypedEvent(types.NewEventAttributeParamsUpdated(msg.Params))
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }

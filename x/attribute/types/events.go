@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/base64"
+	"strconv"
 	time "time"
 )
 
@@ -120,4 +121,8 @@ func NewEventAttributeExpired(attribute Attribute) *EventAttributeExpired {
 		Account:    attribute.Address,
 		Expiration: expiredTime,
 	}
+}
+
+func NewEventAttributeParamsUpdated(params Params) *EventAttributeParamsUpdated {
+	return &EventAttributeParamsUpdated{MaxValueLength: strconv.FormatUint(uint64(params.MaxValueLength), 10)}
 }
