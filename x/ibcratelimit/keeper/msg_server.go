@@ -23,7 +23,9 @@ func NewMsgServer(k Keeper) ibcratelimit.MsgServer {
 var _ ibcratelimit.MsgServer = MsgServer{}
 
 // GovUpdateParams is a governance proposal endpoint for updating the ibcratelimit module's params.
-func (k MsgServer) GovUpdateParams(goCtx context.Context, msg *ibcratelimit.MsgGovUpdateParamsRequest) (*ibcratelimit.MsgGovUpdateParamsResponse, error) {
+//
+//lint:ignore SA1019 Suppress warning for deprecated MsgGovUpdateParamsRequest usage
+func (k MsgServer) GovUpdateParams(_ context.Context, _ *ibcratelimit.MsgGovUpdateParamsRequest) (*ibcratelimit.MsgGovUpdateParamsResponse, error) {
 	return nil, errors.New("deprecated and unusable")
 }
 
