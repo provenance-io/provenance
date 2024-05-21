@@ -108,8 +108,12 @@ func ProposalMsgs(
 		SK:         &sk,
 	}
 
+	var wUpdateParams int
+	simState.AppParams.GetOrGenerate(OpWeightUpdateParams, &wUpdateParams, nil,
+		func(_ *rand.Rand) { wUpdateParams = DefaultWeightUpdateParams })
+
 	return []simtypes.WeightedProposalMsg{
-		simulation.NewWeightedProposalMsg(OpWeightUpdateParams, DefaultWeightUpdateParams, SimulatePropMsgUpdateParams(args)),
+		simulation.NewWeightedProposalMsg(OpWeightUpdateParams, wUpdateParams, SimulatePropMsgUpdateParams(args)),
 	}
 }
 
