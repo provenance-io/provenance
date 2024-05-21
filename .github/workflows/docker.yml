@@ -53,10 +53,6 @@ jobs:
 
       - uses: strangelove-ventures/heighliner-build-action@main
         with:
-          # libraries: |
-          #   - "/lib/libwasmvm_muslc.a"
-          #   - "/usr/aarch64-linux-musl/lib/libwasmvm_muslc.a"
-          #   - "/usr/x86_64-linux-musl/lib/libwasmvm_muslc.a"
           heighliner-tag: v1.5.5
           chain: provenance
           local: true
@@ -64,9 +60,12 @@ jobs:
           tag: heighliner-v1.18.0
           registry: provenanceio
           dockerfile: cosmos
+          platforms: linux/amd64
           build-target: |
             cd ..
             make install
+          libraries: |
+            - "/lib/libwasmvm_muslc.a"
           binaries: |
             - /go/bin/provenanced
           build-env: |
@@ -74,7 +73,7 @@ jobs:
             - "WITH_CLEVELDB=false"
             - "BUILD_TAGS=muslc musl dynamic"
           additional-args: "--alpine-version 3.18"
-          skip: ${{ github.event_name == 'pull_request' }}
+          # skip: ${{ github.event_name == 'pull_request' }}
 
   docker:
     runs-on: ubuntu-latest
