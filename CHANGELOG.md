@@ -90,6 +90,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix unit tests for ibchooks [#1980](https://github.com/provenance-io/provenance/pull/1980).
 * Add `UpdateParams` and `Params` query rpc endpoints to modules.
   * `ibcratelimit` add `UpdateParams` endpoint and deprecate `GovUpdateParams` [#1984](https://github.com/provenance-io/provenance/pull/1984).
+  * `attribute` add `UpdateParams` endpoint and cli [#1984](https://github.com/provenance-io/provenance/pull/1984).
+
 
 ### Client Breaking
 
