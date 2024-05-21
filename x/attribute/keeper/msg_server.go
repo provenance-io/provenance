@@ -256,3 +256,17 @@ func (k msgServer) SetAccountData(goCtx context.Context, msg *types.MsgSetAccoun
 
 	return &types.MsgSetAccountDataResponse{}, nil
 }
+
+// UpdateParams is a governance proposal endpoint for updating the attribute module's params.
+func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParamsRequest) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	k.SetParams(ctx, msg.Params)
+	// k.emitEvent(ctx, ibcratelimit.NewEventParamsUpdated())
+
+	return &types.MsgUpdateParamsResponse{}, nil
+}
