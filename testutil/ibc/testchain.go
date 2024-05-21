@@ -160,9 +160,8 @@ func SignAndDeliver(
 	txCfg client.TxConfig, app *baseapp.BaseApp, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, _ bool, blockTime time.Time, nextValHash []byte, priv ...cryptotypes.PrivKey,
 ) (*abci.ResponseFinalizeBlock, error) {
-	// tb.Helper()
 	tx, err := simtestutil.GenSignedMockTx(
-		rand.New(rand.NewSource(time.Now().UnixNano())),
+		rand.New(rand.NewSource(1)),
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
