@@ -67,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   *  IbcHooks module param migration [#1939](https://github.com/provenance-io/provenance/pull/1939).
   *  Bank module param migration [#1967](https://github.com/provenance-io/provenance/pull/1967).
 * Remove `msgfees` legacy gov proposals [#1953](https://github.com/provenance-io/provenance/pull/1953).
+* Remove `marker` legacy gov proposals [#1961](https://github.com/provenance-io/provenance/pull/1961).
 * Restore the hold module [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Restore gov-prop cli commands and fix next key decoding [#1930](https://github.com/provenance-io/provenance/pull/1930).
 * Switch to InputOutputCoinsProv for exchange transfers [#1930](https://github.com/provenance-io/provenance/pull/1930).
@@ -85,12 +86,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Switch to auto-generated `String` and `Equal` methods for most proto messages [#1957](https://github.com/provenance-io/provenance/pull/1957).
 * Clean up the marker module's expected BankKeeper interface [#1954](https://github.com/provenance-io/provenance/pull/1954).
 * Add the auto-cli commands and a few others newly added by the SDK [#1971](https://github.com/provenance-io/provenance/pull/1971).
+* Fix unit tests for ibcratelimit [#1977](https://github.com/provenance-io/provenance/pull/1977).
+* Fix unit tests for ibchooks [#1980](https://github.com/provenance-io/provenance/pull/1980).
 
 ### Client Breaking
 
 * The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Move the genesis-related commands into a new `genesis` sub-command, and remove the `genesis-` parts of their names [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Many of the SDK's query commands have had their usage altered [#1971](https://github.com/provenance-io/provenance/pull/1971).
+* Rosetta has been removed from the `provenanced` executable [#1981](https://github.com/provenance-io/provenance/pull/1981).
+  It is now a stand-alone service. See: <https://github.com/cosmos/rosetta> for more info.
 
 ### Deprecated
 
@@ -102,7 +107,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `google.golang.org/grpc` from 1.62.1 to 1.64.0 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918), [#1972](https://github.com/provenance-io/provenance/pull/1972))
 - Bump `bufbuild/buf-breaking-action` from 1.1.3 to 1.1.4 ([#1894](https://github.com/provenance-io/provenance/pull/1894))
 - Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
-- Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.31.0 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949))
+- Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.32.0 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949), [#1979](https://github.com/provenance-io/provenance/pull/1979))
 - Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.7 ([#1912](https://github.com/provenance-io/provenance/pull/1912), [#1959](https://github.com/provenance-io/provenance/pull/1959))
 - Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.1 ([#1913](https://github.com/provenance-io/provenance/pull/1913))
 - Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
@@ -113,6 +118,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.1 ([#1960](https://github.com/provenance-io/provenance/pull/1960), [#1966](https://github.com/provenance-io/provenance/pull/1966))
 - Bump `github.com/hashicorp/go-getter` from 1.7.3 to 1.7.4 ([#1958](https://github.com/provenance-io/provenance/pull/1958))
 - Bump `golang.org/x/text` from 0.14.0 to 0.15.0 ([#1964](https://github.com/provenance-io/provenance/pull/1964))
+- Bump `docker/setup-qemu-action` from 2 to 3 ([#1983](https://github.com/provenance-io/provenance/pull/1983))
 
 ---
 

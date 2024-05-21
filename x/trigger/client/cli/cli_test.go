@@ -423,7 +423,7 @@ func (s *IntegrationTestSuite) TestAddBlockHeightTrigger() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
 
-			testcli.NewCLITxExecutor(cmd, args).
+			testcli.NewTxExecutor(cmd, args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.network)
@@ -567,7 +567,7 @@ func (s *IntegrationTestSuite) TestAddTransactionTrigger() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
 
-			testcli.NewCLITxExecutor(cmd, args).
+			testcli.NewTxExecutor(cmd, args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.network)
@@ -695,7 +695,7 @@ func (s *IntegrationTestSuite) TestAddBlockTimeTrigger() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
 
-			testcli.NewCLITxExecutor(cmd, args).
+			testcli.NewTxExecutor(cmd, args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.network)
@@ -753,7 +753,7 @@ func (s *IntegrationTestSuite) TestDestroyTrigger() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			}
 
-			testcli.NewCLITxExecutor(cmd, args).
+			testcli.NewTxExecutor(cmd, args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.network)

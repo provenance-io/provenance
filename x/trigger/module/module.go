@@ -124,12 +124,6 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns content functions used to simulate governance proposals.
-func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	// currently no gov proposals exist
-	return nil
-}
-
 // RandomizedParams returns randomized module parameters for param change proposals.
 func (am AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 	// currently no module params exist

@@ -349,7 +349,7 @@ func (s *IntegrationTestSuite) TestGetBindNameCommand() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -414,7 +414,7 @@ func (s *IntegrationTestSuite) TestGetDeleteNameCmd() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -512,7 +512,7 @@ func (s *IntegrationTestSuite) TestGetModifyNameCmd() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErrMsg(tc.errMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -705,7 +705,7 @@ func (s *IntegrationTestSuite) TestGovRootNameCmd() {
 		s.Run(tc.name, func() {
 			// because the cmd runs inside of the gov cmd (which adds flags) we register here so we can use it directly.
 			flags.AddTxFlagsToCmd(tc.cmd)
-			testcli.NewCLITxExecutor(tc.cmd, tc.args).
+			testcli.NewTxExecutor(tc.cmd, tc.args).
 				WithExpErr(tc.expectErr).
 				WithExpCode(tc.expectedCode).
 				WithExpErrMsg(tc.errorMessage).

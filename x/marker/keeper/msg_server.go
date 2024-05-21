@@ -536,17 +536,28 @@ func (k msgServer) SupplyIncreaseProposal(goCtx context.Context, msg *types.MsgS
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
 	}
 
-	proposal := types.SupplyIncreaseProposal{
-		Amount:        msg.Amount,
-		TargetAddress: msg.TargetAddress,
-	}
-
-	// HandleSupplyIncreaseProposal performs the basic validation
-	err := HandleSupplyIncreaseProposal(ctx, k.Keeper, &proposal)
+	err := k.Keeper.HandleSupplyIncreaseProposal(ctx, msg.Amount, msg.TargetAddress)
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.MsgSupplyIncreaseProposalResponse{}, nil
+}
+
+// DecreaseIncreaseProposal can only be called via gov proposal
+func (k msgServer) SupplyDecreaseProposal(goCtx context.Context, msg *types.MsgSupplyDecreaseProposalRequest) (*types.MsgSupplyDecreaseProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.HandleSupplyDecreaseProposal(ctx, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSupplyDecreaseProposalResponse{}, nil
 }
 
 // UpdateRequiredAttributes will only succeed if signer has transfer authority
@@ -728,4 +739,84 @@ func (k msgServer) AddNetAssetValues(goCtx context.Context, msg *types.MsgAddNet
 	}
 
 	return &types.MsgAddNetAssetValuesResponse{}, nil
+}
+
+// SetAdministratorProposal can only be called via gov proposal
+func (k msgServer) SetAdministratorProposal(goCtx context.Context, msg *types.MsgSetAdministratorProposalRequest) (*types.MsgSetAdministratorProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.HandleSetAdministratorProposal(ctx, msg.Denom, msg.Access)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetAdministratorProposalResponse{}, nil
+}
+
+// RemoveAdministratorProposal can only be called via gov proposal
+func (k msgServer) RemoveAdministratorProposal(goCtx context.Context, msg *types.MsgRemoveAdministratorProposalRequest) (*types.MsgRemoveAdministratorProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.HandleRemoveAdministratorProposal(ctx, msg.Denom, msg.RemovedAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRemoveAdministratorProposalResponse{}, nil
+}
+
+// ChangeStatusProposal can only be called via gov proposal
+func (k msgServer) ChangeStatusProposal(goCtx context.Context, msg *types.MsgChangeStatusProposalRequest) (*types.MsgChangeStatusProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.HandleChangeStatusProposal(ctx, msg.Denom, msg.NewStatus)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgChangeStatusProposalResponse{}, nil
+}
+
+// WithdrawEscrowProposal can only be called via gov proposal
+func (k msgServer) WithdrawEscrowProposal(goCtx context.Context, msg *types.MsgWithdrawEscrowProposalRequest) (*types.MsgWithdrawEscrowProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.HandleWithdrawEscrowProposal(ctx, msg.Denom, msg.TargetAddress, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgWithdrawEscrowProposalResponse{}, nil
+}
+
+// SetDenomMetaDataProposal can only be called via gov proposal
+func (k msgServer) SetDenomMetadataProposal(goCtx context.Context, msg *types.MsgSetDenomMetadataProposalRequest) (*types.MsgSetDenomMetadataProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	err := k.Keeper.HandleSetDenomMetadataProposal(ctx, msg.Metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSetDenomMetadataProposalResponse{}, nil
 }

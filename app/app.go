@@ -124,6 +124,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -287,11 +288,12 @@ type App struct {
 	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
 	ScopedOracleKeeper   capabilitykeeper.ScopedKeeper
 
-	TransferStack    *ibchooks.IBCMiddleware
-	Ics20WasmHooks   *ibchooks.WasmHooks
-	Ics20MarkerHooks *ibchooks.MarkerHooks
-	IbcHooks         *ibchooks.IbcHooks
-	HooksICS4Wrapper ibchooks.ICS4Middleware
+	TransferStack       *ibchooks.IBCMiddleware
+	Ics20WasmHooks      *ibchooks.WasmHooks
+	Ics20MarkerHooks    *ibchooks.MarkerHooks
+	IbcHooks            *ibchooks.IbcHooks
+	HooksICS4Wrapper    ibchooks.ICS4Middleware
+	RateLimitMiddleware porttypes.Middleware
 
 	// the module manager
 	mm                 *module.Manager
@@ -542,8 +544,8 @@ func New(
 	)
 	app.TransferKeeper = &transferKeeper
 	transferModule := ibctransfer.NewIBCModule(*app.TransferKeeper)
-	rateLimitingTransferModule = *rateLimitingTransferModule.WithIBCModule(transferModule)
-	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &app.HooksICS4Wrapper)
+	app.RateLimitMiddleware = rateLimitingTransferModule.WithIBCModule(transferModule)
+	hooksTransferModule := ibchooks.NewIBCMiddleware(app.RateLimitMiddleware, &app.HooksICS4Wrapper)
 	app.TransferStack = &hooksTransferModule
 
 	app.NameKeeper = namekeeper.NewKeeper(appCodec, keys[nametypes.StoreKey])
@@ -690,8 +692,7 @@ func New(
 	// register the proposal types
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper))
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AccountKeeper, app.BankKeeper,
 		app.StakingKeeper, app.DistrKeeper, app.BaseApp.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000}, govAuthority,
@@ -775,6 +776,7 @@ func New(
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icqModule,
 		icaModule,
+		ibctm.AppModule{},
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -950,6 +952,7 @@ func New(
 		paramstypes.ModuleName,
 		slashingtypes.ModuleName,
 		stakingtypes.ModuleName,
+		ibctm.ModuleName,
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
@@ -957,7 +960,7 @@ func New(
 		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
-		consensusparamtypes.ModuleName, // TODO[1760]: Is this the correct placement?
+		consensusparamtypes.ModuleName,
 
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,

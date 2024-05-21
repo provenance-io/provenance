@@ -34,11 +34,17 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgGrantAllowanceRequest)(nil),
 	(*MsgAddFinalizeActivateMarkerRequest)(nil),
 	(*MsgSupplyIncreaseProposalRequest)(nil),
+	(*MsgSupplyDecreaseProposalRequest)(nil),
 	(*MsgUpdateRequiredAttributesRequest)(nil),
 	(*MsgUpdateForcedTransferRequest)(nil),
 	(*MsgSetAccountDataRequest)(nil),
 	(*MsgUpdateSendDenyListRequest)(nil),
 	(*MsgAddNetAssetValuesRequest)(nil),
+	(*MsgSetAdministratorProposalRequest)(nil),
+	(*MsgRemoveAdministratorProposalRequest)(nil),
+	(*MsgChangeStatusProposalRequest)(nil),
+	(*MsgWithdrawEscrowProposalRequest)(nil),
+	(*MsgSetDenomMetadataProposalRequest)(nil),
 }
 
 func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest {
@@ -446,9 +452,11 @@ func (msg *MsgSupplyIncreaseProposalRequest) ValidateBasic() error {
 		return err
 	}
 
-	_, err = sdk.AccAddressFromBech32(msg.TargetAddress)
-	if err != nil {
-		return err
+	if len(msg.TargetAddress) > 0 {
+		_, err = sdk.AccAddressFromBech32(msg.TargetAddress)
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err = sdk.AccAddressFromBech32(msg.Authority)
@@ -596,5 +604,121 @@ func (msg MsgAddNetAssetValuesRequest) ValidateBasic() error {
 	}
 
 	_, err := sdk.AccAddressFromBech32(msg.Administrator)
+	return err
+}
+
+func NewMsgSupplyDecreaseProposalRequest(amount sdk.Coin, authority string) *MsgSupplyDecreaseProposalRequest {
+	return &MsgSupplyDecreaseProposalRequest{
+		Amount:    amount,
+		Authority: authority,
+	}
+}
+
+func (msg MsgSupplyDecreaseProposalRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return err
+	}
+	if msg.Amount.IsNegative() {
+		return fmt.Errorf("amount to decrease must be greater than zero")
+	}
+	return nil
+}
+
+func NewMsgSetAdministratorProposalRequest(denom string, accessGrant []AccessGrant, authority string) *MsgSetAdministratorProposalRequest {
+	return &MsgSetAdministratorProposalRequest{
+		Denom:     denom,
+		Access:    accessGrant,
+		Authority: authority,
+	}
+}
+
+func (msg MsgSetAdministratorProposalRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return err
+	}
+	for _, a := range msg.Access {
+		if err := a.Validate(); err != nil {
+			return fmt.Errorf("invalid access grant for administrator: %w", err)
+		}
+	}
+	return nil
+}
+
+func NewMsgRemoveAdministratorProposalRequest(denom string, removedAddress []string, authority string) *MsgRemoveAdministratorProposalRequest {
+	return &MsgRemoveAdministratorProposalRequest{
+		Denom:          denom,
+		RemovedAddress: removedAddress,
+		Authority:      authority,
+	}
+}
+
+func (msg MsgRemoveAdministratorProposalRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return err
+	}
+	for _, ra := range msg.RemovedAddress {
+		if _, err := sdk.AccAddressFromBech32(ra); err != nil {
+			return fmt.Errorf("administrator account address is invalid: %w", err)
+		}
+	}
+	return nil
+}
+
+func NewMsgChangeStatusProposalRequest(denom string, status MarkerStatus, authority string) *MsgChangeStatusProposalRequest {
+	return &MsgChangeStatusProposalRequest{
+		Denom:     denom,
+		NewStatus: status,
+		Authority: authority,
+	}
+}
+
+func (msg MsgChangeStatusProposalRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	return err
+}
+
+func NewMsgWithdrawEscrowProposalRequest(denom string, amount sdk.Coins, targetAddress, authority string) *MsgWithdrawEscrowProposalRequest {
+	return &MsgWithdrawEscrowProposalRequest{
+		Denom:         denom,
+		Amount:        amount,
+		TargetAddress: targetAddress,
+		Authority:     authority,
+	}
+}
+
+func (msg MsgWithdrawEscrowProposalRequest) ValidateBasic() error {
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+	if !msg.Amount.IsValid() {
+		return fmt.Errorf("amount is invalid: %v", msg.Amount)
+	}
+	_, err := sdk.AccAddressFromBech32(msg.TargetAddress)
+	if err != nil {
+		return err
+	}
+
+	_, err = sdk.AccAddressFromBech32(msg.Authority)
+	return err
+}
+
+func NewMsgSetDenomMetadataProposalRequest(metadata banktypes.Metadata, authority string) *MsgSetDenomMetadataProposalRequest {
+	return &MsgSetDenomMetadataProposalRequest{
+		Metadata:  metadata,
+		Authority: authority,
+	}
+}
+
+func (msg MsgSetDenomMetadataProposalRequest) ValidateBasic() error {
+	if err := msg.Metadata.Validate(); err != nil {
+		return err
+	}
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
 	return err
 }

@@ -21,7 +21,7 @@ func (s *IntegrationTestSuite) TestQueryQuarantinedFundsCmd() {
 	addr1 := addrs[1]
 
 	// Opt addr0 into quarantine.
-	testcli.NewCLITxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(addr0)).
+	testcli.NewTxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(addr0)).
 		Execute(s.T(), s.network)
 
 	quarantinedAmount := int64(50)
@@ -134,7 +134,7 @@ func (s *IntegrationTestSuite) TestQueryIsQuarantinedCmd() {
 	addr1 := addrs[1]
 
 	// Opt addr0 into quarantine.
-	testcli.NewCLITxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(addr0)).
+	testcli.NewTxExecutor(client.TxOptInCmd(), s.appendCommonFlagsTo(addr0)).
 		Execute(s.T(), s.network)
 
 	tests := []struct {
@@ -194,7 +194,7 @@ func (s *IntegrationTestSuite) TestQueryAutoResponsesCmd() {
 
 	// Set 0 <- 1 to auto-accept.
 	// Set 0 <- 2 to auto-decline.
-	testcli.NewCLITxExecutor(client.TxUpdateAutoResponsesCmd(), s.appendCommonFlagsTo(addr0, "accept", addr1, "decline", addr2)).
+	testcli.NewTxExecutor(client.TxUpdateAutoResponsesCmd(), s.appendCommonFlagsTo(addr0, "accept", addr1, "decline", addr2)).
 		Execute(s.T(), s.network)
 
 	newARE := func(to, from string, response quarantine.AutoResponse) *quarantine.AutoResponseEntry {

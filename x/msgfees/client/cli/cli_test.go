@@ -260,7 +260,7 @@ func (s *IntegrationTestSuite) TestMsgFeesProposal() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -308,7 +308,7 @@ func (s *IntegrationTestSuite) TestUpdateNhashPerUsdMilProposal() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -350,7 +350,7 @@ func (s *IntegrationTestSuite) TestUpdateConversionFeeDenomProposal() {
 				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
 			)
 
-			testcli.NewCLITxExecutor(cmd, tc.args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)

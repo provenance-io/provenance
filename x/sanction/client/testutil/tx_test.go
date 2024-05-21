@@ -119,7 +119,7 @@ func (s *IntegrationTestSuite) TestTxSanctionCmd() {
 		s.Run(tc.name, func() {
 			args := s.appendCommonArgsTo(tc.args...)
 			args = append(args, "--title", "TxSanctionCmd", "--summary", tc.name)
-			txResp := testcli.NewCLITxExecutor(client.TxSanctionCmd(), args).
+			txResp := testcli.NewTxExecutor(client.TxSanctionCmd(), args).
 				WithExpInErrMsg(tc.expErr).
 				Execute(s.T(), s.network)
 
@@ -194,7 +194,7 @@ func (s *IntegrationTestSuite) TestTxUnsanctionCmd() {
 		s.Run(tc.name, func() {
 			args := s.appendCommonArgsTo(tc.args...)
 			args = append(args, "--title", "TxUnsanctionCmd", "--summary", tc.name)
-			txResp := testcli.NewCLITxExecutor(client.TxUnsanctionCmd(), args).
+			txResp := testcli.NewTxExecutor(client.TxUnsanctionCmd(), args).
 				WithExpInErrMsg(tc.expErr).
 				Execute(s.T(), s.network)
 
@@ -300,7 +300,7 @@ func (s *IntegrationTestSuite) TestTxUpdateParamsCmd() {
 		s.Run(tc.name, func() {
 			args := s.appendCommonArgsTo(tc.args...)
 			args = append(args, "--title", "TxUpdateParamsCmd", "--summary", tc.name)
-			txResp := testcli.NewCLITxExecutor(client.TxUpdateParamsCmd(), args).
+			txResp := testcli.NewTxExecutor(client.TxUpdateParamsCmd(), args).
 				WithExpInErrMsg(tc.expErr).
 				Execute(s.T(), s.network)
 

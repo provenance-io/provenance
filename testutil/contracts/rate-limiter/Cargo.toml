@@ -43,19 +43,19 @@ optimize-arm = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-provwasm-std = { version = "2.0.0" }
-cosmwasm-schema = "1.2.5"
-cosmwasm-std = { version = "1.4.4", features = ["stargate", "cosmwasm_1_1"] }
-cosmwasm-storage = "1.2.5"
-cw-storage-plus = { version = "1.0.1", features = ["iterator"] }
+provwasm-std = { version = "2.2.0" }
+cosmwasm-schema = "1.5"
+cosmwasm-std = { version = "1.5", features = ["stargate", "cosmwasm_1_1"] }
+cosmwasm-storage = "1.2.0"
+cw-storage-plus = { version = "1.2.0", features = ["iterator"] }
 cw2 = "1.0.1"
-schemars = "0.8.10"
-serde = { version = "1.0.163", default-features = false, features = ["derive"] }
-thiserror = { version = "1.0.31" }
+schemars = "0.8.16"
+serde = { version = "1.0.197", default-features = false, features = ["derive"] }
+thiserror = { version = "1.0.58" }
 sha2 = "0.10.6"
 hex = "0.4.3"
 
 [dev-dependencies]
 cw-multi-test = "0.17.0"
-provwasm-mocks = { version = "2.0.0" }
+provwasm-mocks = { version = "2.2.0" }
 serde-json-wasm = "1.0.1"

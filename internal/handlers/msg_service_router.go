@@ -100,7 +100,7 @@ func (msr *PioMsgServiceRouter) registerHybridHandler(sd *grpc.ServiceDesc, meth
 	return nil
 }
 
-func (msr *PioMsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
+func (msr *PioMsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) {
 	fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 	methodHandler := method.Handler
 
@@ -201,7 +201,6 @@ func (msr *PioMsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, 
 
 		return sdk.WrapServiceResult(ctx, resMsg, err)
 	}
-	return nil
 }
 
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC
@@ -214,11 +213,8 @@ func (msr *PioMsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, 
 func (msr *PioMsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
 	// Adds a top-level query handler based on the gRPC service name.
 	for _, method := range sd.Methods {
-		err := msr.registerMsgServiceHandler(sd, method, handler)
-		if err != nil {
-			panic(err)
-		}
-		err = msr.registerHybridHandler(sd, method, handler)
+		msr.registerMsgServiceHandler(sd, method, handler)
+		err := msr.registerHybridHandler(sd, method, handler)
 		if err != nil {
 			panic(err)
 		}
