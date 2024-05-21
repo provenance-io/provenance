@@ -152,12 +152,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the metadata content functions used to
-// simulate metadata governance proposals.
-func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return []simtypes.WeightedProposalContent{} // simulation.ProposalContents(am.keeper)
-}
-
 // RandomizedParams creates randomized metadata param changes for the simulator.
 func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 	return nil

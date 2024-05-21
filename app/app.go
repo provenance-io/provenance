@@ -19,6 +19,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtos "github.com/cometbft/cometbft/libs/os"
 
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -42,6 +44,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -121,6 +124,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -152,7 +156,6 @@ import (
 	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	metadatawasm "github.com/provenance-io/provenance/x/metadata/wasm"
-	"github.com/provenance-io/provenance/x/msgfees"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -285,11 +288,12 @@ type App struct {
 	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
 	ScopedOracleKeeper   capabilitykeeper.ScopedKeeper
 
-	TransferStack    *ibchooks.IBCMiddleware
-	Ics20WasmHooks   *ibchooks.WasmHooks
-	Ics20MarkerHooks *ibchooks.MarkerHooks
-	IbcHooks         *ibchooks.IbcHooks
-	HooksICS4Wrapper ibchooks.ICS4Middleware
+	TransferStack       *ibchooks.IBCMiddleware
+	Ics20WasmHooks      *ibchooks.WasmHooks
+	Ics20MarkerHooks    *ibchooks.MarkerHooks
+	IbcHooks            *ibchooks.IbcHooks
+	HooksICS4Wrapper    ibchooks.ICS4Middleware
+	RateLimitMiddleware porttypes.Middleware
 
 	// the module manager
 	mm                 *module.Manager
@@ -540,8 +544,8 @@ func New(
 	)
 	app.TransferKeeper = &transferKeeper
 	transferModule := ibctransfer.NewIBCModule(*app.TransferKeeper)
-	rateLimitingTransferModule = *rateLimitingTransferModule.WithIBCModule(transferModule)
-	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &app.HooksICS4Wrapper)
+	app.RateLimitMiddleware = rateLimitingTransferModule.WithIBCModule(transferModule)
+	hooksTransferModule := ibchooks.NewIBCMiddleware(app.RateLimitMiddleware, &app.HooksICS4Wrapper)
 	app.TransferStack = &hooksTransferModule
 
 	app.NameKeeper = namekeeper.NewKeeper(appCodec, keys[nametypes.StoreKey])
@@ -688,9 +692,7 @@ func New(
 	// register the proposal types
 	govRouter := govtypesv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(markertypes.ModuleName, marker.NewProposalHandler(app.MarkerKeeper)).
-		AddRoute(msgfeestypes.ModuleName, msgfees.NewProposalHandler(app.MsgFeesKeeper, app.InterfaceRegistry()))
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), app.AccountKeeper, app.BankKeeper,
 		app.StakingKeeper, app.DistrKeeper, app.BaseApp.MsgServiceRouter(), govtypes.Config{MaxMetadataLen: 10000}, govAuthority,
@@ -774,6 +776,7 @@ func New(
 		ibctransfer.NewAppModule(*app.TransferKeeper),
 		icqModule,
 		icaModule,
+		ibctm.AppModule{},
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -949,6 +952,7 @@ func New(
 		paramstypes.ModuleName,
 		slashingtypes.ModuleName,
 		stakingtypes.ModuleName,
+		ibctm.ModuleName,
 		ibctransfertypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
@@ -956,7 +960,7 @@ func New(
 		sanction.ModuleName,
 		hold.ModuleName,
 		exchange.ModuleName,
-		consensusparamtypes.ModuleName, // TODO[1760]: Is this the correct placement?
+		consensusparamtypes.ModuleName,
 
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
@@ -1318,6 +1322,28 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 // RegisterNodeService registers the node query server.
 func (app *App) RegisterNodeService(clientCtx client.Context, cfg serverconfig.Config) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
+}
+
+// AutoCliOpts returns the autocli options for the app.
+func (app *App) AutoCliOpts() autocli.AppOptions {
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range app.mm.Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	cfg := sdk.GetConfig()
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.mm.Modules),
+		AddressCodec:          authcodec.NewBech32Codec(cfg.GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(cfg.GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(cfg.GetBech32ConsensusAddrPrefix()),
+	}
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

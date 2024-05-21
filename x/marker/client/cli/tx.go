@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
@@ -53,6 +54,7 @@ const (
 	FlagGovProposal            = "gov-proposal"
 	FlagUsdMills               = "usd-mills"
 	FlagVolume                 = "volume"
+	FlagTargetAddress          = "target-address"
 )
 
 // NewTxCmd returns the top-level command for marker CLI transactions.
@@ -87,6 +89,12 @@ func NewTxCmd() *cobra.Command {
 		GetCmdSetAccountData(),
 		GetCmdUpdateSendDenyListRequest(),
 		GetCmdAddNetAssetValues(),
+		GetCmdSupplyDecreaseProposal(),
+		GetCmdSupplyIncreaseProposal(),
+		GetCmdSetAdministratorProposal(),
+		GetCmdRemoveAdministratorProposal(),
+		GetCmdChangeStatusProposal(),
+		GetCmdWithdrawEscrowProposal(),
 	)
 	return txCmd
 }
@@ -102,7 +110,7 @@ Please use 'gov proposal submit-proposal instead.
 `,
 		),
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov proposal submit-proposal' instead")
+			return fmt.Errorf("this command has been deprecated, and is no longer functional. Please use 'gov submit-proposal' instead")
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -1068,6 +1076,213 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 	return cmd
 }
 
+// GetCmdSupplyDecreaseProposal returns a CLI command for submitting a supply decrease proposal.
+func GetCmdSupplyDecreaseProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "supply-decrease-proposal <amount>",
+		Aliases: []string{"sdp", "s-d-p"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Submit a supply decrease proposal of amount to decrease supply by along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a supply decrease proposal of amount to decrease supply by along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker supply-decrease-proposal 1000mycoin --title "My Title" --summary "My summary" --deposit 1000000000nhash 
+$ %[1]s tx marker sdp 100stake --title "My Title" --summary "My summary" --deposit 1000000000nhash
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			coin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid coin %s", args[0])
+			}
+			msg := types.NewMsgSupplyDecreaseProposalRequest(coin, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+// GetCmdSupplyIncreaseProposal returns a CLI command for submitting a supply increase proposal.
+func GetCmdSupplyIncreaseProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "supply-increase-proposal <amount>",
+		Aliases: []string{"sip", "s-i-p"},
+		Args:    cobra.ExactArgs(1),
+		Short:   "Submit a supply increase proposal of amount to increase supply by along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a supply increase proposal of amount to decrease supply by along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker supply-increase-proposal 1000mycoin --title "My Title" --summary "My summary" --deposit 1000000000nhash 
+$ %[1]s tx marker sdp 100stake --title "My Title" --summary "My summary" --deposit 1000000000nhash
+$ %[1]s tx marker sdp 100stake --target-address pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --title "My Title" --summary "My summary" --deposit 1000000000nhash
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			coin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid coin %s", args[0])
+			}
+			targetAddress, err := flagSet.GetString(FlagTargetAddress)
+			if err != nil {
+				return err
+			}
+			if len(targetAddress) > 0 {
+				_, err = sdk.AccAddressFromBech32(targetAddress)
+				if err != nil {
+					return fmt.Errorf("invalid target address %v: %w", targetAddress, err)
+				}
+			}
+			msg := types.NewMsgSupplyIncreaseProposalRequest(coin, targetAddress, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	cmd.Flags().String(FlagTargetAddress, "", "optional address to send minted coins")
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+// GetCmdSetAdministratorProposal returns a CLI command for submitting a set administrator proposal.
+func GetCmdSetAdministratorProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "set-administrator-proposal <denom> <access-grants>",
+		Aliases: []string{"sap", "s-a-p"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Submit a set administrator proposal along with a title, summary, and deposit",
+		Long: strings.TrimSpace(`Submit a set administrator proposal along with a title, summary, and deposit.
+<denom> is the marker denomination.
+<access-grants> is a comma-separated list of access grants in the format address,permissions;address,permissions.
+Example: pb1...,mint,burn;pb2...,admin,transfer
+`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker set-administrator-proposal mycoin "pb1...,mint,burn;pb2...,admin,transfer" --title "My Title" --summary "My summary" --deposit 1000000000nhash
+$ %[1]s tx marker sap mycoin "pb1...,mint,burn" --title "My Title" --summary "My summary" --deposit 1000000000nhash
+`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+
+			denom := args[0]
+			accessGrantsStr := args[1]
+			var accessGrants []types.AccessGrant
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("invalid access grants %s: %v", accessGrantsStr, r)
+					}
+				}()
+				accessGrants = ParseAccessGrantFromString(accessGrantsStr)
+			}()
+
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgSetAdministratorProposalRequest(denom, accessGrants, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+// GetCmdRemoveAdministratorProposal returns a CLI command for submitting a remove administrator proposal.
+func GetCmdRemoveAdministratorProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "remove-administrator-proposal <denom> <removed-addresses>",
+		Aliases: []string{"rap", "r-a-p"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Submit a remove administrator proposal for a marker along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a remove administrator proposal for a marker along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker remove-administrator-proposal mycoin "address1,address2" --title "My Title" --summary "My summary" --deposit 1000000000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			denom := args[0]
+			removedAddressesStr := args[1]
+
+			removedAddresses := strings.Split(removedAddressesStr, ",")
+			for _, addr := range removedAddresses {
+				_, err := sdk.AccAddressFromBech32(addr)
+				if err != nil {
+					return fmt.Errorf("invalid address %s: %w", addr, err)
+				}
+			}
+
+			msg := types.NewMsgRemoveAdministratorProposalRequest(denom, removedAddresses, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+// GetCmdChangeStatusProposal returns a CLI command for submitting a change status proposal.
+func GetCmdChangeStatusProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "change-status-proposal <denom> <new-status>",
+		Aliases: []string{"csp", "c-s-p"},
+		Args:    cobra.ExactArgs(2),
+		Short:   "Submit a change status proposal for a marker along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a change status proposal for a marker along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker change-status-proposal mycoin ACTIVE --title "My Title" --summary "My summary" --deposit 1000000000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			denom := args[0]
+			newStatusStr := strings.ToUpper(args[1])
+
+			var newStatus types.MarkerStatus
+			switch newStatusStr {
+			case "PROPOSED":
+				newStatus = types.StatusProposed
+			case "FINALIZED":
+				newStatus = types.StatusFinalized
+			case "ACTIVE":
+				newStatus = types.StatusActive
+			case "CANCELLED":
+				newStatus = types.StatusCancelled
+			case "DESTROYED":
+				newStatus = types.StatusDestroyed
+			default:
+				return fmt.Errorf("invalid status: %v", args[1])
+			}
+
+			msg := types.NewMsgChangeStatusProposalRequest(denom, newStatus, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
 func getPeriodReset(duration int64) time.Time {
 	return time.Now().Add(getPeriod(duration))
 }
@@ -1098,6 +1313,99 @@ func ParseAccessGrantFromString(addressPermissionString string) []types.AccessGr
 		grants = append(grants, *types.NewAccessGrant(address, permissions))
 	}
 	return grants
+}
+
+// GetCmdWithdrawEscrowProposal returns a CLI command for submitting a withdraw escrow proposal.
+func GetCmdWithdrawEscrowProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "withdraw-escrow-proposal <denom> <amount> <target-address>",
+		Aliases: []string{"wep", "w-e-p"},
+		Args:    cobra.ExactArgs(3),
+		Short:   "Submit a withdraw escrow proposal for a marker along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a withdraw escrow proposal for a marker along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker withdraw-escrow-proposal mycoin 100stake pb1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --title "My Title" --summary "My summary" --deposit 1000000000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+			denom := args[0]
+
+			coins, err := sdk.ParseCoinsNormalized(args[1])
+			if err != nil {
+				return fmt.Errorf("invalid amount %s: %w", args[1], err)
+			}
+
+			targetAddress := args[2]
+			if _, err = sdk.AccAddressFromBech32(targetAddress); err != nil {
+				return fmt.Errorf("invalid target address %v: %w", targetAddress, err)
+			}
+
+			msg := types.NewMsgWithdrawEscrowProposalRequest(denom, coins, targetAddress, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
+}
+
+// GetCmdSetDenomMetadataProposal returns a CLI command for submitting a set denom metadata proposal.
+func GetCmdSetDenomMetadataProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "set-denom-metadata-proposal <denom> <name> <symbol> <description> <display> <exponent>",
+		Aliases: []string{"sdmp", "s-d-m-p"},
+		Args:    cobra.ExactArgs(6),
+		Short:   "Submit a set denom metadata proposal along with a title, summary, and deposit",
+		Long:    strings.TrimSpace(`Submit a set denom metadata proposal along with a title, summary, and deposit.`),
+		Example: fmt.Sprintf(`$ %[1]s tx marker set-denom-metadata-proposal mycoin "My Coin" "MYC" "My coin description" "myc" 6 --title "My Title" --summary "My summary" --deposit 1000000000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+
+			denom := args[0]
+			name := args[1]
+			symbol := args[2]
+			description := args[3]
+			display := args[4]
+			exponent, err := strconv.ParseUint(args[5], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid exponent: %v", args[5])
+			}
+
+			metadata := banktypes.Metadata{
+				Description: description,
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    denom,
+						Exponent: 0,
+					},
+					{
+						Denom:    display,
+						Exponent: uint32(exponent),
+					},
+				},
+				Base:    denom,
+				Display: display,
+				Name:    name,
+				Symbol:  symbol,
+			}
+
+			msg := types.NewMsgSetDenomMetadataProposalRequest(metadata, authority)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	return cmd
 }
 
 // ParseNetAssetValueString splits string (example 1hotdog,1;2jackthecat100,...) to list of NetAssetValue's

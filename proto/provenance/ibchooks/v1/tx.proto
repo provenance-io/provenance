@@ -2,7 +2,6 @@ syntax = "proto3";
 package provenance.ibchooks.v1;
 
 import "cosmos/msg/v1/msg.proto";
-import "gogoproto/gogo.proto";
 
 option go_package = "github.com/provenance-io/provenance/x/ibchooks/types";
 

@@ -124,7 +124,7 @@ func (s *IntegrationTestSuite) createAndFundAccounts(count int, bondCoinAmt int6
 	args = append(args, amount)
 	args = s.appendCommonFlagsTo(args...)
 
-	testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.network)
+	testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.network)
 
 	return addrs
 }
@@ -164,7 +164,7 @@ func (s *IntegrationTestSuite) execBankSend(fromAddr, toAddr, amount string) {
 	addrCdc := s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec()
 	cmd := bankcli.NewSendTxCmd(addrCdc)
 	args := s.appendCommonFlagsTo(fromAddr, toAddr, amount)
-	testcli.NewCLITxExecutor(cmd, args).Execute(s.T(), s.network)
+	testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.network)
 }
 
 var _ fmt.Stringer = asStringer("")

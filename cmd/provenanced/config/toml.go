@@ -51,6 +51,7 @@ func WriteConfigToFile(configFilePath string, config *ClientConfig) {
 		panic(err)
 	}
 
+	//nolint:gosec // The config file should be readable by anyone.
 	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0o644); err != nil {
 		panic(err)
 	}

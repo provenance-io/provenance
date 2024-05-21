@@ -21,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
@@ -46,10 +47,15 @@ type ConfigTestSuite struct {
 	BaseFNApp    string
 	BaseFNCMT    string
 	baseFNClient string
+
+	origAddrCacheEnabled bool
 }
 
 func (s *ConfigTestSuite) SetupTest() {
 	s.Home = s.T().TempDir()
+	s.origAddrCacheEnabled = sdk.IsAddrCacheEnabled()
+	sdk.SetAddrCacheEnabled(false)
+
 	s.T().Logf("%s Home: %s", s.T().Name(), s.Home)
 
 	pioconfig.SetProvenanceConfig("confcoin", 5)
@@ -79,6 +85,10 @@ func (s *ConfigTestSuite) SetupTest() {
 	s.baseFNClient = "client.toml"
 
 	s.ensureConfigFiles()
+}
+
+func (s *ConfigTestSuite) TearDownTest() {
+	sdk.SetAddrCacheEnabled(s.origAddrCacheEnabled)
 }
 
 func TestConfigTestSuite(t *testing.T) {

@@ -31,7 +31,7 @@ import (
 	client "github.com/provenance-io/provenance/x/sanction/client/cli"
 )
 
-const blocksPerVotingPeriod = 6
+const blocksPerVotingPeriod = 8
 
 func TestIntegrationTestSuite(t *testing.T) {
 	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
@@ -183,7 +183,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 
 	// Submit the proposal.
 	s.T().Logf("Proposal: %s\n%s", propFile, propMsgBz)
-	testcli.NewCLITxExecutor(propCmd, propArgs).Execute(s.T(), s.network)
+	testcli.NewTxExecutor(propCmd, propArgs).Execute(s.T(), s.network)
 	propHeight := s.logHeight()
 
 	// Find the last proposal (assuming it's the one just submitted above).
@@ -201,7 +201,7 @@ func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {
 	s.Require().NoError(err, "Unmarshal QueryIsSanctionedResponse (first time)")
 	s.Assert().True(isSanctOut1.IsSanctioned, "is sanctioned (first time)")
 
-	// Cast votes on it. We don't use a CLITxExecutor because we can't wait for a new
+	// Cast votes on it. We don't use a TxExecutor because we can't wait for a new
 	// block after each vote. We'll check all of them manually once they're submitted.
 	voteOutBzs := make([][]byte, len(allVoteArgs))
 	for i, voteArgs := range allVoteArgs {

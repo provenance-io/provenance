@@ -132,8 +132,6 @@ install: go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
 build: validate-go-version go.sum
-# TODO[1760]: Remove this delay once we're stable again.
-	@if [ -z "${ACK_50}" ]; then printf '\033[93mWARNING:\033[0m This branch is currently unstable and should not be built for use.\n         To bypass this 10 second delay: ACK_50=1 make build\n'; sleep 10; fi
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
 
@@ -536,11 +534,6 @@ update-swagger-docs: statik proto-swagger-gen
 	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
 
 .PHONY: update-swagger-docs
-
-test-rosetta:
-	docker build -t rosetta-ci:latest -f client/rosetta/rosetta-ci/Dockerfile .
-	docker-compose -f client/rosetta/docker-compose.yaml --project-directory ./ up --abort-on-container-exit --exit-code-from test_rosetta --build
-.PHONY: test-rosetta
 
 ##############################
 ### Relayer

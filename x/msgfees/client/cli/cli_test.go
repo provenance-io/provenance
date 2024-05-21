@@ -9,16 +9,22 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
-	msgfeescli "github.com/provenance-io/provenance/x/msgfees/client/cli"
+	"github.com/provenance-io/provenance/x/msgfees/client/cli"
 	"github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -34,6 +40,11 @@ type IntegrationTestSuite struct {
 	account2Addr  sdk.AccAddress
 	account2Key   *secp256k1.PrivKey
 	acc2NameCount int
+
+	accountAddresses []sdk.AccAddress
+
+	keyring    keyring.Keyring
+	keyringDir string
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -59,183 +70,197 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg = testutil.DefaultTestNetworkConfig()
 	s.cfg.TimeoutCommit = 500 * time.Millisecond
 	s.cfg.NumValidators = 1
+	s.GenerateAccountsWithKeyrings(1)
 
-	var msgfeeGen types.GenesisState
-	err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[types.ModuleName], &msgfeeGen)
-	s.Require().NoError(err, "UnmarshalJSON msgfee gen state")
-	msgfeeGen.MsgFees = append(msgfeeGen.MsgFees, types.MsgFee{
-		MsgTypeUrl:    "/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
-		AdditionalFee: sdk.NewInt64Coin(s.cfg.BondDenom, 3),
+	testutil.MutateGenesisState(s.T(), &s.cfg, banktypes.ModuleName, &banktypes.GenesisState{}, func(bankGenState *banktypes.GenesisState) *banktypes.GenesisState {
+		var genBalances []banktypes.Balance
+		for i := range s.accountAddresses {
+			genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[i].String(), Coins: sdk.NewCoins(
+				sdk.NewInt64Coin("nhash", 100_000_000), sdk.NewInt64Coin(s.cfg.BondDenom, 100_000_000),
+			).Sort()})
+		}
+		bankGenState.Params = banktypes.DefaultParams()
+		bankGenState.Balances = genBalances
+		return bankGenState
 	})
-	s.cfg.GenesisState[types.ModuleName], err = s.cfg.Codec.MarshalJSON(&msgfeeGen)
-	s.Require().NoError(err, "MarshalJSON msgfee gen state")
+
+	testutil.MutateGenesisState(s.T(), &s.cfg, authtypes.ModuleName, &authtypes.GenesisState{}, func(authData *authtypes.GenesisState) *authtypes.GenesisState {
+		var genAccounts []authtypes.GenesisAccount
+		authData.Params = authtypes.DefaultParams()
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0))
+		accounts, err := authtypes.PackAccounts(genAccounts)
+		s.Require().NoError(err, "should be able to pack accounts for genesis state when setting up suite")
+		authData.Accounts = accounts
+		return authData
+	})
+
+	testutil.MutateGenesisState(s.T(), &s.cfg, types.ModuleName, &types.GenesisState{}, func(msgfeeGen *types.GenesisState) *types.GenesisState {
+		err = s.cfg.Codec.UnmarshalJSON(s.cfg.GenesisState[types.ModuleName], msgfeeGen)
+		s.Require().NoError(err, "UnmarshalJSON msgfee gen state")
+		msgfeeGen.MsgFees = append(msgfeeGen.MsgFees, types.MsgFee{
+			MsgTypeUrl:    "/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
+			AdditionalFee: sdk.NewInt64Coin(s.cfg.BondDenom, 3),
+		})
+		return msgfeeGen
+	})
 
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")
 
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "waiting for height 1")
+}
+
+func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
+	path := hd.CreateHDPath(118, 0, 0).String()
+	s.keyringDir = s.T().TempDir()
+	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
+	s.Require().NoError(err, "Keyring.New")
+	s.keyring = kr
+	for i := 0; i < number; i++ {
+		keyId := fmt.Sprintf("test_key%v", i)
+		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		s.Require().NoError(err, "Keyring.NewMnemonic")
+		addr, err := info.GetAddress()
+		s.Require().NoError(err, "GetAddress")
+		s.accountAddresses = append(s.accountAddresses, addr)
+	}
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	testutil.Cleanup(s.testnet, s.T())
 }
 
-func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
+func (s *IntegrationTestSuite) TestMsgFeesProposal() {
 	testCases := []struct {
-		name          string
-		typeArg       string
-		title         string
-		description   string
-		deposit       string
-		msgType       string
-		additionalFee string
-		recipient     string
-		bips          string
-		expectErrMsg  string
-		expectedCode  uint32
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
 	}{
 		{
-			name:          "add msg based fee proposal - valid",
-			typeArg:       "add",
-			title:         "test add msg based fee",
-			description:   "description",
-			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-			additionalFee: fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 12)).String()),
-			recipient:     "",
-			bips:          "",
-			expectErrMsg:  "",
-			expectedCode:  0,
+			name: "success - add msg fee",
+			args: []string{
+				"add",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=612nhash",
+			},
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:          "add msg based fee proposal with recipient - valid",
-			typeArg:       "add",
-			title:         "test update msg based fee",
-			description:   "description",
-			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-			additionalFee: fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 12)).String()),
-			recipient:     "",
-			bips:          "",
-			expectErrMsg:  "",
-			expectedCode:  0,
+			name: "success - update msg fee",
+			args: []string{
+				"update",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=612000nhash",
+			},
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:          "add msg based fee proposal with recipient and default basis points - valid",
-			typeArg:       "add",
-			title:         "test update msg based fee",
-			description:   "description",
-			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-			additionalFee: fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 12)).String()),
-			recipient:     fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
-			bips:          "",
-			expectErrMsg:  "",
-			expectedCode:  0,
+			name: "success - remove msg fee",
+			args: []string{
+				"remove",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			},
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:          "add msg based fee proposal - invalid msg type url",
-			typeArg:       "add",
-			title:         "test add msg based fee",
-			description:   "description",
-			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=invalid",
-			additionalFee: fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 12)).String()),
-			recipient:     "",
-			bips:          "",
-			expectErrMsg:  "unable to resolve type URL invalid",
-			expectedCode:  0,
+			name:         "failure - invalid number of args",
+			args:         []string{"add", "extra-arg"},
+			expectErrMsg: "accepts 1 arg(s), received 2",
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:          "add msg based fee proposal - invalid additional fee",
-			typeArg:       "add",
-			title:         "test add msg based fee",
-			description:   "description",
-			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
-			additionalFee: fmt.Sprintf("--additional-fee=%s", "blah"),
-			recipient:     "",
-			bips:          "",
-			expectErrMsg:  "invalid decimal coin expression: blah",
-			expectedCode:  0,
+			name: "failure - invalid proposal type",
+			args: []string{
+				"invalid-type",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+			},
+			expectErrMsg: `unknown proposal type "invalid-type"`,
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:          "update msg based fee proposal with recipient - valid",
-			typeArg:       "update",
-			title:         "test update msg based fee",
-			description:   "description",
-			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
-			additionalFee: fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 12)).String()),
-			recipient:     "",
-			bips:          "",
-			expectErrMsg:  "",
-			expectedCode:  0,
+			name: "success - add msg fee with recipient and bips",
+			args: []string{
+				"add",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=612nhash",
+				fmt.Sprintf("--recipient=%v", s.account2Addr.String()),
+				"--bips=100",
+				"--deposit=1000000stake",
+			},
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:          "update msg based fee proposal with recipient and default basis points - valid",
-			typeArg:       "update",
-			title:         "test update msg based fee",
-			description:   "description",
-			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
-			additionalFee: fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 12)).String()),
-			recipient:     fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
-			bips:          "",
-			expectErrMsg:  "",
-			expectedCode:  0,
+			name: "failure - invalid fee format",
+			args: []string{
+				"add",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=invalid-fee",
+			},
+			expectErrMsg: "invalid decimal coin expression: invalid-fee",
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:          "update msg based fee proposal with recipient and modified basis points - valid",
-			typeArg:       "update",
-			title:         "test update msg based fee",
-			description:   "description",
-			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
-			additionalFee: fmt.Sprintf("--additional-fee=%s", sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 12)).String()),
-			recipient:     fmt.Sprintf("--recipient=%s", s.testnet.Validators[0].Address.String()),
-			bips:          fmt.Sprintf("--bips=%s", "5001"),
-			expectErrMsg:  "",
-			expectedCode:  0,
+			name: "success - update msg fee with recipient and bips",
+			args: []string{
+				"update",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=612000nhash",
+				fmt.Sprintf("--recipient=%v", s.account2Addr.String()),
+				"--bips=100",
+				"--deposit=1000000stake",
+			},
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:          "remove msg based fee proposal - valid",
-			typeArg:       "remove",
-			title:         "test update msg based fee",
-			description:   "description",
-			deposit:       sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			msgType:       "--msg-type=/provenance.metadata.v1.MsgAddContractSpecToScopeSpecRequest",
-			additionalFee: "",
-			recipient:     "",
-			bips:          "",
-			expectErrMsg:  "",
-			expectedCode:  0,
+			name: "failure - invalid recipient format",
+			args: []string{
+				"add",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=612nhash",
+				"--recipient=invalid-recipient",
+				"--bips=100",
+				"--deposit=1000000stake",
+			},
+			expectErrMsg: "error validating basis points args: decoding bech32 failed: invalid separator index -1",
+			signer:       s.accountAddresses[0].String(),
+		},
+		{
+			name: "failure - bips out of range",
+			args: []string{
+				"add",
+				"--msg-type=/provenance.metadata.v1.MsgWriteRecordRequest",
+				"--additional-fee=612nhash",
+				fmt.Sprintf("--recipient=%v", s.account2Addr.String()),
+				"--bips=10001",
+				"--deposit=1000000stake",
+			},
+			expectErrMsg: "error validating basis points args: recipient basis points can only be between 0 and 10,000 : 10001",
+			signer:       s.accountAddresses[0].String(),
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			cmd := msgfeescli.GetCmdMsgFeesProposal()
-			args := []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			cmd := cli.GetCmdMsgFeesProposal()
+			tc.args = append(tc.args,
+				"--title", "Update nhash per usd mil proposal", "--summary", "Updates the nhash per usd mil rate.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
-			}
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
 
-			args = append(args, tc.typeArg, tc.title, tc.description, tc.deposit, tc.msgType)
-			if len(tc.additionalFee) != 0 {
-				args = append(args, tc.additionalFee)
-			}
-			if len(tc.recipient) != 0 {
-				args = append(args, tc.recipient)
-			}
-			if len(tc.bips) != 0 {
-				args = append(args, tc.bips)
-			}
-
-			testcli.NewCLITxExecutor(cmd, args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -243,57 +268,47 @@ func (s *IntegrationTestSuite) TestMsgFeesTxGovProposals() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
+func (s *IntegrationTestSuite) TestUpdateNhashPerUsdMilProposal() {
 	testCases := []struct {
 		name         string
-		title        string
-		description  string
-		rate         string
-		deposit      string
+		args         []string
 		expectErrMsg string
 		expectedCode uint32
+		signer       string
 	}{
 		{
-			name:         "update nhash to usd mil proposal - valid",
-			title:        "title",
-			description:  "description",
-			rate:         "10",
-			deposit:      sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			expectErrMsg: "",
+			name:         "success - valid update",
+			args:         []string{"1234"},
 			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:         "update nhash to usd mil proposal - invalid - rate param error",
-			title:        "title",
-			description:  "description",
-			rate:         "invalid-rate",
-			deposit:      sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			expectErrMsg: "unable to parse nhash value: invalid-rate",
-			expectedCode: 0,
+			name:         "failure - invalid nhash value",
+			args:         []string{"invalid-nhash-value"},
+			expectErrMsg: "unable to parse nhash value: invalid-nhash-value",
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:         "update nhash to usd mil proposal - invalid - deposit param",
-			title:        "title",
-			description:  "description",
-			rate:         "10",
-			deposit:      "invalid-deposit",
-			expectErrMsg: "invalid decimal coin expression: invalid-deposit",
-			expectedCode: 0,
+			name:         "failure - no nhash value",
+			args:         []string{},
+			expectErrMsg: "accepts 1 arg(s), received 0",
+			signer:       s.accountAddresses[0].String(),
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			cmd := msgfeescli.GetUpdateNhashPerUsdMilProposal()
-			args := []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			cmd := cli.GetUpdateNhashPerUsdMilProposal()
+			tc.args = append(tc.args,
+				"--title", "Update nhash per usd mil proposal", "--summary", "Updates the nhash per usd mil rate.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
-			}
-			args = append(args, tc.name, tc.description, tc.rate, tc.deposit)
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
 
-			testcli.NewCLITxExecutor(cmd, args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -303,49 +318,44 @@ func (s *IntegrationTestSuite) TestUpdateUsdConversionRateProposal() {
 
 func (s *IntegrationTestSuite) TestUpdateConversionFeeDenomProposal() {
 	testCases := []struct {
-		name               string
-		title              string
-		description        string
-		conversionFeeDenom string
-		deposit            string
-		expectErrMsg       string
-		expectedCode       uint32
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+		signer       string
 	}{
 		{
-			name:               "update nhash to usd mil proposal - valid",
-			title:              "title",
-			description:        "description",
-			conversionFeeDenom: "jackthecat",
-			deposit:            sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
-			expectErrMsg:       "",
-			expectedCode:       0,
+			name:         "success - valid denom update",
+			args:         []string{"customcoin"},
+			expectedCode: 0,
+			signer:       s.accountAddresses[0].String(),
 		},
 		{
-			name:               "update nhash to usd mil proposal - invalid - deposit param",
-			title:              "title",
-			description:        "description",
-			conversionFeeDenom: "jackthecat",
-			deposit:            "invalid-deposit",
-			expectErrMsg:       "invalid decimal coin expression: invalid-deposit",
-			expectedCode:       0,
+			name:         "failure - too many arguments",
+			args:         []string{"customcoin", "unexpected"},
+			expectErrMsg: "accepts 1 arg(s), received 2",
+			signer:       s.accountAddresses[0].String(),
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			cmd := msgfeescli.GetUpdateConversionFeeDenomProposal()
-			args := []string{
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+			cmd := cli.GetUpdateConversionFeeDenomProposal()
+			tc.args = append(tc.args,
+				"--title", "Update conversion fee denom proposal", "--summary", "Updates the conversion fee denom.",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, tc.signer),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
-			}
-			args = append(args, tc.name, tc.description, tc.conversionFeeDenom, tc.deposit)
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
 
-			testcli.NewCLITxExecutor(cmd, args).
+			testcli.NewTxExecutor(cmd, tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
 		})
 	}
 }
+
+// TODO: Add query tests

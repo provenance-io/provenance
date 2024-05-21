@@ -1813,7 +1813,7 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 	s.T().Helper()
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(tc.cmd(), tc.args).
+			testcli.NewTxExecutor(tc.cmd(), tc.args).
 				WithExpErrMsg(tc.expectErrMsg).
 				WithExpCode(tc.expectedCode).
 				Execute(s.T(), s.testnet)
@@ -3464,7 +3464,7 @@ func (s *IntegrationCLITestSuite) TestWriteSessionCmd() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
 	}
-	testcli.NewCLITxExecutor(writeScopeCmd, scopeArgs).Execute(s.T(), s.testnet)
+	testcli.NewTxExecutor(writeScopeCmd, scopeArgs).Execute(s.T(), s.testnet)
 
 	testCases := []txCmdTestCase{
 		{
@@ -3877,7 +3877,7 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			testcli.NewCLITxExecutor(cli.GetCmdAddNetAssetValues(), tc.args).
+			testcli.NewTxExecutor(cli.GetCmdAddNetAssetValues(), tc.args).
 				WithExpErrMsg(tc.expErr).
 				Execute(s.T(), s.testnet)
 		})
