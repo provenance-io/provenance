@@ -1,10 +1,7 @@
 package simulation_test
 
 import (
-	"bytes"
-	"fmt"
 	"math/rand"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -12,10 +9,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/oracle/types"
 
 	. "github.com/provenance-io/provenance/x/oracle/simulation"
@@ -37,23 +35,8 @@ func (s *SimTestSuite) SetupTest() {
 	s.ctx = s.app.BaseApp.NewContext(false)
 }
 
-// LogOperationMsg logs all fields of the provided operationMsg.
-func (s *SimTestSuite) LogOperationMsg(operationMsg simtypes.OperationMsg, msg string, args ...interface{}) {
-	msgFmt := "%s"
-	if len(bytes.TrimSpace(operationMsg.Msg)) == 0 {
-		msgFmt = "    %q"
-	}
-	fmtLines := []string{
-		fmt.Sprintf(msg, args...),
-		"operationMsg.Route:   %q",
-		"operationMsg.Name:    %q",
-		"operationMsg.Comment: %q",
-		"operationMsg.OK:      %t",
-		"operationMsg.Msg: " + msgFmt,
-	}
-	s.T().Logf(strings.Join(fmtLines, "\n"),
-		operationMsg.Route, operationMsg.Name, operationMsg.Comment, operationMsg.OK, string(operationMsg.Msg),
-	)
+func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
+	return testutil.GenerateTestingAccounts(s.T(), s.ctx, s.app, r, n)
 }
 
 // MakeTestSimState creates a new module.SimulationState struct with the fields needed by the functions being tested.
@@ -65,142 +48,69 @@ func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
 	}
 }
 
-func (s *SimTestSuite) TestWeightedOperations() {
-	weightedOps := WeightedOperations(s.MakeTestSimState(), s.app.OracleKeeper,
-		s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper,
-	)
-
-	// setup 3 accounts
-	source := rand.NewSource(1)
-	r := rand.New(source)
-	accs := s.getTestingAccounts(r, 3)
-
-	expected := []struct {
-		weight     int
-		opMsgRoute string
-		opMsgName  string
-	}{
-		{weight: simappparams.DefaultWeightSendOracleQuery, opMsgRoute: types.ModuleName, opMsgName: sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{})},
-	}
-
-	expNames := make([]string, len(expected))
-	for i, exp := range expected {
-		expNames[i] = exp.opMsgName
-	}
-
-	// Run all the ops and get the operation messages and their names.
-	opMsgs := make([]simtypes.OperationMsg, len(weightedOps))
-	actualNames := make([]string, len(weightedOps))
-	for i, w := range weightedOps {
-		opMsgs[i], _, _ = w.Op()(r, s.app.BaseApp, s.ctx, accs, "")
-		actualNames[i] = opMsgs[i].Name
-	}
-
-	// First, make sure the op names are as expected since a failure there probably means the rest will fail.
-	// And it's probably easier to address when you've got a nice list comparison of names and their orderings.
-	s.Require().Equal(expNames, actualNames, "operation message names")
-
-	// Now assert that each entry was as expected.
-	for i := range expected {
-		s.Assert().Equal(expected[i].weight, weightedOps[i].Weight(), "weightedOps[%d].Weight", i)
-		s.Assert().Equal(expected[i].opMsgRoute, opMsgs[i].Route, "weightedOps[%d] operationMsg.Route", i)
-		s.Assert().Equal(expected[i].opMsgName, opMsgs[i].Name, "weightedOps[%d] operationMsg.Name", i)
-	}
+func (s *SimTestSuite) NewSimTestHelper(accCount int) *testutil.SimTestHelper {
+	return testutil.NewSimTestHelper(s.T(), s.ctx, rand.New(rand.NewSource(1)), s.app).
+		WithTestingAccounts(accCount)
 }
 
-func (s *SimTestSuite) TestProposalMsgs() {
-	expected := []struct {
-		key     string
-		weight  int
-		msgType sdk.Msg
-	}{
-		{
-			key:     OpWeightMsgUpdateOracle,
-			weight:  simappparams.DefaultWeightUpdateOracle,
-			msgType: &types.MsgUpdateOracleRequest{},
-		},
+func (s *SimTestSuite) TestWeightedOperations() {
+	expected := []testutil.ExpectedWeightedOp{
+		{Weight: simappparams.DefaultWeightSendOracleQuery, Route: types.ModuleName, MsgType: &types.MsgSendQueryOracleRequest{}},
 	}
 
 	simState := s.MakeTestSimState()
-	var propMsgs []simtypes.WeightedProposalMsg
-	testGetPropMsgs := func() {
-		propMsgs = ProposalMsgs(simState, s.app.OracleKeeper)
+	wOpsFn := func() simulation.WeightedOperations {
+		return WeightedOperations(simState, s.app.OracleKeeper,
+			s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper)
 	}
-	s.Require().NotPanics(testGetPropMsgs, "ProposalMsgs")
-	s.Require().Len(propMsgs, len(expected), "ProposalMsgs")
+	s.NewSimTestHelper(3).AssertWeightedOperations(expected, wOpsFn)
+}
 
-	r := rand.New(rand.NewSource(1))
-	accs := s.getTestingAccounts(r, 10)
-
-	for i, propMsg := range propMsgs {
-		exp := expected[i]
-		s.Run(exp.key, func() {
-			expMsgType := fmt.Sprintf("%T", exp.msgType)
-
-			s.Assert().Equal(exp.key, propMsg.AppParamsKey(), "AppParamsKey()")
-			s.Assert().Equal(exp.weight, propMsg.DefaultWeight(), "DefaultWeight()")
-			s.Require().NotNil(propMsg.MsgSimulatorFn(), "MsgSimulatorFn()")
-
-			var msg sdk.Msg
-			testPropMsg := func() {
-				msg = propMsg.MsgSimulatorFn()(r, s.ctx, accs)
-			}
-			s.Require().NotPanics(testPropMsg, "calling the propMsg.MsgSimulatorFn()")
-			s.Require().NotNil(msg, "msg result")
-			actMsgType := fmt.Sprintf("%T", msg)
-			s.Assert().Equal(expMsgType, actMsgType, "msg result")
-		})
+func (s *SimTestSuite) TestProposalMsgs() {
+	expected := []testutil.ExpectedProposalMsg{
+		{Key: OpWeightMsgUpdateOracle, Weight: simappparams.DefaultWeightUpdateOracle, MsgType: &types.MsgUpdateOracleRequest{}},
 	}
+
+	simState := s.MakeTestSimState()
+	proposalMsgsFn := func() []simtypes.WeightedProposalMsg {
+		return ProposalMsgs(simState, s.app.OracleKeeper)
+	}
+	s.NewSimTestHelper(10).AssertProposalMsgs(expected, proposalMsgsFn)
 }
 
 func (s *SimTestSuite) TestSimulatePropMsgUpdateOracle() {
-	r := rand.New(rand.NewSource(1))
+	// This expected Address might change if use of the randomizer changes (e.g. generating more accounts).
 	expMsg := &types.MsgUpdateOracleRequest{
 		Address:   "cosmos1tnh2q55v8wyygtt9srz5safamzdengsnqeycj3",
 		Authority: s.app.OracleKeeper.GetAuthority(),
 	}
 
-	var msgSimFn simtypes.MsgSimulatorFn
-	testFnMaker := func() {
-		msgSimFn = SimulatePropMsgUpdateOracle(s.app.OracleKeeper)
+	simFnMaker := func() simtypes.MsgSimulatorFn {
+		return SimulatePropMsgUpdateOracle(s.app.OracleKeeper)
 	}
-	s.Require().NotPanics(testFnMaker, "SimulatePropMsgUpdateOracle")
-	s.Require().NotNil(msgSimFn, "SimulatePropMsgUpdateOracle resulting MsgSimulationFn")
-
-	var actMsg sdk.Msg
-	testSimFn := func() {
-		actMsg = msgSimFn(r, s.ctx, nil)
-	}
-	s.Require().NotPanics(testSimFn, "executing the SimulatePropMsgUpdateOracle resulting MsgSimulationFn")
-	s.Assert().Equal(expMsg, actMsg)
+	s.NewSimTestHelper(0).AssertMsgSimulatorFn(expMsg, simFnMaker)
 }
 
 func (s *SimTestSuite) TestSimulateMsgSendQueryOracle() {
-	// setup 3 accounts
-	source := rand.NewSource(1)
-	r := rand.New(source)
-	accounts := s.getTestingAccounts(r, 3)
+	expected := testutil.ExpectedOp{
+		Route:    types.ModuleName,
+		EmptyMsg: &types.MsgSendQueryOracleRequest{},
+		Comment:  "cannot get random channel because none exist",
+		OK:       false,
+	}
 
-	// execute operation
-	op := SimulateMsgSendQueryOracle(s.MakeTestSimState(), s.app.OracleKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper)
-	operationMsg, futureOperations, err := op(r, s.app.BaseApp, s.ctx, accounts, "")
-	s.Require().NoError(err, "SimulateMsgSendQueryOracle op(...) error")
-	s.LogOperationMsg(operationMsg, "no channel")
-
-	var msg types.MsgSendQueryOracleRequest
-	s.Require().NoError(s.app.AppCodec().Unmarshal(operationMsg.Msg, &msg), "UnmarshalJSON(operationMsg.Msg)")
-
-	s.Assert().False(operationMsg.OK, "operationMsg.OK")
-	s.Assert().Equal(sdk.MsgTypeURL(&msg), operationMsg.Name, "operationMsg.Name")
-	s.Assert().Equal(types.ModuleName, operationMsg.Route, "operationMsg.Route")
-	s.Assert().Len(futureOperations, 0, "futureOperations")
-	s.Assert().Equal("cannot get random channel because none exist", operationMsg.Comment, "operationMsg.Comment")
+	simState := s.MakeTestSimState()
+	opMaker := func() simtypes.Operation {
+		return SimulateMsgSendQueryOracle(simState, s.app.OracleKeeper,
+			s.app.AccountKeeper, s.app.BankKeeper, s.app.IBCKeeper.ChannelKeeper)
+	}
+	s.NewSimTestHelper(3).AssertSimOp(expected, opMaker, "no channel")
 }
 
 func (s *SimTestSuite) TestRandomAccs() {
 	source := rand.NewSource(1)
 	r := rand.New(source)
-	accounts := s.getTestingAccounts(r, 3)
+	accounts := testutil.GenerateTestingAccounts(s.T(), s.ctx, s.app, r, 3)
 
 	tests := []struct {
 		name     string
@@ -253,21 +163,4 @@ func (s *SimTestSuite) TestRandomAccs() {
 			}
 		})
 	}
-}
-
-func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, n)
-
-	initAmt := sdk.TokensFromConsensusPower(1000000, sdk.DefaultPowerReduction)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// add coins to the accounts
-	for _, account := range accounts {
-		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
-		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		err := testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins)
-		s.Require().NoError(err)
-	}
-
-	return accounts
 }
