@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -179,5 +180,14 @@ func NewEventSetNetAssetValue(denom string, price sdk.Coin, volume uint64, sourc
 		Price:  price.String(),
 		Volume: strconv.FormatUint(volume, 10),
 		Source: source,
+	}
+}
+
+// NewEventMarkerParamsUpdated returns a new instance of EventMarkerParamsUpdated
+func NewEventMarkerParamsUpdated(allowGovControl bool, denomRegex string, maxSupply sdkmath.Int) *EventMarkerParamsUpdated {
+	return &EventMarkerParamsUpdated{
+		EnableGovernance:       strconv.FormatBool(allowGovControl),
+		UnrestrictedDenomRegex: denomRegex,
+		MaxSupply:              maxSupply.String(),
 	}
 }

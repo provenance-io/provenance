@@ -830,6 +830,9 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	k.SetParams(ctx, msg.Params)
-	// TODO: emit event
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventMarkerParamsUpdated(msg.Params.EnableGovernance, msg.Params.GetUnrestrictedDenomRegex(), msg.Params.MaxSupply)); err != nil {
+		return nil, err
+	}
+
 	return &types.MsgUpdateParamsResponse{}, nil
 }
