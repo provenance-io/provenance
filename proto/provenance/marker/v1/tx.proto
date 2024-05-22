@@ -76,7 +76,7 @@ service Msg {
   rpc WithdrawEscrowProposal(MsgWithdrawEscrowProposalRequest) returns (MsgWithdrawEscrowProposalResponse);
   // SetDenomMetadataProposal is a governance proposal to set marker metadata
   rpc SetDenomMetadataProposal(MsgSetDenomMetadataProposalRequest) returns (MsgSetDenomMetadataProposalResponse);
-  // UpdateParams is a governance proposal endpoint for updating the exchange module's params.
+  // UpdateParams is a governance proposal endpoint for updating the marker module's params.
   rpc UpdateParams(MsgUpdateParamsRequest) returns (MsgUpdateParamsResponse);
 }
 

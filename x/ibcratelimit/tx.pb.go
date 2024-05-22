@@ -275,7 +275,7 @@ type MsgClient interface {
 	// GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
 	// Deprecated: Use UpdateParams instead.
 	GovUpdateParams(ctx context.Context, in *MsgGovUpdateParamsRequest, opts ...grpc.CallOption) (*MsgGovUpdateParamsResponse, error)
-	// UpdateParams is a governance proposal endpoint for updating the exchange module's params.
+	// UpdateParams is a governance proposal endpoint for updating the ibcratelimit module's params.
 	UpdateParams(ctx context.Context, in *MsgUpdateParamsRequest, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 }
 
@@ -311,7 +311,7 @@ type MsgServer interface {
 	// GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
 	// Deprecated: Use UpdateParams instead.
 	GovUpdateParams(context.Context, *MsgGovUpdateParamsRequest) (*MsgGovUpdateParamsResponse, error)
-	// UpdateParams is a governance proposal endpoint for updating the exchange module's params.
+	// UpdateParams is a governance proposal endpoint for updating the ibcratelimit module's params.
 	UpdateParams(context.Context, *MsgUpdateParamsRequest) (*MsgUpdateParamsResponse, error)
 }
 

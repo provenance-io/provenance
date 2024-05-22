@@ -3523,7 +3523,7 @@ type MsgClient interface {
 	WithdrawEscrowProposal(ctx context.Context, in *MsgWithdrawEscrowProposalRequest, opts ...grpc.CallOption) (*MsgWithdrawEscrowProposalResponse, error)
 	// SetDenomMetadataProposal is a governance proposal to set marker metadata
 	SetDenomMetadataProposal(ctx context.Context, in *MsgSetDenomMetadataProposalRequest, opts ...grpc.CallOption) (*MsgSetDenomMetadataProposalResponse, error)
-	// UpdateParams is a governance proposal endpoint for updating the exchange module's params.
+	// UpdateParams is a governance proposal endpoint for updating the marker module's params.
 	UpdateParams(ctx context.Context, in *MsgUpdateParamsRequest, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 }
 
@@ -3845,7 +3845,7 @@ type MsgServer interface {
 	WithdrawEscrowProposal(context.Context, *MsgWithdrawEscrowProposalRequest) (*MsgWithdrawEscrowProposalResponse, error)
 	// SetDenomMetadataProposal is a governance proposal to set marker metadata
 	SetDenomMetadataProposal(context.Context, *MsgSetDenomMetadataProposalRequest) (*MsgSetDenomMetadataProposalResponse, error)
-	// UpdateParams is a governance proposal endpoint for updating the exchange module's params.
+	// UpdateParams is a governance proposal endpoint for updating the marker module's params.
 	UpdateParams(context.Context, *MsgUpdateParamsRequest) (*MsgUpdateParamsResponse, error)
 }
 
