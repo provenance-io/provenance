@@ -326,3 +326,48 @@ func (s *MsgServerTestSuite) TestMsgDeleteAttributeRequest() {
 		})
 	}
 }
+
+func (s *MsgServerTestSuite) TestUpdateParams() {
+	newParams := types.Params{
+		MaxValueLength: 200,
+	}
+
+	tests := []struct {
+		name     string
+		msg      types.MsgUpdateParamsRequest
+		errorMsg string
+	}{
+		{
+			name: "Should fail due to invalid authority",
+			msg: types.MsgUpdateParamsRequest{
+				Authority: "invalid-authority",
+				Params:    newParams,
+			},
+			errorMsg: `expected "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn" got "invalid-authority": expected gov account as only signer for proposal message`,
+		},
+		{
+			name: "Should succeed",
+			msg: types.MsgUpdateParamsRequest{
+				Authority: authtypes.NewModuleAddress("gov").String(),
+				Params:    newParams,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			response, err := s.msgServer.UpdateParams(s.ctx, &tt.msg)
+			if len(tt.errorMsg) > 0 {
+				s.Assert().Error(err)
+				s.Assert().Equal(tt.errorMsg, err.Error())
+				s.Assert().Nil(response)
+			} else {
+				s.Assert().NoError(err)
+				s.Assert().NotNil(response)
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), types.NewEventAttributeParamsUpdated(newParams))
+				s.True(result, fmt.Sprintf("Expected typed event was not found: %v", types.NewEventAttributeParamsUpdated(newParams)))
+			}
+		})
+	}
+}
