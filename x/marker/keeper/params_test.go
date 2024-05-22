@@ -33,7 +33,7 @@ func TestParamTestSuite(t *testing.T) {
 
 func (s *ParamTestSuite) TestGetSetParams() {
 	defaultParams := s.app.MarkerKeeper.GetParams(s.ctx)
-	s.Require().Equal(types.DefaultMaxTotalSupply, defaultParams.MaxTotalSupply, "Default MaxTotalSupply should match")
+	s.Require().Equal(uint64(0), defaultParams.MaxTotalSupply, "MaxTotalSupply is deprecated and should not be set")
 	s.Require().Equal(types.DefaultEnableGovernance, defaultParams.EnableGovernance, "Default EnableGovernance should match")
 	s.Require().Equal(types.DefaultUnrestrictedDenomRegex, defaultParams.UnrestrictedDenomRegex, "Default UnrestrictedDenomRegex should match")
 	s.Require().Equal(types.StringToBigInt(types.DefaultMaxSupply), defaultParams.MaxSupply, "Default MaxSupply should match")
