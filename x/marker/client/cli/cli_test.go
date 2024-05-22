@@ -2589,7 +2589,7 @@ func (s *IntegrationTestSuite) TestUpdateMarkerParamsCmd() {
 				"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
 				"invalid",
 			},
-			expectErr: `invalid max supply: invalid :%!w(<nil>)`,
+			expectErr: `invalid max supply: "invalid"`,
 		},
 	}
 

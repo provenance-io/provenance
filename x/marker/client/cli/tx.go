@@ -1580,7 +1580,7 @@ func GetUpdateMarkerParamsCmd() *cobra.Command {
 
 			maxSupply, ok := sdkmath.NewIntFromString(args[2])
 			if !ok {
-				return fmt.Errorf("invalid max supply: %v :%w", args[2], err)
+				return fmt.Errorf("invalid max supply: %q", args[2])
 			}
 
 			msg := types.NewMsgUpdateParamsRequest(
