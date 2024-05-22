@@ -19,11 +19,9 @@ func TestDefaultParams(t *testing.T) {
 	require.NotNil(t, p)
 	require.Equal(t, DefaultUnrestrictedDenomRegex, p.UnrestrictedDenomRegex)
 	require.Equal(t, DefaultEnableGovernance, p.EnableGovernance)
-	require.Equal(t, uint64(DefaultMaxTotalSupply), p.MaxTotalSupply)
 	require.Equal(t, DefaultMaxSupply, p.MaxSupply.String())
 
 	require.True(t, p.Equal(NewParams(DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, StringToBigInt(DefaultMaxSupply))))
-	require.False(t, p.Equal(NewParams(DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, StringToBigInt(DefaultMaxSupply))))
 	require.False(t, p.Equal(NewParams(false, DefaultUnrestrictedDenomRegex, StringToBigInt(DefaultMaxSupply))))
 	require.False(t, p.Equal(NewParams(DefaultEnableGovernance, "a-z", StringToBigInt(DefaultMaxSupply))))
 	require.False(t, p.Equal(NewParams(DefaultEnableGovernance, DefaultUnrestrictedDenomRegex, StringToBigInt("1000"))))
@@ -41,8 +39,7 @@ func TestDefaultParams(t *testing.T) {
 }
 
 func TestParamString(t *testing.T) {
-	expected := `max_total_supply:100000000000 ` +
-		`enable_governance:true ` +
+	expected := `enable_governance:true ` +
 		`unrestricted_denom_regex:"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}" ` +
 		`max_supply:"100000000000000000000" `
 	p := DefaultParams()
