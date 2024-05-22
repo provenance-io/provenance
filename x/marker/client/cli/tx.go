@@ -96,7 +96,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdRemoveAdministratorProposal(),
 		GetCmdChangeStatusProposal(),
 		GetCmdWithdrawEscrowProposal(),
-		GetCmdMarkerProposal(),
+		GetUpdateMarkerParamsCmd(),
 	)
 	return txCmd
 }
@@ -1554,8 +1554,8 @@ func generateOrBroadcastOptGovProp(clientCtx client.Context, flagSet *pflag.Flag
 	return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
 }
 
-// NewUpdateMarkerParamsCmd creates a command to update the marker module's params via governance proposal.
-func NewUpdateMarkerParamsCmd() *cobra.Command {
+// GetUpdateMarkerParamsCmd creates a command to update the marker module's params via governance proposal.
+func GetUpdateMarkerParamsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "update-marker-params <enable-governance> <unrestricted-denom-regex> <max-supply>",
 		Short:   "Update the marker module's params via governance proposal",

@@ -2563,7 +2563,7 @@ func (s *IntegrationTestSuite) TestUpdateMarkerParamsCmd() {
 	}{
 		{
 			name: "update marker params, should succeed",
-			cmd:  markercli.NewUpdateMarkerParamsCmd(),
+			cmd:  markercli.GetUpdateMarkerParamsCmd(),
 			args: []string{
 				"true",
 				"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
@@ -2573,7 +2573,7 @@ func (s *IntegrationTestSuite) TestUpdateMarkerParamsCmd() {
 		},
 		{
 			name: "update marker params, should fail incorrect governance flag",
-			cmd:  markercli.NewUpdateMarkerParamsCmd(),
+			cmd:  markercli.GetUpdateMarkerParamsCmd(),
 			args: []string{
 				"invalid",
 				"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
@@ -2583,7 +2583,7 @@ func (s *IntegrationTestSuite) TestUpdateMarkerParamsCmd() {
 		},
 		{
 			name: "update marker params, should fail incorrect maxSupply",
-			cmd:  markercli.NewUpdateMarkerParamsCmd(),
+			cmd:  markercli.GetUpdateMarkerParamsCmd(),
 			args: []string{
 				"true",
 				"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
