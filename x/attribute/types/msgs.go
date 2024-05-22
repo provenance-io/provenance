@@ -16,6 +16,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgDeleteAttributeRequest)(nil),
 	(*MsgDeleteDistinctAttributeRequest)(nil),
 	(*MsgSetAccountDataRequest)(nil),
+	(*MsgUpdateParamsRequest)(nil),
 }
 
 func NewMsgAddAttributeRequest(account string, owner sdk.AccAddress, name string, attributeType AttributeType, value []byte) *MsgAddAttributeRequest {
@@ -146,6 +147,22 @@ func (msg MsgSetAccountDataRequest) ValidateBasic() error {
 	// This message is only for regular account addresses. No need to allow for scopes or others.
 	if _, err := sdk.AccAddressFromBech32(msg.Account); err != nil {
 		return fmt.Errorf("invalid account: %w", err)
+	}
+	return nil
+}
+
+// NewMsgUpdateParamsRequest creates a new UpdateParamsRequest message.
+func NewMsgUpdateParamsRequest(authority string, maxValueLength uint32) *MsgUpdateParamsRequest {
+	return &MsgUpdateParamsRequest{
+		Authority: authority,
+		Params:    NewParams(maxValueLength),
+	}
+}
+
+// ValidateBasic runs stateless validation checks on the message.
+func (m MsgUpdateParamsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority: %w", err)
 	}
 	return nil
 }
