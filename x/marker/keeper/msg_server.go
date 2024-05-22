@@ -820,3 +820,16 @@ func (k msgServer) SetDenomMetadataProposal(goCtx context.Context, msg *types.Ms
 
 	return &types.MsgSetDenomMetadataProposalResponse{}, nil
 }
+
+// UpdateParams is a governance proposal endpoint for updating the marker module's params.
+func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParamsRequest) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	k.SetParams(ctx, msg.Params)
+	// TODO: emit event
+	return &types.MsgUpdateParamsResponse{}, nil
+}
