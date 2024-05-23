@@ -733,7 +733,7 @@ func TestMakeMsgMarketCommitmentSettle(t *testing.T) {
 		},
 		{
 			name:      "from file",
-			clientCtx: newClientContextWithCodec(),
+			clientCtx: newClientContext(t),
 			flags:     []string{"--file", filename},
 			expMsg:    fileMsg,
 		},
@@ -743,7 +743,7 @@ func TestMakeMsgMarketCommitmentSettle(t *testing.T) {
 				"--file", filename, "--tag", "new-thang", "--authority",
 				"--outputs", "monroe:87plum",
 			},
-			clientCtx: newClientContextWithCodec(),
+			clientCtx: newClientContext(t),
 			expMsg: &exchange.MsgMarketCommitmentSettleRequest{
 				Admin:    cli.AuthorityAddr.String(),
 				MarketId: 4,
