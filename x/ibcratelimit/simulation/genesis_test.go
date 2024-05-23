@@ -5,13 +5,15 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	"github.com/provenance-io/provenance/x/ibcratelimit/simulation"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestContractFn(t *testing.T) {
@@ -25,13 +27,13 @@ func TestContractFn(t *testing.T) {
 	}{
 		{
 			name:     "success - returns an empty account",
-			seed:     0,
+			seed:     3,
 			accounts: accs,
 			expected: "",
 		},
 		{
 			name:     "success - returns a random account",
-			seed:     3,
+			seed:     0,
 			accounts: accs,
 			expected: "cosmos1tp4es44j4vv8m59za3z0tm64dkmlnm8wg2frhc",
 		},
