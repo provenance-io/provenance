@@ -1206,6 +1206,14 @@ func TestMakeQueryCommitmentSettlementFeeCalc(t *testing.T) {
 			},
 		},
 		{
+			name:  "from flag is unknown name",
+			flags: []string{"--from", "notknown"},
+			expReq: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{},
+			},
+			expErr: joinErrs("notknown.info: key not found", "no <admin> provided"),
+		},
+		{
 			name:  "admin as authority",
 			flags: []string{"--authority"},
 			expReq: &exchange.QueryCommitmentSettlementFeeCalcRequest{
