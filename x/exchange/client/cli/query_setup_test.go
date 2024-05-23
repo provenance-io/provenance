@@ -68,7 +68,7 @@ func runQueryMakerTest[R any](t *testing.T, td queryMakerTestDef[R], tc queryMak
 	err := cmd.Flags().Parse(tc.flags)
 	require.NoError(t, err, "cmd.Flags().Parse(%q)", tc.flags)
 
-	clientCtx := newClientContextWithCodec(t)
+	clientCtx := newClientContext(t)
 
 	var req *R
 	testFunc := func() {
@@ -1195,6 +1195,23 @@ func TestMakeQueryCommitmentSettlementFeeCalc(t *testing.T) {
 					Admin: "kelly",
 				},
 			},
+		},
+		{
+			name:  "admin from keyring",
+			flags: []string{"--from", keyringName},
+			expReq: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					Admin: keyringAddr,
+				},
+			},
+		},
+		{
+			name:  "from flag is unknown name",
+			flags: []string{"--from", "notknown"},
+			expReq: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{},
+			},
+			expErr: joinErrs("notknown.info: key not found", "no <admin> provided"),
 		},
 		{
 			name:  "admin as authority",
