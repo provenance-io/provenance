@@ -60,12 +60,12 @@ jobs:
           tag: heighliner-v1.18.0
           registry: provenanceio
           dockerfile: cosmos
-          platform: linux/amd64
+          # platform: linux/amd64
+          # libraries: |
+          #   - "/lib/libwasmvm_muslc.a"
           build-target: |
             cd ..
             make install
-          libraries: |
-            - "/lib/libwasmvm_muslc.a"
           binaries: |
             - /go/bin/provenanced
           build-env: |
