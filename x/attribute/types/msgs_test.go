@@ -31,6 +31,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgDeleteAttributeRequest{Owner: signer} },
 		func(signer string) sdk.Msg { return &MsgDeleteDistinctAttributeRequest{Owner: signer} },
 		func(signer string) sdk.Msg { return &MsgSetAccountDataRequest{Account: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateParamsRequest{Authority: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
@@ -155,6 +156,44 @@ func TestMsgSetAccountDataRequest_ValidateBasic(t *testing.T) {
 				assert.EqualError(t, err, tc.exp, "ValidateBasic error")
 			} else {
 				assert.NoError(t, err, "ValidateBasic error")
+			}
+		})
+	}
+}
+
+func TestMsgUpdateParamsRequest(t *testing.T) {
+	tests := []struct {
+		name           string
+		authority      string
+		maxValueLength uint32
+		expectPass     bool
+		expectedError  string
+	}{
+		{
+			name:           "valid authority",
+			authority:      sdk.AccAddress(priv1.PubKey().Address()).String(),
+			maxValueLength: 100,
+			expectPass:     true,
+		},
+		{
+			name:           "invalid authority",
+			authority:      "invalid-authority",
+			maxValueLength: 100,
+			expectPass:     false,
+			expectedError:  "invalid authority: decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := NewMsgUpdateParamsRequest(tc.authority, tc.maxValueLength)
+
+			err := msg.ValidateBasic()
+			if tc.expectPass {
+				require.NoError(t, err, "test: %v", tc.name)
+			} else {
+				require.Error(t, err, "test: %v", tc.name)
+				assert.EqualError(t, err, tc.expectedError, "test: %v", tc.name)
 			}
 		})
 	}
