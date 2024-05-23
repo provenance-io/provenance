@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
 
@@ -21,13 +22,13 @@ func PortFn(r *rand.Rand) string {
 	if r.Intn(2) > 0 {
 		return "oracle"
 	}
-	length := uint64(randIntBetween(r, 6, 10))
+	length := uint64(helpers.RandIntBetween(r, 6, 10))
 	return strings.ToLower(simtypes.RandStringOfLength(r, int(length)))
 }
 
 // OracleFn randomized oracle address
 func OracleFn(r *rand.Rand, accs []simtypes.Account) string {
-	randomAccount, _ := RandomAccs(r, accs, 1)
+	randomAccount, _ := helpers.SelectRandomEntries(r, accs, 1)
 	if r.Intn(2) > 0 {
 		return ""
 	}
@@ -56,11 +57,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated oracle parameters:\n%s\n", bz)
-}
-
-// randIntBetween generates a random number between min and max inclusive.
-func randIntBetween(r *rand.Rand, min, max int) int {
-	return r.Intn(max-min+1) + min
 }
 
 // RandomChannel returns a random channel

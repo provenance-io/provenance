@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/x/name/keeper"
 	"github.com/provenance-io/provenance/x/name/types"
 )
@@ -66,7 +67,7 @@ func SimulateMsgBindName(simState module.SimulationState, k keeper.Keeper, ak au
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "no name records available to create under"), nil, nil
 		}
 
-		nameLen := randIntBetween(r, int(params.GetMinSegmentLength()), int(params.GetMaxSegmentLength()))
+		nameLen := helpers.RandIntBetween(r, int(params.GetMinSegmentLength()), int(params.GetMaxSegmentLength()))
 		newRecordName := simtypes.RandStringOfLength(r, nameLen)
 		newRecordOwner := parentOwner
 		if !parentRecord.Restricted {
@@ -199,9 +200,4 @@ func getRandomRecord(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, accs []simt
 	}
 
 	return types.NameRecord{}, simtypes.Account{}, false, nil
-}
-
-// randIntBetween generates a random number between min and max inclusive.
-func randIntBetween(r *rand.Rand, min, max int) int {
-	return r.Intn(max-min+1) + min
 }

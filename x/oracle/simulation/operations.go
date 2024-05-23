@@ -18,6 +18,7 @@ import (
 	channelkeeper "github.com/cosmos/ibc-go/v8/modules/core/04-channel/keeper"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/oracle/keeper"
 	"github.com/provenance-io/provenance/x/oracle/types"
@@ -70,7 +71,7 @@ func SimulateMsgSendQueryOracle(simState module.SimulationState, _ keeper.Keeper
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		raccs, err := RandomAccs(r, accs, 1)
+		raccs, err := helpers.SelectRandomEntries(r, accs, 1)
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil
@@ -144,18 +145,6 @@ func Dispatch(
 	return simtypes.NewOperationMsg(msg, true, ""), futures, nil
 }
 
-func RandomAccs(r *rand.Rand, accs []simtypes.Account, count uint64) ([]simtypes.Account, error) {
-	if uint64(len(accs)) < count {
-		return nil, fmt.Errorf("cannot choose %d accounts because there are only %d", count, len(accs))
-	}
-	raccs := make([]simtypes.Account, 0, len(accs))
-	raccs = append(raccs, accs...)
-	r.Shuffle(len(raccs), func(i, j int) {
-		raccs[i], raccs[j] = raccs[j], raccs[i]
-	})
-	return raccs[:count], nil
-}
-
 func randomChannel(r *rand.Rand, ctx sdk.Context, ck channelkeeper.Keeper) (string, error) {
 	channels := ck.GetAllChannels(ctx)
 	if len(channels) == 0 {
@@ -166,7 +155,7 @@ func randomChannel(r *rand.Rand, ctx sdk.Context, ck channelkeeper.Keeper) (stri
 }
 
 func randomQuery(r *rand.Rand) []byte {
-	queryType := randIntBetween(r, 0, 3)
+	queryType := helpers.RandIntBetween(r, 0, 3)
 	var query string
 	switch queryType {
 	case 0:
