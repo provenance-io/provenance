@@ -48,15 +48,20 @@ jobs:
         # and test-race (00) is the shortest (of the race tests) at around 4m00s.
         # The x/sanction/simulation test-race is one of the longer ones (at almost 2 minutes), and ends up in part 03.
         # By forcing that one into 00, it ends up reducing the overall run-time of this whole workflow by about a minute.
+        # The x/marker/client/cli tests take around 30s (35s for race), and would be in 01.
+        # The x/marker/keeper test take about 3s and (12s for race), and would be in 02.
+        # Moving both of those from to 00 ends up leveling out the times a bit more.
         run: |
           grep -vF \
             -e 'github.com/provenance-io/provenance/x/sanction/simulation' \
             -e 'github.com/provenance-io/provenance/x/marker/client/cli' \
+            -e 'github.com/provenance-io/provenance/x/marker/keeper' \
             pkgs.txt > pkgs.txt.tmp
           split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
           printf '%s\n' \
             'github.com/provenance-io/provenance/x/sanction/simulation' \
             'github.com/provenance-io/provenance/x/marker/client/cli' \
+            'github.com/provenance-io/provenance/x/marker/keeper' \
             >> pkgs.txt.part.00
       - uses: actions/upload-artifact@v4
         with:
