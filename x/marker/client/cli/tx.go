@@ -1071,7 +1071,7 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.From, netAssetValues))
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.GetFromAddress().String(), netAssetValues))
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
