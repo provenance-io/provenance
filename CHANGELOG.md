@@ -93,6 +93,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `ibcratelimit` add `UpdateParams` endpoint and deprecate `GovUpdateParams` [#1984](https://github.com/provenance-io/provenance/pull/1984).
   * `attribute` add `UpdateParams` endpoint and cli [#1987](https://github.com/provenance-io/provenance/pull/1987).
   * `marker` add `UpdateParams` endpoint and cli [#1991](https://github.com/provenance-io/provenance/pull/1991).
+* Update the exchange `commitment-settlement-fee-calc` cli query to utilize the keyring [#2001](https://github.com/provenance-io/provenance/pull/2001).
 
 ### Client Breaking
 
