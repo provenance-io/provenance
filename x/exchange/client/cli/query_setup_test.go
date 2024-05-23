@@ -68,7 +68,7 @@ func runQueryMakerTest[R any](t *testing.T, td queryMakerTestDef[R], tc queryMak
 	err := cmd.Flags().Parse(tc.flags)
 	require.NoError(t, err, "cmd.Flags().Parse(%q)", tc.flags)
 
-	clientCtx := newClientContextWithCodec(t)
+	clientCtx := newClientContext(t)
 
 	var req *R
 	testFunc := func() {
@@ -1193,6 +1193,15 @@ func TestMakeQueryCommitmentSettlementFeeCalc(t *testing.T) {
 			expReq: &exchange.QueryCommitmentSettlementFeeCalcRequest{
 				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
 					Admin: "kelly",
+				},
+			},
+		},
+		{
+			name:  "admin from keyring",
+			flags: []string{"--from", keyringName},
+			expReq: &exchange.QueryCommitmentSettlementFeeCalcRequest{
+				Settlement: &exchange.MsgMarketCommitmentSettleRequest{
+					Admin: keyringAddr,
 				},
 			},
 		},
