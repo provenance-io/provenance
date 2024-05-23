@@ -216,6 +216,7 @@ replace (
 
 	// TODO[1760]: Update once async-icq creates tag with our changes https://github.com/cosmos/ibc-apps/pull/168
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 => github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1
+	// TODO[1760]: Update or change once a tag is made containing a fix for https://github.com/cosmos/ibc-go/issues/6375
 	github.com/cosmos/ibc-go/v8 => github.com/provenance-io/ibc-go/v8 v8.2.1-pio-1
 
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
