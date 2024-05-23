@@ -8,19 +8,19 @@ import (
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
-func (s *TestSuite) TestGovUpdateParams() {
+func (s *TestSuite) TestUpdateParams() {
 	authority := s.app.OracleKeeper.GetAuthority()
 
 	tests := []struct {
 		name  string
-		req   *ibcratelimit.MsgGovUpdateParamsRequest
-		res   *ibcratelimit.MsgGovUpdateParamsResponse
+		req   *ibcratelimit.MsgUpdateParamsRequest
+		res   *ibcratelimit.MsgUpdateParamsResponse
 		event *sdk.Event
 		err   string
 	}{
 		{
 			name: "failure - authority does not match module authority",
-			req: &ibcratelimit.MsgGovUpdateParamsRequest{
+			req: &ibcratelimit.MsgUpdateParamsRequest{
 				Params:    ibcratelimit.NewParams("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
 				Authority: "cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma",
 			},
@@ -29,18 +29,18 @@ func (s *TestSuite) TestGovUpdateParams() {
 		},
 		{
 			name: "success - rate limiter is updated",
-			req: &ibcratelimit.MsgGovUpdateParamsRequest{
+			req: &ibcratelimit.MsgUpdateParamsRequest{
 				Params:    ibcratelimit.NewParams("cosmos1w6t0l7z0yerj49ehnqwqaayxqpe3u7e23edgma"),
 				Authority: authority,
 			},
-			res:   &ibcratelimit.MsgGovUpdateParamsResponse{},
+			res:   &ibcratelimit.MsgUpdateParamsResponse{},
 			event: typedEventToEvent(ibcratelimit.NewEventParamsUpdated()),
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			res, err := s.msgServer.GovUpdateParams(s.ctx, tc.req)
+			res, err := s.msgServer.UpdateParams(s.ctx, tc.req)
 			events := s.ctx.EventManager().Events()
 			numEvents := len(events)
 

@@ -88,6 +88,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add the auto-cli commands and a few others newly added by the SDK [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Fix unit tests for ibcratelimit [#1977](https://github.com/provenance-io/provenance/pull/1977).
 * Fix unit tests for ibchooks [#1980](https://github.com/provenance-io/provenance/pull/1980).
+* Replace deprecated wasm features [#1988](https://github.com/provenance-io/provenance/pull/1988).
+* Add `UpdateParams` and `Params` query rpc endpoints to modules.
+  * `ibcratelimit` add `UpdateParams` endpoint and deprecate `GovUpdateParams` [#1984](https://github.com/provenance-io/provenance/pull/1984).
+  * `attribute` add `UpdateParams` endpoint and cli [#1987](https://github.com/provenance-io/provenance/pull/1987).
 
 ### Client Breaking
 
@@ -96,6 +100,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Many of the SDK's query commands have had their usage altered [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Rosetta has been removed from the `provenanced` executable [#1981](https://github.com/provenance-io/provenance/pull/1981).
   It is now a stand-alone service. See: <https://github.com/cosmos/rosetta> for more info.
+
+### Bug Fixes
+
+* The `add-net-asset-values` command now correctly uses the from `flag`'s `AccAddress` [#1995](https://github.com/provenance-io/provenance/issues/1995).
 
 ### Deprecated
 
@@ -107,7 +115,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `google.golang.org/grpc` from 1.62.1 to 1.64.0 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918), [#1972](https://github.com/provenance-io/provenance/pull/1972))
 - Bump `bufbuild/buf-breaking-action` from 1.1.3 to 1.1.4 ([#1894](https://github.com/provenance-io/provenance/pull/1894))
 - Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
-- Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.32.0 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949), [#1979](https://github.com/provenance-io/provenance/pull/1979))
+- Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.32.1 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949), [#1979](https://github.com/provenance-io/provenance/pull/1979), [#1990](https://github.com/provenance-io/provenance/pull/1990))
 - Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.7 ([#1912](https://github.com/provenance-io/provenance/pull/1912), [#1959](https://github.com/provenance-io/provenance/pull/1959))
 - Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.1 ([#1913](https://github.com/provenance-io/provenance/pull/1913))
 - Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))

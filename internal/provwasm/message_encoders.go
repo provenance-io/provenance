@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	"cosmossdk.io/log"
 
@@ -40,14 +40,14 @@ func (qr *EncoderRegistry) RegisterEncoder(route string, encoder Encoder) {
 }
 
 // MessageEncoders provides provenance message encoding support for smart contracts.
-func MessageEncoders(registry *EncoderRegistry, logger log.Logger) *wasm.MessageEncoders {
-	return &wasm.MessageEncoders{
+func MessageEncoders(registry *EncoderRegistry, logger log.Logger) *wasmkeeper.MessageEncoders {
+	return &wasmkeeper.MessageEncoders{
 		Custom: customEncoders(registry, logger),
 	}
 }
 
 // Custom provenance encoders for CosmWasm integration.
-func customEncoders(registry *EncoderRegistry, logger log.Logger) wasm.CustomEncoder {
+func customEncoders(registry *EncoderRegistry, logger log.Logger) wasmkeeper.CustomEncoder {
 	return func(contract sdk.AccAddress, msg json.RawMessage) ([]sdk.Msg, error) {
 		req := EncodeRequest{}
 		if err := json.Unmarshal(msg, &req); err != nil {
