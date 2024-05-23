@@ -44,13 +44,18 @@ jobs:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt"
           path: ./pkgs.txt
       - name: Split pkgs into parts
-        # The x/marker/simulation test-race takes around 6ish minutes and is by far the longest running one.
-        # The next longest running is x/metadata/client/cli at 2.5ish minutes.
-        # So take x/marker/simulation out of the list, split the list into 3 parts and create a 4th part
-        # with just the x/marker/simulation test.
-        # TODO[1760]: Re-analyze how long tests tests take and change the splitting back to be based on speed if needed.
+        # With a standard split, test-race (03) takes the longest of all these at around 6m35s.
+        # and test-race (00) is the shortest (of the race tests) at around 4m00s.
+        # The /x/quarantine/client/testutil test-race takes around a minute and ends up in part 3.
+        # By forcing that one into 00, it should reduce the overall run-time of all these tests by about a minute.
         run: |
-          split -d -n l/4 pkgs.txt pkgs.txt.part.
+          grep -vF \
+            -e 'github.com/provenance-io/provenance//x/quarantine/client/testutil' \
+            pkgs.txt > pkgs.txt.tmp
+          split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
+          printf '%s\n' \
+            'github.com/provenance-io/provenance//x/quarantine/client/testutil' \
+            >> pkgs.txt.part.04
       - uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.00"
