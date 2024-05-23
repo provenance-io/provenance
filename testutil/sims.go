@@ -99,14 +99,25 @@ func (a SimTestHelper) WithTestingAccounts(n int) *SimTestHelper {
 	return &a
 }
 
-// GenerateTestingAccounts generates n new accounts, creates them (in state) and gives them 1 million power worth of bond tokens.
+// WithTestingAccountsWithPower returns a copy of this SimTestHelper, but with n randomized Accs having the provided power.
+func (a SimTestHelper) WithTestingAccountsWithPower(n int, power int64) *SimTestHelper {
+	a.Accs = GenerateTestingAccountsWithPower(a.T, a.Ctx, a.App, a.R, n, power)
+	return &a
+}
+
+// GenerateTestingAccounts generates n new accounts, creates them (in state) and gives each 1 million power worth of bond tokens.
 func GenerateTestingAccounts(t *testing.T, ctx sdk.Context, app *app.App, r *rand.Rand, n int) []simtypes.Account {
+	return GenerateTestingAccountsWithPower(t, ctx, app, r, n, 1_000_000)
+}
+
+// GenerateTestingAccountsWithPower generates n new accounts, creates them (in state) and gives each the provided power worth of bond tokens.
+func GenerateTestingAccountsWithPower(t *testing.T, ctx sdk.Context, app *app.App, r *rand.Rand, n int, power int64) []simtypes.Account {
 	if n <= 0 {
 		return nil
 	}
 	t.Helper()
 
-	initAmt := sdk.TokensFromConsensusPower(1_000_000, sdk.DefaultPowerReduction)
+	initAmt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	accs := simtypes.RandomAccounts(r, n)

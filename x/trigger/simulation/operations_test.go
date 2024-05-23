@@ -14,10 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/trigger/simulation"
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
@@ -171,18 +171,5 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 }
 
 func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, n)
-
-	initAmt := sdk.TokensFromConsensusPower(1000000, sdk.DefaultPowerReduction)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// add coins to the accounts
-	for _, account := range accounts {
-		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
-		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		err := testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins)
-		s.Require().NoError(err)
-	}
-
-	return accounts
+	return testutil.GenerateTestingAccounts(s.T(), s.ctx, s.app, r, n)
 }

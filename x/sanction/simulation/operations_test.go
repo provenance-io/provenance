@@ -18,10 +18,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	bankutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
 
@@ -79,19 +79,7 @@ func (s *SimTestSuite) createTestingAccounts(r *rand.Rand, count int) []simtypes
 
 // createTestingAccountsWithPower creates new accounts with the specified power (coins amount).
 func (s *SimTestSuite) createTestingAccountsWithPower(r *rand.Rand, count int, power int64) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, count)
-
-	initAmt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// add coins to the accounts
-	for _, account := range accounts {
-		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
-		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		s.Require().NoError(bankutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins))
-	}
-
-	return accounts
+	return testutil.GenerateTestingAccountsWithPower(s.T(), s.ctx, s.app, r, count, power)
 }
 
 // setSanctionParamsAboveGovDeposit looks up the x/gov min deposit and sets the
