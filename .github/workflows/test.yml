@@ -46,15 +46,17 @@ jobs:
       - name: Split pkgs into parts
         # With a standard split, test-race (03) takes the longest of all these at around 6m35s.
         # and test-race (00) is the shortest (of the race tests) at around 4m00s.
-        # The /x/quarantine/client/testutil test-race takes around a minute and ends up in part 03.
-        # By forcing that one into 00, it should reduce the overall run-time of all these tests by about a minute.
+        # The x/sanction/simulation test-race is one of the longer ones (at almost 2 minutes), and ends up in part 03.
+        # By forcing that one into 00, it ends up reducing the overall run-time of this whole workflow by about a minute.
         run: |
           grep -vF \
             -e 'github.com/provenance-io/provenance/x/sanction/simulation' \
+            -e 'github.com/provenance-io/provenance/x/marker/client/cli' \
             pkgs.txt > pkgs.txt.tmp
           split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
           printf '%s\n' \
             'github.com/provenance-io/provenance/x/sanction/simulation' \
+            'github.com/provenance-io/provenance/x/marker/client/cli' \
             >> pkgs.txt.part.00
       - uses: actions/upload-artifact@v4
         with:
