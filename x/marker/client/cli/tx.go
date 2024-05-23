@@ -1069,12 +1069,16 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 				return err
 			}
 
+<<<<<<< HEAD
 			msg := types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.From, netAssetValues)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+=======
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), types.NewMsgAddNetAssetValuesRequest(denom, clientCtx.GetFromAddress().String(), netAssetValues))
+>>>>>>> 9eb21707 (`add-net-asset-values` command now correctly uses the from `flag`'s `AccAddress` (#1996))
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
