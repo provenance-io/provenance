@@ -19,7 +19,7 @@ const (
 
 // ContractFn randomized contract address
 func ContractFn(r *rand.Rand, accs []simtypes.Account) string {
-	randomAccount, _ := helpers.SelectRandomEntries(r, accs, 1)
+	randomAccount, _ := helpers.SelectRandomAccounts(r, accs, 1)
 	if r.Intn(2) > 0 || len(randomAccount) == 0 {
 		return ""
 	}

@@ -56,7 +56,7 @@ func SimulateMsgCreateTrigger(simState module.SimulationState, _ keeper.Keeper, 
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		now := ctx.BlockTime()
-		raccs, err := helpers.SelectRandomEntries(r, accs, 2)
+		raccs, err := helpers.SelectRandomAccounts(r, accs, 2)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), err.Error()), nil, nil
 		}

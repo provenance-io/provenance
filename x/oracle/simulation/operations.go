@@ -71,7 +71,7 @@ func SimulateMsgSendQueryOracle(simState module.SimulationState, _ keeper.Keeper
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		raccs, err := helpers.SelectRandomEntries(r, accs, 1)
+		raccs, err := helpers.SelectRandomAccounts(r, accs, 1)
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil

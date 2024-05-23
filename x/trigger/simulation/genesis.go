@@ -63,7 +63,7 @@ func NewRandomAction(r *rand.Rand, from string, to string) sdk.Msg {
 
 // NewRandomTrigger returns a random trigger
 func NewRandomTrigger(r *rand.Rand, simState *module.SimulationState, accs []simtypes.Account, id types.TriggerID) types.Trigger {
-	raccs, err := helpers.SelectRandomEntries(r, accs, 2)
+	raccs, err := helpers.SelectRandomAccounts(r, accs, 2)
 	if err != nil {
 		panic(fmt.Errorf("NewRandomTrigger failed: %w", err))
 	}
