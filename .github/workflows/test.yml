@@ -50,7 +50,7 @@ jobs:
         # with just the x/marker/simulation test.
         # TODO[1760]: Re-analyze how long tests tests take and change the splitting back to be based on speed if needed.
         run: |
-          split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
+          split -d -n l/4 pkgs.txt pkgs.txt.part.
       - uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.00"
