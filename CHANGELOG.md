@@ -37,7 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Bug Fixes
+
+* The `add-net-asset-values` command now correctly uses the from `flag`'s `AccAddress` [#1995](https://github.com/provenance-io/provenance/issues/1995).
 
 ---
 
