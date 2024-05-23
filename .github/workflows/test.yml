@@ -50,11 +50,11 @@ jobs:
         # By forcing that one into 00, it should reduce the overall run-time of all these tests by about a minute.
         run: |
           grep -vF \
-            -e 'github.com/provenance-io/provenance/x/quarantine/client/testutil' \
+            -e 'github.com/provenance-io/provenance/x/sanction/simulation' \
             pkgs.txt > pkgs.txt.tmp
           split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
           printf '%s\n' \
-            'github.com/provenance-io/provenance/x/quarantine/client/testutil' \
+            'github.com/provenance-io/provenance/x/sanction/simulation' \
             >> pkgs.txt.part.00
       - uses: actions/upload-artifact@v4
         with:
