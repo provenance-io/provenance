@@ -101,6 +101,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Rosetta has been removed from the `provenanced` executable [#1981](https://github.com/provenance-io/provenance/pull/1981).
   It is now a stand-alone service. See: <https://github.com/cosmos/rosetta> for more info.
 
+### Bug Fixes
+
+* The `add-net-asset-values` command now correctly uses the from `flag`'s `AccAddress` [#1995](https://github.com/provenance-io/provenance/issues/1995).
+
 ### Deprecated
 
 * In the config commands, the "tendermint" and "tm" options are deprecated, replaced with "cometbft", "comet", and "cmt" [#1968](https://github.com/provenance-io/provenance/pull/1968).
