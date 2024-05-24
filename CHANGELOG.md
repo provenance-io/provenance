@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add the Sanction module back in [#1922](https://github.com/provenance-io/provenance/pull/1922).
 * Add the Quarantine module back in [#1926](https://github.com/provenance-io/provenance/pull/1926).
 * Bump wasmd to `v0.50.0` [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Update stargate queries for Attribute, Exchange, Marker, IBCRateLimit, Metadata, Msgfees, and Oracle modules [#1760](https://github.com/provenance-io/provenance/issues/1760).
 
 ### Improvements
 
@@ -92,6 +93,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add `UpdateParams` and `Params` query rpc endpoints to modules.
   * `ibcratelimit` add `UpdateParams` endpoint and deprecate `GovUpdateParams` [#1984](https://github.com/provenance-io/provenance/pull/1984).
   * `attribute` add `UpdateParams` endpoint and cli [#1987](https://github.com/provenance-io/provenance/pull/1987).
+  * `marker` add `UpdateParams` endpoint and cli [#1991](https://github.com/provenance-io/provenance/pull/1991).
+* Update the exchange `commitment-settlement-fee-calc` cli query to utilize the keyring [#2001](https://github.com/provenance-io/provenance/pull/2001).
 
 ### Client Breaking
 
@@ -100,6 +103,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Many of the SDK's query commands have had their usage altered [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Rosetta has been removed from the `provenanced` executable [#1981](https://github.com/provenance-io/provenance/pull/1981).
   It is now a stand-alone service. See: <https://github.com/cosmos/rosetta> for more info.
+
+### Bug Fixes
+
+* The `add-net-asset-values` command now correctly uses the from `flag`'s `AccAddress` [#1995](https://github.com/provenance-io/provenance/issues/1995).
 
 ### Deprecated
 
@@ -123,6 +130,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/hashicorp/go-getter` from 1.7.3 to 1.7.4 ([#1958](https://github.com/provenance-io/provenance/pull/1958))
 - Bump `golang.org/x/text` from 0.14.0 to 0.15.0 ([#1964](https://github.com/provenance-io/provenance/pull/1964))
 - Bump `docker/setup-qemu-action` from 2 to 3 ([#1983](https://github.com/provenance-io/provenance/pull/1983))
+- Update `github.com/cosmos/ibc-go/v8` to our forked tag v8.2.1-pio-1 ([#1998](https://github.com/provenance-io/provenance/pull/1998))
 
 ---
 

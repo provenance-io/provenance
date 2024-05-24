@@ -34,11 +34,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	store.Set(types.MarkerParamStoreKey, bz)
 }
 
-// Deprecated: GetMaxTotalSupply is kept for backwards compatibility.
-func (k Keeper) GetMaxTotalSupply(ctx sdk.Context) (max uint64) {
-	return k.GetParams(ctx).MaxTotalSupply
-}
-
 // GetMaxSupply returns the current parameter value for the max allowed supply.
 func (k Keeper) GetMaxSupply(ctx sdk.Context) (max sdkmath.Int) {
 	return k.GetParams(ctx).MaxSupply

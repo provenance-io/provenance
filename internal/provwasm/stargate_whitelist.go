@@ -18,10 +18,12 @@ import (
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
+	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -81,6 +83,8 @@ func init() {
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attribute", &attributetypes.QueryAttributeResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attributes", &attributetypes.QueryAttributesResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Scan", &attributetypes.QueryScanResponse{})
+	setWhitelistedQuery("/provenance.attribute.v1.Query/AttributeAccounts", &attributetypes.QueryAttributeAccountsResponse{})
+	setWhitelistedQuery("/provenance.attribute.v1.Query/AccountData", &attributetypes.QueryAccountDataResponse{})
 
 	// exchange
 	setWhitelistedQuery("/provenance.exchange.v1.Query/OrderFeeCalc", &exchange.QueryOrderFeeCalcResponse{})
@@ -90,49 +94,81 @@ func init() {
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetOwnerOrders", &exchange.QueryGetOwnerOrdersResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAssetOrders", &exchange.QueryGetAssetOrdersResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllOrders", &exchange.QueryGetAllOrdersResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetCommitment", &exchange.QueryGetCommitmentResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAccountCommitments", &exchange.QueryGetAccountCommitmentsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarkerCommitments", &exchange.QueryGetMarketCommitmentsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllCommitments", &exchange.QueryGetAllCommitmentsResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarket", &exchange.QueryGetMarketResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllMarkets", &exchange.QueryGetAllMarketsResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/Params", &exchange.QueryParamsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/CommitmentSettlementFeeCalc", &exchange.QueryCommitmentSettlementFeeCalcResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/ValidateCreateMarket", &exchange.QueryValidateCreateMarketResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/ValidateMarket", &exchange.QueryValidateMarketResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/ValidateManageFees", &exchange.QueryValidateManageFeesResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetPayment", &exchange.QueryGetPaymentResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetPaymentsWithSource", &exchange.QueryGetPaymentsWithSourceResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetPaymentsWithTarget", &exchange.QueryGetPaymentsWithTargetResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllPayments", &exchange.QueryGetAllPaymentsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/PaymentFeeCalc", &exchange.QueryPaymentFeeCalcResponse{})
 
 	// hold
 	setWhitelistedQuery("/provenance.hold.v1.Query/GetHolds", &hold.GetHoldsResponse{})
 	setWhitelistedQuery("/provenance.hold.v1.Query/GetAllHolds", &hold.GetAllHoldsResponse{})
 
+	// ibcratelimit
+	setWhitelistedQuery("/provenance.ibcratelimit.v1.Query/Params", &ibcratelimit.ParamsResponse{})
+
 	// marker
 	setWhitelistedQuery("/provenance.marker.v1.Query/Params", &markertypes.QueryParamsResponse{})
+	setWhitelistedQuery("/provenance.marker.v1.Query/AllMarkers", &markertypes.QueryAllMarkersResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Marker", &markertypes.QueryMarkerResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Holding", &markertypes.QueryHoldingResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Supply", &markertypes.QuerySupplyResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Escrow", &markertypes.QueryEscrowResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Access", &markertypes.QueryAccessResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/DenomMetadata", &markertypes.QueryDenomMetadataResponse{})
+	setWhitelistedQuery("/provenance.marker.v1.Query/AccountData", &markertypes.QueryAccountDataResponse{})
+	setWhitelistedQuery("/provenance.marker.v1.Query/NetAssetValues", &markertypes.QueryNetAssetValuesResponse{})
 
 	// metadata
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Params", &metadatatypes.QueryParamsResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Scope", &metadatatypes.ScopeResponse{})
+	setWhitelistedQuery("/provenance.metadata.v1.Query/ScopesAll", &metadatatypes.ScopesAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Sessions", &metadatatypes.SessionsResponse{})
+	setWhitelistedQuery("/provenance.metadata.v1.Query/SessionsAll", &metadatatypes.SessionsAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Records", &metadatatypes.RecordsResponse{})
+	setWhitelistedQuery("/provenance.metadata.v1.Query/RecordsAll", &metadatatypes.RecordsAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Ownership", &metadatatypes.OwnershipResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/ValueOwnership", &metadatatypes.ValueOwnershipResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/ScopeSpecification", &metadatatypes.ScopeSpecificationResponse{})
+	setWhitelistedQuery("/provenance.metadata.v1.Query/ScopeSpecificationsAll", &metadatatypes.ScopeSpecificationsAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/ContractSpecification", &metadatatypes.ContractSpecificationResponse{})
+	setWhitelistedQuery("/provenance.metadata.v1.Query/ContractSpecificationsAll", &metadatatypes.ContractSpecificationsAllResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/RecordSpecificationsForContractSpecification", &metadatatypes.RecordSpecificationsForContractSpecificationResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/RecordSpecification", &metadatatypes.RecordSpecificationResponse{})
+	setWhitelistedQuery("/provenance.metadata.v1.Query/RecordSpecificationsAll", &metadatatypes.RecordSpecificationsAllResponse{})
+	setWhitelistedQuery("/provenance.metadata.v1.Query/GetByAddr", &metadatatypes.GetByAddrResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/OSLocatorParams", &metadatatypes.OSLocatorParamsResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/OSLocator", &metadatatypes.OSLocatorResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/OSLocatorsByURI", &metadatatypes.OSLocatorsByURIResponse{})
 	setWhitelistedQuery("/provenance.metadata.v1.Query/OSLocatorsByScope", &metadatatypes.OSLocatorsByScopeResponse{})
+	setWhitelistedQuery("/provenance.metadata.v1.Query/OSAllLocators", &metadatatypes.OSAllLocatorsResponse{})
+	setWhitelistedQuery("/provenance.metadata.v1.Query/AccountData", &metadatatypes.AccountDataResponse{})
+	setWhitelistedQuery("/provenance.metadata.v1.Query/ScopeNetAssetValues", &metadatatypes.QueryScopeNetAssetValuesResponse{})
 
 	// msg fee
 	setWhitelistedQuery("/provenance.msgfees.v1.Query/Params", &msgfeestypes.QueryParamsResponse{})
+	setWhitelistedQuery("/provenance.msgfees.v1.Query/QueryAllMsgFees", &msgfeestypes.QueryAllMsgFeesResponse{})
+	setWhitelistedQuery("/provenance.msgfees.v1.Query/CalculateTxFees", &msgfeestypes.CalculateTxFeesResponse{})
 
 	// name
 	setWhitelistedQuery("/provenance.name.v1.Query/Params", &nametypes.QueryParamsResponse{})
 	setWhitelistedQuery("/provenance.name.v1.Query/Resolve", &nametypes.QueryResolveResponse{})
 	setWhitelistedQuery("/provenance.name.v1.Query/ReverseLookup", &nametypes.QueryReverseLookupResponse{})
+
+	// oracle
+	setWhitelistedQuery("/provenance.oracle.v1.Query/OracleAddress", &oracletypes.QueryOracleAddressResponse{})
+	setWhitelistedQuery("/provenance.oracle.v1.Query/Oracle", &oracletypes.QueryOracleResponse{})
 
 	// trigger
 	setWhitelistedQuery("/provenance.trigger.v1.Query/TriggerByID", &triggertypes.QueryTriggerByIDResponse{})
