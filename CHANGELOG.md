@@ -130,6 +130,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/hashicorp/go-getter` from 1.7.3 to 1.7.4 ([#1958](https://github.com/provenance-io/provenance/pull/1958))
 - Bump `golang.org/x/text` from 0.14.0 to 0.15.0 ([#1964](https://github.com/provenance-io/provenance/pull/1964))
 - Bump `docker/setup-qemu-action` from 2 to 3 ([#1983](https://github.com/provenance-io/provenance/pull/1983))
+- Update `github.com/cosmos/ibc-go/v8` to our forked tag v8.2.1-pio-1 ([#1998](https://github.com/provenance-io/provenance/pull/1998))
 
 ---
 
