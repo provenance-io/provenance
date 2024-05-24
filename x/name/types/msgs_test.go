@@ -18,6 +18,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgDeleteNameRequest{Record: NameRecord{Address: signer}} },
 		func(signer string) sdk.Msg { return &MsgModifyNameRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgCreateRootNameRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateParamsRequest{Authority: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
