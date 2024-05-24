@@ -1845,3 +1845,51 @@ func (s *MsgServerTestSuite) TestSetDenomMetadataProposal() {
 		})
 	}
 }
+
+func (s *MsgServerTestSuite) TestMsgUpdateParamsRequest() {
+	authority := s.app.MarkerKeeper.GetAuthority()
+
+	testCases := []struct {
+		name   string
+		msg    *types.MsgUpdateParamsRequest
+		expErr string
+	}{
+		{
+			name: "successfully update params",
+			msg: &types.MsgUpdateParamsRequest{
+				Authority: authority,
+				Params: types.NewParams(
+					true,
+					"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
+					sdkmath.NewInt(1000000000000),
+				),
+			},
+		},
+		{
+			name: "fail to update params, invalid authority",
+			msg: &types.MsgUpdateParamsRequest{
+				Authority: "invalidAuthority",
+				Params: types.NewParams(
+					true,
+					"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
+					sdkmath.NewInt(1000000000000),
+				),
+			},
+			expErr: `expected "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn" got "invalidAuthority": expected gov account as only signer for proposal message`,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			ctx := sdk.WrapSDKContext(s.ctx)
+			res, err := s.msgServer.UpdateParams(ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "UpdateParams error")
+				s.Require().Nil(res, "UpdateParams response")
+			} else {
+				s.Require().NoError(err, "UpdateParams error")
+				s.Require().NotNil(res, "UpdateParams response")
+			}
+		})
+	}
+}

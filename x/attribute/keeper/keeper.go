@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
@@ -35,6 +36,8 @@ type Keeper struct {
 	cdc codec.BinaryCodec
 
 	modAddr sdk.AccAddress
+
+	authority string
 }
 
 // NewKeeper returns an attribute keeper. It handles:
@@ -53,9 +56,28 @@ func NewKeeper(
 		nameKeeper: nameKeeper,
 		cdc:        cdc,
 		modAddr:    authtypes.NewModuleAddress(types.ModuleName),
+		authority:  authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 	nameKeeper.SetAttributeKeeper(keeper)
 	return keeper
+}
+
+// GetAuthority is signer of the proposal
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
+// IsAuthority returns true if the provided address bech32 string is the authority address.
+func (k Keeper) IsAuthority(addr string) bool {
+	return strings.EqualFold(k.authority, addr)
+}
+
+// ValidateAuthority returns an error if the provided address is not the authority.
+func (k Keeper) ValidateAuthority(addr string) error {
+	if !k.IsAuthority(addr) {
+		return govtypes.ErrInvalidSigner.Wrapf("expected %q got %q", k.GetAuthority(), addr)
+	}
+	return nil
 }
 
 // Logger returns a module-specific logger.

@@ -112,3 +112,8 @@ message EventAttributeExpired {
 message EventAccountDataUpdated {
   string account = 1;
 }
+
+// EventAttributeParamsUpdated event emitted when attribute params are updated.
+message EventAttributeParamsUpdated {
+  string max_value_length = 1;
+}
