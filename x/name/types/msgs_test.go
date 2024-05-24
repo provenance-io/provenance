@@ -70,3 +70,49 @@ func TestMsgCreateRootNameRequestValidateBasic(t *testing.T) {
 		}
 	}
 }
+
+func TestMsgUpdateParamsRequestValidateBasic(t *testing.T) {
+	authority := sdk.AccAddress("input111111111111111").String()
+
+	testCases := []struct {
+		name                   string
+		maxSegmentLength       uint32
+		minSegmentLength       uint32
+		maxNameLevels          uint32
+		allowUnrestrictedNames bool
+		authority              string
+		shouldFail             bool
+		expectedErr            string
+	}{
+		{
+			"valid request",
+			100,
+			3,
+			10,
+			true,
+			authority,
+			false,
+			"",
+		},
+		{
+			"invalid authority",
+			100,
+			3,
+			10,
+			true,
+			"blah",
+			true,
+			"decoding bech32 failed: invalid bech32 string length 4",
+		},
+	}
+
+	for _, tc := range testCases {
+		msg := NewMsgUpdateParamsRequest(tc.maxSegmentLength, tc.minSegmentLength, tc.maxNameLevels, tc.allowUnrestrictedNames, tc.authority)
+		err := msg.ValidateBasic()
+		if tc.shouldFail {
+			require.EqualError(t, err, tc.expectedErr, "expected error for case: %s", tc.name)
+		} else {
+			require.NoError(t, err, "unexpected error for case: %s", tc.name)
+		}
+	}
+}
