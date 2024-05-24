@@ -221,7 +221,7 @@ Type: `provenance.marker.v1.EventSetNetAssetValue`
 ---
 ## Marker Params Updated
 
-Fires when a `EventMarkerParamsUpdated` the marker modules params have been update via gov proposal.
+Fires when an `EventMarkerParamsUpdated` event occurs, indicating that the marker module's parameters have been updated via a governance proposal.
 
 Type: `provenance.marker.v1.EventMarkerParamsUpdated`
 
