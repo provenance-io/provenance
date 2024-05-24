@@ -8,6 +8,7 @@ The name module emits the following events:
     - [MsgDeleteNameRequest](#msgdeletenamerequest)
     - [MsgModifyNameRequest](#msgmodifynamerequest)
     - [CreateRootNameProposal](#createrootnameproposal)
+    - [EventNameParamsUpdated](#eventnameparamsupdated)
 
 ## Handlers
 
@@ -45,3 +46,12 @@ The name module emits the following events:
 | name_bound            | name                  | \{NameRecord|Name\}         |
 | name_bound            | address               | \{NameRecord|Address\}      |
 | name_bound            | restricted            | \{NameRecord|Restricted\}   |
+
+### EventNameParamsUpdated
+
+| Type                     | Attribute Key              | Attribute Value             |
+| ------------------------ | -------------------------- | --------------------------- |
+| name_params_updated      | allow_unrestricted_names   | \{Boolean\}                 |
+| name_params_updated      | max_name_levels            | \{String\}                  |
+| name_params_updated      | min_segment_length         | \{String\}                  |
+| name_params_updated      | max_segment_length         | \{String\}                  |
