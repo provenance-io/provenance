@@ -16,6 +16,7 @@ The marker module emits the following events:
   - [Transfer](#transfer)
   - [Set Denom Metadata](#set-denom-metadata)
   - [Set Net Asset Value](#set-net-asset-value)
+  - [Marker Params Updated](#marker-params-updated)
 
 
 
@@ -216,3 +217,16 @@ Type: `provenance.marker.v1.EventSetNetAssetValue`
 | Price         | \{token amount the marker is valued at for volume\} |
 | Volume        | \{total volume/shares associated with price\}       |
 | Source        | \{source address of caller\}                        |
+
+---
+## Marker Params Updated
+
+Fires when an `EventMarkerParamsUpdated` event occurs, indicating that the marker module's parameters have been updated via a governance proposal.
+
+Type: `provenance.marker.v1.EventMarkerParamsUpdated`
+
+| Attribute Key           | Attribute Value                                     |
+|-------------------------|-----------------------------------------------------|
+| EnableGovernance        | \{value for if governance control is enabled\}      |
+| UnrestrictedDenomRegex  | \{regex for unrestricted denom validation\}         | 
+| MaxSupply               | \{value for the max allowed supply\}                |

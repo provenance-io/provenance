@@ -41,14 +41,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new parameter object
 func NewParams(
-	maxTotalSupply uint64,
 	enableGovernance bool,
 	unrestrictedDenomRegex string,
 	maxSupply sdkmath.Int,
 ) Params {
 	return Params{
 		EnableGovernance:       enableGovernance,
-		MaxTotalSupply:         maxTotalSupply,
 		UnrestrictedDenomRegex: unrestrictedDenomRegex,
 		MaxSupply:              maxSupply,
 	}
@@ -68,7 +66,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 // DefaultParams is the default parameter configuration for the bank module
 func DefaultParams() Params {
 	return NewParams(
-		DefaultMaxTotalSupply,
 		DefaultEnableGovernance,
 		DefaultUnrestrictedDenomRegex,
 		StringToBigInt(DefaultMaxSupply),
@@ -77,14 +74,12 @@ func DefaultParams() Params {
 
 func (p Params) Validate() error {
 	errs := []error{
-		validateEnableGovernance(p.EnableGovernance),
-		validateIntParam(p.MaxTotalSupply),
 		validateRegexParam(p.UnrestrictedDenomRegex),
-		validateBigIntParam(p.MaxSupply),
 	}
 	return errors.Join(errs...)
 }
 
+// TODO: remove with the umber (v1.19.x) handlers.
 func validateIntParam(i interface{}) error {
 	_, ok := i.(uint64)
 	if !ok {
@@ -94,6 +89,7 @@ func validateIntParam(i interface{}) error {
 	return nil
 }
 
+// TODO: remove with the umber (v1.19.x) handlers.
 func validateBigIntParam(i interface{}) error {
 	_, ok := i.(sdkmath.Int)
 	if !ok {
@@ -103,6 +99,7 @@ func validateBigIntParam(i interface{}) error {
 	return nil
 }
 
+// TODO: remove with the umber (v1.19.x) handlers.
 func validateEnableGovernance(i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {

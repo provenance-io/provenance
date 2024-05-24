@@ -346,7 +346,7 @@ func (k Keeper) IncreaseSupply(ctx sdk.Context, marker types.MarkerAccountI, coi
 
 	inCirculation := sdk.NewCoin(marker.GetDenom(), k.bankKeeper.GetSupply(ctx, marker.GetDenom()).Amount)
 	total := inCirculation.Add(coin)
-	maxAllowed := sdk.NewCoin(marker.GetDenom(), k.GetParams(ctx).MaxSupply)
+	maxAllowed := sdk.NewCoin(marker.GetDenom(), k.GetMaxSupply(ctx))
 	if total.Amount.GT(maxAllowed.Amount) {
 		return fmt.Errorf(
 			"requested supply %s exceeds maximum allowed value %s", total.Amount.String(), maxAllowed.Amount.String())

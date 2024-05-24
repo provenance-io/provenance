@@ -2552,3 +2552,62 @@ func (s *IntegrationTestSuite) TestUpdateParamsProposal() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestUpdateMarkerParamsCmd() {
+	testCases := []struct {
+		name         string
+		cmd          *cobra.Command
+		args         []string
+		expectErr    string
+		expectedCode uint32
+	}{
+		{
+			name: "update marker params, should succeed",
+			cmd:  markercli.GetUpdateMarkerParamsCmd(),
+			args: []string{
+				"true",
+				"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
+				"1000000",
+			},
+			expectedCode: 0,
+		},
+		{
+			name: "update marker params, should fail incorrect governance flag",
+			cmd:  markercli.GetUpdateMarkerParamsCmd(),
+			args: []string{
+				"invalid",
+				"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
+				"1000000",
+			},
+			expectErr: `invalid enable governance flag: strconv.ParseBool: parsing "invalid": invalid syntax`,
+		},
+		{
+			name: "update marker params, should fail incorrect maxSupply",
+			cmd:  markercli.GetUpdateMarkerParamsCmd(),
+			args: []string{
+				"true",
+				"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
+				"invalid",
+			},
+			expectErr: `invalid max supply: "invalid"`,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			)
+			testcli.NewTxExecutor(tc.cmd, tc.args).
+				WithExpErrMsg(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}

@@ -19,7 +19,7 @@ service Msg {
     option deprecated = true;
   }
 
-  // UpdateParams is a governance proposal endpoint for updating the exchange module's params.
+  // UpdateParams is a governance proposal endpoint for updating the ibcratelimit module's params.
   rpc UpdateParams(MsgUpdateParamsRequest) returns (MsgUpdateParamsResponse);
 }
 
