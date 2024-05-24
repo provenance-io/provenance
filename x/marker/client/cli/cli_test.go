@@ -20,7 +20,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
@@ -54,10 +53,11 @@ const (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg              testnet.Config
-	testnet          *testnet.Network
+	cfg     testnet.Config
+	testnet *testnet.Network
+
 	keyring          keyring.Keyring
-	keyringDir       string
+	keyringEntries   []testutil.TestKeyringEntry
 	accountAddresses []sdk.AccAddress
 
 	holderDenom string
@@ -66,19 +66,8 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) GenerateAccountsWithKeyrings(number int) {
-	path := hd.CreateHDPath(118, 0, 0).String()
-	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
-	s.Require().NoError(err)
-	s.keyring = kr
-	for i := 0; i < number; i++ {
-		keyId := fmt.Sprintf("test_key%v", i)
-		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-		s.Require().NoError(err)
-		addr, err := info.GetAddress()
-		s.Require().NoError(err, "getting keyring address")
-		s.accountAddresses = append(s.accountAddresses, addr)
-	}
+	s.keyringEntries, s.keyring = testutil.GenerateTestKeyring(s.T(), number, s.cfg.Codec)
+	s.accountAddresses = testutil.GetKeyringEntryAddresses(s.keyringEntries)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -1098,7 +1087,7 @@ func (s *IntegrationTestSuite) TestMarkerAuthzTxCommands() {
 	defer func() {
 		s.testnet.Validators[0].ClientCtx = curClientCtx
 	}()
-	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
 
 	testCases := []struct {
 		name         string

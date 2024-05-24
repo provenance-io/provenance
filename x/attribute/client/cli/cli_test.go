@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
@@ -39,11 +38,11 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg        testnet.Config
-	testnet    *testnet.Network
-	keyring    keyring.Keyring
-	keyringDir string
+	cfg     testnet.Config
+	testnet *testnet.Network
 
+	keyring          keyring.Keyring
+	keyringEntries   []testutil.TestKeyringEntry
 	accountAddresses []sdk.AccAddress
 
 	account1Addr sdk.AccAddress
@@ -77,21 +76,8 @@ func TestIntegrationTestSuite(t *testing.T) {
 // Generate a number of accounts with keyring entries.
 // To use these, do .WithKeyring(s.keyring) when getting the client context.
 func (s *IntegrationTestSuite) generateKeyringAndAccounts(number int) {
-	path := hd.CreateHDPath(118, 0, 0).String()
-	s.keyringDir = s.T().TempDir()
-	var err error
-	s.keyring, err = keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
-	s.Require().NoError(err, "creating keyring")
-
-	s.accountAddresses = make([]sdk.AccAddress, number)
-	for i := range s.accountAddresses {
-		keyID := fmt.Sprintf("test_key%v", i+1)
-		info, _, err := s.keyring.NewMnemonic(keyID, keyring.English, path, "", hd.Secp256k1)
-		s.Require().NoError(err, "NewMnemonic(%q)", keyID)
-		addr, err := info.GetAddress()
-		s.Require().NoError(err, "getting keyring address")
-		s.accountAddresses[i] = addr
-	}
+	s.keyringEntries, s.keyring = testutil.GenerateTestKeyring(s.T(), number, s.cfg.Codec)
+	s.accountAddresses = testutil.GetKeyringEntryAddresses(s.keyringEntries)
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
