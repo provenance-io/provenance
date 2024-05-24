@@ -198,3 +198,19 @@ func (s msgServer) CreateRootName(goCtx context.Context, msg *types.MsgCreateRoo
 
 	return &types.MsgCreateRootNameResponse{}, nil
 }
+
+// UpdateParams is a governance proposal endpoint for updating the name module's params.
+func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParamsRequest) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	k.SetParams(ctx, msg.Params)
+	// if err := ctx.EventManager().EmitTypedEvent(types.NewEventMarkerParamsUpdated(msg.Params.EnableGovernance, msg.Params.GetUnrestrictedDenomRegex(), msg.Params.MaxSupply)); err != nil {
+	// 	return nil, err
+	// }
+
+	return &types.MsgUpdateParamsResponse{}, nil
+}
