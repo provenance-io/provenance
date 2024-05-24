@@ -157,6 +157,8 @@ func init() {
 
 	// msg fee
 	setWhitelistedQuery("/provenance.msgfees.v1.Query/Params", &msgfeestypes.QueryParamsResponse{})
+	setWhitelistedQuery("/provenance.msgfees.v1.Query/QueryAllMsgFees", &msgfeestypes.QueryAllMsgFeesResponse{})
+	setWhitelistedQuery("/provenance.msgfees.v1.Query/CalculateTxFees", &msgfeestypes.CalculateTxFeesResponse{})
 
 	// name
 	setWhitelistedQuery("/provenance.name.v1.Query/Params", &nametypes.QueryParamsResponse{})
