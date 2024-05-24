@@ -51,6 +51,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgChangeStatusProposalRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgWithdrawEscrowProposalRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgSetDenomMetadataProposalRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateParamsRequest{Authority: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
@@ -1214,6 +1215,70 @@ func TestMsgSetDenomMetadataProposalRequestValidateBasic(t *testing.T) {
 				require.EqualError(t, err, tc.expectedError)
 			} else {
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateParamsRequestValidateBasic(t *testing.T) {
+	validAuthority := "cosmos1sh49f6ze3vn7cdl2amh2gnc70z5mten3y08xck"
+	invalidAuthority := "invalidaddress"
+
+	testCases := []struct {
+		name          string
+		msg           MsgUpdateParamsRequest
+		expectError   bool
+		expectedError string
+	}{
+		{
+			name: "valid case",
+			msg: MsgUpdateParamsRequest{
+				Authority: validAuthority,
+				Params: NewParams(
+					true,
+					"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
+					sdkmath.NewInt(1000000000000),
+				),
+			},
+			expectError: false,
+		},
+		{
+			name: "invalid regex",
+			msg: MsgUpdateParamsRequest{
+				Authority: validAuthority,
+				Params: NewParams(
+					true,
+					"^invalidregex$",
+					sdkmath.NewInt(1000000000000),
+				),
+			},
+			expectError:   true,
+			expectedError: "invalid parameter, validation regex must not contain anchors ^,$",
+		},
+		{
+			name: "invalid authority",
+			msg: MsgUpdateParamsRequest{
+				Authority: invalidAuthority,
+				Params: NewParams(
+					true,
+					"[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}",
+					sdkmath.NewInt(1000000000000),
+				),
+			},
+			expectError:   true,
+			expectedError: "decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectError {
+				require.Error(t, err, "expected error but got none for case: %s", tc.name)
+				require.EqualError(t, err, tc.expectedError, "unexpected error message for case: %s", tc.name)
+			} else {
+				require.NoError(t, err, "unexpected error for case: %s", tc.name)
 			}
 		})
 	}

@@ -45,6 +45,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgChangeStatusProposalRequest)(nil),
 	(*MsgWithdrawEscrowProposalRequest)(nil),
 	(*MsgSetDenomMetadataProposalRequest)(nil),
+	(*MsgUpdateParamsRequest)(nil),
 }
 
 func NewMsgFinalizeRequest(denom string, admin sdk.AccAddress) *MsgFinalizeRequest {
@@ -717,6 +718,30 @@ func NewMsgSetDenomMetadataProposalRequest(metadata banktypes.Metadata, authorit
 
 func (msg MsgSetDenomMetadataProposalRequest) ValidateBasic() error {
 	if err := msg.Metadata.Validate(); err != nil {
+		return err
+	}
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	return err
+}
+
+func NewMsgUpdateParamsRequest(
+	enableGovernance bool,
+	unrestrictedDenomRegex string,
+	maxSupply sdkmath.Int,
+	authority string,
+) *MsgUpdateParamsRequest {
+	return &MsgUpdateParamsRequest{
+		Authority: authority,
+		Params: NewParams(
+			enableGovernance,
+			unrestrictedDenomRegex,
+			maxSupply,
+		),
+	}
+}
+
+func (msg MsgUpdateParamsRequest) ValidateBasic() error {
+	if err := msg.Params.Validate(); err != nil {
 		return err
 	}
 	_, err := sdk.AccAddressFromBech32(msg.Authority)

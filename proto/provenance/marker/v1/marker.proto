@@ -208,3 +208,10 @@ message EventSetNetAssetValue {
   string volume = 3;
   string source = 4;
 }
+
+// EventMarkerParamsUpdated event emitted when marker params are updated.
+message EventMarkerParamsUpdated {
+  string enable_governance        = 1;
+  string unrestricted_denom_regex = 2;
+  string max_supply               = 3;
+}
