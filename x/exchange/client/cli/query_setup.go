@@ -474,7 +474,11 @@ func MakeQueryCommitmentSettlementFeeCalc(clientCtx client.Context, flagSet *pfl
 	errs := make([]error, 4)
 	clientCtx.From, errs[0] = flagSet.GetString(flags.FlagFrom)
 	if len(clientCtx.From) > 0 {
-		clientCtx.FromAddress, errs[1] = sdk.AccAddressFromBech32(clientCtx.From)
+		if addr, err := sdk.AccAddressFromBech32(clientCtx.From); err == nil {
+			clientCtx.FromAddress = addr
+		} else {
+			clientCtx.FromAddress, clientCtx.From, _, errs[1] = client.GetFromFields(clientCtx, clientCtx.Keyring, clientCtx.From)
+		}
 	}
 	rv.Settlement, errs[2] = MakeMsgMarketCommitmentSettle(clientCtx, flagSet, args)
 	rv.IncludeBreakdownFields, errs[3] = flagSet.GetBool(FlagDetails)
