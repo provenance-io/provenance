@@ -81,6 +81,8 @@ func init() {
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attribute", &attributetypes.QueryAttributeResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Attributes", &attributetypes.QueryAttributesResponse{})
 	setWhitelistedQuery("/provenance.attribute.v1.Query/Scan", &attributetypes.QueryScanResponse{})
+	setWhitelistedQuery("/provenance.attribute.v1.Query/AttributeAccounts", &attributetypes.QueryAttributeAccountsResponse{})
+	setWhitelistedQuery("/provenance.attribute.v1.Query/AccountData", &attributetypes.QueryAccountDataResponse{})
 
 	// exchange
 	setWhitelistedQuery("/provenance.exchange.v1.Query/OrderFeeCalc", &exchange.QueryOrderFeeCalcResponse{})
@@ -90,12 +92,22 @@ func init() {
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetOwnerOrders", &exchange.QueryGetOwnerOrdersResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAssetOrders", &exchange.QueryGetAssetOrdersResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllOrders", &exchange.QueryGetAllOrdersResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetCommitment", &exchange.QueryGetCommitmentResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAccountCommitments", &exchange.QueryGetAccountCommitmentsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarkerCommitments", &exchange.QueryGetMarketCommitmentsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllCommitments", &exchange.QueryGetAllCommitmentsResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarket", &exchange.QueryGetMarketResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllMarkets", &exchange.QueryGetAllMarketsResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/Params", &exchange.QueryParamsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/CommitmentSettlementFeeCalc", &exchange.QueryCommitmentSettlementFeeCalcResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/ValidateCreateMarket", &exchange.QueryValidateCreateMarketResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/ValidateMarket", &exchange.QueryValidateMarketResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/ValidateManageFees", &exchange.QueryValidateManageFeesResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetPayment", &exchange.QueryGetPaymentResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetPaymentsWithSource", &exchange.QueryGetPaymentsWithSourceResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetPaymentsWithTarget", &exchange.QueryGetPaymentsWithTargetResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllPayments", &exchange.QueryGetAllPaymentsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/PaymentFeeCalc", &exchange.QueryPaymentFeeCalcResponse{})
 
 	// hold
 	setWhitelistedQuery("/provenance.hold.v1.Query/GetHolds", &hold.GetHoldsResponse{})
