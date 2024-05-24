@@ -208,9 +208,13 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	k.SetParams(ctx, msg.Params)
-	// if err := ctx.EventManager().EmitTypedEvent(types.NewEventMarkerParamsUpdated(msg.Params.EnableGovernance, msg.Params.GetUnrestrictedDenomRegex(), msg.Params.MaxSupply)); err != nil {
-	// 	return nil, err
-	// }
+	if err := ctx.EventManager().EmitTypedEvent(types.NewEventNameParamsUpdated(
+		msg.Params.AllowUnrestrictedNames,
+		msg.Params.MaxNameLevels,
+		msg.Params.MaxSegmentLength,
+		msg.Params.MinSegmentLength)); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }
