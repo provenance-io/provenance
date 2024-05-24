@@ -18,6 +18,7 @@ import (
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
+	"github.com/provenance-io/provenance/x/ibcratelimit"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
@@ -113,14 +114,20 @@ func init() {
 	setWhitelistedQuery("/provenance.hold.v1.Query/GetHolds", &hold.GetHoldsResponse{})
 	setWhitelistedQuery("/provenance.hold.v1.Query/GetAllHolds", &hold.GetAllHoldsResponse{})
 
+	// ibcratelimit
+	setWhitelistedQuery("/provenance.ibcratelimit.v1.Query/Params", &ibcratelimit.ParamsResponse{})
+
 	// marker
 	setWhitelistedQuery("/provenance.marker.v1.Query/Params", &markertypes.QueryParamsResponse{})
+	setWhitelistedQuery("/provenance.marker.v1.Query/AllMarkers", &markertypes.QueryAllMarkersResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Marker", &markertypes.QueryMarkerResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Holding", &markertypes.QueryHoldingResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Supply", &markertypes.QuerySupplyResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Escrow", &markertypes.QueryEscrowResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/Access", &markertypes.QueryAccessResponse{})
 	setWhitelistedQuery("/provenance.marker.v1.Query/DenomMetadata", &markertypes.QueryDenomMetadataResponse{})
+	setWhitelistedQuery("/provenance.marker.v1.Query/AccountData", &markertypes.QueryAccountDataResponse{})
+	setWhitelistedQuery("/provenance.marker.v1.Query/NetAssetValues", &markertypes.QueryNetAssetValuesResponse{})
 
 	// metadata
 	setWhitelistedQuery("/provenance.metadata.v1.Query/Params", &metadatatypes.QueryParamsResponse{})
