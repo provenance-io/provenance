@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -201,6 +202,19 @@ func (k Keeper) GetEscrow(ctx sdk.Context, marker types.MarkerAccountI) sdk.Coin
 // GetAuthority is signer of the proposal
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// IsAuthority returns true if the provided address bech32 string is the authority address.
+func (k Keeper) IsAuthority(addr string) bool {
+	return strings.EqualFold(k.authority, addr)
+}
+
+// ValidateAuthority returns an error if the provided address is not the authority.
+func (k Keeper) ValidateAuthority(addr string) error {
+	if !k.IsAuthority(addr) {
+		return govtypes.ErrInvalidSigner.Wrapf("expected %q got %q", k.GetAuthority(), addr)
+	}
+	return nil
 }
 
 // IsSendDeny returns true if sender address is denied for marker

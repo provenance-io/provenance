@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 
 	cerrs "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -95,6 +96,7 @@ func NewTxCmd() *cobra.Command {
 		GetCmdRemoveAdministratorProposal(),
 		GetCmdChangeStatusProposal(),
 		GetCmdWithdrawEscrowProposal(),
+		GetUpdateMarkerParamsCmd(),
 	)
 	return txCmd
 }
@@ -1550,4 +1552,50 @@ func generateOrBroadcastOptGovProp(clientCtx client.Context, flagSet *pflag.Flag
 		return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 	}
 	return tx.GenerateOrBroadcastTxCLI(clientCtx, flagSet, msg)
+}
+
+// GetUpdateMarkerParamsCmd creates a command to update the marker module's params via governance proposal.
+func GetUpdateMarkerParamsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-marker-params <enable-governance> <unrestricted-denom-regex> <max-supply>",
+		Short:   "Update the marker module's params via governance proposal",
+		Long:    "Submit an update marker params via governance proposal along with an initial deposit.",
+		Args:    cobra.ExactArgs(3),
+		Example: fmt.Sprintf(`%[1]s tx marker update-marker-params true "[a-zA-Z][a-zA-Z0-9\\-\\.]{2,83}" 1000000000000 --deposit 50000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+
+			enableGovernance, err := strconv.ParseBool(args[0])
+			if err != nil {
+				return fmt.Errorf("invalid enable governance flag: %w", err)
+			}
+
+			unrestrictedDenomRegex := args[1]
+
+			maxSupply, ok := sdkmath.NewIntFromString(args[2])
+			if !ok {
+				return fmt.Errorf("invalid max supply: %q", args[2])
+			}
+
+			msg := types.NewMsgUpdateParamsRequest(
+				enableGovernance,
+				unrestrictedDenomRegex,
+				maxSupply,
+				authority,
+			)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
