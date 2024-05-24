@@ -55,7 +55,7 @@ func DefaultTestNetworkConfig() testnet.Config {
 		log.NewNopLogger(), dbm.NewMemDB(), nil, true, make(map[int64]bool), tempDir, 0,
 		simtestutil.NewAppOptionsWithFlagHome(tempDir),
 	)
-	encCfg := provenanceapp.MakeTestEncodingConfig(nil)
+	encCfg := tempApp.GetEncodingConfig()
 
 	return testnet.Config{
 		Codec:             encCfg.Marshaler,
