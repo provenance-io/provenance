@@ -21,8 +21,8 @@ func TestAllMsgsGetSigners(t *testing.T) {
 }
 
 func TestNewMsgUpdateParamsRequest(t *testing.T) {
-	authority := "cosmos1vh3htvc46rshps02w0p5hchdkrjvc4d8nxkw5t"
-	validContract := "cosmos1vh3htvc46rshps02w0p5hchdkrjvc4d8nxkw5t"
+	authority := sdk.AccAddress("authority").String()
+	validContract := sdk.AccAddress("valid______________").String()
 	invalidContract := "invalid_contract"
 
 	tests := []struct {
