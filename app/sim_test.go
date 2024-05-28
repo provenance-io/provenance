@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -22,7 +23,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
-	evidencetypes "cosmossdk.io/x/evidence/types"
+	"cosmossdk.io/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
@@ -33,32 +34,16 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	icagenesistypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/genesis/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 
 	cmdconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
-	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
-	"github.com/provenance-io/provenance/x/hold"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	msgfeetype "github.com/provenance-io/provenance/x/msgfees/types"
-	nametypes "github.com/provenance-io/provenance/x/name/types"
-	"github.com/provenance-io/provenance/x/quarantine"
-	"github.com/provenance-io/provenance/x/sanction"
-	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
 func init() {
@@ -122,8 +107,24 @@ func appStateWithICQ(appState json.RawMessage, cdc codec.JSONCodec) json.RawMess
 
 func setupSimulation(dirPrefix string, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) {
 	config := simcli.NewConfigFromFlags()
+	config.ChainID = pioconfig.SimAppChainID
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, dirPrefix, dbName, simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	return config, db, dir, logger, skip, err
+}
+
+// logIfEmptyValidatorSetErr writes some stuff to the logs and returns true if the provided obj is from an
+// error about the validator set being empty. If the provided obj is not that, this is a no-op and returns false.
+func logIfEmptyValidatorSetErr(logger log.Logger, obj interface{}) bool {
+	if obj == nil {
+		return false
+	}
+	errStr := fmt.Sprintf("%v", obj)
+	if strings.Contains(errStr, "validator set is empty after InitGenesis") {
+		logger.Info("Skipping simulation as all validators have been unbonded",
+			"err", errStr, "stacktrace", string(debug.Stack()))
+		return true
+	}
+	return false
 }
 
 func TestFullAppSimulation(t *testing.T) {
@@ -217,7 +218,11 @@ func TestAppImportExport(t *testing.T) {
 	}()
 
 	home := t.TempDir()
-	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	appOptions := make(simtestutil.AppOptionsMap)
+	appOptions[flags.FlagHome] = home
+	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+
+	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(config.ChainID))
 
 	fmt.Printf("running provenance test import export\n")
 
@@ -256,67 +261,61 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(config.ChainID))
 
 	var genesisState map[string]json.RawMessage
 	err = json.Unmarshal(exported.AppState, &genesisState)
 	require.NoError(t, err)
 
 	defer func() {
-		if r := recover(); r != nil {
-			rstr := fmt.Sprintf("%v", r)
-			if !strings.Contains(rstr, "validator set is empty after InitGenesis") {
-				panic(r)
-			}
-			logger.Info("Skipping simulation as all validators have been unbonded")
-			logger.Info("err", rstr, "stacktrace", string(debug.Stack()))
-		}
+		logIfEmptyValidatorSetErr(logger, recover())
 	}()
 
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
 	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
-	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
-	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+	_, err = newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
+	if logIfEmptyValidatorSetErr(logger, err) {
+		return
+	}
+	require.NoError(t, err, "InitGenesis")
+
+	err = newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+	require.NoError(t, err, "StoreConsensusParams")
 
 	fmt.Printf("comparing stores...\n")
 
-	storeKeysPrefixes := []StoreKeysPrefixes{
-		{app.keys[authtypes.StoreKey], newApp.keys[authtypes.StoreKey], [][]byte{}},
-		{app.keys[stakingtypes.StoreKey], newApp.keys[stakingtypes.StoreKey],
-			[][]byte{
-				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
-				stakingtypes.HistoricalInfoKey,
-			}}, // ordering may change but it doesn't matter
-		{app.keys[slashingtypes.StoreKey], newApp.keys[slashingtypes.StoreKey], [][]byte{}},
-		{app.keys[minttypes.StoreKey], newApp.keys[minttypes.StoreKey], [][]byte{}},
-		{app.keys[distrtypes.StoreKey], newApp.keys[distrtypes.StoreKey], [][]byte{}},
-		{app.keys[banktypes.StoreKey], newApp.keys[banktypes.StoreKey], [][]byte{banktypes.BalancesPrefix}},
-		{app.keys[paramtypes.StoreKey], newApp.keys[paramtypes.StoreKey], [][]byte{}},
-		{app.keys[govtypes.StoreKey], newApp.keys[govtypes.StoreKey], [][]byte{}},
-		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
-		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
-		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{authzkeeper.GrantKey, authzkeeper.GrantQueuePrefix}},
-		{app.keys[quarantine.StoreKey], newApp.keys[quarantine.StoreKey], [][]byte{}},
-		{app.keys[sanction.StoreKey], newApp.keys[sanction.StoreKey], [][]byte{}},
-
-		{app.keys[markertypes.StoreKey], newApp.keys[markertypes.StoreKey], [][]byte{}},
-		{app.keys[msgfeetype.StoreKey], newApp.keys[msgfeetype.StoreKey], [][]byte{}},
-		{app.keys[attributetypes.StoreKey], newApp.keys[attributetypes.StoreKey], [][]byte{attributetypes.AttributeAddrLookupKeyPrefix}},
-		{app.keys[nametypes.StoreKey], newApp.keys[nametypes.StoreKey], [][]byte{}},
-		{app.keys[metadatatypes.StoreKey], newApp.keys[metadatatypes.StoreKey], [][]byte{}},
-		{app.keys[triggertypes.StoreKey], newApp.keys[triggertypes.StoreKey], [][]byte{}},
-		{app.keys[hold.StoreKey], newApp.keys[hold.StoreKey], [][]byte{}},
+	// skip certain prefixes
+	skipPrefixes := map[string][][]byte{
+		stakingtypes.StoreKey: {
+			stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
+			stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
+			stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
+		},
+		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
+		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
+		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
 	}
 
-	for _, skp := range storeKeysPrefixes {
-		storeA := ctxA.KVStore(skp.A)
-		storeB := ctxB.KVStore(skp.B)
+	storeKeys := app.GetStoreKeys()
+	require.NotEmpty(t, storeKeys, "storeKeys")
 
-		failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skp.Prefixes)
-		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
+	for _, appKeyA := range storeKeys {
+		// only compare kvstores
+		if _, ok := appKeyA.(*storetypes.KVStoreKey); !ok {
+			continue
+		}
 
-		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
-		require.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
+		keyName := appKeyA.Name()
+		appKeyB := newApp.GetKey(keyName)
+
+		storeA := ctxA.KVStore(appKeyA)
+		storeB := ctxB.KVStore(appKeyB)
+
+		failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skipPrefixes[keyName])
+		assert.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare: %s", keyName)
+
+		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
+		assert.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
 	}
 }
 
