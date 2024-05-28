@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	sdkmath "cosmossdk.io/math"
@@ -17,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/trigger/keeper"
 	"github.com/provenance-io/provenance/x/trigger/types"
@@ -56,7 +56,7 @@ func SimulateMsgCreateTrigger(simState module.SimulationState, _ keeper.Keeper, 
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		now := ctx.BlockTime()
-		raccs, err := RandomAccs(r, accs, 2)
+		raccs, err := helpers.SelectRandomAccounts(r, accs, 2)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), err.Error()), nil, nil
 		}
@@ -162,16 +162,4 @@ func randomTrigger(r *rand.Rand, ctx sdk.Context, k keeper.Keeper) *types.Trigge
 	}
 	idx := r.Intn(len(triggers))
 	return &triggers[idx]
-}
-
-func RandomAccs(r *rand.Rand, accs []simtypes.Account, count uint64) ([]simtypes.Account, error) {
-	if uint64(len(accs)) < count {
-		return nil, fmt.Errorf("cannot choose %d accounts because there are only %d", count, len(accs))
-	}
-	raccs := make([]simtypes.Account, 0, len(accs))
-	raccs = append(raccs, accs...)
-	r.Shuffle(len(raccs), func(i, j int) {
-		raccs[i], raccs[j] = raccs[j], raccs[i]
-	})
-	return raccs[:count], nil
 }

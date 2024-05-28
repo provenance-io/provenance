@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -17,13 +18,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	bankutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/sanction"
-	"github.com/provenance-io/provenance/x/sanction/simulation"
+
+	. "github.com/provenance-io/provenance/x/sanction/simulation"
 )
 
 type SimTestSuite struct {
@@ -77,19 +79,7 @@ func (s *SimTestSuite) createTestingAccounts(r *rand.Rand, count int) []simtypes
 
 // createTestingAccountsWithPower creates new accounts with the specified power (coins amount).
 func (s *SimTestSuite) createTestingAccountsWithPower(r *rand.Rand, count int, power int64) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, count)
-
-	initAmt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// add coins to the accounts
-	for _, account := range accounts {
-		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
-		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		s.Require().NoError(bankutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins))
-	}
-
-	return accounts
+	return testutil.GenerateTestingAccountsWithPower(s.T(), s.ctx, s.app, r, count, power)
 }
 
 // setSanctionParamsAboveGovDeposit looks up the x/gov min deposit and sets the
@@ -238,8 +228,8 @@ func (s *SimTestSuite) MakeTestSimState() module.SimulationState {
 }
 
 // getWeightedOpsArgs creates a standard WeightedOpsArgs.
-func (s *SimTestSuite) getWeightedOpsArgs() simulation.WeightedOpsArgs {
-	return simulation.WeightedOpsArgs{
+func (s *SimTestSuite) getWeightedOpsArgs() WeightedOpsArgs {
+	return WeightedOpsArgs{
 		SimState:   s.MakeTestSimState(),
 		ProtoCodec: codec.NewProtoCodec(s.app.InterfaceRegistry()),
 		AK:         s.app.AccountKeeper,
@@ -260,14 +250,13 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		comment string
 		weight  int
 	}{
-		{comment: "sanction", weight: simulation.DefaultWeightSanction},
-		{comment: "immediate sanction", weight: simulation.DefaultWeightSanctionImmediate},
-		{comment: "unsanction", weight: simulation.DefaultWeightUnsanction},
-		{comment: "immediate unsanction", weight: simulation.DefaultWeightUnsanctionImmediate},
-		{comment: "update params", weight: simulation.DefaultWeightUpdateParams},
+		{comment: "sanction", weight: DefaultWeightSanction},
+		{comment: "immediate sanction", weight: DefaultWeightSanctionImmediate},
+		{comment: "unsanction", weight: DefaultWeightUnsanction},
+		{comment: "immediate unsanction", weight: DefaultWeightUnsanctionImmediate},
 	}
 
-	weightedOps := simulation.WeightedOperations(
+	weightedOps := WeightedOperations(
 		s.MakeTestSimState(), codec.NewProtoCodec(s.app.InterfaceRegistry()),
 		s.app.AccountKeeper, s.app.BankKeeper, s.app.GovKeeper, s.app.SanctionKeeper,
 	)
@@ -304,6 +293,48 @@ func (s *SimTestSuite) TestWeightedOperations() {
 			// For this specific case, both MsgSanction and MsgUnsanction look exactly the same,
 			// it's just: '{"addresses":[...]}'
 			// So, long story short (too late), there's nothing worthwhile to check in the operationMsg.Msg field.
+		})
+	}
+}
+
+func (s *SimTestSuite) TestProposalMsgs() {
+	expected := []struct {
+		key     string
+		weight  int
+		msgType sdk.Msg
+	}{
+		{key: OpWeightUpdateParams, weight: DefaultWeightUpdateParams, msgType: &sanction.MsgUpdateParams{}},
+	}
+
+	args := s.getWeightedOpsArgs()
+
+	var propMsgs []simtypes.WeightedProposalMsg
+	testGetPropMsgs := func() {
+		propMsgs = ProposalMsgs(args.SimState, args.ProtoCodec, args.AK, args.BK, args.GK, *args.SK)
+	}
+	s.Require().NotPanics(testGetPropMsgs, "ProposalMsgs")
+	s.Require().Len(propMsgs, len(expected), "ProposalMsgs")
+
+	r := rand.New(rand.NewSource(1))
+	accs := s.createTestingAccounts(r, 10)
+
+	for i, propMsg := range propMsgs {
+		exp := expected[i]
+		s.Run(exp.key, func() {
+			expMsgType := fmt.Sprintf("%T", exp.msgType)
+
+			s.Assert().Equal(exp.key, propMsg.AppParamsKey(), "AppParamsKey()")
+			s.Assert().Equal(exp.weight, propMsg.DefaultWeight(), "DefaultWeight()")
+			s.Require().NotNil(propMsg.MsgSimulatorFn(), "MsgSimulatorFn()")
+
+			var msg sdk.Msg
+			testPropMsg := func() {
+				msg = propMsg.MsgSimulatorFn()(r, s.ctx, accs)
+			}
+			s.Require().NotPanics(testPropMsg, "calling the propMsg.MsgSimulatorFn()")
+			s.Require().NotNil(msg, "msg result")
+			actMsgType := fmt.Sprintf("%T", msg)
+			s.Assert().Equal(expMsgType, actMsgType, "msg result")
 		})
 	}
 }
@@ -416,7 +447,7 @@ func (s *SimTestSuite) TestSendGovMsg() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			args := &simulation.SendGovMsgArgs{
+			args := &SendGovMsgArgs{
 				WeightedOpsArgs: s.getWeightedOpsArgs(),
 				R:               rand.New(rand.NewSource(1)),
 				App:             s.app.BaseApp,
@@ -433,7 +464,7 @@ func (s *SimTestSuite) TestSendGovMsg() {
 			var opMsg simtypes.OperationMsg
 			var err error
 			testFunc := func() {
-				skip, opMsg, err = simulation.SendGovMsg(args)
+				skip, opMsg, err = SendGovMsg(args)
 			}
 			s.Require().NotPanics(testFunc, "SendGovMsg")
 			assertions.AssertErrorContents(s.T(), err, tc.expInErr, "SendGovMsg error")
@@ -477,7 +508,7 @@ func (s *SimTestSuite) TestOperationMsgVote() {
 	var opMsg simtypes.OperationMsg
 	var err error
 	testSendGovSanct := func() {
-		skip, opMsg, err = simulation.SendGovMsg(&simulation.SendGovMsgArgs{
+		skip, opMsg, err = SendGovMsg(&SendGovMsgArgs{
 			WeightedOpsArgs: s.getWeightedOpsArgs(),
 			R:               r,
 			App:             s.app.BaseApp,
@@ -494,7 +525,7 @@ func (s *SimTestSuite) TestOperationMsgVote() {
 		})
 	}
 	testSendGovUnsanct := func() {
-		skip, opMsg, err = simulation.SendGovMsg(&simulation.SendGovMsgArgs{
+		skip, opMsg, err = SendGovMsg(&SendGovMsgArgs{
 			WeightedOpsArgs: s.getWeightedOpsArgs(),
 			R:               r,
 			App:             s.app.BaseApp,
@@ -619,7 +650,7 @@ func (s *SimTestSuite) TestOperationMsgVote() {
 		s.Run(tc.name, func() {
 			var op simtypes.Operation
 			testFunc := func() {
-				op = simulation.OperationMsgVote(&wopArgs, tc.voter, tc.govPropID, tc.vote, tc.comment)
+				op = OperationMsgVote(&wopArgs, tc.voter, tc.govPropID, tc.vote, tc.comment)
 			}
 			s.Require().NotPanics(testFunc, "OperationMsgVote")
 			var fops []simtypes.FutureOperation
@@ -802,7 +833,7 @@ func TestMaxCoins(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual sdk.Coins
 			testFunc := func() {
-				actual = simulation.MaxCoins(tc.a, tc.b)
+				actual = MaxCoins(tc.a, tc.b)
 			}
 			require.NotPanics(t, testFunc, "MaxCoins")
 			assert.Equal(t, tc.exp.String(), actual.String(), "MaxCoins result")
@@ -877,7 +908,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanction() {
 			}
 			var op simtypes.Operation
 			testFunc := func() {
-				op = simulation.SimulateGovMsgSanction(&wopArgs)
+				op = SimulateGovMsgSanction(&wopArgs)
 			}
 			s.Require().NotPanics(testFunc, "SimulateGovMsgSanction")
 			var opMsg simtypes.OperationMsg
@@ -1083,7 +1114,7 @@ func (s *SimTestSuite) TestSimulateGovMsgSanctionImmediate() {
 			}
 			var op simtypes.Operation
 			testFunc := func() {
-				op = simulation.SimulateGovMsgSanctionImmediate(&wopArgs)
+				op = SimulateGovMsgSanctionImmediate(&wopArgs)
 			}
 			s.Require().NotPanics(testFunc, "SimulateGovMsgSanctionImmediate")
 			var opMsg simtypes.OperationMsg
@@ -1291,7 +1322,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanction() {
 			}
 			var op simtypes.Operation
 			testFunc := func() {
-				op = simulation.SimulateGovMsgUnsanction(&wopArgs)
+				op = SimulateGovMsgUnsanction(&wopArgs)
 			}
 			s.Require().NotPanics(testFunc, "SimulateGovMsgUnsanction")
 			var opMsg simtypes.OperationMsg
@@ -1618,7 +1649,7 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 			}
 			var op simtypes.Operation
 			testFunc := func() {
-				op = simulation.SimulateGovMsgUnsanctionImmediate(&wopArgs)
+				op = SimulateGovMsgUnsanctionImmediate(&wopArgs)
 			}
 			s.Require().NotPanics(testFunc, "SimulateGovMsgUnsanctionImmediate")
 			var opMsg simtypes.OperationMsg
@@ -1705,152 +1736,25 @@ func (s *SimTestSuite) TestSimulateGovMsgUnsanctionImmediate() {
 	}
 }
 
-func (s *SimTestSuite) TestSimulateGovMsgUpdateParams() {
-	chainID := "test-simulate-gov-msg-update-params"
-	origMinDep := s.govMinDep
-	defer func() {
-		s.govMinDep = origMinDep
-	}()
-	s.govMinDep = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2))
-	s.requireResetParams()
-
-	s.resetAccsRand()
-
-	tests := []struct {
-		name            string
-		r               *rand.Rand
-		accs            []simtypes.Account
-		expInErr        []string
-		expOpMsgOK      bool
-		expOpMsgRoute   string
-		expOpMsgName    string
-		expOpMsgComment string
-		expParams       *sanction.Params
-	}{
-		{
-			name:            "problem sending gov msg",
-			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccountsWithPower(s.accsRand, 10, 0),
-			expOpMsgOK:      false,
-			expOpMsgRoute:   "sanction",
-			expOpMsgName:    sdk.MsgTypeURL(&sanction.MsgUpdateParams{}),
-			expOpMsgComment: "sender has no spendable coins",
-		},
-		{
-			name:            "all good seed 1",
-			r:               rand.New(rand.NewSource(1)),
-			accs:            s.createTestingAccounts(s.accsRand, 10),
-			expOpMsgOK:      true,
-			expOpMsgRoute:   "gov",
-			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
-			expOpMsgComment: "update params",
-			expParams: &sanction.Params{
-				ImmediateSanctionMinDeposit:   nil,
-				ImmediateUnsanctionMinDeposit: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 821+1)},
-			},
-		},
-		{
-			name:            "all good seed 100",
-			r:               rand.New(rand.NewSource(100)),
-			accs:            s.createTestingAccounts(s.accsRand, 10),
-			expOpMsgOK:      true,
-			expOpMsgRoute:   "gov",
-			expOpMsgName:    sdk.MsgTypeURL(&govv1.MsgSubmitProposal{}),
-			expOpMsgComment: "update params",
-			expParams: &sanction.Params{
-				ImmediateSanctionMinDeposit:   sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 24+1)},
-				ImmediateUnsanctionMinDeposit: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 39+1)},
-			},
-		},
-	}
-
+func (s *SimTestSuite) TestSimulatePropMsgUpdateParams() {
+	seedVal := int64(3) // 3 chosen by random roll of a d10.
 	wopArgs := s.getWeightedOpsArgs()
-	voteType := sdk.MsgTypeURL(&govv1.MsgVote{})
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.freshCtx()
-			var op simtypes.Operation
-			testFunc := func() {
-				op = simulation.SimulateGovMsgUpdateParams(&wopArgs)
-			}
-			s.Require().NotPanics(testFunc, "SimulateGovMsgUpdateParams")
-			var opMsg simtypes.OperationMsg
-			var fops []simtypes.FutureOperation
-			var err error
-			testOp := func() {
-				opMsg, fops, err = op(tc.r, s.app.BaseApp, s.ctx, tc.accs, chainID)
-			}
-			s.Require().NotPanics(testOp, "SimulateGovMsgUpdateParams op execution")
-			assertions.AssertErrorContents(s.T(), err, tc.expInErr, "op error")
-			s.Assert().Equal(tc.expOpMsgOK, opMsg.OK, "op msg ok")
-			s.Assert().Equal(tc.expOpMsgRoute, opMsg.Route, "op msg route")
-			s.Assert().Equal(tc.expOpMsgName, opMsg.Name, "op msg name")
-			s.Assert().Equal(tc.expOpMsgComment, opMsg.Comment, "op msg comment")
-			if !tc.expOpMsgOK && !opMsg.OK {
-				s.Assert().Empty(fops, "future ops")
-			}
-			if tc.expOpMsgOK && opMsg.OK {
-				s.Assert().Equal(len(tc.accs), len(fops), "number of future ops")
-				// If we were expecting it to be okay, and it was, run all the future ops too.
-				// Some of them might fail (due to being sanctioned),
-				// but all the ones that went through should be YES votes.
-				maxBlockTime := s.ctx.BlockHeader().Time.Add(s.votingPeriod)
-				prop := s.getLastGovProp()
-				s.Assert().Equal(s.govMinDep.String(), sdk.NewCoins(prop.TotalDeposit...).String(), "prop deposit")
-				preVotes := s.getVotes(prop.Id)
-				// There shouldn't be any votes yet.
-				if !s.Assert().Empty(preVotes, "votes before running future ops") {
-					for i, fop := range fops {
-						s.Assert().LessOrEqual(fop.BlockTime, maxBlockTime, "future op %d block time", i+1)
-						s.Assert().Equal(0, fop.BlockHeight, "future op %d block height", i+1)
-						var fopMsg simtypes.OperationMsg
-						var ffops []simtypes.FutureOperation
-						testFop := func() {
-							fopMsg, ffops, err = fop.Op(rand.New(rand.NewSource(1)), s.app.BaseApp, s.ctx, tc.accs, chainID)
-						}
-						if !s.Assert().NotPanics(testFop, "future op %d execution", i+1) {
-							continue
-						}
-						if err != nil {
-							s.T().Logf("future op %d returned an error, but that's kind of expected: %v", i+1, err)
-							continue
-						}
-						if !fopMsg.OK {
-							s.T().Logf("future op %d returned not okay, but that's kind of expected: %q", i+1, fopMsg.Comment)
-							continue
-						}
-						s.Assert().Empty(ffops, "future ops returned by future op %d", i+1)
-						s.Assert().Equal(voteType, fopMsg.Name, "future op %d msg name", i+1)
-						s.Assert().Equal(tc.expOpMsgComment, fopMsg.Comment, "future op %d msg comment", i+1)
-					}
-					// Now there should be some votes.
-					postVotes := s.getVotes(prop.Id)
-					for i, vote := range postVotes {
-						if s.Assert().Len(vote.Options, 1, "vote %d options count", i+1) {
-							s.Assert().Equal(govv1.OptionYes, vote.Options[0].Option, "vote %d option", i+1)
-							s.Assert().Equal("1.000000000000000000", vote.Options[1].Weight, "vote %d weight", i+1)
-						}
-					}
-				}
-				// Now, get the message and check its content.
-				msgs, err := prop.GetMsgs()
-				if s.Assert().NoError(err, "getting messages from the proposal") {
-					if s.Assert().Len(msgs, 1, "number of messages in the proposal") {
-						msg, ok := msgs[0].(*sanction.MsgUpdateParams)
-						if s.Assert().True(ok, "could not cast prop msg to MsgUpdateParams") {
-							if !s.Assert().Equal(tc.expParams, msg.Params, "params in gov prop") && tc.expParams != nil && msg.Params != nil {
-								s.Assert().Equal(tc.expParams.ImmediateSanctionMinDeposit.String(),
-									msg.Params.ImmediateSanctionMinDeposit.String(),
-									"ImmediateSanctionMinDeposit")
-								s.Assert().Equal(tc.expParams.ImmediateUnsanctionMinDeposit.String(),
-									msg.Params.ImmediateUnsanctionMinDeposit.String(),
-									"ImmediateUnsanctionMinDeposit")
-							}
-						}
-					}
-				}
-			}
-		})
+	expMsg := &sanction.MsgUpdateParams{
+		Params:    RandomParams(rand.New(rand.NewSource(seedVal))),
+		Authority: wopArgs.SK.GetAuthority(),
 	}
+
+	var simFn simtypes.MsgSimulatorFn
+	testGetSimFn := func() {
+		simFn = SimulatePropMsgUpdateParams(&wopArgs)
+	}
+	s.Require().NotPanics(testGetSimFn, "SimulatePropMsgUpdateParams")
+
+	var actMsg sdk.Msg
+	testGetMsg := func() {
+		actMsg = simFn(rand.New(rand.NewSource(seedVal)), s.ctx, nil)
+	}
+	s.Require().NotPanics(testGetMsg, "running the SimulatePropMsgUpdateParams result")
+
+	s.Assert().Equal(expMsg, actMsg, "resulting MsgUpdateParams")
 }

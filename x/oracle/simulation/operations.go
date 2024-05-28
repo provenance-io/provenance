@@ -18,6 +18,7 @@ import (
 	channelkeeper "github.com/cosmos/ibc-go/v8/modules/core/04-channel/keeper"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/oracle/keeper"
 	"github.com/provenance-io/provenance/x/oracle/types"
@@ -35,40 +36,33 @@ const (
 func WeightedOperations(
 	simState module.SimulationState, k keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper, ck channelkeeper.Keeper,
 ) simulation.WeightedOperations {
-	var (
-		wMsgUpdateOracle    int
-		wMsgSendOracleQuery int
-	)
+	var wMsgSendOracleQuery int
 
-	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateOracle, &wMsgUpdateOracle, nil,
-		func(_ *rand.Rand) { wMsgUpdateOracle = simappparams.DefaultWeightUpdateOracle })
 	simState.AppParams.GetOrGenerate(OpWeightMsgSendOracleQuery, &wMsgSendOracleQuery, nil,
 		func(_ *rand.Rand) { wMsgSendOracleQuery = simappparams.DefaultWeightSendOracleQuery })
 
 	return simulation.WeightedOperations{
-		simulation.NewWeightedOperation(wMsgUpdateOracle, SimulateMsgUpdateOracle(simState, k, ak, bk)),
 		simulation.NewWeightedOperation(wMsgSendOracleQuery, SimulateMsgSendQueryOracle(simState, k, ak, bk, ck)),
 	}
 }
 
-// SimulateMsgUpdateOracle sends a MsgUpdateOracle.
-func SimulateMsgUpdateOracle(simState module.SimulationState, _ keeper.Keeper, ak authkeeper.AccountKeeperI, bk bankkeeper.Keeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		raccs, err := RandomAccs(r, accs, uint64(len(accs)))
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateOracleRequest{}), err.Error()), nil, nil
-		}
+// ProposalMsgs returns all the governance proposal messages.
+func ProposalMsgs(simState module.SimulationState, k keeper.Keeper) []simtypes.WeightedProposalMsg {
+	var wMsgUpdateOracle int
 
-		// 50% chance to be from the module's authority
-		from := raccs[0]
-		to := raccs[1]
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateOracle, &wMsgUpdateOracle, nil,
+		func(_ *rand.Rand) { wMsgUpdateOracle = simappparams.DefaultWeightUpdateOracle })
 
-		// TODO[1760]: Submit this as a gov prop and also return futures for the votes.
-		msg := types.NewMsgUpdateOracle(from.Address.String(), to.Address.String())
+	return []simtypes.WeightedProposalMsg{
+		simulation.NewWeightedProposalMsg(OpWeightMsgUpdateOracle, wMsgUpdateOracle, SimulatePropMsgUpdateOracle(k)),
+	}
+}
 
-		return Dispatch(r, app, ctx, simState, from, chainID, msg, ak, bk, nil)
+func SimulatePropMsgUpdateOracle(k keeper.Keeper) simtypes.MsgSimulatorFn {
+	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
+		// change it to a new random account.
+		raccs := simtypes.RandomAccounts(r, 1)
+		return types.NewMsgUpdateOracle(k.GetAuthority(), raccs[0].Address.String())
 	}
 }
 
@@ -77,7 +71,7 @@ func SimulateMsgSendQueryOracle(simState module.SimulationState, _ keeper.Keeper
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		raccs, err := RandomAccs(r, accs, 1)
+		raccs, err := helpers.SelectRandomAccounts(r, accs, 1)
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil
@@ -151,18 +145,6 @@ func Dispatch(
 	return simtypes.NewOperationMsg(msg, true, ""), futures, nil
 }
 
-func RandomAccs(r *rand.Rand, accs []simtypes.Account, count uint64) ([]simtypes.Account, error) {
-	if uint64(len(accs)) < count {
-		return nil, fmt.Errorf("cannot choose %d accounts because there are only %d", count, len(accs))
-	}
-	raccs := make([]simtypes.Account, 0, len(accs))
-	raccs = append(raccs, accs...)
-	r.Shuffle(len(raccs), func(i, j int) {
-		raccs[i], raccs[j] = raccs[j], raccs[i]
-	})
-	return raccs[:count], nil
-}
-
 func randomChannel(r *rand.Rand, ctx sdk.Context, ck channelkeeper.Keeper) (string, error) {
 	channels := ck.GetAllChannels(ctx)
 	if len(channels) == 0 {
@@ -173,7 +155,7 @@ func randomChannel(r *rand.Rand, ctx sdk.Context, ck channelkeeper.Keeper) (stri
 }
 
 func randomQuery(r *rand.Rand) []byte {
-	queryType := randIntBetween(r, 0, 3)
+	queryType := helpers.RandIntBetween(r, 0, 3)
 	var query string
 	switch queryType {
 	case 0:

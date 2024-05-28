@@ -13,6 +13,7 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
@@ -30,12 +31,12 @@ const (
 // TriggerIDStartFn randomized starting trigger id
 func TriggerIDStartFn(r *rand.Rand) uint64 {
 	// max 5 ids for the triggers max 5 ids for the queue = min of 10 here.
-	return uint64(randIntBetween(r, 10, 10000000000))
+	return uint64(helpers.RandIntBetween(r, 10, 10000000000))
 }
 
 // QueueStartFn randomized Queue Start Index
 func QueueStartFn(r *rand.Rand) uint64 {
-	return uint64(randIntBetween(r, 1, 10000000000))
+	return uint64(helpers.RandIntBetween(r, 1, 10000000000))
 }
 
 // NewRandomEvent returns a random event
@@ -43,16 +44,16 @@ func NewRandomEvent(r *rand.Rand, now time.Time) types.TriggerEventI {
 	if r.Intn(2) > 0 {
 		minimumTime := int(time.Second * 10)
 		maximumTime := int(time.Minute * 5)
-		randTime := now.Add(time.Duration(randIntBetween(r, minimumTime, maximumTime)))
+		randTime := now.Add(time.Duration(helpers.RandIntBetween(r, minimumTime, maximumTime)))
 		return &types.BlockTimeEvent{Time: randTime.UTC()}
 	}
-	height := uint64(randIntBetween(r, 10, 150))
+	height := uint64(helpers.RandIntBetween(r, 10, 150))
 	return &types.BlockHeightEvent{BlockHeight: height}
 }
 
 // NewRandomAction returns a random action
 func NewRandomAction(r *rand.Rand, from string, to string) sdk.Msg {
-	amount := int64(randIntBetween(r, 100, 1000))
+	amount := int64(helpers.RandIntBetween(r, 100, 1000))
 	return &banktypes.MsgSend{
 		FromAddress: from,
 		ToAddress:   to,
@@ -62,7 +63,7 @@ func NewRandomAction(r *rand.Rand, from string, to string) sdk.Msg {
 
 // NewRandomTrigger returns a random trigger
 func NewRandomTrigger(r *rand.Rand, simState *module.SimulationState, accs []simtypes.Account, id types.TriggerID) types.Trigger {
-	raccs, err := RandomAccs(r, accs, 2)
+	raccs, err := helpers.SelectRandomAccounts(r, accs, 2)
 	if err != nil {
 		panic(fmt.Errorf("NewRandomTrigger failed: %w", err))
 	}
@@ -230,9 +231,4 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 	fmt.Printf("Selected randomly generated trigger parameters:\n%s\n", bz)
-}
-
-// randIntBetween generates a random number between min and max inclusive.
-func randIntBetween(r *rand.Rand, min, max int) int {
-	return r.Intn(max-min+1) + min
 }

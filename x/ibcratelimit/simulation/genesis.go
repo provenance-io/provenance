@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 )
 
@@ -16,9 +17,9 @@ const (
 	Contract = "contract"
 )
 
-// ContractFn randomized conntract address
+// ContractFn randomized contract address
 func ContractFn(r *rand.Rand, accs []simtypes.Account) string {
-	randomAccount, _ := RandomAccs(r, accs, 1)
+	randomAccount, _ := helpers.SelectRandomAccounts(r, accs, 1)
 	if r.Intn(2) > 0 || len(randomAccount) == 0 {
 		return ""
 	}
