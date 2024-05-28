@@ -12,18 +12,13 @@ import (
 
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 
-	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
 	"github.com/provenance-io/provenance/testutil/queries"
@@ -34,60 +29,7 @@ import (
 const blocksPerVotingPeriod = 8
 
 func TestIntegrationTestSuite(t *testing.T) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
-	govv1.DefaultMinDepositRatio = sdkmath.LegacyZeroDec()
-	cfg := testutil.DefaultTestNetworkConfig()
-	cfg.NumValidators = 5
-	// cfg.TimeoutCommit = time.Millisecond * msPerBlock
-
-	// Define some stuff in the sanction genesis state.
-	sanctionedAddr1 := sdk.AccAddress("1_sanctioned_address_")
-	sanctionedAddr2 := sdk.AccAddress("2_sanctioned_address_")
-	tempSanctAddr := sdk.AccAddress("temp_sanctioned_addr")
-	tempUnsanctAddr := sdk.AccAddress("temp_unsanctioned___")
-	sanctionGenBz := cfg.GenesisState[sanction.ModuleName]
-	var sanctionGen sanction.GenesisState
-	if len(sanctionGenBz) > 0 {
-		cfg.Codec.MustUnmarshalJSON(sanctionGenBz, &sanctionGen)
-	}
-	sanctionGen.SanctionedAddresses = append(sanctionGen.SanctionedAddresses,
-		sanctionedAddr1.String(),
-		sanctionedAddr2.String(),
-	)
-	sanctionGen.TemporaryEntries = append(sanctionGen.TemporaryEntries,
-		&sanction.TemporaryEntry{
-			Address:    tempSanctAddr.String(),
-			ProposalId: 1,
-			Status:     sanction.TEMP_STATUS_SANCTIONED,
-		},
-		&sanction.TemporaryEntry{
-			Address:    tempUnsanctAddr.String(),
-			ProposalId: 1,
-			Status:     sanction.TEMP_STATUS_UNSANCTIONED,
-		},
-	)
-	sanctionGen.Params = &sanction.Params{
-		ImmediateSanctionMinDeposit:   sdk.NewCoins(sdk.NewInt64Coin(cfg.BondDenom, 52)),
-		ImmediateUnsanctionMinDeposit: sdk.NewCoins(sdk.NewInt64Coin(cfg.BondDenom, 133)),
-	}
-	cfg.GenesisState[sanction.ModuleName] = cfg.Codec.MustMarshalJSON(&sanctionGen)
-
-	// Tweak the gov params too to make testing gov props easier.
-	// MinDeposit: 6stake (default is 10000000stake)
-	// MaxDepositPeriod: 5s (default is 48h)
-	// VotingPeriod: 5s (default is 48h)
-	govGenBz := cfg.GenesisState[gov.ModuleName]
-	var govGen govv1.GenesisState
-	if len(govGenBz) > 0 {
-		cfg.Codec.MustUnmarshalJSON(govGenBz, &govGen)
-	}
-	govGen.Params.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(cfg.BondDenom, 6))
-	votingPeriod := cfg.TimeoutCommit * blocksPerVotingPeriod
-	govGen.Params.MaxDepositPeriod = &votingPeriod
-	govGen.Params.VotingPeriod = &votingPeriod
-	cfg.GenesisState[gov.ModuleName] = cfg.Codec.MustMarshalJSON(&govGen)
-
-	suite.Run(t, NewIntegrationTestSuite(cfg, &sanctionGen))
+	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func (s *IntegrationTestSuite) TestSanctionValidatorImmediateUsingGovCmds() {

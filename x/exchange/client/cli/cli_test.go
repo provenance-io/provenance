@@ -50,12 +50,13 @@ import (
 type CmdTestSuite struct {
 	suite.Suite
 
-	cfg          testnet.Config
-	testnet      *testnet.Network
-	keyring      keyring.Keyring
-	keyringDir   string
-	accountAddrs []sdk.AccAddress
-	feeDenom     string
+	cfg      testnet.Config
+	testnet  *testnet.Network
+	feeDenom string
+
+	keyring        keyring.Keyring
+	keyringEntries []testutil.TestKeyringEntry
+	accountAddrs   []sdk.AccAddress
 
 	addr0 sdk.AccAddress
 	addr1 sdk.AccAddress
@@ -361,7 +362,7 @@ func (s *CmdTestSuite) SetupSuite() {
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "testnet.New(...)")
 
-	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
 
 	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "s.testnet.WaitForHeight(1)")
@@ -375,21 +376,8 @@ func (s *CmdTestSuite) TearDownSuite() {
 // The s.keyringDir, s.keyring, and s.accountAddrs are all set in here.
 // The getClientCtx function returns a context that knows about this keyring.
 func (s *CmdTestSuite) generateAccountsWithKeyring(number int) {
-	path := hd.CreateHDPath(118, 0, 0).String()
-	s.keyringDir = s.T().TempDir()
-	var err error
-	s.keyring, err = keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
-	s.Require().NoError(err, "keyring.New(...)")
-
-	s.accountAddrs = make([]sdk.AccAddress, number)
-	for i := range s.accountAddrs {
-		keyId := fmt.Sprintf("test_key_%v", i)
-		var info *keyring.Record
-		info, _, err = s.keyring.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-		s.Require().NoError(err, "[%d] s.keyring.NewMnemonic(...)", i)
-		s.accountAddrs[i], err = info.GetAddress()
-		s.Require().NoError(err, "[%d] getting keyring address", i)
-	}
+	s.keyringEntries, s.keyring = testutil.GenerateTestKeyring(s.T(), number, s.cfg.Codec)
+	s.accountAddrs = testutil.GetKeyringEntryAddresses(s.keyringEntries)
 }
 
 // makeInitialOrder makes an order using the order id for various aspects.

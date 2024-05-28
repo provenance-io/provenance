@@ -11,7 +11,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -32,10 +31,11 @@ import (
 type TestSuite struct {
 	suite.Suite
 
-	cfg        network.Config
-	network    *network.Network
-	keyring    keyring.Keyring
-	keyringDir string
+	cfg     network.Config
+	network *network.Network
+
+	keyring        keyring.Keyring
+	keyringEntries []testutil.TestKeyringEntry
 
 	accountAddr      sdk.AccAddress
 	accountKey       *secp256k1.PrivKey
@@ -102,7 +102,7 @@ func (s *TestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "network.New")
 
-	s.network.Validators[0].ClientCtx = s.network.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+	s.network.Validators[0].ClientCtx = s.network.Validators[0].ClientCtx.WithKeyring(s.keyring)
 	_, err = testutil.WaitForHeight(s.network, 6)
 	s.Require().NoError(err, "WaitForHeight")
 }
@@ -112,21 +112,8 @@ func (s *TestSuite) TearDownSuite() {
 }
 
 func (s *TestSuite) GenerateAccountsWithKeyrings(number int) {
-	path := hd.CreateHDPath(118, 0, 0).String()
-	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
-	s.Require().NoError(err, "Keyring.New")
-	s.keyring = kr
-	for i := 0; i < number; i++ {
-		keyId := fmt.Sprintf("test_key%v", i)
-		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-		s.Require().NoError(err, "Keyring.NewMneomonic")
-		addr, err := info.GetAddress()
-		if err != nil {
-			panic(err)
-		}
-		s.accountAddresses = append(s.accountAddresses, addr)
-	}
+	s.keyringEntries, s.keyring = testutil.GenerateTestKeyring(s.T(), number, s.cfg.Codec)
+	s.accountAddresses = testutil.GetKeyringEntryAddresses(s.keyringEntries)
 }
 
 func (s *TestSuite) TestGetParams() {

@@ -74,6 +74,11 @@ func (k Keeper) IsContractConfigured(ctx sdk.Context) bool {
 	return params.ContractAddress != ""
 }
 
+// GetAuthority gets the authority account address.
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
 // ValidateAuthority returns an error if the provided address is not the authority.
 func (k Keeper) ValidateAuthority(addr string) error {
 	if k.authority != addr {

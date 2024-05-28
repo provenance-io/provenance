@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -43,11 +42,11 @@ import (
 type IntegrationCLITestSuite struct {
 	suite.Suite
 
-	cfg             testnet.Config
-	testnet         *testnet.Network
+	cfg     testnet.Config
+	testnet *testnet.Network
+
 	keyring         keyring.Keyring
-	keyringDir      string
-	keyringAccounts []keyring.Record
+	keyringAccounts []testutil.TestKeyringEntry
 
 	asJson         string
 	asText         string
@@ -497,7 +496,7 @@ owner: %s`,
 	s.testnet, err = testnet.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "creating testnet")
 
-	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
 
 	_, err = testutil.WaitForHeight(s.testnet, 1)
 	s.Require().NoError(err, "waiting for height 1")
@@ -508,17 +507,7 @@ func (s *IntegrationCLITestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationCLITestSuite) generateAccountsWithKeyrings(number int) {
-	path := hd.CreateHDPath(118, 0, 0).String()
-	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
-	s.Require().NoError(err, "keyring creation")
-	s.keyring = kr
-	for i := 0; i < number; i++ {
-		keyId := fmt.Sprintf("test_key%v", i)
-		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-		s.Require().NoError(err, "key creation")
-		s.keyringAccounts = append(s.keyringAccounts, *info)
-	}
+	s.keyringAccounts, s.keyring = testutil.GenerateTestKeyring(s.T(), number, s.cfg.Codec)
 }
 
 func ownerPartyList(addresses ...string) []metadatatypes.Party {
