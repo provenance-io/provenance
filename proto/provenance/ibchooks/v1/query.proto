@@ -1,0 +1,28 @@
+syntax = "proto3";
+package provenance.ibchooks.v1;
+
+option go_package = "github.com/provenance-io/provenance/x/ibchooks/types";
+
+option java_package        = "io.provenance.ibchooks.v1";
+option java_multiple_files = true;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "provenance/ibchooks/v1/params.proto";
+
+// Query defines the gRPC querier service for attribute module.
+service Query {
+  // Params queries params of the ihchooks module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/provenance/attribute/v1/params";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
