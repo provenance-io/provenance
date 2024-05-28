@@ -29,7 +29,7 @@ func PortFn(r *rand.Rand) string {
 // OracleFn randomized oracle address
 func OracleFn(r *rand.Rand, accs []simtypes.Account) string {
 	randomAccount, _ := helpers.SelectRandomAccounts(r, accs, 1)
-	if r.Intn(2) > 0 {
+	if r.Intn(2) > 0 || len(randomAccount) == 0 {
 		return ""
 	}
 	return randomAccount[0].Address.String()
