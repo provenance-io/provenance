@@ -21,7 +21,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the name parameters to the store.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&params) // Serialize parameters to bytes
+	bz := k.cdc.MustMarshal(&params)
 	store.Set(types.NameParamStoreKey, bz)
 }
 

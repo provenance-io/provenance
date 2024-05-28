@@ -51,6 +51,24 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
+// GetAuthority is signer of the proposal
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
+// IsAuthority returns true if the provided address bech32 string is the authority address.
+func (k Keeper) IsAuthority(addr string) bool {
+	return strings.EqualFold(k.authority, addr)
+}
+
+// ValidateAuthority returns an error if the provided address is not the authority.
+func (k Keeper) ValidateAuthority(addr string) error {
+	if !k.IsAuthority(addr) {
+		return govtypes.ErrInvalidSigner.Wrapf("expected %q got %q", k.GetAuthority(), addr)
+	}
+	return nil
+}
+
 // SetAttributeKeeper sets the attribute keeper
 func (k *Keeper) SetAttributeKeeper(ak types.AttributeKeeper) {
 	if k.attrKeeper != nil && ak != nil && k.attrKeeper != ak {
@@ -289,10 +307,6 @@ func (k Keeper) addRecord(ctx sdk.Context, name string, addr sdk.AccAddress, res
 	store.Set(addrPrefix, bz)
 
 	return nil
-}
-
-func (k Keeper) GetAuthority() string {
-	return k.authority
 }
 
 // DeleteInvalidAddressIndexEntries is only for the rust upgrade. It goes over all the address -> name entries and

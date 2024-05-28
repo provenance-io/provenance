@@ -713,3 +713,87 @@ func (s *IntegrationTestSuite) TestGovRootNameCmd() {
 		})
 	}
 }
+
+func (s *IntegrationTestSuite) TestUpdateNameParamsCmd() {
+	testCases := []struct {
+		name         string
+		cmd          *cobra.Command
+		args         []string
+		expectErr    string
+		expectedCode uint32
+	}{
+		{
+			name: "update name params, should succeed",
+			cmd:  namecli.GetUpdateNameParamsCmd(),
+			args: []string{
+				"16",
+				"2",
+				"5",
+				"true",
+			},
+			expectedCode: 0,
+		},
+		{
+			name: "update name params, should fail incorrect max segment length",
+			cmd:  namecli.GetUpdateNameParamsCmd(),
+			args: []string{
+				"invalid",
+				"2",
+				"5",
+				"true",
+			},
+			expectErr: `invalid max segment length: strconv.ParseUint: parsing "invalid": invalid syntax`,
+		},
+		{
+			name: "update name params, should fail incorrect min segment length",
+			cmd:  namecli.GetUpdateNameParamsCmd(),
+			args: []string{
+				"16",
+				"invalid",
+				"5",
+				"true",
+			},
+			expectErr: `invalid min segment length: strconv.ParseUint: parsing "invalid": invalid syntax`,
+		},
+		{
+			name: "update name params, should fail incorrect max name levels",
+			cmd:  namecli.GetUpdateNameParamsCmd(),
+			args: []string{
+				"16",
+				"2",
+				"invalid",
+				"true",
+			},
+			expectErr: `invalid max name levels: strconv.ParseUint: parsing "invalid": invalid syntax`,
+		},
+		{
+			name: "update name params, should fail incorrect unrestricted names flag",
+			cmd:  namecli.GetUpdateNameParamsCmd(),
+			args: []string{
+				"16",
+				"2",
+				"5",
+				"invalid",
+			},
+			expectErr: `invalid allow unrestricted names flag: strconv.ParseBool: parsing "invalid": invalid syntax`,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+			)
+			testcli.NewTxExecutor(tc.cmd, tc.args).
+				WithExpErrMsg(tc.expectErr).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
+}

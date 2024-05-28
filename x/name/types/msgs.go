@@ -14,6 +14,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgDeleteNameRequest)(nil),
 	(*MsgModifyNameRequest)(nil),
 	(*MsgCreateRootNameRequest)(nil),
+	(*MsgUpdateParamsRequest)(nil),
 }
 
 func NewMsgBindNameRequest(record, parent NameRecord) *MsgBindNameRequest {
@@ -100,4 +101,27 @@ func (msg MsgCreateRootNameRequest) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func NewMsgUpdateParamsRequest(
+	maxSegmentLength uint32,
+	minSegmentLength uint32,
+	maxNameLevels uint32,
+	allowUnrestrictedNames bool,
+	authority string,
+) *MsgUpdateParamsRequest {
+	return &MsgUpdateParamsRequest{
+		Authority: authority,
+		Params: NewParams(
+			maxSegmentLength,
+			minSegmentLength,
+			maxNameLevels,
+			allowUnrestrictedNames,
+		),
+	}
+}
+
+func (msg MsgUpdateParamsRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	return err
 }
