@@ -17,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 
 	"github.com/provenance-io/provenance/x/ibchooks/types"
@@ -29,6 +31,7 @@ type (
 
 		channelKeeper  types.ChannelKeeper
 		ContractKeeper *wasmkeeper.PermissionedKeeper
+		authority      string
 	}
 )
 
@@ -44,6 +47,7 @@ func NewKeeper(
 		storeKey:       storeKey,
 		channelKeeper:  channelKeeper,
 		ContractKeeper: contractKeeper,
+		authority:      authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	}
 	return keeper
 }
@@ -51,6 +55,24 @@ func NewKeeper(
 // Logger returns a logger for the x/tokenfactory module
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// GetAuthority is signer of the proposal
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
+// IsAuthority returns true if the provided address bech32 string is the authority address.
+func (k Keeper) IsAuthority(addr string) bool {
+	return strings.EqualFold(k.authority, addr)
+}
+
+// ValidateAuthority returns an error if the provided address is not the authority.
+func (k Keeper) ValidateAuthority(addr string) error {
+	if !k.IsAuthority(addr) {
+		return govtypes.ErrInvalidSigner.Wrapf("expected %q got %q", k.GetAuthority(), addr)
+	}
+	return nil
 }
 
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {

@@ -40,3 +40,19 @@ func (m msgServer) EmitIBCAck(goCtx context.Context, msg *types.MsgEmitIBCAck) (
 
 	return &types.MsgEmitIBCAckResponse{ContractResult: string(ack), IbcAck: string(ack)}, nil
 }
+
+// UpdateParams is a governance proposal endpoint for updating the ibchooks module's params.
+func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParamsRequest) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.ValidateAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	k.SetParams(ctx, msg.Params)
+	// if err := ctx.EventManager().EmitTypedEvent(); err != nil {
+	// 	return nil, err
+	// }
+
+	return &types.MsgUpdateParamsResponse{}, nil
+}
