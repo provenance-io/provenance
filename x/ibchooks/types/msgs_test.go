@@ -14,6 +14,7 @@ import (
 func TestAllMsgsGetSigners(t *testing.T) {
 	msgMakers := []testutil.MsgMaker{
 		func(signer string) sdk.Msg { return &MsgEmitIBCAck{Sender: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateParamsRequest{Authority: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)

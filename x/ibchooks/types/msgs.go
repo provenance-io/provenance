@@ -9,6 +9,7 @@ import (
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
 	(*MsgEmitIBCAck)(nil),
+	(*MsgUpdateParamsRequest)(nil),
 }
 
 func (m MsgEmitIBCAck) ValidateBasic() error {
