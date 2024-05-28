@@ -10,6 +10,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -23,6 +24,7 @@ import (
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	"github.com/provenance-io/provenance/testutil"
+	testcli "github.com/provenance-io/provenance/testutil/cli"
 	ibchookscli "github.com/provenance-io/provenance/x/ibchooks/client/cli"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 )
@@ -97,7 +99,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.testnet, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "network.New")
 
-	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
+	// s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 	_, err = testutil.WaitForHeight(s.testnet, 6)
 	s.Require().NoError(err, "WaitForHeight")
 }
@@ -135,4 +137,45 @@ func (s *IntegrationTestSuite) TestQueryParams() {
 	s.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response))
 	expectedParams := ibchookstypes.DefaultParams()
 	s.Equal(expectedParams, response.Params, "should have the default params")
+}
+
+func (s *IntegrationTestSuite) TestUpdateParamsCmd() {
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErrMsg string
+		expectedCode uint32
+	}{
+		{
+			name:         "success - update allowed async ack contracts",
+			args:         []string{fmt.Sprintf("%v,%v", s.accountAddr.String(), s.accountAddresses[0].String())},
+			expectedCode: 0,
+		},
+		{
+			name:         "failure - invalid args",
+			args:         []string{"contract1"},
+			expectErrMsg: "invalid contract address: contract1",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			cmd := ibchookscli.NewUpdateParamsCmd()
+			tc.args = append(tc.args,
+				"--title", fmt.Sprintf("title: %v", tc.name),
+				"--summary", fmt.Sprintf("summary: %v", tc.name),
+				"--deposit=1000000stake",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.testnet.Validators[0].Address.String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+				fmt.Sprintf("--%s=json", cmtcli.OutputFlag),
+			)
+
+			testcli.NewTxExecutor(cmd, tc.args).
+				WithExpErrMsg(tc.expectErrMsg).
+				WithExpCode(tc.expectedCode).
+				Execute(s.T(), s.testnet)
+		})
+	}
 }

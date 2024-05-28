@@ -51,6 +51,9 @@ func NewUpdateParamsCmd() *cobra.Command {
 			allowedAsyncAckContracts := strings.Split(args[0], ",")
 
 			msg := types.NewMsgUpdateParamsRequest(allowedAsyncAckContracts, authority)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
 		},
 	}
