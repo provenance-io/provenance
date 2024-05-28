@@ -74,7 +74,7 @@ func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {}
 
 // GetTxCmd returns no root tx command for the ibchooks module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
+func (AppModuleBasic) GetTxCmd() *cobra.Command { return cli.NewTxCmd() }
 
 // GetQueryCmd returns the root query command for the ibchooks module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
