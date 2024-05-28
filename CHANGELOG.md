@@ -95,7 +95,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `ibcratelimit` add `UpdateParams` endpoint and deprecate `GovUpdateParams` [#1984](https://github.com/provenance-io/provenance/pull/1984).
   * `attribute` add `UpdateParams` endpoint and cli [#1987](https://github.com/provenance-io/provenance/pull/1987).
   * `marker` add `UpdateParams` endpoint and cli [#1991](https://github.com/provenance-io/provenance/pull/1991).
+  * `name` add `UpdateParams` endpoint and cli [#2004](https://github.com/provenance-io/provenance/pull/2004).
 * Update the exchange `commitment-settlement-fee-calc` cli query to utilize the keyring [#2001](https://github.com/provenance-io/provenance/pull/2001).
+* Implement the ProposalMsgs module interface for the internal/provwasm, ibcratelimit, oracle, and sanction modules [#1993](https://github.com/provenance-io/provenance/pull/1993.)
 
 ### Client Breaking
 

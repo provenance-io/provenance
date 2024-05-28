@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -230,4 +231,59 @@ func owner(ctx client.Context, flags *pflag.FlagSet) (string, error) {
 	}
 
 	return proposalOwner, nil
+}
+
+// GetUpdateNameParamsCmd creates a command to update the name module's params via governance proposal.
+func GetUpdateNameParamsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "update-name-params <max-segment-length> <min-segment-length> <max-name-levels> <allow-unrestricted-names>",
+		Short:   "Update the name module's params via governance proposal",
+		Long:    "Submit an update name params via governance proposal along with an initial deposit.",
+		Args:    cobra.ExactArgs(4),
+		Example: fmt.Sprintf(`%[1]s tx name update-name-params 16 2 5 true --deposit 50000nhash`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			flagSet := cmd.Flags()
+			authority := provcli.GetAuthority(flagSet)
+
+			maxSegmentLength, err := strconv.ParseUint(args[0], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid max segment length: %w", err)
+			}
+
+			minSegmentLength, err := strconv.ParseUint(args[1], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid min segment length: %w", err)
+			}
+
+			maxNameLevels, err := strconv.ParseUint(args[2], 10, 32)
+			if err != nil {
+				return fmt.Errorf("invalid max name levels: %w", err)
+			}
+
+			allowUnrestrictedNames, err := strconv.ParseBool(args[3])
+			if err != nil {
+				return fmt.Errorf("invalid allow unrestricted names flag: %w", err)
+			}
+
+			msg := types.NewMsgUpdateParamsRequest(
+				uint32(maxSegmentLength),
+				uint32(minSegmentLength),
+				uint32(maxNameLevels),
+				allowUnrestrictedNames,
+				authority,
+			)
+			return provcli.GenerateOrBroadcastTxCLIAsGovProp(clientCtx, flagSet, msg)
+		},
+	}
+
+	govcli.AddGovPropFlagsToCmd(cmd)
+	provcli.AddAuthorityFlagToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

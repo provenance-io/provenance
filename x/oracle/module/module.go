@@ -33,6 +33,7 @@ import (
 var (
 	_ module.AppModuleBasic      = (*AppModule)(nil)
 	_ module.AppModuleSimulation = (*AppModule)(nil)
+	_ module.HasProposalMsgs     = (*AppModule)(nil)
 
 	_ appmodule.AppModule = (*AppModule)(nil)
 )
@@ -138,6 +139,11 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns simulation operations (i.e msgs) with their respective weight
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(simState, am.keeper, am.accountKeeper, am.bankKeeper, am.channelKeeper)
+}
+
+// ProposalMsgs returns all the msgs to execute as governance proposals.
+func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
+	return simulation.ProposalMsgs(simState, am.keeper)
 }
 
 // Name returns the oracle module's name.

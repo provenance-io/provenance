@@ -13,10 +13,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/attribute/simulation"
 	"github.com/provenance-io/provenance/x/attribute/types"
 )
@@ -267,20 +267,7 @@ func (s *SimTestSuite) TestSimulateMsgSetAccountData() {
 }
 
 func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, n)
-
-	initAmt := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// add coins to the accounts
-	for i, account := range accounts {
-		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
-		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		err := testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins)
-		s.Require().NoError(err, "[%d]: FundAccount", i)
-	}
-
-	return accounts
+	return testutil.GenerateTestingAccountsWithPower(s.T(), s.ctx, s.app, r, n, 200)
 }
 
 func GenerateRandomTime(minHours int) time.Time {

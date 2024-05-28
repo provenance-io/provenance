@@ -30,6 +30,7 @@ import (
 var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasProposalMsgs     = AppModule{}
 
 	_ appmodule.AppModule = AppModule{}
 )
@@ -158,6 +159,14 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns the all the sanction module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
+		simState, codec.NewProtoCodec(am.registry),
+		am.accKeeper, am.bankKeeper, am.govKeeper, am.keeper,
+	)
+}
+
+// ProposalMsgs returns all the msgs to execute as governance proposals.
+func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
+	return simulation.ProposalMsgs(
 		simState, codec.NewProtoCodec(am.registry),
 		am.accKeeper, am.bankKeeper, am.govKeeper, am.keeper,
 	)

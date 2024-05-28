@@ -105,6 +105,7 @@ func (p *Params) Equal(that interface{}) bool {
 	return true
 }
 
+// TODO: remove with the umber (v1.19.x) handlers.
 func validateIntParam(i interface{}) error {
 	_, ok := i.(uint32)
 	if !ok {
@@ -114,6 +115,7 @@ func validateIntParam(i interface{}) error {
 	return nil
 }
 
+// TODO: remove with the umber (v1.19.x) handlers.
 func validateAllowUnrestrictedNames(i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {

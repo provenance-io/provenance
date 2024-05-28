@@ -15,11 +15,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/marker/keeper"
 	"github.com/provenance-io/provenance/x/marker/simulation"
@@ -220,18 +220,13 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	govMinDep := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 3))
 	depositPeriod := 1 * time.Second
 
-	resetParams := func(t *testing.T, ctx sdk.Context) {
-		// TODO[1760]: gov: Figure out how to set just the deposit params and uncomment this.
-		_, _ = govMinDep, depositPeriod
-		/*
-			require.NotPanics(s.T(), func() {
-				s.app.GovKeeper.SetDepositParams(s.ctx, govtypes.DepositParams{
-					MinDeposit:       govMinDep,
-					MaxDepositPeriod: &depositPeriod,
-				})
-			}, "gov SetDepositParams")
-
-		*/
+	resetParams := func() {
+		params := govtypes.DefaultParams()
+		params.MinDeposit = govMinDep
+		params.MaxDepositPeriod = &depositPeriod
+		assertions.RequireNotPanicsNoError(s.T(), func() error {
+			return s.app.GovKeeper.Params.Set(s.ctx, params)
+		}, "reset gov params")
 	}
 
 	access := types.AccessGrant{
@@ -319,7 +314,7 @@ func (s *SimTestSuite) TestSimulateMsgAddMarkerProposal() {
 	}
 
 	for _, tc := range tests {
-		resetParams(s.T(), s.ctx)
+		resetParams()
 		s.Run(tc.name, func() {
 			args := &simulation.SendGovMsgArgs{
 				WeightedOpsArgs: *s.getWeightedOpsArgs(),
@@ -463,20 +458,7 @@ func (s *SimTestSuite) TestSimulateMsgUpdateSendDenyList() {
 }
 
 func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, n)
-
-	initAmt := sdk.TokensFromConsensusPower(1000000, sdk.DefaultPowerReduction)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// add coins to the accounts
-	for _, account := range accounts {
-		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
-		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		err := testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins)
-		s.Require().NoError(err)
-	}
-
-	return accounts
+	return testutil.GenerateTestingAccounts(s.T(), s.ctx, s.app, r, n)
 }
 
 // getWeightedOpsArgs creates a standard WeightedOpsArgs.
@@ -512,17 +494,5 @@ func (s *SimTestSuite) freshCtx() {
 
 // createTestingAccountsWithPower creates new accounts with the specified power (coins amount).
 func (s *SimTestSuite) createTestingAccountsWithPower(r *rand.Rand, count int, power int64) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, count)
-
-	initAmt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// add coins to the accounts
-	for _, account := range accounts {
-		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
-		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		s.Require().NoError(testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins))
-	}
-
-	return accounts
+	return testutil.GenerateTestingAccountsWithPower(s.T(), s.ctx, s.app, r, count, power)
 }

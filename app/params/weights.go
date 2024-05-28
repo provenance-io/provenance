@@ -14,13 +14,6 @@ const (
 	DefaultWeightMsgDeleteDistinctAttribute int = 5
 	DefaultWeightMsgSetAccountData          int = 10
 	// Marker
-	DefaultWeightSupplyIncreaseProposalContent      int = 5
-	DefaultWeightSupplyDecreaseProposalContent      int = 5
-	DefaultWeightSetAdministratorProposalContent    int = 5
-	DefaultWeightRemoveAdministratorProposalContent int = 5
-	DefaultWeightChangeStatusProposalContent        int = 5
-	DefaultWeightSetDenomMetadataProposalContent    int = 5
-	// Adjusted marker operations to a cumulative weight of 100
 	DefaultWeightMsgAddMarker                 int = 30
 	DefaultWeightMsgChangeStatus              int = 10
 	DefaultWeightMsgFinalize                  int = 10
@@ -28,12 +21,6 @@ const (
 	DefaultWeightMsgAddFinalizeActivateMarker int = 10
 	DefaultWeightMsgAddMarkerProposal         int = 40
 	DefaultWeightMsgUpdateDenySendList        int = 10
-	// MsgFees
-	DefaultWeightAddMsgFeeProposalContent    int = 75
-	DefaultWeightRemoveMsgFeeProposalContent int = 25
-	// Rewards
-	DefaultWeightSubmitCreateRewards int = 95
-	DefaultWeightSubmitEndRewards    int = 5
 	// Trigger
 	DefaultWeightSubmitCreateTrigger  int = 95
 	DefaultWeightSubmitDestroyTrigger int = 5
@@ -41,5 +28,5 @@ const (
 	DefaultWeightUpdateOracle    int = 25
 	DefaultWeightSendOracleQuery int = 75
 	// Ibc Rate Limiter
-	DefaultWeightUpdateParams int = 100
+	DefaultWeightIBCRLUpdateParams int = 100
 )

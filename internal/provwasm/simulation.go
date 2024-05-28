@@ -32,6 +32,11 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
+var (
+	_ module.AppModuleSimulation = (*Wrapper)(nil)
+	_ module.HasProposalMsgs     = (*Wrapper)(nil)
+)
+
 const (
 	denom      = "coinfortestingsmartc" // must be a string of length 20
 	namePrefix = "scsnameprefix"        // must be a string of length 13
@@ -84,8 +89,8 @@ func (pw Wrapper) GenerateGenesisState(input *module.SimulationState) {
 	input.GenState[types.ModuleName] = input.Cdc.MustMarshalJSON(&wasmGenesis)
 }
 
-// ProposalContents doesn't return any content functions for governance proposals.
-func (pw Wrapper) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+// ProposalMsgs returns the wasm weighted proposal messages.
+func (pw Wrapper) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return wasmsimulation.ProposalMsgs(pw.bk, pw.wk)
 }
 

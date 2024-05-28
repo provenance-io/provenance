@@ -14,10 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/x/trigger/simulation"
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
@@ -170,77 +170,6 @@ func (s *SimTestSuite) TestSimulateMsgDestroyTrigger() {
 	s.Assert().Len(futureOperations, 0, "futureOperations")
 }
 
-func (s *SimTestSuite) TestRandomAccs() {
-	source := rand.NewSource(1)
-	r := rand.New(source)
-	accounts := s.getTestingAccounts(r, 3)
-
-	tests := []struct {
-		name     string
-		accs     []simtypes.Account
-		expected []simtypes.Account
-		count    uint64
-		err      string
-	}{
-		{
-			name:     "valid - return nothing when count is 0",
-			accs:     []simtypes.Account{},
-			expected: []simtypes.Account{},
-			count:    0,
-		},
-		{
-			name:     "valid - return 1 when count is 1",
-			accs:     []simtypes.Account{accounts[0]},
-			expected: []simtypes.Account{accounts[0]},
-			count:    1,
-		},
-		{
-			name:     "valid - return multiple when count greater than 1",
-			accs:     []simtypes.Account{accounts[0], accounts[1]},
-			expected: []simtypes.Account{accounts[1], accounts[0]},
-			count:    2,
-		},
-		{
-			name:     "valid - return is limited by count",
-			accs:     []simtypes.Account{accounts[0], accounts[1], accounts[2]},
-			expected: []simtypes.Account{accounts[1]},
-			count:    1,
-		},
-		{
-			name:     "invalid - return error when count is greater than length",
-			accs:     []simtypes.Account{accounts[0], accounts[1]},
-			expected: []simtypes.Account{},
-			count:    3,
-			err:      "cannot choose 3 accounts because there are only 2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			raccs, err := simulation.RandomAccs(r, tc.accs, tc.count)
-			if len(tc.err) == 0 {
-				s.Require().NoError(err, "should have no error for successful RandomAccs")
-				s.Require().Equal(tc.expected, raccs, "should have correct output for successful RandomAccs")
-			} else {
-				s.Require().EqualError(err, tc.err, "should have correct error message for RandomAccs")
-			}
-		})
-	}
-}
-
 func (s *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-	accounts := simtypes.RandomAccounts(r, n)
-
-	initAmt := sdk.TokensFromConsensusPower(1000000, sdk.DefaultPowerReduction)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// add coins to the accounts
-	for _, account := range accounts {
-		acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, account.Address)
-		s.app.AccountKeeper.SetAccount(s.ctx, acc)
-		err := testutil.FundAccount(s.ctx, s.app.BankKeeper, account.Address, initCoins)
-		s.Require().NoError(err)
-	}
-
-	return accounts
+	return testutil.GenerateTestingAccounts(s.T(), s.ctx, s.app, r, n)
 }
