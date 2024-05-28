@@ -38,6 +38,32 @@ func LogOperationMsg(t *testing.T, operationMsg simtypes.OperationMsg, msg strin
 	)
 }
 
+func GenerateTestingAccounts(t *testing.T, ctx sdk.Context, app *app.App, r *rand.Rand, n int) []simtypes.Account {
+	return GenerateTestingAccountsWithPower(t, ctx, app, r, n, 1_000_000)
+}
+
+// GenerateTestingAccountsWithPower generates n new accounts, creates them (in state) and gives each the provided power worth of bond tokens.
+func GenerateTestingAccountsWithPower(t *testing.T, ctx sdk.Context, app *app.App, r *rand.Rand, n int, power int64) []simtypes.Account {
+	if n <= 0 {
+		return nil
+	}
+	t.Helper()
+
+	initAmt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
+	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+
+	accs := simtypes.RandomAccounts(r, n)
+	// add coins to the accounts
+	for i, account := range accs {
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
+		app.AccountKeeper.SetAccount(ctx, acc)
+		err := testutil.FundAccount(ctx, app.BankKeeper, account.Address, initCoins)
+		require.NoError(t, err, "[%d]: FundAccount", i)
+	}
+
+	return accs
+}
+
 // SimTestHelper contains various things needed to check most of the simulation-related stuff.
 type SimTestHelper struct {
 	// T is the testing.T to use for the tests.
@@ -106,32 +132,6 @@ func (a SimTestHelper) WithTestingAccountsWithPower(n int, power int64) *SimTest
 }
 
 // GenerateTestingAccounts generates n new accounts, creates them (in state) and gives each 1 million power worth of bond tokens.
-func GenerateTestingAccounts(t *testing.T, ctx sdk.Context, app *app.App, r *rand.Rand, n int) []simtypes.Account {
-	return GenerateTestingAccountsWithPower(t, ctx, app, r, n, 1_000_000)
-}
-
-// GenerateTestingAccountsWithPower generates n new accounts, creates them (in state) and gives each the provided power worth of bond tokens.
-func GenerateTestingAccountsWithPower(t *testing.T, ctx sdk.Context, app *app.App, r *rand.Rand, n int, power int64) []simtypes.Account {
-	if n <= 0 {
-		return nil
-	}
-	t.Helper()
-
-	initAmt := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	accs := simtypes.RandomAccounts(r, n)
-	// add coins to the accounts
-	for i, account := range accs {
-		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
-		app.AccountKeeper.SetAccount(ctx, acc)
-		err := testutil.FundAccount(ctx, app.BankKeeper, account.Address, initCoins)
-		require.NoError(t, err, "[%d]: FundAccount", i)
-	}
-
-	return accs
-}
-
 // ExpectedWeightedOp is the various aspects of a simulation.WeightedOperation to check.
 type ExpectedWeightedOp struct {
 	// Weight is the expected WeightedOperation.Weight.
