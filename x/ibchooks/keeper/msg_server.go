@@ -50,9 +50,11 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 	}
 
 	k.SetParams(ctx, msg.Params)
-	// if err := ctx.EventManager().EmitTypedEvent(); err != nil {
-	// 	return nil, err
-	// }
+	if err := ctx.EventManager().EmitTypedEvent(&types.EventIBCHooksParamsUpdated{
+		AllowedAsyncAckContracts: msg.Params.AllowedAsyncAckContracts,
+	}); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }
