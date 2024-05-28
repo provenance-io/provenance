@@ -94,8 +94,6 @@ func Cleanup(n *testnet.Network, t *testing.T) {
 	}
 	t.Log("Cleanup: Cleaning up testnet.")
 	n.Cleanup()
-	// Give things a chance to finish closing up. Hopefully will prevent things like address collisions. 100ms chosen randomly.
-	time.Sleep(100 * time.Millisecond)
 	t.Log("Cleanup: Done.")
 }
 
