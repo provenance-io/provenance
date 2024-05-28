@@ -376,3 +376,58 @@ func (s *MsgServerTestSuite) TestCreateRootName() {
 		})
 	}
 }
+
+func (s *MsgServerTestSuite) TestUpdateParams() {
+	authority := s.app.NameKeeper.GetAuthority()
+
+	tests := []struct {
+		name          string
+		expErr        string
+		msg           *types.MsgUpdateParamsRequest
+		expectedEvent proto.Message
+	}{
+		{
+			name: "valid authority with valid params",
+			msg: types.NewMsgUpdateParamsRequest(
+				100,
+				3,
+				10,
+				true,
+				authority,
+			),
+			expectedEvent: types.NewEventNameParamsUpdated(
+				true,
+				10,
+				100,
+				3,
+			),
+		},
+		{
+			name: "invalid authority",
+			msg: types.NewMsgUpdateParamsRequest(
+				100,
+				3,
+				10,
+				true,
+				"invalid-authority",
+			),
+			expErr: `expected "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn" got "invalid-authority": expected gov account as only signer for proposal message`,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := s.msgServer.UpdateParams(s.ctx, tc.msg)
+			if len(tc.expErr) > 0 {
+				s.Require().EqualError(err, tc.expErr, "Expected error message did not match")
+			} else {
+				s.Require().NoError(err, "Expected no error but got: %v", err)
+			}
+			if tc.expectedEvent != nil {
+				result := s.containsMessage(s.ctx.EventManager().ABCIEvents(), tc.expectedEvent)
+				s.Require().True(result, "Expected typed event was not found: %v", tc.expectedEvent)
+			}
+		})
+	}
+}

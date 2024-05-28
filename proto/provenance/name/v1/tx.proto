@@ -24,6 +24,9 @@ service Msg {
 
   // CreateRootName defines a governance method for creating a root name.
   rpc CreateRootName(MsgCreateRootNameRequest) returns (MsgCreateRootNameResponse);
+
+  // UpdateParams is a governance proposal endpoint for updating the name module's params.
+  rpc UpdateParams(MsgUpdateParamsRequest) returns (MsgUpdateParamsResponse);
 }
 
 // MsgBindNameRequest defines an sdk.Msg type that is used to add an address/name binding under an optional parent name.
@@ -87,3 +90,17 @@ message MsgModifyNameRequest {
 
 // MsgModifyNameResponse defines the Msg/ModifyName response type.
 message MsgModifyNameResponse {}
+
+// MsgUpdateParamsRequest is a request message for the UpdateParams endpoint.
+message MsgUpdateParamsRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority should be the governance module account address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params are the new param values to set.
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateParamsResponse is a response message for the UpdateParams endpoint.
+message MsgUpdateParamsResponse {}

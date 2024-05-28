@@ -79,3 +79,11 @@ message EventNameUpdate {
   string name       = 2;
   bool   restricted = 3;
 }
+
+// EventNameParamsUpdated event emitted when name params are updated.
+message EventNameParamsUpdated {
+  string allow_unrestricted_names = 1;
+  string max_name_levels          = 2;
+  string min_segment_length       = 3;
+  string max_segment_length       = 4;
+}
