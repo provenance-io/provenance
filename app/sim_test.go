@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -22,7 +23,8 @@ import (
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
-
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -422,15 +424,27 @@ func TestAppStateDeterminism(t *testing.T) {
 	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
-	home := t.TempDir()
-
-	seeds := make([]int64, numSeeds)
-	for i := range seeds {
-		seeds[i] = rand.Int63()
+	var seeds []int64
+	if config.Seed != simcli.DefaultSeedValue {
+		// If a seed was provided, just do that one.
+		numSeeds = 1
+		seeds = append(seeds, config.Seed)
+	} else {
+		// Otherwise, pick random seeds to use.
+		seeds = make([]int64, numSeeds)
+		for i := range seeds {
+			seeds[i] = rand.Int63()
+		}
 	}
 
-	// uncomment and tweak to use a single specific seed.
-	//seeds = []int64{9171851189930047994}
+	home := t.TempDir()
+
+	appOptions := viper.New()
+	appOptions.SetDefault(flags.FlagHome, home)
+	appOptions.SetDefault(server.FlagInvCheckPeriod, simcli.FlagPeriodValue)
+	if simcli.FlagVerboseValue {
+		appOptions.SetDefault(flags.FlagLogLevel, "debug")
+	}
 
 	for i, seed := range seeds {
 		config.Seed = seed
@@ -445,7 +459,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-			app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, interBlockCacheOpt())
+			app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, appOptions, interBlockCacheOpt(), baseapp.SetChainID(config.ChainID))
 
 			fmt.Printf(
 				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
