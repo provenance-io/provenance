@@ -15,8 +15,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
@@ -24,7 +22,7 @@ import (
 	"github.com/provenance-io/provenance/testutil"
 	testcli "github.com/provenance-io/provenance/testutil/cli"
 	ibchookscli "github.com/provenance-io/provenance/x/ibchooks/client/cli"
-	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
+	"github.com/provenance-io/provenance/x/ibchooks/types"
 )
 
 type IntegrationTestSuite struct {
@@ -54,30 +52,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg.NumValidators = 1
 
-	var genBalances []banktypes.Balance
-	var bankGenState banktypes.GenesisState
-	bankGenState.Params = banktypes.DefaultParams()
-	bankGenState.Balances = genBalances
-	bankDataBz, err := s.cfg.Codec.MarshalJSON(&bankGenState)
-	s.Require().NoError(err, "should be able to marshal bank genesis state when setting up suite")
-	genesisState[banktypes.ModuleName] = bankDataBz
-
-	var authData authtypes.GenesisState
-	var genAccounts []authtypes.GenesisAccount
-	authData.Params = authtypes.DefaultParams()
-	accounts, err := authtypes.PackAccounts(genAccounts)
-	s.Require().NoError(err, "should be able to pack accounts for genesis state when setting up suite")
-	authData.Accounts = accounts
-	authDataBz, err := s.cfg.Codec.MarshalJSON(&authData)
-	s.Require().NoError(err, "should be able to marshal auth genesis state when setting up suite")
-	genesisState[authtypes.ModuleName] = authDataBz
-
-	ibchooksParams := ibchookstypes.DefaultParams()
-	ibchooksGenesis := &ibchookstypes.GenesisState{Params: ibchooksParams}
-
-	ibchooksDataBz, err := s.cfg.Codec.MarshalJSON(ibchooksGenesis)
-	s.Require().NoError(err, "should be able to marshal ibchooks genesis state when setting up suite")
-	genesisState[ibchookstypes.ModuleName] = ibchooksDataBz
+	testutil.MutateGenesisState(s.T(), &s.cfg, types.ModuleName, &types.GenesisState{}, func(ibchooks *types.GenesisState) *types.GenesisState {
+		ibchooksParams := types.DefaultParams()
+		ibchooksGenesis := &types.GenesisState{Params: ibchooksParams}
+		return ibchooksGenesis
+	})
 
 	s.cfg.GenesisState = genesisState
 
@@ -101,9 +80,9 @@ func (s *IntegrationTestSuite) TestQueryParams() {
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("--%s=json", cmtcli.OutputFlag)})
 	s.Require().NoError(err)
 
-	var response ibchookstypes.QueryParamsResponse
+	var response types.QueryParamsResponse
 	s.NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response))
-	expectedParams := ibchookstypes.DefaultParams()
+	expectedParams := types.DefaultParams()
 	s.Equal(expectedParams, response.Params, "should have the default params")
 }
 
