@@ -31,12 +31,12 @@ func NewMsgUpdateParamsRequest(allowedAsyncAckContracts []string, authority stri
 func (msg MsgUpdateParamsRequest) ValidateBasic() error {
 	for _, contract := range msg.Params.AllowedAsyncAckContracts {
 		if _, err := sdk.AccAddressFromBech32(contract); err != nil {
-			return fmt.Errorf("invalid contract address: %s", contract)
+			return fmt.Errorf("invalid contract address: %q: %w", contract, err)
 		}
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return fmt.Errorf("invalid authority address: %s", msg.Authority)
+		return fmt.Errorf("invalid authority address: %q: %w", msg.Authority, err)
 	}
 
 	return nil

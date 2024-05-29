@@ -40,13 +40,13 @@ func TestNewMsgUpdateParamsRequest(t *testing.T) {
 			name:      "invalid contract address",
 			contracts: []string{validContract, invalidContract},
 			authority: authority,
-			expErr:    "invalid contract address: invalid_contract",
+			expErr:    `invalid contract address: "invalid_contract": decoding bech32 failed: invalid separator index -1`,
 		},
 		{
 			name:      "invalid authority address",
 			contracts: []string{validContract, validContract},
 			authority: "invalid_authority",
-			expErr:    "invalid authority address: invalid_authority",
+			expErr:    `invalid authority address: "invalid_authority": decoding bech32 failed: invalid separator index -1`,
 		},
 	}
 

@@ -122,7 +122,7 @@ func (s *IntegrationTestSuite) TestUpdateParamsCmd() {
 		{
 			name:         "failure - invalid args",
 			args:         []string{"contract1"},
-			expectErrMsg: "invalid contract address: contract1",
+			expectErrMsg: `invalid contract address: "contract1": decoding bech32 failed: invalid separator index 8`,
 		},
 	}
 
