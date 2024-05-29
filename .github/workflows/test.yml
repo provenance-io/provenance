@@ -117,29 +117,6 @@ jobs:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-${{ matrix.part }}-coverage"
           path: ./${{ matrix.part }}profile.out
 
-  build-tests:
-    # TODO[1760]: Delete this build-tests action once the tests reliably pass again.
-    needs: setup-tests
-    strategy:
-      fail-fast: false
-      matrix:
-        part: ["00", "01", "02", "03"]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        if: needs.setup-tests.outputs.should-run
-        with:
-          go-version: ${{ needs.setup-tests.outputs.go-version }}
-      - uses: actions/download-artifact@v4
-        if: needs.setup-tests.outputs.should-run
-        with:
-          name: "${{ needs.setup-tests.outputs.file-prefix }}-pkgs.txt.part.${{ matrix.part }}"
-      - name: build tests
-        if: needs.setup-tests.outputs.should-run
-        run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -tags='norace ledger test_ledger_mock' -run='ZYX_NOPE_NOPE_XYZ'
-
   #  This action performs a code coverage assessment but filters out generated code from proto based types
   #  and grpc services
   upload-coverage-report:
