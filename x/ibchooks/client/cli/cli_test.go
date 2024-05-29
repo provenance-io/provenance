@@ -11,8 +11,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -32,13 +30,10 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	cfg              network.Config
-	testnet          *network.Network
-	keyring          keyring.Keyring
-	keyringDir       string
-	accountAddr      sdk.AccAddress
-	accountKey       *secp256k1.PrivKey
-	accountAddresses []sdk.AccAddress
+	cfg         network.Config
+	testnet     *network.Network
+	accountAddr sdk.AccAddress
+	accountKey  *secp256k1.PrivKey
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -58,14 +53,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState := s.cfg.GenesisState
 
 	s.cfg.NumValidators = 1
-	s.generateAccountsWithKeyrings(2)
 
 	var genBalances []banktypes.Balance
-	for i := range s.accountAddresses {
-		genBalances = append(genBalances, banktypes.Balance{Address: s.accountAddresses[i].String(), Coins: sdk.NewCoins(
-			sdk.NewInt64Coin("nhash", 100_000_000), sdk.NewInt64Coin(s.cfg.BondDenom, 100_000_000),
-		).Sort()})
-	}
 	var bankGenState banktypes.GenesisState
 	bankGenState.Params = banktypes.DefaultParams()
 	bankGenState.Balances = genBalances
@@ -76,8 +65,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var authData authtypes.GenesisState
 	var genAccounts []authtypes.GenesisAccount
 	authData.Params = authtypes.DefaultParams()
-	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[0], nil, 3, 0))
-	genAccounts = append(genAccounts, authtypes.NewBaseAccount(s.accountAddresses[1], nil, 4, 0))
 	accounts, err := authtypes.PackAccounts(genAccounts)
 	s.Require().NoError(err, "should be able to pack accounts for genesis state when setting up suite")
 	authData.Accounts = accounts
@@ -99,31 +86,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.testnet, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err, "network.New")
 
-	// s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyringDir(s.keyringDir).WithKeyring(s.keyring)
 	_, err = testutil.WaitForHeight(s.testnet, 6)
 	s.Require().NoError(err, "WaitForHeight")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	testutil.Cleanup(s.testnet, s.T())
-}
-
-func (s *IntegrationTestSuite) generateAccountsWithKeyrings(number int) {
-	path := hd.CreateHDPath(118, 0, 0).String()
-	s.keyringDir = s.T().TempDir()
-	kr, err := keyring.New(s.T().Name(), "test", s.keyringDir, nil, s.cfg.Codec)
-	s.Require().NoError(err, "Keyring.New")
-	s.keyring = kr
-	for i := 0; i < number; i++ {
-		keyId := fmt.Sprintf("test_key%v", i)
-		info, _, err := kr.NewMnemonic(keyId, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-		s.Require().NoError(err, "Keyring.NewMneomonic")
-		addr, err := info.GetAddress()
-		if err != nil {
-			panic(err)
-		}
-		s.accountAddresses = append(s.accountAddresses, addr)
-	}
 }
 
 func (s *IntegrationTestSuite) TestQueryParams() {
@@ -148,7 +116,7 @@ func (s *IntegrationTestSuite) TestUpdateParamsCmd() {
 	}{
 		{
 			name:         "success - update allowed async ack contracts",
-			args:         []string{fmt.Sprintf("%v,%v", s.accountAddr.String(), s.accountAddresses[0].String())},
+			args:         []string{fmt.Sprintf("%v,%v", s.accountAddr.String(), sdk.AccAddress("input111111111111111").String())},
 			expectedCode: 0,
 		},
 		{
