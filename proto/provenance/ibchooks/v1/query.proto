@@ -14,7 +14,7 @@ import "provenance/ibchooks/v1/params.proto";
 service Query {
   // Params queries params of the ihchooks module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/provenance/attribute/v1/params";
+    option (google.api.http).get = "/provenance/ibchooks/v1/params";
   }
 }
 
