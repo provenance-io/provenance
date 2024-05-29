@@ -543,7 +543,7 @@ func SimulateGovMsgUnsanctionImmediate(args *WeightedOpsArgs) simtypes.Operation
 }
 
 func SimulatePropMsgUpdateParams(args *WeightedOpsArgs) simtypes.MsgSimulatorFn {
-	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
 		return &sanction.MsgUpdateParams{
 			Params:    RandomParams(r),
 			Authority: args.SK.GetAuthority(),
