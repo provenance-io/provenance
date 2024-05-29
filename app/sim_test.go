@@ -200,7 +200,12 @@ func TestSimple(t *testing.T) {
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/provenance-io/provenance -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func TestAppImportExport(t *testing.T) {
 	// uncomment to run in ide without flags.
-	//simcli.FlagEnabledValue = true
+	simcli.FlagEnabledValue = true
+	simcli.FlagNumBlocksValue = 30
+	simcli.FlagVerboseValue = true
+	simcli.FlagSeedValue = 2
+	simcli.FlagCommitValue = true
+	simcli.FlagPeriodValue = 3
 
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
@@ -283,7 +288,8 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[stakingtypes.StoreKey], newApp.keys[stakingtypes.StoreKey],
 			[][]byte{
 				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
-				stakingtypes.HistoricalInfoKey,
+				stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIndexKey, stakingtypes.UnbondingTypeKey,
+				stakingtypes.UnbondingIDKey, stakingtypes.ValidatorUpdatesKey,
 			}}, // ordering may change but it doesn't matter
 		{app.keys[slashingtypes.StoreKey], newApp.keys[slashingtypes.StoreKey], [][]byte{}},
 		{app.keys[minttypes.StoreKey], newApp.keys[minttypes.StoreKey], [][]byte{}},
