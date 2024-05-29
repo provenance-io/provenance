@@ -1,18 +1,24 @@
 syntax = "proto3";
 package provenance.ibchooks.v1;
 
-import "cosmos/msg/v1/msg.proto";
-
 option go_package = "github.com/provenance-io/provenance/x/ibchooks/types";
 
 option java_package        = "io.provenance.ibchooks.v1";
 option java_multiple_files = true;
+
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "provenance/ibchooks/v1/params.proto";
 
 // Msg defines the Msg service.
 service Msg {
   // EmitIBCAck checks the sender can emit the ack and writes the IBC
   // acknowledgement
   rpc EmitIBCAck(MsgEmitIBCAck) returns (MsgEmitIBCAckResponse);
+
+  // UpdateParams is a governance proposal endpoint for updating the ibchooks module's params.
+  rpc UpdateParams(MsgUpdateParamsRequest) returns (MsgUpdateParamsResponse);
 }
 
 // MsgEmitIBCAck is the IBC Acknowledgement
@@ -29,3 +35,17 @@ message MsgEmitIBCAckResponse {
   string contract_result = 1;
   string ibc_ack         = 2;
 }
+
+// MsgUpdateParamsRequest is a request message for the UpdateParams endpoint.
+message MsgUpdateParamsRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority should be the governance module account address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params are the new param values to set.
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateParamsResponse is a response message for the UpdateParams endpoint.
+message MsgUpdateParamsResponse {}
