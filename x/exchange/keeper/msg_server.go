@@ -417,7 +417,7 @@ func (k MsgServer) GovCloseMarket(goCtx context.Context, msg *exchange.MsgGovClo
 
 // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
 //
-//lint:ignore SA1019 Suppress warning for deprecated MsgGovUpdateParamsRequest usage
+//nolint:staticcheck // SA1019 Suppress warning for deprecated MsgGovUpdateParamsRequest usage
 func (k MsgServer) GovUpdateParams(_ context.Context, _ *exchange.MsgGovUpdateParamsRequest) (*exchange.MsgGovUpdateParamsResponse, error) {
 	return nil, errors.New("deprecated and unusable")
 }
