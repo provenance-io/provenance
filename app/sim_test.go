@@ -53,14 +53,8 @@ func init() {
 	pioconfig.SetProvenanceConfig("", 0)
 }
 
-type StoreKeysPrefixes struct {
-	A        storetypes.StoreKey
-	B        storetypes.StoreKey
-	Prefixes [][]byte
-}
-
-// ProvAppStateFn wraps the simtypes.AppStateFn and sets the ICA GenesisState if isn't yet defined in the appState.
-func ProvAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
+// provAppStateFn wraps the simtypes.AppStateFn and sets the ICA and ICQ GenesisState if isn't yet defined in the appState.
+func provAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
 		appState, simAccs, chainID, genesisTimestamp := simtestutil.AppStateFn(cdc, simManager, genesisState)(r, accs, config)
 		appState = appStateWithICA(appState, cdc)
@@ -129,12 +123,67 @@ func logIfEmptyValidatorSetErr(logger log.Logger, obj interface{}) bool {
 	return false
 }
 
+// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+// an IAVLStore for faster simulation speed.
+func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
+	bapp.SetFauxMerkleMode()
+}
+
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
+// inter-block write-through cache.
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
+}
+
+// printStats outputs the config and db info.
+func printStats(config simtypes.Config, db dbm.DB) {
+	printConfig(config)
+	if config.Commit {
+		printDBInfo(db)
+	}
+}
+
+// printConfig outputs the config.
+func printConfig(config simtypes.Config) {
+	fmt.Println("-vvv-  Config Info  -vvv-")
+	cfields := cmdconfig.MakeFieldValueMap(config, true)
+	for _, f := range cfields.GetSortedKeys() {
+		fmt.Printf("%s: %s\n", f, cfields.GetStringOf(f))
+	}
+	fmt.Println("-^^^-  Config Info  -^^^-")
+}
+
+// printDBInfo outputs the db.Stats map.
+func printDBInfo(db dbm.DB) {
+	fmt.Println("-vvv-  Database Info  -vvv-")
+	dbStats := db.Stats()
+	if len(dbStats) == 0 {
+		fmt.Println("No info to report.")
+	} else {
+		keys := make([]string, 0, len(dbStats))
+		for k := range dbStats {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			v := dbStats[k]
+			if strings.Contains(v, "\n") {
+				fmt.Printf("%s:\n", k)
+				fmt.Println(v)
+			} else {
+				fmt.Printf("%s: %q\n", k, v)
+			}
+		}
+	}
+	fmt.Println("-^^^-  Database Info  -^^^-")
+}
+
 func TestFullAppSimulation(t *testing.T) {
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping provenance application simulation")
 	}
-	PrintConfig(config)
+	printConfig(config)
 	require.NoError(t, err, "provenance simulation setup failed")
 
 	defer func() {
@@ -152,7 +201,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		ProvAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -165,7 +214,7 @@ func TestFullAppSimulation(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	PrintStats(config, db)
+	printStats(config, db)
 }
 
 func TestSimple(t *testing.T) {
@@ -173,7 +222,7 @@ func TestSimple(t *testing.T) {
 	if skip {
 		t.Skip("skipping provenance application simulation")
 	}
-	PrintConfig(config)
+	printConfig(config)
 	require.NoError(t, err, "provenance simulation setup failed")
 
 	defer func() {
@@ -189,7 +238,7 @@ func TestSimple(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		ProvAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -198,7 +247,7 @@ func TestSimple(t *testing.T) {
 	)
 
 	require.NoError(t, simErr)
-	PrintStats(config, db)
+	printStats(config, db)
 }
 
 // Profile with:
@@ -211,7 +260,7 @@ func TestAppImportExport(t *testing.T) {
 	if skip {
 		t.Skip("skipping application import/export simulation")
 	}
-	PrintConfig(config)
+	printConfig(config)
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
@@ -234,7 +283,7 @@ func TestAppImportExport(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		ProvAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -247,7 +296,7 @@ func TestAppImportExport(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	PrintStats(config, db)
+	printStats(config, db)
 
 	fmt.Printf("exporting genesis...\n")
 
@@ -339,7 +388,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	if skip {
 		t.Skip("skipping application simulation after import")
 	}
-	PrintConfig(config)
+	printConfig(config)
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
@@ -355,7 +404,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		app.BaseApp,
-		ProvAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -368,7 +417,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
-	PrintStats(config, db)
+	printStats(config, db)
 
 	if stopEarly {
 		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
@@ -403,7 +452,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		t,
 		os.Stdout,
 		newApp.BaseApp,
-		ProvAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(newApp, newApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -462,7 +511,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	for i, seed := range seeds {
 		config.Seed = seed
-		PrintConfig(config)
+		printConfig(config)
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
@@ -484,7 +533,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				app.BaseApp,
-				ProvAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+				provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				simtestutil.SimulationOperations(app, app.AppCodec(), config),
 				app.ModuleAccountAddrs(),
@@ -493,7 +542,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			PrintStats(config, db)
+			printStats(config, db)
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
@@ -506,59 +555,4 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 		}
 	}
-}
-
-// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
-// an IAVLStore for faster simulation speed.
-func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
-	bapp.SetFauxMerkleMode()
-}
-
-// interBlockCacheOpt returns a BaseApp option function that sets the persistent
-// inter-block write-through cache.
-func interBlockCacheOpt() func(*baseapp.BaseApp) {
-	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
-}
-
-// PrintStats outputs the config and db info.
-func PrintStats(config simtypes.Config, db dbm.DB) {
-	PrintConfig(config)
-	if config.Commit {
-		PrintDBInfo(db)
-	}
-}
-
-// PrintConfig outputs the config.
-func PrintConfig(config simtypes.Config) {
-	fmt.Println("-vvv-  Config Info  -vvv-")
-	cfields := cmdconfig.MakeFieldValueMap(config, true)
-	for _, f := range cfields.GetSortedKeys() {
-		fmt.Printf("%s: %s\n", f, cfields.GetStringOf(f))
-	}
-	fmt.Println("-^^^-  Config Info  -^^^-")
-}
-
-// PrintDBInfo outputs the db.Stats map.
-func PrintDBInfo(db dbm.DB) {
-	fmt.Println("-vvv-  Database Info  -vvv-")
-	dbStats := db.Stats()
-	if len(dbStats) == 0 {
-		fmt.Println("No info to report.")
-	} else {
-		keys := make([]string, 0, len(dbStats))
-		for k := range dbStats {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, k := range keys {
-			v := dbStats[k]
-			if strings.Contains(v, "\n") {
-				fmt.Printf("%s:\n", k)
-				fmt.Println(v)
-			} else {
-				fmt.Printf("%s: %q\n", k, v)
-			}
-		}
-	}
-	fmt.Println("-^^^-  Database Info  -^^^-")
 }

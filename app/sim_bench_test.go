@@ -27,7 +27,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	if skip {
 		b.Skip("skipping benchmark application simulation")
 	}
-	PrintConfig(config)
+	printConfig(config)
 
 	defer func() {
 		db.Close()
@@ -44,7 +44,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b,
 		os.Stdout,
 		app.BaseApp,
-		ProvAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -61,7 +61,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b.Fatal(simErr)
 	}
 
-	PrintStats(config, db)
+	printStats(config, db)
 }
 
 func BenchmarkInvariants(b *testing.B) {
@@ -76,7 +76,7 @@ func BenchmarkInvariants(b *testing.B) {
 	}
 
 	config.AllInvariants = false
-	PrintConfig(config)
+	printConfig(config)
 
 	defer func() {
 		db.Close()
@@ -93,7 +93,7 @@ func BenchmarkInvariants(b *testing.B) {
 		b,
 		os.Stdout,
 		app.BaseApp,
-		ProvAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		provAppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -110,7 +110,7 @@ func BenchmarkInvariants(b *testing.B) {
 		b.Fatal(simErr)
 	}
 
-	PrintStats(config, db)
+	printStats(config, db)
 
 	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight() + 1, Time: lastBlockTime})
 
