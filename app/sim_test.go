@@ -25,14 +25,14 @@ import (
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -40,6 +40,7 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	icagenesistypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/genesis/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 
@@ -224,6 +225,7 @@ func TestAppImportExport(t *testing.T) {
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 
 	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(config.ChainID))
+	require.Equal(t, "provenanced", app.Name())
 
 	fmt.Printf("running provenance test import export\n")
 
@@ -302,22 +304,33 @@ func TestAppImportExport(t *testing.T) {
 	require.NotEmpty(t, storeKeys, "storeKeys")
 
 	for _, appKeyA := range storeKeys {
-		// only compare kvstores
-		if _, ok := appKeyA.(*storetypes.KVStoreKey); !ok {
-			continue
-		}
-
 		keyName := appKeyA.Name()
-		appKeyB := newApp.GetKey(keyName)
+		t.Run(keyName, func(t *testing.T) {
+			// only compare kvstores
+			if _, ok := appKeyA.(*storetypes.KVStoreKey); !ok {
+				t.Skipf("Skipping because the key is a %T (not a KVStoreKey)", appKeyA)
+				return
+			}
 
-		storeA := ctxA.KVStore(appKeyA)
-		storeB := ctxB.KVStore(appKeyB)
+			appKeyB := newApp.GetKey(keyName)
 
-		failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skipPrefixes[keyName])
-		assert.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare: %s", keyName)
+			storeA := ctxA.KVStore(appKeyA)
+			storeB := ctxB.KVStore(appKeyB)
 
-		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
-		assert.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
+			failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skipPrefixes[keyName])
+			assert.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare: %s", keyName)
+
+			// Make the lists the same length because GetSimulationLog assumes they're that way.
+			for len(failedKVBs) < len(failedKVAs) {
+				failedKVBs = append(failedKVBs, kv.Pair{Key: []byte{}, Value: []byte{}})
+			}
+			for len(failedKVBs) > len(failedKVAs) {
+				failedKVAs = append(failedKVAs, kv.Pair{Key: []byte{}, Value: []byte{}})
+			}
+
+			fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
+			assert.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
+		})
 	}
 }
 
