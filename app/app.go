@@ -810,7 +810,6 @@ func New(
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
-	// TODO[1760]: Remove all entries for modules that do not have a begin blocker.
 	app.mm.SetOrderBeginBlockers(
 		capabilitytypes.ModuleName,
 		minttypes.ModuleName,
@@ -820,77 +819,18 @@ func New(
 		stakingtypes.ModuleName,
 		ibcexported.ModuleName,
 		markertypes.ModuleName,
-		icatypes.ModuleName,
 		attributetypes.ModuleName,
-		triggertypes.ModuleName,
-
-		// no-ops
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		govtypes.ModuleName,
-		crisistypes.ModuleName,
-		genutiltypes.ModuleName,
 		authz.ModuleName,
-		group.ModuleName,
-		feegrant.ModuleName,
-		paramstypes.ModuleName,
-		msgfeestypes.ModuleName,
-		metadatatypes.ModuleName,
-		oracletypes.ModuleName,
-		wasmtypes.ModuleName,
-		ibcratelimit.ModuleName,
-		ibchookstypes.ModuleName,
-		ibctransfertypes.ModuleName,
-		icqtypes.ModuleName,
-		nametypes.ModuleName,
-		vestingtypes.ModuleName,
-		quarantine.ModuleName,
-		sanction.ModuleName,
-		hold.ModuleName,
-		exchange.ModuleName,
-		consensusparamtypes.ModuleName,
+		triggertypes.ModuleName,
 	)
 
-	// TODO[1760]: Remove all entries for modules that do not have an end blocker.
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
-		authtypes.ModuleName,
-		icatypes.ModuleName,
+		feegrant.ModuleName,
 		group.ModuleName,
 		triggertypes.ModuleName,
-
-		// no-ops
-		vestingtypes.ModuleName,
-		distrtypes.ModuleName,
-		authz.ModuleName,
-		metadatatypes.ModuleName,
-		oracletypes.ModuleName,
-		nametypes.ModuleName,
-		genutiltypes.ModuleName,
-		ibcexported.ModuleName,
-		ibcratelimit.ModuleName,
-		ibchookstypes.ModuleName,
-		ibctransfertypes.ModuleName,
-		icqtypes.ModuleName,
-		msgfeestypes.ModuleName,
-		wasmtypes.ModuleName,
-		slashingtypes.ModuleName,
-		upgradetypes.ModuleName,
-		attributetypes.ModuleName,
-		capabilitytypes.ModuleName,
-		evidencetypes.ModuleName,
-		banktypes.ModuleName,
-		minttypes.ModuleName,
-		markertypes.ModuleName,
-		feegrant.ModuleName,
-		paramstypes.ModuleName,
-		quarantine.ModuleName,
-		sanction.ModuleName,
-		hold.ModuleName,
-		exchange.ModuleName,
-		consensusparamtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
