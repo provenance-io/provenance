@@ -14,7 +14,6 @@ import (
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -178,6 +177,14 @@ func printDBInfo(db dbm.DB) {
 	fmt.Println("-^^^-  Database Info  -^^^-")
 }
 
+// newSimAppOpts creates a new set of AppOptions with a temp dir for home, and the desired invariant check period.
+func newSimAppOpts(t testing.TB) simtestutil.AppOptionsMap {
+	return simtestutil.AppOptionsMap{
+		flags.FlagHome:            t.TempDir(),
+		server.FlagInvCheckPeriod: simcli.FlagPeriodValue,
+	}
+}
+
 func TestFullAppSimulation(t *testing.T) {
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
@@ -191,7 +198,7 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, t.TempDir(), simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	app := New(logger, db, nil, true, newSimAppOpts(t), fauxMerkleModeOpt)
 	require.Equal(t, "provenanced", app.Name())
 
 	fmt.Printf("running provenance full app simulation\n")
@@ -230,7 +237,7 @@ func TestSimple(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, t.TempDir(), simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	app := New(logger, db, nil, true, newSimAppOpts(t), fauxMerkleModeOpt)
 	require.Equal(t, "provenanced", app.Name())
 
 	// run randomized simulation
@@ -268,12 +275,12 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	home := t.TempDir()
-	appOptions := make(simtestutil.AppOptionsMap)
-	appOptions[flags.FlagHome] = home
-	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
-
-	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(config.ChainID))
+	appOpts := newSimAppOpts(t)
+	baseAppOpts := []func(*baseapp.BaseApp){
+		fauxMerkleModeOpt,
+		baseapp.SetChainID(config.ChainID),
+	}
+	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.Equal(t, "provenanced", app.Name())
 
 	fmt.Printf("running provenance test import export\n")
@@ -305,7 +312,7 @@ func TestAppImportExport(t *testing.T) {
 
 	fmt.Printf("importing genesis...\n")
 
-	newDB, newDir, _, _, err := simtestutil.SetupSimulation(config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
+	newDB, newDir, newLogger, _, err := simtestutil.SetupSimulation(config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
@@ -313,7 +320,7 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(config.ChainID))
+	newApp := New(newLogger, newDB, nil, true, appOpts, baseAppOpts...)
 
 	var genesisState map[string]json.RawMessage
 	err = json.Unmarshal(exported.AppState, &genesisState)
@@ -396,8 +403,12 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	home := t.TempDir()
-	app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	appOpts := newSimAppOpts(t)
+	baseAppOpts := []func(*baseapp.BaseApp){
+		fauxMerkleModeOpt,
+		baseapp.SetChainID(config.ChainID),
+	}
+	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
 
 	// Run randomized simulation
 	stopEarly, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(
@@ -431,7 +442,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	fmt.Printf("importing genesis...\n")
 
-	_, newDB, newDir, _, _, err := setupSimulation("leveldb-app-sim-2", "Simulation-2")
+	_, newDB, newDir, newLogger, _, err := setupSimulation("leveldb-app-sim-2", "Simulation-2")
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
@@ -439,7 +450,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newApp := New(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, fauxMerkleModeOpt)
+	newApp := New(newLogger, newDB, nil, true, appOpts, baseAppOpts...)
 
 	_, err = newApp.InitChain(&abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
@@ -500,13 +511,9 @@ func TestAppStateDeterminism(t *testing.T) {
 		}
 	}
 
-	home := t.TempDir()
-
-	appOptions := viper.New()
-	appOptions.SetDefault(flags.FlagHome, home)
-	appOptions.SetDefault(server.FlagInvCheckPeriod, simcli.FlagPeriodValue)
+	appOpts := newSimAppOpts(t)
 	if simcli.FlagVerboseValue {
-		appOptions.SetDefault(flags.FlagLogLevel, "debug")
+		appOpts[flags.FlagLogLevel] = "debug"
 	}
 
 	for i, seed := range seeds {
@@ -522,7 +529,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-			app := New(logger, db, nil, true, map[int64]bool{}, home, simcli.FlagPeriodValue, appOptions, interBlockCacheOpt(), baseapp.SetChainID(config.ChainID))
+			app := New(logger, db, nil, true, appOpts, interBlockCacheOpt(), baseapp.SetChainID(config.ChainID))
 
 			fmt.Printf(
 				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",

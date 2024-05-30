@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -75,11 +74,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	// We initially set the config as testnet so commands that run before start work for testing such as gentx.
 	app.SetConfig(true, false)
 
-	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
-		tempDir,
-		0,
-		simtestutil.EmptyAppOptions{},
-	)
+	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	encodingConfig := tempApp.GetEncodingConfig()
 
 	initClientCtx := client.Context{}.
@@ -275,11 +270,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		cache = store.NewCommitKVStoreCacheManager()
 	}
 
-	skipUpgradeHeights := make(map[int64]bool)
-	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
-		skipUpgradeHeights[int64(h)] = true
-	}
-
 	pruningOpts, err := server.GetPruningOptionsFromFlags(appOpts)
 	if err != nil {
 		panic(err)
@@ -310,10 +300,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 
 	return app.New(
-		logger, db, traceStore, true, skipUpgradeHeights,
-		cast.ToString(appOpts.Get(flags.FlagHome)),
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		appOpts,
+		logger, db, traceStore, true, appOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
@@ -362,19 +349,14 @@ func createAppAndExport(
 ) (servertypes.ExportedApp, error) {
 	var a *app.App
 
-	homePath, ok := appOpts.Get(flags.FlagHome).(string)
-	if !ok || homePath == "" {
-		return servertypes.ExportedApp{}, errors.New("application home not set")
-	}
-
 	if height != -1 {
-		a = app.New(logger, db, traceStore, false, map[int64]bool{}, homePath, cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), appOpts)
+		a = app.New(logger, db, traceStore, false, appOpts)
 
 		if err := a.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		a = app.New(logger, db, traceStore, true, map[int64]bool{}, homePath, cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)), appOpts)
+		a = app.New(logger, db, traceStore, true, appOpts)
 	}
 
 	return a.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)

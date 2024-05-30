@@ -12,7 +12,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 )
 
 // Profile with:
@@ -37,7 +36,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		}
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(logger, db, nil, true, newSimAppOpts(b), interBlockCacheOpt())
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -86,7 +85,7 @@ func BenchmarkInvariants(b *testing.B) {
 		}
 	}()
 
-	app := New(logger, db, nil, true, map[int64]bool{}, b.TempDir(), simcli.FlagPeriodValue, simtestutil.EmptyAppOptions{}, interBlockCacheOpt())
+	app := New(logger, db, nil, true, newSimAppOpts(b), interBlockCacheOpt())
 
 	// run randomized simulation
 	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(

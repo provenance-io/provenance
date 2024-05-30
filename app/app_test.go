@@ -28,12 +28,9 @@ import (
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	opts := SetupOptions{
-		Logger:             log.NewTestLogger(t),
-		DB:                 dbm.NewMemDB(),
-		InvCheckPeriod:     0,
-		HomePath:           t.TempDir(),
-		SkipUpgradeHeights: map[int64]bool{},
-		AppOpts:            simtestutil.EmptyAppOptions{},
+		Logger:  log.NewTestLogger(t),
+		DB:      dbm.NewMemDB(),
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}
 	app := NewAppWithCustomOptions(t, false, opts)
 
@@ -54,8 +51,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := New(log.NewTestLogger(t), opts.DB, nil, true,
-		map[int64]bool{}, opts.HomePath, 0, simtestutil.EmptyAppOptions{})
+	app2 := New(log.NewTestLogger(t), opts.DB, nil, true, opts.AppOpts)
 	require.NotPanics(t, func() {
 		_, err = app2.ExportAppStateAndValidators(false, nil, nil)
 	}, "exporting app state at current height")
@@ -74,12 +70,9 @@ func TestGetMaccPerms(t *testing.T) {
 
 func TestExportAppStateAndValidators(t *testing.T) {
 	opts := SetupOptions{
-		Logger:             log.NewTestLogger(t),
-		DB:                 dbm.NewMemDB(),
-		InvCheckPeriod:     0,
-		HomePath:           t.TempDir(),
-		SkipUpgradeHeights: map[int64]bool{},
-		AppOpts:            simtestutil.EmptyAppOptions{},
+		Logger:  log.NewTestLogger(t),
+		DB:      dbm.NewMemDB(),
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}
 	app := NewAppWithCustomOptions(t, false, opts)
 	ctx := app.BaseApp.NewContext(false)
