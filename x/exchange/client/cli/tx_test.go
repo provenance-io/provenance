@@ -1760,7 +1760,7 @@ func (s *CmdTestSuite) TestCmdTxGovCloseMarket() {
 	}
 }
 
-func (s *CmdTestSuite) TestCmdTxGovUpdateParams() {
+func (s *CmdTestSuite) TestCmdTxUpdateParams() {
 	tests := []txCmdTestCase{
 		{
 			name:     "cmd error",
@@ -1780,7 +1780,7 @@ func (s *CmdTestSuite) TestCmdTxGovUpdateParams() {
 		{
 			name: "prop created",
 			preRun: func() ([]string, func(*sdk.TxResponse)) {
-				expMsg := &exchange.MsgGovUpdateParamsRequest{
+				expMsg := &exchange.MsgUpdateParamsRequest{
 					Authority: cli.AuthorityAddr.String(),
 					Params: exchange.Params{
 						DefaultSplit: 777,

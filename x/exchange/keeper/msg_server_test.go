@@ -5434,21 +5434,21 @@ func (s *TestSuite) TestMsgServer_GovCloseMarket() {
 	}
 }
 
-func (s *TestSuite) TestMsgServer_GovUpdateParams() {
-	testDef := msgServerTestDef[exchange.MsgGovUpdateParamsRequest, exchange.MsgGovUpdateParamsResponse, struct{}]{
-		endpointName: "GovUpdateParams",
-		endpoint:     keeper.NewMsgServer(s.k).GovUpdateParams,
-		expResp:      &exchange.MsgGovUpdateParamsResponse{},
-		followup: func(msg *exchange.MsgGovUpdateParamsRequest, _ struct{}) {
+func (s *TestSuite) TestMsgServer_UpdateParams() {
+	testDef := msgServerTestDef[exchange.MsgUpdateParamsRequest, exchange.MsgUpdateParamsResponse, struct{}]{
+		endpointName: "UpdateParams",
+		endpoint:     keeper.NewMsgServer(s.k).UpdateParams,
+		expResp:      &exchange.MsgUpdateParamsResponse{},
+		followup: func(msg *exchange.MsgUpdateParamsRequest, _ struct{}) {
 			actParams := s.k.GetParams(s.ctx)
 			s.Assert().Equal(&msg.Params, actParams, "GetParams")
 		},
 	}
 
-	tests := []msgServerTestCase[exchange.MsgGovUpdateParamsRequest, struct{}]{
+	tests := []msgServerTestCase[exchange.MsgUpdateParamsRequest, struct{}]{
 		{
 			name: "wrong authority",
-			msg: exchange.MsgGovUpdateParamsRequest{
+			msg: exchange.MsgUpdateParamsRequest{
 				Authority: s.addr5.String(),
 				Params:    exchange.Params{},
 			},
@@ -5461,7 +5461,7 @@ func (s *TestSuite) TestMsgServer_GovUpdateParams() {
 			setup: func() {
 				s.k.SetParams(s.ctx, nil)
 			},
-			msg: exchange.MsgGovUpdateParamsRequest{
+			msg: exchange.MsgUpdateParamsRequest{
 				Authority: s.k.GetAuthority(),
 				Params: exchange.Params{
 					DefaultSplit: 333,
@@ -5477,7 +5477,7 @@ func (s *TestSuite) TestMsgServer_GovUpdateParams() {
 			setup: func() {
 				s.k.SetParams(s.ctx, exchange.DefaultParams())
 			},
-			msg: exchange.MsgGovUpdateParamsRequest{
+			msg: exchange.MsgUpdateParamsRequest{
 				Authority: s.k.GetAuthority(),
 				Params:    *exchange.DefaultParams(),
 			},
@@ -5490,7 +5490,7 @@ func (s *TestSuite) TestMsgServer_GovUpdateParams() {
 			setup: func() {
 				s.k.SetParams(s.ctx, exchange.DefaultParams())
 			},
-			msg: exchange.MsgGovUpdateParamsRequest{
+			msg: exchange.MsgUpdateParamsRequest{
 				Authority: s.k.GetAuthority(),
 				Params: exchange.Params{
 					DefaultSplit: 333,
@@ -5509,7 +5509,7 @@ func (s *TestSuite) TestMsgServer_GovUpdateParams() {
 					DenomSplits:  []exchange.DenomSplit{{Denom: "cherry", Split: 4}},
 				})
 			},
-			msg: exchange.MsgGovUpdateParamsRequest{
+			msg: exchange.MsgUpdateParamsRequest{
 				Authority: s.k.GetAuthority(),
 				Params: exchange.Params{
 					DefaultSplit: 345,
