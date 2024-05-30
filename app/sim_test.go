@@ -107,21 +107,6 @@ func setupSimulation(dirPrefix string, dbName string) (simtypes.Config, dbm.DB, 
 	return config, db, dir, logger, skip, err
 }
 
-// logIfEmptyValidatorSetErr writes some stuff to the logs and returns true if the provided obj is from an
-// error about the validator set being empty. If the provided obj is not that, this is a no-op and returns false.
-func logIfEmptyValidatorSetErr(logger log.Logger, obj interface{}) bool {
-	if obj == nil {
-		return false
-	}
-	errStr := fmt.Sprintf("%v", obj)
-	if strings.Contains(errStr, "validator set is empty after InitGenesis") {
-		logger.Info("Skipping simulation as all validators have been unbonded",
-			"err", errStr, "stacktrace", string(debug.Stack()))
-		return true
-	}
-	return false
-}
-
 // fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
 // an IAVLStore for faster simulation speed.
 func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
@@ -262,6 +247,16 @@ func TestSimple(t *testing.T) {
 func TestAppImportExport(t *testing.T) {
 	// uncomment to run in ide without flags.
 	//simcli.FlagEnabledValue = true
+	//tempDir, err := os.MkdirTemp("", "sim-log-*")
+	//require.NoError(t, err, "MkdirTemp")
+	//t.Logf("tempDir: %s", tempDir)
+	//simcli.FlagNumBlocksValue = 30
+	//simcli.FlagVerboseValue = true
+	//simcli.FlagCommitValue = true
+	//simcli.FlagSeedValue = 2
+	//simcli.FlagPeriodValue = 3
+	//simcli.FlagExportParamsPathValue = filepath.Join(tempDir, fmt.Sprintf("sim_params-%d.json", simcli.FlagSeedValue))
+	//simcli.FlagExportStatePathValue = filepath.Join(tempDir, fmt.Sprintf("sim_state-%d.json", simcli.FlagSeedValue))
 
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
@@ -300,8 +295,8 @@ func TestAppImportExport(t *testing.T) {
 
 	// export state and simParams before the simulation error is checked
 	err = simtestutil.CheckExportSimulation(app, config, simParams)
-	require.NoError(t, err)
-	require.NoError(t, simErr)
+	require.NoError(t, err, "CheckExportSimulation")
+	require.NoError(t, simErr, "SimulateFromSeedProv")
 
 	printStats(config, db)
 
@@ -313,7 +308,7 @@ func TestAppImportExport(t *testing.T) {
 	fmt.Printf("importing genesis...\n")
 
 	newDB, newDir, newLogger, _, err := simtestutil.SetupSimulation(config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
-	require.NoError(t, err, "simulation setup failed")
+	require.NoError(t, err, "simulation setup 2 failed")
 
 	defer func() {
 		require.NoError(t, newDB.Close())
@@ -326,15 +321,15 @@ func TestAppImportExport(t *testing.T) {
 	err = json.Unmarshal(exported.AppState, &genesisState)
 	require.NoError(t, err)
 
-	defer func() {
-		logIfEmptyValidatorSetErr(logger, recover())
-	}()
-
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
 	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
 	_, err = newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
-	if logIfEmptyValidatorSetErr(logger, err) {
-		return
+	if err != nil {
+		if strings.Contains(err.Error(), "validator set is empty after InitGenesis") {
+			logger.Info("Skipping simulation as all validators have been unbonded")
+			logger.Info("err", err, "stacktrace", string(debug.Stack()))
+			return
+		}
 	}
 	require.NoError(t, err, "InitGenesis")
 
