@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -19,6 +20,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtos "github.com/cometbft/cometbft/libs/os"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
@@ -34,7 +37,6 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -51,12 +53,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -891,29 +895,36 @@ func New(
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
+	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
-	// TODO[1760]: Assign this list to a variable so we can call SetOrderExportGenesis with the same list.
-	genesisModuleOrder := []string{
-		capabilitytypes.ModuleName,
+	moduleGenesisOrder := []string{
+		capabilitytypes.ModuleName, // Must be first.
+
 		authtypes.ModuleName,
 		banktypes.ModuleName,
+
 		markertypes.ModuleName,
+
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
-		genutiltypes.ModuleName,
+		genutiltypes.ModuleName, // Must be after both staking and auth.
 		evidencetypes.ModuleName,
 		authz.ModuleName,
-		group.ModuleName,
 		feegrant.ModuleName,
+		group.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		consensusparamtypes.ModuleName,
+
 		quarantine.ModuleName,
 		sanction.ModuleName,
-
 		nametypes.ModuleName,
 		attributetypes.ModuleName,
 		metadatatypes.ModuleName,
@@ -927,21 +938,14 @@ func New(
 		icatypes.ModuleName,
 		ibcratelimit.ModuleName,
 		ibchookstypes.ModuleName,
-		// wasm after ibc transfer
-		wasmtypes.ModuleName,
+		wasmtypes.ModuleName, // must be after ibctransfer.
 		triggertypes.ModuleName,
 		oracletypes.ModuleName,
-
-		// no-ops
-		paramstypes.ModuleName,
-		vestingtypes.ModuleName,
-		upgradetypes.ModuleName,
-		consensusparamtypes.ModuleName,
 	}
-	app.mm.SetOrderInitGenesis(genesisModuleOrder...)
-	app.mm.SetOrderExportGenesis(genesisModuleOrder...)
+	app.mm.SetOrderInitGenesis(moduleGenesisOrder...)
+	app.mm.SetOrderExportGenesis(moduleGenesisOrder...)
 
-	app.mm.SetOrderMigrations(
+	moduleMigrationOrder := []string{
 		banktypes.ModuleName,
 		authz.ModuleName,
 		group.ModuleName,
@@ -983,13 +987,27 @@ func New(
 
 		// Last due to v0.44 issue: https://github.com/cosmos/cosmos-sdk/issues/10591
 		authtypes.ModuleName,
-	)
+	}
+	app.mm.SetOrderMigrations(moduleMigrationOrder...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.BaseApp.MsgServiceRouter(), app.GRPCQueryRouter())
 	if err := app.mm.RegisterServices(app.configurator); err != nil {
 		panic(err)
 	}
+
+	// Register upgrade handlers and set the store loader.
+	// This must be done after the module manager and configurator are set,
+	// but before the baseapp is sealed via LoadLatestVersion() down below.
+	app.registerUpgradeHandlers(appOpts)
+
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
+
+	reflectionSvc, err := runtimeservices.NewReflectionService()
+	if err != nil {
+		panic(err)
+	}
+	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
 
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
@@ -1008,7 +1026,35 @@ func New(
 	app.SetInitChainer(app.InitChainer)
 	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
+	app.SetEndBlocker(app.EndBlocker)
+	app.setAnteHandler()
+	app.setPostHandler()
+	app.setFeeHandler()
+	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
 
+	// At startup, after all modules have been registered, check that all proto annotations are correct.
+	protoFiles, err := proto.MergedRegistry()
+	if err != nil {
+		panic(err)
+	}
+	err = msgservice.ValidateProtoAnnotations(protoFiles)
+	if err != nil {
+		// Once we switch to using protoreflect-based antehandlers, we might
+		// want to panic here instead of logging a warning.
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
+
+	if loadLatest {
+		if err := app.LoadLatestVersion(); err != nil {
+			cmtos.Exit(err.Error())
+		}
+	}
+
+	simappparams.AppEncodingConfig = app.GetEncodingConfig()
+	return app
+}
+
+func (app *App) setAnteHandler() {
 	anteHandler, err := antewrapper.NewAnteHandler(
 		antewrapper.HandlerOptions{
 			AccountKeeper:       app.AccountKeeper,
@@ -1022,8 +1068,22 @@ func New(
 		panic(err)
 	}
 
+	// Set the AnteHandler for the app
 	app.SetAnteHandler(anteHandler)
+}
 
+func (app *App) setPostHandler() {
+	postHandler, err := posthandler.NewPostHandler(
+		posthandler.HandlerOptions{},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetPostHandler(postHandler)
+}
+
+func (app *App) setFeeHandler() {
 	msgFeeHandler, err := piohandlers.NewAdditionalMsgFeeHandler(piohandlers.PioBaseAppKeeperOptions{
 		AccountKeeper:  app.AccountKeeper,
 		BankKeeper:     app.BankKeeper,
@@ -1031,18 +1091,15 @@ func New(
 		MsgFeesKeeper:  app.MsgFeesKeeper,
 		Decoder:        app.txConfig.TxDecoder(),
 	})
-
 	if err != nil {
 		panic(err)
 	}
 
 	app.SetFeeHandler(msgFeeHandler)
+}
 
-	app.SetEndBlocker(app.EndBlocker)
-
-	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
-
-	// Add upgrade plans for each release. This must be done before the baseapp seals via LoadLatestVersion() down below.
+func (app *App) registerUpgradeHandlers(appOpts servertypes.AppOptions) {
+	// Add the upgrade handlers for each release.
 	InstallCustomUpgradeHandlers(app)
 
 	// Use the dump of $home/data/upgrade-info.json:{"name":"$plan","height":321654} to determine
@@ -1078,15 +1135,6 @@ func New(
 	// Verify configuration settings
 	storeLoader = ValidateWrapper(app.Logger(), appOpts, storeLoader)
 	app.SetStoreLoader(storeLoader)
-
-	if loadLatest {
-		if err := app.LoadLatestVersion(); err != nil {
-			cmtos.Exit(err.Error())
-		}
-	}
-
-	simappparams.AppEncodingConfig = app.GetEncodingConfig()
-	return app
 }
 
 // GetBaseApp returns the base cosmos app
@@ -1275,7 +1323,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig serverconfig.API
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
-	// Register new queries routes from grpc-gateway.
+	// Register new CometBFT queries routes from grpc-gateway.
 	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register node gRPC service for grpc-gateway.
