@@ -424,6 +424,7 @@ func TestFilterBeginBlockerEvents(t *testing.T) {
 }
 
 func TestMsgServerProtoAnnotations(t *testing.T) {
+	// This will probably go away when we get an updated async-icq library.
 	expErr := "service icq.v1.Msg does not have cosmos.msg.v1.service proto annotation"
 
 	// Create an app so that we know everything's been registered.
