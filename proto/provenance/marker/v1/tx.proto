@@ -19,6 +19,8 @@ option java_multiple_files = true;
 
 // Msg defines the Marker Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // Finalize
   rpc Finalize(MsgFinalizeRequest) returns (MsgFinalizeResponse);
   // Activate

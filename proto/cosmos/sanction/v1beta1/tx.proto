@@ -9,6 +9,8 @@ option go_package = "github.com/provenance-io/provenance/x/sanction";
 
 // Msg defines the sanction Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // Sanction is a governance operation for sanctioning addresses.
   rpc Sanction(MsgSanction) returns (MsgSanctionResponse);
 

@@ -14,6 +14,8 @@ import "provenance/attribute/v1/attribute.proto";
 
 // Msg defines the attribute module Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // AddAttribute defines a method to verify a particular invariance.
   rpc AddAttribute(MsgAddAttributeRequest) returns (MsgAddAttributeResponse);
 

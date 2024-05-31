@@ -19,6 +19,8 @@ import "provenance/exchange/v1/payments.proto";
 
 // Msg is the service for exchange module's tx endpoints.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // CreateAsk creates an ask order (to sell something you own).
   rpc CreateAsk(MsgCreateAskRequest) returns (MsgCreateAskResponse);
 
