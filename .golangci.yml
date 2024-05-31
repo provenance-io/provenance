@@ -83,6 +83,7 @@ linters-settings:
 
           - github.com/armon/go-metrics
 
+          - cosmossdk.io/api
           - cosmossdk.io/client/v2/autocli
           - cosmossdk.io/core
           - cosmossdk.io/errors
