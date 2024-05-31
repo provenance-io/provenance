@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
-	"github.com/provenance-io/provenance/internal/helpers"
+	internalrand "github.com/provenance-io/provenance/internal/rand"
 	"github.com/provenance-io/provenance/x/name/keeper"
 	"github.com/provenance-io/provenance/x/name/types"
 )
@@ -67,7 +67,7 @@ func SimulateMsgBindName(simState module.SimulationState, k keeper.Keeper, ak au
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBindNameRequest{}), "no name records available to create under"), nil, nil
 		}
 
-		nameLen := helpers.RandIntBetween(r, int(params.GetMinSegmentLength()), int(params.GetMaxSegmentLength()))
+		nameLen := internalrand.IntBetween(r, int(params.GetMinSegmentLength()), int(params.GetMaxSegmentLength()))
 		newRecordName := simtypes.RandStringOfLength(r, nameLen)
 		newRecordOwner := parentOwner
 		if !parentRecord.Restricted {

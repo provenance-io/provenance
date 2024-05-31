@@ -16,8 +16,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
 
@@ -217,7 +217,7 @@ func testValidateBasic(t *testing.T, msg sdk.Msg, expErr []string) {
 	t.Helper()
 	var err error
 	testFunc := func() {
-		err = helpers.ValidateBasic(msg)
+		err = internalsdk.ValidateBasic(msg)
 	}
 	require.NotPanics(t, testFunc, "%T.ValidateBasic()", msg)
 
