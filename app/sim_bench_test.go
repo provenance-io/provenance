@@ -22,9 +22,7 @@ import (
 func BenchmarkFullAppSimulation(b *testing.B) {
 	b.ReportAllocs()
 	config, db, dir, logger, skip, err := setupSimulation("goleveldb-app-sim", "Simulation")
-	if err != nil {
-		b.Fatalf("simulation setup failed: %s", err.Error())
-	}
+	require.NoError(b, err, "simulation setup failed")
 
 	if skip {
 		b.Skip("skipping benchmark application simulation")
@@ -32,14 +30,16 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	printConfig(config)
 
 	defer func() {
-		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			b.Fatal(err)
-		}
+		require.NoError(b, db.Close())
+		require.NoError(b, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, newSimAppOpts(b), interBlockCacheOpt())
+	appOpts := newSimAppOpts(b)
+	baseAppOpts := []func(*baseapp.BaseApp){
+		interBlockCacheOpt(),
+		baseapp.SetChainID(config.ChainID),
+	}
+	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -55,13 +55,9 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	)
 
 	// export state and simParams before the simulation error is checked
-	if err = simtestutil.CheckExportSimulation(app, config, simParams); err != nil {
-		b.Fatal(err)
-	}
-
-	if simErr != nil {
-		b.Fatal(simErr)
-	}
+	err = simtestutil.CheckExportSimulation(app, config, simParams)
+	require.NoError(b, err, "CheckExportSimulation")
+	require.NoError(b, simErr, "SimulateFromSeed")
 
 	printStats(config, db)
 }
@@ -69,9 +65,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 func BenchmarkInvariants(b *testing.B) {
 	b.ReportAllocs()
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-invariant-bench", "Simulation")
-	if err != nil {
-		b.Fatalf("simulation setup failed: %s", err.Error())
-	}
+	require.NoError(b, err, "simulation setup failed")
 
 	if skip {
 		b.Skip("skipping benchmark application simulation")
