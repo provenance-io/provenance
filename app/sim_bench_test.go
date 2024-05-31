@@ -7,8 +7,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -78,14 +81,16 @@ func BenchmarkInvariants(b *testing.B) {
 	printConfig(config)
 
 	defer func() {
-		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			b.Fatal(err)
-		}
+		require.NoError(b, db.Close())
+		require.NoError(b, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, newSimAppOpts(b), interBlockCacheOpt())
+	appOpts := newSimAppOpts(b)
+	baseAppOpts := []func(*baseapp.BaseApp){
+		interBlockCacheOpt(),
+		baseapp.SetChainID(config.ChainID),
+	}
+	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
 
 	// run randomized simulation
 	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(
@@ -101,13 +106,9 @@ func BenchmarkInvariants(b *testing.B) {
 	)
 
 	// export state and simParams before the simulation error is checked
-	if err = simtestutil.CheckExportSimulation(app, config, simParams); err != nil {
-		b.Fatal(err)
-	}
-
-	if simErr != nil {
-		b.Fatal(simErr)
-	}
+	err = simtestutil.CheckExportSimulation(app, config, simParams)
+	require.NoError(b, err, "CheckExportSimulation")
+	require.NoError(b, simErr, "SimulateFromSeedProv")
 
 	printStats(config, db)
 
