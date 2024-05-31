@@ -91,33 +91,17 @@ linters-settings:
           - cosmossdk.io/math
           - cosmossdk.io/store
           - cosmossdk.io/x/evidence
-          - cosmossdk.io/x/evidence/keeper
-          - cosmossdk.io/x/evidence/types
           - cosmossdk.io/x/feegrant
-          - cosmossdk.io/x/feegrant/keeper
-          - cosmossdk.io/x/feegrant/module
           - cosmossdk.io/x/tx/signing
           - cosmossdk.io/x/upgrade
-          - cosmossdk.io/x/upgrade/keeper
-          - cosmossdk.io/x/upgrade/types
           - github.com/cosmos/cosmos-db
           - github.com/cosmos/cosmos-sdk
           - github.com/cosmos/go-bip39
-          - github.com/cosmos/ibc-apps/modules/async-icq/v8
-          - github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper
-          - github.com/cosmos/ibc-apps/modules/async-icq/v8/types
-          - github.com/cosmos/ibc-go/modules/capability
-          - github.com/cosmos/ibc-go/modules/capability/keeper
-          - github.com/cosmos/ibc-go/modules/capability/types
-          - github.com/cosmos/ibc-go/v8
+          - github.com/cosmos/ibc-apps
+          - github.com/cosmos/ibc-go
 
           - github.com/CosmWasm/wasmd
-          - github.com/CosmWasm/wasmvm/types
-
-          # used for interchain queries
-          - github.com/cosmos/ibc-apps/modules/async-icq/v6
-          - github.com/cosmos/ibc-apps/modules/async-icq/v6/types
-          - github.com/cosmos/ibc-apps/modules/async-icq/v6/keeper
+          - github.com/CosmWasm/wasmvm
 
           - github.com/cosmos/gogoproto
 
