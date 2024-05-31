@@ -342,7 +342,7 @@ func TestAppImportExport(t *testing.T) {
 	fmt.Printf("exporting genesis...\n")
 
 	exported, err := app.ExportAppStateAndValidators(false, nil, nil)
-	require.NoError(t, err)
+	require.NoError(t, err, "ExportAppStateAndValidators")
 
 	fmt.Printf("importing genesis...\n")
 
@@ -433,7 +433,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
-		db.Close()
+		require.NoError(t, db.Close())
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
@@ -459,8 +459,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	// export state and simParams before the simulation error is checked
 	err = simtestutil.CheckExportSimulation(app, config, simParams)
-	require.NoError(t, err)
-	require.NoError(t, simErr)
+	require.NoError(t, err, "CheckExportSimulation")
+	require.NoError(t, simErr, "SimulateFromSeedProv")
 
 	printStats(config, db)
 
@@ -472,15 +472,15 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	fmt.Printf("exporting genesis...\n")
 
 	exported, err := app.ExportAppStateAndValidators(true, nil, nil)
-	require.NoError(t, err)
+	require.NoError(t, err, "ExportAppStateAndValidators")
 
 	fmt.Printf("importing genesis...\n")
 
-	_, newDB, newDir, newLogger, _, err := setupSimulation("leveldb-app-sim-2", "Simulation-2")
-	require.NoError(t, err, "simulation setup failed")
+	newDB, newDir, newLogger, _, err := simtestutil.SetupSimulation(config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
+	require.NoError(t, err, "simulation setup 2 failed")
 
 	defer func() {
-		newDB.Close()
+		require.NoError(t, newDB.Close())
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
@@ -488,6 +488,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	_, err = newApp.InitChain(&abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
+		ChainId:       config.ChainID,
 		Time:          lastBlockTime,
 	})
 	require.NoError(t, err, "InitChain")
