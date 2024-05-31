@@ -3,6 +3,7 @@ package app
 // DONTCOVER
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -39,6 +40,7 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/gogoproto/proto"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	icagenesistypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/genesis/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
@@ -58,45 +60,82 @@ func provAppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, g
 		appState, simAccs, chainID, genesisTimestamp := simtestutil.AppStateFn(cdc, simManager, genesisState)(r, accs, config)
 		appState = appStateWithICA(appState, cdc)
 		appState = appStateWithICQ(appState, cdc)
+		appState = appStateWithWasmSeqs(appState, cdc)
 		return appState, simAccs, chainID, genesisTimestamp
 	}
 }
 
 // appStateWithICA checks the given appState for an ica entry. If it's not found, it's populated with the defaults.
 func appStateWithICA(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
-	rawState := make(map[string]json.RawMessage)
-	err := json.Unmarshal(appState, &rawState)
-	if err != nil {
-		panic(fmt.Sprintf("error unmarshalling appstate: %v", err))
-	}
-	icaGenJSON, icaGenFound := rawState[icatypes.ModuleName]
-	if !icaGenFound || len(icaGenJSON) == 0 {
-		icaGenState := icagenesistypes.DefaultGenesis()
-		rawState[icatypes.ModuleName] = cdc.MustMarshalJSON(icaGenState)
-		appState, err = json.Marshal(rawState)
-		if err != nil {
-			panic(fmt.Sprintf("error marshalling appstate: %v", err))
-		}
-	}
-	return appState
+	return mutateAppState(appState, cdc, icatypes.ModuleName, icagenesistypes.DefaultGenesis(), nil)
 }
 
 // appStateWithICA checks the given appState for an ica entry. If it's not found, it's populated with the defaults.
 func appStateWithICQ(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
+	return mutateAppState(appState, cdc, icqtypes.ModuleName, icqtypes.DefaultGenesis(), nil)
+}
+
+// appStateWithWasmSeqs makes sure the wasm genesis state has sequence entries.
+func appStateWithWasmSeqs(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
+	// During the import/export test, the wasm module state of the first app ends up with empty sequence entries.
+	// But export-genesis reads empty sequence entries as "1" and creates an entry in the Sequences list.
+	// So when we call InitGenesis with the second app, those sequences are stored in state, resulting in different states between the two apps.
+	// The behavior of the wasm module is the same if the value is 1 or empty, so the behavior of the two apps is the same, just not the state.
+	// So in here, we make sure there are default entries for the sequences so that even the first one has them.
+	// If the sims do any wasm stuff that'll change those entries, both the state and exported genesis will match, and there won't be a problem.
+	return mutateAppState(appState, cdc, wasmtypes.ModuleName, &wasmtypes.GenesisState{Params: wasmtypes.DefaultParams()},
+		func(wasmGenState *wasmtypes.GenesisState) *wasmtypes.GenesisState {
+			reqSeqKeys := [][]byte{wasmtypes.KeySequenceCodeID, wasmtypes.KeySequenceInstanceID}
+			for _, seqKey := range reqSeqKeys {
+				haveSeq := false
+				for _, seq := range wasmGenState.Sequences {
+					if bytes.Equal(seqKey, seq.IDKey) {
+						haveSeq = true
+						break
+					}
+				}
+				if !haveSeq {
+					wasmGenState.Sequences = append(wasmGenState.Sequences, wasmtypes.Sequence{IDKey: seqKey, Value: 1})
+				}
+			}
+			return wasmGenState
+		})
+}
+
+// mutateAppState returns a new appState with an updated (or new) entry for the given module.
+// The mutator will receive the module's genesis state from appState if it exists, otherwise,
+// it'll receive the provided defaultState. If the mutator is nil, this basically just ensures
+// that the appState has an entry for the module, setting it to the default if it's not already there.
+func mutateAppState[G proto.Message](appState json.RawMessage, cdc codec.JSONCodec, moduleName string, defaultState G, mutator func(state G) G) json.RawMessage {
 	rawState := make(map[string]json.RawMessage)
 	err := json.Unmarshal(appState, &rawState)
 	if err != nil {
 		panic(fmt.Sprintf("error unmarshalling appstate: %v", err))
 	}
-	icqGenJSON, icqGenFound := rawState[icqtypes.ModuleName]
-	if !icqGenFound || len(icqGenJSON) == 0 {
-		icqGenState := icqtypes.DefaultGenesis()
-		rawState[icqtypes.ModuleName] = cdc.MustMarshalJSON(icqGenState)
-		appState, err = json.Marshal(rawState)
+
+	if len(rawState[moduleName]) > 0 {
+		err = cdc.UnmarshalJSON(rawState[moduleName], defaultState)
 		if err != nil {
-			panic(fmt.Sprintf("error marshalling appstate: %v", err))
+			panic(fmt.Sprintf("error unmarshalling %s genesis state from %q as %T: %v",
+				moduleName, string(rawState[moduleName]), defaultState, err))
 		}
 	}
+
+	if mutator != nil {
+		defaultState = mutator(defaultState)
+	}
+
+	rawState[moduleName], err = cdc.MarshalJSON(defaultState)
+	if err != nil {
+		panic(fmt.Sprintf("error marshalling %s genesis state %#v: %v",
+			moduleName, defaultState, err))
+	}
+
+	appState, err = json.Marshal(rawState)
+	if err != nil {
+		panic(fmt.Sprintf("error marshalling appstate: %v", err))
+	}
+
 	return appState
 }
 
