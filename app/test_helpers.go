@@ -25,11 +25,13 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -78,7 +80,11 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint, chainID string) 
 		pioconfig.SetProvenanceConfig("", 0)
 	}
 
-	app := New(loggerMaker(), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()), baseapp.SetChainID(chainID))
+	appOpts := simtestutil.AppOptionsMap{
+		flags.FlagHome:            t.TempDir(),
+		server.FlagInvCheckPeriod: invCheckPeriod,
+	}
+	app := New(loggerMaker(), db, nil, true, appOpts, baseapp.SetChainID(chainID))
 	if withGenesis {
 		return app, app.DefaultGenesis()
 	}
