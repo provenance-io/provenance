@@ -262,11 +262,16 @@ func TestSimple(t *testing.T) {
 	require.NoError(t, err, "provenance simulation setup failed")
 
 	defer func() {
-		db.Close()
+		require.NoError(t, db.Close())
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := New(logger, db, nil, true, newSimAppOpts(t), fauxMerkleModeOpt)
+	appOpts := newSimAppOpts(t)
+	baseAppOpts := []func(*baseapp.BaseApp){
+		fauxMerkleModeOpt,
+		baseapp.SetChainID(config.ChainID),
+	}
+	app := New(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.Equal(t, "provenanced", app.Name())
 
 	// run randomized simulation
@@ -282,7 +287,7 @@ func TestSimple(t *testing.T) {
 		app.AppCodec(),
 	)
 
-	require.NoError(t, simErr)
+	require.NoError(t, simErr, "SimulateFromSeed")
 	printStats(config, db)
 }
 
