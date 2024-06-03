@@ -1182,8 +1182,8 @@ func MakeMsgGovCloseMarket(_ client.Context, flagSet *pflag.FlagSet, _ []string)
 	return msg, errors.Join(errs...)
 }
 
-// SetupCmdTxGovUpdateParams adds all the flags needed for MakeMsgGovUpdateParams.
-func SetupCmdTxGovUpdateParams(cmd *cobra.Command) {
+// SetupCmdTxUpdateParams adds all the flags needed for MakeMsgUpdateParams.
+func SetupCmdTxUpdateParams(cmd *cobra.Command) {
 	cmd.Flags().String(FlagAuthority, "", "The authority address to use (defaults to the governance module account)")
 	cmd.Flags().Uint32(FlagDefault, 0, "The default split (required)")
 	cmd.Flags().StringSlice(FlagSplit, nil, "The denom-splits (repeatable)")
@@ -1207,10 +1207,10 @@ Example <split>: nhash:500`,
 	cmd.Args = cobra.NoArgs
 }
 
-// MakeMsgGovUpdateParams reads all the SetupCmdTxGovUpdateParams flags and creates the desired Msg.
+// MakeMsgUpdateParams reads all the SetupCmdTxUpdateParams flags and creates the desired Msg.
 // Satisfies the msgMaker type.
-func MakeMsgGovUpdateParams(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgGovUpdateParamsRequest, error) {
-	msg := &exchange.MsgGovUpdateParamsRequest{}
+func MakeMsgUpdateParams(_ client.Context, flagSet *pflag.FlagSet, _ []string) (*exchange.MsgUpdateParamsRequest, error) {
+	msg := &exchange.MsgUpdateParamsRequest{}
 
 	errs := make([]error, 3)
 	msg.Authority, errs[0] = ReadFlagAuthority(flagSet)

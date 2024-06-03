@@ -35,7 +35,7 @@ The exchange module has `Msg` endpoints for users, markets, and governance propo
     - [GovCreateMarket](#govcreatemarket)
     - [GovManageFees](#govmanagefees)
     - [GovCloseMarket](#govclosemarket)
-    - [GovUpdateParams](#govupdateparams)
+    - [UpdateParams](#updateparams)
 
 
 ## User Endpoints
@@ -737,19 +737,19 @@ It is expected to fail if:
 +++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L650-L651
 
 
-### GovUpdateParams
+### UpdateParams
 
-The exchange module params are updated via governance proposal with a `MsgGovUpdateParamsRequest`.
+The exchange module params are updated via governance proposal with a `MsgUpdateParamsRequest`.
 
 It is expected to fail if:
 * The provided `authority` is not the governance module's account.
 
-#### MsgGovUpdateParamsRequest
+#### MsgUpdateParamsRequest
 
-+++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L653-L662
++++ https://github.com/provenance-io/provenance/blob/bd2f1ac4396c72970dd40d40e388dcbb1dd98250/proto/provenance/exchange/v1/tx.proto#L697-L706
 
 See also: [Params](06_params.md#params).
 
-#### MsgGovUpdateParamsResponse
+#### MsgUpdateParamsResponse
 
-+++ https://github.com/provenance-io/provenance/blob/v1.18.0/proto/provenance/exchange/v1/tx.proto#L664-L665
++++ https://github.com/provenance-io/provenance/blob/bd2f1ac4396c72970dd40d40e388dcbb1dd98250/proto/provenance/exchange/v1/tx.proto#L708-L709

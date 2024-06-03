@@ -2734,10 +2734,10 @@ func TestMakeMsgGovCloseMarket(t *testing.T) {
 	}
 }
 
-func TestSetupCmdTxGovUpdateParams(t *testing.T) {
+func TestSetupCmdTxUpdateParams(t *testing.T) {
 	runSetupTestCase(t, setupTestCase{
-		name:  "SetupCmdTxGovUpdateParams",
-		setup: cli.SetupCmdTxGovUpdateParams,
+		name:  "SetupCmdTxUpdateParams",
+		setup: cli.SetupCmdTxUpdateParams,
 		expFlags: []string{
 			cli.FlagAuthority, cli.FlagDefault, cli.FlagSplit,
 		},
@@ -2755,18 +2755,18 @@ Example <split>: nhash:500`,
 	})
 }
 
-func TestMakeMsgGovUpdateParams(t *testing.T) {
-	td := txMakerTestDef[*exchange.MsgGovUpdateParamsRequest]{
-		makerName: "MakeMsgGovUpdateParams",
-		maker:     cli.MakeMsgGovUpdateParams,
-		setup:     cli.SetupCmdTxGovUpdateParams,
+func TestMakeMsgUpdateParams(t *testing.T) {
+	td := txMakerTestDef[*exchange.MsgUpdateParamsRequest]{
+		makerName: "MakeMsgUpdateParams",
+		maker:     cli.MakeMsgUpdateParams,
+		setup:     cli.SetupCmdTxUpdateParams,
 	}
 
-	tests := []txMakerTestCase[*exchange.MsgGovUpdateParamsRequest]{
+	tests := []txMakerTestCase[*exchange.MsgUpdateParamsRequest]{
 		{
 			name:  "some errors",
 			flags: []string{"--split", "jack,14"},
-			expMsg: &exchange.MsgGovUpdateParamsRequest{
+			expMsg: &exchange.MsgUpdateParamsRequest{
 				Authority: cli.AuthorityAddr.String(),
 				Params:    exchange.Params{DenomSplits: []exchange.DenomSplit{}},
 			},
@@ -2779,7 +2779,7 @@ func TestMakeMsgGovUpdateParams(t *testing.T) {
 			name:      "no splits",
 			clientCtx: client.Context{FromAddress: sdk.AccAddress("FromAddress_________")},
 			flags:     []string{"--default", "501"},
-			expMsg: &exchange.MsgGovUpdateParamsRequest{
+			expMsg: &exchange.MsgUpdateParamsRequest{
 				Authority: cli.AuthorityAddr.String(),
 				Params:    exchange.Params{DefaultSplit: 501},
 			},
@@ -2790,7 +2790,7 @@ func TestMakeMsgGovUpdateParams(t *testing.T) {
 			flags: []string{
 				"--split", "banana:99", "--default", "105",
 				"--authority", "Jeff", "--split", "apple:333,plum:555"},
-			expMsg: &exchange.MsgGovUpdateParamsRequest{
+			expMsg: &exchange.MsgUpdateParamsRequest{
 				Authority: "Jeff",
 				Params: exchange.Params{
 					DefaultSplit: 105,

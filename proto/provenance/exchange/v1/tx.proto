@@ -111,7 +111,13 @@ service Msg {
   rpc GovCloseMarket(MsgGovCloseMarketRequest) returns (MsgGovCloseMarketResponse);
 
   // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
-  rpc GovUpdateParams(MsgGovUpdateParamsRequest) returns (MsgGovUpdateParamsResponse);
+  // Deprecated: Use UpdateParams instead.
+  rpc GovUpdateParams(MsgGovUpdateParamsRequest) returns (MsgGovUpdateParamsResponse) {
+    option deprecated = true;
+  };
+
+  // UpdateParams is a governance proposal endpoint for updating the exchange module's params.
+  rpc UpdateParams(MsgUpdateParamsRequest) returns (MsgUpdateParamsResponse);
 }
 
 // MsgCreateAskRequest is a request message for the CreateAsk endpoint.
@@ -670,7 +676,9 @@ message MsgGovCloseMarketRequest {
 message MsgGovCloseMarketResponse {}
 
 // MsgGovUpdateParamsRequest is a request message for the GovUpdateParams endpoint.
+// Deprecated: Use MsgUpdateParamsRequest instead.
 message MsgGovUpdateParamsRequest {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // authority should be the governance module account address.
@@ -681,4 +689,21 @@ message MsgGovUpdateParamsRequest {
 }
 
 // MsgGovUpdateParamsResponse is a response message for the GovUpdateParams endpoint.
-message MsgGovUpdateParamsResponse {}
+// Deprecated: Use MsgUpdateParamsResponse instead.
+message MsgGovUpdateParamsResponse {
+  option deprecated = true;
+}
+
+// MsgGovUpdateParamsRequest is a request message for the GovUpdateParams endpoint.
+message MsgUpdateParamsRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority should be the governance module account address.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params are the new param values to set
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateParamsResponse is a response message for the GovUpdateParams endpoint.
+message MsgUpdateParamsResponse {}
