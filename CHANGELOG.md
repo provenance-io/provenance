@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add the Quarantine module back in [#1926](https://github.com/provenance-io/provenance/pull/1926).
 * Bump wasmd to `v0.50.0` [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Update stargate queries for Attribute, Exchange, Marker, IBCRateLimit, Metadata, Msgfees, and Oracle modules [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Update stargate queries for Quarantine and Sanction modules [#2016](https://github.com/provenance-io/provenance/pull/2016).
 
 ### Improvements
 
@@ -91,6 +92,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix unit tests for ibchooks [#1980](https://github.com/provenance-io/provenance/pull/1980).
 * Replace deprecated wasm features [#1988](https://github.com/provenance-io/provenance/pull/1988).
 * Add `UpdateParams` and `Params` query rpc endpoints to modules.
+  * `exchange` add `UpdateParams` endpoint and deprecate `GovUpdateParams` [#2017](https://github.com/provenance-io/provenance/pull/2017).
   * `ibchooks` add `UpdateParams` endpoint and `Params` query endpoint [#2006](https://github.com/provenance-io/provenance/pull/2006).
   * `ibcratelimit` add `UpdateParams` endpoint and deprecate `GovUpdateParams` [#1984](https://github.com/provenance-io/provenance/pull/1984).
   * `attribute` add `UpdateParams` endpoint and cli [#1987](https://github.com/provenance-io/provenance/pull/1987).
@@ -98,6 +100,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `name` add `UpdateParams` endpoint and cli [#2004](https://github.com/provenance-io/provenance/pull/2004).
 * Update the exchange `commitment-settlement-fee-calc` cli query to utilize the keyring [#2001](https://github.com/provenance-io/provenance/pull/2001).
 * Implement the ProposalMsgs module interface for the internal/provwasm, ibcratelimit, oracle, and sanction modules [#1993](https://github.com/provenance-io/provenance/pull/1993.)
+* Breakdown internal/helpers into multiple internal packages [#2019](https://github.com/provenance-io/provenance/pull/2019).
 
 ### Client Breaking
 

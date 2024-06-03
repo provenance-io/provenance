@@ -18,8 +18,8 @@ import (
 	channelkeeper "github.com/cosmos/ibc-go/v8/modules/core/04-channel/keeper"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
-	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	internalrand "github.com/provenance-io/provenance/internal/rand"
 	"github.com/provenance-io/provenance/x/oracle/keeper"
 	"github.com/provenance-io/provenance/x/oracle/types"
 )
@@ -71,7 +71,7 @@ func SimulateMsgSendQueryOracle(simState module.SimulationState, _ keeper.Keeper
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		raccs, err := helpers.SelectRandomAccounts(r, accs, 1)
+		raccs, err := internalrand.SelectAccounts(r, accs, 1)
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSendQueryOracleRequest{}), err.Error()), nil, nil
@@ -155,7 +155,7 @@ func randomChannel(r *rand.Rand, ctx sdk.Context, ck channelkeeper.Keeper) (stri
 }
 
 func randomQuery(r *rand.Rand) []byte {
-	queryType := helpers.RandIntBetween(r, 0, 3)
+	queryType := internalrand.IntBetween(r, 0, 3)
 	var query string
 	switch queryType {
 	case 0:

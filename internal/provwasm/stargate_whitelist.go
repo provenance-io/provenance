@@ -24,6 +24,8 @@ import (
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
+	"github.com/provenance-io/provenance/x/quarantine"
+	"github.com/provenance-io/provenance/x/sanction"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
 )
 
@@ -64,6 +66,17 @@ func init() {
 	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Deposit", &govtypes.QueryDepositResponse{})
 	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Params", &govtypes.QueryParamsResponse{})
 	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Vote", &govtypes.QueryVoteResponse{})
+
+	// quarantine
+	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/IsQuarantined", &quarantine.QueryIsQuarantinedResponse{})
+	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/QuarantinedFunds", &quarantine.QueryQuarantinedFundsResponse{})
+	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/AutoResponses", &quarantine.QueryAutoResponsesResponse{})
+
+	// sanction
+	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/IsSanctioned", &sanction.QueryIsSanctionedResponse{})
+	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/SanctionedAddresses", &sanction.QuerySanctionedAddressesResponse{})
+	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/TemporaryEntries", &sanction.QueryTemporaryEntriesResponse{})
+	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/Params", &sanction.QueryParamsResponse{})
 
 	// slashing
 	setWhitelistedQuery("/cosmos.slashing.v1beta1.Query/Params", &slashingtypes.QueryParamsResponse{})
