@@ -44,6 +44,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgGovManageFeesRequest)(nil),
 	(*MsgGovCloseMarketRequest)(nil),
 	(*MsgGovUpdateParamsRequest)(nil),
+	(*MsgUpdateParamsRequest)(nil),
 }
 
 // createPaymentGetSignersFunc returns a custom GetSigners function for a Msg that has a signer in a Payment.
@@ -743,6 +744,10 @@ func (m MsgGovCloseMarketRequest) ValidateBasic() error {
 }
 
 func (m MsgGovUpdateParamsRequest) ValidateBasic() error {
+	return errors.New("deprecated and unusable")
+}
+
+func (m MsgUpdateParamsRequest) ValidateBasic() error {
 	errs := make([]error, 0, 2)
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		errs = append(errs, fmt.Errorf("invalid authority: %w", err))

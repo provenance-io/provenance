@@ -60,6 +60,7 @@ func TestAllMsgsGetSigners(t *testing.T) {
 		func(signer string) sdk.Msg { return &MsgGovManageFeesRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgGovCloseMarketRequest{Authority: signer} },
 		func(signer string) sdk.Msg { return &MsgGovUpdateParamsRequest{Authority: signer} },
+		func(signer string) sdk.Msg { return &MsgUpdateParamsRequest{Authority: signer} },
 	}
 
 	testutil.RunGetSignersTests(t, AllRequestMsgs, msgMakers, nil)
@@ -3658,23 +3659,23 @@ func TestMsgGovCloseMarketRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
+func TestMsgUpdateParamsRequest_ValidateBasic(t *testing.T) {
 	pioconfig.SetProvenanceConfig("", 0)
 	authority := sdk.AccAddress("authority___________").String()
 
 	tests := []struct {
 		name   string
-		msg    MsgGovUpdateParamsRequest
+		msg    MsgUpdateParamsRequest
 		expErr []string
 	}{
 		{
 			name:   "zero value",
-			msg:    MsgGovUpdateParamsRequest{},
+			msg:    MsgUpdateParamsRequest{},
 			expErr: []string{"invalid authority", emptyAddrErr},
 		},
 		{
 			name: "default params",
-			msg: MsgGovUpdateParamsRequest{
+			msg: MsgUpdateParamsRequest{
 				Authority: authority,
 				Params:    *DefaultParams(),
 			},
@@ -3682,7 +3683,7 @@ func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "control",
-			msg: MsgGovUpdateParamsRequest{
+			msg: MsgUpdateParamsRequest{
 				Authority: authority,
 				Params: Params{
 					DefaultSplit: 543,
@@ -3697,7 +3698,7 @@ func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "no authority",
-			msg: MsgGovUpdateParamsRequest{
+			msg: MsgUpdateParamsRequest{
 				Authority: "",
 				Params:    *DefaultParams(),
 			},
@@ -3705,7 +3706,7 @@ func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad authority",
-			msg: MsgGovUpdateParamsRequest{
+			msg: MsgUpdateParamsRequest{
 				Authority: "bad",
 				Params:    *DefaultParams(),
 			},
@@ -3713,7 +3714,7 @@ func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad params",
-			msg: MsgGovUpdateParamsRequest{
+			msg: MsgUpdateParamsRequest{
 				Authority: authority,
 				Params: Params{
 					DefaultSplit: 10_123,
@@ -3730,7 +3731,7 @@ func TestMsgGovUpdateParamsRequest_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "multiple errors",
-			msg: MsgGovUpdateParamsRequest{
+			msg: MsgUpdateParamsRequest{
 				Authority: "",
 				Params:    Params{DefaultSplit: 10_555},
 			},
