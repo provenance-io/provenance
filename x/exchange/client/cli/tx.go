@@ -51,7 +51,7 @@ func CmdTx() *cobra.Command {
 		CmdTxGovCreateMarket(),
 		CmdTxGovManageFees(),
 		CmdTxGovCloseMarket(),
-		CmdTxGovUpdateParams(),
+		CmdTxUpdateParams(),
 	)
 
 	return cmd
@@ -437,17 +437,17 @@ func CmdTxGovCloseMarket() *cobra.Command {
 	return cmd
 }
 
-// CmdTxGovUpdateParams creates the gov-update-params sub-command for the exchange tx command.
-func CmdTxGovUpdateParams() *cobra.Command {
+// CmdTxUpdateParams creates the gov-update-params sub-command for the exchange tx command.
+func CmdTxUpdateParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "gov-update-params",
-		Aliases: []string{"gov-params", "update-params", "params"},
+		Use:     "update-params",
+		Aliases: []string{"gov-params", "gov-update-params", "params"},
 		Short:   "Submit a governance proposal to update the exchange module params",
-		RunE:    govTxRunE(MakeMsgGovUpdateParams),
+		RunE:    govTxRunE(MakeMsgUpdateParams),
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
 	govcli.AddGovPropFlagsToCmd(cmd)
-	SetupCmdTxGovUpdateParams(cmd)
+	SetupCmdTxUpdateParams(cmd)
 	return cmd
 }

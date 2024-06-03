@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -415,7 +416,14 @@ func (k MsgServer) GovCloseMarket(goCtx context.Context, msg *exchange.MsgGovClo
 }
 
 // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
-func (k MsgServer) GovUpdateParams(goCtx context.Context, msg *exchange.MsgGovUpdateParamsRequest) (*exchange.MsgGovUpdateParamsResponse, error) {
+//
+//nolint:staticcheck // SA1019 Suppress warning for deprecated MsgGovUpdateParamsRequest usage
+func (k MsgServer) GovUpdateParams(_ context.Context, _ *exchange.MsgGovUpdateParamsRequest) (*exchange.MsgGovUpdateParamsResponse, error) {
+	return nil, errors.New("deprecated and unusable")
+}
+
+// UpdateParams is a governance proposal endpoint for updating the exchange module's params.
+func (k MsgServer) UpdateParams(goCtx context.Context, msg *exchange.MsgUpdateParamsRequest) (*exchange.MsgUpdateParamsResponse, error) {
 	if err := k.ValidateAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
@@ -424,5 +432,5 @@ func (k MsgServer) GovUpdateParams(goCtx context.Context, msg *exchange.MsgGovUp
 	k.SetParams(ctx, &msg.Params)
 	k.emitEvent(ctx, exchange.NewEventParamsUpdated())
 
-	return &exchange.MsgGovUpdateParamsResponse{}, nil
+	return &exchange.MsgUpdateParamsResponse{}, nil
 }
