@@ -15,7 +15,7 @@ The `fee_accept_payment_flat` is assessed as a msg fee when accepting a payment 
 The default `Params` have a `default_split` of `500` and no `DenomSplit`s.
 The default `fee_create_payment_flat` and `fee_accept_payment_flat` are each 100,000,000 `nhash` (0.1 `hash`).
 
-Params are set using the [GovUpdateParams](03_messages.md#govupdateparams) governance proposal endpoint.
+Params are set using the [UpdateParams](03_messages.md#updateparams) governance proposal endpoint.
 
 The current params can be looked up using the [Params](05_queries.md#params) query.
 

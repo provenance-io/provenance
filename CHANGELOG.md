@@ -91,6 +91,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Fix unit tests for ibchooks [#1980](https://github.com/provenance-io/provenance/pull/1980).
 * Replace deprecated wasm features [#1988](https://github.com/provenance-io/provenance/pull/1988).
 * Add `UpdateParams` and `Params` query rpc endpoints to modules.
+  * `exchange` add `UpdateParams` endpoint and deprecate `GovUpdateParams` [#2017](https://github.com/provenance-io/provenance/pull/2017).
   * `ibchooks` add `UpdateParams` endpoint and `Params` query endpoint [#2006](https://github.com/provenance-io/provenance/pull/2006).
   * `ibcratelimit` add `UpdateParams` endpoint and deprecate `GovUpdateParams` [#1984](https://github.com/provenance-io/provenance/pull/1984).
   * `attribute` add `UpdateParams` endpoint and cli [#1987](https://github.com/provenance-io/provenance/pull/1987).
