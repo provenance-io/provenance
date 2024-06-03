@@ -419,6 +419,7 @@ func TestAppImportExport(t *testing.T) {
 
 			failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skipPrefixes[keyName])
 			assert.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare: %s", keyName)
+			fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
 
 			// Make the lists the same length because GetSimulationLog assumes they're that way.
 			for len(failedKVBs) < len(failedKVAs) {
@@ -428,7 +429,6 @@ func TestAppImportExport(t *testing.T) {
 				failedKVAs = append(failedKVAs, kv.Pair{Key: []byte{}, Value: []byte{}})
 			}
 
-			fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), appKeyA, appKeyB)
 			assert.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(keyName, app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
 		})
 	}
