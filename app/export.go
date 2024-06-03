@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/provenance-io/provenance/internal/helpers"
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -100,7 +100,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 
 	// withdraw all validator commission
 	ierr := app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, helpers.MustGetOperatorAddr(val))
+		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, internalsdk.MustGetOperatorAddr(val))
 		return false
 	})
 	if ierr != nil {
@@ -136,7 +136,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 	// reinitialize all validators
 	ierr = app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		// donate any unwithdrawn outstanding reward fraction tokens to the community pool
-		scraps, err := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, helpers.MustGetOperatorAddr(val))
+		scraps, err := app.DistrKeeper.GetValidatorOutstandingRewardsCoins(ctx, internalsdk.MustGetOperatorAddr(val))
 		if err != nil {
 			panic(err)
 		}
@@ -150,7 +150,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 			panic(err)
 		}
 
-		if err = app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, helpers.MustGetOperatorAddr(val)); err != nil {
+		if err = app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, internalsdk.MustGetOperatorAddr(val)); err != nil {
 			panic(err)
 		}
 		return false
