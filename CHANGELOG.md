@@ -99,6 +99,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `name` add `UpdateParams` endpoint and cli [#2004](https://github.com/provenance-io/provenance/pull/2004).
 * Update the exchange `commitment-settlement-fee-calc` cli query to utilize the keyring [#2001](https://github.com/provenance-io/provenance/pull/2001).
 * Implement the ProposalMsgs module interface for the internal/provwasm, ibcratelimit, oracle, and sanction modules [#1993](https://github.com/provenance-io/provenance/pull/1993.)
+* Update `app.New` to get the home directory, invariant check period, and skip-upgrade heights from the appOptions instead of arguments [#2015](https://github.com/provenance-io/provenance/pull/2015).
+* Simplify the module lists (e.g. `SetOrderEndBlockers`) by removing unneeded entries [#2015](https://github.com/provenance-io/provenance/pull/2015).
 
 ### Client Breaking
 
@@ -111,6 +113,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * The `add-net-asset-values` command now correctly uses the from `flag`'s `AccAddress` [#1995](https://github.com/provenance-io/provenance/issues/1995).
+* Fix the sim tests [#2015](https://github.com/provenance-io/provenance/pull/2015).
 
 ### Deprecated
 
