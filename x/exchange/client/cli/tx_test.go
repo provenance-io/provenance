@@ -12,7 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/provenance-io/provenance/internal/helpers"
+	internalcollections "github.com/provenance-io/provenance/internal/collections"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/client/cli"
 )
@@ -1010,7 +1010,7 @@ func (s *CmdTestSuite) TestCmdTxMarketManagePermissions() {
 					}
 				}
 
-				addrOrder := helpers.Keys(expPerms)
+				addrOrder := internalcollections.Keys(expPerms)
 				sort.Slice(addrOrder, func(i, j int) bool {
 					return bytes.Compare(s.accountAddrs[addrOrder[i]], s.accountAddrs[addrOrder[j]]) < 0
 				})
@@ -1042,7 +1042,7 @@ func (s *CmdTestSuite) TestCmdTxMarketManagePermissions() {
 					3: {exchange.Permission_cancel, exchange.Permission_attributes},
 				}
 
-				addrOrder := helpers.Keys(expPerms)
+				addrOrder := internalcollections.Keys(expPerms)
 				sort.Slice(addrOrder, func(i, j int) bool {
 					return bytes.Compare(s.accountAddrs[addrOrder[i]], s.accountAddrs[addrOrder[j]]) < 0
 				})
