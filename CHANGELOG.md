@@ -135,6 +135,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `docker/setup-qemu-action` from 2 to 3 ([#1983](https://github.com/provenance-io/provenance/pull/1983))
 - Update `github.com/cosmos/ibc-go/v8` to our forked tag v8.2.1-pio-1 ([#1998](https://github.com/provenance-io/provenance/pull/1998))
 - Bump `github.com/rs/zerolog` from 1.32.0 to 1.33.0 ([#1994](https://github.com/provenance-io/provenance/pull/1994))
+- Bump `github.com/spf13/viper` from 1.18.2 to 1.19.0 ([#2020](https://github.com/provenance-io/provenance/pull/2020))
 
 ---
 
