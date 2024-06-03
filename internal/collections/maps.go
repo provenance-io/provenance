@@ -1,4 +1,4 @@
-package helpers
+package collections
 
 // This file houses functions that are in "golang.org/x/exp/maps" but not "maps", but that we want to use.
 // If any show up in "maps", delete them from here and switch uses to the official ones.

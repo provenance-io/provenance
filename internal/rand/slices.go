@@ -1,20 +1,13 @@
-package helpers
+package rand
 
 import (
 	"fmt"
 	"math/rand"
-
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-// RandIntBetween generates a random number between min and max inclusive.
-func RandIntBetween(r *rand.Rand, min, max int) int {
-	return r.Intn(max-min+1) + min
-}
-
-// SelectRandomEntries selects count entries from the ones provided.
+// SelectEntries selects count entries from the ones provided.
 // The entriesType string is used in the error message to describe the entries slice.
-func SelectRandomEntries[E any](r *rand.Rand, entries []E, count int, entriesType string) ([]E, error) {
+func SelectEntries[E any](r *rand.Rand, entries []E, count int, entriesType string) ([]E, error) {
 	if count == 0 {
 		return nil, nil
 	}
@@ -35,9 +28,4 @@ func SelectRandomEntries[E any](r *rand.Rand, entries []E, count int, entriesTyp
 		randomized[i], randomized[j] = randomized[j], randomized[i]
 	})
 	return randomized[:count], nil
-}
-
-// SelectRandomAccounts selects count accounts from the ones provided.
-func SelectRandomAccounts(r *rand.Rand, accs []simtypes.Account, count int) ([]simtypes.Account, error) {
-	return SelectRandomEntries(r, accs, count, "accounts")
 }

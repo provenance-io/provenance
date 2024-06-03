@@ -6,7 +6,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 
-	"github.com/provenance-io/provenance/internal/helpers"
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
 
 var _ types.UnpackInterfacesMessage = (*GenesisState)(nil)
@@ -60,7 +60,7 @@ func (gs GenesisState) Validate() error {
 		}
 
 		for idx, msg := range msgs {
-			if err = helpers.ValidateBasic(msg); err != nil {
+			if err = internalsdk.ValidateBasic(msg); err != nil {
 				return fmt.Errorf("trigger id: %d, msg: %d, err: %w", trigger.GetId(), idx, err)
 			}
 		}

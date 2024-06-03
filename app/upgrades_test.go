@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/provenance-io/provenance/internal/helpers"
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
 
 type UpgradeTestSuite struct {
@@ -265,7 +265,7 @@ func (s *UpgradeTestSuite) DelegateToValidator(valAddress sdk.ValAddress, delega
 }
 
 func (s *UpgradeTestSuite) GetOperatorAddr(val stakingtypes.ValidatorI) sdk.ValAddress {
-	addr, err := helpers.GetOperatorAddr(val)
+	addr, err := internalsdk.GetOperatorAddr(val)
 	s.Require().NoError(err, "GetOperatorAddr(%q)", val.GetOperator())
 	return addr
 }
