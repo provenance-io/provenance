@@ -13,7 +13,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/provenance-io/provenance/internal/helpers"
+	internalcollections "github.com/provenance-io/provenance/internal/collections"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
@@ -3153,7 +3153,7 @@ func TestPermission_Validate(t *testing.T) {
 	}
 
 	t.Run("all values have a test case", func(t *testing.T) {
-		allVals := helpers.Keys(Permission_name)
+		allVals := internalcollections.Keys(Permission_name)
 		sort.Slice(allVals, func(i, j int) bool {
 			return allVals[i] < allVals[j]
 		})
@@ -3330,7 +3330,7 @@ func TestParsePermission(t *testing.T) {
 	}
 
 	t.Run("all values have a test case", func(t *testing.T) {
-		allVals := helpers.Keys(Permission_name)
+		allVals := internalcollections.Keys(Permission_name)
 		sort.Slice(allVals, func(i, j int) bool {
 			return allVals[i] < allVals[j]
 		})
