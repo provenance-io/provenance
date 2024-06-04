@@ -18,8 +18,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
-	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/internal/protocompat"
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 )
 
@@ -169,7 +169,7 @@ func (msr *PioMsgServiceRouter) registerMsgServiceHandler(sd *grpc.ServiceDesc, 
 			return handler(goCtx, req)
 		}
 
-		if err = helpers.ValidateBasic(req); err != nil {
+		if err = internalsdk.ValidateBasic(req); err != nil {
 			return nil, err
 		}
 

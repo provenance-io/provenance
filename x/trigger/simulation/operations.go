@@ -16,8 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
-	"github.com/provenance-io/provenance/internal/helpers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	internalrand "github.com/provenance-io/provenance/internal/rand"
 	"github.com/provenance-io/provenance/x/trigger/keeper"
 	"github.com/provenance-io/provenance/x/trigger/types"
 )
@@ -56,7 +56,7 @@ func SimulateMsgCreateTrigger(simState module.SimulationState, _ keeper.Keeper, 
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		now := ctx.BlockTime()
-		raccs, err := helpers.SelectRandomAccounts(r, accs, 2)
+		raccs, err := internalrand.SelectAccounts(r, accs, 2)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateTriggerRequest{}), err.Error()), nil, nil
 		}

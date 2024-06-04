@@ -12,7 +12,7 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
-	"github.com/provenance-io/provenance/internal/helpers"
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.
@@ -81,7 +81,7 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 
 	sigCtx := simappparams.AppEncodingConfig.InterfaceRegistry.SigningContext()
 	for idx, action := range actions {
-		if err = helpers.ValidateBasic(action); err != nil {
+		if err = internalsdk.ValidateBasic(action); err != nil {
 			return fmt.Errorf("action: %d: %w", idx, err)
 		}
 		if err = hasSigners(sigCtx, authorities, action); err != nil {

@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add the Quarantine module back in [#1926](https://github.com/provenance-io/provenance/pull/1926).
 * Bump wasmd to `v0.50.0` [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Update stargate queries for Attribute, Exchange, Marker, IBCRateLimit, Metadata, Msgfees, and Oracle modules [#1760](https://github.com/provenance-io/provenance/issues/1760).
+* Update stargate queries for Quarantine and Sanction modules [#2016](https://github.com/provenance-io/provenance/pull/2016).
 
 ### Improvements
 
@@ -100,6 +101,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update the exchange `commitment-settlement-fee-calc` cli query to utilize the keyring [#2001](https://github.com/provenance-io/provenance/pull/2001).
 * Implement the ProposalMsgs module interface for the internal/provwasm, ibcratelimit, oracle, and sanction modules [#1993](https://github.com/provenance-io/provenance/pull/1993.)
 * Update ibcnet relayer to v2.5.2 and fix chain ids for localnet and ibcnet. [#2021](https://github.com/provenance-io/provenance/pull/2021).
+* Breakdown internal/helpers into multiple internal packages [#2019](https://github.com/provenance-io/provenance/pull/2019).
 
 ### Client Breaking
 
@@ -137,6 +139,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `docker/setup-qemu-action` from 2 to 3 ([#1983](https://github.com/provenance-io/provenance/pull/1983))
 - Update `github.com/cosmos/ibc-go/v8` to our forked tag v8.2.1-pio-1 ([#1998](https://github.com/provenance-io/provenance/pull/1998))
 - Bump `github.com/rs/zerolog` from 1.32.0 to 1.33.0 ([#1994](https://github.com/provenance-io/provenance/pull/1994))
+- Bump `github.com/spf13/viper` from 1.18.2 to 1.19.0 ([#2020](https://github.com/provenance-io/provenance/pull/2020))
 
 ---
 
