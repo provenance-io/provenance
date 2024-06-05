@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdksigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -202,31 +203,31 @@ func (s *QueryServerTestSuite) createTxFeesRequest(pubKey cryptotypes.PubKey, pr
 	}
 }
 
-func (s *QueryServerTestSuite) signTx(theTx client.TxBuilder, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct sdk.AccountI) {
-	accountSig := sdksigning.SignatureV2{
-		PubKey: pubKey,
-		Data: &sdksigning.SingleSignatureData{
-			SignMode: sdksigning.SignMode(s.cfg.TxConfig.SignModeHandler().DefaultMode()),
-		},
-		Sequence: acct.GetSequence(),
-	}
+func (s *QueryServerTestSuite) signTx(txb client.TxBuilder, pubKey cryptotypes.PubKey, privKey cryptotypes.PrivKey, acct sdk.AccountI) {
 	signerData := signing.SignerData{
 		ChainID:       s.cfg.ChainID,
 		AccountNumber: acct.GetAccountNumber(),
 		Sequence:      acct.GetSequence(),
 	}
-	txData := signing.TxData{} // TODO[1760]: signing: Base this off of theTx.GetTx().
+	theTx := txb.GetTx()
+	adaptableTx, ok := theTx.(authsigning.V2AdaptableTx)
+	s.Require().True(ok, "%T does not implement the authsigning.V2AdaptableTx interface", theTx)
+
+	txData := adaptableTx.GetSigningTxData()
 	signBytes, err := s.cfg.TxConfig.SignModeHandler().GetSignBytes(s.ctx, s.cfg.TxConfig.SignModeHandler().DefaultMode(), signerData, txData)
-	if err != nil {
-		panic(err)
-	}
+	s.Require().NoError(err, "GetSignBytes")
+
 	sig, err := privKey.Sign(signBytes)
-	if err != nil {
-		panic(err)
+	s.Require().NoError(err, "privKey.Sign(signBytes)")
+
+	accountSig := sdksigning.SignatureV2{
+		PubKey: pubKey,
+		Data: &sdksigning.SingleSignatureData{
+			SignMode:  sdksigning.SignMode(s.cfg.TxConfig.SignModeHandler().DefaultMode()),
+			Signature: sig,
+		},
+		Sequence: acct.GetSequence(),
 	}
-	accountSig.Data.(*sdksigning.SingleSignatureData).Signature = sig
-	err = theTx.SetSignatures(accountSig)
-	if err != nil {
-		panic(err)
-	}
+	err = txb.SetSignatures(accountSig)
+	s.Require().NoError(err, "SetSignatures")
 }
