@@ -75,7 +75,7 @@ func appStateWithICQ(appState json.RawMessage, cdc codec.JSONCodec) json.RawMess
 	return mutateAppState(appState, cdc, icqtypes.ModuleName, icqtypes.DefaultGenesis(), nil)
 }
 
-// appStateWithWasmSeqs makes sure the wasm genesis state has sequence entries.
+// appStateWithWasmSeqs ensures the wasm genesis state has sequence entries.
 func appStateWithWasmSeqs(appState json.RawMessage, cdc codec.JSONCodec) json.RawMessage {
 	// During the import/export test, the wasm module state of the first app ends up with empty sequence entries.
 	// But export-genesis reads empty sequence entries as "1" and creates an entry in the Sequences list.
@@ -83,23 +83,25 @@ func appStateWithWasmSeqs(appState json.RawMessage, cdc codec.JSONCodec) json.Ra
 	// The behavior of the wasm module is the same if the value is 1 or empty, so the behavior of the two apps is the same, just not the state.
 	// So in here, we make sure there are default entries for the sequences so that even the first one has them.
 	// If the sims do any wasm stuff that'll change those entries, both the state and exported genesis will match, and there won't be a problem.
-	return mutateAppState(appState, cdc, wasmtypes.ModuleName, &wasmtypes.GenesisState{Params: wasmtypes.DefaultParams()},
-		func(wasmGenState *wasmtypes.GenesisState) *wasmtypes.GenesisState {
-			reqSeqKeys := [][]byte{wasmtypes.KeySequenceCodeID, wasmtypes.KeySequenceInstanceID}
-			for _, seqKey := range reqSeqKeys {
-				haveSeq := false
-				for _, seq := range wasmGenState.Sequences {
-					if bytes.Equal(seqKey, seq.IDKey) {
-						haveSeq = true
-						break
-					}
-				}
-				if !haveSeq {
-					wasmGenState.Sequences = append(wasmGenState.Sequences, wasmtypes.Sequence{IDKey: seqKey, Value: 1})
-				}
+	return mutateAppState(appState, cdc, wasmtypes.ModuleName, &wasmtypes.GenesisState{Params: wasmtypes.DefaultParams()}, func(wasmGenState *wasmtypes.GenesisState) *wasmtypes.GenesisState {
+		requiredSequences := [][]byte{wasmtypes.KeySequenceCodeID, wasmtypes.KeySequenceInstanceID}
+		for _, seqKey := range requiredSequences {
+			if !sequenceExists(wasmGenState.Sequences, seqKey) {
+				wasmGenState.Sequences = append(wasmGenState.Sequences, wasmtypes.Sequence{IDKey: seqKey, Value: 1})
 			}
-			return wasmGenState
-		})
+		}
+		return wasmGenState
+	})
+}
+
+// sequenceExists checks if a sequence entry exists for the given key.
+func sequenceExists(sequences []wasmtypes.Sequence, key []byte) bool {
+	for _, seq := range sequences {
+		if bytes.Equal(seq.IDKey, key) {
+			return true
+		}
+	}
+	return false
 }
 
 // mutateAppState returns a new appState with an updated (or new) entry for the given module.
