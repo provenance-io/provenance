@@ -367,8 +367,7 @@ func initGenFiles(
 	crisisGenState.ConstantFee.Denom = chainDenom
 	appGenState[crisistypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&crisisGenState)
 
-	// Set the gov depost denom
-	// TODO[1760]: gov: Verify that these changes are okay and nothing else is needed.
+	// Set the gov deposit and shorten the voting period.
 	var govGenState govtypesv1.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState)
 	govGenState.Params.MinDeposit = sdk.NewCoins(sdk.NewInt64Coin(chainDenom, 10000000))
