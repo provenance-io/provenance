@@ -147,6 +147,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cosmos/cosmos-sdk from 0.50.5-pio-3 to 0.50.7-pio-1 TODO: add link
 - Bump `cosmossdk.io/api` from 0.7.4 to 0.7.5 TODO: add link
 - Bump `cosmossdk.io/store` from 1.0.2 to 1.1.0 TODO: add link
+- Bump `cosmossdk.io/x/feegrant` from 0.1.0 to 0.1.1 TODO: add link
 
 ---
 
