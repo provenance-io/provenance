@@ -40,11 +40,8 @@ type MarkerHooksTestSuite struct {
 	path *ibctesting.Path
 }
 
-func init() {
-	ibctesting.DefaultTestingAppInit = SetupSimApp
-}
-
 func (suite *MarkerHooksTestSuite) SetupTest() {
+	ibctesting.DefaultTestingAppInit = SetupSimAppFn(suite.T())
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = &testutil.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),

@@ -13,6 +13,8 @@ import "provenance/ibcratelimit/v1/params.proto";
 
 // Msg is the service for ibcratelimit module's tx endpoints.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // GovUpdateParams is a governance proposal endpoint for updating the exchange module's params.
   // Deprecated: Use UpdateParams instead.
   rpc GovUpdateParams(MsgGovUpdateParamsRequest) returns (MsgGovUpdateParamsResponse) {

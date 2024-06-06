@@ -11,6 +11,8 @@ option java_multiple_files = true;
 
 // Msg
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // UpdateOracle is the RPC endpoint for updating the oracle
   rpc UpdateOracle(MsgUpdateOracleRequest) returns (MsgUpdateOracleResponse);
   // SendQueryOracle sends a query to an oracle on another chain

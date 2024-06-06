@@ -14,6 +14,8 @@ option java_multiple_files = true;
 
 // Msg defines the msgfees Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // AssessCustomMsgFee endpoint executes the additional fee charges.
   // This will only emit the event and not persist it to the keeper.  Fees are handled with the custom msg fee handlers
   // Use Case: smart contracts will be able to charge additional fees and direct partial funds to specified recipient
