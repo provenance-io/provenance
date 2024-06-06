@@ -16,6 +16,8 @@ option java_multiple_files = true;
 
 // Msg defines the Metadata Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // ---- Primary Data Management -----
 
   // WriteScope adds or updates a scope.

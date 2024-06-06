@@ -34,8 +34,7 @@ func NewAppConstructor() testnet.AppConstructor {
 		ctx := val.GetCtx()
 		appCfg := val.GetAppConfig()
 		return provenanceapp.New(
-			ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), ctx.Config.RootDir, 0,
-			simtestutil.EmptyAppOptions{},
+			ctx.Logger, dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(ctx.Config.RootDir),
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(appCfg.Pruning)),
 			baseapp.SetMinGasPrices(appCfg.MinGasPrices),
 			baseapp.SetChainID(ctx.Viper.GetString(flags.FlagChainID)),
@@ -51,10 +50,7 @@ func DefaultTestNetworkConfig() testnet.Config {
 	}
 	defer os.RemoveAll(tempDir)
 
-	tempApp := provenanceapp.New(
-		log.NewNopLogger(), dbm.NewMemDB(), nil, true, make(map[int64]bool), tempDir, 0,
-		simtestutil.NewAppOptionsWithFlagHome(tempDir),
-	)
+	tempApp := provenanceapp.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	encCfg := tempApp.GetEncodingConfig()
 
 	return testnet.Config{

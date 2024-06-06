@@ -9,31 +9,33 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/gogoproto/proto"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
+	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	markermodule "github.com/provenance-io/provenance/x/marker"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	opts := SetupOptions{
-		Logger:             log.NewTestLogger(t),
-		DB:                 dbm.NewMemDB(),
-		InvCheckPeriod:     0,
-		HomePath:           t.TempDir(),
-		SkipUpgradeHeights: map[int64]bool{},
-		AppOpts:            simtestutil.EmptyAppOptions{},
+		Logger:  log.NewTestLogger(t),
+		DB:      dbm.NewMemDB(),
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}
 	app := NewAppWithCustomOptions(t, false, opts)
 
@@ -54,8 +56,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := New(log.NewTestLogger(t), opts.DB, nil, true,
-		map[int64]bool{}, opts.HomePath, 0, simtestutil.EmptyAppOptions{})
+	app2 := New(log.NewTestLogger(t), opts.DB, nil, true, opts.AppOpts)
 	require.NotPanics(t, func() {
 		_, err = app2.ExportAppStateAndValidators(false, nil, nil)
 	}, "exporting app state at current height")
@@ -74,12 +75,9 @@ func TestGetMaccPerms(t *testing.T) {
 
 func TestExportAppStateAndValidators(t *testing.T) {
 	opts := SetupOptions{
-		Logger:             log.NewTestLogger(t),
-		DB:                 dbm.NewMemDB(),
-		InvCheckPeriod:     0,
-		HomePath:           t.TempDir(),
-		SkipUpgradeHeights: map[int64]bool{},
-		AppOpts:            simtestutil.EmptyAppOptions{},
+		Logger:  log.NewTestLogger(t),
+		DB:      dbm.NewMemDB(),
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}
 	app := NewAppWithCustomOptions(t, false, opts)
 	ctx := app.BaseApp.NewContext(false)
@@ -423,4 +421,25 @@ func TestFilterBeginBlockerEvents(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMsgServerProtoAnnotations(t *testing.T) {
+	// If this test fails after bumping the async-icq library, change expErr to an empty string and delete this comment.
+	expErr := "service icq.v1.Msg does not have cosmos.msg.v1.service proto annotation"
+
+	// Create an app so that we know everything's been registered.
+	logger := log.NewNopLogger()
+	db, err := dbm.NewDB("proto-test", dbm.MemDBBackend, "")
+	require.NoError(t, err, "dbm.NewDB")
+	appOpts := newSimAppOpts(t)
+	baseAppOpts := []func(*baseapp.BaseApp){
+		fauxMerkleModeOpt,
+		baseapp.SetChainID(pioconfig.SimAppChainID),
+	}
+	_ = New(logger, db, nil, true, appOpts, baseAppOpts...)
+
+	protoFiles, err := proto.MergedRegistry()
+	require.NoError(t, err, "proto.MergedRegistry()")
+	err = msgservice.ValidateProtoAnnotations(protoFiles)
+	assertions.AssertErrorValue(t, err, expErr, "ValidateProtoAnnotations")
 }

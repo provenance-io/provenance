@@ -13,6 +13,8 @@ option java_multiple_files = true;
 
 // Msg defines the bank Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // BindName binds a name to an address under a root name.
   rpc BindName(MsgBindNameRequest) returns (MsgBindNameResponse);
 

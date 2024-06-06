@@ -25,11 +25,13 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -65,13 +67,10 @@ var DefaultConsensusParams = &cmttmtypes.ConsensusParams{
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
 type SetupOptions struct {
-	Logger             log.Logger
-	DB                 *dbm.MemDB
-	InvCheckPeriod     uint
-	HomePath           string
-	SkipUpgradeHeights map[int64]bool
-	AppOpts            servertypes.AppOptions
-	ChainID            string
+	Logger  log.Logger
+	DB      *dbm.MemDB
+	AppOpts servertypes.AppOptions
+	ChainID string
 }
 
 func setup(t *testing.T, withGenesis bool, invCheckPeriod uint, chainID string) (*App, GenesisState) {
@@ -81,7 +80,11 @@ func setup(t *testing.T, withGenesis bool, invCheckPeriod uint, chainID string) 
 		pioconfig.SetProvenanceConfig("", 0)
 	}
 
-	app := New(loggerMaker(), db, nil, true, map[int64]bool{}, t.TempDir(), invCheckPeriod, simtestutil.EmptyAppOptions{}, baseapp.SetChainID(chainID))
+	appOpts := simtestutil.AppOptionsMap{
+		flags.FlagHome:            t.TempDir(),
+		server.FlagInvCheckPeriod: invCheckPeriod,
+	}
+	app := New(loggerMaker(), db, nil, true, appOpts, baseapp.SetChainID(chainID))
 	if withGenesis {
 		return app, app.DefaultGenesis()
 	}
@@ -157,7 +160,7 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 		Coins:   sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000_000_000)),
 	}
 
-	app := New(options.Logger, options.DB, nil, true, options.SkipUpgradeHeights, options.HomePath, options.InvCheckPeriod, options.AppOpts)
+	app := New(options.Logger, options.DB, nil, true, options.AppOpts, baseapp.SetChainID(options.ChainID))
 	genesisState := app.DefaultGenesis()
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
@@ -524,10 +527,6 @@ func MakeTestEncodingConfig(t *testing.T) params.EncodingConfig {
 	}
 	defer os.RemoveAll(tempDir)
 
-	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
-		tempDir,
-		0,
-		simtestutil.EmptyAppOptions{},
-	)
+	tempApp := New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	return tempApp.GetEncodingConfig()
 }

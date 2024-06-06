@@ -3,10 +3,7 @@ package types
 import (
 	"fmt"
 
-	"google.golang.org/protobuf/protoadapt"
-
-	"cosmossdk.io/x/tx/signing"
-
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
@@ -79,12 +76,12 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 		authorities[string(addr)] = true
 	}
 
-	sigCtx := simappparams.AppEncodingConfig.InterfaceRegistry.SigningContext()
+	cdc := simappparams.AppEncodingConfig.Marshaler
 	for idx, action := range actions {
 		if err = internalsdk.ValidateBasic(action); err != nil {
 			return fmt.Errorf("action: %d: %w", idx, err)
 		}
-		if err = hasSigners(sigCtx, authorities, action); err != nil {
+		if err = hasSigners(cdc, authorities, action); err != nil {
 			return fmt.Errorf("action: %d: %w", idx, err)
 		}
 	}
@@ -93,8 +90,8 @@ func (msg MsgCreateTriggerRequest) ValidateBasic() error {
 
 // hasSigners checks if the signers are all in the set of the entries
 // The keys in the available map are a cast of an AccAddress to a string. It is not the result of AccAddress.String().
-func hasSigners(sigCtx *signing.Context, available map[string]bool, action sdk.Msg) error {
-	signers, err := sigCtx.GetSigners(protoadapt.MessageV2Of(action))
+func hasSigners(codec codec.Codec, available map[string]bool, action sdk.Msg) error {
+	signers, _, err := codec.GetMsgV1Signers(action)
 	if err != nil {
 		return fmt.Errorf("could not get signers of %T: %w", action, err)
 	}
