@@ -13,6 +13,8 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -77,19 +79,22 @@ type HooksTestSuite struct {
 	path *ibctesting.Path
 }
 
-func SetupSimApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
-	db := dbm.NewMemDB()
-	provenanceApp := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, simtestutil.EmptyAppOptions{})
-	genesis := provenanceApp.DefaultGenesis()
-	return provenanceApp, genesis
-}
-
-func init() {
-	ibctesting.DefaultTestingAppInit = SetupSimApp
+func SetupSimAppFn(t *testing.T) func() (ibctesting.TestingApp, map[string]json.RawMessage) {
+	return func() (ibctesting.TestingApp, map[string]json.RawMessage) {
+		pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
+		db := dbm.NewMemDB()
+		appOpts := simtestutil.AppOptionsMap{
+			flags.FlagHome:            t.TempDir(),
+			server.FlagInvCheckPeriod: 5,
+		}
+		provenanceApp := app.New(log.NewNopLogger(), db, nil, true, appOpts)
+		genesis := provenanceApp.DefaultGenesis()
+		return provenanceApp, genesis
+	}
 }
 
 func (suite *HooksTestSuite) SetupTest() {
+	ibctesting.DefaultTestingAppInit = SetupSimAppFn(suite.T())
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = &testutil.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),

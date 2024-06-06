@@ -38,11 +38,7 @@ func Test_TestnetCmd(t *testing.T) {
 	pioconfig.SetProvenanceConfig("", 0)
 	logger := log.NewNopLogger()
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
-	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, nil,
-		home,
-		0,
-		simtestutil.EmptyAppOptions{},
-	)
+	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(home))
 	encodingConfig := tempApp.GetEncodingConfig()
 
 	require.NoError(t, err)

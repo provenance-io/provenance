@@ -13,6 +13,8 @@ option go_package = "github.com/provenance-io/provenance/x/quarantine";
 
 // Query defines the quarantine gRPC msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // OptIn defines a method for opting in to account quarantine.
   // Funds sent to a quarantined account must be approved before they can be received.
   rpc OptIn(MsgOptIn) returns (MsgOptInResponse);

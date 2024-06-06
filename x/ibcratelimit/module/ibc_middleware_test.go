@@ -12,11 +12,14 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 
+	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -51,17 +54,23 @@ func TestMiddlewareTestSuite(t *testing.T) {
 	suite.Run(t, new(MiddlewareTestSuite))
 }
 
-func SetupSimApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
-	db := dbm.NewMemDB()
-	provenanceApp := app.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, simtestutil.EmptyAppOptions{})
-	genesis := provenanceApp.DefaultGenesis()
-	return provenanceApp, genesis
+func (suite *MiddlewareTestSuite) SetupSimAppFn() func() (ibctesting.TestingApp, map[string]json.RawMessage) {
+	return func() (ibctesting.TestingApp, map[string]json.RawMessage) {
+		pioconfig.SetProvenanceConfig(sdk.DefaultBondDenom, 0)
+		db := dbm.NewMemDB()
+		appOpts := simtestutil.AppOptionsMap{
+			flags.FlagHome:            suite.T().TempDir(),
+			server.FlagInvCheckPeriod: 5,
+		}
+		provenanceApp := app.New(log.NewNopLogger(), db, nil, true, appOpts)
+		genesis := provenanceApp.DefaultGenesis()
+		return provenanceApp, genesis
+	}
 }
 
 func (suite *MiddlewareTestSuite) SetupTest() {
 	SkipIfWSL(suite.T())
-	ibctesting.DefaultTestingAppInit = SetupSimApp
+	ibctesting.DefaultTestingAppInit = suite.SetupSimAppFn()
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 
 	suite.chainA = &testutil.TestChain{
