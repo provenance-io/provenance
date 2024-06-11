@@ -144,8 +144,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/rs/zerolog` from 1.32.0 to 1.33.0 ([#1994](https://github.com/provenance-io/provenance/pull/1994))
 - Bump `github.com/spf13/viper` from 1.18.2 to 1.19.0 ([#2020](https://github.com/provenance-io/provenance/pull/2020))
 - Bump `github.com/cosmos/gogoproto` from 1.4.12 to 1.5.0 ([#2024](https://github.com/provenance-io/provenance/pull/2024))
+- Bump `cosmossdk.io/api` from 0.7.4 to 0.7.5 ([#2025](https://github.com/provenance-io/provenance/pull/2025))
 - Bump `github.com/cosmos/cosmos-sdk from 0.50.5-pio-3 to 0.50.7-pio-1 TODO: add link
-- Bump `cosmossdk.io/api` from 0.7.4 to 0.7.5 TODO: add link
 - Bump `cosmossdk.io/store` from 1.0.2 to 1.1.0 TODO: add link
 - Bump `cosmossdk.io/x/feegrant` from 0.1.0 to 0.1.1 TODO: add link
 - Bump `cosmossdk.io/x/evidence` from 0.1.0 to 0.1.1 TODO: add link
