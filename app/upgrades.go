@@ -398,7 +398,7 @@ func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
 // TODO: Remove with the umber handlers.
 func migrateNameParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Migrating name params.")
-	nameParamSpace := app.ParamsKeeper.Subspace(nametypes.ModuleName)
+	nameParamSpace := app.ParamsKeeper.Subspace(nametypes.ModuleName).WithKeyTable(nametypes.ParamKeyTable())
 
 	params := nametypes.DefaultParams()
 
