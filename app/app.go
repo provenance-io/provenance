@@ -947,11 +947,6 @@ func New(
 		panic(err)
 	}
 
-	// Register upgrade handlers and set the store loader.
-	// This must be done after the module manager and configurator are set,
-	// but before the baseapp is sealed via LoadLatestVersion() down below.
-	app.registerUpgradeHandlers(appOpts)
-
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 
 	reflectionSvc, err := runtimeservices.NewReflectionService()
@@ -982,6 +977,11 @@ func New(
 	app.setPostHandler()
 	app.setFeeHandler()
 	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
+
+	// Register upgrade handlers and set the store loader.
+	// This must be done after the module manager, configurator, and pre-blocker are set,
+	// but before the baseapp is sealed via LoadLatestVersion() below.
+	app.registerUpgradeHandlers(appOpts)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -1358,8 +1358,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 
 // injectUpgrade causes the named upgrade to be run as the chain starts.
 //
-// To use this, add a call to it in New after the call to InstallCustomUpgradeHandlers
-// but before the line that looks for an upgrade file.
+// To use this, add a call to it in registerUpgradeHandlers immediately after the
+// call to InstallCustomUpgradeHandlers, but before the line that looks for an upgrade file.
 //
 // This function is for testing an upgrade against an existing chain's data (e.g. mainnet).
 // Here's how:
@@ -1390,15 +1390,16 @@ func (app *App) injectUpgrade(name string) { //nolint:unused // This is designed
 	if err := app.UpgradeKeeper.DumpUpgradeInfoToDisk(plan.Height, plan); err != nil {
 		panic(err)
 	}
-	// Define a new BeginBlocker that will inject the upgrade.
+
+	// Define a new PreBlocker that will inject the upgrade.
 	injected := false
-	app.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		if !injected {
 			app.Logger().Info("Injecting upgrade plan", "plan", plan)
 			// Ideally, we'd just call ScheduleUpgrade(ctx, plan) here (and panic on error).
-			// But the upgrade keeper often its own migration stuff that change some store key stuff.
-			// ScheduleUpgrade tries to read some of that changed store stuff and fails if the migration hasn't
-			// been applied yet. So we're doing things the hard way here.
+			// But the upgrade keeper often has its own migration stuff that change some store stuff.
+			// ScheduleUpgrade would try to read some of that old state using the update pattern,
+			// causing a failure. So we're doing things the hard way here.
 			if err := app.UpgradeKeeper.ClearUpgradePlan(ctx); err != nil {
 				panic(err)
 			}
@@ -1407,6 +1408,6 @@ func (app *App) injectUpgrade(name string) { //nolint:unused // This is designed
 			store.Set(upgradetypes.PlanKey(), bz)
 			injected = true
 		}
-		return app.BeginBlocker(ctx)
+		return app.PreBlocker(ctx, req)
 	})
 }
