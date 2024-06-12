@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
@@ -50,7 +51,7 @@ type appUpgrade struct {
 // or vice versa, please add comments explaining why in both entries.
 var upgrades = map[string]appUpgrade{
 	"umber-rc1": { // upgrade for v1.19.0-rc1
-		Added:   []string{crisistypes.ModuleName},
+		Added:   []string{crisistypes.ModuleName, consensusparamtypes.ModuleName},
 		Deleted: []string{"reward"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -89,7 +90,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"umber": { // upgrade for v1.19.0
-		Added:   []string{crisistypes.ModuleName},
+		Added:   []string{crisistypes.ModuleName, consensusparamtypes.ModuleName},
 		Deleted: []string{"reward"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
