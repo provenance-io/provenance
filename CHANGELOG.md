@@ -104,6 +104,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Breakdown internal/helpers into multiple internal packages [#2019](https://github.com/provenance-io/provenance/pull/2019).
 * Update `app.New` to get the home directory, invariant check period, and skip-upgrade heights from the appOptions instead of arguments [#2015](https://github.com/provenance-io/provenance/pull/2015).
 * Simplify the module lists (e.g. `SetOrderEndBlockers`) by removing unneeded entries [#2015](https://github.com/provenance-io/provenance/pull/2015).
+* Update the `upgrade-test.sh` script to work with v0.50 commands [#2026](https://github.com/provenance-io/provenance/pull/2026).
 
 ### Client Breaking
 
@@ -130,7 +131,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
 - Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.32.2 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949), [#1979](https://github.com/provenance-io/provenance/pull/1979), [#1990](https://github.com/provenance-io/provenance/pull/1990), [#2011](https://github.com/provenance-io/provenance/pull/2011))
 - Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.7 ([#1912](https://github.com/provenance-io/provenance/pull/1912), [#1959](https://github.com/provenance-io/provenance/pull/1959))
-- Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.1 ([#1913](https://github.com/provenance-io/provenance/pull/1913))
+- Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.3 ([#1913](https://github.com/provenance-io/provenance/pull/1913), [#2026](https://github.com/provenance-io/provenance/pull/2026))
 - Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
 - Bump `peter-evans/create-pull-request` from 6.0.2 to 6.0.5 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940), [#1955](https://github.com/provenance-io/provenance/pull/1955))
 - Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.3 ([#1928](https://github.com/provenance-io/provenance/pull/1928), [#1944](https://github.com/provenance-io/provenance/pull/1944))
@@ -145,6 +146,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/spf13/viper` from 1.18.2 to 1.19.0 ([#2020](https://github.com/provenance-io/provenance/pull/2020))
 - Bump `github.com/cosmos/gogoproto` from 1.4.12 to 1.5.0 ([#2024](https://github.com/provenance-io/provenance/pull/2024))
 - Bump `cosmossdk.io/api` from 0.7.4 to 0.7.5 ([#2025](https://github.com/provenance-io/provenance/pull/2025))
+- Bump `github.com/cosmos/cosmos-sdk` from 0.50.5-pio-3 to 0.50.7-pio-1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
+- Bump `cosmossdk.io/store` from 1.0.2 to 1.1.0 [#2026](https://github.com/provenance-io/provenance/pull/2026)
+- Bump `cosmossdk.io/x/feegrant` from 0.1.0 to 0.1.1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
+- Bump `cosmossdk.io/x/evidence` from 0.1.0 to 0.1.1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
 
 ---
 
