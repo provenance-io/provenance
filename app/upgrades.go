@@ -3,7 +3,9 @@ package app
 import (
 	"context"
 	"fmt"
+	"time"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -81,6 +83,11 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
+			err = setNewGovParamsTestnet(ctx, app)
+			if err != nil {
+				return nil, err
+			}
+
 			updateIBCClients(ctx, app)
 
 			removeInactiveValidatorDelegations(ctx, app)
@@ -116,6 +123,11 @@ var upgrades = map[string]appUpgrade{
 			migrateIbcHooksParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
+			if err != nil {
+				return nil, err
+			}
+
+			err = setNewGovParamsMainnet(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -476,4 +488,72 @@ func migrateIbcHooksParams(ctx sdk.Context, app *App) {
 	app.IBCHooksKeeper.SetParams(ctx, params)
 
 	ctx.Logger().Info("Done migrating ibchooks params.")
+}
+
+// setNewGovParamsTestnet updates the newly added gov params fields to have the values we want for testnet.
+// TODO: Remove with the umber handlers.
+func setNewGovParamsTestnet(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting new gov params for testnet.")
+
+	params, err := app.GovKeeper.Params.Get(ctx)
+	if err != nil {
+		return fmt.Errorf("error getting gov params: %w", err)
+	}
+
+	params.MinInitialDepositRatio = sdkmath.LegacyMustNewDecFromStr("0.00002").String()
+	params.MinDepositRatio = sdkmath.LegacyZeroDec().String()
+
+	params.ProposalCancelRatio = sdkmath.LegacyZeroDec().String()
+	params.ProposalCancelDest = ""
+
+	expVP := time.Minute * 5
+	params.ExpeditedVotingPeriod = &expVP
+	params.ExpeditedThreshold = sdkmath.LegacyMustNewDecFromStr("0.667").String()
+	params.ExpeditedMinDeposit = params.MinDeposit
+
+	params.BurnVoteQuorum = false
+	params.BurnProposalDepositPrevote = false
+	params.BurnVoteVeto = true
+
+	err = app.GovKeeper.Params.Set(ctx, params)
+	if err != nil {
+		return fmt.Errorf("error setting updated gov params: %w", err)
+	}
+
+	ctx.Logger().Info("Done setting new gov params for testnet.")
+	return nil
+}
+
+// setNewGovParamsMainnet updates the newly added gov params fields to have the values we want for mainnet.
+// TODO: Remove with the umber handlers.
+func setNewGovParamsMainnet(ctx sdk.Context, app *App) error {
+	ctx.Logger().Info("Setting new gov params for mainnet.")
+
+	params, err := app.GovKeeper.Params.Get(ctx)
+	if err != nil {
+		return fmt.Errorf("error getting gov params: %w", err)
+	}
+
+	params.MinInitialDepositRatio = sdkmath.LegacyMustNewDecFromStr("0.02").String()
+	params.MinDepositRatio = sdkmath.LegacyZeroDec().String()
+
+	params.ProposalCancelRatio = sdkmath.LegacyMustNewDecFromStr("0.5").String()
+	params.ProposalCancelDest = ""
+
+	expVP := time.Hour * 24
+	params.ExpeditedVotingPeriod = &expVP
+	params.ExpeditedThreshold = sdkmath.LegacyMustNewDecFromStr("0.667").String()
+	params.ExpeditedMinDeposit = params.MinDeposit
+
+	params.BurnVoteQuorum = false
+	params.BurnProposalDepositPrevote = true
+	params.BurnVoteVeto = true
+
+	err = app.GovKeeper.Params.Set(ctx, params)
+	if err != nil {
+		return fmt.Errorf("error setting updated gov params: %w", err)
+	}
+
+	ctx.Logger().Info("Done setting new gov params for mainnet.")
+	return nil
 }
