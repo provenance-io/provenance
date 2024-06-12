@@ -292,7 +292,7 @@ grpc.address="localhost:9090"
 grpc.enable=true
 grpc.max-recv-msg-size=10485760
 grpc.max-send-msg-size=2147483647
-mempool.max-txs=5000
+mempool.max-txs=-1
 state-sync.snapshot-interval=0
 state-sync.snapshot-keep-recent=2
 streaming.abci.keys=[]
@@ -464,7 +464,7 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 				s.makeAppConfigHeaderLines(),
 				`min-retain-blocks=0`,
 				`grpc.address="localhost:9090"`,
-				`mempool.max-txs=5000`,
+				`mempool.max-txs=-1`,
 				""),
 		},
 		{
@@ -509,7 +509,7 @@ func (s *ConfigTestSuite) TestConfigGetMulti() {
 			keys: []string{"mempool"},
 			expected: s.makeMultiLine(
 				s.makeAppConfigHeaderLines(),
-				`mempool.max-txs=5000`,
+				`mempool.max-txs=-1`,
 				"",
 				s.makeCMTConfigHeaderLines(),
 				`mempool.broadcast=true`,
@@ -687,7 +687,7 @@ func (s *ConfigTestSuite) TestConfigChanged() {
 			args: []string{"changed", "mempool"},
 			out: s.makeMultiLine(
 				s.makeAppDiffHeaderLines(),
-				`mempool.max-txs=5000 (same as default)`,
+				`mempool.max-txs=-1 (same as default)`,
 				"",
 				s.makeCMTDiffHeaderLines(),
 				`mempool.broadcast=true (same as default)`,

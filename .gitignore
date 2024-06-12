@@ -4,6 +4,7 @@ bin/
 build/
 config/
 !cmd/provenanced/config/
+!third_party/**/config/
 data/
 .idea/
 *.swp
