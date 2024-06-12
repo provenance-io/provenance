@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -374,9 +375,9 @@ func migrateMarkerParams(ctx sdk.Context, app *App) {
 
 	// TODO: remove markertypes.ParamStoreKeyMaxSupply with the umber handlers.
 	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyMaxSupply) {
-		var maxSupply string
+		var maxSupply sdkmath.Int
 		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyMaxSupply, &maxSupply)
-		params.MaxSupply = markertypes.StringToBigInt(maxSupply)
+		params.MaxSupply = maxSupply
 	}
 
 	app.MarkerKeeper.SetParams(ctx, params)
