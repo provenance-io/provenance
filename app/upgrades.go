@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
-	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	circuittypes "cosmossdk.io/x/circuit/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
@@ -83,11 +82,6 @@ var upgrades = map[string]appUpgrade{
 				return nil, err
 			}
 
-			err = setupCircuitBreakerTestnet(ctx, app)
-			if err != nil {
-				return nil, err
-			}
-
 			updateIBCClients(ctx, app)
 
 			removeInactiveValidatorDelegations(ctx, app)
@@ -123,11 +117,6 @@ var upgrades = map[string]appUpgrade{
 			migrateIbcHooksParams(ctx, app)
 
 			vm, err = runModuleMigrations(ctx, app, vm)
-			if err != nil {
-				return nil, err
-			}
-
-			err = setupCircuitBreakerMainnet(ctx, app)
 			if err != nil {
 				return nil, err
 			}
@@ -488,52 +477,4 @@ func migrateIbcHooksParams(ctx sdk.Context, app *App) {
 	app.IBCHooksKeeper.SetParams(ctx, params)
 
 	ctx.Logger().Info("Done migrating ibchooks params.")
-}
-
-// setupCircuitBreakerMainnet sets up the circuit breaker module for mainnet.
-// TODO: Remove with the umber handlers.
-func setupCircuitBreakerMainnet(ctx sdk.Context, app *App) error {
-	perms := []*circuittypes.MsgAuthorizeCircuitBreaker{}
-	return setupCircuitBreaker(ctx, app, perms, "mainnet")
-}
-
-// setupCircuitBreakerTestnet sets up the circuit breaker module for testnet.
-// TODO: Remove with the umber handlers.
-func setupCircuitBreakerTestnet(ctx sdk.Context, app *App) error {
-	perms := []*circuittypes.MsgAuthorizeCircuitBreaker{}
-	return setupCircuitBreaker(ctx, app, perms, "testnet")
-}
-
-// setupCircuitBreaker sets up the circuit breaker with the provided permissions.
-// The "granter" of each provided permission will be the authority.
-// TODO: Remove with the umber handlers.
-func setupCircuitBreaker(ctx sdk.Context, app *App, perms []*circuittypes.MsgAuthorizeCircuitBreaker, chain string) (err error) {
-	ctx.Logger().Info(fmt.Sprintf("Setting circuit breaker permissions for %s.", chain))
-	defer func() {
-		if err == nil {
-			ctx.Logger().Info(fmt.Sprintf("Done setting circuit breaker permissions for %s.", chain))
-		}
-	}()
-
-	if len(perms) == 0 {
-		return nil
-	}
-
-	authBz := app.CircuitKeeper.GetAuthority()
-	authority, err := app.AccountKeeper.AddressCodec().BytesToString(authBz)
-	if err != nil {
-		return fmt.Errorf("error getting authority address: %w", err)
-	}
-
-	msgServer := circuitkeeper.NewMsgServerImpl(app.CircuitKeeper)
-	for _, msg := range perms {
-		msg.Granter = authority
-		ctx.Logger().Info(fmt.Sprintf("Granting circuit breaker permissions to %s.", msg.Grantee))
-		_, err = msgServer.AuthorizeCircuitBreaker(ctx, msg)
-		if err != nil {
-			return fmt.Errorf("error granting permissions for %s: %w", msg.Grantee, err)
-		}
-	}
-
-	return nil
 }
