@@ -84,6 +84,7 @@ func (s *AnteTestSuite) SetupTest(isCheckTx bool) {
 			TxSigningHandlerMap: s.encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:      ante.DefaultSigVerificationGasConsumer,
 			MsgFeesKeeper:       s.app.MsgFeesKeeper,
+			CircuitKeeper:       &s.app.CircuitKeeper,
 		},
 	)
 
