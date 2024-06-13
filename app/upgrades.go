@@ -300,14 +300,14 @@ func updateIBCClients(ctx sdk.Context, app *App) {
 // migrateBaseappParams migrates to new ConsensusParamsKeeper
 // TODO: Remove with the umber handlers.
 func migrateBaseappParams(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Migrating legacy params.")
+	ctx.Logger().Info("Migrating consensus params.")
 	legacyBaseAppSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 	err := baseapp.MigrateParams(ctx, legacyBaseAppSubspace, app.ConsensusParamsKeeper.ParamsStore)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Unable to migrate legacy params to ConsensusParamsKeeper, error: %s.", err))
 		return err
 	}
-	ctx.Logger().Info("Done migrating legacy params.")
+	ctx.Logger().Info("Done migrating consensus params.")
 	return nil
 }
 
