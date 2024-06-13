@@ -362,7 +362,6 @@ func New(
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	sdk.SetCoinDenomRegex(SdkCoinDenomRegex)
 
-	// TODO[1760]: Add the circuit breaker module to the app.
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
