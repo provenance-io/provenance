@@ -366,8 +366,8 @@ func (s *UpgradeTestSuite) TestUmberRC1() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
 		"INF Done pruning expired consensus states for IBC.",
-		"INF Migrating legacy params.",
-		"INF Done migrating legacy params.",
+		"INF Migrating consensus params.",
+		"INF Done migrating consensus params.",
 		"INF Migrating bank params.",
 		"INF Done migrating bank params.",
 		"INF Migrating attribute params.",
@@ -397,8 +397,8 @@ func (s *UpgradeTestSuite) TestUmber() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
 		"INF Done pruning expired consensus states for IBC.",
-		"INF Migrating legacy params.",
-		"INF Done migrating legacy params.",
+		"INF Migrating consensus params.",
+		"INF Done migrating consensus params.",
 		"INF Migrating bank params.",
 		"INF Done migrating bank params.",
 		"INF Migrating attribute params.",
