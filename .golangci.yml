@@ -90,6 +90,7 @@ linters-settings:
           - cosmossdk.io/log
           - cosmossdk.io/math
           - cosmossdk.io/store
+          - cosmossdk.io/x/circuit
           - cosmossdk.io/x/evidence
           - cosmossdk.io/x/feegrant
           - cosmossdk.io/x/tx/signing

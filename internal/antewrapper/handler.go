@@ -2,6 +2,7 @@ package antewrapper
 
 import (
 	storetypes "cosmossdk.io/store/types"
+	circuitante "cosmossdk.io/x/circuit/ante"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,6 +22,7 @@ type HandlerOptions struct {
 	ExtensionOptionChecker cosmosante.ExtensionOptionChecker
 	FeegrantKeeper         msgfeestypes.FeegrantKeeper
 	MsgFeesKeeper          msgfeestypes.MsgFeesKeeper
+	CircuitKeeper          circuitante.CircuitBreaker
 	TxSigningHandlerMap    *txsigning.HandlerMap
 	SigGasConsumer         func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
@@ -45,7 +47,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 	decorators := []sdk.AnteDecorator{
 		cosmosante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
-		NewFeeMeterContextDecorator(),         // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
+		circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
+		NewFeeMeterContextDecorator(), // NOTE : fee gas meter also has the functionality of GasTracerContextDecorator in previous versions
 		NewTxGasLimitDecorator(),
 		NewMinGasPricesDecorator(),
 		NewMsgFeesDecorator(options.MsgFeesKeeper),

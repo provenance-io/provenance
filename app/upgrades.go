@@ -7,6 +7,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	circuittypes "cosmossdk.io/x/circuit/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -53,7 +54,7 @@ type appUpgrade struct {
 // or vice versa, please add comments explaining why in both entries.
 var upgrades = map[string]appUpgrade{
 	"umber-rc1": { // upgrade for v1.19.0-rc1
-		Added:   []string{crisistypes.ModuleName},
+		Added:   []string{crisistypes.ModuleName, circuittypes.ModuleName},
 		Deleted: []string{"reward"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -97,7 +98,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"umber": { // upgrade for v1.19.0
-		Added:   []string{crisistypes.ModuleName},
+		Added:   []string{crisistypes.ModuleName, circuittypes.ModuleName},
 		Deleted: []string{"reward"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
