@@ -459,7 +459,7 @@ func migrateMsgFeesParams(ctx sdk.Context, app *App) {
 // TODO: Remove with the umber handlers.
 func migrateIbcHooksParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Migrating ibchooks params.")
-	ibcHooksParamSpace := app.ParamsKeeper.Subspace(ibchookstypes.ModuleName)
+	ibcHooksParamSpace := app.ParamsKeeper.Subspace(ibchookstypes.ModuleName).WithKeyTable(ibchookstypes.ParamKeyTable())
 
 	params := ibchookstypes.DefaultParams()
 
