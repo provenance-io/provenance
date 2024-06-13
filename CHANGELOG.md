@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump wasmd to `v0.50.0` [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Update stargate queries for Attribute, Exchange, Marker, IBCRateLimit, Metadata, Msgfees, and Oracle modules [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Update stargate queries for Quarantine and Sanction modules [#2016](https://github.com/provenance-io/provenance/pull/2016).
+* Add the circuit breaker module [#2031](https://github.com/provenance-io/provenance/pull/2031).
 
 ### Improvements
 
