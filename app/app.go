@@ -1039,8 +1039,6 @@ func (app *App) registerUpgradeHandlers(appOpts servertypes.AppOptions) {
 	// Add the upgrade handlers for each release.
 	InstallCustomUpgradeHandlers(app)
 
-	app.injectUpgrade("umber") // TODO: Delete this line.
-
 	// Use the dump of $home/data/upgrade-info.json:{"name":"$plan","height":321654} to determine
 	// if we load a store upgrade from the handlers. No file == no error from read func.
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
