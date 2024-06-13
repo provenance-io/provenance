@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Bump wasmd to `v0.50.0` [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Update stargate queries for Attribute, Exchange, Marker, IBCRateLimit, Metadata, Msgfees, and Oracle modules [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Update stargate queries for Quarantine and Sanction modules [#2016](https://github.com/provenance-io/provenance/pull/2016).
+* Add the circuit breaker module [#2031](https://github.com/provenance-io/provenance/pull/2031).
 
 ### Improvements
 
@@ -138,7 +139,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.3 ([#1928](https://github.com/provenance-io/provenance/pull/1928), [#1944](https://github.com/provenance-io/provenance/pull/1944))
 - Bump `cosmwasm-std` from 1.4.1 to 1.4.4 ([#1950](https://github.com/provenance-io/provenance/pull/1950))
 - Bump `golangci/golangci-lint-action` from 4 to 6 ([#1951](https://github.com/provenance-io/provenance/pull/1951), [#1965](https://github.com/provenance-io/provenance/pull/1965))
-- Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.1 ([#1960](https://github.com/provenance-io/provenance/pull/1960), [#1966](https://github.com/provenance-io/provenance/pull/1966))
+- Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.2 ([#1960](https://github.com/provenance-io/provenance/pull/1960), [#1966](https://github.com/provenance-io/provenance/pull/1966), [#2028](https://github.com/provenance-io/provenance/pull/2028))
 - Bump `github.com/hashicorp/go-getter` from 1.7.3 to 1.7.4 ([#1958](https://github.com/provenance-io/provenance/pull/1958))
 - Bump `golang.org/x/text` from 0.14.0 to 0.16.0 ([#1964](https://github.com/provenance-io/provenance/pull/1964), [#2023](https://github.com/provenance-io/provenance/pull/2023))
 - Bump `docker/setup-qemu-action` from 2 to 3 ([#1983](https://github.com/provenance-io/provenance/pull/1983))
