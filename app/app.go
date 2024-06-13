@@ -328,13 +328,14 @@ func New(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
+	sdkConfig := sdk.GetConfig()
+	addrPrefix := sdkConfig.GetBech32AccountAddrPrefix()
+	valAddrPrefix := sdkConfig.GetBech32ValidatorAddrPrefix()
+	consAddrPrefix := sdkConfig.GetBech32ConsensusAddrPrefix()
+
 	signingOptions := signing.Options{
-		AddressCodec: address.Bech32Codec{
-			Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-		},
-		ValidatorAddressCodec: address.Bech32Codec{
-			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-		},
+		AddressCodec:          address.Bech32Codec{Bech32Prefix: addrPrefix},
+		ValidatorAddressCodec: address.Bech32Codec{Bech32Prefix: valAddrPrefix},
 	}
 	exchange.DefineCustomGetSigners(&signingOptions)
 	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
@@ -430,13 +431,8 @@ func New(
 	// capability keeper must be sealed after scope to module registrations are completed.
 	app.CapabilityKeeper.Seal()
 
-	// Obtain prefixes so running tests can use "cosmos" while we use "pb"
-	addrPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
-	valAddrPrefix := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
-	consAddrPrefix := sdk.GetConfig().GetBech32ConsensusAddrPrefix()
-
 	// add keepers
-	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(addrPrefix), addrPrefix, govAuthority)
+	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, signingOptions.AddressCodec, addrPrefix, govAuthority)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
