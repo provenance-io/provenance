@@ -34,6 +34,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 
+	"github.com/provenance-io/provenance/cmd/provenanced/config"
 	provconfig "github.com/provenance-io/provenance/cmd/provenanced/config"
 	"github.com/provenance-io/provenance/internal/pioconfig"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -78,7 +79,7 @@ func Init(
 	moniker string,
 ) error {
 	chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
-	isTestnet, _ := cmd.Flags().GetBool(EnvTypeFlag)
+	isTestnet, _ := cmd.Flags().GetBool(config.EnvTypeFlag)
 	doRecover, _ := cmd.Flags().GetBool(FlagRecover)
 	doOverwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
 	timeoutCommit, err := cmd.Flags().GetDuration(FlagTimeoutCommit)
