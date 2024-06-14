@@ -10,6 +10,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmv2 "github.com/CosmWasm/wasmd/x/wasm/migrations/v2"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -92,6 +93,7 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
@@ -332,13 +334,14 @@ func New(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
+	sdkConfig := sdk.GetConfig()
+	addrPrefix := sdkConfig.GetBech32AccountAddrPrefix()
+	valAddrPrefix := sdkConfig.GetBech32ValidatorAddrPrefix()
+	consAddrPrefix := sdkConfig.GetBech32ConsensusAddrPrefix()
+
 	signingOptions := signing.Options{
-		AddressCodec: address.Bech32Codec{
-			Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-		},
-		ValidatorAddressCodec: address.Bech32Codec{
-			Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-		},
+		AddressCodec:          address.Bech32Codec{Bech32Prefix: addrPrefix},
+		ValidatorAddressCodec: address.Bech32Codec{Bech32Prefix: valAddrPrefix},
 	}
 	exchange.DefineCustomGetSigners(&signingOptions)
 	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
@@ -359,7 +362,6 @@ func New(
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	sdk.SetCoinDenomRegex(SdkCoinDenomRegex)
 
-	// TODO[1760]: Add the circuit breaker module to the app.
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
@@ -434,13 +436,8 @@ func New(
 	// capability keeper must be sealed after scope to module registrations are completed.
 	app.CapabilityKeeper.Seal()
 
-	// Obtain prefixes so running tests can use "cosmos" while we use "pb"
-	addrPrefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
-	valAddrPrefix := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
-	consAddrPrefix := sdk.GetConfig().GetBech32ConsensusAddrPrefix()
-
 	// add keepers
-	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec(addrPrefix), addrPrefix, govAuthority)
+	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, signingOptions.AddressCodec, addrPrefix, govAuthority)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
@@ -957,11 +954,6 @@ func New(
 		panic(err)
 	}
 
-	// Register upgrade handlers and set the store loader.
-	// This must be done after the module manager and configurator are set,
-	// but before the baseapp is sealed via LoadLatestVersion() down below.
-	app.registerUpgradeHandlers(appOpts)
-
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 
 	reflectionSvc, err := runtimeservices.NewReflectionService()
@@ -992,6 +984,11 @@ func New(
 	app.setPostHandler()
 	app.setFeeHandler()
 	app.SetAggregateEventsFunc(piohandlers.AggregateEvents)
+
+	// Register upgrade handlers and set the store loader.
+	// This must be done after the module manager, configurator, and pre-blocker are set,
+	// but before the baseapp is sealed via LoadLatestVersion() below.
+	app.registerUpgradeHandlers(appOpts)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -1346,16 +1343,17 @@ func GetMaccPerms() map[string][]string {
 func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
-	paramsKeeper.Subspace(authtypes.ModuleName)
+	//nolint:staticcheck // The ParamKeyTable functions are deprecated, but needed here for the migrations.
+	paramsKeeper.Subspace(authtypes.ModuleName).WithKeyTable(authtypes.ParamKeyTable())
 	paramsKeeper.Subspace(banktypes.ModuleName)
-	paramsKeeper.Subspace(stakingtypes.ModuleName)
-	paramsKeeper.Subspace(minttypes.ModuleName)
-	paramsKeeper.Subspace(distrtypes.ModuleName)
-	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName)
-	paramsKeeper.Subspace(crisistypes.ModuleName)
+	paramsKeeper.Subspace(stakingtypes.ModuleName).WithKeyTable(stakingtypes.ParamKeyTable())   //nolint:staticcheck
+	paramsKeeper.Subspace(minttypes.ModuleName).WithKeyTable(minttypes.ParamKeyTable())         //nolint:staticcheck
+	paramsKeeper.Subspace(distrtypes.ModuleName).WithKeyTable(distrtypes.ParamKeyTable())       //nolint:staticcheck
+	paramsKeeper.Subspace(slashingtypes.ModuleName).WithKeyTable(slashingtypes.ParamKeyTable()) //nolint:staticcheck
+	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypesv1.ParamKeyTable())         //nolint:staticcheck
+	paramsKeeper.Subspace(crisistypes.ModuleName).WithKeyTable(crisistypes.ParamKeyTable())     //nolint:staticcheck
 
-	paramsKeeper.Subspace(wasmtypes.ModuleName)
+	paramsKeeper.Subspace(wasmtypes.ModuleName).WithKeyTable(wasmv2.ParamKeyTable()) //nolint:staticcheck
 
 	// register the key tables for legacy param subspaces
 	keyTable := ibcclienttypes.ParamKeyTable()
@@ -1363,14 +1361,15 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibcexported.ModuleName).WithKeyTable(keyTable)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
 	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
+	paramsKeeper.Subspace(icqtypes.ModuleName).WithKeyTable(icqtypes.ParamKeyTable())
 
 	return paramsKeeper
 }
 
 // injectUpgrade causes the named upgrade to be run as the chain starts.
 //
-// To use this, add a call to it in New after the call to InstallCustomUpgradeHandlers
-// but before the line that looks for an upgrade file.
+// To use this, add a call to it in registerUpgradeHandlers immediately after the
+// call to InstallCustomUpgradeHandlers, but before the line that looks for an upgrade file.
 //
 // This function is for testing an upgrade against an existing chain's data (e.g. mainnet).
 // Here's how:
@@ -1401,15 +1400,16 @@ func (app *App) injectUpgrade(name string) { //nolint:unused // This is designed
 	if err := app.UpgradeKeeper.DumpUpgradeInfoToDisk(plan.Height, plan); err != nil {
 		panic(err)
 	}
-	// Define a new BeginBlocker that will inject the upgrade.
+
+	// Define a new PreBlocker that will inject the upgrade.
 	injected := false
-	app.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		if !injected {
 			app.Logger().Info("Injecting upgrade plan", "plan", plan)
 			// Ideally, we'd just call ScheduleUpgrade(ctx, plan) here (and panic on error).
-			// But the upgrade keeper often its own migration stuff that change some store key stuff.
-			// ScheduleUpgrade tries to read some of that changed store stuff and fails if the migration hasn't
-			// been applied yet. So we're doing things the hard way here.
+			// But the upgrade keeper often has its own migration stuff that change some store stuff.
+			// ScheduleUpgrade would try to read some of that old state using the update pattern,
+			// causing a failure. So we're doing things the hard way here.
 			if err := app.UpgradeKeeper.ClearUpgradePlan(ctx); err != nil {
 				panic(err)
 			}
@@ -1418,6 +1418,6 @@ func (app *App) injectUpgrade(name string) { //nolint:unused // This is designed
 			store.Set(upgradetypes.PlanKey(), bz)
 			injected = true
 		}
-		return app.BeginBlocker(ctx)
+		return app.PreBlocker(ctx, req)
 	})
 }
