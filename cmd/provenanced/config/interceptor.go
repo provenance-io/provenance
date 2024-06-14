@@ -19,6 +19,10 @@ const (
 	CustomDenomFlag = "custom-denom"
 	// CustomMsgFeeFloorPriceFlag flag to take in custom msg floor fees, defaults to 1905nhash if not passed in.
 	CustomMsgFeeFloorPriceFlag = "msgfee-floor-price"
+	// EnvTypeFlag is a flag for indicating a testnet
+	EnvTypeFlag = "testnet"
+	// CoinTypeFlag is a flag for indicating coin type.
+	CoinTypeFlag = "coin-type"
 )
 
 // InterceptConfigsPreRunHandler performs a pre-run function for all commands.
@@ -52,7 +56,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	// This needs to be done before we load the config files for the cases when:
 	//  1. The files don't exist yet, and we're loading the defaults.
 	//  2. The config is packed and we're filling in the missing with defaults.
-	if vpr.GetBool("testnet") {
+	if vpr.GetBool(EnvTypeFlag) {
 		DefaultKeyringBackend = "test"
 	}
 	// Read the configs into viper and the contexts.
