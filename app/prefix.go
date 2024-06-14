@@ -26,16 +26,17 @@ var (
 
 // SetConfig sets the configuration for the network using mainnet or testnet
 func SetConfig(testnet bool, seal bool) {
-	// not the default (mainnet) so reset with testnet config
+	AccountAddressPrefix = AccountAddressPrefixMainNet
+	CoinType = CoinTypeMainNet
 	if testnet {
 		AccountAddressPrefix = AccountAddressPrefixTestNet
-		AccountPubKeyPrefix = AccountAddressPrefixTestNet + "pub"
-		ValidatorAddressPrefix = AccountAddressPrefixTestNet + "valoper"
-		ValidatorPubKeyPrefix = AccountAddressPrefixTestNet + "valoperpub"
-		ConsNodeAddressPrefix = AccountAddressPrefixTestNet + "valcons"
-		ConsNodePubKeyPrefix = AccountAddressPrefixTestNet + "valconspub"
 		CoinType = CoinTypeTestNet
 	}
+	AccountPubKeyPrefix = AccountAddressPrefix + "pub"
+	ValidatorAddressPrefix = AccountAddressPrefix + "valoper"
+	ValidatorPubKeyPrefix = AccountAddressPrefix + "valoperpub"
+	ConsNodeAddressPrefix = AccountAddressPrefix + "valcons"
+	ConsNodePubKeyPrefix = AccountAddressPrefix + "valconspub"
 
 	config := sdk.GetConfig()
 	config.SetCoinType(uint32(CoinType))
@@ -43,6 +44,7 @@ func SetConfig(testnet bool, seal bool) {
 	config.SetBech32PrefixForAccount(AccountAddressPrefix, AccountPubKeyPrefix)
 	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)
 	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
+
 	if seal {
 		config.Seal()
 	}

@@ -78,7 +78,7 @@ func Init(
 	moniker string,
 ) error {
 	chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
-	isTestnet, _ := cmd.Flags().GetBool(EnvTypeFlag)
+	isTestnet, _ := cmd.Flags().GetBool(provconfig.EnvTypeFlag)
 	doRecover, _ := cmd.Flags().GetBool(FlagRecover)
 	doOverwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
 	timeoutCommit, err := cmd.Flags().GetDuration(FlagTimeoutCommit)
