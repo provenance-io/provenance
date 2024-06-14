@@ -53,7 +53,7 @@ func init() {
 
 	// bank
 	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/Balance", &banktypes.QueryBalanceResponse{})
-	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomMetadata", &banktypes.QueryDenomsMetadataResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomMetadata", &banktypes.QueryDenomMetadataResponse{})
 	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/Params", &banktypes.QueryParamsResponse{})
 	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/SupplyOf", &banktypes.QuerySupplyOfResponse{})
 
@@ -109,7 +109,7 @@ func init() {
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllOrders", &exchange.QueryGetAllOrdersResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetCommitment", &exchange.QueryGetCommitmentResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAccountCommitments", &exchange.QueryGetAccountCommitmentsResponse{})
-	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarkerCommitments", &exchange.QueryGetMarketCommitmentsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarketCommitments", &exchange.QueryGetMarketCommitmentsResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllCommitments", &exchange.QueryGetAllCommitmentsResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarket", &exchange.QueryGetMarketResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllMarkets", &exchange.QueryGetAllMarketsResponse{})
