@@ -106,6 +106,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update `app.New` to get the home directory, invariant check period, and skip-upgrade heights from the appOptions instead of arguments [#2015](https://github.com/provenance-io/provenance/pull/2015).
 * Simplify the module lists (e.g. `SetOrderEndBlockers`) by removing unneeded entries [#2015](https://github.com/provenance-io/provenance/pull/2015).
 * Update the `upgrade-test.sh` script to work with v0.50 commands [#2026](https://github.com/provenance-io/provenance/pull/2026).
+* Set the new gov params fields during the umber upgrades [#2027](https://github.com/provenance-io/provenance/pull/2027).
 
 ### Client Breaking
 

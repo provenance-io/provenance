@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
@@ -383,6 +384,8 @@ func (s *UpgradeTestSuite) TestUmberRC1() {
 		"INF Migrating ibchooks params.",
 		"INF Done migrating ibchooks params.",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Setting new gov params for testnet.",
+		"INF Done setting new gov params for testnet.",
 		"INF Updating IBC AllowedClients.",
 		"INF Done updating IBC AllowedClients.",
 		"INF Removing inactive validator delegations.",
@@ -414,6 +417,8 @@ func (s *UpgradeTestSuite) TestUmber() {
 		"INF Migrating ibchooks params.",
 		"INF Done migrating ibchooks params.",
 		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Setting new gov params for mainnet.",
+		"INF Done setting new gov params for mainnet.",
 		"INF Updating IBC AllowedClients.",
 		"INF Done updating IBC AllowedClients.",
 		"INF Removing inactive validator delegations.",
@@ -646,4 +651,104 @@ func (s *UpgradeTestSuite) TestRemoveInactiveValidatorDelegations() {
 		s.Require().NoError(err, "GetAllValidators")
 		s.Assert().Len(validators, 3, "GetAllValidators after %s", runnerName)
 	})
+}
+
+func (s *UpgradeTestSuite) TestSetNewGovParamsTestnet() {
+	var runErr error
+	runner := func() {
+		runErr = setNewGovParamsTestnet(s.ctx, s.app)
+	}
+	runnerName := "setNewGovParamsTestnet"
+
+	threeDays := time.Hour * 24 * 3
+	fiveMinutes := time.Minute * 5
+
+	iniParams := govv1.DefaultParams()
+	iniParams.MinInitialDepositRatio = sdkmath.LegacyMustNewDecFromStr("0.25").String()
+	iniParams.MinDepositRatio = sdkmath.LegacyMustNewDecFromStr("0.10").String()
+	iniParams.ProposalCancelRatio = sdkmath.LegacyMustNewDecFromStr("0.83").String()
+	iniParams.ProposalCancelDest = sdk.AccAddress("addr________________").String()
+	iniParams.ExpeditedVotingPeriod = &threeDays
+	iniParams.ExpeditedThreshold = sdkmath.LegacyMustNewDecFromStr("0.406").String()
+	iniParams.ExpeditedMinDeposit = []sdk.Coin{sdk.NewInt64Coin("banana", 1000)}
+	iniParams.BurnVoteQuorum = true
+	iniParams.BurnProposalDepositPrevote = true
+	iniParams.BurnVoteVeto = false
+
+	err := s.app.GovKeeper.Params.Set(s.ctx, iniParams)
+	s.Require().NoError(err, "Setting initial gov params")
+
+	expParams := govv1.DefaultParams()
+	expParams.MinInitialDepositRatio = sdkmath.LegacyMustNewDecFromStr("0.00002").String()
+	expParams.MinDepositRatio = sdkmath.LegacyZeroDec().String()
+	expParams.ProposalCancelRatio = sdkmath.LegacyZeroDec().String()
+	expParams.ProposalCancelDest = ""
+	expParams.ExpeditedVotingPeriod = &fiveMinutes
+	expParams.ExpeditedThreshold = sdkmath.LegacyMustNewDecFromStr("0.667").String()
+	expParams.ExpeditedMinDeposit = iniParams.MinDeposit
+	expParams.BurnVoteQuorum = false
+	expParams.BurnProposalDepositPrevote = false
+	expParams.BurnVoteVeto = true
+
+	expLogLines := []string{
+		"INF Setting new gov params for testnet.",
+		"INF Done setting new gov params for testnet.",
+	}
+
+	s.ExecuteAndAssertLogs(runner, expLogLines, nil, true, runnerName)
+	s.Require().NoError(runErr, runnerName)
+
+	actParams, err := s.app.GovKeeper.Params.Get(s.ctx)
+	s.Require().NoError(err, "getting gov params after %s", runnerName)
+	s.Assert().Equal(expParams, actParams, "resulting gov params")
+}
+
+func (s *UpgradeTestSuite) TestSetNewGovParamsMainnet() {
+	var runErr error
+	runner := func() {
+		runErr = setNewGovParamsMainnet(s.ctx, s.app)
+	}
+	runnerName := "setNewGovParamsMainnet"
+
+	threeDays := time.Hour * 24 * 3
+	oneDay := time.Hour * 24
+
+	iniParams := govv1.DefaultParams()
+	iniParams.MinInitialDepositRatio = sdkmath.LegacyMustNewDecFromStr("0.25").String()
+	iniParams.MinDepositRatio = sdkmath.LegacyMustNewDecFromStr("0.10").String()
+	iniParams.ProposalCancelRatio = sdkmath.LegacyMustNewDecFromStr("0.83").String()
+	iniParams.ProposalCancelDest = sdk.AccAddress("addr________________").String()
+	iniParams.ExpeditedVotingPeriod = &threeDays
+	iniParams.ExpeditedThreshold = sdkmath.LegacyMustNewDecFromStr("0.406").String()
+	iniParams.ExpeditedMinDeposit = []sdk.Coin{sdk.NewInt64Coin("banana", 1000)}
+	iniParams.BurnVoteQuorum = true
+	iniParams.BurnProposalDepositPrevote = false
+	iniParams.BurnVoteVeto = false
+
+	err := s.app.GovKeeper.Params.Set(s.ctx, iniParams)
+	s.Require().NoError(err, "Setting initial gov params")
+
+	expParams := govv1.DefaultParams()
+	expParams.MinInitialDepositRatio = sdkmath.LegacyMustNewDecFromStr("0.02").String()
+	expParams.MinDepositRatio = sdkmath.LegacyZeroDec().String()
+	expParams.ProposalCancelRatio = sdkmath.LegacyMustNewDecFromStr("0.5").String()
+	expParams.ProposalCancelDest = ""
+	expParams.ExpeditedVotingPeriod = &oneDay
+	expParams.ExpeditedThreshold = sdkmath.LegacyMustNewDecFromStr("0.667").String()
+	expParams.ExpeditedMinDeposit = iniParams.MinDeposit
+	expParams.BurnVoteQuorum = false
+	expParams.BurnProposalDepositPrevote = true
+	expParams.BurnVoteVeto = true
+
+	expLogLines := []string{
+		"INF Setting new gov params for mainnet.",
+		"INF Done setting new gov params for mainnet.",
+	}
+
+	s.ExecuteAndAssertLogs(runner, expLogLines, nil, true, runnerName)
+	s.Require().NoError(runErr, runnerName)
+
+	actParams, err := s.app.GovKeeper.Params.Get(s.ctx)
+	s.Require().NoError(err, "getting gov params after %s", runnerName)
+	s.Assert().Equal(expParams, actParams, "resulting gov params")
 }
