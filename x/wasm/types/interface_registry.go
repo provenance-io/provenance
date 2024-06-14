@@ -19,6 +19,6 @@ type WasmInterfaceRegistry struct {
 }
 
 // Resolve implements codectypes.InterfaceRegistry
-func (WasmInterfaceRegistry) Resolve(typeUrl string) (proto.Message, error) {
+func (WasmInterfaceRegistry) Resolve(_ string) (proto.Message, error) {
 	return new(WasmAny), nil
 }
