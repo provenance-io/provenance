@@ -51,13 +51,6 @@ import (
 	"github.com/provenance-io/provenance/internal/pioconfig"
 )
 
-const (
-	// EnvTypeFlag is a flag for indicating a testnet
-	EnvTypeFlag = "testnet"
-	// CoinTypeFlag is a flag for indicating coin type.
-	CoinTypeFlag = "coin-type"
-)
-
 // NewRootCmd creates a new root command for provenanced. It is called once in the main function.
 // Providing sealConfig = false is only for unit tests that want to run multiple commands.
 func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
@@ -111,12 +104,12 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 
 			// set app context based on initialized EnvTypeFlag
 			vpr := server.GetServerContextFromCmd(cmd).Viper
-			testnet := vpr.GetBool(EnvTypeFlag)
+			testnet := vpr.GetBool(config.EnvTypeFlag)
 			app.SetConfig(testnet, sealConfig)
 
 			overwriteFlagDefaults(cmd, map[string]string{
 				// Override default value for coin-type to match our mainnet or testnet value.
-				CoinTypeFlag: fmt.Sprint(app.CoinType),
+				config.CoinTypeFlag: fmt.Sprint(app.CoinType),
 				// Override min gas price(server level config) here since the provenance config would have been set based on flags.
 				server.FlagMinGasPrices: pioconfig.GetProvenanceConfig().ProvenanceMinGasPrices,
 			})
@@ -128,7 +121,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        "",
 		flags.FlagKeyringBackend: "test",
-		CoinTypeFlag:             fmt.Sprint(app.CoinTypeMainNet),
+		config.CoinTypeFlag:      fmt.Sprint(app.CoinTypeMainNet),
 	})
 
 	// add keyring to autocli opts
@@ -158,7 +151,7 @@ func Execute(rootCmd *cobra.Command) error {
 	ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
 	ctx = context.WithValue(ctx, server.ServerContextKey, server.NewDefaultContext())
 
-	rootCmd.PersistentFlags().BoolP(EnvTypeFlag, "t", false, "Indicates this command should use the testnet configuration (default: false [mainnet])")
+	rootCmd.PersistentFlags().BoolP(config.EnvTypeFlag, "t", false, "Indicates this command should use the testnet configuration (default: false [mainnet])")
 	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic)")
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, cmtconfig.LogFormatPlain, "The logging format (json|plain)")
 

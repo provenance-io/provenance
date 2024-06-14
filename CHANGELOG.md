@@ -121,6 +121,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * The `add-net-asset-values` command now correctly uses the from `flag`'s `AccAddress` [#1995](https://github.com/provenance-io/provenance/issues/1995).
 * Fix the sim tests [#2015](https://github.com/provenance-io/provenance/pull/2015).
+* Fix the `umber` and `umber-rc1` upgrades [#2033](https://github.com/provenance-io/provenance/pull/2033).
 
 ### Deprecated
 

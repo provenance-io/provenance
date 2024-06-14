@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -54,7 +55,7 @@ type appUpgrade struct {
 // or vice versa, please add comments explaining why in both entries.
 var upgrades = map[string]appUpgrade{
 	"umber-rc1": { // upgrade for v1.19.0-rc1
-		Added:   []string{crisistypes.ModuleName, circuittypes.ModuleName},
+		Added:   []string{crisistypes.ModuleName, circuittypes.ModuleName, consensusparamtypes.ModuleName},
 		Deleted: []string{"reward"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -98,7 +99,7 @@ var upgrades = map[string]appUpgrade{
 		},
 	},
 	"umber": { // upgrade for v1.19.0
-		Added:   []string{crisistypes.ModuleName, circuittypes.ModuleName},
+		Added:   []string{crisistypes.ModuleName, circuittypes.ModuleName, consensusparamtypes.ModuleName},
 		Deleted: []string{"reward"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
 			var err error
@@ -312,14 +313,14 @@ func updateIBCClients(ctx sdk.Context, app *App) {
 // migrateBaseappParams migrates to new ConsensusParamsKeeper
 // TODO: Remove with the umber handlers.
 func migrateBaseappParams(ctx sdk.Context, app *App) error {
-	ctx.Logger().Info("Migrating legacy params.")
+	ctx.Logger().Info("Migrating consensus params.")
 	legacyBaseAppSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 	err := baseapp.MigrateParams(ctx, legacyBaseAppSubspace, app.ConsensusParamsKeeper.ParamsStore)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Unable to migrate legacy params to ConsensusParamsKeeper, error: %s.", err))
 		return err
 	}
-	ctx.Logger().Info("Done migrating legacy params.")
+	ctx.Logger().Info("Done migrating consensus params.")
 	return nil
 }
 
@@ -387,9 +388,9 @@ func migrateMarkerParams(ctx sdk.Context, app *App) {
 
 	// TODO: remove markertypes.ParamStoreKeyMaxSupply with the umber handlers.
 	if markerParamSpace.Has(ctx, markertypes.ParamStoreKeyMaxSupply) {
-		var maxSupply string
+		var maxSupply sdkmath.Int
 		markerParamSpace.Get(ctx, markertypes.ParamStoreKeyMaxSupply, &maxSupply)
-		params.MaxSupply = markertypes.StringToBigInt(maxSupply)
+		params.MaxSupply = maxSupply
 	}
 
 	app.MarkerKeeper.SetParams(ctx, params)
@@ -401,13 +402,8 @@ func migrateMarkerParams(ctx sdk.Context, app *App) {
 // TODO: Remove with the umber handlers.
 func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Migrating metadata os locator params.")
-	metadataParamSpace := app.ParamsKeeper.Subspace(metadatatypes.ModuleName).WithKeyTable(metadatatypes.ParamKeyTable())
-	maxValueLength := uint32(metadatatypes.DefaultMaxURILength)
-	// TODO: remove metadatatypes.ParamStoreKeyMaxValueLength with the umber handlers.
-	if metadataParamSpace.Has(ctx, metadatatypes.ParamStoreKeyMaxValueLength) {
-		metadataParamSpace.Get(ctx, metadatatypes.ParamStoreKeyMaxValueLength, &maxValueLength)
-	}
-	app.MetadataKeeper.SetOSLocatorParams(ctx, metadatatypes.OSLocatorParams{MaxUriLength: maxValueLength})
+	params := metadatatypes.DefaultOSLocatorParams()
+	app.MetadataKeeper.SetOSLocatorParams(ctx, params)
 	ctx.Logger().Info("Done migrating metadata os locator params.")
 }
 
@@ -415,7 +411,7 @@ func migrateMetadataOSLocatorParams(ctx sdk.Context, app *App) {
 // TODO: Remove with the umber handlers.
 func migrateNameParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Migrating name params.")
-	nameParamSpace := app.ParamsKeeper.Subspace(nametypes.ModuleName)
+	nameParamSpace := app.ParamsKeeper.Subspace(nametypes.ModuleName).WithKeyTable(nametypes.ParamKeyTable())
 
 	params := nametypes.DefaultParams()
 
@@ -476,7 +472,7 @@ func migrateMsgFeesParams(ctx sdk.Context, app *App) {
 // TODO: Remove with the umber handlers.
 func migrateIbcHooksParams(ctx sdk.Context, app *App) {
 	ctx.Logger().Info("Migrating ibchooks params.")
-	ibcHooksParamSpace := app.ParamsKeeper.Subspace(ibchookstypes.ModuleName)
+	ibcHooksParamSpace := app.ParamsKeeper.Subspace(ibchookstypes.ModuleName).WithKeyTable(ibchookstypes.ParamKeyTable())
 
 	params := ibchookstypes.DefaultParams()
 
