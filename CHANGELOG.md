@@ -107,6 +107,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Simplify the module lists (e.g. `SetOrderEndBlockers`) by removing unneeded entries [#2015](https://github.com/provenance-io/provenance/pull/2015).
 * Update the `upgrade-test.sh` script to work with v0.50 commands [#2026](https://github.com/provenance-io/provenance/pull/2026).
 * Set the new gov params fields during the umber upgrades [#2027](https://github.com/provenance-io/provenance/pull/2027).
+* Add a bunch of queries to the stargate whitelist [#2037](https://github.com/provenance-io/provenance/pull/2037).
 
 ### Client Breaking
 
