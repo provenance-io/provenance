@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/x/feegrant"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -185,6 +186,16 @@ func init() {
 	setWhitelistedQuery("/cosmos.upgrade.v1beta1.Query/AppliedPlan", &upgradetypes.QueryAppliedPlanResponse{})
 	setWhitelistedQuery("/cosmos.upgrade.v1beta1.Query/ModuleVersions", &upgradetypes.QueryModuleVersionsResponse{})
 	setWhitelistedQuery("/cosmos.upgrade.v1beta1.Query/Authority", &upgradetypes.QueryAuthorityResponse{})
+
+	// wasm
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractHistory", &wasmtypes.QueryContractInfoResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractsByCode", &wasmtypes.QueryContractsByCodeResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/SmartContractState", &wasmtypes.QuerySmartContractStateResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/Code", &wasmtypes.QueryCodeResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/Codes", &wasmtypes.QueryCodesResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/PinnedCodes", &wasmtypes.QueryPinnedCodesResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/Params", &wasmtypes.QueryParamsResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractsByCreator", &wasmtypes.QueryContractsByCreatorResponse{})
 
 	// ==========================================================
 	// provenance queries
