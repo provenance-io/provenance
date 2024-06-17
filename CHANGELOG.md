@@ -153,6 +153,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `cosmossdk.io/store` from 1.0.2 to 1.1.0 [#2026](https://github.com/provenance-io/provenance/pull/2026)
 - Bump `cosmossdk.io/x/feegrant` from 0.1.0 to 0.1.1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
 - Bump `cosmossdk.io/x/evidence` from 0.1.0 to 0.1.1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
+- Bump `cosmossdk.io/x/circuit` from 0.1.0 to 0.1.1 ([#2035](https://github.com/provenance-io/provenance/pull/2035))
 
 ---
 
