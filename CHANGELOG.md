@@ -120,6 +120,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * The `add-net-asset-values` command now correctly uses the from `flag`'s `AccAddress` [#1995](https://github.com/provenance-io/provenance/issues/1995).
 * Fix the sim tests [#2015](https://github.com/provenance-io/provenance/pull/2015).
+* Fix the `umber` and `umber-rc1` upgrades [#2033](https://github.com/provenance-io/provenance/pull/2033).
 
 ### Deprecated
 
@@ -131,7 +132,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `google.golang.org/grpc` from 1.62.1 to 1.64.0 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918), [#1972](https://github.com/provenance-io/provenance/pull/1972))
 - Bump `bufbuild/buf-breaking-action` from 1.1.3 to 1.1.4 ([#1894](https://github.com/provenance-io/provenance/pull/1894))
 - Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
-- Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.32.2 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949), [#1979](https://github.com/provenance-io/provenance/pull/1979), [#1990](https://github.com/provenance-io/provenance/pull/1990), [#2011](https://github.com/provenance-io/provenance/pull/2011))
+- Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.33.0 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949), [#1979](https://github.com/provenance-io/provenance/pull/1979), [#1990](https://github.com/provenance-io/provenance/pull/1990), [#2011](https://github.com/provenance-io/provenance/pull/2011), [#2036](https://github.com/provenance-io/provenance/pull/2036))
 - Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.7 ([#1912](https://github.com/provenance-io/provenance/pull/1912), [#1959](https://github.com/provenance-io/provenance/pull/1959))
 - Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.3 ([#1913](https://github.com/provenance-io/provenance/pull/1913), [#2026](https://github.com/provenance-io/provenance/pull/2026))
 - Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
@@ -152,6 +153,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `cosmossdk.io/store` from 1.0.2 to 1.1.0 [#2026](https://github.com/provenance-io/provenance/pull/2026)
 - Bump `cosmossdk.io/x/feegrant` from 0.1.0 to 0.1.1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
 - Bump `cosmossdk.io/x/evidence` from 0.1.0 to 0.1.1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
+- Bump `cosmossdk.io/x/circuit` from 0.1.0 to 0.1.1 ([#2035](https://github.com/provenance-io/provenance/pull/2035))
+- Bump `github.com/spf13/cobra` from 1.8.0 to 1.8.1 ([#2038](https://github.com/provenance-io/provenance/pull/2038))
 
 ---
 
