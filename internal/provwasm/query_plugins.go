@@ -47,7 +47,6 @@ func (qr *QuerierRegistry) RegisterQuerier(route string, querier Querier) {
 
 // QueryPlugins provides provenance query support for smart contracts.
 func QueryPlugins(registry *QuerierRegistry, queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) *wasmkeeper.QueryPlugins {
-
 	protoCdc, ok := cdc.(*codec.ProtoCodec)
 	if !ok {
 		panic(fmt.Errorf("codec must be *codec.ProtoCodec type: actual: %T", cdc))
