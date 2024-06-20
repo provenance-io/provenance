@@ -97,6 +97,12 @@ var upgrades = map[string]appUpgrade{
 
 			removeInactiveValidatorDelegations(ctx, app)
 
+			scopeNavs, err := ReadNetAssetValues("upgrade_files/testnet_scope_navs.csv")
+			if err != nil {
+				return nil, err
+			}
+			addScopeNavsWithHeight(ctx, app, scopeNavs)
+
 			return vm, nil
 		},
 	},
@@ -566,7 +572,7 @@ func setNewGovParams(ctx sdk.Context, app *App, newParams govv1.Params, chain st
 }
 
 // addScopeNavsWithHeight sets net asset values with heights for markers
-// TODO: Remove with the tourmaline handlers.
+// TODO: Remove with the umber handlers.
 func addScopeNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAssetValueWithHeight) {
 	ctx.Logger().Info("Adding scope net asset values with heights.")
 
