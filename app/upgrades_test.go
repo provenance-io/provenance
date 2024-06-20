@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -23,6 +24,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	internalsdk "github.com/provenance-io/provenance/internal/sdk"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type UpgradeTestSuite struct {
@@ -751,4 +753,87 @@ func (s *UpgradeTestSuite) TestSetNewGovParamsMainnet() {
 	actParams, err := s.app.GovKeeper.Params.Get(s.ctx)
 	s.Require().NoError(err, "getting gov params after %s", runnerName)
 	s.Assert().Equal(expParams, actParams, "resulting gov params")
+}
+
+func (s *UpgradeTestSuite) TestAddScopeNavsWithHeight() {
+	address1 := sdk.AccAddress("address1")
+	testScopes := []struct {
+		name      string
+		scopeUUID string
+	}{
+		{"scope1", "11111111-1111-1111-1111-111111111111"},
+		{"scope2", "22222222-2222-2222-2222-222222222222"},
+		{"scope3", "33333333-3333-3333-3333-333333333333"},
+	}
+
+	for _, ts := range testScopes {
+		uid, err := uuid.Parse(ts.scopeUUID)
+		s.Require().NoError(err)
+		scopeAddr := metadatatypes.ScopeMetadataAddress(uid)
+		scope := metadatatypes.Scope{
+			ScopeId: scopeAddr,
+			Owners:  []metadatatypes.Party{{Address: address1.String(), Role: metadatatypes.PartyType_PARTY_TYPE_OWNER}},
+		}
+		s.app.MetadataKeeper.SetScope(s.ctx, scope)
+	}
+
+	presentNav := metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 55))
+	s.Require().NoError(s.app.MetadataKeeper.SetNetAssetValueWithBlockHeight(s.ctx, metadatatypes.ScopeMetadataAddress(uuid.MustParse("11111111-1111-1111-1111-111111111111")), presentNav, "test", 100))
+
+	addScopeNavsWithHeight(s.ctx, s.app, []NetAssetValueWithHeight{
+		{
+			ScopeUUID:     "22222222-2222-2222-2222-222222222222",
+			NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 12345)),
+			Height:        406,
+		},
+	})
+
+	tests := []struct {
+		name      string
+		scopeUUID string
+		expNav    *metadatatypes.NetAssetValue
+		expHeight uint64
+	}{
+		{
+			name:      "already has nav",
+			scopeUUID: "11111111-1111-1111-1111-111111111111",
+			expNav:    &metadatatypes.NetAssetValue{Price: sdk.NewInt64Coin(metadatatypes.UsdDenom, 55)},
+			expHeight: 100,
+		},
+		{
+			name:      "nav set from custom config with height",
+			scopeUUID: "22222222-2222-2222-2222-222222222222",
+			expNav:    &metadatatypes.NetAssetValue{Price: sdk.NewInt64Coin(metadatatypes.UsdDenom, 12345)},
+			expHeight: 406,
+		},
+		{
+			name:      "nav add fails for non-existent scope",
+			scopeUUID: "33333333-3333-3333-3333-333333333333",
+			expNav:    nil,
+			expHeight: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			uid, err := uuid.Parse(tc.scopeUUID)
+			s.Require().NoError(err)
+			scopeAddr := metadatatypes.ScopeMetadataAddress(uid)
+
+			netAssetValues := []metadatatypes.NetAssetValue{}
+			err = s.app.MetadataKeeper.IterateNetAssetValues(s.ctx, scopeAddr, func(state metadatatypes.NetAssetValue) (stop bool) {
+				netAssetValues = append(netAssetValues, state)
+				return false
+			})
+			s.Require().NoError(err, "IterateNetAssetValues err")
+
+			if tc.expNav != nil {
+				s.Assert().Len(netAssetValues, 1, "Should be 1 nav set for scope")
+				s.Assert().Equal(tc.expNav.Price, netAssetValues[0].Price, "Net asset value price should equal default upgraded price")
+				s.Assert().Equal(tc.expHeight, netAssetValues[0].UpdatedBlockHeight, "Net asset value updated block height should equal expected")
+			} else {
+				s.Assert().Len(netAssetValues, 0, "Scope not expected to have nav")
+			}
+		})
+	}
 }
