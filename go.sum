@@ -910,8 +910,8 @@ github.com/provenance-io/cosmos-sdk v0.50.7-pio-1 h1:A4WC4LzcQj6jh+WdIIP4OIN3DCS
 github.com/provenance-io/cosmos-sdk v0.50.7-pio-1/go.mod h1:84xDDJEHttRT7NDGwBaUOLVOMN0JNE9x7NbsYIxXs1s=
 github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1 h1:p+7pxHB0ukO2aow+M6uW9gHgeQl7YJyYGyMSKHZ5My8=
 github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1/go.mod h1:tObW9uxibh5Z22CtOaHVeTDotCSMyc/2B4MrYdaViBo=
-github.com/provenance-io/ibc-go/v8 v8.2.1-pio-1 h1:Vmf8Q6qnI3eeyUjV5NsMJsT127diiGuzW+653wj4Y1s=
-github.com/provenance-io/ibc-go/v8 v8.2.1-pio-1/go.mod h1:wj3qx75iC/XNnsMqbPDCIGs0G6Y3E/lo3bdqCyoCy+8=
+github.com/provenance-io/ibc-go/v8 v8.3.2-pio-1 h1:NOybWs/qIj0gGsOUs8xXwiAlEgtZwOtkhf0/yD0dZYA=
+github.com/provenance-io/ibc-go/v8 v8.3.2-pio-1/go.mod h1:izwHZvn9lKrBn8xWj0aXWut6HKcwHMPD3uyuvOJoPSA=
 github.com/provenance-io/wasmd v0.50.0-pio-2 h1:vuRXQ7NvqEk0TZ/dDFEfojMTwCn/ItVDjMe3/jiCDbY=
 github.com/provenance-io/wasmd v0.50.0-pio-2/go.mod h1:UjmShW4l9YxaMytwJZ7IB7MWzHiynSZP3DdWrG0FRtk=
 github.com/rakyll/statik v0.1.7 h1:OF3QCZUuyPxuGEP7B4ypUa7sB/iHtqOTDYZXGM8KOdQ=

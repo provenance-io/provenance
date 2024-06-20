@@ -608,6 +608,7 @@ func New(
 		app.AccountKeeper, app.ScopedICAHostKeeper, pioMessageRouter, govAuthority,
 	)
 	app.ICAHostKeeper = &icaHostKeeper
+	app.ICAHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
 	icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
 
