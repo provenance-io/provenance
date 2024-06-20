@@ -40,7 +40,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/
     
 
-COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/internal/api/libwasmvm.*.so /tmp
+COPY --from=build /go/src/github.com/provenance-io/provenance/vendor/github.com/CosmWasm/wasmvm/v2/internal/api/libwasmvm.*.so /tmp
 COPY --from=build /go/bin/provenanced /usr/bin/provenanced
 
 RUN ARCH=$(uname -m) && \
