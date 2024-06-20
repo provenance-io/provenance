@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update stargate queries for Quarantine and Sanction modules [#2016](https://github.com/provenance-io/provenance/pull/2016).
 * Add the circuit breaker module [#2031](https://github.com/provenance-io/provenance/pull/2031).
 * Bump wasmd to `v0.51.0` [#2044](https://github.com/provenance-io/provenance/issues/2044).
+* Bump wasmvm to `v2.0.1` [#2044](https://github.com/provenance-io/provenance/issues/2044).
 
 ### Improvements
 
