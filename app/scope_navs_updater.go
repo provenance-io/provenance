@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -34,7 +35,7 @@ func ReadNetAssetValues(fileName string) ([]NetAssetValueWithHeight, error) {
 		return nil, err
 	}
 
-	var assets []NetAssetValueWithHeight
+	assets := make([]NetAssetValueWithHeight, 0, len(records))
 	for _, record := range records {
 		if len(record) < 3 {
 			continue

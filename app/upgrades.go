@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
+
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	circuittypes "cosmossdk.io/x/circuit/types"
@@ -20,12 +22,10 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
-	"github.com/google/uuid"
 
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -583,7 +583,7 @@ func addScopeNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAsset
 			ctx.Logger().Error(fmt.Sprintf("invalid uuid %v : %v", navWithHeight.ScopeUUID, err))
 			continue
 		}
-		scopeAddr := types.ScopeMetadataAddress(uid)
+		scopeAddr := metadatatypes.ScopeMetadataAddress(uid)
 		_, found := app.MetadataKeeper.GetScope(ctx, scopeAddr)
 		if !found {
 			ctx.Logger().Error(fmt.Sprintf("unable to find scope %v", navWithHeight.ScopeUUID))
