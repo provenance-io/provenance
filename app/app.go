@@ -646,7 +646,7 @@ func New(
 
 	// Add the capabilities and indicate that provwasm contracts can be run on this chain.
 	// Capabilities defined here: https://github.com/CosmWasm/cosmwasm/blob/main/docs/CAPABILITIES-BUILT-IN.md
-	supportedFeatures := "staking,provenance,stargate,iterator,cosmwasm_1_4"
+	supportedFeatures := "staking,provenance,stargate,iterator,cosmwasm_1_1, cosmwasm_1_2, cosmwasm_1_3, cosmwasm_1_4"
 
 	// The last arguments contain custom message handlers, and custom query handlers,
 	// to allow smart contracts to use provenance modules.
