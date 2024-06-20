@@ -8,7 +8,7 @@ type WasmAny struct {
 }
 
 func (*WasmAny) ProtoMessage()             {}
-func (*WasmAny) XXX_WellKnownType() string { return "BytesValue" }
+func (*WasmAny) XXX_WellKnownType() string { return "BytesValue" } //nolint:revive
 func (m *WasmAny) Reset()                  { *m = WasmAny{} }
 func (m *WasmAny) String() string {
 	return fmt.Sprintf("%x", m.Value) // not compatible w/ pb oct
