@@ -20,10 +20,12 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibctmmigrations "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint/migrations"
+	"github.com/google/uuid"
 
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/metadata/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
@@ -561,4 +563,30 @@ func setNewGovParams(ctx sdk.Context, app *App, newParams govv1.Params, chain st
 
 	ctx.Logger().Info(fmt.Sprintf("Done setting new gov params for %s.", chain))
 	return nil
+}
+
+// addScopeNavsWithHeight sets net asset values with heights for markers
+// TODO: Remove with the tourmaline handlers.
+func addScopeNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAssetValueWithHeight) {
+	ctx.Logger().Info("Adding scope net asset values with heights.")
+
+	for _, navWithHeight := range navsWithHeight {
+		uid, err := uuid.Parse(navWithHeight.ScopeUUID)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("invalid uuid %v : %v", navWithHeight.ScopeUUID, err))
+			continue
+		}
+		scopeAddr := types.ScopeMetadataAddress(uid)
+		_, found := app.MetadataKeeper.GetScope(ctx, scopeAddr)
+		if !found {
+			ctx.Logger().Error(fmt.Sprintf("unable to find scope %v", navWithHeight.ScopeUUID))
+			continue
+		}
+
+		if err := app.MetadataKeeper.SetNetAssetValueWithBlockHeight(ctx, scopeAddr, navWithHeight.NetAssetValue, "upgrade_handler", navWithHeight.Height); err != nil {
+			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value with height %v at height %d: %v", navWithHeight.NetAssetValue, navWithHeight.Height, err))
+		}
+	}
+
+	ctx.Logger().Info("Done adding scope net asset values with heights.")
 }
