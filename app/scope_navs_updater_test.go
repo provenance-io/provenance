@@ -24,7 +24,6 @@ func TestReadNetAssetValues(t *testing.T) {
 	assert.True(t, assets[0].NetAssetValue.Price.Equal(expectedFirst.NetAssetValue.Price), "The first NetAssetValue should match")
 	assert.Equal(t, expectedFirst.Height, assets[0].Height, "The first Height should match")
 
-	// Assert the last value
 	expectedLast := NetAssetValueWithHeight{
 		ScopeUUID:     "65939db0-6d7a-42ef-9443-378304d33225",
 		NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 93661920)),
