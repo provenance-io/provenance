@@ -17,6 +17,10 @@ import (
 type MockWasmServer struct {
 }
 
+func (m MockWasmServer) BuildAddress(ctx context.Context, request *wasmtypes.QueryBuildAddressRequest) (*wasmtypes.QueryBuildAddressResponse, error) {
+	return nil, nil
+}
+
 func (k Keeper) WithWasmQueryServer(server wasmtypes.QueryServer) Keeper {
 	k.wasmQueryServer = server
 	return k
