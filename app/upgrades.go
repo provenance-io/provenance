@@ -95,13 +95,13 @@ var upgrades = map[string]appUpgrade{
 
 			updateIBCClients(ctx, app)
 
-			removeInactiveValidatorDelegations(ctx, app)
-
 			scopeNavs, err := ReadNetAssetValues("upgrade_files/testnet_scope_navs.csv")
 			if err != nil {
 				return nil, err
 			}
 			addScopeNavsWithHeight(ctx, app, scopeNavs)
+
+			removeInactiveValidatorDelegations(ctx, app)
 
 			return vm, nil
 		},
@@ -576,6 +576,7 @@ func setNewGovParams(ctx sdk.Context, app *App, newParams govv1.Params, chain st
 func addScopeNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAssetValueWithHeight) {
 	ctx.Logger().Info("Adding scope net asset values with heights.")
 
+	totalAdded := 0
 	for _, navWithHeight := range navsWithHeight {
 		uid, err := uuid.Parse(navWithHeight.ScopeUUID)
 		if err != nil {
@@ -592,7 +593,8 @@ func addScopeNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAsset
 		if err := app.MetadataKeeper.SetNetAssetValueWithBlockHeight(ctx, scopeAddr, navWithHeight.NetAssetValue, "upgrade_handler", navWithHeight.Height); err != nil {
 			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value with height %v at height %d: %v", navWithHeight.NetAssetValue, navWithHeight.Height, err))
 		}
+		totalAdded++
 	}
 
-	ctx.Logger().Info("Done adding scope net asset values with heights.")
+	ctx.Logger().Info(fmt.Sprintf("Done adding a total of %v scope net asset values with heights.", totalAdded))
 }
