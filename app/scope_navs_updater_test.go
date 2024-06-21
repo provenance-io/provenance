@@ -33,3 +33,28 @@ func TestReadNetAssetValues(t *testing.T) {
 	assert.True(t, assets[len(assets)-1].NetAssetValue.Price.Equal(expectedLast.NetAssetValue.Price), "The last NetAssetValue should match")
 	assert.Equal(t, expectedLast.Height, assets[len(assets)-1].Height, "The last Height should match")
 }
+
+func TestParseValueToUsdMills(t *testing.T) {
+	tests := []struct {
+		input          string
+		expectedOutput int64
+		expectError    bool
+	}{
+		{"1.24", 1240, false},
+		{"0.99", 990, false},
+		{"100.5", 100500, false},
+		{"100.3456", 100345, false},
+		{"abc", 0, true},
+		{"", 0, true},
+	}
+
+	for _, test := range tests {
+		output, err := parseValueToUsdMills(test.input)
+		if test.expectError {
+			assert.Error(t, err, "Expected an error for input: %s", test.input)
+		} else {
+			assert.NoError(t, err, "Did not expect an error for input: %s", test.input)
+			assert.Equal(t, test.expectedOutput, output, "Expected output to be %d for input: %s", test.expectedOutput, test.input)
+		}
+	}
+}

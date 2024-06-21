@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -16,6 +15,16 @@ type NetAssetValueWithHeight struct {
 	Height        uint64
 }
 
+// parseValueToUsdMills parses and converts cents amount into usd mills as int64 $1.24 = 1240
+func parseValueToUsdMills(navStr string) (int64, error) {
+	navValue, err := strconv.ParseFloat(navStr, 64)
+	if err != nil {
+		return 0, err
+	}
+	return int64(navValue * 1000), nil
+}
+
+// ReadNetAssetValues reads a CSV file and parses its contents into a slice of NetAssetValueWithHeight
 func ReadNetAssetValues(fileName string) ([]NetAssetValueWithHeight, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -25,7 +34,7 @@ func ReadNetAssetValues(fileName string) ([]NetAssetValueWithHeight, error) {
 
 	reader := csv.NewReader(file)
 
-	// skips the header line
+	// Skip the header line
 	if _, err := reader.Read(); err != nil {
 		return nil, err
 	}
@@ -43,11 +52,10 @@ func ReadNetAssetValues(fileName string) ([]NetAssetValueWithHeight, error) {
 
 		scopeUUID := record[0]
 
-		navValue, err := strconv.ParseFloat(record[1], 64)
+		navInt64, err := parseValueToUsdMills(record[1])
 		if err != nil {
 			return nil, err
 		}
-		navValue *= 1000
 
 		heightIndex := len(record) - 1
 		height, err := strconv.ParseUint(record[heightIndex], 10, 64)
@@ -55,7 +63,7 @@ func ReadNetAssetValues(fileName string) ([]NetAssetValueWithHeight, error) {
 			return nil, err
 		}
 
-		price := sdk.NewInt64Coin(metadatatypes.UsdDenom, int64(navValue))
+		price := sdk.NewInt64Coin(metadatatypes.UsdDenom, navInt64)
 
 		asset := NetAssetValueWithHeight{
 			ScopeUUID:     scopeUUID,
