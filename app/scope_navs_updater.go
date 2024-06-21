@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
