@@ -62,12 +62,10 @@ jobs:
             make install
           binaries: |
             - /go/bin/provenanced
-# override WASMVM_REPO since github.com/CosmWasm/wasmvs/v2 path doesn't exist in github
           build-env: |
             - "WITH_LEDGER=false"
             - "WITH_CLEVELDB=false"
             - "BUILD_TAGS=muslc musl dynamic"
-            - "WASMVM_REPO=github.com/CosmWasm/wasmvm"
           additional-args: "--alpine-version 3.18"
           skip: ${{ github.event_name == 'pull_request' }}
 
