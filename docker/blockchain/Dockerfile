@@ -48,7 +48,7 @@ RUN ARCH=$(uname -m) && \
         echo "Unsupported architecture (required: x86_64 or aarch64): $ARCH"; \
         exit 1; \
     fi && \
-    cp /tmp/libwasmvm.$ARCH.so /usr/local/lib/. && \
+    cp /"tmp/libwasmvm.$ARCH.so /usr/local/lib/." && \
     rm /tmp/libwasmvm.*.so
 
 ENV PIO_HOME=/home/provenance
