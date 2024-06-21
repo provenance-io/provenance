@@ -749,3 +749,26 @@ func (k Keeper) RemoveNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddr
 		store.Delete(key)
 	}
 }
+
+// SetNetAssetValueWithBlockHeight adds/updates a net asset value to scope with a specific block height
+func (k Keeper) SetNetAssetValueWithBlockHeight(ctx sdk.Context, scopeID types.MetadataAddress, netAssetValue types.NetAssetValue, source string, blockHeight uint64) error {
+	netAssetValue.UpdatedBlockHeight = blockHeight
+	if err := netAssetValue.Validate(); err != nil {
+		return err
+	}
+
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(scopeID, netAssetValue.Price, source)
+	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
+		return err
+	}
+
+	key := types.NetAssetValueKey(scopeID, netAssetValue.Price.Denom)
+	bz, err := k.cdc.Marshal(&netAssetValue)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(k.storeKey)
+	store.Set(key, bz)
+
+	return nil
+}

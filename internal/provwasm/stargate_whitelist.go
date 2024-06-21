@@ -4,12 +4,23 @@ import (
 	"fmt"
 	"sync"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
+	circuittypes "cosmossdk.io/x/circuit/types"
+	evidencetypes "cosmossdk.io/x/evidence/types"
+	"cosmossdk.io/x/feegrant"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -18,6 +29,7 @@ import (
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/hold"
+	ibchookstypes "github.com/provenance-io/provenance/x/ibchooks/types"
 	"github.com/provenance-io/provenance/x/ibcratelimit"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
@@ -48,44 +60,142 @@ func init() {
 	// ==========================================================
 
 	// auth
+	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/Accounts", &authtypes.QueryAccountsResponse{})
 	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/Account", &authtypes.QueryAccountResponse{})
+	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/AccountAddressByID", &authtypes.QueryAccountAddressByIDResponse{})
 	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/Params", &authtypes.QueryParamsResponse{})
+	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/ModuleAccounts", &authtypes.QueryModuleAccountsResponse{})
+	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/ModuleAccountByName", &authtypes.QueryModuleAccountByNameResponse{})
+	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/Bech32Prefix", &authtypes.Bech32PrefixResponse{})
+	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/AddressBytesToString", &authtypes.AddressBytesToStringResponse{})
+	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/AddressStringToBytes", &authtypes.AddressStringToBytesResponse{})
+	setWhitelistedQuery("/cosmos.auth.v1beta1.Query/AccountInfo", &authtypes.QueryAccountInfoResponse{})
+
+	// authz
+	setWhitelistedQuery("/cosmos.authz.v1beta1.Query/Grants", &authztypes.QueryGrantsResponse{})
+	setWhitelistedQuery("/cosmos.authz.v1beta1.Query/GranterGrants", &authztypes.QueryGranterGrantsResponse{})
+	setWhitelistedQuery("/cosmos.authz.v1beta1.Query/GranteeGrants", &authztypes.QueryGranteeGrantsResponse{})
 
 	// bank
 	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/Balance", &banktypes.QueryBalanceResponse{})
-	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomMetadata", &banktypes.QueryDenomsMetadataResponse{})
-	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/Params", &banktypes.QueryParamsResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/SpendableBalances", &banktypes.QuerySpendableBalancesResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/SpendableBalanceByDenom", &banktypes.QuerySpendableBalanceByDenomResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/TotalSupply", &banktypes.QueryTotalSupplyResponse{})
 	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/SupplyOf", &banktypes.QuerySupplyOfResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/Params", &banktypes.QueryParamsResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomMetadata", &banktypes.QueryDenomMetadataResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomMetadataByQueryString", &banktypes.QueryDenomMetadataByQueryStringResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomsMetadata", &banktypes.QueryDenomsMetadataResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomOwners", &banktypes.QueryDenomOwnersResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/DenomOwnersByQuery", &banktypes.QueryDenomOwnersByQueryResponse{})
+	setWhitelistedQuery("/cosmos.bank.v1beta1.Query/SendEnabled", &banktypes.QuerySendEnabledResponse{})
+
+	// circuit
+	setWhitelistedQuery("/cosmos.circuit.v1.Query/Account", &circuittypes.AccountResponse{})
+	setWhitelistedQuery("/cosmos.circuit.v1.Query/Accounts", &circuittypes.AccountsResponse{})
+	setWhitelistedQuery("/cosmos.circuit.v1.Query/DisabledList", &circuittypes.DisabledListResponse{})
+
+	// consensus
+	setWhitelistedQuery("/cosmos.consensus.v1.Query/Params", &consensustypes.QueryParamsResponse{})
 
 	// distribution
 	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/Params", &distributiontypes.QueryParamsResponse{})
-	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress", &distributiontypes.QueryDelegatorWithdrawAddressResponse{})
+	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/ValidatorDistributionInfo", &distributiontypes.QueryValidatorDistributionInfoResponse{})
+	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards", &distributiontypes.QueryValidatorOutstandingRewardsResponse{})
 	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/ValidatorCommission", &distributiontypes.QueryValidatorCommissionResponse{})
+	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/ValidatorSlashes", &distributiontypes.QueryValidatorSlashesResponse{})
+	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/DelegationRewards", &distributiontypes.QueryDelegationRewardsResponse{})
+	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/DelegationTotalRewards", &distributiontypes.QueryDelegationTotalRewardsResponse{})
+	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/DelegatorValidators", &distributiontypes.QueryDelegatorValidatorsResponse{})
+	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress", &distributiontypes.QueryDelegatorWithdrawAddressResponse{})
+	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/CommunityPool", &distributiontypes.QueryCommunityPoolResponse{})
+
+	// evidence
+	setWhitelistedQuery("/cosmos.evidence.v1beta1.Query/Evidence", &evidencetypes.QueryEvidenceResponse{})
+	setWhitelistedQuery("/cosmos.evidence.v1beta1.Query/AllEvidence", &evidencetypes.QueryAllEvidenceResponse{})
+
+	// feegrant
+	setWhitelistedQuery("/cosmos.feegrant.v1beta1.Query/Allowance", &feegrant.QueryAllowanceResponse{})
+	setWhitelistedQuery("/cosmos.feegrant.v1beta1.Query/Allowances", &feegrant.QueryAllowancesResponse{})
+	setWhitelistedQuery("/cosmos.feegrant.v1beta1.Query/AllowancesByGranter", &feegrant.QueryAllowancesByGranterResponse{})
 
 	// gov
-	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Deposit", &govtypes.QueryDepositResponse{})
-	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Params", &govtypes.QueryParamsResponse{})
-	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Vote", &govtypes.QueryVoteResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Proposal", &govtypesv1beta1.QueryProposalResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Proposals", &govtypesv1beta1.QueryProposalsResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Vote", &govtypesv1beta1.QueryVoteResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Votes", &govtypesv1beta1.QueryVotesResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Params", &govtypesv1beta1.QueryParamsResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Deposit", &govtypesv1beta1.QueryDepositResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Deposits", &govtypesv1beta1.QueryDepositsResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/TallyResult", &govtypesv1beta1.QueryTallyResultResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1.Query/Constitution", &govtypes.QueryConstitutionResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1.Query/Proposal", &govtypes.QueryProposalResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1.Query/Proposals", &govtypes.QueryProposalsResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1.Query/Vote", &govtypes.QueryVoteResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1.Query/Votes", &govtypes.QueryVotesResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1.Query/Params", &govtypes.QueryParamsResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1.Query/Deposit", &govtypes.QueryDepositResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1.Query/Deposits", &govtypes.QueryDepositsResponse{})
+	setWhitelistedQuery("/cosmos.gov.v1.Query/TallyResult", &govtypes.QueryTallyResultResponse{})
 
-	// quarantine
-	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/IsQuarantined", &quarantine.QueryIsQuarantinedResponse{})
-	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/QuarantinedFunds", &quarantine.QueryQuarantinedFundsResponse{})
-	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/AutoResponses", &quarantine.QueryAutoResponsesResponse{})
+	// group
+	setWhitelistedQuery("/cosmos.group.v1.Query/GroupInfo", &group.QueryGroupInfoResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/GroupPolicyInfo", &group.QueryGroupPolicyInfoResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/GroupMembers", &group.QueryGroupMembersResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/GroupsByAdmin", &group.QueryGroupsByAdminResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/GroupPoliciesByGroup", &group.QueryGroupPoliciesByGroupResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/GroupPoliciesByAdmin", &group.QueryGroupPoliciesByAdminResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/Proposal", &group.QueryProposalResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/ProposalsByGroupPolicy", &group.QueryProposalsByGroupPolicyResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/VoteByProposalVoter", &group.QueryVoteByProposalVoterResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/VotesByProposal", &group.QueryVotesByProposalResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/VotesByVoter", &group.QueryVotesByVoterResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/GroupsByMember", &group.QueryGroupsByMemberResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/TallyResult", &group.QueryTallyResultResponse{})
+	setWhitelistedQuery("/cosmos.group.v1.Query/Groups", &group.QueryGroupsResponse{})
 
-	// sanction
-	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/IsSanctioned", &sanction.QueryIsSanctionedResponse{})
-	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/SanctionedAddresses", &sanction.QuerySanctionedAddressesResponse{})
-	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/TemporaryEntries", &sanction.QueryTemporaryEntriesResponse{})
-	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/Params", &sanction.QueryParamsResponse{})
+	// mint
+	setWhitelistedQuery("/cosmos.mint.v1beta1.Query/Params", &minttypes.QueryParamsResponse{})
+	setWhitelistedQuery("/cosmos.mint.v1beta1.Query/Inflation", &minttypes.QueryInflationResponse{})
+	setWhitelistedQuery("/cosmos.mint.v1beta1.Query/AnnualProvisions", &minttypes.QueryAnnualProvisionsResponse{})
 
 	// slashing
 	setWhitelistedQuery("/cosmos.slashing.v1beta1.Query/Params", &slashingtypes.QueryParamsResponse{})
 	setWhitelistedQuery("/cosmos.slashing.v1beta1.Query/SigningInfo", &slashingtypes.QuerySigningInfoResponse{})
+	setWhitelistedQuery("/cosmos.slashing.v1beta1.Query/SigningInfos", &slashingtypes.QuerySigningInfosResponse{})
 
 	// staking
-	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Delegation", &stakingtypes.QueryDelegationResponse{})
-	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Params", &stakingtypes.QueryParamsResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Validators", &stakingtypes.QueryValidatorsResponse{})
 	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Validator", &stakingtypes.QueryValidatorResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/ValidatorDelegations", &stakingtypes.QueryValidatorDelegationsResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/ValidatorUnbondingDelegations", &stakingtypes.QueryValidatorUnbondingDelegationsResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Delegation", &stakingtypes.QueryDelegationResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/UnbondingDelegation", &stakingtypes.QueryUnbondingDelegationResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/DelegatorDelegations", &stakingtypes.QueryDelegatorDelegationsResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations", &stakingtypes.QueryDelegatorUnbondingDelegationsResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Redelegations", &stakingtypes.QueryRedelegationsResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/DelegatorValidators", &stakingtypes.QueryDelegatorValidatorsResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/DelegatorValidator", &stakingtypes.QueryDelegatorValidatorResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/HistoricalInfo", &stakingtypes.QueryHistoricalInfoResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Pool", &stakingtypes.QueryPoolResponse{})
+	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Params", &stakingtypes.QueryParamsResponse{})
+
+	// upgrade
+	setWhitelistedQuery("/cosmos.upgrade.v1beta1.Query/CurrentPlan", &upgradetypes.QueryCurrentPlanResponse{})
+	setWhitelistedQuery("/cosmos.upgrade.v1beta1.Query/AppliedPlan", &upgradetypes.QueryAppliedPlanResponse{})
+	setWhitelistedQuery("/cosmos.upgrade.v1beta1.Query/ModuleVersions", &upgradetypes.QueryModuleVersionsResponse{})
+	setWhitelistedQuery("/cosmos.upgrade.v1beta1.Query/Authority", &upgradetypes.QueryAuthorityResponse{})
+
+	// wasm
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractHistory", &wasmtypes.QueryContractInfoResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractsByCode", &wasmtypes.QueryContractsByCodeResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/SmartContractState", &wasmtypes.QuerySmartContractStateResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/Code", &wasmtypes.QueryCodeResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/Codes", &wasmtypes.QueryCodesResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/PinnedCodes", &wasmtypes.QueryPinnedCodesResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/Params", &wasmtypes.QueryParamsResponse{})
+	setWhitelistedQuery("/cosmwasm.wasm.v1.Query/ContractsByCreator", &wasmtypes.QueryContractsByCreatorResponse{})
 
 	// ==========================================================
 	// provenance queries
@@ -109,7 +219,7 @@ func init() {
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllOrders", &exchange.QueryGetAllOrdersResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetCommitment", &exchange.QueryGetCommitmentResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAccountCommitments", &exchange.QueryGetAccountCommitmentsResponse{})
-	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarkerCommitments", &exchange.QueryGetMarketCommitmentsResponse{})
+	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarketCommitments", &exchange.QueryGetMarketCommitmentsResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllCommitments", &exchange.QueryGetAllCommitmentsResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetMarket", &exchange.QueryGetMarketResponse{})
 	setWhitelistedQuery("/provenance.exchange.v1.Query/GetAllMarkets", &exchange.QueryGetAllMarketsResponse{})
@@ -130,6 +240,9 @@ func init() {
 
 	// ibcratelimit
 	setWhitelistedQuery("/provenance.ibcratelimit.v1.Query/Params", &ibcratelimit.ParamsResponse{})
+
+	// ibchooks
+	setWhitelistedQuery("/provenance.ibchooks.v1.Query/Params", &ibchookstypes.QueryParamsResponse{})
 
 	// marker
 	setWhitelistedQuery("/provenance.marker.v1.Query/Params", &markertypes.QueryParamsResponse{})
@@ -182,6 +295,17 @@ func init() {
 	// oracle
 	setWhitelistedQuery("/provenance.oracle.v1.Query/OracleAddress", &oracletypes.QueryOracleAddressResponse{})
 	setWhitelistedQuery("/provenance.oracle.v1.Query/Oracle", &oracletypes.QueryOracleResponse{})
+
+	// quarantine
+	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/IsQuarantined", &quarantine.QueryIsQuarantinedResponse{})
+	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/QuarantinedFunds", &quarantine.QueryQuarantinedFundsResponse{})
+	setWhitelistedQuery("/cosmos.quarantine.v1beta1.Query/AutoResponses", &quarantine.QueryAutoResponsesResponse{})
+
+	// sanction
+	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/IsSanctioned", &sanction.QueryIsSanctionedResponse{})
+	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/SanctionedAddresses", &sanction.QuerySanctionedAddressesResponse{})
+	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/TemporaryEntries", &sanction.QueryTemporaryEntriesResponse{})
+	setWhitelistedQuery("/cosmos.sanction.v1beta1.Query/Params", &sanction.QueryParamsResponse{})
 
 	// trigger
 	setWhitelistedQuery("/provenance.trigger.v1.Query/TriggerByID", &triggertypes.QueryTriggerByIDResponse{})

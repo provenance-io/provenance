@@ -27,7 +27,7 @@ require (
 	github.com/cosmos/gogoproto v1.5.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
-	github.com/cosmos/ibc-go/v8 v8.2.1
+	github.com/cosmos/ibc-go/v8 v8.3.2
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
@@ -217,7 +217,7 @@ replace (
 	// TODO: Update once async-icq creates tag with our changes https://github.com/cosmos/ibc-apps/pull/168
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 => github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1
 	// TODO: Update or change once a tag is made containing a fix for https://github.com/cosmos/ibc-go/issues/6375
-	github.com/cosmos/ibc-go/v8 => github.com/provenance-io/ibc-go/v8 v8.2.1-pio-1
+	github.com/cosmos/ibc-go/v8 => github.com/provenance-io/ibc-go/v8 v8.3.2-pio-1
 
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134

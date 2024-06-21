@@ -608,6 +608,7 @@ func New(
 		app.AccountKeeper, app.ScopedICAHostKeeper, pioMessageRouter, govAuthority,
 	)
 	app.ICAHostKeeper = &icaHostKeeper
+	app.ICAHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
 	icaModule := ica.NewAppModule(nil, app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
 
@@ -644,9 +645,9 @@ func New(
 	querierRegistry.RegisterQuerier(markertypes.RouterKey, markerwasm.Querier(app.MarkerKeeper))
 	querierRegistry.RegisterQuerier(metadatatypes.RouterKey, metadatawasm.Querier(app.MetadataKeeper))
 
-	// Add the staking feature and indicate that provwasm contracts can be run on this chain.
-	// Addition of cosmwasm_1_1 adds capability defined here: https://github.com/CosmWasm/cosmwasm/pull/1356
-	supportedFeatures := "staking,provenance,stargate,iterator,cosmwasm_1_1"
+	// Add the capabilities and indicate that provwasm contracts can be run on this chain.
+	// Capabilities defined here: https://github.com/CosmWasm/cosmwasm/blob/main/docs/CAPABILITIES-BUILT-IN.md
+	supportedFeatures := "staking,provenance,stargate,iterator,cosmwasm_1_1, cosmwasm_1_2, cosmwasm_1_3, cosmwasm_1_4"
 
 	// The last arguments contain custom message handlers, and custom query handlers,
 	// to allow smart contracts to use provenance modules.

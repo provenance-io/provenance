@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update stargate queries for Attribute, Exchange, Marker, IBCRateLimit, Metadata, Msgfees, and Oracle modules [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Update stargate queries for Quarantine and Sanction modules [#2016](https://github.com/provenance-io/provenance/pull/2016).
 * Add the circuit breaker module [#2031](https://github.com/provenance-io/provenance/pull/2031).
+* Add upgrade handler to set scope net asset values and update block height for pio-testnet-1 [#2046](https://github.com/provenance-io/provenance/pull/2046)
 
 ### Improvements
 
@@ -107,6 +108,82 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Simplify the module lists (e.g. `SetOrderEndBlockers`) by removing unneeded entries [#2015](https://github.com/provenance-io/provenance/pull/2015).
 * Update the `upgrade-test.sh` script to work with v0.50 commands [#2026](https://github.com/provenance-io/provenance/pull/2026).
 * Set the new gov params fields during the umber upgrades [#2027](https://github.com/provenance-io/provenance/pull/2027).
+* Add a bunch of queries to the stargate whitelist [#2037](https://github.com/provenance-io/provenance/pull/2037).
+  * /cosmos.auth.v1beta1.Query/Accounts
+  * /cosmos.auth.v1beta1.Query/AccountAddressByID
+  * /cosmos.auth.v1beta1.Query/ModuleAccounts
+  * /cosmos.auth.v1beta1.Query/ModuleAccountByName
+  * /cosmos.auth.v1beta1.Query/Bech32Prefix
+  * /cosmos.auth.v1beta1.Query/AddressBytesToString
+  * /cosmos.auth.v1beta1.Query/AddressStringToBytes
+  * /cosmos.auth.v1beta1.Query/AccountInfo
+  * /cosmos.authz.v1beta1.Query/Grants
+  * /cosmos.authz.v1beta1.Query/GranterGrants
+  * /cosmos.authz.v1beta1.Query/GranteeGrants
+  * /cosmos.bank.v1beta1.Query/AllBalances
+  * /cosmos.bank.v1beta1.Query/SpendableBalances
+  * /cosmos.bank.v1beta1.Query/SpendableBalanceByDenom
+  * /cosmos.bank.v1beta1.Query/TotalSupply
+  * /cosmos.bank.v1beta1.Query/DenomMetadataByQueryString
+  * /cosmos.bank.v1beta1.Query/DenomsMetadata
+  * /cosmos.bank.v1beta1.Query/DenomOwners
+  * /cosmos.bank.v1beta1.Query/DenomOwnersByQuery
+  * /cosmos.bank.v1beta1.Query/SendEnabled
+  * /cosmos.circuit.v1.Query/Account
+  * /cosmos.circuit.v1.Query/Accounts
+  * /cosmos.circuit.v1.Query/DisabledList
+  * /cosmos.consensus.v1.Query/Params
+  * /cosmos.distribution.v1beta1.Query/ValidatorDistributionInfo
+  * /cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards
+  * /cosmos.distribution.v1beta1.Query/ValidatorSlashes
+  * /cosmos.distribution.v1beta1.Query/DelegationRewards
+  * /cosmos.distribution.v1beta1.Query/DelegationTotalRewards
+  * /cosmos.distribution.v1beta1.Query/DelegatorValidators
+  * /cosmos.distribution.v1beta1.Query/CommunityPool
+  * /cosmos.evidence.v1beta1.Query/Evidence
+  * /cosmos.evidence.v1beta1.Query/AllEvidence
+  * /cosmos.feegrant.v1beta1.Query/Allowance
+  * /cosmos.feegrant.v1beta1.Query/Allowances
+  * /cosmos.feegrant.v1beta1.Query/AllowancesByGranter
+  * /cosmos.gov.v1beta1.Query/Proposal
+  * /cosmos.gov.v1beta1.Query/Proposals
+  * /cosmos.gov.v1beta1.Query/Vote
+  * /cosmos.gov.v1beta1.Query/Votes
+  * /cosmos.gov.v1beta1.Query/Params
+  * /cosmos.gov.v1beta1.Query/Deposit
+  * /cosmos.gov.v1beta1.Query/Deposits
+  * /cosmos.gov.v1beta1.Query/TallyResult
+  * /cosmos.gov.v1.Query/Constitution
+  * /cosmos.group.v1.Query/GroupInfo
+  * /cosmos.group.v1.Query/GroupPolicyInfo
+  * /cosmos.group.v1.Query/GroupMembers
+  * /cosmos.group.v1.Query/GroupsByAdmin
+  * /cosmos.group.v1.Query/GroupPoliciesByGroup
+  * /cosmos.group.v1.Query/GroupPoliciesByAdmin
+  * /cosmos.group.v1.Query/Proposal
+  * /cosmos.group.v1.Query/ProposalsByGroupPolicy
+  * /cosmos.group.v1.Query/VoteByProposalVoter
+  * /cosmos.group.v1.Query/VotesByProposal
+  * /cosmos.group.v1.Query/VotesByVoter
+  * /cosmos.group.v1.Query/GroupsByMember
+  * /cosmos.group.v1.Query/TallyResult
+  * /cosmos.group.v1.Query/Groups
+  * /cosmos.mint.v1beta1.Query/Params
+  * /cosmos.mint.v1beta1.Query/Inflation
+  * /cosmos.mint.v1beta1.Query/AnnualProvisions
+  * /cosmos.slashing.v1beta1.Query/SigningInfos
+  * /cosmos.staking.v1beta1.Query/Validators
+  * /cosmos.staking.v1beta1.Query/Validator
+  * /cosmos.staking.v1beta1.Query/ValidatorDelegations
+  * /cosmos.staking.v1beta1.Query/ValidatorUnbondingDelegations
+  * /cosmos.staking.v1beta1.Query/DelegatorDelegations
+  * /cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations
+  * /cosmos.staking.v1beta1.Query/Redelegations
+  * /cosmos.staking.v1beta1.Query/DelegatorValidators
+  * /cosmos.staking.v1beta1.Query/DelegatorValidator
+  * /cosmos.staking.v1beta1.Query/HistoricalInfo
+  * /cosmos.staking.v1beta1.Query/Pool
+
 
 ### Client Breaking
 
@@ -157,6 +234,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/spf13/cobra` from 1.8.0 to 1.8.1 ([#2038](https://github.com/provenance-io/provenance/pull/2038))
 - Bump `cosmossdk.io/client/v2` from 2.0.0-beta.1 to 2.0.0-beta.2 ([#2042](https://github.com/provenance-io/provenance/pull/2042))
 - Bump `docker/build-push-action` from 5 to 6 ([#2039](https://github.com/provenance-io/provenance/pull/2039))
+- Bump `github.com/cosmos/ibc-go/v8` from 8.2.1 to 8.3.2 ([#2043](https://github.com/provenance-io/provenance/pull/2043))
 
 ---
 
