@@ -234,8 +234,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/spf13/cobra` from 1.8.0 to 1.8.1 ([#2038](https://github.com/provenance-io/provenance/pull/2038))
 - Bump `docker/build-push-action` from 5 to 6 ([#2039](https://github.com/provenance-io/provenance/pull/2039))
 - Bump `github.com/cosmos/ibc-go/v8` from 8.2.1 to 8.3.2 ([#2043](https://github.com/provenance-io/provenance/pull/2043))
-- Bump wasmd to `v0.51.0` [#2045](https://github.com/provenance-io/provenance/pull/2045).
-- Bump wasmvm to `v2.0.1` [#2045](https://github.com/provenance-io/provenance/pull/2045).
+- Bump wasmd to `v0.51.0` [#2045](https://github.com/provenance-io/provenance/pull/2045)
+- Bump wasmvm to `v2.0.1` [#2045](https://github.com/provenance-io/provenance/pull/2045)
 
 ---
 
