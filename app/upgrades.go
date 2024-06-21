@@ -590,7 +590,7 @@ func addScopeNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAsset
 			continue
 		}
 
-		if err := app.MetadataKeeper.SetNetAssetValueWithBlockHeight(ctx, scopeAddr, navWithHeight.NetAssetValue, "upgrade_handler", navWithHeight.Height); err != nil {
+		if err := app.MetadataKeeper.SetNetAssetValueWithBlockHeight(ctx, scopeAddr, navWithHeight.NetAssetValue, "owner", navWithHeight.Height); err != nil {
 			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value with height %v at height %d: %v", navWithHeight.NetAssetValue, navWithHeight.Height, err))
 		}
 		totalAdded++
