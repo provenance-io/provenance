@@ -366,6 +366,8 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
+	// create a new temp dir for the app to fix wasmvm data dir lockfile contention
+	appOpts = newSimAppOpts(t)
 	newApp := New(newLogger, newDB, nil, true, appOpts, baseAppOpts...)
 
 	var genesisState map[string]json.RawMessage
@@ -496,6 +498,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
+	// create a new temp dir for the app to fix wasmvm data dir lockfile contention
+	appOpts = newSimAppOpts(t)
 	newApp := New(newLogger, newDB, nil, true, appOpts, baseAppOpts...)
 
 	_, err = newApp.InitChain(&abci.RequestInitChain{
@@ -558,11 +562,6 @@ func TestAppStateDeterminism(t *testing.T) {
 		}
 	}
 
-	appOpts := newSimAppOpts(t)
-	if simcli.FlagVerboseValue {
-		appOpts[flags.FlagLogLevel] = "debug"
-	}
-
 	for i, seed := range seeds {
 		config.Seed = seed
 		printConfig(config)
@@ -573,6 +572,12 @@ func TestAppStateDeterminism(t *testing.T) {
 				logger = log.NewTestLogger(t)
 			} else {
 				logger = log.NewNopLogger()
+			}
+
+			// create a new temp dir for the app to fix wasmvm data dir lockfile contention
+			appOpts := newSimAppOpts(t)
+			if simcli.FlagVerboseValue {
+				appOpts[flags.FlagLogLevel] = "debug"
 			}
 
 			db := dbm.NewMemDB()

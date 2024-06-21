@@ -25,6 +25,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   heighliner-docker:
+    # temporarily disable heighliner docker build until issue fixed: https://github.com/strangelove-ventures/heighliner/issues/253
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

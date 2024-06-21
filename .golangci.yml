@@ -102,7 +102,7 @@ linters-settings:
           - github.com/cosmos/ibc-go
 
           - github.com/CosmWasm/wasmd
-          - github.com/CosmWasm/wasmvm
+          - github.com/CosmWasm/wasmvm/v2
 
           - github.com/cosmos/gogoproto
 

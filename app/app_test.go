@@ -55,6 +55,8 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 
 	app.Commit()
 
+	// create a new temp dir for the app to fix wasmvm data dir lockfile contention
+	opts.AppOpts = simtestutil.NewAppOptionsWithFlagHome(t.TempDir())
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := New(log.NewTestLogger(t), opts.DB, nil, true, opts.AppOpts)
 	require.NotPanics(t, func() {
