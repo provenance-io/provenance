@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* nothing
+
+---
+
+## [v1.19.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc1) - 2024-06-24
+
 ### Features
 
 * Bump cosmos-SDK to `v0.50.2` (from `v0.46.13-pio-2`) [#1772](https://github.com/provenance-io/provenance/issues/1772).
@@ -236,6 +242,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cosmos/ibc-go/v8` from 8.2.1 to 8.3.2 ([#2043](https://github.com/provenance-io/provenance/pull/2043))
 - Bump wasmd to `v0.51.0` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
 - Bump wasmvm to `v2.0.1` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc1
 
 ---
 
