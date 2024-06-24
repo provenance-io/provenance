@@ -390,9 +390,10 @@ func (s *UpgradeTestSuite) TestUmberRC1() {
 		"INF Done setting new gov params for testnet.",
 		"INF Updating IBC AllowedClients.",
 		"INF Done updating IBC AllowedClients.",
-		"INF Adding scope net asset values with heights.",
+		"INF Adding scope net asset values.",
 		"INF Adding 1101 scope net asset value entries.",
-		"INF Done adding a total of 0 scope net asset values with heights.",
+		"INF Successfully added 0 of 1101 scope net asset value entries.",
+		"INF Done adding scope net asset values.",
 		"INF Removing inactive validator delegations.",
 		"INF Threshold: 21 days",
 		"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
@@ -759,17 +760,24 @@ func (s *UpgradeTestSuite) TestSetNewGovParamsMainnet() {
 }
 
 func (s *UpgradeTestSuite) TestAddScopeNAVsWithHeight() {
-	address1 := sdk.AccAddress("address1")
-	testScopes := []struct {
-		name      string
-		scopeUUID string
-	}{
-		{"scope1", "11111111-1111-1111-1111-111111111111"},
-		{"scope2", "22222222-2222-2222-2222-222222222222"},
-		{"scope3", "33333333-3333-3333-3333-333333333333"},
+	usdNAV := func(amount int) *metadatatypes.NetAssetValue {
+		return &metadatatypes.NetAssetValue{Price: sdk.NewInt64Coin(metadatatypes.UsdDenom, int64(amount))}
 	}
 
-	for _, ts := range testScopes {
+	// Define some scopes and initial NAVs, and store them.
+	address1 := sdk.AccAddress("address1")
+	testScopes := []struct {
+		scopeUUID string
+		initNAV   *metadatatypes.NetAssetValue
+	}{
+		{scopeUUID: "11111111-1111-1111-1111-111111111111", initNAV: usdNAV(55)},
+		{scopeUUID: "22222222-2222-2222-2222-222222222222"},
+		{scopeUUID: "33333333-3333-3333-3333-333333333333"},
+		{scopeUUID: "44444444-4444-4444-4444-444444444444"},
+		{scopeUUID: "55555555-5555-5555-5555-555555555555", initNAV: usdNAV(73)},
+	}
+
+	for i, ts := range testScopes {
 		uid, err := uuid.Parse(ts.scopeUUID)
 		s.Require().NoError(err)
 		scopeAddr := metadatatypes.ScopeMetadataAddress(uid)
@@ -778,19 +786,38 @@ func (s *UpgradeTestSuite) TestAddScopeNAVsWithHeight() {
 			Owners:  []metadatatypes.Party{{Address: address1.String(), Role: metadatatypes.PartyType_PARTY_TYPE_OWNER}},
 		}
 		s.app.MetadataKeeper.SetScope(s.ctx, scope)
+
+		if ts.initNAV != nil {
+			err = s.app.MetadataKeeper.SetNetAssetValueWithBlockHeight(s.ctx, scopeAddr, *ts.initNAV, "test", 100)
+			s.Require().NoError(err, "[%d/%d]: SetNetAssetValueWithBlockHeight", i+1, len(testScopes))
+		}
 	}
 
-	presentNav := metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 55))
-	s.Require().NoError(s.app.MetadataKeeper.SetNetAssetValueWithBlockHeight(s.ctx, metadatatypes.ScopeMetadataAddress(uuid.MustParse("11111111-1111-1111-1111-111111111111")), presentNav, "test", 100))
-
-	addScopeNAVsWithHeight(s.ctx, s.app, []ScopeNAV{
+	// Define the scope NAVs that we'll be giving to addScopeNAVsWithHeight.
+	scopeNAVs := []ScopeNAV{
+		{ScopeUUID: "22222222-2222-2222-2222-222222222222", NetAssetValue: *usdNAV(12345), Height: 406},
+		{ScopeUUID: "12345678-90ab-cdef-123x-567890abcdef", NetAssetValue: *usdNAV(54321), Height: 407},
+		{ScopeUUID: "12345678-90ab-cdef-1234-567890abcdef", NetAssetValue: *usdNAV(66666), Height: 408},
 		{
-			ScopeUUID:     "22222222-2222-2222-2222-222222222222",
-			NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 12345)),
-			Height:        406,
+			ScopeUUID: "44444444-4444-4444-4444-444444444444",
+			NetAssetValue: metadatatypes.NetAssetValue{
+				Price: sdk.Coin{Denom: metadatatypes.UsdDenom, Amount: sdkmath.NewInt(-9001)},
+			},
+			Height: 409,
 		},
-	})
+		{ScopeUUID: "55555555-5555-5555-5555-555555555555", NetAssetValue: *usdNAV(987654), Height: 410},
+	}
 
+	// Define the expected log output from addScopeNAVsWithHeight when given those NAVs.
+	expLogOutput := []string{
+		"INF Adding 5 scope net asset value entries.",
+		"ERR [2/5]: Invalid UUID \"12345678-90ab-cdef-123x-567890abcdef\": invalid UUID format.",
+		"ERR [3/5]: Unable to find scope with UUID \"12345678-90ab-cdef-1234-567890abcdef\".",
+		"ERR [4/5]: Unable to set scope scope1qpzyg3zyg3zyg3zyg3zyg3zyg3zqyvqcrf (\"44444444-4444-4444-4444-444444444444\") net asset value -9001usd at height 409: negative coin amount: -9001.",
+		"INF Successfully added 2 of 5 scope net asset value entries.",
+	}
+
+	// Define what the expected resulting NAV entries should be for each scope.
 	tests := []struct {
 		name      string
 		scopeUUID string
@@ -798,25 +825,51 @@ func (s *UpgradeTestSuite) TestAddScopeNAVsWithHeight() {
 		expHeight uint64
 	}{
 		{
-			name:      "already has nav",
+			name:      "previously set nav that was not provided",
 			scopeUUID: "11111111-1111-1111-1111-111111111111",
-			expNav:    &metadatatypes.NetAssetValue{Price: sdk.NewInt64Coin(metadatatypes.UsdDenom, 55)},
+			expNav:    usdNAV(55),
 			expHeight: 100,
 		},
 		{
-			name:      "nav set from custom config with height",
+			name:      "new nav set",
 			scopeUUID: "22222222-2222-2222-2222-222222222222",
-			expNav:    &metadatatypes.NetAssetValue{Price: sdk.NewInt64Coin(metadatatypes.UsdDenom, 12345)},
+			expNav:    usdNAV(12345),
 			expHeight: 406,
 		},
 		{
-			name:      "nav add fails for non-existent scope",
+			name:      "no nav set, was not provided",
 			scopeUUID: "33333333-3333-3333-3333-333333333333",
 			expNav:    nil,
-			expHeight: 0,
+		},
+		{
+			name:      "nav add fails for being invalid",
+			scopeUUID: "44444444-4444-4444-4444-444444444444",
+			expNav:    nil,
+		},
+		{
+			name:      "nav set over existing entry",
+			scopeUUID: "55555555-5555-5555-5555-555555555555",
+			expNav:    usdNAV(987654),
+			expHeight: 410,
+		},
+		{
+			name:      "nav add fails for non-existent scope",
+			scopeUUID: "12345678-90ab-cdef-1234-567890abcdef",
+			expNav:    nil,
 		},
 	}
 
+	// Call addScopeNAVsWithHeight.
+	s.logBuffer.Reset()
+	addScopeNAVsWithHeight(s.ctx, s.app, scopeNAVs)
+
+	// Check the logs.
+	s.Run("addScopeNAVsWithHeight logs", func() {
+		actLogOutput := splitLogOutput(s.GetLogOutput("addScopeNAVsWithHeight"))
+		s.Assert().Equal(expLogOutput, actLogOutput, "addScopeNAVsWithHeight")
+	})
+
+	// Check the NAVs.
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			uid, err := uuid.Parse(tc.scopeUUID)
