@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/csv"
-	"os"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,7 +9,9 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
-type NetAssetValueWithHeight struct {
+const umberTestnetScopeNAVsFN = "upgrade_files/umber/testnet_scope_navs.csv"
+
+type ScopeNAV struct {
 	ScopeUUID     string
 	NetAssetValue metadatatypes.NetAssetValue
 	Height        uint64
@@ -25,9 +26,9 @@ func parseValueToUsdMills(navStr string) (int64, error) {
 	return int64(navValue * 1000), nil
 }
 
-// ReadNetAssetValues reads a CSV file and parses its contents into a slice of NetAssetValueWithHeight
-func ReadNetAssetValues(fileName string) ([]NetAssetValueWithHeight, error) {
-	file, err := os.Open(fileName)
+// ReadScopeNAVs reads a CSV file from the upgrade_files dir, and parses its contents into a slice of ScopeNAV
+func ReadScopeNAVs(fileName string) ([]ScopeNAV, error) {
+	file, err := UpgradeFiles.Open(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +46,7 @@ func ReadNetAssetValues(fileName string) ([]NetAssetValueWithHeight, error) {
 		return nil, err
 	}
 
-	assets := make([]NetAssetValueWithHeight, 0, len(records))
+	assets := make([]ScopeNAV, 0, len(records))
 	for _, record := range records {
 		if len(record) < 3 {
 			continue
@@ -66,7 +67,7 @@ func ReadNetAssetValues(fileName string) ([]NetAssetValueWithHeight, error) {
 
 		price := sdk.NewInt64Coin(metadatatypes.UsdDenom, navInt64)
 
-		asset := NetAssetValueWithHeight{
+		asset := ScopeNAV{
 			ScopeUUID:     scopeUUID,
 			NetAssetValue: metadatatypes.NewNetAssetValue(price),
 			Height:        height,

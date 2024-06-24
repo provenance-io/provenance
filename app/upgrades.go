@@ -95,11 +95,10 @@ var upgrades = map[string]appUpgrade{
 
 			updateIBCClients(ctx, app)
 
-			scopeNavs, err := ReadNetAssetValues("upgrade_files/testnet_scope_navs.csv")
+			err = addScopeNAVs(ctx, app, umberTestnetScopeNAVsFN)
 			if err != nil {
 				return nil, err
 			}
-			addScopeNavsWithHeight(ctx, app, scopeNavs)
 
 			removeInactiveValidatorDelegations(ctx, app)
 
@@ -571,30 +570,48 @@ func setNewGovParams(ctx sdk.Context, app *App, newParams govv1.Params, chain st
 	return nil
 }
 
-// addScopeNavsWithHeight sets net asset values with heights for markers
+// addScopeNAVs reads a navs csv file and sets net asset values with heights for markers.
 // TODO: Remove with the umber handlers.
-func addScopeNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAssetValueWithHeight) {
-	ctx.Logger().Info("Adding scope net asset values with heights.")
+func addScopeNAVs(ctx sdk.Context, app *App, fileName string) error {
+	ctx.Logger().Info("Adding scope net asset values.")
+	navs, err := ReadScopeNAVs(fileName)
+	if err != nil {
+		return fmt.Errorf("could not read navs: %w", err)
+	}
+	addScopeNAVsWithHeight(ctx, app, navs)
+	ctx.Logger().Info("Done adding scope net asset values.")
+	return nil
+}
+
+// addScopeNAVsWithHeight sets net asset values with heights for markers.
+// TODO: Remove with the umber handlers.
+func addScopeNAVsWithHeight(ctx sdk.Context, app *App, scopeNAVs []ScopeNAV) {
+	count := len(scopeNAVs)
+	ctx.Logger().Info(fmt.Sprintf("Adding %d scope net asset value entries.", count))
 
 	totalAdded := 0
-	for _, navWithHeight := range navsWithHeight {
-		uid, err := uuid.Parse(navWithHeight.ScopeUUID)
+	for i, scopeNAV := range scopeNAVs {
+		uid, err := uuid.Parse(scopeNAV.ScopeUUID)
 		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("invalid uuid %v : %v", navWithHeight.ScopeUUID, err))
+			ctx.Logger().Error(fmt.Sprintf("[%d/%d]: Invalid UUID %q: %v.", i+1, count, scopeNAV.ScopeUUID, err))
 			continue
 		}
 		scopeAddr := metadatatypes.ScopeMetadataAddress(uid)
 		_, found := app.MetadataKeeper.GetScope(ctx, scopeAddr)
 		if !found {
-			ctx.Logger().Error(fmt.Sprintf("unable to find scope %v", navWithHeight.ScopeUUID))
+			ctx.Logger().Error(fmt.Sprintf("[%d/%d]: Unable to find scope with UUID %q.", i+1, count, scopeNAV.ScopeUUID))
 			continue
 		}
 
-		if err := app.MetadataKeeper.SetNetAssetValueWithBlockHeight(ctx, scopeAddr, navWithHeight.NetAssetValue, "owner", navWithHeight.Height); err != nil {
-			ctx.Logger().Error(fmt.Sprintf("unable to set net asset value with height %v at height %d: %v", navWithHeight.NetAssetValue, navWithHeight.Height, err))
+		err = app.MetadataKeeper.SetNetAssetValueWithBlockHeight(ctx, scopeAddr, scopeNAV.NetAssetValue, "owner", scopeNAV.Height)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("[%d/%d]: Unable to set scope %s (%q) net asset value %s at height %d: %v.",
+				i+1, count, scopeAddr, scopeNAV.ScopeUUID, scopeNAV.NetAssetValue.Price, scopeNAV.Height, err))
+			continue
 		}
+
 		totalAdded++
 	}
 
-	ctx.Logger().Info(fmt.Sprintf("Done adding a total of %v scope net asset values with heights.", totalAdded))
+	ctx.Logger().Info(fmt.Sprintf("Successfully added %d of %d scope net asset value entries.", totalAdded, count))
 }

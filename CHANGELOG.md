@@ -48,7 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update stargate queries for Attribute, Exchange, Marker, IBCRateLimit, Metadata, Msgfees, and Oracle modules [#1760](https://github.com/provenance-io/provenance/issues/1760).
 * Update stargate queries for Quarantine and Sanction modules [#2016](https://github.com/provenance-io/provenance/pull/2016).
 * Add the circuit breaker module [#2031](https://github.com/provenance-io/provenance/pull/2031).
-* Add upgrade handler to set scope net asset values and update block height for pio-testnet-1 [#2046](https://github.com/provenance-io/provenance/pull/2046)
+* Add upgrade handler to set scope net asset values and update block height for pio-testnet-1 [#2046](https://github.com/provenance-io/provenance/pull/2046), [#2050](https://github.com/provenance-io/provenance/pull/2050).
 
 ### Improvements
 
@@ -184,7 +184,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * /cosmos.staking.v1beta1.Query/HistoricalInfo
   * /cosmos.staking.v1beta1.Query/Pool
 
-
 ### Client Breaking
 
 * The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` [#1971](https://github.com/provenance-io/provenance/pull/1971).
@@ -235,8 +234,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `cosmossdk.io/client/v2` from 2.0.0-beta.1 to 2.0.0-beta.2 ([#2042](https://github.com/provenance-io/provenance/pull/2042))
 - Bump `docker/build-push-action` from 5 to 6 ([#2039](https://github.com/provenance-io/provenance/pull/2039))
 - Bump `github.com/cosmos/ibc-go/v8` from 8.2.1 to 8.3.2 ([#2043](https://github.com/provenance-io/provenance/pull/2043))
-- Bump wasmd to `v0.51.0` [#2045](https://github.com/provenance-io/provenance/pull/2045)
-- Bump wasmvm to `v2.0.1` [#2045](https://github.com/provenance-io/provenance/pull/2045)
+- Bump wasmd to `v0.51.0` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
+- Bump wasmvm to `v2.0.1` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
 
 ---
 
