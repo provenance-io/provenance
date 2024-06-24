@@ -391,6 +391,7 @@ func (s *UpgradeTestSuite) TestUmberRC1() {
 		"INF Updating IBC AllowedClients.",
 		"INF Done updating IBC AllowedClients.",
 		"INF Adding scope net asset values with heights.",
+		"INF Adding 1101 scope net asset value entries.",
 		"INF Done adding a total of 0 scope net asset values with heights.",
 		"INF Removing inactive validator delegations.",
 		"INF Threshold: 21 days",
@@ -757,7 +758,7 @@ func (s *UpgradeTestSuite) TestSetNewGovParamsMainnet() {
 	s.Assert().Equal(expParams, actParams, "resulting gov params")
 }
 
-func (s *UpgradeTestSuite) TestAddScopeNavsWithHeight() {
+func (s *UpgradeTestSuite) TestAddScopeNAVsWithHeight() {
 	address1 := sdk.AccAddress("address1")
 	testScopes := []struct {
 		name      string
@@ -782,7 +783,7 @@ func (s *UpgradeTestSuite) TestAddScopeNavsWithHeight() {
 	presentNav := metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 55))
 	s.Require().NoError(s.app.MetadataKeeper.SetNetAssetValueWithBlockHeight(s.ctx, metadatatypes.ScopeMetadataAddress(uuid.MustParse("11111111-1111-1111-1111-111111111111")), presentNav, "test", 100))
 
-	addScopeNavsWithHeight(s.ctx, s.app, []NetAssetValueWithHeight{
+	addScopeNAVsWithHeight(s.ctx, s.app, []ScopeNAV{
 		{
 			ScopeUUID:     "22222222-2222-2222-2222-222222222222",
 			NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 12345)),

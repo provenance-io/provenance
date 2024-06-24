@@ -95,11 +95,10 @@ var upgrades = map[string]appUpgrade{
 
 			updateIBCClients(ctx, app)
 
-			scopeNavs, err := ReadNetAssetValues("upgrade_files/testnet_scope_navs.csv")
+			err = addScopeNAVs(ctx, app, umberTestnetScopeNAVsFN)
 			if err != nil {
 				return nil, err
 			}
-			addScopeNavsWithHeight(ctx, app, scopeNavs)
 
 			removeInactiveValidatorDelegations(ctx, app)
 
@@ -571,10 +570,23 @@ func setNewGovParams(ctx sdk.Context, app *App, newParams govv1.Params, chain st
 	return nil
 }
 
-// addScopeNavsWithHeight sets net asset values with heights for markers
+// addScopeNAVs reads a navs csv file and sets net asset values with heights for markers.
 // TODO: Remove with the umber handlers.
-func addScopeNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAssetValueWithHeight) {
+func addScopeNAVs(ctx sdk.Context, app *App, fileName string) error {
 	ctx.Logger().Info("Adding scope net asset values with heights.")
+	navs, err := ReadScopeNAVs(fileName)
+	if err != nil {
+		return fmt.Errorf("could not read navs: %w", err)
+	}
+	totalAdded := addScopeNAVsWithHeight(ctx, app, navs)
+	ctx.Logger().Info(fmt.Sprintf("Done adding a total of %v scope net asset values with heights.", totalAdded))
+	return nil
+}
+
+// addScopeNAVsWithHeight sets net asset values with heights for markers.
+// TODO: Remove with the umber handlers.
+func addScopeNAVsWithHeight(ctx sdk.Context, app *App, navsWithHeight []ScopeNAV) int {
+	ctx.Logger().Info(fmt.Sprintf("Adding %d scope net asset value entries.", len(navsWithHeight)))
 
 	totalAdded := 0
 	for _, navWithHeight := range navsWithHeight {
@@ -596,5 +608,5 @@ func addScopeNavsWithHeight(ctx sdk.Context, app *App, navsWithHeight []NetAsset
 		totalAdded++
 	}
 
-	ctx.Logger().Info(fmt.Sprintf("Done adding a total of %v scope net asset values with heights.", totalAdded))
+	return totalAdded
 }
