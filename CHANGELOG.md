@@ -37,12 +37,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Dependencies
+
+- Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
 
 ---
 
-### Dependencies
-- Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
+## [v1.19.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc2) - 2024-06-25
+
+### Bug Fixes
+
+* Fix the heighliner docker image build [#2052](https://github.com/provenance-io/provenance/pull/2052).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.19.0-rc1...v1.19.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc2
+
+---
 
 ## [v1.19.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc1) - 2024-06-24
 
