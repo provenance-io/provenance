@@ -37,12 +37,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Dependencies
+
+- Bump `bufbuild/buf-setup-action` from 1.33.0 to 1.34.0 ([#2049](https://github.com/provenance-io/provenance/pull/2049))
 
 ---
 
-### Dependencies
-- Bump `bufbuild/buf-setup-action` from 1.33.0 to 1.34.0 ([#2049](https://github.com/provenance-io/provenance/pull/2049))
+## [v1.19.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc2) - 2024-06-25
+
+### Bug Fixes
+
+* Fix the heighliner docker image build [#2052](https://github.com/provenance-io/provenance/pull/2052).
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.19.0-rc1...v1.19.0-rc2
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc2
+
+---
 
 ## [v1.19.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc1) - 2024-06-24
 
