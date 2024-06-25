@@ -41,6 +41,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
+
 ## [v1.19.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc1) - 2024-06-24
 
 ### Features
