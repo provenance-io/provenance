@@ -334,7 +334,7 @@ SupplyIncreaseProposal is a governance-only message for increasing the supply of
 
 +++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L229-L239
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1//tx.proto#L241-L242
++++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L241-L242
 
 This service message is expected to fail if:
 
