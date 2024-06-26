@@ -391,7 +391,7 @@ func AttrsString(vals []abci.EventAttribute) string {
 	for i, v := range vals {
 		entries[i] = AttrString(v)
 	}
-	return fmt.Sprintf("(%d)g[%s]", len(vals), strings.Join(entries, ","))
+	return fmt.Sprintf("(%d)[%s]", len(vals), strings.Join(entries, ","))
 }
 
 func AttrString(val abci.EventAttribute) string {
