@@ -30,7 +30,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Buf setup action
-        uses: bufbuild/buf-setup-action@v1.33.0
+        uses: bufbuild/buf-setup-action@v1.34.0
       - name: Buf push 'third_party/proto'
         uses: bufbuild/buf-push-action@v1
         with:
