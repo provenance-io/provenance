@@ -287,9 +287,9 @@ clean:
 	rm -rf $(BUILDDIR)/*
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*/statik*" | xargs goimports -w -local github.com/provenance-io/provenance
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -w -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" | xargs misspell -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" | xargs goimports -w -local github.com/provenance-io/provenance
 
 check-built:
 	@if [ ! -f "$(BUILDDIR)/provenanced" ]; then \
@@ -526,14 +526,6 @@ proto-update-deps:
 
 .PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
 
-
-##############################
-### Docs
-##############################
-update-swagger-docs: statik proto-swagger-gen
-	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
-
-.PHONY: update-swagger-docs
 
 ##############################
 ### Relayer

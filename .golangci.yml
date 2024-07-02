@@ -118,8 +118,6 @@ linters-settings:
 
           - github.com/provenance-io/provenance
 
-          - github.com/rakyll/statik/fs 
-
           - github.com/spf13/cast
           - github.com/spf13/cobra
           - github.com/spf13/pflag
