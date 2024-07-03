@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Dependencies
 
 - Bump `bufbuild/buf-setup-action` from 1.33.0 to 1.34.0 ([#2049](https://github.com/provenance-io/provenance/pull/2049))
+- Bump `google.golang.org/grpc` from 1.64.0 to 1.65.0 ([#2065](https://github.com/provenance-io/provenance/pull/2065))
 
 ---
 
