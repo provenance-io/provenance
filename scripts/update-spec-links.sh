@@ -183,7 +183,7 @@ fi
 ###########################################  Identify proto files involved.  ###########################################
 ########################################################################################################################
 
-[[ -n "$verbose" ]] && printf 'Identifying proto files linked to from %d files.\n' "${#files[@]}"
+[[ -z "$quiet" ]] && printf 'Identifying proto files linked to from %d files.\n' "${#files[@]}"
 
 declare protos_linked=()
 i=0
@@ -224,6 +224,8 @@ set +o noglob
 #####################################  Put all needed proto files in a temp dir.  ######################################
 ########################################################################################################################
 
+[[ -z "$quiet" ]] && printf 'Getting %d proto files.\n' "${#protos[@]}"
+
 temp_dir="$( mktemp -d -t link-updates )"
 [[ -n "$verbose" ]] && printf 'Created temp dir for protos: %s\n' "$temp_dir"
 
@@ -245,8 +247,6 @@ safe_exit () {
 
   exit "$ec"
 }
-
-[[ -n "$verbose" ]] && printf 'Getting %d proto files.\n' "${#protos[@]}"
 
 i=0
 for file in "${protos[@]}"; do
@@ -281,6 +281,8 @@ fi
 #####################################  Identify Line Numbers in the Proto Files.  ######################################
 ########################################################################################################################
 
+[[ -z "$quiet" ]] && printf 'Identifying line numbers for messages in the proto files.\n'
+
 # Get a count of all the lines in a file.
 # Usage: get_line_count <file>
 #   or   <stuff> | get_line_count
@@ -302,6 +304,8 @@ find "$temp_dir" -type f -name '*.proto' -print0 | xargs -0 awk -f "${where_i_am
 #################################################  Identify Endpoints  #################################################
 ########################################################################################################################
 
+[[ -z "$quiet" ]] && printf 'Identifying endpoint messages in the proto files.\n'
+
 # Each line of the endpoint summary file is expected to have this format:
 #     rpc:<endpoint>:(Request|Response):<proto file>;<message name>=<proto file>
 endpoint_summary_file="${temp_dir}/endpoint_summary.txt"
@@ -315,6 +319,7 @@ find "$temp_dir" -type f -name '*.proto' -print0 | xargs -0 awk -f "${where_i_am
 ############################################  Identify Links and Content.  #############################################
 ########################################################################################################################
 
+[[ -z "$quiet" ]] && printf 'Identifying proto links and their content in %d markdown files.\n' "${#files[@]}"
 
 # First pass, identify all the links and their content.
 # The lines in the initial link info file are expected to each have one of the following formats:
@@ -327,7 +332,7 @@ initial_link_info_file="${temp_dir}/initial_link_info.txt"
 i=0
 for file in "${files[@]}"; do
   i=$(( i + 1 ))
-  printf '[%d/%d] Processing: %s\n' "$i" "${#files[@]}" "$file"
+  [[ -n "$verbose" ]] && printf '[%d/%d] Processing: %s\n' "$i" "${#files[@]}" "$file"
   awk -v LinkRx="$link_rx_esc" -f "${where_i_am}/identify-links.awk" "$file" >> "$initial_link_info_file" || safe_exit $?
 done
 rpc_count="$( grep ';rpc:' "$initial_link_info_file" | get_line_count )"
@@ -385,9 +390,10 @@ while IFS="" read -r line || [[ -n "$line" ]]; do
     fi
 done < "$initial_link_info_file"
 
+link_count="$( get_line_count "$link_info_file" )"
 problem_count="$( grep -F ';ERROR' "$link_info_file" | get_line_count )"
 if [[ -n "$verbose" ]]; then
-  printf 'Found %d links in %d files.\n' "$( get_line_count "$link_info_file" )" "${#files[@]}"
+  printf 'Found %d links in %d files.\n' "$link_count" "${#files[@]}"
   printf 'Know the message name for %d links.\n' "$( grep '=' "$link_info_file" | get_line_count )"
   printf 'Know the endpoint and type for %d links.\n' "$( grep ';rpc:' "$link_info_file" | get_line_count )"
   printf 'Found %d problems.\n' "$problem_count"
@@ -404,6 +410,8 @@ fi
 ########################################################################################################################
 #############################################  Update the markdown files.  #############################################
 ########################################################################################################################
+
+[[ -z "$quiet" ]] && printf 'Updating %d links in %d files.\n' "$link_count" "${#files[@]}"
 
 # TODO: Look through each line of the link_info_file and update each link.
 # Will use something like sed "$( printf '%d c\\\n%s' "$line_number" "$new_entry" )"$'\n' <markdown file> > <temp file>
