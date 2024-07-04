@@ -7,12 +7,12 @@ order: 4
 In this section we describe the queries available for looking up trigger information.
 
 <!-- TOC 2 -->
-  - [Query Trigger By ID](#query-trigger-by-id)
-  - [Query Triggers](#query-triggers)
+  - [Query/TriggerByID](#querytriggerbyid)
+  - [Query/Triggers](#querytriggers)
 
 
 ---
-## Query Trigger By ID
+## Query/TriggerByID
 
 The `QueryTriggerByID` query is used to obtain the content of a specific Trigger.
 
@@ -28,7 +28,7 @@ The `id` is the unique identifier for the Trigger.
 
 
 ---
-## Query Triggers
+## Query/Triggers
 
 The `QueryTriggers` query is used to obtain all Triggers.
 

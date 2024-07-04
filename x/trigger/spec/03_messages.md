@@ -7,11 +7,11 @@ order: 3
 In this section we describe the processing of the trigger messages and the corresponding updates to the state.
 
 <!-- TOC 2 -->
-  - [Msg/CreateTriggerRequest](#msgcreatetriggerrequest)
-  - [Msg/DestroyTriggerRequest](#msgdestroytriggerrequest)
+  - [Msg/CreateTrigger](#msgcreatetrigger)
+  - [Msg/DestroyTrigger](#msgdestroytrigger)
 
 
-## Msg/CreateTriggerRequest
+## Msg/CreateTrigger
 
 Creates a `Trigger` that will fire when its event has been detected. If the message has more than one signer, then the newly created `Trigger` will designate the first signer as the owner.
 
@@ -30,7 +30,7 @@ The message will fail under the following conditions:
 * At least one action is not a valid `sdk.Msg`
 * The signers on one or more actions aren't in the set of the request's signers.
 
-## Msg/DestroyTriggerRequest
+## Msg/DestroyTrigger
 
 Destroys a `Trigger` that has been created and is still registered.
 

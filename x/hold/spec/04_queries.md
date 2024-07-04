@@ -36,6 +36,8 @@ Response:
 
 +++ https://github.com/provenance-io/provenance/blob/dwedul/1607-in-place-escrow/proto/provenance/hold/v1/query.proto#L56-L62
 
+<!-- link message: AccountHold -->
+
 +++ https://github.com/provenance-io/provenance/blob/dwedul/1607-in-place-escrow/proto/provenance/hold/v1/hold.proto#L12-L19
 
 It is expected to fail if the pagination parameters are invalid.

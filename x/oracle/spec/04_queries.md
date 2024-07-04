@@ -7,11 +7,11 @@ order: 4
 In this section we describe the queries available for looking up oracle information.
 
 <!-- TOC 2 -->
-  - [Query Oracle Address](#query-oracle-address)
-  - [Query Oracle](#query-oracle)
+  - [Query/OracleAddress](#queryoracleaddress)
+  - [Query/Oracle](#queryoracle)
 
 ---
-## Query Oracle Address
+## Query/OracleAddress
 The `QueryOracleAddress` query is used to obtain the address of the module's oracle.
 
 ### Request
@@ -24,7 +24,7 @@ The `QueryOracleAddress` query is used to obtain the address of the module's ora
 
 
 ---
-## Query Oracle
+## Query/Oracle
 The `QueryOracle` query forwards a query to the module's oracle.
 
 ### Request

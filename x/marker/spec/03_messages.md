@@ -5,30 +5,30 @@ All created/modified state objects specified by each message are defined within 
 [state](./02_state_transitions.md) section.
 
 <!-- TOC 2 2 -->
-  - [Msg/AddMarkerRequest](#msgaddmarkerrequest)
-  - [Msg/AddAccessRequest](#msgaddaccessrequest)
-  - [Msg/DeleteAccessRequest](#msgdeleteaccessrequest)
-  - [Msg/FinalizeRequest](#msgfinalizerequest)
-  - [Msg/ActivateRequest](#msgactivaterequest)
-  - [Msg/CancelRequest](#msgcancelrequest)
-  - [Msg/DeleteRequest](#msgdeleterequest)
-  - [Msg/MintRequest](#msgmintrequest)
-  - [Msg/BurnRequest](#msgburnrequest)
-  - [Msg/WithdrawRequest](#msgwithdrawrequest)
-  - [Msg/TransferRequest](#msgtransferrequest)
-  - [Msg/IbcTransferRequest](#msgibctransferrequest)
-  - [Msg/SetDenomMetadataRequest](#msgsetdenommetadatarequest)
-  - [Msg/AddFinalizeActivateMarkerRequest](#msgaddfinalizeactivatemarkerrequest)
-  - [Msg/GrantAllowanceRequest](#msggrantallowancerequest)
-  - [Msg/SupplyIncreaseProposalRequest](#msgsupplyincreaseproposalrequest)
-  - [Msg/UpdateRequiredAttributesRequest](#msgupdaterequiredattributesrequest)
-  - [Msg/UpdateSendDenyListRequest](#msgupdatesenddenylistrequest)
-  - [Msg/UpdateForcedTransferRequest](#msgupdateforcedtransferrequest)
-  - [Msg/SetAccountDataRequest](#msgsetaccountdatarequest)
-  - [Msg/AddNetAssetValuesRequest](#msgaddnetassetvaluesrequest)
+  - [Msg/AddMarker](#msgaddmarker)
+  - [Msg/AddAccess](#msgaddaccess)
+  - [Msg/DeleteAccess](#msgdeleteaccess)
+  - [Msg/Finalize](#msgfinalize)
+  - [Msg/Activate](#msgactivate)
+  - [Msg/Cancel](#msgcancel)
+  - [Msg/Delete](#msgdelete)
+  - [Msg/Mint](#msgmint)
+  - [Msg/Burn](#msgburn)
+  - [Msg/Withdraw](#msgwithdraw)
+  - [Msg/Transfer](#msgtransfer)
+  - [Msg/IbcTransfer](#msgibctransfer)
+  - [Msg/SetDenomMetadata](#msgsetdenommetadata)
+  - [Msg/AddFinalizeActivateMarker](#msgaddfinalizeactivatemarker)
+  - [Msg/GrantAllowance](#msggrantallowance)
+  - [Msg/SupplyIncreaseProposal](#msgsupplyincreaseproposal)
+  - [Msg/UpdateRequiredAttributes](#msgupdaterequiredattributes)
+  - [Msg/UpdateSendDenyList](#msgupdatesenddenylist)
+  - [Msg/UpdateForcedTransfer](#msgupdateforcedtransfer)
+  - [Msg/SetAccountData](#msgsetaccountdata)
+  - [Msg/AddNetAssetValues](#msgaddnetassetvalues)
 
 
-## Msg/AddMarkerRequest
+## Msg/AddMarker
 
 A marker is created using the Add Marker service message.
 The created marker can not be directly added in an Active (or Cancelled/Destroyed) status.  Markers
@@ -62,7 +62,7 @@ If issued via governance proposal, and has a `from_address` of the governance mo
 - The marker's `allow_governance_control` flag ignores the `enable_governance` param value, and is set to the provided value.
 - If the marker status is Active, and no `manager` is provided, it is left blank (instead of being populated with the `from_address`).
 
-## Msg/AddAccessRequest
+## Msg/AddAccess
 
 Add Access Request is used to add permissions to a marker that allow the specified accounts to perform the specified actions.
 
@@ -85,7 +85,7 @@ The Add Access request can be called many times on a marker with some or all of 
 only be used against markers in the `Pending` status when called by the current marker manager address or against `Finalized`
 and `Active` markers when the caller is currently assigned the `Admin` access type.
 
-## Msg/DeleteAccessRequest
+## Msg/DeleteAccess
 
 DeleteAccess Request defines the Msg/DeleteAccess request type
 
@@ -104,7 +104,7 @@ The Delete Access request will remove all access granted to the given address on
 only be used against markers in the `Pending` status when called by the current marker manager address or against `Finalized`
 and `Active` markers when the caller is currently assigned the `Admin` access type.
 
-## Msg/FinalizeRequest
+## Msg/Finalize
 
 Finalize Request defines the Msg/Finalize request type
 
@@ -122,7 +122,7 @@ This service message is expected to fail if:
 The `Finalize` marker status performs a set of checks to ensure the marker is ready to be activated.  It is designed to
 serve as an intermediate step prior to activation that indicates marker configuration is complete.
 
-## Msg/ActivateRequest
+## Msg/Activate
 
 Activate Request defines the Msg/Activate request type
 
@@ -145,7 +145,7 @@ rights assigned as access grants for any modification.
 If a marker has a fixed supply the begin block/invariant supply checks are also performed.  If the supply is expected to
 float then the `total_supply` value will be set to zero upon activation.
 
-## Msg/CancelRequest
+## Msg/Cancel
 
 Cancel Request defines the Msg/Cancel request type
 
@@ -165,7 +165,7 @@ This service message is expected to fail if:
 - The amount in circulation is greater than zero or any remaining amount is not currently held in escrow within the
   marker account.
 
-## Msg/DeleteRequest
+## Msg/Delete
 
 Delete Request defines the Msg/Delete request type
 
@@ -183,7 +183,7 @@ This service message is expected to fail if:
   marker account.
 - There are any other coins remaining in escrow after supply has been fully burned.
 
-## Msg/MintRequest
+## Msg/Mint
 
 Mint Request defines the Msg/Mint request type
 
@@ -200,7 +200,7 @@ This service message is expected to fail if:
 - The requested amount of mint would increase the total supply in circulation above the configured supply limit set in
   the marker module params
 
-## Msg/BurnRequest
+## Msg/Burn
 
 Burn Request defines the Msg/Burn request type that is used to remove supply of the marker coin from circulation.  In
 order to successfully burn supply the amount to burn must be held by the marker account itself (in escrow).
@@ -217,7 +217,7 @@ This service message is expected to fail if:
 - The given administrator address does not currently have the "burn" access granted on the marker
 - The amount of coin to burn is not currently held in escrow within the marker account.
 
-## Msg/WithdrawRequest
+## Msg/Withdraw
 
 Withdraw Request defines the Msg/Withdraw request type and is used to withdraw coin from escrow within the marker.
 
@@ -238,7 +238,7 @@ This service message is expected to fail if:
  - The given administrator address does not currently have the "withdraw" access granted on the marker
 - The amount of coin requested for withdraw is not currently held by the marker account
 
-## Msg/TransferRequest
+## Msg/Transfer
 
 Transfer Request defines the Msg/Transfer request type.  A transfer request is used to transfer coin between two
 accounts for `RESTRICTED_COIN` type markers. Such markers have `send_enabled=false` configured with the `x/bank` module,
@@ -258,7 +258,7 @@ This service message is expected to fail if:
   - The given administrator address does not currently have the "transfer" access granted on the marker
   - The marker types is not `RESTRICTED_COIN`
 
-## Msg/IbcTransferRequest
+## Msg/IbcTransfer
 
 Ibc transfer Request defines the Msg/IbcTransfer request type.  The `IbcTransferRequest` is used to transfer `RESTRICTED_COIN` type markers to another chain via ibc. These coins have their `send_enabled` flag disabled by the bank module and thus cannot be sent using a normal `send_coin` operation.
 
@@ -268,7 +268,7 @@ NOTE: A transfer request also requires a signature from an account with the tran
 
 +++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L199-L200
 
-## Msg/SetDenomMetadataRequest
+## Msg/SetDenomMetadata
 
 SetDenomMetadata Request defines the Msg/SetDenomMetadata request type.  This request is used to set the informational
 denom metadata held within the bank module.  Denom metadata can be used to provide a more streamlined user experience
@@ -293,7 +293,7 @@ This service message is expected to fail if:
         - DenomUnit Denom fields are modified.
         - Any aliases are removed from a DenomUnit.
 
-## Msg/AddFinalizeActivateMarkerRequest
+## Msg/AddFinalizeActivateMarker
 
 AddFinalizeActivate requested is used for adding, finalizing, and activating a marker in a single request.
 
@@ -312,7 +312,7 @@ This service message is expected to fail if:
   - Contains a grant with an invalid address
   - Contains a grant with an invalid access enum value (Unspecified/0)
 
-## Msg/GrantAllowanceRequest
+## Msg/GrantAllowance
 
 GrantAllowance grants a fee allowance to the grantee on the granter's account.
 
@@ -328,7 +328,7 @@ This service message is expected to fail if:
 - The administrator or grantee are invalid addresses
 - The administrator does not have `ADMIN` access on the marker.
 
-## Msg/SupplyIncreaseProposalRequest
+## Msg/SupplyIncreaseProposal
 
 SupplyIncreaseProposal is a governance-only message for increasing the supply of a marker.
 
@@ -344,7 +344,7 @@ This service message is expected to fail if:
 
 See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-increase-proposal)
 
-## Msg/UpdateRequiredAttributesRequest
+## Msg/UpdateRequiredAttributes
 
 UpdateRequiredAttributes allows signers that have transfer authority or via gov proposal to add and remove required attributes from a restricted marker.
 
@@ -359,7 +359,7 @@ This service message is expected to fail if:
 - Attributes cannot be normalized
 - Marker denom cannot be found or is not a restricted marker
 
-## Msg/UpdateSendDenyListRequest
+## Msg/UpdateSendDenyList
 
 UpdateSendDenyList allows signers that have transfer authority or via gov proposal to add and remove addresses to the deny send list for a restricted marker.
 
@@ -376,7 +376,7 @@ This service message is expected to fail if:
 - Marker denom cannot be found or is not a restricted marker
 - Signer does not have transfer authority or is not from gov proposal
 
-## Msg/UpdateForcedTransferRequest
+## Msg/UpdateForcedTransfer
 
 UpdateForcedTransfer allows for the activation or deactivation of forced transfers for a marker.
 This message must be submitted via governance proposal.
@@ -392,7 +392,7 @@ This service message is expected to fail if:
 - The marker is not a restricted coin.
 - The marker does not allow governance control.
 
-## Msg/SetAccountDataRequest
+## Msg/SetAccountData
 
 SetAccountData allows the association of some data (a string) with a marker.
 
@@ -409,7 +409,7 @@ This service message is expected to fail if:
 - The signer is not the governance module account and does not have deposit access on the marker.
 - The provided value is too long (as defined by the attribute module params).
 
-## Msg/AddNetAssetValuesRequest
+## Msg/AddNetAssetValues
 
 AddNetAssetValuesRequest allows for the adding/updating of net asset values for a marker.
 

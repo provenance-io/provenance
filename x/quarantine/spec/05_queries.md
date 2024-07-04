@@ -34,6 +34,7 @@ Response:
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/quarantine/v1beta1/query.proto#L67-L74
 
 QuarantinedFunds:
+<!-- link message: QuarantinedFunds -->
 
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/quarantine/v1beta1/quarantine.proto#L10-L21
 
@@ -62,6 +63,7 @@ Response:
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/quarantine/v1beta1/query.proto#L87-L94
 
 AutoResponseEntry:
+<!-- link message: AutoResponseEntry -->
 
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/quarantine/v1beta1/quarantine.proto#L23-L31
 

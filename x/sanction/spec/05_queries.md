@@ -60,10 +60,12 @@ Response:
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/query.proto#L69-L75
 
 TemporaryEntry:
+<!-- link message: TemporaryEntry -->
 
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/sanction.proto#L27-L35
 
 TempStatus:
+<!-- link message: TempStatus -->
 
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/sanction.proto#L37-L47
 

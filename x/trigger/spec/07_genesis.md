@@ -7,7 +7,7 @@ order: 7
 In this section we describe the processing of the trigger messages and the corresponding updates to the state.
 
 
-## Msg/GenesisState
+## GenesisState
 
 GenesisState contains a list of triggers, queued triggers, and gas limits. It also tracks the triggerID and the queue start. These are exported and later imported from/to the store.
 

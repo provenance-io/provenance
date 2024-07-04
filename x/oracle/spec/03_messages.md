@@ -7,12 +7,12 @@ order: 3
 In this section we describe the processing of the oracle messages and their corresponding updates to the state.
 
 <!-- TOC 2 -->
-  - [Msg/UpdateOracleRequest](#msgupdateoraclerequest)
-  - [Msg/SendQueryOracleRequest](#msgsendqueryoraclerequest)
+  - [Msg/UpdateOracle](#msgupdateoracle)
+  - [Msg/SendQueryOracle](#msgsendqueryoracle)
 
 
 ---
-## Msg/UpdateOracleRequest
+## Msg/UpdateOracle
 
 The oracle's address is modified by proposing the `MsgUpdateOracleRequest` message.
 
@@ -28,7 +28,7 @@ The message will fail under the following conditions:
 * The authority does not match the gov module.
 * The new address does not pass basic integrity and format checks.
 
-## Msg/SendQueryOracleRequest
+## Msg/SendQueryOracle
 
 Sends a query to another chain's `Oracle` using `ICQ`.
 
