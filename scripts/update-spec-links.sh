@@ -29,6 +29,9 @@ EOF
 
 }
 
+repo_root="$( git rev-parse --show-toplevel )" || exit $?
+where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
+
 declare files_in=()
 declare dirs_in=()
 
@@ -114,7 +117,8 @@ fi
 ########################################  Identify files that will be updated.  ########################################
 ########################################################################################################################
 
-link_rx='^\+\+\+ https://github\.com/provenance-io/provenance'
+link_rx='^\+\+\+ https://github\.com/provenance-io/provenance.*/proto/.*\.proto'
+link_rx_esc="$( sed 's|\\|\\\\|g;' <<< "$link_rx" )"
 declare files=()
 
 if [[ "${#files_in[@]}" -eq '0' && "${#dirs_in[@]}" -eq '0' ]]; then
@@ -191,7 +195,14 @@ for file in "${files[@]}"; do
   IFS=$'\n' new_proto_files+=( $( grep -E "$link_rx" "$file" | sed 's|^.*/proto/|proto/|; s/#.*$//;' | sort -u ) )
   set +o noglob
   if [[ "${#new_proto_files[@]}" -ne '0' ]]; then
-    [[ -n "$verbose" ]] && printf 'Found %d:\n' "${#new_proto_files[@]}" && printf '[%d/%d]:   %s\n' "$i" "${#files[@]}" "${new_proto_files[@]}"
+    if [[ -n "$verbose" ]]; then
+      printf 'Found %d:\n' "${#new_proto_files[@]}"
+      j=0
+      for new_file in "${new_proto_files[@]}"; do
+        j=$(( j + 1 ))
+        printf '[%d/%d|%d/%d]: %s\n' "$i" "${#files[@]}" "$j" "${#new_proto_files[@]}" "$new_file"
+      done
+    fi
     protos_linked+=( "${new_proto_files[@]}" )
   else
     [[ -n "$verbose" ]] && printf 'None found.\n'
@@ -207,8 +218,7 @@ set -o noglob
 IFS=$'\n' protos+=( $( printf '%s\n' "${protos_linked[@]}" | sort -u ) )
 set +o noglob
 
-[[ -n "$verbose" ]] && printf 'All linked protos (no dups) (%d):\n' "${#protos[@]}"
-[[ -n "$verbose" ]] && printf '  %s\n' "${protos[@]}"
+[[ -n "$verbose" ]] && printf 'All linked protos (no dups) (%d):\n' "${#protos[@]}" && printf '  %s\n' "${protos[@]}"
 
 ########################################################################################################################
 #####################################  Put all needed proto files in a temp dir.  ######################################
@@ -217,6 +227,7 @@ set +o noglob
 temp_dir="$( mktemp -d -t link-updates )"
 [[ -n "$verbose" ]] && printf 'Created temp dir for protos: %s\n' "$temp_dir"
 
+# safe_exit handles any needed cleanup before exiting with the provided code.
 # Usage: safe_exit [code]
 safe_exit () {
   local ec
@@ -236,8 +247,6 @@ safe_exit () {
 }
 
 [[ -n "$verbose" ]] && printf 'Getting %d proto files.\n' "${#protos[@]}"
-
-repo_root="$( git rev-parse --show-toplevel )"
 
 i=0
 for file in "${protos[@]}"; do
@@ -267,6 +276,138 @@ done
 if [[ -n "$stop_early" ]]; then
   safe_exit 1
 fi
+
+########################################################################################################################
+#####################################  Identify Line Numbers in the Proto Files.  ######################################
+########################################################################################################################
+
+# Get a count of all the lines in a file.
+# Usage: get_line_count <file>
+#   or   <stuff> | get_line_count
+# Note: A newline is added automatically when using a heredoc.
+#       So get_line_count <<< '' will return 1 instead of the expected 0.
+get_line_count () {
+  # Not using wc because it won't count a line if there's no ending newline.
+  awk 'END { print FNR; }' "$@"
+}
+
+# Each line of the message summary file is expected to have this format:
+#     <message name>=<proto file>#L<start>-L<end>
+message_summary_file="${temp_dir}/message_summary.txt"
+[[ -n "$verbose" ]] && printf 'Creating summary of all message and enums: %s\n' "$message_summary_file"
+find "$temp_dir" -type f -name '*.proto' -print0 | xargs -0 awk -f "${where_i_am}/identify-messages.awk" >> "$message_summary_file" || safe_exit $?
+[[ -n "$verbose" ]] && printf 'Found %d messages/enums in the proto files.\n' "$( get_line_count "$message_summary_file" )"
+
+########################################################################################################################
+#################################################  Identify Endpoints  #################################################
+########################################################################################################################
+
+# Each line of the endpoint summary file is expected to have this format:
+#     rpc:<endpoint>:(Request|Response):<proto file>;<message name>=<proto file>
+endpoint_summary_file="${temp_dir}/endpoint_summary.txt"
+[[ -n "$verbose" ]] && printf 'Creating summary of all endpoint messages: %s\n' "$endpoint_summary_file"
+find "$temp_dir" -type f -name '*.proto' -print0 | xargs -0 awk -f "${where_i_am}/identify-endpoints.awk" >> "$endpoint_summary_file" || safe_exit $?
+[[ -n "$verbose" ]] && printf 'Found %d endpoint messages in the proto files.\n' "$( get_line_count "$endpoint_summary_file" )"
+
+
+
+########################################################################################################################
+############################################  Identify Links and Content.  #############################################
+########################################################################################################################
+
+
+# First pass, identify all the links and their content.
+# The lines in the initial link info file are expected to each have one of the following formats:
+#       <markdown file>:<line number>;<message name>=<proto file>
+#       <markdown file>:<line number>;rpc:<endpoint>:(Request|Response):<proto file>
+#       <markdown file>:<line number>;ERROR: <error message>: <context>
+
+initial_link_info_file="${temp_dir}/initial_link_info.txt"
+[[ -n "$verbose" ]] && printf 'Identifying link content, initial pass of %d files: %s\n' "${#files[@]}" "$initial_link_info_file"
+i=0
+for file in "${files[@]}"; do
+  i=$(( i + 1 ))
+  printf '[%d/%d] Processing: %s\n' "$i" "${#files[@]}" "$file"
+  awk -v LinkRx="$link_rx_esc" -f "${where_i_am}/identify-links.awk" "$file" >> "$initial_link_info_file" || safe_exit $?
+done
+rpc_count="$( grep ';rpc:' "$initial_link_info_file" | get_line_count )"
+if [[ -n "$verbose" ]]; then
+  printf 'Found %d links in %d files.\n' "$( get_line_count "$initial_link_info_file" )" "${#files[@]}"
+  printf 'Identified the message name for %d links.\n' "$( grep -F '=' "$initial_link_info_file" | get_line_count )"
+  printf 'Identified the endpoint and type for %d links.\n' "$rpc_count"
+  printf 'Found %d problems.\n' "$( grep -F ';ERROR' "$initial_link_info_file" | get_line_count )"
+fi
+# We'll move onto the second pass even if there were errors because new errors might be found;
+# this will provide us with a more complete picture of problems.
+
+# Second pass, change all of the rpc lines with the format:
+#       <markdown file>:<line number>;rpc:<endpoint>:(Request|Response):<proto file>
+# To a message line with the format:
+#       <markdown file>:<line number>;<message name>=<proto file>
+
+link_info_file="${temp_dir}/link_info.txt"
+[[ -n "$verbose" ]] && printf 'Identifying message name for %d links: %s\n' "$rpc_count" "$link_info_file"
+
+i=0
+while IFS="" read -r line || [[ -n "$line" ]]; do
+    if [[ ! "$line" =~ ';rpc:' ]]; then
+      # Not an rpc-lookup line, just pass it on.
+      printf '%s\n' "$line" >> "$link_info_file"
+    else
+        i=$(( i + 1 ))
+        [[ -n "$verbose" ]] && printf '[%d\%d]: Processing: %s\n' "$i" "$rpc_count" "$line"
+        # The line has this format:
+        #   <markdown file>:<line number>;rpc:<endpoint>:(Request|Response):<proto file>
+        # Split the line into the line number and the rest.
+        lead="$( sed 's/;.*$//' <<< "$line" )"
+        [[ -n "$verbose" ]] && printf '[%d\%d]: lead: %s\n' "$i" "$rpc_count" "$lead"
+        to_find="$( sed 's/^[^;]*;//' <<< "$line" )"
+        [[ -n "$verbose" ]] && printf '[%d\%d]: to_find: %s\n' "$i" "$rpc_count" "$to_find"
+
+        # Look for a line in the endpoint_summary_file that starts with to_find followed by a semi-colon.
+        # The endpoint_summary_file lines have this format:
+        #     rpc:<endpoint>:(Request|Response):<proto file>;<message name>=<proto file>
+        found_lines="$( grep -F "${to_find};" "$endpoint_summary_file" )"
+        found_lines_count="$( get_line_count <<< "$found_lines" )"
+        [[ -n "$verbose" ]] && printf '[%d\%d]: found_lines (%d): %s\n' "$i" "$rpc_count" "$found_lines_count" "$found_lines"
+
+        if [[ -z "$found_lines" || "$found_lines" =~ ^[[:space:]]*$ ]]; then
+            [[ -n "$verbose" ]] && printf '[%d\%d]: Result: Error: not found.\n' "$i" "$rpc_count"
+            printf '%s;ERROR: could not find endpoint message: %s\n' "$lead" "$to_find" >> "$link_info_file"
+        elif [[ "$found_lines_count" -eq '1' ]]; then
+            [[ -n "$verbose" ]] && printf '[%d\%d]: Result: Message identified.\n' "$i" "$rpc_count"
+            message="$( sed 's/^[^;]*;//' <<< "$found_lines" )"
+            printf '%s;%s\n' "$lead" "$message" >> "$link_info_file"
+        else
+            [[ -n "$verbose" ]] && printf '[%d\%d]: Result: Multiple messages identified.\n' "$i" "$rpc_count"
+            printf '%s;ERROR: found %d endpoint messages: %s\n' "$lead" "$found_lines_count" "$to_find" >> "$link_info_file"
+        fi
+    fi
+done < "$initial_link_info_file"
+
+problem_count="$( grep -F ';ERROR' "$link_info_file" | get_line_count )"
+if [[ -n "$verbose" ]]; then
+  printf 'Found %d links in %d files.\n' "$( get_line_count "$link_info_file" )" "${#files[@]}"
+  printf 'Know the message name for %d links.\n' "$( grep '=' "$link_info_file" | get_line_count )"
+  printf 'Know the endpoint and type for %d links.\n' "$( grep ';rpc:' "$link_info_file" | get_line_count )"
+  printf 'Found %d problems.\n' "$problem_count"
+fi
+
+# Now, we'll check for errors and stop if any are found.
+[[ -n "$verbose" ]] && printf 'Checking for link identification errors: %s\n' "$link_info_file"
+if [[ "$problem_count" -ne '0' ]]; then
+    printf 'Found %d problematic links in the markdown files.\n' "$problem_count"
+    grep -F ';ERROR' "$link_info_file"
+    safe_exit 1
+fi
+
+########################################################################################################################
+#############################################  Update the markdown files.  #############################################
+########################################################################################################################
+
+# TODO: Look through each line of the link_info_file and update each link.
+# Will use something like sed "$( printf '%d c\\\n%s' "$line_number" "$new_entry" )"$'\n' <markdown file> > <temp file>
+# Then copy the temp file over the original.
 
 
 safe_exit 0
