@@ -117,7 +117,7 @@ fi
 ########################################  Identify files that will be updated.  ########################################
 ########################################################################################################################
 
-link_prefix='+++ https://github\.com/provenance-io/provenance.*/'
+link_prefix="+++ https://github.com/provenance-io/provenance/blob/$ref/"
 link_rx='^\+\+\+ https://github\.com/provenance-io/provenance.*/proto/.*\.proto'
 link_rx_esc="$( sed 's|\\|\\\\|g;' <<< "$link_rx" )"
 declare files=()
@@ -514,9 +514,9 @@ while IFS="" read -r line || [[ -n "$line" ]]; do
   #   <markdown file>:<line number>;<new link>
   md_file="$( sed 's/:.*$//' <<< "$line" )"
   [[ -n "$verbose" ]] && printf '[%d/%d]: md_file: %s\n' "$i" "$link_count" "$md_file"
-  line_number="$( sed -E 's/^.*:([[:digit:]]+);.*$/\1/' <<< "$line" )"
+  line_number="$( sed -E 's/^[^:]*:([[:digit:]]+);.*$/\1/' <<< "$line" )"
   [[ -n "$verbose" ]] && printf '[%d/%d]: line_number: %s\n' "$i" "$link_count" "$line_number"
-  new_link="$( sed 's/^.*:[[:digit:]];//' <<< "$line" )"
+  new_link="$( sed -E 's/^[^:]*:[[:digit:]]+;//' <<< "$line" )"
   [[ -n "$verbose" ]] && printf '[%d/%d]: new_link: %s\n' "$i" "$link_count" "$new_link"
 
   if [[ -z "$md_file" || -z "$line_number" || -z "$new_link" || "$md_file" == "$line" || "$line_number" == "$line" || "$new_link" == "$line" || "${md_file}:${line_number};${new_link}" != "$line" ]]; then
