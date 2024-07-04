@@ -21,13 +21,14 @@
         if (debug!="") { print "DEBUG 0: LinkRx='" LinkRx "'"; };
     }
 
-    IsLineOfInterest = (match($0, LinkRx) || /^#/ || /^<!-- link message: / || /^Request:/ || /^Response:/) ? "1" : "";
+    IsLinkLine=(match($0, LinkRx)) ? "1": "";
+    IsLineOfInterest=(IsLinkLine!="" || /^#/ || /^<!-- link message: / || /^Request:/ || /^Response:/) ? "1" : "";
     if (IsLineOfInterest=="") {
         next;
     }
 
     Lead=FILENAME ":" FNR ";";
-    if (LinkMessage!="") {
+    if (LinkMessage!="" && IsLinkLine=="") {
         print Lead "ERROR: link message comment not above a link: " LinkMessage;
         LinkMessage="";
     } else if (/^<!-- link message: /) {
@@ -48,7 +49,7 @@
         HaveReq="";
         InResp="";
         HaveResp="";
-    } else if (/^\+/) {
+    } else if (IsLinkLine!="") {
         if (debug!="") { print Lead "DEBUG: Link Line: " $0; };
         ProtoFile=$0;
         sub(/^\+.*\/proto\//,"proto/",ProtoFile);
