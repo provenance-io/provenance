@@ -3,7 +3,7 @@
 # To include debugging information in the output, provide these arguments to the awk command: -v debug='1'
 #
 # Each line of output will have the format:
-#   <message name>=<proto file>#L<start>-L<end>
+#   ;<message name>=<proto file>#L<start>-L<end>
 # The <proto file> value will be relative to the repo root directory (e.g. it will start with "proto/").
 #
 # This file must be in the scripts/ directory so that the update-spec-links.sh script can find it.
@@ -55,11 +55,17 @@
     if (debug!="") { print "DEBUG " FNR ": MsgName=[" MsgName "], MsgStart=[" MsgStart "], MsgEnd=[" MsgEnd "]"; };
     # If we have everything, output a line about it and reset for the next one.
     if (MsgName!="" && MsgStart!="" && MsgEnd!="") {
-        Fn=FILENAME;
-        if (debug!="") { print "DEBUG " FNR ": [1/2] Fn: " Fn; };
-        sub(/^.*\/proto\//,"proto/",Fn);
-        if (debug!="") { print "DEBUG " FNR ": [2/2] Fn: " Fn; };
-        print MsgName "=" Fn "#L" MsgStart "-L" MsgEnd;
+        if (FILENAME=="") {
+            Source="<pipe>";
+            if (debug!="") { print "DEBUG " FNR ": No FILENAME found. Source: " Source; };
+        } else {
+            Source=FILENAME;
+            if (debug!="") { print "DEBUG " FNR ": [1/2] Source: " Source; };
+            sub(/^.*\/proto\//,"proto/",Source);
+            if (debug!="") { print "DEBUG " FNR ": [2/2] Source: " Source; };
+        }
+
+        print ";" MsgName "=" Source "#L" MsgStart "-L" MsgEnd;
         MsgName="";
         MsgStart="";
         MsgEnd="";

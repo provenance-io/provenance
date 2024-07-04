@@ -58,6 +58,7 @@
         Name="";
         Err="";
         TempReqResp="";
+        D="=";
         if (LinkMessage!="") {
             if (debug!="") { print Lead "DEBUG: Using previous link message comment."; };
             Name=LinkMessage;
@@ -65,7 +66,6 @@
             sub(/ -->.*$/,"",Name);
             LinkMessage="";
         } else if (LastHeader!="") {
-            D="=";
             Name=LastHeader;
             sub(/^#+ /,"",Name);
             gsub(/[[:space:]]+/,"",Name);

@@ -117,6 +117,7 @@ fi
 ########################################  Identify files that will be updated.  ########################################
 ########################################################################################################################
 
+link_prefix='+++ https://github\.com/provenance-io/provenance.*/'
 link_rx='^\+\+\+ https://github\.com/provenance-io/provenance.*/proto/.*\.proto'
 link_rx_esc="$( sed 's|\\|\\\\|g;' <<< "$link_rx" )"
 declare files=()
@@ -229,9 +230,9 @@ set +o noglob
 temp_dir="$( mktemp -d -t link-updates )"
 [[ -n "$verbose" ]] && printf 'Created temp dir for protos: %s\n' "$temp_dir"
 
-# safe_exit handles any needed cleanup before exiting with the provided code.
-# Usage: safe_exit [code]
-safe_exit () {
+# clean_exit handles any needed cleanup before exiting with the provided code.
+# Usage: clean_exit [code]
+clean_exit () {
   local ec
   ec="${1:-0}"
 
@@ -251,7 +252,7 @@ safe_exit () {
 i=0
 for file in "${protos[@]}"; do
   i=$(( i + 1 ))
-  [[ -n "$verbose" ]] && printf '[%d/%d] Getting: %s ... ' "$i" "${#protos[@]}" "$file"
+  [[ -n "$verbose" ]] && printf '[%d/%d]: Getting: %s ... ' "$i" "${#protos[@]}" "$file"
   file_dir="$( dirname "$file" )"
   dest_dir="${temp_dir}/${file_dir}"
   mkdir -p "$dest_dir"
@@ -267,14 +268,14 @@ for file in "${protos[@]}"; do
       stop_early='YES'
     fi
   else
-    [[ -n "$verbose" ]] && printf 'From: %s\n' "$source_file"
     source_file="${repo_root}/${file}"
+    [[ -n "$verbose" ]] && printf 'From: %s\n' "$source_file"
     cp "$source_file" "$dest_dir" || stop_early='YES'
   fi
 done
 
 if [[ -n "$stop_early" ]]; then
-  safe_exit 1
+  clean_exit 1
 fi
 
 ########################################################################################################################
@@ -294,10 +295,10 @@ get_line_count () {
 }
 
 # Each line of the message summary file is expected to have this format:
-#     <message name>=<proto file>#L<start>-L<end>
+#     ;<message name>=<proto file>#L<start>-L<end>
 message_summary_file="${temp_dir}/message_summary.txt"
 [[ -n "$verbose" ]] && printf 'Creating summary of all message and enums: %s\n' "$message_summary_file"
-find "$temp_dir" -type f -name '*.proto' -print0 | xargs -0 awk -f "${where_i_am}/identify-messages.awk" >> "$message_summary_file" || safe_exit $?
+find "$temp_dir" -type f -name '*.proto' -print0 | xargs -0 awk -f "${where_i_am}/identify-messages.awk" >> "$message_summary_file" || clean_exit $?
 [[ -n "$verbose" ]] && printf 'Found %d messages/enums in the proto files.\n' "$( get_line_count "$message_summary_file" )"
 
 ########################################################################################################################
@@ -310,7 +311,7 @@ find "$temp_dir" -type f -name '*.proto' -print0 | xargs -0 awk -f "${where_i_am
 #     rpc:<endpoint>:(Request|Response):<proto file>;<message name>=<proto file>
 endpoint_summary_file="${temp_dir}/endpoint_summary.txt"
 [[ -n "$verbose" ]] && printf 'Creating summary of all endpoint messages: %s\n' "$endpoint_summary_file"
-find "$temp_dir" -type f -name '*.proto' -print0 | xargs -0 awk -f "${where_i_am}/identify-endpoints.awk" >> "$endpoint_summary_file" || safe_exit $?
+find "$temp_dir" -type f -name '*.proto' -print0 | xargs -0 awk -f "${where_i_am}/identify-endpoints.awk" >> "$endpoint_summary_file" || clean_exit $?
 [[ -n "$verbose" ]] && printf 'Found %d endpoint messages in the proto files.\n' "$( get_line_count "$endpoint_summary_file" )"
 
 
@@ -332,9 +333,10 @@ initial_link_info_file="${temp_dir}/initial_link_info.txt"
 i=0
 for file in "${files[@]}"; do
   i=$(( i + 1 ))
-  [[ -n "$verbose" ]] && printf '[%d/%d] Processing: %s\n' "$i" "${#files[@]}" "$file"
-  awk -v LinkRx="$link_rx_esc" -f "${where_i_am}/identify-links.awk" "$file" >> "$initial_link_info_file" || safe_exit $?
+  [[ -n "$verbose" ]] && printf '[1:%d/%d]: Processing: %s\n' "$i" "${#files[@]}" "$file"
+  awk -v LinkRx="$link_rx_esc" -f "${where_i_am}/identify-links.awk" "$file" >> "$initial_link_info_file" || clean_exit $?
 done
+
 rpc_count="$( grep ';rpc:' "$initial_link_info_file" | get_line_count )"
 if [[ -n "$verbose" ]]; then
   printf 'Found %d links in %d files.\n' "$( get_line_count "$initial_link_info_file" )" "${#files[@]}"
@@ -342,6 +344,7 @@ if [[ -n "$verbose" ]]; then
   printf 'Identified the endpoint and type for %d links.\n' "$rpc_count"
   printf 'Found %d problems.\n' "$( grep -F ';ERROR' "$initial_link_info_file" | get_line_count )"
 fi
+
 # We'll move onto the second pass even if there were errors because new errors might be found;
 # this will provide us with a more complete picture of problems.
 
@@ -355,39 +358,52 @@ link_info_file="${temp_dir}/link_info.txt"
 
 i=0
 while IFS="" read -r line || [[ -n "$line" ]]; do
-    if [[ ! "$line" =~ ';rpc:' ]]; then
-      # Not an rpc-lookup line, just pass it on.
-      printf '%s\n' "$line" >> "$link_info_file"
+  if [[ ! "$line" =~ ';rpc:' ]]; then
+    # Not an rpc-lookup line, just pass it on.
+    printf '%s\n' "$line" >> "$link_info_file"
+    continue
+  fi
+
+  i=$(( i + 1 ))
+  [[ -n "$verbose" ]] && printf '[2:%d/%d]: Processing: %s\n' "$i" "$rpc_count" "$line"
+  # The line has this format:
+  #   <markdown file>:<line number>;rpc:<endpoint>:(Request|Response):<proto file>
+  # Split the line into the line number and the rest.
+  lead="$( sed 's/;.*$//' <<< "$line" )"
+  [[ -n "$verbose" ]] && printf '[2:%d/%d]: lead: %s\n' "$i" "$rpc_count" "$lead"
+  to_find="$( sed 's/^[^;]*;//' <<< "$line" )"
+  [[ -n "$verbose" ]] && printf '[2:%d/%d]: to_find: %s\n' "$i" "$rpc_count" "$to_find"
+  if [[ -z "$lead" || -z "$to_find" || "$lead" == "$to_find" ]]; then
+    [[ -n "$verbose" ]] && printf '[2:%d/%d]: Result: Error: Could not split lead and to_find.\n' "$i" "$ok_count"
+    printf '%s;ERROR: could not parse as endpoint lookup line\n' "$line" >> "$link_info_file"
+    continue
+  fi
+
+  # Look for a line in the endpoint_summary_file that starts with to_find followed by a semi-colon.
+  # The endpoint_summary_file lines have this format:
+  #     rpc:<endpoint>:(Request|Response):<proto file>;<message name>=<proto file>
+  found_lines="$( grep -F "${to_find};" "$endpoint_summary_file" )"
+  found_lines_count="$( get_line_count <<< "$found_lines" )"
+  [[ -z "$found_lines" || "$found_lines" =~ ^[[:space:]]*$ ]] && found_lines_count='0'
+  [[ -n "$verbose" ]] && printf '[2:%d/%d]: found_lines (%d): %q\n' "$i" "$rpc_count" "$found_lines_count" "$found_lines"
+
+  if [[ "$found_lines_count" -eq '1' ]]; then
+    message="$( sed 's/^[^;]*;//' <<< "$found_lines" )"
+    [[ -n "$verbose" ]] && printf '[2:%d/%d]: message: %s\n' "$i" "$rpc_count" "$message"
+    if [[ -z "$message" || "$message" == "$found_lines" ]]; then
+      [[ -n "$verbose" ]] && printf '[2:%d/%d]: Result: Error: Could not parse [%s].\n' "$i" "$rpc_count" "$found_lines"
+      printf '%s;ERROR: could not parse message from %s for %s\n' "$lead" "$found_lines" "$to_find" >> "$link_info_file"
     else
-        i=$(( i + 1 ))
-        [[ -n "$verbose" ]] && printf '[%d\%d]: Processing: %s\n' "$i" "$rpc_count" "$line"
-        # The line has this format:
-        #   <markdown file>:<line number>;rpc:<endpoint>:(Request|Response):<proto file>
-        # Split the line into the line number and the rest.
-        lead="$( sed 's/;.*$//' <<< "$line" )"
-        [[ -n "$verbose" ]] && printf '[%d\%d]: lead: %s\n' "$i" "$rpc_count" "$lead"
-        to_find="$( sed 's/^[^;]*;//' <<< "$line" )"
-        [[ -n "$verbose" ]] && printf '[%d\%d]: to_find: %s\n' "$i" "$rpc_count" "$to_find"
-
-        # Look for a line in the endpoint_summary_file that starts with to_find followed by a semi-colon.
-        # The endpoint_summary_file lines have this format:
-        #     rpc:<endpoint>:(Request|Response):<proto file>;<message name>=<proto file>
-        found_lines="$( grep -F "${to_find};" "$endpoint_summary_file" )"
-        found_lines_count="$( get_line_count <<< "$found_lines" )"
-        [[ -n "$verbose" ]] && printf '[%d\%d]: found_lines (%d): %s\n' "$i" "$rpc_count" "$found_lines_count" "$found_lines"
-
-        if [[ -z "$found_lines" || "$found_lines" =~ ^[[:space:]]*$ ]]; then
-            [[ -n "$verbose" ]] && printf '[%d\%d]: Result: Error: not found.\n' "$i" "$rpc_count"
-            printf '%s;ERROR: could not find endpoint message: %s\n' "$lead" "$to_find" >> "$link_info_file"
-        elif [[ "$found_lines_count" -eq '1' ]]; then
-            [[ -n "$verbose" ]] && printf '[%d\%d]: Result: Message identified.\n' "$i" "$rpc_count"
-            message="$( sed 's/^[^;]*;//' <<< "$found_lines" )"
-            printf '%s;%s\n' "$lead" "$message" >> "$link_info_file"
-        else
-            [[ -n "$verbose" ]] && printf '[%d\%d]: Result: Multiple messages identified.\n' "$i" "$rpc_count"
-            printf '%s;ERROR: found %d endpoint messages: %s\n' "$lead" "$found_lines_count" "$to_find" >> "$link_info_file"
-        fi
+      [[ -n "$verbose" ]] && printf '[2:%d/%d]: Result: Success: Message identified.\n' "$i" "$rpc_count"
+      printf '%s;%s\n' "$lead" "$message" >> "$link_info_file"
     fi
+  elif [[ "$found_lines_count" -eq '0' ]]; then
+    [[ -n "$verbose" ]] && printf '[2:%d/%d]: Result: Error: Not found.\n' "$i" "$rpc_count"
+    printf '%s;ERROR: could not find endpoint message: %s\n' "$lead" "$to_find" >> "$link_info_file"
+  else
+    [[ -n "$verbose" ]] && printf '[2:%d/%d]: Result: Error: Multiple messages identified.\n' "$i" "$rpc_count"
+    printf '%s;ERROR: found %d endpoint messages: %s\n' "$lead" "$found_lines_count" "$to_find" >> "$link_info_file"
+  fi
 done < "$initial_link_info_file"
 
 link_count="$( get_line_count "$link_info_file" )"
@@ -395,17 +411,91 @@ problem_count="$( grep -F ';ERROR' "$link_info_file" | get_line_count )"
 if [[ -n "$verbose" ]]; then
   printf 'Found %d links in %d files.\n' "$link_count" "${#files[@]}"
   printf 'Know the message name for %d links.\n' "$( grep '=' "$link_info_file" | get_line_count )"
-  printf 'Know the endpoint and type for %d links.\n' "$( grep ';rpc:' "$link_info_file" | get_line_count )"
+  printf 'Still need to get the endpoint messages for %d links.\n' "$( grep ';rpc:' "$link_info_file" | get_line_count )"
+  printf 'Found %d problems.\n' "$problem_count"
+fi
+
+# Again, we'll move onto the third pass even if there were errors because new errors might be found;
+# this will provide us with a more complete picture of problems.
+
+# Third pass, generate the new links
+ok_count=$(( link_count - problem_count ))
+new_links_file="${temp_dir}/new_links.txt"
+[[ -n "$verbose" ]] && printf 'Creating %d new links: %s\n' "$ok_count" "$new_links_file"
+
+i=0
+while IFS="" read -r line || [[ -n "$line" ]]; do
+  if [[ "$line" =~ ';ERROR' ]]; then
+    # Pass on previous errors.
+    printf '%s\n' "$line" >> "$new_links_file"
+    continue
+  fi
+
+  i=$(( i + 1 ))
+  [[ -n "$verbose" ]] && printf '[3:%d/%d]: Processing: %s\n' "$i" "$ok_count" "$line"
+
+  # All lines here should have this format:
+  #       <markdown file>:<line number>;<message name>=<proto file>
+  lead="$( sed 's/;.*$//' <<< "$line" )"
+  [[ -n "$verbose" ]] && printf '[3:%d/%d]: lead: %s\n' "$i" "$ok_count" "$lead"
+  to_find="$( sed 's/^[^;]*;//' <<< "$line" )"
+  [[ -n "$verbose" ]] && printf '[3:%d/%d]: to_find: %s\n' "$i" "$ok_count" "$to_find"
+  if [[ -z "$lead" || -z "$to_find" || "$lead" == "$to_find" ]]; then
+    [[ -n "$verbose" ]] && printf '[3:%d/%d]: Result: Error: Could not split lead and to_find.\n' "$i" "$ok_count"
+    printf '%s;ERROR: could not parse as link info line\n' "$line" >> "$new_links_file"
+    continue
+  fi
+
+  # We just need to find a matching entry in the message_summary_file, which has lines with this format:
+  #     ;<message name>=<proto file>#L<start>-L<end>
+  found_lines="$( grep -F ";${to_find}#" "$message_summary_file" )"
+  found_lines_count="$( get_line_count <<< "$found_lines" )"
+  [[ -z "$found_lines" || "$found_lines" =~ ^[[:space:]]*$ ]] && found_lines_count='0'
+  [[ -n "$verbose" ]] && printf '[3:%d/%d]: found_lines (%d): %q\n' "$i" "$ok_count" "$found_lines_count" "$found_lines"
+
+  if [[ "$found_lines_count" -eq '1' ]]; then
+    relative_link="$( sed -E 's/^[^=]+=//' <<< "$found_lines" )"
+    [[ -n "$verbose" ]] && printf '[3:%d/%d]: relative_link: %s\n' "$i" "$ok_count" "$relative_link"
+    if [[ -z "$relative_link" || "$found_lines" == "$relative_link" ]]; then
+      printf '%s;ERROR: could not parse relative link for %s from %s\n' "$lead" "$to_find" "$found_lines" >> "$new_links_file"
+    else
+      [[ -n "$verbose" ]] && printf '[3:%d/%d]: Result: Success: New link created.\n' "$i" "$ok_count"
+      link="${link_prefix}${relative_link}"
+      printf '%s;%s\n' "$lead" "$link" >> "$new_links_file"
+    fi
+  elif [[ "$found_lines_count" -eq '0' ]]; then
+    [[ -n "$verbose" ]] && printf '[3:%d/%d]: Result: Error: Not found.\n' "$i" "$ok_count"
+    printf '%s;ERROR: could not find message line numbers: %s\n' "$lead" "$to_find" >> "$new_links_file"
+  else
+    [[ -n "$verbose" ]] && printf '[3:%d/%d]: Result: Error: Multiple message line number entries identified.\n' "$i" "$ok_count"
+    printf '%s;ERROR: found %d message line number entries: %s\n' "$lead" "$found_lines_count" "$to_find" >> "$new_links_file"
+  fi
+done < "$link_info_file"
+
+link_count="$( get_line_count "$new_links_file" )"
+ok_count="$( grep -E ';\+\+\+ ' "$new_links_file" | get_line_count )"
+problem_count="$( grep -F ';ERROR' "$new_links_file" | get_line_count )"
+if [[ -n "$verbose" ]]; then
+  printf 'Found %d links in %d files.\n' "$link_count" "${#files[@]}"
+  printf 'Created %d updated links.\n' "$ok_count"
   printf 'Found %d problems.\n' "$problem_count"
 fi
 
 # Now, we'll check for errors and stop if any are found.
-[[ -n "$verbose" ]] && printf 'Checking for link identification errors: %s\n' "$link_info_file"
+problem_count="$( grep ';ERROR' "$new_links_file" | get_line_count )"
+[[ -n "$verbose" ]] && printf 'Checking for link identification errors: %s\n' "$new_links_file"
 if [[ "$problem_count" -ne '0' ]]; then
-    printf 'Found %d problematic links in the markdown files.\n' "$problem_count"
-    grep -F ';ERROR' "$link_info_file"
-    safe_exit 1
+  printf 'Found %d problematic links in the markdown files.\n' "$problem_count"
+  grep -F ';ERROR' "$new_links_file"
+  clean_exit 1
 fi
+
+if [[ "$link_count" -ne "$ok_count" ]]; then
+  printf 'Could not create new links (%d) for every current link (%d).\n' "$ok_count" "$link_count"
+  grep -Ev ';\+\+\+ ' "$new_links_file"
+  clean_exit 1
+fi
+
 
 ########################################################################################################################
 #############################################  Update the markdown files.  #############################################
@@ -413,9 +503,50 @@ fi
 
 [[ -z "$quiet" ]] && printf 'Updating %d links in %d files.\n' "$link_count" "${#files[@]}"
 
-# TODO: Look through each line of the link_info_file and update each link.
-# Will use something like sed "$( printf '%d c\\\n%s' "$line_number" "$new_entry" )"$'\n' <markdown file> > <temp file>
-# Then copy the temp file over the original.
+tfile="$temp_dir/temp.md"
+ec=0
+i=0
+while IFS="" read -r line || [[ -n "$line" ]]; do
+  i=$(( i + 1 ))
+  [[ -n "$verbose" ]] && printf '[%d/%d]: Applying update: %s\n' "$i" "$link_count" "$line"
 
+  # Each line should have this format:
+  #   <markdown file>:<line number>;<new link>
+  md_file="$( sed 's/:.*$//' <<< "$line" )"
+  [[ -n "$verbose" ]] && printf '[%d/%d]: md_file: %s\n' "$i" "$link_count" "$md_file"
+  line_number="$( sed -E 's/^.*:([[:digit:]]+);.*$/\1/' <<< "$line" )"
+  [[ -n "$verbose" ]] && printf '[%d/%d]: line_number: %s\n' "$i" "$link_count" "$line_number"
+  new_link="$( sed 's/^.*:[[:digit:]];//' <<< "$line" )"
+  [[ -n "$verbose" ]] && printf '[%d/%d]: new_link: %s\n' "$i" "$link_count" "$new_link"
 
-safe_exit 0
+  if [[ -z "$md_file" || -z "$line_number" || -z "$new_link" || "$md_file" == "$line" || "$line_number" == "$line" || "$new_link" == "$line" || "${md_file}:${line_number};${new_link}" != "$line" ]]; then
+    printf '[%d/%d]: ERROR: Could not parse new link line: %s\n' "$i" "$link_count" "$line"
+    ec=1
+    continue
+  fi
+
+  # This sed command uses the a line number to identify which line to update, and the c directive to
+  # replace the entire line with new content. It's a little clunky because it insists that the c
+  # is followed by a \ and then the new content must all be on its own line. And it has to end in a
+  # newline because sed doesn't automatically include that. Without that newline, the line below gets
+  # appended to the new content and the file ultimately has one less line.
+  if ! sed "$( printf '%d c\\\n%s' "$line_number" "$new_link" )"$'\n' "$md_file" > "$tfile"; then
+    printf '[%d/%d]: ERROR: Command failed: sed to update line %d in %s with new link: %s\n' "$i" "$link_count" "$line_number" "$md_file" "$new_link"
+    ec=1
+    continue
+  fi
+
+  if ! mv "$tfile" "$md_file"; then
+    printf '[%d/%d]: ERROR: Command failed: mv %s %s\n' "$i" "$link_count" "$tfile" "$md_file"
+    ec=1
+    continue
+  fi
+
+  [[ -n "$verbose" ]] && printf '[%d/%d]: Success.\n' "$i" "$link_count"
+done < "$new_links_file"
+
+if [[ "$ec" -eq '0' ]]; then
+  [[ -z "$quiet" ]] && printf 'Done.\n'
+fi
+
+clean_exit "$ec"
