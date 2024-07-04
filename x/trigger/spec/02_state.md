@@ -60,6 +60,7 @@ The `Attribute` is used by the `TransactionEvent` to allow the user to configure
 
 ---
 ## Queue
+<!-- link message: QueuedTrigger -->
 
 The `Queue` is an internal structure that we use to store and throttle the execution of `Triggers` on the `BeginBlock`. We store each `Trigger` as a `QueuedTrigger`, and then manipulate the `Queue Start Index` and `Queue Length` whenever we add or remove from the `Queue`. When we add to the `Queue`, the new element is added to the `QueueStartIndex` + `Length`. The `QueueLength` is then incremented by one. When we dequeue from the Queue, the `QueueStartIndex` will be incremented by 1 and the `QueueLength` is decremented by 1. We also ensure the key of the dequeued element is removed.
 

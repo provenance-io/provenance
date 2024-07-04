@@ -41,6 +41,7 @@ Byte Array Length: `17`
 * Bech32 Example: `"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"`
 
 #### Scope Values
+<!-- link message: Scope -->
 
 +++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/scope.proto#L69-L96
 
@@ -110,6 +111,7 @@ Byte Array Length: `33`
 * Bech32 Example: `"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"`
 
 #### Session Values
+<!-- link message: Session -->
 
 +++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/scope.proto#L98-L124
 
@@ -166,6 +168,7 @@ Byte Array Length: `33`
 * Bech32 Example: `"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"`
 
 #### Record Values
+<!-- link message: Record -->
 
 +++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/scope.proto#L126-L150
 
@@ -221,6 +224,7 @@ Byte Array Length: `17`
 * Bech32 Example: `"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"`
 
 #### Scope Specification Values
+<!-- link message: ScopeSpecification -->
 
 +++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/specification.proto#L36-L58
 
@@ -285,6 +289,7 @@ Byte Array Length: `17`
 * Bech32 Example: `"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"`
 
 #### Contract Specification Values
+<!-- link message: ContractSpecification -->
 
 +++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/specification.proto#L60-L86
 
@@ -351,6 +356,7 @@ Byte Array Length: `33`
 * Bech32 Example: `"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"`
 
 #### Record Specification Values
+<!-- link message: RecordSpecification -->
 
 +++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/specification.proto#L88-L108
 
@@ -396,6 +402,7 @@ Byte Array Length: `21`
 | 2-(21 or 33) | The bytes of the owner address.                         |
 
 #### Object Store Locator Values
+<!-- link message: ObjectStoreLocator -->
 
 +++ https://github.com/provenance-io/provenance/blob/main/proto/provenance/metadata/v1/objectstore.proto#L9-L16
 
