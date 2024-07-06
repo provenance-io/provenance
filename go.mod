@@ -213,6 +213,8 @@ replace (
 	// This is required for https://github.com/provenance-io/provenance/issues/1414
 	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.51.0-pio-1
 	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.7-pio-1
+	// iavl v1.1.2 was revoked due
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.1.4
 
 	// TODO: Update once async-icq creates tag with our changes https://github.com/cosmos/ibc-apps/pull/168
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 => github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1
