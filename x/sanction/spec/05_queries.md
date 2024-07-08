@@ -17,11 +17,11 @@ If it returns `false`, the account *is* allowed to move its funds (at least from
 
 Request:
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/query.proto#L34-L37
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/query.proto#L34-L37
 
 Response:
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/query.proto#L39-L43
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/query.proto#L39-L43
 
 It is expected to fail if the `address` is invalid.
 
@@ -32,11 +32,11 @@ It takes in `pagination` parameters and outputs a list of `addresses`.
 
 Request:
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/query.proto#L45-L49
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/query.proto#L45-L49
 
 Response:
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/query.proto#L51-L58
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/query.proto#L51-L58
 
 This query does not take into account temporary sanctions or temporary unsanctions. 
 Addresses that are temporarily sanctioned (but not permanently sanctioned) are **not** returned by this query.
@@ -53,21 +53,21 @@ It takes in `pagination` parameters and an optional `address`.
 
 Request:
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/query.proto#L60-L67
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/query.proto#L60-L67
 
 Response:
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/query.proto#L69-L75
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/query.proto#L69-L75
 
 TemporaryEntry:
 <!-- link message: TemporaryEntry -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/sanction.proto#L36-L44
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/sanction.proto#L36-L44
 
 TempStatus:
 <!-- link message: TempStatus -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/sanction.proto#L46-L56
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/sanction.proto#L46-L56
 
 - If an `address` is provided, only temporary entries associated with that address are returned.
 - If an `address` is provided that does not have any temporary entries, a single `TemporaryEntry` with a `status` of `TEMP_STATUS_UNSPECIFIED` is returned.
@@ -87,11 +87,11 @@ It has no input and outputs the `params`.
 
 Request:
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/query.proto#L77-L78
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/query.proto#L77-L78
 
 Response:
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/query.proto#L80-L84
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/query.proto#L80-L84
 
 This query returns the values used for the params.
 That is, if there are params stored in state, they are returned;

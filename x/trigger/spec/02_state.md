@@ -28,7 +28,7 @@ The excess gas on a MsgCreateTrigger transaction will be used for the `Trigger's
 * Event Listener: `0x02 | Event Type (32 bytes) | Order (8 bytes) -> []byte{}`
 * Gas Limit: `0x04 | Trigger ID (8 bytes) -> uint64(GasLimit)`
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/provenance/trigger/v1/trigger.proto#L13-L25
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/trigger/v1/trigger.proto#L13-L25
 
 ### TriggerEventI
 
@@ -38,25 +38,25 @@ A `Trigger` must have an event that implements the `TriggerEventI` interface. Cu
 
 The `BlockHeightEvent` allows the user to configure their `Trigger` to fire when the current block's `Block Height` is greater than or equal to the defined one.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/provenance/trigger/v1/trigger.proto#L39-L46
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/trigger/v1/trigger.proto#L39-L46
 
 #### BlockTimeEvent
 
 The `BlockTimeEvent` allows the user to configure their `Trigger` to fire when the current block's `Block Time` is greater than or equal to the defined one.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/provenance/trigger/v1/trigger.proto#L48-L55
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/trigger/v1/trigger.proto#L48-L55
 
 #### TransactionEvent
 
 The `TransactionEvent` allows the user to configure their `Trigger` to fire when a transaction event matching the user defined one has been emitted.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/provenance/trigger/v1/trigger.proto#L57-L66
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/trigger/v1/trigger.proto#L57-L66
 
 ##### Attribute
 
 The `Attribute` is used by the `TransactionEvent` to allow the user to configure which attributes must be present on the transaction event. An `Attribute` with an empty `value` will only require the `name` to match.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/provenance/trigger/v1/trigger.proto#L68-L76
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/trigger/v1/trigger.proto#L68-L76
 
 ---
 ## Queue
@@ -68,4 +68,4 @@ The `Queue` is an internal structure that we use to store and throttle the execu
 * Queue Start Index: `0x06 -> uint64(QueueStartIndex)`
 * Queue Length: `0x07 -> uint64(QueueLength)`
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/provenance/trigger/v1/trigger.proto#L27-L37
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/trigger/v1/trigger.proto#L27-L37

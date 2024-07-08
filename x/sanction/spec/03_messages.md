@@ -12,7 +12,7 @@ All Msg Service endpoints in the `x/sanction` module are for use with governance
 A user can request that accounts be sanctioned by submitting a governance proposal containing a `MsgSanction`.
 It contains the list of `addresses` of accounts to be sanctioned and the `authority` able to do it.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/tx.proto#L24-L34
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/tx.proto#L24-L34
 
 If the proposal ever has enough total deposit (defined in params), immediate temporary sanctions are issued for each address.
 Temporary sanctions expire at the completion of the governance proposal regardless of outcome.
@@ -31,7 +31,7 @@ It is expected to fail if:
 A user can request that accounts be unsanctioned by submitting a governance proposal containing a `MsgUnsanction`.
 It contains the list of `addresses` of accounts to be unsanctioned and the `authority` able to do it.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/tx.proto#L39-L49
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/tx.proto#L39-L49
 
 If the proposal ever has enough total deposit (defined in params), immediate temporary unsanctions are issued for each address.
 Temporary unsanctions expire at the completion of the governance proposal regardless of outcome.
@@ -49,7 +49,7 @@ It is expected to fail if:
 The sanction module params can be updated by submitting a governance proposal containing a `MsgUpdateParams`.
 It contains the desired new `params` and the `authority` able to update them.
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/cosmos/sanction/v1beta1/tx.proto#L54-L64
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/tx.proto#L54-L64
 
 If `params` is `null`, they will be deleted from state, reverting them to their code-defined defaults.
 If a field in `params` is `null` or empty, the record in state will reflect that.

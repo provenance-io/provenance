@@ -20,7 +20,7 @@ marker is able to perform normal functions such as receiving and holding coins, 
 be queried against for balance information from the `bank` module.
 <!-- link message: MarkerAccount -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/provenance/marker/v1/marker.proto#L28-L59
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/marker.proto#L28-L59
 
 ```go
 type MarkerAccount struct {
@@ -185,7 +185,7 @@ iterator from the auth module.
 A marker can support multiple distinct net asset values assigned to track settlement pricing information on-chain. The `price` attribute denotes the value assigned to the marker for a specific asset's associated `volume`. For instance, when considering a scenario where 10 billion `nhash` holds a value of 15¢, the corresponding `volume` should reflect the quantity of 10,000,000,000. The `update_block_height` attribute captures the block height when the update occurred.
 <!-- link message: NetAssetValue -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/provenance/marker/v1/marker.proto#L91-L99
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/marker.proto#L91-L99
 
 ## Params
 
@@ -194,4 +194,4 @@ and defines overall functioning of the marker module.
 
 - Params: `Paramsspace("marker") -> legacy_amino(params)`
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0-rc2/proto/provenance/marker/v1/marker.proto#L14-L26
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/marker.proto#L14-L26
