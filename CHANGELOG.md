@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Dependencies
 
 - Bump `bufbuild/buf-setup-action` from 1.33.0 to 1.34.0 ([#2049](https://github.com/provenance-io/provenance/pull/2049))
-- Bump `github.com/cometbft/cometbft` from 0.38.7 to 0.38.8 ([#2061](https://github.com/provenance-io/provenance/pull/2061))
+- Bump `github.com/cometbft/cometbft` from 0.38.7 to 0.38.9 ([#2061](https://github.com/provenance-io/provenance/pull/2061))
 
 ---
 
