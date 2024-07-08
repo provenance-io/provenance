@@ -1,6 +1,6 @@
 # This awk script will process a markdown file and identify the desired content for each proto link.
 # You MUST provide a value for LinkRx when invoking this script.
-# Example usage: awk -v LinkRx='^\\+\\+\\+' -f identify-links.awk <file>
+# Example usage: awk -v LinkRx='^\\+\\+\\+' -f identify-links.awk <markdown file>
 # To include debugging information in the output, provide these arguments to the awk command: -v debug='1'
 #
 # This file must be in the scripts/ directory so that the update-spec-links.sh script can find it.
@@ -25,7 +25,7 @@
 # The output from the identify-messages.awk script can then be used to add the line numbers to the ;<message name>=<proto file> lines.
 #
 # The <markdown file> is the one that this awk script is parsing.
-# The <line number> is the number of the line that the link is on.
+# The <line number> is the number of the line that the link is on (in the <mardown file>).
 # The <proto file> is extracted from the link and will be relative to the repo's root.
 # The <message name> is identified by a markdown header or a link comment.
 # The <endpoint> is also identified by a markdown header.
@@ -43,8 +43,8 @@
 # Only lines of interest are considered by this script.
 # The rest of the markdown file's content is simply ignored.
 #
-# A link message html comment applies only to the next link.
-# These are also often refert to as a "link comment" or "link message comment".
+# A link message html comment applies only to the next link: "<!-- link message: MessageName -->"
+# These are also often refered to as a "link comment" or "link message comment".
 # Their use does not interrupt the other patterns described in here.
 # This allows you to use them on any link without interfering with the other patterns.
 # An error is generated if the next line of interest after a link comment is NOT a link.
@@ -65,87 +65,101 @@
 # they're not included in these examples to make them easier to read in here.
 #
 #   Use the header that the link is under:
-#       ### MessageName
-#       <link to MessageName>
-#     Spaces are removed from the header strings, so this is treated the same way:
-#       ### Message Name
-#       <link to MessageName>
-#     A header like this can only be used for a single link.
+#         ### MessageName
+#         <link to MessageName>
+#      Spaces are removed from the header strings, so this is treated the same way:
+#         ### Message Name
+#         <link to MessageName>
+#      A header like this can only be used for a single link.
+#
 #   An endpoint header followed by request and/or response headers:
-#       ### EndpointName
-#       #### Request
-#       <link to request message>
-#       #### Response
-#       <link to response message>
+#         ### EndpointName
+#         #### Request
+#         <link to request message>
+#         #### Response
+#         <link to response message>
+#
 #   An endpoint header followed by "Request:" and/or "Response:" lines:
-#       ### EndpointName
-#       Request:
-#       <link to request message>
-#       Response:
-#       <link to response message>
-#  A clearly defined endpoint header followed by one or two links:
-#       ### Msg/EndpointName
-#       <link to request message>
-#       <link to response message>
-#     If there's only one link after such a header, it's assumed to be the request.
-#     Only "Msg/" and "Query/" are recognized prefixes for a clearly defined endpoint header.
-#     Without the "Msg/" or "Query/" prefix in the header, the this script would think that the
-#     first link should refer to a message or enum with the same name as the "EndpointName", and
-#     an error would be generated for the second line.
-#  A link message html comment followed by a link:
-#       <!-- link message: MessageName -->
-#       <link to MessageName>
-#     There cannot be header lines, another link comment or "Request:" or "Response:" lines between the link comment and link.
+#         ### EndpointName
+#         Request:
+#         <link to request message>
+#         Response:
+#         <link to response message>
+#
+#   A clearly defined endpoint header followed by one or two links:
+#         ### Msg/EndpointName
+#         <link to request message>
+#         <link to response message>
+#      If there's only one link after such a header, it's assumed to be the request.
+#      Only "Msg/" and "Query/" are recognized prefixes for a clearly defined endpoint header.
+#      Without the "Msg/" or "Query/" prefix in the header, this script would think that the
+#      first link should refer to a message or enum with the same name as the "EndpointName",
+#      and an error would be generated for the second line.
+#
+#   A link message html comment followed by a link:
+#         <!-- link message: MessageName -->
+#         <link to MessageName>
+#      There cannot be any lines of interest between the comment and the link, but there can be boring lines.
 #
 # Here are some more complex examples. Again, there should be empty lines
 # before and after each link, but they aren't included in these examples.
-#   A link comment under another message's header
-#       ### Message Name
-#       <link to MessageName>
-#       <!-- link message: OtherMessage -->
-#       <link to OtherMessage>
-#     or even
-#       ### Message Name
-#       <!-- link message: OtherMessage -->
-#       <link to OtherMessage>
-#       <link to MessageName>
-#   A link comment under a clearly defined endpoint header.
-#       ### Msg/EndpointName
-#       <link to EndpointName request message>
-#       <!-- link message: InternalMessage1 -->
-#       <link to InternalMessage1>
-#       <!-- link message: InternalMessage2 -->
-#       <link to InternalMessage2>
-#       <link to EndpointName response message>
 #
-# Troubleshooting:
-#   Here are some example error lines, and what they might mean:
-#     "You must provide a LinkRx value (with -v LinkRx=...) to invoke this script"
+#   A link comment under another message's header
+#         ### Message Name
+#         <link to MessageName>
+#         <!-- link message: OtherMessage -->
+#         <link to OtherMessage>
+#      or even
+#         ### Message Name
+#         <!-- link message: OtherMessage -->
+#         <link to OtherMessage>
+#         <link to MessageName>
+#
+#   A link comment under a clearly defined endpoint header.
+#         ### Msg/EndpointName
+#         <link to EndpointName request message>
+#         <!-- link message: InternalMessage1 -->
+#         <link to InternalMessage1>
+#         <!-- link message: InternalMessage2 -->
+#         <link to InternalMessage2>
+#         <link to EndpointName response message>
+#
+# Troubleshooting
+#
+# Here are some example error lines, and what they might mean:
+#
+#   "You must provide a LinkRx value (with -v LinkRx=...) to invoke this script"
 #       Cause: The LinkRx value was not provided when this awk script was invoked.
 #       Fix: Include these args in your awk command: -v LinkRx='...'
-#     "link message comment not above a link: <!-- link message: <MessageName> -->"
-#       Cause: The first line of interest after a link comment line, is not a link.
+#
+#   "link message comment not above a link: <!-- link message: <MessageName> -->"
+#       Cause: The first line of interest after a link comment line is not a link.
 #       Fix: Either delete the link comment line or else move it closer to the link.
 #       Note: The <line number> included in this error is the line number of the (non-link)
 #             line of interest, and NOT the line number of the link comment.
-#     "endpoint <EndpointName> already has a request and response"
+#
+#   "endpoint <EndpointName> already has a request and response"
 #       Cause: There are three or more links under a "Msg/Endpoint" or "Query/Endpoint" header.
 #       Fix: Add a link comment above one or more links in the section.
 #       Note: The first link (without a link comment) is assumed to the the request,
 #             and the second is the response. So you don't need to put a link comment
 #             above those two, just the ones that are neither the request nor response.
-#     "multiple links found in endpoint <EndpointName> (request|response) section"
+#
+#   "multiple links found in endpoint <EndpointName> (request|response) section"
 #       Cause: There is a request or response section in the markdown that has two or more links.
 #       Fix: Add a link comment above the non-request/response links.
-#            You might also consider adding headers above each of those links so that those messages
-#            can be easily linked to by other documentation.
+#            You might also consider instead adding headers above each of those links so that
+#            those messages can be easily linked to by other documentation.
+#
 #       Note: The first link (without a link comment) is taken to be either the request
 #             or response (depending on the section). All other links must have a link comment.
-#     "could not identify desired content of link"
+#   "could not identify desired content of link"
 #       Cause: There is probably two links in a non-endpoint section, but there might be other things that cause this.
 #       Fix: Either add a link comment or a new header above the problematic link.
 #
 {
+    # Make sure that there's a LinkRx provided. This check is done on line one instead of a BEGIN block
+    # because I wanted the FILENAME in it, which isn't available in a BEGIN block.
     if (FNR==1) {
         if (LinkRx=="") {
             print FILENAME ":0;ERROR: You must provide a LinkRx value (with -v LinkRx=...) to invoke this script";

@@ -1,5 +1,5 @@
 # This awk script will process a proto file and output all the messages and their starting and ending lines.
-# Example usage: awk -f identify-messages.awk <file>
+# Example usage: awk -f identify-messages.awk <proto file>
 # To include debugging information in the output, provide these arguments to the awk command: -v debug='1'
 #
 # This file must be in the scripts/ directory so that the update-spec-links.sh script can find it.

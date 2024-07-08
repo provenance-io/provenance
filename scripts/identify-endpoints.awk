@@ -1,5 +1,5 @@
 # This awk script will process a proto file and output information about endpoint request and response message names.
-# Example usage: awk -f identify-endpoints.awk <file>
+# Example usage: awk -f identify-endpoints.awk <proto file>
 # To include debugging information in the output, provide these arguments to the awk command: -v debug='1'
 #
 # This file must be in the scripts/ directory so that the update-spec-links.sh script can find it.
@@ -10,8 +10,9 @@
 #   rpc:<endpoint>:Request:<proto file>;<request name>=<proto file>
 #   rpc:<endpoint>:Response:<proto file>;<response name>=<proto file>
 # The <proto file> value will be relative to the repo root directory (e.g. it will start with "proto/").
-# Note that the output has the <proto file> twice. That makes it so we can find the entry by the start of the line
-# and we have exactly what we need to replace it with after the double colons, without any extra special parsing needed.
+# Note that the output has the <proto file> twice. That makes it so we can find the entry by the start
+# of the line and we have exactly what we need to replace it with after the semicolon. It saves us from
+# having to also parse that out separately elsewhere.
 #
 # You can basically think of each line having this format:
 #   <identifier>;<message info>
