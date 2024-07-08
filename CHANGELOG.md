@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Dependencies
 
+- Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
 - Bump `bufbuild/buf-setup-action` from 1.33.0 to 1.34.0 ([#2049](https://github.com/provenance-io/provenance/pull/2049))
 
 ---
