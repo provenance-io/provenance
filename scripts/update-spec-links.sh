@@ -5,7 +5,7 @@
 #   identify-endpoints.awk
 #   identify-messages.awk
 
-simple_usage='Usage: ./update-spec-links.sh <ref> [<flags>] [<file or dir> ...]'
+simple_usage='Usage: ./update-spec-links.sh <ref> [<flags>] [<markdown file or dir> ...]'
 
 show_usage () {
   cat << EOF
@@ -65,14 +65,19 @@ EOF
 where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
 
 # Define paths to each of the required scripts.
-# Note that each of these can alternatively be defined as environment variables
+# Note that each of these can alternatively be defined using environment variables
 # primarily so that it's easier to test/develop alternative versions of each one.
 identify_messages_awk="${IDENTIFY_MESSAGES_AWK:-${where_i_am}/identify-messages.awk}"
 identify_endpoints_awk="${IDENTIFY_ENDPOINTS_AWK:-${where_i_am}/identify-endpoints.awk}"
 identify_links_awk="${IDENTIFY_LINKS_AWK:-${where_i_am}/identify-links.awk}"
 
+########################################################################################################################
+################################################  Read/Parse CLI args  #################################################
+########################################################################################################################
+
 declare files_in=()
 declare dirs_in=()
+clean='always'
 
 while [[ "$#" -gt '0' ]]; do
   case "$1" in
@@ -221,7 +226,7 @@ fi
 
 link_prefix="+++ https://github.com/provenance-io/provenance/blob/$ref/"
 link_rx='^\+\+\+ https://github\.com/provenance-io/provenance.*/proto/.*\.proto'
-link_rx_esc="$( sed 's|\\|\\\\|g;' <<< "$link_rx" )"
+link_rx_esc="$( sed -E 's|\\|\\\\|g;' <<< "$link_rx" )"
 declare files=()
 
 if [[ "${#files_in[@]}" -eq '0' && "${#dirs_in[@]}" -eq '0' ]]; then
@@ -331,9 +336,9 @@ set +o noglob
 if [[ -z "$source_ref" ]]; then
   # If there isn't a source ref, then we're copying the proto files from the local version.
   # But all we'll know is the path relative to the repo root. So, below, we'll convert that
-  # relative path to an absolute path for the cp command so that this script from any directory
-  # in this repo. We're doing this before trying to create the temp directory so that we don't
-  # have to worry about the extra cleanup if this fails.
+  # relative path to an absolute path for the cp command so that this script can run from any
+  # directory in this repo. We're doing this before trying to create the temp directory so
+  # that we don't have to worry about the extra cleanup if this fails.
   repo_root="$( git rev-parse --show-toplevel )" || exit $?
 fi
 
@@ -415,7 +420,7 @@ get_line_count () {
 # Each line of the message summary file is expected to have this format:
 #     ;<message name>=<proto file>#L<start>-L<end>
 message_summary_file="${temp_dir}/message-summary.txt"
-[[ -n "$verbose" ]] && printf 'Creating summary of all message and enums: %s\n' "$message_summary_file"
+[[ -n "$verbose" ]] && printf 'Creating summary of all messages and enums: %s\n' "$message_summary_file"
 find "$temp_dir" -type f -name '*.proto' -print0 | xargs -0 awk -f "$identify_messages_awk" >> "$message_summary_file" || clean_exit $?
 [[ -n "$verbose" ]] && printf 'Found %d messages/enums in the proto files.\n' "$( get_line_count "$message_summary_file" )"
 
@@ -496,9 +501,9 @@ while IFS="" read -r line || [[ -n "$line" ]]; do
   # Split the line into:
   #   The lead: <markdown file>:<line number>
   #   And the endpoint lookup string: rpc:<endpoint>:(Request|Response):<proto file>
-  lead="$( sed 's/;.*$//' <<< "$line" )"
+  lead="$( sed -E 's/;.*$//' <<< "$line" )"
   [[ -n "$verbose" ]] && printf '[2:%d/%d]: lead: %s\n' "$i" "$rpc_count" "$lead"
-  to_find="$( sed 's/^[^;]*;//' <<< "$line" )"
+  to_find="$( sed -E 's/^[^;]*;//' <<< "$line" )"
   [[ -n "$verbose" ]] && printf '[2:%d/%d]: to_find: %s\n' "$i" "$rpc_count" "$to_find"
   if [[ -z "$lead" || -z "$to_find" || "$lead" == "$to_find" ]]; then
     [[ -n "$verbose" ]] && printf '[2:%d/%d]: Result: Error: Could not split lead and to_find.\n' "$i" "$ok_count"
