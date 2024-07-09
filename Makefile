@@ -455,9 +455,9 @@ indexer-db-down:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-gen update-swagger-docs
+proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-gen proto-swagger-gen
 proto-checks: proto-update-deps proto-lint proto-check-breaking proto-check-breaking-third-party
-proto-regen: proto-format proto-gen update-swagger-docs
+proto-regen: proto-format proto-gen proto-swagger-gen
 
 containerProtoVer=0.14.0
 containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
