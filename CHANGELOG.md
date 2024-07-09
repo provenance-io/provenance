@@ -37,7 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Improvements
+
+* Add the (empty) `umber-rc2` upgrade [#2069](https://github.com/provenance-io/provenance/pull/2069).
 
 ---
 
