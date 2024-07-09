@@ -32,7 +32,7 @@ done
 swagger-combine ./client/docs/config.json -o ./tmp-swagger-gen/swagger-new.yaml -f yaml --continueOnConflictingPaths true --includeDefinitions true
 
 # Strip buf appended Query and Service tags from the resulting swagger.
-# While this isn't the cleanest approach unfortunatley buf doesn't support a
+# While this isn't the cleanest approach unfortunately buf doesn't support a
 # configuration to remove or prevent appending these extra tags.
 
 grep -v '        - Query' "./tmp-swagger-gen/swagger-new.yaml" | grep -v '        - Service' > "./client/docs/swagger-ui/swagger.yaml"
