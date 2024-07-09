@@ -37,12 +37,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
-
----
-
-## [v1.19.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc1) - 2024-06-24
-
 ### Features
 
 * Create a script for updating links in the spec docs to proto messages [#2068](https://github.com/provenance-io/provenance/pull/2068).
@@ -51,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Update all the proto links in the spec docs to point to `v1.19.0` versions of the proto files [#2068](https://github.com/provenance-io/provenance/pull/2068).
 * Add the (empty) `umber-rc2` upgrade [#2069](https://github.com/provenance-io/provenance/pull/2069).
+* Update the Swagger API documentation [#2063](https://github.com/provenance-io/provenance/pull/2063).
 
 ### Dependencies
 
