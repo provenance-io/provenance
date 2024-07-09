@@ -13,11 +13,11 @@ The query takes in an `address` and returns a coins `amount`.
 
 Request:
 
-+++ https://github.com/provenance-io/provenance/blob/dwedul/1607-in-place-escrow/proto/provenance/hold/v1/query.proto#L28-L35
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/hold/v1/query.proto#L28-L35
 
 Response:
 
-+++ https://github.com/provenance-io/provenance/blob/dwedul/1607-in-place-escrow/proto/provenance/hold/v1/query.proto#L37-L45
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/hold/v1/query.proto#L37-L49
 
 It is expected to fail if the `address` is invalid or missing.
 
@@ -30,12 +30,14 @@ The query takes in pagination parameters and returns a list of `address`/`amount
 
 Request:
 
-+++ https://github.com/provenance-io/provenance/blob/dwedul/1607-in-place-escrow/proto/provenance/hold/v1/query.proto#L47-L54
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/hold/v1/query.proto#L51-L58
 
 Response:
 
-+++ https://github.com/provenance-io/provenance/blob/dwedul/1607-in-place-escrow/proto/provenance/hold/v1/query.proto#L56-L62
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/hold/v1/query.proto#L60-L66
 
-+++ https://github.com/provenance-io/provenance/blob/dwedul/1607-in-place-escrow/proto/provenance/hold/v1/hold.proto#L12-L19
+<!-- link message: AccountHold -->
+
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/hold/v1/hold.proto#L12-L23
 
 It is expected to fail if the pagination parameters are invalid.
