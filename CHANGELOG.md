@@ -37,14 +37,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* Create a script for updating links in the spec docs to proto messages [#2068](https://github.com/provenance-io/provenance/pull/2068).
+
 ### Improvements
 
+* Update all the proto links in the spec docs to point to `v1.19.0` versions of the proto files [#2068](https://github.com/provenance-io/provenance/pull/2068).
 * Add the (empty) `umber-rc2` upgrade [#2069](https://github.com/provenance-io/provenance/pull/2069).
 
 ### Dependencies
 
 - Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
 - Bump `bufbuild/buf-setup-action` from 1.33.0 to 1.34.0 ([#2049](https://github.com/provenance-io/provenance/pull/2049))
+- Bump `github.com/cometbft/cometbft` from 0.38.7 to 0.38.9 ([#2061](https://github.com/provenance-io/provenance/pull/2061))
 
 ---
 

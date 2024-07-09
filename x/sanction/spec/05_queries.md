@@ -60,12 +60,14 @@ Response:
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/query.proto#L69-L75
 
 TemporaryEntry:
+<!-- link message: TemporaryEntry -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/sanction.proto#L27-L35
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/sanction.proto#L36-L44
 
 TempStatus:
+<!-- link message: TempStatus -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/sanction.proto#L37-L47
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/sanction/v1beta1/sanction.proto#L46-L56
 
 - If an `address` is provided, only temporary entries associated with that address are returned.
 - If an `address` is provided that does not have any temporary entries, a single `TemporaryEntry` with a `status` of `TEMP_STATUS_UNSPECIFIED` is returned.

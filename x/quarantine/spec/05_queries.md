@@ -34,8 +34,9 @@ Response:
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/quarantine/v1beta1/query.proto#L67-L74
 
 QuarantinedFunds:
+<!-- link message: QuarantinedFunds -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/quarantine/v1beta1/quarantine.proto#L10-L21
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/quarantine/v1beta1/quarantine.proto#L11-L26
 
 - If neither a `to_address` nor `from_address` are provided, all non-declined quarantined funds for any addresses will be returned.
 - If the request contains a `to_address` but no `from_address`, all non-declined quarantined funds for the `to_address` are returned.
@@ -62,8 +63,9 @@ Response:
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/quarantine/v1beta1/query.proto#L87-L94
 
 AutoResponseEntry:
+<!-- link message: AutoResponseEntry -->
 
-+++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/quarantine/v1beta1/quarantine.proto#L23-L31
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/cosmos/quarantine/v1beta1/quarantine.proto#L28-L36
 
 - If no `from_address` is provided, all auto-response entries for the provided `to_address` are returned. The results will not contain any entries for `AUTO_RESPONSE_UNSPECIFIED`.
 - If a `from_address` is provided, the auto-response setting that `to_address` has from `from_address` is returned. This result might be `AUTO_RESPONSE_UNSPECIFIED`.
