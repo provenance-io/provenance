@@ -37,6 +37,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* Create a script for updating links in the spec docs to proto messages [#2068](https://github.com/provenance-io/provenance/pull/2068).
+
+### Improvements
+
+* Update all the proto links in the spec docs to point to `v1.19.0` versions of the proto files [#2068](https://github.com/provenance-io/provenance/pull/2068).
+
 ### Dependencies
 
 - Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
