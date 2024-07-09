@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `google.golang.org/grpc` from 1.64.0 to 1.65.0 ([#2065](https://github.com/provenance-io/provenance/pull/2065))
 - Bump `github.com/cometbft/cometbft` from 0.38.7 to 0.38.9 ([#2061](https://github.com/provenance-io/provenance/pull/2061))
 - Bump `github.com/cosmos/ibc-go/modules/capability` from 1.0.0 to 1.0.1 ([#2064](https://github.com/provenance-io/provenance/pull/2064))
+- Bump `github.com/rs/cors` from 1.10.1 to 1.11.0 ([#2066](https://github.com/provenance-io/provenance/pull/2066))
 
 ---
 
