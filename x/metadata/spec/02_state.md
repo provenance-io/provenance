@@ -41,8 +41,9 @@ Byte Array Length: `17`
 * Bech32 Example: `"scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel"`
 
 #### Scope Values
+<!-- link message: Scope -->
 
-+++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/scope.proto#L69-L96
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/scope.proto#L70-L90
 
 ```protobuf
 // Scope defines a root reference for a collection of records owned by one or more parties.
@@ -110,8 +111,9 @@ Byte Array Length: `33`
 * Bech32 Example: `"session1qxge0zaztu65tx5x5llv5xc9zts9sqlch3sxwn44j50jzgt8rshvqyfrjcr"`
 
 #### Session Values
+<!-- link message: Session -->
 
-+++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/scope.proto#L98-L124
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/scope.proto#L92-L111
 
 ```protobuf
 // Session defines an execution context against a specific specification instance.
@@ -166,8 +168,9 @@ Byte Array Length: `33`
 * Bech32 Example: `"record1q2ge0zaztu65tx5x5llv5xc9ztsw42dq2jdvmdazuwzcaddhh8gmu3mcze3"`
 
 #### Record Values
+<!-- link message: Record -->
 
-+++ https://github.com/provenance-io/provenance/blob/812cb97c77036b8df59e10845fa8a04f4ba84c43/proto/provenance/metadata/v1/scope.proto#L126-L150
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/scope.proto#L113-L130
 
 ```protobuf
 // A record (of fact) is attached to a session or each consideration output from a contract
@@ -221,8 +224,9 @@ Byte Array Length: `17`
 * Bech32 Example: `"scopespec1qnwg86nsatx5pl56muw0v9ytlz3qu3jx6m"`
 
 #### Scope Specification Values
+<!-- link message: ScopeSpecification -->
 
-+++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/specification.proto#L36-L58
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/specification.proto#L36-L51
 
 ```protobuf
 // ScopeSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
@@ -285,8 +289,9 @@ Byte Array Length: `17`
 * Bech32 Example: `"contractspec1q000d0q2e8w5say53afqdesxp2zqzkr4fn"`
 
 #### Contract Specification Values
+<!-- link message: ContractSpecification -->
 
-+++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/specification.proto#L60-L86
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/specification.proto#L53-L76
 
 ```protobuf
 // ContractSpecification defines the required parties, resources, conditions, and consideration outputs for a contract
@@ -351,8 +356,9 @@ Byte Array Length: `33`
 * Bech32 Example: `"recspec1qh00d0q2e8w5say53afqdesxp2zw42dq2jdvmdazuwzcaddhh8gmuqhez44"`
 
 #### Record Specification Values
+<!-- link message: RecordSpecification -->
 
-+++ https://github.com/provenance-io/provenance/blob/4192fd46ea56574bb4ffcacb632d8bb54a720b28/proto/provenance/metadata/v1/specification.proto#L88-L108
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/specification.proto#L78-L95
 
 ```protobuf
 // RecordSpecification defines the specification for a Record including allowed/required inputs/outputs
@@ -396,8 +402,9 @@ Byte Array Length: `21`
 | 2-(21 or 33) | The bytes of the owner address.                         |
 
 #### Object Store Locator Values
+<!-- link message: ObjectStoreLocator -->
 
-+++ https://github.com/provenance-io/provenance/blob/main/proto/provenance/metadata/v1/objectstore.proto#L9-L16
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/objectstore.proto#L12-L23
 
 ```protobuf
 // Defines an Locator object stored on chain, which represents a owner( blockchain address) associated with a endpoint
