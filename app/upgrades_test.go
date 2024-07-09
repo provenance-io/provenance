@@ -402,6 +402,18 @@ func (s *UpgradeTestSuite) TestUmberRC1() {
 	s.AssertUpgradeHandlerLogs("umber-rc1", expInLog, nil)
 }
 
+func (s *UpgradeTestSuite) TestUmberRC2() {
+	key := "umber-rc2"
+	s.Assert().Contains(upgrades, key, "%q defined upgrades map", key)
+
+	entry := upgrades[key]
+	s.Assert().NotNil(entry, "%q entry in the upgrades map", key)
+	s.Assert().Empty(entry.Added, "%q.Added", key)
+	s.Assert().Empty(entry.Deleted, "%q.Deleted", key)
+	s.Assert().Empty(entry.Renamed, "%q.Renamed", key)
+	s.Assert().Nil(entry.Handler, "%q.Handler", key)
+}
+
 func (s *UpgradeTestSuite) TestUmber() {
 	expInLog := []string{
 		"INF Pruning expired consensus states for IBC.",
