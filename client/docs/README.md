@@ -64,7 +64,7 @@ To get a new version of `swagger_third_party.yaml`:
 
 Finally, to update the rest of the swagger files (regardless of whether the 3rd party file needed updating), run this command:
 ```bash
-> make update-swagger-docs
+> make proto-swagger-gen
 ```
 
 Commit any files with changes so they can be included in a PR.

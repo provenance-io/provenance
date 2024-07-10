@@ -37,7 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Improvements
+
+* Update the Swagger API documentation [#2063](https://github.com/provenance-io/provenance/pull/2063).
 
 ---
 
