@@ -122,7 +122,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 	}
 }
 
-// StargateQuerier dispatches whitelisted stargate queries
+// GrpcQuerier dispatches whitelisted queries and returns protobuf encoded responses
 func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
 		_, err := GetWhitelistedQuery(request.Path)
