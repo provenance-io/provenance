@@ -45,15 +45,18 @@ jobs:
           path: ./pkgs.txt
       - name: Split pkgs into parts
         # The sanction and quarantine simulation race test takes about 6 minutes.
-        # With a normal split, they both end up in part 03, making that one take
-        # much longer than the others. So we'll shift that one to its own part 04.
+        # So we'll split everything else 3 ways, and make those part 03 and 04
         run: |
           grep -vF \
             -e 'github.com/provenance-io/provenance/x/quarantine/simulation' \
+            -e 'github.com/provenance-io/provenance/x/sanction/simulation' \
             pkgs.txt > pkgs.txt.tmp
-          split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
+          split -d -n l/3 pkgs.txt.tmp pkgs.txt.part.
           printf '%s\n' \
             'github.com/provenance-io/provenance/x/quarantine/simulation' \
+            >> pkgs.txt.part.03
+          printf '%s\n' \
+            'github.com/provenance-io/provenance/x/sanction/simulation' \
             >> pkgs.txt.part.04
       - uses: actions/upload-artifact@v4
         with:
