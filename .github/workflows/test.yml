@@ -44,8 +44,17 @@ jobs:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt"
           path: ./pkgs.txt
       - name: Split pkgs into parts
+        # The sanction and quarantine simulation race test takes about 6 minutes.
+        # With a normal split, they both end up in part 03, making that one take
+        # much longer than the others. So we'll shift that one to its own part 04.
         run: |
-          split -d -n l/5 pkgs.txt pkgs.txt.part.
+          grep -vF \
+            -e 'github.com/provenance-io/provenance/x/quarantine/simulation' \
+            pkgs.txt > pkgs.txt.tmp
+          split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
+          printf '%s\n' \
+            'github.com/provenance-io/provenance/x/quarantine/simulation' \
+            >> pkgs.txt.part.04
       - uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.00"
