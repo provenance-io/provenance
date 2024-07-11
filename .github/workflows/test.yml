@@ -44,22 +44,8 @@ jobs:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt"
           path: ./pkgs.txt
       - name: Split pkgs into parts
-        # With a standard split, test-race (03) takes the longest of all these at around 6m35s.
-        # and test-race (00) is the shortest (of the race tests) at around 4m00s.
-        # The x/sanction/simulation test-race is one of the longer ones (at almost 2 minutes), and ends up in part 03.
-        # By forcing that one into 00, it ends up reducing the overall run-time of this whole workflow by about a minute.
-        # The x/marker/client/cli tests take around 30s (35s for race), and would be in 01.
-        # Moving it to 00 ends up leveling out the times a bit more.
         run: |
-          grep -vF \
-            -e 'github.com/provenance-io/provenance/x/sanction/simulation' \
-            -e 'github.com/provenance-io/provenance/x/marker/client/cli' \
-            pkgs.txt > pkgs.txt.tmp
-          split -d -n l/4 pkgs.txt.tmp pkgs.txt.part.
-          printf '%s\n' \
-            'github.com/provenance-io/provenance/x/sanction/simulation' \
-            'github.com/provenance-io/provenance/x/marker/client/cli' \
-            >> pkgs.txt.part.00
+          split -d -n l/5 pkgs.txt pkgs.txt.part.
       - uses: actions/upload-artifact@v4
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.00"
@@ -76,6 +62,10 @@ jobs:
         with:
           name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.03"
           path: ./pkgs.txt.part.03
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "${{ steps.def-vars.outputs.file-prefix }}-pkgs.txt.part.04"
+          path: ./pkgs.txt.part.04
     outputs:
       should-run: ${{ env.GIT_DIFF }}
       go-version: '1.21'
@@ -90,7 +80,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: ["00", "01", "02", "03"]
+        part: ["00", "01", "02", "03", "04"]
     runs-on: ubuntu-latest
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
@@ -146,6 +136,10 @@ jobs:
         if: needs.setup-tests.outputs.should-run
         with:
           name: "${{ needs.setup-tests.outputs.file-prefix }}-03-coverage"
+      - uses: actions/download-artifact@v4
+        if: needs.setup-tests.outputs.should-run
+        with:
+          name: "${{ needs.setup-tests.outputs.file-prefix }}-04-coverage"
       - name: Combine profiles
         if: needs.setup-tests.outputs.should-run
         run: |
@@ -177,7 +171,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: ["00", "01", "02", "03"]
+        part: ["00", "01", "02", "03", "04"]
     env:
       LD_LIBRARY_PATH: /usr/local/lib:/usr/local/lib/x86_64-linux-gnu
     steps:
