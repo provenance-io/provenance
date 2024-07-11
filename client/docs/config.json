@@ -2,24 +2,17 @@
   "swagger": "2.0",
   "info": {
     "title": "Provenance Blockchain",
-    "description": "Provenance Blockchain Node Application",
-    "version": "1.13.0"
+    "description": "Provenance Blockchain Protocol API",
+    "version": "1.19.0"
   },
   "apis": [
     {
-      "url": "./client/docs/swagger_third_party.yaml",
-      "dereference": {
-        "circular": "ignore"
-      },
-      "paths": {
-          "exclude": [
-              "cosmos/nft/.*"
-          ]
-      }
-    },
-
-    {
       "url": "./tmp-swagger-gen/provenance/attribute/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Attribute"
+        ]
+      },
       "operationIds": {
         "rename": {
           "Params": "AttributeParams"
@@ -27,11 +20,20 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/attribute/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/attribute/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Attribute"
+        ]
+      }
     },
-
     {
       "url": "./tmp-swagger-gen/provenance/exchange/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Exchange"
+        ]
+      },
       "operationIds": {
         "rename": {
           "Params": "ExchangeParams"
@@ -39,19 +41,36 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/exchange/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/exchange/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Exchange"
+        ]
+      }
     },
-
     {
-      "url": "./tmp-swagger-gen/provenance/hold/v1/query.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/hold/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Hold"
+        ]
+      }
     },
-
     {
-      "url": "./tmp-swagger-gen/provenance/ibchooks/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/ibchooks/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "IBC"
+        ]
+      }
     },
-
     {
       "url": "./tmp-swagger-gen/provenance/ibcratelimit/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "IBC"
+        ]
+      },
       "operationIds": {
         "rename": {
           "Params": "IBCRateLimitParams"
@@ -59,11 +78,20 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/ibcratelimit/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/ibcratelimit/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "IBC"
+        ]
+      }
     },
-
     {
       "url": "./tmp-swagger-gen/provenance/marker/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Marker"
+        ]
+      },
       "operationIds": {
         "rename": {
           "Params": "MarkerParams",
@@ -73,11 +101,20 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/marker/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/marker/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Marker"
+        ]
+      }
     },
-
     {
       "url": "./tmp-swagger-gen/provenance/metadata/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Metadata"
+        ]
+      },
       "operationIds": {
         "rename": {
           "Params": "MetadataParams",
@@ -86,11 +123,20 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/metadata/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/metadata/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Metadata"
+        ]
+      }
     },
-
     {
       "url": "./tmp-swagger-gen/provenance/msgfees/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Fees"
+        ]
+      },
       "operationIds": {
         "rename": {
           "Params": "MsgFeeParams"
@@ -98,11 +144,20 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/msgfees/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/msgfees/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Fees"
+        ]
+      }
     },
-
     {
       "url": "./tmp-swagger-gen/provenance/name/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Name"
+        ]
+      },
       "operationIds": {
         "rename": {
           "Params": "NameParams"
@@ -110,18 +165,36 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/name/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/name/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Name"
+        ]
+      }
     },
-
     {
-      "url": "./tmp-swagger-gen/provenance/oracle/v1/query.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/oracle/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Oracle"
+        ]
+      }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/oracle/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/provenance/oracle/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Oracle"
+        ]
+      }
     },
-
     {
       "url": "./tmp-swagger-gen/cosmos/sanction/v1beta1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Sanction"
+        ]
+      },
       "operationIds": {
         "rename": {
           "Params": "SanctionParams"
@@ -129,22 +202,60 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/cosmos/sanction/v1beta1/tx.swagger.json"
-    },
-
-    {
-      "url": "./tmp-swagger-gen/cosmos/quarantine/v1beta1/query.swagger.json"
-    },
-    {
-      "url": "./tmp-swagger-gen/cosmos/quarantine/v1beta1/tx.swagger.json"
-    },
-
-    {
-      "url": "./tmp-swagger-gen/provenance/trigger/v1/query.swagger.json"
+      "url": "./tmp-swagger-gen/cosmos/sanction/v1beta1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Sanction"
+        ]
+      }
     },
     {
-      "url": "./tmp-swagger-gen/provenance/trigger/v1/tx.swagger.json"
+      "url": "./tmp-swagger-gen/cosmos/quarantine/v1beta1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Quarantine"
+        ]
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/quarantine/v1beta1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Quarantine"
+        ]
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/trigger/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "Trigger"
+        ]
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/provenance/trigger/v1/tx.swagger.json",
+      "tags": {
+        "add": [
+          "Trigger"
+        ]
+      }
+    },
+    {
+      "url": "./client/docs/swagger_third_party.yaml",
+      "dereference": {
+        "circular": "ignore"
+      },
+      "tags": {
+        "add": [
+          "Cosmos SDK"
+        ]
+      },
+      "paths": {
+        "exclude": [
+          "cosmos/nft/.*"
+        ]
+      }
     }
   ]
 }
-
