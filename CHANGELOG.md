@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cometbft/cometbft` from 0.38.7 to 0.38.9 ([#2061](https://github.com/provenance-io/provenance/pull/2061))
 - Bump `github.com/cosmos/ibc-go/modules/capability` from 1.0.0 to 1.0.1 ([#2064](https://github.com/provenance-io/provenance/pull/2064))
 - Bump `github.com/rs/cors` from 1.10.1 to 1.11.0 ([#2066](https://github.com/provenance-io/provenance/pull/2066))
+- Bump `github.com/cosmos/iavl` from 1.1.2 to 1.2.0 ([#2076](https://github.com/provenance-io/provenance/pull/2076))
 
 ---
 
@@ -274,8 +275,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `cosmossdk.io/client/v2` from 2.0.0-beta.1 to 2.0.0-beta.2 ([#2042](https://github.com/provenance-io/provenance/pull/2042))
 - Bump `docker/build-push-action` from 5 to 6 ([#2039](https://github.com/provenance-io/provenance/pull/2039))
 - Bump `github.com/cosmos/ibc-go/v8` from 8.2.1 to 8.3.2 ([#2043](https://github.com/provenance-io/provenance/pull/2043))
-- Bump wasmd to `v0.51.0` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
-- Bump wasmvm to `v2.0.1` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
+- Bump `github.com/CosmWasm/wasmd` from `v0.51.0-pio-1` to `v0.52.0-pio-1` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
+- Bump `github.com/CosmWasm/wasmvm` from `v2.0.1` to `v2.1.0` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
 
 ### Full Commit History
 
