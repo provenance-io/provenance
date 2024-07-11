@@ -272,6 +272,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cosmos/ibc-go/v8` from 8.2.1 to 8.3.2 ([#2043](https://github.com/provenance-io/provenance/pull/2043))
 - Bump wasmd to `v0.51.0` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
 - Bump wasmvm to `v2.0.1` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
+- Bump wasmd to `v0.52.0` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
+- Bump wasmvm to `v2.1.0` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
 
 ### Full Commit History
 
