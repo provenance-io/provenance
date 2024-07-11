@@ -1,3 +1,38 @@
+## [v1.19.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc3) - 2024-07-11
+
+### Features
+
+* Create a script for updating links in the spec docs to proto messages [#2068](https://github.com/provenance-io/provenance/pull/2068).
+
+### Improvements
+
+* Update the Swagger API documentation [#2063](https://github.com/provenance-io/provenance/pull/2063).
+* Update all the proto links in the spec docs to point to `v1.19.0` versions of the proto files [#2068](https://github.com/provenance-io/provenance/pull/2068).
+* Add the (empty) `umber-rc2` upgrade [#2069](https://github.com/provenance-io/provenance/pull/2069).
+
+### Bug Fixes
+
+* Put the location of the wasm directory back to where it is in previous versions: data/wasm/wasm [#2071](https://github.com/provenance-io/provenance/pull/2071).
+
+### Dependencies
+
+- Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
+- Bump `bufbuild/buf-setup-action` from 1.33.0 to 1.34.0 ([#2049](https://github.com/provenance-io/provenance/pull/2049))
+- Bump `google.golang.org/grpc` from 1.64.0 to 1.65.0 ([#2065](https://github.com/provenance-io/provenance/pull/2065))
+- Bump `github.com/cometbft/cometbft` from 0.38.7 to 0.38.9 ([#2061](https://github.com/provenance-io/provenance/pull/2061))
+- Bump `github.com/cosmos/ibc-go/modules/capability` from 1.0.0 to 1.0.1 ([#2064](https://github.com/provenance-io/provenance/pull/2064))
+- Bump `github.com/rs/cors` from 1.10.1 to 1.11.0 ([#2066](https://github.com/provenance-io/provenance/pull/2066))
+- Bump `github.com/cosmos/iavl` from 1.1.2 to 1.2.0 ([#2076](https://github.com/provenance-io/provenance/pull/2076))
+- Bump `github.com/CosmWasm/wasmd` from `v0.51.0-pio-1` to `v0.52.0-pio-1` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
+- Bump `github.com/CosmWasm/wasmvm` from `v2.0.1` to `v2.1.0` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.19.0-rc2...v1.19.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc3
+
+---
+
 ## [v1.19.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc2) - 2024-06-25
 
 ### Bug Fixes
