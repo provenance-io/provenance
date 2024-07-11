@@ -47,6 +47,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add the (empty) `umber-rc2` upgrade [#2069](https://github.com/provenance-io/provenance/pull/2069).
 * Update the Swagger API documentation [#2063](https://github.com/provenance-io/provenance/pull/2063).
 
+### Bug Fixes
+
+* Put the location of the wasm directory back to where it is in previous versions: data/wasm/wasm [#2071](https://github.com/provenance-io/provenance/pull/2071).
+
 ### Dependencies
 
 - Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
@@ -55,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cometbft/cometbft` from 0.38.7 to 0.38.9 ([#2061](https://github.com/provenance-io/provenance/pull/2061))
 - Bump `github.com/cosmos/ibc-go/modules/capability` from 1.0.0 to 1.0.1 ([#2064](https://github.com/provenance-io/provenance/pull/2064))
 - Bump `github.com/rs/cors` from 1.10.1 to 1.11.0 ([#2066](https://github.com/provenance-io/provenance/pull/2066))
+- Bump `github.com/cosmos/iavl` from 1.1.2 to 1.2.0 ([#2076](https://github.com/provenance-io/provenance/pull/2076))
 
 ---
 

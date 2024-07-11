@@ -620,7 +620,7 @@ func New(
 	icqIBCModule := icq.NewIBCModule(app.ICQKeeper)
 
 	// Init CosmWasm module
-	wasmDir := filepath.Join(homePath, "data")
+	wasmDir := filepath.Join(homePath, "data", "wasm")
 
 	wasmWrap := WasmWrapper{Wasm: wasmtypes.DefaultWasmConfig()}
 	err = viper.Unmarshal(&wasmWrap)
