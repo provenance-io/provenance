@@ -5,38 +5,38 @@ All created/modified state objects specified by each message are defined within 
 [state](./02_state_transitions.md) section.
 
 <!-- TOC 2 2 -->
-  - [Msg/AddMarkerRequest](#msgaddmarkerrequest)
-  - [Msg/AddAccessRequest](#msgaddaccessrequest)
-  - [Msg/DeleteAccessRequest](#msgdeleteaccessrequest)
-  - [Msg/FinalizeRequest](#msgfinalizerequest)
-  - [Msg/ActivateRequest](#msgactivaterequest)
-  - [Msg/CancelRequest](#msgcancelrequest)
-  - [Msg/DeleteRequest](#msgdeleterequest)
-  - [Msg/MintRequest](#msgmintrequest)
-  - [Msg/BurnRequest](#msgburnrequest)
-  - [Msg/WithdrawRequest](#msgwithdrawrequest)
-  - [Msg/TransferRequest](#msgtransferrequest)
-  - [Msg/IbcTransferRequest](#msgibctransferrequest)
-  - [Msg/SetDenomMetadataRequest](#msgsetdenommetadatarequest)
-  - [Msg/AddFinalizeActivateMarkerRequest](#msgaddfinalizeactivatemarkerrequest)
-  - [Msg/GrantAllowanceRequest](#msggrantallowancerequest)
-  - [Msg/SupplyIncreaseProposalRequest](#msgsupplyincreaseproposalrequest)
-  - [Msg/UpdateRequiredAttributesRequest](#msgupdaterequiredattributesrequest)
-  - [Msg/UpdateSendDenyListRequest](#msgupdatesenddenylistrequest)
-  - [Msg/UpdateForcedTransferRequest](#msgupdateforcedtransferrequest)
-  - [Msg/SetAccountDataRequest](#msgsetaccountdatarequest)
-  - [Msg/AddNetAssetValuesRequest](#msgaddnetassetvaluesrequest)
+  - [Msg/AddMarker](#msgaddmarker)
+  - [Msg/AddAccess](#msgaddaccess)
+  - [Msg/DeleteAccess](#msgdeleteaccess)
+  - [Msg/Finalize](#msgfinalize)
+  - [Msg/Activate](#msgactivate)
+  - [Msg/Cancel](#msgcancel)
+  - [Msg/Delete](#msgdelete)
+  - [Msg/Mint](#msgmint)
+  - [Msg/Burn](#msgburn)
+  - [Msg/Withdraw](#msgwithdraw)
+  - [Msg/Transfer](#msgtransfer)
+  - [Msg/IbcTransfer](#msgibctransfer)
+  - [Msg/SetDenomMetadata](#msgsetdenommetadata)
+  - [Msg/AddFinalizeActivateMarker](#msgaddfinalizeactivatemarker)
+  - [Msg/GrantAllowance](#msggrantallowance)
+  - [Msg/SupplyIncreaseProposal](#msgsupplyincreaseproposal)
+  - [Msg/UpdateRequiredAttributes](#msgupdaterequiredattributes)
+  - [Msg/UpdateSendDenyList](#msgupdatesenddenylist)
+  - [Msg/UpdateForcedTransfer](#msgupdateforcedtransfer)
+  - [Msg/SetAccountData](#msgsetaccountdata)
+  - [Msg/AddNetAssetValues](#msgaddnetassetvalues)
 
 
-## Msg/AddMarkerRequest
+## Msg/AddMarker
 
 A marker is created using the Add Marker service message.
 The created marker can not be directly added in an Active (or Cancelled/Destroyed) status.  Markers
 must have a valid supply and denomination value.
 
-+++ https://github.com/provenance-io/provenance/blob/d999e7acefea1d77e2d5ce86ea89524dbf2692f8/proto/provenance/marker/v1/tx.proto#L83-L102
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L103-L121
 
-+++ https://github.com/provenance-io/provenance/blob/d999e7acefea1d77e2d5ce86ea89524dbf2692f8/proto/provenance/marker/v1/tx.proto#L104-L105
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L123-L124
 
 
 This service message is expected to fail if:
@@ -62,13 +62,13 @@ If issued via governance proposal, and has a `from_address` of the governance mo
 - The marker's `allow_governance_control` flag ignores the `enable_governance` param value, and is set to the provided value.
 - If the marker status is Active, and no `manager` is provided, it is left blank (instead of being populated with the `from_address`).
 
-## Msg/AddAccessRequest
+## Msg/AddAccess
 
 Add Access Request is used to add permissions to a marker that allow the specified accounts to perform the specified actions.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L98-L103
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L126-L133
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L105-106
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L135-L136
 
 This service message is expected to fail if:
 
@@ -85,13 +85,13 @@ The Add Access request can be called many times on a marker with some or all of 
 only be used against markers in the `Pending` status when called by the current marker manager address or against `Finalized`
 and `Active` markers when the caller is currently assigned the `Admin` access type.
 
-## Msg/DeleteAccessRequest
+## Msg/DeleteAccess
 
 DeleteAccess Request defines the Msg/DeleteAccess request type
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L108-L113
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L138-L145
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L114-L115
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L146-L147
 
 This service message is expected to fail if:
 
@@ -104,13 +104,13 @@ The Delete Access request will remove all access granted to the given address on
 only be used against markers in the `Pending` status when called by the current marker manager address or against `Finalized`
 and `Active` markers when the caller is currently assigned the `Admin` access type.
 
-## Msg/FinalizeRequest
+## Msg/Finalize
 
 Finalize Request defines the Msg/Finalize request type
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L117-L121
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L149-L155
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L122-L123
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L156-L157
 
 This service message is expected to fail if:
 
@@ -122,13 +122,13 @@ This service message is expected to fail if:
 The `Finalize` marker status performs a set of checks to ensure the marker is ready to be activated.  It is designed to
 serve as an intermediate step prior to activation that indicates marker configuration is complete.
 
-## Msg/ActivateRequest
+## Msg/Activate
 
 Activate Request defines the Msg/Activate request type
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L125-L129
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L159-L165
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L130-L131
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L166-L167
 
 This service message is expected to fail if:
 
@@ -145,13 +145,13 @@ rights assigned as access grants for any modification.
 If a marker has a fixed supply the begin block/invariant supply checks are also performed.  If the supply is expected to
 float then the `total_supply` value will be set to zero upon activation.
 
-## Msg/CancelRequest
+## Msg/Cancel
 
 Cancel Request defines the Msg/Cancel request type
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L133-L137
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L169-L175
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L138-L139
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L176-L177
 
 This service message is expected to fail if:
 
@@ -165,13 +165,13 @@ This service message is expected to fail if:
 - The amount in circulation is greater than zero or any remaining amount is not currently held in escrow within the
   marker account.
 
-## Msg/DeleteRequest
+## Msg/Delete
 
 Delete Request defines the Msg/Delete request type
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L141-L145
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L179-L185
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L146-L147
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L186-L187
 
 This service message is expected to fail if:
 
@@ -183,13 +183,13 @@ This service message is expected to fail if:
   marker account.
 - There are any other coins remaining in escrow after supply has been fully burned.
 
-## Msg/MintRequest
+## Msg/Mint
 
 Mint Request defines the Msg/Mint request type
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L149-L154
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L189-L195
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L155-L156
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L196-L197
 
 This service message is expected to fail if:
 
@@ -200,14 +200,14 @@ This service message is expected to fail if:
 - The requested amount of mint would increase the total supply in circulation above the configured supply limit set in
   the marker module params
 
-## Msg/BurnRequest
+## Msg/Burn
 
 Burn Request defines the Msg/Burn request type that is used to remove supply of the marker coin from circulation.  In
 order to successfully burn supply the amount to burn must be held by the marker account itself (in escrow).
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L158-L163
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L199-L205
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L164-L165
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L206-L207
 
 This service message is expected to fail if:
 
@@ -217,16 +217,16 @@ This service message is expected to fail if:
 - The given administrator address does not currently have the "burn" access granted on the marker
 - The amount of coin to burn is not currently held in escrow within the marker account.
 
-## Msg/WithdrawRequest
+## Msg/Withdraw
 
 Withdraw Request defines the Msg/Withdraw request type and is used to withdraw coin from escrow within the marker.
 
 NOTE: any denom coin can be held within a marker "in escrow", these values are not restricted to just the denom of the
 marker itself.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L167-L174
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L209-L222
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L175-L176
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L223-L224
 
 This service message is expected to fail if:
 
@@ -238,7 +238,7 @@ This service message is expected to fail if:
  - The given administrator address does not currently have the "withdraw" access granted on the marker
 - The amount of coin requested for withdraw is not currently held by the marker account
 
-## Msg/TransferRequest
+## Msg/Transfer
 
 Transfer Request defines the Msg/Transfer request type.  A transfer request is used to transfer coin between two
 accounts for `RESTRICTED_COIN` type markers. Such markers have `send_enabled=false` configured with the `x/bank` module,
@@ -247,9 +247,9 @@ with `TRANSFER` access. If force transfer is not enabled for the marker, the sou
 permission (via `authz`) to do the transfer. If force transfer is allowed for the marker, the source account does not
 need to approve of the transfer.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L178-L185
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L226-L234
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L187-L188
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L236-L237
 
 This service message is expected to fail if:
 
@@ -258,25 +258,25 @@ This service message is expected to fail if:
   - The given administrator address does not currently have the "transfer" access granted on the marker
   - The marker types is not `RESTRICTED_COIN`
 
-## Msg/IbcTransferRequest
+## Msg/IbcTransfer
 
 Ibc transfer Request defines the Msg/IbcTransfer request type.  The `IbcTransferRequest` is used to transfer `RESTRICTED_COIN` type markers to another chain via ibc. These coins have their `send_enabled` flag disabled by the bank module and thus cannot be sent using a normal `send_coin` operation.
 
 NOTE: A transfer request also requires a signature from an account with the transfer permission as well as approval from the account the funds will be withdrawn from.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L190-L197
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L239-L248
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L199-L200
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L250-L251
 
-## Msg/SetDenomMetadataRequest
+## Msg/SetDenomMetadata
 
 SetDenomMetadata Request defines the Msg/SetDenomMetadata request type.  This request is used to set the informational
 denom metadata held within the bank module.  Denom metadata can be used to provide a more streamlined user experience
 within block explorers or similar applications.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L202-L207
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L253-L260
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L209-L210
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L262-L263
 
 This service message is expected to fail if:
 
@@ -293,13 +293,13 @@ This service message is expected to fail if:
         - DenomUnit Denom fields are modified.
         - Any aliases are removed from a DenomUnit.
 
-## Msg/AddFinalizeActivateMarkerRequest
+## Msg/AddFinalizeActivateMarker
 
 AddFinalizeActivate requested is used for adding, finalizing, and activating a marker in a single request.
 
-+++ https://github.com/provenance-io/provenance/blob/d999e7acefea1d77e2d5ce86ea89524dbf2692f8/proto/provenance/marker/v1/tx.proto#L221-L236
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L265-L281
 
-+++ https://github.com/provenance-io/provenance/blob/d999e7acefea1d77e2d5ce86ea89524dbf2692f8/proto/provenance/marker/v1/tx.proto#L238-L239
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L283-L284
 
 This service message is expected to fail if:
 
@@ -312,13 +312,13 @@ This service message is expected to fail if:
   - Contains a grant with an invalid address
   - Contains a grant with an invalid access enum value (Unspecified/0)
 
-## Msg/GrantAllowanceRequest
+## Msg/GrantAllowance
 
 GrantAllowance grants a fee allowance to the grantee on the granter's account.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L61-L72
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L85-L98
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L74-L75
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L100-L101
 
 This service message is expected to fail if:
 
@@ -328,13 +328,13 @@ This service message is expected to fail if:
 - The administrator or grantee are invalid addresses
 - The administrator does not have `ADMIN` access on the marker.
 
-## Msg/SupplyIncreaseProposalRequest
+## Msg/SupplyIncreaseProposal
 
 SupplyIncreaseProposal is a governance-only message for increasing the supply of a marker.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L229-L239
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L286-L295
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1//tx.proto#L241-L242
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L297-L298
 
 This service message is expected to fail if:
 
@@ -344,13 +344,13 @@ This service message is expected to fail if:
 
 See also: [Governance: Supply Increase Proposal](./10_governance.md#supply-increase-proposal)
 
-## Msg/UpdateRequiredAttributesRequest
+## Msg/UpdateRequiredAttributes
 
 UpdateRequiredAttributes allows signers that have transfer authority or via gov proposal to add and remove required attributes from a restricted marker.
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L244-L255
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L313-L328
 
-+++ https://github.com/provenance-io/provenance/blob/22740319ba4b3ba268b3720d4bee36d6c6b06b40/proto/provenance/marker/v1/tx.proto#L257-L258
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L330-L331
 
 This service message is expected to fail if:
 
@@ -359,13 +359,13 @@ This service message is expected to fail if:
 - Attributes cannot be normalized
 - Marker denom cannot be found or is not a restricted marker
 
-## Msg/UpdateSendDenyListRequest
+## Msg/UpdateSendDenyList
 
 UpdateSendDenyList allows signers that have transfer authority or via gov proposal to add and remove addresses to the deny send list for a restricted marker.
 
-+++ https://github.com/provenance-io/provenance/blob/373d0ee8faeaa9e3b70d658e6069ab1781e6ce5e/proto/provenance/marker/v1/tx.proto#L295-L308
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L367-L381
 
-+++ https://github.com/provenance-io/provenance/blob/373d0ee8faeaa9e3b70d658e6069ab1781e6ce5e/proto/provenance/marker/v1/tx.proto#L310-L311
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L383-L384
 
 This service message is expected to fail if:
 
@@ -376,14 +376,14 @@ This service message is expected to fail if:
 - Marker denom cannot be found or is not a restricted marker
 - Signer does not have transfer authority or is not from gov proposal
 
-## Msg/UpdateForcedTransferRequest
+## Msg/UpdateForcedTransfer
 
 UpdateForcedTransfer allows for the activation or deactivation of forced transfers for a marker.
 This message must be submitted via governance proposal.
 
-+++ https://github.com/provenance-io/provenance/blob/a830a8ecf24199469de52b92ee20475d6912f2eb/proto/provenance/marker/v1/tx.proto#L260-L272
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L333-L345
 
-+++ https://github.com/provenance-io/provenance/blob/a830a8ecf24199469de52b92ee20475d6912f2eb/proto/provenance/marker/v1/tx.proto#L274-L275
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L347-L348
 
 This service message is expected to fail if:
 
@@ -392,13 +392,13 @@ This service message is expected to fail if:
 - The marker is not a restricted coin.
 - The marker does not allow governance control.
 
-## Msg/SetAccountDataRequest
+## Msg/SetAccountData
 
 SetAccountData allows the association of some data (a string) with a marker.
 
-+++ https://github.com/provenance-io/provenance/blob/e83f1955cba07e2ba87790c4487d22632ae9e69c/proto/provenance/marker/v1/tx.proto#L279-L291
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L350-L362
 
-+++ https://github.com/provenance-io/provenance/blob/e83f1955cba07e2ba87790c4487d22632ae9e69c/proto/provenance/marker/v1/tx.proto#L293-L294
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L364-L365
 
 This endpoint can either be used directly or via governance proposal.
 
@@ -409,13 +409,13 @@ This service message is expected to fail if:
 - The signer is not the governance module account and does not have deposit access on the marker.
 - The provided value is too long (as defined by the attribute module params).
 
-## Msg/AddNetAssetValuesRequest
+## Msg/AddNetAssetValues
 
 AddNetAssetValuesRequest allows for the adding/updating of net asset values for a marker.
 
-+++ https://github.com/provenance-io/provenance/blob/25070572cc898c476f5bb1a816c6c1c4d07e3d38/proto/provenance/marker/v1/tx.proto#L327-L332
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L386-L393
 
-+++ https://github.com/provenance-io/provenance/blob/25070572cc898c476f5bb1a816c6c1c4d07e3d38/proto/provenance/marker/v1/tx.proto#L334-L335
++++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/marker/v1/tx.proto#L395-L396
 
 This endpoint can either be used directly or via governance proposal.
 
