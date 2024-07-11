@@ -56,7 +56,7 @@ type appUpgrade struct {
 // If something is happening in the rc upgrade(s) that isn't being applied in the non-rc,
 // or vice versa, please add comments explaining why in both entries.
 var upgrades = map[string]appUpgrade{
-	"umber-rc1": { // upgrade for v1.19.0-rc1
+	"umber-rc1": { // upgrade for v1.19.0-rc2
 		Added:   []string{crisistypes.ModuleName, circuittypes.ModuleName, consensusparamtypes.ModuleName},
 		Deleted: []string{"reward"},
 		Handler: func(ctx sdk.Context, app *App, vm module.VersionMap) (module.VersionMap, error) {
@@ -105,6 +105,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
+	"umber-rc2": {}, // upgrade for v1.19.0-rc3
 	"umber": { // upgrade for v1.19.0
 		Added:   []string{crisistypes.ModuleName, circuittypes.ModuleName, consensusparamtypes.ModuleName},
 		Deleted: []string{"reward"},
