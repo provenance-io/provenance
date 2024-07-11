@@ -57,6 +57,7 @@ func QueryPlugins(registry *QuerierRegistry, queryRouter baseapp.GRPCQueryRouter
 	return &wasmkeeper.QueryPlugins{
 		Custom:   customPlugins(registry),
 		Stargate: StargateQuerier(queryRouter, stargateCdc),
+		Grpc:     GrpcQuerier(queryRouter),
 	}
 }
 
@@ -118,6 +119,31 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 		}
 
 		return bz, nil
+	}
+}
+
+// StargateQuerier dispatches whitelisted stargate queries
+func GrpcQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
+	return func(ctx sdk.Context, request *wasmvmtypes.GrpcQuery) (proto.Message, error) {
+		_, err := GetWhitelistedQuery(request.Path)
+		if err != nil {
+			return nil, err
+		}
+
+		route := queryRouter.Route(request.Path)
+		if route == nil {
+			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
+		}
+
+		res, err := route(ctx, &abci.RequestQuery{
+			Data: request.Data,
+			Path: request.Path,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return res, nil
 	}
 }
 
