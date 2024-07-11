@@ -47,6 +47,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Add the (empty) `umber-rc2` upgrade [#2069](https://github.com/provenance-io/provenance/pull/2069).
 * Update the Swagger API documentation [#2063](https://github.com/provenance-io/provenance/pull/2063).
 
+### Bug Fixes
+
+* Put the location of the wasm directory back to where it is in previous versions: data/wasm/wasm [#2071](https://github.com/provenance-io/provenance/pull/2071).
+
 ### Dependencies
 
 - Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
