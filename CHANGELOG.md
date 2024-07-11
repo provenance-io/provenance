@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Create a script for updating links in the spec docs to proto messages [#2068](https://github.com/provenance-io/provenance/pull/2068).
+* Add grpc querier for cosmwasm 2.1.0 smart contracts [#2083](https://github.com/provenance-io/provenance/pull/2083).
 
 ### Improvements
 
