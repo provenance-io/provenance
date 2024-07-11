@@ -32,6 +32,20 @@ func TestReadScopeNAVs(t *testing.T) {
 				Height:        23056719,
 			},
 		},
+		{
+			fileName: umberMainnetScopeNAVsFN,
+			expCount: 212895,
+			expFirst: ScopeNAV{
+				ScopeUUID:     "a4a5173d-50e0-4f8a-a5a6-c570deb14af3",
+				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 40475000)),
+				Height:        17662354,
+			},
+			expLast: ScopeNAV{
+				ScopeUUID:     "4887e509-0c75-494e-ae01-ad9de0b44148",
+				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 24813000)),
+				Height:        17662354,
+			},
+		},
 	}
 
 	assertEqualEntry := func(t *testing.T, expected, actual ScopeNAV, msg string, args ...interface{}) bool {
