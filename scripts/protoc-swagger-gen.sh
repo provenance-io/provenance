@@ -29,8 +29,13 @@ done
 # combine swagger files
 # uses nodejs package `swagger-combine`.
 # all the individual swagger files need to be configured in `config.json` for merging
-swagger-combine ./client/docs/config.json -o ./client/docs/swagger-ui/swagger.yaml -f yaml --continueOnConflictingPaths true --includeDefinitions true
+swagger-combine ./client/docs/config.json -o ./tmp-swagger-gen/swagger-new.yaml -f yaml --continueOnConflictingPaths true --includeDefinitions true
 
+# Strip buf appended Query and Service tags from the resulting swagger.
+# While this isn't the cleanest approach unfortunately buf doesn't support a
+# configuration to remove or prevent appending these extra tags.
+
+grep -v '        - Query' "./tmp-swagger-gen/swagger-new.yaml" | grep -v '        - Service' > "./client/docs/swagger-ui/swagger.yaml"
 # clean swagger files
 [[ -n "$verbose" ]] && printf 'Deleting ./tmp-swagger-gen\n'
 rm -rf ./tmp-swagger-gen

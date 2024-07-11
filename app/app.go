@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,7 +14,6 @@ import (
 	wasmv2 "github.com/CosmWasm/wasmd/x/wasm/migrations/v2"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
@@ -137,6 +137,7 @@ import (
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 
 	simappparams "github.com/provenance-io/provenance/app/params"
+	"github.com/provenance-io/provenance/client/docs"
 	"github.com/provenance-io/provenance/internal/antewrapper"
 	piohandlers "github.com/provenance-io/provenance/internal/handlers"
 	"github.com/provenance-io/provenance/internal/pioconfig"
@@ -185,8 +186,6 @@ import (
 	triggerkeeper "github.com/provenance-io/provenance/x/trigger/keeper"
 	triggermodule "github.com/provenance-io/provenance/x/trigger/module"
 	triggertypes "github.com/provenance-io/provenance/x/trigger/types"
-
-	_ "github.com/provenance-io/provenance/client/docs/statik" // registers swagger-ui files with statik
 )
 
 var (
@@ -1277,9 +1276,9 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig serverconfig.API
 	// Register grpc-gateway routes for all modules.
 	app.BasicModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
-	// register swagger API from root so that other applications can override easily
-	if apiConfig.Swagger {
-		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
+	// Register swagger API
+	if err := RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
+		panic(err)
 	}
 }
 
@@ -1320,15 +1319,21 @@ func (app *App) AutoCliOpts() autocli.AppOptions {
 	}
 }
 
-// RegisterSwaggerAPI registers swagger route with API Server
-func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
-	statikFS, err := fs.New()
-	if err != nil {
-		panic(err)
+// RegisterSwaggerAPI provides a common function which registers swagger route with API Server
+func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router, swaggerEnabled bool) error {
+	if !swaggerEnabled {
+		return nil
 	}
 
-	staticServer := http.FileServer(statikFS)
+	root, err := fs.Sub(docs.SwaggerUI, "swagger-ui")
+	if err != nil {
+		return err
+	}
+
+	staticServer := http.FileServer(http.FS(root))
 	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
+
+	return nil
 }
 
 // GetMaccPerms returns a copy of the module account permissions
