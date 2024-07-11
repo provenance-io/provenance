@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* nothing
+
+---
+
+## [v1.19.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc3) - 2024-07-11
+
 ### Features
 
 * Create a script for updating links in the spec docs to proto messages [#2068](https://github.com/provenance-io/provenance/pull/2068).
@@ -62,6 +68,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cosmos/iavl` from 1.1.2 to 1.2.0 ([#2076](https://github.com/provenance-io/provenance/pull/2076))
 - Bump `github.com/CosmWasm/wasmd` from `v0.51.0-pio-1` to `v0.52.0-pio-1` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
 - Bump `github.com/CosmWasm/wasmvm` from `v2.0.1` to `v2.1.0` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.19.0-rc2...v1.19.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc3
 
 ---
 
