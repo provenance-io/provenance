@@ -55,7 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cometbft/cometbft` from 0.38.7 to 0.38.9 ([#2061](https://github.com/provenance-io/provenance/pull/2061))
 - Bump `github.com/cosmos/ibc-go/modules/capability` from 1.0.0 to 1.0.1 ([#2064](https://github.com/provenance-io/provenance/pull/2064))
 - Bump `github.com/rs/cors` from 1.10.1 to 1.11.0 ([#2066](https://github.com/provenance-io/provenance/pull/2066))
-- Bump `github.com/cosmos/iavl` from 1.1.2 to 1.1.4 ([#2076](https://github.com/provenance-io/provenance/pull/2076))
+- Bump `github.com/cosmos/iavl` from 1.1.2 to 1.2.0 ([#2076](https://github.com/provenance-io/provenance/pull/2076))
 
 ---
 
