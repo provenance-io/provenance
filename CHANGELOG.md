@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* Add the (empty) `umber-rc2` upgrade [#2069](https://github.com/provenance-io/provenance/pull/2069).
+
 ### Dependencies
 
 - Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
