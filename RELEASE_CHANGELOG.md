@@ -1,3 +1,16 @@
+## [v1.19.0-rc4](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc4) - 2024-07-12
+
+### Dependencies
+
+- Bump `github.com/cometbft/cometbft` from 0.38.9 to `github.com/provenance-io/cometbft-pio` v0.38.10-pio-1 ([#2087](https://github.com/provenance-io/provenance/pull/2087))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.19.0-rc3...v1.19.0-rc4
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc4
+
+---
+
 ## [v1.19.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc3) - 2024-07-11
 
 ### Features
