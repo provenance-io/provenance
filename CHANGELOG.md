@@ -37,15 +37,50 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* nothing
+
+---
+
+## [v1.19.0-rc5](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc5) - 2024-07-12
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.19.0-rc4...v1.19.0-rc5
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc5
+
+---
+
+### Bug Fixes
+
+* Change the umber-rc2 upgrade to umber-rc4. [#2091](https://github.com/provenance-io/provenance/pull/2091).
+
+---
+
+## [v1.19.0-rc4](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc4) - 2024-07-12
+
+### Dependencies
+
+- Bump `github.com/cometbft/cometbft` from 0.38.9 to `github.com/provenance-io/cometbft-pio` v0.38.10-pio-1 ([#2087](https://github.com/provenance-io/provenance/pull/2087))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.19.0-rc3...v1.19.0-rc4
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc4
+
+---
+
+## [v1.19.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc3) - 2024-07-11
+
 ### Features
 
 * Create a script for updating links in the spec docs to proto messages [#2068](https://github.com/provenance-io/provenance/pull/2068).
+* Add grpc querier for cosmwasm 2.1.0 smart contracts [#2083](https://github.com/provenance-io/provenance/pull/2083).
 
 ### Improvements
 
+* Update the Swagger API documentation [#2063](https://github.com/provenance-io/provenance/pull/2063).
 * Update all the proto links in the spec docs to point to `v1.19.0` versions of the proto files [#2068](https://github.com/provenance-io/provenance/pull/2068).
 * Add the (empty) `umber-rc2` upgrade [#2069](https://github.com/provenance-io/provenance/pull/2069).
-* Update the Swagger API documentation [#2063](https://github.com/provenance-io/provenance/pull/2063).
 
 ### Bug Fixes
 
@@ -60,6 +95,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `github.com/cosmos/ibc-go/modules/capability` from 1.0.0 to 1.0.1 ([#2064](https://github.com/provenance-io/provenance/pull/2064))
 - Bump `github.com/rs/cors` from 1.10.1 to 1.11.0 ([#2066](https://github.com/provenance-io/provenance/pull/2066))
 - Bump `github.com/cosmos/iavl` from 1.1.2 to 1.2.0 ([#2076](https://github.com/provenance-io/provenance/pull/2076))
+- Bump `github.com/CosmWasm/wasmd` from `v0.51.0-pio-1` to `v0.52.0-pio-1` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
+- Bump `github.com/CosmWasm/wasmvm` from `v2.0.1` to `v2.1.0` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.19.0-rc2...v1.19.0-rc3
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc3
 
 ---
 
@@ -275,8 +317,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `cosmossdk.io/client/v2` from 2.0.0-beta.1 to 2.0.0-beta.2 ([#2042](https://github.com/provenance-io/provenance/pull/2042))
 - Bump `docker/build-push-action` from 5 to 6 ([#2039](https://github.com/provenance-io/provenance/pull/2039))
 - Bump `github.com/cosmos/ibc-go/v8` from 8.2.1 to 8.3.2 ([#2043](https://github.com/provenance-io/provenance/pull/2043))
-- Bump `github.com/CosmWasm/wasmd` from `v0.51.0-pio-1` to `v0.52.0-pio-1` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
-- Bump `github.com/CosmWasm/wasmvm` from `v2.0.1` to `v2.1.0` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
+- Bump `github.com/CosmWasm/wasmd` from `v0.50.0-pio-2` to `v0.51.0-pio-1` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
+- Bump `github.com/CosmWasm/wasmvm` from `v1.5.0` to `v2.0.1` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
 
 ### Full Commit History
 

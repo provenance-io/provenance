@@ -402,8 +402,8 @@ func (s *UpgradeTestSuite) TestUmberRC1() {
 	s.AssertUpgradeHandlerLogs("umber-rc1", expInLog, nil)
 }
 
-func (s *UpgradeTestSuite) TestUmberRC2() {
-	key := "umber-rc2"
+func (s *UpgradeTestSuite) TestUmberRC4() {
+	key := "umber-rc4"
 	s.Assert().Contains(upgrades, key, "%q defined upgrades map", key)
 
 	entry := upgrades[key]
