@@ -41,6 +41,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+## [v1.19.0-rc5](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc5) - 2024-07-12
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.19.0-rc4...v1.19.0-rc5
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc5
+
+---
+
+### Bug Fixes
+
+* Change the umber-rc2 upgrade to umber-rc4. [#2091](https://github.com/provenance-io/provenance/pull/2091).
+
+---
+
 ## [v1.19.0-rc4](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc4) - 2024-07-12
 
 ### Dependencies
