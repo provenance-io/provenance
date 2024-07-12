@@ -37,7 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Dependencies
+
+- Bump `github.com/cometbft/cometbft` from 0.38.9 to `github.com/provenance-io/cometbft-pio` v0.38.10-pio-1 ([#2087](https://github.com/provenance-io/provenance/pull/2087))
 
 ---
 
