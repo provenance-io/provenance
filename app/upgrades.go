@@ -105,7 +105,7 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
-	"umber-rc2": {}, // upgrade for v1.19.0-rc3
+	"umber-rc4": {}, // upgrade for v1.19.0-rc5
 	"umber": { // upgrade for v1.19.0
 		Added:   []string{crisistypes.ModuleName, circuittypes.ModuleName, consensusparamtypes.ModuleName},
 		Deleted: []string{"reward"},
