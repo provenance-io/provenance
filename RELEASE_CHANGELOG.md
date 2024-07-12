@@ -1,3 +1,12 @@
+## [v1.19.0-rc5](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc5) - 2024-07-12
+
+### Full Commit History
+
+* https://github.com/provenance-io/provenance/compare/v1.19.0-rc4...v1.19.0-rc5
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc5
+
+---
+
 ## [v1.19.0-rc4](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc4) - 2024-07-12
 
 ### Dependencies
