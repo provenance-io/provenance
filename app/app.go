@@ -988,7 +988,7 @@ func New(
 	// Register upgrade handlers and set the store loader.
 	// This must be done after the module manager, configurator, and pre-blocker are set,
 	// but before the baseapp is sealed via LoadLatestVersion() below.
-	app.registerUpgradeHandlers(appOpts)
+	app.registerUpgradeHandlers()
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -1045,7 +1045,7 @@ func (app *App) setFeeHandler() {
 	app.SetFeeHandler(msgFeeHandler)
 }
 
-func (app *App) registerUpgradeHandlers(appOpts servertypes.AppOptions) {
+func (app *App) registerUpgradeHandlers() {
 	// Add the upgrade handlers for each release.
 	InstallCustomUpgradeHandlers(app)
 
@@ -1078,9 +1078,6 @@ func (app *App) registerUpgradeHandlers(appOpts servertypes.AppOptions) {
 	if storeLoader == nil {
 		storeLoader = baseapp.DefaultStoreLoader
 	}
-
-	// Verify configuration settings
-	storeLoader = ValidateWrapper(app.Logger(), appOpts, storeLoader)
 	app.SetStoreLoader(storeLoader)
 }
 
