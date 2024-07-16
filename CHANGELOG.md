@@ -41,6 +41,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `cosmossdk.io/client/v2` from 2.0.0-beta.2 to 2.0.0-beta.3 ([#2093](https://github.com/provenance-io/provenance/pull/2093))
+
 ## [v1.19.0-rc5](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc5) - 2024-07-12
 
 ### Full Commit History
