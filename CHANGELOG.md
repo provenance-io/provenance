@@ -41,6 +41,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `cosmossdk.io/x/upgrade` from 0.1.3 to 0.1.4 ([#2094](https://github.com/provenance-io/provenance/pull/2094))
+
 ## [v1.19.0-rc5](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc5) - 2024-07-12
 
 ### Full Commit History
