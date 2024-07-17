@@ -14,7 +14,8 @@ require (
 	cosmossdk.io/x/circuit v0.1.2
 	cosmossdk.io/x/feegrant v0.1.1
 	cosmossdk.io/x/tx v0.13.3
-	cosmossdk.io/x/upgrade v0.1.3
+	cosmossdk.io/x/upgrade v0.1.4
+	cosmossdk.io/x/verygood v0.7.1
 	github.com/CosmWasm/wasmd v0.52.0
 	github.com/CosmWasm/wasmvm/v2 v2.1.0
 	github.com/cometbft/cometbft v0.38.9
