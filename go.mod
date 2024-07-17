@@ -89,6 +89,8 @@ require (
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
+	github.com/donkey/plows v1.0.1 // indirect
+	github.com/donkey/rides v1.0.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
 	github.com/emicklei/dot v1.6.1 // indirect
