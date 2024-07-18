@@ -1,6 +1,8 @@
 ## [v1.19.0](https://github.com/provenance-io/provenance/releases/tag/v1.19.0) - 2024-07-19
 
-Provenance Blockchain `v1.19.0` is primarily focused on updating cosmos-SDK `v0.50` (from `v0.46`) which includes several performance improvements.
+Provenance Blockchain `v1.19.0` is primarily focused on updating our use of [Cosmos-SDK](https://github.com/cosmos/cosmos-sdk) to `v0.50` (from `v0.46`) which includes several performance improvements.
+
+Details about changes made by Cosmos-SDK can be found in their [releases](https://github.com/cosmos/cosmos-sdk/releases), e.g. [v0.50.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.1) or [v0.47.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0).
 
 ### Features
 
