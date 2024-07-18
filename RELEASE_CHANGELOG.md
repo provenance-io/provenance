@@ -162,6 +162,7 @@
 ### Deprecated
 
 * In the config commands, the "tendermint" and "tm" options are deprecated, replaced with "cometbft", "comet", and "cmt" [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* All of the old governance proposals are now either deprecated or unusable. They all have new `Msg`-style endpoints for use in a `gov.v1.MsgSubmitProposal`.
 
 ### Client Breaking
 
@@ -180,6 +181,10 @@
 * Many of the SDK's query commands have had their usage altered [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Rosetta has been removed from the `provenanced` executable [#1981](https://github.com/provenance-io/provenance/pull/1981).
   It is now a stand-alone service. See: <https://github.com/cosmos/rosetta> for more info.
+* When submitting a governance proposal, at least 1000 hash (`1000000000000nhash`) of the deposit must be included. The rest can still be added later.
+* When submitting a governance proposal, the new `title` and `summary` fields are required.
+* The `broadcast-mode` value `block` has been removed and can now only be either `sync` or `async`.
+  The `provenanced query wait-tx` command can be used to achieve similar functionality as `block`, E.g. `provenanced tx <whatever> --output text | provenanced query wait-tx`.
 
 ### Dependencies
 
