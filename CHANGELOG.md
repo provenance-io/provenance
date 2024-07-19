@@ -37,7 +37,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Improvements
+
+* Remove the warnings about some config settings [2095](https://github.com/provenance-io/provenance/pull/2095).
 
 ---
 
