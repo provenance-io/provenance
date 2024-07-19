@@ -4,6 +4,8 @@ Provenance Blockchain `v1.19.0` is primarily focused on updating our use of [Cos
 
 Details about changes made by Cosmos-SDK can be found in their [releases](https://github.com/cosmos/cosmos-sdk/releases), e.g. [v0.50.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.1) or [v0.47.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0).
 
+This release also includes a focus on individual asset valuations and includes a bulk update of the Figure Lending loan values.
+
 ### Features
 
 * Bump cosmos-SDK to `v0.50.2` (from `v0.46.13-pio-2`) [#1772](https://github.com/provenance-io/provenance/issues/1772).
