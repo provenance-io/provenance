@@ -955,7 +955,7 @@ func (s *UpgradeTestSuite) TestStoreWasmCode() {
 			upgradeFiles: UpgradeFiles,
 			expLogs: []string{
 				"INF Storing the Funding Trading Bridge smart contract.",
-				"INF Smart contract stored with codeID: 1 and checksum: \"ffaa4f5827f722ce12af244bf8c795217c532fbc4e3b6ff80f305cbd8f7364a3\".",
+				"INF Smart contract stored with codeID: 1 and checksum: \"7e643e228169980aff5d75d576873d34b368d30a154dc617d2ed9b0093c97128\".",
 				"INF Done storing the Funding Trading Bridge smart contract.",
 			},
 		},
@@ -1005,7 +1005,7 @@ func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
 		},
 		{
 			name:    "storage succeeds",
-			expLogs: []string{"INF Smart contract stored with codeID: 1 and checksum: \"ffaa4f5827f722ce12af244bf8c795217c532fbc4e3b6ff80f305cbd8f7364a3\"."},
+			expLogs: []string{"INF Smart contract stored with codeID: 1 and checksum: \"7e643e228169980aff5d75d576873d34b368d30a154dc617d2ed9b0093c97128\"."},
 		},
 	}
 
