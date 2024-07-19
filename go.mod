@@ -213,7 +213,7 @@ replace (
 
 	github.com/cosmos/cosmos-db => github.com/other/cosmos-db v1.0.4
 
-	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.7-pio-1
+	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.7-pio-2
 
 	// Replace iavl to fix the node stop/start app hash problem. This can be removed once upstream is off v1.1.2
 	github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.0
