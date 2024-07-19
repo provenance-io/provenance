@@ -2,6 +2,9 @@ package app
 
 import (
 	"bytes"
+	"context"
+	"embed"
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -9,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
@@ -442,6 +447,8 @@ func (s *UpgradeTestSuite) TestUmber() {
 		"INF Removing inactive validator delegations.",
 		"INF Threshold: 21 days",
 		"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
+		"INF Storing the Funding Trading Bridge Smart Contract.",
+		"INF Done storing the Funding Trading Bridge Smart Contract.",
 	}
 
 	s.AssertUpgradeHandlerLogs("umber", expInLog, nil)
@@ -902,6 +909,112 @@ func (s *UpgradeTestSuite) TestAddScopeNAVsWithHeight() {
 			} else {
 				s.Assert().Len(netAssetValues, 0, "Scope not expected to have nav")
 			}
+		})
+	}
+}
+
+// wrappedWasmMsgSrvr is a wasmtypes.MsgServer that lets us inject an error to return from StoreCode.
+type wrappedWasmMsgSrvr struct {
+	wasmMsgServer wasmtypes.MsgServer
+	storeCodeErr  string
+}
+
+func newWrappedWasmMsgSrvr(wasmKeeper *wasmkeeper.Keeper) *wrappedWasmMsgSrvr {
+	return &wrappedWasmMsgSrvr{wasmMsgServer: wasmkeeper.NewMsgServerImpl(wasmKeeper)}
+}
+
+func (w *wrappedWasmMsgSrvr) WithStoreCodeErr(str string) *wrappedWasmMsgSrvr {
+	w.storeCodeErr = str
+	return w
+}
+
+func (w *wrappedWasmMsgSrvr) StoreCode(ctx context.Context, msg *wasmtypes.MsgStoreCode) (*wasmtypes.MsgStoreCodeResponse, error) {
+	if len(w.storeCodeErr) > 0 {
+		return nil, errors.New(w.storeCodeErr)
+	}
+	return w.wasmMsgServer.StoreCode(ctx, msg)
+}
+
+func (s *UpgradeTestSuite) TestStoreWasmCode() {
+	origUpgradeFiles := UpgradeFiles
+	defer func() {
+		UpgradeFiles = origUpgradeFiles
+	}()
+
+	tests := []struct {
+		name         string
+		upgradeFiles embed.FS
+		expLogs      []string
+	}{
+		{
+			name:         "success",
+			upgradeFiles: UpgradeFiles,
+			expLogs: []string{
+				"INF Storing the Funding Trading Bridge Smart Contract.",
+				"INF Smart contract stored with codeID: 1 and checksum: \"ffaa4f5827f722ce12af244bf8c795217c532fbc4e3b6ff80f305cbd8f7364a3\".",
+				"INF Done storing the Funding Trading Bridge Smart Contract.",
+			},
+		},
+		{
+			name:         "failed to read file",
+			upgradeFiles: embed.FS{},
+			expLogs: []string{
+				"INF Storing the Funding Trading Bridge Smart Contract.",
+				"ERR Could not read smart contract. error=\"open upgrade_files/umber/funding_trading_bridge_smart_contract.wasm: file does not exist\"",
+				"INF Done storing the Funding Trading Bridge Smart Contract.",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			UpgradeFiles = tc.upgradeFiles
+			s.logBuffer.Reset()
+			testFunc := func() {
+				storeWasmCode(s.ctx, s.app)
+			}
+			s.Require().NotPanics(testFunc, "storeWasmCode")
+			actLogs := splitLogOutput(s.GetLogOutput("executeStoreCodeMsg"))
+			s.Assert().Equal(tc.expLogs, actLogs, "log messages during executeStoreCodeMsg")
+		})
+	}
+}
+
+func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
+	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/umber/funding_trading_bridge_smart_contract.wasm")
+	s.Require().NoError(err, "reading wasm file")
+	msg := &wasmtypes.MsgStoreCode{
+		Sender:                s.app.GovKeeper.GetAuthority(),
+		WASMByteCode:          codeBz,
+		InstantiatePermission: &wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeEverybody},
+	}
+
+	tests := []struct {
+		name    string
+		errMsg  string
+		expLogs []string
+	}{
+		{
+			name:    "storage fails",
+			errMsg:  "dang no worky",
+			expLogs: []string{"ERR Could not store smart contract. error=\"dang no worky\""},
+		},
+		{
+			name:    "storage succeeds",
+			expLogs: []string{"INF Smart contract stored with codeID: 1 and checksum: \"ffaa4f5827f722ce12af244bf8c795217c532fbc4e3b6ff80f305cbd8f7364a3\"."},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			msgServer := newWrappedWasmMsgSrvr(s.app.WasmKeeper).WithStoreCodeErr(tc.errMsg)
+			s.logBuffer.Reset()
+			testFunc := func() {
+				executeStoreCodeMsg(s.ctx, msgServer, msg)
+			}
+			s.Require().NotPanics(testFunc, "executeStoreCodeMsg")
+			actLogs := splitLogOutput(s.GetLogOutput("executeStoreCodeMsg"))
+			s.Assert().Equal(tc.expLogs, actLogs, "log messages during executeStoreCodeMsg")
 		})
 	}
 }
