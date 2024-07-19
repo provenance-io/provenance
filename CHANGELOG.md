@@ -41,6 +41,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Remove the warnings about some config settings [2095](https://github.com/provenance-io/provenance/pull/2095).
 
+### Dependencies
+
+- Bump `github.com/cometbft/cometbft` from v0.38.10-pio-1 to v0.38.10 ([#2097](https://github.com/provenance-io/provenance/pull/2097))
+
 ---
 
 ## [v1.19.0-rc5](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc5) - 2024-07-12
