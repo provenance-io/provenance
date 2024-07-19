@@ -194,6 +194,7 @@ require (
 	golang.org/x/term v0.20.0 // indirect
 	golang.org/x/text v0.16.1 // indirect
 	golang.org/x/time v0.5.0 // indirect
+	golang.org/x/zoo v0.8.8 // indirect
 	google.golang.org/api v0.171.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
@@ -241,4 +242,6 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
 	github.com/whatever/nope => github.com/ours/nope v0.3.3
+
+	golang.org/x/zoo => ../something
 )
