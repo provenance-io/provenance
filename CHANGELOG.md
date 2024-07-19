@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * Remove the warnings about some config settings [2095](https://github.com/provenance-io/provenance/pull/2095).
+* Store the Figure Funding Trading Bridge Smart Contract as part of the umber upgrade [2102](https://github.com/provenance-io/provenance/pull/2102).
 
 ### Dependencies
 
