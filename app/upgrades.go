@@ -626,9 +626,9 @@ func addScopeNAVsWithHeight(ctx sdk.Context, app *App, scopeNAVs []ScopeNAV) {
 // storeWasmCode will store the provided wasm contract.
 // TODO: Remove with the umber handlers.
 func storeWasmCode(ctx sdk.Context, app *App) {
-	ctx.Logger().Info("Storing the Funding Trading Bridge Smart Contract.")
+	ctx.Logger().Info("Storing the Funding Trading Bridge smart contract.")
 	defer func() {
-		ctx.Logger().Info("Done storing the Funding Trading Bridge Smart Contract.")
+		ctx.Logger().Info("Done storing the Funding Trading Bridge smart contract.")
 	}()
 
 	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/umber/funding_trading_bridge_smart_contract.wasm")
@@ -646,11 +646,13 @@ func storeWasmCode(ctx sdk.Context, app *App) {
 }
 
 // wasmMsgSrvr has just the StoreCode endpoint needed for this upgrade.
+// TODO: Remove with the umber handlers.
 type wasmMsgSrvr interface {
 	StoreCode(context.Context, *wasmtypes.MsgStoreCode) (*wasmtypes.MsgStoreCodeResponse, error)
 }
 
 // executeStoreCodeMsg executes a MsgStoreCode.
+// TODO: Remove with the umber handlers.
 func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmtypes.MsgStoreCode) {
 	cacheCtx, writeCache := ctx.CacheContext()
 	resp, err := wasmMsgServer.StoreCode(cacheCtx, msg)

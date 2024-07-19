@@ -447,8 +447,8 @@ func (s *UpgradeTestSuite) TestUmber() {
 		"INF Removing inactive validator delegations.",
 		"INF Threshold: 21 days",
 		"INF A total of 0 inactive (unbonded) validators have had all their delegators removed.",
-		"INF Storing the Funding Trading Bridge Smart Contract.",
-		"INF Done storing the Funding Trading Bridge Smart Contract.",
+		"INF Storing the Funding Trading Bridge smart contract.",
+		"INF Done storing the Funding Trading Bridge smart contract.",
 	}
 
 	s.AssertUpgradeHandlerLogs("umber", expInLog, nil)
@@ -950,18 +950,18 @@ func (s *UpgradeTestSuite) TestStoreWasmCode() {
 			name:         "success",
 			upgradeFiles: UpgradeFiles,
 			expLogs: []string{
-				"INF Storing the Funding Trading Bridge Smart Contract.",
+				"INF Storing the Funding Trading Bridge smart contract.",
 				"INF Smart contract stored with codeID: 1 and checksum: \"ffaa4f5827f722ce12af244bf8c795217c532fbc4e3b6ff80f305cbd8f7364a3\".",
-				"INF Done storing the Funding Trading Bridge Smart Contract.",
+				"INF Done storing the Funding Trading Bridge smart contract.",
 			},
 		},
 		{
 			name:         "failed to read file",
 			upgradeFiles: embed.FS{},
 			expLogs: []string{
-				"INF Storing the Funding Trading Bridge Smart Contract.",
+				"INF Storing the Funding Trading Bridge smart contract.",
 				"ERR Could not read smart contract. error=\"open upgrade_files/umber/funding_trading_bridge_smart_contract.wasm: file does not exist\"",
-				"INF Done storing the Funding Trading Bridge Smart Contract.",
+				"INF Done storing the Funding Trading Bridge smart contract.",
 			},
 		},
 	}
