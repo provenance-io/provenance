@@ -149,6 +149,11 @@ var upgrades = map[string]appUpgrade{
 
 			updateIBCClients(ctx, app)
 
+			err = addScopeNAVs(ctx, app, umberMainnetScopeNAVsFN)
+			if err != nil {
+				return nil, err
+			}
+
 			removeInactiveValidatorDelegations(ctx, app)
 
 			storeWasmCode(ctx, app)

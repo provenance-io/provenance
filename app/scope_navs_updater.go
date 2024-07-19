@@ -9,7 +9,10 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
-const umberTestnetScopeNAVsFN = "upgrade_files/umber/testnet_scope_navs.csv"
+const (
+	umberTestnetScopeNAVsFN = "upgrade_files/umber/testnet_scope_navs.csv"
+	umberMainnetScopeNAVsFN = "upgrade_files/umber/mainnet_scope_navs.csv"
+)
 
 type ScopeNAV struct {
 	ScopeUUID     string
