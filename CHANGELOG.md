@@ -38,14 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Improvements
-
-* Remove the warnings about some config settings [2095](https://github.com/provenance-io/provenance/pull/2095).
-* Record several scope NAVs with the umber upgrade [#2085](https://github.com/provenance-io/provenance/pull/2085).
-
-### Dependencies
-
-- Bump `github.com/cometbft/cometbft` from v0.38.10-pio-1 to v0.38.10 ([#2097](https://github.com/provenance-io/provenance/pull/2097))
+* nothing
 
 ---
 
@@ -202,6 +195,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update the Swagger API documentation [#2063](https://github.com/provenance-io/provenance/pull/2063).
 * Update all the proto links in the spec docs to point to `v1.19.0` versions of the proto files [#2068](https://github.com/provenance-io/provenance/pull/2068).
 * Add the (empty) `umber-rc2`, `umber-rc3` and `umber-rc4` upgrades [#2069](https://github.com/provenance-io/provenance/pull/2069), [#2091](https://github.com/provenance-io/provenance/pull/2091).
+* Remove the warnings about some config settings [2095](https://github.com/provenance-io/provenance/pull/2095).
+* Record several scope NAVs with the umber upgrade [#2085](https://github.com/provenance-io/provenance/pull/2085).
+* Store the Figure Funding Trading Bridge Smart Contract as part of the umber upgrade [2102](https://github.com/provenance-io/provenance/pull/2102).
 
 ### Bug Fixes
 
@@ -255,7 +251,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 - Bump `docker/setup-qemu-action` from 2 to 3 ([#1983](https://github.com/provenance-io/provenance/pull/1983))
 - Bump `github.com/CosmWasm/wasmd` from `v0.50.0-pio-2` to `v0.52.0-pio-1` ([#2045](https://github.com/provenance-io/provenance/pull/2045), [#2077](https://github.com/provenance-io/provenance/pull/2077))
 - Bump `github.com/CosmWasm/wasmvm` from `v1.5.0` to `v2.1.0`` ([#2045](https://github.com/provenance-io/provenance/pull/2045), [#2077](https://github.com/provenance-io/provenance/pull/2077))
-- Bump `github.com/cometbft/cometbft` from 0.38.5 to `github.com/provenance-io/cometbft-pio` v0.38.10-pio-1 ([#1912](https://github.com/provenance-io/provenance/pull/1912), [#1959](https://github.com/provenance-io/provenance/pull/1959), [#2061](https://github.com/provenance-io/provenance/pull/2061), [#2087](https://github.com/provenance-io/provenance/pull/2087))
+- Bump `github.com/cometbft/cometbft` from 0.38.5 to v0.38.10 ([#1912](https://github.com/provenance-io/provenance/pull/1912), [#1959](https://github.com/provenance-io/provenance/pull/1959), [#2061](https://github.com/provenance-io/provenance/pull/2061), [#2087](https://github.com/provenance-io/provenance/pull/2087), [#2097](https://github.com/provenance-io/provenance/pull/2097))
 - Bump `github.com/cosmos/cosmos-sdk` from 0.50.5-pio-3 to 0.50.7-pio-1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
 - Bump `github.com/cosmos/gogoproto` from 1.4.12 to 1.5.0 ([#2024](https://github.com/provenance-io/provenance/pull/2024))
 - Bump `github.com/cosmos/iavl` from 1.1.2 to 1.2.0 ([#2076](https://github.com/provenance-io/provenance/pull/2076))
