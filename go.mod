@@ -20,7 +20,7 @@ require (
 	github.com/CosmWasm/wasmvm/v2 v2.1.0
 	github.com/bits-and-blooms/bitset v1.8.0
 	github.com/cometbft/cometbft-db v0.9.6
-	github.com/cosmos/cosmos-db v1.0.2
+	github.com/cosmos/cosmos-db v1.0.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.50.7
 	github.com/cosmos/go-bip39 v1.0.0
@@ -214,6 +214,8 @@ replace (
 
 	// TODO: Remove this once cometbft has tagged their own version v0.38.10 (or later).
 	github.com/cometbft/cometbft => github.com/provenance-io/cometbft-pio v0.38.10-pio-1
+
+	github.com/cosmos/cosmos-db => github.com/other/cosmos-db v1.0.4
 
 	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.7-pio-1
 
