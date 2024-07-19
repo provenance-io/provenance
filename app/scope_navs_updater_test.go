@@ -34,16 +34,16 @@ func TestReadScopeNAVs(t *testing.T) {
 		},
 		{
 			fileName: umberMainnetScopeNAVsFN,
-			expCount: 212895,
+			expCount: 215558,
 			expFirst: ScopeNAV{
-				ScopeUUID:     "a4a5173d-50e0-4f8a-a5a6-c570deb14af3",
-				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 40475000)),
-				Height:        17662354,
+				ScopeUUID:     "b0b97639-5ecf-4808-b679-99c11a5cda47",
+				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 47395000)),
+				Height:        14871216,
 			},
 			expLast: ScopeNAV{
-				ScopeUUID:     "4887e509-0c75-494e-ae01-ad9de0b44148",
-				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 24813000)),
-				Height:        17662354,
+				ScopeUUID:     "98503480-12be-4142-bd9d-e80c6e017e22",
+				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 43768160)),
+				Height:        9787583,
 			},
 		},
 	}
