@@ -38,7 +38,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-* nothing
+### Improvements
+
+* Remove the warnings about some config settings [2095](https://github.com/provenance-io/provenance/pull/2095).
+* Record several scope NAVs with the umber upgrade [#2085](https://github.com/provenance-io/provenance/pull/2085).
+
+### Dependencies
+
+- Bump `github.com/cometbft/cometbft` from v0.38.10-pio-1 to v0.38.10 ([#2097](https://github.com/provenance-io/provenance/pull/2097))
 
 ---
 
