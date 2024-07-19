@@ -172,7 +172,6 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
@@ -231,9 +230,6 @@ replace (
 	github.com/fatih/color => github.com/other/color v1.16.1
 
 	github.com/golang/mock => github.com/ourthing/mock v1.6.3
-
-	// replace broken goleveldb
-	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
 	github.com/whatever/nope => github.com/ours/nope v0.3.3
 
