@@ -208,9 +208,6 @@ replace (
 	// Use cosmos fork of keyring (because the SDK does).
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
-	// This is required for https://github.com/provenance-io/provenance/issues/1414
-	github.com/CosmWasm/wasmd => github.com/provenance-io/wasmd v0.52.0-pio-1
-
 	// TODO: Remove this once cometbft has tagged their own version v0.38.10 (or later).
 	github.com/cometbft/cometbft => github.com/provenance-io/cometbft-pio v0.38.10-pio-1
 
