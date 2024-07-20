@@ -126,53 +126,70 @@ awk '{if (inSec=="1" && /^[[:space:]]*\)[[:space:]]*$/) {inSec="";}; if (inSec==
 awk '{if (inSec=="1" && /^[[:space:]]*\)[[:space:]]*$/) {inSec="";}; if (inSec=="1" || /^[[:space:]]*replace[[:space:]]*[^([:space:]]/) {print $0;}; if (/^[[:space:]]*replace[[:space:]]*\(/) {inSec="1";};}' go.mod | clean_diff > "$cur_replaces"
 
 # Figure out (and output) the changelog entry for each lib being changed.
+i=0
 for lib in "${libs[@]}"; do
-    # First, try to get the versions from updated replace lines.
-    new="$( get_replace_str "$lib" "$plus_replaces" )"
-    was="$( get_replace_str "$lib" "$minus_replaces" )"
+    i=$(( i + 1 ))
+    [[ -n "$verbose" ]] && printf '[%d/%d]: Processing "%s".\n' "$i" "${#libs[@]}" "$lib"
 
-    # If there aren't any updated replace lines, check for an existing one.
+    # These will either be empty or have the format "`<other lib>` <other version" or "`<location>`".
+    new_repl="$( get_replace_str "$lib" "$plus_replaces" )"
+    was_repl="$( get_replace_str "$lib" "$minus_replaces" )"
+    cur_repl="$( get_replace_str "$lib" "$cur_replaces" )"
+    [[ -n "$verbose" ]] && printf '[%d/%d]:   %s="%s"  %s="%s"  %s="%s"\n' "$i" "${#libs[@]}" 'new_repl' "$new_repl" 'was_repl' "$was_repl" 'cur_repl' "$cur_repl"
+
+
+    # These will be either empty or be "<version>".
+    new_req="$( grep -F "$lib v" "$plus_requires" | sed -E 's/^.* //' )"
+    was_req="$( grep -F "$lib v" "$minus_requires" | sed -E 's/^.* //' )"
+    cur_req="$( grep -F "$lib v" "$cur_requires" | sed -E 's/^.* //' )"
+    [[ -n "$verbose" ]] && printf '[%d/%d]:   %s="%s"  %s="%s"  %s="%s"\n' "$i" "${#libs[@]}" 'new_req' "$new_req" 'was_req' "$was_req" 'cur_req' "$cur_req"
+
+    # If there weren't changes to require lines, but there is a require line
+    # for the library, we want a warning added to the end of the changelog entry
+    # since that change would be largely inconsequential.
     warning=''
-    if [[ -z "$new" && -z "$was" ]]; then
-        cur="$( get_replace_str "$lib" "$cur_replaces" )"
-        if [[ -n "$cur" ]]; then
-            warning=" but is still replaced by $cur"
-        fi
+    if [[ -z "$new_repl" && -z "$was_repl" && -n "$cur_repl" ]]; then
+        warning=" but is still replaced by $cur_repl"
     fi
 
-    # Now, if we don't have it yet, get the versions from the updated requires.
-    new_not_repl=''
-    if [[ -z "$new" ]]; then
-        new="$( grep -F "$lib v" "$plus_requires" | sed -E 's/^.* //' )"
-        new_not_repl='YES'
-    fi
-    was_not_repl=''
-    if [[ -z "$was" ]]; then
-        was="$( grep -F "$lib v" "$minus_requires" | sed -E 's/^.* //' )"
-        was_not_repl='YES'
+    # Pick the strings to use for the old and new versions.
+    # If there was a change to a replace line, use that over a changed require line.
+    new="${new_repl:-$new_req}"
+    was="${was_repl:-$was_req}"
+
+    # Edge case: A replace line was removed, and the main entry didn't change.
+    if [[ -z "$new" && -n "$was_repl" && -z "$was_req" && -n "$cur_req" ]]; then
+        # We want to report that we are now on the currently required version.
+        new="$cur_req"
+        [[ -n "$verbose" ]] && printf '[%d/%d]:   Using currently required version as new.\n' "$i" "${#libs[@]}"
     fi
 
-    # Last check. If we don't have a was yet, check for the current entry.
-    # This is for the case when a replace line is added or removed but the main entry does not change.
-    if [[ -z "$new" && -z "$was_not_repl" ]]; then
-        new="$( grep -F "$lib v" "$cur_requires" | sed -E 's/^.* //' )"
+    # Edge case: A replace line was added, and the main entry didn't change.
+    if [[ -z "$was" && -n "$new_repl" && -z "$new_req" && -n "$cur_req" ]]; then
+        # We want to report that we were on the the currently required version.
+        was="$cur_req"
+        [[ -n "$verbose" ]] && printf '[%d/%d]:   Using currently required version as was.\n' "$i" "${#libs[@]}"
     fi
-    if [[ -z "$was" && -z "$new_not_repl" ]]; then
-        was="$( grep -F "$lib v" "$cur_requires" | sed -E 's/^.* //' )"
-    fi
+
+    [[ -n "$verbose" ]] && printf '[%d/%d]:   %s="%s"  %s="%s"  %s="%s"\n' "$i" "${#libs[@]}" 'new' "$new" 'was' "$was" 'warning' "$warning"
 
     # Now generate the changelog line for this library.
     if [[ -n "$new" && -n "$was" ]]; then
-        # new and was can be the same if the entry just moved in the file.
         if [[ "$new" != "$was" ]]; then
+            [[ -n "$verbose" ]] && printf '[%d/%d]: Creating bump line.\n' "$i" "${#libs[@]}"
             printf '* `%s` bumped to %s (from %s)%s\n' "$lib" "$new" "$was" "$warning" >> "$changes"
+        else
+            [[ -n "$verbose" ]] && printf '[%d/%d]: No change to report.\n' "$i" "${#libs[@]}"
         fi
     elif [[ -n "$new" ]]; then
+        [[ -n "$verbose" ]] && printf '[%d/%d]: Creating add line.\n' "$i" "${#libs[@]}"
         printf '* `%s` added at %s%s\n' "$lib" "$new" "$warning" >> "$changes"
     elif [[ -n "$was" ]]; then
+        [[ -n "$verbose" ]] && printf '[%d/%d]: Creating remove line.\n' "$i" "${#libs[@]}"
         printf '* `%s` removed at %s%s\n' "$lib" "$was" "$warning" >> "$changes"
     else
         # It shouldn't be possible to see this, but it's here just in case things go wonky.
+        [[ -n "$verbose" ]] && printf '[%d/%d]: Creating unknown line.\n' "$i" "${#libs[@]}"
         printf '* `%s` TODO: Could not identify dependency change details, fix me.\n' "$lib" >> "$changes"
     fi
 done
