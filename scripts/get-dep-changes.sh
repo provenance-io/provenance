@@ -2,15 +2,44 @@
 # This script will git diff go.mod and identify the changes to it,
 # outputting the info in a format ready for the changelog.
 
-temp_dir="$( mktemp -d -t link-updates )"
+while [[ "$#" -gt '0' ]]; do
+    case "$1" in
+        -h|--help)
+            printf 'Usage: get-dep-changes.sh\n'
+            exit 0
+            ;;
+        --no-clean)
+            no_clean='YES'
+            ;;
+        -v|--verbose)
+            verbose='YES'
+            ;;
+        *)
+            printf 'Unknown argument: %s\n' "$1"
+            exit 0
+            ;;
+    esac
+    shift
+done
+
+
+temp_dir="$( mktemp -d -t dep-updates )"
 [[ -n "$verbose" ]] && printf 'Created temp dir: %s\n' "$temp_dir"
-full_diff="${temp_dir}/1-full.diff"               # The full results of the diff.
-minus_lines="${temp_dir}/2-minus-lines.txt"       # Just the subtractions we care about.
-plus_lines="${temp_dir}/2-plus-lines.txt"         # Just the additions we care about.
-minus_requires="${temp_dir}/3-minus-requires.txt" # Just the removed requirement lines.
-plus_requires="${temp_dir}/3-plus-requires.txt"   # Just the added requirement lines.
-minus_replaces="${temp_dir}/3-minus-replaces.txt" # Just the removed replace lines.
-plus_replaces="${temp_dir}/3-plus-replaces.txt"   # Just the added replace lines.
+
+clean_exit () {
+  local ec
+  ec="${1:-0}"
+  if [[ -n "$temp_dir" && -d "$temp_dir" ]]; then
+    if [[ -z "$no_clean" ]]; then
+      [[ -n "$verbose" ]] && printf 'Deleting temp dir: %s\n' "$temp_dir"
+      rm -rf "$temp_dir"
+      temp_dir=''
+    else
+      [[ -n "$verbose" ]] && printf 'NOT deleting temp dir: %s\n' "$temp_dir"
+    fi
+  fi
+  exit "$ec"
+}
 
 # Usage: <stuff> | clean_diff
 # This will reformat the lines from a diff and remove lines we don't care about.
@@ -21,18 +50,19 @@ plus_replaces="${temp_dir}/3-plus-replaces.txt"   # Just the added replace lines
 # Note that this will strip out the leading + or -, so if that's important, it's up to you to keep track of.
 clean_diff () {
     # Use sed to:
-    #   Remove the + or - and any space immediately after it.
-    #   If it now starts with "require" or "replace", remove that and any spaces after it.
+    #   Remove the + or - and leading whitespace.
+    #   If it now starts with "require" or "replace", remove that and any whitespace after it.
     #   Remove any line-ending comment.
     #   Remove all trailing whitespace.
     #   Make sure there are spaces around the "=>" in replace lines.
     #   Change all groups of 1 or more whitespace characters to a single space.
     # Then use grep to only keep lines with one of the desired formats.
-    sed -E 's/^[-+][[:space:]]*//; s/^(require|replace)[[:space:]]*//; s|//.*$||; s/[[:space:]]+$//; s/=>/ => /; s/[[:space:]]+/ /g;' \
+    sed -E 's/^[-+[:space:]][[:space:]]*//; s/^(require|replace)[[:space:]]*//; s|//.*$||; s/[[:space:]]+$//; s/=>/ => /; s/[[:space:]]+/ /g;' \
         | grep -E '^[^ ]+ (v[^ ]+|=> [^ ]+( v[^ ]+)?)$'
+    return 0
 }
 
-# Usage: get_repl_str <lib> <filename>
+# Usage: get_replace_str <lib> <filename>
 # This will look for a replace line in <filename> for the <lib>.
 # If found, it'll print a string describing the replacing version.
 # If not found, this won't print anything.
@@ -61,8 +91,23 @@ get_replace_str () {
     return 0
 }
 
+full_diff="${temp_dir}/1-full.diff"               # The full results of the diff.
+minus_lines="${temp_dir}/2-minus-lines.txt"       # Just the subtractions we care about.
+plus_lines="${temp_dir}/2-plus-lines.txt"         # Just the additions we care about.
+minus_requires="${temp_dir}/3-minus-requires.txt" # Just the removed requirement lines.
+plus_requires="${temp_dir}/3-plus-requires.txt"   # Just the added requirement lines.
+cur_requires="${temp_dir}/3-cur-requires.txt"     # All current requires (even ones not changing).
+minus_replaces="${temp_dir}/3-minus-replaces.txt" # Just the removed replace lines.
+plus_replaces="${temp_dir}/3-plus-replaces.txt"   # Just the added replace lines.
+cur_replaces="${temp_dir}/3-cur-replaces.txt"     # All current replaces (even ones not changing).
+changes="${temp_dir}/4-changes.md"                # All the changelog entries (but without the link).
+
 # Get the go.mod diff.
 git diff -U0 main -- go.mod > "$full_diff"
+if [[ -z "$( head -c 1 "$full_diff" )" ]]; then
+    [[ -n "$verbose" ]] && printf 'go.mod does not have any changes.\n'
+    clean_exit 0
+fi
 # Split it into subtractions and additions.
 grep -E '^-' "$full_diff" | clean_diff > "$minus_lines"
 grep -E '^\+' "$full_diff" | clean_diff > "$plus_lines"
@@ -72,4 +117,66 @@ grep -E '=>' "$minus_lines" > "$minus_replaces"
 grep -Ev '=>' "$plus_lines" > "$plus_requires"
 grep -E '=>' "$plus_lines" > "$plus_replaces"
 # Identify all libraries that are changing.
-libs=( $( sed -E 's/ .*$/' "$plus_lines" "$minus_lines" | sort -u ) )
+libs=( $( sed -E 's/ .*$//' "$plus_lines" "$minus_lines" | sort -u ) )
+# Identify all the current replace lines.
+# This awk script outputs all lines that are either inside a "replace (" block,
+# or start with "replace" (but aren't the beginning of a replace block).
+# The clean_diff can be re-used here too to standardize the formatting and get only what we need.
+awk '{if (inSec=="1" && /^[[:space:]]*\)[[:space:]]*$/) {inSec="";}; if (inSec=="1" || /^[[:space:]]*require[[:space:]]*[^([:space:]]/) {print $0;}; if (/^[[:space:]]*require[[:space:]]*\(/) {inSec="1";};}' go.mod | clean_diff > "$cur_requires"
+awk '{if (inSec=="1" && /^[[:space:]]*\)[[:space:]]*$/) {inSec="";}; if (inSec=="1" || /^[[:space:]]*replace[[:space:]]*[^([:space:]]/) {print $0;}; if (/^[[:space:]]*replace[[:space:]]*\(/) {inSec="1";};}' go.mod | clean_diff > "$cur_replaces"
+
+# Figure out (and output) the changelog entry for each lib being changed.
+for lib in "${libs[@]}"; do
+    # First, try to get the versions from updated replace lines.
+    new="$( get_replace_str "$lib" "$plus_replaces" )"
+    was="$( get_replace_str "$lib" "$minus_replaces" )"
+
+    # If there aren't any updated replace lines, check for an existing one.
+    warning=''
+    if [[ -z "$new" && -z "$was" ]]; then
+        cur="$( get_replace_str "$lib" "$cur_replaces" )"
+        if [[ -n "$cur" ]]; then
+            warning=" but is still replaced by $cur"
+        fi
+    fi
+
+    # Now, if we don't have it yet, get the versions from the updated requires.
+    new_not_repl=''
+    if [[ -z "$new" ]]; then
+        new="$( grep -F "$lib v" "$plus_requires" | sed -E 's/^.* //' )"
+        new_not_repl='YES'
+    fi
+    was_not_repl=''
+    if [[ -z "$was" ]]; then
+        was="$( grep -F "$lib v" "$minus_requires" | sed -E 's/^.* //' )"
+        was_not_repl='YES'
+    fi
+
+    # Last check. If we don't have a was yet, check for the current entry.
+    # This is for the case when a replace line is added or removed but the main entry does not change.
+    if [[ -z "$new" && -z "$was_not_repl" ]]; then
+        new="$( grep -F "$lib v" "$cur_requires" | sed -E 's/^.* //' )"
+    fi
+    if [[ -z "$was" && -z "$new_not_repl" ]]; then
+        was="$( grep -F "$lib v" "$cur_requires" | sed -E 's/^.* //' )"
+    fi
+
+    # Now generate the changelog line for this library.
+    if [[ -n "$new" && -n "$was" ]]; then
+        # new and was can be the same if the entry just moved in the file.
+        if [[ "$new" != "$was" ]]; then
+            printf '* `%s` bumped to %s (from %s)%s\n' "$lib" "$new" "$was" "$warning" >> "$changes"
+        fi
+    elif [[ -n "$new" ]]; then
+        printf '* `%s` added at %s%s\n' "$lib" "$new" "$warning" >> "$changes"
+    elif [[ -n "$was" ]]; then
+        printf '* `%s` removed at %s%s\n' "$lib" "$was" "$warning" >> "$changes"
+    else
+        # It shouldn't be possible to see this, but it's here just in case things go wonky.
+        printf '* `%s` TODO: Could not identify dependency change details, fix me.\n' "$lib" >> "$changes"
+    fi
+done
+
+cat "$changes"
+
+clean_exit 0
