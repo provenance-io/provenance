@@ -76,7 +76,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/house v0.4.1 // indirect
-	github.com/cosmos/iavl v1.4.0 // indirect
+	github.com/cosmos/iavl v1.3.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
@@ -216,7 +216,7 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.7-pio-2
 
 	// Replace iavl to fix the node stop/start app hash problem. This can be removed once upstream is off v1.1.2
-	github.com/cosmos/iavl => github.com/cosmos/iavl v1.4.0
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.0
 
 	// TODO: Update once async-icq creates tag with our changes https://github.com/cosmos/ibc-apps/pull/168
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 => github.com/provenance-io/ibc-apps/modules/async-icq/v8 v8.0.0-prov-1
