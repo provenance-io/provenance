@@ -2,6 +2,8 @@
 # This script will git diff go.mod and identify the changes to it,
 # outputting the info in a format ready for the changelog.
 
+branch='main'
+
 while [[ "$#" -gt '0' ]]; do
     case "$1" in
         -h|--help)
@@ -14,9 +16,17 @@ while [[ "$#" -gt '0' ]]; do
         -v|--verbose)
             verbose='YES'
             ;;
+        -b|--branch)
+            if [[ -z "$2" ]]; then
+                printf 'No argument provided after %s\n' "$1"
+                exit 1
+            fi
+            branch="$2"
+            shift
+            ;;
         *)
             printf 'Unknown argument: %s\n' "$1"
-            exit 0
+            exit 1
             ;;
     esac
     shift
@@ -103,7 +113,7 @@ cur_replaces="${temp_dir}/3-cur-replaces.txt"     # All current replaces (even o
 changes="${temp_dir}/4-changes.md"                # All the changelog entries (but without the link).
 
 # Get the go.mod diff.
-git diff -U0 main -- go.mod > "$full_diff"
+git diff -U0 "$branch" -- go.mod > "$full_diff"
 if [[ -z "$( head -c 1 "$full_diff" )" ]]; then
     [[ -n "$verbose" ]] && printf 'go.mod does not have any changes.\n'
     clean_exit 0
