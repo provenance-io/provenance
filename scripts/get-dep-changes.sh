@@ -100,7 +100,8 @@ fi
 [[ -n "$verbose" ]] && printf 'Link: %s\n' "$link"
 
 
-temp_dir="$( mktemp -d -t dep-updates )"
+[[ -n "$verbose" ]] && printf 'Creating temp dir.\n'
+temp_dir="$( mktemp -d -t dep-updates )" || exit $?
 [[ -n "$verbose" ]] && printf 'Created temp dir: %s\n' "$temp_dir"
 
 clean_exit () {
@@ -168,6 +169,8 @@ get_replace_str () {
     return 0
 }
 
+# Define all the files that we'll be making.
+# The numbers in these roughly reflect the step that they're created in.
 full_diff="${temp_dir}/1-full.diff"               # The full results of the diff.
 minus_lines="${temp_dir}/2-minus-lines.txt"       # Just the subtractions we care about.
 plus_lines="${temp_dir}/2-plus-lines.txt"         # Just the additions we care about.
@@ -181,29 +184,44 @@ changes="${temp_dir}/4-changes.md"                # All the changelog entries (b
 final="${temp_dir}/5-final.md"                    # The final changelog entry content.
 
 # Get the go.mod diff.
+[[ -n "$verbose" ]] && printf 'Creating full diff: %s\n' "$full_diff"
 git diff -U0 "$branch" -- go.mod > "$full_diff"
 if [[ -z "$( head -c 1 "$full_diff" )" ]]; then
     [[ -n "$verbose" ]] && printf 'go.mod does not have any changes.\n'
     clean_exit 0
 fi
+
 # Split it into subtractions and additions.
+[[ -n "$verbose" ]] && printf 'Identifying all subtractions: %s\n' "$minus_lines"
 grep -E '^-' "$full_diff" | clean_diff > "$minus_lines"
+[[ -n "$verbose" ]] && printf 'Identifying all additions: %s\n' "$plus_lines"
 grep -E '^\+' "$full_diff" | clean_diff > "$plus_lines"
+
 # Split it further into require lines and replace lines.
+[[ -n "$verbose" ]] && printf 'Identifying subtracted requires: %s\n' "$minus_requires"
 grep -Ev '=>' "$minus_lines" > "$minus_requires"
+[[ -n "$verbose" ]] && printf 'Identifying subtracted replaces: %s\n' "$minus_replaces"
 grep -E '=>' "$minus_lines" > "$minus_replaces"
+[[ -n "$verbose" ]] && printf 'Identifying added requires: %s\n' "$plus_requires"
 grep -Ev '=>' "$plus_lines" > "$plus_requires"
+[[ -n "$verbose" ]] && printf 'Identifying added replaces: %s\n' "$plus_replaces"
 grep -E '=>' "$plus_lines" > "$plus_replaces"
+
 # Identify all libraries that are changing.
+[[ -n "$verbose" ]] && printf 'Identifying all changed libraries.\n'
 libs=( $( sed -E 's/ .*$//' "$plus_lines" "$minus_lines" | sort -u ) )
+
 # Identify all the current replace lines.
 # This awk script outputs all lines that are either inside a "replace (" block,
 # or start with "replace" (but aren't the beginning of a replace block).
 # The clean_diff can be re-used here too to standardize the formatting and get only what we need.
+[[ -n "$verbose" ]] && printf 'Identifying all current requires: %s\n' "$cur_requires"
 awk '{if (inSec=="1" && /^[[:space:]]*\)[[:space:]]*$/) {inSec="";}; if (inSec=="1" || /^[[:space:]]*require[[:space:]]*[^([:space:]]/) {print $0;}; if (/^[[:space:]]*require[[:space:]]*\(/) {inSec="1";};}' go.mod | clean_diff > "$cur_requires"
+[[ -n "$verbose" ]] && printf 'Identifying all current replaces: %s\n' "$cur_replaces"
 awk '{if (inSec=="1" && /^[[:space:]]*\)[[:space:]]*$/) {inSec="";}; if (inSec=="1" || /^[[:space:]]*replace[[:space:]]*[^([:space:]]/) {print $0;}; if (/^[[:space:]]*replace[[:space:]]*\(/) {inSec="1";};}' go.mod | clean_diff > "$cur_replaces"
 
 # Figure out (and output) the changelog entry for each lib being changed.
+[[ -n "$verbose" ]] && printf 'Identifying changelog entries for %d libraries: %s\n' "${#libs[@]}" "$changes"
 i=0
 for lib in "${libs[@]}"; do
     i=$(( i + 1 ))
@@ -273,6 +291,7 @@ for lib in "${libs[@]}"; do
 done
 
 # Append the link to each line.
+[[ -n "$verbose" ]] && printf 'Appending link (%s) to each entry: %s\n' "$link" "$final"
 awk -v link="$link" '{print $0 " (" link ").";}' "$changes" > "$final"
 
 cat "$final"
