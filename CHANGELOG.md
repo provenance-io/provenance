@@ -27,106 +27,22 @@ Types of changes (Stanzas):
 
 "Features" for new features.
 "Improvements" for changes in existing functionality.
-"Deprecated" for soon-to-be removed features.
 "Bug Fixes" for any bug fixes.
+"Deprecated" for soon-to-be removed features.
 "Client Breaking" for breaking CLI commands and REST routes used by end-users.
 "API Breaking" for breaking exported APIs used by developers building on SDK.
 "State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
+"Dependencies" for changes to library versions.
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
 ## [Unreleased]
 
-### Improvements
-
-* Remove the warnings about some config settings [2095](https://github.com/provenance-io/provenance/pull/2095).
-* Record several scope NAVs with the umber upgrade [#2085](https://github.com/provenance-io/provenance/pull/2085).
-* Store the Figure Funding Trading Bridge Smart Contract as part of the umber upgrade [2102](https://github.com/provenance-io/provenance/pull/2102).
-
-### Dependencies
-
-- Bump `github.com/cometbft/cometbft` from v0.38.10-pio-1 to v0.38.10 ([#2097](https://github.com/provenance-io/provenance/pull/2097))
+* nothing
 
 ---
 
-## [v1.19.0-rc5](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc5) - 2024-07-12
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.19.0-rc4...v1.19.0-rc5
-* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc5
-
----
-
-### Bug Fixes
-
-* Change the umber-rc2 upgrade to umber-rc4. [#2091](https://github.com/provenance-io/provenance/pull/2091).
-
----
-
-## [v1.19.0-rc4](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc4) - 2024-07-12
-
-### Dependencies
-
-- Bump `github.com/cometbft/cometbft` from 0.38.9 to `github.com/provenance-io/cometbft-pio` v0.38.10-pio-1 ([#2087](https://github.com/provenance-io/provenance/pull/2087))
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.19.0-rc3...v1.19.0-rc4
-* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc4
-
----
-
-## [v1.19.0-rc3](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc3) - 2024-07-11
-
-### Features
-
-* Create a script for updating links in the spec docs to proto messages [#2068](https://github.com/provenance-io/provenance/pull/2068).
-* Add grpc querier for cosmwasm 2.1.0 smart contracts [#2083](https://github.com/provenance-io/provenance/pull/2083).
-
-### Improvements
-
-* Update the Swagger API documentation [#2063](https://github.com/provenance-io/provenance/pull/2063).
-* Update all the proto links in the spec docs to point to `v1.19.0` versions of the proto files [#2068](https://github.com/provenance-io/provenance/pull/2068).
-* Add the (empty) `umber-rc2` upgrade [#2069](https://github.com/provenance-io/provenance/pull/2069).
-
-### Bug Fixes
-
-* Put the location of the wasm directory back to where it is in previous versions: data/wasm/wasm [#2071](https://github.com/provenance-io/provenance/pull/2071).
-
-### Dependencies
-
-- Bump `github.com/hashicorp/go-getter` from 1.7.4 to 1.7.5 ([#2057](https://github.com/provenance-io/provenance/pull/2057))
-- Bump `bufbuild/buf-setup-action` from 1.33.0 to 1.34.0 ([#2049](https://github.com/provenance-io/provenance/pull/2049))
-- Bump `google.golang.org/grpc` from 1.64.0 to 1.65.0 ([#2065](https://github.com/provenance-io/provenance/pull/2065))
-- Bump `github.com/cometbft/cometbft` from 0.38.7 to 0.38.9 ([#2061](https://github.com/provenance-io/provenance/pull/2061))
-- Bump `github.com/cosmos/ibc-go/modules/capability` from 1.0.0 to 1.0.1 ([#2064](https://github.com/provenance-io/provenance/pull/2064))
-- Bump `github.com/rs/cors` from 1.10.1 to 1.11.0 ([#2066](https://github.com/provenance-io/provenance/pull/2066))
-- Bump `github.com/cosmos/iavl` from 1.1.2 to 1.2.0 ([#2076](https://github.com/provenance-io/provenance/pull/2076))
-- Bump `github.com/CosmWasm/wasmd` from `v0.51.0-pio-1` to `v0.52.0-pio-1` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
-- Bump `github.com/CosmWasm/wasmvm` from `v2.0.1` to `v2.1.0` ([#2077](https://github.com/provenance-io/provenance/pull/2077))
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.19.0-rc2...v1.19.0-rc3
-* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc3
-
----
-
-## [v1.19.0-rc2](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc2) - 2024-06-25
-
-### Bug Fixes
-
-* Fix the heighliner docker image build [#2052](https://github.com/provenance-io/provenance/pull/2052).
-
-### Full Commit History
-
-* https://github.com/provenance-io/provenance/compare/v1.19.0-rc1...v1.19.0-rc2
-* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc2
-
----
-
-## [v1.19.0-rc1](https://github.com/provenance-io/provenance/releases/tag/v1.19.0-rc1) - 2024-06-24
+## [v1.19.0](https://github.com/provenance-io/provenance/releases/tag/v1.19.0) - 2024-07-19
 
 ### Features
 
@@ -140,6 +56,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * Update stargate queries for Quarantine and Sanction modules [#2016](https://github.com/provenance-io/provenance/pull/2016).
 * Add the circuit breaker module [#2031](https://github.com/provenance-io/provenance/pull/2031).
 * Add upgrade handler to set scope net asset values and update block height for pio-testnet-1 [#2046](https://github.com/provenance-io/provenance/pull/2046), [#2050](https://github.com/provenance-io/provenance/pull/2050).
+* Create a script for updating links in the spec docs to proto messages [#2068](https://github.com/provenance-io/provenance/pull/2068).
+* Add grpc querier for cosmwasm 2.1.0 smart contracts [#2083](https://github.com/provenance-io/provenance/pull/2083).
 
 ### Improvements
 
@@ -274,63 +192,86 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * /cosmos.staking.v1beta1.Query/DelegatorValidator
   * /cosmos.staking.v1beta1.Query/HistoricalInfo
   * /cosmos.staking.v1beta1.Query/Pool
+* Update the Swagger API documentation [#2063](https://github.com/provenance-io/provenance/pull/2063).
+* Update all the proto links in the spec docs to point to `v1.19.0` versions of the proto files [#2068](https://github.com/provenance-io/provenance/pull/2068).
+* Add the (empty) `umber-rc2`, `umber-rc3` and `umber-rc4` upgrades [#2069](https://github.com/provenance-io/provenance/pull/2069), [#2091](https://github.com/provenance-io/provenance/pull/2091).
+* Remove the warnings about some config settings [2095](https://github.com/provenance-io/provenance/pull/2095).
+* Record several scope NAVs with the umber upgrade [#2085](https://github.com/provenance-io/provenance/pull/2085).
+* Store the Figure Funding Trading Bridge Smart Contract as part of the umber upgrade [2102](https://github.com/provenance-io/provenance/pull/2102).
+
+### Bug Fixes
+
+* The `add-net-asset-values` command now correctly uses the from `flag`'s `AccAddress` [#1995](https://github.com/provenance-io/provenance/issues/1995).
+* Fix the `umber` and `umber-rc1` upgrades [#2033](https://github.com/provenance-io/provenance/pull/2033).
+* Fix the heighliner docker image build [#2052](https://github.com/provenance-io/provenance/pull/2052).
+* Put the location of the wasm directory back to where it is in previous versions: data/wasm/wasm [#2071](https://github.com/provenance-io/provenance/pull/2071).
+
+### Deprecated
+
+* In the config commands, the "tendermint" and "tm" options are deprecated, replaced with "cometbft", "comet", and "cmt" [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* All of the old governance proposals are now either deprecated or unusable. They all have new `Msg`-style endpoints for use in a `gov.v1.MsgSubmitProposal`.
 
 ### Client Breaking
 
 * The `provenanced query account` command has been removed. It is still available as `provenanced query auth account` [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Move the genesis-related commands into a new `genesis` sub-command, and remove the `genesis-` parts of their names [#1971](https://github.com/provenance-io/provenance/pull/1971).
+  * `provenanced add-genesis-account` is now `provenanced genesis add-account`
+  * `provenanced add-genesis-custom-floor` is now `provenanced genesis add-custom-floor`
+  * `provenanced add-genesis-custom-market` is now `provenanced genesis add-custom-market`
+  * `provenanced add-genesis-default-market` is now `provenanced genesis add-default-market`
+  * `provenanced add-genesis-marker` is now `provenanced genesis add-marker`
+  * `provenanced add-genesis-msg-fee` is now `provenanced genesis add-msg-fee`
+  * `provenanced add-genesis-root-name` is now `provenanced genesis add-root-name`
+  * `provenanced collect-gentxs` is now `provenanced genesis collect-gentxs`
+  * `provenanced gentx` is now `provenanced genesis gentx`
+  * `provenanced validate-genesis` is now `provenanced genesis validate`
 * Many of the SDK's query commands have had their usage altered [#1971](https://github.com/provenance-io/provenance/pull/1971).
 * Rosetta has been removed from the `provenanced` executable [#1981](https://github.com/provenance-io/provenance/pull/1981).
   It is now a stand-alone service. See: <https://github.com/cosmos/rosetta> for more info.
-
-### Bug Fixes
-
-* The `add-net-asset-values` command now correctly uses the from `flag`'s `AccAddress` [#1995](https://github.com/provenance-io/provenance/issues/1995).
-* Fix the sim tests [#2015](https://github.com/provenance-io/provenance/pull/2015).
-* Fix the `umber` and `umber-rc1` upgrades [#2033](https://github.com/provenance-io/provenance/pull/2033).
-
-### Deprecated
-
-* In the config commands, the "tendermint" and "tm" options are deprecated, replaced with "cometbft", "comet", and "cmt" [#1968](https://github.com/provenance-io/provenance/pull/1968).
+* When submitting a governance proposal, at least 1000 hash (`1000000000000nhash`) of the deposit must be included. The rest can still be added later.
+* When submitting a governance proposal, the new `title` and `summary` fields are required.
+* The `broadcast-mode` value `block` has been removed and can now only be either `sync` or `async`.
+  The `provenanced query wait-tx` command can be used to achieve similar functionality as `block`, E.g. `provenanced tx <whatever> --output text | provenanced query wait-tx`.
 
 ### Dependencies
 
-- Bump `github.com/cosmos/ibc-go/v8` from 8.0.0 to 8.2.1 ([#1910](https://github.com/provenance-io/provenance/pull/1910), [#1956](https://github.com/provenance-io/provenance/pull/1956))
-- Bump `google.golang.org/grpc` from 1.62.1 to 1.64.0 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918), [#1972](https://github.com/provenance-io/provenance/pull/1972))
 - Bump `bufbuild/buf-breaking-action` from 1.1.3 to 1.1.4 ([#1894](https://github.com/provenance-io/provenance/pull/1894))
 - Bump `bufbuild/buf-lint-action` from 1.1.0 to 1.1.1 ([#1895](https://github.com/provenance-io/provenance/pull/1895))
-- Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.33.0 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949), [#1979](https://github.com/provenance-io/provenance/pull/1979), [#1990](https://github.com/provenance-io/provenance/pull/1990), [#2011](https://github.com/provenance-io/provenance/pull/2011), [#2036](https://github.com/provenance-io/provenance/pull/2036))
-- Bump `github.com/cometbft/cometbft` from 0.38.5 to 0.38.7 ([#1912](https://github.com/provenance-io/provenance/pull/1912), [#1959](https://github.com/provenance-io/provenance/pull/1959))
-- Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.3 ([#1913](https://github.com/provenance-io/provenance/pull/1913), [#2026](https://github.com/provenance-io/provenance/pull/2026))
-- Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
-- Bump `peter-evans/create-pull-request` from 6.0.2 to 6.1.0 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940), [#1955](https://github.com/provenance-io/provenance/pull/1955), [#2040](https://github.com/provenance-io/provenance/pull/2040))
-- Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.3 ([#1928](https://github.com/provenance-io/provenance/pull/1928), [#1944](https://github.com/provenance-io/provenance/pull/1944))
-- Bump `cosmwasm-std` from 1.4.1 to 1.4.4 ([#1950](https://github.com/provenance-io/provenance/pull/1950))
-- Bump `golangci/golangci-lint-action` from 4 to 6 ([#1951](https://github.com/provenance-io/provenance/pull/1951), [#1965](https://github.com/provenance-io/provenance/pull/1965))
-- Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.2 ([#1960](https://github.com/provenance-io/provenance/pull/1960), [#1966](https://github.com/provenance-io/provenance/pull/1966), [#2028](https://github.com/provenance-io/provenance/pull/2028))
-- Bump `github.com/hashicorp/go-getter` from 1.7.3 to 1.7.4 ([#1958](https://github.com/provenance-io/provenance/pull/1958))
-- Bump `golang.org/x/text` from 0.14.0 to 0.16.0 ([#1964](https://github.com/provenance-io/provenance/pull/1964), [#2023](https://github.com/provenance-io/provenance/pull/2023))
-- Bump `docker/setup-qemu-action` from 2 to 3 ([#1983](https://github.com/provenance-io/provenance/pull/1983))
-- Update `github.com/cosmos/ibc-go/v8` to our forked tag v8.2.1-pio-1 ([#1998](https://github.com/provenance-io/provenance/pull/1998))
-- Bump `github.com/rs/zerolog` from 1.32.0 to 1.33.0 ([#1994](https://github.com/provenance-io/provenance/pull/1994))
-- Bump `github.com/spf13/viper` from 1.18.2 to 1.19.0 ([#2020](https://github.com/provenance-io/provenance/pull/2020))
-- Bump `github.com/cosmos/gogoproto` from 1.4.12 to 1.5.0 ([#2024](https://github.com/provenance-io/provenance/pull/2024))
+- Bump `bufbuild/buf-setup-action` from 1.30.0 to 1.34.0 ([#1904](https://github.com/provenance-io/provenance/pull/1904), [#1949](https://github.com/provenance-io/provenance/pull/1949), [#1979](https://github.com/provenance-io/provenance/pull/1979), [#1990](https://github.com/provenance-io/provenance/pull/1990), [#2011](https://github.com/provenance-io/provenance/pull/2011), [#2036](https://github.com/provenance-io/provenance/pull/2036), [#2049](https://github.com/provenance-io/provenance/pull/2049))
 - Bump `cosmossdk.io/api` from 0.7.4 to 0.7.5 ([#2025](https://github.com/provenance-io/provenance/pull/2025))
-- Bump `github.com/cosmos/cosmos-sdk` from 0.50.5-pio-3 to 0.50.7-pio-1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
-- Bump `cosmossdk.io/store` from 1.0.2 to 1.1.0 [#2026](https://github.com/provenance-io/provenance/pull/2026)
-- Bump `cosmossdk.io/x/feegrant` from 0.1.0 to 0.1.1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
-- Bump `cosmossdk.io/x/evidence` from 0.1.0 to 0.1.1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
-- Bump `cosmossdk.io/x/circuit` from 0.1.0 to 0.1.1 ([#2035](https://github.com/provenance-io/provenance/pull/2035))
-- Bump `github.com/spf13/cobra` from 1.8.0 to 1.8.1 ([#2038](https://github.com/provenance-io/provenance/pull/2038))
 - Bump `cosmossdk.io/client/v2` from 2.0.0-beta.1 to 2.0.0-beta.2 ([#2042](https://github.com/provenance-io/provenance/pull/2042))
+- Bump `cosmossdk.io/store` from 1.0.2 to 1.1.0 [#2026](https://github.com/provenance-io/provenance/pull/2026)
+- Bump `cosmossdk.io/x/circuit` from 0.1.0 to 0.1.1 ([#2035](https://github.com/provenance-io/provenance/pull/2035))
+- Bump `cosmossdk.io/x/evidence` from 0.1.0 to 0.1.1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
+- Bump `cosmossdk.io/x/feegrant` from 0.1.0 to 0.1.1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
+- Bump `cosmossdk.io/x/tx` from 0.13.1 to 0.13.3 ([#1928](https://github.com/provenance-io/provenance/pull/1928), [#1944](https://github.com/provenance-io/provenance/pull/1944))
+- Bump `cosmossdk.io/x/upgrade` from 0.1.0 to 0.1.3 ([#1913](https://github.com/provenance-io/provenance/pull/1913), [#2026](https://github.com/provenance-io/provenance/pull/2026))
+- Bump `cosmwasm-std` from 1.4.1 to 1.4.4 ([#1950](https://github.com/provenance-io/provenance/pull/1950))
 - Bump `docker/build-push-action` from 5 to 6 ([#2039](https://github.com/provenance-io/provenance/pull/2039))
-- Bump `github.com/cosmos/ibc-go/v8` from 8.2.1 to 8.3.2 ([#2043](https://github.com/provenance-io/provenance/pull/2043))
-- Bump `github.com/CosmWasm/wasmd` from `v0.50.0-pio-2` to `v0.51.0-pio-1` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
-- Bump `github.com/CosmWasm/wasmvm` from `v1.5.0` to `v2.0.1` ([#2045](https://github.com/provenance-io/provenance/pull/2045))
+- Bump `docker/setup-qemu-action` from 2 to 3 ([#1983](https://github.com/provenance-io/provenance/pull/1983))
+- Bump `github.com/CosmWasm/wasmd` from `v0.50.0-pio-2` to `v0.52.0-pio-1` ([#2045](https://github.com/provenance-io/provenance/pull/2045), [#2077](https://github.com/provenance-io/provenance/pull/2077))
+- Bump `github.com/CosmWasm/wasmvm` from `v1.5.0` to `v2.1.0`` ([#2045](https://github.com/provenance-io/provenance/pull/2045), [#2077](https://github.com/provenance-io/provenance/pull/2077))
+- Bump `github.com/cometbft/cometbft` from 0.38.5 to v0.38.10 ([#1912](https://github.com/provenance-io/provenance/pull/1912), [#1959](https://github.com/provenance-io/provenance/pull/1959), [#2061](https://github.com/provenance-io/provenance/pull/2061), [#2087](https://github.com/provenance-io/provenance/pull/2087), [#2097](https://github.com/provenance-io/provenance/pull/2097))
+- Bump `github.com/cosmos/cosmos-sdk` from 0.50.5-pio-3 to 0.50.7-pio-1 [#2026](https://github.com/provenance-io/provenance/pull/2026)
+- Bump `github.com/cosmos/gogoproto` from 1.4.12 to 1.5.0 ([#2024](https://github.com/provenance-io/provenance/pull/2024))
+- Bump `github.com/cosmos/iavl` from 1.1.2 to 1.2.0 ([#2076](https://github.com/provenance-io/provenance/pull/2076))
+- Bump `github.com/cosmos/ibc-go/modules/capability` from 1.0.0 to 1.0.1 ([#2064](https://github.com/provenance-io/provenance/pull/2064))
+- Bump `github.com/cosmos/ibc-go/v8` from 8.0.0 to `github.com/provenance-io/ibc-go/v8` v8.3.2-pio-1 ([#1910](https://github.com/provenance-io/provenance/pull/1910), [#1956](https://github.com/provenance-io/provenance/pull/1956), [#1998](https://github.com/provenance-io/provenance/pull/1998), [#2043](https://github.com/provenance-io/provenance/pull/2043))
+- Bump `github.com/hashicorp/go-getter` from 1.7.3 to 1.7.5 ([#1958](https://github.com/provenance-io/provenance/pull/1958), [#2057](https://github.com/provenance-io/provenance/pull/2057))
+- Bump `github.com/hashicorp/go-metrics` from 0.5.2 to 0.5.3 ([#1914](https://github.com/provenance-io/provenance/pull/1914))
+- Bump `github.com/rs/cors` from 1.10.1 to 1.11.0 ([#2066](https://github.com/provenance-io/provenance/pull/2066))
+- Bump `github.com/rs/zerolog` from 1.32.0 to 1.33.0 ([#1994](https://github.com/provenance-io/provenance/pull/1994))
+- Bump `github.com/spf13/cobra` from 1.8.0 to 1.8.1 ([#2038](https://github.com/provenance-io/provenance/pull/2038))
+- Bump `github.com/spf13/viper` from 1.18.2 to 1.19.0 ([#2020](https://github.com/provenance-io/provenance/pull/2020))
+- Bump `golang.org/x/text` from 0.14.0 to 0.16.0 ([#1964](https://github.com/provenance-io/provenance/pull/1964), [#2023](https://github.com/provenance-io/provenance/pull/2023))
+- Bump `golangci/golangci-lint-action` from 4 to 6 ([#1951](https://github.com/provenance-io/provenance/pull/1951), [#1965](https://github.com/provenance-io/provenance/pull/1965))
+- Bump `google.golang.org/grpc` from 1.62.1 to 1.65.0 ([#1903](https://github.com/provenance-io/provenance/pull/1903), [#1918](https://github.com/provenance-io/provenance/pull/1918), [#1972](https://github.com/provenance-io/provenance/pull/1972), [#2065](https://github.com/provenance-io/provenance/pull/2065))
+- Bump `google.golang.org/protobuf` from 1.33.0 to 1.34.2 ([#1960](https://github.com/provenance-io/provenance/pull/1960), [#1966](https://github.com/provenance-io/provenance/pull/1966), [#2028](https://github.com/provenance-io/provenance/pull/2028))
+- Bump `peter-evans/create-pull-request` from 6.0.2 to 6.1.0 ([#1929](https://github.com/provenance-io/provenance/pull/1929), [#1940](https://github.com/provenance-io/provenance/pull/1940), [#1955](https://github.com/provenance-io/provenance/pull/1955), [#2040](https://github.com/provenance-io/provenance/pull/2040))
 
 ### Full Commit History
 
-* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0-rc1
+* https://github.com/provenance-io/provenance/compare/v1.18.0...v1.19.0
 
 ---
 
