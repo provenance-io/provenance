@@ -2,12 +2,40 @@
 # This script will git diff go.mod and identify the changes to it,
 # outputting the info in a format ready for the changelog.
 
+show_usage () {
+    cat << EOF
+get-dep-changes.sh: Analyze changes made to go.mod and generate changelog entries.
+
+Usage: get-dep-changes.sh {-p|--pull-request|--pr <num> | -n|--issue-no|--issue <num>}
+          [--branch <branch>] [-v|--verbose] [--no-clean] [-h|--help]
+
+You must provide either a PR number or issue number, but you cannot provide both.
+
+-p|--pull-request|--pr <num>
+    Append a PR link to the given <num> to the end of each changelog entry.
+-n|--issue-no|--issue <num>
+    Append an issue link to the given <num> to the end of each changelog entry.
+
+--branch <branch>
+    Providing this option allows you to compare current changes against a branch other than main.
+    By default, <brancy> is main.
+
+-v|--verbose
+    Output extra information.
+
+--no-clean
+    Do not delete the temporary directory used for processing.
+
+EOF
+
+}
+
 branch='main'
 
 while [[ "$#" -gt '0' ]]; do
     case "$1" in
         -h|--help)
-            printf 'Usage: get-dep-changes.sh\n'
+            show_usage
             exit 0
             ;;
         --no-clean)
@@ -24,6 +52,31 @@ while [[ "$#" -gt '0' ]]; do
             branch="$2"
             shift
             ;;
+        -p|--pull-request|--pr)
+            if [[ -z "$2" && -z "$pr" ]]; then
+                printf 'No argument provided after %s\n' "$1"
+                exit 1
+            fi
+            if [[ "$2" =~ [^[:digit:]] ]]; then
+                printf 'Invalid %s value: [%s]. Only digits are allowed.\n' "$1" "$2"
+                exit 1
+            fi
+            pr="$2"
+            shift
+            ;;
+        -n|--issue-no|--issue)
+            # Using -n and --issue-no to match the `unclog add` flags.
+            if [[ -z "$2" && -z "$issue" ]]; then
+                printf 'No argument provided after %s\n' "$1"
+                exit 1
+            fi
+            if [[ "$2" =~ [^[:digit:]] ]]; then
+                printf 'Invalid %s value: [%s]. Only digits are allowed.\n' "$1" "$2"
+                exit 1
+            fi
+            issue="$2"
+            shift
+            ;;
         *)
             printf 'Unknown argument: %s\n' "$1"
             exit 1
@@ -31,6 +84,20 @@ while [[ "$#" -gt '0' ]]; do
     esac
     shift
 done
+
+if [[ -n "$pr" && -n "$issue" ]]; then
+    printf 'You cannot provide both a pr (%s) and issue (%s) number.\n' "$issue" "$pr"
+    exit 1
+elif [[ -n "$pr" ]]; then
+    link="[PR ${pr}](https://github.com/provenance-io/provenance/pull/${pr})"
+elif [[ -n "$issue" ]]; then
+    link="[#${issue}](https://github.com/provenance-io/provenance/issues/${issue})"
+else
+    printf 'You must provide either a --pr <num> or --issue <num>.\n'
+    exit 1
+fi
+
+[[ -n "$verbose" ]] && printf 'Link: %s\n' "$link"
 
 
 temp_dir="$( mktemp -d -t dep-updates )"
@@ -45,7 +112,7 @@ clean_exit () {
       rm -rf "$temp_dir"
       temp_dir=''
     else
-      [[ -n "$verbose" ]] && printf 'NOT deleting temp dir: %s\n' "$temp_dir"
+      printf 'NOT deleting temp dir: %s\n' "$temp_dir"
     fi
   fi
   exit "$ec"
@@ -111,6 +178,7 @@ minus_replaces="${temp_dir}/3-minus-replaces.txt" # Just the removed replace lin
 plus_replaces="${temp_dir}/3-plus-replaces.txt"   # Just the added replace lines.
 cur_replaces="${temp_dir}/3-cur-replaces.txt"     # All current replaces (even ones not changing).
 changes="${temp_dir}/4-changes.md"                # All the changelog entries (but without the link).
+final="${temp_dir}/5-final.md"                    # The final changelog entry content.
 
 # Get the go.mod diff.
 git diff -U0 "$branch" -- go.mod > "$full_diff"
@@ -204,6 +272,9 @@ for lib in "${libs[@]}"; do
     fi
 done
 
-cat "$changes"
+# Append the link to each line.
+awk -v link="$link" '{print $0 " (" link ").";}' "$changes" > "$final"
+
+cat "$final"
 
 clean_exit 0
