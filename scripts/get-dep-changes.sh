@@ -292,7 +292,7 @@ done
 
 # Append the link to each line.
 [[ -n "$verbose" ]] && printf 'Appending link (%s) to each entry: %s\n' "$link" "$final"
-awk -v link="$link" '{print $0 " (" link ").";}' "$changes" > "$final"
+awk -v link="$link" '{print $0 " " link ".";}' "$changes" > "$final"
 
 cat "$final"
 
