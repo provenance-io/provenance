@@ -42,6 +42,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `cosmossdk.io/core` from 0.11.0 to 0.11.1 ([#2107](https://github.com/provenance-io/provenance/pull/2107))
+
 ## [v1.19.0](https://github.com/provenance-io/provenance/releases/tag/v1.19.0) - 2024-07-19
 
 ### Features
