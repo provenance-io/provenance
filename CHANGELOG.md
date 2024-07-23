@@ -42,6 +42,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `bufbuild/buf-setup-action` from 1.34.0 to 1.35.0 ([#2106](https://github.com/provenance-io/provenance/pull/2106))
+
 ## [v1.19.0](https://github.com/provenance-io/provenance/releases/tag/v1.19.0) - 2024-07-19
 
 ### Features
