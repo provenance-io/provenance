@@ -16,6 +16,19 @@ You must provide either a PR number or issue number, but you cannot provide both
 -n|--issue-no|--issue <num>
     Append an issue link to the given <num> to the end of each changelog entry.
 
+--name <name>
+    The <name> is cleaned then appended to the <num> to create the filename for this change.
+    To clean the <name>, it is lowercased, then non-alphanumeric chars are changed to dashes.
+    If provided, the changelog entries will be written to
+        <repo root>.changelog/unreleased/dependencies/<num>-<name>.md
+    If not provided, the changelog entries will be written to stdout.
+    If not in a repo, or to put the file in a different directory, use the --dir <dir> option.
+
+--dir <dir>
+    Put the changelog entries in the provided <dir>.
+    This arg only has meaning if --name is also provided.
+    The default is '<repo root>.changelog/unreleased/dependencies'.
+
 --branch <branch>
     Providing this option allows you to compare current changes against a branch other than main.
     By default, <brancy> is main.
@@ -30,8 +43,6 @@ EOF
 
 }
 
-branch='main'
-
 while [[ "$#" -gt '0' ]]; do
     case "$1" in
         -h|--help)
@@ -45,7 +56,7 @@ while [[ "$#" -gt '0' ]]; do
             verbose='YES'
             ;;
         -b|--branch)
-            if [[ -z "$2" ]]; then
+            if [[ -z "$2" && -z "$branch" ]]; then
                 printf 'No argument provided after %s\n' "$1"
                 exit 1
             fi
@@ -77,6 +88,22 @@ while [[ "$#" -gt '0' ]]; do
             issue="$2"
             shift
             ;;
+        --name)
+            if [[ -z "$2" && -z "$name" ]]; then
+                printf 'No argument provided after %s\n' "$1"
+                exit 1
+            fi
+            name="$2"
+            shift
+            ;;
+        --dir)
+            if [[ -z "$2" && -z "$out_dir" ]]; then
+                printf 'No argument provided after %s\n' "$1"
+                exit 1
+            fi
+            out_dir="$2"
+            shift
+            ;;
         *)
             printf 'Unknown argument: %s\n' "$1"
             exit 1
@@ -85,38 +112,53 @@ while [[ "$#" -gt '0' ]]; do
     shift
 done
 
+branch="${branch:-main}"
+
 if [[ -n "$pr" && -n "$issue" ]]; then
     printf 'You cannot provide both a pr (%s) and issue (%s) number.\n' "$issue" "$pr"
     exit 1
 elif [[ -n "$pr" ]]; then
     link="[PR ${pr}](https://github.com/provenance-io/provenance/pull/${pr})"
+    num="$pr"
 elif [[ -n "$issue" ]]; then
     link="[#${issue}](https://github.com/provenance-io/provenance/issues/${issue})"
+    num="$issue"
 else
     printf 'You must provide either a --pr <num> or --issue <num>.\n'
     exit 1
 fi
-
 [[ -n "$verbose" ]] && printf 'Link: %s\n' "$link"
 
+if [[ -n "$name" ]]; then
+    name="$( sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s/[^[:alnum:]]+/-/g;' <<< "$name" | tr '[:upper:]' '[:lower:]' )"
+    [[ -n "$verbose" ]] && printf 'Cleaned name: %s\n' "'$name'"
+    if [[ -n "$name" ]]; then
+        if [[ -z "$out_dir" ]]; then
+            repo_root="$( git rev-parse --show-toplevel )" || exit $?
+            out_dir="${repo_root}/.changelog/unreleased/dependencies"
+        fi
+        out_fn="${out_dir}/${num}-${name}.md"
+        [[ -n "$verbose" ]] && printf 'Output filename: %s\n' "'$name'"
+    fi
+fi
 
 [[ -n "$verbose" ]] && printf 'Creating temp dir.\n'
 temp_dir="$( mktemp -d -t dep-updates )" || exit $?
 [[ -n "$verbose" ]] && printf 'Created temp dir: %s\n' "$temp_dir"
 
 clean_exit () {
-  local ec
-  ec="${1:-0}"
-  if [[ -n "$temp_dir" && -d "$temp_dir" ]]; then
-    if [[ -z "$no_clean" ]]; then
-      [[ -n "$verbose" ]] && printf 'Deleting temp dir: %s\n' "$temp_dir"
-      rm -rf "$temp_dir"
-      temp_dir=''
-    else
-      printf 'NOT deleting temp dir: %s\n' "$temp_dir"
+    local ec
+    ec="${1:-0}"
+    if [[ -n "$temp_dir" && -d "$temp_dir" ]]; then
+        if [[ -z "$no_clean" ]]; then
+            [[ -n "$verbose" ]] && printf 'Deleting temp dir: %s\n' "$temp_dir"
+            rm -rf "$temp_dir"
+            temp_dir=''
+        else
+            printf 'NOT deleting temp dir: %s\n' "$temp_dir"
+        fi
     fi
-  fi
-  exit "$ec"
+    exit "$ec"
 }
 
 # Usage: <stuff> | clean_diff
@@ -169,7 +211,7 @@ get_replace_str () {
     return 0
 }
 
-# Define all the files that we'll be making.
+# Define all the temp files that we'll be making.
 # The numbers in these roughly reflect the step that they're created in.
 full_diff="${temp_dir}/1-full.diff"               # The full results of the diff.
 minus_lines="${temp_dir}/2-minus-lines.txt"       # Just the subtractions we care about.
@@ -294,6 +336,21 @@ done
 [[ -n "$verbose" ]] && printf 'Appending link (%s) to each entry: %s\n' "$link" "$final"
 awk -v link="$link" '{print $0 " " link ".";}' "$changes" > "$final"
 
-cat "$final"
+# Either put the file in place or output the content.
+if [[ -n "$out_fn" ]]; then
+    out_dir="$( dirname "$out_fn" )"
+    if [[ -n "$out_dir" && "$out_dir" != '.' ]]; then
+        [[ -n "$verbose" ]] && printf 'Ensuring dir exists: %s\n' "$out_dir"
+        mkdir -p "$out_dir" && ok="YES"
+    fi
+    if [[ -n "$ok" ]]; then
+        [[ -n "$verbose" ]] && printf 'Copying final file from %s to %s\n' "$final" "$out_fn"
+        cp "$final" "$out_fn" || ok=''
+    fi
+fi
+
+if [[ -z "$ok" ]]; then
+    cat "$final"
+fi
 
 clean_exit 0
