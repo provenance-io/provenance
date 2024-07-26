@@ -64,8 +64,7 @@ func NewRootCmd(sealConfig bool) (*cobra.Command, params.EncodingConfig) {
 	sdk.SetAddrCacheEnabled(false)
 	defer sdk.SetAddrCacheEnabled(true)
 
-	// We initially set the config as testnet so commands that run before start work for testing such as gentx.
-	app.SetConfig(true, false)
+	app.SetConfig(isTestnetFlagSet(), false)
 
 	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 	encodingConfig := tempApp.GetEncodingConfig()
@@ -437,4 +436,20 @@ func getIAVLCacheSize(options servertypes.AppOptions) int {
 		return cast.ToInt(serverconfig.DefaultConfig().IAVLCacheSize)
 	}
 	return iavlCacheSize
+}
+
+// isTestnetFlagSet returns true if the command was invoked with the --testnet flag.
+// This should be the same as viper.Get("testnet"), but can be used without needing
+// to set up viper.
+func isTestnetFlagSet() bool {
+	ev := os.Getenv("PIO_TESTNET")
+	if len(ev) > 0 {
+		return cast.ToBool(ev)
+	}
+	for _, arg := range os.Args[1:] {
+		if arg == "-t" || arg == "--testnet" {
+			return true
+		}
+	}
+	return false
 }
