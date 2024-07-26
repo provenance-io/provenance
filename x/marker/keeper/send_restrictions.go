@@ -13,8 +13,6 @@ import (
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
-const AddressHasAccessKey = "address_has_access"
-
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
 func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
