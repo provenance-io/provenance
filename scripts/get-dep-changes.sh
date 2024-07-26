@@ -32,7 +32,7 @@ You must provide either a PR number or issue number, but you cannot provide both
 
 --branch <branch>
     Providing this option allows you to compare current changes against a branch other than main.
-    By default, <brancy> is main.
+    By default, <branch> is "main".
 
 -v|--verbose
     Output extra information.
@@ -42,6 +42,11 @@ You must provide either a PR number or issue number, but you cannot provide both
 
 --force
     If the output file already exists, overwrite it instead of outputting an error.
+
+Exit codes:
+    0  No errors encountered.
+    1  An error was encountered.
+    10 There are no changes to go.mod.
 
 EOF
 
@@ -141,7 +146,7 @@ if [[ -n "$name" ]]; then
     [[ -n "$verbose" ]] && printf 'Cleaned name: %s\n' "'$name'"
     if [[ -n "$name" ]]; then
         if [[ -z "$out_dir" ]]; then
-            repo_root="$( git rev-parse --show-toplevel )" || exit $?
+            repo_root="$( git rev-parse --show-toplevel )" || exit 1
             out_dir="${repo_root}/.changelog/unreleased/dependencies"
         fi
         out_fn="${out_dir}/${num}-${name}.md"
@@ -154,7 +159,7 @@ if [[ -n "$name" ]]; then
 fi
 
 [[ -n "$verbose" ]] && printf 'Creating temp dir.\n'
-temp_dir="$( mktemp -d -t dep-updates )" || exit $?
+temp_dir="$( mktemp -d -t dep-updates )" || exit 1
 [[ -n "$verbose" ]] && printf 'Created temp dir: %s\n' "$temp_dir"
 
 clean_exit () {
@@ -239,9 +244,10 @@ final="${temp_dir}/5-final.md"                    # The final changelog entry co
 # Get the go.mod diff.
 [[ -n "$verbose" ]] && printf 'Creating full diff: %s\n' "$full_diff"
 git diff -U0 "$branch" -- go.mod > "$full_diff"
-if [[ -z "$( head -c 1 "$full_diff" )" ]]; then
+if ! grep -q '.' "$full_diff"; then
     [[ -n "$verbose" ]] && printf 'go.mod does not have any changes.\n'
-    clean_exit 0
+    # Using the exit code of 10 here to indicate no changes.
+    clean_exit 10
 fi
 
 # Split it into subtractions and additions.
