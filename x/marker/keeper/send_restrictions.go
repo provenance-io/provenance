@@ -44,7 +44,8 @@ func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.Ac
 		// a marker account is if an admin creates one using the marker module's GrantAllowance endpoint.
 		// So if a feegrant is in use, that means the sending of these funds is authorized.
 		// We also assume that other stuff is handling the actual checking and use of that feegrant,
-		// so we don't need to worry about its details in here.
+		// so we don't need to worry about its details in here, and that HasFeeGrantInUse is only ever
+		// true when collecting fees.
 		if !internalsdk.HasFeeGrantInUse(ctx) {
 			if len(admin) == 0 {
 				return nil, fmt.Errorf("cannot withdraw from marker account %s (%s)",
