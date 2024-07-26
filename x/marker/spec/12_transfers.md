@@ -159,6 +159,7 @@ This flow checks that, if this is a withdrawal, nothing (yet) prevents the send.
 flowchart TD
     start[["checkSenderMarker(Sender, Transfer Agent)"]]
     issm{{"Is Sender a marker?"}}
+    isfg{{"Is a fee grant in use?"}}
     haveta{{"Is there a Transfer Agent?"}}
     istaw{{"Does the Transfer Agent\nhave withdraw access?"}}
     isasm{{"Does the Amount have\nthe Sender marker's denom?"}}
@@ -168,18 +169,20 @@ flowchart TD
     denied(["Send denied."])
     style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
     start --> issm
-    issm -->|yes| haveta
+    issm -->|yes| isfg
+    isfg -->|no| haveta
     haveta -->|yes| istaw
     haveta -.->|no| denied
     istaw -.->|no| denied
     istaw -->|yes| isasm
+    isfg -->|yes| isasm
     isasm -->|yes| issma
     issma -->|yes| ok
     isasm -.->|no| ok
     issma -.->|no| denied
     issm -.->|no| ok
-    linkStyle 3,4,9 stroke:#b30000,color:#b30000
-    linkStyle 7,8,10 stroke:#1b8500,color:#1b8500
+    linkStyle 4,5,11 stroke:#b30000,color:#b30000
+    linkStyle 9,10,12 stroke:#1b8500,color:#1b8500
 ```
 
 #### checkReceiverMarker
