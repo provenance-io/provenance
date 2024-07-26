@@ -7,7 +7,8 @@ show_usage () {
 get-dep-changes.sh: Analyze changes made to go.mod and generate changelog entries.
 
 Usage: get-dep-changes.sh {-p|--pull-request|--pr <num> | -n|--issue-no|--issue <num>}
-          [--branch <branch>] [-v|--verbose] [--no-clean] [-h|--help]
+          [--branch <branch>] [--name <name> [--dir <dir>]]
+          [-v|--verbose] [--no-clean] [--force] [-h|--help]
 
 You must provide either a PR number or issue number, but you cannot provide both.
 
@@ -39,6 +40,9 @@ You must provide either a PR number or issue number, but you cannot provide both
 --no-clean
     Do not delete the temporary directory used for processing.
 
+--force
+    If the output file already exists, overwrite it instead of outputting an error.
+
 EOF
 
 }
@@ -56,7 +60,7 @@ while [[ "$#" -gt '0' ]]; do
             verbose='YES'
             ;;
         -b|--branch)
-            if [[ -z "$2" && -z "$branch" ]]; then
+            if [[ -z "$2" ]]; then
                 printf 'No argument provided after %s\n' "$1"
                 exit 1
             fi
@@ -64,7 +68,7 @@ while [[ "$#" -gt '0' ]]; do
             shift
             ;;
         -p|--pull-request|--pr)
-            if [[ -z "$2" && -z "$pr" ]]; then
+            if [[ -z "$2" ]]; then
                 printf 'No argument provided after %s\n' "$1"
                 exit 1
             fi
@@ -77,7 +81,7 @@ while [[ "$#" -gt '0' ]]; do
             ;;
         -n|--issue-no|--issue)
             # Using -n and --issue-no to match the `unclog add` flags.
-            if [[ -z "$2" && -z "$issue" ]]; then
+            if [[ -z "$2" ]]; then
                 printf 'No argument provided after %s\n' "$1"
                 exit 1
             fi
@@ -89,7 +93,7 @@ while [[ "$#" -gt '0' ]]; do
             shift
             ;;
         --name)
-            if [[ -z "$2" && -z "$name" ]]; then
+            if [[ -z "$2" ]]; then
                 printf 'No argument provided after %s\n' "$1"
                 exit 1
             fi
@@ -97,12 +101,15 @@ while [[ "$#" -gt '0' ]]; do
             shift
             ;;
         --dir)
-            if [[ -z "$2" && -z "$out_dir" ]]; then
+            if [[ -z "$2" ]]; then
                 printf 'No argument provided after %s\n' "$1"
                 exit 1
             fi
             out_dir="$2"
             shift
+            ;;
+        --force)
+            force='YES'
             ;;
         *)
             printf 'Unknown argument: %s\n' "$1"
@@ -130,7 +137,7 @@ fi
 [[ -n "$verbose" ]] && printf 'Link: %s\n' "$link"
 
 if [[ -n "$name" ]]; then
-    name="$( sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s/[^[:alnum:]]+/-/g;' <<< "$name" | tr '[:upper:]' '[:lower:]' )"
+    name="$( sed -E 's/[^[:alnum:]]+/-/g; s/^-//; s/-$//;' <<< "$name" | tr '[:upper:]' '[:lower:]' )"
     [[ -n "$verbose" ]] && printf 'Cleaned name: %s\n' "'$name'"
     if [[ -n "$name" ]]; then
         if [[ -z "$out_dir" ]]; then
@@ -138,7 +145,11 @@ if [[ -n "$name" ]]; then
             out_dir="${repo_root}/.changelog/unreleased/dependencies"
         fi
         out_fn="${out_dir}/${num}-${name}.md"
-        [[ -n "$verbose" ]] && printf 'Output filename: %s\n' "'$name'"
+        [[ -n "$verbose" ]] && printf 'Output filename: %s\n' "'$out_fn'"
+        if [[ -z "$force" && -e "$out_fn" ]]; then
+            printf 'Output file already exists: %s\n' "$out_fn"
+            exit 1
+        fi
     fi
 fi
 
@@ -340,16 +351,19 @@ awk -v link="$link" '{print $0 " " link ".";}' "$changes" > "$final"
 if [[ -n "$out_fn" ]]; then
     out_dir="$( dirname "$out_fn" )"
     if [[ -n "$out_dir" && "$out_dir" != '.' ]]; then
-        [[ -n "$verbose" ]] && printf 'Ensuring dir exists: %s\n' "$out_dir"
-        mkdir -p "$out_dir" && ok="YES"
+        [[ -n "$verbose" ]] && printf 'Making dir (if it does not exist yet): %s\n' "$out_dir"
+        mkdir -p "$out_dir" || failed="YES"
     fi
-    if [[ -n "$ok" ]]; then
+    if [[ -z "$failed" ]]; then
         [[ -n "$verbose" ]] && printf 'Copying final file from %s to %s\n' "$final" "$out_fn"
-        cp "$final" "$out_fn" || ok=''
+        if cp "$final" "$out_fn"; then
+            copied='YES'
+            printf 'Dependency changelog entry created: %s\n' "$out_fn"
+        fi
     fi
 fi
 
-if [[ -z "$ok" ]]; then
+if [[ -z "$copied" ]]; then
     cat "$final"
 fi
 
