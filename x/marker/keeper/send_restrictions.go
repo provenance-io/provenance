@@ -41,7 +41,12 @@ func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.Ac
 	// If it's coming from a marker, make sure the withdraw is allowed.
 	admin := types.GetTransferAgent(ctx)
 	if fromMarker, _ := k.GetMarker(ctx, fromAddr); fromMarker != nil {
-		// If the fromAddr is a marker, either a feegrant needs to be in use, or there needs to be a transfer agent.
+		// The only ways to legitimately send from a marker account is to have a transfer agent with
+		// withdraw permissions, or through a feegrant. The only way to have a feegrant from
+		// a marker account is if an admin creates one using the marker module's GrantAllowance endpoint.
+		// So if a feegrant is in use, that means the sending of these funds is authorized.
+		// We also assume that other stuff is handling the actual checking and use of that feegrant,
+		// so we don't need to worry about its details in here.
 		if !internalsdk.HasFeeGrantInUse(ctx) {
 			if len(admin) == 0 {
 				return nil, fmt.Errorf("cannot withdraw from marker account %s (%s)",
