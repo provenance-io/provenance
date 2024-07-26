@@ -11,9 +11,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/keeper"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
@@ -147,6 +149,21 @@ func TestSendRestrictionFn(t *testing.T) {
 
 	nrDenom := "nonrestrictedmarker"
 	nrMarker := newMarker(nrDenom, coin, nil)
+
+	// Create a marker similar to the ones we use for hash grants.
+	gDenom := "grantmarker"
+	gMarker := newMarkerAcc(gDenom, coin, nil)
+	gMarker.Supply = sdkmath.ZeroInt()
+	gMarker.AccessControl = []types.AccessGrant{
+		{Address: owner.String(), Permissions: types.AccessList{
+			types.Access_Mint, types.Access_Admin,
+			types.Access_Deposit, types.Access_Withdraw}}}
+	gMarker = createActiveMarker(gMarker)
+	denomOther := "othercoin"
+	// And throw some other funds in there.
+	require.NoError(t,
+		testutil.FundAccount(types.WithBypass(ctx), app.BankKeeper, gMarker.GetAddress(), cz(c(5000, denomOther))),
+		"Adding funds to %s marker account", gDenom)
 
 	rDenomNoAttr := "restrictedmarkernoreqattributes"
 	rMarkerNoAttr := newMarker(rDenomNoAttr, restricted, nil)
@@ -501,6 +518,29 @@ func TestSendRestrictionFn(t *testing.T) {
 			to:     addrWithAttrs,
 			amt:    cz(c(2, rDenomNoAttr)),
 			expErr: "cannot withdraw from marker account " + rMarkerNoAttr.GetAddress().String() + " (" + rDenomNoAttr + ")",
+		},
+		{
+			name:   "from grant marker: no admin, no feegrant in use",
+			ctx:    ctxP(ctx),
+			from:   gMarker.GetAddress(),
+			to:     addrWithAttrs,
+			amt:    cz(c(2, denomOther)),
+			expErr: "cannot withdraw from marker account " + gMarker.GetAddress().String() + " (" + gDenom + ")",
+		},
+		{
+			name: "from grant marker: no admin, with feegrant in use",
+			ctx:  ctxP(internalsdk.WithFeeGrantInUse(ctx)),
+			from: gMarker.GetAddress(),
+			to:   addrWithAttrs,
+			amt:  cz(c(3, denomOther)),
+		},
+		{
+			name:   "from grant marker: no admin, without feegrant in use",
+			ctx:    ctxP(internalsdk.WithoutFeeGrantInUse(ctx)),
+			from:   gMarker.GetAddress(),
+			to:     addrWithAttrs,
+			amt:    cz(c(6, denomOther)),
+			expErr: "cannot withdraw from marker account " + gMarker.GetAddress().String() + " (" + gDenom + ")",
 		},
 		{
 			name:   "from marker: admin without withdraw permission",

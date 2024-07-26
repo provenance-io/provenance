@@ -10,6 +10,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/provenance-io/provenance/internal/antewrapper"
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -69,7 +70,7 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, _ bool) (sdk.Coins, sdk.Events,
 		baseFeeConsumed := feeGasMeter.BaseFeeConsumed()
 		unchargedFees, _ := feeTx.GetFee().SafeSub(baseFeeConsumed...)
 
-		deductFeesFrom, err := antewrapper.GetFeePayerUsingFeeGrant(ctx, afd.feegrantKeeper, feeTx, unchargedFees, tx.GetMsgs())
+		deductFeesFrom, usedFeegrant, err := antewrapper.GetFeePayerUsingFeeGrant(ctx, afd.feegrantKeeper, feeTx, unchargedFees, tx.GetMsgs())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -82,6 +83,9 @@ func (afd MsgFeeInvoker) Invoke(ctx sdk.Context, _ bool) (sdk.Coins, sdk.Events,
 		// If there's fees left to collect, or there were consumed fees, deduct/distribute them now.
 		if !unchargedFees.IsZero() || !consumedFees.IsZero() {
 			eventCtx := ctx.WithEventManager(sdk.NewEventManager())
+			if usedFeegrant {
+				eventCtx = internalsdk.WithFeeGrantInUse(eventCtx)
+			}
 			err = afd.msgFeeKeeper.DeductFeesDistributions(afd.bankKeeper, eventCtx, deductFeesFromAcc, unchargedFees, feeGasMeter.FeeConsumedDistributions())
 			if err != nil {
 				return nil, nil, err

@@ -8,11 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
-
-const AddressHasAccessKey = "address_has_access"
 
 var _ banktypes.SendRestrictionFn = Keeper{}.SendRestrictionFn
 
@@ -40,17 +39,23 @@ func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.Ac
 	// If it's coming from a marker, make sure the withdraw is allowed.
 	admin := types.GetTransferAgent(ctx)
 	if fromMarker, _ := k.GetMarker(ctx, fromAddr); fromMarker != nil {
-		// It shouldn't be possible for the fromAddr to be a marker without a transfer
-		// agent because no keys exist for any marker accounts (so it can't sign a Tx).
-		// So, to be on the safe side, we return an error if that's the case.
-		if len(admin) == 0 {
-			return nil, fmt.Errorf("cannot withdraw from marker account %s (%s)",
-				fromAddr.String(), fromMarker.GetDenom())
-		}
+		// The only ways to legitimately send from a marker account is to have a transfer agent with
+		// withdraw permissions, or through a feegrant. The only way to have a feegrant from
+		// a marker account is if an admin creates one using the marker module's GrantAllowance endpoint.
+		// So if a feegrant is in use, that means the sending of these funds is authorized.
+		// We also assume that other stuff is handling the actual checking and use of that feegrant,
+		// so we don't need to worry about its details in here, and that HasFeeGrantInUse is only ever
+		// true when collecting fees.
+		if !internalsdk.HasFeeGrantInUse(ctx) {
+			if len(admin) == 0 {
+				return nil, fmt.Errorf("cannot withdraw from marker account %s (%s)",
+					fromAddr.String(), fromMarker.GetDenom())
+			}
 
-		// That transfer agent must have withdraw access on the marker we're taking from.
-		if err := fromMarker.ValidateAddressHasAccess(admin, types.Access_Withdraw); err != nil {
-			return nil, err
+			// That transfer agent must have withdraw access on the marker we're taking from.
+			if err := fromMarker.ValidateAddressHasAccess(admin, types.Access_Withdraw); err != nil {
+				return nil, err
+			}
 		}
 
 		// Check to see if marker is active; the coins created by a marker can only be withdrawn when it is active.
