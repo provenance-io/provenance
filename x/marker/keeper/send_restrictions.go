@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 
 	attrTypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/types"
@@ -40,17 +41,17 @@ func (k Keeper) SendRestrictionFn(goCtx context.Context, fromAddr, toAddr sdk.Ac
 	// If it's coming from a marker, make sure the withdraw is allowed.
 	admin := types.GetTransferAgent(ctx)
 	if fromMarker, _ := k.GetMarker(ctx, fromAddr); fromMarker != nil {
-		// It shouldn't be possible for the fromAddr to be a marker without a transfer
-		// agent because no keys exist for any marker accounts (so it can't sign a Tx).
-		// So, to be on the safe side, we return an error if that's the case.
-		if len(admin) == 0 {
-			return nil, fmt.Errorf("cannot withdraw from marker account %s (%s)",
-				fromAddr.String(), fromMarker.GetDenom())
-		}
+		// If the fromAddr is a marker, either a feegrant needs to be in use, or there needs to be a transfer agent.
+		if !internalsdk.HasFeeGrantInUse(ctx) {
+			if len(admin) == 0 {
+				return nil, fmt.Errorf("cannot withdraw from marker account %s (%s)",
+					fromAddr.String(), fromMarker.GetDenom())
+			}
 
-		// That transfer agent must have withdraw access on the marker we're taking from.
-		if err := fromMarker.ValidateAddressHasAccess(admin, types.Access_Withdraw); err != nil {
-			return nil, err
+			// That transfer agent must have withdraw access on the marker we're taking from.
+			if err := fromMarker.ValidateAddressHasAccess(admin, types.Access_Withdraw); err != nil {
+				return nil, err
+			}
 		}
 
 		// Check to see if marker is active; the coins created by a marker can only be withdrawn when it is active.

@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
+	internalsdk "github.com/provenance-io/provenance/internal/sdk"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
 )
 
@@ -91,7 +92,7 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 		return sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	deductFeesFrom, err := GetFeePayerUsingFeeGrant(ctx, dfd.feegrantKeeper, feeTx, baseFeeToConsume, msgs)
+	deductFeesFrom, usedFeeGrant, err := GetFeePayerUsingFeeGrant(ctx, dfd.feegrantKeeper, feeTx, baseFeeToConsume, msgs)
 	if err != nil {
 		return err
 	}
@@ -130,7 +131,11 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 	// We don't do this when simulating since we're simulating.
 	// And we don't do this during InitGenesis since those Txs don't have any fees on them at all.
 	if !simulate && !IsInitGenesis(ctx) && !baseFeeToConsume.IsZero() {
-		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFrom, baseFeeToConsume)
+		dctx := ctx
+		if usedFeeGrant {
+			dctx = internalsdk.WithFeeGrantInUse(ctx)
+		}
+		err = DeductFees(dfd.bankKeeper, dctx, deductFeesFrom, baseFeeToConsume)
 		if err != nil {
 			return err
 		}
@@ -151,16 +156,17 @@ func (dfd ProvenanceDeductFeeDecorator) checkDeductBaseFee(ctx sdk.Context, feeT
 	return nil
 }
 
-func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper msgfeestypes.FeegrantKeeper, feeTx sdk.FeeTx, fee sdk.Coins, msgs []sdk.Msg) (sdk.AccAddress, error) {
+func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper msgfeestypes.FeegrantKeeper, feeTx sdk.FeeTx, fee sdk.Coins, msgs []sdk.Msg) (sdk.AccAddress, bool, error) {
 	feePayer := sdk.AccAddress(feeTx.FeePayer())
 	feeGranter := sdk.AccAddress(feeTx.FeeGranter())
 	deductFeesFrom := feePayer
+	usedFeeGrant := false
 
 	// if feegranter set deduct base fee from feegranter account.
 	// this works with only when feegrant enabled.
 	if feeGranter != nil && !bytes.Equal(feeGranter, feePayer) {
 		if feegrantKeeper == nil {
-			return nil, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
+			return nil, false, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
 		}
 		err := feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, msgs)
 		if err != nil {
@@ -168,12 +174,13 @@ func GetFeePayerUsingFeeGrant(ctx sdk.Context, feegrantKeeper msgfeestypes.Feegr
 			for i, msg := range msgs {
 				msgTypes[i] = sdk.MsgTypeURL(msg)
 			}
-			return nil, cerrs.Wrapf(err, "failed to use fee grant: granter: %s, grantee: %s, fee: %q, msgs: %q", feeGranter, feePayer, fee, msgTypes)
+			return nil, false, cerrs.Wrapf(err, "failed to use fee grant: granter: %s, grantee: %s, fee: %q, msgs: %q", feeGranter, feePayer, fee, msgTypes)
 		}
 		deductFeesFrom = feeGranter
+		usedFeeGrant = true
 	}
 
-	return deductFeesFrom, nil
+	return deductFeesFrom, usedFeeGrant, nil
 }
 
 // CalculateBaseFee calculates the base fee.
