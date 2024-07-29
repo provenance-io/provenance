@@ -17,11 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.pull_request.labels.*.name, 'dependencies')
     steps:
-      - name: Checkout PR branch
+      - name: Checkout Target Branch
         uses: actions/checkout@v4
         with:
-          # Gotta get the whole thing so we can git diff later.
-          fetch-depth: 0
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
+        with:
           # Depending on your needs, you can use a token that will re-trigger workflows
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
@@ -35,6 +38,8 @@ jobs:
           PR_BASE: ${{ github.event.pull_request.head.ref }}
           PR_TARGET: ${{ github.event.pull_request.base.ref }}
         run: |
+          git status
+          git branch
           ./scripts/dependabot-changelog.sh \
             --verbose \
             --pr "$PR_NUM" \
