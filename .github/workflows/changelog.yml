@@ -23,17 +23,6 @@ jobs:
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
 
-      # All commits must be signed, import key and sign commit of updated change log.
-      - name: Import GPG key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          # Use a key associated with the provenanceio-bot github account.
-          gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.BOT_GPG_PRIVATE_KEY_PW }}
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-
       - name: Generate entry
         env:
           # Getting the title directly in the run script opens an injection vulnerability.
@@ -50,6 +39,17 @@ jobs:
             --title "$PR_TITLE" \
             --head-branch "$GITHUB_HEAD_REF" \
             --target-branch "$GITHUB_BASE_REF"
+
+      # All commits must be signed, import key and sign commit of updated change log.
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          # Use a key associated with the provenanceio-bot github account.
+          gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.BOT_GPG_PRIVATE_KEY_PW }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
 
       # This step is required for committing the changes to your branch.
       # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
