@@ -22,8 +22,6 @@ jobs:
           # Depending on your needs, you can use a token that will re-trigger workflows
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
-          # Need full history to diff against.
-          fetch-depth: 0
 
       # All commits must be signed, import key and sign commit of updated change log.
       - name: Import GPG key
@@ -42,7 +40,14 @@ jobs:
           # Using an env var for it (like this) prevents that vulnerability.
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUM: ${{ github.event.number }}
-        run: ./scripts/dependabot-changelog.sh --pr "$PR_NUM" --title "$PR_TITLE" --branch "$GITHUB_HEAD_REF" --verbose
+        run: \
+          git fetch origin "$GITHUB_BASE_REF" --depth 1
+          ./scripts/dependabot-changelog.sh \
+            --verbose \
+            --pr "$PR_NUM" \
+            --title "$PR_TITLE" \
+            --head-branch "$GITHUB_HEAD_REF" \
+            --target-branch "$GITHUB_BASE_REF"
 
       # This step is required for committing the changes to your branch.
       # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs

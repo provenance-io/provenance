@@ -2,10 +2,32 @@
 # This script will create the changelog entry for a dependabot PR.
 # It's designed to be called by a github action kicked off because of a dependabot PR.
 
+show_usage () {
+  cat << EOF
+dependabot-changelog.sh will create the changelog entries for a dependabot PR.
+
+Usage: ./dependabot-changelog.sh --pr <num> --title <title> --head-branch <branch> --target-branch <branch>
+
+--pr <num>
+    Identifies the PR number for use in the links as well as the changelog filename.
+--title <title>
+    Identifies the title of the PR. It is used when there are no changes to go.mod.
+    Expected format: "Bump <library> to <new version> from <old version>"
+--head-branch <branch>
+    Identifies the name of the branch with the change that we want merged into the target branch.
+    For dependabot changes, it will have the format "dependabot/<type>/<library>-<new version>".
+    The filename containing the new entries is derived from this.
+--target-branch <branch>
+    Identifies the branch that this PR is going into. It will almost always be "main".
+
+EOF
+
+}
+
 while [[ "$#" -gt '0' ]]; do
     case "$1" in
         --help)
-          printf 'Usage: ./dependabot-changelog.sh --pr <num> --title <title> --branch <branch>\n'
+          printf 'Usage: ./dependabot-changelog.sh --pr <num> --title <title> --head-branch <branch> --target-branch <branch>\n'
           exit 0
           ;;
         -p|--pull-request|--pr)
@@ -28,12 +50,20 @@ while [[ "$#" -gt '0' ]]; do
             title="$2"
             shift
             ;;
-        -b|--branch)
+        --head-branch)
             if [[ -z "$2" ]]; then
                 printf 'No argument provided after %s\n' "$1"
                 exit 1
             fi
-            branch="$2"
+            head_branch="$2"
+            shift
+            ;;
+        --target-branch)
+            if [[ -z "$2" ]]; then
+                printf 'No argument provided after %s\n' "$1"
+                exit 1
+            fi
+            target_branch="$2"
             shift
             ;;
         -v|--verbose)
@@ -47,32 +77,39 @@ while [[ "$#" -gt '0' ]]; do
     shift
 done
 
-if [[ -z "$branch" ]]; then
-    branch="$( git branch --show-current )"
+if [[ -z "$head_branch" ]]; then
+    head_branch="$( git branch --show-current )"
 fi
 
-if [[ -z "$branch" || "$branch" == 'HEAD' ]]; then
-    printf 'Could not determine the branch and no --branch <branch> provided.\n'
+if [[ -z "$head_branch" || "$head_branch" == 'HEAD' ]]; then
+    printf 'Could not determine the head branch and no --head-branch <branch> provided.\n'
     exit 1
 fi
-[[ -n "$verbose" ]] && printf 'Branch: "%s"\n' "$branch"
+[[ -n "$verbose" ]] && printf '  Head Branch: "%s"\n' "$head_branch"
+
+if [[ -z "$target_branch" ]]; then
+    printf 'No --target-branch <branch> provided.\n'
+    exit 1
+fi
+[[ -n "$verbose" ]] && printf 'Target Branch: "%s"\n' "$head_branch"
+
 
 if [[ -z "$pr" ]]; then
     printf 'No --pr <num> provided.\n'
     exit 1
 fi
-[[ -n "$verbose" ]] && printf '   PR: "%s"\n' "$pr"
+[[ -n "$verbose" ]] && printf '           PR: "%s"\n' "$pr"
 
 if [[ -z "$title" ]]; then
     printf 'No --title <title> provided.\n'
     exit 1
 fi
-[[ -n "$verbose" ]] && printf 'Title: "%s"\n' "$title"
+[[ -n "$verbose" ]] && printf '        Title: "%s"\n' "$title"
 
 # Dependabot branch names look like this: "dependabot/github_actions/bufbuild/buf-setup-action-1.34.0"
 # The "github_actions" can also be "go_modules" (anb probably other things too).
 # For the filename, we'll omit the "dependabot/<lib type>/" part and use just what's left.
-branch_fn="$( sed -E 's|^[^/]+/[^/]+/||; s|/|-|g;' <<< "$branch" )"
+branch_fn="$( sed -E 's|^[^/]+/[^/]+/||; s|/|-|g;' <<< "$head_branch" )"
 [[ -n "$verbose" ]] && printf 'Branch Filename: "%s"\n' "$branch_fn"
 
 # This script requires another script that must be in the same directory.
@@ -82,7 +119,7 @@ where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
 
 # Run the script to create the entry from the changes in go.mod.
 # The $verbose variable is purposely not quoted so that it doesn't count as an arg if it's empty.
-"$where_i_am/get-dep-changes.sh" --pr "$pr" --name "$branch_fn" $verbose --force
+"$where_i_am/get-dep-changes.sh" --pr "$pr" --name "$branch_fn" $verbose --force --target-branch "$target_branch"
 ec=$?
 # That script exits with 0 when there are go.mod changes and the new file was created.
 # If there were go.mod changes, we're all done here.

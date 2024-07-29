@@ -7,7 +7,7 @@ show_usage () {
 get-dep-changes.sh: Analyze changes made to go.mod and generate changelog entries.
 
 Usage: ./get-dep-changes.sh {-p|--pull-request|--pr <num> | -n|--issue-no|--issue <num>}
-          [--name <name> [--dir <dir>]] [--branch <branch>]
+          [--name <name> [--dir <dir>]] [--target-branch <branch>]
           [-v|--verbose] [--no-clean] [--force] [-h|--help]
 
 You must provide either a PR number or issue number, but you cannot provide both.
@@ -31,7 +31,7 @@ If a name is provided, the entries are written to a file, otherwise stdout.
     This arg only has meaning if --name is also provided.
     The default is '<repo root>.changelog/unreleased/dependencies'.
 
---branch <branch>
+--target-branch <branch>
     Providing this option allows you to compare current changes against a branch other than main.
     By default, <branch> is "main".
 
@@ -65,7 +65,7 @@ while [[ "$#" -gt '0' ]]; do
         -v|--verbose)
             verbose='YES'
             ;;
-        -b|--branch)
+        --target-branch)
             if [[ -z "$2" ]]; then
                 printf 'No argument provided after %s\n' "$1"
                 exit 1
