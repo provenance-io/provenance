@@ -36,13 +36,14 @@ jobs:
           # Using an env var for it (like this) prevents that vulnerability.
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUM: ${{ github.event.number }}
+          PR_TARGET: ${{ github.base_ref }}
         run: |
           ./scripts/dependabot-changelog.sh \
             --verbose \
             --pr "$PR_NUM" \
             --title "$PR_TITLE" \
             --head-branch "$GITHUB_HEAD_REF" \
-            --target-branch "$GITHUB_BASE_REF"
+            --target-branch "$PR_TARGET"
 
       # All commits must be signed, import key and sign commit of updated change log.
       - name: Import GPG key
