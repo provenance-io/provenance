@@ -17,15 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.pull_request.labels.*.name, 'dependencies')
     steps:
-      - name: Checkout Target Branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.base_ref }}
-
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          # Gotta get the whole thing so we can git diff later.
+          fetch-depth: 0
           # Depending on your needs, you can use a token that will re-trigger workflows
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
