@@ -23,6 +23,9 @@ jobs:
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
 
+      - name: Install git
+        run: sudo apt update && sudo apt install git
+
       # All commits must be signed, import key and sign commit of updated change log.
       - name: Import GPG key
         id: import_gpg
