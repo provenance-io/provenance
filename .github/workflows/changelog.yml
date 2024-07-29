@@ -17,14 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.pull_request.labels.*.name, 'dependencies')
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Target Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
         with:
           # Depending on your needs, you can use a token that will re-trigger workflows
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
-
-      - name: Install git
-        run: sudo apt update && sudo apt install git && command -v git
 
       - name: Generate entry
         env:
@@ -33,9 +36,6 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUM: ${{ github.event.number }}
         run: |
-          printf 'Path:\n' && printf '  %s\n' $( tr ':' '\n' <<< "$PATH" )
-          command -v git
-          git fetch origin "$GITHUB_BASE_REF" --depth 1
           ./scripts/dependabot-changelog.sh \
             --verbose \
             --pr "$PR_NUM" \
