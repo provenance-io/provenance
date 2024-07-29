@@ -16,6 +16,13 @@ jobs:
   changelog:
     runs-on: ubuntu-latest
     if: contains(github.event.pull_request.labels.*.name, 'dependencies')
+    env:
+      # Getting the title directly in the run script opens an injection vulnerability.
+      # Using an env var for it (like this) prevents that vulnerability.
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_NUM: ${{ github.event.number }}
+      PR_BASE: ${{ github.event.pull_request.head.ref }}
+      PR_TARGET: ${{ github.event.pull_request.base.ref }}
     steps:
       - name: Checkout PR Branch
         uses: actions/checkout@v4
@@ -29,13 +36,6 @@ jobs:
         run: git fetch origin "${PR_TARGET}:${PR_TARGET}" --depth 1
 
       - name: Generate entry
-        env:
-          # Getting the title directly in the run script opens an injection vulnerability.
-          # Using an env var for it (like this) prevents that vulnerability.
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_NUM: ${{ github.event.number }}
-          PR_BASE: ${{ github.event.pull_request.head.ref }}
-          PR_TARGET: ${{ github.event.pull_request.base.ref }}
         run: |
           ./scripts/dependabot-changelog.sh \
             --verbose \
