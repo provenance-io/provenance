@@ -40,7 +40,7 @@ jobs:
           # Using an env var for it (like this) prevents that vulnerability.
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUM: ${{ github.event.number }}
-        run: ./scripts/dependabot-changelog.sh --pr "$PR_NUM" --title "$PR_TITLE" --branch "$GITHUB_HEAD_REF"
+        run: ./scripts/dependabot-changelog.sh --pr "$PR_NUM" --title "$PR_TITLE" --branch "$GITHUB_HEAD_REF" --verbose
 
       # This step is required for committing the changes to your branch.
       # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
