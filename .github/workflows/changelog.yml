@@ -23,6 +23,9 @@ jobs:
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
 
+      - name: Install git
+        run: sudo apt update && sudo apt install git
+
       - name: Generate entry
         env:
           # Getting the title directly in the run script opens an injection vulnerability.
@@ -30,9 +33,7 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUM: ${{ github.event.number }}
         run: \
-          sudo apt update || exit $?
-          sudo apt install git || exit $?
-          git fetch origin "$GITHUB_BASE_REF" --depth 1 || exit $?
+          git fetch origin "$GITHUB_BASE_REF" --depth 1
           ./scripts/dependabot-changelog.sh \
             --verbose \
             --pr "$PR_NUM" \
