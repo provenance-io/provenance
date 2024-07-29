@@ -23,9 +23,6 @@ jobs:
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
 
-      - name: Install git
-        run: sudo apt update && sudo apt install git
-
       # All commits must be signed, import key and sign commit of updated change log.
       - name: Import GPG key
         id: import_gpg
@@ -44,6 +41,7 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUM: ${{ github.event.number }}
         run: \
+          sudo apt update && sudo apt install git
           git fetch origin "$GITHUB_BASE_REF" --depth 1
           ./scripts/dependabot-changelog.sh \
             --verbose \
