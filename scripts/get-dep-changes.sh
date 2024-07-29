@@ -6,11 +6,12 @@ show_usage () {
     cat << EOF
 get-dep-changes.sh: Analyze changes made to go.mod and generate changelog entries.
 
-Usage: get-dep-changes.sh {-p|--pull-request|--pr <num> | -n|--issue-no|--issue <num>}
-          [--branch <branch>] [--name <name> [--dir <dir>]]
+Usage: ./get-dep-changes.sh {-p|--pull-request|--pr <num> | -n|--issue-no|--issue <num>}
+          [--name <name> [--dir <dir>]] [--branch <branch>]
           [-v|--verbose] [--no-clean] [--force] [-h|--help]
 
 You must provide either a PR number or issue number, but you cannot provide both.
+If a name is provided, the entries are written to a file, otherwise stdout.
 
 -p|--pull-request|--pr <num>
     Append a PR link to the given <num> to the end of each changelog entry.
@@ -159,7 +160,7 @@ if [[ -n "$name" ]]; then
 fi
 
 [[ -n "$verbose" ]] && printf 'Creating temp dir.\n'
-temp_dir="$( mktemp -d -t dep-updates )" || exit 1
+temp_dir="$( mktemp -d -t dep-updates.XXXX )" || exit 1
 [[ -n "$verbose" ]] && printf 'Created temp dir: %s\n' "$temp_dir"
 
 clean_exit () {
