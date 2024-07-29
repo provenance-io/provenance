@@ -24,7 +24,7 @@ jobs:
           token: ${{ secrets.BOT_CPR_PAT }}
 
       - name: Install git
-        run: sudo apt update && sudo apt install git
+        run: sudo apt update && sudo apt install git && command -v git
 
       - name: Generate entry
         env:
@@ -33,6 +33,8 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUM: ${{ github.event.number }}
         run: \
+          printf 'Path:\n' && printf '  %s\n' $( tr ':' '\n' <<< "$PATH" )
+          command -v git
           git fetch origin "$GITHUB_BASE_REF" --depth 1
           ./scripts/dependabot-changelog.sh \
             --verbose \
