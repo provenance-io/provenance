@@ -35,7 +35,7 @@ jobs:
           PR_TARGET: ${{ github.event.pull_request.base.ref }}
         run: |
           printf 'git status\n' && git status
-          printf 'git fetch origin "%s" --depth 1\n' "$PR_TARGET" && git fetch origin "$PR_TARGET" --depth 1
+          printf 'git fetch origin "%s:%s" --depth 1\n' "$PR_TARGET" "$PR_TARGET" && git fetch origin "${PR_TARGET}:${PR_TARGET}" --depth 1
           printf 'git status\n' && git status
           printf 'git branch\n' && git branch
           ./scripts/dependabot-changelog.sh \
