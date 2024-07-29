@@ -22,6 +22,8 @@ jobs:
           # Depending on your needs, you can use a token that will re-trigger workflows
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
+          # Need full history to diff against.
+          fetch-depth: 0
 
       # All commits must be signed, import key and sign commit of updated change log.
       - name: Import GPG key
