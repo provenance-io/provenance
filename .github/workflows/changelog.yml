@@ -32,7 +32,7 @@ jobs:
           # Using an env var for it (like this) prevents that vulnerability.
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUM: ${{ github.event.number }}
-        run: \
+        run: |
           printf 'Path:\n' && printf '  %s\n' $( tr ':' '\n' <<< "$PATH" )
           command -v git
           git fetch origin "$GITHUB_BASE_REF" --depth 1
