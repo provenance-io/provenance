@@ -107,7 +107,7 @@ fi
 [[ -n "$verbose" ]] && printf '          Title: "%s"\n' "$title"
 
 # Dependabot branch names look like this: "dependabot/github_actions/bufbuild/buf-setup-action-1.34.0"
-# The "github_actions" can also be "go_modules" (anb probably other things too).
+# The "github_actions" part can also be "go_modules" (and probably other things too).
 # For the filename, we'll omit the "dependabot/<lib type>/" part and use just what's left.
 branch_fn="$( sed -E 's|^[^/]+/[^/]+/||; s|/|-|g;' <<< "$head_branch" )"
 [[ -n "$verbose" ]] && printf 'Branch Filename: "%s"\n' "$branch_fn"
