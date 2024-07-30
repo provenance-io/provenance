@@ -1659,4 +1659,4 @@ into new 0.40.x base.  Minimal unit test coverage and features in place to begin
 
 The Provenance Blockchain was started by Figure Technologies in 2018 using a Hyperledger Fabric derived private network.
 A subsequent migration was made to a new internal private network based on the 0.38-0.39 series of Cosmos SDK and
-Tendermint.  The Provence-IO/Provenance Cosmos SDK derived public network is the
+Tendermint.
