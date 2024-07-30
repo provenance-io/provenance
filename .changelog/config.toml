@@ -1,0 +1,90 @@
+# The GitHub URL for your project.
+#
+# This is mainly necessary if you need to automatically generate changelog
+# entries directly from the CLI. Right now we only support GitHub, but if
+# anyone wants GitLab support please let us know and we'll try implement it
+# too.
+project_url = "https://github.com/provenance-io/provenance"
+
+# The file to use as a Handlebars template for changes added directly through
+# the CLI.
+#
+# Assumes that relative paths are relative to the `.changelog` folder. If this
+# file does not exist, a default template will be used.
+change_template = "change-template.md"
+
+# The number of characters at which to wrap entries automatically added from
+# the CLI.
+wrap = 120
+
+# The heading right at the beginning of the changelog.
+heading = "# CHANGELOG"
+
+# What style of bullet to use for the instances where unclog has to generate
+# bullets for you. Can be "-" or "*".
+bullet_style = "*"
+
+# The message to output when your changelog has no entries yet.
+empty_msg = "Nothing to see here! Add some entries to get started."
+
+# The name of the file (relative to the `.changelog` directory) to use as an
+# epilogue for your changelog (will be appended as-is to the end of your
+# generated changelog).
+epilogue_filename = "epilogue.md"
+
+# Sort releases by the given property/properties. Possible values include:
+# - `version` : Sort releases by semantic version.
+# - `date`    : Sort releases by release date.
+#
+# This is an array, as one could potentially first sort by date and then version
+# in cases where multiple releases were cut on the same date.
+#
+# Release dates are currently parsed from release summaries, and are expected to
+# be located on the first line of the release summary.
+sort_releases_by = ["version"]
+
+# Release date formats to expect in the release summary, in order of precedence.
+#
+# See https://docs.rs/chrono/latest/chrono/format/strftime/index.html for
+# possible format specifiers.
+release_date_formats = [
+    # "*December 1, 2023*
+    "*%B %d, %Y*",
+    # "*Dec 1, 2023*
+    "*%b %d, %Y*",
+    # "2023-12-01" (ISO format)
+    "%F",
+]
+
+
+# Settings relating to unreleased changelog entries.
+[unreleased]
+
+# The name of the folder containing unreleased entries, relative to the
+# `.changelog` folder.
+folder = "unreleased"
+
+# The heading to use for the unreleased entries section.
+heading = "## Unreleased"
+
+
+# Settings relating to sets (groups) of changes in the changelog. For example, a
+# particular version of the software (e.g. "v1.0.0") is typically a change set.
+[change_sets]
+
+# The filename containing a summary of the intended changes. Relative to the
+# change set folder (e.g. `.changelog/unreleased/breaking-changes/summary.md`).
+summary_filename = "summary.md"
+
+# The extension of files in a change set.
+entry_ext = "md"
+
+
+# Settings relating to all sections within a change set. For example, the
+# "BREAKING CHANGES" section for a particular release is a change set section.
+[change_set_sections]
+
+# Sort entries by a particular property. Possible values include:
+# - `id`         : The issue/PR number (the default value).
+# - `entry-text` : The entry text itself.
+sort_entries_by = "id"
