@@ -153,47 +153,57 @@ if ! grep -Eqi '^Bump [^ ]+ from [^ ]+ to [^ ]+$' <<< "$title"; then
 fi
 
 lib="$( sed -E 's/^Bump //; s/ from.*$//;' <<< "$title" )"
-[[ -n "$verbose" ]] && printf 'Library: "%s"\n' "$lib"
+[[ -n "$verbose" ]] && printf '    Library: "%s"\n' "$lib"
 if [[ -z "$lib" || "$lib" == "$title" || "$lib" =~ ' ' ]]; then
     printf 'Could not extract library from title: %s\n' "$title"
     exit 1
 fi
 
 old_ver="$( sed -E 's/^.*from //; s/ to.*$//' <<< "$title" )"
-[[ -n "$verbose" ]] && printf 'Old Ver: "%s"\n' "$old_ver"
+[[ -n "$verbose" ]] && printf '    Old Ver: "%s"\n' "$old_ver"
 if [[ -z "$old_ver" || "$old_ver" == "$title" || "$old_ver" =~ ' ' ]]; then
     printf 'Could not extract old version from title: %s\n' "$title"
     exit 1
 fi
 
 new_ver="$( sed -E 's/^.*to //' <<< "$title" )"
-[[ -n "$verbose" ]] && printf 'New Ver: "%s"\n' "$new_ver"
+[[ -n "$verbose" ]] && printf '    New Ver: "%s"\n' "$new_ver"
 if [[ -z "$new_ver" || "$new_ver" == "$title" || "$new_ver" =~ ' ' ]]; then
     printf 'Could not extract new version from title: %s\n' "$title"
     exit 1
 fi
 
 link="[PR ${pr}](https://github.com/provenance-io/provenance/pull/${pr})"
-[[ -n "$verbose" ]] && printf 'Link: "%s"\n' "$link"
-repo_root="$( git rev-parse --show-toplevel > /dev/null 2>&1 )"
+[[ -n "$verbose" ]] && printf '       Link: "%s"\n' "$link"
+
+repo_root="$( git rev-parse --show-toplevel 2> /dev/null )"
 if [[ -z "$repo_root" ]]; then
-    if [[ ! -d './.changelog' ]]; then
+    if [[ "$where_i_am" =~ /scripts$ ]]; then
+        # If this is in the scripts directory, assume it's {repo_root}/scripts.
+        repo_root="$( dirname "$where_i_am" )"
+    else
+        # Not in a git repo, and who knows where this script is in relation to the root,
+        # so let's just hope that our current location is the repo root.
+        repo_root='.'
+    fi
+    # Since we're not exactly sure we have the right repo_root here, we want to make sure the .changelog
+    # dir already exists. If not, we'd probably be trying to create the new file in the wrong place.
+    if [[ ! -d "${repo_root}/.changelog" ]]; then
         printf 'Could not identify target directory.\n'
         exit 1
     fi
-    repo_root='.'
 fi
-[[ -n "$verbose" ]] && printf 'Repo Root: "%s"\n' "$repo_root"
+[[ -n "$verbose" ]] && printf '  Repo Root: "%s"\n' "$repo_root"
 
 out_dir="${repo_root}/.changelog/unreleased/dependencies"
-[[ -n "$verbose" ]] && printf 'Output  Dir: "%s"\n' "$out_dir"
+[[ -n "$verbose" ]] && printf ' Output Dir: "%s"\n' "$out_dir"
 if ! mkdir -p "$out_dir"; then
     printf 'Could not create directory: %s\n' "$out_dir"
     exit 1
 fi
 
 name="$( sed -E 's/[^[:alnum:]]+/-/g; s/^-//; s/-$//;' <<< "$branch_fn" | tr '[:upper:]' '[:lower:]' )"
-[[ -n "$verbose" ]] && printf 'Name: "%s"\n' "$name"
+[[ -n "$verbose" ]] && printf '       Name: "%s"\n' "$name"
 out_fn="${out_dir}/${pr}-${name}.md"
 [[ -n "$verbose" ]] && printf 'Output File: "%s"\n' "$out_fn"
 
