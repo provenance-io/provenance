@@ -260,7 +260,7 @@ fi
 # This is extracted as a function for easier short-circuit control in this process.
 # It will move all the entry files from the rc dirs for this version into unreleased.
 combine_rc_dirs () {
-    local rc_vers v rc_ver v_id rc_ver_dir entries sections s section s_id e entry e_id v_file u_file
+    local rc_vers v rc_ver v_id rc_ver_dir entries sections s section s_id s_dir e entry e_id v_file u_file
     [[ -n "$verbose" ]] && printf 'Combining rc dirs back into unreleased.\n'
 
     [[ -n "$verbose" ]] && printf 'Identifying rc version dirs for this version.\n'
@@ -287,7 +287,8 @@ combine_rc_dirs () {
                 s=$(( s + 1 ))
                 s_id="${v_id}[${s}/${#sections[@]}]"
                 [[ -n "$verbose" ]] && printf '%s: Making section [%s] in unreleased (if it does not exist yet).\n' "$s_id" "$section"
-                if ! mkdir "${changelog_dir}/unreleased/${section}"; then
+                s_dir="${changelog_dir}/unreleased/${section}"
+                if [[ ! -d "$s_dir" ]] && ! mkdir "$s_dir"; then
                     printf '%s: Failed to make section dir: [%s].\n' "$s_id" "$section"
                     return 1
                 fi
@@ -326,13 +327,13 @@ combine_rc_dirs () {
         if [[ -n "$( find "$rc_ver_dir" -type f -not -name '.*' -not -name 'summary.md' )" ]]; then
             printf '%s: Cannot delete non-empty rc directory.\n' "$v_id"
             return 1
-        elif ! rm -rf "$to_del"; then
+        elif ! rm -rf "$rc_ver_dir"; then
             printf '%s: Failed to delete rc directory.\n' "$v_id"
             return 1
         fi
     done
 
-    return "$ec"
+    return 0
 }
 
 # If this is not an rc, we want to move all of the "released" rc entries into unreleased so that we can
@@ -354,6 +355,117 @@ sed -E -e 's|\[[^[:digit:]]*[[:digit:]]+\](\([^)]+/pull/([[:digit:]]+)\))|[PR \2
        -e 's|\[[^[:digit:]]*[[:digit:]]+\](\([^)]+/issues/([[:digit:]]+)\))|[#\2]\1|g' \
        -e 's|\.([[:space:]]*\[[^]]+\]\([^)]+\))[[:space:]]*\.|\1.|g' \
        "$unclog_build_file" > "$links_fixed_file" || clean_exit 1
+if grep -qE '[^[:space:]]' <<< "$( tail -n 1 "$links_fixed_file" )" > /dev/null 2>&1; then
+    # The last line is not a blank line, add one now so that the last section is consistent with the rest.
+    printf '\n' >> "$links_fixed_file"
+fi
 
+# Split it out into individual sections so that we can more easily re-order them.
+cur_file="${temp_dir}/3-section-top.md"
+[[ -n "$verbose" ]] && printf 'Splitting into section files.\nNow writing to: [%s].\n' "$cur_file"
+
+# Usage: lower_to_title <words>
+# Converts the first letter of each word to upper-case, and standardizes word spacing.
+lower_to_title () {
+    # Unfortunately, there isn't an easy way to do this that is also portable.
+    # Expansions of ${var,,} (convert everything to lower) and ${var^} (convert first char to upper),
+    # aren't available everywhere. Also, not all versions of sed allow for the \L and \u directives.
+    # Even the toupper and tolower functions in awk aren't always available.
+    # The ${var::} expansion seems to be pretty widely available, though, so we'll use that with tr on each word.
+    local words
+    words=()
+    while [[ "$#" -gt '0' ]]; do
+        # ${1:0:1} means "in the $1 variable, get a substring starting at char 0 with length 1."
+        # ${1:1} means "in the $1 variable, get a substring starting at char 1 (and going to the end of the string)."
+        words+=( "$( tr '[:lower:]' '[:upper:]' <<< "${1:0:1}" )${1:1}" )
+        shift
+    done
+    # This also standardizes the spacing before, between, and after the words.
+    printf '%s' "${words[*]}"
+}
+
+while IFS="" read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" =~ ^##[[:space:]]+Unreleased[[:space:]]*$ ]]; then
+        printf '## [%s](https://github.com/provenance-io/provenance/releases/tag/%s) %s\n' "$version" "$version" "$date" >> "$cur_file"
+    elif [[ "$line" =~ ^###[[:space:]] ]]; then
+        [[ -n "$verbose" ]] && printf 'Found new section line: [%s].\n' "$line"
+        section="$( sed -E 's/^###[[:space:]]+//; s/[[:space:]]+$//; s/[^[:alnum:]]+/-/g;' <<< "$line" | tr '[:upper:]' '[:lower:]' )"
+        cur_file="${temp_dir}/3-section-${section}.md"
+        [[ -n "$verbose" ]] && printf 'Now writing to: [%s].\n' "$cur_file"
+        # I'm providing the section unquoted here so that the shell splits it into words for us.
+        printf '### %s\n' "$( lower_to_title $( tr '-' ' ' <<< "$section" ) )" >> "$cur_file"
+    else
+        printf '%s\n' "$line" >> "$cur_file"
+    fi
+done < "$links_fixed_file"
+
+# Sort the entries of the dependencies section.
+# They have the format "* `<library>` <action> <version> ..." where <action> is one of "added at" "bumped to" or "removed at".
+# So, if we just sort them using version sort, it'll end up sorting them by library and version, which a handy way to view them.
+dep_file="${temp_dir}/3-section-dependencies.md"
+if [[ -f "$dep_file" ]]; then
+    [[ -n "$verbose" ]] && printf 'Sorting the dependency entries: [%s].\n' "$dep_file"
+    orig_dep_file="${dep_file}.orig"
+    mv "$dep_file" "$orig_dep_file"
+    head -n 2 "$orig_dep_file" > "$dep_file"
+    grep -E '^[[:space:]]*[-*]' "$orig_dep_file" | sort --version-sort >> "$dep_file"
+    printf '\n' >> "$dep_file"
+fi
+
+new_rl_file="${temp_dir}/4-release-notes.md"
+[[ -n "$verbose" ]] && printf 'Re-combining sections in the desired order: [%s].\n' "$new_rl_file"
+# Usage: include_sections <section 1> <section 2> ...
+# Appends the provided sections to the new_rl_file ("temp release notes file"),
+# and marks each section as included.
+include_sections () {
+    local s section s_id s_file
+    s=0
+    for section in "$@"; do
+        s=$(( s + 1 ))
+        s_id="[${s}/${#}=${section}]"
+        s_file="${temp_dir}/3-section-${section}.md"
+        if [[ -f "$s_file" ]]; then
+            [[ -n "$verbose" ]] && printf '%s: Including [%s].\n' "$s_id" "$s_file"
+            if ! cat "$s_file" >> "$new_rl_file"; then
+                printf '%s: Could not append [%s] to [%s].\n' "$s_id" "$s_file" "$new_rl_file"
+                clean_exit 1
+            fi
+            if ! mv "$s_file" "$s_file.included"; then
+                printf '%s: Could not mark file as included: [%s].\n' "$s_id" "$s_file"
+                clean_exit 1
+            fi
+        else
+            [[ -n "$verbose" ]] && printf '%s: No section file to include: [%s].\n' "$s_id" "$s_file"
+        fi
+    done
+}
+
+section_order=()
+section_order+=( top )
+section_order+=( $( awk '{ if (in_com!="") { if (/^"/) { sub(/^"/,""); sub(/".*$/,""); sub(/^[[:space:]]+/,""); sub(/[[:space:]]$/,""); gsub(/[[:space:]]+/,"-"); print $0; } else if (/-->/) { exit 0; } }; if (/<!--/) { in_com="1" }; }' "$changelog_file" | tr '[:upper:]' '[:lower:]' ) )
+[[ -n "$verbose" ]] && printf 'Order: [%s <other>].\n' "${section_order[*]}"
+include_sections "${section_order[@]}"
+
+other_sections=()
+other_sections+=( $( find "$temp_dir" -type f -name '3-section-*.md' | sed -E 's|^.*/3-section-||; s/\.md$//;' | sort ) )
+if [[ "${#other_sections[@]}" -ne '0' ]]; then
+    [[ -n "$verbose" ]] && printf 'Including other sections: [%s].\n' "${other_sections[*]}"
+    include_sections "${other_sections[@]}"
+fi
+
+[[ -n "$verbose" ]] && printf 'Appending diff links: [%s].\n' "$new_rl_file"
+printf '### Full Commit History\n\n' >> "$new_rl_file"
+[[ -n "$prev_ver_rc" ]] && printf '* https://github.com/provenance-io/provenance/compare/%s...%s\n' "$prev_ver_rc" "$version" >> "$new_rl_file"
+printf '* https://github.com/provenance-io/provenance/compare/%s...%s\n\n' "$prev_ver" "$version" >> "$new_rl_file"
+
+new_cl_file="${temp_dir}/5-new-changelog.md"
+[[ -n "$verbose" ]] && printf 'Creating updated changelog: [%s].\n' "$new_cl_file"
+
+awk '{if (/^##[[:space:]]/ && $0 !~ /[Uu][Nn][Rr][Ee][Ll][Ee][Aa][Ss][Ee][Dd]/) { exit 0; }; print $0; }' "$changelog_file" > "$new_cl_file"
+cat "$new_rl_file" >> "$new_cl_file"
+printf -- '---\n\n' >> "$new_cl_file"
+# TODO: get the rest of the changelog file, removing and rcs for this version (if it's not an rc).
+
+# TODO: Copy the new release notes and new changelog.
 
 clean_exit 0
