@@ -74,8 +74,8 @@ fi
 repo_root="$( git rev-parse --show-toplevel 2> /dev/null )"
 if [[ -z "$repo_root" ]]; then
     where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
-    if [[ "$where_i_am" =~ /scripts$ ]]; then
-        # If this is in the scripts directory, assume it's {repo_root}/scripts.
+    if [[ "$where_i_am" =~ /.changelog$ || "$where_i_am" =~ /scripts$ ]]; then
+        # If this is in the .changelog or scripts directory, assume it's {repo_root}/<dir>.
         repo_root="$( dirname "$where_i_am" )"
     else
         # Not in a git repo, and who knows where this script is in relation to the root,
@@ -91,6 +91,12 @@ if [[ ! -f "$changelog_file" ]]; then
     exit 1
 fi
 [[ -n "$verbose" ]] && printf 'Changelog file: [%s].\n' "$changelog_file"
+changelog_dir="${repo_root}/.changelog"
+if [[ ! -d "$changelog_dir" ]]; then
+    printf 'Could not find the .changelog/ dir.\n'
+    exit 1
+fi
+[[ -n "$verbose" ]] && printf ' Changelog dir: [%s].\n' "$changelog_dir"
 
 
 # Do some superficial validation on the provided version. We'll do more later though.
@@ -170,6 +176,10 @@ fi
 temp_dir="$( mktemp -d -t prep-release.XXXX )" || exit 1
 [[ -n "$verbose" ]] && printf 'Created temp dir: %s\n' "$temp_dir"
 
+# Usage: clean_exit [<code>]
+# Default <code> is 0.
+# Since we now have a temp dir to clean up, there should not be any exit statements after this. Use this instead.
+# Cleans up the temp dir and exits.
 clean_exit () {
     local ec
     ec="${1:-0}"
@@ -186,6 +196,7 @@ clean_exit () {
 }
 
 # Usage: handle_invalid_version <msg> <args>
+# Outputs a message about an invalid version. Then, if not forcing the version, it'll exit this script.
 handle_invalid_version () {
     local msg
     msg="$1"
@@ -204,7 +215,7 @@ versions_file="${temp_dir}/versions.txt"
 [[ -n "$verbose" ]] && printf 'Creating versions file: %s.\n' "$versions_file"
 grep -oE '^## \[v[^]]+' "$changelog_file" | sed -E 's/^## \[//' > "$versions_file"
 
-# Do some more validation on the version.
+# Do some more validation on the new version.
 [[ -n "$verbose" ]] && printf 'Validating new version against existing ones.\n'
 
 if grep -qFx "$version" "$versions_file" 2> /dev/null; then
@@ -244,6 +255,105 @@ if [[ -n "$verbose" ]]; then
     printf 'Previous Non-RC Version: [%s].\n' "$prev_ver"
     [[ -n "$prev_ver_rc" ]] && printf '    Previous RC Version: [%s].\n' "$prev_ver_rc"
 fi
+
+# Usage: combine_rc_dirs
+# This is extracted as a function for easier short-circuit control in this process.
+# It will move all the entry files from the rc dirs for this version into unreleased.
+combine_rc_dirs () {
+    local rc_vers v rc_ver v_id rc_ver_dir entries sections s section s_id e entry e_id v_file u_file
+    [[ -n "$verbose" ]] && printf 'Combining rc dirs back into unreleased.\n'
+
+    [[ -n "$verbose" ]] && printf 'Identifying rc version dirs for this version.\n'
+    rc_vers=( $( find "$changelog_dir" -type d -depth 1 -name "${version}-rc*" | sed -E 's|^.*/||' ) )
+    [[ -n "$verbose" ]] && printf 'Found %d version dirs: [%s].\n' "${#rc_vers[@]}" "${rc_vers[*]}"
+    [[ "${#rc_vers[@]}" -eq '0' ]] && return 0
+
+    v=0
+    for rc_ver in "${rc_vers[@]}"; do
+        v=$(( v + 1 ))
+        v_id="[${v}/${#rc_vers[@]}=${rc_ver}]"
+        [[ -n "$verbose" ]] && printf '%s: Identifying entry files.\n' "$v_id"
+        rc_ver_dir="${changelog_dir}/${rc_ver}"
+        entries=( $( find "$rc_ver_dir" -type f -depth 2 -name '*.md' | grep -Eo '[^/]+/[^/]+$' ) )
+        [[ -n "$verbose" ]] && printf '%s: Found %d entry files.\n' "$v_id" "${#entries[@]}"
+
+        if [[ "${#entries[@]}" -gt '0' ]]; then
+            [[ -n "$verbose" ]] && printf '%s: Identifying sections.\n' "$v_id"
+            sections=( $( printf '%s\n' "${entries[@]}" | sed -E 's|/.*$||' | sort -u ) )
+
+            [[ -n "$verbose" ]] && printf '%s: Making sure %d sections exist in unreleased: [%s].\n' $v_id "${#sections[@]}" "${sections[*]}"
+            s=0
+            for section in "${sections[@]}"; do
+                s=$(( s + 1 ))
+                s_id="${v_id}[${s}/${#sections[@]}]"
+                [[ -n "$verbose" ]] && printf '%s: Making section [%s] in unreleased (if it does not exist yet).\n' "$s_id" "$section"
+                if ! mkdir "${changelog_dir}/unreleased/${section}"; then
+                    printf '%s: Failed to make section dir: [%s].\n' "$s_id" "$section"
+                    return 1
+                fi
+            done
+
+            [[ -n "$verbose" ]] && printf '%s: Moving %d entry files to unreleased.\n' "$v_id" "${#entries[@]}"
+            e=0
+            for entry in "${entries[@]}"; do
+                e=$(( e + 1 ))
+                e_id="${v_id}[${e}/${#entries[@]}]"
+
+                [[ -n "$verbose" ]] && printf '%s: Moving entry to unreleased: [%s].\n' "$e_id" "$entry"
+                v_file="${rc_ver_dir}/${entry}"
+                u_file="${changelog_dir}/unreleased/${entry}"
+                if [[ -e "$u_file" ]]; then
+                    if diff -q "$v_file" "$u_file" > /dev/null 2>&1; then
+                        # The unreleased file already exists and is the same as the version one. Just delete the version one.
+                        if ! rm "$v_file"; then
+                            printf "%s: Failed to delete version file: [%s].\n" "$e_id" "$v_file"
+                            return 1
+                        fi
+                    else
+                        printf '%s: Cannot move entry [%s] into unreleased because it already exists and is different.\n' "$e_id" "$entry"
+                        return 1
+                    fi
+                else
+                    if ! mv "$v_file" "$u_file"; then
+                        printf '%s: Failed to move entry file [%s] to [%s].\n' "$e_id" "$v_file" "$u_file"
+                        return 1
+                    fi
+                fi
+            done
+        fi
+
+        [[ -n "$verbose" ]] && printf '%s: Deleting rc dir.\n' "$v_id"
+        if [[ -n "$( find "$rc_ver_dir" -type f -not -name '.*' -not -name 'summary.md' )" ]]; then
+            printf '%s: Cannot delete non-empty rc directory.\n' "$v_id"
+            return 1
+        elif ! rm -rf "$to_del"; then
+            printf '%s: Failed to delete rc directory.\n' "$v_id"
+            return 1
+        fi
+    done
+
+    return "$ec"
+}
+
+# If this is not an rc, we want to move all of the "released" rc entries into unreleased so that we can
+# get the changelog of all the new stuff in this release.
+if [[ -z "$v_rc" ]]; then
+    combine_rc_dirs || clean_exit 1
+fi
+
+unclog_build_file="${temp_dir}/1-unclog-build.md"
+[[ -n "$verbose" ]] && printf 'Generating initial changelog entry: [%s].\n' "$unclog_build_file"
+cd "${repo_root}" || clean_exit 1
+unclog build --unreleased-only > "$unclog_build_file" || clean_exit 1
+
+# Make sure all the PR and issue links have the correct link text.
+# Also, if there's period right before and after the link, get rid of the one before.
+links_fixed_file="${temp_dir}/2-links-fixed.md"
+[[ -n "$verbose" ]] && printf 'Fixing the link text: [%s].\n' "$links_fixed_file"
+sed -E -e 's|\[[^[:digit:]]*[[:digit:]]+\](\([^)]+/pull/([[:digit:]]+)\))|[PR \2]\1|g' \
+       -e 's|\[[^[:digit:]]*[[:digit:]]+\](\([^)]+/issues/([[:digit:]]+)\))|[#\2]\1|g' \
+       -e 's|\.([[:space:]]*\[[^]]+\]\([^)]+\))[[:space:]]*\.|\1.|g' \
+       "$unclog_build_file" > "$links_fixed_file" || clean_exit 1
 
 
 clean_exit 0
