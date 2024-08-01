@@ -36,9 +36,9 @@ Types of changes (Stanzas):
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
-## [Unreleased]
+## Unreleased
 
-* nothing
+See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
