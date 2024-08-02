@@ -430,12 +430,14 @@ lower_to_title () {
     printf '%s' "${words[*]}"
 }
 
+actual_sections=()
 while IFS="" read -r line || [[ -n "$line" ]]; do
     if [[ "$line" =~ ^##[[:space:]]+Unreleased[[:space:]]*$ ]]; then
         printf '## [%s](https://github.com/provenance-io/provenance/releases/tag/%s) %s\n' "$version" "$version" "$date" >> "$cur_file"
     elif [[ "$line" =~ ^###[[:space:]] ]]; then
         [[ -n "$verbose" ]] && printf 'Found new section line: [%s].\n' "$line"
         section="$( sed -E 's/^###[[:space:]]+//; s/[[:space:]]+$//; s/[^[:alnum:]]+/-/g;' <<< "$line" | tr '[:upper:]' '[:lower:]' )"
+        actual_sections+=( "$section" )
         cur_file="${temp_dir}/3-section-${section}.md"
         [[ -n "$verbose" ]] && printf 'Now writing to: [%s].\n' "$cur_file"
         # I'm providing the section unquoted here so that the shell splits it into words for us.
@@ -458,50 +460,51 @@ if [[ -f "$dep_file" ]]; then
     printf '\n' >> "$dep_file"
 fi
 
-new_cl_entry_file="${temp_dir}/4-release-notes.md"
-[[ -n "$verbose" ]] && printf 'Re-combining sections in the desired order: [%s].\n' "$new_cl_entry_file"
-# Usage: include_sections <section 1> <section 2> ...
-# Appends the provided sections to the new_cl_entry_file ("temp release notes file"),
-# and marks each section as included.
-include_sections () {
-    local s section s_id s_file
-    s=0
-    for section in "$@"; do
-        s=$(( s + 1 ))
-        s_id="[${s}/${#}=${section}]"
-        s_file="${temp_dir}/3-section-${section}.md"
-        if [[ -f "$s_file" ]]; then
-            [[ -n "$verbose" ]] && printf '%s: Including [%s].\n' "$s_id" "$s_file"
-            if ! cat "$s_file" >> "$new_cl_entry_file"; then
-                printf '%s: Could not append [%s] to [%s].\n' "$s_id" "$s_file" "$new_cl_entry_file"
-                clean_exit 1
+[[ -n "$verbose" ]] && printf 'Determining desired order for sections.\n'
+
+section_order=()
+add_to_section_order () {
+    while [[ "$#" -gt '0' ]]; do
+        for s in "${section_order[@]}"; do
+            if [[ "$s" == "$1" ]]; then
+                shift
+                continue 2
             fi
-            if ! mv "$s_file" "$s_file.included"; then
-                printf '%s: Could not mark file as included: [%s].\n' "$s_id" "$s_file"
-                clean_exit 1
-            fi
-        else
-            [[ -n "$verbose" ]] && printf '%s: No section file to include: [%s].\n' "$s_id" "$s_file"
-        fi
+        done
+        section_order+=( "$1" )
+        shift
     done
 }
 
-section_order=()
-section_order+=( top )
-# We want the dependencies entry to be absolutely last (after the other entries), so we'll remove it here and do it manually later.
-section_order+=( $( awk '{ if (in_com) { if (/^"/) { sub(/^"/,""); sub(/".*$/,""); sub(/^[[:space:]]+/,""); sub(/[[:space:]]$/,""); gsub(/[[:space:]]+/,"-"); print $0; } else if (/-->/) { exit 0; } }; if (/<!--/) { in_com=1; }; }' "$changelog_file" | tr '[:upper:]' '[:lower:]' | grep -vFx 'dependencies' ) )
-[[ -n "$verbose" ]] && printf 'Order (%d): [%s].\n' "${#section_order[@]}" "${section_order[*]}"
-include_sections "${section_order[@]}"
+# These sub-commands aren't quoted here because we want it split on spaces (and I know they don't have any glob stuff).
+# We want "top" first, it's the version header and blurb.
+# Then use the pre-defined section order for the expected sections (but hold off on dependencies).
+# Then add all the actual sections so that any unexpected sections are still included.
+# And lastly, we have the dependencies section.
+add_to_section_order top \
+    $( "${where_i_am}/get-valid-sections.sh" | grep -vFx 'dependencies' ) \
+    $( printf '%s\n' "${actual_sections[@]}" | grep -vFx 'dependencies' ) \
+    dependencies
+[[ -n "$verbose" ]] && printf 'Including sections in this order (%d): [%s].\n' "${#section_order[@]}" "${section_order[*]}"
 
-other_sections=()
-other_sections+=( $( find "$temp_dir" -type f -name '3-section-*.md' -not -name '3-section-dependencies.md' | sed -E 's|^.*/3-section-||; s/\.md$//;' | sort ) )
-if [[ "${#other_sections[@]}" -ne '0' ]]; then
-    [[ -n "$verbose" ]] && printf 'Including other sections (%d): [%s].\n' "${#other_sections[@]}" "${other_sections[*]}"
-    include_sections "${other_sections[@]}"
-fi
+new_cl_entry_file="${temp_dir}/4-release-notes.md"
+[[ -n "$verbose" ]] && printf 'Re-combining sections with proper order: [%s].\n' "$new_cl_entry_file"
 
-[[ -n "$verbose" ]] && printf 'Including dependencies section.\n'
-include_sections 'dependencies'
+s=0
+for section in "${section_order[@]}"; do
+    s=$(( s + 1 ))
+    s_id="[${s}/${#}=${section}]"
+    s_file="${temp_dir}/3-section-${section}.md"
+    if [[ ! -f "$s_file" ]]; then
+        [[ -n "$verbose" ]] && printf '%s: No section file to include: [%s].\n' "$s_id" "$s_file"
+        continue
+    fi
+    [[ -n "$verbose" ]] && printf '%s: Including [%s].\n' "$s_id" "$s_file"
+    if ! cat "$s_file" >> "$new_cl_entry_file"; then
+        printf '%s: Could not append [%s] to [%s].\n' "$s_id" "$s_file" "$new_cl_entry_file"
+        clean_exit 1
+    fi
+done
 
 [[ -n "$verbose" ]] && printf 'Appending diff links: [%s].\n' "$new_cl_entry_file"
 printf '### Full Commit History\n\n' >> "$new_cl_entry_file"
@@ -510,6 +513,7 @@ printf '* https://github.com/provenance-io/provenance/compare/%s...%s\n\n' "$pre
 
 # Usage: clean_versions <input file>
 #    or: <stuff> clean_versions
+# This will remove this version and any rcs for this verison from changelog content.
 clean_versions () {
     awk -v version="$version" '{ if (/^##[[:space:]]/) { if (index($0,version "-rc") || index($0,"[" version "]")) { keep=0; } else { keep=1; }; }; if (keep) { print $0; }; }' "$@"
 }
