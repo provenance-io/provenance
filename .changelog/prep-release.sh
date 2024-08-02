@@ -77,9 +77,9 @@ fi
 
 printf 'Doing Setup and Validation.\n'
 
+where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
 repo_root="$( git rev-parse --show-toplevel 2> /dev/null )"
 if [[ -z "$repo_root" ]]; then
-    where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
     if [[ "$where_i_am" =~ /.changelog$ || "$where_i_am" =~ /scripts$ ]]; then
         # If this is in the .changelog or scripts directory, assume it's {repo_root}/<dir>.
         repo_root="$( dirname "$where_i_am" )"
