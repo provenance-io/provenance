@@ -494,7 +494,7 @@ section_order+=( $( awk '{ if (in_com) { if (/^"/) { sub(/^"/,""); sub(/".*$/,""
 include_sections "${section_order[@]}"
 
 other_sections=()
-other_sections+=( $( find "$temp_dir" -type f -name '3-section-*.md' | sed -E 's|^.*/3-section-||; s/\.md$//;' | sort ) )
+other_sections+=( $( find "$temp_dir" -type f -name '3-section-*.md' -not -name '3-section-dependencies.md' | sed -E 's|^.*/3-section-||; s/\.md$//;' | sort ) )
 if [[ "${#other_sections[@]}" -ne '0' ]]; then
     [[ -n "$verbose" ]] && printf 'Including other sections (%d): [%s].\n' "${#other_sections[@]}" "${other_sections[*]}"
     include_sections "${other_sections[@]}"
