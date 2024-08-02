@@ -100,6 +100,7 @@ fi
 
 
 # Do some superficial validation on the provided version. We'll do more later though.
+[[ -n "$verbose" ]] && printf 'Doing initial validation on the version: [%s].\n' "$version"
 if ! grep -Eq '^v[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+(-rc[[:digit:]]+)?$' <<< "$version" 2> /dev/null; then
     printf 'Invalid version format [%s]. Use vA.B.C or vA.B.C-rcX.\n' "$version"
     exit 1
@@ -116,7 +117,34 @@ v_base="v${v_major}.${v_minor}.${v_patch}"
 [[ -n "$verbose" ]] && printf 'Version: [%s] = Major: [%s] . Minor: [%s] . Patch: [%s] (%s) - RC: [%s]\n' \
                                 "$version" "$v_major" "$v_minor" "$v_patch" "$v_base" "$v_rc"
 
+# Make sure the new version directory does not already exist.
+new_ver_dir="${changelog_dir}/${version}"
+if [[ -d "$new_ver_dir" ]]; then
+    # If the new version directory already exists, and you are redoing the changelog for it, you'll need to
+    # move the things you want into unreleased and then delete the existing version directory.
+    # Nothing is done about it in here because there's no way to know what all should be included, or even
+    # if the existing version was just provided by accident.
+    printf 'The changelog version directory for [%s] already exists: [%s].\n' "$version" "$new_ver_dir"
+    exit 1
+fi
+
+# If this is not an rc, there needs to be a summary file.
+# If this is an rc and there isn't a summary file, we'll create a default one later (when it's needed).
+unreleased_dir="${changelog_dir}/unreleased"
+unreleased_sum_file="${unreleased_dir}/summary.md"
+[[ -n "$verbose" ]] && printf 'Checking summary file: [%s].\n' "$unreleased_sum_file"
+if [[ -f "$unreleased_sum_file" ]] && awk '{ sub(/<!--.*-->/,""); if (in_com) { if (sub(/^.*-->/,"")) { in_com=0; } else { $0=""; }; } else if (sub(/<!--.*$/,"")) { in_com=1; }; if (/./) { all_good=1; exit 0; }; } END { if (!all_good) { exit 1; }; }' "$unreleased_sum_file"; then
+    have_summary='YES'
+fi
+if [[ -z "$v_rc" ]]; then
+    if [[ -z "$have_summary" ]]; then
+        printf 'A summary is required, but the file either does not exist or does not have any content: [%s].\n' "$unreleased_sum_file"
+        exit 1
+    fi
+fi
+
 # Validate the date (or get it if not provided).
+[[ -n "$verbose" ]] && printf 'Getting or validating the date: [%s].\n' "$date"
 if [[ -z "$date" ]]; then
     date="$( date +'%F' )"
 elif [[ ! "$date" =~ ^[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2}$ ]]; then
@@ -281,13 +309,13 @@ combine_rc_dirs () {
             [[ -n "$verbose" ]] && printf '%s: Identifying sections.\n' "$v_id"
             sections=( $( printf '%s\n' "${entries[@]}" | sed -E 's|/.*$||' | sort -u ) )
 
-            [[ -n "$verbose" ]] && printf '%s: Making sure %d sections exist in unreleased: [%s].\n' $v_id "${#sections[@]}" "${sections[*]}"
+            [[ -n "$verbose" ]] && printf '%s: Making sure %d sections exist in unreleased: [%s].\n' "$v_id" "${#sections[@]}" "${sections[*]}"
             s=0
             for section in "${sections[@]}"; do
                 s=$(( s + 1 ))
                 s_id="${v_id}[${s}/${#sections[@]}]"
                 [[ -n "$verbose" ]] && printf '%s: Making section [%s] in unreleased (if it does not exist yet).\n' "$s_id" "$section"
-                s_dir="${changelog_dir}/unreleased/${section}"
+                s_dir="${unreleased_dir}/${section}"
                 if [[ ! -d "$s_dir" ]] && ! mkdir "$s_dir"; then
                     printf '%s: Failed to make section dir: [%s].\n' "$s_id" "$section"
                     return 1
@@ -302,7 +330,7 @@ combine_rc_dirs () {
 
                 [[ -n "$verbose" ]] && printf '%s: Moving entry to unreleased: [%s].\n' "$e_id" "$entry"
                 v_file="${rc_ver_dir}/${entry}"
-                u_file="${changelog_dir}/unreleased/${entry}"
+                u_file="${unreleased_dir}/${entry}"
                 if [[ -e "$u_file" ]]; then
                     if diff -q "$v_file" "$u_file" > /dev/null 2>&1; then
                         # The unreleased file already exists and is the same as the version one. Just delete the version one.
@@ -342,6 +370,12 @@ if [[ -z "$v_rc" ]]; then
     combine_rc_dirs || clean_exit 1
 fi
 
+# If this is an rc and we don't have a summary, create a default one now.
+if [[ -n "$v_rc" && -z "$have_summary" ]]; then
+    printf 'This is Provenance Blockchain release candidate `%s`.\n' "$version" > "$unreleased_sum_file"
+fi
+
+# Use unclog to generate the beginnings of the new release notes.
 unclog_build_file="${temp_dir}/1-unclog-build.md"
 [[ -n "$verbose" ]] && printf 'Generating initial changelog entry: [%s].\n' "$unclog_build_file"
 cd "${repo_root}" || clean_exit 1
@@ -442,7 +476,7 @@ include_sections () {
 
 section_order=()
 section_order+=( top )
-section_order+=( $( awk '{ if (in_com!="") { if (/^"/) { sub(/^"/,""); sub(/".*$/,""); sub(/^[[:space:]]+/,""); sub(/[[:space:]]$/,""); gsub(/[[:space:]]+/,"-"); print $0; } else if (/-->/) { exit 0; } }; if (/<!--/) { in_com="1" }; }' "$changelog_file" | tr '[:upper:]' '[:lower:]' ) )
+section_order+=( $( awk '{ if (in_com) { if (/^"/) { sub(/^"/,""); sub(/".*$/,""); sub(/^[[:space:]]+/,""); sub(/[[:space:]]$/,""); gsub(/[[:space:]]+/,"-"); print $0; } else if (/-->/) { exit 0; } }; if (/<!--/) { in_com=1; }; }' "$changelog_file" | tr '[:upper:]' '[:lower:]' ) )
 [[ -n "$verbose" ]] && printf 'Order: [%s <other>].\n' "${section_order[*]}"
 include_sections "${section_order[@]}"
 
@@ -458,14 +492,48 @@ printf '### Full Commit History\n\n' >> "$new_rl_file"
 [[ -n "$prev_ver_rc" ]] && printf '* https://github.com/provenance-io/provenance/compare/%s...%s\n' "$prev_ver_rc" "$version" >> "$new_rl_file"
 printf '* https://github.com/provenance-io/provenance/compare/%s...%s\n\n' "$prev_ver" "$version" >> "$new_rl_file"
 
+# Usage: clean_versions <input file>
+#    or: <stuff> clean_versions
+clean_versions () {
+    awk -v version="$version" '{ if (/^##[[:space:]]/) { if (index($0,version "-rc") || index($0,"[" version "]")) { keep=0; } else { keep=1; }; }; if (keep) { print $0; }; }' "$0"
+}
+
+# If this is an rc and there's an existing release notes, append those to the end, removing any existing section for this version.
+release_notes_file="${repo_root}/RELEASE_NOTES.md"
+if [[ -n "$v_rc" && -f "$release_notes_file" ]]; then
+    [[ -n "$verbose" ]] && printf 'Including existing release notes: [%s].\n' "$release_notes_file"
+    clean_versions "$release_notes_file" >> "$new_rl_file"
+fi
+
 new_cl_file="${temp_dir}/5-new-changelog.md"
-[[ -n "$verbose" ]] && printf 'Creating updated changelog: [%s].\n' "$new_cl_file"
+[[ -n "$verbose" ]] && printf 'Building new changelog: [%s].\n' "$new_cl_file"
 
+# Get the top of the changelog file up to the first version header that isn't unreleased.
 awk '{if (/^##[[:space:]]/ && $0 !~ /[Uu][Nn][Rr][Ee][Ll][Ee][Aa][Ss][Ee][Dd]/) { exit 0; }; print $0; }' "$changelog_file" > "$new_cl_file"
-cat "$new_rl_file" >> "$new_cl_file"
+
+# Include the new stuff, but remove any blurb.
+awk '{ if (/^##[[:space:]]/) { in_top=1; print $0; print ""; } else if (/^###[[:space:]]/) { in_top=0; }; if (!in_top) { print $0; }; }' "$new_rl_file" >> "$new_cl_file"
+# Add a divider.
 printf -- '---\n\n' >> "$new_cl_file"
-# TODO: get the rest of the changelog file, removing and rcs for this version (if it's not an rc).
 
-# TODO: Copy the new release notes and new changelog.
+# Get the rest of the changelog file, but remove any existing entry for this version and also any rcs for
+# this version (e.g. if the version is v1.2.3, remove v1.2.3-rc1 etc.). If this version is an rc, it shouldn't
+# remove the other rcs, though (e.g. if the version is v1.2.3-rc2, we still want v1.2.3-rc1 in there).
+awk '{if (!in_bot && /^##[[:space:]]/ && $0 !~ /[Uu][Nn][Rr][Ee][Ll][Ee][Aa][Ss][Ee][Dd]/) { in_bot=1; }; if (in_bot) { print $0; }; }' "$changelog_file" | clean_versions >> "$new_cl_file"
 
+[[ -n "$verbose" ]] && printf 'Putting release notes into place: cp "%s" "%s".\n' "$new_rl_file" "$release_notes_file"
+cp "$new_rl_file" "$release_notes_file" | clean_exit 1
+[[ -n "$verbose" ]] && printf 'Putting changelog into place: cp "%s" "%s".\n' "$new_cl_file" "$changelog_file"
+cp "$new_cl_file" "$changelog_file" | clean_exit 1
+
+# Note: I'm not using unlcog release here because they assume you're going to do that before unclog build, and will try to open the
+# editor to change the summary. But we don't want that since we've already done stuff with the summary and it shouldn't change now.
+[[ -n "$verbose" ]] && printf 'Moving unreleased entries to new version dir: [%s].\n' "$new_ver_dir"
+mv "$unreleased_dir" "$new_ver_dir" || clean_exit 1
+rm "$new_ver_dir/.gitkeep" > /dev/null 2>&1
+[[ -n "$verbose" ]] && printf 'Creating new unreleased dir: [%s].\n' "$unreleased_dir"
+mkdir "$unreleased_dir" || clean_exit 1
+touch "$unreleased_dir/.gitkeep" || clean_exit 1
+
+[[ -n "$verbose" ]] && printf 'Done.\n'
 clean_exit 0
