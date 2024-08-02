@@ -71,6 +71,12 @@ if ! command -v unclog > /dev/null 2>&1; then
     exit 1
 fi
 
+########################################################################################################################
+################################################  Setup and Validation  ################################################
+########################################################################################################################
+
+printf 'Doing Setup and Validation.\n'
+
 repo_root="$( git rev-parse --show-toplevel 2> /dev/null )"
 if [[ -z "$repo_root" ]]; then
     where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
@@ -289,13 +295,13 @@ fi
 # It will move all the entry files from the rc dirs for this version into unreleased.
 combine_rc_dirs () {
     local rc_vers v rc_ver v_id rc_ver_dir entries sections s section s_id s_dir e entry e_id v_file u_file
-    [[ -n "$verbose" ]] && printf 'Combining rc dirs back into unreleased.\n'
 
     [[ -n "$verbose" ]] && printf 'Identifying rc version dirs for this version.\n'
     rc_vers=( $( find "$changelog_dir" -type d -depth 1 -name "${version}-rc*" | sed -E 's|^.*/||' ) )
     [[ -n "$verbose" ]] && printf 'Found %d version dirs: [%s].\n' "${#rc_vers[@]}" "${rc_vers[*]}"
     [[ "${#rc_vers[@]}" -eq '0' ]] && return 0
 
+    printf 'Combining Release Candidate dirs back into unreleased.\n'
     v=0
     for rc_ver in "${rc_vers[@]}"; do
         v=$(( v + 1 ))
@@ -369,6 +375,12 @@ combine_rc_dirs () {
 if [[ -z "$v_rc" ]]; then
     combine_rc_dirs || clean_exit 1
 fi
+
+########################################################################################################################
+##############################################  Build New Release Notes  ###############################################
+########################################################################################################################
+
+printf 'Creating the new Release Notes file.\n'
 
 # If this is an rc and we don't have a summary, create a default one now.
 if [[ -n "$v_rc" && -z "$have_summary" ]]; then
@@ -477,13 +489,13 @@ include_sections () {
 section_order=()
 section_order+=( top )
 section_order+=( $( awk '{ if (in_com) { if (/^"/) { sub(/^"/,""); sub(/".*$/,""); sub(/^[[:space:]]+/,""); sub(/[[:space:]]$/,""); gsub(/[[:space:]]+/,"-"); print $0; } else if (/-->/) { exit 0; } }; if (/<!--/) { in_com=1; }; }' "$changelog_file" | tr '[:upper:]' '[:lower:]' ) )
-[[ -n "$verbose" ]] && printf 'Order: [%s <other>].\n' "${section_order[*]}"
+[[ -n "$verbose" ]] && printf 'Order (%d): [%s].\n' "${#section_order[@]}" "${section_order[*]}"
 include_sections "${section_order[@]}"
 
 other_sections=()
 other_sections+=( $( find "$temp_dir" -type f -name '3-section-*.md' | sed -E 's|^.*/3-section-||; s/\.md$//;' | sort ) )
 if [[ "${#other_sections[@]}" -ne '0' ]]; then
-    [[ -n "$verbose" ]] && printf 'Including other sections: [%s].\n' "${other_sections[*]}"
+    [[ -n "$verbose" ]] && printf 'Including other sections (%d): [%s].\n' "${#other_sections[@]}" "${other_sections[*]}"
     include_sections "${other_sections[@]}"
 fi
 
@@ -505,6 +517,15 @@ if [[ -n "$v_rc" && -f "$release_notes_file" ]]; then
     clean_versions "$release_notes_file" >> "$new_rl_file"
 fi
 
+[[ -n "$verbose" ]] && printf 'Putting release notes into place: cp "%s" "%s".\n' "$new_rl_file" "$release_notes_file"
+cp "$new_rl_file" "$release_notes_file" || clean_exit 1
+
+########################################################################################################################
+###############################################  Building New Changelog  ###############################################
+########################################################################################################################
+
+printf 'Creating the new Changelog file.\n'
+
 new_cl_file="${temp_dir}/5-new-changelog.md"
 [[ -n "$verbose" ]] && printf 'Building new changelog: [%s].\n' "$new_cl_file"
 
@@ -521,19 +542,25 @@ printf -- '---\n\n' >> "$new_cl_file"
 # remove the other rcs, though (e.g. if the version is v1.2.3-rc2, we still want v1.2.3-rc1 in there).
 awk '{if (!in_bot && /^##[[:space:]]/ && $0 !~ /[Uu][Nn][Rr][Ee][Ll][Ee][Aa][Ss][Ee][Dd]/) { in_bot=1; }; if (in_bot) { print $0; }; }' "$changelog_file" | clean_versions >> "$new_cl_file"
 
-[[ -n "$verbose" ]] && printf 'Putting release notes into place: cp "%s" "%s".\n' "$new_rl_file" "$release_notes_file"
-cp "$new_rl_file" "$release_notes_file" | clean_exit 1
 [[ -n "$verbose" ]] && printf 'Putting changelog into place: cp "%s" "%s".\n' "$new_cl_file" "$changelog_file"
-cp "$new_cl_file" "$changelog_file" | clean_exit 1
+cp "$new_cl_file" "$changelog_file" || clean_exit 1
 
-# Note: I'm not using unlcog release here because they assume you're going to do that before unclog build, and will try to open the
-# editor to change the summary. But we don't want that since we've already done stuff with the summary and it shouldn't change now.
+########################################################################################################################
+##################################################  Finalize Release  ##################################################
+########################################################################################################################
+
+printf 'Finishing the release.\n'
+
+# Note: I'm not using unlcog release here because they assume you're going to do that before unclog build,
+# and will try to open the editor to change the summary. But we don't want that since we've already done
+# stuff with the summary and it shouldn't change now.
+
 [[ -n "$verbose" ]] && printf 'Moving unreleased entries to new version dir: [%s].\n' "$new_ver_dir"
 mv "$unreleased_dir" "$new_ver_dir" || clean_exit 1
 rm "$new_ver_dir/.gitkeep" > /dev/null 2>&1
 [[ -n "$verbose" ]] && printf 'Creating new unreleased dir: [%s].\n' "$unreleased_dir"
-mkdir "$unreleased_dir" || clean_exit 1
-touch "$unreleased_dir/.gitkeep" || clean_exit 1
+mkdir -p "$unreleased_dir" || clean_exit 1
+touch "$unreleased_dir/.gitkeep"
 
-[[ -n "$verbose" ]] && printf 'Done.\n'
+printf 'Done.\n'
 clean_exit 0
