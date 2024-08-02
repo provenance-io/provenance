@@ -527,22 +527,23 @@ cp "$new_rl_file" "$release_notes_file" || clean_exit 1
 printf 'Creating the new Changelog file.\n'
 
 new_cl_file="${temp_dir}/5-new-changelog.md"
-[[ -n "$verbose" ]] && printf 'Building new changelog: [%s].\n' "$new_cl_file"
-
+[[ -n "$verbose" ]] && printf 'Putting top of changelog in temp file: [%s].\n' "$new_cl_file"
 # Get the top of the changelog file up to the first version header that isn't unreleased.
 awk '{if (/^##[[:space:]]/ && $0 !~ /[Uu][Nn][Rr][Ee][Ll][Ee][Aa][Ss][Ee][Dd]/) { exit 0; }; print $0; }' "$changelog_file" > "$new_cl_file"
 
+[[ -n "$verbose" ]] && printf 'Appending the new release notes (without the blurb): [%s].\n' "$new_cl_file"
 # Include the new stuff, but remove any blurb.
 awk '{ if (/^##[[:space:]]/) { in_top=1; print $0; print ""; } else if (/^###[[:space:]]/) { in_top=0; }; if (!in_top) { print $0; }; }' "$new_rl_file" >> "$new_cl_file"
 # Add a divider.
 printf -- '---\n\n' >> "$new_cl_file"
 
+[[ -n "$verbose" ]] && printf 'Appending the rest of the changelog file: [%s].\n' "$new_cl_file"
 # Get the rest of the changelog file, but remove any existing entry for this version and also any rcs for
 # this version (e.g. if the version is v1.2.3, remove v1.2.3-rc1 etc.). If this version is an rc, it shouldn't
 # remove the other rcs, though (e.g. if the version is v1.2.3-rc2, we still want v1.2.3-rc1 in there).
 awk '{if (!in_bot && /^##[[:space:]]/ && $0 !~ /[Uu][Nn][Rr][Ee][Ll][Ee][Aa][Ss][Ee][Dd]/) { in_bot=1; }; if (in_bot) { print $0; }; }' "$changelog_file" | clean_versions >> "$new_cl_file"
 
-[[ -n "$verbose" ]] && printf 'Putting changelog into place: cp "%s" "%s".\n' "$new_cl_file" "$changelog_file"
+[[ -n "$verbose" ]] && printf 'Putting changelog into place: [%s].\n' "$new_cl_file"
 cp "$new_cl_file" "$changelog_file" || clean_exit 1
 
 ########################################################################################################################
