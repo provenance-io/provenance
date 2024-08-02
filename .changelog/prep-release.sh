@@ -507,7 +507,7 @@ printf '* https://github.com/provenance-io/provenance/compare/%s...%s\n\n' "$pre
 # Usage: clean_versions <input file>
 #    or: <stuff> clean_versions
 clean_versions () {
-    awk -v version="$version" '{ if (/^##[[:space:]]/) { if (index($0,version "-rc") || index($0,"[" version "]")) { keep=0; } else { keep=1; }; }; if (keep) { print $0; }; }' "$0"
+    awk -v version="$version" '{ if (/^##[[:space:]]/) { if (index($0,version "-rc") || index($0,"[" version "]")) { keep=0; } else { keep=1; }; }; if (keep) { print $0; }; }' "$@"
 }
 
 # If this is an rc and there's an existing release notes, append those to the end, removing any existing section for this version.
