@@ -458,10 +458,10 @@ if [[ -f "$dep_file" ]]; then
     printf '\n' >> "$dep_file"
 fi
 
-new_rl_file="${temp_dir}/4-release-notes.md"
-[[ -n "$verbose" ]] && printf 'Re-combining sections in the desired order: [%s].\n' "$new_rl_file"
+new_cl_entry_file="${temp_dir}/4-release-notes.md"
+[[ -n "$verbose" ]] && printf 'Re-combining sections in the desired order: [%s].\n' "$new_cl_entry_file"
 # Usage: include_sections <section 1> <section 2> ...
-# Appends the provided sections to the new_rl_file ("temp release notes file"),
+# Appends the provided sections to the new_cl_entry_file ("temp release notes file"),
 # and marks each section as included.
 include_sections () {
     local s section s_id s_file
@@ -472,8 +472,8 @@ include_sections () {
         s_file="${temp_dir}/3-section-${section}.md"
         if [[ -f "$s_file" ]]; then
             [[ -n "$verbose" ]] && printf '%s: Including [%s].\n' "$s_id" "$s_file"
-            if ! cat "$s_file" >> "$new_rl_file"; then
-                printf '%s: Could not append [%s] to [%s].\n' "$s_id" "$s_file" "$new_rl_file"
+            if ! cat "$s_file" >> "$new_cl_entry_file"; then
+                printf '%s: Could not append [%s] to [%s].\n' "$s_id" "$s_file" "$new_cl_entry_file"
                 clean_exit 1
             fi
             if ! mv "$s_file" "$s_file.included"; then
@@ -503,10 +503,10 @@ fi
 [[ -n "$verbose" ]] && printf 'Including dependencies section.\n'
 include_sections 'dependencies'
 
-[[ -n "$verbose" ]] && printf 'Appending diff links: [%s].\n' "$new_rl_file"
-printf '### Full Commit History\n\n' >> "$new_rl_file"
-[[ -n "$prev_ver_rc" ]] && printf '* https://github.com/provenance-io/provenance/compare/%s...%s\n' "$prev_ver_rc" "$version" >> "$new_rl_file"
-printf '* https://github.com/provenance-io/provenance/compare/%s...%s\n\n' "$prev_ver" "$version" >> "$new_rl_file"
+[[ -n "$verbose" ]] && printf 'Appending diff links: [%s].\n' "$new_cl_entry_file"
+printf '### Full Commit History\n\n' >> "$new_cl_entry_file"
+[[ -n "$prev_ver_rc" ]] && printf '* https://github.com/provenance-io/provenance/compare/%s...%s\n' "$prev_ver_rc" "$version" >> "$new_cl_entry_file"
+printf '* https://github.com/provenance-io/provenance/compare/%s...%s\n\n' "$prev_ver" "$version" >> "$new_cl_entry_file"
 
 # Usage: clean_versions <input file>
 #    or: <stuff> clean_versions
@@ -515,7 +515,10 @@ clean_versions () {
 }
 
 # If this is an rc and there's an existing release notes, append those to the end, removing any existing section for this version.
+# If it's not an rc, or there isn't an existing one, just use what we've already got.
+new_rl_file="${temp_dir}/5-release-notes.md"
 release_notes_file="${repo_root}/RELEASE_NOTES.md"
+cp "$new_cl_entry_file" "$new_rl_file"
 if [[ -n "$v_rc" && -f "$release_notes_file" ]]; then
     [[ -n "$verbose" ]] && printf 'Including existing release notes: [%s].\n' "$release_notes_file"
     printf -- '---\n\n' >> "$new_rl_file"
@@ -531,14 +534,14 @@ cp "$new_rl_file" "$release_notes_file" || clean_exit 1
 
 printf 'Creating the new Changelog file.\n'
 
-new_cl_file="${temp_dir}/5-new-changelog.md"
+new_cl_file="${temp_dir}/6-new-changelog.md"
 [[ -n "$verbose" ]] && printf 'Putting top of changelog in temp file: [%s].\n' "$new_cl_file"
 # Get the top of the changelog file up to the first version header that isn't unreleased.
 awk '{if (/^##[[:space:]]/ && $0 !~ /[Uu][Nn][Rr][Ee][Ll][Ee][Aa][Ss][Ee][Dd]/) { exit 0; }; print $0; }' "$changelog_file" > "$new_cl_file"
 
-[[ -n "$verbose" ]] && printf 'Appending the new release notes (without the blurb): [%s].\n' "$new_cl_file"
+[[ -n "$verbose" ]] && printf 'Appending the new version entry (without the blurb): [%s].\n' "$new_cl_file"
 # Include the new stuff, but remove any blurb.
-awk '{ if (/^##[[:space:]]/) { in_top=1; print $0; print ""; } else if (/^###[[:space:]]/) { in_top=0; }; if (!in_top) { print $0; }; }' "$new_rl_file" >> "$new_cl_file"
+awk '{ if (/^##[[:space:]]/) { in_top=1; print $0; print ""; } else if (/^###[[:space:]]/) { in_top=0; }; if (!in_top) { print $0; }; }' "$new_cl_entry_file" >> "$new_cl_file"
 # Add a divider.
 printf -- '---\n\n' >> "$new_cl_file"
 
