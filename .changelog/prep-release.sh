@@ -488,7 +488,8 @@ include_sections () {
 
 section_order=()
 section_order+=( top )
-section_order+=( $( awk '{ if (in_com) { if (/^"/) { sub(/^"/,""); sub(/".*$/,""); sub(/^[[:space:]]+/,""); sub(/[[:space:]]$/,""); gsub(/[[:space:]]+/,"-"); print $0; } else if (/-->/) { exit 0; } }; if (/<!--/) { in_com=1; }; }' "$changelog_file" | tr '[:upper:]' '[:lower:]' ) )
+# We want the dependencies entry to be absolutely last (after the other entries), so we'll remove it here and do it manually later.
+section_order+=( $( awk '{ if (in_com) { if (/^"/) { sub(/^"/,""); sub(/".*$/,""); sub(/^[[:space:]]+/,""); sub(/[[:space:]]$/,""); gsub(/[[:space:]]+/,"-"); print $0; } else if (/-->/) { exit 0; } }; if (/<!--/) { in_com=1; }; }' "$changelog_file" | tr '[:upper:]' '[:lower:]' | grep -vFx 'dependencies' ) )
 [[ -n "$verbose" ]] && printf 'Order (%d): [%s].\n' "${#section_order[@]}" "${section_order[*]}"
 include_sections "${section_order[@]}"
 
@@ -498,6 +499,9 @@ if [[ "${#other_sections[@]}" -ne '0' ]]; then
     [[ -n "$verbose" ]] && printf 'Including other sections (%d): [%s].\n' "${#other_sections[@]}" "${other_sections[*]}"
     include_sections "${other_sections[@]}"
 fi
+
+[[ -n "$verbose" ]] && printf 'Including dependencies section.\n'
+include_sections 'dependencies'
 
 [[ -n "$verbose" ]] && printf 'Appending diff links: [%s].\n' "$new_rl_file"
 printf '### Full Commit History\n\n' >> "$new_rl_file"
