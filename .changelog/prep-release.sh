@@ -518,6 +518,7 @@ clean_versions () {
 release_notes_file="${repo_root}/RELEASE_NOTES.md"
 if [[ -n "$v_rc" && -f "$release_notes_file" ]]; then
     [[ -n "$verbose" ]] && printf 'Including existing release notes: [%s].\n' "$release_notes_file"
+    printf -- '---\n\n' >> "$new_rl_file"
     clean_versions "$release_notes_file" >> "$new_rl_file"
 fi
 
