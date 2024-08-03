@@ -88,7 +88,7 @@ Before a PR can be merged:
 - All commits must be signed.
 - It must be up-to-date with `main`.
 - It must be approved by two or more maintainers.
-- It must must pass all required Github action checks.
+- It must pass all required Github action checks.
 
 The following are encouraged and may sometimes be required:
 - All Github action checks pass (even the non-required ones).
@@ -97,6 +97,7 @@ The following are encouraged and may sometimes be required:
 - Functions and variables have accurate `godoc` comments.
 - Test code coverage increases.
 - Running `go mod tidy` should not cause `go.mod` or `go.sum` to change.
+- There should be at least one entry in the changelog. See: [.changelog/README.md](.changelog/README.md).
 
 ### Process for reviewing PRs
 
@@ -309,36 +310,12 @@ You will need to create a new development branch for this and PR it back to the 
 
 The `CHANGELOG.md` on the `.x` branch must be updated to reflect the new release.
 
-1. Run `make linkify`.
-2. Add a horizontal rule and version section heading, e.g.
-   ```plaintext
-   ---
-   
-   ## [v1.13.0](https://github.com/provenance-io/provenance/releases/tag/v1.13.0) - 2022-10-04
-   ```
-   This usually goes immediately under the `## Unreleased` heading to indicate that all unreleased things are now released.
-   There should be an empty line both above the `---` and below the new version header.
-3. If going from a release candidate to a full release, the release candidate entries should all be combined into one entry for the full release.
-4. Optionally add an extra paragraph or two with general new version information.
-   This should go below the newly added version heading but above any subheadings (e.g. `### Improvements`).
-5. Add a `### Full Commit History` section at the end of the new version section with links to diffs between versions. E.g.
-   ```plaintext
-   ### Full Commit History
-   
-   * https://github.com/provenance-io/provenance/compare/v1.12.0...v1.13.0
-   ```
-   Note that the three dot `...` diff is preferred over the two dot `..` one for these links.
-   For release candidates `2` and above, include links from both the previously released version and the previous release candidate.
-   This should be the last section before the `---` above the next version entry.
-
-Now, create/update the `RELEASE_CHANGELOG.md`.
-For release candidates above `2`, the existing `RELEASE_CHANGELOG.md` should be updated to include info about the new version at the top.
-For full or `-rc1` releases, delete any existing `RELEASE_CHANGELOG.md` and start a new empty one.
-
-1. Copy the lines from `CHANGELOG.md` starting with the new version header and ending on the blank line before the hr above the next version entry.
-2. Paste them into the `RELEASE_CHANGELOG.md`.
-
-Push up your changes and PR them to the `.x` branch.
+1. Run `.changelog/prep-release.sh <version>` to create/update `RELEASE_NOTES.md`, update `CHANGELOG.md`, and move things around in the `.changelog/` folder.
+2. Run `make linkify`.
+3. Review the changes with extra attention on the new content of `CHANGELOG.md` and `RELEASE_NOTES.md`.
+4. Stage and commit the changes.
+5. Push up your branch and create a PR for it to the `.x` branch.
+6. Get the PR approved and merged.
 
 #### 3. Create the New Version Tag
 
@@ -354,6 +331,8 @@ Do the following locally.
 You can then monitor the Github actions for the repo and also watch for the new release page to be created.
 
 #### 4. PR the .x Branch Back to Main
+
+TODO: Update this with new details involving the .changelog directory.
 
 This PR should update the `CHANGELOG.md` and contain any changes applied to the `.x` branch but not yet in `main`.
 It should NOT contain the `RELEASE_CHANGELOG.md` file.
