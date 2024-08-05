@@ -22,14 +22,24 @@ is_valid_section () {
 }
 
 ec=0
+bad_sections=()
 for section in $( find "$ur_dir" -type d -depth 1 | sed 's|^.*/||' ); do
     if ! is_valid_section "$section"; then
-        printf 'Invalid unreleased section directory: %s\n' "$section"
-        ec=1
+        bad_sections+=( "$section" )
     fi
 done
 
-if [[ "$ec" -ne '0' ]]; then
+if [[ "${#bad_sections[@]}" -ne '0' ]]; then
+    printf 'Invalid unreleased section(s):\n'
+    printf '.changelog/unreleased/%s\n' "${bad_sections[@]}"
     printf 'Valid sections: [%s]\n' "${valid_sections[*]}"
+    ec=1
 fi
+
+bad_files="$( find "$ur_dir" -type f -depth 2 -name '*[[:space:]]*' | sed -E 's|^.*/\.changelog/|.changelog/|'  )"
+if [[ -n "$bad_files" ]]; then
+    printf 'Invalid unreleased filename(s):\n%s\n' "$bad_files"
+    ec=1
+fi
+
 exit "$ec"

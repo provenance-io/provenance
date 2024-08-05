@@ -277,7 +277,7 @@ lint:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "./client/*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -d -s
 	scripts/no-now-lint.sh
 	$(GO) mod verify
-	.changelog/lint-unreleased-sections.sh
+	.changelog/lint-unreleased.sh
 
 lint-fix:
 	$(GOLANGCI_LINT) run --fix
