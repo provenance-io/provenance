@@ -4,6 +4,14 @@ This `.changelog/` directory is primarily used to coordinate unreleased changes 
 ultimately to generate the release notes and changelog content for a release.
 
 <!-- TOC -->
+  - [Overview](#overview)
+  - [Adding Changes](#adding-changes)
+  - [Dependencies](#dependencies)
+  - [Section Names](#section-names)
+  - [Unclog](#unclog)
+  - [Entry Files](#entry-files)
+  - [Releases](#releases)
+  - [Finding Changes](#finding-changes)
 
 
 

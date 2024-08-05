@@ -302,7 +302,7 @@ linkify:
 	python ./scripts/linkify.py CHANGELOG.md
 
 update-tocs:
-	scripts/update-toc.sh x docs CONTRIBUTING.md
+	scripts/update-toc.sh x docs CONTRIBUTING.md .changelog/README.md
 
 get-valid-sections:
 	.changelog/get-valid-sections.sh
