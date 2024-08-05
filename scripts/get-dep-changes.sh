@@ -7,29 +7,29 @@ show_usage () {
 get-dep-changes.sh: Analyze changes made to go.mod and generate changelog entries.
 
 Usage: ./get-dep-changes.sh {-p|--pull-request|--pr <num> | -n|--issue-no|--issue <num>}
-          [--name <name> [--dir <dir>]] [--target-branch <branch>]
+          [--id <id> [--dir <dir>]] [--target-branch <branch>]
           [-v|--verbose] [--no-clean] [--force] [-h|--help]
 
 You must provide either a PR number or issue number, but you cannot provide both.
-If a name is provided, the entries are written to a file, otherwise stdout.
+If an <id> is provided, the entries are written to a file, otherwise stdout.
 
 -p|--pull-request|--pr <num>
     Append a PR link to the given <num> to the end of each changelog entry.
 -n|--issue-no|--issue <num>
     Append an issue link to the given <num> to the end of each changelog entry.
 
---name <name>
-    The <name> is cleaned then appended to the <num> to create the filename for this change.
-    To clean the <name>, it is lowercased, then non-alphanumeric chars are changed to dashes.
+--id <id>
+    The <id> is cleaned then appended to the <num> to create the filename for this change.
+    To clean the <id>, it is lowercased, then non-alphanumeric chars are changed to dashes.
     If provided, the changelog entries will be written to
-        <repo root>.changelog/unreleased/dependencies/<num>-<name>.md
+        <repo root>/.changelog/unreleased/dependencies/<num>-<id>.md
     If not provided, the changelog entries will be written to stdout.
-    If not in a repo, or to put the file in a different directory, use the --dir <dir> option.
+    If not in a git repo, or to put the file in a different directory, use the --dir <dir> option.
 
 --dir <dir>
     Put the changelog entries in the provided <dir>.
-    This arg only has meaning if --name is also provided.
-    The default is '<repo root>.changelog/unreleased/dependencies'.
+    This arg only has meaning if --id is also provided.
+    The default is '<repo root>/.changelog/unreleased/dependencies'.
 
 --target-branch <branch>
     Providing this option allows you to compare current changes against a branch other than main.
@@ -98,12 +98,12 @@ while [[ "$#" -gt '0' ]]; do
             issue="$2"
             shift
             ;;
-        --name)
+        -i|--id)
             if [[ -z "$2" ]]; then
                 printf 'No argument provided after %s\n' "$1"
                 exit 1
             fi
-            name="$2"
+            id="$2"
             shift
             ;;
         --dir)
@@ -142,15 +142,15 @@ else
 fi
 [[ -n "$verbose" ]] && printf 'Link: %s\n' "$link"
 
-if [[ -n "$name" ]]; then
-    name="$( sed -E 's/[^[:alnum:]]+/-/g; s/^-//; s/-$//;' <<< "$name" | tr '[:upper:]' '[:lower:]' )"
-    [[ -n "$verbose" ]] && printf 'Cleaned name: %s\n' "'$name'"
-    if [[ -n "$name" ]]; then
+if [[ -n "$id" ]]; then
+    id="$( sed -E 's/[^[:alnum:]]+/-/g; s/^-//; s/-$//;' <<< "$id" | tr '[:upper:]' '[:lower:]' )"
+    [[ -n "$verbose" ]] && printf 'Cleaned id: %s\n' "'$id'"
+    if [[ -n "$id" ]]; then
         if [[ -z "$out_dir" ]]; then
             repo_root="$( git rev-parse --show-toplevel )" || exit 1
             out_dir="${repo_root}/.changelog/unreleased/dependencies"
         fi
-        out_fn="${out_dir}/${num}-${name}.md"
+        out_fn="${out_dir}/${num}-${id}.md"
         [[ -n "$verbose" ]] && printf 'Output filename: %s\n' "'$out_fn'"
         if [[ -z "$force" && -e "$out_fn" ]]; then
             printf 'Output file already exists: %s\n' "$out_fn"
