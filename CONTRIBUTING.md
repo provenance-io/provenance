@@ -46,7 +46,7 @@ contributors, the general procedure for contributing has been established:
    3. If nobody has been assigned for the issue and you would like to work on it,
       make a comment on the issue to inform the community of your intentions
       to begin work
-   4. Follow standard Github best practices: fork the repo, branch from the
+   4. Follow standard GitHub best practices: fork the repo, branch from the
       HEAD of `main`, make some commits, and submit a PR to `main`
       - For core developers working on `provenance-io`, to ensure a clear
         ownership of branches, branches must be named with the convention
@@ -79,7 +79,7 @@ To accommodate review process we suggest that PRs are categorically broken up.
 Ideally each PR addresses only a single issue. Additionally, as much as possible
 code refactoring and cleanup should be submitted as a separate PRs from bugfixes/feature-additions.
 
-Draft PRs can be used for preliminary feedback and to see the results of the Github action checks.
+Draft PRs can be used for preliminary feedback and to see the results of the GitHub action checks.
 They can also be used to better indicate that you are working on an issue.
 
 ### PR Requirements
@@ -88,10 +88,10 @@ Before a PR can be merged:
 - All commits must be signed.
 - It must be up-to-date with `main`.
 - It must be approved by two or more maintainers.
-- It must pass all required Github action checks.
+- It must pass all required GitHub action checks.
 
 The following are encouraged and may sometimes be required:
-- All Github action checks pass (even the non-required ones).
+- All GitHub action checks pass (even the non-required ones).
 - New Unit and/or integration tests have been written.
 - Documentation has been updated (in `/docs` or `x/<module>/spec`).
 - Functions and variables have accurate `godoc` comments.
@@ -220,7 +220,7 @@ Branch protection might not be set up in all repos, but those branches should al
 - Using `--force` onto a protected branch is not allowed (except when reverting a broken commit, which should seldom happen).
 - Protected branches must not fail `make test test-race`.
 - Protected branches must not fail `make lint`.
-- Protected branches should not fail any Github action checks.
+- Protected branches should not fail any GitHub action checks.
 
 ### Development Branch naming
 
@@ -259,7 +259,7 @@ Definitions:
 - The Provenance Blockchain network used for testing and integration is "`testnet`".
 
 Git tags should only be used for releases.
-A release is automatically created by Github when a tag is pushed that has the format `v#.#.#` (where `#` is a whole number of any length).
+A release is automatically created by GitHub when a tag is pushed that has the format `v#.#.#` (where `#` is a whole number of any length).
 A release candidate is created if the tag has the format `v#.#.#-rc#`.
 
 As of `v1.13.0`, release tags are created on the `.x` branches. E.g. on `release/v1.13.x`.
@@ -302,7 +302,7 @@ If a `.x` branch does not yet exist for the desired minor version, one must be c
 
 1. Start on `main` and make sure you're up-to-date, e.g. `git checkout main && git pull`.
 2. Create the new `.x` branch, e.g. `git checkout -b release/v1.13.x`.
-3. Push it to Github, e.g. `git push`.
+3. Push it to GitHub, e.g. `git push`.
 
 #### 2. Update Changelog and Release Notes
 
@@ -314,7 +314,7 @@ The `CHANGELOG.md` on the `.x` branch must be updated to reflect the new release
 2. Run `make linkify`.
 3. Review the changes with extra attention on the new content of `CHANGELOG.md` and `RELEASE_NOTES.md`.
 4. Stage and commit the changes.
-5. Push up your branch and create a PR for it to the `.x` branch.
+5. Push up your branch and create a PR for it to the `.x` branch. The PR title should be like `Mark v1.13.0`.
 6. Get the PR approved and merged.
 
 #### 3. Create the New Version Tag
@@ -328,23 +328,24 @@ Do the following locally.
 5. Push the branch. E.g. `git push`.
 6. Push the tag. E.g. `git push origin v1.13.0`.
 
-You can then monitor the Github actions for the repo and also watch for the new release page to be created.
+You can then monitor the GitHub actions for the repo and also watch for the new release page to be created.
 
 #### 4. PR the .x Branch Back to Main
 
-TODO: Update this with new details involving the .changelog directory.
-
-This PR should update the `CHANGELOG.md` and contain any changes applied to the `.x` branch but not yet in `main`.
+This PR should update the `CHANGELOG.md` and contain any changes applied to the `.x` branch that are not yet in `main`.
 It should NOT contain the `RELEASE_CHANGELOG.md` file.
+It also should NOT have the new version directory under `.changelog/` (e.g. `.changelog/v1.13.0`), but it SHOULD remove applicable entries from `.changelog/unreleased`.
 
 Do the following locally.
 
 1. Navigate to your locally cloned repo.
-2. Check out the `main` branch and make sure it's up-to-date. E.g. `git checkout main && git pull`.
-3. Check out the `.x` branch and make sure it's up-to-date. E.g. `git checkout release/v1.13.x && git pull`.
+2. Check out the `.x` branch and make sure it's up-to-date. E.g. `git checkout release/v1.13.x && git pull`.
+3. Check out the `main` branch and make sure it's up-to-date. E.g. `git checkout main && git pull`.
 4. Create a new development branch. E.g. `git checkout -b myuser/v1.13.0-back-to-main`.
-5. Remove the `RELEASE_CHANGELOG.md` file.
-6. Update your branch with `main`. E.g. `git merge main`.
-7. Make sure the `CHANGELOG.md` correctly indicates the contents of the new release and still contains any unreleased entries.
-8. Address any other conflicts that might exist.
-9. Create a PR from your branch targeting `main`.
+5. Identify the commit that updated the changelog on the .x branch. E.g. `git log -5 --oneline release/v1.13.x`, then copy the commit hash.
+6. Cherry-pick (without committing) that commit to your development branch. E.g. `git cherry-pick 5f57e13 --no-commit`.
+7. Remove the `RELEASE_CHANGELOG.md` file.
+8. Remove the new version directory under `.changelog`.
+9. Stage the removals and finish the cherry-pick to commit the changes.
+10. Identify any other changes made to the `.x` branch that were not made to `main` (and should be); cherry-pick and commit them.
+11. Create a PR from your branch targeting `main`. The PR title should be like `Mark v1.13.0`.
