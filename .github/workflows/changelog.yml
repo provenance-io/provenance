@@ -36,7 +36,7 @@ jobs:
 
       - name: Generate entry
         run: |
-          ./scripts/dependabot-changelog.sh \
+          ./.changelog/dependabot-changelog.sh \
             --verbose \
             --pr "$PR_NUM" \
             --title "$PR_TITLE" \
