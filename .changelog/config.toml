@@ -15,7 +15,14 @@ change_template = "change-template.md"
 
 # The number of characters at which to wrap entries automatically added from
 # the CLI.
-wrap = 120
+# Provenance Blockchain notes:
+# The length of the issue/pr link is included in this length.
+# For the most part, we want the link on the same line as the text, though.
+# A 4 digit PR or issue link both end up with 64 characters in it.
+# It's nice to keep things to 120, but I don't like forcing that.
+# So at 200, there's 120 for the main content, 64 for the link,
+# and 16 extra chars for wiggle-room (before the wrap).
+wrap = 200
 
 # The heading right at the beginning of the changelog.
 heading = "# CHANGELOG"
