@@ -3,7 +3,7 @@
 # It's designed to be called by a github action kicked off because of a dependabot PR.
 
 show_usage () {
-  cat << EOF
+    cat << EOF
 dependabot-changelog.sh will create the changelog entries for a dependabot PR.
 
 Usage: ./dependabot-changelog.sh --pr <num> --title <title> --head-branch <branch> --target-branch <branch>
@@ -27,9 +27,9 @@ EOF
 while [[ "$#" -gt '0' ]]; do
     case "$1" in
         --help)
-          printf 'Usage: ./dependabot-changelog.sh --pr <num> --title <title> --head-branch <branch> --target-branch <branch>\n'
-          exit 0
-          ;;
+            printf 'Usage: ./dependabot-changelog.sh --pr <num> --title <title> --head-branch <branch> --target-branch <branch>\n'
+            exit 0
+            ;;
         -p|--pull-request|--pr)
             if [[ -z "$2" ]]; then
                 printf 'No argument provided after %s\n' "$1"
