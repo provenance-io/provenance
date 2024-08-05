@@ -24,10 +24,15 @@ EOF
 
 }
 
+if [[ "$#" -eq '0' ]]; then
+    show_usage
+    exit 0
+fi
+
 while [[ "$#" -gt '0' ]]; do
     case "$1" in
         --help)
-            printf 'Usage: ./dependabot-changelog.sh --pr <num> --title <title> --head-branch <branch> --target-branch <branch>\n'
+            show_usage
             exit 0
             ;;
         -p|--pull-request|--pr)
@@ -77,34 +82,35 @@ while [[ "$#" -gt '0' ]]; do
     shift
 done
 
-if [[ -z "$head_branch" ]]; then
-    head_branch="$( git branch --show-current )"
-fi
-
 if [[ -z "$head_branch" || "$head_branch" == 'HEAD' ]]; then
-    printf 'Could not determine the head branch and no --head-branch <branch> provided.\n'
-    exit 1
+    printf 'No --head-branch <branch> provided.\n'
+    stop_early='YES'
 fi
-[[ -n "$verbose" ]] && printf '    Head Branch: "%s"\n' "$head_branch"
 
 if [[ -z "$target_branch" ]]; then
     printf 'No --target-branch <branch> provided.\n'
-    exit 1
+    stop_early='YES'
 fi
-[[ -n "$verbose" ]] && printf '  Target Branch: "%s"\n' "$head_branch"
 
 
 if [[ -z "$pr" ]]; then
     printf 'No --pr <num> provided.\n'
-    exit 1
+    stop_early='YES'
 fi
-[[ -n "$verbose" ]] && printf '             PR: "%s"\n' "$pr"
 
 if [[ -z "$title" ]]; then
     printf 'No --title <title> provided.\n'
-    exit 1
+    stop_early='YES'
 fi
-[[ -n "$verbose" ]] && printf '          Title: "%s"\n' "$title"
+
+[[ -n "$stop_earl" ]] && exit 1
+
+if [[ -n "$verbose" ]]; then
+    printf '    Head Branch: "%s"\n' "$head_branch"
+    printf '  Target Branch: "%s"\n' "$head_branch"
+    printf '             PR: "%s"\n' "$pr"
+    printf '          Title: "%s"\n' "$title"
+fi
 
 # Dependabot branch names look like this: "dependabot/github_actions/bufbuild/buf-setup-action-1.34.0"
 # The "github_actions" part can also be "go_modules" (and probably other things too).
@@ -133,7 +139,7 @@ if [[ "$ec" -eq '0' ]]; then
 fi
 
 # That script exits with 10 to indicate there were no go.mod changes.
-# All other exit codes are an error that requires attention.
+# All other (non-zero) exit codes are an error that requires attention.
 if [[ "$ec" -ne '10' ]]; then
     printf 'An error was encountered.\n'
     exit "$ec"
@@ -178,8 +184,8 @@ link="[PR ${pr}](https://github.com/provenance-io/provenance/pull/${pr})"
 
 repo_root="$( git rev-parse --show-toplevel 2> /dev/null )"
 if [[ -z "$repo_root" ]]; then
-    if [[ "$where_i_am" =~ /scripts$ ]]; then
-        # If this is in the scripts directory, assume it's {repo_root}/scripts.
+    if [[ "$where_i_am" =~ /.changelog$ || "$where_i_am" =~ /scripts$ ]]; then
+        # If this is in the .changelog or scripts directory, assume it's directly in {repo_root}.
         repo_root="$( dirname "$where_i_am" )"
     else
         # Not in a git repo, and who knows where this script is in relation to the root,

@@ -311,11 +311,10 @@ You will need to create a new development branch for this and PR it back to the 
 The `CHANGELOG.md` on the `.x` branch must be updated to reflect the new release.
 
 1. Run `.changelog/prep-release.sh <version>` to create/update `RELEASE_NOTES.md`, update `CHANGELOG.md`, and move things around in the `.changelog/` folder.
-2. Run `make linkify`.
-3. Review the changes with extra attention on the new content of `CHANGELOG.md` and `RELEASE_NOTES.md`.
-4. Stage and commit the changes.
-5. Push up your branch and create a PR for it to the `.x` branch. The PR title should be like `Mark v1.13.0`.
-6. Get the PR approved and merged.
+2. Review the changes with extra attention on the new content of `CHANGELOG.md` and `RELEASE_NOTES.md`.
+3. Stage and commit the changes.
+4. Push up your branch and create a PR for it to the `.x` branch. The PR title should be like `Mark v1.13.0`.
+5. Get the PR approved and merged.
 
 #### 3. Create the New Version Tag
 

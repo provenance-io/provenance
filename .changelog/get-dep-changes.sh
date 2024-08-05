@@ -7,8 +7,8 @@ show_usage () {
 get-dep-changes.sh: Analyze changes made to go.mod and generate changelog entries.
 
 Usage: ./get-dep-changes.sh {-p|--pull-request|--pr <num> | -n|--issue-no|--issue <num>}
-          [--id <id> [--dir <dir>]] [--target-branch <branch>]
-          [-v|--verbose] [--no-clean] [--force] [-h|--help]
+                [--id <id> [--dir <dir>]] [--target-branch <branch>]
+                [--force] [--no-clean] [-v|--verbose] [-h|--help]
 
 You must provide either a PR number or issue number, but you cannot provide both.
 If an <id> is provided, the entries are written to a file, otherwise stdout.
@@ -163,6 +163,9 @@ fi
 temp_dir="$( mktemp -d -t dep-updates.XXXX )" || exit 1
 [[ -n "$verbose" ]] && printf 'Created temp dir: %s\n' "$temp_dir"
 
+# Usage: clean_exit [<code>]
+# Default <code> is 0.
+# Cleans up the temp dir and exits.
 clean_exit () {
     local ec
     ec="${1:-0}"

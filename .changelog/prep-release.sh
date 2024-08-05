@@ -6,7 +6,7 @@ show_usage () {
 prep-release.sh: Prepares the changelog for a new release.
 
 Usage: prep-release.sh <version> [--date <date> [--force-date]]
-                [--force-version] [-v|--verbose] [--no-clean] [-h|--help]
+                [--force-version] [--no-clean] [-v|--verbose] [-h|--help]
 
 The <version> must have format vA.B.C or vA.B.C-rcX where A, B, C and X are numbers.
 
@@ -16,6 +16,11 @@ The <version> must have format vA.B.C or vA.B.C-rcX where A, B, C and X are numb
 --force-date indicates that the provided date is correct.
     By default, this script won't allow dates that are more than 14 days before or after today.
     This flag allows you to bypass that check.
+
+--force-version indicates that the provided version is correct.
+    By default, this script requires versions to be incremental and not yet exist.
+    This flag allows you to bypass those requirements.
+    The version must always have a correct format, though, even with this flag.
 
 --no-clean causes the temporary directory to remain once the script has exited.
 
