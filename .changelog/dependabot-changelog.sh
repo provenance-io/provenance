@@ -103,11 +103,11 @@ if [[ -z "$title" ]]; then
     stop_early='YES'
 fi
 
-[[ -n "$stop_earl" ]] && exit 1
+[[ -n "$stop_early" ]] && exit 1
 
 if [[ -n "$verbose" ]]; then
     printf '    Head Branch: "%s"\n' "$head_branch"
-    printf '  Target Branch: "%s"\n' "$head_branch"
+    printf '  Target Branch: "%s"\n' "$target_branch"
     printf '             PR: "%s"\n' "$pr"
     printf '          Title: "%s"\n' "$title"
 fi
