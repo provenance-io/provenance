@@ -25,7 +25,8 @@ jobs:
             go.sum
             .github/workflows/lint.yml
             scripts/no-now-lint.sh
-            .changelog/**
+            .changelog/lint-unreleased.sh
+            .changelog/unreleased/**
       - uses: actions/setup-go@v5
         if: env.GIT_DIFF
         with:
