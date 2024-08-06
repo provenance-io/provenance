@@ -302,7 +302,7 @@ combine_rc_dirs () {
     local rc_vers v rc_ver v_id rc_ver_dir entries sections s section s_id s_dir e entry e_id v_file u_file
 
     [[ -n "$verbose" ]] && printf 'Identifying rc version dirs for this version.\n'
-    rc_vers=( $( find "$changelog_dir" -type d -depth 1 -name "${version}-rc*" | sed -E 's|^.*/||' ) )
+    rc_vers=( $( find "$changelog_dir" -type d -mindepth 1 -maxdepth 1 -name "${version}-rc*" | sed -E 's|^.*/||' ) )
     [[ -n "$verbose" ]] && printf 'Found %d version dirs: [%s].\n' "${#rc_vers[@]}" "${rc_vers[*]}"
     [[ "${#rc_vers[@]}" -eq '0' ]] && return 0
 
@@ -313,7 +313,7 @@ combine_rc_dirs () {
         v_id="[${v}/${#rc_vers[@]}=${rc_ver}]"
         [[ -n "$verbose" ]] && printf '%s: Identifying entry files.\n' "$v_id"
         rc_ver_dir="${changelog_dir}/${rc_ver}"
-        entries=( $( find "$rc_ver_dir" -type f -depth 2 -name '*.md' | grep -Eo '[^/]+/[^/]+$' ) )
+        entries=( $( find "$rc_ver_dir" -type f -mindepth 2 -maxdepth 2 -name '*.md' | grep -Eo '[^/]+/[^/]+$' ) )
         [[ -n "$verbose" ]] && printf '%s: Found %d entry files.\n' "$v_id" "${#entries[@]}"
 
         if [[ "${#entries[@]}" -gt '0' ]]; then
