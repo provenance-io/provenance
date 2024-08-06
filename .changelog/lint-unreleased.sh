@@ -25,13 +25,13 @@ is_valid_section () {
 
 ec=0
 bad_sections=()
-for section in $( find "$ur_dir" -type d -depth 1 | sed 's|^.*/||' ); do
+for section in $( find "$ur_dir" -type d -mindepth 1 -maxdepth 1 | sed 's|^.*/||' ); do
     if ! is_valid_section "$section"; then
         bad_sections+=( "$section" )
     fi
 done
 
-bad_files="$( find "$ur_dir" -type f -depth 2 -name '*[[:space:]]*' | sed -E 's|^.*/\.changelog/|.changelog/|'  )"
+bad_files="$( find "$ur_dir" -type f -mindepth 2 -name '*[[:space:]]*' | sed -E 's|^.*/\.changelog/|.changelog/|'  )"
 
 [[ -n "$VERBOSE" ]] && set +x
 
