@@ -82,7 +82,7 @@ while [[ "$#" -gt '0' ]]; do
     shift
 done
 
-if [[ -z "$head_branch" || "$head_branch" == 'HEAD' ]]; then
+if [[ -z "$head_branch" ]]; then
     printf 'No --head-branch <branch> provided.\n'
     stop_early='YES'
 fi
