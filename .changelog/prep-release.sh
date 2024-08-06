@@ -461,7 +461,7 @@ if [[ -f "$dep_file" ]]; then
     orig_dep_file="${dep_file}.orig"
     mv "$dep_file" "$orig_dep_file"
     head -n 2 "$orig_dep_file" > "$dep_file"
-    grep -E '^[[:space:]]*[-*]' "$orig_dep_file" | sort --version-sort >> "$dep_file"
+    grep -E '^[[:space:]]*[-*]' "$orig_dep_file" | sed -E 's/^[[:space:]]+//; s/^(.)[[:space:]]+/\1 /;' | sort --version-sort >> "$dep_file"
     printf '\n' >> "$dep_file"
 fi
 
