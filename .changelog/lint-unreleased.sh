@@ -1,6 +1,8 @@
 #!/bin/bash
 # This script will check that the dirs in unreleased are all valid.
 
+[[ -n "$VERBOSE" ]] && set -x
+
 where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
 ur_dir="${where_i_am}/unreleased"
 if [[ ! -d "$ur_dir" ]]; then
@@ -29,6 +31,10 @@ for section in $( find "$ur_dir" -type d -depth 1 | sed 's|^.*/||' ); do
     fi
 done
 
+bad_files="$( find "$ur_dir" -type f -depth 2 -name '*[[:space:]]*' | sed -E 's|^.*/\.changelog/|.changelog/|'  )"
+
+[[ -n "$VERBOSE" ]] && set +x
+
 if [[ "${#bad_sections[@]}" -ne '0' ]]; then
     printf 'Invalid unreleased section(s):\n'
     printf '.changelog/unreleased/%s\n' "${bad_sections[@]}"
@@ -36,7 +42,6 @@ if [[ "${#bad_sections[@]}" -ne '0' ]]; then
     ec=1
 fi
 
-bad_files="$( find "$ur_dir" -type f -depth 2 -name '*[[:space:]]*' | sed -E 's|^.*/\.changelog/|.changelog/|'  )"
 if [[ -n "$bad_files" ]]; then
     printf 'Invalid unreleased filename(s):\n%s\n' "$bad_files"
     ec=1
