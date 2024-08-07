@@ -42,6 +42,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `golang.org/x/text` from 0.16.0 to 0.17.0 ([#2115](https://github.com/provenance-io/provenance/pull/2115))
+
 ## [v1.19.1](https://github.com/provenance-io/provenance/releases/tag/v1.19.1) - 2024-07-25
 
 ### Bug Fixes
