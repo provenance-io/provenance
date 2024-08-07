@@ -23,6 +23,6 @@ write a little note why.
 - [ ] Wrote unit and integration [tests](https://github.com/provenance-io/provenance/blob/main/CONTRIBUTING.md#testing)
 - [ ] Updated relevant documentation (`docs/`) or specification (`x/<module>/spec/`).
 - [ ] Added relevant `godoc` [comments](https://blog.golang.org/godoc-documenting-go-code).
-- [ ] Added relevant changelog entries under `.changelog/unreleased` (see [Adding Changes](.changelog/README.md#adding-changes)).
+- [ ] Added relevant changelog entries under `.changelog/unreleased` (see [Adding Changes](https://github.com/provenance-io/provenance/blob/main/.changelog/README.md#adding-changes)).
 - [ ] Re-reviewed `Files changed` in the Github PR explorer.
 - [ ] Review `Codecov Report` in the comment section below once CI passes.
