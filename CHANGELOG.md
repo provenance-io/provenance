@@ -42,6 +42,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ---
 
+### Dependencies
+- Bump `github.com/cosmos/gogoproto` from 1.5.0 to 1.6.0 ([#2117](https://github.com/provenance-io/provenance/pull/2117))
+
 ## [v1.19.1](https://github.com/provenance-io/provenance/releases/tag/v1.19.1) - 2024-07-25
 
 ### Bug Fixes
