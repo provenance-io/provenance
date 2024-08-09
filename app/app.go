@@ -145,7 +145,6 @@ import (
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
-	attributewasm "github.com/provenance-io/provenance/x/attribute/wasm"
 	"github.com/provenance-io/provenance/x/exchange"
 	exchangekeeper "github.com/provenance-io/provenance/x/exchange/keeper"
 	exchangemodule "github.com/provenance-io/provenance/x/exchange/module"
@@ -161,19 +160,15 @@ import (
 	"github.com/provenance-io/provenance/x/marker"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	markerwasm "github.com/provenance-io/provenance/x/marker/wasm"
 	"github.com/provenance-io/provenance/x/metadata"
 	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
-	metadatawasm "github.com/provenance-io/provenance/x/metadata/wasm"
 	msgfeeskeeper "github.com/provenance-io/provenance/x/msgfees/keeper"
 	msgfeesmodule "github.com/provenance-io/provenance/x/msgfees/module"
 	msgfeestypes "github.com/provenance-io/provenance/x/msgfees/types"
-	msgfeeswasm "github.com/provenance-io/provenance/x/msgfees/wasm"
 	"github.com/provenance-io/provenance/x/name"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-	namewasm "github.com/provenance-io/provenance/x/name/wasm"
 	oraclekeeper "github.com/provenance-io/provenance/x/oracle/keeper"
 	oraclemodule "github.com/provenance-io/provenance/x/oracle/module"
 	oracletypes "github.com/provenance-io/provenance/x/oracle/types"
@@ -631,18 +626,9 @@ func New(
 
 	// Init CosmWasm encoder integrations
 	encoderRegistry := provwasm.NewEncoderRegistry()
-	encoderRegistry.RegisterEncoder(nametypes.RouterKey, namewasm.Encoder)
-	encoderRegistry.RegisterEncoder(attributetypes.RouterKey, attributewasm.Encoder)
-	encoderRegistry.RegisterEncoder(markertypes.RouterKey, markerwasm.Encoder)
-	encoderRegistry.RegisterEncoder(metadatatypes.RouterKey, metadatawasm.Encoder)
-	encoderRegistry.RegisterEncoder(msgfeestypes.RouterKey, msgfeeswasm.Encoder)
 
 	// Init CosmWasm query integrations
 	querierRegistry := provwasm.NewQuerierRegistry()
-	querierRegistry.RegisterQuerier(nametypes.RouterKey, namewasm.Querier(app.NameKeeper))
-	querierRegistry.RegisterQuerier(attributetypes.RouterKey, attributewasm.Querier(app.AttributeKeeper))
-	querierRegistry.RegisterQuerier(markertypes.RouterKey, markerwasm.Querier(app.MarkerKeeper))
-	querierRegistry.RegisterQuerier(metadatatypes.RouterKey, metadatawasm.Querier(app.MetadataKeeper))
 
 	// Add the capabilities and indicate that provwasm contracts can be run on this chain.
 	// Capabilities defined here: https://github.com/CosmWasm/cosmwasm/blob/main/docs/CAPABILITIES-BUILT-IN.md
