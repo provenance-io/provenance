@@ -624,12 +624,6 @@ func New(
 	}
 	wasmConfig := wasmWrap.Wasm
 
-	// Init CosmWasm encoder integrations
-	encoderRegistry := provwasm.NewEncoderRegistry()
-
-	// Init CosmWasm query integrations
-	querierRegistry := provwasm.NewQuerierRegistry()
-
 	// Add the capabilities and indicate that provwasm contracts can be run on this chain.
 	// Capabilities defined here: https://github.com/CosmWasm/cosmwasm/blob/main/docs/CAPABILITIES-BUILT-IN.md
 	supportedFeatures := []string{"staking", "provenance", "stargate", "iterator", "cosmwasm_1_1", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "cosmwasm_2_1"}
@@ -654,8 +648,7 @@ func New(
 		wasmConfig,
 		supportedFeatures,
 		govAuthority,
-		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(querierRegistry, *app.GRPCQueryRouter(), appCodec)),
-		wasmkeeper.WithMessageEncoders(provwasm.MessageEncoders(encoderRegistry, logger)),
+		wasmkeeper.WithQueryPlugins(provwasm.QueryPlugins(*app.GRPCQueryRouter(), appCodec)),
 	)
 	app.WasmKeeper = &wasmKeeperInstance
 

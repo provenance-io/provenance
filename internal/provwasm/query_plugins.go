@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
 
 	provwasmtypes "github.com/provenance-io/provenance/x/wasm/types"
@@ -46,7 +45,7 @@ func (qr *QuerierRegistry) RegisterQuerier(route string, querier Querier) {
 }
 
 // QueryPlugins provides provenance query support for smart contracts.
-func QueryPlugins(registry *QuerierRegistry, queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) *wasmkeeper.QueryPlugins {
+func QueryPlugins(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) *wasmkeeper.QueryPlugins {
 	protoCdc, ok := cdc.(*codec.ProtoCodec)
 	if !ok {
 		panic(fmt.Errorf("codec must be *codec.ProtoCodec type: actual: %T", cdc))
@@ -55,40 +54,8 @@ func QueryPlugins(registry *QuerierRegistry, queryRouter baseapp.GRPCQueryRouter
 	stargateCdc := codec.NewProtoCodec(provwasmtypes.NewWasmInterfaceRegistry(protoCdc.InterfaceRegistry()))
 
 	return &wasmkeeper.QueryPlugins{
-		Custom:   customPlugins(registry),
 		Stargate: StargateQuerier(queryRouter, stargateCdc),
 		Grpc:     GrpcQuerier(queryRouter),
-	}
-}
-
-// Custom provenance queriers for CosmWasm integration.
-func customPlugins(registry *QuerierRegistry) wasmkeeper.CustomQuerier {
-	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
-		req := QueryRequest{}
-		if err := json.Unmarshal(request, &req); err != nil {
-			ctx.Logger().Error("failed to unmarshal query request", "err", err)
-			return nil, sdkerrors.ErrJSONUnmarshal.Wrap(err.Error())
-		}
-		query, exists := registry.queriers[req.Route]
-		if !exists {
-			ctx.Logger().Error("querier not found", "route", req.Route)
-			return nil, sdkerrors.ErrInvalidRequest.Wrapf("querier not found for route: %s", req.Route)
-		}
-		bz, err := query(ctx, req.Params, req.Version)
-		if err != nil {
-			ctx.Logger().Error("failed to execute query", "err", err)
-			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-		}
-		if len(bz) > maxQueryResultSize {
-			errm := "query result size limit exceeded"
-			ctx.Logger().Error(errm, "maxQueryResultSize", maxQueryResultSize)
-			return nil, sdkerrors.ErrInvalidRequest.Wrap(errm)
-		}
-		if !json.Valid(bz) {
-			ctx.Logger().Error("invalid querier JSON", "route", req.Route)
-			return nil, sdkerrors.ErrJSONMarshal.Wrapf("invalid querier JSON from route: %s", req.Route)
-		}
-		return bz, nil
 	}
 }
 
