@@ -18,9 +18,6 @@ import (
 	provwasmtypes "github.com/provenance-io/provenance/x/wasm/types"
 )
 
-// The maximum querier result size allowed, ~10MB.
-const maxQueryResultSize = (10 << 20) - 1
-
 // Querier describes behavior for provenance smart contract query support.
 type Querier func(ctx sdk.Context, query json.RawMessage, version string) ([]byte, error)
 
