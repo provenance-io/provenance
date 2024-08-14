@@ -15,12 +15,33 @@ permissions:
 jobs:
   changelog:
     runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'dependencies')
+    env:
+      # Getting the title directly in the run script opens an injection vulnerability.
+      # Using an env var for it (like this) prevents that vulnerability.
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_NUM: ${{ github.event.number }}
+      PR_BASE: ${{ github.event.pull_request.head.ref }}
+      PR_TARGET: ${{ github.event.pull_request.base.ref }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
         with:
           # Depending on your needs, you can use a token that will re-trigger workflows
           # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs
           token: ${{ secrets.BOT_CPR_PAT }}
+
+      - name: Fetch Target Branch
+        run: git fetch origin "${PR_TARGET}:${PR_TARGET}" --depth 1
+
+      - name: Generate entry
+        run: |
+          ./.changelog/dependabot-changelog.sh \
+            --verbose \
+            --pr "$PR_NUM" \
+            --title "$PR_TITLE" \
+            --head-branch "$PR_BASE" \
+            --target-branch "$PR_TARGET"
 
       # All commits must be signed, import key and sign commit of updated change log.
       - name: Import GPG key
@@ -32,12 +53,6 @@ jobs:
           passphrase: ${{ secrets.BOT_GPG_PRIVATE_KEY_PW }}
           git_user_signingkey: true
           git_commit_gpgsign: true
-
-      - uses: dangoslen/dependabot-changelog-helper@v3
-        with:
-          version: ${{ needs.setup.outputs.version }}
-          activationLabels: 'dependencies'
-          changelogPath: './CHANGELOG.md'
 
       # This step is required for committing the changes to your branch.
       # See https://github.com/stefanzweifel/git-auto-commit-action#commits-made-by-this-action-do-not-trigger-new-workflow-runs

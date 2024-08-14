@@ -277,6 +277,7 @@ lint:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "./client/*" -not -path "*.git*" -not -path "*.pb.go" | xargs gofmt -d -s
 	scripts/no-now-lint.sh
 	$(GO) mod verify
+	.changelog/lint-unreleased.sh
 
 lint-fix:
 	$(GOLANGCI_LINT) run --fix
@@ -301,9 +302,12 @@ linkify:
 	python ./scripts/linkify.py CHANGELOG.md
 
 update-tocs:
-	scripts/update-toc.sh x docs CONTRIBUTING.md
+	scripts/update-toc.sh x docs CONTRIBUTING.md .changelog/README.md
 
-.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs
+get-valid-sections:
+	.changelog/get-valid-sections.sh
+
+.PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs get-valid-sections
 
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
