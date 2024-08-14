@@ -51,13 +51,7 @@ or using the `make get-valid-sections` target.
 
 ## Unreleased
 
-* nothing
-
 See: [.changelog/unreleased](.changelog/unreleased)
-
-### Bug Fixes
-
-* Allow marker funds to be used via feegrant again [#2110](https://github.com/provenance-io/provenance/issues/2110).
 
 ---
 
