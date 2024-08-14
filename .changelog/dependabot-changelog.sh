@@ -126,7 +126,7 @@ where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
 [[ -n "$verbose" ]] && printf 'Looking for go.mod dependency changes.\n'
 # Run the script to create the entry from the changes in go.mod.
 # The $verbose variable is purposely not quoted so that it doesn't count as an arg if it's empty.
-"$where_i_am/get-dep-changes.sh" --pr "$pr" --name "$branch_fn" $verbose --force --target-branch "$target_branch"
+"$where_i_am/get-dep-changes.sh" --pr "$pr" --id "$branch_fn" $verbose --force --target-branch "$target_branch"
 ec=$?
 [[ -n "$verbose" ]] && printf 'Exit code from get-dep-changes.sh: %d\n' "$ec"
 
