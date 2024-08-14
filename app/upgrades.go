@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/google/uuid"
 
 	sdkmath "cosmossdk.io/math"
@@ -105,7 +107,9 @@ var upgrades = map[string]appUpgrade{
 			return vm, nil
 		},
 	},
-	"umber-rc2": {}, // upgrade for v1.19.0-rc3
+	"umber-rc2": {}, // not used.
+	"umber-rc3": {}, // not used.
+	"umber-rc4": {}, // upgrade for v1.19.0-rc5
 	"umber": { // upgrade for v1.19.0
 		Added:   []string{crisistypes.ModuleName, circuittypes.ModuleName, consensusparamtypes.ModuleName},
 		Deleted: []string{"reward"},
@@ -145,7 +149,14 @@ var upgrades = map[string]appUpgrade{
 
 			updateIBCClients(ctx, app)
 
+			err = addScopeNAVs(ctx, app, umberMainnetScopeNAVsFN)
+			if err != nil {
+				return nil, err
+			}
+
 			removeInactiveValidatorDelegations(ctx, app)
+
+			storeWasmCode(ctx, app)
 
 			return vm, nil
 		},
@@ -615,4 +626,46 @@ func addScopeNAVsWithHeight(ctx sdk.Context, app *App, scopeNAVs []ScopeNAV) {
 	}
 
 	ctx.Logger().Info(fmt.Sprintf("Successfully added %d of %d scope net asset value entries.", totalAdded, count))
+}
+
+// storeWasmCode will store the provided wasm contract.
+// TODO: Remove with the umber handlers.
+func storeWasmCode(ctx sdk.Context, app *App) {
+	ctx.Logger().Info("Storing the Funding Trading Bridge smart contract.")
+	defer func() {
+		ctx.Logger().Info("Done storing the Funding Trading Bridge smart contract.")
+	}()
+
+	codeBz, err := UpgradeFiles.ReadFile("upgrade_files/umber/funding_trading_bridge_smart_contract.wasm")
+	if err != nil {
+		ctx.Logger().Error("Could not read smart contract.", "error", err)
+		return
+	}
+
+	msg := &wasmtypes.MsgStoreCode{
+		Sender:                app.GovKeeper.GetAuthority(),
+		WASMByteCode:          codeBz,
+		InstantiatePermission: &wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeEverybody},
+	}
+	executeStoreCodeMsg(ctx, wasmkeeper.NewMsgServerImpl(app.WasmKeeper), msg)
+}
+
+// wasmMsgSrvr has just the StoreCode endpoint needed for this upgrade.
+// TODO: Remove with the umber handlers.
+type wasmMsgSrvr interface {
+	StoreCode(context.Context, *wasmtypes.MsgStoreCode) (*wasmtypes.MsgStoreCodeResponse, error)
+}
+
+// executeStoreCodeMsg executes a MsgStoreCode.
+// TODO: Remove with the umber handlers.
+func executeStoreCodeMsg(ctx sdk.Context, wasmMsgServer wasmMsgSrvr, msg *wasmtypes.MsgStoreCode) {
+	cacheCtx, writeCache := ctx.CacheContext()
+	resp, err := wasmMsgServer.StoreCode(cacheCtx, msg)
+	if err != nil {
+		ctx.Logger().Error("Could not store smart contract.", "error", err)
+		return
+	}
+	writeCache()
+	ctx.Logger().Info(fmt.Sprintf("Smart contract stored with codeID: %d and checksum: %q.",
+		resp.CodeID, fmt.Sprintf("%x", resp.Checksum)))
 }

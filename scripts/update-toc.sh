@@ -137,7 +137,7 @@ update_toc () {
   has_toc_loc="$( grep -q "$TOC_LOC_REGEX" "$filename" && printf 'YES' )"
   has_heading_two="$( grep -q '^##' "$filename" && printf 'YES' )"
 
-  tempfile="$( mktemp -t "$( sed 's/\//-/g' <<< 'x/metadata/spec/03_messages.md' )" )"
+  tempfile="$( mktemp -t "$( sed 's/\//-/g' <<< "$filename" )" )"
 
   # if there's no pre-defined TOC location, and no level 2 heading, put the TOC at the top.
   if [[ -z "$has_toc_loc" && -z "$has_heading_two" ]]; then
