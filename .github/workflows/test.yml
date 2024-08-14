@@ -31,6 +31,14 @@ jobs:
             go.mod
             go.sum
             .github/workflows/test.yml
+      # This setup-go action will cache/restore using a key with a hash of go.sum.
+      - uses: actions/setup-go@v5
+        id: setup-go
+        with:
+          go-version-file: 'go.mod'
+      - name: Populate Mod Cache
+        if: steps.setup-go.outputs.cache-hit != 'true'
+        run: go mod download
       - name: Define Variables
         id: def-vars
         run: |
@@ -80,9 +88,7 @@ jobs:
           path: ./pkgs.txt.part.04
     outputs:
       should-run: ${{ env.GIT_DIFF }}
-      go-version: '1.21'
       file-prefix: ${{ steps.def-vars.outputs.file-prefix }}
-
 
   tests:
     needs: setup-tests
@@ -104,7 +110,7 @@ jobs:
       - uses: actions/setup-go@v5
         if: needs.setup-tests.outputs.should-run
         with:
-          go-version: ${{ needs.setup-tests.outputs.go-version }}
+          go-version-file: 'go.mod'
       - uses: actions/download-artifact@v4
         if: needs.setup-tests.outputs.should-run
         with:
@@ -191,7 +197,7 @@ jobs:
       - uses: actions/setup-go@v5
         if: needs.setup-tests.outputs.should-run
         with:
-          go-version: ${{ needs.setup-tests.outputs.go-version }}
+          go-version-file: 'go.mod'
       - uses: actions/download-artifact@v4
         if: needs.setup-tests.outputs.should-run
         with:
