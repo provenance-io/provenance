@@ -25,6 +25,7 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -124,6 +125,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			bal(markertypes.MustGetMarkerAddress("lockedcoin"), coin(1000, "lockedcoin")),
 			bal(markertypes.MustGetMarkerAddress("propcoin"), coin(1000, "propcoin")),
 			bal(markertypes.MustGetMarkerAddress("authzhotdog"), coin(800, "authzhotdog")),
+			bal(markertypes.MustGetMarkerAddress("grantcoin"), coin(5000, s.cfg.BondDenom)),
 		)
 
 		return bankGenState
@@ -226,6 +228,25 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				Supply:                 sdkmath.NewInt(3000),
 				Denom:                  s.holderDenom,
 				AllowForcedTransfer:    true,
+			},
+			{
+				BaseAccount: &authtypes.BaseAccount{
+					Address:       markertypes.MustGetMarkerAddress("grantcoin").String(),
+					AccountNumber: 160,
+					Sequence:      0,
+				},
+				Status:                 markertypes.StatusActive,
+				SupplyFixed:            false,
+				MarkerType:             markertypes.MarkerType_Coin,
+				AllowGovernanceControl: true,
+				Supply:                 sdkmath.NewInt(0),
+				Denom:                  "grantcoin",
+				AllowForcedTransfer:    false,
+				AccessControl: []markertypes.AccessGrant{
+					*markertypes.NewAccessGrant(s.accountAddresses[0], []markertypes.Access{
+						markertypes.Access_Admin, markertypes.Access_Deposit, markertypes.Access_Withdraw,
+					}),
+				},
 			},
 		}
 		markerData.Markers = append(markerData.Markers, newMarkers...)
@@ -2599,4 +2620,45 @@ func (s *IntegrationTestSuite) TestUpdateMarkerParamsCmd() {
 				Execute(s.T(), s.testnet)
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestPayingWithFeegrant() {
+	curClientCtx := s.testnet.Validators[0].ClientCtx
+	defer func() {
+		s.testnet.Validators[0].ClientCtx = curClientCtx
+	}()
+	s.testnet.Validators[0].ClientCtx = s.testnet.Validators[0].ClientCtx.WithKeyring(s.keyring)
+
+	setupOK := s.Run("Create a feegrant with the marker as the granter", func() {
+		cmd := markercli.GetCmdFeeGrant()
+		args := []string{
+			"grantcoin",
+			s.accountAddresses[0].String(),
+			s.accountAddresses[2].String(),
+			fmt.Sprintf("--%s=%s", markercli.FlagSpendLimit, sdk.NewInt64Coin(s.cfg.BondDenom, 5000)),
+			fmt.Sprintf("--%s=%s", markercli.FlagExpiration, getFormattedExpiration(oneYear)),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String()),
+		}
+		testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
+	})
+
+	s.Run("Attempt to use the feegrant for a send", func() {
+		if !setupOK {
+			s.T().Skipf("Skipping due to setup failure.")
+		}
+		addrCdc := s.cfg.Codec.InterfaceRegistry().SigningContext().AddressCodec()
+		cmd := bankcli.NewSendTxCmd(addrCdc)
+		args := []string{
+			s.accountAddresses[2].String(),
+			s.accountAddresses[1].String(),
+			sdk.NewInt64Coin(s.cfg.BondDenom, 17).String(),
+			"--" + flags.FlagFees, sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 10)).String(),
+			"--" + flags.FlagBroadcastMode, flags.BroadcastSync,
+			"--" + flags.FlagSkipConfirmation,
+			"--fee-granter", markertypes.MustGetMarkerAddress("grantcoin").String(),
+		}
+		testcli.NewTxExecutor(cmd, args).Execute(s.T(), s.testnet)
+	})
 }
