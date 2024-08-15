@@ -263,6 +263,12 @@ func (s *ConfigTestSuite) TestConfigCmdGet() {
 		monikerLineMatch := regexp.MustCompile(`(?m)^moniker="([^"]*)"$`).FindStringSubmatch(noArgsOut)
 		s.Require().Len(monikerLineMatch, 2, "moniker line regexp sub-matches")
 		moniker := monikerLineMatch[1]
+		// The CometBFT version (not sure why that's in a config file, but whatever) changes each time the CometBFT
+		// library is bumped. So we'll get it and make sure it's in the right format, but we won't care about the
+		// specific value it has. The line should look something like this: `version="0.38.11"`.
+		versionLineMatch := regexp.MustCompile(`(?m)^version="([^"]*[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+[^"]*)"$`).FindStringSubmatch(noArgsOut)
+		s.Require().Len(versionLineMatch, 2, "CometBFT version line regexp sub-matches")
+		version := versionLineMatch[1]
 
 		expectedAll := s.makeMultiLine(
 			s.makeAppConfigHeaderLines(),
@@ -322,9 +328,9 @@ log_level="info"`,
 priv_validator_key_file="config/priv_validator_key.json"
 priv_validator_laddr=""
 priv_validator_state_file="data/priv_validator_state.json"
-proxy_app="tcp://127.0.0.1:26658"
-version="0.38.10"
-blocksync.version="v0"
+proxy_app="tcp://127.0.0.1:26658"`,
+			fmt.Sprintf("version=%q", version),
+			`blocksync.version="v0"
 consensus.create_empty_blocks=true
 consensus.create_empty_blocks_interval="0s"
 consensus.double_sign_check_height=0
