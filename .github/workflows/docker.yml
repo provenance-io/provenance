@@ -73,7 +73,6 @@ jobs:
           build-env: |
             - "WITH_LEDGER=false"
             - "BUILD_TAGS=muslc musl dynamic"
-            - "BASE_VERSION=1.23"
           skip: ${{ github.event_name == 'pull_request' }}
 
   docker:
