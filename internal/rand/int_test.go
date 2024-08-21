@@ -82,6 +82,7 @@ func TestIntBetween(t *testing.T) {
 			assert.True(t, seen[tc.max], "maximum value %d in seen map", tc.max)
 
 			seenVals := slices.Collect(maps.Keys(seen))
+			slices.Sort(seenVals)
 			// Make sure the smallest and largest are as expected.
 			assert.Equal(t, tc.min, seenVals[0], "smallest number generated")
 			assert.Equal(t, tc.max, seenVals[len(seenVals)-1], "largest number generated")
