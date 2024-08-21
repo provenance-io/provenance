@@ -93,8 +93,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - name: Install runsim
-        run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
       - name: Update provwasm contract
         run: make download-smart-contracts
       - name: Test
