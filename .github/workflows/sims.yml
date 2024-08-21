@@ -84,8 +84,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - name: Display go version
-        run: go version
       - name: Install runsim
         if: steps.go-cache-setup.outputs.cache-hit != 'true'
         run: export GO111MODULE="on" && go get github.com/cosmos/tools/cmd/runsim@v1.0.0
@@ -123,8 +121,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - name: Display go version
-        run: go version
       - name: Update provwasm contract
         run: make download-smart-contracts
       - name: Test
@@ -182,8 +178,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - name: Display go version
-        run: go version
       - name: Update provwasm contract
         run: make download-smart-contracts
       - name: Test
@@ -226,8 +220,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - name: Display go version
-        run: go version
       - name: Update provwasm contract
         run: make download-smart-contracts
       - name: Test
