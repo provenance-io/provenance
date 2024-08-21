@@ -81,7 +81,7 @@ func SimulateMsgAddAttribute(simState module.SimulationState, _ keeper.Keeper, a
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAddAttributeRequest{}), "no name records available to create under"), nil, nil
 		}
 
-		t := types.AttributeType(r.Intn(9))
+		t := types.AttributeType(r.Intn(9)) //nolint:gosec // G115: r.Intn(9) will always fit in an int32 (implicit cast here).
 		msg := types.NewMsgAddAttributeRequest(
 			randomRecord.GetAddress(),
 			simAccount.Address,
@@ -107,7 +107,7 @@ func SimulateMsgUpdateAttribute(simState module.SimulationState, k keeper.Keeper
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateAttributeRequest{}), "no attributes available to delete"), nil, nil
 		}
 
-		t := types.AttributeType(r.Intn(9))
+		t := types.AttributeType(r.Intn(9)) //nolint:gosec // G115: r.Intn(9) will always fit in an int32 (implicit cast here).
 		msg := types.NewMsgUpdateAttributeRequest(
 			randomAttribute.GetAddress(),
 			simAccount.Address,
@@ -169,7 +169,7 @@ func SimulateMsgSetAccountData(simState module.SimulationState, k keeper.Keeper,
 		// 9 in 10 chance that it will be between 1 and MaxValueLen characters.
 		value := ""
 		if r.Intn(10) != 0 {
-			maxLen := uint(k.GetMaxValueLength(ctx))
+			maxLen := k.GetMaxValueLength(ctx)
 			if maxLen > 500 {
 				maxLen = 500
 			}

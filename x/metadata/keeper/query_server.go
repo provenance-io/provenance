@@ -293,7 +293,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 			return false
 		})
 		if itErr != nil {
-			return &retval, sdkerrors.ErrInvalidRequest.Wrapf(fmt.Sprintf("error getting sessions for scope with address %s: %v", scopeAddr, itErr))
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("error getting sessions for scope with address %s: %v", scopeAddr, itErr)
 		}
 	default:
 		return &retval, sdkerrors.ErrInvalidRequest.Wrap("empty request parameters")

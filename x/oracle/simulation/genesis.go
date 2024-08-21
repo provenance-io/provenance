@@ -22,8 +22,8 @@ func PortFn(r *rand.Rand) string {
 	if r.Intn(2) > 0 {
 		return "oracle"
 	}
-	length := uint64(internalrand.IntBetween(r, 6, 10))
-	return strings.ToLower(simtypes.RandStringOfLength(r, int(length)))
+	length := internalrand.IntBetween(r, 6, 10)
+	return strings.ToLower(simtypes.RandStringOfLength(r, length))
 }
 
 // OracleFn randomized oracle address

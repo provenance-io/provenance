@@ -37,7 +37,7 @@ func TestSetConfig(t *testing.T) {
 		seal        bool
 		expPath     string
 		expHRP      string
-		expCoinType int
+		expCoinType uint32
 		expPanic    string
 	}{
 		{
@@ -151,8 +151,8 @@ func TestSetConfig(t *testing.T) {
 				assert.Equal(t, expConsPubPre, consPubPre, "sdkConfig.GetBech32ConsensusPubPrefix()")
 
 				assert.Equal(t, tc.expPath, fullBIP44Path, "sdkConfig.GetFullBIP44Path()")
-				assert.Equal(t, tc.expCoinType, app.CoinType, "CoinType")
-				assert.Equal(t, tc.expCoinType, int(coinType), "sdkConfig.GetCoinType()")
+				assert.Equal(t, tc.expCoinType, app.CoinType, "CoinType - Exp = %d, Act = %d", tc.expCoinType, app.CoinType)
+				assert.Equal(t, tc.expCoinType, coinType, "sdkConfig.GetCoinType() - Exp = %d, Act = %d", tc.expCoinType, coinType)
 				assert.Equal(t, 44, app.Purpose, "Purpose")
 				assert.Equal(t, 44, int(purpose), "sdkConfig.GetPurpose()")
 			}

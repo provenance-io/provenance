@@ -9,13 +9,13 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
+    - copyloopvar
     - depguard
     - dogsled
     - durationcheck
     - errcheck
     - errorlint
     - errname
-    - exportloopref
 #    - forcetypeassert
     - gci
     - goconst
@@ -150,7 +150,9 @@ linters-settings:
         allow:
           - $gostd
           - github.com/stretchr/testify
-
+  errcheck:
+    exclude-functions:
+      - (fmt.State).Write
   gci:
     custom-order: true
     sections:

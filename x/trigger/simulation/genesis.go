@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 
@@ -135,26 +136,26 @@ func RandomGasLimits(r *rand.Rand, triggers []types.Trigger, queuedTriggers []ty
 	return rv
 }
 
-// randomTriggerAndQueueIDs generates random unique ids (1 to max inclusive) and divvies them up with the provided counts.
-func randomTriggerAndQueueIDs(r *rand.Rand, triggerCount, queueCount, max int) ([]uint64, []uint64) {
-	ids := randomTriggerIDs(r, triggerCount+queueCount, max)
+// randomTriggerAndQueueIDs generates random unique ids (1 to maxCount inclusive) and divvies them up with the provided counts.
+func randomTriggerAndQueueIDs(r *rand.Rand, triggerCount, queueCount, maxCount int) ([]uint64, []uint64) {
+	ids := randomTriggerIDs(r, triggerCount+queueCount, maxCount)
 	return ids[:triggerCount], ids[triggerCount:]
 }
 
-// randomTriggerIDs generates count different random trigger ids between 1 and max inclusive
-// If count > max, only max will be returned.
-func randomTriggerIDs(r *rand.Rand, count int, max int) []uint64 {
-	if count > max {
-		panic(fmt.Errorf("cannot generate %d unique trigger ids with a max of %d", count, max))
+// randomTriggerIDs generates count different random trigger ids between 1 and maxCount inclusive
+// If count > maxCount, only maxCount will be returned.
+func randomTriggerIDs(r *rand.Rand, count int, maxCount int) []uint64 {
+	if count > maxCount {
+		panic(fmt.Errorf("cannot generate %d unique trigger ids with a max of %d", count, maxCount))
 	}
 	if count == 0 {
 		return []uint64{}
 	}
 	rv := make([]uint64, count)
-	// If count is 33+% of max, generate a permutation up to max (exclusive).
-	// Then increment each of the first <count> of them (since we want 1 to max inclusive) and return those.
-	if max/3 <= count {
-		nums := r.Perm(max)
+	// If count is 33+% of maxCount, generate a permutation up to maxCount (exclusive).
+	// Then increment each of the first <count> of them (since we want 1 to maxCount inclusive) and return those.
+	if maxCount/3 <= count {
+		nums := r.Perm(maxCount)
 		for i := range rv {
 			rv[i] = uint64(nums[i]) + 1
 		}
@@ -165,7 +166,7 @@ func randomTriggerIDs(r *rand.Rand, count int, max int) []uint64 {
 	seen[0] = true
 	for i := range rv {
 		for seen[rv[i]] {
-			rv[i] = uint64(r.Intn(max) + 1)
+			rv[i] = uint64(r.Intn(maxCount) + 1)
 		}
 		seen[rv[i]] = true
 	}
@@ -202,7 +203,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 		triggerID = uint64(numIniTrig) + uint64(numIniTrigQueued)
 	}
 
-	triggerIDs, queueTriggerIDs := randomTriggerAndQueueIDs(simState.Rand, numIniTrig, numIniTrigQueued, int(triggerID))
+	if triggerID > uint64(math.MaxInt) {
+		// This should only ever happen if using a pre-defined value for the trigger id.
+		panic(fmt.Errorf("cannot run sims with a %s param [%d] larger than max int (%d)", TriggerID, triggerID, math.MaxInt))
+	}
+	triggerIDInt := int(triggerID) //nolint:gosec // G115: Overflow handled above.
+	triggerIDs, queueTriggerIDs := randomTriggerAndQueueIDs(simState.Rand, numIniTrig, numIniTrigQueued, triggerIDInt)
 	var triggers []types.Trigger
 	simState.AppParams.GetOrGenerate(
 		Triggers, &triggers, simState.Rand,

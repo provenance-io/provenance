@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -33,7 +32,7 @@ func (k Keeper) Attribute(c context.Context, req *types.QueryAttributeRequest) (
 		return nil, status.Error(codes.InvalidArgument, "empty attribute name")
 	}
 	if err := types.ValidateAttributeAddress(req.Account); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("invalid account address: %v", err))
+		return nil, status.Errorf(codes.InvalidArgument, "invalid account address: %v", err)
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	attributes := make([]types.Attribute, 0)
@@ -67,7 +66,7 @@ func (k Keeper) Attributes(c context.Context, req *types.QueryAttributesRequest)
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	if err := types.ValidateAttributeAddress(req.Account); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("invalid account address: %v", err))
+		return nil, status.Errorf(codes.InvalidArgument, "invalid account address: %v", err)
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	attributes := make([]types.Attribute, 0)
@@ -107,7 +106,7 @@ func (k Keeper) Scan(c context.Context, req *types.QueryScanRequest) (*types.Que
 		return nil, status.Error(codes.InvalidArgument, "empty attribute name suffix")
 	}
 	if err := types.ValidateAttributeAddress(req.Account); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("invalid account address: %v", err))
+		return nil, status.Errorf(codes.InvalidArgument, "invalid account address: %v", err)
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	attributes := make([]types.Attribute, 0)

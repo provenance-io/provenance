@@ -35,7 +35,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 // GetMaxSupply returns the current parameter value for the max allowed supply.
-func (k Keeper) GetMaxSupply(ctx sdk.Context) (max sdkmath.Int) {
+func (k Keeper) GetMaxSupply(ctx sdk.Context) sdkmath.Int {
 	return k.GetParams(ctx).MaxSupply
 }
 

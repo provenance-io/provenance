@@ -38,7 +38,7 @@ func (k Keeper) AllMarkers(c context.Context, req *types.QueryAllMarkersRequest)
 		if err == nil {
 			anyMsg, anyErr := codectypes.NewAnyWithValue(result)
 			if anyErr != nil {
-				return status.Errorf(codes.Internal, anyErr.Error())
+				return status.Error(codes.Internal, anyErr.Error())
 			}
 			markers = append(markers, anyMsg)
 		}
@@ -62,7 +62,7 @@ func (k Keeper) Marker(c context.Context, req *types.QueryMarkerRequest) (*types
 	}
 	anyMsg, err := codectypes.NewAnyWithValue(marker)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QueryMarkerResponse{Marker: anyMsg}, nil
 }

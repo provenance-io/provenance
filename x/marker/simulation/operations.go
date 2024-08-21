@@ -109,10 +109,10 @@ func SimulateMsgAddMarker(k keeper.Keeper, args *WeightedOpsArgs) simtypes.Opera
 			sdkmath.NewIntFromBigInt(sdkmath.ZeroInt().BigInt().Rand(r, k.GetMaxSupply(ctx).BigInt())),
 			simAccount.Address,
 			mgrAccount.Address,
-			types.MarkerType(r.Intn(2)+1), // coin or restricted_coin
-			r.Intn(2) > 0,                 // fixed supply
-			r.Intn(2) > 0,                 // allow gov
-			r.Intn(2) > 0,                 // allow forced transfer
+			randMarkerType(r), // coin or restricted_coin
+			r.Intn(2) > 0,     // fixed supply
+			r.Intn(2) > 0,     // allow gov
+			r.Intn(2) > 0,     // allow forced transfer
 			[]string{},
 			0,
 			0,
@@ -199,7 +199,7 @@ func SimulateMsgAddFinalizeActivateMarker(k keeper.Keeper, args *WeightedOpsArgs
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		mgrAccount, _ := simtypes.RandomAcc(r, accs)
 		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
-		markerType := types.MarkerType(r.Intn(2) + 1) // coin or restricted_coin
+		markerType := randMarkerType(r)
 		// random access grants
 		grants := randomAccessGrants(r, accs, 100, markerType)
 		msg := types.NewMsgAddFinalizeActivateMarkerRequest(
@@ -233,8 +233,8 @@ func SimulateMsgAddMarkerProposal(k keeper.Keeper, args *WeightedOpsArgs) simtyp
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		denom := randomUnrestrictedDenom(r, k.GetUnrestrictedDenomRegex(ctx))
 
-		markerStatus := types.MarkerStatus(r.Intn(3) + 1)
-		markerType := types.MarkerType(r.Intn(2) + 1)
+		markerStatus := types.MarkerStatus(r.Intn(3) + 1) //nolint:gosec // G115: 1-3 always fits in a uint32 (implicit cast).
+		markerType := randMarkerType(r)
 		msg := &types.MsgAddMarkerRequest{
 			Amount: sdk.Coin{
 				Denom:  denom,
@@ -325,7 +325,7 @@ func SimulateMsgSetAccountData(k keeper.Keeper, args *WeightedOpsArgs) simtypes.
 		// 1 in 10 chance that the value stays "".
 		// 9 in 10 chance that it will be between 1 and MaxValueLen characters.
 		if r.Intn(10) != 0 {
-			maxLen := uint(args.AttrK.GetMaxValueLength(ctx))
+			maxLen := args.AttrK.GetMaxValueLength(ctx)
 			if maxLen > 500 {
 				maxLen = 500
 			}
@@ -433,10 +433,10 @@ func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
 	if len(matches) != 3 {
 		panic("expected two number as range expression in unrestricted denom expression")
 	}
-	min, _ := strconv.ParseInt(matches[1], 10, 32)
-	max, _ := strconv.ParseInt(matches[2], 10, 32)
+	minLen, _ := strconv.ParseInt(matches[1], 10, 32)
+	maxLen, _ := strconv.ParseInt(matches[2], 10, 32)
 
-	return simtypes.RandStringOfLength(r, int(randomInt63(r, max-min)+min))
+	return simtypes.RandStringOfLength(r, int(randomInt63(r, maxLen-minLen)+minLen))
 }
 
 // randomAccessGrants generates random access grants for randomly selected accounts.
@@ -530,11 +530,15 @@ func randomAccWithAccess(r *rand.Rand, marker types.MarkerAccountI, accs []simty
 	return simtypes.Account{}, false
 }
 
-func randomInt63(r *rand.Rand, max int64) (result int64) {
-	if max == 0 {
+func randomInt63(r *rand.Rand, maxVal int64) (result int64) {
+	if maxVal == 0 {
 		return 0
 	}
-	return r.Int63n(max)
+	return r.Int63n(maxVal)
+}
+
+func randMarkerType(r *rand.Rand) types.MarkerType {
+	return types.MarkerType(r.Intn(2) + 1) //nolint:gosec // G115: Either 1 or 2, so always fits in int32 (implicit cast).
 }
 
 // WeightedOpsArgs holds all the args provided to WeightedOperations so that they can be passed on later more easily.

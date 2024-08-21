@@ -36,9 +36,9 @@ func GenEnableGovernance(r *rand.Rand) bool {
 
 // GenUnrestrictedDenomRegex returns a randomized length focused string for the unrestricted denom validation expression
 func GenUnrestrictedDenomRegex(r *rand.Rand) string {
-	min := r.Int31n(16) + 3
-	max := r.Int31n(64-min) + min
-	return fmt.Sprintf(`[a-zA-Z][a-zA-Z0-9\\-\\.]{%d,%d}`, min, max)
+	minLen := r.Int31n(16) + 3
+	maxLen := r.Int31n(64-minLen) + minLen
+	return fmt.Sprintf(`[a-zA-Z][a-zA-Z0-9\\-\\.]{%d,%d}`, minLen, maxLen)
 }
 
 // RandomizedGenState generates a random GenesisState for marker

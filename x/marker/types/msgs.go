@@ -424,7 +424,7 @@ func (msg MsgAddFinalizeActivateMarkerRequest) ValidateBasic() error {
 	}
 
 	// since this is a one shot process should have 1 access list member, to have any value for a marker
-	if msg.AccessList == nil || len(msg.AccessList) == 0 {
+	if len(msg.AccessList) == 0 {
 		return fmt.Errorf("since this will activate the marker, must have access list defined")
 	}
 

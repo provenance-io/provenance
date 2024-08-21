@@ -34,6 +34,6 @@ func (k Keeper) SetOSLocatorParams(ctx sdk.Context, params types.OSLocatorParams
 }
 
 // GetMaxURILength returns the configured parameter for max URI length on a locator record
-func (k Keeper) GetMaxURILength(ctx sdk.Context) (max uint32) {
+func (k Keeper) GetMaxURILength(ctx sdk.Context) uint32 {
 	return k.GetOSLocatorParams(ctx).MaxUriLength
 }

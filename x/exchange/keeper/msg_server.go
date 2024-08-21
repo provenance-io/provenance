@@ -330,7 +330,7 @@ func (k MsgServer) RejectPayments(goCtx context.Context, msg *exchange.MsgReject
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	err = k.Keeper.RejectPayments(ctx, target, sources)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf(err.Error())
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	return &exchange.MsgRejectPaymentsResponse{}, nil

@@ -120,9 +120,9 @@ func (k Keeper) SetParams(ctx sdk.Context, params *exchange.Params) {
 	deleteAllParamsSplits(store)
 	var feeCreate, feeAccept []sdk.Coin
 	if params != nil {
-		setParamsSplit(store, "", uint16(params.DefaultSplit))
+		setParamsSplit(store, "", uint16(params.DefaultSplit)) //nolint:gosec // G115: Validated elsewhere to be 10,000 max.
 		for _, split := range params.DenomSplits {
-			setParamsSplit(store, split.Denom, uint16(split.Split))
+			setParamsSplit(store, split.Denom, uint16(split.Split)) //nolint:gosec // G115: Validated elsewhere to be 10,000 max.
 		}
 		feeCreate = params.FeeCreatePaymentFlat
 		feeAccept = params.FeeAcceptPaymentFlat
@@ -194,11 +194,11 @@ func (k Keeper) GetExchangeSplit(ctx sdk.Context, denom string) uint16 {
 	if len(denom) > 0 && len(defaults.DenomSplits) > 0 {
 		for _, ds := range defaults.DenomSplits {
 			if ds.Denom == denom {
-				return uint16(ds.Split)
+				return uint16(ds.Split) //nolint:gosec // G115: Validated elsewhere to be 10,000 max.
 			}
 		}
 	}
 
 	// Lastly, use the default from the defaults.
-	return uint16(defaults.DefaultSplit)
+	return uint16(defaults.DefaultSplit) //nolint:gosec // G115: Validated elsewhere to be 10,000 max.
 }

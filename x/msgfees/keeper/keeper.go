@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/constraints"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -181,9 +182,9 @@ func (k Keeper) ConvertDenomToHash(ctx sdk.Context, coin sdk.Coin) (sdk.Coin, er
 	conversionDenom := k.GetConversionFeeDenom(ctx)
 	switch coin.Denom {
 	case types.UsdDenom:
-		nhashPerMil := int64(k.GetNhashPerUsdMil(ctx))
-		amount := coin.Amount.MulRaw(nhashPerMil)
-		msgFeeCoin := sdk.NewInt64Coin(conversionDenom, amount.Int64())
+		nhashPerMil := sdkmath.NewIntFromUint64(k.GetNhashPerUsdMil(ctx))
+		amount := coin.Amount.Mul(nhashPerMil)
+		msgFeeCoin := sdk.NewCoin(conversionDenom, amount)
 		return msgFeeCoin, nil
 	case conversionDenom:
 		return coin, nil
@@ -309,10 +310,10 @@ func DetermineBips(recipient string, recipientBasisPoints string) (uint32, error
 		if err != nil {
 			return bips, types.ErrInvalidBipsValue.Wrap(err.Error())
 		}
-		bips = uint32(bips64)
-		if bips > 10_000 {
+		if bips64 > 10_000 {
 			return 0, types.ErrInvalidBipsValue.Wrap(fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", recipientBasisPoints).Error())
 		}
+		bips = uint32(bips64) //nolint:gosec // G115: We know bips64 <= 10,000 so it'll fit into an int32 just fine.
 	} else if len(recipientBasisPoints) == 0 && len(recipient) > 0 {
 		bips = types.DefaultMsgFeeBips
 	}
