@@ -29,6 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/setup-qemu-action@v3
