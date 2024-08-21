@@ -3,6 +3,8 @@ package exchange
 import (
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -13,7 +15,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	internalcollections "github.com/provenance-io/provenance/internal/collections"
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
@@ -3153,7 +3154,7 @@ func TestPermission_Validate(t *testing.T) {
 	}
 
 	t.Run("all values have a test case", func(t *testing.T) {
-		allVals := internalcollections.Keys(Permission_name)
+		allVals := slices.Collect(maps.Keys(Permission_name))
 		sort.Slice(allVals, func(i, j int) bool {
 			return allVals[i] < allVals[j]
 		})
@@ -3330,7 +3331,7 @@ func TestParsePermission(t *testing.T) {
 	}
 
 	t.Run("all values have a test case", func(t *testing.T) {
-		allVals := internalcollections.Keys(Permission_name)
+		allVals := slices.Collect(maps.Keys(Permission_name))
 		sort.Slice(allVals, func(i, j int) bool {
 			return allVals[i] < allVals[j]
 		})
