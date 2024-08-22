@@ -498,7 +498,7 @@ proto-gen:
 			sh ./scripts/protocgen.sh; \
 	fi
 	mv .go.mod.bak go.mod
-	$(GO)go mod tidy
+	$(GO) mod tidy
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
