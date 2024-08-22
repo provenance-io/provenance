@@ -18,7 +18,7 @@ Built executables are placed in the `build/` directory.
 
 ### Go
 
-Building `provenanced` requires [Go 1.21+](https://golang.org/dl/) (or higher).
+Building `provenanced` requires [Go 1.23](https://golang.org/dl/) (specifically).
 
 ## Building or Installing `provenanced`
 

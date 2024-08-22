@@ -7,8 +7,8 @@ import (
 const (
 	AccountAddressPrefixMainNet = "pb"
 	AccountAddressPrefixTestNet = "tp"
-	CoinTypeMainNet             = 505
-	CoinTypeTestNet             = 1
+	CoinTypeMainNet             = uint32(505)
+	CoinTypeTestNet             = uint32(1)
 	Purpose                     = 44
 )
 
@@ -39,7 +39,7 @@ func SetConfig(testnet bool, seal bool) {
 	ConsNodePubKeyPrefix = AccountAddressPrefix + "valconspub"
 
 	config := sdk.GetConfig()
-	config.SetCoinType(uint32(CoinType))
+	config.SetCoinType(CoinType)
 	config.SetPurpose(Purpose)
 	config.SetBech32PrefixForAccount(AccountAddressPrefix, AccountPubKeyPrefix)
 	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)

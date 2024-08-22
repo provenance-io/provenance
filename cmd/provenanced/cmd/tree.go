@@ -26,7 +26,7 @@ func GetTreeCmd() *cobra.Command {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("command not found: %q", args)
 			}
-			cmd.Printf(strings.Join(cmds, "\n") + "\n")
+			cmd.Printf("%s\n", strings.Join(cmds, "\n"))
 			return nil
 		},
 		DisableFlagsInUseLine: true,

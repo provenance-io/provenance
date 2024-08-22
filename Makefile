@@ -34,11 +34,11 @@ HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
-# Only support go version 1.21
+# Only support go version 1.23
+SUPPORTED_GO_MAJOR_VERSION = 1
+SUPPORTED_GO_MINOR_VERSION = 23
 GO_MAJOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
 GO_MINOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
-SUPPORTED_GO_MAJOR_VERSION = 1
-SUPPORTED_GO_MINOR_VERSION = 21
 GO_VERSION_VALIDATION_ERR_MSG = Golang version $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION) is not supported, you must use $(SUPPORTED_GO_MAJOR_VERSION).$(SUPPORTED_GO_MINOR_VERSION)
 
 # The below include contains the tools target.
@@ -128,7 +128,7 @@ all: build format lint test
 ##############################
 
 # Install puts the binaries in the local environment path.
-install: go.sum
+install: validate-go-version go.sum
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) install $(BUILD_FLAGS) ./cmd/provenanced
 
 build: validate-go-version go.sum
@@ -222,7 +222,7 @@ $(RELEASE_PLAN): $(RELEASE_CHECKSUM)
 build-release-libwasm: $(RELEASE_WASM)
 
 $(RELEASE_WASM): $(RELEASE_BIN)
-	go mod vendor && \
+	$(GO) mod vendor && \
 	cp vendor/github.com/CosmWasm/wasmvm/v2/internal/api/$(LIBWASMVM) $(RELEASE_BIN)
 
 .PHONY: build-release-bin
@@ -482,7 +482,7 @@ proto-gen:
 			sh ./scripts/protocgen.sh; \
 	fi
 	mv .go.mod.bak go.mod
-	go mod tidy
+	$(GO)go mod tidy
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
@@ -492,7 +492,7 @@ proto-swagger-gen:
 		docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 			sh ./scripts/protoc-swagger-gen.sh; \
 	fi
-	go mod tidy
+	$(GO) mod tidy
 
 proto-format:
 	@echo "Formatting Protobuf files"

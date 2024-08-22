@@ -73,8 +73,7 @@ func (msg MsgAssessCustomMsgFeeRequest) GetBips() (uint32, error) {
 			return 0, fmt.Errorf("recipient basis points can only be between 0 and 10,000 : %v", msg.RecipientBasisPoints)
 		}
 	}
-
-	return uint32(bips), err
+	return uint32(bips), err //nolint:gosec // G115: ParseUint bitsize is 32, so we know this is okay.
 }
 
 func NewMsgAddMsgFeeProposalRequest(msgTypeURL string, additionalFee sdk.Coin, recipient string, recipientBasisPoints string, authority string) *MsgAddMsgFeeProposalRequest {

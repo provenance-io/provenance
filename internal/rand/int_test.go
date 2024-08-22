@@ -2,11 +2,11 @@ package rand
 
 import (
 	"fmt"
+	"maps"
 	"math/rand"
 	"slices"
 	"testing"
 
-	internalcollections "github.com/provenance-io/provenance/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -81,7 +81,7 @@ func TestIntBetween(t *testing.T) {
 			assert.True(t, seen[tc.min], "minimum value %d in seen map", tc.min)
 			assert.True(t, seen[tc.max], "maximum value %d in seen map", tc.max)
 
-			seenVals := internalcollections.Keys(seen)
+			seenVals := slices.Collect(maps.Keys(seen))
 			slices.Sort(seenVals)
 			// Make sure the smallest and largest are as expected.
 			assert.Equal(t, tc.min, seenVals[0], "smallest number generated")

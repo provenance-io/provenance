@@ -38,6 +38,7 @@ func LogOperationMsg(t *testing.T, operationMsg simtypes.OperationMsg, msg strin
 	)
 }
 
+// GenerateTestingAccounts generates n new accounts, creates them (in state) and gives each 1 million power worth of bond tokens.
 func GenerateTestingAccounts(t *testing.T, ctx sdk.Context, app *app.App, r *rand.Rand, n int) []simtypes.Account {
 	return GenerateTestingAccountsWithPower(t, ctx, app, r, n, 1_000_000)
 }
@@ -131,7 +132,6 @@ func (a SimTestHelper) WithTestingAccountsWithPower(n int, power int64) *SimTest
 	return &a
 }
 
-// GenerateTestingAccounts generates n new accounts, creates them (in state) and gives each 1 million power worth of bond tokens.
 // ExpectedWeightedOp is the various aspects of a simulation.WeightedOperation to check.
 type ExpectedWeightedOp struct {
 	// Weight is the expected WeightedOperation.Weight.
@@ -298,7 +298,7 @@ func (a SimTestHelper) AssertSimOp(expected ExpectedOp, opMaker func() simtypes.
 	if !assert.NotPanics(a.T, testFunc, "executing the simtypes.Operation(...)") {
 		return nil, fOps, false
 	}
-	LogOperationMsg(a.T, opMsg, opDesc)
+	LogOperationMsg(a.T, opMsg, "%s", opDesc)
 
 	// Check the error and number of future ops.
 	ok := true

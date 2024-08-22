@@ -55,7 +55,6 @@ jobs:
       version: ${{ steps.vars.outputs.version }}
       is_release: ${{ steps.vars.outputs.is_release }}
       prerelease: ${{ steps.vars.outputs.prerelease }}
-      go_version: '1.21'
 
   build_osx:
     runs-on: macos-latest
@@ -68,7 +67,7 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ needs.build_init.outputs.go_version }}
+          go-version-file: 'go.mod'
       - name: Build osx binary
         run: |
           export VERSION=${{ needs.build_init.outputs.version }}
@@ -93,7 +92,7 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ needs.build_init.outputs.go_version }}
+          go-version-file: 'go.mod'
       - name: Install deps
         run: |
           sudo apt-get update
@@ -163,7 +162,7 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ needs.build_init.outputs.go_version }}
+          go-version-file: 'go.mod'
       - name: Download linux zip artifact
         uses: actions/download-artifact@v4
         with:

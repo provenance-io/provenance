@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -19,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/provenance-io/provenance/app"
-	internalcollections "github.com/provenance-io/provenance/internal/collections"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/hold"
 	"github.com/provenance-io/provenance/x/hold/keeper"
@@ -1529,7 +1530,7 @@ func (s *TestSuite) TestVestingAndHoldOverTime() {
 	}
 
 	// Put all the step values in order.
-	steps := internalcollections.Keys(stepsMap)
+	steps := slices.Collect(maps.Keys(stepsMap))
 	sort.Slice(steps, func(i, j int) bool {
 		return steps[i] < steps[j]
 	})

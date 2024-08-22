@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -113,7 +114,8 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	nav := types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdMills)), msg.Volume)
+	usdMills := sdkmath.NewIntFromUint64(msg.UsdMills)
+	nav := types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills), msg.Volume)
 	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{nav}, types.ModuleName)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
@@ -515,7 +517,8 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		normalizedReqAttrs,
 	)
 
-	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewInt64Coin(types.UsdDenom, int64(msg.UsdMills)), msg.Volume)}, types.ModuleName)
+	usdMills := sdkmath.NewIntFromUint64(msg.UsdMills)
+	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills), msg.Volume)}, types.ModuleName)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

@@ -263,12 +263,12 @@ func (k Keeper) Normalize(ctx sdk.Context, name string) (string, error) {
 	segCount := uint32(0)
 	for _, segment := range strings.Split(normalized, ".") {
 		segCount++
-		segLen := uint32(len(segment))
+		segLen := len(segment)
 		isUUID := types.IsValidUUID(segment)
-		if segLen < k.GetMinSegmentLength(ctx) {
+		if segLen < int(k.GetMinSegmentLength(ctx)) {
 			return "", types.ErrNameSegmentTooShort
 		}
-		if segLen > k.GetMaxSegmentLength(ctx) && !isUUID {
+		if segLen > int(k.GetMaxSegmentLength(ctx)) && !isUUID {
 			return "", types.ErrNameSegmentTooLong
 		}
 	}

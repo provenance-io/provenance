@@ -26,17 +26,18 @@ const (
 
 // GenMaxSegmentLength randomized Max Segment Length
 func GenMaxSegmentLength(r *rand.Rand) uint32 {
-	return uint32(r.Intn(22) + 11) // ensures that max is always more than range of min values (1-11)
+	// ensures that max is always more than range of min values (1-11)
+	return uint32(r.Intn(22) + 11) //nolint:gosec // G115: Max is 32, which fits in a uint32 just fine.
 }
 
 // GenMaxNameLevels randomized Maximum number of segment levels
 func GenMaxNameLevels(r *rand.Rand) uint32 {
-	return uint32(r.Intn(9) + 3)
+	return uint32(r.Intn(9) + 3) //nolint:gosec // G115: Max is 11, which fits in a uint32 just fine.
 }
 
 // GenMinSegmentLength randomized minimum segment name length
 func GenMinSegmentLength(r *rand.Rand) uint32 {
-	return uint32(r.Intn(10) + 1)
+	return uint32(r.Intn(10) + 1) //nolint:gosec // G115: Max is 10, which fits in a uint32 just fine.
 }
 
 // GenAllowUnrestrictedNames returns a randomized AllowUnrestrictedNames parameter.
