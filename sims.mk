@@ -1,5 +1,3 @@
-#!/usr/bin/make -f
-
 ########################################
 ### Simulations
 ###
@@ -18,8 +16,6 @@
 ###   SIM_BLOCK_SIZE: The size of blocks to use for test-sim-benchmark or test-sim-profile. Default is 200.
 ###   SIM_COMMIT:     Whether to commit during  test-sim-benchmark or test-sim-profile. Default is true.
 
-GO ?= go
-BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
 DB_BACKEND ?= goleveldb
 ifneq ($(DB_BACKEND),goleveldb)
@@ -30,11 +26,8 @@ endif
 # Runsim creates a command string, then does a split on " " to turn it into args.
 # With two tags, e.g. -tags 'foo bar', you'd end up with three args, "-tags", "'foo", and "bar'", and it'll get confused.
 # But we CAN provide a single tag in the -SimAppPkg value in order to trick it into including it in the `go test` commands.
-# We need to provide the -DBBackend flag to the runsim tests too, and use the same hack.
+# We provide the -DBBackend flag to the runsim tests using this same -SimAppPkg hack.
 SIMAPP += -DBBackend=$(DB_BACKEND)
-ifneq ($(db_tag),)
-  SIMAPP += -tags $(db_tag)
-endif
 
 SIM_GENESIS ?= ${HOME}/.provenanced/config/genesis.json
 
