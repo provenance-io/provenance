@@ -530,11 +530,11 @@ proto-lint:
 
 proto-check-breaking:
 	@echo "Check breaking Protobuf files"
-	$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main,subdir=proto --error-format=json
+	$(DOCKER_BUF) breaking proto --against '$(HTTPS_GIT)#branch=main,subdir=proto' --error-format=json
 
 proto-check-breaking-third-party:
 	@echo "Check breaking Protobuf files"
-	$(DOCKER_BUF) breaking third_party/proto --against $(HTTPS_GIT)#branch=main,subdir=third_party/proto --error-format=json
+	$(DOCKER_BUF) breaking third_party/proto --against '$(HTTPS_GIT)#branch=main,subdir=third_party/proto' --error-format=json
 
 proto-update-check:
 	@echo "Checking for third_party Protobuf updates"
