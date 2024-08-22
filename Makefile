@@ -178,7 +178,6 @@ RELEASE_PLAN=$(BUILDDIR)/plan-$(VERSION).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
 
-UNAME_M = $(shell uname -m)
 ifeq ($(UNAME_S),darwin)
     LIBWASMVM := $(LIBWASMVM).dylib
 else ifeq ($(UNAME_S),linux)
