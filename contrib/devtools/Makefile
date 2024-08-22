@@ -1,22 +1,9 @@
+########################################
+### Developer Tools
 ###
-# Find OS and Go environment
-# GO contains the Go binary
-###
-ifeq ($(OS),Windows_NT)
-  GO := $(shell where go.exe 2> NUL)
-else
-  GO := $(shell command -v go 2> /dev/null)
-endif
+### runsim  --------> Used by some of the simulation targets.
+### golangci-lint --> Used to lint our go code.
 
-ifeq ($(GO),)
-  $(error could not find go. Is it in PATH? $(GO))
-endif
-
-###############################################################################
-###                                 Tools                                   ###
-###############################################################################
-
-GOPATH ?= $(shell $(GO) env GOPATH)
 
 TOOLS_DESTDIR  ?= $(GOPATH)/bin
 RUNSIM         = $(TOOLS_DESTDIR)/runsim
