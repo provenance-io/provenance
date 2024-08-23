@@ -533,7 +533,7 @@ proto-check-breaking:
 	$(DOCKER_BUF) breaking proto --against '$(HTTPS_GIT)#branch=main,subdir=proto' --error-format=json
 
 proto-check-breaking-third-party:
-	@echo "Check breaking Protobuf files"
+	@echo "Check breaking 3rd party Protobuf files"
 	$(DOCKER_BUF) breaking third_party/proto --against '$(HTTPS_GIT)#branch=main,subdir=third_party/proto' --error-format=json
 
 proto-update-check:
