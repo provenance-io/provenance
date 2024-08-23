@@ -38,9 +38,12 @@ ifeq (,$(VERSION))
   endif
 endif
 
-GOLANGCI_LINT ?= $(shell which golangci-lint 2> /dev/null)
 ifeq (,$(GOLANGCI_LINT))
-  GOLANGCI_LINT = $(BINDIR)/golangci-lint
+  GOLANGCI_LINT := $(shell which golangci-lint 2> /dev/null)
+  # If golangci-lint isn't found, use a common location and let whatever needs it fail on its own.
+  ifeq (,$(GOLANGCI_LINT))
+    GOLANGCI_LINT := $(BINDIR)/golangci-lint
+  endif
 endif
 
 HTTPS_GIT := https://github.com/provenance-io/provenance.git
