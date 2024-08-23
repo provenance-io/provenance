@@ -34,11 +34,7 @@ ifeq (,$(VERSION))
   VERSION := $(shell git describe --exact-match 2> /dev/null)
   # If there isn't a tag, use the branch name and commit hash.
   ifeq (,$(VERSION))
-    BRANCH_PRETTY := $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD 2> /dev/null))
-    ifeq (,$(BRANCH_PRETTY))
-      BRANCH_PRETTY = nobranch
-    endif
-    VERSION := $(BRANCH_PRETTY)-$(COMMIT)
+    VERSION := $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD 2> /dev/null || echo nobranch))-$(COMMIT)
   endif
 endif
 
