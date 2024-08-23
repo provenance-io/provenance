@@ -10,7 +10,7 @@ ifeq (,$(GO))
   endif
 endif
 # Make sure we have a working go executable since most stuff in here needs it.
-ifeq ("$(shell $(GO) version > /dev/null 2>&1 || echo nogo)","nogo")
+ifeq ("$(shell $(GO) version > /dev/null || echo nogo)","nogo")
   $(error Could not find go. Is it in PATH? $(GO))
 endif
 ifeq (,$(GOPATH))
