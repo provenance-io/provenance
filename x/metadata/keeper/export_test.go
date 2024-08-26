@@ -32,6 +32,14 @@ func (k *Keeper) SetAuthzKeeper(authzKeeper AuthzKeeper) AuthzKeeper {
 	return rv
 }
 
+// SetBankKeeper is a TEST ONLY setter for the keeper's bank keeper.
+// It returns the previously defined BankKeeper
+func (k *Keeper) SetBankKeeper(bankKeeper BankKeeper) BankKeeper {
+	rv := k.bankKeeper
+	k.bankKeeper = bankKeeper
+	return rv
+}
+
 // TestablePartyDetails is the same as PartyDetails, but with
 // public fields so that they can be created in unit tests as needed.
 // Use the Real() method to convert it to a PartyDetails.

@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -30,12 +31,16 @@ type Keeper struct {
 
 	// For getting marker accounts
 	markerKeeper MarkerKeeper
+
+	// For managing value owners
+	bankKeeper BankKeeper
 }
 
 // NewKeeper creates new instances of the metadata Keeper.
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper AuthKeeper,
 	authzKeeper AuthzKeeper, attrKeeper AttrKeeper, markerKeeper MarkerKeeper,
+	bankKeeper bankkeeper.BaseKeeper,
 ) Keeper {
 	return Keeper{
 		storeKey:     key,
@@ -44,6 +49,7 @@ func NewKeeper(
 		authzKeeper:  authzKeeper,
 		attrKeeper:   attrKeeper,
 		markerKeeper: markerKeeper,
+		bankKeeper:   NewMDBankKeeper(bankKeeper),
 	}
 }
 

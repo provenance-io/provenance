@@ -580,7 +580,7 @@ func New(
 	)
 
 	app.MetadataKeeper = metadatakeeper.NewKeeper(
-		appCodec, keys[metadatatypes.StoreKey], app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper,
+		appCodec, keys[metadatatypes.StoreKey], app.AccountKeeper, app.AuthzKeeper, app.AttributeKeeper, app.MarkerKeeper, app.BankKeeper,
 	)
 
 	app.HoldKeeper = holdkeeper.NewKeeper(
