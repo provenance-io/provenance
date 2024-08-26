@@ -37,6 +37,7 @@ type MarkerKeeper interface {
 type BankKeeper interface {
 	BlockedAddr(addr sdk.AccAddress) bool
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	InputOutputCoins(ctx context.Context, input types.Input, outputs []types.Output) error
 	SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
