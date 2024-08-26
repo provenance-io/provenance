@@ -739,6 +739,7 @@ type MetadataAddressDetails struct {
 	ParentAddress MetadataAddress
 }
 
+// GetDetails breaks this MetadataAddress down into its various components, and returns all the details.
 func (ma MetadataAddress) GetDetails() MetadataAddressDetails {
 	// Copying this MetadataAddress to prevent weird behavior.
 	addr := make(MetadataAddress, len(ma))
@@ -800,4 +801,9 @@ func (ma MetadataAddress) GetDetails() MetadataAddressDetails {
 		}
 	}
 	return retval
+}
+
+// Denom gets the denom string for this MetadataAddress.
+func (ma MetadataAddress) Denom() string {
+	return "nft/" + ma.String()
 }

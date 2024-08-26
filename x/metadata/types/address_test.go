@@ -1885,3 +1885,11 @@ func (s *AddressTestSuite) TestGenerateExamples() {
 }
 
 // TODO: GetDetails tests.
+
+func (s *AddressTestSuite) TestDenom() {
+	exp := "nft/" + s.scopeBech32
+	addr, err := MetadataAddressFromBech32(s.scopeBech32)
+	s.Require().NoError(err, "MetadataAddressFromBech32(%q)", s.scopeBech32)
+	act := addr.Denom()
+	s.Assert().Equal(exp, act, "%v.Denom()", addr)
+}
