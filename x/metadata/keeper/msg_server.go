@@ -231,27 +231,14 @@ func (k msgServer) MigrateValueOwner(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "MigrateValueOwner")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	var scopes []*types.Scope
-	err := k.IterateScopesForValueOwner(ctx, msg.Existing, func(scopeID types.MetadataAddress) (stop bool) {
-		scope, found := k.GetScope(ctx, scopeID)
-		if found {
-			scopes = append(scopes, &scope)
-		}
-		return false
-	})
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
-	}
-	if len(scopes) == 0 {
-		return nil, sdkerrors.ErrNotFound.Wrapf("no scopes found with value owner %q", msg.Existing)
-	}
+	// TODO[2137]: Identify the scopes from the bank keeper.
 
-	err = k.ValidateUpdateValueOwners(ctx, scopes, msg.Proposed, msg)
+	err := k.ValidateUpdateValueOwners(ctx, []*types.Scope{}, msg.Proposed, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.SetScopeValueOwners(ctx, scopes, msg.Proposed)
+	k.SetScopeValueOwners(ctx, []*types.Scope{}, msg.Proposed)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_MigrateValueOwner, msg.GetSignerStrs()))
 	return &types.MsgMigrateValueOwnerResponse{}, nil

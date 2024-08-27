@@ -73,7 +73,7 @@ var (
 	AddressScopeCacheKeyPrefix = []byte{0x17}
 	// ScopeSpecScopeCacheKeyPrefix for scope to scope specification cache lookup
 	ScopeSpecScopeCacheKeyPrefix = []byte{0x11}
-	// ValueOwnerScopeCacheKeyPrefix for scope to value owner address cache lookup
+	// TODO[2137]: Move this to the migration stuff so those entries can be deleted.
 	ValueOwnerScopeCacheKeyPrefix = []byte{0x18}
 
 	// AddressScopeSpecCacheKeyPrefix for scope spec lookup by address
@@ -111,16 +111,6 @@ func GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID MetadataAddress) []byte {
 // GetScopeSpecScopeCacheKey returns the store key for an address cache entry
 func GetScopeSpecScopeCacheKey(scopeSpecID MetadataAddress, scopeID MetadataAddress) []byte {
 	return append(GetScopeSpecScopeCacheIteratorPrefix(scopeSpecID), scopeID.Bytes()...)
-}
-
-// GetValueOwnerScopeCacheIteratorPrefix returns an iterator prefix for all scope cache entries assigned to a given address
-func GetValueOwnerScopeCacheIteratorPrefix(addr sdk.AccAddress) []byte {
-	return append(ValueOwnerScopeCacheKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
-}
-
-// GetValueOwnerScopeCacheKey returns the store key for an address cache entry
-func GetValueOwnerScopeCacheKey(addr sdk.AccAddress, scopeID MetadataAddress) []byte {
-	return append(GetValueOwnerScopeCacheIteratorPrefix(addr), scopeID.Bytes()...)
 }
 
 // GetAddressScopeSpecCacheIteratorPrefix returns an iterator prefix for all scope spec cache entries assigned to a given address

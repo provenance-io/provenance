@@ -637,25 +637,9 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(k.storeKey)
-	scopeStore := prefix.NewStore(store, types.GetValueOwnerScopeCacheIteratorPrefix(addr))
+	// TODO[2137]: Use the bank stuff to find the scopes for a value owner.
+	_, _ = ctx, addr
 
-	pageRes, err := query.Paginate(scopeStore, req.Pagination, func(key, _ []byte) error {
-		var ma types.MetadataAddress
-		if mErr := ma.Unmarshal(key); mErr != nil {
-			return mErr
-		}
-		scopeID, sErr := ma.ScopeUUID()
-		if sErr != nil {
-			return sErr
-		}
-		retval.ScopeUuids = append(retval.ScopeUuids, scopeID.String())
-		return nil
-	})
-	if err != nil {
-		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("paginate: %v", err)
-	}
-	retval.Pagination = pageRes
 	return &retval, nil
 }
 

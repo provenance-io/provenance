@@ -44,30 +44,6 @@ func (k Keeper) IterateScopesForAddress(ctx sdk.Context, address sdk.AccAddress,
 	return nil
 }
 
-// IterateScopesForValueOwner iterates over all scope ids that have the provided value owner.
-func (k Keeper) IterateScopesForValueOwner(ctx sdk.Context, valueOwner string, handler func(scopeID types.MetadataAddress) (stop bool)) error {
-	addr, err := sdk.AccAddressFromBech32(valueOwner)
-	if err != nil {
-		return fmt.Errorf("cannot iterate over invalid value owner %q: %w", valueOwner, err)
-	}
-
-	store := ctx.KVStore(k.storeKey)
-	prefix := types.GetValueOwnerScopeCacheIteratorPrefix(addr)
-	it := storetypes.KVStorePrefixIterator(store, prefix)
-	defer it.Close()
-	for ; it.Valid(); it.Next() {
-		var scopeID types.MetadataAddress
-		if err = scopeID.Unmarshal(it.Key()[len(prefix):]); err != nil {
-			return err
-		}
-		if handler(scopeID) {
-			break
-		}
-	}
-
-	return nil
-}
-
 // IterateScopesForScopeSpec processes scopes associated with the provided scope specification id with the given handler.
 func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.MetadataAddress,
 	handler func(scopeID types.MetadataAddress) (stop bool),
@@ -185,7 +161,6 @@ func (k Keeper) SetScopeValueOwners(ctx sdk.Context, scopes []*types.Scope, newV
 type scopeIndexValues struct {
 	ScopeID         types.MetadataAddress
 	Addresses       []sdk.AccAddress
-	ValueOwner      sdk.AccAddress
 	SpecificationID types.MetadataAddress
 }
 
@@ -199,11 +174,6 @@ func getScopeIndexValues(scope *types.Scope) *scopeIndexValues {
 		SpecificationID: scope.SpecificationId,
 	}
 	knownAddrs := make(map[string]bool)
-	if addr, err := sdk.AccAddressFromBech32(scope.ValueOwnerAddress); err == nil {
-		rv.ValueOwner = addr
-		rv.Addresses = append(rv.Addresses, addr)
-		knownAddrs[scope.ValueOwnerAddress] = true
-	}
 	for _, dataAccess := range scope.DataAccess {
 		if !knownAddrs[dataAccess] {
 			if addr, err := sdk.AccAddressFromBech32(dataAccess); err == nil {
@@ -236,9 +206,6 @@ func getMissingScopeIndexValues(required, found *scopeIndexValues) *scopeIndexVa
 	rv.Addresses = findMissingComp(required.Addresses, found.Addresses, func(a1 sdk.AccAddress, a2 sdk.AccAddress) bool {
 		return a1.Equals(a2)
 	})
-	if !required.ValueOwner.Equals(found.ValueOwner) {
-		rv.ValueOwner = required.ValueOwner
-	}
 	if !required.SpecificationID.Equals(found.SpecificationID) {
 		rv.SpecificationID = required.SpecificationID
 	}
@@ -253,9 +220,6 @@ func (v scopeIndexValues) IndexKeys() [][]byte {
 	rv := make([][]byte, 0, len(v.Addresses)+2)
 	for _, addr := range v.Addresses {
 		rv = append(rv, types.GetAddressScopeCacheKey(addr, v.ScopeID))
-	}
-	if len(v.ValueOwner) > 0 {
-		rv = append(rv, types.GetValueOwnerScopeCacheKey(v.ValueOwner, v.ScopeID))
 	}
 	if !v.SpecificationID.Empty() {
 		rv = append(rv, types.GetScopeSpecScopeCacheKey(v.SpecificationID, v.ScopeID))
