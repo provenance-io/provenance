@@ -1,12 +1,14 @@
 package types
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -1892,4 +1894,613 @@ func (s *AddressTestSuite) TestDenom() {
 	s.Require().NoError(err, "MetadataAddressFromBech32(%q)", s.scopeBech32)
 	act := addr.Denom()
 	s.Assert().Equal(exp, act, "%v.Denom()", addr)
+}
+
+func (s *AddressTestSuite) TestAccMDLink_String() {
+	newUUID := func(b byte) uuid.UUID {
+		bz := bytes.Repeat([]byte{b}, 16)
+		rv, err := uuid.FromBytes(bz)
+		s.Require().NoError(err, "uuid.FromBytes(%v)", bz)
+		return rv
+	}
+	makeExp := func(accStr, mdStr string) string {
+		return accStr + ":" + mdStr
+	}
+	accAddr := sdk.AccAddress("accAddr_____________")
+	scopeAddr := ScopeMetadataAddress(newUUID('0'))
+	sessionAddr := SessionMetadataAddress(newUUID('1'), newUUID('1'))
+	recordAddr := RecordMetadataAddress(newUUID('2'), strings.Repeat("2", 2))
+	sSpecAddr := ScopeSpecMetadataAddress(newUUID('3'))
+	cSpecAddr := ContractSpecMetadataAddress(newUUID('4'))
+	rSpecAddr := RecordSpecMetadataAddress(newUUID('5'), strings.Repeat("5", 5))
+
+	tests := []struct {
+		name string
+		link *AccMDLink
+		exp  string
+	}{
+		{
+			name: "nil link",
+			link: nil,
+			exp:  nilStr,
+		},
+		{
+			name: "nil + nil",
+			link: NewAccMDLink(nil, nil),
+			exp:  makeExp(nilStr, nilStr),
+		},
+		{
+			name: "nil + empty",
+			link: NewAccMDLink(nil, MetadataAddress{}),
+			exp:  makeExp(nilStr, emptyStr),
+		},
+		{
+			name: "empty + nil",
+			link: NewAccMDLink(sdk.AccAddress{}, nil),
+			exp:  makeExp(emptyStr, nilStr),
+		},
+		{
+			name: "empty + empty",
+			link: NewAccMDLink(sdk.AccAddress{}, MetadataAddress{}),
+			exp:  makeExp(emptyStr, emptyStr),
+		},
+		{
+			name: "nil + scope",
+			link: NewAccMDLink(nil, scopeAddr),
+			exp:  makeExp(nilStr, scopeAddr.String()),
+		},
+		{
+			name: "empty + scope",
+			link: NewAccMDLink(sdk.AccAddress{}, scopeAddr),
+			exp:  makeExp(emptyStr, scopeAddr.String()),
+		},
+		{
+			name: "addr + nil",
+			link: NewAccMDLink(accAddr, nil),
+			exp:  makeExp(accAddr.String(), nilStr),
+		},
+		{
+			name: "addr + empty",
+			link: NewAccMDLink(accAddr, MetadataAddress{}),
+			exp:  makeExp(accAddr.String(), emptyStr),
+		},
+		{
+			name: "addr + scope",
+			link: NewAccMDLink(accAddr, scopeAddr),
+			exp:  makeExp(accAddr.String(), scopeAddr.String()),
+		},
+		{
+			name: "addr + session",
+			link: NewAccMDLink(accAddr, sessionAddr),
+			exp:  makeExp(accAddr.String(), sessionAddr.String()),
+		},
+		{
+			name: "addr + record",
+			link: NewAccMDLink(accAddr, recordAddr),
+			exp:  makeExp(accAddr.String(), recordAddr.String()),
+		},
+		{
+			name: "addr + scope spec",
+			link: NewAccMDLink(accAddr, sSpecAddr),
+			exp:  makeExp(accAddr.String(), sSpecAddr.String()),
+		},
+		{
+			name: "addr + contract spec",
+			link: NewAccMDLink(accAddr, cSpecAddr),
+			exp:  makeExp(accAddr.String(), cSpecAddr.String()),
+		},
+		{
+			name: "addr + record spec",
+			link: NewAccMDLink(accAddr, rSpecAddr),
+			exp:  makeExp(accAddr.String(), rSpecAddr.String()),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var act string
+			testFunc := func() {
+				act = tc.link.String()
+			}
+			s.Require().NotPanics(testFunc, "%v.String()", tc.link)
+			s.Assert().Equal(tc.exp, act, "$v.String()", tc.link)
+		})
+	}
+}
+
+func (s *AddressTestSuite) TestAccMDLinks_String() {
+	newUUID := func(b byte) uuid.UUID {
+		bz := bytes.Repeat([]byte{b}, 16)
+		rv, err := uuid.FromBytes(bz)
+		s.Require().NoError(err, "uuid.FromBytes(%v)", bz)
+		return rv
+	}
+	accAddr1 := sdk.AccAddress("accAddr1____________")
+	accAddr2 := sdk.AccAddress("accAddr2____________")
+	accAddr3 := sdk.AccAddress("accAddr3____________")
+	scopeAddr := ScopeMetadataAddress(newUUID('0'))
+	sessionAddr := SessionMetadataAddress(newUUID('1'), newUUID('1'))
+	recordAddr := RecordMetadataAddress(newUUID('2'), strings.Repeat("2", 2))
+	sSpecAddr := ScopeSpecMetadataAddress(newUUID('3'))
+	cSpecAddr := ContractSpecMetadataAddress(newUUID('4'))
+	rSpecAddr := RecordSpecMetadataAddress(newUUID('5'), strings.Repeat("5", 5))
+	makeExp := func(entries ...string) string {
+		return "[" + strings.Join(entries, ", ") + "]"
+	}
+	tests := []struct {
+		name  string
+		links AccMDLinks
+		exp   string
+	}{
+		{
+			name:  "nil",
+			links: nil,
+			exp:   nilStr,
+		},
+		{
+			name:  "empty",
+			links: AccMDLinks{},
+			exp:   emptyStr,
+		},
+		{
+			name:  "one nil entry",
+			links: AccMDLinks{nil},
+			exp:   makeExp(nilStr),
+		},
+		{
+			name:  "one nil nil entry",
+			links: AccMDLinks{{}},
+			exp:   makeExp(NewAccMDLink(nil, nil).String()),
+		},
+		{
+			name:  "one empty empty entry",
+			links: AccMDLinks{NewAccMDLink(sdk.AccAddress{}, MetadataAddress{})},
+			exp:   makeExp(NewAccMDLink(sdk.AccAddress{}, MetadataAddress{}).String()),
+		},
+		{
+			name:  "one normal entry",
+			links: AccMDLinks{NewAccMDLink(accAddr1, scopeAddr)},
+			exp:   makeExp(NewAccMDLink(accAddr1, scopeAddr).String()),
+		},
+		{
+			name: "many entries",
+			links: AccMDLinks{
+				NewAccMDLink(accAddr1, scopeAddr),
+				NewAccMDLink(accAddr1, sessionAddr),
+				NewAccMDLink(accAddr2, recordAddr),
+				nil,
+				NewAccMDLink(accAddr2, sSpecAddr),
+				NewAccMDLink(accAddr3, cSpecAddr),
+				NewAccMDLink(accAddr3, rSpecAddr),
+				NewAccMDLink(accAddr1, nil),
+				NewAccMDLink(sdk.AccAddress{}, scopeAddr),
+			},
+			exp: makeExp(
+				NewAccMDLink(accAddr1, scopeAddr).String(),
+				NewAccMDLink(accAddr1, sessionAddr).String(),
+				NewAccMDLink(accAddr2, recordAddr).String(),
+				nilStr,
+				NewAccMDLink(accAddr2, sSpecAddr).String(),
+				NewAccMDLink(accAddr3, cSpecAddr).String(),
+				NewAccMDLink(accAddr3, rSpecAddr).String(),
+				NewAccMDLink(accAddr1, nil).String(),
+				NewAccMDLink(sdk.AccAddress{}, scopeAddr).String(),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var act string
+			testFunc := func() {
+				act = tc.links.String()
+			}
+			s.Require().NotPanics(testFunc, "%v.String()", tc.links)
+			s.Assert().Equal(tc.exp, act, "$v.String()", tc.links)
+		})
+	}
+}
+
+func (s *AddressTestSuite) TestAccMDLinks_GetAccAddrs() {
+	newLink := func(accAddr sdk.AccAddress) *AccMDLink {
+		return &AccMDLink{AccAddr: accAddr}
+	}
+	addrs := make([]sdk.AccAddress, 6)
+	links := make(AccMDLinks, len(addrs))
+	for i := range addrs {
+		addrs[i] = sdk.AccAddress(fmt.Sprintf("addr[%d]_____________", i))
+		links[i] = newLink(addrs[i])
+	}
+
+	tests := []struct {
+		name  string
+		links AccMDLinks
+		exp   []sdk.AccAddress
+	}{
+		{
+			name:  "nil links",
+			links: nil,
+			exp:   nil,
+		},
+		{
+			name:  "empty links",
+			links: AccMDLinks{},
+			exp:   nil,
+		},
+		{
+			name:  "one link is nil",
+			links: AccMDLinks{nil},
+			exp:   []sdk.AccAddress{},
+		},
+		{
+			name:  "one link with acc",
+			links: links[0:1],
+			exp:   addrs[0:1],
+		},
+		{
+			name:  "one link with nil acc",
+			links: AccMDLinks{newLink(nil)},
+			exp:   []sdk.AccAddress{},
+		},
+		{
+			name:  "one link with empty acc",
+			links: AccMDLinks{newLink(sdk.AccAddress{})},
+			exp:   []sdk.AccAddress{},
+		},
+		{
+			name: "two links no acc in either",
+			links: AccMDLinks{
+				newLink(nil),
+				newLink(sdk.AccAddress{}),
+			},
+			exp: []sdk.AccAddress{},
+		},
+		{
+			name: "two links first has acc second does not",
+			links: AccMDLinks{
+				links[0],
+				newLink(nil),
+			},
+			exp: addrs[0:1],
+		},
+		{
+			name: "two links second has acc first does not",
+			links: AccMDLinks{
+				newLink(nil),
+				links[1],
+			},
+			exp: addrs[1:2],
+		},
+		{
+			name: "two links both have same acc",
+			links: AccMDLinks{
+				links[0],
+				newLink(addrs[0]),
+			},
+			exp: addrs[0:1],
+		},
+		{
+			name:  "two links with different accs in sequential order",
+			links: links[3:5],
+			exp:   addrs[3:5],
+		},
+		{
+			name:  "two links with different accs in reverse order",
+			links: AccMDLinks{links[5], links[4]},
+			exp:   []sdk.AccAddress{addrs[5], addrs[4]},
+		},
+		{
+			name:  "three links all different",
+			links: links[1:4],
+			exp:   addrs[1:4],
+		},
+		{
+			name: "three links all same",
+			links: AccMDLinks{
+				newLink(addrs[5]),
+				newLink(addrs[5]),
+				newLink(addrs[5]),
+			},
+			exp: addrs[5:6],
+		},
+		{
+			name: "three links AAB",
+			links: AccMDLinks{
+				newLink(addrs[5]),
+				newLink(addrs[5]),
+				newLink(addrs[3]),
+			},
+			exp: []sdk.AccAddress{addrs[5], addrs[3]},
+		},
+		{
+			name: "three links ABA",
+			links: AccMDLinks{
+				newLink(addrs[5]),
+				newLink(addrs[3]),
+				newLink(addrs[5]),
+			},
+			exp: []sdk.AccAddress{addrs[5], addrs[3]},
+		},
+		{
+			name: "three links BAA",
+			links: AccMDLinks{
+				newLink(addrs[3]),
+				newLink(addrs[5]),
+				newLink(addrs[5]),
+			},
+			exp: []sdk.AccAddress{addrs[3], addrs[5]},
+		},
+		{
+			name: "three links ABnil",
+			links: AccMDLinks{
+				newLink(addrs[3]),
+				newLink(addrs[5]),
+				nil,
+			},
+			exp: []sdk.AccAddress{addrs[3], addrs[5]},
+		},
+		{
+			name: "three links AnilB",
+			links: AccMDLinks{
+				newLink(addrs[3]),
+				nil,
+				newLink(addrs[5]),
+			},
+			exp: []sdk.AccAddress{addrs[3], addrs[5]},
+		},
+		{
+			name: "three links nilAB",
+			links: AccMDLinks{
+				nil,
+				newLink(addrs[3]),
+				newLink(addrs[5]),
+			},
+			exp: []sdk.AccAddress{addrs[3], addrs[5]},
+		},
+		{
+			name: "three links AnilA",
+			links: AccMDLinks{
+				newLink(addrs[2]),
+				nil,
+				newLink(addrs[2]),
+			},
+			exp: []sdk.AccAddress{addrs[2]},
+		},
+		{
+			name:  "six links each with different acc",
+			links: links,
+			exp:   addrs,
+		},
+		{
+			name: "six links one nil one acc nil one acc empty two same",
+			links: AccMDLinks{
+				newLink(addrs[0]),
+				nil,
+				newLink(sdk.AccAddress{}),
+				newLink(addrs[3]),
+				newLink(nil),
+				newLink(addrs[0]),
+			},
+			exp: []sdk.AccAddress{addrs[0], addrs[3]},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var act []sdk.AccAddress
+			testFunc := func() {
+				act = tc.links.GetAccAddrs()
+			}
+			s.Require().NotPanics(testFunc, "GetAccAddrs")
+			s.Assert().Equal(tc.exp, act, "GetAccAddrs")
+		})
+	}
+}
+
+func (s *AddressTestSuite) TestAccMDLinks_GetMetadataAddrs() {
+	newLink := func(mdAddr MetadataAddress) *AccMDLink {
+		return &AccMDLink{MDAddr: mdAddr}
+	}
+	newUUID := func(b byte) uuid.UUID {
+		bz := bytes.Repeat([]byte{b}, 16)
+		rv, err := uuid.FromBytes(bz)
+		s.Require().NoError(err, "uuid.FromBytes(%v)", bz)
+		return rv
+	}
+	addrs := []MetadataAddress{
+		ScopeMetadataAddress(newUUID('0')),
+		SessionMetadataAddress(newUUID('1'), newUUID('1')),
+		RecordMetadataAddress(newUUID('2'), strings.Repeat("2", 2)),
+		ScopeSpecMetadataAddress(newUUID('3')),
+		ContractSpecMetadataAddress(newUUID('4')),
+		RecordSpecMetadataAddress(newUUID('5'), strings.Repeat("5", 5)),
+	}
+	links := make(AccMDLinks, len(addrs))
+	for i := range addrs {
+		links[i] = &AccMDLink{MDAddr: addrs[i]}
+	}
+
+	tests := []struct {
+		name  string
+		links AccMDLinks
+		exp   []MetadataAddress
+	}{
+		{
+			name:  "nil links",
+			links: nil,
+			exp:   nil,
+		},
+		{
+			name:  "empty links",
+			links: AccMDLinks{},
+			exp:   nil,
+		},
+		{
+			name:  "one link is nil",
+			links: AccMDLinks{nil},
+			exp:   []MetadataAddress{},
+		},
+		{
+			name:  "one link with md",
+			links: links[0:1],
+			exp:   addrs[0:1],
+		},
+		{
+			name:  "one link with nil md",
+			links: AccMDLinks{newLink(nil)},
+			exp:   []MetadataAddress{},
+		},
+		{
+			name:  "one link with empty md",
+			links: AccMDLinks{newLink(MetadataAddress{})},
+			exp:   []MetadataAddress{},
+		},
+		{
+			name: "two links no md in either",
+			links: AccMDLinks{
+				newLink(nil),
+				newLink(MetadataAddress{}),
+			},
+			exp: []MetadataAddress{},
+		},
+		{
+			name: "two links first has md second does not",
+			links: AccMDLinks{
+				links[0],
+				newLink(nil),
+			},
+			exp: addrs[0:1],
+		},
+		{
+			name: "two links second has md first does not",
+			links: AccMDLinks{
+				newLink(nil),
+				links[1],
+			},
+			exp: addrs[1:2],
+		},
+		{
+			name: "two links both have same md",
+			links: AccMDLinks{
+				links[0],
+				newLink(addrs[0]),
+			},
+			exp: addrs[0:1],
+		},
+		{
+			name:  "two links with different mds in sequential order",
+			links: links[3:5],
+			exp:   addrs[3:5],
+		},
+		{
+			name:  "two links with different mds in reverse order",
+			links: AccMDLinks{links[5], links[4]},
+			exp:   []MetadataAddress{addrs[5], addrs[4]},
+		},
+		{
+			name:  "three links all different",
+			links: links[1:4],
+			exp:   addrs[1:4],
+		},
+		{
+			name: "three links all same",
+			links: AccMDLinks{
+				newLink(addrs[5]),
+				newLink(addrs[5]),
+				newLink(addrs[5]),
+			},
+			exp: addrs[5:6],
+		},
+		{
+			name: "three links AAB",
+			links: AccMDLinks{
+				newLink(addrs[5]),
+				newLink(addrs[5]),
+				newLink(addrs[3]),
+			},
+			exp: []MetadataAddress{addrs[5], addrs[3]},
+		},
+		{
+			name: "three links ABA",
+			links: AccMDLinks{
+				newLink(addrs[5]),
+				newLink(addrs[3]),
+				newLink(addrs[5]),
+			},
+			exp: []MetadataAddress{addrs[5], addrs[3]},
+		},
+		{
+			name: "three links BAA",
+			links: AccMDLinks{
+				newLink(addrs[3]),
+				newLink(addrs[5]),
+				newLink(addrs[5]),
+			},
+			exp: []MetadataAddress{addrs[3], addrs[5]},
+		},
+		{
+			name: "three links ABnil",
+			links: AccMDLinks{
+				newLink(addrs[3]),
+				newLink(addrs[5]),
+				nil,
+			},
+			exp: []MetadataAddress{addrs[3], addrs[5]},
+		},
+		{
+			name: "three links AnilB",
+			links: AccMDLinks{
+				newLink(addrs[3]),
+				nil,
+				newLink(addrs[5]),
+			},
+			exp: []MetadataAddress{addrs[3], addrs[5]},
+		},
+		{
+			name: "three links nilAB",
+			links: AccMDLinks{
+				nil,
+				newLink(addrs[3]),
+				newLink(addrs[5]),
+			},
+			exp: []MetadataAddress{addrs[3], addrs[5]},
+		},
+		{
+			name: "three links AnilA",
+			links: AccMDLinks{
+				newLink(addrs[2]),
+				nil,
+				newLink(addrs[2]),
+			},
+			exp: []MetadataAddress{addrs[2]},
+		},
+		{
+			name:  "six links each with different md",
+			links: links,
+			exp:   addrs,
+		},
+		{
+			name: "six links one nil one md nil one md empty two same",
+			links: AccMDLinks{
+				newLink(addrs[0]),
+				nil,
+				newLink(MetadataAddress{}),
+				newLink(addrs[3]),
+				newLink(nil),
+				newLink(addrs[0]),
+			},
+			exp: []MetadataAddress{addrs[0], addrs[3]},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var act []MetadataAddress
+			testFunc := func() {
+				act = tc.links.GetMetadataAddrs()
+			}
+			s.Require().NotPanics(testFunc, "GetMetadataAddrs")
+			s.Assert().Equal(tc.exp, act, "GetMetadataAddrs")
+		})
+	}
 }

@@ -807,3 +807,98 @@ func (ma MetadataAddress) GetDetails() MetadataAddressDetails {
 func (ma MetadataAddress) Denom() string {
 	return "nft/" + ma.String()
 }
+
+// AccMDLink associates an account address with a metadata address.
+type AccMDLink struct {
+	AccAddr sdk.AccAddress
+	MDAddr  MetadataAddress
+}
+
+// NewAccMDLink creates a new link between an address and a metadata address.
+func NewAccMDLink(accAddr sdk.AccAddress, mdAddr MetadataAddress) *AccMDLink {
+	return &AccMDLink{
+		AccAddr: accAddr,
+		MDAddr:  mdAddr,
+	}
+}
+
+const nilStr = "<nil>"
+const emptyStr = "<empty>"
+
+func (l *AccMDLink) String() string {
+	if l == nil {
+		return nilStr
+	}
+	return accStr(l.AccAddr) + ":" + mdStr(l.MDAddr)
+}
+
+func accStr(acc sdk.AccAddress) string {
+	if len(acc) > 0 {
+		return acc.String()
+	}
+	if acc == nil {
+		return nilStr
+	}
+	return emptyStr
+}
+
+func mdStr(md MetadataAddress) string {
+	if len(md) > 0 {
+		return md.String()
+	}
+	if md == nil {
+		return nilStr
+	}
+	return emptyStr
+}
+
+// AccMDLinks is a slice of AccMDLink.
+type AccMDLinks []*AccMDLink
+
+func (a AccMDLinks) String() string {
+	if len(a) > 0 {
+		strs := make([]string, len(a))
+		for i, link := range a {
+			strs[i] = link.String()
+		}
+		return "[" + strings.Join(strs, ", ") + "]"
+	}
+	if a == nil {
+		return nilStr
+	}
+	return emptyStr
+}
+
+// GetAccAddrs returns a list of all the AccAddr contained in this AccMDLinks.
+// Each entry will appear only once and they will be in the order first seen.
+func (a AccMDLinks) GetAccAddrs() []sdk.AccAddress {
+	if len(a) == 0 {
+		return nil
+	}
+	rv := make([]sdk.AccAddress, 0, len(a))
+	seen := make(map[string]bool, len(a))
+	for _, link := range a {
+		if link != nil && len(link.AccAddr) > 0 && !seen[string(link.AccAddr)] {
+			rv = append(rv, link.AccAddr)
+			seen[string(link.AccAddr)] = true
+		}
+	}
+	return rv
+}
+
+// GetMetadataAddrs returns a list of all the MDAddr contained in this AccMDLinks.
+// Each entry will appear only once and they will be in the order first seen.
+func (a AccMDLinks) GetMetadataAddrs() []MetadataAddress {
+	if len(a) == 0 {
+		return nil
+	}
+	rv := make([]MetadataAddress, 0, len(a))
+	seen := make(map[string]bool, len(a))
+	for _, link := range a {
+		if link != nil && len(link.MDAddr) > 0 && !seen[string(link.MDAddr)] {
+			rv = append(rv, link.MDAddr)
+			seen[string(link.MDAddr)] = true
+		}
+	}
+	return rv
+}
