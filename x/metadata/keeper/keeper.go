@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -19,6 +20,8 @@ type Keeper struct {
 	// Key to access the key-value store from sdk.Context
 	storeKey storetypes.StoreKey
 	cdc      codec.BinaryCodec
+
+	moduleAddr sdk.AccAddress
 
 	// To check if accounts exist and set public keys.
 	authKeeper AuthKeeper
@@ -45,6 +48,7 @@ func NewKeeper(
 	return Keeper{
 		storeKey:     key,
 		cdc:          cdc,
+		moduleAddr:   authtypes.NewModuleAddress(types.ModuleName),
 		authKeeper:   authKeeper,
 		authzKeeper:  authzKeeper,
 		attrKeeper:   attrKeeper,
