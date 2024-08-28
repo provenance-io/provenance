@@ -1889,11 +1889,43 @@ func (s *AddressTestSuite) TestGenerateExamples() {
 // TODO: GetDetails tests.
 
 func (s *AddressTestSuite) TestDenom() {
-	exp := "nft/" + s.scopeBech32
-	addr, err := MetadataAddressFromBech32(s.scopeBech32)
-	s.Require().NoError(err, "MetadataAddressFromBech32(%q)", s.scopeBech32)
-	act := addr.Denom()
-	s.Assert().Equal(exp, act, "%v.Denom()", addr)
+	// As of writing this, the only metadata type that we should be making denoms for are scopes.
+	// However, I figured that restriction would be better left higher up which allows the Denom() method
+	// to be simpler (and wouldn't have to either return an error or panic).
+	// That's why I've included test cases for all the metadata types.
+
+	// These were all generated in a terminal by running commands like this:
+	// $ provenanced metaaddress encode scope `uuidgen`
+	// I used `uuidgen` for the record names too because it was an easy way to get a random string.
+	tests := []string{
+		"scope1qrrlhs80yxy5dwyp0tgmpvd49kmqn6cwx2",
+		"scope1qz4x0pmzt505ae4nmjfjq6ngq82q3g203c",
+		"session1q9xqvqjv73m5x245uwp3ut6jc6ykhs7xnvea7jxenx0pwtmu6cta6u48vr3",
+		"session1q93ef6tuvha5359suwj9svp0g2yqd8t72ky7vsfpnqx95aqc3rtnw57g9kn",
+		"record1qge4f7nh68tyvy473dlekp369lcfwax7ysuhsm3x7kql8mxxrcn85jjqy4m",
+		"record1q2r24x62aze5gxyws04qvxc9ey59kj7u6gsgcrljgcczkcuflc865ae0wzx",
+		"scopespec1qjjwrht7ne25cq9tua7tn0vtezcqrsneea",
+		"scopespec1qjzk96c9mjzy9z9zpjkuhvptujqsjhm5lz",
+		"contractspec1qw88nm7astdy9ay7vh8hc3jpur7qr27mh8",
+		"contractspec1qdez57m4vp2y4wd9qckuuhcp0lls0xx3nz",
+		"recspec1q48tu2exkajyafvn979hhe36ls5pv9jj9c08ldh7wtas4k0uj9xnzvgyg6e",
+		"recspec1q42c5g4a9k25zqyg6v95hp85sp2hy85aelha0l05yy635l2cp44mg3ca006",
+	}
+
+	for i, tc := range tests {
+		s.Run(fmt.Sprintf("[%d]%s...%s", i, tc[:strings.Index(tc, "1")], tc[len(tc)-2:]), func() {
+			exp := "nft/" + tc
+			addr, err := MetadataAddressFromBech32(tc)
+			s.Require().NoError(err, "MetadataAddressFromBech32(%q)", tc)
+
+			var act string
+			testFunc := func() {
+				act = addr.Denom()
+			}
+			s.Require().NotPanics(testFunc, "%#v.Denom()", addr)
+			s.Assert().Equal(exp, act, "%#v.Denom()", addr)
+		})
+	}
 }
 
 func (s *AddressTestSuite) TestAccMDLink_String() {
