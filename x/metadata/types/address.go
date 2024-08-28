@@ -932,40 +932,6 @@ func (a AccMDLinks) WithNilsRemoved() AccMDLinks {
 	return rv
 }
 
-// GetAccAddrs returns a list of all the AccAddr contained in this AccMDLinks.
-// Each entry will appear only once and they will be in the order first seen.
-func (a AccMDLinks) GetAccAddrs() []sdk.AccAddress {
-	if len(a) == 0 {
-		return nil
-	}
-	rv := make([]sdk.AccAddress, 0, len(a))
-	seen := make(map[string]bool, len(a))
-	for _, link := range a {
-		if link != nil && len(link.AccAddr) > 0 && !seen[string(link.AccAddr)] {
-			rv = append(rv, link.AccAddr)
-			seen[string(link.AccAddr)] = true
-		}
-	}
-	return rv
-}
-
-// GetMetadataAddrs returns a list of all the MDAddr contained in this AccMDLinks.
-// Each entry will appear only once and they will be in the order first seen.
-func (a AccMDLinks) GetMetadataAddrs() []MetadataAddress {
-	if len(a) == 0 {
-		return nil
-	}
-	rv := make([]MetadataAddress, 0, len(a))
-	seen := make(map[string]bool, len(a))
-	for _, link := range a {
-		if link != nil && len(link.MDAddr) > 0 && !seen[string(link.MDAddr)] {
-			rv = append(rv, link.MDAddr)
-			seen[string(link.MDAddr)] = true
-		}
-	}
-	return rv
-}
-
 // Coins creates a Coins containing an entry for every MDAddr in this AccMDLinks.
 func (a AccMDLinks) Coins() sdk.Coins {
 	if len(a) == 0 {
