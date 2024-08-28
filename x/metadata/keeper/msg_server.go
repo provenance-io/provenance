@@ -203,21 +203,14 @@ func (k msgServer) UpdateValueOwners(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "UpdateValueOwners")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	scopes := make([]*types.Scope, len(msg.ScopeIds))
-	for i, id := range msg.ScopeIds {
-		scope, found := k.GetScope(ctx, id)
-		if !found {
-			return nil, sdkerrors.ErrNotFound.Wrapf("scope not found with id %s", id)
-		}
-		scopes[i] = &scope
-	}
+	// TODO[2137]: Identify the owners from the bank keeper.
 
-	err := k.ValidateUpdateValueOwners(ctx, scopes, msg.ValueOwnerAddress, msg)
+	err := k.ValidateUpdateValueOwners(ctx, nil, msg.ValueOwnerAddress, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.SetScopeValueOwners(ctx, scopes, msg.ValueOwnerAddress)
+	k.SetScopeValueOwners(ctx, nil, msg.ValueOwnerAddress)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_UpdateValueOwners, msg.GetSignerStrs()))
 	return &types.MsgUpdateValueOwnersResponse{}, nil
@@ -233,12 +226,12 @@ func (k msgServer) MigrateValueOwner(
 
 	// TODO[2137]: Identify the scopes from the bank keeper.
 
-	err := k.ValidateUpdateValueOwners(ctx, []*types.Scope{}, msg.Proposed, msg)
+	err := k.ValidateUpdateValueOwners(ctx, nil, msg.Proposed, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.SetScopeValueOwners(ctx, []*types.Scope{}, msg.Proposed)
+	k.SetScopeValueOwners(ctx, nil, msg.Proposed)
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_MigrateValueOwner, msg.GetSignerStrs()))
 	return &types.MsgMigrateValueOwnerResponse{}, nil
