@@ -2341,6 +2341,198 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateAllAreScopes() {
 	}
 }
 
+func (s *AddressTestSuite) TestAccMDLinks_WithNilsRemoved() {
+	goodEntry := func(i string) *AccMDLink {
+		str := "good_uuid_" + i + "_____"
+		uid, err := uuid.FromBytes([]byte(str))
+		s.Require().NoError(err, "uuid.FromBytes([]byte(%q))", str)
+		return &AccMDLink{
+			AccAddr: sdk.AccAddress("good_address_" + i + "______"),
+			MDAddr:  ScopeMetadataAddress(uid),
+		}
+	}
+	good1 := goodEntry("1")
+	good2 := goodEntry("2")
+	good3 := goodEntry("3")
+	good4 := goodEntry("4")
+
+	tests := []struct {
+		name        string
+		links       AccMDLinks
+		exp         AccMDLinks
+		expNoChange bool
+	}{
+		{
+			name:        "nil",
+			links:       nil,
+			expNoChange: true,
+		},
+		{
+			name:        "empty",
+			links:       AccMDLinks{},
+			expNoChange: true,
+		},
+		{
+			name:  "one entry: nil",
+			links: AccMDLinks{nil},
+			exp:   AccMDLinks{},
+		},
+		{
+			name:        "one entry: good",
+			links:       AccMDLinks{good1},
+			expNoChange: true,
+		},
+		{
+			name:  "two entries: nil nil",
+			links: AccMDLinks{nil, nil},
+			exp:   AccMDLinks{},
+		},
+		{
+			name:  "two entries: good nil",
+			links: AccMDLinks{good1, nil},
+			exp:   AccMDLinks{good1},
+		},
+		{
+			name:  "two entries: nil good",
+			links: AccMDLinks{nil, good2},
+			exp:   AccMDLinks{good2},
+		},
+		{
+			name:        "two entries: good good",
+			links:       AccMDLinks{good1, good2},
+			expNoChange: true,
+		},
+
+		{
+			name:  "four entries: nil nil nil nil",
+			links: AccMDLinks{nil, nil, nil, nil},
+			exp:   AccMDLinks{},
+		},
+
+		{
+			name:  "four entries: good nil nil nil",
+			links: AccMDLinks{good1, nil, nil, nil},
+			exp:   AccMDLinks{good1},
+		},
+		{
+			name:  "four entries: nil good nil nil",
+			links: AccMDLinks{nil, good2, nil, nil},
+			exp:   AccMDLinks{good2},
+		},
+		{
+			name:  "four entries: nil nil good nil",
+			links: AccMDLinks{nil, nil, good3, nil},
+			exp:   AccMDLinks{good3},
+		},
+		{
+			name:  "four entries: nil nil nil good",
+			links: AccMDLinks{nil, nil, nil, good4},
+			exp:   AccMDLinks{good4},
+		},
+
+		{
+			name:  "four entries: good good nil nil",
+			links: AccMDLinks{good1, good2, nil, nil},
+			exp:   AccMDLinks{good1, good2},
+		},
+		{
+			name:  "four entries: good nil good nil",
+			links: AccMDLinks{good1, nil, good3, nil},
+			exp:   AccMDLinks{good1, good3},
+		},
+		{
+			name:  "four entries: good nil nil good",
+			links: AccMDLinks{good1, nil, nil, good4},
+			exp:   AccMDLinks{good1, good4},
+		},
+		{
+			name:  "four entries: nil good good nil",
+			links: AccMDLinks{nil, good2, good3, nil},
+			exp:   AccMDLinks{good2, good3},
+		},
+		{
+			name:  "four entries: nil good nil good",
+			links: AccMDLinks{nil, good2, nil, good4},
+			exp:   AccMDLinks{good2, good4},
+		},
+		{
+			name:  "four entries: nil nil good good",
+			links: AccMDLinks{nil, nil, good3, good4},
+			exp:   AccMDLinks{good3, good4},
+		},
+
+		{
+			name:  "four entries: good good good nil",
+			links: AccMDLinks{good1, good2, good3, nil},
+			exp:   AccMDLinks{good1, good2, good3},
+		},
+		{
+			name:  "four entries: good good nil good",
+			links: AccMDLinks{good1, good2, nil, good4},
+			exp:   AccMDLinks{good1, good2, good4},
+		},
+		{
+			name:  "four entries: good nil good good",
+			links: AccMDLinks{good1, nil, good3, good4},
+			exp:   AccMDLinks{good1, good3, good4},
+		},
+		{
+			name:  "four entries: nil good good good",
+			links: AccMDLinks{nil, good2, good3, good4},
+			exp:   AccMDLinks{good2, good3, good4},
+		},
+
+		{
+			name:        "four entries: good good good good",
+			links:       AccMDLinks{good1, good2, good3, good4},
+			expNoChange: true,
+		},
+		{
+			name:        "four entries: all good: alternate order",
+			links:       AccMDLinks{good3, good1, good4, good2},
+			expNoChange: true,
+		},
+	}
+
+	linkStr := func(link *AccMDLink) string {
+		if link == nil {
+			return nilStr
+		}
+		return string(link.AccAddr) + ":scope-" + string(link.MDAddr[1:])
+	}
+	linkStrs := func(links AccMDLinks) []string {
+		if links == nil {
+			return nil
+		}
+		rv := make([]string, len(links))
+		for i, link := range links {
+			rv[i] = linkStr(link)
+		}
+		return rv
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.expNoChange {
+				tc.exp = tc.links
+			}
+
+			var act AccMDLinks
+			testFunc := func() {
+				act = tc.links.WithNilsRemoved()
+			}
+			s.Require().NotPanics(testFunc, "WithNilsRemoved")
+
+			if !s.Assert().Equal(tc.exp, act, "WithNilsRemoved") {
+				// run the comparison again with strings this time to hopefully help identify the problem
+				expStrs := linkStrs(tc.exp)
+				actStrs := linkStrs(act)
+				s.Assert().Equal(expStrs, actStrs, "WithNilsRemoved as strings")
+			}
+		})
+	}
+}
+
 func (s *AddressTestSuite) TestAccMDLinks_Coins() {
 	newUUID := func(name string, i int) uuid.UUID {
 		bz := []byte(fmt.Sprintf("%s[%d]________________", name, i))[:16]

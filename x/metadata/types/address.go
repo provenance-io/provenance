@@ -906,6 +906,32 @@ func (a AccMDLinks) ValidateAllAreScopes() error {
 	return errors.Join(errs...)
 }
 
+func (a AccMDLinks) WithNilsRemoved() AccMDLinks {
+	if len(a) == 0 {
+		return a
+	}
+	hasNilAt := -1
+	for i, link := range a {
+		if link == nil {
+			hasNilAt = i
+			break
+		}
+	}
+	if hasNilAt < 0 {
+		return a
+	}
+	rv := make(AccMDLinks, hasNilAt, len(a)-1)
+	if hasNilAt > 0 {
+		copy(rv, a[:hasNilAt])
+	}
+	for i := hasNilAt + 1; i < len(a); i++ {
+		if a[i] != nil {
+			rv = append(rv, a[i])
+		}
+	}
+	return rv
+}
+
 // GetAccAddrs returns a list of all the AccAddr contained in this AccMDLinks.
 // Each entry will appear only once and they will be in the order first seen.
 func (a AccMDLinks) GetAccAddrs() []sdk.AccAddress {
