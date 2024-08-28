@@ -9,8 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -386,11 +384,11 @@ func (k *MockBankKeeper) BurnCoins(ctx context.Context, moduleName string, amt s
 	panic("not implemented")
 }
 
-func (k *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k *MockBankKeeper) GetSupply(ctx context.Context, denom string) sdk.Coin {
 	panic("not implemented")
 }
 
-func (k *MockBankKeeper) InputOutputCoins(ctx context.Context, input banktypes.Input, outputs []banktypes.Output) error {
+func (k *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	panic("not implemented")
 }
 
