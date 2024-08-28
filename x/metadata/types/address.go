@@ -418,7 +418,11 @@ func (ma MetadataAddress) ContractSpecUUID() (uuid.UUID, error) {
 // Prefix returns the human readable part (prefix) of this MetadataAddress, e.g. "scope" or "contractspec"
 // More accurately, this converts the 1st byte into its human readable string value.
 func (ma MetadataAddress) Prefix() (string, error) {
-	return VerifyMetadataAddressFormat(ma)
+	prefix, err := VerifyMetadataAddressFormat(ma)
+	if len(prefix) == 0 {
+		return prefix, err
+	}
+	return prefix, nil
 }
 
 // PrimaryUUID returns the primary UUID from this MetadataAddress (if applicable).
