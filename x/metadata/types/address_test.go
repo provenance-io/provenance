@@ -20,6 +20,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 type AddressTestSuite struct {
@@ -2166,6 +2168,282 @@ func (s *AddressTestSuite) TestAccMDLinks_String() {
 			}
 			s.Require().NotPanics(testFunc, "%v.String()", tc.links)
 			s.Assert().Equal(tc.exp, act, "$v.String()", tc.links)
+		})
+	}
+}
+
+func (s *AddressTestSuite) TestAccMDLinks_ValidateAllAreScopes() {
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
+	newUUID := func(name string, i int) uuid.UUID {
+		bz := []byte(fmt.Sprintf("%s[%d]________________", name, i))[:16]
+		rv, err := uuid.FromBytes(bz)
+		s.Require().NoError(err, "%s[%d]: uuid.FromBytes(%v)", name, i, bz)
+		return rv
+	}
+	scopeIDs := make([]MetadataAddress, 6)
+	for i := range scopeIDs {
+		scopeIDs[i] = ScopeMetadataAddress(newUUID("scopeIDs", i))
+	}
+
+	tests := []struct {
+		name  string
+		links AccMDLinks
+		exp   string
+	}{
+		{
+			name:  "nil links",
+			links: nil,
+			exp:   "",
+		},
+		{
+			name:  "empty links",
+			links: nil,
+			exp:   "",
+		},
+		{
+			name:  "one link: nil md addr",
+			links: AccMDLinks{{MDAddr: nil}},
+			exp:   "invalid metadata address MetadataAddress(nil): address is empty",
+		},
+		{
+			name:  "one link: empty md addr",
+			links: AccMDLinks{{MDAddr: MetadataAddress{}}},
+			exp:   "invalid metadata address MetadataAddress{}: address is empty",
+		},
+		{
+			name:  "one link: scope",
+			links: AccMDLinks{{MDAddr: scopeIDs[0]}},
+			exp:   "",
+		},
+		{
+			name:  "one link: session",
+			links: AccMDLinks{{MDAddr: SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1))}},
+			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1))),
+		},
+		{
+			name:  "one link: record",
+			links: AccMDLinks{{MDAddr: RecordMetadataAddress(newUUID("record", 0), "recordname")}},
+			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", RecordMetadataAddress(newUUID("record", 0), "recordname")),
+		},
+		{
+			name:  "one link: scope spec",
+			links: AccMDLinks{{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 0))}},
+			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", ScopeSpecMetadataAddress(newUUID("scopespec", 0))),
+		},
+		{
+			name:  "one link: contract spec",
+			links: AccMDLinks{{MDAddr: ContractSpecMetadataAddress(newUUID("contractspec", 0))}},
+			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", ContractSpecMetadataAddress(newUUID("contractspec", 0))),
+		},
+		{
+			name:  "one link: record spec",
+			links: AccMDLinks{{MDAddr: RecordSpecMetadataAddress(newUUID("contractspec", 0), "recordname")}},
+			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", RecordSpecMetadataAddress(newUUID("contractspec", 0), "recordname")),
+		},
+		{
+			name:  "one link: unknown type",
+			links: AccMDLinks{{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}}},
+			exp:   "invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
+		},
+		{
+			name:  "one link: scope type byte but invalid",
+			links: AccMDLinks{{MDAddr: MetadataAddress{ScopeKeyPrefix[0], 0x6e, 0x6f, 0x70, 0x65}}},
+			exp:   "invalid metadata address MetadataAddress{0x0, 0x6e, 0x6f, 0x70, 0x65}: incorrect address length (expected: 17, actual: 5)",
+		},
+		{
+			name:  "two links: different scopes",
+			links: AccMDLinks{{MDAddr: scopeIDs[0]}, {MDAddr: scopeIDs[1]}},
+			exp:   "",
+		},
+		{
+			name:  "two links: same scopes",
+			links: AccMDLinks{{MDAddr: scopeIDs[2]}, {MDAddr: scopeIDs[2]}},
+			exp:   fmt.Sprintf("contains metadata address %q more than once", scopeIDs[2]),
+		},
+		{
+			name: "two links: both invalid",
+			links: AccMDLinks{
+				{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 1))},
+				{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}},
+			},
+			exp: joinErrs(
+				fmt.Sprintf("invalid metadata address %q: must be a scope address", ScopeSpecMetadataAddress(newUUID("scopespec", 1))),
+				"invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
+			),
+		},
+		{
+			name: "two links: same and wrong type",
+			links: AccMDLinks{
+				{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 2))},
+				{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 2))},
+			},
+			exp: joinErrs(
+				fmt.Sprintf("invalid metadata address %q: must be a scope address", ScopeSpecMetadataAddress(newUUID("scopespec", 2))),
+				fmt.Sprintf("contains metadata address %q more than once", ScopeSpecMetadataAddress(newUUID("scopespec", 2))),
+			),
+		},
+		{
+			name: "two links: same and invalid",
+			links: AccMDLinks{
+				{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}},
+				{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}},
+			},
+			exp: joinErrs(
+				"invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
+				"contains metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65} more than once",
+			),
+		},
+		{
+			name: "six links: all valid and different",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[0]}, {MDAddr: scopeIDs[1]}, {MDAddr: scopeIDs[2]},
+				{MDAddr: scopeIDs[3]}, {MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[5]},
+			},
+			exp: "",
+		},
+		{
+			name: "six links: all same",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[4]},
+				{MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[4]},
+			},
+			exp: fmt.Sprintf("contains metadata address %q more than once", scopeIDs[4]),
+		},
+		{
+			name: "six links: last is invalid",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[5]}, {MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[3]},
+				{MDAddr: scopeIDs[2]}, {MDAddr: scopeIDs[1]}, {MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}},
+			},
+			exp: "invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
+		},
+		{
+			name: "six links: 2nd to last is dup",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[0]}, {MDAddr: scopeIDs[1]}, {MDAddr: scopeIDs[2]},
+				{MDAddr: scopeIDs[3]}, {MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[3]},
+			},
+			exp: fmt.Sprintf("contains metadata address %q more than once", scopeIDs[3]),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var err error
+			testFunc := func() {
+				err = tc.links.ValidateAllAreScopes()
+			}
+			s.Require().NotPanics(testFunc, "ValidateAllAreScopes")
+			assertions.AssertErrorValue(s.T(), err, tc.exp, "ValidateAllAreScopes")
+		})
+	}
+}
+
+func (s *AddressTestSuite) TestAccMDLinks_Coins() {
+	newUUID := func(name string, i int) uuid.UUID {
+		bz := []byte(fmt.Sprintf("%s[%d]________________", name, i))[:16]
+		rv, err := uuid.FromBytes(bz)
+		s.Require().NoError(err, "%s[%d]: uuid.FromBytes(%v)", name, i, bz)
+		return rv
+	}
+
+	tests := []struct {
+		name     string
+		links    AccMDLinks
+		exp      sdk.Coins
+		expPanic string
+	}{
+		{
+			name:  "nil links",
+			links: nil,
+			exp:   nil,
+		},
+		{
+			name:  "empty links",
+			links: AccMDLinks{},
+			exp:   nil,
+		},
+		{
+			name:  "one link: nil md addr",
+			links: AccMDLinks{{MDAddr: nil}},
+			exp:   sdk.NewCoins(sdk.NewInt64Coin("nft/", 1)),
+		},
+		{
+			name:  "one link: empty md addr",
+			links: AccMDLinks{{MDAddr: MetadataAddress{}}},
+			exp:   sdk.NewCoins(sdk.NewInt64Coin("nft/", 1)),
+		},
+		{
+			name:     "one link: invalid scope md addr",
+			links:    AccMDLinks{{MDAddr: MetadataAddress{ScopeKeyPrefix[0], 0x6e, 0x6f, 0x70, 0x65}}},
+			expPanic: "incorrect address length (expected: 17, actual: 5)",
+		},
+		{
+			name:  "one link: scope",
+			links: AccMDLinks{{MDAddr: ScopeMetadataAddress(newUUID("scope", 0))}},
+			exp:   sdk.NewCoins(sdk.NewInt64Coin(ScopeMetadataAddress(newUUID("scope", 0)).Denom(), 1)),
+		},
+		{
+			name:  "one link: scope",
+			links: AccMDLinks{{MDAddr: SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1))}},
+			exp:   sdk.NewCoins(sdk.NewInt64Coin(SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1)).Denom(), 1)),
+		},
+		{
+			name:  "one link: record",
+			links: AccMDLinks{{MDAddr: RecordMetadataAddress(newUUID("record", 0), "thingy")}},
+			exp:   sdk.NewCoins(sdk.NewInt64Coin(RecordMetadataAddress(newUUID("record", 0), "thingy").Denom(), 1)),
+		},
+		{
+			name:  "one link: scope spec",
+			links: AccMDLinks{{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 0))}},
+			exp:   sdk.NewCoins(sdk.NewInt64Coin(ScopeSpecMetadataAddress(newUUID("scopespec", 0)).Denom(), 1)),
+		},
+		{
+			name:  "one link: contract spec",
+			links: AccMDLinks{{MDAddr: ContractSpecMetadataAddress(newUUID("contractspec", 0))}},
+			exp:   sdk.NewCoins(sdk.NewInt64Coin(ContractSpecMetadataAddress(newUUID("contractspec", 0)).Denom(), 1)),
+		},
+		{
+			name:  "one link: record spec",
+			links: AccMDLinks{{MDAddr: RecordSpecMetadataAddress(newUUID("recordspec", 0), "thingy")}},
+			exp:   sdk.NewCoins(sdk.NewInt64Coin(RecordSpecMetadataAddress(newUUID("recordspec", 0), "thingy").Denom(), 1)),
+		},
+		{
+			name:     "one link: invalid type",
+			links:    AccMDLinks{{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}}},
+			expPanic: "invalid metadata address type: 160",
+		},
+		{
+			name: "two links: same",
+			links: AccMDLinks{
+				{MDAddr: ScopeMetadataAddress(newUUID("scope", 1))},
+				{MDAddr: ScopeMetadataAddress(newUUID("scope", 1))},
+			},
+			exp: sdk.NewCoins(sdk.NewInt64Coin(ScopeMetadataAddress(newUUID("scope", 1)).Denom(), 2)),
+		},
+		{
+			name: "two links: different",
+			links: AccMDLinks{
+				{MDAddr: ScopeMetadataAddress(newUUID("scope", 2))},
+				{MDAddr: ScopeMetadataAddress(newUUID("scope", 3))},
+			},
+			exp: sdk.NewCoins(
+				sdk.NewInt64Coin(ScopeMetadataAddress(newUUID("scope", 2)).Denom(), 1),
+				sdk.NewInt64Coin(ScopeMetadataAddress(newUUID("scope", 3)).Denom(), 1),
+			),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var act sdk.Coins
+			testFunc := func() {
+				act = tc.links.Coins()
+			}
+			assertions.RequirePanicEquals(s.T(), testFunc, tc.expPanic, "Coins")
+			s.Assert().Equal(tc.exp.String(), act.String(), "Coins (as strings)")
 		})
 	}
 }

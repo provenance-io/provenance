@@ -418,11 +418,7 @@ func (ma MetadataAddress) ContractSpecUUID() (uuid.UUID, error) {
 // Prefix returns the human readable part (prefix) of this MetadataAddress, e.g. "scope" or "contractspec"
 // More accurately, this converts the 1st byte into its human readable string value.
 func (ma MetadataAddress) Prefix() (string, error) {
-	prefix, err := VerifyMetadataAddressFormat(ma)
-	if len(prefix) == 0 {
-		return prefix, err
-	}
-	return prefix, nil
+	return VerifyMetadataAddressFormat(ma)
 }
 
 // PrimaryUUID returns the primary UUID from this MetadataAddress (if applicable).
@@ -874,6 +870,42 @@ func (a AccMDLinks) String() string {
 	return emptyStr
 }
 
+// ValidateAllAreScopes returns an error if this contains any MDAddr entries that are not for a scope, or if any of them appears twice.
+func (a AccMDLinks) ValidateAllAreScopes() error {
+	if len(a) == 0 {
+		return nil
+	}
+	var errs []error
+	seenMDAddrs := make(map[string]int)
+	hasErr := make(map[string]bool)
+	for _, link := range a {
+		key := string(link.MDAddr)
+		switch seenMDAddrs[key] {
+		case 0:
+			seenMDAddrs[key] = 1
+			hrp, err := VerifyMetadataAddressFormat(link.MDAddr)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("invalid metadata address %#v: %w", link.MDAddr, err))
+				hasErr[key] = true
+				continue
+			}
+			if hrp != PrefixScope {
+				errs = append(errs, fmt.Errorf("invalid metadata address %q: must be a scope address", link.MDAddr))
+				continue
+			}
+		case 1:
+			seenMDAddrs[key]++
+			verb := "%q"
+			if hasErr[key] {
+				verb = "%#v"
+			}
+			errs = append(errs, fmt.Errorf("contains metadata address "+verb+" more than once", link.MDAddr))
+			continue
+		}
+	}
+	return errors.Join(errs...)
+}
+
 // GetAccAddrs returns a list of all the AccAddr contained in this AccMDLinks.
 // Each entry will appear only once and they will be in the order first seen.
 func (a AccMDLinks) GetAccAddrs() []sdk.AccAddress {
@@ -904,6 +936,18 @@ func (a AccMDLinks) GetMetadataAddrs() []MetadataAddress {
 			rv = append(rv, link.MDAddr)
 			seen[string(link.MDAddr)] = true
 		}
+	}
+	return rv
+}
+
+// Coins creates a Coins containing an entry for every MDAddr in this AccMDLinks.
+func (a AccMDLinks) Coins() sdk.Coins {
+	if len(a) == 0 {
+		return nil
+	}
+	rv := make(sdk.Coins, 0, len(a))
+	for _, link := range a {
+		rv = rv.Add(link.MDAddr.Coin())
 	}
 	return rv
 }
