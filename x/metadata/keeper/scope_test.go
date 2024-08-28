@@ -404,6 +404,8 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
 }
 
 func (s *ScopeKeeperTestSuite) TestSetScopeValueOwners() {
+	// TODO[2137]: Redo this test
+	s.FailNow("this test needs to be overhauled")
 	// Setup
 	// Three scopes, each with different value owners.
 	// 1st has the value owner also in owners.
@@ -459,10 +461,12 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwners() {
 	}
 
 	scopes := []*types.Scope{&scopeWOwner, &scopeWDataAccess, &scopeSolo}
+	_ = scopes
 	addrNewValueOwnerAcc := sdk.AccAddress("addrNewValueOwner___")
 	addrNewValueOwner := addrNewValueOwnerAcc.String()
 	testFunc := func() {
-		mdKeeper.SetScopeValueOwners(ctx, scopes, addrNewValueOwner)
+		// TODO[2137]: Provide the correct 2nd arg here, and pay attention to the error.
+		mdKeeper.SetScopeValueOwners(ctx, nil, addrNewValueOwner)
 	}
 	s.Require().NotPanics(testFunc, "SetScopeValueOwners")
 

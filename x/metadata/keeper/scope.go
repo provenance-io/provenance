@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -161,25 +161,96 @@ func (k Keeper) GetScopeValueOwners(ctx sdk.Context, ids []types.MetadataAddress
 	return rv, errors.Join(errs...)
 }
 
-// SetScopeValueOwners updates the value owner of all the provided scopes and stores each in the kv store.
+// SetScopeValueOwners updates the value owner of all provided scopes.
+// A coin will be minted for any scope that does not yet have a value owner.
+// If the newValueOwner is empty, all of the coins for the provided scopes will be burned.
 //
-// Contract: Each provided scope must not have been modified from its value as read from state.
-// Changing one before providing it to this function can mess up indexing.
-func (k Keeper) SetScopeValueOwners(ctx sdk.Context, scopes []*types.Scope, newValueOwner string) {
-	// Not using SetScope in here to skip the re-reading of each scope.
-	// It's expected that sometimes there will be quite a few (100+) scopes to update, so this will save on gas.
-	store := ctx.KVStore(k.storeKey)
-
-	for _, oldScope := range scopes {
-		// Copy the old scope and update/store the copy.
-		newScope := *oldScope
-		newScope.ValueOwnerAddress = newValueOwner
-		b := k.cdc.MustMarshal(&newScope)
-		store.Set(newScope.ScopeId, b)
-		k.indexScope(store, &newScope, oldScope)
-		k.EmitEvent(ctx, types.NewEventScopeUpdated(oldScope.ScopeId))
+// Contract: The provided AccMDLinks must accurately indicate the current value owners of each scope in the AccAddr fields.
+// If the AccAddr field is nil or empty, that indicates that there is no value owner yet for the scope.
+func (k Keeper) SetScopeValueOwners(ctx sdk.Context, links types.AccMDLinks, newValueOwner string) error {
+	links = links.WithNilsRemoved()
+	if len(links) == 0 {
+		return nil
 	}
-	types.GetIncObjFuncN(types.TLType_Scope, types.TLAction_Updated, len(scopes))()
+
+	if err := links.ValidateAllAreScopes(); err != nil {
+		return err
+	}
+
+	var toAddr sdk.AccAddress
+	doBurn := false
+	if len(newValueOwner) == 0 {
+		// If there's no new value owner, we'll send everything to the module account so that we can then burn it.
+		toAddr = k.moduleAddr
+		doBurn = true
+	} else {
+		// Sending to another account, so make sure it's valid and not blocked.
+		var err error
+		toAddr, err = sdk.AccAddressFromBech32(newValueOwner)
+		if err != nil {
+			return fmt.Errorf("invalid new value owner address %q: %w", newValueOwner, err)
+		}
+		if k.bankKeeper.BlockedAddr(toAddr) {
+			return sdkerrors.ErrUnauthorized.Wrapf("new value owner %s is not allowed to receive funds", newValueOwner)
+		}
+	}
+
+	// Identify the addresses and the amounts to send to each, and also the amounts to mint or burn.
+	var fromAddrs []sdk.AccAddress
+	fromAddrAmts := make(map[string]sdk.Coins)
+	var toMint, toBurn sdk.Coins
+	for _, link := range links {
+		coin := link.MDAddr.Coin()
+
+		if len(link.AccAddr) == 0 {
+			if doBurn {
+				// There's no AccAddr which means it hasn't been minted yet, but we're burning so we can just ignore it.
+				continue
+			}
+			// Make sure the lack of an existing owner isn't a lie.
+			supply := k.bankKeeper.GetSupply(ctx, coin.Denom)
+			if !supply.IsZero() {
+				return fmt.Errorf("cannot mint scope coin for %q: supply %s is not zero", link.MDAddr, supply.Amount)
+			}
+			// Add it to the amount to mint and send it from the module account.
+			toMint = toMint.Add(coin)
+			link.AccAddr = k.moduleAddr
+		}
+
+		cur, seen := fromAddrAmts[string(link.AccAddr)]
+		if !seen {
+			fromAddrs = append(fromAddrs, link.AccAddr)
+		}
+		fromAddrAmts[string(link.AccAddr)] = cur.Add(coin)
+		if doBurn {
+			toBurn = toBurn.Add(coin)
+		}
+	}
+
+	// Mint anything that needs minting.
+	if !doBurn && !toMint.IsZero() {
+		if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, toMint); err != nil {
+			return fmt.Errorf("could not mint scope coins %q: %w", toMint, err)
+		}
+	}
+
+	// Do all the sending!
+	for _, fromAddr := range fromAddrs {
+		if !toAddr.Equals(fromAddr) {
+			if err := k.bankKeeper.SendCoins(ctx, fromAddr, toAddr, fromAddrAmts[string(fromAddr)]); err != nil {
+				return fmt.Errorf("could not send scope coins %q from %s to %s: %w", fromAddrAmts[string(fromAddr)], fromAddr, toAddr, err)
+			}
+		}
+	}
+
+	// If we're burning it, it should all be in the module account, so we can burn it all!
+	if doBurn && !toBurn.IsZero() {
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, toBurn); err != nil {
+			return fmt.Errorf("could not burn scope coins %q", toBurn)
+		}
+	}
+
+	return nil
 }
 
 // scopeIndexValues is a struct containing the values used to index a scope.
