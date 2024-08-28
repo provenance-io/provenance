@@ -808,6 +808,11 @@ func (ma MetadataAddress) Denom() string {
 	return "nft/" + ma.String()
 }
 
+// Coin creates the singular coin that represents this MetadataAddress.
+func (ma MetadataAddress) Coin() sdk.Coin {
+	return sdk.NewInt64Coin(ma.Denom(), 1)
+}
+
 // AccMDLink associates an account address with a metadata address.
 type AccMDLink struct {
 	AccAddr sdk.AccAddress
