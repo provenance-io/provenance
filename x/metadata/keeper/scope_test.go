@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -138,6 +139,268 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 	scope, found = s.app.MetadataKeeper.GetScope(ctx, s.scopeID)
 	s.Assert().False(found)
 	s.Assert().NotNil(scope)
+}
+
+func (s *ScopeKeeperTestSuite) TestGetScopeValueOwner() {
+	nonScopeErr := func(id string) string {
+		return "cannot get value owner for non-scope metadata address \"" + id + "\""
+	}
+
+	tests := []struct {
+		name      string
+		bk        *MockBankKeeper
+		id        types.MetadataAddress
+		expAddr   sdk.AccAddress
+		expErr    string
+		expBKCall bool
+	}{
+		{
+			name:   "nil id",
+			id:     nil,
+			expErr: nonScopeErr(""),
+		},
+		{
+			name:   "empty id",
+			id:     types.MetadataAddress{},
+			expErr: nonScopeErr(""),
+		},
+		{
+			name:   "session id",
+			id:     types.SessionMetadataAddress(s.scopeUUID, s.scopeSpecUUID),
+			expErr: nonScopeErr(types.SessionMetadataAddress(s.scopeUUID, s.scopeSpecUUID).String()),
+		},
+		{
+			name:   "record id",
+			id:     types.RecordMetadataAddress(s.scopeUUID, "justsomerecord"),
+			expErr: nonScopeErr(types.RecordMetadataAddress(s.scopeUUID, "justsomerecord").String()),
+		},
+		{
+			name:   "scope spec id",
+			id:     s.scopeSpecID,
+			expErr: nonScopeErr(s.scopeSpecID.String()),
+		},
+		{
+			name:   "contract spec id",
+			id:     types.ContractSpecMetadataAddress(s.scopeUUID),
+			expErr: nonScopeErr(types.ContractSpecMetadataAddress(s.scopeUUID).String()),
+		},
+		{
+			name:   "record spec id",
+			id:     types.RecordSpecMetadataAddress(s.scopeUUID, "justsomerecord"),
+			expErr: nonScopeErr(types.RecordSpecMetadataAddress(s.scopeUUID, "justsomerecord").String()),
+		},
+		{
+			name:      "scope id without owner",
+			id:        s.scopeID,
+			expAddr:   nil,
+			expErr:    "",
+			expBKCall: true,
+		},
+		{
+			name:      "scope id with lookup error",
+			bk:        NewMockBankKeeper().WithDenomOwnerError(s.scopeID, "this error was injected"),
+			id:        s.scopeID,
+			expErr:    "this error was injected",
+			expBKCall: true,
+		},
+		{
+			name:      "scope id with owner",
+			bk:        NewMockBankKeeper().WithDenomOwnerResult(s.scopeID, s.user1Addr),
+			id:        s.scopeID,
+			expAddr:   s.user1Addr,
+			expBKCall: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.bk == nil {
+				tc.bk = NewMockBankKeeper()
+			}
+			origBK := s.app.MetadataKeeper.SetBankKeeper(tc.bk)
+			defer func() {
+				s.app.MetadataKeeper.SetBankKeeper(origBK)
+			}()
+			var expBKCalls []string
+			if tc.expBKCall {
+				expBKCalls = append(expBKCalls, tc.id.Denom())
+			}
+
+			ctx := s.FreshCtx()
+			var actAddr sdk.AccAddress
+			var actErr error
+			testFunc := func() {
+				actAddr, actErr = s.app.MetadataKeeper.GetScopeValueOwner(ctx, tc.id)
+			}
+			s.Require().NotPanics(testFunc, "GetScopeValueOwner")
+			s.AssertErrorValue(actErr, tc.expErr, "GetScopeValueOwner error")
+			s.Assert().Equal(tc.expAddr, actAddr, "GetScopeValueOwner address")
+			s.Assert().Equal(expBKCalls, tc.bk.DenomOwnerCalls, "calls made to DenomOwners")
+		})
+	}
+}
+
+func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
+	nonScopeErr := func(id string) string {
+		return "cannot get value owner for non-scope metadata address \"" + id + "\""
+	}
+	joinErrs := func(errs ...string) string {
+		return strings.Join(errs, "\n")
+	}
+	uuids := make([]uuid.UUID, 10)
+	scopeIDs := make([]types.MetadataAddress, len(uuids))
+	for i := range uuids {
+		bz := []byte(fmt.Sprintf("uuids[%d]________", i))
+		var err error
+		uuids[i], err = uuid.FromBytes(bz)
+		s.Require().NoError(err, "uuid.FromBytes(%q)", string(bz))
+		scopeIDs[i] = types.ScopeMetadataAddress(uuids[i])
+	}
+
+	tests := []struct {
+		name       string
+		bk         *MockBankKeeper
+		ids        []types.MetadataAddress
+		expLinks   types.AccMDLinks
+		expErr     string
+		expBKCalls []string
+	}{
+		{
+			name:     "nil ids",
+			ids:      nil,
+			expLinks: types.AccMDLinks{},
+		},
+		{
+			name:     "empty ids",
+			ids:      []types.MetadataAddress{},
+			expLinks: types.AccMDLinks{},
+		},
+		{
+			name:     "one nil id",
+			ids:      []types.MetadataAddress{nil},
+			expLinks: types.AccMDLinks{},
+			expErr:   nonScopeErr(""),
+		},
+		{
+			name:     "one empty id",
+			ids:      []types.MetadataAddress{{}},
+			expLinks: types.AccMDLinks{},
+			expErr:   nonScopeErr(""),
+		},
+		{
+			name: "one of each non-scope id",
+			ids: []types.MetadataAddress{
+				types.SessionMetadataAddress(uuids[0], uuids[1]),
+				types.RecordMetadataAddress(uuids[2], "somerecord"),
+				types.ScopeSpecMetadataAddress(uuids[3]),
+				types.ContractSpecMetadataAddress(uuids[4]),
+				types.RecordSpecMetadataAddress(uuids[5], "somerecord"),
+			},
+			expLinks: types.AccMDLinks{},
+			expErr: joinErrs(
+				nonScopeErr(types.SessionMetadataAddress(uuids[0], uuids[1]).String()),
+				nonScopeErr(types.RecordMetadataAddress(uuids[2], "somerecord").String()),
+				nonScopeErr(types.ScopeSpecMetadataAddress(uuids[3]).String()),
+				nonScopeErr(types.ContractSpecMetadataAddress(uuids[4]).String()),
+				nonScopeErr(types.RecordSpecMetadataAddress(uuids[5], "somerecord").String()),
+			),
+		},
+		{
+			name:       "one id: no owner",
+			ids:        []types.MetadataAddress{scopeIDs[0]},
+			expLinks:   types.AccMDLinks{types.NewAccMDLink(nil, scopeIDs[0])},
+			expBKCalls: []string{scopeIDs[0].Denom()},
+		},
+		{
+			name:       "one id: DenomOwner error",
+			bk:         NewMockBankKeeper().WithDenomOwnerError(scopeIDs[1], "something broke yo"),
+			ids:        []types.MetadataAddress{scopeIDs[1]},
+			expLinks:   types.AccMDLinks{},
+			expErr:     "something broke yo",
+			expBKCalls: []string{scopeIDs[1].Denom()},
+		},
+		{
+			name: "three ids: errors for all",
+			bk: NewMockBankKeeper().
+				WithDenomOwnerError(scopeIDs[3], "its now on fire").
+				WithDenomOwnerError(scopeIDs[6], "small thing go big boom").
+				WithDenomOwnerError(scopeIDs[7], "something broke yo"),
+			ids:        []types.MetadataAddress{scopeIDs[7], scopeIDs[3], scopeIDs[6]},
+			expLinks:   types.AccMDLinks{},
+			expErr:     joinErrs("something broke yo", "its now on fire", "small thing go big boom"),
+			expBKCalls: []string{scopeIDs[7].Denom(), scopeIDs[3].Denom(), scopeIDs[6].Denom()},
+		},
+		{
+			name: "three ids: same owner",
+			bk: NewMockBankKeeper().
+				WithDenomOwnerResult(scopeIDs[4], s.user1Addr).
+				WithDenomOwnerResult(scopeIDs[5], s.user1Addr).
+				WithDenomOwnerResult(scopeIDs[6], s.user1Addr),
+			ids: []types.MetadataAddress{scopeIDs[4], scopeIDs[5], scopeIDs[6]},
+			expLinks: types.AccMDLinks{
+				types.NewAccMDLink(s.user1Addr, scopeIDs[4]),
+				types.NewAccMDLink(s.user1Addr, scopeIDs[5]),
+				types.NewAccMDLink(s.user1Addr, scopeIDs[6]),
+			},
+			expBKCalls: []string{scopeIDs[4].Denom(), scopeIDs[5].Denom(), scopeIDs[6].Denom()},
+		},
+		{
+			name: "three ids: different owners",
+			bk: NewMockBankKeeper().
+				WithDenomOwnerResult(scopeIDs[0], s.user1Addr).
+				WithDenomOwnerResult(scopeIDs[9], s.user2Addr).
+				WithDenomOwnerResult(scopeIDs[4], s.user3Addr),
+			ids: []types.MetadataAddress{scopeIDs[0], scopeIDs[9], scopeIDs[4]},
+			expLinks: types.AccMDLinks{
+				types.NewAccMDLink(s.user1Addr, scopeIDs[0]),
+				types.NewAccMDLink(s.user2Addr, scopeIDs[9]),
+				types.NewAccMDLink(s.user3Addr, scopeIDs[4]),
+			},
+			expBKCalls: []string{scopeIDs[0].Denom(), scopeIDs[9].Denom(), scopeIDs[4].Denom()},
+		},
+		{
+			name: "four ids: one non-scope, error from one, one found, one not found",
+			bk: NewMockBankKeeper().
+				WithDenomOwnerResult(scopeIDs[1], s.user3Addr).
+				WithDenomOwnerError(scopeIDs[2], "oopsie daisy: no worky"),
+			ids: []types.MetadataAddress{
+				types.ContractSpecMetadataAddress(uuids[7]),
+				scopeIDs[1], scopeIDs[2], scopeIDs[8],
+			},
+			expLinks: types.AccMDLinks{
+				types.NewAccMDLink(s.user3Addr, scopeIDs[1]),
+				types.NewAccMDLink(nil, scopeIDs[8]),
+			},
+			expErr: joinErrs(
+				nonScopeErr(types.ContractSpecMetadataAddress(uuids[7]).String()),
+				"oopsie daisy: no worky",
+			),
+			expBKCalls: []string{scopeIDs[1].Denom(), scopeIDs[2].Denom(), scopeIDs[8].Denom()},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.bk == nil {
+				tc.bk = NewMockBankKeeper()
+			}
+			origBK := s.app.MetadataKeeper.SetBankKeeper(tc.bk)
+			defer func() {
+				s.app.MetadataKeeper.SetBankKeeper(origBK)
+			}()
+
+			ctx := s.FreshCtx()
+			var actLinks types.AccMDLinks
+			var actErr error
+			testFunc := func() {
+				actLinks, actErr = s.app.MetadataKeeper.GetScopeValueOwners(ctx, tc.ids)
+			}
+			s.Require().NotPanics(testFunc, "GetScopeValueOwners")
+			s.AssertErrorValue(actErr, tc.expErr, "GetScopeValueOwners error")
+			s.Assert().Equal(tc.expLinks, actLinks, "GetScopeValueOwners address")
+			s.Assert().Equal(tc.expBKCalls, tc.bk.DenomOwnerCalls, "calls made to DenomOwners")
+		})
+	}
 }
 
 func (s *ScopeKeeperTestSuite) TestSetScopeValueOwners() {

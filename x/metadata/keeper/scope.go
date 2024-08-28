@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
@@ -134,6 +135,30 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 	store.Delete(id)
 	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope.ScopeId))
 	defer types.GetIncObjFunc(types.TLType_Scope, types.TLAction_Deleted)
+}
+
+// GetScopeValueOwner gets the value owner of a given scope.
+func (k Keeper) GetScopeValueOwner(ctx sdk.Context, id types.MetadataAddress) (sdk.AccAddress, error) {
+	if !id.IsScopeAddress() {
+		return nil, fmt.Errorf("cannot get value owner for non-scope metadata address %q", id)
+	}
+	return k.bankKeeper.DenomOwner(ctx, id.Denom())
+}
+
+// GetScopeValueOwners gets the value owners for each given scope.
+// The AccAddr will be nil for any scope that does not have a value owner.
+func (k Keeper) GetScopeValueOwners(ctx sdk.Context, ids []types.MetadataAddress) (types.AccMDLinks, error) {
+	var errs []error
+	rv := make(types.AccMDLinks, 0, len(ids))
+	for _, id := range ids {
+		addr, err := k.GetScopeValueOwner(ctx, id)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			rv = append(rv, types.NewAccMDLink(addr, id))
+		}
+	}
+	return rv, errors.Join(errs...)
 }
 
 // SetScopeValueOwners updates the value owner of all the provided scopes and stores each in the kv store.

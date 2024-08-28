@@ -2,14 +2,17 @@ package keeper_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/provenance-io/provenance/x/metadata/keeper"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // This file houses mock stuff for use in unit tests.
@@ -336,3 +339,77 @@ func (a *MockAuthorization) String() string {
 
 // ProtoMessage satisfies the authz.Authorization interface.
 func (a *MockAuthorization) ProtoMessage() {}
+
+// ensure that the MockBankKeeper implements keeper.BankKeeper.
+var _ keeper.BankKeeper = (*MockBankKeeper)(nil)
+
+type MockBankKeeper struct {
+	DenomOwnerResults map[string]DenomOwnerResult
+	DenomOwnerCalls   []string
+}
+
+func NewMockBankKeeper() *MockBankKeeper {
+	return &MockBankKeeper{
+		DenomOwnerResults: make(map[string]DenomOwnerResult),
+	}
+}
+
+func (k *MockBankKeeper) WithDenomOwnerResult(mdAddr types.MetadataAddress, accAddr sdk.AccAddress) *MockBankKeeper {
+	k.DenomOwnerResults[mdAddr.Denom()] = DenomOwnerResult{Owner: accAddr}
+	return k
+}
+
+func (k *MockBankKeeper) WithDenomOwnerError(mdAddr types.MetadataAddress, err string) *MockBankKeeper {
+	k.DenomOwnerResults[mdAddr.Denom()] = DenomOwnerResult{Err: err}
+	return k
+}
+
+// ClearResults clears previously recorded calls but leaves the desired results intact.
+func (k *MockBankKeeper) ClearResults() {
+	k.DenomOwnerCalls = nil
+}
+
+type DenomOwnerResult struct {
+	Owner sdk.AccAddress
+	Err   string
+}
+
+func (k *MockBankKeeper) BlockedAddr(addr sdk.AccAddress) bool {
+	panic("not implemented")
+}
+
+func (k *MockBankKeeper) MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
+	panic("not implemented")
+}
+
+func (k *MockBankKeeper) BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
+	panic("not implemented")
+}
+
+func (k *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	panic("not implemented")
+}
+
+func (k *MockBankKeeper) InputOutputCoins(ctx context.Context, input banktypes.Input, outputs []banktypes.Output) error {
+	panic("not implemented")
+}
+
+func (k *MockBankKeeper) SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
+	panic("not implemented")
+}
+
+func (k *MockBankKeeper) SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
+	panic("not implemented")
+}
+
+func (k *MockBankKeeper) DenomOwner(_ context.Context, denom string) (sdk.AccAddress, error) {
+	k.DenomOwnerCalls = append(k.DenomOwnerCalls, denom)
+	result, found := k.DenomOwnerResults[denom]
+	if found {
+		if len(result.Err) > 0 {
+			return nil, errors.New(result.Err)
+		}
+		return result.Owner, nil
+	}
+	return nil, nil
+}
