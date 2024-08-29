@@ -94,7 +94,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	scope, found := k.GetScope(ctx, scopeAddr)
+	scope, found := k.GetScopeWithValueOwner(ctx, scopeAddr)
 	if found {
 		retval.Scope = types.WrapScope(&scope, !req.ExcludeIdInfo)
 	} else {
@@ -162,6 +162,7 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 		var scope types.Scope
 		vErr := scope.Unmarshal(value)
 		if vErr == nil {
+			k.PopulateScopeValueOwner(ctx, &scope)
 			retval.Scopes = append(retval.Scopes, types.WrapScope(&scope, incInfo))
 			return nil
 		}
@@ -300,7 +301,7 @@ func (k Keeper) Sessions(c context.Context, req *types.SessionsRequest) (*types.
 	}
 
 	if req.IncludeScope {
-		scope, found := k.GetScope(ctx, scopeAddr)
+		scope, found := k.GetScopeWithValueOwner(ctx, scopeAddr)
 		if found {
 			retval.Scope = types.WrapScope(&scope, !req.ExcludeIdInfo)
 		} else {
@@ -485,7 +486,7 @@ func (k Keeper) Records(c context.Context, req *types.RecordsRequest) (*types.Re
 	}
 
 	if req.IncludeScope {
-		scope, found := k.GetScope(ctx, scopeAddr)
+		scope, found := k.GetScopeWithValueOwner(ctx, scopeAddr)
 		if found {
 			retval.Scope = types.WrapScope(&scope, !req.ExcludeIdInfo)
 		} else {
@@ -975,7 +976,7 @@ func (k Keeper) GetByAddr(c context.Context, req *types.GetByAddrRequest) (*type
 		}
 		switch hrp {
 		case types.PrefixScope:
-			scope, found := k.GetScope(ctx, id)
+			scope, found := k.GetScopeWithValueOwner(ctx, id)
 			if found {
 				retval.Scopes = append(retval.Scopes, &scope)
 			} else {
