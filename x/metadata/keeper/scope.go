@@ -98,6 +98,7 @@ func (k Keeper) GetScopeWithValueOwner(ctx sdk.Context, id types.MetadataAddress
 
 // SetScope stores a scope in the module kv store.
 func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
+	scope.ValueOwnerAddress = ""
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&scope)
 
