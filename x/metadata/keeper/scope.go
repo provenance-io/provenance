@@ -469,7 +469,7 @@ func (k Keeper) ValidateWriteScope(
 // ValidateDeleteScope checks the current scope and the proposed removal scope to determine if the proposed remove is valid
 // based on the existing state
 func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRequest) error {
-	scope, found := k.GetScope(ctx, msg.ScopeId)
+	scope, found := k.GetScopeWithValueOwner(ctx, msg.ScopeId)
 	if !found {
 		return fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
