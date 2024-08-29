@@ -20,10 +20,7 @@ func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop b
 	for ; it.Valid(); it.Next() {
 		var scope types.Scope
 		k.cdc.MustUnmarshal(it.Value(), &scope)
-		vo, err := k.GetScopeValueOwner(ctx, scope.ScopeId)
-		if err == nil && len(vo) > 0 {
-			scope.ValueOwnerAddress = vo.String()
-		}
+		k.PopulateScopeValueOwner(ctx, &scope)
 		if handler(scope) {
 			break
 		}
@@ -88,12 +85,19 @@ func (k Keeper) GetScope(ctx sdk.Context, id types.MetadataAddress) (scope types
 func (k Keeper) GetScopeWithValueOwner(ctx sdk.Context, id types.MetadataAddress) (scope types.Scope, found bool) {
 	scope, found = k.GetScope(ctx, id)
 	if found {
-		vo, err := k.GetScopeValueOwner(ctx, id)
-		if err == nil && len(vo) > 0 {
-			scope.ValueOwnerAddress = vo.String()
-		}
+		k.PopulateScopeValueOwner(ctx, &scope)
 	}
 	return scope, found
+}
+
+// PopulateScopeValueOwner will look up and set the ValueOwnerAddress in the provided scope.
+func (k Keeper) PopulateScopeValueOwner(ctx sdk.Context, scope *types.Scope) {
+	vo, err := k.GetScopeValueOwner(ctx, scope.ScopeId)
+	if err == nil && len(vo) > 0 {
+		scope.ValueOwnerAddress = vo.String()
+	} else {
+		scope.ValueOwnerAddress = ""
+	}
 }
 
 // SetScope stores a scope in the module kv store.

@@ -123,22 +123,237 @@ func randomUser() testUser {
 
 func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 	ctx := s.FreshCtx()
-	scope, found := s.app.MetadataKeeper.GetScope(ctx, s.scopeID)
-	s.Assert().NotNil(scope)
-	s.False(found)
+	theScope := *types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1, false)
 
-	ns := *types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1, false)
-	s.Assert().NotNil(ns)
-	s.app.MetadataKeeper.SetScope(ctx, ns)
+	tests := []struct {
+		name   string
+		runner func()
+	}{
+		{
+			name: "before setting scope",
+			runner: func() {
+				expScope := types.Scope{}
+				actScope, found := s.app.MetadataKeeper.GetScope(ctx, theScope.ScopeId)
+				s.Assert().False(found, "GetScope found")
+				s.Assert().Equal(expScope, actScope, "GetScope result")
+			},
+		},
+		{
+			name: "set scope",
+			runner: func() {
+				// Note: Management of index entries during SetScope is tested in TestScopeIndexing.
+				ctx = ctx.WithEventManager(sdk.NewEventManager())
+				expEvent, err := sdk.TypedEventToEvent(types.NewEventScopeCreated(theScope.ScopeId))
+				s.Require().NoError(err, "TypedEventToEvent NewEventScopeCreated")
+				expEvents := sdk.Events{expEvent}
 
-	scope, found = s.app.MetadataKeeper.GetScope(ctx, s.scopeID)
-	s.Assert().True(found)
-	s.Assert().NotNil(scope)
+				s.app.MetadataKeeper.SetScope(ctx, theScope)
+				actEvents := ctx.EventManager().Events()
+				assertions.AssertEqualEvents(s.T(), expEvents, actEvents, "events emitted during SetScope new")
+			},
+		},
+		{
+			name: "after setting it",
+			runner: func() {
+				expScope := theScope
+				expScope.ValueOwnerAddress = ""
+				actScope, found := s.app.MetadataKeeper.GetScope(ctx, theScope.ScopeId)
+				s.Assert().True(found, "GetScope found")
+				s.Assert().Equal(expScope, actScope, "GetScope result")
+			},
+		},
+		{
+			name: "update scope",
+			runner: func() {
+				// Note: Management of index entries during SetScope is tested in TestScopeIndexing.
+				ctx = ctx.WithEventManager(sdk.NewEventManager())
+				theScope.DataAccess = append(theScope.DataAccess, s.user2)
+				expEvent, err := sdk.TypedEventToEvent(types.NewEventScopeUpdated(theScope.ScopeId))
+				s.Require().NoError(err, "TypedEventToEvent NewEventScopeUpdated")
+				expEvents := sdk.Events{expEvent}
 
-	s.app.MetadataKeeper.RemoveScope(ctx, ns.ScopeId)
-	scope, found = s.app.MetadataKeeper.GetScope(ctx, s.scopeID)
-	s.Assert().False(found)
-	s.Assert().NotNil(scope)
+				s.app.MetadataKeeper.SetScope(ctx, theScope)
+				actEvents := ctx.EventManager().Events()
+				assertions.AssertEqualEvents(s.T(), expEvents, actEvents, "events emitted during SetScope update")
+			},
+		},
+		{
+			name: "after update",
+			runner: func() {
+				expScope := theScope
+				expScope.ValueOwnerAddress = ""
+				actScope, found := s.app.MetadataKeeper.GetScope(ctx, theScope.ScopeId)
+				s.Assert().True(found, "GetScope found")
+				s.Assert().Equal(expScope, actScope, "GetScope result")
+			},
+		},
+		{
+			name: "remove scope",
+			runner: func() {
+				// Note: Management of index entries during RemoveScope is tested in TestScopeIndexing.
+				// More detailed tests of RemoveScope is done in various other tests.
+				ctx = ctx.WithEventManager(sdk.NewEventManager())
+				expEvent, err := sdk.TypedEventToEvent(types.NewEventScopeDeleted(theScope.ScopeId))
+				s.Require().NoError(err, "TypedEventToEvent NewEventScopeDeleted")
+				expEvents := sdk.Events{expEvent}
+
+				s.app.MetadataKeeper.RemoveScope(ctx, theScope.ScopeId)
+				actEvents := ctx.EventManager().Events()
+				assertions.AssertEqualEvents(s.T(), expEvents, actEvents, "events emitted during RemoveScope")
+			},
+		},
+		{
+			name: "after remove scope",
+			runner: func() {
+				expScope := types.Scope{}
+				actScope, found := s.app.MetadataKeeper.GetScope(ctx, theScope.ScopeId)
+				s.Assert().False(found, "GetScope found")
+				s.Assert().Equal(expScope, actScope, "GetScope result")
+			},
+		},
+	}
+
+	ok := true
+	for _, tc := range tests {
+		ok = s.Run(tc.name, func() {
+			if !ok {
+				s.T().Skip("Skipping due to previous failure.")
+			}
+			tc.runner()
+		}) && ok
+	}
+}
+
+func (s *ScopeKeeperTestSuite) TestGetScopeWithValueOwner() {
+	noScopeUUID, err := uuid.FromBytes([]byte("1111111111111111"))
+	s.Require().NoError(err, "uuid.FromBytes([]byte(\"1111111111111111\"))")
+	noScopeID := types.ScopeMetadataAddress(noScopeUUID)
+
+	okScopeUUID, err := uuid.FromBytes([]byte("2222222222222222"))
+	s.Require().NoError(err, "uuid.FromBytes([]byte(\"2222222222222222\"))")
+	okScopeID := types.ScopeMetadataAddress(okScopeUUID)
+
+	okScope := types.Scope{
+		ScopeId:            okScopeID,
+		SpecificationId:    s.scopeSpecID,
+		Owners:             ownerPartyList(s.user1),
+		ValueOwnerAddress:  "",
+		RequirePartyRollup: true,
+	}
+
+	s.app.MetadataKeeper.SetScope(s.FreshCtx(), okScope)
+
+	tests := []struct {
+		name     string
+		bk       *MockBankKeeper
+		id       types.MetadataAddress
+		expScope types.Scope
+		expFound bool
+	}{
+		{
+			name:     "no such scope",
+			id:       noScopeID,
+			expScope: types.Scope{},
+			expFound: false,
+		},
+		{
+			name: "no such scope but has a value owner on record",
+			bk:   NewMockBankKeeper().WithDenomOwnerResult(noScopeID, s.user3Addr),
+			id:   noScopeID,
+			// This is testing that the ValueOwnerAddress field is not populated in this case.
+			expScope: types.Scope{},
+			expFound: false,
+		},
+		{
+			name:     "scope without value owner",
+			id:       okScopeID,
+			expScope: okScope,
+			expFound: true,
+		},
+		{
+			name: "scope with value owner",
+			bk:   NewMockBankKeeper().WithDenomOwnerResult(okScopeID, s.user3Addr),
+			id:   okScopeID,
+			expScope: types.Scope{
+				ScopeId:            okScope.ScopeId,
+				SpecificationId:    okScope.SpecificationId,
+				Owners:             okScope.Owners,
+				DataAccess:         okScope.DataAccess,
+				ValueOwnerAddress:  s.user3,
+				RequirePartyRollup: okScope.RequirePartyRollup,
+			},
+			expFound: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.bk == nil {
+				tc.bk = NewMockBankKeeper()
+			}
+			origBK := s.app.MetadataKeeper.SetBankKeeper(tc.bk)
+			defer func() {
+				s.app.MetadataKeeper.SetBankKeeper(origBK)
+			}()
+
+			ctx := s.FreshCtx()
+			var actScope types.Scope
+			var actFound bool
+			testFunc := func() {
+				actScope, actFound = s.app.MetadataKeeper.GetScopeWithValueOwner(ctx, tc.id)
+			}
+			s.Require().NotPanics(testFunc, "GetScopeWithValueOwner")
+			s.Assert().Equal(tc.expScope, actScope, "GetScopeWithValueOwner scope")
+			s.Assert().Equal(tc.expFound, actFound, "GetScopeWithValueOwner found")
+		})
+	}
+}
+
+func (s *ScopeKeeperTestSuite) TestPopulateScopeValueOwner() {
+	tests := []struct {
+		name  string
+		bk    *MockBankKeeper
+		scope types.Scope
+		expVO string
+	}{
+		{
+			name:  "error getting value owner",
+			bk:    NewMockBankKeeper().WithDenomOwnerError(s.scopeID, "oops go boom"),
+			scope: types.Scope{ScopeId: s.scopeID, ValueOwnerAddress: "initialvo"},
+			expVO: "",
+		},
+		{
+			name:  "no value owner",
+			scope: types.Scope{ScopeId: s.scopeID, ValueOwnerAddress: "initialvo"},
+			expVO: "",
+		},
+		{
+			name:  "has value owner",
+			bk:    NewMockBankKeeper().WithDenomOwnerResult(s.scopeID, s.user2Addr),
+			scope: types.Scope{ScopeId: s.scopeID, ValueOwnerAddress: "initialvo"},
+			expVO: s.user2,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.bk == nil {
+				tc.bk = NewMockBankKeeper()
+			}
+			origBK := s.app.MetadataKeeper.SetBankKeeper(tc.bk)
+			defer func() {
+				s.app.MetadataKeeper.SetBankKeeper(origBK)
+			}()
+
+			ctx := s.FreshCtx()
+			testFunc := func() {
+				s.app.MetadataKeeper.PopulateScopeValueOwner(ctx, &tc.scope)
+			}
+			s.Require().NotPanics(testFunc, "PopulateScopeValueOwner")
+			actVO := tc.scope.ValueOwnerAddress
+			s.Assert().Equal(tc.expVO, actVO, "ValueOwnerAddress after PopulateScopeValueOwner")
+		})
+	}
 }
 
 func (s *ScopeKeeperTestSuite) TestGetScopeValueOwner() {
