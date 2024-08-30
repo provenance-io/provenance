@@ -662,6 +662,18 @@ func (ma MetadataAddress) IsScopeAddress() bool {
 	return (err == nil && hrp == PrefixScope)
 }
 
+// ValidateIsScopeAddress returns an error if this isn't a valid MetadataAddress or if it's not a scope.
+func (ma MetadataAddress) ValidateIsScopeAddress() error {
+	hrp, err := VerifyMetadataAddressFormat(ma)
+	if err != nil {
+		return fmt.Errorf("invalid metadata address %#v: %w", ma, err)
+	}
+	if hrp != PrefixScope {
+		return fmt.Errorf("invalid metadata address %q: must be a scope address", ma)
+	}
+	return nil
+}
+
 // IsSessionAddress returns true if this address is valid and has a session type byte.
 func (ma MetadataAddress) IsSessionAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
@@ -896,12 +908,8 @@ func (a AccMDLinks) ValidateForScopes() error {
 		switch seenMDAddrs[key] {
 		case 0:
 			seenMDAddrs[key] = 1
-			hrp, err := VerifyMetadataAddressFormat(link.MDAddr)
-			switch {
-			case err != nil:
-				return fmt.Errorf("invalid metadata address %#v: %w", link.MDAddr, err)
-			case hrp != PrefixScope:
-				return fmt.Errorf("invalid metadata address %q: must be a scope address", link.MDAddr)
+			if err := link.MDAddr.ValidateIsScopeAddress(); err != nil {
+				return err
 			}
 		case 1:
 			seenMDAddrs[key] = 2

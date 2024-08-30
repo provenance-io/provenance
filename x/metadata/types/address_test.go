@@ -1851,6 +1851,86 @@ func (s *AddressTestSuite) TestFormat() {
 	})
 }
 
+func (s *AddressTestSuite) TestValidateIsScopeAddress() {
+	newUUID := func(name string, i int) uuid.UUID {
+		bz := []byte(fmt.Sprintf("%s[%d]________________", name, i))[:16]
+		rv, err := uuid.FromBytes(bz)
+		s.Require().NoError(err, "%s[%d]: uuid.FromBytes(%q)", name, i, bz)
+		return rv
+	}
+	notScopeErr := func(ma MetadataAddress) string {
+		return fmt.Sprintf("invalid metadata address %q: must be a scope address", ma)
+	}
+
+	tests := []struct {
+		name string
+		ma   MetadataAddress
+		exp  string
+	}{
+		{
+			name: "nil",
+			ma:   nil,
+			exp:  "invalid metadata address MetadataAddress(nil): address is empty",
+		},
+		{
+			name: "empty",
+			ma:   MetadataAddress{},
+			exp:  "invalid metadata address MetadataAddress{}: address is empty",
+		},
+		{
+			name: "session",
+			ma:   SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1)),
+			exp:  notScopeErr(SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1))),
+		},
+		{
+			name: "record",
+			ma:   RecordMetadataAddress(newUUID("record", 2), "bananas"),
+			exp:  notScopeErr(RecordMetadataAddress(newUUID("record", 2), "bananas")),
+		},
+		{
+			name: "scope spec",
+			ma:   ScopeSpecMetadataAddress(newUUID("scopespec", 3)),
+			exp:  notScopeErr(ScopeSpecMetadataAddress(newUUID("scopespec", 3))),
+		},
+		{
+			name: "contract spec",
+			ma:   ContractSpecMetadataAddress(newUUID("scopespec", 3)),
+			exp:  notScopeErr(ContractSpecMetadataAddress(newUUID("scopespec", 3))),
+		},
+		{
+			name: "record spec",
+			ma:   RecordSpecMetadataAddress(newUUID("recordspec", 4), "bananas"),
+			exp:  notScopeErr(RecordSpecMetadataAddress(newUUID("recordspec", 4), "bananas")),
+		},
+		{
+			name: "unknown type",
+			ma:   MetadataAddress{0xa0, 0x1, 0x2, 0xff},
+			exp:  "invalid metadata address MetadataAddress{0xa0, 0x1, 0x2, 0xff}: invalid metadata address type: 160",
+		},
+		{
+			name: "invalid scope",
+			ma:   MetadataAddress{ScopeKeyPrefix[0], 0x1, 0x2, 0xff},
+			exp:  "invalid metadata address MetadataAddress{0x0, 0x1, 0x2, 0xff}: incorrect address length (expected: 17, actual: 4)",
+		},
+		{
+			name: "valid scope",
+			ma:   ScopeMetadataAddress(newUUID("scope", 5)),
+			exp:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var err error
+			testFunc := func() {
+				err = tc.ma.ValidateIsScopeAddress()
+			}
+			s.Require().NotPanics(testFunc, "%#v.ValidateIsScopeAddress()", tc.ma)
+			assertions.AssertErrorValue(s.T(), err, tc.exp, "%#v.ValidateIsScopeAddress()", tc.ma)
+		})
+	}
+}
+
 func (s *AddressTestSuite) TestGenerateExamples() {
 	// This "test" doesn't actually test anything. It just generates some output that's helpful
 	// for validating other MetadataAddress implementations.
