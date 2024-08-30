@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -36,4 +37,9 @@ func (k *MDBankKeeper) DenomOwner(ctx context.Context, denom string) (sdk.AccAdd
 		return nil, err
 	}
 	return rv, nil
+}
+
+// GetBalancesCollection gets the Balances collection from the underlying bank keeper.
+func (k *MDBankKeeper) GetBalancesCollection() *collections.IndexedMap[collections.Pair[sdk.AccAddress, string], sdkmath.Int, bankkeeper.BalancesIndexes] {
+	return k.Balances
 }

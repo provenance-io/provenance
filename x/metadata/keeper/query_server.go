@@ -5,10 +5,13 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
+	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -616,6 +619,8 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 	return &retval, nil
 }
 
+const scopeDenomPrefix = types.DenomPrefix + types.PrefixScope + "1"
+
 // ValueOwnership returns a list of scope identifiers that list the given address as a value owner.
 func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipRequest) (*types.ValueOwnershipResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ValueOwnership")
@@ -638,8 +643,28 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	// TODO[2137]: Use the bank stuff to find the scopes for a value owner.
-	_, _ = ctx, addr
+
+	// This is basically the bank module's AllBalances query filtered to only scope denoms.
+	// But then, instead of returning coins, it returns the scope UUIDs.
+	retval.ScopeUuids, retval.Pagination, err = query.CollectionFilteredPaginate(ctx, k.bankKeeper.GetBalancesCollection(), req.Pagination,
+		func(key collections.Pair[sdk.AccAddress, string], _ sdkmath.Int) (bool, error) {
+			return strings.HasPrefix(key.K2(), scopeDenomPrefix), nil
+		},
+		func(key collections.Pair[sdk.AccAddress, string], _ sdkmath.Int) (string, error) {
+			id, idErr := types.MetadataAddressFromDenom(key.K2())
+			if idErr != nil {
+				// ignore the error and put an empty string in the list.
+				return "", nil
+			}
+			// Since MetadataAddressFromDenom didn't error, we know PrimaryUUID won't either.
+			uid, _ := id.PrimaryUUID()
+			return uid.String(), nil
+		},
+		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr),
+	)
+	if err != nil {
+		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("error collecting results: %v", err)
+	}
 
 	return &retval, nil
 }

@@ -4,8 +4,12 @@ import (
 	"context"
 	"time"
 
+	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -38,5 +42,9 @@ type BankKeeper interface {
 	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+
+	// These are methods not in the bank keeper, but that we add using our own MDBankKeeper.
+
 	DenomOwner(ctx context.Context, denom string) (sdk.AccAddress, error)
+	GetBalancesCollection() *collections.IndexedMap[collections.Pair[sdk.AccAddress, string], sdkmath.Int, bankkeeper.BalancesIndexes]
 }
