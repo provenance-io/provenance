@@ -553,6 +553,98 @@ func (s *AddressTestSuite) TestMetadataAddressFromBech32() {
 	}
 }
 
+func (s *AddressTestSuite) TestMetadataAddressFromDenom() {
+	newUUID := func(name string, i int) uuid.UUID {
+		bz := []byte(fmt.Sprintf("%s[%d]________________", name, i))[:16]
+		rv, err := uuid.FromBytes(bz)
+		s.Require().NoError(err, "%s[%d]: uuid.FromBytes(%v)", name, i, bz)
+		return rv
+	}
+	scopeID := ScopeMetadataAddress(newUUID("scope", 0))
+	sessionID := SessionMetadataAddress(newUUID("session", 1), newUUID("session", 2))
+	recordID := RecordMetadataAddress(newUUID("record", 3), "money1")
+	scopeSpecID := ScopeSpecMetadataAddress(newUUID("scopespec", 4))
+	contractSpecID := ContractSpecMetadataAddress(newUUID("contractspec", 5))
+	recordSpecID := RecordSpecMetadataAddress(newUUID("recordspec", 6), "money2")
+
+	tests := []struct {
+		name    string
+		denom   string
+		expAddr MetadataAddress
+		expErr  string
+	}{
+		{
+			name:   "empty",
+			denom:  "",
+			expErr: "denom \"\" is not a MetadataAddress denom",
+		},
+		{
+			name:   "non-medatadata denom",
+			denom:  "nhash",
+			expErr: "denom \"nhash\" is not a MetadataAddress denom",
+		},
+		{
+			name:   "starts with nft without the slash",
+			denom:  "nft" + scopeID.String(),
+			expErr: "denom \"nft" + scopeID.String() + "\" is not a MetadataAddress denom",
+		},
+		{
+			name:    "just the prefix",
+			denom:   DenomPrefix,
+			expAddr: nil,
+			expErr:  "invalid metadata address in denom \"nft/\": empty address string is not allowed",
+		},
+		{
+			name:   "invalid address",
+			denom:  DenomPrefix + sdk.AccAddress("nope_nope_nope_nope_").String(),
+			expErr: "invalid metadata address in denom \"nft/" + sdk.AccAddress("nope_nope_nope_nope_").String() + "\": invalid metadata address type: 110",
+		},
+		{
+			name:    "scope",
+			denom:   scopeID.Denom(),
+			expAddr: scopeID,
+		},
+		{
+			name:    "session",
+			denom:   sessionID.Denom(),
+			expAddr: sessionID,
+		},
+		{
+			name:    "record",
+			denom:   recordID.Denom(),
+			expAddr: recordID,
+		},
+		{
+			name:    "scope spec",
+			denom:   scopeSpecID.Denom(),
+			expAddr: scopeSpecID,
+		},
+		{
+			name:    "contract spec",
+			denom:   contractSpecID.Denom(),
+			expAddr: contractSpecID,
+		},
+		{
+			name:    "record spec",
+			denom:   recordSpecID.Denom(),
+			expAddr: recordSpecID,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var actAddr MetadataAddress
+			var actErr error
+			testFunc := func() {
+				actAddr, actErr = MetadataAddressFromDenom(tc.denom)
+			}
+			s.Require().NotPanics(testFunc, "MetadataAddressFromDenom(%q)", tc.denom)
+			assertions.AssertErrorValue(s.T(), actErr, tc.expErr, "error from MetadataAddressFromDenom(%q)", tc.denom)
+			s.Assert().Equal(tc.expAddr, actAddr, "address from MetadataAddressFromDenom(%q)", tc.denom)
+		})
+	}
+}
+
 func (s *AddressTestSuite) TestMetadataAddressWithInvalidData() {
 	t := s.T()
 
@@ -1998,7 +2090,7 @@ func (s *AddressTestSuite) TestDenom() {
 
 	for i, tc := range tests {
 		s.Run(fmt.Sprintf("[%d]%s...%s", i, tc[:strings.Index(tc, "1")], tc[len(tc)-2:]), func() {
-			exp := "nft/" + tc
+			exp := DenomPrefix + tc
 			addr, err := MetadataAddressFromBech32(tc)
 			s.Require().NoError(err, "MetadataAddressFromBech32(%q)", tc)
 
@@ -2033,7 +2125,7 @@ func (s *AddressTestSuite) TestCoin() {
 
 	for i, tc := range tests {
 		s.Run(fmt.Sprintf("[%d]%s...%s", i, tc[:strings.Index(tc, "1")], tc[len(tc)-2:]), func() {
-			exp := sdk.Coin{Denom: "nft/" + tc, Amount: sdkmath.OneInt()}
+			exp := sdk.Coin{Denom: DenomPrefix + tc, Amount: sdkmath.OneInt()}
 			addr, err := MetadataAddressFromBech32(tc)
 			s.Require().NoError(err, "MetadataAddressFromBech32(%q)", tc)
 
@@ -2551,12 +2643,12 @@ func (s *AddressTestSuite) TestAccMDLinks_Coins() {
 		{
 			name:  "one link: nil md addr",
 			links: AccMDLinks{{MDAddr: nil}},
-			exp:   sdk.NewCoins(sdk.NewInt64Coin("nft/", 1)),
+			exp:   sdk.NewCoins(sdk.NewInt64Coin(DenomPrefix, 1)),
 		},
 		{
 			name:  "one link: empty md addr",
 			links: AccMDLinks{{MDAddr: MetadataAddress{}}},
-			exp:   sdk.NewCoins(sdk.NewInt64Coin("nft/", 1)),
+			exp:   sdk.NewCoins(sdk.NewInt64Coin(DenomPrefix, 1)),
 		},
 		{
 			name:     "one link: invalid scope md addr",

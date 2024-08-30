@@ -31,6 +31,8 @@ const (
 	PrefixContractSpecification = "contractspec"
 	// PrefixRecordSpecification is the address human readable prefix used with bech32 encoding of RecordSpecification IDs
 	PrefixRecordSpecification = "recspec"
+
+	DenomPrefix = "nft/"
 )
 
 var (
@@ -171,6 +173,19 @@ func ParseMetadataAddressFromBech32(address string) (MetadataAddress, string, er
 func MetadataAddressFromBech32(address string) (addr MetadataAddress, err error) {
 	bz, _, err := ParseMetadataAddressFromBech32(address)
 	return bz, err
+}
+
+// MetadataAddressFromDenom gets the MetadataAddress that the provided denom is for.
+func MetadataAddressFromDenom(denom string) (MetadataAddress, error) {
+	id := strings.TrimPrefix(denom, DenomPrefix)
+	if id == denom {
+		return nil, fmt.Errorf("denom %q is not a MetadataAddress denom", denom)
+	}
+	rv, err := MetadataAddressFromBech32(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid metadata address in denom %q: %w", denom, err)
+	}
+	return rv, nil
 }
 
 // ScopeMetadataAddress creates a MetadataAddress instance for the given scope by its uuid
@@ -821,7 +836,7 @@ func (ma MetadataAddress) GetDetails() MetadataAddressDetails {
 
 // Denom gets the denom string for this MetadataAddress.
 func (ma MetadataAddress) Denom() string {
-	return "nft/" + ma.String()
+	return DenomPrefix + ma.String()
 }
 
 // Coin creates the singular coin that represents this MetadataAddress.
