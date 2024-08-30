@@ -353,6 +353,9 @@ func (ma MetadataAddress) String() string {
 
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	if err != nil {
+		// If it's not valid, return the %#v format. We don't give it to fmt.Sprintf though,
+		// because the MetadataAddress.Format method calls this .String method.
+		// Instead, use fmt.Sprintf on it as a byte slice and replace that type with this type.
 		// TODO: return "MetadataAddress" + strings.TrimPrefix(fmt.Sprintf("%#v", []byte(ma)), "[]byte")
 		panic(err)
 	}
