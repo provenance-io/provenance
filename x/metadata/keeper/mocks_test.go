@@ -341,22 +341,64 @@ func (a *MockAuthorization) ProtoMessage() {}
 // ensure that the MockBankKeeper implements keeper.BankKeeper.
 var _ keeper.BankKeeper = (*MockBankKeeper)(nil)
 
+// MockBankKeeper is a mocked keeper.BankKeeper.
 type MockBankKeeper struct {
-	DenomOwnerResults map[string]DenomOwnerResult
-	DenomOwnerCalls   []string
+	BlockedAddrResults map[string]bool
+	MintCoinsResults   []string
+	BurnCoinsResults   []string
+	SendCoinsResults   map[string]string
+	DenomOwnerResults  map[string]DenomOwnerResult
+
+	BlockedAddrCalls []sdk.AccAddress
+	MintCoinsCalls   []*MintBurnCall
+	BurnCoinsCalls   []*MintBurnCall
+	SendCoinsCalls   []*SendCoinsCall
+	DenomOwnerCalls  []string
 }
 
+// NewMockBankKeeper creates a new MockBankKeeper.
+// Usually followed by calls to WithBlockedAddr, WithMintCoinsErrors, WithBurnCoinsErrors,
+// SendCoinsErrors, WithDenomOwnerResult, and/or WithDenomOwnerError.
 func NewMockBankKeeper() *MockBankKeeper {
 	return &MockBankKeeper{
 		DenomOwnerResults: make(map[string]DenomOwnerResult),
 	}
 }
 
+// WithBlockedAddr makes the provided addr report as blocked.
+func (k *MockBankKeeper) WithBlockedAddr(addr sdk.AccAddress) *MockBankKeeper {
+	k.BlockedAddrResults[string(addr)] = true
+	return k
+}
+
+// WithMintCoinsErrors queues up the provided strings as errors to return from MintCoins.
+// An entry of "" means no error will be returned for that entry.
+func (k *MockBankKeeper) WithMintCoinsErrors(errs ...string) *MockBankKeeper {
+	k.MintCoinsResults = append(k.MintCoinsResults, errs...)
+	return k
+}
+
+// WithMintCoinsErrors queues up the provided strings as errors to return from BurnCoins.
+// An entry of "" means no error will be returned for that entry.
+func (k *MockBankKeeper) WithBurnCoinsErrors(errs ...string) *MockBankKeeper {
+	k.BurnCoinsResults = append(k.BurnCoinsResults, errs...)
+	return k
+}
+
+// SendCoinsErrors makes the SendCoins return the provided err for the given fromAddr.
+// An err of "" means no error will be returned for that fromAddr.
+func (k *MockBankKeeper) SendCoinsErrors(fromAddr sdk.AccAddress, err string) *MockBankKeeper {
+	k.SendCoinsResults[string(fromAddr)] = err
+	return k
+}
+
+// WithDenomOwnerResult makes DenomOwner return the given accAddr for the given scope (with nil error).
 func (k *MockBankKeeper) WithDenomOwnerResult(mdAddr types.MetadataAddress, accAddr sdk.AccAddress) *MockBankKeeper {
 	k.DenomOwnerResults[mdAddr.Denom()] = DenomOwnerResult{Owner: accAddr}
 	return k
 }
 
+// WithDenomOwnerError makes DenomOwner return the given err for the given scope (with nil AccAddress).
 func (k *MockBankKeeper) WithDenomOwnerError(mdAddr types.MetadataAddress, err string) *MockBankKeeper {
 	k.DenomOwnerResults[mdAddr.Denom()] = DenomOwnerResult{Err: err}
 	return k
@@ -364,39 +406,93 @@ func (k *MockBankKeeper) WithDenomOwnerError(mdAddr types.MetadataAddress, err s
 
 // ClearResults clears previously recorded calls but leaves the desired results intact.
 func (k *MockBankKeeper) ClearResults() {
+	k.BlockedAddrCalls = nil
+	k.MintCoinsCalls = nil
+	k.BurnCoinsCalls = nil
+	k.SendCoinsCalls = nil
 	k.DenomOwnerCalls = nil
 }
 
+// MintBurnCall is the args provided to either MintCoins or BurnCoins.
+type MintBurnCall struct {
+	ModuleName string
+	Coins      sdk.Coins
+}
+
+func NewMintBurnCall(moduleName string, coins sdk.Coins) *MintBurnCall {
+	return &MintBurnCall{
+		ModuleName: moduleName,
+		Coins:      coins,
+	}
+}
+
+// SendCoinsCall is the args provided to SendCoins.
+type SendCoinsCall struct {
+	FromAddr sdk.AccAddress
+	ToAddr   sdk.AccAddress
+	Amt      sdk.Coins
+}
+
+func NewSendCoinsCall(fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) *SendCoinsCall {
+	return &SendCoinsCall{
+		FromAddr: fromAddr,
+		ToAddr:   toAddr,
+		Amt:      amt,
+	}
+}
+
+// DenomOwnerResult is the args returned by DenomOwner.
 type DenomOwnerResult struct {
 	Owner sdk.AccAddress
 	Err   string
 }
 
+func NewDenomOwnerResult(owner sdk.AccAddress, err string) *DenomOwnerResult {
+	return &DenomOwnerResult{
+		Owner: owner,
+		Err:   err,
+	}
+}
+
 func (k *MockBankKeeper) BlockedAddr(addr sdk.AccAddress) bool {
-	panic("not implemented")
+	k.BlockedAddrCalls = append(k.BlockedAddrCalls, addr)
+	return k.BlockedAddrResults[string(addr)]
 }
 
-func (k *MockBankKeeper) MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
-	panic("not implemented")
+func (k *MockBankKeeper) MintCoins(_ context.Context, moduleName string, amt sdk.Coins) error {
+	k.MintCoinsCalls = append(k.MintCoinsCalls, NewMintBurnCall(moduleName, amt))
+	if len(k.MintCoinsResults) > 0 {
+		err := k.MintCoinsResults[0]
+		k.MintCoinsResults = k.MintCoinsResults[1:]
+		if len(err) > 0 {
+			return errors.New(err)
+		}
+	}
+	return nil
 }
 
-func (k *MockBankKeeper) BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error {
-	panic("not implemented")
+func (k *MockBankKeeper) BurnCoins(_ context.Context, moduleName string, amt sdk.Coins) error {
+	k.BurnCoinsCalls = append(k.BurnCoinsCalls, NewMintBurnCall(moduleName, amt))
+	if len(k.BurnCoinsResults) > 0 {
+		err := k.BurnCoinsResults[0]
+		k.BurnCoinsResults = k.BurnCoinsResults[1:]
+		if len(err) > 0 {
+			return errors.New(err)
+		}
+	}
+	return nil
 }
 
-func (k *MockBankKeeper) GetSupply(ctx context.Context, denom string) sdk.Coin {
-	panic("not implemented")
+func (k *MockBankKeeper) SendCoins(_ context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	k.SendCoinsCalls = append(k.SendCoinsCalls, NewSendCoinsCall(fromAddr, toAddr, amt))
+	err := k.SendCoinsResults[string(fromAddr)]
+	if len(err) > 0 {
+		return errors.New(err)
+	}
+	return nil
 }
 
-func (k *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	panic("not implemented")
-}
-
-func (k *MockBankKeeper) SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
-	panic("not implemented")
-}
-
-func (k *MockBankKeeper) SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
+func (k *MockBankKeeper) SpendableCoin(_ context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	panic("not implemented")
 }
 
