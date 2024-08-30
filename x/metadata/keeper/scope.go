@@ -192,16 +192,6 @@ func (k Keeper) SetScopeValueOwner(ctx sdk.Context, scopeID types.MetadataAddres
 		return err
 	}
 
-	coin := scopeID.Coin()
-	fromAddr, err := k.bankKeeper.DenomOwner(ctx, coin.Denom)
-	if err != nil {
-		return fmt.Errorf("could not get current value owner of %q: %w", scopeID, err)
-	}
-	if fromAddr.String() == newValueOwner {
-		// no change, nothing more to do.
-		return nil
-	}
-
 	var toAddr sdk.AccAddress
 	doBurn := false
 	if len(newValueOwner) == 0 {
@@ -210,13 +200,24 @@ func (k Keeper) SetScopeValueOwner(ctx sdk.Context, scopeID types.MetadataAddres
 		doBurn = true
 	} else {
 		// Sending to another account, so make sure it's valid and not blocked.
+		var err error
 		toAddr, err = sdk.AccAddressFromBech32(newValueOwner)
 		if err != nil {
 			return fmt.Errorf("invalid new value owner address %q: %w", newValueOwner, err)
 		}
 		if k.bankKeeper.BlockedAddr(toAddr) {
-			return sdkerrors.ErrUnauthorized.Wrapf("new value owner %s is not allowed to receive funds", newValueOwner)
+			return sdkerrors.ErrUnauthorized.Wrapf("new value owner %q is not allowed to receive funds", newValueOwner)
 		}
+	}
+
+	coin := scopeID.Coin()
+	fromAddr, err := k.bankKeeper.DenomOwner(ctx, coin.Denom)
+	if err != nil {
+		return fmt.Errorf("could not get current value owner of %q: %w", scopeID, err)
+	}
+	if fromAddr.String() == newValueOwner {
+		// no change, nothing more to do.
+		return nil
 	}
 
 	coins := sdk.Coins{coin}
@@ -234,7 +235,7 @@ func (k Keeper) SetScopeValueOwner(ctx sdk.Context, scopeID types.MetadataAddres
 
 	if doBurn {
 		if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, coins); err != nil {
-			return fmt.Errorf("could not burn scope coin %q", coins)
+			return fmt.Errorf("could not burn scope coin %q: %w", coins, err)
 		}
 	}
 
