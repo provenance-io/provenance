@@ -2172,10 +2172,7 @@ func (s *AddressTestSuite) TestAccMDLinks_String() {
 	}
 }
 
-func (s *AddressTestSuite) TestAccMDLinks_ValidateAllAreScopes() {
-	joinErrs := func(errs ...string) string {
-		return strings.Join(errs, "\n")
-	}
+func (s *AddressTestSuite) TestAccMDLinks_ValidateForScopes() {
 	newUUID := func(name string, i int) uuid.UUID {
 		bz := []byte(fmt.Sprintf("%s[%d]________________", name, i))[:16]
 		rv, err := uuid.FromBytes(bz)
@@ -2185,6 +2182,10 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateAllAreScopes() {
 	scopeIDs := make([]MetadataAddress, 6)
 	for i := range scopeIDs {
 		scopeIDs[i] = ScopeMetadataAddress(newUUID("scopeIDs", i))
+	}
+	addrs := make([]sdk.AccAddress, len(scopeIDs))
+	for i := range addrs {
+		addrs[i] = sdk.AccAddress(fmt.Sprintf("addr[%d]_____________", i))
 	}
 
 	tests := []struct {
@@ -2203,129 +2204,231 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateAllAreScopes() {
 			exp:   "",
 		},
 		{
+			name:  "one link: nil",
+			links: AccMDLinks{nil},
+			exp:   "nil entry not allowed",
+		},
+		{
+			name:  "one link: empty",
+			links: AccMDLinks{{}},
+			exp:   "invalid metadata address MetadataAddress(nil): address is empty",
+		},
+		{
 			name:  "one link: nil md addr",
-			links: AccMDLinks{{MDAddr: nil}},
+			links: AccMDLinks{{MDAddr: nil, AccAddr: addrs[0]}},
 			exp:   "invalid metadata address MetadataAddress(nil): address is empty",
 		},
 		{
 			name:  "one link: empty md addr",
-			links: AccMDLinks{{MDAddr: MetadataAddress{}}},
+			links: AccMDLinks{{MDAddr: MetadataAddress{}, AccAddr: addrs[0]}},
 			exp:   "invalid metadata address MetadataAddress{}: address is empty",
 		},
 		{
 			name:  "one link: scope",
-			links: AccMDLinks{{MDAddr: scopeIDs[0]}},
+			links: AccMDLinks{{MDAddr: scopeIDs[0], AccAddr: addrs[0]}},
 			exp:   "",
 		},
 		{
+			name:  "one link: nil acc addr",
+			links: AccMDLinks{{MDAddr: scopeIDs[0], AccAddr: nil}},
+			exp:   fmt.Sprintf("no account address associated with metadata address %q", scopeIDs[0]),
+		},
+		{
+			name:  "one link: nil empty addr",
+			links: AccMDLinks{{MDAddr: scopeIDs[0], AccAddr: sdk.AccAddress{}}},
+			exp:   fmt.Sprintf("no account address associated with metadata address %q", scopeIDs[0]),
+		},
+		{
 			name:  "one link: session",
-			links: AccMDLinks{{MDAddr: SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1))}},
+			links: AccMDLinks{{MDAddr: SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1)), AccAddr: addrs[0]}},
 			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1))),
 		},
 		{
 			name:  "one link: record",
-			links: AccMDLinks{{MDAddr: RecordMetadataAddress(newUUID("record", 0), "recordname")}},
+			links: AccMDLinks{{MDAddr: RecordMetadataAddress(newUUID("record", 0), "recordname"), AccAddr: addrs[0]}},
 			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", RecordMetadataAddress(newUUID("record", 0), "recordname")),
 		},
 		{
 			name:  "one link: scope spec",
-			links: AccMDLinks{{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 0))}},
+			links: AccMDLinks{{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 0)), AccAddr: addrs[0]}},
 			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", ScopeSpecMetadataAddress(newUUID("scopespec", 0))),
 		},
 		{
 			name:  "one link: contract spec",
-			links: AccMDLinks{{MDAddr: ContractSpecMetadataAddress(newUUID("contractspec", 0))}},
+			links: AccMDLinks{{MDAddr: ContractSpecMetadataAddress(newUUID("contractspec", 0)), AccAddr: addrs[0]}},
 			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", ContractSpecMetadataAddress(newUUID("contractspec", 0))),
 		},
 		{
 			name:  "one link: record spec",
-			links: AccMDLinks{{MDAddr: RecordSpecMetadataAddress(newUUID("contractspec", 0), "recordname")}},
+			links: AccMDLinks{{MDAddr: RecordSpecMetadataAddress(newUUID("contractspec", 0), "recordname"), AccAddr: addrs[0]}},
 			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", RecordSpecMetadataAddress(newUUID("contractspec", 0), "recordname")),
 		},
 		{
-			name:  "one link: unknown type",
-			links: AccMDLinks{{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}}},
+			name:  "one link: unknown mdaddr type",
+			links: AccMDLinks{{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}, AccAddr: addrs[0]}},
 			exp:   "invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
 		},
 		{
 			name:  "one link: scope type byte but invalid",
-			links: AccMDLinks{{MDAddr: MetadataAddress{ScopeKeyPrefix[0], 0x6e, 0x6f, 0x70, 0x65}}},
+			links: AccMDLinks{{MDAddr: MetadataAddress{ScopeKeyPrefix[0], 0x6e, 0x6f, 0x70, 0x65}, AccAddr: addrs[0]}},
 			exp:   "invalid metadata address MetadataAddress{0x0, 0x6e, 0x6f, 0x70, 0x65}: incorrect address length (expected: 17, actual: 5)",
 		},
 		{
-			name:  "two links: different scopes",
-			links: AccMDLinks{{MDAddr: scopeIDs[0]}, {MDAddr: scopeIDs[1]}},
-			exp:   "",
+			name:  "two links: first nil",
+			links: AccMDLinks{nil, {MDAddr: scopeIDs[1], AccAddr: addrs[1]}},
+			exp:   "nil entry not allowed",
 		},
 		{
-			name:  "two links: same scopes",
-			links: AccMDLinks{{MDAddr: scopeIDs[2]}, {MDAddr: scopeIDs[2]}},
-			exp:   fmt.Sprintf("contains metadata address %q more than once", scopeIDs[2]),
+			name:  "two links: first empty",
+			links: AccMDLinks{{}, {MDAddr: scopeIDs[1], AccAddr: addrs[1]}},
+			exp:   "invalid metadata address MetadataAddress(nil): address is empty",
 		},
 		{
-			name: "two links: both invalid",
+			name:  "two links: second nil",
+			links: AccMDLinks{{MDAddr: scopeIDs[0], AccAddr: addrs[0]}, nil},
+			exp:   "nil entry not allowed",
+		},
+		{
+			name:  "two links: second empty",
+			links: AccMDLinks{{MDAddr: scopeIDs[0], AccAddr: addrs[0]}, {}},
+			exp:   "invalid metadata address MetadataAddress(nil): address is empty",
+		},
+		{
+			name: "two links: fully different",
 			links: AccMDLinks{
-				{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 1))},
-				{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}},
-			},
-			exp: joinErrs(
-				fmt.Sprintf("invalid metadata address %q: must be a scope address", ScopeSpecMetadataAddress(newUUID("scopespec", 1))),
-				"invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
-			),
-		},
-		{
-			name: "two links: same and wrong type",
-			links: AccMDLinks{
-				{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 2))},
-				{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 2))},
-			},
-			exp: joinErrs(
-				fmt.Sprintf("invalid metadata address %q: must be a scope address", ScopeSpecMetadataAddress(newUUID("scopespec", 2))),
-				fmt.Sprintf("contains metadata address %q more than once", ScopeSpecMetadataAddress(newUUID("scopespec", 2))),
-			),
-		},
-		{
-			name: "two links: same and invalid",
-			links: AccMDLinks{
-				{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}},
-				{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}},
-			},
-			exp: joinErrs(
-				"invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
-				"contains metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65} more than once",
-			),
-		},
-		{
-			name: "six links: all valid and different",
-			links: AccMDLinks{
-				{MDAddr: scopeIDs[0]}, {MDAddr: scopeIDs[1]}, {MDAddr: scopeIDs[2]},
-				{MDAddr: scopeIDs[3]}, {MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[5]},
+				{MDAddr: scopeIDs[0], AccAddr: addrs[0]},
+				{MDAddr: scopeIDs[1], AccAddr: addrs[1]},
 			},
 			exp: "",
 		},
 		{
-			name: "six links: all same",
+			name: "two links: same scopes different acc addrs",
 			links: AccMDLinks{
-				{MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[4]},
-				{MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[4]},
+				{MDAddr: scopeIDs[2], AccAddr: addrs[0]},
+				{MDAddr: scopeIDs[2], AccAddr: addrs[1]},
 			},
-			exp: fmt.Sprintf("contains metadata address %q more than once", scopeIDs[4]),
+			exp: fmt.Sprintf("duplicate metadata address %q not allowed", scopeIDs[2]),
 		},
 		{
-			name: "six links: last is invalid",
+			name: "two links: same acc addrs different md addrs",
 			links: AccMDLinks{
-				{MDAddr: scopeIDs[5]}, {MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[3]},
-				{MDAddr: scopeIDs[2]}, {MDAddr: scopeIDs[1]}, {MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}},
+				{MDAddr: scopeIDs[0], AccAddr: addrs[0]},
+				{MDAddr: scopeIDs[1], AccAddr: addrs[0]},
+			},
+			exp: "",
+		},
+		{
+			name: "two links: invalid first md addr",
+			links: AccMDLinks{
+				{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 1)), AccAddr: addrs[0]},
+				{MDAddr: scopeIDs[1], AccAddr: addrs[1]},
+			},
+			exp: fmt.Sprintf("invalid metadata address %q: must be a scope address", ScopeSpecMetadataAddress(newUUID("scopespec", 1))),
+		},
+		{
+			name: "two links: invalid second md addr",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[0], AccAddr: addrs[0]},
+				{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}, AccAddr: addrs[1]},
 			},
 			exp: "invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
 		},
 		{
-			name: "six links: 2nd to last is dup",
+			name: "two links: first missing acc addr",
 			links: AccMDLinks{
-				{MDAddr: scopeIDs[0]}, {MDAddr: scopeIDs[1]}, {MDAddr: scopeIDs[2]},
-				{MDAddr: scopeIDs[3]}, {MDAddr: scopeIDs[4]}, {MDAddr: scopeIDs[3]},
+				{MDAddr: scopeIDs[0], AccAddr: nil},
+				{MDAddr: scopeIDs[1], AccAddr: addrs[1]},
 			},
-			exp: fmt.Sprintf("contains metadata address %q more than once", scopeIDs[3]),
+			exp: fmt.Sprintf("no account address associated with metadata address %q", scopeIDs[0]),
+		},
+		{
+			name: "two links: second missing acc addr",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[0], AccAddr: addrs[0]},
+				{MDAddr: scopeIDs[1], AccAddr: nil},
+			},
+			exp: fmt.Sprintf("no account address associated with metadata address %q", scopeIDs[1]),
+		},
+		{
+			name: "six links: all valid and fully different",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[0], AccAddr: addrs[0]}, {MDAddr: scopeIDs[1], AccAddr: addrs[1]},
+				{MDAddr: scopeIDs[2], AccAddr: addrs[2]}, {MDAddr: scopeIDs[3], AccAddr: addrs[3]},
+				{MDAddr: scopeIDs[4], AccAddr: addrs[4]}, {MDAddr: scopeIDs[5], AccAddr: addrs[5]},
+			},
+			exp: "",
+		},
+		{
+			name: "six links: different scopes but same acc addrs",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[0], AccAddr: addrs[2]}, {MDAddr: scopeIDs[1], AccAddr: addrs[2]},
+				{MDAddr: scopeIDs[2], AccAddr: addrs[2]}, {MDAddr: scopeIDs[3], AccAddr: addrs[2]},
+				{MDAddr: scopeIDs[4], AccAddr: addrs[2]}, {MDAddr: scopeIDs[5], AccAddr: addrs[2]},
+			},
+			exp: "",
+		},
+		{
+			name: "six links: same scopes but different acc addrs",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[4], AccAddr: addrs[0]}, {MDAddr: scopeIDs[4], AccAddr: addrs[1]},
+				{MDAddr: scopeIDs[4], AccAddr: addrs[2]}, {MDAddr: scopeIDs[4], AccAddr: addrs[3]},
+				{MDAddr: scopeIDs[4], AccAddr: addrs[4]}, {MDAddr: scopeIDs[4], AccAddr: addrs[5]},
+			},
+			exp: fmt.Sprintf("duplicate metadata address %q not allowed", scopeIDs[4]),
+		},
+		{
+			name: "six links: all same",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[4], AccAddr: addrs[4]}, {MDAddr: scopeIDs[4], AccAddr: addrs[4]},
+				{MDAddr: scopeIDs[4], AccAddr: addrs[4]}, {MDAddr: scopeIDs[4], AccAddr: addrs[4]},
+				{MDAddr: scopeIDs[4], AccAddr: addrs[4]}, {MDAddr: scopeIDs[4], AccAddr: addrs[4]},
+			},
+			exp: fmt.Sprintf("duplicate metadata address %q not allowed", scopeIDs[4]),
+		},
+		{
+			name: "six links: last is invalid md addr",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[5], AccAddr: addrs[5]}, {MDAddr: scopeIDs[4], AccAddr: addrs[4]},
+				{MDAddr: scopeIDs[3], AccAddr: addrs[3]}, {MDAddr: scopeIDs[2], AccAddr: addrs[2]},
+				{MDAddr: scopeIDs[1], AccAddr: addrs[1]}, {MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}, AccAddr: addrs[0]},
+			},
+			exp: "invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
+		},
+		{
+			name: "six links: last is missing acc addr",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[1], AccAddr: addrs[1]}, {MDAddr: scopeIDs[0], AccAddr: addrs[0]},
+				{MDAddr: scopeIDs[2], AccAddr: addrs[2]}, {MDAddr: scopeIDs[5], AccAddr: addrs[5]},
+				{MDAddr: scopeIDs[3], AccAddr: addrs[3]}, {MDAddr: scopeIDs[4], AccAddr: nil},
+			},
+			exp: fmt.Sprintf("no account address associated with metadata address %q", scopeIDs[4]),
+		},
+		{
+			name: "six links: last is dup scope",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[0], AccAddr: addrs[0]}, {MDAddr: scopeIDs[1], AccAddr: addrs[0]},
+				{MDAddr: scopeIDs[2], AccAddr: addrs[2]}, {MDAddr: scopeIDs[3], AccAddr: addrs[3]},
+				{MDAddr: scopeIDs[4], AccAddr: addrs[4]}, {MDAddr: scopeIDs[3], AccAddr: addrs[5]},
+			},
+			exp: fmt.Sprintf("duplicate metadata address %q not allowed", scopeIDs[3]),
+		},
+		{
+			name: "six links: last is nil",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[0], AccAddr: addrs[0]}, {MDAddr: scopeIDs[1], AccAddr: addrs[0]},
+				{MDAddr: scopeIDs[2], AccAddr: addrs[2]}, {MDAddr: scopeIDs[3], AccAddr: addrs[3]},
+				{MDAddr: scopeIDs[4], AccAddr: addrs[4]}, nil,
+			},
+			exp: "nil entry not allowed",
+		},
+		{
+			name: "six links: last is empty",
+			links: AccMDLinks{
+				{MDAddr: scopeIDs[0], AccAddr: addrs[0]}, {MDAddr: scopeIDs[1], AccAddr: addrs[0]},
+				{MDAddr: scopeIDs[2], AccAddr: addrs[2]}, {MDAddr: scopeIDs[3], AccAddr: addrs[3]},
+				{MDAddr: scopeIDs[4], AccAddr: addrs[4]}, {},
+			},
+			exp: "invalid metadata address MetadataAddress(nil): address is empty",
 		},
 	}
 
@@ -2333,202 +2436,10 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateAllAreScopes() {
 		s.Run(tc.name, func() {
 			var err error
 			testFunc := func() {
-				err = tc.links.ValidateAllAreScopes()
+				err = tc.links.ValidateForScopes()
 			}
-			s.Require().NotPanics(testFunc, "ValidateAllAreScopes")
-			assertions.AssertErrorValue(s.T(), err, tc.exp, "ValidateAllAreScopes")
-		})
-	}
-}
-
-func (s *AddressTestSuite) TestAccMDLinks_WithNilsRemoved() {
-	goodEntry := func(i string) *AccMDLink {
-		str := "good_uuid_" + i + "_____"
-		uid, err := uuid.FromBytes([]byte(str))
-		s.Require().NoError(err, "uuid.FromBytes([]byte(%q))", str)
-		return &AccMDLink{
-			AccAddr: sdk.AccAddress("good_address_" + i + "______"),
-			MDAddr:  ScopeMetadataAddress(uid),
-		}
-	}
-	good1 := goodEntry("1")
-	good2 := goodEntry("2")
-	good3 := goodEntry("3")
-	good4 := goodEntry("4")
-
-	tests := []struct {
-		name        string
-		links       AccMDLinks
-		exp         AccMDLinks
-		expNoChange bool
-	}{
-		{
-			name:        "nil",
-			links:       nil,
-			expNoChange: true,
-		},
-		{
-			name:        "empty",
-			links:       AccMDLinks{},
-			expNoChange: true,
-		},
-		{
-			name:  "one entry: nil",
-			links: AccMDLinks{nil},
-			exp:   AccMDLinks{},
-		},
-		{
-			name:        "one entry: good",
-			links:       AccMDLinks{good1},
-			expNoChange: true,
-		},
-		{
-			name:  "two entries: nil nil",
-			links: AccMDLinks{nil, nil},
-			exp:   AccMDLinks{},
-		},
-		{
-			name:  "two entries: good nil",
-			links: AccMDLinks{good1, nil},
-			exp:   AccMDLinks{good1},
-		},
-		{
-			name:  "two entries: nil good",
-			links: AccMDLinks{nil, good2},
-			exp:   AccMDLinks{good2},
-		},
-		{
-			name:        "two entries: good good",
-			links:       AccMDLinks{good1, good2},
-			expNoChange: true,
-		},
-
-		{
-			name:  "four entries: nil nil nil nil",
-			links: AccMDLinks{nil, nil, nil, nil},
-			exp:   AccMDLinks{},
-		},
-
-		{
-			name:  "four entries: good nil nil nil",
-			links: AccMDLinks{good1, nil, nil, nil},
-			exp:   AccMDLinks{good1},
-		},
-		{
-			name:  "four entries: nil good nil nil",
-			links: AccMDLinks{nil, good2, nil, nil},
-			exp:   AccMDLinks{good2},
-		},
-		{
-			name:  "four entries: nil nil good nil",
-			links: AccMDLinks{nil, nil, good3, nil},
-			exp:   AccMDLinks{good3},
-		},
-		{
-			name:  "four entries: nil nil nil good",
-			links: AccMDLinks{nil, nil, nil, good4},
-			exp:   AccMDLinks{good4},
-		},
-
-		{
-			name:  "four entries: good good nil nil",
-			links: AccMDLinks{good1, good2, nil, nil},
-			exp:   AccMDLinks{good1, good2},
-		},
-		{
-			name:  "four entries: good nil good nil",
-			links: AccMDLinks{good1, nil, good3, nil},
-			exp:   AccMDLinks{good1, good3},
-		},
-		{
-			name:  "four entries: good nil nil good",
-			links: AccMDLinks{good1, nil, nil, good4},
-			exp:   AccMDLinks{good1, good4},
-		},
-		{
-			name:  "four entries: nil good good nil",
-			links: AccMDLinks{nil, good2, good3, nil},
-			exp:   AccMDLinks{good2, good3},
-		},
-		{
-			name:  "four entries: nil good nil good",
-			links: AccMDLinks{nil, good2, nil, good4},
-			exp:   AccMDLinks{good2, good4},
-		},
-		{
-			name:  "four entries: nil nil good good",
-			links: AccMDLinks{nil, nil, good3, good4},
-			exp:   AccMDLinks{good3, good4},
-		},
-
-		{
-			name:  "four entries: good good good nil",
-			links: AccMDLinks{good1, good2, good3, nil},
-			exp:   AccMDLinks{good1, good2, good3},
-		},
-		{
-			name:  "four entries: good good nil good",
-			links: AccMDLinks{good1, good2, nil, good4},
-			exp:   AccMDLinks{good1, good2, good4},
-		},
-		{
-			name:  "four entries: good nil good good",
-			links: AccMDLinks{good1, nil, good3, good4},
-			exp:   AccMDLinks{good1, good3, good4},
-		},
-		{
-			name:  "four entries: nil good good good",
-			links: AccMDLinks{nil, good2, good3, good4},
-			exp:   AccMDLinks{good2, good3, good4},
-		},
-
-		{
-			name:        "four entries: good good good good",
-			links:       AccMDLinks{good1, good2, good3, good4},
-			expNoChange: true,
-		},
-		{
-			name:        "four entries: all good: alternate order",
-			links:       AccMDLinks{good3, good1, good4, good2},
-			expNoChange: true,
-		},
-	}
-
-	linkStr := func(link *AccMDLink) string {
-		if link == nil {
-			return nilStr
-		}
-		return string(link.AccAddr) + ":scope-" + string(link.MDAddr[1:])
-	}
-	linkStrs := func(links AccMDLinks) []string {
-		if links == nil {
-			return nil
-		}
-		rv := make([]string, len(links))
-		for i, link := range links {
-			rv[i] = linkStr(link)
-		}
-		return rv
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			if tc.expNoChange {
-				tc.exp = tc.links
-			}
-
-			var act AccMDLinks
-			testFunc := func() {
-				act = tc.links.WithNilsRemoved()
-			}
-			s.Require().NotPanics(testFunc, "WithNilsRemoved")
-
-			if !s.Assert().Equal(tc.exp, act, "WithNilsRemoved") {
-				// run the comparison again with strings this time to hopefully help identify the problem
-				expStrs := linkStrs(tc.exp)
-				actStrs := linkStrs(act)
-				s.Assert().Equal(expStrs, actStrs, "WithNilsRemoved as strings")
-			}
+			s.Require().NotPanics(testFunc, "ValidateForScopes")
+			assertions.AssertErrorValue(s.T(), err, tc.exp, "ValidateForScopes")
 		})
 	}
 }

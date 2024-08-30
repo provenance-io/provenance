@@ -353,6 +353,7 @@ func (ma MetadataAddress) String() string {
 
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	if err != nil {
+		// TODO: return "MetadataAddress" + strings.TrimPrefix(fmt.Sprintf("%#v", []byte(ma)), "[]byte")
 		panic(err)
 	}
 
@@ -874,66 +875,45 @@ func (a AccMDLinks) String() string {
 	return emptyStr
 }
 
-// ValidateAllAreScopes returns an error if this contains any MDAddr entries that are not for a scope, or if any of them appears twice.
-func (a AccMDLinks) ValidateAllAreScopes() error {
+// ValidateForScopes returns an error in the following cases:
+//   - An entry is nil.
+//   - An entry does not have an AccAddr.
+//   - An entry does not have a MDAddr.
+//   - An MDAddr is not a valid scope id.
+//   - Any MDAddr appears more than once.
+func (a AccMDLinks) ValidateForScopes() error {
 	if len(a) == 0 {
 		return nil
 	}
-	var errs []error
-	seenMDAddrs := make(map[string]int)
-	hasErr := make(map[string]bool)
+
+	seenMDAddrs := make(map[string]int8)
 	for _, link := range a {
+		if link == nil {
+			return errors.New("nil entry not allowed")
+		}
+
 		key := string(link.MDAddr)
 		switch seenMDAddrs[key] {
 		case 0:
 			seenMDAddrs[key] = 1
 			hrp, err := VerifyMetadataAddressFormat(link.MDAddr)
-			if err != nil {
-				errs = append(errs, fmt.Errorf("invalid metadata address %#v: %w", link.MDAddr, err))
-				hasErr[key] = true
-				continue
-			}
-			if hrp != PrefixScope {
-				errs = append(errs, fmt.Errorf("invalid metadata address %q: must be a scope address", link.MDAddr))
-				continue
+			switch {
+			case err != nil:
+				return fmt.Errorf("invalid metadata address %#v: %w", link.MDAddr, err)
+			case hrp != PrefixScope:
+				return fmt.Errorf("invalid metadata address %q: must be a scope address", link.MDAddr)
 			}
 		case 1:
-			seenMDAddrs[key]++
-			verb := "%q"
-			if hasErr[key] {
-				verb = "%#v"
-			}
-			errs = append(errs, fmt.Errorf("contains metadata address "+verb+" more than once", link.MDAddr))
-			continue
+			seenMDAddrs[key] = 2
+			return fmt.Errorf("duplicate metadata address %q not allowed", link.MDAddr)
 		}
-	}
-	return errors.Join(errs...)
-}
 
-func (a AccMDLinks) WithNilsRemoved() AccMDLinks {
-	if len(a) == 0 {
-		return a
-	}
-	hasNilAt := -1
-	for i, link := range a {
-		if link == nil {
-			hasNilAt = i
-			break
+		if len(link.AccAddr) == 0 {
+			return fmt.Errorf("no account address associated with metadata address %q", link.MDAddr)
 		}
 	}
-	if hasNilAt < 0 {
-		return a
-	}
-	rv := make(AccMDLinks, hasNilAt, len(a)-1)
-	if hasNilAt > 0 {
-		copy(rv, a[:hasNilAt])
-	}
-	for i := hasNilAt + 1; i < len(a); i++ {
-		if a[i] != nil {
-			rv = append(rv, a[i])
-		}
-	}
-	return rv
+
+	return nil
 }
 
 // Coins creates a Coins containing an entry for every MDAddr in this AccMDLinks.
