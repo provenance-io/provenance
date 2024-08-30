@@ -323,11 +323,11 @@ func UpdateValueOwnersCmd() *cobra.Command {
 			msg.ScopeIds = make([]types.MetadataAddress, len(args[1:]))
 			for i, arg := range args[1:] {
 				msg.ScopeIds[i], err = types.MetadataAddressFromBech32(arg)
-				if err == nil && !msg.ScopeIds[i].IsScopeAddress() {
-					err = fmt.Errorf("not a scope identifier")
-				}
 				if err != nil {
 					return fmt.Errorf("invalid scope id %d %q: %w", i+1, arg, err)
+				}
+				if !msg.ScopeIds[i].IsScopeAddress() {
+					err = fmt.Errorf("not a scope identifier: %q", arg)
 				}
 			}
 
