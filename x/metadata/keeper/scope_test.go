@@ -99,6 +99,17 @@ func (s *ScopeKeeperTestSuite) AssertErrorValue(theError error, errorString stri
 	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
 }
 
+// SwapBankKeeper will set the bank keeper (in the metadata keeper) to the one provided
+// and return a function that will set it back to its original value.
+// Standard usage: defer s.SwapBankKeeper(tc.bk)()
+// That will execute this method to set the bank keeper, then  defer the resulting func (to put it back at the end).
+func (s *ScopeKeeperTestSuite) SwapBankKeeper(bk keeper.BankKeeper) func() {
+	origBK := s.app.MetadataKeeper.SetBankKeeper(bk)
+	return func() {
+		s.app.MetadataKeeper.SetBankKeeper(origBK)
+	}
+}
+
 func TestScopeKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(ScopeKeeperTestSuite))
 }
@@ -291,10 +302,7 @@ func (s *ScopeKeeperTestSuite) TestGetScopeWithValueOwner() {
 			if tc.bk == nil {
 				tc.bk = NewMockBankKeeper()
 			}
-			origBK := s.app.MetadataKeeper.SetBankKeeper(tc.bk)
-			defer func() {
-				s.app.MetadataKeeper.SetBankKeeper(origBK)
-			}()
+			defer s.SwapBankKeeper(tc.bk)()
 
 			ctx := s.FreshCtx()
 			var actScope types.Scope
@@ -340,10 +348,7 @@ func (s *ScopeKeeperTestSuite) TestPopulateScopeValueOwner() {
 			if tc.bk == nil {
 				tc.bk = NewMockBankKeeper()
 			}
-			origBK := s.app.MetadataKeeper.SetBankKeeper(tc.bk)
-			defer func() {
-				s.app.MetadataKeeper.SetBankKeeper(origBK)
-			}()
+			defer s.SwapBankKeeper(tc.bk)()
 
 			ctx := s.FreshCtx()
 			testFunc := func() {
@@ -432,13 +437,11 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwner() {
 			if tc.bk == nil {
 				tc.bk = NewMockBankKeeper()
 			}
-			origBK := s.app.MetadataKeeper.SetBankKeeper(tc.bk)
-			defer func() {
-				s.app.MetadataKeeper.SetBankKeeper(origBK)
-			}()
-			var expBKCalls []string
+			defer s.SwapBankKeeper(tc.bk)()
+
+			var expBKCalls BankKeeperCalls
 			if tc.expBKCall {
-				expBKCalls = append(expBKCalls, tc.id.Denom())
+				expBKCalls.DenomOwner = append(expBKCalls.DenomOwner, tc.id.Denom())
 			}
 
 			ctx := s.FreshCtx()
@@ -450,7 +453,7 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwner() {
 			s.Require().NotPanics(testFunc, "GetScopeValueOwner")
 			s.AssertErrorValue(actErr, tc.expErr, "GetScopeValueOwner error")
 			s.Assert().Equal(tc.expAddr, actAddr, "GetScopeValueOwner address")
-			s.Assert().Equal(expBKCalls, tc.bk.DenomOwnerCalls, "calls made to DenomOwners")
+			tc.bk.AssertCalls(s.T(), expBKCalls)
 		})
 	}
 }
@@ -478,7 +481,7 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
 		ids        []types.MetadataAddress
 		expLinks   types.AccMDLinks
 		expErr     string
-		expBKCalls []string
+		expDOCalls []string // Expected calls made to DenomOwner.
 	}{
 		{
 			name:     "nil ids",
@@ -524,7 +527,7 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
 			name:       "one id: no owner",
 			ids:        []types.MetadataAddress{scopeIDs[0]},
 			expLinks:   types.AccMDLinks{types.NewAccMDLink(nil, scopeIDs[0])},
-			expBKCalls: []string{scopeIDs[0].Denom()},
+			expDOCalls: []string{scopeIDs[0].Denom()},
 		},
 		{
 			name:       "one id: DenomOwner error",
@@ -532,7 +535,7 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
 			ids:        []types.MetadataAddress{scopeIDs[1]},
 			expLinks:   types.AccMDLinks{},
 			expErr:     "something broke yo",
-			expBKCalls: []string{scopeIDs[1].Denom()},
+			expDOCalls: []string{scopeIDs[1].Denom()},
 		},
 		{
 			name: "three ids: errors for all",
@@ -543,7 +546,7 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
 			ids:        []types.MetadataAddress{scopeIDs[7], scopeIDs[3], scopeIDs[6]},
 			expLinks:   types.AccMDLinks{},
 			expErr:     joinErrs("something broke yo", "its now on fire", "small thing go big boom"),
-			expBKCalls: []string{scopeIDs[7].Denom(), scopeIDs[3].Denom(), scopeIDs[6].Denom()},
+			expDOCalls: []string{scopeIDs[7].Denom(), scopeIDs[3].Denom(), scopeIDs[6].Denom()},
 		},
 		{
 			name: "three ids: same owner",
@@ -557,7 +560,7 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
 				types.NewAccMDLink(s.user1Addr, scopeIDs[5]),
 				types.NewAccMDLink(s.user1Addr, scopeIDs[6]),
 			},
-			expBKCalls: []string{scopeIDs[4].Denom(), scopeIDs[5].Denom(), scopeIDs[6].Denom()},
+			expDOCalls: []string{scopeIDs[4].Denom(), scopeIDs[5].Denom(), scopeIDs[6].Denom()},
 		},
 		{
 			name: "three ids: different owners",
@@ -571,7 +574,7 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
 				types.NewAccMDLink(s.user2Addr, scopeIDs[9]),
 				types.NewAccMDLink(s.user3Addr, scopeIDs[4]),
 			},
-			expBKCalls: []string{scopeIDs[0].Denom(), scopeIDs[9].Denom(), scopeIDs[4].Denom()},
+			expDOCalls: []string{scopeIDs[0].Denom(), scopeIDs[9].Denom(), scopeIDs[4].Denom()},
 		},
 		{
 			name: "four ids: one non-scope, error from one, one found, one not found",
@@ -590,7 +593,7 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
 				nonScopeErr(types.ContractSpecMetadataAddress(uuids[7]).String()),
 				"oopsie daisy: no worky",
 			),
-			expBKCalls: []string{scopeIDs[1].Denom(), scopeIDs[2].Denom(), scopeIDs[8].Denom()},
+			expDOCalls: []string{scopeIDs[1].Denom(), scopeIDs[2].Denom(), scopeIDs[8].Denom()},
 		},
 	}
 
@@ -599,10 +602,11 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
 			if tc.bk == nil {
 				tc.bk = NewMockBankKeeper()
 			}
-			origBK := s.app.MetadataKeeper.SetBankKeeper(tc.bk)
-			defer func() {
-				s.app.MetadataKeeper.SetBankKeeper(origBK)
-			}()
+			defer s.SwapBankKeeper(tc.bk)()
+
+			expBKCalls := BankKeeperCalls{
+				DenomOwner: tc.expDOCalls,
+			}
 
 			ctx := s.FreshCtx()
 			var actLinks types.AccMDLinks
@@ -613,7 +617,235 @@ func (s *ScopeKeeperTestSuite) TestGetScopeValueOwners() {
 			s.Require().NotPanics(testFunc, "GetScopeValueOwners")
 			s.AssertErrorValue(actErr, tc.expErr, "GetScopeValueOwners error")
 			s.Assert().Equal(tc.expLinks, actLinks, "GetScopeValueOwners address")
-			s.Assert().Equal(tc.expBKCalls, tc.bk.DenomOwnerCalls, "calls made to DenomOwners")
+			tc.bk.AssertCalls(s.T(), expBKCalls)
+		})
+	}
+}
+
+func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
+	decodeID := func(id string) types.MetadataAddress {
+		rv, err := types.MetadataAddressFromBech32(id)
+		s.Require().NoError(err, "types.MetadataAddressFromBech32(%q)", id)
+		return rv
+	}
+	scopeIDStr := "scope1qpz0e5p8py55wa9mhckh3qg5qsasjwvmh2" // generated via CLI.
+	scopeID := decodeID(scopeIDStr)
+	moduleAddr := authtypes.NewModuleAddress(types.ModuleName) // cosmos1g4z8k7hm6hj5fa7s780slnxjvq2dnpgpj2jy0e
+	addr1 := sdk.AccAddress("1addr_______________")            // cosmos1x9skgerjta047h6lta047h6lta047h6l4429yc
+	addr2 := sdk.AccAddress("2addr_______________")            // cosmos1xfskgerjta047h6lta047h6lta047h6lh0rr9a
+
+	tests := []struct {
+		name          string
+		bk            *MockBankKeeper
+		curOwner      sdk.AccAddress
+		scopeID       types.MetadataAddress
+		newValueOwner string
+		expErr        string
+		expCallBA     sdk.AccAddress // BA = BlockedAddr
+		expCallDO     bool           // DO = Denom Owner
+		expCallMint   bool
+		expCallSend   *SendCoinsCall
+		expCallBurn   bool
+	}{
+		{
+			name:    "nil scope id",
+			scopeID: nil,
+			expErr:  "invalid metadata address MetadataAddress(nil): address is empty",
+		},
+		{
+			name:    "empty scope id",
+			scopeID: types.MetadataAddress{},
+			expErr:  "invalid metadata address MetadataAddress{}: address is empty",
+		},
+		{
+			name:    "invalid scope id",
+			scopeID: types.MetadataAddress{types.ScopeKeyPrefix[0], 0x1, 0x2},
+			expErr:  "invalid metadata address MetadataAddress{0x0, 0x1, 0x2}: incorrect address length (expected: 17, actual: 3)",
+		},
+		{
+			name:    "session",
+			scopeID: decodeID("session1q98duk50zlfyhpv3q7f88uzygyzdfw8hwdk2x3z8s4r009lk5nl6syhyghk"),
+			expErr:  "invalid metadata address \"session1q98duk50zlfyhpv3q7f88uzygyzdfw8hwdk2x3z8s4r009lk5nl6syhyghk\": must be a scope address",
+		},
+		{
+			name:    "record",
+			scopeID: decodeID("record1q26mxxwwvw2524dt3dpgf95gnhefy9ndhhsmphsxfntx7c8f52vpklgcn7v"),
+			expErr:  "invalid metadata address \"record1q26mxxwwvw2524dt3dpgf95gnhefy9ndhhsmphsxfntx7c8f52vpklgcn7v\": must be a scope address",
+		},
+		{
+			name:    "scope spec",
+			scopeID: decodeID("scopespec1qnna3wa2v4hy2l9jlklkvvtxjxes7wjq86"),
+			expErr:  "invalid metadata address \"scopespec1qnna3wa2v4hy2l9jlklkvvtxjxes7wjq86\": must be a scope address",
+		},
+		{
+			name:    "contract spec",
+			scopeID: decodeID("contractspec1qdwlarvm04p5cl4sca0vmzudksss654dk2"),
+			expErr:  "invalid metadata address \"contractspec1qdwlarvm04p5cl4sca0vmzudksss654dk2\": must be a scope address",
+		},
+		{
+			name:    "record spec",
+			scopeID: decodeID("recspec1qkrgw9lwe3k5gm5rh24kh0nkkkqujayqx92qrkvsezr6dvvyv4jmcw7t5tc"),
+			expErr:  "invalid metadata address \"recspec1qkrgw9lwe3k5gm5rh24kh0nkkkqujayqx92qrkvsezr6dvvyv4jmcw7t5tc\": must be a scope address",
+		},
+		{
+			name:          "invalid new value owner",
+			scopeID:       scopeID,
+			newValueOwner: "bill",
+			expErr:        "invalid new value owner address \"bill\": decoding bech32 failed: invalid bech32 string length 4",
+		},
+		{
+			name:          "blocked new value owner",
+			bk:            NewMockBankKeeper().WithBlockedAddr(addr1),
+			scopeID:       scopeID,
+			newValueOwner: addr1.String(),
+			expErr:        fmt.Sprintf("new value owner %q is not allowed to receive funds: unauthorized", addr1.String()),
+			expCallBA:     addr1,
+		},
+		{
+			name:      "error getting current owner",
+			bk:        NewMockBankKeeper().WithDenomOwnerError(scopeID, "not now clark"),
+			scopeID:   scopeID,
+			expErr:    fmt.Sprintf("could not get current value owner of %q: not now clark", scopeIDStr),
+			expCallDO: true,
+		},
+		{
+			name:          "no current owner to empty new owner",
+			scopeID:       scopeID,
+			newValueOwner: "",
+			expErr:        "",
+			expCallDO:     true,
+		},
+		{
+			name:          "no current owner to new owner: error minting",
+			bk:            NewMockBankKeeper().WithMintCoinsErrors("not so fresh"),
+			scopeID:       scopeID,
+			newValueOwner: addr1.String(),
+			expErr:        fmt.Sprintf("could not mint scope coin \"1nft/%s\": not so fresh", scopeIDStr),
+			expCallBA:     addr1,
+			expCallDO:     true,
+			expCallMint:   true,
+		},
+		{
+			name:          "no current owner to new owner: error sending",
+			bk:            NewMockBankKeeper().WithSendCoinsError(moduleAddr, "it is mine now"),
+			scopeID:       scopeID,
+			newValueOwner: addr1.String(),
+			expErr: fmt.Sprintf("could not send scope coin \"1nft/%s\" from %s to %s: it is mine now",
+				scopeIDStr, moduleAddr.String(), addr1.String()),
+			expCallBA:   addr1,
+			expCallDO:   true,
+			expCallMint: true,
+			expCallSend: NewSendCoinsCall(moduleAddr, addr1, sdk.Coins{scopeID.Coin()}),
+		},
+		{
+			name:          "no current owner to new owner: okay",
+			scopeID:       scopeID,
+			newValueOwner: addr1.String(),
+			expCallBA:     addr1,
+			expCallDO:     true,
+			expCallMint:   true,
+			expCallSend:   NewSendCoinsCall(moduleAddr, addr1, sdk.Coins{scopeID.Coin()}),
+		},
+		{
+			name:          "current owner to self",
+			curOwner:      addr1,
+			scopeID:       scopeID,
+			newValueOwner: addr1.String(),
+			expErr:        "",
+			expCallBA:     addr1,
+			expCallDO:     true,
+		},
+		{
+			name:          "current owner to new owner: error sending",
+			bk:            NewMockBankKeeper().WithSendCoinsError(addr1, "gonna keep this one"),
+			curOwner:      addr1,
+			scopeID:       scopeID,
+			newValueOwner: addr2.String(),
+			expErr: fmt.Sprintf("could not send scope coin \"1nft/%s\" from %s to %s: gonna keep this one",
+				scopeIDStr, addr1.String(), addr2.String()),
+			expCallBA:   addr2,
+			expCallDO:   true,
+			expCallSend: NewSendCoinsCall(addr1, addr2, sdk.Coins{scopeID.Coin()}),
+		},
+		{
+			name:          "current owner to new owner: okay",
+			curOwner:      addr1,
+			scopeID:       scopeID,
+			newValueOwner: addr2.String(),
+			expCallBA:     addr2,
+			expCallDO:     true,
+			expCallSend:   NewSendCoinsCall(addr1, addr2, sdk.Coins{scopeID.Coin()}),
+		},
+		{
+			name:          "current owner to empty new owner: error sending",
+			bk:            NewMockBankKeeper().WithSendCoinsError(addr1, "finders keepers"),
+			curOwner:      addr1,
+			scopeID:       scopeID,
+			newValueOwner: "",
+			expErr: fmt.Sprintf("could not send scope coin \"1nft/%s\" from %s to %s: finders keepers",
+				scopeIDStr, addr1.String(), moduleAddr.String()),
+			expCallDO:   true,
+			expCallSend: NewSendCoinsCall(addr1, moduleAddr, sdk.Coins{scopeID.Coin()}),
+		},
+		{
+			name:          "current owner to empty new owner: error burning",
+			bk:            NewMockBankKeeper().WithBurnCoinsErrors("too wet"),
+			curOwner:      addr1,
+			scopeID:       scopeID,
+			newValueOwner: "",
+			expErr:        fmt.Sprintf("could not burn scope coin \"1nft/%s\": too wet", scopeIDStr),
+			expCallDO:     true,
+			expCallSend:   NewSendCoinsCall(addr1, moduleAddr, sdk.Coins{scopeID.Coin()}),
+			expCallBurn:   true,
+		},
+		{
+			name:          "current owner to empty new owner: okay",
+			curOwner:      addr1,
+			scopeID:       scopeID,
+			newValueOwner: "",
+			expCallDO:     true,
+			expCallSend:   NewSendCoinsCall(addr1, moduleAddr, sdk.Coins{scopeID.Coin()}),
+			expCallBurn:   true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Set up expected bank keeper calls.
+			expBKCalls := BankKeeperCalls{}
+			if len(tc.expCallBA) > 0 {
+				expBKCalls.BlockedAddr = append(expBKCalls.BlockedAddr, tc.expCallBA)
+			}
+			if tc.expCallMint {
+				expBKCalls.MintCoins = append(expBKCalls.MintCoins, NewMintBurnCall(types.ModuleName, sdk.Coins{tc.scopeID.Coin()}))
+			}
+			if tc.expCallBurn {
+				expBKCalls.BurnCoins = append(expBKCalls.BurnCoins, NewMintBurnCall(types.ModuleName, sdk.Coins{tc.scopeID.Coin()}))
+			}
+			if tc.expCallSend != nil {
+				expBKCalls.SendCoins = append(expBKCalls.SendCoins, tc.expCallSend)
+			}
+			if tc.expCallDO {
+				expBKCalls.DenomOwner = append(expBKCalls.DenomOwner, tc.scopeID.Denom())
+			}
+
+			// Set up the mock bank keeper.
+			if tc.bk == nil {
+				tc.bk = NewMockBankKeeper()
+			}
+			if len(tc.curOwner) > 0 {
+				tc.bk = tc.bk.WithDenomOwnerResult(tc.scopeID, tc.curOwner)
+			}
+			defer s.SwapBankKeeper(tc.bk)()
+
+			ctx := s.FreshCtx()
+			var err error
+			testFunc := func() {
+				err = s.app.MetadataKeeper.SetScopeValueOwner(ctx, tc.scopeID, tc.newValueOwner)
+			}
+			s.Require().NotPanics(testFunc, "SetScopeValueOwner(%q, %q)", tc.scopeID, tc.newValueOwner)
+			s.AssertErrorValue(err, tc.expErr, "error from SetScopeValueOwner(%q, %q)", tc.scopeID, tc.newValueOwner)
+			tc.bk.AssertCalls(s.T(), expBKCalls)
 		})
 	}
 }
