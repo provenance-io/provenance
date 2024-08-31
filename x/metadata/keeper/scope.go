@@ -102,8 +102,18 @@ func (k Keeper) PopulateScopeValueOwner(ctx sdk.Context, scope *types.Scope) {
 }
 
 // SetScope stores a scope in the module kv store.
-func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
-	scope.ValueOwnerAddress = ""
+func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) error {
+	// If there's a value owner in the provided scope, update that record then remove it form the
+	// scope before writing the scope. If it doesn't have a value owner, we don't do anything about it.
+	// It shouldn't be possible to delete the value owner record once there is one for a scope.
+	if len(scope.ValueOwnerAddress) > 0 {
+		err := k.SetScopeValueOwner(ctx, scope.ScopeId, scope.ValueOwnerAddress)
+		if err != nil {
+			return fmt.Errorf("could not set value owner: %w", err)
+		}
+		scope.ValueOwnerAddress = ""
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&scope)
 
@@ -126,6 +136,7 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) {
 	k.indexScope(store, &scope, oldScope)
 	k.EmitEvent(ctx, event)
 	defer types.GetIncObjFunc(types.TLType_Scope, action)
+	return nil
 }
 
 // RemoveScope removes a scope from the module kv store along with all its records and sessions.
@@ -139,6 +150,11 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 	scope, found := k.GetScope(ctx, id)
 	if !found {
 		return
+	}
+
+	// Remove the value owner
+	if err := k.SetScopeValueOwner(ctx, id, ""); err != nil {
+		panic(err)
 	}
 
 	// Remove all records

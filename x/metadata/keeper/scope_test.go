@@ -135,6 +135,26 @@ func randomUser() testUser {
 func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 	ctx := s.FreshCtx()
 	theScope := *types.NewScope(s.scopeID, s.scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, s.user1, false)
+	moduleAddr := authtypes.NewModuleAddress(types.ModuleName).String() // cosmos1g4z8k7hm6hj5fa7s780slnxjvq2dnpgpj2jy0e
+	eventCoinReceived := func(receiver string, amount sdk.Coin) sdk.Event {
+		return sdk.NewEvent("coin_received",
+			sdk.NewAttribute("receiver", receiver),
+			sdk.NewAttribute("amount", amount.String()),
+		)
+	}
+	eventCoinSpent := func(spender string, amount sdk.Coin) sdk.Event {
+		return sdk.NewEvent("coin_spent",
+			sdk.NewAttribute("spender", spender),
+			sdk.NewAttribute("amount", amount.String()),
+		)
+	}
+	eventTransfer := func(sender, recipient string, amount sdk.Coin) sdk.Event {
+		return sdk.NewEvent("transfer",
+			sdk.NewAttribute("recipient", recipient),
+			sdk.NewAttribute("sender", sender),
+			sdk.NewAttribute("amount", amount.String()),
+		)
+	}
 
 	tests := []struct {
 		name   string
@@ -156,9 +176,22 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 				ctx = ctx.WithEventManager(sdk.NewEventManager())
 				expEvent, err := sdk.TypedEventToEvent(types.NewEventScopeCreated(theScope.ScopeId))
 				s.Require().NoError(err, "TypedEventToEvent NewEventScopeCreated")
-				expEvents := sdk.Events{expEvent}
+				amt := theScope.ScopeId.Coin()
+				expEvents := sdk.Events{
+					eventCoinReceived(moduleAddr, amt),
+					sdk.NewEvent("coinbase",
+						sdk.NewAttribute("minter", moduleAddr),
+						sdk.NewAttribute("amount", amt.String()),
+					),
+					eventCoinSpent(moduleAddr, amt),
+					eventCoinReceived(theScope.ValueOwnerAddress, amt),
+					eventTransfer(moduleAddr, theScope.ValueOwnerAddress, amt),
+					sdk.NewEvent("message", sdk.NewAttribute("sender", moduleAddr)),
+					expEvent,
+				}
 
-				s.app.MetadataKeeper.SetScope(ctx, theScope)
+				err = s.app.MetadataKeeper.SetScope(ctx, theScope)
+				s.Require().NoError(err, "SetScope")
 				actEvents := ctx.EventManager().Events()
 				assertions.AssertEqualEvents(s.T(), expEvents, actEvents, "events emitted during SetScope new")
 			},
@@ -171,6 +204,10 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 				actScope, found := s.app.MetadataKeeper.GetScope(ctx, theScope.ScopeId)
 				s.Assert().True(found, "GetScope found")
 				s.Assert().Equal(expScope, actScope, "GetScope result")
+
+				actValueOwner, err := s.app.MetadataKeeper.GetScopeValueOwner(ctx, theScope.ScopeId)
+				s.Require().NoError(err, "GetScopeValueOwner error")
+				s.Assert().Equal(theScope.ValueOwnerAddress, actValueOwner.String(), "GetScopeValueOwner result")
 			},
 		},
 		{
@@ -183,7 +220,8 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 				s.Require().NoError(err, "TypedEventToEvent NewEventScopeUpdated")
 				expEvents := sdk.Events{expEvent}
 
-				s.app.MetadataKeeper.SetScope(ctx, theScope)
+				err = s.app.MetadataKeeper.SetScope(ctx, theScope)
+				s.Require().NoError(err, "SetScope")
 				actEvents := ctx.EventManager().Events()
 				assertions.AssertEqualEvents(s.T(), expEvents, actEvents, "events emitted during SetScope update")
 			},
@@ -199,6 +237,38 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 			},
 		},
 		{
+			name: "update scope value owner",
+			runner: func() {
+				ctx = ctx.WithEventManager(sdk.NewEventManager())
+				origOwner := theScope.ValueOwnerAddress
+				theScope.ValueOwnerAddress = s.user2
+				expEvent, err := sdk.TypedEventToEvent(types.NewEventScopeUpdated(theScope.ScopeId))
+				s.Require().NoError(err, "TypedEventToEvent NewEventScopeUpdated")
+				amt := theScope.ScopeId.Coin()
+				expEvents := sdk.Events{
+					eventCoinSpent(origOwner, amt),
+					eventCoinReceived(theScope.ValueOwnerAddress, amt),
+					eventTransfer(origOwner, theScope.ValueOwnerAddress, amt),
+					sdk.NewEvent("message", sdk.NewAttribute("sender", origOwner)),
+					expEvent,
+				}
+
+				err = s.app.MetadataKeeper.SetScope(ctx, theScope)
+				s.Require().NoError(err, "SetScope")
+				actEvents := ctx.EventManager().Events()
+				assertions.AssertEqualEvents(s.T(), expEvents, actEvents, "events emitted during SetScope update")
+			},
+		},
+		{
+			name: "scope value owner after updating it",
+			runner: func() {
+				expScope := theScope
+				actScope, found := s.app.MetadataKeeper.GetScopeWithValueOwner(ctx, theScope.ScopeId)
+				s.Assert().True(found, "GetScope found")
+				s.Assert().Equal(expScope, actScope, "GetScope result")
+			},
+		},
+		{
 			name: "remove scope",
 			runner: func() {
 				// Note: Management of index entries during RemoveScope is tested in TestScopeIndexing.
@@ -206,7 +276,19 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 				ctx = ctx.WithEventManager(sdk.NewEventManager())
 				expEvent, err := sdk.TypedEventToEvent(types.NewEventScopeDeleted(theScope.ScopeId))
 				s.Require().NoError(err, "TypedEventToEvent NewEventScopeDeleted")
-				expEvents := sdk.Events{expEvent}
+				amt := theScope.ScopeId.Coin()
+				expEvents := sdk.Events{
+					eventCoinSpent(theScope.ValueOwnerAddress, amt),
+					eventCoinReceived(moduleAddr, amt),
+					eventTransfer(theScope.ValueOwnerAddress, moduleAddr, amt),
+					sdk.NewEvent("message", sdk.NewAttribute("sender", theScope.ValueOwnerAddress)),
+					eventCoinSpent(moduleAddr, amt),
+					sdk.NewEvent("burn",
+						sdk.NewAttribute("burner", moduleAddr),
+						sdk.NewAttribute("amount", amt.String()),
+					),
+					expEvent,
+				}
 
 				s.app.MetadataKeeper.RemoveScope(ctx, theScope.ScopeId)
 				actEvents := ctx.EventManager().Events()
