@@ -208,6 +208,7 @@ var (
 		wasmtypes.ModuleName:      {authtypes.Burner},
 		triggertypes.ModuleName:   nil,
 		oracletypes.ModuleName:    nil,
+		metadatatypes.ModuleName:  {authtypes.Minter, authtypes.Burner},
 	}
 )
 
