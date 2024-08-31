@@ -619,8 +619,6 @@ func (k Keeper) Ownership(c context.Context, req *types.OwnershipRequest) (*type
 	return &retval, nil
 }
 
-const scopeDenomPrefix = types.DenomPrefix + types.PrefixScope + "1"
-
 // ValueOwnership returns a list of scope identifiers that list the given address as a value owner.
 func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipRequest) (*types.ValueOwnershipResponse, error) {
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "query", "ValueOwnership")
