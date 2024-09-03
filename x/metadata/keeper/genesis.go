@@ -16,7 +16,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	}
 	if data.Scopes != nil {
 		for _, s := range data.Scopes {
-			k.SetScope(ctx, s)
+			if err := k.SetScope(ctx, s); err != nil {
+				panic(err)
+			}
 		}
 	}
 	if data.Sessions != nil {

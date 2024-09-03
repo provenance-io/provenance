@@ -53,7 +53,10 @@ func (k msgServer) WriteScope(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.SetScope(ctx, msg.Scope)
+	err = k.SetScope(ctx, msg.Scope)
+	if err != nil {
+		return nil, fmt.Errorf("could not wrte scope %q: %w", msg.Scope.ScopeId, err)
+	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSignerStrs()))
 	return types.NewMsgWriteScopeResponse(msg.Scope.ScopeId), nil
@@ -98,7 +101,10 @@ func (k msgServer) AddScopeDataAccess(
 
 	existing.AddDataAccess(msg.DataAccess)
 
-	k.SetScope(ctx, existing)
+	err := k.SetScope(ctx, existing)
+	if err != nil {
+		return nil, fmt.Errorf("could not update scope %q: %w", msg.ScopeId, err)
+	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeDataAccess, msg.GetSignerStrs()))
 	return &types.MsgAddScopeDataAccessResponse{}, nil
@@ -123,7 +129,10 @@ func (k msgServer) DeleteScopeDataAccess(
 
 	existing.RemoveDataAccess(msg.DataAccess)
 
-	k.SetScope(ctx, existing)
+	err := k.SetScope(ctx, existing)
+	if err != nil {
+		return nil, fmt.Errorf("could not update scope %q: %w", msg.ScopeId, err)
+	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeDataAccess, msg.GetSignerStrs()))
 	return &types.MsgDeleteScopeDataAccessResponse{}, nil
@@ -156,7 +165,10 @@ func (k msgServer) AddScopeOwner(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.SetScope(ctx, proposed)
+	err := k.SetScope(ctx, proposed)
+	if err != nil {
+		return nil, fmt.Errorf("could not update scope %q: %w", msg.ScopeId, err)
+	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_AddScopeOwner, msg.GetSignerStrs()))
 	return &types.MsgAddScopeOwnerResponse{}, nil
@@ -189,7 +201,10 @@ func (k msgServer) DeleteScopeOwner(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.SetScope(ctx, proposed)
+	err := k.SetScope(ctx, proposed)
+	if err != nil {
+		return nil, fmt.Errorf("could not update scope %q: %w", msg.ScopeId, err)
+	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_DeleteScopeOwner, msg.GetSignerStrs()))
 	return &types.MsgDeleteScopeOwnerResponse{}, nil
@@ -210,7 +225,10 @@ func (k msgServer) UpdateValueOwners(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.SetScopeValueOwners(ctx, nil, msg.ValueOwnerAddress)
+	err = k.SetScopeValueOwners(ctx, nil, msg.ValueOwnerAddress)
+	if err != nil {
+		return nil, fmt.Errorf("failure setting scope value owners: %w", err)
+	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_UpdateValueOwners, msg.GetSignerStrs()))
 	return &types.MsgUpdateValueOwnersResponse{}, nil
@@ -231,7 +249,10 @@ func (k msgServer) MigrateValueOwner(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.SetScopeValueOwners(ctx, nil, msg.Proposed)
+	err = k.SetScopeValueOwners(ctx, nil, msg.Proposed)
+	if err != nil {
+		return nil, fmt.Errorf("failure setting scope value owners: %w", err)
+	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_MigrateValueOwner, msg.GetSignerStrs()))
 	return &types.MsgMigrateValueOwnerResponse{}, nil
