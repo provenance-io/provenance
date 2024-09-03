@@ -54,6 +54,17 @@ func TestAddressTestSuite(t *testing.T) {
 	suite.Run(t, new(AddressTestSuite))
 }
 
+func mapToStrings[S ~[]E, E fmt.Stringer](vals S) []string {
+	if vals == nil {
+		return nil
+	}
+	rv := make([]string, len(vals))
+	for i, v := range vals {
+		rv[i] = v.String()
+	}
+	return rv
+}
+
 func (s *AddressTestSuite) requireBech32String(typeCode []byte, data []byte) string {
 	hrp, err := MetadataAddress{typeCode[0]}.Prefix()
 	s.Require().NoError(err, "getPrefix error")
@@ -2719,6 +2730,153 @@ func (s *AddressTestSuite) TestAccMDLinks_Coins() {
 			}
 			assertions.RequirePanicEquals(s.T(), testFunc, tc.expPanic, "Coins")
 			s.Assert().Equal(tc.exp.String(), act.String(), "Coins (as strings)")
+		})
+	}
+}
+
+func (s *AddressTestSuite) TestAccMDLinks_GetAccAddrs() {
+	addr1 := sdk.AccAddress("1addr_______________") // cosmos1x9skgerjta047h6lta047h6lta047h6l4429yc
+	addr2 := sdk.AccAddress("2addr_______________") // cosmos1xfskgerjta047h6lta047h6lta047h6lh0rr9a
+	addr3 := sdk.AccAddress("3addr_______________") // cosmos1xdskgerjta047h6lta047h6lta047h6lw7ypa7
+
+	tests := []struct {
+		name  string
+		links AccMDLinks
+		exp   []sdk.AccAddress
+	}{
+		{
+			name:  "nil",
+			links: nil,
+			exp:   nil,
+		},
+		{
+			name:  "empty",
+			links: AccMDLinks{},
+			exp:   nil,
+		},
+		{
+			name:  "one nil entry",
+			links: AccMDLinks{nil},
+			exp:   nil,
+		},
+		{
+			name:  "one entry: nil addr",
+			links: AccMDLinks{{AccAddr: nil}},
+			exp:   nil,
+		},
+		{
+			name:  "one entry: empty addr",
+			links: AccMDLinks{{AccAddr: sdk.AccAddress{}}},
+			exp:   nil,
+		},
+		{
+			name:  "one entry: ok addr",
+			links: AccMDLinks{{AccAddr: addr1}},
+			exp:   []sdk.AccAddress{addr1},
+		},
+		{
+			name:  "two nil entries",
+			links: AccMDLinks{nil, nil},
+			exp:   nil,
+		},
+		{
+			name:  "two entries: addrs: nil nil",
+			links: AccMDLinks{{AccAddr: nil}, {AccAddr: nil}},
+			exp:   nil,
+		},
+		{
+			name:  "two entries: addrs: nil empty",
+			links: AccMDLinks{{AccAddr: nil}, {AccAddr: sdk.AccAddress{}}},
+			exp:   nil,
+		},
+		{
+			name:  "two entries: addrs: nil ok",
+			links: AccMDLinks{{AccAddr: nil}, {AccAddr: addr1}},
+			exp:   []sdk.AccAddress{addr1},
+		},
+		{
+			name:  "two entries: nil entry, entry with ok address",
+			links: AccMDLinks{nil, {AccAddr: addr1}},
+			exp:   []sdk.AccAddress{addr1},
+		},
+		{
+			name:  "two entries: addrs: empty nil",
+			links: AccMDLinks{{AccAddr: sdk.AccAddress{}}, {AccAddr: nil}},
+			exp:   nil,
+		},
+		{
+			name:  "two entries: addrs: empty empty",
+			links: AccMDLinks{{AccAddr: sdk.AccAddress{}}, {AccAddr: sdk.AccAddress{}}},
+			exp:   nil,
+		},
+		{
+			name:  "two entries: addrs: empty ok",
+			links: AccMDLinks{{AccAddr: sdk.AccAddress{}}, {AccAddr: addr1}},
+			exp:   []sdk.AccAddress{addr1},
+		},
+		{
+			name:  "two entries: addrs: ok nil",
+			links: AccMDLinks{{AccAddr: addr1}, {AccAddr: nil}},
+			exp:   []sdk.AccAddress{addr1},
+		},
+		{
+			name:  "two entries: ok addr then nil entry",
+			links: AccMDLinks{{AccAddr: addr1}, nil},
+			exp:   []sdk.AccAddress{addr1},
+		},
+		{
+			name:  "two entries: addrs: ok empty",
+			links: AccMDLinks{{AccAddr: addr1}, {AccAddr: sdk.AccAddress{}}},
+			exp:   []sdk.AccAddress{addr1},
+		},
+		{
+			name:  "two entries: addrs: same",
+			links: AccMDLinks{{AccAddr: addr1}, {AccAddr: addr1}},
+			exp:   []sdk.AccAddress{addr1},
+		},
+		{
+			name:  "two entries: addrs: different",
+			links: AccMDLinks{{AccAddr: addr1}, {AccAddr: addr2}},
+			exp:   []sdk.AccAddress{addr1, addr2},
+		},
+		{
+			name:  "two entries: addrs: different opposite order",
+			links: AccMDLinks{{AccAddr: addr2}, {AccAddr: addr1}},
+			exp:   []sdk.AccAddress{addr2, addr1},
+		},
+		{
+			name: "three different addrs with duplicates",
+			links: AccMDLinks{
+				{AccAddr: addr2}, {AccAddr: addr2}, {AccAddr: addr1}, {AccAddr: addr2},
+				{AccAddr: addr1}, {AccAddr: addr1}, {AccAddr: addr3}, {AccAddr: addr1},
+				{AccAddr: addr2}, {AccAddr: addr1},
+			},
+			exp: []sdk.AccAddress{addr2, addr1, addr3},
+		},
+		{
+			name: "a bit of everything",
+			links: AccMDLinks{
+				nil, nil, {AccAddr: nil}, {AccAddr: addr1},
+				{AccAddr: addr1}, {AccAddr: sdk.AccAddress{}}, nil, {AccAddr: addr2},
+				{AccAddr: addr1}, {AccAddr: nil}, {AccAddr: addr3}, {AccAddr: sdk.AccAddress{}},
+				{AccAddr: addr3}, nil, {AccAddr: addr1}, nil,
+			},
+			exp: []sdk.AccAddress{addr1, addr2, addr3},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var act []sdk.AccAddress
+			testFunc := func() {
+				act = tc.links.GetAccAddrs()
+			}
+			s.Require().NotPanics(testFunc, "GetAccAddrs() on %s", tc.links.String())
+			if !s.Assert().Equal(tc.exp, act, "result of GetAccAddrs()") {
+				expStrs := mapToStrings(tc.exp)
+				actStrs := mapToStrings(act)
+				s.Assert().Equal(expStrs, actStrs, "strings of the result of GetAccAddrs()")
+			}
 		})
 	}
 }

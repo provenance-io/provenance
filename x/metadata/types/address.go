@@ -953,3 +953,21 @@ func (a AccMDLinks) Coins() sdk.Coins {
 	}
 	return rv
 }
+
+// GetAccAddrs returns a list of all AccAddr values from this AccMDLinks.
+// Each entry will appear only once and in the order it first appears in this list.
+// Empty and nil entries are ignored.
+func (a AccMDLinks) GetAccAddrs() []sdk.AccAddress {
+	seen := make(map[string]bool)
+	var rv []sdk.AccAddress
+	for _, link := range a {
+		if link == nil || len(link.AccAddr) == 0 {
+			continue
+		}
+		if !seen[string(link.AccAddr)] {
+			seen[string(link.AccAddr)] = true
+			rv = append(rv, link.AccAddr)
+		}
+	}
+	return rv
+}
