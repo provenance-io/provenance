@@ -5,7 +5,6 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -644,10 +643,7 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 
 	// This is basically the bank module's AllBalances query filtered to only scope denoms.
 	// But then, instead of returning coins, it returns the scope UUIDs.
-	retval.ScopeUuids, retval.Pagination, err = query.CollectionFilteredPaginate(ctx, k.bankKeeper.GetBalancesCollection(), req.Pagination,
-		func(key collections.Pair[sdk.AccAddress, string], _ sdkmath.Int) (bool, error) {
-			return strings.HasPrefix(key.K2(), scopeDenomPrefix), nil
-		},
+	retval.ScopeUuids, retval.Pagination, err = query.CollectionPaginate(ctx, k.bankKeeper.GetBalancesCollection(), req.Pagination,
 		func(key collections.Pair[sdk.AccAddress, string], _ sdkmath.Int) (string, error) {
 			id, idErr := types.MetadataAddressFromDenom(key.K2())
 			if idErr != nil {
@@ -658,7 +654,10 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 			uid, _ := id.PrimaryUUID()
 			return uid.String(), nil
 		},
-		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](addr),
+		func(o *query.CollectionsPaginateOptions[collections.Pair[sdk.AccAddress, string]]) {
+			pfx := collections.Join(addr, scopeDenomPrefix)
+			o.Prefix = &pfx
+		},
 	)
 	if err != nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("error collecting results: %v", err)
