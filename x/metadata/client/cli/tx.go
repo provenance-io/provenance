@@ -327,7 +327,7 @@ func UpdateValueOwnersCmd() *cobra.Command {
 					return fmt.Errorf("invalid scope id %d %q: %w", i+1, arg, err)
 				}
 				if !msg.ScopeIds[i].IsScopeAddress() {
-					err = fmt.Errorf("not a scope identifier: %q", arg)
+					return fmt.Errorf("not a scope identifier: %q", arg)
 				}
 			}
 
