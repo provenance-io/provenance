@@ -196,8 +196,7 @@ func getAuthzMessageTypeURLs(msgTypeURL string) []string {
 	}
 	switch msgTypeURL {
 	case types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgDeleteScopeDataAccessRequest,
-		types.TypeURLMsgAddScopeOwnerRequest, types.TypeURLMsgDeleteScopeOwnerRequest,
-		types.TypeURLMsgUpdateValueOwnersRequest, types.TypeURLMsgMigrateValueOwnerRequest:
+		types.TypeURLMsgAddScopeOwnerRequest, types.TypeURLMsgDeleteScopeOwnerRequest:
 		urls = append(urls, types.TypeURLMsgWriteScopeRequest)
 	case types.TypeURLMsgWriteRecordRequest:
 		urls = append(urls, types.TypeURLMsgWriteSessionRequest)

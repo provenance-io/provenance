@@ -2430,17 +2430,15 @@ func TestGetAuthzMessageTypeURLs(t *testing.T) {
 		}
 		return url[lastDot+1:]
 	}
-	getName := func(tc testCase) string {
-		if tc.name != "" {
-			return tc.name
+	newCase := func(url string, also ...string) testCase {
+		desc := " (boring)"
+		if len(also) > 0 {
+			desc = " (special)"
 		}
-		return getMsgName(tc.url)
-	}
-	boringCase := func(url string) testCase {
 		return testCase{
-			name:     "boring " + getMsgName(url),
+			name:     getMsgName(url) + desc,
 			url:      url,
-			expected: []string{url},
+			expected: append([]string{url}, also...),
 		}
 	}
 
@@ -2455,66 +2453,33 @@ func TestGetAuthzMessageTypeURLs(t *testing.T) {
 			url:      "random",
 			expected: []string{"random"},
 		},
-		boringCase(types.TypeURLMsgWriteScopeRequest),
-		boringCase(types.TypeURLMsgDeleteScopeRequest),
-		{
-			url:      types.TypeURLMsgAddScopeDataAccessRequest,
-			expected: []string{types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		{
-			url:      types.TypeURLMsgDeleteScopeDataAccessRequest,
-			expected: []string{types.TypeURLMsgDeleteScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		{
-			url:      types.TypeURLMsgAddScopeOwnerRequest,
-			expected: []string{types.TypeURLMsgAddScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		{
-			url:      types.TypeURLMsgDeleteScopeOwnerRequest,
-			expected: []string{types.TypeURLMsgDeleteScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		{
-			url:      types.TypeURLMsgUpdateValueOwnersRequest,
-			expected: []string{types.TypeURLMsgUpdateValueOwnersRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		{
-			url:      types.TypeURLMsgMigrateValueOwnerRequest,
-			expected: []string{types.TypeURLMsgMigrateValueOwnerRequest, types.TypeURLMsgWriteScopeRequest},
-		},
-		boringCase(types.TypeURLMsgWriteSessionRequest),
-		{
-			url:      types.TypeURLMsgWriteRecordRequest,
-			expected: []string{types.TypeURLMsgWriteRecordRequest, types.TypeURLMsgWriteSessionRequest},
-		},
-		boringCase(types.TypeURLMsgDeleteRecordRequest),
-		boringCase(types.TypeURLMsgWriteScopeSpecificationRequest),
-		boringCase(types.TypeURLMsgDeleteScopeSpecificationRequest),
-		boringCase(types.TypeURLMsgWriteContractSpecificationRequest),
-		boringCase(types.TypeURLMsgDeleteContractSpecificationRequest),
-		{
-			url:      types.TypeURLMsgAddContractSpecToScopeSpecRequest,
-			expected: []string{types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest},
-		},
-		{
-			url:      types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest,
-			expected: []string{types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest},
-		},
-		{
-			url:      types.TypeURLMsgWriteRecordSpecificationRequest,
-			expected: []string{types.TypeURLMsgWriteRecordSpecificationRequest, types.TypeURLMsgWriteContractSpecificationRequest},
-		},
-		{
-			url:      types.TypeURLMsgDeleteRecordSpecificationRequest,
-			expected: []string{types.TypeURLMsgDeleteRecordSpecificationRequest, types.TypeURLMsgDeleteContractSpecificationRequest},
-		},
-		boringCase(types.TypeURLMsgBindOSLocatorRequest),
-		boringCase(types.TypeURLMsgDeleteOSLocatorRequest),
-		boringCase(types.TypeURLMsgModifyOSLocatorRequest),
-		boringCase(types.TypeURLMsgSetAccountDataRequest),
+		newCase(types.TypeURLMsgWriteScopeRequest),
+		newCase(types.TypeURLMsgDeleteScopeRequest),
+		newCase(types.TypeURLMsgAddScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest),
+		newCase(types.TypeURLMsgDeleteScopeDataAccessRequest, types.TypeURLMsgWriteScopeRequest),
+		newCase(types.TypeURLMsgAddScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest),
+		newCase(types.TypeURLMsgDeleteScopeOwnerRequest, types.TypeURLMsgWriteScopeRequest),
+		newCase(types.TypeURLMsgUpdateValueOwnersRequest),
+		newCase(types.TypeURLMsgMigrateValueOwnerRequest),
+		newCase(types.TypeURLMsgWriteSessionRequest),
+		newCase(types.TypeURLMsgWriteRecordRequest, types.TypeURLMsgWriteSessionRequest),
+		newCase(types.TypeURLMsgDeleteRecordRequest),
+		newCase(types.TypeURLMsgWriteScopeSpecificationRequest),
+		newCase(types.TypeURLMsgDeleteScopeSpecificationRequest),
+		newCase(types.TypeURLMsgWriteContractSpecificationRequest),
+		newCase(types.TypeURLMsgDeleteContractSpecificationRequest),
+		newCase(types.TypeURLMsgAddContractSpecToScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest),
+		newCase(types.TypeURLMsgDeleteContractSpecFromScopeSpecRequest, types.TypeURLMsgWriteScopeSpecificationRequest),
+		newCase(types.TypeURLMsgWriteRecordSpecificationRequest, types.TypeURLMsgWriteContractSpecificationRequest),
+		newCase(types.TypeURLMsgDeleteRecordSpecificationRequest, types.TypeURLMsgDeleteContractSpecificationRequest),
+		newCase(types.TypeURLMsgBindOSLocatorRequest),
+		newCase(types.TypeURLMsgDeleteOSLocatorRequest),
+		newCase(types.TypeURLMsgModifyOSLocatorRequest),
+		newCase(types.TypeURLMsgSetAccountDataRequest),
 	}
 
 	for _, tc := range tests {
-		t.Run(getName(tc), func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			actual := keeper.GetAuthzMessageTypeURLs(tc.url)
 			assert.Equal(t, tc.expected, actual, "getAuthzMessageTypeURLs(%q)", tc.url)
 		})
