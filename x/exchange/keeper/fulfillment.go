@@ -257,7 +257,7 @@ func (k Keeper) SettleOrders(ctx sdk.Context, req *exchange.MsgMarketSettleReque
 		return errors.New("settlement unexpectedly resulted in all orders fully filled")
 	}
 
-	return k.closeSettlement(markertypes.WithTransferAgent(ctx, admin), store, req.MarketId, settlement)
+	return k.closeSettlement(markertypes.WithTransferAgents(ctx, admin), store, req.MarketId, settlement)
 }
 
 // closeSettlement does all the processing needed to complete a settlement.

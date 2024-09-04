@@ -396,7 +396,7 @@ func (k Keeper) SettleCommitments(ctx sdk.Context, req *exchange.MsgMarketCommit
 	}
 
 	// Do the transfers
-	xFerCtx := markertypes.WithTransferAgent(ctx, admin)
+	xFerCtx := markertypes.WithTransferAgents(ctx, admin)
 	var xferErrs []error
 	for _, transfer := range transfers {
 		err = k.DoTransfer(xFerCtx, transfer.Inputs, transfer.Outputs)

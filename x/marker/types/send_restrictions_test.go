@@ -28,19 +28,19 @@ func TestContextCombos(t *testing.T) {
 	}{
 		{
 			name:      "with transfer agent on with bypass",
-			ctx:       WithTransferAgent(WithBypass(newCtx()), sdk.AccAddress("some_transfer_agent_")),
+			ctx:       WithTransferAgents(WithBypass(newCtx()), sdk.AccAddress("some_transfer_agent_")),
 			expBypass: true,
 			expTA:     sdk.AccAddress("some_transfer_agent_"),
 		},
 		{
 			name:      "with bypass on with transfer agent",
-			ctx:       WithBypass(WithTransferAgent(newCtx(), sdk.AccAddress("other_transfer_agent"))),
+			ctx:       WithBypass(WithTransferAgents(newCtx(), sdk.AccAddress("other_transfer_agent"))),
 			expBypass: true,
 			expTA:     sdk.AccAddress("other_transfer_agent"),
 		},
 		{
 			name:      "without either on with transfer agent and bypass",
-			ctx:       WithoutBypass(WithoutTransferAgent(WithBypass(WithTransferAgent(newCtx(), sdk.AccAddress("bad_transfer_agent__"))))),
+			ctx:       WithoutBypass(WithoutTransferAgents(WithBypass(WithTransferAgents(newCtx(), sdk.AccAddress("bad_transfer_agent__"))))),
 			expBypass: false,
 			expTA:     nil,
 		},
@@ -49,10 +49,15 @@ func TestContextCombos(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			actBypass := HasBypass(tc.ctx)
-			actTA := GetTransferAgent(tc.ctx)
+			// TODO[2137]: Refactor this test to include cases with multiple transfer agents.
+			actTAs := GetTransferAgents(tc.ctx)
+			var actTA sdk.AccAddress
+			if len(actTAs) > 0 {
+				actTA = actTAs[0]
+			}
 
 			assert.Equal(t, tc.expBypass, actBypass, "HasBypass")
-			assert.Equal(t, tc.expTA, actTA, "GetTransferAgent")
+			assert.Equal(t, tc.expTA, actTA, "GetTransferAgents")
 		})
 	}
 }
@@ -137,55 +142,61 @@ func TestTransferAgentFuncs(t *testing.T) {
 		},
 		{
 			name: "context with transfer agent",
-			ctx:  WithTransferAgent(newCtx(), sdk.AccAddress("transfer_agent______")),
+			ctx:  WithTransferAgents(newCtx(), sdk.AccAddress("transfer_agent______")),
 			exp:  sdk.AccAddress("transfer_agent______"),
 		},
 		{
 			name: "context without transfer agent",
-			ctx:  WithoutTransferAgent(newCtx()),
+			ctx:  WithoutTransferAgents(newCtx()),
 			exp:  nil,
 		},
 		{
 			name: "context with transfer agent twice",
-			ctx:  WithTransferAgent(WithTransferAgent(newCtx(), sdk.AccAddress("first_transfer_agent")), sdk.AccAddress("agent_2_of_transfer_")),
+			ctx:  WithTransferAgents(WithTransferAgents(newCtx(), sdk.AccAddress("first_transfer_agent")), sdk.AccAddress("agent_2_of_transfer_")),
 			exp:  sdk.AccAddress("agent_2_of_transfer_"),
 		},
 		{
 			name: "context without transfer agent twice",
-			ctx:  WithoutTransferAgent(WithoutTransferAgent(newCtx())),
+			ctx:  WithoutTransferAgents(WithoutTransferAgents(newCtx())),
 			exp:  nil,
 		},
 		{
 			name: "context with transfer agent on one that originally was without it",
-			ctx:  WithTransferAgent(WithoutTransferAgent(newCtx()), sdk.AccAddress("agent_of_transfer___")),
+			ctx:  WithTransferAgents(WithoutTransferAgents(newCtx()), sdk.AccAddress("agent_of_transfer___")),
 			exp:  sdk.AccAddress("agent_of_transfer___"),
 		},
 		{
 			name: "context without transfer agent on one that originally had it",
-			ctx:  WithoutTransferAgent(WithTransferAgent(newCtx(), sdk.AccAddress("the_transfer_agent__"))),
+			ctx:  WithoutTransferAgents(WithTransferAgents(newCtx(), sdk.AccAddress("the_transfer_agent__"))),
 			exp:  nil,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := GetTransferAgent(tc.ctx)
-			assert.Equal(t, tc.exp, actual, "GetTransferAgent")
+			actTAs := GetTransferAgents(tc.ctx)
+			// TODO[2137]: Refactor this test to include cases with multiple transfer agents.
+			var actual sdk.AccAddress
+			if len(actTAs) > 0 {
+				actual = actTAs[0]
+			}
+			assert.Equal(t, tc.exp, actual, "GetTransferAgents")
 		})
 	}
 }
 
 func TestTransferAgentFuncsDoNotModifyProvided(t *testing.T) {
 	origCtx := sdk.NewContext(nil, cmtproto.Header{}, false, nil)
-	assert.Nil(t, GetTransferAgent(origCtx), "GetTransferAgent(origCtx)")
+	assert.Nil(t, GetTransferAgents(origCtx), "GetTransferAgents(origCtx)")
 
 	ta := sdk.AccAddress("great_transfer_agent")
-	afterWith := WithTransferAgent(origCtx, ta)
-	assert.Equal(t, ta, GetTransferAgent(afterWith), "GetTransferAgent(afterWith)")
-	assert.Nil(t, GetTransferAgent(origCtx), "GetTransferAgent(origCtx) after giving it to WithTransferAgent")
+	expAgents := []sdk.AccAddress{ta}
+	afterWith := WithTransferAgents(origCtx, ta)
+	assert.Equal(t, expAgents, GetTransferAgents(afterWith), "GetTransferAgents(afterWith)")
+	assert.Nil(t, GetTransferAgents(origCtx), "GetTransferAgents(origCtx) after giving it to WithTransferAgents")
 
-	afterWithout := WithoutTransferAgent(afterWith)
-	assert.Nil(t, GetTransferAgent(afterWithout), "GetTransferAgent(afterWithout)")
-	assert.Equal(t, ta, GetTransferAgent(afterWith), "GetTransferAgent(afterWith) after giving it to WithoutTransferAgent")
-	assert.Nil(t, GetTransferAgent(origCtx), "GetTransferAgent(origCtx) after giving afterWith to WithoutTransferAgent")
+	afterWithout := WithoutTransferAgents(afterWith)
+	assert.Nil(t, GetTransferAgents(afterWithout), "GetTransferAgents(afterWithout)")
+	assert.Equal(t, expAgents, GetTransferAgents(afterWith), "GetTransferAgents(afterWith) after giving it to WithoutTransferAgents")
+	assert.Nil(t, GetTransferAgents(origCtx), "GetTransferAgents(origCtx) after giving afterWith to WithoutTransferAgents")
 }

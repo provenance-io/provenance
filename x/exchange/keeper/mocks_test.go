@@ -415,13 +415,17 @@ func (s *TestSuite) assertBankKeeperCalls(mk *MockBankKeeper, expected BankCalls
 
 // NewSendCoinsArgs creates a new record of args provided to a call to SendCoins.
 func NewSendCoinsArgs(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) *SendCoinsArgs {
-	return &SendCoinsArgs{
+	rv := &SendCoinsArgs{
 		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
-		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		fromAddr:               fromAddr,
 		toAddr:                 toAddr,
 		amt:                    amt,
 	}
+	xferAgents := markertypes.GetTransferAgents(ctx)
+	if len(xferAgents) > 0 {
+		rv.ctxTransferAgent = xferAgents[0]
+	}
+	return rv
 }
 
 // sendCoinsArgsString creates a string of a SendCoinsArgs
@@ -433,13 +437,17 @@ func (s *TestSuite) sendCoinsArgsString(a *SendCoinsArgs) string {
 
 // NewSendCoinsFromAccountToModuleArgs creates a new record of args provided to a call to SendCoinsFromAccountToModule.
 func NewSendCoinsFromAccountToModuleArgs(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) *SendCoinsFromAccountToModuleArgs {
-	return &SendCoinsFromAccountToModuleArgs{
+	rv := &SendCoinsFromAccountToModuleArgs{
 		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
-		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		senderAddr:             senderAddr,
 		recipientModule:        recipientModule,
 		amt:                    amt,
 	}
+	xferAgents := markertypes.GetTransferAgents(ctx)
+	if len(xferAgents) > 0 {
+		rv.ctxTransferAgent = xferAgents[0]
+	}
+	return rv
 }
 
 // sendCoinsFromAccountToModuleArgsString creates a string of a SendCoinsFromAccountToModuleArgs
@@ -451,12 +459,16 @@ func (s *TestSuite) sendCoinsFromAccountToModuleArgsString(a *SendCoinsFromAccou
 
 // NewInputOutputCoinsArgs creates a new record of args provided to a call to InputOutputCoins.
 func NewInputOutputCoinsArgs(ctx context.Context, inputs []banktypes.Input, outputs []banktypes.Output) *InputOutputCoinsArgs {
-	return &InputOutputCoinsArgs{
+	rv := &InputOutputCoinsArgs{
 		ctxHasQuarantineBypass: quarantine.HasBypass(ctx),
-		ctxTransferAgent:       markertypes.GetTransferAgent(ctx),
 		inputs:                 inputs,
 		outputs:                outputs,
 	}
+	xferAgents := markertypes.GetTransferAgents(ctx)
+	if len(xferAgents) > 0 {
+		rv.ctxTransferAgent = xferAgents[0]
+	}
+	return rv
 }
 
 // inputOutputCoinsArgsString creates a string of a InputOutputCoinsArgs substituting the address names as possible.

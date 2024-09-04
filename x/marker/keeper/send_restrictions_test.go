@@ -198,6 +198,15 @@ func TestSendRestrictionFn(t *testing.T) {
 		require.NoError(t, err, "MarkerAddress(%q)", denom)
 		return fmt.Sprintf("%s does not have %s on %s marker (%s)", addr, role, denom, mAddr)
 	}
+	multiNoAccessErr := func(role types.Access, denom string, addrs ...sdk.AccAddress) string {
+		mAddr, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+		strs := make([]string, len(addrs))
+		for i, addr := range addrs {
+			strs[i] = addr.String()
+		}
+		return fmt.Sprintf("none of %q have %s on %s marker (%s)", strs, role, denom, mAddr)
+	}
 
 	testCases := []struct {
 		name       string
@@ -225,7 +234,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		{
 			name: "restricted to fee collector from normal account",
 			// include a transfer agent just to make sure that doesn't bypass anything.
-			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithTransfer)),
 			from:   addrOther,
 			to:     addrFeeCollector,
 			amt:    cz(c(1, rDenomNoAttr)),
@@ -234,7 +243,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		{
 			name: "restricted to fee collector from marker module account",
 			// include a transfer agent just to make sure that doesn't bypass anything.
-			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithTranWithdraw)),
 			from:   app.MarkerKeeper.GetMarkerModuleAddr(),
 			to:     addrFeeCollector,
 			amt:    cz(c(1, rDenomNoAttr)),
@@ -243,7 +252,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		{
 			name: "restricted to fee collector from ibc transfer module account",
 			// include a transfer agent just to make sure that doesn't bypass anything.
-			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithTransfer)),
 			from:   app.MarkerKeeper.GetIbcTransferModuleAddr(),
 			to:     addrFeeCollector,
 			amt:    cz(c(1, rDenomNoAttr)),
@@ -544,7 +553,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		},
 		{
 			name:   "from marker: admin without withdraw permission",
-			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithTransfer)),
 			from:   rMarkerNoAttr.GetAddress(),
 			to:     addrWithAttrs,
 			amt:    cz(c(2, rDenomNoAttr)),
@@ -552,7 +561,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		},
 		{
 			name: "from marker: withdraw marker funds from inactive marker",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTranWithdraw)),
 			from: rMarkerProposed.GetAddress(),
 			to:   addrWithAttrs,
 			amt:  cz(c(2, rDenomNoAttr), c(1, rDenomProposed), c(5, rDenom3Attrs)),
@@ -562,35 +571,35 @@ func TestSendRestrictionFn(t *testing.T) {
 		},
 		{
 			name: "from marker: withdraw non-marker funds from inactive marker",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTranWithdraw)),
 			from: rMarkerProposed.GetAddress(),
 			to:   addrWithAttrs,
 			amt:  cz(c(2, rDenomNoAttr), c(5, rDenom3Attrs)),
 		},
 		{
 			name: "from marker: withdraw from active marker",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTranWithdraw)),
 			from: rMarkerNoAttr.GetAddress(),
 			to:   addrWithAttrs,
 			amt:  cz(c(3, rDenomNoAttr)),
 		},
 		{
 			name: "with admin: does not have transfer: okay otherwise",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrOther)),
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrOther)),
 			from: owner,
 			to:   addrWithAttrs,
 			amt:  cz(c(1, rDenom1Attr), c(1, nrDenom)),
 		},
 		{
 			name: "with admin: has transfer: would otherwise fail",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTransfer)),
 			from: addrWithDenySend,
 			to:   addrWithAttrs,
 			amt:  cz(c(1, rDenomNoAttr)),
 		},
 		{
 			name:   "from marker to marker: admin only has transfer",
-			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTransfer)),
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithTransfer)),
 			from:   rMarkerNoAttr.GetAddress(),
 			to:     rMarker1Attr.GetAddress(),
 			amt:    cz(c(1, rDenom1AttrNoOneHas)),
@@ -598,7 +607,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		},
 		{
 			name:   "from marker to marker: admin only has deposit",
-			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithDeposit)),
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithDeposit)),
 			from:   rMarkerNoAttr.GetAddress(),
 			to:     rMarker1Attr.GetAddress(),
 			amt:    cz(c(1, rDenom1AttrNoOneHas)),
@@ -606,7 +615,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		},
 		{
 			name:   "from marker to marker: admin only has withdraw",
-			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithWithdraw)),
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithWithdraw)),
 			from:   rMarkerNoAttr.GetAddress(),
 			to:     rMarker1Attr.GetAddress(),
 			amt:    cz(c(1, rDenom1AttrNoOneHas)),
@@ -614,7 +623,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		},
 		{
 			name:   "from marker to marker: admin only has transfer and deposit",
-			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTranDep)),
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithTranDep)),
 			from:   rMarkerNoAttr.GetAddress(),
 			to:     rMarker1Attr.GetAddress(),
 			amt:    cz(c(1, rDenom1AttrNoOneHas)),
@@ -622,7 +631,7 @@ func TestSendRestrictionFn(t *testing.T) {
 		},
 		{
 			name:   "from marker to marker: admin only has transfer and withdraw",
-			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithTranWithdraw)),
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithTranWithdraw)),
 			from:   rMarkerNoAttr.GetAddress(),
 			to:     rMarker1Attr.GetAddress(),
 			amt:    cz(c(1, rDenom1AttrNoOneHas)),
@@ -630,15 +639,15 @@ func TestSendRestrictionFn(t *testing.T) {
 		},
 		{
 			name:   "from marker to marker: admin only has deposit and withdraw",
-			ctx:    ctxP(types.WithTransferAgent(ctx, addrWithDepWithdraw)),
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithDepWithdraw)),
 			from:   rMarker1Attr.GetAddress(),
 			to:     rMarker2Attrs.GetAddress(),
 			amt:    cz(c(1, rDenom1Attr)),
-			expErr: noAccessErr(addrWithDepWithdraw, types.Access_Transfer, rDenom1Attr),
+			expErr: multiNoAccessErr(types.Access_Transfer, rDenom1Attr, rMarker1Attr.GetAddress(), addrWithDepWithdraw),
 		},
 		{
 			name: "from marker to marker: admin has transfer and deposit and withdraw",
-			ctx:  ctxP(types.WithTransferAgent(ctx, addrWithTranDepWithdraw)),
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTranDepWithdraw)),
 			from: rMarker1Attr.GetAddress(),
 			to:   rMarker2Attrs.GetAddress(),
 			amt:  cz(c(1, rDenomNoAttr)),

@@ -8,7 +8,7 @@ import (
 
 var (
 	bypassKey        = "bypass-marker-restriction"
-	transferAgentKey = "marker-transfer-agent"
+	transferAgentKey = "marker-transfer-agents"
 )
 
 // WithBypass returns a new context that will cause the marker bank send restriction to be skipped.
@@ -36,27 +36,28 @@ func HasBypass[C context.Context](ctx C) bool {
 	return isBool && bypass
 }
 
-// WithTransferAgent returns a new context that contains the provided marker transfer agent.
-func WithTransferAgent[C context.Context](ctx C, transferAgent sdk.AccAddress) C {
+// WithTransferAgents returns a new context that contains the provided marker transfer agent.
+// This will overwrite any existing transfer agents in the context.
+func WithTransferAgents[C context.Context](ctx C, transferAgents ...sdk.AccAddress) C {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx = sdkCtx.WithValue(transferAgentKey, transferAgent)
+	sdkCtx = sdkCtx.WithValue(transferAgentKey, transferAgents)
 	return context.Context(sdkCtx).(C)
 }
 
-// WithoutTransferAgent returns a new context with a nil marker transfer agent.
-func WithoutTransferAgent[C context.Context](ctx C) C {
+// WithoutTransferAgents returns a new context without any marker transfer agents.
+func WithoutTransferAgents[C context.Context](ctx C) C {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx = sdkCtx.WithValue(transferAgentKey, sdk.AccAddress(nil))
 	return context.Context(sdkCtx).(C)
 }
 
-// GetTransferAgent gets the marker transfer agent from the provided context.
-func GetTransferAgent[C context.Context](ctx C) sdk.AccAddress {
+// GetTransferAgents gets the marker transfer agents from the provided context.
+func GetTransferAgents[C context.Context](ctx C) []sdk.AccAddress {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	val := sdkCtx.Value(transferAgentKey)
 	if val == nil {
 		return nil
 	}
-	rv, _ := val.(sdk.AccAddress)
+	rv, _ := val.([]sdk.AccAddress)
 	return rv
 }

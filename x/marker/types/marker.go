@@ -160,6 +160,31 @@ func (ma *MarkerAccount) ValidateAddressHasAccess(addr sdk.AccAddress, role Acce
 	return ma.ValidateHasAccess(addr.String(), role)
 }
 
+// AtLeastOneAddrHasAccess returns true if one or more of the provided addrs has the given role on this marker.
+func AtLeastOneAddrHasAccess(ma MarkerAccountI, addrs []sdk.AccAddress, role Access) bool {
+	for _, addr := range addrs {
+		if ma.HasAccess(addr.String(), role) {
+			return true
+		}
+	}
+	return false
+}
+
+// ValidateAtLeastOneAddrHasAccess returns an error if there isn't an entry in addrs that has the given role in this marker.
+func ValidateAtLeastOneAddrHasAccess(ma MarkerAccountI, addrs []sdk.AccAddress, role Access) error {
+	if len(addrs) == 1 {
+		return ma.ValidateHasAccess(addrs[0].String(), role)
+	}
+	if !AtLeastOneAddrHasAccess(ma, addrs, role) {
+		strs := make([]string, len(addrs))
+		for i, addr := range addrs {
+			strs[i] = addr.String()
+		}
+		return fmt.Errorf("none of %q have permission %s on %s marker (%s)", strs, role, ma.GetDenom(), ma.GetAddress())
+	}
+	return nil
+}
+
 // AddressListForPermission returns a list of all addresses with the provided rule within the
 // current MarkerAccount AccessControl list
 func (ma *MarkerAccount) AddressListForPermission(role Access) []sdk.AccAddress {

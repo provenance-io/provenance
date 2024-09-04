@@ -460,7 +460,7 @@ func TestMintBurnCoins(t *testing.T) {
 	require.Error(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
 
 	// Remove escrow balance from account
-	require.NoError(t, app.BankKeeper.SendCoinsFromAccountToModule(types.WithTransferAgent(ctx, user), addr, "mint", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.OneInt()))), "sending coins to module")
+	require.NoError(t, app.BankKeeper.SendCoinsFromAccountToModule(types.WithTransferAgents(ctx, user), addr, "mint", sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.OneInt()))), "sending coins to module")
 
 	// Succeeds because the bond denom coin was removed.
 	require.NoError(t, app.MarkerKeeper.DeleteMarker(ctx, user, "testcoin"))
