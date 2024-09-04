@@ -249,7 +249,7 @@ func (k msgServer) MigrateValueOwner(
 	// TODO[2137]: Identify the scopes from the bank keeper.
 	addr, err := sdk.AccAddressFromBech32(msg.Existing)
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid existing address %q: %w", msg.Existing, err)
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid existing address %q: %v", msg.Existing, err)
 	}
 	ranger := &collections.Range[collections.Pair[sdk.AccAddress, string]]{}
 	ranger.Prefix(collections.Join(addr, scopeDenomPrefix))
@@ -271,7 +271,7 @@ func (k msgServer) MigrateValueOwner(
 		return false, nil
 	})
 	if err != nil {
-		return nil, sdkerrors.ErrLogic.Wrapf("error iterating scopes owned by %q: %w", addr, err)
+		return nil, sdkerrors.ErrLogic.Wrapf("error iterating scopes owned by %q: %v", addr, err)
 	}
 
 	err = k.ValidateUpdateValueOwners(ctx, links, msg)
