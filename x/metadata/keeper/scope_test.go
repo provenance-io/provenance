@@ -2874,6 +2874,7 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
+	s.FailNow("This test needs to be revised.")
 	scopeID1 := types.ScopeMetadataAddress(uuid.New())
 	scopeID2 := types.ScopeMetadataAddress(uuid.New())
 	scopeID3 := types.ScopeMetadataAddress(uuid.New())
@@ -3077,7 +3078,8 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 				mdKeeper.SetAuthzKeeper(origAuthzK)
 			}()
 
-			err := mdKeeper.ValidateUpdateValueOwners(s.FreshCtx(), tc.scopes, tc.newValueOwner, tc.msg)
+			// TODO[2137]: Call this correctly.
+			err := mdKeeper.ValidateUpdateValueOwners(s.FreshCtx(), nil, tc.msg)
 			s.AssertErrorValue(err, tc.expErr, "ValidateUpdateValueOwners")
 
 			getAccs := tc.authK.GetAccountCalls

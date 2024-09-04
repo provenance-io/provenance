@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -218,9 +219,12 @@ func (k msgServer) UpdateValueOwners(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "UpdateValueOwners")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	// TODO[2137]: Identify the owners from the bank keeper.
+	links, err := k.GetScopeValueOwners(ctx, msg.ScopeIds)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	}
 
-	err := k.ValidateUpdateValueOwners(ctx, nil, msg.ValueOwnerAddress, msg)
+	err = k.ValidateUpdateValueOwners(ctx, links, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -243,13 +247,39 @@ func (k msgServer) MigrateValueOwner(
 	ctx := UnwrapMetadataContext(goCtx)
 
 	// TODO[2137]: Identify the scopes from the bank keeper.
+	addr, err := sdk.AccAddressFromBech32(msg.Existing)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid existing address %q: %w", msg.Existing, err)
+	}
+	ranger := &collections.Range[collections.Pair[sdk.AccAddress, string]]{}
+	ranger.Prefix(collections.Join(addr, scopeDenomPrefix))
+	var links types.AccMDLinks
+	err = k.bankKeeper.GetBalancesCollection().Walk(ctx, ranger, func(key collections.Pair[sdk.AccAddress, string], _ sdkmath.Int) (bool, error) {
+		accAddr := key.K1()
+		// If this entry's addr does not equal the one we care about, something's horribly wrong.
+		if !addr.Equals(accAddr) {
+			return true, fmt.Errorf("address in iterator key %q does not equal the provided existing address %q", accAddr, msg.Existing)
+		}
+		denom := key.K2()
+		mdAddr, mdErr := types.MetadataAddressFromDenom(denom)
+		// This should be iterating only over scope denoms. If there's a bad one, log it, then keep going.
+		if mdErr != nil {
+			k.Logger(ctx).Error(fmt.Sprintf("invalid metadata denom %q (owned by %q): %v", denom, accAddr, mdErr))
+			return false, nil
+		}
+		links = append(links, types.NewAccMDLink(accAddr, mdAddr))
+		return false, nil
+	})
+	if err != nil {
+		return nil, sdkerrors.ErrLogic.Wrapf("error iterating scopes owned by %q: %w", addr, err)
+	}
 
-	err := k.ValidateUpdateValueOwners(ctx, nil, msg.Proposed, msg)
+	err = k.ValidateUpdateValueOwners(ctx, links, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	err = k.SetScopeValueOwners(ctx, nil, msg.Proposed)
+	err = k.SetScopeValueOwners(ctx, links, msg.Proposed)
 	if err != nil {
 		return nil, fmt.Errorf("failure setting scope value owners: %w", err)
 	}

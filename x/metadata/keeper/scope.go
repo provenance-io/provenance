@@ -749,38 +749,68 @@ func (k Keeper) ValidateUpdateScopeOwners(
 
 func (k Keeper) ValidateUpdateValueOwners(
 	ctx sdk.Context,
-	scopes []*types.Scope,
-	newValueOwner string,
+	links types.AccMDLinks,
 	msg types.MetadataMsg,
 ) error {
-	var existingValueOwners []string
-	knownValueOwners := make(map[string]bool)
-
-	for _, scope := range scopes {
-		if len(scope.ValueOwnerAddress) == 0 {
-			return fmt.Errorf("scope %s does not yet have a value owner", scope.ScopeId)
-		}
-		if !knownValueOwners[scope.ValueOwnerAddress] {
-			existingValueOwners = append(existingValueOwners, scope.ValueOwnerAddress)
-			knownValueOwners[scope.ValueOwnerAddress] = true
-		}
+	if len(links) == 0 {
+		return errors.New("no scopes found")
 	}
-
-	signers := NewSignersWrapper(msg.GetSignerStrs())
-	usedSigners, err := k.validateScopeValueOwnerChangeToProposed(ctx, newValueOwner, signers)
-	if err != nil {
+	if err := links.ValidateForScopes(); err != nil {
 		return err
 	}
 
-	for _, existing := range existingValueOwners {
-		alsoUsedSigners, err := k.validateScopeValueOwnerChangeFromExisting(ctx, existing, signers, msg)
-		if err != nil {
-			return err
-		}
-		usedSigners.AlsoUse(alsoUsedSigners)
+	signerStrs := msg.GetSignerStrs()
+	if len(signerStrs) == 0 {
+		return errors.New("no signers provided")
 	}
 
-	return k.validateSmartContractSigners(ctx, usedSigners, msg)
+	// If the first signer is a smart contract, ignore all other signers provided.
+	// This is different from the other metadata signers stuff because we don't have any permissions to check.
+	// We just need to make sure all existing value owners have signed (or given authority with authz).
+	// If it's a smart contract doing this, then all needed signers must have an authz grant for the given
+	// smart contract. It's probably not a good idea to authz grant a smart contract though, but it's allowed.
+	var signerAccs []sdk.AccAddress
+	signer0, err := sdk.AccAddressFromBech32(signerStrs[0])
+	if err != nil {
+		return fmt.Errorf("invalid signer address %q: %w", signerStrs[0], err)
+	}
+	if k.isWasmAccount(ctx, signer0) {
+		signerAccs = make([]sdk.AccAddress, 1)
+		if len(signerStrs) > 1 {
+			signerStrs = signerStrs[:1]
+		}
+	} else {
+		signerAccs = make([]sdk.AccAddress, len(signerStrs))
+	}
+	signerAccs[0] = signer0
+
+	signerAccMap := make(map[string]bool)
+	for i, signerStr := range signerStrs {
+		if len(signerAccs[i]) == 0 {
+			signerAccs[i], err = sdk.AccAddressFromBech32(signerStr)
+			if err != nil {
+				return fmt.Errorf("invalid signer[%d] address %q: %w", i, signerStr, err)
+			}
+		}
+		signerAccMap[string(signerAccs[i])] = true
+	}
+
+	reqSigners := links.GetAccAddrs()
+	for _, req := range reqSigners {
+		if signerAccMap[string(req)] {
+			continue
+		}
+
+		grantee, err := k.findAuthzGrantee(ctx, req, signerAccs, msg)
+		if err != nil {
+			return fmt.Errorf("authz error with existing value owner %q: %w", req.String(), err)
+		}
+		if len(grantee) == 0 {
+			return fmt.Errorf("missing signature from existing value owner %q", req.String())
+		}
+	}
+
+	return nil
 }
 
 // AddSetNetAssetValues adds a set of net asset values to a scope
