@@ -333,12 +333,6 @@ func (a *MockAuthorization) Reset() {
 
 // String returns a string of this MockAuthorization and satisfies the authz.Authorization interface.
 func (a *MockAuthorization) String() string {
-	_ = MockAuthorization{
-		Name:              "",
-		AcceptResponse:    authz.AcceptResponse{},
-		AcceptResponseErr: nil,
-		AcceptCalls:       nil,
-	}
 	return fmt.Sprintf("MockAuthorization{%q, %v, %v, %d}", a.Name, a.AcceptResponse, a.AcceptResponseErr, a.AcceptCalls)
 }
 
