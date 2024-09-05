@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -104,9 +105,20 @@ func (s *ScopeKeeperTestSuite) AssertErrorValue(theError error, errorString stri
 // Standard usage: defer s.SwapBankKeeper(tc.bk)()
 // That will execute this method to set the bank keeper, then  defer the resulting func (to put it back at the end).
 func (s *ScopeKeeperTestSuite) SwapBankKeeper(bk keeper.BankKeeper) func() {
-	origBK := s.app.MetadataKeeper.SetBankKeeper(bk)
+	orig := s.app.MetadataKeeper.SetBankKeeper(bk)
 	return func() {
-		s.app.MetadataKeeper.SetBankKeeper(origBK)
+		s.app.MetadataKeeper.SetBankKeeper(orig)
+	}
+}
+
+// SwapAuthzKeeper will set the authz keeper (in the metadata keeper) to the one provided
+// and return a function that will set it back to its original value.
+// Standard usage: defer s.SwapAuthzKeeper(tc.bk)()
+// That will execute this method to set the authz keeper, then  defer the resulting func (to put it back at the end).
+func (s *ScopeKeeperTestSuite) SwapAuthzKeeper(ak keeper.AuthzKeeper) func() {
+	orig := s.app.MetadataKeeper.SetAuthzKeeper(ak)
+	return func() {
+		s.app.MetadataKeeper.SetAuthzKeeper(orig)
 	}
 }
 
@@ -2874,217 +2886,400 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
-	s.FailNow("This test needs to be revised.")
-	scopeID1 := types.ScopeMetadataAddress(uuid.New())
-	scopeID2 := types.ScopeMetadataAddress(uuid.New())
-	scopeID3 := types.ScopeMetadataAddress(uuid.New())
-	scopeID4 := types.ScopeMetadataAddress(uuid.New())
-
-	addr1 := sdk.AccAddress("addr1_______________")
-	addr2 := sdk.AccAddress("addr2_______________")
-	addr3 := sdk.AccAddress("addr3_______________")
-	addr4 := sdk.AccAddress("addr4_______________")
-	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
-	addrSmartContract := sdk.AccAddress("addrSmartContract___")
-
-	addr1Str := addr1.String()
-	addr2Str := addr2.String()
-	addr3Str := addr3.String()
-	addr4Str := addr4.String()
-	addrWithDepositStr := addrWithDeposit.String()
-	addrSmartContractStr := addrSmartContract.String()
-
-	scope := func(scopeID types.MetadataAddress, valueOwner string) *types.Scope {
-		return &types.Scope{
-			ScopeId:           scopeID,
-			ValueOwnerAddress: valueOwner,
-		}
+	newUUID := func(i string) uuid.UUID {
+		str := strings.ReplaceAll("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "x", i)
+		rv, err := uuid.Parse(str)
+		s.Require().NoError(err, "uuid.Parse(%q)", str)
+		return rv
 	}
+	scopeID1 := types.ScopeMetadataAddress(newUUID("1"))
+	scopeID2 := types.ScopeMetadataAddress(newUUID("2"))
+	scopeID3 := types.ScopeMetadataAddress(newUUID("3"))
+	scopeID4 := types.ScopeMetadataAddress(newUUID("4"))
 
-	msg := func(signers ...string) *types.MsgUpdateValueOwnersRequest {
-		return &types.MsgUpdateValueOwnersRequest{
-			Signers: signers,
+	addr1 := sdk.AccAddress("1addr_______________") // cosmos1x9skgerjta047h6lta047h6lta047h6l4429yc
+	addr2 := sdk.AccAddress("2addr_______________") // cosmos1xfskgerjta047h6lta047h6lta047h6lh0rr9a
+	addr3 := sdk.AccAddress("3addr_______________") // cosmos1xdskgerjta047h6lta047h6lta047h6lw7ypa7
+	addr4 := sdk.AccAddress("4addr_______________") // cosmos1x3skgerjta047h6lta047h6lta047h6lnj308h
+	addr5 := sdk.AccAddress("5addr_______________") // cosmos1x4skgerjta047h6lta047h6lta047h6l2rkdl5
+	s.T().Logf("Addresses:\naddr1: %s\naddr2: %s\naddr3: %s\naddr4: %s\naddr5: %s",
+		addr1, addr2, addr3, addr4, addr5)
+
+	accStrs := func(addrs []sdk.AccAddress) []string {
+		if addrs == nil {
+			return nil
 		}
+		rv := make([]string, len(addrs))
+		for i, addr := range addrs {
+			rv[i] = addr.String()
+		}
+		return rv
 	}
-	msgType := types.TypeURLMsgUpdateValueOwnersRequest
-
-	markerDenom := "some.marker"
-	markerAddr := markertypes.MustGetMarkerAddress(markerDenom)
-	markerAddrStr := markerAddr.String()
-	marker := &markertypes.MarkerAccount{
-		BaseAccount: authtypes.NewBaseAccount(markerAddr, nil, 0, 0),
-		Denom:       markerDenom,
-		AccessControl: []markertypes.AccessGrant{
-			{
-				Address:     addrWithDepositStr,
-				Permissions: markertypes.AccessList{markertypes.Access_Deposit},
-			},
+	type msgMaker struct {
+		name    string
+		msgType string
+		make    func(signers []sdk.AccAddress) types.MetadataMsg
+	}
+	msgMakerUpdate := msgMaker{
+		name:    "update",
+		msgType: types.TypeURLMsgUpdateValueOwnersRequest,
+		make: func(signers []sdk.AccAddress) types.MetadataMsg {
+			return &types.MsgUpdateValueOwnersRequest{Signers: accStrs(signers)}
 		},
 	}
+	msgMakerMigrate := msgMaker{
+		name:    "migrate",
+		msgType: types.TypeURLMsgMigrateValueOwnerRequest,
+		make: func(signers []sdk.AccAddress) types.MetadataMsg {
+			return &types.MsgMigrateValueOwnerRequest{Signers: accStrs(signers)}
+		},
+	}
+	allMsgMakers := []msgMaker{msgMakerUpdate, msgMakerMigrate}
 
-	missingSig := func(addr string) string {
-		return "missing signature from existing value owner " + addr
+	missingSig := func(addr sdk.AccAddress) string {
+		return "missing signature from existing value owner \"" + addr.String() + "\""
+	}
+
+	newDelAuthzCall := func(granter, grantee sdk.AccAddress, msgType, name string) GetAuthorizationCall {
+		return GetAuthorizationCall{
+			GrantInfo: GrantInfo{Granter: granter, Grantee: grantee, MsgType: msgType},
+			Result: GetAuthorizationResult{
+				Auth: NewMockAuthorization(name, authz.AcceptResponse{Accept: true, Delete: true}, nil),
+				Exp:  nil,
+			},
+		}
+	}
+	newDelGrantErr := func(granter, grantee sdk.AccAddress, msgType, err string) DeleteGrantCall {
+		rv := DeleteGrantCall{
+			GrantInfo: GrantInfo{Granter: granter, Grantee: grantee, MsgType: msgType},
+		}
+		if len(err) > 0 {
+			rv.Result = errors.New(err)
+		}
+		return rv
 	}
 
 	tests := []struct {
-		name          string
-		scopes        []*types.Scope
-		newValueOwner string
-		msg           types.MetadataMsg
-		authK         *MockAuthKeeper
-		authzK        *MockAuthzKeeper
-		expErr        string
-		expGetAccs    []*GetAccountCall
+		name        string
+		msgMakers   []msgMaker
+		authzK      *MockAuthzKeeper
+		authzGrants []GrantInfo // The MsgType field will be populated if not set.
+		wasmAddrs   []sdk.AccAddress
+		links       types.AccMDLinks
+		signers     []sdk.AccAddress
+		expErr      string
 	}{
 		{
-			name: "one of the scopes does not have an existing value owner",
-			scopes: []*types.Scope{
-				scope(scopeID1, addr1Str), scope(scopeID2, addr1Str),
-				scope(scopeID3, ""), scope(scopeID4, addr1Str),
-			},
-			newValueOwner: addr1Str,
-			msg:           msg(addr1Str),
-			expErr:        "scope " + scopeID3.String() + " does not yet have a value owner",
-			expGetAccs:    nil,
+			name:   "nil links",
+			links:  nil,
+			expErr: "no scopes found",
 		},
 		{
-			name:          "no signer for proposed",
-			scopes:        []*types.Scope{scope(scopeID1, addr1Str)},
-			newValueOwner: markerAddrStr,
-			msg:           msg(),
-			authK:         NewMockAuthKeeper().WithGetAccountResults(NewGetAccountCall(markerAddr, marker)),
-			expErr:        fmt.Sprintf("missing signature for %s (%s) with authority to deposit/add it as scope value owner", markerAddrStr, markerDenom),
-			expGetAccs: []*GetAccountCall{
-				NewGetAccountCall(markerAddr, marker), // checking if proposed is a marker
-			},
+			name:   "empty links",
+			links:  types.AccMDLinks{},
+			expErr: "no scopes found",
 		},
 		{
-			name: "no signer for existing 1 of 3",
-			scopes: []*types.Scope{
-				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
-			},
-			newValueOwner: "",
-			msg:           msg(addr2Str, addr3Str),
-			expErr:        missingSig(addr1Str),
-			expGetAccs: []*GetAccountCall{
-				NewGetAccountCall(addr1, nil), // checking if existing is a marker
-				NewGetAccountCall(addr2, nil), // checking if signer is wasm
-				NewGetAccountCall(addr3, nil), // checking if signer is wasm
-			},
+			name:   "link without acc addr",
+			links:  types.AccMDLinks{{AccAddr: nil, MDAddr: scopeID1}},
+			expErr: "no account address associated with metadata address \"" + scopeID1.String() + "\"",
 		},
 		{
-			name: "no signer for existing 2 of 3",
-			scopes: []*types.Scope{
-				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
-			},
-			newValueOwner: "",
-			msg:           msg(addr1Str, addr3Str),
-			expErr:        missingSig(addr2Str),
-			expGetAccs: []*GetAccountCall{
-				NewGetAccountCall(addr1, nil), // checking if existing is a marker
-				NewGetAccountCall(addr2, nil), // checking if existing is a marker
-				NewGetAccountCall(addr1, nil), // checking if signer is wasm
-				NewGetAccountCall(addr3, nil), // checking if signer is wasm
-			},
+			name:   "link without md addr",
+			links:  types.AccMDLinks{{AccAddr: addr1, MDAddr: nil}},
+			expErr: "invalid metadata address MetadataAddress(nil): address is empty",
 		},
 		{
-			name: "no signer for existing 3 of 3",
-			scopes: []*types.Scope{
-				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
-			},
-			newValueOwner: "",
-			msg:           msg(addr1Str, addr2Str),
-			expErr:        missingSig(addr3Str),
-			expGetAccs: []*GetAccountCall{
-				NewGetAccountCall(addr1, nil), // checking if existing is a marker
-				NewGetAccountCall(addr2, nil), // checking if existing is a marker
-				NewGetAccountCall(addr3, nil), // checking if existing is a marker
-				NewGetAccountCall(addr1, nil), // checking if signer is wasm
-				NewGetAccountCall(addr2, nil), // checking if signer is wasm
-			},
+			name:   "no msg signers",
+			links:  types.AccMDLinks{{AccAddr: addr1, MDAddr: scopeID1}},
+			expErr: "no signers provided",
 		},
 		{
-			name: "invalid smart contract signer",
-			scopes: []*types.Scope{
-				scope(scopeID1, addr1Str), scope(scopeID2, addr2Str), scope(scopeID3, addr3Str),
-			},
-			newValueOwner: addr4Str,
-			msg:           msg(addr1Str, addr2Str, addr3Str, addrSmartContractStr),
-			authK:         NewMockAuthKeeper().WithGetAccountResults(NewWasmGetAccountCall(addrSmartContract)),
-			expErr:        "smart contract signer " + addrSmartContractStr + " cannot follow non-smart-contract signer",
-			expGetAccs: []*GetAccountCall{
-				NewGetAccountCall(addr4, nil),            // checking if proposed is a marker
-				NewGetAccountCall(addr1, nil),            // checking if existing is a marker
-				NewGetAccountCall(addr2, nil),            // checking if existing is a marker
-				NewGetAccountCall(addr3, nil),            // checking if existing is a marker
-				NewGetAccountCall(addr1, nil),            // checking if signer is wasm.
-				NewGetAccountCall(addr2, nil),            // checking if signer is wasm.
-				NewGetAccountCall(addr3, nil),            // checking if signer is wasm.
-				NewWasmGetAccountCall(addrSmartContract), // checking if signer is wasm.
-			},
+			name:    "different signer from existing value owner",
+			links:   types.AccMDLinks{{AccAddr: addr1, MDAddr: scopeID1}},
+			signers: []sdk.AccAddress{addr2},
+			expErr:  missingSig(addr1),
 		},
 		{
-			name: "all scopes have same value owner authz used",
-			scopes: []*types.Scope{
-				scope(scopeID1, addr1Str), scope(scopeID2, addr1Str),
-				scope(scopeID3, addr1Str), scope(scopeID4, addr1Str),
-			},
-			newValueOwner: "",
-			msg:           msg(addr2Str),
-			expErr:        "",
-			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
-				NewAcceptedGetAuthorizationCall(addr2, addr1, msgType, "one"),
-			),
-			expGetAccs: []*GetAccountCall{
-				NewGetAccountCall(addr1, nil), // checking if existing is a marker
-				// This one should happen only once for all scopes and other checks in there.
-				NewGetAccountCall(addr2, nil), // checking if signer is wasm
-			},
+			name:      "first signer is wasm second is existing value owner",
+			wasmAddrs: []sdk.AccAddress{addr2},
+			links:     types.AccMDLinks{{AccAddr: addr1, MDAddr: scopeID1}},
+			signers:   []sdk.AccAddress{addr2, addr1},
+			expErr:    missingSig(addr1),
 		},
 		{
-			name:          "okay with a MsgMigrateValueOwnerRequest and authz",
-			scopes:        []*types.Scope{scope(scopeID1, addr1Str)},
-			newValueOwner: addr2Str,
-			msg: &types.MsgMigrateValueOwnerRequest{
-				Existing: addr1Str,
-				Proposed: addr2Str,
-				Signers:  []string{addr3Str},
+			name: "only signer is existing value owner",
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr1, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr1, MDAddr: scopeID4},
 			},
-			expErr: "",
-			authzK: NewMockAuthzKeeper().WithGetAuthorizationResults(
-				NewAcceptedGetAuthorizationCall(addr3, addr1, types.TypeURLMsgMigrateValueOwnerRequest, "one"),
-			),
-			expGetAccs: []*GetAccountCall{
-				NewGetAccountCall(addr2, nil), // checking if proposed is a marker
-				NewGetAccountCall(addr1, nil), // checking if existing is a marker
-				NewGetAccountCall(addr3, nil), // checking if signer is wasm
+			signers: []sdk.AccAddress{addr1},
+		},
+		{
+			name:      "only signer is wasm and is also existing value owner",
+			wasmAddrs: []sdk.AccAddress{addr1},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr1, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr1, MDAddr: scopeID4},
 			},
+			signers: []sdk.AccAddress{addr1},
+		},
+		{
+			name: "only signer is wasm with authz grants from existing value owners",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr5},
+				{Granter: addr2, Grantee: addr5},
+				{Granter: addr3, Grantee: addr5},
+				{Granter: addr4, Grantee: addr5},
+			},
+			wasmAddrs: []sdk.AccAddress{addr5},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr3, MDAddr: scopeID2},
+				{AccAddr: addr2, MDAddr: scopeID3}, {AccAddr: addr4, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr5},
+		},
+		{
+			name: "only signer is wasm with authz grants from all but one existing value owner",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr5},
+				{Granter: addr2, Grantee: addr5},
+				{Granter: addr4, Grantee: addr5},
+			},
+			wasmAddrs: []sdk.AccAddress{addr5},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr3, MDAddr: scopeID2},
+				{AccAddr: addr2, MDAddr: scopeID3}, {AccAddr: addr4, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr5},
+			expErr:  missingSig(addr3),
+		},
+		{
+			name: "two existing value owners: only first is signer",
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr1},
+			expErr:  missingSig(addr2),
+		},
+		{
+			name: "two existing value owners: only second is signer",
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr2},
+			expErr:  missingSig(addr1),
+		},
+		{
+			name: "two existing value owners: both are signers",
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr1, addr2},
+		},
+		{
+			name: "two existing value owners: both are signers in opposite order",
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr2, addr1},
+		},
+		{
+			name: "authz: two existing value owners to same other signer",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3},
+				{Granter: addr2, Grantee: addr3},
+			},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr3},
+		},
+		{
+			name:        "authz: two existing value owners only first gave grant",
+			authzGrants: []GrantInfo{{Granter: addr1, Grantee: addr3}},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr3},
+			expErr:  missingSig(addr2),
+		},
+		{
+			name:        "authz: two existing value owners only second gave grant",
+			authzGrants: []GrantInfo{{Granter: addr2, Grantee: addr3}},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr3},
+			expErr:  missingSig(addr1),
+		},
+		{
+			name: "authz: two existing value owners to two different signers",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3},
+				{Granter: addr2, Grantee: addr4},
+			},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr4, addr3},
+		},
+		{
+			name: "authz: two existing value owners first is signer and second gave grant to first",
+			authzGrants: []GrantInfo{
+				{Granter: addr2, Grantee: addr1},
+			},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr1},
+		},
+		{
+			name: "authz: two existing value owners second is signer and first gave grant to second",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr2},
+			},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr2},
+		},
+		{
+			name: "authz: error from authorization followup",
+			authzK: NewMockAuthzKeeper().
+				WithGetAuthorizationResults(
+					newDelAuthzCall(addr2, addr3, msgMakerUpdate.msgType, "deleteme1"),
+					newDelAuthzCall(addr2, addr3, msgMakerMigrate.msgType, "deleteme2"),
+				).
+				WithDeleteGrantResults(
+					newDelGrantErr(addr2, addr3, msgMakerUpdate.msgType, "injected error"),
+					newDelGrantErr(addr2, addr3, msgMakerMigrate.msgType, "injected error"),
+				),
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3},
+			},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3}, {AccAddr: addr2, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr3},
+			expErr:  "authz error with existing value owner \"" + addr2.String() + "\": injected error",
+		},
+		{
+			name:      "only authz grant is for migrate",
+			msgMakers: []msgMaker{msgMakerUpdate},
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3, MsgType: msgMakerMigrate.msgType},
+			},
+			links:   types.AccMDLinks{{AccAddr: addr1, MDAddr: scopeID1}},
+			signers: []sdk.AccAddress{addr3},
+			expErr:  missingSig(addr1),
+		},
+		{
+			name:      "only authz grant is for update",
+			msgMakers: []msgMaker{msgMakerMigrate},
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr3, MsgType: msgMakerUpdate.msgType},
+			},
+			links:   types.AccMDLinks{{AccAddr: addr1, MDAddr: scopeID1}},
+			signers: []sdk.AccAddress{addr3},
+			expErr:  missingSig(addr1),
+		},
+		{
+			name: "invalid first signer",
+			msgMakers: []msgMaker{
+				{
+					name:    msgMakerUpdate.name,
+					msgType: msgMakerUpdate.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgUpdateValueOwnersRequest{Signers: []string{"nope"}}
+					},
+				},
+				{
+					name:    msgMakerMigrate.name,
+					msgType: msgMakerMigrate.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgMigrateValueOwnerRequest{Signers: []string{"nope"}}
+					},
+				},
+			},
+			links:  types.AccMDLinks{{AccAddr: addr1, MDAddr: scopeID1}},
+			expErr: "invalid signer address \"nope\": decoding bech32 failed: invalid bech32 string length 4",
+		},
+		{
+			name: "invalid second signer",
+			msgMakers: []msgMaker{
+				{
+					name:    msgMakerUpdate.name,
+					msgType: msgMakerUpdate.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgUpdateValueOwnersRequest{Signers: []string{addr1.String(), "nope"}}
+					},
+				},
+				{
+					name:    msgMakerMigrate.name,
+					msgType: msgMakerMigrate.msgType,
+					make: func(_ []sdk.AccAddress) types.MetadataMsg {
+						return &types.MsgMigrateValueOwnerRequest{Signers: []string{addr1.String(), "nope"}}
+					},
+				},
+			},
+			links:  types.AccMDLinks{{AccAddr: addr1, MDAddr: scopeID1}},
+			expErr: "invalid signer[1] address \"nope\": decoding bech32 failed: invalid bech32 string length 4",
 		},
 	}
 
 	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			if tc.authK == nil {
-				tc.authK = NewMockAuthKeeper()
-			}
-			if tc.authzK == nil {
-				tc.authzK = NewMockAuthzKeeper()
-			}
-			mdKeeper := s.app.MetadataKeeper
-			origAuthK := mdKeeper.SetAuthKeeper(tc.authK)
-			origAuthzK := mdKeeper.SetAuthzKeeper(tc.authzK)
-			defer func() {
-				mdKeeper.SetAuthKeeper(origAuthK)
-				mdKeeper.SetAuthzKeeper(origAuthzK)
-			}()
+		if len(tc.msgMakers) == 0 {
+			tc.msgMakers = allMsgMakers
+		}
+		for _, maker := range tc.msgMakers {
+			s.Run(maker.name+": "+tc.name, func() {
+				authzK := tc.authzK
+				if authzK == nil {
+					authzK = NewMockAuthzKeeper()
+				}
+				if len(tc.authzGrants) > 0 {
+					entries := make([]GetAuthorizationCall, len(tc.authzGrants))
+					for i, grant := range tc.authzGrants {
+						msgType := grant.MsgType
+						if len(msgType) == 0 {
+							msgType = maker.msgType
+						}
+						authName := strings.Repeat(fmt.Sprintf("%d", i), 5)
+						entries[i] = NewAcceptedGetAuthorizationCall(grant.Grantee, grant.Granter, msgType, authName)
+					}
+					authzK = authzK.WithGetAuthorizationResults(entries...)
+				}
+				defer s.SwapAuthzKeeper(authzK)()
 
-			// TODO[2137]: Call this correctly.
-			err := mdKeeper.ValidateUpdateValueOwners(s.FreshCtx(), nil, tc.msg)
-			s.AssertErrorValue(err, tc.expErr, "ValidateUpdateValueOwners")
+				msg := maker.make(tc.signers)
+				ctx := s.FreshCtx()
+				if len(tc.wasmAddrs) > 0 {
+					cache := keeper.GetAuthzCache(ctx)
+					for _, addr := range tc.wasmAddrs {
+						cache.SetIsWasm(addr, true)
+					}
+				}
 
-			getAccs := tc.authK.GetAccountCalls
-			s.Assert().Equal(tc.expGetAccs, getAccs, "calls made to GetAccount")
-		})
+				var err error
+				testFunc := func() {
+					err = s.app.MetadataKeeper.ValidateUpdateValueOwners(ctx, tc.links, msg)
+				}
+				s.Require().NotPanics(testFunc, "ValidateUpdateValueOwners")
+				s.AssertErrorValue(err, tc.expErr, "ValidateUpdateValueOwners")
+			})
+		}
 	}
 }
 

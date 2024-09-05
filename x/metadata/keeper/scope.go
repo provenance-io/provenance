@@ -784,20 +784,17 @@ func (k Keeper) ValidateUpdateValueOwners(
 	}
 	signerAccs[0] = signer0
 
-	signerAccMap := make(map[string]bool)
-	for i, signerStr := range signerStrs {
-		if len(signerAccs[i]) == 0 {
-			signerAccs[i], err = sdk.AccAddressFromBech32(signerStr)
-			if err != nil {
-				return fmt.Errorf("invalid signer[%d] address %q: %w", i, signerStr, err)
-			}
+	for i := 1; i < len(signerStrs); i++ {
+		signerStr := signerStrs[i]
+		signerAccs[i], err = sdk.AccAddressFromBech32(signerStr)
+		if err != nil {
+			return fmt.Errorf("invalid signer[%d] address %q: %w", i, signerStr, err)
 		}
-		signerAccMap[string(signerAccs[i])] = true
 	}
 
 	reqSigners := links.GetAccAddrs()
 	for _, req := range reqSigners {
-		if signerAccMap[string(req)] {
+		if containsAddr(req, signerAccs) {
 			continue
 		}
 
@@ -811,6 +808,15 @@ func (k Keeper) ValidateUpdateValueOwners(
 	}
 
 	return nil
+}
+
+func containsAddr(toFind sdk.AccAddress, addrs []sdk.AccAddress) bool {
+	for _, addr := range addrs {
+		if toFind.Equals(addr) {
+			return true
+		}
+	}
+	return false
 }
 
 // AddSetNetAssetValues adds a set of net asset values to a scope
