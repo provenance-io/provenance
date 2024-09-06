@@ -437,6 +437,148 @@ func (s *AddressTestSuite) TestVerifyMetadataAddressFormat() {
 	}
 }
 
+func (s *AddressTestSuite) TestGetNameForHRP() {
+	tests := []struct {
+		hrp string
+		exp string
+	}{
+		{hrp: PrefixScope, exp: "scope"},
+		{hrp: PrefixSession, exp: "session"},
+		{hrp: PrefixRecord, exp: "record"},
+		{hrp: PrefixScopeSpecification, exp: "scope specification"},
+		{hrp: PrefixContractSpecification, exp: "contract specification"},
+		{hrp: PrefixRecordSpecification, exp: "record specification"},
+		{hrp: "", exp: `<"">`},
+		{hrp: "unknown", exp: `<"unknown">`},
+		{hrp: `I might be "evil"`, exp: `<"I might be \"evil\"">`},
+		{hrp: PrefixScope + "1", exp: `<"scope1">`},
+		{hrp: PrefixScope + "spe", exp: `<"scopespe">`},
+		{hrp: PrefixScope + "spec ", exp: `<"scopespec ">`},
+		{hrp: PrefixScope + "specification", exp: `<"scopespecification">`},
+		{hrp: PrefixScope[1:], exp: `<"cope">`},
+		{hrp: PrefixScope[:len(PrefixScope)-1], exp: `<"scop">`},
+		{hrp: PrefixRecord + "spec", exp: `<"recordspec">`},
+		{hrp: PrefixRecord + "specification", exp: `<"recordspecification">`},
+	}
+
+	for _, tc := range tests {
+		name := tc.hrp
+		if len(name) == 0 {
+			name = "(empty)"
+		}
+		s.Run(name, func() {
+			var act string
+			testFunc := func() {
+				act = getNameForHRP(tc.hrp)
+			}
+			s.Require().NotPanics(testFunc, "getNameForHRP(%q)", tc.hrp)
+			s.Assert().Equal(tc.exp, act, "result from getNameForHRP(%q)", tc.hrp)
+		})
+	}
+}
+
+func (s *AddressTestSuite) TestVerifyMetadataAddressHasType() {
+	newUUID := func(i string) uuid.UUID {
+		id := strings.ReplaceAll("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "x", i)
+		rv, err := uuid.Parse(id)
+		s.Require().NoError(err, "uuid.Parse(%q)", id)
+		return rv
+	}
+	type testCase struct {
+		name   string
+		ma     MetadataAddress
+		hrp    string
+		expErr string
+	}
+
+	tests := []testCase{
+		{
+			name:   "nil",
+			ma:     nil,
+			hrp:    "whatever",
+			expErr: "invalid <\"whatever\"> metadata address MetadataAddress(nil): address is empty",
+		},
+		{
+			name:   "empty",
+			ma:     MetadataAddress{},
+			hrp:    "thingy",
+			expErr: "invalid <\"thingy\"> metadata address MetadataAddress{}: address is empty",
+		},
+		{
+			name:   "invalid scope id",
+			ma:     MetadataAddress{ScopeKeyPrefix[0], 0x1, 0x2},
+			hrp:    PrefixScope,
+			expErr: "invalid scope metadata address MetadataAddress{0x0, 0x1, 0x2}: incorrect address length (expected: 17, actual: 3)",
+		},
+		{
+			name:   "invalid session id",
+			ma:     MetadataAddress{SessionKeyPrefix[0], 0x3, 0x4},
+			hrp:    PrefixSession,
+			expErr: "invalid session metadata address MetadataAddress{0x1, 0x3, 0x4}: incorrect address length (expected: 33, actual: 3)",
+		},
+		{
+			name:   "invalid record id",
+			ma:     MetadataAddress{RecordKeyPrefix[0], 0x5, 0x6},
+			hrp:    PrefixRecord,
+			expErr: "invalid record metadata address MetadataAddress{0x2, 0x5, 0x6}: incorrect address length (expected: 33, actual: 3)",
+		},
+		{
+			name:   "invalid scope spec id",
+			ma:     MetadataAddress{ScopeSpecificationKeyPrefix[0], 0x7, 0x8},
+			hrp:    PrefixScopeSpecification,
+			expErr: "invalid scope specification metadata address MetadataAddress{0x4, 0x7, 0x8}: incorrect address length (expected: 17, actual: 3)",
+		},
+		{
+			name:   "invalid contract spec id",
+			ma:     MetadataAddress{ContractSpecificationKeyPrefix[0], 0x9, 0xa},
+			hrp:    PrefixContractSpecification,
+			expErr: "invalid contract specification metadata address MetadataAddress{0x3, 0x9, 0xa}: incorrect address length (expected: 17, actual: 3)",
+		},
+		{
+			name:   "invalid record spec id",
+			ma:     MetadataAddress{RecordSpecificationKeyPrefix[0], 0xb, 0xc},
+			hrp:    PrefixRecordSpecification,
+			expErr: "invalid record specification metadata address MetadataAddress{0x5, 0xb, 0xc}: incorrect address length (expected: 33, actual: 3)",
+		},
+	}
+
+	validCases := []struct {
+		hrp string
+		ma  MetadataAddress
+	}{
+		{hrp: PrefixScope, ma: ScopeMetadataAddress(newUUID("1"))},
+		{hrp: PrefixSession, ma: SessionMetadataAddress(newUUID("2"), newUUID("3"))},
+		{hrp: PrefixRecord, ma: RecordMetadataAddress(newUUID("4"), newUUID("5").String())},
+		{hrp: PrefixScopeSpecification, ma: ScopeSpecMetadataAddress(newUUID("6"))},
+		{hrp: PrefixContractSpecification, ma: ContractSpecMetadataAddress(newUUID("7"))},
+		{hrp: PrefixRecordSpecification, ma: RecordSpecMetadataAddress(newUUID("8"), newUUID("9").String())},
+	}
+	for _, vc := range validCases {
+		for _, typeVC := range validCases {
+			tc := testCase{
+				name: fmt.Sprintf("valid %s: want %s", vc.hrp, typeVC.hrp),
+				ma:   vc.ma,
+				hrp:  typeVC.hrp,
+			}
+			if vc.hrp != typeVC.hrp {
+				tc.expErr = fmt.Sprintf("invalid %s id \"%s\": wrong type", getNameForHRP(tc.hrp), tc.ma.String())
+			}
+			tests = append(tests, tc)
+		}
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var err error
+			testFunc := func() {
+				err = VerifyMetadataAddressHasType(tc.ma, tc.hrp)
+			}
+			s.Require().NotPanics(testFunc, "VerifyMetadataAddressHasType(%q, %q)", tc.ma, tc.hrp)
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "error from VerifyMetadataAddressHasType(%q, %q)", tc.ma, tc.hrp)
+		})
+	}
+}
+
 func (s *AddressTestSuite) TestMetadataAddressFromBech32() {
 	notAScopeAddr := MetadataAddress{ScopeKeyPrefix[0], 1, 2, 3}
 	notAScopeAddrStr, err := bech32.ConvertAndEncode(PrefixScope, notAScopeAddr)
@@ -1954,82 +2096,85 @@ func (s *AddressTestSuite) TestFormat() {
 	})
 }
 
-func (s *AddressTestSuite) TestValidateIsScopeAddress() {
+func (s *AddressTestSuite) TestValidateIsTypeAddressFuncs() {
 	newUUID := func(name string, i int) uuid.UUID {
 		bz := []byte(fmt.Sprintf("%s[%d]________________", name, i))[:16]
 		rv, err := uuid.FromBytes(bz)
 		s.Require().NoError(err, "%s[%d]: uuid.FromBytes(%q)", name, i, bz)
 		return rv
 	}
-	notScopeErr := func(ma MetadataAddress) string {
-		return fmt.Sprintf("invalid metadata address %q: must be a scope address", ma)
-	}
 
-	tests := []struct {
-		name string
-		ma   MetadataAddress
-		exp  string
+	funcsToTest := []struct {
+		name      string
+		hrp       string
+		validator func(ma MetadataAddress) error
 	}{
 		{
-			name: "nil",
-			ma:   nil,
-			exp:  "invalid metadata address MetadataAddress(nil): address is empty",
+			name:      "ValidateIsScopeAddress",
+			hrp:       PrefixScope,
+			validator: MetadataAddress.ValidateIsScopeAddress,
 		},
 		{
-			name: "empty",
-			ma:   MetadataAddress{},
-			exp:  "invalid metadata address MetadataAddress{}: address is empty",
-		},
-		{
-			name: "session",
-			ma:   SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1)),
-			exp:  notScopeErr(SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1))),
-		},
-		{
-			name: "record",
-			ma:   RecordMetadataAddress(newUUID("record", 2), "bananas"),
-			exp:  notScopeErr(RecordMetadataAddress(newUUID("record", 2), "bananas")),
-		},
-		{
-			name: "scope spec",
-			ma:   ScopeSpecMetadataAddress(newUUID("scopespec", 3)),
-			exp:  notScopeErr(ScopeSpecMetadataAddress(newUUID("scopespec", 3))),
-		},
-		{
-			name: "contract spec",
-			ma:   ContractSpecMetadataAddress(newUUID("scopespec", 3)),
-			exp:  notScopeErr(ContractSpecMetadataAddress(newUUID("scopespec", 3))),
-		},
-		{
-			name: "record spec",
-			ma:   RecordSpecMetadataAddress(newUUID("recordspec", 4), "bananas"),
-			exp:  notScopeErr(RecordSpecMetadataAddress(newUUID("recordspec", 4), "bananas")),
-		},
-		{
-			name: "unknown type",
-			ma:   MetadataAddress{0xa0, 0x1, 0x2, 0xff},
-			exp:  "invalid metadata address MetadataAddress{0xa0, 0x1, 0x2, 0xff}: invalid metadata address type: 160",
-		},
-		{
-			name: "invalid scope",
-			ma:   MetadataAddress{ScopeKeyPrefix[0], 0x1, 0x2, 0xff},
-			exp:  "invalid metadata address MetadataAddress{0x0, 0x1, 0x2, 0xff}: incorrect address length (expected: 17, actual: 4)",
-		},
-		{
-			name: "valid scope",
-			ma:   ScopeMetadataAddress(newUUID("scope", 5)),
-			exp:  "",
+			name:      "ValidateIsScopeSpecificationAddress",
+			hrp:       PrefixScopeSpecification,
+			validator: MetadataAddress.ValidateIsScopeSpecificationAddress,
 		},
 	}
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			var err error
-			testFunc := func() {
-				err = tc.ma.ValidateIsScopeAddress()
+	addrsToTest := []struct {
+		name       string
+		ma         MetadataAddress
+		expInvalid string
+	}{
+		{
+			name:       "nil",
+			ma:         nil,
+			expInvalid: "address is empty",
+		},
+		{
+			name:       "empty",
+			ma:         MetadataAddress{},
+			expInvalid: "address is empty",
+		},
+		{
+			name:       "unknown type",
+			ma:         MetadataAddress{0xa0, 0x1, 0x2, 0xff},
+			expInvalid: "invalid metadata address type: 160",
+		},
+		{
+			name:       "invalid scope",
+			ma:         MetadataAddress{ScopeKeyPrefix[0], 0x1, 0x2, 0xff},
+			expInvalid: "incorrect address length (expected: 17, actual: 4)",
+		},
+		{name: PrefixScope, ma: ScopeMetadataAddress(newUUID("scope", 1))},
+		{name: PrefixSession, ma: SessionMetadataAddress(newUUID("session", 2), newUUID("session", 3))},
+		{name: PrefixRecord, ma: RecordMetadataAddress(newUUID("record", 4), "bananas")},
+		{name: PrefixScopeSpecification, ma: ScopeSpecMetadataAddress(newUUID("scopespec", 5))},
+		{name: PrefixContractSpecification, ma: ContractSpecMetadataAddress(newUUID("scopespec", 6))},
+		{name: PrefixRecordSpecification, ma: RecordSpecMetadataAddress(newUUID("recordspec", 7), "alsobananas")},
+	}
+
+	for _, funcDef := range funcsToTest {
+		typeName := getNameForHRP(funcDef.hrp)
+		s.Run(funcDef.name, func() {
+			for _, addrDef := range addrsToTest {
+				s.Run(addrDef.name, func() {
+					var expErr string
+					switch {
+					case len(addrDef.expInvalid) > 0:
+						expErr = fmt.Sprintf("invalid %s metadata address %#v: %s", typeName, addrDef.ma, addrDef.expInvalid)
+					case funcDef.hrp != addrDef.name:
+						expErr = fmt.Sprintf("invalid %s id %q: wrong type", typeName, addrDef.ma)
+					}
+
+					var err error
+					testFunc := func() {
+						err = funcDef.validator(addrDef.ma)
+					}
+					s.Require().NotPanics(testFunc, "%#v.%s()", addrDef.ma, funcDef.name)
+					assertions.AssertErrorValue(s.T(), err, expErr, "%#v.%s()", addrDef.ma, funcDef.name)
+				})
 			}
-			s.Require().NotPanics(testFunc, "%#v.ValidateIsScopeAddress()", tc.ma)
-			assertions.AssertErrorValue(s.T(), err, tc.exp, "%#v.ValidateIsScopeAddress()", tc.ma)
 		})
 	}
 }
@@ -2394,17 +2539,17 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateForScopes() {
 		{
 			name:  "one link: empty",
 			links: AccMDLinks{{}},
-			exp:   "invalid metadata address MetadataAddress(nil): address is empty",
+			exp:   "invalid scope metadata address MetadataAddress(nil): address is empty",
 		},
 		{
 			name:  "one link: nil md addr",
 			links: AccMDLinks{{MDAddr: nil, AccAddr: addrs[0]}},
-			exp:   "invalid metadata address MetadataAddress(nil): address is empty",
+			exp:   "invalid scope metadata address MetadataAddress(nil): address is empty",
 		},
 		{
 			name:  "one link: empty md addr",
 			links: AccMDLinks{{MDAddr: MetadataAddress{}, AccAddr: addrs[0]}},
-			exp:   "invalid metadata address MetadataAddress{}: address is empty",
+			exp:   "invalid scope metadata address MetadataAddress{}: address is empty",
 		},
 		{
 			name:  "one link: scope",
@@ -2424,37 +2569,37 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateForScopes() {
 		{
 			name:  "one link: session",
 			links: AccMDLinks{{MDAddr: SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1)), AccAddr: addrs[0]}},
-			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1))),
+			exp:   fmt.Sprintf("invalid scope id %q: wrong type", SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1))),
 		},
 		{
 			name:  "one link: record",
 			links: AccMDLinks{{MDAddr: RecordMetadataAddress(newUUID("record", 0), "recordname"), AccAddr: addrs[0]}},
-			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", RecordMetadataAddress(newUUID("record", 0), "recordname")),
+			exp:   fmt.Sprintf("invalid scope id %q: wrong type", RecordMetadataAddress(newUUID("record", 0), "recordname")),
 		},
 		{
 			name:  "one link: scope spec",
 			links: AccMDLinks{{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 0)), AccAddr: addrs[0]}},
-			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", ScopeSpecMetadataAddress(newUUID("scopespec", 0))),
+			exp:   fmt.Sprintf("invalid scope id %q: wrong type", ScopeSpecMetadataAddress(newUUID("scopespec", 0))),
 		},
 		{
 			name:  "one link: contract spec",
 			links: AccMDLinks{{MDAddr: ContractSpecMetadataAddress(newUUID("contractspec", 0)), AccAddr: addrs[0]}},
-			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", ContractSpecMetadataAddress(newUUID("contractspec", 0))),
+			exp:   fmt.Sprintf("invalid scope id %q: wrong type", ContractSpecMetadataAddress(newUUID("contractspec", 0))),
 		},
 		{
 			name:  "one link: record spec",
 			links: AccMDLinks{{MDAddr: RecordSpecMetadataAddress(newUUID("contractspec", 0), "recordname"), AccAddr: addrs[0]}},
-			exp:   fmt.Sprintf("invalid metadata address %q: must be a scope address", RecordSpecMetadataAddress(newUUID("contractspec", 0), "recordname")),
+			exp:   fmt.Sprintf("invalid scope id %q: wrong type", RecordSpecMetadataAddress(newUUID("contractspec", 0), "recordname")),
 		},
 		{
 			name:  "one link: unknown mdaddr type",
 			links: AccMDLinks{{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}, AccAddr: addrs[0]}},
-			exp:   "invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
+			exp:   "invalid scope metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
 		},
 		{
 			name:  "one link: scope type byte but invalid",
 			links: AccMDLinks{{MDAddr: MetadataAddress{ScopeKeyPrefix[0], 0x6e, 0x6f, 0x70, 0x65}, AccAddr: addrs[0]}},
-			exp:   "invalid metadata address MetadataAddress{0x0, 0x6e, 0x6f, 0x70, 0x65}: incorrect address length (expected: 17, actual: 5)",
+			exp:   "invalid scope metadata address MetadataAddress{0x0, 0x6e, 0x6f, 0x70, 0x65}: incorrect address length (expected: 17, actual: 5)",
 		},
 		{
 			name:  "two links: first nil",
@@ -2464,7 +2609,7 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateForScopes() {
 		{
 			name:  "two links: first empty",
 			links: AccMDLinks{{}, {MDAddr: scopeIDs[1], AccAddr: addrs[1]}},
-			exp:   "invalid metadata address MetadataAddress(nil): address is empty",
+			exp:   "invalid scope metadata address MetadataAddress(nil): address is empty",
 		},
 		{
 			name:  "two links: second nil",
@@ -2474,7 +2619,7 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateForScopes() {
 		{
 			name:  "two links: second empty",
 			links: AccMDLinks{{MDAddr: scopeIDs[0], AccAddr: addrs[0]}, {}},
-			exp:   "invalid metadata address MetadataAddress(nil): address is empty",
+			exp:   "invalid scope metadata address MetadataAddress(nil): address is empty",
 		},
 		{
 			name: "two links: fully different",
@@ -2506,7 +2651,7 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateForScopes() {
 				{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 1)), AccAddr: addrs[0]},
 				{MDAddr: scopeIDs[1], AccAddr: addrs[1]},
 			},
-			exp: fmt.Sprintf("invalid metadata address %q: must be a scope address", ScopeSpecMetadataAddress(newUUID("scopespec", 1))),
+			exp: fmt.Sprintf("invalid scope id %q: wrong type", ScopeSpecMetadataAddress(newUUID("scopespec", 1))),
 		},
 		{
 			name: "two links: invalid second md addr",
@@ -2514,7 +2659,7 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateForScopes() {
 				{MDAddr: scopeIDs[0], AccAddr: addrs[0]},
 				{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}, AccAddr: addrs[1]},
 			},
-			exp: "invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
+			exp: "invalid scope metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
 		},
 		{
 			name: "two links: first missing acc addr",
@@ -2575,7 +2720,7 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateForScopes() {
 				{MDAddr: scopeIDs[3], AccAddr: addrs[3]}, {MDAddr: scopeIDs[2], AccAddr: addrs[2]},
 				{MDAddr: scopeIDs[1], AccAddr: addrs[1]}, {MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}, AccAddr: addrs[0]},
 			},
-			exp: "invalid metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
+			exp: "invalid scope metadata address MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}: invalid metadata address type: 160",
 		},
 		{
 			name: "six links: last is missing acc addr",
@@ -2611,7 +2756,7 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateForScopes() {
 				{MDAddr: scopeIDs[2], AccAddr: addrs[2]}, {MDAddr: scopeIDs[3], AccAddr: addrs[3]},
 				{MDAddr: scopeIDs[4], AccAddr: addrs[4]}, {},
 			},
-			exp: "invalid metadata address MetadataAddress(nil): address is empty",
+			exp: "invalid scope metadata address MetadataAddress(nil): address is empty",
 		},
 	}
 

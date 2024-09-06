@@ -32,6 +32,7 @@ const (
 	// PrefixRecordSpecification is the address human readable prefix used with bech32 encoding of RecordSpecification IDs
 	PrefixRecordSpecification = "recspec"
 
+	// DenomPrefix is the string prepended to a metadata address to create the denom for that metadata object.
 	DenomPrefix = "nft/"
 )
 
@@ -90,6 +91,33 @@ func VerifyMetadataAddressFormat(bz []byte) (string, error) {
 		}
 	}
 	return hrp, nil
+}
+
+// getNameForHRP returns the more formal name used for each metadata hrp.
+// E.g. if the hrp is PrefixRecordSpecification (i.e. "recspec"), this will return "record specification".
+func getNameForHRP(hrp string) string {
+	switch hrp {
+	case PrefixScope, PrefixSession, PrefixRecord:
+		return hrp
+	case PrefixScopeSpecification, PrefixContractSpecification:
+		return strings.TrimSuffix(hrp, "spec") + " specification"
+	case PrefixRecordSpecification:
+		return "record specification"
+	}
+	return fmt.Sprintf("<%q>", hrp)
+}
+
+// VerifyMetadataAddressHasType makes sure that the provided ma is a valid MetadataAddress
+// and that it has the provided type (e.g. PrefixScope or PrefixContractSpecification, etc.).
+func VerifyMetadataAddressHasType(ma MetadataAddress, expHRP string) error {
+	hrp, err := VerifyMetadataAddressFormat(ma)
+	if err != nil {
+		return fmt.Errorf("invalid %s metadata address %#v: %w", getNameForHRP(expHRP), ma, err)
+	}
+	if hrp != expHRP {
+		return fmt.Errorf("invalid %s id %q: wrong type", getNameForHRP(expHRP), ma)
+	}
+	return nil
 }
 
 // ConvertHashToAddress constructs a MetadataAddress using the provided type code and the raw bytes of the
@@ -680,18 +708,6 @@ func (ma MetadataAddress) IsScopeAddress() bool {
 	return (err == nil && hrp == PrefixScope)
 }
 
-// ValidateIsScopeAddress returns an error if this isn't a valid MetadataAddress or if it's not a scope.
-func (ma MetadataAddress) ValidateIsScopeAddress() error {
-	hrp, err := VerifyMetadataAddressFormat(ma)
-	if err != nil {
-		return fmt.Errorf("invalid metadata address %#v: %w", ma, err)
-	}
-	if hrp != PrefixScope {
-		return fmt.Errorf("invalid metadata address %q: must be a scope address", ma)
-	}
-	return nil
-}
-
 // IsSessionAddress returns true if this address is valid and has a session type byte.
 func (ma MetadataAddress) IsSessionAddress() bool {
 	hrp, err := VerifyMetadataAddressFormat(ma)
@@ -733,6 +749,16 @@ func (ma MetadataAddress) isTypeOneOf(options ...[]byte) bool {
 		}
 	}
 	return false
+}
+
+// ValidateIsScopeAddress returns an error if this isn't a valid MetadataAddress or if it's not a scope.
+func (ma MetadataAddress) ValidateIsScopeAddress() error {
+	return VerifyMetadataAddressHasType(ma, PrefixScope)
+}
+
+// ValidateIsScopeSpecificationAddress returns an error if this isn't a valid MetadataAddress or if it's not a scope specification.
+func (ma MetadataAddress) ValidateIsScopeSpecificationAddress() error {
+	return VerifyMetadataAddressHasType(ma, PrefixScopeSpecification)
 }
 
 // MetadataAddressDetails contains a breakdown of the components in a MetadataAddress.
