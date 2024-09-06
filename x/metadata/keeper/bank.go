@@ -60,6 +60,9 @@ func (k *MDBankKeeper) DenomOwner(ctx context.Context, denom string) (sdk.AccAdd
 	return rv, nil
 }
 
+// TODO[2137]: Get rid of this GetBalancesCollection method and replace it with a method that returns
+// an AccMDLinks with all the scopes owned by an address with optional pagination parameters.
+
 // GetBalancesCollection gets the Balances collection from the underlying bank keeper.
 func (k *MDBankKeeper) GetBalancesCollection() *collections.IndexedMap[collections.Pair[sdk.AccAddress, string], sdkmath.Int, bankkeeper.BalancesIndexes] {
 	return k.Balances
