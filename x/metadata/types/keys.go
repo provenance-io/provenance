@@ -14,9 +14,6 @@ const (
 
 	// RouterKey to be used for routing msgs
 	RouterKey = ModuleName
-
-	// DefaultParamspace is the name used for the parameter subspace for this module.
-	DefaultParamspace = ModuleName
 )
 
 // KVStore Key Prefixes used for iterator/scans against the store and identification of key types
@@ -148,7 +145,7 @@ func GetOSLocatorKey(addr sdk.AccAddress) []byte {
 	return append(OSLocatorAddressKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
 }
 
-// NetAssetValueKey returns key [prefix][scope address] for scope net asset values
+// NetAssetValueKeyPrefix returns the [prefix][scope address] part of a scope net asset values key.
 func NetAssetValueKeyPrefix(scopeAddr MetadataAddress) []byte {
 	return append(NetAssetValuePrefix, address.MustLengthPrefix(scopeAddr.Bytes())...)
 }
