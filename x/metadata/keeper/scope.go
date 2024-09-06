@@ -402,7 +402,6 @@ func (k Keeper) indexScope(store storetypes.KVStore, newScope, oldScope *types.S
 // based on the existing state
 func (k Keeper) ValidateWriteScope(
 	ctx sdk.Context,
-	existing *types.Scope,
 	msg *types.MsgWriteScopeRequest,
 ) error {
 	proposed := msg.Scope
@@ -410,26 +409,38 @@ func (k Keeper) ValidateWriteScope(
 		return err
 	}
 
-	// IDs must match
-	if existing != nil {
-		if !proposed.ScopeId.Equals(existing.ScopeId) {
-			return fmt.Errorf("cannot update scope identifier. expected %s, got %s", existing.ScopeId, proposed.ScopeId)
+	var existing *types.Scope
+	if e, found := k.GetScope(ctx, msg.Scope.ScopeId); found {
+		existing = &e
+	}
+
+	// If the scope does not exist yet, there MUST be a proposed value owner.
+	// TODO[2137]: Re-evaluate whether we should require a value owner when creating a scope.
+	if existing == nil && len(proposed.ValueOwnerAddress) == 0 {
+		return errors.New("a value owner is required to create a scope")
+	}
+	// If the scope already exists:
+	//   - Lack of a proposed value owner means there is no desired change to it and we don't need to look it up.
+	//   - Presence of a proposed value owner means we need to look up the existing one
+	//     and require them to be a signer iff it's different from the proposed value owner.
+	if existing != nil && len(proposed.ValueOwnerAddress) > 0 {
+		vo, err := k.GetScopeValueOwner(ctx, proposed.ScopeId)
+		if err != nil {
+			return fmt.Errorf("error identifying current value owner of %q: %w", proposed.ScopeId, err)
+		}
+		// It is possible for older scopes to not have a value owner.
+		if len(vo) > 0 {
+			existing.ValueOwnerAddress = vo.String()
 		}
 	}
 
-	if err := proposed.SpecificationId.Validate(); err != nil {
-		return fmt.Errorf("invalid specification id: %w", err)
-	}
-	if !proposed.SpecificationId.IsScopeSpecificationAddress() {
-		return fmt.Errorf("invalid specification id: is not scope specification id: %s", proposed.SpecificationId)
-	}
-
 	// Existing owners are not required to sign when the ONLY change is from one value owner to another.
-	// If the value owner wasn't previously set, and is being set now, existing owners must sign.
-	// If anything else is changing, the existing owners must sign.
+	// Signatures from existing owners are required if:
+	//   - Anything other than the value owner is changing.
+	//   - There's a proposed value owner and the scope exists, but does not yet have a value owner.
 	existingValueOwner := ""
 	onlyChangeIsValueOwner := false
-	if existing != nil && len(existing.ValueOwnerAddress) > 0 {
+	if existing != nil && len(existing.ValueOwnerAddress) > 0 && existing.ValueOwnerAddress != proposed.ValueOwnerAddress {
 		existingValueOwner = existing.ValueOwnerAddress
 		// Make a copy of proposed scope and set its value owner to the existing one. If it then
 		// equals the existing scope, then the only change in proposed is to the value owner field.
@@ -481,7 +492,7 @@ func (k Keeper) ValidateWriteScope(
 		}
 	}
 
-	usedSigners, err := k.ValidateScopeValueOwnerUpdate(ctx, existingValueOwner, proposed.ValueOwnerAddress, msg)
+	usedSigners, err := k.ValidateScopeValueOwnerSigned(ctx, existingValueOwner, proposed.ValueOwnerAddress, msg)
 	if err != nil {
 		return err
 	}
@@ -519,8 +530,8 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 		//     associated party from the existing scope.
 		//   - Value owner signer restrictions are applied.
 		// We don't care about that first one, and only care about the roles one if the spec exists.
-		scopeSpec, found := k.GetScopeSpecification(ctx, scope.SpecificationId)
-		if !found {
+		scopeSpec, specFound := k.GetScopeSpecification(ctx, scope.SpecificationId)
+		if !specFound {
 			if validatedParties, err = k.validateAllRequiredSigned(ctx, types.GetRequiredPartyAddresses(scope.Owners), msg); err != nil {
 				return err
 			}
@@ -531,7 +542,7 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 		}
 	}
 
-	usedSigners, err := k.ValidateScopeValueOwnerUpdate(ctx, scope.ValueOwnerAddress, "", msg)
+	usedSigners, err := k.ValidateScopeValueOwnerSigned(ctx, scope.ValueOwnerAddress, "", msg)
 	if err != nil {
 		return err
 	}

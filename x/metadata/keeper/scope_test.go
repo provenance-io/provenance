@@ -1116,6 +1116,7 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
+	s.FailNow("Need to refactor this to account for existing not being an arg anymore.")
 	ns := func(scopeID, scopeSpecification types.MetadataAddress, owners []types.Party, dataAccess []string, valueOwner string) *types.Scope {
 		return &types.Scope{
 			ScopeId:           scopeID,
@@ -1685,7 +1686,8 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				Scope:   tc.proposed,
 				Signers: tc.signers,
 			}
-			err = s.app.MetadataKeeper.ValidateWriteScope(s.FreshCtx(), tc.existing, msg)
+			// TODO[2137]: Set tc.existing in state so it can be retrieved.
+			err = s.app.MetadataKeeper.ValidateWriteScope(s.FreshCtx(), msg)
 			if len(tc.errorMsg) > 0 {
 				s.Assert().EqualError(err, tc.errorMsg, "ValidateWriteScope expected error")
 			} else {

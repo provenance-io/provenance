@@ -422,15 +422,42 @@ func (k Keeper) validateSmartContractSigners(ctx sdk.Context, usedSigners UsedSi
 	return nil
 }
 
-// ValidateScopeValueOwnerUpdate verifies that it's okay for the msg signers to
-// change a scope's value owner from existing to proposed.
-// If some parties have already been validated (possibly utilizing authz), they
-// can be provided in order to prevent an authorization from being used twice during
-// a single Tx.
-//
-// If no error is returned, a map of bech32 strings to true is returned where each key
-// is a signer that either has a signer in validatedParties, or is used directly in here.
-func (k Keeper) ValidateScopeValueOwnerUpdate(
+// ValidateScopeValueOwnerSigned makes sure that the existing address is a signer of the msg, possibly via authz.
+// If the provided existing address is empty or equals proposed, nothing is checked and no error is returned.
+func (k Keeper) ValidateScopeValueOwnerSigned(
+	ctx sdk.Context,
+	existing string,
+	proposed string,
+	msg types.MetadataMsg,
+) (UsedSignersMap, error) {
+	if len(existing) == 0 || existing == proposed {
+		return NewUsedSignersMap(), nil
+	}
+	signers := msg.GetSignerStrs()
+	for _, signer := range signers {
+		if existing == signer {
+			return NewUsedSignersMap().Use(signer), nil
+		}
+	}
+
+	// Not a signer. Check with authz for help.
+	// If existing isn't a bech32, we just skip the authz check. Should only happen in unit tests.
+	granter, err := sdk.AccAddressFromBech32(existing)
+	if err == nil {
+		grantees := NewSignersWrapper(signers).Accs()
+		grantee, err := k.findAuthzGrantee(ctx, granter, grantees, msg)
+		if err != nil {
+			return nil, fmt.Errorf("authz error with existing value owner %q: %w", existing, err)
+		}
+		if len(grantee) > 0 {
+			return NewUsedSignersMap().Use(grantee.String()), nil
+		}
+	}
+
+	return nil, fmt.Errorf("missing signature from existing value owner %s", existing)
+}
+
+func (k Keeper) ValidateScopeValueOwnerUpdate( // TODO[2137]: Delete this method.
 	ctx sdk.Context,
 	existing,
 	proposed string,
@@ -454,9 +481,7 @@ func (k Keeper) ValidateScopeValueOwnerUpdate(
 	return usedSigners.AlsoUse(newUsedSigners), nil
 }
 
-// validateScopeValueOwnerChangeFromExisting validates that the provided signers
-// are allowed to change the existing value owner.
-func (k Keeper) validateScopeValueOwnerChangeFromExisting(
+func (k Keeper) validateScopeValueOwnerChangeFromExisting( // TODO[2137]: Delete this method.
 	ctx sdk.Context,
 	existing string,
 	signers *SignersWrapper,
@@ -513,9 +538,7 @@ func (k Keeper) validateScopeValueOwnerChangeFromExisting(
 	return nil, fmt.Errorf("missing signature from existing value owner %s", existing)
 }
 
-// validateScopeValueOwnerChangeToProposed validates that the provided signers
-// are allowed to set the value owner to the proposed value.
-func (k Keeper) validateScopeValueOwnerChangeToProposed(
+func (k Keeper) validateScopeValueOwnerChangeToProposed( // TODO[2137]: Delete this method.
 	ctx sdk.Context,
 	proposed string,
 	signers *SignersWrapper,
