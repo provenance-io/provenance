@@ -103,7 +103,7 @@ func (k Keeper) PopulateScopeValueOwner(ctx sdk.Context, scope *types.Scope) {
 
 // SetScope stores a scope in the module kv store.
 func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) error {
-	// If there's a value owner in the provided scope, update that record then remove it form the
+	// If there's a value owner in the provided scope, update that record then remove it from the
 	// scope before writing the scope. If it doesn't have a value owner, we don't do anything about it.
 	// It shouldn't be possible to delete the value owner record once there is one for a scope.
 	if len(scope.ValueOwnerAddress) > 0 {
@@ -114,6 +114,13 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) error {
 		scope.ValueOwnerAddress = ""
 	}
 
+	k.writeScopeToState(ctx, scope)
+	return nil
+}
+
+// writeScopeToState writes the given scope to state, updates the related indexes, and emits the appropriate events.
+// It's split out from SetScope only so that unit tests can write scopes that have something in the value owner field.
+func (k Keeper) writeScopeToState(ctx sdk.Context, scope types.Scope) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&scope)
 
@@ -136,7 +143,6 @@ func (k Keeper) SetScope(ctx sdk.Context, scope types.Scope) error {
 	k.indexScope(store, &scope, oldScope)
 	k.EmitEvent(ctx, event)
 	defer types.GetIncObjFunc(types.TLType_Scope, action)
-	return nil
 }
 
 // RemoveScope removes a scope from the module kv store along with all its records and sessions.
