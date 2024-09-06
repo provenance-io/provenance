@@ -44,22 +44,17 @@ func (s Scope) Equals(t Scope) bool {
 
 // ValidateBasic performs basic format checking of data within a scope
 func (s Scope) ValidateBasic() error {
-	prefix, err := VerifyMetadataAddressFormat(s.ScopeId)
-	if err != nil {
+	var err error
+	if err = s.ScopeId.ValidateIsScopeAddress(); err != nil {
 		return err
 	}
-	if prefix != PrefixScope {
-		return fmt.Errorf("invalid scope identifier (expected: %s, got %s)", PrefixScope, prefix)
-	}
-	if !s.SpecificationId.Empty() {
-		prefix, err = VerifyMetadataAddressFormat(s.SpecificationId)
-		if err != nil {
+
+	if !s.SpecificationId.Empty() { // TODO[2137]: Figure out when it'd be valid to not have a spec id here. Add a comment or require there to be one.
+		if err = s.SpecificationId.ValidateIsScopeSpecificationAddress(); err != nil {
 			return err
 		}
-		if prefix != PrefixScopeSpecification {
-			return fmt.Errorf("invalid scope specification identifier (expected: %s, got %s)", PrefixScopeSpecification, prefix)
-		}
 	}
+
 	if err = s.ValidateOwnersBasic(); err != nil {
 		return err
 	}
