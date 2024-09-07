@@ -396,11 +396,9 @@ func (ma MetadataAddress) String() string {
 
 	hrp, err := VerifyMetadataAddressFormat(ma)
 	if err != nil {
-		// If it's not valid, return the %#v format. We don't give it to fmt.Sprintf though,
-		// because the MetadataAddress.Format method calls this .String method.
-		// Instead, use fmt.Sprintf on it as a byte slice and replace that type with this type.
-		// TODO: return "MetadataAddress" + strings.TrimPrefix(fmt.Sprintf("%#v", []byte(ma)), "[]byte")
-		panic(err)
+		// Be careful changing this. The %#v path in MetadataAddress.Format does NOT call this String method,
+		// but %v, %q and %s do. So there would be infinite recursion with some other formatter directives.
+		return fmt.Sprintf("%#v", ma)
 	}
 
 	bech32Addr, err := bech32.ConvertAndEncode(hrp, ma.Bytes())
@@ -691,7 +689,8 @@ func (ma MetadataAddress) Format(s fmt.State, verb rune) {
 			out = fmt.Sprintf(fmt.FormatString(s, verb), ma.String())
 		}
 	default:
-		// The 'p' (pointer) and 'T' (type) verbs are never processed using this Format method.
+		// The other verbs (e.g. c b o O d x X U) should behave just like if this were a []byte.
+		// Note that the 'p' (pointer) and 'T' (type) verbs are never processed using this Format method.
 		// That's how %T returns the correct type even though it would actually return "[]byte" if run through this.
 		out = fmt.Sprintf(fmt.FormatString(s, verb), []byte(ma))
 	}

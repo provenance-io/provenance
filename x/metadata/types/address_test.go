@@ -2007,6 +2007,9 @@ func (s *AddressTestSuite) TestFormat() {
 	emptyID := namedMetadataAddress{name: "empty", id: MetadataAddress{}}
 	nilID := namedMetadataAddress{name: "nil", id: nil}
 	invalidID := namedMetadataAddress{name: "invalid", id: MetadataAddress("do not create MetadataAddresses this way")}
+	expInvID := "MetadataAddress{0x64, 0x6f, 0x20, 0x6e, 0x6f, 0x74, 0x20, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x20, " +
+		"0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65, 0x73, 0x20, " +
+		"0x74, 0x68, 0x69, 0x73, 0x20, 0x77, 0x61, 0x79}"
 
 	tests := []struct {
 		id  namedMetadataAddress
@@ -2065,10 +2068,10 @@ func (s *AddressTestSuite) TestFormat() {
 		{id: nilID, fmt: "%#v", exp: "MetadataAddress(nil)"},
 		{id: nilID, fmt: "%T", exp: "types.MetadataAddress"},
 		{id: nilID, fmt: "%x", exp: ""},
-		{id: invalidID, fmt: "%s", exp: "%!s(PANIC=Format method: invalid metadata address type: 100)"},
-		{id: invalidID, fmt: "%q", exp: "%!q(PANIC=Format method: invalid metadata address type: 100)"},
-		{id: invalidID, fmt: "%v", exp: "%!v(PANIC=Format method: invalid metadata address type: 100)"},
-		{id: invalidID, fmt: "%#v", exp: "MetadataAddress{0x64, 0x6f, 0x20, 0x6e, 0x6f, 0x74, 0x20, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x20, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x65, 0x73, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20, 0x77, 0x61, 0x79}"},
+		{id: invalidID, fmt: "%s", exp: expInvID},
+		{id: invalidID, fmt: "%q", exp: `"` + expInvID + `"`},
+		{id: invalidID, fmt: "%v", exp: expInvID},
+		{id: invalidID, fmt: "%#v", exp: expInvID},
 		{id: invalidID, fmt: "%T", exp: "types.MetadataAddress"},
 		{id: invalidID, fmt: "%x", exp: "646f206e6f7420637265617465204d65746164617461416464726573736573207468697320776179"},
 	}
@@ -2809,7 +2812,7 @@ func (s *AddressTestSuite) TestAccMDLinks_Coins() {
 		{
 			name:     "one link: invalid scope md addr",
 			links:    AccMDLinks{{MDAddr: MetadataAddress{ScopeKeyPrefix[0], 0x6e, 0x6f, 0x70, 0x65}}},
-			expPanic: "incorrect address length (expected: 17, actual: 5)",
+			expPanic: "invalid denom: nft/MetadataAddress{0x0, 0x6e, 0x6f, 0x70, 0x65}",
 		},
 		{
 			name:  "one link: scope",
@@ -2844,7 +2847,7 @@ func (s *AddressTestSuite) TestAccMDLinks_Coins() {
 		{
 			name:     "one link: invalid type",
 			links:    AccMDLinks{{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}}},
-			expPanic: "invalid metadata address type: 160",
+			expPanic: "invalid denom: nft/MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}",
 		},
 		{
 			name: "two links: same",
