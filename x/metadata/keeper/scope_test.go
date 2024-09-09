@@ -744,42 +744,42 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 		{
 			name:    "nil scope id",
 			scopeID: nil,
-			expErr:  "invalid metadata address MetadataAddress(nil): address is empty",
+			expErr:  "invalid scope metadata address MetadataAddress(nil): address is empty",
 		},
 		{
 			name:    "empty scope id",
 			scopeID: types.MetadataAddress{},
-			expErr:  "invalid metadata address MetadataAddress{}: address is empty",
+			expErr:  "invalid scope metadata address MetadataAddress{}: address is empty",
 		},
 		{
 			name:    "invalid scope id",
 			scopeID: types.MetadataAddress{types.ScopeKeyPrefix[0], 0x1, 0x2},
-			expErr:  "invalid metadata address MetadataAddress{0x0, 0x1, 0x2}: incorrect address length (expected: 17, actual: 3)",
+			expErr:  "invalid scope metadata address MetadataAddress{0x0, 0x1, 0x2}: incorrect address length (expected: 17, actual: 3)",
 		},
 		{
 			name:    "session",
 			scopeID: decodeID("session1q98duk50zlfyhpv3q7f88uzygyzdfw8hwdk2x3z8s4r009lk5nl6syhyghk"),
-			expErr:  "invalid metadata address \"session1q98duk50zlfyhpv3q7f88uzygyzdfw8hwdk2x3z8s4r009lk5nl6syhyghk\": must be a scope address",
+			expErr:  "invalid scope id \"session1q98duk50zlfyhpv3q7f88uzygyzdfw8hwdk2x3z8s4r009lk5nl6syhyghk\": wrong type",
 		},
 		{
 			name:    "record",
 			scopeID: decodeID("record1q26mxxwwvw2524dt3dpgf95gnhefy9ndhhsmphsxfntx7c8f52vpklgcn7v"),
-			expErr:  "invalid metadata address \"record1q26mxxwwvw2524dt3dpgf95gnhefy9ndhhsmphsxfntx7c8f52vpklgcn7v\": must be a scope address",
+			expErr:  "invalid scope id \"record1q26mxxwwvw2524dt3dpgf95gnhefy9ndhhsmphsxfntx7c8f52vpklgcn7v\": wrong type",
 		},
 		{
 			name:    "scope spec",
 			scopeID: decodeID("scopespec1qnna3wa2v4hy2l9jlklkvvtxjxes7wjq86"),
-			expErr:  "invalid metadata address \"scopespec1qnna3wa2v4hy2l9jlklkvvtxjxes7wjq86\": must be a scope address",
+			expErr:  "invalid scope id \"scopespec1qnna3wa2v4hy2l9jlklkvvtxjxes7wjq86\": wrong type",
 		},
 		{
 			name:    "contract spec",
 			scopeID: decodeID("contractspec1qdwlarvm04p5cl4sca0vmzudksss654dk2"),
-			expErr:  "invalid metadata address \"contractspec1qdwlarvm04p5cl4sca0vmzudksss654dk2\": must be a scope address",
+			expErr:  "invalid scope id \"contractspec1qdwlarvm04p5cl4sca0vmzudksss654dk2\": wrong type",
 		},
 		{
 			name:    "record spec",
 			scopeID: decodeID("recspec1qkrgw9lwe3k5gm5rh24kh0nkkkqujayqx92qrkvsezr6dvvyv4jmcw7t5tc"),
-			expErr:  "invalid metadata address \"recspec1qkrgw9lwe3k5gm5rh24kh0nkkkqujayqx92qrkvsezr6dvvyv4jmcw7t5tc\": must be a scope address",
+			expErr:  "invalid scope id \"recspec1qkrgw9lwe3k5gm5rh24kh0nkkkqujayqx92qrkvsezr6dvvyv4jmcw7t5tc\": wrong type",
 		},
 		{
 			name:          "invalid new value owner",
@@ -1887,13 +1887,13 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 			expected: missing2Sigs(s.user1, s.user2),
 		},
 		{
-			name:     "marker value owner signed by owner and user with auth",
+			name:     "marker value owner signed by owner and user with auth", // TODO[2137]: Figure out what to do with this case.
 			scope:    scopeMarkerValueOwner,
 			signers:  []string{s.user1, s.user2},
 			expected: "",
 		},
 		{
-			name:     "marker value owner signed by owner and user with auth reversed",
+			name:     "marker value owner signed by owner and user with auth reversed", // TODO[2137]: Figure out what to do with this case.
 			scope:    scopeMarkerValueOwner,
 			signers:  []string{s.user2, s.user1},
 			expected: "",
@@ -1905,7 +1905,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 			expected: missing1Sig(s.user2),
 		},
 		{
-			name:     "marker value owner not signed by user with auth",
+			name:     "marker value owner not signed by user with auth", // TODO[2137]: Figure out what to do with this case.
 			scope:    scopeMarkerValueOwner,
 			signers:  []string{s.user2},
 			expected: fmt.Sprintf("missing signature for %s (testcoins2) with authority to withdraw/remove it as scope value owner", markerAddr),
@@ -1989,13 +1989,13 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 			expected: "",
 		},
 		{
-			name:     "with rollup marker value owner no signer has withdraw",
+			name:     "with rollup marker value owner no signer has withdraw", // TODO[2137]: Figure out what to do with this case.
 			scope:    scopeRollupMarkerValueOwner,
 			signers:  []string{s.user2},
 			expected: "missing signature for " + markerAddr + " (testcoins2) with authority to withdraw/remove it as scope value owner",
 		},
 		{
-			name:     "with rollup marker value owner signer has withdraw",
+			name:     "with rollup marker value owner signer has withdraw", // TODO[2137]: Figure out what to do with this case.
 			scope:    scopeRollupMarkerValueOwner,
 			signers:  []string{s.user1, s.user2},
 			expected: "",
@@ -2959,7 +2959,6 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 		return rv
 	}
 
-	// TODO[2137]: Identify the expected addrs for each test case.
 	tests := []struct {
 		name        string
 		msgMakers   []msgMaker
@@ -2969,7 +2968,7 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 		links       types.AccMDLinks
 		signers     []sdk.AccAddress
 		expErr      string
-		expAddrs    []sdk.AccAddress
+		expAddrs    []sdk.AccAddress // Will be signers if not defined and expErr is also empty.
 	}{
 		{
 			name:   "nil links",
@@ -2989,7 +2988,7 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 		{
 			name:   "link without md addr",
 			links:  types.AccMDLinks{{AccAddr: addr1, MDAddr: nil}},
-			expErr: "invalid metadata address MetadataAddress(nil): address is empty",
+			expErr: "invalid scope metadata address MetadataAddress(nil): address is empty",
 		},
 		{
 			name:   "no msg signers",
@@ -3055,6 +3054,37 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 			},
 			signers: []sdk.AccAddress{addr5},
 			expErr:  missingSig(addr3),
+		},
+		{
+			name: "first signer is wasm so the others are not returned",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr5},
+				{Granter: addr2, Grantee: addr5},
+				{Granter: addr3, Grantee: addr5},
+				{Granter: addr4, Grantee: addr5},
+			},
+			wasmAddrs: []sdk.AccAddress{addr5},
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr3, MDAddr: scopeID2},
+				{AccAddr: addr2, MDAddr: scopeID3}, {AccAddr: addr4, MDAddr: scopeID4},
+			},
+			signers:  []sdk.AccAddress{addr5, addr1, addr2, addr3, addr4},
+			expAddrs: []sdk.AccAddress{addr5},
+		},
+		{
+			name: "first signer is not wasm so all are returned",
+			authzGrants: []GrantInfo{
+				{Granter: addr1, Grantee: addr5},
+				{Granter: addr2, Grantee: addr5},
+				{Granter: addr3, Grantee: addr5},
+				{Granter: addr4, Grantee: addr5},
+			},
+			wasmAddrs: []sdk.AccAddress{addr1, addr3}, // Shouldn't matter since the first signer is all that's checked.
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr3, MDAddr: scopeID2},
+				{AccAddr: addr2, MDAddr: scopeID3}, {AccAddr: addr4, MDAddr: scopeID4},
+			},
+			signers: []sdk.AccAddress{addr5, addr1, addr2, addr3, addr4},
 		},
 		{
 			name: "two existing value owners: only first is signer",
@@ -3264,6 +3294,10 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 					authzK = authzK.WithGetAuthorizationResults(entries...)
 				}
 				defer s.SwapAuthzKeeper(authzK)()
+
+				if len(tc.expAddrs) == 0 && len(tc.expErr) == 0 {
+					tc.expAddrs = tc.signers
+				}
 
 				msg := maker.make(tc.signers)
 				ctx := s.FreshCtx()

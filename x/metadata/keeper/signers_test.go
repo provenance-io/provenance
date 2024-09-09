@@ -15,6 +15,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/provenance-io/provenance/testutil/assertions"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -165,11 +166,12 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 	}{
 		{
 			// Alice makes a call to the Sam that causes Sam to try to change Bob's Scope's value owner to Alice.
-			// That must fail.
+			// This is why it's a bad idea to authz grant a smart contract. We allow this since both Alice and Bob
+			// have authz granted the smart contract to be able to so.
 			name:     "smart contract updating value owner of wrong scope",
 			existing: newScope(addrBob),
 			msg:      newMsg(addrAlice, addrSam.String(), addrAlice.String()),
-			exp:      "missing signature from existing value owner " + addrBob.String(),
+			exp:      "",
 		},
 		{
 			// Bob makes a call to Sam to do stuff that causes Sam to try to change Alice's Scope's value owner to Bob.
@@ -207,7 +209,17 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 			authKeeper.ClearResults()
 			authzKeeper.ClearResults()
 
-			err := mdKeeper.ValidateWriteScope(s.FreshCtx(), tc.existing, tc.msg)
+			if tc.existing != nil {
+				ctx := s.FreshCtx()
+				assertions.RequireNotPanicsNoError(s.T(), func() error {
+					return mdKeeper.SetScope(ctx, *tc.existing)
+				}, "SetScope")
+				defer s.Require().NotPanics(func() {
+					mdKeeper.RemoveScope(ctx, tc.existing.ScopeId)
+				}, "RemoveScope")
+			}
+
+			err := mdKeeper.ValidateWriteScope(s.FreshCtx(), tc.msg)
 			s.AssertErrorValue(err, tc.exp, "ValidateWriteScope")
 		})
 	}
