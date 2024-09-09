@@ -67,7 +67,7 @@ func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.Met
 }
 
 // GetScope returns the scope with the given id. The value owner field will always be empty from this method.
-// See also: GetScopeWithValueOwner and GetScopeValueOwner.
+// See also: GetScopeWithValueOwner, PopulateScopeValueOwner and GetScopeValueOwner.
 func (k Keeper) GetScope(ctx sdk.Context, id types.MetadataAddress) (scope types.Scope, found bool) {
 	if !id.IsScopeAddress() {
 		return scope, false
@@ -81,7 +81,7 @@ func (k Keeper) GetScope(ctx sdk.Context, id types.MetadataAddress) (scope types
 	return scope, true
 }
 
-// GetScopeWithValueOwner will get a scope from state and populate its value owner field.
+// GetScopeWithValueOwner will get a scope from state and also look up and set its value owner field.
 func (k Keeper) GetScopeWithValueOwner(ctx sdk.Context, id types.MetadataAddress) (scope types.Scope, found bool) {
 	scope, found = k.GetScope(ctx, id)
 	if found {

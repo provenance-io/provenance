@@ -875,7 +875,7 @@ type AccMDLink struct {
 	MDAddr  MetadataAddress
 }
 
-// NewAccMDLink creates a new link between an address and a metadata address.
+// NewAccMDLink creates a new association between an account address and a metadata address.
 func NewAccMDLink(accAddr sdk.AccAddress, mdAddr MetadataAddress) *AccMDLink {
 	return &AccMDLink{
 		AccAddr: accAddr,
@@ -883,9 +883,14 @@ func NewAccMDLink(accAddr sdk.AccAddress, mdAddr MetadataAddress) *AccMDLink {
 	}
 }
 
-const nilStr = "<nil>"
-const emptyStr = "<empty>"
+const (
+	// nilStr is a string indicating that something is nil.
+	nilStr = "<nil>"
+	// emptyStr is a string indicating that something is empty.
+	emptyStr = "<empty>"
+)
 
+// String returns a string representation of this AccMDLink in the format <AccAddr>:<MDAddr> using bech32 strings.
 func (l *AccMDLink) String() string {
 	if l == nil {
 		return nilStr
@@ -893,6 +898,7 @@ func (l *AccMDLink) String() string {
 	return accStr(l.AccAddr) + ":" + mdStr(l.MDAddr)
 }
 
+// accStr returns a string representation of an AccAddress, either bech32 or a string indicating nil or empty.
 func accStr(acc sdk.AccAddress) string {
 	if len(acc) > 0 {
 		return acc.String()
@@ -903,6 +909,7 @@ func accStr(acc sdk.AccAddress) string {
 	return emptyStr
 }
 
+// accStr returns a string representation of a MetadataAddress, either bech32 or a string indicating nil or empty.
 func mdStr(md MetadataAddress) string {
 	if len(md) > 0 {
 		return md.String()
@@ -916,6 +923,7 @@ func mdStr(md MetadataAddress) string {
 // AccMDLinks is a slice of AccMDLink.
 type AccMDLinks []*AccMDLink
 
+// String returns a string representation of this AccMDLinks.
 func (a AccMDLinks) String() string {
 	if len(a) > 0 {
 		strs := make([]string, len(a))
@@ -965,18 +973,6 @@ func (a AccMDLinks) ValidateForScopes() error {
 	}
 
 	return nil
-}
-
-// Coins creates a Coins containing an entry for every MDAddr in this AccMDLinks.
-func (a AccMDLinks) Coins() sdk.Coins {
-	if len(a) == 0 {
-		return nil
-	}
-	rv := make(sdk.Coins, 0, len(a))
-	for _, link := range a {
-		rv = rv.Add(link.MDAddr.Coin())
-	}
-	return rv
 }
 
 // GetAccAddrs returns a list of all AccAddr values from this AccMDLinks.

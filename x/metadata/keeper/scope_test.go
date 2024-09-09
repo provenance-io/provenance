@@ -2904,8 +2904,6 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 	addr3 := sdk.AccAddress("3addr_______________") // cosmos1xdskgerjta047h6lta047h6lta047h6lw7ypa7
 	addr4 := sdk.AccAddress("4addr_______________") // cosmos1x3skgerjta047h6lta047h6lta047h6lnj308h
 	addr5 := sdk.AccAddress("5addr_______________") // cosmos1x4skgerjta047h6lta047h6lta047h6l2rkdl5
-	s.T().Logf("Addresses:\naddr1: %s\naddr2: %s\naddr3: %s\naddr4: %s\naddr5: %s",
-		addr1, addr2, addr3, addr4, addr5)
 
 	accStrs := func(addrs []sdk.AccAddress) []string {
 		if addrs == nil {
@@ -2961,6 +2959,7 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 		return rv
 	}
 
+	// TODO[2137]: Identify the expected addrs for each test case.
 	tests := []struct {
 		name        string
 		msgMakers   []msgMaker
@@ -2970,6 +2969,7 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 		links       types.AccMDLinks
 		signers     []sdk.AccAddress
 		expErr      string
+		expAddrs    []sdk.AccAddress
 	}{
 		{
 			name:   "nil links",
@@ -3274,12 +3274,14 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 					}
 				}
 
+				var addrs []sdk.AccAddress
 				var err error
 				testFunc := func() {
-					err = s.app.MetadataKeeper.ValidateUpdateValueOwners(ctx, tc.links, msg)
+					addrs, err = s.app.MetadataKeeper.ValidateUpdateValueOwners(ctx, tc.links, msg)
 				}
 				s.Require().NotPanics(testFunc, "ValidateUpdateValueOwners")
-				s.AssertErrorValue(err, tc.expErr, "ValidateUpdateValueOwners")
+				s.AssertErrorValue(err, tc.expErr, "error from ValidateUpdateValueOwners")
+				s.Assert().Equal(tc.expAddrs, addrs, "addrs from ValidateUpdateValueOwners")
 			})
 		}
 	}

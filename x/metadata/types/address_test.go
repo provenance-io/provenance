@@ -753,6 +753,11 @@ func (s *AddressTestSuite) TestMetadataAddressFromDenom() {
 			expErr: "invalid metadata address in denom \"nft/" + sdk.AccAddress("nope_nope_nope_nope_").String() + "\": invalid metadata address type: 110",
 		},
 		{
+			name:   "just a scope id",
+			denom:  scopeID.String(),
+			expErr: "denom \"" + scopeID.String() + "\" is not a MetadataAddress denom",
+		},
+		{
 			name:    "scope",
 			denom:   scopeID.Denom(),
 			expAddr: scopeID,
@@ -2771,113 +2776,6 @@ func (s *AddressTestSuite) TestAccMDLinks_ValidateForScopes() {
 			}
 			s.Require().NotPanics(testFunc, "ValidateForScopes")
 			assertions.AssertErrorValue(s.T(), err, tc.exp, "ValidateForScopes")
-		})
-	}
-}
-
-func (s *AddressTestSuite) TestAccMDLinks_Coins() {
-	newUUID := func(name string, i int) uuid.UUID {
-		bz := []byte(fmt.Sprintf("%s[%d]________________", name, i))[:16]
-		rv, err := uuid.FromBytes(bz)
-		s.Require().NoError(err, "%s[%d]: uuid.FromBytes(%v)", name, i, bz)
-		return rv
-	}
-
-	tests := []struct {
-		name     string
-		links    AccMDLinks
-		exp      sdk.Coins
-		expPanic string
-	}{
-		{
-			name:  "nil links",
-			links: nil,
-			exp:   nil,
-		},
-		{
-			name:  "empty links",
-			links: AccMDLinks{},
-			exp:   nil,
-		},
-		{
-			name:  "one link: nil md addr",
-			links: AccMDLinks{{MDAddr: nil}},
-			exp:   sdk.NewCoins(sdk.NewInt64Coin(DenomPrefix, 1)),
-		},
-		{
-			name:  "one link: empty md addr",
-			links: AccMDLinks{{MDAddr: MetadataAddress{}}},
-			exp:   sdk.NewCoins(sdk.NewInt64Coin(DenomPrefix, 1)),
-		},
-		{
-			name:     "one link: invalid scope md addr",
-			links:    AccMDLinks{{MDAddr: MetadataAddress{ScopeKeyPrefix[0], 0x6e, 0x6f, 0x70, 0x65}}},
-			expPanic: "invalid denom: nft/MetadataAddress{0x0, 0x6e, 0x6f, 0x70, 0x65}",
-		},
-		{
-			name:  "one link: scope",
-			links: AccMDLinks{{MDAddr: ScopeMetadataAddress(newUUID("scope", 0))}},
-			exp:   sdk.NewCoins(sdk.NewInt64Coin(ScopeMetadataAddress(newUUID("scope", 0)).Denom(), 1)),
-		},
-		{
-			name:  "one link: scope",
-			links: AccMDLinks{{MDAddr: SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1))}},
-			exp:   sdk.NewCoins(sdk.NewInt64Coin(SessionMetadataAddress(newUUID("session", 0), newUUID("session", 1)).Denom(), 1)),
-		},
-		{
-			name:  "one link: record",
-			links: AccMDLinks{{MDAddr: RecordMetadataAddress(newUUID("record", 0), "thingy")}},
-			exp:   sdk.NewCoins(sdk.NewInt64Coin(RecordMetadataAddress(newUUID("record", 0), "thingy").Denom(), 1)),
-		},
-		{
-			name:  "one link: scope spec",
-			links: AccMDLinks{{MDAddr: ScopeSpecMetadataAddress(newUUID("scopespec", 0))}},
-			exp:   sdk.NewCoins(sdk.NewInt64Coin(ScopeSpecMetadataAddress(newUUID("scopespec", 0)).Denom(), 1)),
-		},
-		{
-			name:  "one link: contract spec",
-			links: AccMDLinks{{MDAddr: ContractSpecMetadataAddress(newUUID("contractspec", 0))}},
-			exp:   sdk.NewCoins(sdk.NewInt64Coin(ContractSpecMetadataAddress(newUUID("contractspec", 0)).Denom(), 1)),
-		},
-		{
-			name:  "one link: record spec",
-			links: AccMDLinks{{MDAddr: RecordSpecMetadataAddress(newUUID("recordspec", 0), "thingy")}},
-			exp:   sdk.NewCoins(sdk.NewInt64Coin(RecordSpecMetadataAddress(newUUID("recordspec", 0), "thingy").Denom(), 1)),
-		},
-		{
-			name:     "one link: invalid type",
-			links:    AccMDLinks{{MDAddr: MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}}},
-			expPanic: "invalid denom: nft/MetadataAddress{0xa0, 0x6e, 0x6f, 0x70, 0x65}",
-		},
-		{
-			name: "two links: same",
-			links: AccMDLinks{
-				{MDAddr: ScopeMetadataAddress(newUUID("scope", 1))},
-				{MDAddr: ScopeMetadataAddress(newUUID("scope", 1))},
-			},
-			exp: sdk.NewCoins(sdk.NewInt64Coin(ScopeMetadataAddress(newUUID("scope", 1)).Denom(), 2)),
-		},
-		{
-			name: "two links: different",
-			links: AccMDLinks{
-				{MDAddr: ScopeMetadataAddress(newUUID("scope", 2))},
-				{MDAddr: ScopeMetadataAddress(newUUID("scope", 3))},
-			},
-			exp: sdk.NewCoins(
-				sdk.NewInt64Coin(ScopeMetadataAddress(newUUID("scope", 2)).Denom(), 1),
-				sdk.NewInt64Coin(ScopeMetadataAddress(newUUID("scope", 3)).Denom(), 1),
-			),
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			var act sdk.Coins
-			testFunc := func() {
-				act = tc.links.Coins()
-			}
-			assertions.RequirePanicEquals(s.T(), testFunc, tc.expPanic, "Coins")
-			s.Assert().Equal(tc.exp.String(), act.String(), "Coins (as strings)")
 		})
 	}
 }

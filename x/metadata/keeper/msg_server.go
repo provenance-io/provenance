@@ -53,7 +53,7 @@ func (k msgServer) WriteScope(
 
 	err = k.SetScope(WithSignersAsTransferAgents(ctx, msg), msg.Scope)
 	if err != nil {
-		return nil, fmt.Errorf("could not wrte scope %q: %w", msg.Scope.ScopeId, err)
+		return nil, fmt.Errorf("could not write scope %q: %w", msg.Scope.ScopeId, err)
 	}
 
 	k.EmitEvent(ctx, types.NewEventTxCompleted(types.TxEndpoint_WriteScope, msg.GetSignerStrs()))
@@ -243,7 +243,6 @@ func (k msgServer) MigrateValueOwner(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "MigrateValueOwner")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	// TODO[2137]: Identify the scopes from the bank keeper.
 	addr, err := sdk.AccAddressFromBech32(msg.Existing)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid existing address %q: %v", msg.Existing, err)
