@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -419,4 +420,11 @@ func safeBech32ToAccAddresses(bech32s []string) []sdk.AccAddress {
 		}
 	}
 	return rv
+}
+
+// WithSignersAsTransferAgents returns a context that tells the marker module that the signers of the provided msg
+// are transfer agents on any funds transfers (e.g. setting a marker's account as the value owner of a scope).
+func WithSignersAsTransferAgents[C context.Context](ctx C, msg types.MetadataMsg) C {
+	addrs := safeBech32ToAccAddresses(msg.GetSignerStrs())
+	return markertypes.WithTransferAgents(ctx, addrs...)
 }

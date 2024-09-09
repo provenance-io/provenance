@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -50,7 +51,7 @@ func (k msgServer) WriteScope(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	err = k.SetScope(ctx, msg.Scope)
+	err = k.SetScope(WithSignersAsTransferAgents(ctx, msg), msg.Scope)
 	if err != nil {
 		return nil, fmt.Errorf("could not wrte scope %q: %w", msg.Scope.ScopeId, err)
 	}
@@ -71,7 +72,7 @@ func (k msgServer) DeleteScope(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.RemoveScope(ctx, msg.ScopeId)
+	k.RemoveScope(WithSignersAsTransferAgents(ctx, msg), msg.ScopeId)
 
 	k.RemoveNetAssetValues(ctx, msg.ScopeId)
 
@@ -220,12 +221,12 @@ func (k msgServer) UpdateValueOwners(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	err = k.ValidateUpdateValueOwners(ctx, links, msg)
+	signers, err := k.ValidateUpdateValueOwners(ctx, links, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	err = k.SetScopeValueOwners(ctx, nil, msg.ValueOwnerAddress)
+	err = k.SetScopeValueOwners(markertypes.WithTransferAgents(ctx, signers...), nil, msg.ValueOwnerAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failure setting scope value owners: %w", err)
 	}
@@ -270,12 +271,12 @@ func (k msgServer) MigrateValueOwner(
 		return nil, sdkerrors.ErrLogic.Wrapf("error iterating scopes owned by %q: %v", addr, err)
 	}
 
-	err = k.ValidateUpdateValueOwners(ctx, links, msg)
+	signers, err := k.ValidateUpdateValueOwners(ctx, links, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	err = k.SetScopeValueOwners(ctx, links, msg.Proposed)
+	err = k.SetScopeValueOwners(markertypes.WithTransferAgents(ctx, signers...), links, msg.Proposed)
 	if err != nil {
 		return nil, fmt.Errorf("failure setting scope value owners: %w", err)
 	}

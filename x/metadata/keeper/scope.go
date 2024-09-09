@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
@@ -158,7 +157,7 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
 		return
 	}
 
-	// Remove the value owner
+	// Remove the value owner.
 	if err := k.SetScopeValueOwner(ctx, id, ""); err != nil {
 		panic(err)
 	}
@@ -282,7 +281,7 @@ func (k Keeper) SetScopeValueOwners(ctx sdk.Context, links types.AccMDLinks, new
 		return sdkerrors.ErrUnauthorized.Wrapf("new value owner %s is not allowed to receive funds", newValueOwner)
 	}
 
-	// Identify the addresses and the amounts to send to each, and also the amounts to mint or burn.
+	// Identify the addresses and the amounts to send to each.
 	var fromAddrs []sdk.AccAddress
 	fromAddrAmts := make(map[string]sdk.Coins)
 	for _, link := range links {
@@ -764,21 +763,24 @@ func (k Keeper) ValidateUpdateScopeOwners(
 	return nil
 }
 
+// ValidateUpdateValueOwners checks that the signer(s) of the provided msg are authorized to change the value owner
+// of the scopes in the links provided. Also checks that the provided links are valid.
+// Returns the validated signer addresses.
 func (k Keeper) ValidateUpdateValueOwners(
 	ctx sdk.Context,
 	links types.AccMDLinks,
 	msg types.MetadataMsg,
-) error {
+) ([]sdk.AccAddress, error) {
 	if len(links) == 0 {
-		return errors.New("no scopes found")
+		return nil, errors.New("no scopes found")
 	}
 	if err := links.ValidateForScopes(); err != nil {
-		return err
+		return nil, err
 	}
 
 	signerStrs := msg.GetSignerStrs()
 	if len(signerStrs) == 0 {
-		return errors.New("no signers provided")
+		return nil, errors.New("no signers provided")
 	}
 
 	// If the first signer is a smart contract, ignore all other signers provided.
@@ -789,7 +791,7 @@ func (k Keeper) ValidateUpdateValueOwners(
 	var signerAccs []sdk.AccAddress
 	signer0, err := sdk.AccAddressFromBech32(signerStrs[0])
 	if err != nil {
-		return fmt.Errorf("invalid signer address %q: %w", signerStrs[0], err)
+		return nil, fmt.Errorf("invalid signer address %q: %w", signerStrs[0], err)
 	}
 	if k.isWasmAccount(ctx, signer0) {
 		signerAccs = make([]sdk.AccAddress, 1)
@@ -805,7 +807,7 @@ func (k Keeper) ValidateUpdateValueOwners(
 		signerStr := signerStrs[i]
 		signerAccs[i], err = sdk.AccAddressFromBech32(signerStr)
 		if err != nil {
-			return fmt.Errorf("invalid signer[%d] address %q: %w", i, signerStr, err)
+			return nil, fmt.Errorf("invalid signer[%d] address %q: %w", i, signerStr, err)
 		}
 	}
 
@@ -817,16 +819,17 @@ func (k Keeper) ValidateUpdateValueOwners(
 
 		grantee, err := k.findAuthzGrantee(ctx, req, signerAccs, msg)
 		if err != nil {
-			return fmt.Errorf("authz error with existing value owner %q: %w", req.String(), err)
+			return nil, fmt.Errorf("authz error with existing value owner %q: %w", req.String(), err)
 		}
 		if len(grantee) == 0 {
-			return fmt.Errorf("missing signature from existing value owner %q", req.String())
+			return nil, fmt.Errorf("missing signature from existing value owner %q", req.String())
 		}
 	}
 
-	return nil
+	return signerAccs, nil
 }
 
+// containsAddr returns true if the addr toFind is equal to one (or more) of the provided addrs, false otherwise.
 func containsAddr(toFind sdk.AccAddress, addrs []sdk.AccAddress) bool {
 	for _, addr := range addrs {
 		if toFind.Equals(addr) {
