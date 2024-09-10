@@ -122,6 +122,20 @@ func (s *ScopeKeeperTestSuite) SwapAuthzKeeper(ak keeper.AuthzKeeper) func() {
 	}
 }
 
+// WriteTempScope will call SetScope on the provided scope and return a func that will call RemoveScope for it.
+// Standard usage: defer WriteTempScope(s.T(), s.app.MetadataKeeper, ctx, scope)()
+// That will execute the SetScope and defer the call to RemoveScope.
+func WriteTempScope(t *testing.T, mdKeeper keeper.Keeper, ctx sdk.Context, scope types.Scope) func() {
+	assertions.RequireNotPanicsNoError(t, func() error {
+		return mdKeeper.SetScope(ctx, scope)
+	}, "SetScope")
+	return func() {
+		assertions.RequireNotPanicsNoError(t, func() error {
+			return mdKeeper.RemoveScope(ctx, scope.ScopeId)
+		}, "RemoveScope")
+	}
+}
+
 func TestScopeKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(ScopeKeeperTestSuite))
 }
@@ -302,7 +316,8 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 					expEvent,
 				}
 
-				s.app.MetadataKeeper.RemoveScope(ctx, theScope.ScopeId)
+				err = s.app.MetadataKeeper.RemoveScope(ctx, theScope.ScopeId)
+				s.Require().NoError(err, "RemoveScope")
 				actEvents := ctx.EventManager().Events()
 				assertions.AssertEqualEvents(s.T(), expEvents, actEvents, "events emitted during RemoveScope")
 			},
@@ -324,7 +339,7 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeGetSet() {
 			if !ok {
 				s.T().Skip("Skipping due to previous failure.")
 			}
-			tc.runner()
+			s.Require().NotPanics(tc.runner)
 		}) && ok
 	}
 }
@@ -2816,7 +2831,7 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 	ctx := s.FreshCtx()
 	store := ctx.KVStore(s.app.GetKey(types.ModuleName))
 
-	s.T().Run("1 write new scope", func(t *testing.T) {
+	s.Run("1 write new scope", func() {
 		expectedIndexes := []struct {
 			key  []byte
 			name string
@@ -2827,14 +2842,15 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 			{types.GetScopeSpecScopeCacheKey(specIDOrig, scopeID), "specIDOrig spec index"},
 		}
 
-		s.app.MetadataKeeper.SetScope(ctx, scopeV1)
+		err := s.app.MetadataKeeper.SetScope(ctx, scopeV1)
+		s.Require().NoError(err, "SetScope")
 
 		for _, expected := range expectedIndexes {
-			assert.True(t, store.Has(expected.key), expected.name)
+			s.Assert().True(store.Has(expected.key), expected.name)
 		}
 	})
 
-	s.T().Run("2 update scope", func(t *testing.T) {
+	s.Run("2 update scope", func() {
 		expectedIndexes := []struct {
 			key  []byte
 			name string
@@ -2854,17 +2870,18 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 			{types.GetScopeSpecScopeCacheKey(specIDOrig, scopeID), "specIDOrig spec index"},
 		}
 
-		s.app.MetadataKeeper.SetScope(ctx, scopeV2)
+		err := s.app.MetadataKeeper.SetScope(ctx, scopeV2)
+		s.Require().NoError(err, "SetScope")
 
 		for _, expected := range expectedIndexes {
-			assert.True(t, store.Has(expected.key), expected.name)
+			s.Assert().True(store.Has(expected.key), expected.name)
 		}
 		for _, unexpected := range unexpectedIndexes {
-			assert.False(t, store.Has(unexpected.key), unexpected.name)
+			s.Assert().False(store.Has(unexpected.key), unexpected.name)
 		}
 	})
 
-	s.T().Run("3 delete scope", func(t *testing.T) {
+	s.Run("3 delete scope", func() {
 		unexpectedIndexes := []struct {
 			key  []byte
 			name string
@@ -2879,10 +2896,11 @@ func (s *ScopeKeeperTestSuite) TestScopeIndexing() {
 			{types.GetScopeSpecScopeCacheKey(specIDNew, scopeID), "specIDNew spec index"},
 		}
 
-		s.app.MetadataKeeper.RemoveScope(ctx, scopeID)
+		err := s.app.MetadataKeeper.RemoveScope(ctx, scopeID)
+		s.Require().NoError(err, "RemoveScope")
 
 		for _, unexpected := range unexpectedIndexes {
-			assert.False(t, store.Has(unexpected.key), unexpected.name)
+			s.Assert().False(store.Has(unexpected.key), unexpected.name)
 		}
 	})
 }

@@ -70,6 +70,55 @@ func (s *MsgServerTestSuite) AssertErrorValue(theError error, errorString string
 	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
 }
 
+// newUUID will create a new UUID using the provided name and index to define the bytes.
+func (s *MsgServerTestSuite) newUUID(name string, i int) uuid.UUID {
+	s.T().Helper()
+	str := fmt.Sprintf("%d_%s", i, name)
+	if len(str) > 16 {
+		s.FailNowf("cannot newUUID(%q, %d): base string %q is longer than 16 bytes", name, i, str)
+	}
+	if len(str) < 16 {
+		str = str + strings.Repeat("_", 16-len(str))
+	}
+	rv, err := uuid.FromBytes([]byte(str))
+	s.Require().NoError(err, "uuid.FromBytes([]byte(%q))", str)
+	return rv
+}
+
+// namedValue is a way to associate a variable name with its value for use with logNamedValues.
+type namedValue struct {
+	name  string
+	value string
+}
+
+// logNamedValues will log the provided entries under the given header.
+func (s *MsgServerTestSuite) logNamedValues(header string, entries []namedValue) {
+	// Note: This func might not be called by checked-in code, but it's handy when troubleshooting, so don't delete it.
+	lines := make([]string, len(entries))
+	for i, entry := range entries {
+		lines[i] = fmt.Sprintf("%20s = %s", entry.name, entry.value)
+	}
+	s.T().Logf("%s:\n%s", header, strings.Join(lines, "\n"))
+}
+
+// MakeNonWasmAccount will make sure the account with the provided bech32 string has a sequence of 1.
+// This will cause the isWasmAccount test to report that the account is NOT a wasm account.
+func (s *MsgServerTestSuite) MakeNonWasmAccounts(bech32s ...string) {
+	s.T().Helper()
+	for i, bech32 := range bech32s {
+		addr, err := sdk.AccAddressFromBech32(bech32)
+		s.Require().NoError(err, "[%d]: sdk.AccAddressFromBech32(%q)", i, bech32)
+		acct := s.app.AccountKeeper.GetAccount(s.ctx, addr)
+		if acct == nil {
+			acct = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr)
+		}
+		if acct.GetSequence() == uint64(0) {
+			s.Require().NoError(acct.SetSequence(1), "[%d]: %q.SetSequence(1)", i, bech32)
+			s.app.AccountKeeper.SetAccount(s.ctx, acct)
+		}
+	}
+}
+
 // TODO: WriteScope tests
 // TODO: DeleteScope tests
 
@@ -402,43 +451,43 @@ func (s *MsgServerTestSuite) TestAddAndDeleteScopeOwners() {
 }
 
 func (s *MsgServerTestSuite) TestUpdateValueOwners() {
-	scopeID1 := types.ScopeMetadataAddress(uuid.New())
-	scopeID2 := types.ScopeMetadataAddress(uuid.New())
-	scopeIDNotFound := types.ScopeMetadataAddress(uuid.New())
+	scopeID1 := types.ScopeMetadataAddress(s.newUUID("scope", 1))             // scope1qqc47umrdacx2h6lta047h6lta0sfyvr90
+	scopeID2 := types.ScopeMetadataAddress(s.newUUID("scope", 2))             // scope1qqe97umrdacx2h6lta047h6lta0sk6uj0g
+	scopeIDNotFound := types.ScopeMetadataAddress(s.newUUID("notfound", 0))   // scope1qqc97mn0w3nx7atwv3047h6lta0sylrdee
+	scopeID3Diff1 := types.ScopeMetadataAddress(s.newUUID("scope_3_diff", 1)) // scope1qqc47umrdacx2hentajxjenxta0sp32qg7
+	scopeID3Diff2 := types.ScopeMetadataAddress(s.newUUID("scope_3_diff", 2)) // scope1qqe97umrdacx2hentajxjenxta0s7063ze
+	scopeID3Diff3 := types.ScopeMetadataAddress(s.newUUID("scope_3_diff", 3)) // scope1qqe47umrdacx2hentajxjenxta0szju7u4
+	scopeID3Same1 := types.ScopeMetadataAddress(s.newUUID("scope_3_same", 1)) // scope1qqc47umrdacx2hentaekzmt9ta0sc9gw9t
+	scopeID3Same2 := types.ScopeMetadataAddress(s.newUUID("scope_3_same", 2)) // scope1qqe97umrdacx2hentaekzmt9ta0s8mcl0v
+	scopeID3Same3 := types.ScopeMetadataAddress(s.newUUID("scope_3_same", 3)) // scope1qqe47umrdacx2hentaekzmt9ta0smx7s3q
 
-	scopeID3Diff1 := types.ScopeMetadataAddress(uuid.New())
-	scopeID3Diff2 := types.ScopeMetadataAddress(uuid.New())
-	scopeID3Diff3 := types.ScopeMetadataAddress(uuid.New())
-	scopeID3Same1 := types.ScopeMetadataAddress(uuid.New())
-	scopeID3Same2 := types.ScopeMetadataAddress(uuid.New())
-	scopeID3Same3 := types.ScopeMetadataAddress(uuid.New())
+	owner1 := sdk.AccAddress("owner1______________").String()      // cosmos1damkuetjx9047h6lta047h6lta047h6lccgedl
+	owner2 := sdk.AccAddress("owner2______________").String()      // cosmos1damkuetjxf047h6lta047h6lta047h6lsp5nql
+	owner3Diff1 := sdk.AccAddress("owner3Diff1_________").String() // cosmos1damkuetjxdzxjenxx9047h6lta047h6lx6slvt
+	owner3Diff2 := sdk.AccAddress("owner3Diff2_________").String() // cosmos1damkuetjxdzxjenxxf047h6lta047h6l955tqt
+	owner3Diff3 := sdk.AccAddress("owner3Diff3_________").String() // cosmos1damkuetjxdzxjenxxd047h6lta047h6lyf08yt
+	owner3Same1 := sdk.AccAddress("owner3Same1_________").String() // cosmos1damkuetjxdfkzmt9x9047h6lta047h6l4tvcmn
+	owner3Same2 := sdk.AccAddress("owner3Same2_________").String() // cosmos1damkuetjxdfkzmt9xf047h6lta047h6lk9gvhn
+	owner3Same3 := sdk.AccAddress("owner3Same3_________").String() // cosmos1damkuetjxdfkzmt9xd047h6lta047h6lhcnqnn
 
-	owner1 := sdk.AccAddress("owner1______________").String()
-	owner2 := sdk.AccAddress("owner2______________").String()
-	owner3Diff1 := sdk.AccAddress("owner3Diff1_________").String()
-	owner3Diff2 := sdk.AccAddress("owner3Diff2_________").String()
-	owner3Diff3 := sdk.AccAddress("owner3Diff3_________").String()
-	owner3Same1 := sdk.AccAddress("owner3Same1_________").String()
-	owner3Same2 := sdk.AccAddress("owner3Same2_________").String()
-	owner3Same3 := sdk.AccAddress("owner3Same3_________").String()
+	dataAccess1 := sdk.AccAddress("dataAccess1_________").String()      // cosmos1v3shgc2pvd3k2umnx9047h6lta047h6lvp7hkw
+	dataAccess2 := sdk.AccAddress("dataAccess2_________").String()      // cosmos1v3shgc2pvd3k2umnxf047h6lta047h6l006r6w
+	dataAccess3Diff1 := sdk.AccAddress("dataAccess3Diff1____").String() // cosmos1v3shgc2pvd3k2umnxdzxjenxx9047h6lfpj2sv
+	dataAccess3Diff2 := sdk.AccAddress("dataAccess3Diff2____").String() // cosmos1v3shgc2pvd3k2umnxdzxjenxxf047h6lngt850
+	dataAccess3Diff3 := sdk.AccAddress("dataAccess3Diff3____").String() // cosmos1v3shgc2pvd3k2umnxdzxjenxxd047h6lz0mm0w
+	dataAccess3Same1 := sdk.AccAddress("dataAccess3Same1____").String() // cosmos1v3shgc2pvd3k2umnxdfkzmt9x9047h6l84c2fh
+	dataAccess3Same2 := sdk.AccAddress("dataAccess3Same2____").String() // cosmos1v3shgc2pvd3k2umnxdfkzmt9xf047h6laup8d5
+	dataAccess3Same3 := sdk.AccAddress("dataAccess3Same3____").String() // cosmos1v3shgc2pvd3k2umnxdfkzmt9xd047h6lvm3mk4
 
-	dataAccess1 := sdk.AccAddress("dataAccess1_________").String()
-	dataAccess2 := sdk.AccAddress("dataAccess2_________").String()
-	dataAccess3Diff1 := sdk.AccAddress("dataAccess3Diff1____").String()
-	dataAccess3Diff2 := sdk.AccAddress("dataAccess3Diff2____").String()
-	dataAccess3Diff3 := sdk.AccAddress("dataAccess3Diff3____").String()
-	dataAccess3Same1 := sdk.AccAddress("dataAccess3Same1____").String()
-	dataAccess3Same2 := sdk.AccAddress("dataAccess3Same2____").String()
-	dataAccess3Same3 := sdk.AccAddress("dataAccess3Same3____").String()
+	valueOwner1 := sdk.AccAddress("valueOwner1_________").String()      // cosmos1weskcat9famkuetjx9047h6lta047h6l7yqwad
+	valueOwner2 := sdk.AccAddress("valueOwner2_________").String()      // cosmos1weskcat9famkuetjxf047h6lta047h6la2y63d
+	valueOwner3Diff1 := sdk.AccAddress("valueOwner3Diff1____").String() // cosmos1weskcat9famkuetjxdzxjenxx9047h6lmyvnm0
+	valueOwner3Diff2 := sdk.AccAddress("valueOwner3Diff2____").String() // cosmos1weskcat9famkuetjxdzxjenxxf047h6lpd47lv
+	valueOwner3Diff3 := sdk.AccAddress("valueOwner3Diff3____").String() // cosmos1weskcat9famkuetjxdzxjenxxd047h6ls29zyd
+	valueOwner3Same := sdk.AccAddress("valueOwner3Same_____").String()  // cosmos1weskcat9famkuetjxdfkzmt9ta047h6ly5atem
+	s.MakeNonWasmAccounts(valueOwner1, valueOwner2, valueOwner3Diff1)
 
-	valueOwner1 := sdk.AccAddress("valueOwner1_________").String()
-	valueOwner2 := sdk.AccAddress("valueOwner2_________").String()
-	valueOwner3Diff1 := sdk.AccAddress("valueOwner3Diff1____").String()
-	valueOwner3Diff2 := sdk.AccAddress("valueOwner3Diff2____").String()
-	valueOwner3Diff3 := sdk.AccAddress("valueOwner3Diff3____").String()
-	valueOwner3Same := sdk.AccAddress("valueOwner3Same_____").String()
-
-	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
+	scopeSpecID := types.ScopeSpecMetadataAddress(s.newUUID("scopespec", 1)) // scopespec1qsc47umrdacx2umsv4347h6lta0s56jv59
 	ns := func(scopeID types.MetadataAddress, owner, dataAccess, valueOwner string) types.Scope {
 		return types.Scope{
 			ScopeId:           scopeID,
@@ -452,7 +501,7 @@ func (s *MsgServerTestSuite) TestUpdateValueOwners() {
 		return scopeIDs
 	}
 
-	newValueOwner := sdk.AccAddress("newValueOwner_______").String()
+	newValueOwner := sdk.AccAddress("newValueOwner_______").String() // cosmos1dejhw4npd36k2nmhdejhyh6lta047h6lvuu8z5
 
 	tests := []struct {
 		name     string
@@ -469,7 +518,7 @@ func (s *MsgServerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: ids(scopeIDNotFound, scopeID1, scopeID2),
 			signers:  []string{valueOwner1, valueOwner2},
-			expErr:   "scope not found with id " + scopeIDNotFound.String() + ": not found",
+			expErr:   "no account address associated with metadata address \"" + scopeIDNotFound.String() + "\": invalid request",
 		},
 		{
 			name: "scope 2 of 3 not found",
@@ -479,7 +528,7 @@ func (s *MsgServerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: ids(scopeID1, scopeIDNotFound, scopeID2),
 			signers:  []string{valueOwner1, valueOwner2},
-			expErr:   "scope not found with id " + scopeIDNotFound.String() + ": not found",
+			expErr:   "no account address associated with metadata address \"" + scopeIDNotFound.String() + "\": invalid request",
 		},
 		{
 			name: "scope 3 of 3 not found",
@@ -489,7 +538,7 @@ func (s *MsgServerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: ids(scopeID1, scopeID2, scopeIDNotFound),
 			signers:  []string{valueOwner1, valueOwner2},
-			expErr:   "scope not found with id " + scopeIDNotFound.String() + ": not found",
+			expErr:   "no account address associated with metadata address \"" + scopeIDNotFound.String() + "\": invalid request",
 		},
 		{
 			name: "not properly signed",
@@ -499,7 +548,7 @@ func (s *MsgServerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: ids(scopeID1, scopeID2),
 			signers:  []string{valueOwner1},
-			expErr:   "missing signature from existing value owner " + valueOwner2 + ": invalid request",
+			expErr:   "missing signature from existing value owner \"" + valueOwner2 + "\": invalid request",
 		},
 		{
 			name: "1 scope without value owner",
@@ -508,7 +557,7 @@ func (s *MsgServerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: ids(scopeID1),
 			signers:  []string{owner1},
-			expErr:   "scope " + scopeID1.String() + " does not yet have a value owner: invalid request",
+			expErr:   "no account address associated with metadata address \"" + scopeID1.String() + "\": invalid request",
 		},
 		{
 			name: "1 scope updated",
@@ -546,24 +595,26 @@ func (s *MsgServerTestSuite) TestUpdateValueOwners() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			for _, scope := range tc.starters {
-				s.app.MetadataKeeper.SetScope(s.ctx, scope)
-				defer s.app.MetadataKeeper.RemoveScope(s.ctx, scope.ScopeId)
+				defer WriteTempScope(s.T(), s.app.MetadataKeeper, s.ctx, scope)()
 			}
 			msg := types.MsgUpdateValueOwnersRequest{
 				ScopeIds:          tc.scopeIDs,
 				ValueOwnerAddress: newValueOwner,
 				Signers:           tc.signers,
 			}
-			_, err := s.msgServer.UpdateValueOwners(s.ctx, &msg)
+			em := sdk.NewEventManager()
+			ctx := s.ctx.WithEventManager(em)
+
+			_, err := s.msgServer.UpdateValueOwners(ctx, &msg)
 			if len(tc.expErr) > 0 {
-				s.Assert().EqualError(err, tc.expErr, "handler(MsgUpdateValueOwnersRequest)")
+				s.Assert().EqualError(err, tc.expErr, "error from UpdateValueOwners")
 			} else {
-				s.Require().NoError(err, "handler(MsgUpdateValueOwnersRequest)")
+				s.Require().NoError(err, "error from UpdateValueOwners")
 
 				for i, scopeID := range tc.scopeIDs {
-					scope, found := s.app.MetadataKeeper.GetScope(s.ctx, scopeID)
-					if s.Assert().True(found, "[%d]GetScope(%s) found bool", i, scopeID) {
-						s.Assert().Equal(newValueOwner, scope.ValueOwnerAddress, "[%d] updated scope's value owner", i)
+					actVO, err2 := s.app.MetadataKeeper.GetScopeValueOwner(s.ctx, scopeID)
+					if s.Assert().NoError(err2, "[%d]: error from GetScopeValueOwner(%q)", i, scopeID) {
+						s.Assert().Equal(msg.ValueOwnerAddress, actVO.String(), "[%d]: addr from GetScopeValueOwner(%q)", i, scopeID)
 					}
 				}
 			}
@@ -612,7 +663,7 @@ func (s *MsgServerTestSuite) TestMigrateValueOwner() {
 				Proposed: "doesn't matter",
 				Signers:  []string{"who cares"},
 			},
-			expErr: "cannot iterate over invalid value owner \"\": empty address string is not allowed: invalid request",
+			expErr: "invalid existing address \"\": empty address string is not allowed: invalid request",
 		},
 		{
 			name: "no scopes",
@@ -630,7 +681,7 @@ func (s *MsgServerTestSuite) TestMigrateValueOwner() {
 				Proposed: addr("not_for_public_use__"),
 				Signers:  []string{addr("incorrect_signer____")},
 			},
-			expErr: "missing signature from existing value owner " + addrW1 + ": invalid request",
+			expErr: "missing signature from existing value owner \"" + addrW1 + "\": invalid request",
 		},
 		{
 			name: "1 scope updated",
@@ -658,12 +709,11 @@ func (s *MsgServerTestSuite) TestMigrateValueOwner() {
 			if len(tc.expErr) > 0 {
 				s.Assert().EqualError(err, tc.expErr, "Metadata hander(%T)", tc.msg)
 			} else {
-				if s.Assert().NoError(err, tc.expErr, "Metadata hander(%T)", tc.msg) {
-					for i, scopeID := range tc.scopeIDs {
-						scope, found := s.app.MetadataKeeper.GetScope(s.ctx, scopeID)
-						s.Assert().True(found, "[%d]: GetScope(%q) found boolean", i, scopeID.String())
-						actual := scope.ValueOwnerAddress
-						s.Assert().Equal(tc.msg.Proposed, actual, "[%d] %q value owner after migrate", i, scopeID.String())
+				s.Require().NoError(err, tc.expErr, "Metadata hander(%T)", tc.msg)
+				for i, scopeID := range tc.scopeIDs {
+					actVO, err2 := s.app.MetadataKeeper.GetScopeValueOwner(s.ctx, scopeID)
+					if s.Assert().NoError(err2, "[%d]: error from GetScopeValueOwner(%q)", i, scopeID) {
+						s.Assert().Equal(tc.msg.Proposed, actVO.String(), "[%d]: addr from GetScopeValueOwner(%q)", i, scopeID)
 					}
 				}
 			}
@@ -816,8 +866,7 @@ func (s *MsgServerTestSuite) TestWriteDeleteRecord() {
 		DataAccess:        nil,
 		ValueOwnerAddress: "",
 	}
-	s.app.MetadataKeeper.SetScope(s.ctx, scope)
-	defer s.app.MetadataKeeper.RemoveScope(s.ctx, scope.ScopeId)
+	defer WriteTempScope(s.T(), s.app.MetadataKeeper, s.ctx, scope)()
 
 	session1UUID := uuid.New()
 	session1 := types.Session{

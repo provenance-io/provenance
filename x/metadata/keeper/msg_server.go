@@ -72,7 +72,9 @@ func (k msgServer) DeleteScope(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	k.RemoveScope(WithSignersAsTransferAgents(ctx, msg), msg.ScopeId)
+	if err := k.RemoveScope(WithSignersAsTransferAgents(ctx, msg), msg.ScopeId); err != nil {
+		return nil, fmt.Errorf("could not delete scope %q: %w", msg.ScopeId, err)
+	}
 
 	k.RemoveNetAssetValues(ctx, msg.ScopeId)
 
@@ -226,7 +228,7 @@ func (k msgServer) UpdateValueOwners(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	err = k.SetScopeValueOwners(markertypes.WithTransferAgents(ctx, signers...), nil, msg.ValueOwnerAddress)
+	err = k.SetScopeValueOwners(markertypes.WithTransferAgents(ctx, signers...), links, msg.ValueOwnerAddress)
 	if err != nil {
 		return nil, fmt.Errorf("failure setting scope value owners: %w", err)
 	}
@@ -254,22 +256,25 @@ func (k msgServer) MigrateValueOwner(
 		accAddr := key.K1()
 		// If this entry's addr does not equal the one we care about, something's horribly wrong.
 		if !addr.Equals(accAddr) {
-			return true, fmt.Errorf("address in iterator key %q does not equal the provided existing address %q", accAddr, msg.Existing)
+			return true, fmt.Errorf("address %q in iterator key does not equal the provided existing address %q", accAddr.String(), msg.Existing)
 		}
 		denom := key.K2()
 		mdAddr, mdErr := types.MetadataAddressFromDenom(denom)
 		// This should be iterating only over scope denoms. If there's a bad one, log it, then keep going.
 		if mdErr != nil {
-			k.Logger(ctx).Error(fmt.Sprintf("invalid metadata denom %q (owned by %q): %v", denom, accAddr, mdErr))
+			k.Logger(ctx).Error(fmt.Sprintf("invalid metadata denom %q (owned by %q): %v", denom, accAddr.String(), mdErr))
 			return false, nil
 		}
 		links = append(links, types.NewAccMDLink(accAddr, mdAddr))
 		return false, nil
 	})
 	if err != nil {
-		return nil, sdkerrors.ErrLogic.Wrapf("error iterating scopes owned by %q: %v", addr, err)
+		return nil, sdkerrors.ErrLogic.Wrapf("error iterating scopes owned by %q: %v", addr.String(), err)
 	}
 
+	if len(links) == 0 {
+		return nil, sdkerrors.ErrNotFound.Wrapf("no scopes found with value owner %q", addr.String())
+	}
 	signers, err := k.ValidateUpdateValueOwners(ctx, links, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())

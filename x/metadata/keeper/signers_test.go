@@ -15,8 +15,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/provenance-io/provenance/testutil/assertions"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -210,13 +208,7 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 			authzKeeper.ClearResults()
 
 			if tc.existing != nil {
-				ctx := s.FreshCtx()
-				assertions.RequireNotPanicsNoError(s.T(), func() error {
-					return mdKeeper.SetScope(ctx, *tc.existing)
-				}, "SetScope")
-				defer s.Require().NotPanics(func() {
-					mdKeeper.RemoveScope(ctx, tc.existing.ScopeId)
-				}, "RemoveScope")
+				defer WriteTempScope(s.T(), s.app.MetadataKeeper, s.FreshCtx(), *tc.existing)()
 			}
 
 			err := mdKeeper.ValidateWriteScope(s.FreshCtx(), tc.msg)

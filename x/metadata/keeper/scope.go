@@ -145,40 +145,36 @@ func (k Keeper) writeScopeToState(ctx sdk.Context, scope types.Scope) {
 }
 
 // RemoveScope removes a scope from the module kv store along with all its records and sessions.
-func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) {
-	if !id.IsScopeAddress() {
-		panic(fmt.Errorf("invalid address, address must be for a scope"))
+func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) error {
+	if err := id.ValidateIsScopeAddress(); err != nil {
+		return err
 	}
-	// iterate and remove all records, groups
-	store := ctx.KVStore(k.storeKey)
 
+	// If the scope already does not exist, don't do anything.
 	scope, found := k.GetScope(ctx, id)
 	if !found {
-		return
+		return nil
 	}
 
-	// Remove the value owner.
+	// Burn the scope's value owner coin.
 	if err := k.SetScopeValueOwner(ctx, id, ""); err != nil {
 		panic(err)
 	}
 
-	// Remove all records
-	prefix, err := id.ScopeRecordIteratorPrefix()
-	if err != nil {
-		panic(err)
-	}
+	// Remove all records. The sessions are deleted by RemoveRecord as the last record in each is deleted.
+	store := ctx.KVStore(k.storeKey)
+	prefix, _ := id.ScopeRecordIteratorPrefix() // Can't return an error because we know it's a valid scope id.
 	iter := storetypes.KVStorePrefixIterator(store, prefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		k.RemoveRecord(ctx, iter.Key())
 	}
 
-	// Sessions will be removed as the last record in each is deleted.
-
 	k.indexScope(store, nil, &scope)
 	store.Delete(id)
 	k.EmitEvent(ctx, types.NewEventScopeDeleted(scope.ScopeId))
 	defer types.GetIncObjFunc(types.TLType_Scope, types.TLAction_Deleted)
+	return nil
 }
 
 // GetScopeValueOwner gets the value owner of a given scope.
