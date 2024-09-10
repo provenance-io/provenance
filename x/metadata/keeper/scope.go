@@ -813,6 +813,14 @@ func (k Keeper) ValidateUpdateValueOwners(
 			continue
 		}
 
+		// If it's a marker address, there's no way it signed, but we'll provide the signers
+		// as transfer agents with the SendCoins. That will allow the marker module to correctly
+		// check for deposit or withdraw among the signers and return an error then if appropriate.
+		if k.IsMarkerAddr(ctx, req.String()) {
+			continue
+		}
+
+		// Not a direct signer, and not a marker. Check with authz for an applicable grant.
 		grantee, err := k.findAuthzGrantee(ctx, req, signerAccs, msg)
 		if err != nil {
 			return nil, fmt.Errorf("authz error with existing value owner %q: %w", req.String(), err)
