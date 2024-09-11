@@ -4,14 +4,12 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/collections"
-	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // AuthKeeper is an interface with functions that the auth.Keeper has that are needed in this module.
@@ -47,5 +45,5 @@ type BankKeeper interface {
 	// These are methods not in the bank keeper, but that we add using our own MDBankKeeper.
 
 	DenomOwner(ctx context.Context, denom string) (sdk.AccAddress, error)
-	GetBalancesCollection() *collections.IndexedMap[collections.Pair[sdk.AccAddress, string], sdkmath.Int, bankkeeper.BalancesIndexes]
+	GetScopesForValueOwner(ctx context.Context, valueOwner sdk.AccAddress, pageReq *query.PageRequest) (types.AccMDLinks, *query.PageResponse, error)
 }

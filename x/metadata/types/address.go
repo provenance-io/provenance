@@ -992,3 +992,21 @@ func (a AccMDLinks) GetAccAddrs() []sdk.AccAddress {
 	}
 	return rv
 }
+
+// GetPrimaryUUIDs extracts the primary UUID out of each MDAddr and converts each to a string.
+// If the MDAddr is nil, empty, or invalid, it's corresponding result will be "".
+func (a AccMDLinks) GetPrimaryUUIDs() []string {
+	if a == nil {
+		return nil
+	}
+	rv := make([]string, len(a))
+	for i, link := range a {
+		if link != nil && len(link.MDAddr) > 0 {
+			id, err := link.MDAddr.PrimaryUUID()
+			if err == nil {
+				rv[i] = id.String()
+			}
+		}
+	}
+	return rv
+}

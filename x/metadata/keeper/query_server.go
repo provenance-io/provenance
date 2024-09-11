@@ -9,8 +9,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"cosmossdk.io/collections"
-	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -641,27 +639,12 @@ func (k Keeper) ValueOwnership(c context.Context, req *types.ValueOwnershipReque
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	// This is basically the bank module's AllBalances query filtered to only scope denoms.
-	// But then, instead of returning coins, it returns the scope UUIDs.
-	retval.ScopeUuids, retval.Pagination, err = query.CollectionPaginate(ctx, k.bankKeeper.GetBalancesCollection(), req.Pagination,
-		func(key collections.Pair[sdk.AccAddress, string], _ sdkmath.Int) (string, error) {
-			id, idErr := types.MetadataAddressFromDenom(key.K2())
-			if idErr != nil {
-				// ignore the error and put an empty string in the list.
-				return "", nil
-			}
-			// Since MetadataAddressFromDenom didn't error, we know PrimaryUUID won't either.
-			uid, _ := id.PrimaryUUID()
-			return uid.String(), nil
-		},
-		func(o *query.CollectionsPaginateOptions[collections.Pair[sdk.AccAddress, string]]) {
-			pfx := collections.Join(addr, scopeDenomPrefix)
-			o.Prefix = &pfx
-		},
-	)
+	var links types.AccMDLinks
+	links, retval.Pagination, err = k.bankKeeper.GetScopesForValueOwner(ctx, addr, req.Pagination)
 	if err != nil {
 		return &retval, sdkerrors.ErrInvalidRequest.Wrapf("error collecting results: %v", err)
 	}
+	retval.ScopeUuids = links.GetPrimaryUUIDs()
 
 	return &retval, nil
 }

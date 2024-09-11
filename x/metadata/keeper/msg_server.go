@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -249,32 +248,15 @@ func (k msgServer) MigrateValueOwner(
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("invalid existing address %q: %v", msg.Existing, err)
 	}
-	ranger := &collections.Range[collections.Pair[sdk.AccAddress, string]]{}
-	ranger.Prefix(collections.Join(addr, scopeDenomPrefix))
-	var links types.AccMDLinks
-	err = k.bankKeeper.GetBalancesCollection().Walk(ctx, ranger, func(key collections.Pair[sdk.AccAddress, string], _ sdkmath.Int) (bool, error) {
-		accAddr := key.K1()
-		// If this entry's addr does not equal the one we care about, something's horribly wrong.
-		if !addr.Equals(accAddr) {
-			return true, fmt.Errorf("address %q in iterator key does not equal the provided existing address %q", accAddr.String(), msg.Existing)
-		}
-		denom := key.K2()
-		mdAddr, mdErr := types.MetadataAddressFromDenom(denom)
-		// This should be iterating only over scope denoms. If there's a bad one, log it, then keep going.
-		if mdErr != nil {
-			k.Logger(ctx).Error(fmt.Sprintf("invalid metadata denom %q (owned by %q): %v", denom, accAddr.String(), mdErr))
-			return false, nil
-		}
-		links = append(links, types.NewAccMDLink(accAddr, mdAddr))
-		return false, nil
-	})
-	if err != nil {
-		return nil, sdkerrors.ErrLogic.Wrapf("error iterating scopes owned by %q: %v", addr.String(), err)
-	}
 
+	links, _, err := k.bankKeeper.GetScopesForValueOwner(ctx, addr, nil)
+	if err != nil {
+		return nil, sdkerrors.ErrLogic.Wrapf("error getting scopes with value owner %q: %v", addr.String(), err)
+	}
 	if len(links) == 0 {
 		return nil, sdkerrors.ErrNotFound.Wrapf("no scopes found with value owner %q", addr.String())
 	}
+
 	signers, err := k.ValidateUpdateValueOwners(ctx, links, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())

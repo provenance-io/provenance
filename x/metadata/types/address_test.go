@@ -2926,3 +2926,149 @@ func (s *AddressTestSuite) TestAccMDLinks_GetAccAddrs() {
 		})
 	}
 }
+
+func (s *AddressTestSuite) TestAccMDLinks_GetPrimaryUUIDs() {
+	newUUIDStr := func(i int) string {
+		s.Require().LessOrEqual(0, i, "arg provided to newUUID(%d)", i)
+		s.Require().GreaterOrEqual(15, i, "arg provided to newUUID(%d)", i)
+		h := '0' + byte(i)
+		if i >= 10 {
+			h = 'a' - 10 + byte(i)
+		}
+		return strings.ReplaceAll("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "x", string(h))
+	}
+	newUUID := func(i int) uuid.UUID {
+		str := newUUIDStr(i)
+		rv, err := uuid.Parse(str)
+		s.Require().NoError(err, "uuid.Parse(%q)", str)
+		return rv
+	}
+
+	tests := []struct {
+		name  string
+		links AccMDLinks
+		exp   []string
+	}{
+		{
+			name:  "nil links",
+			links: nil,
+			exp:   nil,
+		},
+		{
+			name:  "empty links",
+			links: AccMDLinks{},
+			exp:   []string{},
+		},
+		{
+			name:  "one link: nil",
+			links: AccMDLinks{nil},
+			exp:   []string{""},
+		},
+		{
+			name:  "one link: nil addr",
+			links: AccMDLinks{{MDAddr: nil}},
+			exp:   []string{""},
+		},
+		{
+			name:  "one link: empty addr",
+			links: AccMDLinks{{MDAddr: MetadataAddress{}}},
+			exp:   []string{""},
+		},
+		{
+			name:  "one link: unknown type in addr",
+			links: AccMDLinks{{MDAddr: MetadataAddress{0xA0, 0x1, 0x2}}},
+			exp:   []string{""},
+		},
+		{
+			name:  "one link: addr too short",
+			links: AccMDLinks{{MDAddr: ScopeMetadataAddress(newUUID(0))[:16]}},
+			exp:   []string{""},
+		},
+		{
+			name:  "one link: scope id",
+			links: AccMDLinks{{MDAddr: ScopeMetadataAddress(newUUID(1))}},
+			exp:   []string{newUUIDStr(1)},
+		},
+		{
+			name:  "one link: session id",
+			links: AccMDLinks{{MDAddr: SessionMetadataAddress(newUUID(2), newUUID(8))}},
+			exp:   []string{newUUIDStr(2)},
+		},
+		{
+			name:  "one link: record id",
+			links: AccMDLinks{{MDAddr: RecordMetadataAddress(newUUID(3), newUUIDStr(4))}},
+			exp:   []string{newUUIDStr(3)},
+		},
+		{
+			name:  "one link: scope spec id",
+			links: AccMDLinks{{MDAddr: ScopeSpecMetadataAddress(newUUID(5))}},
+			exp:   []string{newUUIDStr(5)},
+		},
+		{
+			name:  "one link: contract spec id",
+			links: AccMDLinks{{MDAddr: ContractSpecMetadataAddress(newUUID(6))}},
+			exp:   []string{newUUIDStr(6)},
+		},
+		{
+			name:  "one link: record spec id",
+			links: AccMDLinks{{MDAddr: RecordSpecMetadataAddress(newUUID(7), newUUIDStr(9))}},
+			exp:   []string{newUUIDStr(7)},
+		},
+		{
+			name: "six links: one of each type",
+			links: AccMDLinks{
+				{MDAddr: ScopeMetadataAddress(newUUID(11))},
+				{MDAddr: SessionMetadataAddress(newUUID(10), newUUID(3))},
+				{MDAddr: RecordMetadataAddress(newUUID(15), newUUIDStr(2))},
+				{MDAddr: ScopeSpecMetadataAddress(newUUID(13))},
+				{MDAddr: ContractSpecMetadataAddress(newUUID(12))},
+				{MDAddr: RecordSpecMetadataAddress(newUUID(14), newUUIDStr(1))},
+			},
+			exp: []string{
+				newUUIDStr(11), newUUIDStr(10), newUUIDStr(15),
+				newUUIDStr(13), newUUIDStr(12), newUUIDStr(14),
+			},
+		},
+		{
+			name: "six links: all different scopes",
+			links: AccMDLinks{
+				{MDAddr: ScopeMetadataAddress(newUUID(7))},
+				{MDAddr: ScopeMetadataAddress(newUUID(1))},
+				{MDAddr: ScopeMetadataAddress(newUUID(0))},
+				{MDAddr: ScopeMetadataAddress(newUUID(8))},
+				{MDAddr: ScopeMetadataAddress(newUUID(14))},
+				{MDAddr: ScopeMetadataAddress(newUUID(2))},
+			},
+			exp: []string{
+				newUUIDStr(7), newUUIDStr(1), newUUIDStr(0),
+				newUUIDStr(8), newUUIDStr(14), newUUIDStr(2),
+			},
+		},
+		{
+			name: "six links: mix of different, same and invalid scopes",
+			links: AccMDLinks{
+				{MDAddr: ScopeMetadataAddress(newUUID(14))},
+				{MDAddr: ScopeMetadataAddress(newUUID(12))},
+				{MDAddr: ScopeMetadataAddress(newUUID(8))},
+				{MDAddr: ScopeMetadataAddress(newUUID(10))[:16]},
+				{MDAddr: ScopeMetadataAddress(newUUID(11))},
+				{MDAddr: ScopeMetadataAddress(newUUID(12))},
+			},
+			exp: []string{
+				newUUIDStr(14), newUUIDStr(12), newUUIDStr(8),
+				"", newUUIDStr(11), newUUIDStr(12),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var act []string
+			testFunc := func() {
+				act = tc.links.GetPrimaryUUIDs()
+			}
+			s.Require().NotPanics(testFunc, "GetPrimaryUUIDs")
+			s.Assert().Equal(tc.exp, act, "result from GetPrimaryUUIDs")
+		})
+	}
+}

@@ -9,13 +9,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"cosmossdk.io/collections"
-	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -577,7 +575,7 @@ func (k *MockBankKeeper) DenomOwner(_ context.Context, denom string) (sdk.AccAdd
 	return nil, nil
 }
 
-func (k *MockBankKeeper) GetBalancesCollection() *collections.IndexedMap[collections.Pair[sdk.AccAddress, string], sdkmath.Int, bankkeeper.BalancesIndexes] {
+func (k *MockBankKeeper) GetScopesForValueOwner(_ context.Context, _ sdk.AccAddress, _ *query.PageRequest) (types.AccMDLinks, *query.PageResponse, error) {
 	panic("not implemented")
 }
 
