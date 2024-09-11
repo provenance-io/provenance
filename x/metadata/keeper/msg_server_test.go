@@ -94,11 +94,16 @@ type namedValue struct {
 // logNamedValues will log the provided entries under the given header.
 func (s *MsgServerTestSuite) logNamedValues(header string, entries []namedValue) {
 	// Note: This func might not be called by checked-in code, but it's handy when troubleshooting, so don't delete it.
+	logNamedValues(s.T(), header, entries)
+}
+
+// logNamedValues will log the provided entries under the given header.
+func logNamedValues(t *testing.T, header string, entries []namedValue) {
 	lines := make([]string, len(entries))
 	for i, entry := range entries {
 		lines[i] = fmt.Sprintf("%20s = %s", entry.name, entry.value)
 	}
-	s.T().Logf("%s:\n%s", header, strings.Join(lines, "\n"))
+	t.Logf("%s:\n%s", header, strings.Join(lines, "\n"))
 }
 
 // MakeNonWasmAccount will make sure the account with the provided bech32 string has a sequence of 1.
