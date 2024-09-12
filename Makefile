@@ -1,56 +1,65 @@
 #!/usr/bin/make -f
 export GO111MODULE=on
 
-GO ?= go
+# Find the go executable if it wasn't pre-set (e.g. via env var).
+ifeq (,$(GO))
+  ifeq ($(OS),Windows_NT)
+    GO := $(shell where go.exe 2> NUL)
+  else
+    GO := $(shell command -v go 2> /dev/null)
+  endif
+endif
+# Make sure we have a working go executable since most stuff in here needs it.
+ifeq ("$(shell $(GO) version > /dev/null || echo nogo)","nogo")
+  $(error Could not find go. Is it in PATH? $(GO))
+endif
+ifeq (,$(GOPATH))
+  GOPATH := $(shell $(GO) env GOPATH)
+endif
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
 WITH_LEDGER ?= true
-
 # We used to use 'yes' on these flags, so at least for now, change 'yes' into 'true'
 ifeq ($(WITH_LEDGER),yes)
   WITH_LEDGER=true
 endif
 
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null)
-BRANCH_PRETTY := $(subst /,-,$(BRANCH))
-export CMTVERSION := $(shell $(GO) list -m github.com/cometbft/cometbft 2> /dev/null | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%h' 2> /dev/null)
-# don't override user values
+ifeq (,$(COMMIT))
+  COMMIT := unknown
+endif
 ifeq (,$(VERSION))
-  VERSION := $(shell git describe --exact-match 2>/dev/null)
-  # if VERSION is empty, then populate it with branch's name and raw commit hash
+  # If VERSION wasn't provided (e.g. via env var), look for a tag on HEAD.
+  VERSION := $(shell git describe --exact-match 2> /dev/null)
+  # If there isn't a tag, use the branch name and commit hash.
   ifeq (,$(VERSION))
-    VERSION := $(BRANCH_PRETTY)-$(COMMIT)
+    VERSION := $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD 2> /dev/null || echo nobranch))-$(COMMIT)
   endif
 endif
 
-GOLANGCI_LINT=$(shell which golangci-lint)
-ifeq ("$(wildcard $(GOLANGCI_LINT))","")
-    GOLANGCI_LINT = $(BINDIR)/golangci-lint
+ifeq (,$(GOLANGCI_LINT))
+  GOLANGCI_LINT := $(shell which golangci-lint 2> /dev/null)
+  # If golangci-lint isn't found, use a common location and let whatever needs it fail on its own.
+  ifeq (,$(GOLANGCI_LINT))
+    GOLANGCI_LINT := $(BINDIR)/golangci-lint
+  endif
 endif
 
 HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
-# Only support go version 1.23
-SUPPORTED_GO_MAJOR_VERSION = 1
-SUPPORTED_GO_MINOR_VERSION = 23
-GO_MAJOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
-GO_MINOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
-GO_VERSION_VALIDATION_ERR_MSG = Golang version $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION) is not supported, you must use $(SUPPORTED_GO_MAJOR_VERSION).$(SUPPORTED_GO_MINOR_VERSION)
-
 # The below include contains the tools target.
 include contrib/devtools/Makefile
 
 #Identify the system and if gcc is available.
 ifeq ($(OS),Windows_NT)
-  UNAME_S = 'windows_nt'
-  UNAME_M = 'unknown'
+  UNAME_S = windows_nt
+  UNAME_M = unknown
 else
-  UNAME_S = $(shell uname -s | tr '[A-Z]' '[a-z]')
-  UNAME_M = $(shell uname -m | tr '[A-Z]' '[a-z]')
+  UNAME_S := $(shell uname -s | tr '[A-Z]' '[a-z]')
+  UNAME_M := $(shell uname -m | tr '[A-Z]' '[a-z]')
 endif
 
 ifeq ($(UNAME_S),windows_nt)
@@ -66,6 +75,8 @@ endif
 ##############################
 # Build Flags/Tags
 ##############################
+
+export CMTVERSION := $(shell $(GO) list -m github.com/cometbft/cometbft 2> /dev/null | sed 's:.* ::')
 
 ifeq ($(WITH_LEDGER),true)
   ifeq ($(UNAME_S),openbsd)
@@ -178,7 +189,6 @@ RELEASE_PLAN=$(BUILDDIR)/plan-$(VERSION).json
 RELEASE_CHECKSUM_NAME=sha256sum.txt
 RELEASE_CHECKSUM=$(BUILDDIR)/$(RELEASE_CHECKSUM_NAME)
 
-UNAME_M = $(shell uname -m)
 ifeq ($(UNAME_S),darwin)
     LIBWASMVM := $(LIBWASMVM).dylib
 else ifeq ($(UNAME_S),linux)
@@ -209,7 +219,7 @@ build-release-checksum: $(RELEASE_CHECKSUM)
 
 $(RELEASE_CHECKSUM):
 	cd $(BUILDDIR) && \
-	  shasum -a 256 *.zip  > $(RELEASE_CHECKSUM) && \
+		shasum -a 256 *.zip  > $(RELEASE_CHECKSUM) && \
 	cd ..
 
 .PHONY: build-release-plan
@@ -240,7 +250,7 @@ build-release-zip: $(RELEASE_ZIP)
 
 $(RELEASE_ZIP): $(RELEASE_PIO) $(RELEASE_WASM)
 	cd $(BUILDDIR) && \
-	  zip -u $(RELEASE_ZIP_NAME) bin/$(LIBWASMVM) bin/provenanced && \
+		zip -u $(RELEASE_ZIP_NAME) bin/$(LIBWASMVM) bin/provenanced && \
 	cd ..
 
 # gon packages the zip wrong. need bin/provenanced and bin/libwasmvm
@@ -309,10 +319,15 @@ get-valid-sections:
 
 .PHONY: go-mod-cache go.sum lint clean format check-built linkify update-tocs get-valid-sections
 
+# Only support go version 1.23
+SUPPORTED_GO_MAJOR_VERSION = 1
+SUPPORTED_GO_MINOR_VERSION = 23
+GO_MAJOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
+GO_MINOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 
 validate-go-version: ## Validates the installed version of go against Provenance's minimum requirement.
 	@if [ "$(GO_MAJOR_VERSION)" -ne $(SUPPORTED_GO_MAJOR_VERSION) ] || [ "$(GO_MINOR_VERSION)" -ne $(SUPPORTED_GO_MINOR_VERSION) ]; then \
-		echo '$(GO_VERSION_VALIDATION_ERR_MSG)'; \
+		echo 'Golang version $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION) is not supported, you must use $(SUPPORTED_GO_MAJOR_VERSION).$(SUPPORTED_GO_MINOR_VERSION).'; \
 		exit 1; \
 	fi
 
@@ -482,7 +497,7 @@ proto-gen:
 			sh ./scripts/protocgen.sh; \
 	fi
 	mv .go.mod.bak go.mod
-	$(GO)go mod tidy
+	$(GO) mod tidy
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
@@ -514,11 +529,11 @@ proto-lint:
 
 proto-check-breaking:
 	@echo "Check breaking Protobuf files"
-	$(DOCKER_BUF) breaking proto --against $(HTTPS_GIT)#branch=main,subdir=proto --error-format=json
+	$(DOCKER_BUF) breaking proto --against '$(HTTPS_GIT)#branch=main,subdir=proto' --error-format=json
 
 proto-check-breaking-third-party:
-	@echo "Check breaking Protobuf files"
-	$(DOCKER_BUF) breaking third_party/proto --against $(HTTPS_GIT)#branch=main,subdir=third_party/proto --error-format=json
+	@echo "Check breaking 3rd party Protobuf files"
+	$(DOCKER_BUF) breaking third_party/proto --against '$(HTTPS_GIT)#branch=main,subdir=third_party/proto' --error-format=json
 
 proto-update-check:
 	@echo "Checking for third_party Protobuf updates"
