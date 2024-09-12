@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
@@ -18,24 +17,8 @@ import (
 // scopeDenomPrefix is the string that will start every scope denom.
 const scopeDenomPrefix = types.DenomPrefix + types.PrefixScope + "1"
 
-// oneInt is the value 1 (one) as the sdk's version of Int.
-var oneInt = sdkmath.OneInt()
-
-// mintCoinsRestriction returns an error if any coin is not for a scope, or isn't for 1.
-func mintCoinsRestriction(_ context.Context, coins sdk.Coins) error {
-	for _, coin := range coins {
-		if !strings.HasPrefix(coin.Denom, scopeDenomPrefix) {
-			return fmt.Errorf("cannot mint %s: denom is not for a scope", coin)
-		}
-		if !coin.Amount.Equal(oneInt) {
-			return fmt.Errorf("cannot mint %s: amount is not one", coin)
-		}
-	}
-	return nil
-}
-
 func NewMDBankKeeper(bk bankkeeper.BaseKeeper) *MDBankKeeper {
-	return &MDBankKeeper{BaseKeeper: bk.WithMintCoinsRestriction(mintCoinsRestriction)}
+	return &MDBankKeeper{BaseKeeper: bk}
 }
 
 // MDBankKeeper extends the SDK's bank keeper to add methods that act on fields so that we can mock all of it.
