@@ -97,7 +97,8 @@ func (k *MDBankKeeper) balanceValueOwnerTransformer(key collections.Pair[sdk.Acc
 	denom := key.K2()
 	mdAddr, err := types.MetadataAddressFromDenom(denom)
 	if err != nil {
-		k.Logger().Error(fmt.Sprintf("invalid metadata denom %q (owned by %q): %v", denom, accAddr.String(), err))
+		// MetadataAddressFromDenom always includes the denom in the error message, so we don't need it again here.
+		k.Logger().Error(fmt.Sprintf("invalid metadata balance entry for account %q: %v", accAddr.String(), err))
 	}
 	return types.NewAccMDLink(accAddr, mdAddr)
 }
