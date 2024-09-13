@@ -54,7 +54,7 @@ jobs:
           git commit -S -m "Update buf.lock to latest commit hash"
       - name: Create Pull Request
         id: cpr
-        uses: peter-evans/create-pull-request@v7.0.0
+        uses: peter-evans/create-pull-request@v7.0.2
         with:
           base: main
           branch: provenanceio-bot/patch-buf-lock
