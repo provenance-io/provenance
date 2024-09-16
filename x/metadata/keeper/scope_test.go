@@ -2029,13 +2029,17 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 	}
 
 	for _, tc := range tests {
-		s.T().Run(tc.name, func(t *testing.T) {
+		s.Run(tc.name, func() {
 			msg := &types.MsgDeleteScopeRequest{
 				ScopeId: tc.scope.ScopeId,
 				Signers: tc.signers,
 			}
 			// TODO[2137]: Define the expAddrs in these test cases.
-			addrs, err := s.app.MetadataKeeper.ValidateDeleteScope(s.FreshCtx(), msg)
+			var addrs []sdk.AccAddress
+			testFunc := func() {
+				addrs, err = s.app.MetadataKeeper.ValidateDeleteScope(s.FreshCtx(), msg)
+			}
+			s.Require().NotPanics(testFunc, "ValidateDeleteScope")
 			s.AssertErrorValue(err, tc.expErr, "error from ValidateDeleteScope")
 			s.Assert().Equal(tc.expAddrs, addrs, "addresses from ValidateDeleteScope")
 		})
@@ -2550,7 +2554,7 @@ func (s *ScopeKeeperTestSuite) TestValidateScopeDeleteDataAccess() {
 	}
 }
 
-func (s *ScopeKeeperTestSuite) TestValidateScopeUpdateOwners() {
+func (s *ScopeKeeperTestSuite) TestValidateUpdateScopeOwners() {
 	pt := func(addr string, role types.PartyType, opt bool) types.Party {
 		return types.Party{Address: addr, Role: role, Optional: opt}
 	}
