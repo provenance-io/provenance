@@ -2995,6 +2995,79 @@ func TestReqAttrBypassAddrs(t *testing.T) {
 	}
 }
 
+func TestIsMarkerAccount(t *testing.T) {
+	app := simapp.Setup(t)
+	ctx := app.BaseApp.NewContext(false)
+
+	newMarker := func(denom string, status types.MarkerStatus, typ types.MarkerType) sdk.AccAddress {
+		addr, err := types.MarkerAddress(denom)
+		require.NoError(t, err, "MarkerAddress(%q)", denom)
+		marker := &types.MarkerAccount{
+			BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
+			AccessControl: []types.AccessGrant{{
+				Address:     sdk.AccAddress("addr_with_perms_____").String(),
+				Permissions: types.AccessList{types.Access_Admin},
+			}},
+			Status:                 status,
+			Denom:                  denom,
+			Supply:                 sdkmath.NewInt(1000),
+			MarkerType:             typ,
+			SupplyFixed:            true,
+			AllowGovernanceControl: true,
+		}
+
+		require.NotPanics(t, func() {
+			app.MarkerKeeper.SetNewMarker(ctx, marker)
+		}, "SetNewMarker %q", marker.Denom)
+		return addr
+	}
+
+	normalAddr := sdk.AccAddress("normal_address______")
+	setNewAccount(app, ctx, &authtypes.BaseAccount{Address: normalAddr.String()})
+
+	tests := []struct {
+		name string
+		addr sdk.AccAddress
+		exp  bool
+	}{
+		{name: "nil address", addr: nil, exp: false},
+		{name: "empty address", addr: nil, exp: false},
+		{name: "unknown address", addr: sdk.AccAddress("unknown_address_____"), exp: false},
+		{name: "normal address", addr: normalAddr, exp: false},
+		{
+			name: "proposed restricted marker",
+			addr: newMarker("proposedrestricted", types.StatusProposed, types.MarkerType_RestrictedCoin),
+			exp:  true,
+		},
+		{
+			name: "active restricted marker",
+			addr: newMarker("activerestricted", types.StatusActive, types.MarkerType_RestrictedCoin),
+			exp:  true,
+		},
+		{
+			name: "proposed coin marker",
+			addr: newMarker("proposedcoin", types.StatusProposed, types.MarkerType_Coin),
+			exp:  true,
+		},
+		{
+			name: "active coin marker",
+			addr: newMarker("activecoin", types.StatusActive, types.MarkerType_Coin),
+			exp:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual bool
+			testFunc := func() {
+				actual = app.MarkerKeeper.IsMarkerAccount(ctx, tc.addr)
+			}
+			require.NotPanics(t, testFunc, "IsMarkerAccount")
+			assert.Equal(t, tc.exp, actual, "result from IsMarkerAccount")
+		})
+	}
+}
+
 // dummyBankKeeper satisfies the types.BankKeeper interface but does nothing.
 type dummyBankKeeper struct{}
 
