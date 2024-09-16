@@ -415,11 +415,8 @@ func (k Keeper) ValidateWriteScope(
 		existing = &e
 	}
 
-	// If the scope does not exist yet, there MUST be a proposed value owner.
-	// TODO[2137]: Re-evaluate whether we should require a value owner when creating a scope.
-	if existing == nil && len(proposed.ValueOwnerAddress) == 0 {
-		return nil, errors.New("a value owner is required to create a scope")
-	}
+	// TODO[2137]: Evaluate whether we should require a value owner when creating a scope.
+
 	// If the scope already exists:
 	//   - Lack of a proposed value owner means there is no desired change to it and we don't need to look it up.
 	//   - Presence of a proposed value owner means we need to look up the existing one
