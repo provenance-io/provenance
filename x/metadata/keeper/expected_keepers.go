@@ -33,6 +33,7 @@ type AttrKeeper interface {
 // MarkerKeeper defines the attribute functionality needed by the metadata module.
 type MarkerKeeper interface {
 	GetMarkerByDenom(ctx sdk.Context, denom string) (markertypes.MarkerAccountI, error)
+	IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 }
 
 type BankKeeper interface {

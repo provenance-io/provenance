@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -479,21 +478,21 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 		}
 
 		// If the required signer is the same as the proposed value, there's no change, so a signer isn't needed.
-		reqStr := existing.String()
-		if reqStr == proposed {
+		existingStr := existing.String()
+		if existingStr == proposed {
 			continue
 		}
 
 		// If it's one of the signers, there's nothing more to check for this one.
 		if containsAddr(signerAccs, existing) {
-			usedSigners.Use(reqStr)
+			usedSigners.Use(existingStr)
 			continue
 		}
 
 		// If it's a marker address, there's no way it signed, but we'll later provide the signers
 		// as transfer agents with SendCoins. That will allow the marker module to correctly
 		// check for deposit or withdraw among the signers and return an error then if appropriate.
-		if k.IsMarkerAddr(ctx, reqStr) {
+		if k.markerKeeper.IsMarkerAccount(ctx, existing) {
 			transferAgents = signerAccs
 			continue
 		}
@@ -501,10 +500,10 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 		// Not a direct signer, and not a marker. Check with authz for an applicable grant.
 		grantee, authzErr := k.findAuthzGrantee(ctx, existing, signerAccs, msg)
 		if authzErr != nil {
-			return nil, nil, fmt.Errorf("authz error with existing value owner %q: %w", reqStr, authzErr)
+			return nil, nil, fmt.Errorf("authz error with existing value owner %q: %w", existingStr, authzErr)
 		}
 		if len(grantee) == 0 {
-			return nil, nil, fmt.Errorf("missing signature from existing value owner %q", reqStr)
+			return nil, nil, fmt.Errorf("missing signature from existing value owner %q", existingStr)
 		}
 		usedSigners.Use(grantee.String())
 	}
@@ -615,18 +614,4 @@ func validatePartiesArePresent(required, available []types.Party) error {
 		word = "parties"
 	}
 	return fmt.Errorf("missing %s: %s", word, strings.Join(parts, ", "))
-}
-
-// IsMarkerAddr returns true if the provided bech32 address string is a marker account's address.
-func (k Keeper) IsMarkerAddr(ctx sdk.Context, bech32 string) bool {
-	addr, err := sdk.AccAddressFromBech32(bech32)
-	if err != nil || len(addr) == 0 {
-		return false
-	}
-	acc := k.authKeeper.GetAccount(ctx, addr)
-	if acc == nil {
-		return false
-	}
-	_, isMarker := acc.(*markertypes.MarkerAccount)
-	return isMarker
 }

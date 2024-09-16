@@ -14,6 +14,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -336,6 +337,55 @@ func (a *MockAuthorization) String() string {
 
 // ProtoMessage satisfies the authz.Authorization interface.
 func (a *MockAuthorization) ProtoMessage() {}
+
+var _ keeper.MarkerKeeper = (*MockMarkerKeeper)(nil)
+
+// MockMarkerKeeper is a mocked keeper.MarkerKeeper.
+type MockMarkerKeeper struct {
+	IsMarkerAccountResults map[string]bool
+	IsMarkerAccountCalls   []sdk.AccAddress
+}
+
+func NewMockMarkerKeeper() *MockMarkerKeeper {
+	return &MockMarkerKeeper{
+		IsMarkerAccountResults: make(map[string]bool),
+	}
+}
+
+// WithIsMarkerAccountResults sets up the provided addrs to return true from IsMarkerAccount.
+func (k *MockMarkerKeeper) WithIsMarkerAccountResults(addrs ...sdk.AccAddress) *MockMarkerKeeper {
+	for _, addr := range addrs {
+		k.IsMarkerAccountResults[string(addr)] = true
+	}
+	return k
+}
+
+// ClearResults clears previously recorded calls but leaves the desired results intact.
+func (k *MockMarkerKeeper) ClearResults() {
+	k.IsMarkerAccountCalls = nil
+}
+
+// AssertIsMarkerAccountCalls asserts that calls made to IsMarkerAccount are as expected.
+func (k *MockMarkerKeeper) AssertIsMarkerAccountCalls(t *testing.T, exp []sdk.AccAddress) bool {
+	t.Helper()
+	act := k.IsMarkerAccountCalls
+	if assert.Equal(t, exp, act, "Addrs provided to IsMarkerAccount") {
+		return true
+	}
+	expStrs := addrsCastToStrings(exp)
+	actStrs := addrsCastToStrings(act)
+	assert.Equal(t, expStrs, actStrs, "Addrs (as strings) provided to IsMarkerAccount")
+	return false
+}
+
+func (k *MockMarkerKeeper) GetMarkerByDenom(_ sdk.Context, _ string) (markertypes.MarkerAccountI, error) {
+	panic("MockMarkerKeeper.GetMarkerByDenom not implemented")
+}
+
+func (k *MockMarkerKeeper) IsMarkerAccount(_ sdk.Context, addr sdk.AccAddress) bool {
+	k.IsMarkerAccountCalls = append(k.IsMarkerAccountCalls, addr)
+	return k.IsMarkerAccountResults[string(addr)]
+}
 
 // ensure that the MockBankKeeper implements keeper.BankKeeper.
 var _ keeper.BankKeeper = (*MockBankKeeper)(nil)
