@@ -36,12 +36,12 @@ func TestSendRestrictionFn(t *testing.T) {
 	ctxP := func(ctx sdk.Context) *sdk.Context {
 		return &ctx
 	}
-	owner := sdk.AccAddress("owner_address_______")
+	owner := sdk.AccAddress("owner_address_______") // cosmos1damkuetjtaskgerjv4ehxh6lta047h6l54ft8x
 	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, owner))
 	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, "kyc.provenance.io", owner, false), "SetNameRecord kyc.provenance.io")
 	require.NoError(t, app.NameKeeper.SetNameRecord(ctx, "not-kyc.provenance.io", owner, false), "SetNameRecord not-kyc.provenance.io")
 
-	addrWithAttrs := sdk.AccAddress("addr_with_attributes")
+	addrWithAttrs := sdk.AccAddress("addr_with_attributes") // cosmos1v9jxgujlwa5hg6zlv968gunfvf6hgetn0pdywn
 	addrWithAttrsStr := addrWithAttrs.String()
 	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx,
 		attrTypes.Attribute{
@@ -62,19 +62,20 @@ func TestSendRestrictionFn(t *testing.T) {
 		owner,
 	), "SetAttribute not-kyc.provenance.io")
 
-	addrWithoutAttrs := sdk.AccAddress("addr_without_attribs")
-	addrWithTransfer := sdk.AccAddress("addr_with_transfer__")
-	addrWithForceTransfer := sdk.AccAddress("addr_with_force_tran")
-	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")
-	addrWithWithdraw := sdk.AccAddress("addrWithWithdraw____")
-	addrWithTranDep := sdk.AccAddress("addrWithTranDep_____")
-	addrWithTranWithdraw := sdk.AccAddress("addrWithTranWithdraw")
-	addrWithTranDepWithdraw := sdk.AccAddress("addrWithTranDepWithd")
-	addrWithDepWithdraw := sdk.AccAddress("addrWithDepWithdraw_")
-	addrWithDenySend := sdk.AccAddress("addrWithDenySend_____")
-	addrOther := sdk.AccAddress("addrOther___________")
+	addrWithoutAttrs := sdk.AccAddress("addr_without_attribs")        // cosmos1v9jxgujlwa5hg6r0w4697ct5w3exjcnnex0ue3
+	addrWithTransfer := sdk.AccAddress("addr_with_transfer__")        // cosmos1v9jxgujlwa5hg6zlw3exzmnnvejhyh6l0estr5
+	addrWithForceTransfer := sdk.AccAddress("addr_with_force_tran")   // cosmos1v9jxgujlwa5hg6zlvehhycm9ta68yctwk3cx3n
+	addrWithDeposit := sdk.AccAddress("addrWithDeposit_____")         // cosmos1v9jxgujhd96xs3r9wphhx6t5ta047h6lkfv2e0
+	addrWithWithdraw := sdk.AccAddress("addrWithWithdraw____")        // cosmos1v9jxgujhd96xs4mfw35xgunpwa047h6lf5yvu2
+	addrWithTranDep := sdk.AccAddress("addrWithTranDep_____")         // cosmos1v9jxgujhd96xs4rjv9hygetsta047h6lvx7ley
+	addrWithTranWithdraw := sdk.AccAddress("addrWithTranWithdraw")    // cosmos1v9jxgujhd96xs4rjv9h9w6t5dpj8ycth4fy3dc
+	addrWithTranDepWithdraw := sdk.AccAddress("addrWithTranDepWithd") // cosmos1v9jxgujhd96xs4rjv9hygets2a5hg6ry5lx6jm
+	addrWithDepWithdraw := sdk.AccAddress("addrWithDepWithdraw_")     // cosmos1v9jxgujhd96xs3r9wptkjargv3exza6lsjke8w
+	addrWithDenySend := sdk.AccAddress("addrWithDenySend____")        // cosmos1v9jxgujhd96xs3r9deu4xetwv3047h6lttsvaa
+	addrOther := sdk.AccAddress("addrOther___________")               // cosmos1v9jxguj0w35x2ujlta047h6lta047h6ldtkks6
+	addrOther2 := sdk.AccAddress("addrOther2__________")              // cosmos1v9jxguj0w35x2u3jta047h6lta047h6lucvw6t
 
-	addrFeeCollector := app.MarkerKeeper.GetFeeCollectorAddr()
+	addrFeeCollector := app.MarkerKeeper.GetFeeCollectorAddr() // cosmos17xpfvakm2amg962yls6f84z3kell8c5lserqta
 	bypassAddrs := app.MarkerKeeper.GetReqAttrBypassAddrs()
 	var addrWithBypass, addrWithBypassNoDep sdk.AccAddress
 	for _, addr := range bypassAddrs {
@@ -147,11 +148,11 @@ func TestSendRestrictionFn(t *testing.T) {
 
 	}
 
-	nrDenom := "nonrestrictedmarker"
+	nrDenom := "nonrestrictedmarker" // cosmos1kfpnkyu2vln5ywrhhvuwdy5pe9an5krxm09mzm
 	nrMarker := newMarker(nrDenom, coin, nil)
 
 	// Create a marker similar to the ones we use for hash grants.
-	gDenom := "grantmarker"
+	gDenom := "grantmarker" // cosmos1j6pqqrczarugl3zxunvnwgsrq04rzm9wujnlj4
 	gMarker := newMarkerAcc(gDenom, coin, nil)
 	gMarker.Supply = sdkmath.ZeroInt()
 	gMarker.AccessControl = []types.AccessGrant{
@@ -159,20 +160,21 @@ func TestSendRestrictionFn(t *testing.T) {
 			types.Access_Mint, types.Access_Admin,
 			types.Access_Deposit, types.Access_Withdraw}}}
 	gMarker = createActiveMarker(gMarker)
-	denomOther := "othercoin"
+
+	denomOther := "othercoin" // cosmos17hpvvkergxjys0mlsdy9s8r2r3hksl3fsffn94 (if it were a marker account).
 	// And throw some other funds in there.
 	require.NoError(t,
 		testutil.FundAccount(types.WithBypass(ctx), app.BankKeeper, gMarker.GetAddress(), cz(c(5000, denomOther))),
 		"Adding funds to %s marker account", gDenom)
 
-	rDenomNoAttr := "restrictedmarkernoreqattributes"
+	rDenomNoAttr := "restrictedmarkernoreqattributes" // cosmos1y4lw4mu35znxeuu00t2waemytpprkv9kazmkp2
 	rMarkerNoAttr := newMarker(rDenomNoAttr, restricted, nil)
 	app.MarkerKeeper.AddSendDeny(ctx, rMarkerNoAttr.GetAddress(), addrWithDenySend)
 
-	rDenom1AttrNoOneHas := "restrictedmarkerreqattributes2"
+	rDenom1AttrNoOneHas := "restrictedmarkerreqattributes2" // cosmos1up7jx7k307r926gcaqnylnqm9nj9vukc90z6u4
 	newMarker(rDenom1AttrNoOneHas, restricted, []string{"some.attribute.that.i.require"})
 
-	rDenom1Attr := "restrictedmarkerreqattributes3"
+	rDenom1Attr := "restrictedmarkerreqattributes3" // cosmos13h8gqljs4yz8v6duauce47aw2cqnz5njf46sl9
 	rMarker1Attr := newMarker(rDenom1Attr, restricted, []string{"kyc.provenance.io"})
 	require.NoError(t, app.AttributeKeeper.SetAttribute(ctx,
 		attrTypes.Attribute{
@@ -184,13 +186,13 @@ func TestSendRestrictionFn(t *testing.T) {
 		owner,
 	), "SetAttribute kyc.provenance.io")
 
-	rDenom2Attrs := "restrictedmarkerreqattributes4"
+	rDenom2Attrs := "restrictedmarkerreqattributes4" // cosmos1qnp4x74tlzz5w9any3etx0erhl92ufk9pfwtv2
 	rMarker2Attrs := newMarker(rDenom2Attrs, restricted, []string{"kyc.provenance.io", "not-kyc.provenance.io"})
 
-	rDenom3Attrs := "restrictedmarkerreqattributes5"
+	rDenom3Attrs := "restrictedmarkerreqattributes5" // cosmos15jcvmcvecjxysdemd2t9qvy5wp8ak28z8sgcnn
 	newMarker(rDenom3Attrs, restricted, []string{"kyc.provenance.io", "not-kyc.provenance.io", "foo.provenance.io"})
 
-	rDenomProposed := "stillproposed"
+	rDenomProposed := "stillproposed" // cosmos1cjq467qkvef5gu4nczt42fl3q8pgmrnesx4647
 	rMarkerProposed := newProposedMarker(rDenomProposed, restricted, nil)
 
 	noAccessErr := func(addr sdk.AccAddress, role types.Access, denom string) string {
@@ -584,7 +586,7 @@ func TestSendRestrictionFn(t *testing.T) {
 			amt:  cz(c(3, rDenomNoAttr)),
 		},
 		{
-			name: "with admin: does not have transfer: okay otherwise",
+			name: "with admin: does not have transfer, but from does",
 			ctx:  ctxP(types.WithTransferAgents(ctx, addrOther)),
 			from: owner,
 			to:   addrWithAttrs,
@@ -593,6 +595,28 @@ func TestSendRestrictionFn(t *testing.T) {
 		{
 			name: "with admin: has transfer: would otherwise fail",
 			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTransfer)),
+			from: addrWithDenySend,
+			to:   addrWithAttrs,
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name:   "with two admins: neither has transfer",
+			ctx:    ctxP(types.WithTransferAgents(ctx, addrWithDeposit, addrWithWithdraw)),
+			from:   addrOther,
+			to:     addrWithAttrs,
+			amt:    cz(c(1, rDenomNoAttr)),
+			expErr: addrOther.String() + " does not have transfer permissions for " + rDenomNoAttr,
+		},
+		{
+			name: "with two admins: first has transfer",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTransfer, addrWithWithdraw)),
+			from: addrWithDenySend,
+			to:   addrWithAttrs,
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "with two admins: second has transfer",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithDeposit, addrWithTransfer)),
 			from: addrWithDenySend,
 			to:   addrWithAttrs,
 			amt:  cz(c(1, rDenomNoAttr)),
@@ -648,6 +672,90 @@ func TestSendRestrictionFn(t *testing.T) {
 		{
 			name: "from marker to marker: admin has transfer and deposit and withdraw",
 			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTranDepWithdraw)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: transfer, deposit, withdraw",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTransfer, addrWithDeposit, addrWithWithdraw)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: transfer, withdraw, deposit",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTransfer, addrWithWithdraw, addrWithDeposit)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: withdraw, transfer, deposit",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithWithdraw, addrWithTransfer, addrWithDeposit)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: withdraw, deposit, transfer",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithWithdraw, addrWithDeposit, addrWithTransfer)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: deposit, withdraw, transfer",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithDeposit, addrWithWithdraw, addrWithTransfer)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: deposit, transfer, withdraw",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithDeposit, addrWithTransfer, addrWithWithdraw)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: trans+dep+withdraw, none, none",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTranDepWithdraw, addrOther, addrOther2)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: none, trans+dep+withdraw, none",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrOther, addrWithTranDepWithdraw, addrOther2)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: none, none, trans+dep+withdraw",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrOther, addrOther2, addrWithTranDepWithdraw)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: trans+dep, withdraw, none",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTranDep, addrWithWithdraw, addrOther)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "from marker to marker: 3 admins: none, trans+withdraw, dep",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrOther, addrWithTranWithdraw, addrWithDeposit)),
+			from: rMarker1Attr.GetAddress(),
+			to:   rMarker2Attrs.GetAddress(),
+			amt:  cz(c(1, rDenomNoAttr)),
+		},
+		{
+			name: "trans, none, dep+withdraw",
+			ctx:  ctxP(types.WithTransferAgents(ctx, addrWithTransfer, addrOther, addrWithDepWithdraw)),
 			from: rMarker1Attr.GetAddress(),
 			to:   rMarker2Attrs.GetAddress(),
 			amt:  cz(c(1, rDenomNoAttr)),
