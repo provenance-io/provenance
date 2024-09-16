@@ -109,13 +109,13 @@ flowchart TD
     qhasbp{{"Does context have bypass, or is the Sender either\nthe marker module or ibc transfer account?"}}
     qfc{{"Is the Receiver the fee collector?"}}
     qrc{{"Is there a restricted coin in the Amount?"}}
-    gta["Get Transfer Agent from the context if possible."]
-    csm[["checkSenderMarker(Sender, Transfer Agent)"]]
+    gta["Get Transfer Agents from the context if possible."]
+    csm[["checkSenderMarker(Sender, Transfer Agents)"]]
     issmok{{"Proceed?"}}
-    crm[["checkReceiverMarker(Receiver, Sender, Transfer Agent)"]]
+    crm[["checkReceiverMarker(Receiver, Sender, Transfer Agents)"]]
     isrmok{{"Proceed?"}}
     nextd["Get next Denom from Amount."]
-    vsd[["validateSendDenom(Sender, Receiver, Denom)"]]
+    vsd[["validateSendDenom(Sender, Receiver, Denom, Transfer Agents)"]]
     isdok{{"Is Denom transfer allowed?"}}
     mored{{"Does Amount have another Denom?"}}
     ok(["Send allowed."])
@@ -157,11 +157,10 @@ This flow checks that, if this is a withdrawal, nothing (yet) prevents the send.
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
-    start[["checkSenderMarker(Sender, Transfer Agent)"]]
+    start[["checkSenderMarker(Sender, Transfer Agents)"]]
     issm{{"Is Sender a marker?"}}
     isfg{{"Is a fee grant in use?"}}
-    haveta{{"Is there a Transfer Agent?"}}
-    istaw{{"Does the Transfer Agent\nhave withdraw access?"}}
+    istaw{{"Does a Transfer Agent\nhave withdraw access?"}}
     isasm{{"Does the Amount have\nthe Sender marker's denom?"}}
     issma{{"Is Sender marker active?"}}
     ok(["Proceed."])
@@ -170,9 +169,7 @@ flowchart TD
     style denied fill:#ffaaaa,stroke:#b30000,stroke-width:3px
     start --> issm
     issm -->|yes| isfg
-    isfg -->|no| haveta
-    haveta -->|yes| istaw
-    haveta -.->|no| denied
+    isfg -->|no| istaw
     istaw -.->|no| denied
     istaw -->|yes| isasm
     isfg -->|yes| isasm
@@ -181,8 +178,8 @@ flowchart TD
     isasm -.->|no| ok
     issma -.->|no| denied
     issm -.->|no| ok
-    linkStyle 4,5,11 stroke:#b30000,color:#b30000
-    linkStyle 9,10,12 stroke:#1b8500,color:#1b8500
+    linkStyle 3,9 stroke:#b30000,color:#b30000
+    linkStyle 7,8,10 stroke:#1b8500,color:#1b8500
 ```
 
 #### checkReceiverMarker
@@ -192,11 +189,11 @@ This flow checks that, if this is a deposit, nothing (yet) prevents the send. It
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
-    start[["checkReceiverMarker(Receiver, Sender, Transfer Agent)"]]
+    start[["checkReceiverMarker(Receiver, Sender, Transfer Agents)"]]
     issm{{"Is Receiver a restricted marker?"}}
-    haveta{{"Is there a Transfer Agent?"}}
+    haveta{{"Are there a Transfer Agents?"}}
     isrd{{"Does Sender\nhave deposit access?"}}
-    istad{{"Does Transfer Agent\nhave deposit access?"}}
+    istad{{"Does a Transfer Agent\nhave deposit access?"}}
     ok(["Proceed."])
     style ok fill:#bbffaa,stroke:#1b8500,stroke-width:3px
     denied(["Send denied."])
@@ -221,7 +218,7 @@ Each `Denom` is checked using `validateSendDenom`, which has this flow. It is us
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart TD
-    start[["validateSendDenom(Sender, Receiver, Denom)"]]
+    start[["validateSendDenom(Sender, Receiver, Denom, Transfer Agents)"]]
     isdm{{"Is there a marker for Denom?"}}
     isma{{"Is the marker active?"}}
     qisrc{{"Is Denom a restricted coin?"}}
@@ -331,8 +328,8 @@ If the `Receiver` is a quarantined account, we can assume that it is neither a m
 ```mermaid
 %%{ init: { 'flowchart': { 'curve': 'monotoneY'} } }%%
 flowchart LR
-    vsd[["validateSendDenom(Sender, Receiver, Denom)"]]
-    transq{{"Does Sender have\ntransfer for Denom?"}}
+    vsd[["validateSendDenom(Sender, Receiver, Denom, Transfer Agents)"]]
+    transq{{"Does Sender or a transfer agent\n have transfer for Denom?"}}
     mreqattr{{"Does Denom have\nrequired attributes?"}}
     treqattr{{"Does Receiver have\nthose attributes?"}}
     ok(["Denom transfer allowed."])
