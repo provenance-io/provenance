@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -422,46 +423,103 @@ func (k Keeper) validateSmartContractSigners(ctx sdk.Context, usedSigners UsedSi
 	return nil
 }
 
-// ValidateScopeValueOwnerSigned makes sure that the existing address is a signer of the msg, possibly via authz.
-// If the provided existing address is empty or equals proposed, nothing is checked and no error is returned.
-func (k Keeper) ValidateScopeValueOwnerSigned(
+// ValidateScopeValueOwnersSigners ensures that all of the existingOwners are signers of the provided msg for the purposes
+// of updating a value owner. Returns the list of possible transfer agents and a map indicating which signers were used.
+func (k Keeper) ValidateScopeValueOwnersSigners(
 	ctx sdk.Context,
-	existing string,
+	existingOwners []sdk.AccAddress,
 	proposed string,
 	msg types.MetadataMsg,
-) (UsedSignersMap, error) {
-	if len(existing) == 0 || existing == proposed {
-		return NewUsedSignersMap(), nil
+) ([]sdk.AccAddress, UsedSignersMap, error) {
+	if len(existingOwners) == 0 {
+		return nil, nil, nil
 	}
-	signers := msg.GetSignerStrs()
-	for _, signer := range signers {
-		if existing == signer {
-			return NewUsedSignersMap().Use(signer), nil
+	if len(existingOwners) == 1 && existingOwners[0].String() == proposed {
+		return nil, nil, nil
+	}
+
+	signerStrs := msg.GetSignerStrs()
+	if len(signerStrs) == 0 {
+		return nil, nil, errors.New("no signers provided")
+	}
+
+	// If the first signer is a smart contract, ignore all other signers in the msg.
+	// Only the existing value owner is allowed to change the value owner (regardless of the scope's parties).
+	// If it's a smart contract doing this, it'll be the first signer provided, and we ignore all other signers.
+	// So the smart contract must either be the existing owner or else all existing owners must have an authz
+	// grant for it. It's probably not a good idea to authz grant a smart contract though, but it's allowed.
+	var signerAccs []sdk.AccAddress
+	signer0, err := sdk.AccAddressFromBech32(signerStrs[0])
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid signer address %q: %w", signerStrs[0], err)
+	}
+	if k.isWasmAccount(ctx, signer0) {
+		signerAccs = make([]sdk.AccAddress, 1)
+		if len(signerStrs) > 1 {
+			signerStrs = signerStrs[:1]
 		}
+	} else {
+		signerAccs = make([]sdk.AccAddress, len(signerStrs))
 	}
-
-	// If it's a marker address, there's no way it signed, but we'll provide the signers
-	// as transfer agents with the SendCoins. That will allow the marker module to correctly
-	// check for deposit or withdraw among the signers and return an error then if appropriate.
-	if k.IsMarkerAddr(ctx, existing) {
-		return NewUsedSignersMap(), nil
-	}
-
-	// Not a signer. Check with authz for help.
-	// If existing isn't a bech32, we just skip the authz check. Should only happen in unit tests.
-	granter, err := sdk.AccAddressFromBech32(existing)
-	if err == nil {
-		grantees := NewSignersWrapper(signers).Accs()
-		grantee, err := k.findAuthzGrantee(ctx, granter, grantees, msg)
+	signerAccs[0] = signer0
+	for i := 1; i < len(signerStrs); i++ {
+		signerStr := signerStrs[i]
+		signerAccs[i], err = sdk.AccAddressFromBech32(signerStr)
 		if err != nil {
-			return nil, fmt.Errorf("authz error with existing value owner %q: %w", existing, err)
-		}
-		if len(grantee) > 0 {
-			return NewUsedSignersMap().Use(grantee.String()), nil
+			return nil, nil, fmt.Errorf("invalid signer[%d] address %q: %w", i, signerStr, err)
 		}
 	}
 
-	return nil, fmt.Errorf("missing signature from existing value owner %s", existing)
+	var transferAgents []sdk.AccAddress
+	usedSigners := NewUsedSignersMap()
+	for _, existing := range existingOwners {
+		// If it's empty, there's nothing to check.
+		if len(existing) == 0 {
+			continue
+		}
+
+		// If the required signer is the same as the proposed value, there's no change, so a signer isn't needed.
+		reqStr := existing.String()
+		if reqStr == proposed {
+			continue
+		}
+
+		// If it's one of the signers, there's nothing more to check for this one.
+		if containsAddr(signerAccs, existing) {
+			usedSigners.Use(reqStr)
+			continue
+		}
+
+		// If it's a marker address, there's no way it signed, but we'll later provide the signers
+		// as transfer agents with SendCoins. That will allow the marker module to correctly
+		// check for deposit or withdraw among the signers and return an error then if appropriate.
+		if k.IsMarkerAddr(ctx, reqStr) {
+			transferAgents = signerAccs
+			continue
+		}
+
+		// Not a direct signer, and not a marker. Check with authz for an applicable grant.
+		grantee, authzErr := k.findAuthzGrantee(ctx, existing, signerAccs, msg)
+		if authzErr != nil {
+			return nil, nil, fmt.Errorf("authz error with existing value owner %q: %w", reqStr, authzErr)
+		}
+		if len(grantee) == 0 {
+			return nil, nil, fmt.Errorf("missing signature from existing value owner %q", reqStr)
+		}
+		usedSigners.Use(grantee.String())
+	}
+
+	return transferAgents, usedSigners, nil
+}
+
+// containsAddr returns true if the addr toFind is equal to one (or more) of the provided addrs, false otherwise.
+func containsAddr(addrs []sdk.AccAddress, toFind sdk.AccAddress) bool {
+	for _, addr := range addrs {
+		if toFind.Equals(addr) {
+			return true
+		}
+	}
+	return false
 }
 
 // ValidateSignersWithoutParties makes sure that each entry in the required list are either signers of the msg,

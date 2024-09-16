@@ -160,7 +160,8 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 		name     string
 		existing *types.Scope
 		msg      *types.MsgWriteScopeRequest
-		exp      string
+		expAddrs []sdk.AccAddress
+		expErr   string
 	}{
 		{
 			// Alice makes a call to the Sam that causes Sam to try to change Bob's Scope's value owner to Alice.
@@ -169,7 +170,7 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 			name:     "smart contract updating value owner of wrong scope",
 			existing: newScope(addrBob),
 			msg:      newMsg(addrAlice, addrSam.String(), addrAlice.String()),
-			exp:      "",
+			expErr:   "",
 		},
 		{
 			// Bob makes a call to Sam to do stuff that causes Sam to try to change Alice's Scope's value owner to Bob.
@@ -177,28 +178,28 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 			name:     "smart contract updating value owner of other scope but invoker is authorized",
 			existing: newScope(addrAlice),
 			msg:      newMsg(addrBob, addrSam.String(), addrBob.String()),
-			exp:      "",
+			expErr:   "",
 		},
 		{
 			// If the value owner is the smart contract, it can be updated to Alice by Alice invoking the smart contract
 			name:     "value owner is smart contract updating to invoker",
 			existing: newScope(addrSam),
 			msg:      newMsg(addrAlice, addrSam.String(), addrAlice.String()),
-			exp:      "",
+			expErr:   "",
 		},
 		{
 			// If the value owner is the smart contract, it can be updated to Bob by Alice invoking the smart contract
 			name:     "value owner is smart contract updating to non-invoker",
 			existing: newScope(addrSam),
 			msg:      newMsg(addrBob, addrSam.String(), addrAlice.String()),
-			exp:      "",
+			expErr:   "",
 		},
 		{
 			// If the value owner is the smart contract, it can be updated to Alice by Bob invoking the smart contract
 			name:     "value owner is smart contract updating to non-invoker with authz",
 			existing: newScope(addrSam),
 			msg:      newMsg(addrAlice, addrSam.String(), addrBob.String()),
-			exp:      "",
+			expErr:   "",
 		},
 	}
 
@@ -211,8 +212,10 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 				defer WriteTempScope(s.T(), s.app.MetadataKeeper, s.FreshCtx(), *tc.existing)()
 			}
 
-			err := mdKeeper.ValidateWriteScope(s.FreshCtx(), tc.msg)
-			s.AssertErrorValue(err, tc.exp, "ValidateWriteScope")
+			// TODO[2137]: Update the test cases to set the expAddrs values, and maybe a negative test case or two.
+			addrs, err := mdKeeper.ValidateWriteScope(s.FreshCtx(), tc.msg)
+			s.AssertErrorValue(err, tc.expErr, "error from ValidateWriteScope")
+			s.Assert().Equal(tc.expAddrs, addrs, "addresses from ValidateWriteScope")
 		})
 	}
 }

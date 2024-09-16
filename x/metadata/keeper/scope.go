@@ -400,14 +400,14 @@ func (k Keeper) indexScope(store storetypes.KVStore, newScope, oldScope *types.S
 }
 
 // ValidateWriteScope checks the current scope and the proposed scope to determine if the proposed changes are valid
-// based on the existing state
+// based on the existing state. Returns the addresses allowed to act as transfer agents.
 func (k Keeper) ValidateWriteScope(
 	ctx sdk.Context,
 	msg *types.MsgWriteScopeRequest,
-) error {
+) ([]sdk.AccAddress, error) {
 	proposed := msg.Scope
 	if err := proposed.ValidateBasic(); err != nil {
-		return err
+		return nil, err
 	}
 
 	var existing *types.Scope
@@ -418,20 +418,22 @@ func (k Keeper) ValidateWriteScope(
 	// If the scope does not exist yet, there MUST be a proposed value owner.
 	// TODO[2137]: Re-evaluate whether we should require a value owner when creating a scope.
 	if existing == nil && len(proposed.ValueOwnerAddress) == 0 {
-		return errors.New("a value owner is required to create a scope")
+		return nil, errors.New("a value owner is required to create a scope")
 	}
 	// If the scope already exists:
 	//   - Lack of a proposed value owner means there is no desired change to it and we don't need to look it up.
 	//   - Presence of a proposed value owner means we need to look up the existing one
 	//     and require them to be a signer iff it's different from the proposed value owner.
+	var existingVOAddrs []sdk.AccAddress
 	if existing != nil && len(proposed.ValueOwnerAddress) > 0 {
 		vo, err := k.GetScopeValueOwner(ctx, proposed.ScopeId)
 		if err != nil {
-			return fmt.Errorf("error identifying current value owner of %q: %w", proposed.ScopeId, err)
+			return nil, fmt.Errorf("error identifying current value owner of %q: %w", proposed.ScopeId, err)
 		}
 		// It is possible for older scopes to not have a value owner.
 		if len(vo) > 0 {
 			existing.ValueOwnerAddress = vo.String()
+			existingVOAddrs = append(existingVOAddrs, vo)
 		}
 	}
 
@@ -439,10 +441,8 @@ func (k Keeper) ValidateWriteScope(
 	// Signatures from existing owners are required if:
 	//   - Anything other than the value owner is changing.
 	//   - There's a proposed value owner and the scope exists, but does not yet have a value owner.
-	existingValueOwner := ""
 	onlyChangeIsValueOwner := false
 	if existing != nil && len(existing.ValueOwnerAddress) > 0 && existing.ValueOwnerAddress != proposed.ValueOwnerAddress {
-		existingValueOwner = existing.ValueOwnerAddress
 		// Make a copy of proposed scope and set its value owner to the existing one. If it then
 		// equals the existing scope, then the only change in proposed is to the value owner field.
 		proposedCopy := proposed
@@ -456,14 +456,14 @@ func (k Keeper) ValidateWriteScope(
 	if !onlyChangeIsValueOwner {
 		scopeSpec, found := k.GetScopeSpecification(ctx, proposed.SpecificationId)
 		if !found {
-			return fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
+			return nil, fmt.Errorf("scope specification %s not found", proposed.SpecificationId)
 		}
 
 		if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
-			return err
+			return nil, err
 		}
 		if err = k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Owners)); err != nil {
-			return err
+			return nil, err
 		}
 
 		// Make sure everyone has signed.
@@ -474,7 +474,7 @@ func (k Keeper) ValidateWriteScope(
 			//   - Value owner signer restrictions are applied.
 			if existing != nil && !existing.Equals(proposed) {
 				if validatedParties, err = k.validateAllRequiredSigned(ctx, existing.GetAllOwnerAddresses(), msg); err != nil {
-					return err
+					return nil, err
 				}
 			}
 		} else {
@@ -487,27 +487,30 @@ func (k Keeper) ValidateWriteScope(
 			// Note: This means that a scope can be initially written without consideration for signers and roles.
 			if existing != nil {
 				if validatedParties, err = k.validateAllRequiredPartiesSigned(ctx, existing.Owners, existing.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
-					return err
+					return nil, err
 				}
 			}
 		}
 	}
 
-	usedSigners, err := k.ValidateScopeValueOwnerSigned(ctx, existingValueOwner, proposed.ValueOwnerAddress, msg)
+	transferAgents, usedSigners, err := k.ValidateScopeValueOwnersSigners(ctx, existingVOAddrs, proposed.ValueOwnerAddress, msg)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	usedSigners.AlsoUse(GetUsedSigners(validatedParties))
-	return k.validateSmartContractSigners(ctx, usedSigners, msg)
+	if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
+		return nil, err
+	}
+	return transferAgents, nil
 }
 
 // ValidateDeleteScope checks the current scope and the proposed removal scope to determine if the proposed remove is valid
 // based on the existing state
-func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRequest) error {
-	scope, found := k.GetScopeWithValueOwner(ctx, msg.ScopeId)
+func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRequest) ([]sdk.AccAddress, error) {
+	scope, found := k.GetScope(ctx, msg.ScopeId)
 	if !found {
-		return fmt.Errorf("scope not found with id %s", msg.ScopeId)
+		return nil, fmt.Errorf("scope not found with id %s", msg.ScopeId)
 	}
 
 	var err error
@@ -521,7 +524,7 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 		//   - Value owner signer restrictions are applied.
 		// We don't care about the first one here.
 		if validatedParties, err = k.validateAllRequiredSigned(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
-			return err
+			return nil, err
 		}
 	} else {
 		// New:
@@ -534,22 +537,37 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 		scopeSpec, specFound := k.GetScopeSpecification(ctx, scope.SpecificationId)
 		if !specFound {
 			if validatedParties, err = k.validateAllRequiredSigned(ctx, types.GetRequiredPartyAddresses(scope.Owners), msg); err != nil {
-				return err
+				return nil, err
 			}
 		} else {
 			if validatedParties, err = k.validateAllRequiredPartiesSigned(ctx, scope.Owners, scope.Owners, scopeSpec.PartiesInvolved, msg); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
-	usedSigners, err := k.ValidateScopeValueOwnerSigned(ctx, scope.ValueOwnerAddress, "", msg)
+	var existingVOAddrs []sdk.AccAddress
+	vo, err := k.GetScopeValueOwner(ctx, scope.ScopeId)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("error identifying current value owner of %q: %w", scope.ScopeId, err)
+	}
+	// It is possible for older scopes to not have a value owner.
+	if len(vo) > 0 {
+		scope.ValueOwnerAddress = vo.String()
+		existingVOAddrs = append(existingVOAddrs, vo)
+	}
+
+	transferAgents, usedSigners, err := k.ValidateScopeValueOwnersSigners(ctx, existingVOAddrs, "", msg)
+	if err != nil {
+		return nil, err
 	}
 
 	usedSigners.AlsoUse(GetUsedSigners(validatedParties))
-	return k.validateSmartContractSigners(ctx, usedSigners, msg)
+	err = k.validateSmartContractSigners(ctx, usedSigners, msg)
+	if err != nil {
+		return nil, err
+	}
+	return transferAgents, err
 }
 
 // ValidateSetScopeAccountData makes sure that the msg signers have proper authority to
@@ -761,10 +779,11 @@ func (k Keeper) ValidateUpdateScopeOwners(
 
 // ValidateUpdateValueOwners checks that the signer(s) of the provided msg are authorized to change the value owner
 // of the scopes in the links provided. Also checks that the provided links are valid.
-// Returns the validated signer addresses.
+// Returns the transfer agents available for the SendCoins.
 func (k Keeper) ValidateUpdateValueOwners(
 	ctx sdk.Context,
 	links types.AccMDLinks,
+	proposed string,
 	msg types.MetadataMsg,
 ) ([]sdk.AccAddress, error) {
 	if len(links) == 0 {
@@ -774,73 +793,8 @@ func (k Keeper) ValidateUpdateValueOwners(
 		return nil, err
 	}
 
-	signerStrs := msg.GetSignerStrs()
-	if len(signerStrs) == 0 {
-		return nil, errors.New("no signers provided")
-	}
-
-	// If the first signer is a smart contract, ignore all other signers provided.
-	// This is different from the other metadata signers stuff because we don't have any permissions to check.
-	// We just need to make sure all existing value owners have signed (or given authority with authz).
-	// If it's a smart contract doing this, then all needed signers must have an authz grant for the given
-	// smart contract. It's probably not a good idea to authz grant a smart contract though, but it's allowed.
-	var signerAccs []sdk.AccAddress
-	signer0, err := sdk.AccAddressFromBech32(signerStrs[0])
-	if err != nil {
-		return nil, fmt.Errorf("invalid signer address %q: %w", signerStrs[0], err)
-	}
-	if k.isWasmAccount(ctx, signer0) {
-		signerAccs = make([]sdk.AccAddress, 1)
-		if len(signerStrs) > 1 {
-			signerStrs = signerStrs[:1]
-		}
-	} else {
-		signerAccs = make([]sdk.AccAddress, len(signerStrs))
-	}
-	signerAccs[0] = signer0
-
-	for i := 1; i < len(signerStrs); i++ {
-		signerStr := signerStrs[i]
-		signerAccs[i], err = sdk.AccAddressFromBech32(signerStr)
-		if err != nil {
-			return nil, fmt.Errorf("invalid signer[%d] address %q: %w", i, signerStr, err)
-		}
-	}
-
-	reqSigners := links.GetAccAddrs()
-	for _, req := range reqSigners {
-		if containsAddr(req, signerAccs) {
-			continue
-		}
-
-		// If it's a marker address, there's no way it signed, but we'll provide the signers
-		// as transfer agents with the SendCoins. That will allow the marker module to correctly
-		// check for deposit or withdraw among the signers and return an error then if appropriate.
-		if k.IsMarkerAddr(ctx, req.String()) {
-			continue
-		}
-
-		// Not a direct signer, and not a marker. Check with authz for an applicable grant.
-		grantee, err := k.findAuthzGrantee(ctx, req, signerAccs, msg)
-		if err != nil {
-			return nil, fmt.Errorf("authz error with existing value owner %q: %w", req.String(), err)
-		}
-		if len(grantee) == 0 {
-			return nil, fmt.Errorf("missing signature from existing value owner %q", req.String())
-		}
-	}
-
-	return signerAccs, nil
-}
-
-// containsAddr returns true if the addr toFind is equal to one (or more) of the provided addrs, false otherwise.
-func containsAddr(toFind sdk.AccAddress, addrs []sdk.AccAddress) bool {
-	for _, addr := range addrs {
-		if toFind.Equals(addr) {
-			return true
-		}
-	}
-	return false
+	transferAgents, _, err := k.ValidateScopeValueOwnersSigners(ctx, links.GetAccAddrs(), proposed, msg)
+	return transferAgents, err
 }
 
 // AddSetNetAssetValues adds a set of net asset values to a scope

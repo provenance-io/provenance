@@ -39,18 +39,19 @@ func (k msgServer) WriteScope(
 	//nolint:errcheck // the error was checked when msg.ValidateBasic was called before getting here.
 	msg.ConvertOptionalFields()
 
-	if err := k.ValidateWriteScope(ctx, msg); err != nil {
+	transferAgents, err := k.ValidateWriteScope(ctx, msg)
+	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
 	usdMills := sdkmath.NewIntFromUint64(msg.UsdMills)
 	nav := types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills))
-	err := k.AddSetNetAssetValues(ctx, msg.Scope.ScopeId, []types.NetAssetValue{nav}, types.ModuleName)
+	err = k.AddSetNetAssetValues(ctx, msg.Scope.ScopeId, []types.NetAssetValue{nav}, types.ModuleName)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	err = k.SetScope(WithSignersAsTransferAgents(ctx, msg), msg.Scope)
+	err = k.SetScope(markertypes.WithTransferAgents(ctx, transferAgents...), msg.Scope)
 	if err != nil {
 		return nil, fmt.Errorf("could not write scope %q: %w", msg.Scope.ScopeId, err)
 	}
@@ -67,11 +68,13 @@ func (k msgServer) DeleteScope(
 	defer telemetry.MeasureSince(time.Now(), types.ModuleName, "tx", "DeleteScope")
 	ctx := UnwrapMetadataContext(goCtx)
 
-	if err := k.ValidateDeleteScope(ctx, msg); err != nil {
+	transferAgents, err := k.ValidateDeleteScope(ctx, msg)
+	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	if err := k.RemoveScope(WithSignersAsTransferAgents(ctx, msg), msg.ScopeId); err != nil {
+	err = k.RemoveScope(markertypes.WithTransferAgents(ctx, transferAgents...), msg.ScopeId)
+	if err != nil {
 		return nil, fmt.Errorf("could not delete scope %q: %w", msg.ScopeId, err)
 	}
 
@@ -222,7 +225,7 @@ func (k msgServer) UpdateValueOwners(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	signers, err := k.ValidateUpdateValueOwners(ctx, links, msg)
+	signers, err := k.ValidateUpdateValueOwners(ctx, links, msg.ValueOwnerAddress, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
@@ -257,7 +260,7 @@ func (k msgServer) MigrateValueOwner(
 		return nil, sdkerrors.ErrNotFound.Wrapf("no scopes found with value owner %q", addr.String())
 	}
 
-	signers, err := k.ValidateUpdateValueOwners(ctx, links, msg)
+	signers, err := k.ValidateUpdateValueOwners(ctx, links, msg.Proposed, msg)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}

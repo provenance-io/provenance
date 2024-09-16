@@ -1210,6 +1210,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 		signers  []string
 		authzK   *MockAuthzKeeper
 		errorMsg string
+		expAddrs []sdk.AccAddress // TODO[2137]: Define this in each test case and make sure it's fully tested.
 	}{
 		{
 			name:     "nil previous, proposed throws address error",
@@ -1702,12 +1703,9 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				Signers: tc.signers,
 			}
 			// TODO[2137]: Set tc.existing in state so it can be retrieved.
-			err = s.app.MetadataKeeper.ValidateWriteScope(s.FreshCtx(), msg)
-			if len(tc.errorMsg) > 0 {
-				s.Assert().EqualError(err, tc.errorMsg, "ValidateWriteScope expected error")
-			} else {
-				s.Assert().NoError(err, "ValidateWriteScope unexpected error")
-			}
+			addrs, err := s.app.MetadataKeeper.ValidateWriteScope(s.FreshCtx(), msg)
+			s.AssertErrorValue(err, tc.errorMsg, "error from ValidateWriteScope")
+			s.Assert().Equal(tc.expAddrs, addrs, "addrs from ValidateWriteScope")
 		})
 	}
 }
@@ -1857,175 +1855,176 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		name     string
 		scope    types.Scope
 		signers  []string
-		expected string
+		expAddrs []sdk.AccAddress
+		expErr   string
 	}{
 		{
-			name:     "no value owner all signers",
-			scope:    scopeNoValueOwner,
-			signers:  []string{s.user1, s.user2},
-			expected: "",
+			name:    "no value owner all signers",
+			scope:   scopeNoValueOwner,
+			signers: []string{s.user1, s.user2},
+			expErr:  "",
 		},
 		{
-			name:     "no value owner all signers reversed",
-			scope:    scopeNoValueOwner,
-			signers:  []string{s.user1, s.user2},
-			expected: "",
+			name:    "no value owner all signers reversed",
+			scope:   scopeNoValueOwner,
+			signers: []string{s.user1, s.user2},
+			expErr:  "",
 		},
 		{
-			name:     "no value owner extra signer",
-			scope:    scopeNoValueOwner,
-			signers:  []string{s.user1, s.user2, s.user3},
-			expected: "",
+			name:    "no value owner extra signer",
+			scope:   scopeNoValueOwner,
+			signers: []string{s.user1, s.user2, s.user3},
+			expErr:  "",
 		},
 		{
-			name:     "no value owner missing signer 1",
-			scope:    scopeNoValueOwner,
-			signers:  []string{s.user2},
-			expected: missing1Sig(s.user1),
+			name:    "no value owner missing signer 1",
+			scope:   scopeNoValueOwner,
+			signers: []string{s.user2},
+			expErr:  missing1Sig(s.user1),
 		},
 		{
-			name:     "no value owner missing signer 2",
-			scope:    scopeNoValueOwner,
-			signers:  []string{s.user1},
-			expected: missing1Sig(s.user2),
+			name:    "no value owner missing signer 2",
+			scope:   scopeNoValueOwner,
+			signers: []string{s.user1},
+			expErr:  missing1Sig(s.user2),
 		},
 		{
-			name:     "no value owner no signers",
-			scope:    scopeNoValueOwner,
-			signers:  []string{},
-			expected: missing2Sigs(s.user1, s.user2),
+			name:    "no value owner no signers",
+			scope:   scopeNoValueOwner,
+			signers: []string{},
+			expErr:  missing2Sigs(s.user1, s.user2),
 		},
 		{
-			name:     "no value owner wrong signer",
-			scope:    scopeNoValueOwner,
-			signers:  []string{s.user3},
-			expected: missing2Sigs(s.user1, s.user2),
+			name:    "no value owner wrong signer",
+			scope:   scopeNoValueOwner,
+			signers: []string{s.user3},
+			expErr:  missing2Sigs(s.user1, s.user2),
 		},
 		{
-			name:     "marker value owner signed by owner and user with auth", // TODO[2137]: Figure out what to do with this case.
-			scope:    scopeMarkerValueOwner,
-			signers:  []string{s.user1, s.user2},
-			expected: "",
+			name:    "marker value owner signed by owner and user with auth", // TODO[2137]: Figure out what to do with this case.
+			scope:   scopeMarkerValueOwner,
+			signers: []string{s.user1, s.user2},
+			expErr:  "",
 		},
 		{
-			name:     "marker value owner signed by owner and user with auth reversed", // TODO[2137]: Figure out what to do with this case.
-			scope:    scopeMarkerValueOwner,
-			signers:  []string{s.user2, s.user1},
-			expected: "",
+			name:    "marker value owner signed by owner and user with auth reversed", // TODO[2137]: Figure out what to do with this case.
+			scope:   scopeMarkerValueOwner,
+			signers: []string{s.user2, s.user1},
+			expErr:  "",
 		},
 		{
-			name:     "marker value owner not signed by owner",
-			scope:    scopeMarkerValueOwner,
-			signers:  []string{s.user1},
-			expected: missing1Sig(s.user2),
+			name:    "marker value owner not signed by owner",
+			scope:   scopeMarkerValueOwner,
+			signers: []string{s.user1},
+			expErr:  missing1Sig(s.user2),
 		},
 		{
-			name:     "marker value owner not signed by user with auth", // TODO[2137]: Figure out what to do with this case.
-			scope:    scopeMarkerValueOwner,
-			signers:  []string{s.user2},
-			expected: fmt.Sprintf("missing signature for %s (testcoins2) with authority to withdraw/remove it as scope value owner", markerAddr),
+			name:    "marker value owner not signed by user with auth", // TODO[2137]: Figure out what to do with this case.
+			scope:   scopeMarkerValueOwner,
+			signers: []string{s.user2},
+			expErr:  fmt.Sprintf("missing signature for %s (testcoins2) with authority to withdraw/remove it as scope value owner", markerAddr),
 		},
 		{
-			name:     "user value owner signed by owner and value owner",
-			scope:    scopeUserValueOwner,
-			signers:  []string{s.user1, s.user2},
-			expected: "",
+			name:    "user value owner signed by owner and value owner",
+			scope:   scopeUserValueOwner,
+			signers: []string{s.user1, s.user2},
+			expErr:  "",
 		},
 		{
-			name:     "user value owner signed by owner and value owner reversed",
-			scope:    scopeUserValueOwner,
-			signers:  []string{s.user2, s.user1},
-			expected: "",
+			name:    "user value owner signed by owner and value owner reversed",
+			scope:   scopeUserValueOwner,
+			signers: []string{s.user2, s.user1},
+			expErr:  "",
 		},
 		{
-			name:     "user value owner not signed by owner",
-			scope:    scopeUserValueOwner,
-			signers:  []string{s.user1},
-			expected: missing1Sig(s.user2),
+			name:    "user value owner not signed by owner",
+			scope:   scopeUserValueOwner,
+			signers: []string{s.user1},
+			expErr:  missing1Sig(s.user2),
 		},
 		{
-			name:     "user value owner not signed by value owner",
-			scope:    scopeUserValueOwner,
-			signers:  []string{s.user2},
-			expected: fmt.Sprintf("missing signature from existing value owner %s", s.user1),
+			name:    "user value owner not signed by value owner",
+			scope:   scopeUserValueOwner,
+			signers: []string{s.user2},
+			expErr:  fmt.Sprintf("missing signature from existing value owner %s", s.user1),
 		},
 		{
-			name:     "scope does not exist",
-			scope:    types.Scope{ScopeId: dneScopeID},
-			signers:  []string{},
-			expected: fmt.Sprintf("scope not found with id %s", dneScopeID),
+			name:    "scope does not exist",
+			scope:   types.Scope{ScopeId: dneScopeID},
+			signers: []string{},
+			expErr:  fmt.Sprintf("scope not found with id %s", dneScopeID),
 		},
 		{
-			name:     "with rollup no scope spec neither req party signed",
-			scope:    scopeRollupNoSpecReq,
-			signers:  []string{otherUser},
-			expected: "missing signatures: " + s.user1 + ", " + s.user2 + "",
+			name:    "with rollup no scope spec neither req party signed",
+			scope:   scopeRollupNoSpecReq,
+			signers: []string{otherUser},
+			expErr:  "missing signatures: " + s.user1 + ", " + s.user2 + "",
 		},
 		{
-			name:     "with rollup no scope spec req party 1 not signed",
-			scope:    scopeRollupNoSpecReq,
-			signers:  []string{s.user2},
-			expected: "missing signature: " + s.user1,
+			name:    "with rollup no scope spec req party 1 not signed",
+			scope:   scopeRollupNoSpecReq,
+			signers: []string{s.user2},
+			expErr:  "missing signature: " + s.user1,
 		},
 		{
-			name:     "with rollup no scope spec req party 2 not signed",
-			scope:    scopeRollupNoSpecReq,
-			signers:  []string{s.user1},
-			expected: "missing signature: " + s.user2,
+			name:    "with rollup no scope spec req party 2 not signed",
+			scope:   scopeRollupNoSpecReq,
+			signers: []string{s.user1},
+			expErr:  "missing signature: " + s.user2,
 		},
 		{
-			name:     "with rollup no scope spec both req parties signed",
-			scope:    scopeRollupNoSpecReq,
-			signers:  []string{s.user1, s.user2},
-			expected: "",
+			name:    "with rollup no scope spec both req parties signed",
+			scope:   scopeRollupNoSpecReq,
+			signers: []string{s.user1, s.user2},
+			expErr:  "",
 		},
 		{
-			name:     "with rollup no scope spec all optional parties signer not involved",
-			scope:    scopeRollupNoSpecAllOpt,
-			signers:  []string{otherUser},
-			expected: "",
+			name:    "with rollup no scope spec all optional parties signer not involved",
+			scope:   scopeRollupNoSpecAllOpt,
+			signers: []string{otherUser},
+			expErr:  "",
 		},
 		{
-			name:     "with rollup req scope owner not signed",
-			scope:    scopeRollup,
-			signers:  []string{s.user2, otherUser},
-			expected: "missing required signature: " + s.user1 + " (OWNER)",
+			name:    "with rollup req scope owner not signed",
+			scope:   scopeRollup,
+			signers: []string{s.user2, otherUser},
+			expErr:  "missing required signature: " + s.user1 + " (OWNER)",
 		},
 		{
-			name:     "with rollup req role not signed",
-			scope:    scopeRollup,
-			signers:  []string{s.user1},
-			expected: "missing signers for roles required by spec: SERVICER need 1 have 0",
+			name:    "with rollup req role not signed",
+			scope:   scopeRollup,
+			signers: []string{s.user1},
+			expErr:  "missing signers for roles required by spec: SERVICER need 1 have 0",
 		},
 		{
-			name:     "with rollup req scope owner and req roles signed",
-			scope:    scopeRollup,
-			signers:  []string{s.user1, s.user2},
-			expected: "",
+			name:    "with rollup req scope owner and req roles signed",
+			scope:   scopeRollup,
+			signers: []string{s.user1, s.user2},
+			expErr:  "",
 		},
 		{
-			name:     "with rollup marker value owner no signer has withdraw", // TODO[2137]: Figure out what to do with this case.
-			scope:    scopeRollupMarkerValueOwner,
-			signers:  []string{s.user2},
-			expected: "missing signature for " + markerAddr + " (testcoins2) with authority to withdraw/remove it as scope value owner",
+			name:    "with rollup marker value owner no signer has withdraw", // TODO[2137]: Figure out what to do with this case.
+			scope:   scopeRollupMarkerValueOwner,
+			signers: []string{s.user2},
+			expErr:  "missing signature for " + markerAddr + " (testcoins2) with authority to withdraw/remove it as scope value owner",
 		},
 		{
-			name:     "with rollup marker value owner signer has withdraw", // TODO[2137]: Figure out what to do with this case.
-			scope:    scopeRollupMarkerValueOwner,
-			signers:  []string{s.user1, s.user2},
-			expected: "",
+			name:    "with rollup marker value owner signer has withdraw", // TODO[2137]: Figure out what to do with this case.
+			scope:   scopeRollupMarkerValueOwner,
+			signers: []string{s.user1, s.user2},
+			expErr:  "",
 		},
 		{
-			name:     "with rollup value owner not signed",
-			scope:    scopeRollupUserValueOwner,
-			signers:  []string{s.user2},
-			expected: "missing signature from existing value owner " + s.user1,
+			name:    "with rollup value owner not signed",
+			scope:   scopeRollupUserValueOwner,
+			signers: []string{s.user2},
+			expErr:  "missing signature from existing value owner " + s.user1,
 		},
 		{
-			name:     "with rollup value owner signed",
-			scope:    scopeRollupUserValueOwner,
-			signers:  []string{s.user1, s.user2},
-			expected: "",
+			name:    "with rollup value owner signed",
+			scope:   scopeRollupUserValueOwner,
+			signers: []string{s.user1, s.user2},
+			expErr:  "",
 		},
 	}
 
@@ -2035,12 +2034,10 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 				ScopeId: tc.scope.ScopeId,
 				Signers: tc.signers,
 			}
-			actual := s.app.MetadataKeeper.ValidateDeleteScope(s.FreshCtx(), msg)
-			if len(tc.expected) > 0 {
-				require.EqualError(t, actual, tc.expected)
-			} else {
-				require.NoError(t, actual)
-			}
+			// TODO[2137]: Define the expAddrs in these test cases.
+			addrs, err := s.app.MetadataKeeper.ValidateDeleteScope(s.FreshCtx(), msg)
+			s.AssertErrorValue(err, tc.expErr, "error from ValidateDeleteScope")
+			s.Assert().Equal(tc.expAddrs, addrs, "addresses from ValidateDeleteScope")
 		})
 	}
 }
@@ -2984,6 +2981,7 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 		authzGrants []GrantInfo // The MsgType field will be populated if not set.
 		wasmAddrs   []sdk.AccAddress
 		links       types.AccMDLinks
+		proposed    string // TODO[2137]: Provide this in most of the tests cases.
 		signers     []sdk.AccAddress
 		expErr      string
 		expAddrs    []sdk.AccAddress // Will be signers if not defined and expErr is also empty.
@@ -3329,7 +3327,7 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 				var addrs []sdk.AccAddress
 				var err error
 				testFunc := func() {
-					addrs, err = s.app.MetadataKeeper.ValidateUpdateValueOwners(ctx, tc.links, msg)
+					addrs, err = s.app.MetadataKeeper.ValidateUpdateValueOwners(ctx, tc.links, tc.proposed, msg)
 				}
 				s.Require().NotPanics(testFunc, "ValidateUpdateValueOwners")
 				s.AssertErrorValue(err, tc.expErr, "error from ValidateUpdateValueOwners")
