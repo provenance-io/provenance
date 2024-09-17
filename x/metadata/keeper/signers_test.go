@@ -96,6 +96,7 @@ func TestAuthzTestSuite(t *testing.T) {
 }
 
 func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
+	needsUpdate(s.T()) // TODO[2137]: Update TestWriteScopeSmartContractValueOwnerAuthz to account for recent changes.
 	// Setup:
 	// Alice and Bob have both granted smart contract "Sam" the ability to WriteScope for them.
 	// They are each the value owner of their own scope.

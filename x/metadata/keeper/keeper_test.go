@@ -124,6 +124,15 @@ func addrsToStrings(addrs []sdk.AccAddress) []string {
 	return rv
 }
 
+// needsUpdate runs a sub-test that fails. Use it to indicate that a set of tests needs to be updated.
+// TODO[2137]: Delete this needsUpdate method.
+func needsUpdate(t *testing.T) {
+	t.Fatal("This test needs to be updated to account for recent changes.")
+	// t.Run("update needed", func(t *testing.T) {
+	// 	t.Error("The parent test needs to be updated to account for recent changes.")
+	// })
+}
+
 func (s *KeeperTestSuite) TestParams() {
 	s.T().Run("os param tests", func(t *testing.T) {
 		osp := s.app.MetadataKeeper.GetOSLocatorParams(s.ctx)

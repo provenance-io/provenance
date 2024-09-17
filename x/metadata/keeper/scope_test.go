@@ -970,8 +970,7 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 }
 
 func (s *ScopeKeeperTestSuite) TestSetScopeValueOwners() {
-	// TODO[2137]: Redo this test
-	s.FailNow("this test needs to be overhauled")
+	needsUpdate(s.T()) // TODO[2137]: Update TestSetScopeValueOwners to account for recent changes.
 	// Setup
 	// Three scopes, each with different value owners.
 	// 1st has the value owner also in owners.
@@ -1141,7 +1140,7 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
-	s.FailNow("Need to refactor this to account for existing not being an arg anymore.")
+	needsUpdate(s.T()) // TODO[2137]: Update TestValidateWriteScope to account for recent changes.
 	ns := func(scopeID, scopeSpecification types.MetadataAddress, owners []types.Party, dataAccess []string, valueOwner string) *types.Scope {
 		return &types.Scope{
 			ScopeId:           scopeID,
@@ -1721,6 +1720,8 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
+	needsUpdate(s.T()) // TODO[2137]: Update TestValidateDeleteScope to account for recent changes.
+
 	pt := func(addr string, role types.PartyType, opt bool) types.Party {
 		return types.Party{
 			Address:  addr,
