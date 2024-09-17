@@ -469,7 +469,6 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 		}
 	}
 
-	var transferAgents []sdk.AccAddress
 	usedSigners := NewUsedSignersMap()
 	for _, existing := range existingOwners {
 		// If it's empty, there's nothing to check.
@@ -493,7 +492,6 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 		// as transfer agents with SendCoins. That will allow the marker module to correctly
 		// check for deposit or withdraw among the signers and return an error then if appropriate.
 		if k.markerKeeper.IsMarkerAccount(ctx, existing) {
-			transferAgents = signerAccs
 			continue
 		}
 
@@ -508,7 +506,7 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 		usedSigners.Use(grantee.String())
 	}
 
-	return transferAgents, usedSigners, nil
+	return signerAccs, usedSigners, nil
 }
 
 // containsAddr returns true if the addr toFind is equal to one (or more) of the provided addrs, false otherwise.
