@@ -131,6 +131,15 @@ func TestIntegrationCLITestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationCLITestSuite))
 }
 
+// needsUpdate runs a sub-test that fails. Use it to indicate that a set of tests needs to be updated.
+// TODO[2137]: Delete this needsUpdate method.
+func needsUpdate(t *testing.T) {
+	t.Fatal("This test needs to be updated to account for recent changes.")
+	// t.Run("update needed", func(t *testing.T) {
+	// 	t.Error("The parent test needs to be updated to account for recent changes.")
+	// })
+}
+
 func (s *IntegrationCLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 	pioconfig.SetProvenanceConfig("atom", 0)
@@ -1546,6 +1555,7 @@ func (s *IntegrationCLITestSuite) TestGetMetadataRecordSpecCmd() {
 }
 
 func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
+	needsUpdate(s.T()) // TODO[2137]: Update TestGetOwnershipCmd to account for recent changes.
 	cmd := func() *cobra.Command { return cli.GetOwnershipCmd() }
 
 	newUser := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address()).String()
@@ -1811,6 +1821,7 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 }
 
 func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
+	needsUpdate(s.T()) // TODO[2137]: Update TestScopeTxCommands to account for recent changes.
 	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
 	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
 	testCases := []txCmdTestCase{
@@ -2163,6 +2174,7 @@ func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
 }
 
 func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
+	needsUpdate(s.T()) // TODO[2137]: Update TestUpdateMigrateValueOwnersCmds to account for recent changes.
 	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
 	scopeID1 := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
 	scopeID2 := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
