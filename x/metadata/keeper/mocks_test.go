@@ -629,6 +629,12 @@ func (k *MockBankKeeper) GetScopesForValueOwner(_ context.Context, _ sdk.AccAddr
 	panic("not implemented")
 }
 
+// addrsCastToStrings casts each of the provided addrs to strings.
+// This does NOT create bech32 address strings.
+// It's handy when the bytes of the address are known, but not the bech32,
+// but you want to do a string comparison on the slices.
+//
+// To convert them to bech32 address strings, use mapToStrings.
 func addrsCastToStrings(addrs []sdk.AccAddress) []string {
 	if addrs == nil {
 		return nil

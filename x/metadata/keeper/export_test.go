@@ -40,6 +40,14 @@ func (k *Keeper) SetBankKeeper(bankKeeper BankKeeper) BankKeeper {
 	return rv
 }
 
+// SetBankKeeper is a TEST ONLY setter for the keeper's marker keeper.
+// It returns the previously defined MarkerKeeper
+func (k *Keeper) SetMarkerKeeper(markerKeeper MarkerKeeper) MarkerKeeper {
+	rv := k.markerKeeper
+	k.markerKeeper = markerKeeper
+	return rv
+}
+
 // TestablePartyDetails is the same as PartyDetails, but with
 // public fields so that they can be created in unit tests as needed.
 // Use the Real() method to convert it to a PartyDetails.

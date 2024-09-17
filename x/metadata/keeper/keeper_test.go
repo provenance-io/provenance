@@ -112,6 +112,18 @@ func ownerPartyList(addresses ...string) []types.Party {
 	return retval
 }
 
+// addrsToStrings returns the bech32 address of each of the provided addrs.
+func addrsToStrings(addrs []sdk.AccAddress) []string {
+	if addrs == nil {
+		return nil
+	}
+	rv := make([]string, len(addrs))
+	for i, v := range addrs {
+		rv[i] = v.String()
+	}
+	return rv
+}
+
 func (s *KeeperTestSuite) TestParams() {
 	s.T().Run("os param tests", func(t *testing.T) {
 		osp := s.app.MetadataKeeper.GetOSLocatorParams(s.ctx)
