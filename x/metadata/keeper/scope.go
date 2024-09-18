@@ -4,11 +4,14 @@ import (
 	"errors"
 	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
 
+	storetypes "cosmossdk.io/store/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/provenance-io/provenance/internal/provutils"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -346,7 +349,7 @@ func getMissingScopeIndexValues(required, found *scopeIndexValues) *scopeIndexVa
 		return required
 	}
 	rv.ScopeID = required.ScopeID
-	rv.Addresses = findMissingComp(required.Addresses, found.Addresses, func(a1 sdk.AccAddress, a2 sdk.AccAddress) bool {
+	rv.Addresses = provutils.FindMissingFunc(required.Addresses, found.Addresses, func(a1, a2 sdk.AccAddress) bool {
 		return a1.Equals(a2)
 	})
 	if !required.SpecificationID.Equals(found.SpecificationID) {
@@ -448,7 +451,7 @@ func (k Keeper) ValidateWriteScope(
 	}
 
 	var err error
-	var validatedParties []*PartyDetails
+	var validatedParties []*types.PartyDetails
 
 	if !onlyChangeIsValueOwner {
 		scopeSpec, found := k.GetScopeSpecification(ctx, proposed.SpecificationId)
@@ -459,7 +462,7 @@ func (k Keeper) ValidateWriteScope(
 		if err = validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 			return nil, err
 		}
-		if err = k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Owners)); err != nil {
+		if err = k.validateProvenanceRole(ctx, types.BuildPartyDetails(nil, proposed.Owners)); err != nil {
 			return nil, err
 		}
 
@@ -495,7 +498,7 @@ func (k Keeper) ValidateWriteScope(
 		return nil, err
 	}
 
-	usedSigners.AlsoUse(GetUsedSigners(validatedParties))
+	usedSigners.AlsoUse(types.GetUsedSigners(validatedParties))
 	if err = k.validateSmartContractSigners(ctx, usedSigners, msg); err != nil {
 		return nil, err
 	}
@@ -511,7 +514,7 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 	}
 
 	var err error
-	var validatedParties []*PartyDetails
+	var validatedParties []*types.PartyDetails
 
 	// Make sure everyone has signed.
 	if !scope.RequirePartyRollup {
@@ -559,7 +562,7 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 		return nil, err
 	}
 
-	usedSigners.AlsoUse(GetUsedSigners(validatedParties))
+	usedSigners.AlsoUse(types.GetUsedSigners(validatedParties))
 	err = k.validateSmartContractSigners(ctx, usedSigners, msg)
 	if err != nil {
 		return nil, err
@@ -581,7 +584,7 @@ func (k Keeper) ValidateSetScopeAccountData(ctx sdk.Context, msg *types.MsgSetAc
 	}
 
 	var err error
-	var validatedParties []*PartyDetails
+	var validatedParties []*types.PartyDetails
 
 	// This is similar to ValidateDeleteScope, but the value owner isn't considered,
 	// and we expect the scope spec to still exist.
@@ -612,7 +615,7 @@ func (k Keeper) ValidateSetScopeAccountData(ctx sdk.Context, msg *types.MsgSetAc
 		}
 	}
 
-	return k.validateSmartContractSigners(ctx, GetUsedSigners(validatedParties), msg)
+	return k.validateSmartContractSigners(ctx, types.GetUsedSigners(validatedParties), msg)
 }
 
 // ValidateAddScopeDataAccess checks the current scope and the proposed
@@ -740,7 +743,7 @@ func (k Keeper) ValidateUpdateScopeOwners(
 	if err := validateRolesPresent(proposed.Owners, scopeSpec.PartiesInvolved); err != nil {
 		return err
 	}
-	if err := k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Owners)); err != nil {
+	if err := k.validateProvenanceRole(ctx, types.BuildPartyDetails(nil, proposed.Owners)); err != nil {
 		return err
 	}
 
@@ -766,7 +769,7 @@ func (k Keeper) ValidateUpdateScopeOwners(
 		if err != nil {
 			return err
 		}
-		if err = k.validateSmartContractSigners(ctx, GetUsedSigners(validatedParties), msg); err != nil {
+		if err = k.validateSmartContractSigners(ctx, types.GetUsedSigners(validatedParties), msg); err != nil {
 			return err
 		}
 	}

@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -28,6 +26,10 @@ import (
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
+
+func TestAuthzTestSuite(t *testing.T) {
+	suite.Run(t, new(AuthzTestSuite))
+}
 
 type AuthzTestSuite struct {
 	suite.Suite
@@ -69,7 +71,7 @@ func (s *AuthzTestSuite) SetupTest() {
 }
 
 func (s *AuthzTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()}))
+	return FreshCtx(s.app).WithBlockTime(time.Now())
 }
 
 // AssertErrorValue asserts that:
@@ -91,8 +93,30 @@ func (s *AuthzTestSuite) AssertErrorValue(theError error, errorString string, ms
 	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
 }
 
-func TestAuthzTestSuite(t *testing.T) {
-	suite.Run(t, new(AuthzTestSuite))
+// partiesCopy creates a new []*types.PartyDetails with copies of each provided entry.
+// Nil in = nil out.
+func partiesCopy(parties []*types.PartyDetails) []*types.PartyDetails {
+	if parties == nil {
+		return nil
+	}
+	rv := make([]*types.PartyDetails, len(parties))
+	for i, party := range parties {
+		rv[i] = party.Copy()
+	}
+	return rv
+}
+
+// partiesReversed creates a new []*types.PartyDetails with copies of each provided entry
+// in the opposite order as provided. Nil in = nil out.
+func partiesReversed(parties []*types.PartyDetails) []*types.PartyDetails {
+	if parties == nil {
+		return nil
+	}
+	rv := make([]*types.PartyDetails, len(parties))
+	for i, party := range parties {
+		rv[len(rv)-i-1] = party.Copy()
+	}
+	return rv
 }
 
 func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
@@ -485,7 +509,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 		msg              types.MetadataMsg
 		authKeeper       *MockAuthKeeper
 		authzKeeper      *MockAuthzKeeper
-		expParties       []*keeper.PartyDetails
+		expParties       []*types.PartyDetails
 		expErr           string
 	}{
 		{
@@ -496,7 +520,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 			msg:              newMsg("signer1"),
 			authKeeper:       NewMockAuthKeeper(),
 			authzKeeper:      NewMockAuthzKeeper(),
-			expParties:       []*keeper.PartyDetails{},
+			expParties:       []*types.PartyDetails{},
 			expErr:           "",
 		},
 		{
@@ -628,8 +652,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 			msg:              newMsg("party1"),
 			authKeeper:       NewMockAuthKeeper(),
 			authzKeeper:      NewMockAuthzKeeper(),
-			expParties: []*keeper.PartyDetails{
-				keeper.TestablePartyDetails{
+			expParties: []*types.PartyDetails{
+				types.TestablePartyDetails{
 					Address:         accStr("party1"),
 					Role:            provenance,
 					Optional:        false,
@@ -652,8 +676,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned() {
 				NewGetAccountCall(acc("party1"), scAcct("party1")),
 			),
 			authzKeeper: NewMockAuthzKeeper(),
-			expParties: []*keeper.PartyDetails{
-				keeper.TestablePartyDetails{
+			expParties: []*types.PartyDetails{
+				types.TestablePartyDetails{
 					Address:         accStr("party1"),
 					Role:            owner,
 					Optional:        false,
@@ -731,8 +755,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorization
 		},
 	}
 	reqRoles := []types.PartyType{types.PartyType_PARTY_TYPE_VALIDATOR}
-	expDetails := []*keeper.PartyDetails{
-		keeper.TestablePartyDetails{
+	expDetails := []*types.PartyDetails{
+		types.TestablePartyDetails{
 			Address:         accStr(party1),
 			Role:            types.PartyType_PARTY_TYPE_VALIDATOR,
 			Optional:        true,
@@ -742,7 +766,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorization
 			CanBeUsedBySpec: true,
 			UsedBySpec:      true,
 		}.Real(),
-		keeper.TestablePartyDetails{
+		types.TestablePartyDetails{
 			Address:         accStr(party1),
 			Role:            types.PartyType_PARTY_TYPE_OWNER,
 			Optional:        false,
@@ -752,7 +776,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorization
 			CanBeUsedBySpec: false,
 			UsedBySpec:      false,
 		}.Real(),
-		keeper.TestablePartyDetails{
+		types.TestablePartyDetails{
 			Address:         accStr(party2),
 			Role:            types.PartyType_PARTY_TYPE_SERVICER,
 			Optional:        false,
@@ -794,8 +818,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredPartiesSigned_CountAuthorization
 
 func TestAssociateSigners(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
-	pd := func(address string, acc sdk.AccAddress, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(address string, acc sdk.AccAddress, signer string, signerAcc sdk.AccAddress) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:   address,
 			Acc:       acc,
 			Signer:    signer,
@@ -803,8 +827,8 @@ func TestAssociateSigners(t *testing.T) {
 		}.Real()
 	}
 	// pdz is a shorter varargs way to define a []*keeper.PartyDetails.
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -828,11 +852,11 @@ func TestAssociateSigners(t *testing.T) {
 	}
 
 	// partyStr gets a string of the golang code that would make the provided party for these tests.
-	partyStr := func(p *keeper.PartyDetails) string {
+	partyStr := func(p *types.PartyDetails) string {
 		if p == nil {
 			return "nil"
 		}
-		party := p.Testable()
+		party := types.NewTestablePartyDetails(p)
 		var addrVal string
 		addrAcc, err := sdk.AccAddressFromBech32(party.Address)
 		if err == nil {
@@ -858,7 +882,7 @@ func TestAssociateSigners(t *testing.T) {
 		return fmt.Sprintf("pd(%s, %s, %s, %s)", addrVal, accVal, sigVal, sigAccVal)
 	}
 	// partiesStr gets a string of the golang code that would make the provided parties for these tests.
-	partiesStr := func(parties []*keeper.PartyDetails) string {
+	partiesStr := func(parties []*types.PartyDetails) string {
 		if parties == nil {
 			return "nil"
 		}
@@ -913,16 +937,16 @@ func TestAssociateSigners(t *testing.T) {
 	// Both parties and expParties must have the same length and if one is nil, the other must be too.
 	// The entries are shuffled in tandem. E.g. if parties becomes [1, 0, 2] then expParties will also have the order [1, 0, 2].
 	// Nil in = nil out.
-	partiesShuffled := func(r *rand.Rand, parties, expParties []*keeper.PartyDetails) ([]*keeper.PartyDetails, []*keeper.PartyDetails) {
+	partiesShuffled := func(r *rand.Rand, parties, expParties []*types.PartyDetails) ([]*types.PartyDetails, []*types.PartyDetails) {
 		if (parties == nil && expParties != nil) || (parties != nil && expParties == nil) || (len(parties) != len(expParties)) {
 			panic("test definition failure: parties and expParties should always have the same number of entries")
 		}
 		if parties == nil {
 			return nil, nil
 		}
-		rvp := make([]*keeper.PartyDetails, 0, len(parties))
+		rvp := make([]*types.PartyDetails, 0, len(parties))
 		rvp = append(rvp, parties...)
-		rve := make([]*keeper.PartyDetails, 0, len(expParties))
+		rve := make([]*types.PartyDetails, 0, len(expParties))
 		rve = append(rve, expParties...)
 		r.Shuffle(len(rve), func(i, j int) {
 			rve[i], rve[j] = rve[j], rve[i]
@@ -933,9 +957,9 @@ func TestAssociateSigners(t *testing.T) {
 
 	type testCase struct {
 		name       string
-		parties    []*keeper.PartyDetails
+		parties    []*types.PartyDetails
 		signers    *keeper.SignersWrapper
-		expParties []*keeper.PartyDetails
+		expParties []*types.PartyDetails
 	}
 
 	tests := []testCase{
@@ -1254,8 +1278,8 @@ func TestAssociateSigners(t *testing.T) {
 
 func TestFindUnsignedRequired(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
-	pd := func(address string, optional bool, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(address string, optional bool, signer string, signerAcc sdk.AccAddress) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:   address,
 			Optional:  optional,
 			Signer:    signer,
@@ -1263,8 +1287,8 @@ func TestFindUnsignedRequired(t *testing.T) {
 		}.Real()
 	}
 	// pdz is just a shorter way to define a []*keeper.PartyDetails
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -1274,8 +1298,8 @@ func TestFindUnsignedRequired(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		parties []*keeper.PartyDetails
-		exp     []*keeper.PartyDetails
+		parties []*types.PartyDetails
+		exp     []*types.PartyDetails
 	}{
 		{
 			name:    "nil",
@@ -1404,8 +1428,8 @@ func TestFindUnsignedRequired(t *testing.T) {
 
 func TestAssociateRequiredRoles(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
-	pd := func(role types.PartyType, canBeUsed, isUsed bool, signer string, signerAcc sdk.AccAddress) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(role types.PartyType, canBeUsed, isUsed bool, signer string, signerAcc sdk.AccAddress) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Role:            role,
 			Signer:          signer,
 			SignerAcc:       signerAcc,
@@ -1414,8 +1438,8 @@ func TestAssociateRequiredRoles(t *testing.T) {
 		}.Real()
 	}
 	// pdz is just a shorter way to define a []*keeper.PartyDetails
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -1449,10 +1473,10 @@ func TestAssociateRequiredRoles(t *testing.T) {
 
 	type testCase struct {
 		name       string
-		parties    []*keeper.PartyDetails
+		parties    []*types.PartyDetails
 		reqRoles   []types.PartyType
 		exp        []types.PartyType
-		expParties []*keeper.PartyDetails
+		expParties []*types.PartyDetails
 	}
 
 	tests := []testCase{
@@ -1465,10 +1489,10 @@ func TestAssociateRequiredRoles(t *testing.T) {
 		},
 		{
 			name:       "empty nil",
-			parties:    []*keeper.PartyDetails{},
+			parties:    []*types.PartyDetails{},
 			reqRoles:   nil,
 			exp:        nil,
-			expParties: []*keeper.PartyDetails{},
+			expParties: []*types.PartyDetails{},
 		},
 		{
 			name:       "nil empty",
@@ -1479,10 +1503,10 @@ func TestAssociateRequiredRoles(t *testing.T) {
 		},
 		{
 			name:       "empty empty",
-			parties:    []*keeper.PartyDetails{},
+			parties:    []*types.PartyDetails{},
 			reqRoles:   []types.PartyType{},
 			exp:        nil,
-			expParties: []*keeper.PartyDetails{},
+			expParties: []*types.PartyDetails{},
 		},
 		{
 			name:       "2 req nil parties",
@@ -1883,15 +1907,15 @@ func TestAssociateRequiredRoles(t *testing.T) {
 
 func TestMissingRolesString(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
-	pd := func(role types.PartyType, used bool) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(role types.PartyType, used bool) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Role:       role,
 			UsedBySpec: used,
 		}.Real()
 	}
 	// pdz is just a shorter way to define a []*keeper.PartyDetails
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -1934,8 +1958,8 @@ func TestMissingRolesString(t *testing.T) {
 		return rv
 	}
 	// partiesForDeterministismTests returns two parties for each role (1 used, 1 not) in a random order.
-	partiesForDeterministismTests := func() []*keeper.PartyDetails {
-		var rv []*keeper.PartyDetails
+	partiesForDeterministismTests := func() []*types.PartyDetails {
+		var rv []*types.PartyDetails
 		for i := range types.PartyType_name {
 			role := types.PartyType(i)
 			rv = append(rv, pd(role, true), pd(role, false))
@@ -1965,11 +1989,11 @@ func TestMissingRolesString(t *testing.T) {
 		return fmt.Sprintf("rz(%s)", strings.Join(strs, ", "))
 	}
 	// partyStr gets a string of the golang code that would make the provided party for these tests.
-	partyStr := func(party *keeper.PartyDetails) string {
+	partyStr := func(party *types.PartyDetails) string {
 		return fmt.Sprintf("pd(%s, %t)", roleStr(party.GetRole()), party.IsUsed())
 	}
 	// partiesStr gets a string of the golang code that would make the provided parties for these tests.
-	partiesStr := func(parties []*keeper.PartyDetails) string {
+	partiesStr := func(parties []*types.PartyDetails) string {
 		if parties == nil {
 			return "nil"
 		}
@@ -2007,11 +2031,11 @@ func TestMissingRolesString(t *testing.T) {
 		return rv
 	}
 	// partiesShuffled copies each of the provided party and returns them in a random order. Nil in = nil out.
-	partiesShuffled := func(r *rand.Rand, parties []*keeper.PartyDetails) []*keeper.PartyDetails {
+	partiesShuffled := func(r *rand.Rand, parties []*types.PartyDetails) []*types.PartyDetails {
 		if parties == nil {
 			return nil
 		}
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		r.Shuffle(len(rv), func(i, j int) {
 			rv[i], rv[j] = rv[j], rv[i]
@@ -2021,7 +2045,7 @@ func TestMissingRolesString(t *testing.T) {
 
 	type testCase struct {
 		name     string
-		parties  []*keeper.PartyDetails
+		parties  []*types.PartyDetails
 		reqRoles []types.PartyType
 		exp      string
 	}
@@ -3117,23 +3141,23 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 	}
 	// pd is a short way to create a *keeper.PartyDetails with the info needed in these tests.
 	// The provided strings are passed through accStr.
-	pd := func(address, signer string) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(address, signer string) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address: accStr(address),
 			Signer:  accStr(signer),
 		}.Real()
 	}
 	// pde is pd "expected". It allows setting the addrAcc and signerAcc values too.
-	pde := func(address, addrAcc, signer, signerAcc string) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pde := func(address, addrAcc, signer, signerAcc string) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:   accStr(address),
 			Acc:       acc(addrAcc),
 			Signer:    accStr(signer),
 			SignerAcc: acc(signerAcc),
 		}.Real()
 	}
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -3161,11 +3185,11 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 
 	tests := []struct {
 		name        string
-		parties     []*keeper.PartyDetails
+		parties     []*types.PartyDetails
 		signers     *keeper.SignersWrapper
 		authzKeeper *MockAuthzKeeper
 		expErr      string
-		expParties  []*keeper.PartyDetails
+		expParties  []*types.PartyDetails
 		expGetAuth  []*GetAuthorizationCall
 	}{
 		{
@@ -3196,11 +3220,11 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 		},
 		{
 			name:        "1 party not bech32",
-			parties:     pdz(keeper.TestablePartyDetails{Address: "not-correct"}.Real()),
+			parties:     pdz(types.TestablePartyDetails{Address: "not-correct"}.Real()),
 			signers:     sw("signer1"),
 			authzKeeper: NewMockAuthzKeeper(),
 			expErr:      "",
-			expParties:  pdz(keeper.TestablePartyDetails{Address: "not-correct"}.Real()),
+			expParties:  pdz(types.TestablePartyDetails{Address: "not-correct"}.Real()),
 			expGetAuth:  nil,
 		},
 		{
@@ -3418,8 +3442,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 
 	s.Run("onAssociation with counter", func() {
 		counter := 0
-		var partiesAssociated []*keeper.PartyDetails
-		onAssoc := func(party *keeper.PartyDetails) bool {
+		var partiesAssociated []*types.PartyDetails
+		onAssoc := func(party *types.PartyDetails) bool {
 			counter++
 			partiesAssociated = append(partiesAssociated, party)
 			return false
@@ -3482,8 +3506,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 	s.Run("onAssociation stop early", func() {
 		counter := 0
 		stopAt := 3
-		var partiesAssociated []*keeper.PartyDetails
-		onAssoc := func(party *keeper.PartyDetails) bool {
+		var partiesAssociated []*types.PartyDetails
+		onAssoc := func(party *types.PartyDetails) bool {
 			counter++
 			partiesAssociated = append(partiesAssociated, party)
 			return counter >= stopAt
@@ -3515,7 +3539,7 @@ func (s *AuthzTestSuite) TestAssociateAuthorizations() {
 				GetAuthorizationCall{
 					GrantInfo: GrantInfo{
 						Grantee: acc("signer"),
-						Granter: sdk.MustAccAddressFromBech32(party.Testable().Address),
+						Granter: sdk.MustAccAddressFromBech32(types.NewTestablePartyDetails(party).Address),
 						MsgType: theMsgType,
 					},
 					Result: GetAuthorizationResult{
@@ -3561,8 +3585,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 	}
 	// pdu creates a usable, unsigned *keeper.PartyDetails.
 	// The provided strings are passed through accStr.
-	pdu := func(address string, role types.PartyType) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pdu := func(address string, role types.PartyType) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:         accStr(address),
 			Acc:             acc(address),
 			Role:            role,
@@ -3571,8 +3595,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 		}.Real()
 	}
 	// pdx creates a *keeper.PartyDetails that isn't usable.
-	pdx := func(address string, role types.PartyType) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pdx := func(address string, role types.PartyType) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:         accStr(address),
 			Acc:             acc(address),
 			Role:            role,
@@ -3581,8 +3605,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 		}.Real()
 	}
 	// pdus creates a *keeper.PartyDetails that was usable but now has a signer and is used.
-	pdus := func(address string, role types.PartyType, signer string) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pdus := func(address string, role types.PartyType, signer string) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:         accStr(address),
 			Acc:             acc(address),
 			Role:            role,
@@ -3591,8 +3615,8 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 			SignerAcc:       acc(signer),
 		}.Real()
 	}
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -3659,12 +3683,12 @@ func (s *AuthzTestSuite) TestAssociateAuthorizationsForRoles() {
 	tests := []struct {
 		name        string
 		roles       []types.PartyType
-		parties     []*keeper.PartyDetails
+		parties     []*types.PartyDetails
 		signers     *keeper.SignersWrapper
 		authzKeeper *MockAuthzKeeper
 		expMissing  bool
 		expErr      string
-		expParties  []*keeper.PartyDetails
+		expParties  []*types.PartyDetails
 		expGetAuth  []*GetAuthorizationCall
 	}{
 		{
@@ -4187,15 +4211,15 @@ func (s *AuthzTestSuite) TestValidateProvenanceRole() {
 	accStr := func(addr string) string {
 		return acc(addr).String()
 	}
-	pd := func(canBeUsed bool, role types.PartyType, address string) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	pd := func(canBeUsed bool, role types.PartyType, address string) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			CanBeUsedBySpec: canBeUsed,
 			Role:            role,
 			Address:         address,
 		}.Real()
 	}
-	pdz := func(parties ...*keeper.PartyDetails) []*keeper.PartyDetails {
-		rv := make([]*keeper.PartyDetails, 0, len(parties))
+	pdz := func(parties ...*types.PartyDetails) []*types.PartyDetails {
+		rv := make([]*types.PartyDetails, 0, len(parties))
 		rv = append(rv, parties...)
 		return rv
 	}
@@ -4245,7 +4269,7 @@ func (s *AuthzTestSuite) TestValidateProvenanceRole() {
 
 	tests := []struct {
 		name       string
-		parties    []*keeper.PartyDetails
+		parties    []*types.PartyDetails
 		authKeeper *MockAuthKeeper
 		expErr     string
 		expGetAcc  []*GetAccountCall
@@ -4691,7 +4715,7 @@ func (s *AuthzTestSuite) TestIsWasmAccount() {
 		authKeeper.ClearResults()
 
 		// Make sure they're cached.
-		cache := keeper.GetAuthzCache(ctx)
+		cache := types.GetAuthzCache(ctx)
 		for _, tc := range isWasmTests {
 			hasEntry := cache.HasIsWasm(tc.addr)
 			s.Assert().True(hasEntry, "cache HasIsWasm(%s)", tc.name)
@@ -4775,7 +4799,7 @@ func (s *AuthzTestSuite) TestValidateSmartContractSigners() {
 
 	tests := []struct {
 		name        string
-		usedSigners keeper.UsedSignersMap
+		usedSigners types.UsedSignersMap
 		msg         types.MetadataMsg
 		authK       *MockAuthKeeper
 		authzK      *MockAuthzKeeper
@@ -5096,7 +5120,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 		proposed         string
 		signers          []sdk.AccAddress
 		expAddrs         []sdk.AccAddress
-		expUsedSigners   keeper.UsedSignersMap
+		expUsedSigners   types.UsedSignersMap
 		expErr           string
 		expIsMarkerCalls []sdk.AccAddress
 	}{
@@ -5159,7 +5183,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:       addr2.String(),
 			signers:        []sdk.AccAddress{addr1},
 			expAddrs:       []sdk.AccAddress{addr1},
-			expUsedSigners: keeper.NewUsedSignersMap().Use(addr1.String()),
+			expUsedSigners: types.NewUsedSignersMap().Use(addr1.String()),
 		},
 		{
 			name:           "only signer is wasm and is also existing value owner",
@@ -5168,7 +5192,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:       addr2.String(),
 			signers:        []sdk.AccAddress{addr1},
 			expAddrs:       []sdk.AccAddress{addr1},
-			expUsedSigners: keeper.NewUsedSignersMap().Use(addr1.String()),
+			expUsedSigners: types.NewUsedSignersMap().Use(addr1.String()),
 		},
 		{
 			name: "only signer is wasm with authz grants from existing value owners",
@@ -5183,7 +5207,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr5},
 			expAddrs:         []sdk.AccAddress{addr5},
-			expUsedSigners:   keeper.NewUsedSignersMap().Use(addr5.String()),
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr5.String()),
 			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2, addr3, addr4},
 		},
 		{
@@ -5214,7 +5238,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr5, addr1, addr2, addr3, addr4},
 			expAddrs:         []sdk.AccAddress{addr5},
-			expUsedSigners:   keeper.NewUsedSignersMap().Use(addr5.String()),
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr5.String()),
 			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2, addr3, addr4},
 		},
 		{
@@ -5225,7 +5249,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:       addr6.String(),
 			signers:        []sdk.AccAddress{addr5, addr1, addr2, addr3, addr4},
 			expAddrs:       []sdk.AccAddress{addr5, addr1, addr2, addr3, addr4},
-			expUsedSigners: keeper.NewUsedSignersMap().Use(addr1.String(), addr2.String(), addr3.String(), addr4.String()),
+			expUsedSigners: types.NewUsedSignersMap().Use(addr1.String(), addr2.String(), addr3.String(), addr4.String()),
 		},
 		{
 			name:             "four existing, two are signers, other two are markers",
@@ -5234,7 +5258,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr2, addr3},
 			expAddrs:         []sdk.AccAddress{addr2, addr3},
-			expUsedSigners:   keeper.NewUsedSignersMap().Use(addr2.String(), addr3.String()),
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr2.String(), addr3.String()),
 			expIsMarkerCalls: []sdk.AccAddress{addr1, addr4},
 		},
 		{
@@ -5259,7 +5283,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:       addr6.String(),
 			signers:        []sdk.AccAddress{addr1, addr2},
 			expAddrs:       []sdk.AccAddress{addr1, addr2},
-			expUsedSigners: keeper.NewUsedSignersMap().Use(addr1.String(), addr2.String()),
+			expUsedSigners: types.NewUsedSignersMap().Use(addr1.String(), addr2.String()),
 		},
 		{
 			name:           "two existing value owners: both are signers in opposite order",
@@ -5267,7 +5291,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:       addr6.String(),
 			signers:        []sdk.AccAddress{addr2, addr1},
 			expAddrs:       []sdk.AccAddress{addr2, addr1},
-			expUsedSigners: keeper.NewUsedSignersMap().Use(addr1.String(), addr2.String()),
+			expUsedSigners: types.NewUsedSignersMap().Use(addr1.String(), addr2.String()),
 		},
 		{
 			name: "authz: two existing value owners to same other signer",
@@ -5279,7 +5303,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr3},
 			expAddrs:         []sdk.AccAddress{addr3},
-			expUsedSigners:   keeper.NewUsedSignersMap().Use(addr3.String()),
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr3.String()),
 			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2},
 		},
 		{
@@ -5310,7 +5334,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr4, addr3},
 			expAddrs:         []sdk.AccAddress{addr4, addr3},
-			expUsedSigners:   keeper.NewUsedSignersMap().Use(addr3.String(), addr4.String()),
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr3.String(), addr4.String()),
 			expIsMarkerCalls: []sdk.AccAddress{addr1, addr2},
 		},
 		{
@@ -5322,7 +5346,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr1},
 			expAddrs:         []sdk.AccAddress{addr1},
-			expUsedSigners:   keeper.NewUsedSignersMap().Use(addr1.String()),
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr1.String()),
 			expIsMarkerCalls: []sdk.AccAddress{addr2},
 		},
 		{
@@ -5334,7 +5358,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr2},
 			expAddrs:         []sdk.AccAddress{addr2},
-			expUsedSigners:   keeper.NewUsedSignersMap().Use(addr2.String()),
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr2.String()),
 			expIsMarkerCalls: []sdk.AccAddress{addr1},
 		},
 		{
@@ -5482,7 +5506,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr6.String(),
 			signers:          []sdk.AccAddress{addr3},
 			expAddrs:         []sdk.AccAddress{addr3},
-			expUsedSigners:   keeper.NewUsedSignersMap(),
+			expUsedSigners:   types.NewUsedSignersMap(),
 			expIsMarkerCalls: []sdk.AccAddress{addr1},
 		},
 		{
@@ -5492,7 +5516,7 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 			proposed:         addr3.String(),
 			signers:          []sdk.AccAddress{addr1},
 			expAddrs:         []sdk.AccAddress{addr1},
-			expUsedSigners:   keeper.NewUsedSignersMap().Use(addr1.String()),
+			expUsedSigners:   types.NewUsedSignersMap().Use(addr1.String()),
 			expIsMarkerCalls: []sdk.AccAddress{addr2},
 		},
 		{
@@ -5561,14 +5585,14 @@ func (s *AuthzTestSuite) TestValidateScopeValueOwnersSigners() {
 
 				ctx := s.FreshCtx()
 				if len(tc.wasmAddrs) > 0 {
-					cache := keeper.GetAuthzCache(ctx)
+					cache := types.GetAuthzCache(ctx)
 					for _, addr := range tc.wasmAddrs {
 						cache.SetIsWasm(addr, true)
 					}
 				}
 
 				var actAddrs []sdk.AccAddress
-				var actUsedAddrs keeper.UsedSignersMap
+				var actUsedAddrs types.UsedSignersMap
 				var actErr error
 				testFunc := func() {
 					actAddrs, actUsedAddrs, actErr = kpr.ValidateScopeValueOwnersSigners(ctx, tc.existingOwners, tc.proposed, msg)
@@ -5694,8 +5718,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 	randAddr3 := sdk.AccAddress("random_address_3____").String()
 
 	// expFoundSigner creates a PartyDetails for a party found as a signer.
-	expFoundSigner := func(addr string) *keeper.PartyDetails {
-		return keeper.TestablePartyDetails{
+	expFoundSigner := func(addr string) *types.PartyDetails {
+		return types.TestablePartyDetails{
 			Address:         addr,
 			Role:            types.PartyType_PARTY_TYPE_UNSPECIFIED,
 			Optional:        false,
@@ -5707,8 +5731,8 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 		}.Real()
 	}
 	// expFoundAuthz creates a PartyDetails for a party found via authz.
-	expFoundAuthz := func(addr string, signer sdk.AccAddress) *keeper.PartyDetails {
-		rv := keeper.TestablePartyDetails{
+	expFoundAuthz := func(addr string, signer sdk.AccAddress) *types.PartyDetails {
+		rv := types.TestablePartyDetails{
 			Address:         addr,
 			Role:            types.PartyType_PARTY_TYPE_UNSPECIFIED,
 			Optional:        false,
@@ -5722,7 +5746,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 		return rv
 	}
 	// pdz is just a shorter way of creating a slice of PartyDetails.
-	pdz := func(details ...*keeper.PartyDetails) []*keeper.PartyDetails {
+	pdz := func(details ...*types.PartyDetails) []*types.PartyDetails {
 		return details
 	}
 
@@ -5730,7 +5754,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 		name     string
 		owners   []string
 		msg      types.MetadataMsg
-		exp      []*keeper.PartyDetails
+		exp      []*types.PartyDetails
 		errorMsg string
 	}{
 		{

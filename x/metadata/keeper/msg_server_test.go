@@ -39,7 +39,7 @@ type MsgServerTestSuite struct {
 
 func (s *MsgServerTestSuite) SetupTest() {
 	s.app = app.Setup(s.T())
-	s.ctx = keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
+	s.ctx = FreshCtx(s.app)
 	s.msgServer = keeper.NewMsgServerImpl(s.app.MetadataKeeper)
 
 	s.pubkey1 = secp256k1.GenPrivKey().PubKey()

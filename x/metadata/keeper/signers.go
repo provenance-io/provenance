@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/provenance-io/provenance/internal/provutils"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -50,7 +51,7 @@ func (k Keeper) ValidateSignersWithParties(
 	if err = k.validateProvenanceRole(ctx, parties); err != nil {
 		return err
 	}
-	return k.validateSmartContractSigners(ctx, GetUsedSigners(parties), msg)
+	return k.validateSmartContractSigners(ctx, types.GetUsedSigners(parties), msg)
 }
 
 // validateAllRequiredPartiesSigned ensures the following:
@@ -65,8 +66,8 @@ func (k Keeper) validateAllRequiredPartiesSigned(
 	reqParties, availableParties []types.Party,
 	reqRoles []types.PartyType,
 	msg types.MetadataMsg,
-) ([]*PartyDetails, error) {
-	parties := BuildPartyDetails(reqParties, availableParties)
+) ([]*types.PartyDetails, error) {
+	parties := types.BuildPartyDetails(reqParties, availableParties)
 	signers := NewSignersWrapper(msg.GetSignerStrs())
 
 	// Make sure all required parties are signers.
@@ -79,7 +80,7 @@ func (k Keeper) validateAllRequiredPartiesSigned(
 		for i, party := range missingReqParties {
 			missing[i] = fmt.Sprintf("%s (%s)", party.GetAddress(), party.GetRole().SimpleString())
 		}
-		return nil, fmt.Errorf("missing required signature%s: %s", pluralEnding(len(missing)), strings.Join(missing, ", "))
+		return nil, fmt.Errorf("missing required signature%s: %s", provutils.PluralEnding(missing), strings.Join(missing, ", "))
 	}
 
 	// Make sure all required roles are present as signers.
@@ -95,9 +96,9 @@ func (k Keeper) validateAllRequiredPartiesSigned(
 	return parties, nil
 }
 
-// associateSigners updates each PartyDetails to indicate there's a signer if its
+// associateSigners updates each types.PartyDetails to indicate there's a signer if its
 // address is in the signers list.
-func associateSigners(parties []*PartyDetails, signers *SignersWrapper) {
+func associateSigners(parties []*types.PartyDetails, signers *SignersWrapper) {
 	if signers == nil {
 		return
 	}
@@ -114,8 +115,8 @@ func associateSigners(parties []*PartyDetails, signers *SignersWrapper) {
 
 // findUnsignedRequired returns a list of parties that are required (optional=false)
 // and don't have a signer.
-func findUnsignedRequired(parties []*PartyDetails) []*PartyDetails {
-	var rv []*PartyDetails
+func findUnsignedRequired(parties []*types.PartyDetails) []*types.PartyDetails {
+	var rv []*types.PartyDetails
 	for _, party := range parties {
 		if party.IsRequired() && !party.HasSigner() {
 			rv = append(rv, party)
@@ -129,7 +130,7 @@ func findUnsignedRequired(parties []*PartyDetails) []*PartyDetails {
 //
 // This is similar to validateRolesPresent except this requires a role to have a signer
 // in order for it to fulfill a required role.
-func associateRequiredRoles(parties []*PartyDetails, reqRoles []types.PartyType) []types.PartyType {
+func associateRequiredRoles(parties []*types.PartyDetails, reqRoles []types.PartyType) []types.PartyType {
 	var missingRoles []types.PartyType
 reqRolesLoop:
 	for _, role := range reqRoles {
@@ -146,7 +147,7 @@ reqRolesLoop:
 
 // missingRolesString generates and returns an error message indicating that
 // some required roles don't have signers.
-func missingRolesString(parties []*PartyDetails, reqRoles []types.PartyType) string {
+func missingRolesString(parties []*types.PartyDetails, reqRoles []types.PartyType) string {
 	// Get a count for each required role
 	reqCountByRole := make(map[types.PartyType]int)
 	for _, role := range reqRoles {
@@ -157,7 +158,7 @@ func missingRolesString(parties []*PartyDetails, reqRoles []types.PartyType) str
 	haveCountByRole := make(map[types.PartyType]int)
 	for _, party := range parties {
 		if party.IsUsed() {
-			haveCountByRole[party.role]++
+			haveCountByRole[party.GetRole()]++
 		}
 	}
 
@@ -223,7 +224,7 @@ func (k Keeper) findAuthzGrantee(
 	if len(granter) == 0 || len(grantees) == 0 {
 		return nil, nil
 	}
-	cache := GetAuthzCache(ctx)
+	cache := types.GetAuthzCache(ctx)
 	msgTypes := getAuthzMessageTypeURLs(sdk.MsgTypeURL(msg))
 	for _, grantee := range grantees {
 		for _, msgType := range msgTypes {
@@ -263,10 +264,10 @@ func (k Keeper) findAuthzGrantee(
 // to stop checking (i.e. true => stop now, false => keep checking the rest of the parties).
 func (k Keeper) associateAuthorizations(
 	ctx sdk.Context,
-	parties []*PartyDetails,
+	parties []*types.PartyDetails,
 	signers *SignersWrapper,
 	msg types.MetadataMsg,
-	onAssociation func(party *PartyDetails) (stop bool),
+	onAssociation func(party *types.PartyDetails) (stop bool),
 ) error {
 	for _, party := range parties {
 		if !party.HasSigner() {
@@ -298,20 +299,20 @@ func (k Keeper) associateAuthorizations(
 func (k Keeper) associateAuthorizationsForRoles(
 	ctx sdk.Context,
 	roles []types.PartyType,
-	parties []*PartyDetails,
+	parties []*types.PartyDetails,
 	signers *SignersWrapper,
 	msg types.MetadataMsg,
 ) (bool, error) {
 	missingRoles := false
 	for _, role := range roles {
 		found := false
-		var partiesToCheck []*PartyDetails
+		var partiesToCheck []*types.PartyDetails
 		for _, party := range parties {
 			if party.IsStillUsableAs(role) && !party.HasSigner() {
 				partiesToCheck = append(partiesToCheck, party)
 			}
 		}
-		err := k.associateAuthorizations(ctx, partiesToCheck, signers, msg, func(party *PartyDetails) bool {
+		err := k.associateAuthorizations(ctx, partiesToCheck, signers, msg, func(party *types.PartyDetails) bool {
 			party.MarkAsUsed()
 			found = true
 			return true
@@ -331,7 +332,7 @@ func (k Keeper) associateAuthorizationsForRoles(
 // validateProvenanceRole makes sure that:
 //   - All parties with the address of a smart contract have the PROVENANCE role.
 //   - All parties with the PROVENANCE role have the address of a smart contract.
-func (k Keeper) validateProvenanceRole(ctx sdk.Context, parties []*PartyDetails) error {
+func (k Keeper) validateProvenanceRole(ctx sdk.Context, parties []*types.PartyDetails) error {
 	for _, party := range parties {
 		if party.CanBeUsed() {
 			// Using the party address here (instead of the signer) because it's
@@ -358,7 +359,7 @@ func (k Keeper) isWasmAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	if len(addr) == 0 {
 		return false
 	}
-	authzCache := GetAuthzCache(ctx)
+	authzCache := types.GetAuthzCache(ctx)
 	if authzCache.HasIsWasm(addr) {
 		return authzCache.GetIsWasm(addr)
 	}
@@ -372,7 +373,7 @@ func (k Keeper) isWasmAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 // are in the usedSigners map or are authorized by all signers after them.
 // The usedSigners map has bech32 keys and value indicating whether that address was
 // used as a signer in some capacity (e.g. they're a party).
-func (k Keeper) validateSmartContractSigners(ctx sdk.Context, usedSigners UsedSignersMap, msg types.MetadataMsg) error {
+func (k Keeper) validateSmartContractSigners(ctx sdk.Context, usedSigners types.UsedSignersMap, msg types.MetadataMsg) error {
 	// When a smart contract is a signer, they must either be used as a signer
 	// already, or must be authorized by all signers after it.
 	// The wasm encoders (hopefully) put the smart contract as the first signer
@@ -429,7 +430,7 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 	existingOwners []sdk.AccAddress,
 	proposed string,
 	msg types.MetadataMsg,
-) ([]sdk.AccAddress, UsedSignersMap, error) {
+) ([]sdk.AccAddress, types.UsedSignersMap, error) {
 	if len(existingOwners) == 0 {
 		return nil, nil, nil
 	}
@@ -469,7 +470,7 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 		}
 	}
 
-	usedSigners := NewUsedSignersMap()
+	usedSigners := types.NewUsedSignersMap()
 	for _, existing := range existingOwners {
 		// If it's empty, there's nothing to check.
 		if len(existing) == 0 {
@@ -533,21 +534,20 @@ func (k Keeper) ValidateSignersWithoutParties(
 	if err != nil {
 		return err
 	}
-	return k.validateSmartContractSigners(ctx, GetUsedSigners(parties), msg)
+	return k.validateSmartContractSigners(ctx, types.GetUsedSigners(parties), msg)
 }
 
 // validateAllRequiredSigned ensures that all required addresses are either in the msg signers,
 // or have granted an authorization to someone in the signers.
 //
 // If you call this, you will probably also need to call validateSmartContractSigners on your own.
-func (k Keeper) validateAllRequiredSigned(ctx sdk.Context, required []string, msg types.MetadataMsg) ([]*PartyDetails, error) {
-	details := make([]*PartyDetails, len(required))
+func (k Keeper) validateAllRequiredSigned(ctx sdk.Context, required []string, msg types.MetadataMsg) ([]*types.PartyDetails, error) {
+	details := make([]*types.PartyDetails, len(required))
 	for i, addr := range required {
-		details[i] = &PartyDetails{
-			address:  addr,
-			role:     types.PartyType_PARTY_TYPE_UNSPECIFIED,
-			optional: false,
-		}
+		details[i] = types.WrapRequiredParty(types.Party{
+			Address: addr,
+			Role:    types.PartyType_PARTY_TYPE_UNSPECIFIED,
+		})
 	}
 
 	signers := NewSignersWrapper(msg.GetSignerStrs())
@@ -569,7 +569,7 @@ func (k Keeper) validateAllRequiredSigned(ctx sdk.Context, required []string, ms
 		for i, party := range missingReqParties {
 			missing[i] = party.GetAddress()
 		}
-		return nil, fmt.Errorf("missing signature%s: %s", pluralEnding(len(missing)), strings.Join(missing, ", "))
+		return nil, fmt.Errorf("missing signature%s: %s", provutils.PluralEnding(missing), strings.Join(missing, ", "))
 	}
 
 	return details, nil
@@ -579,7 +579,7 @@ func (k Keeper) validateAllRequiredSigned(ctx sdk.Context, required []string, ms
 //
 // This is similar to associateRequiredRoles, except this one doesn't require the party to have a signer.
 func validateRolesPresent(parties []types.Party, reqRoles []types.PartyType) error {
-	details := BuildPartyDetails(nil, parties)
+	details := types.BuildPartyDetails(nil, parties)
 	roleMissing := false
 reqRolesLoop:
 	for _, role := range reqRoles {
@@ -599,7 +599,7 @@ reqRolesLoop:
 
 // validatePartiesArePresent returns an error if there are any parties in required that are not in available.
 func validatePartiesArePresent(required, available []types.Party) error {
-	missing := findMissingParties(required, available)
+	missing := types.FindMissingParties(required, available)
 	if len(missing) == 0 {
 		return nil
 	}

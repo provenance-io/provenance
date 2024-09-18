@@ -1341,6 +1341,201 @@ func (s *ScopeTestSuite) TestEqualParties() {
 	}
 }
 
+func TestFindMissingParties(t *testing.T) {
+	// pz is just a shorter way to define a []Party
+	pz := func(parties ...Party) []Party {
+		return parties
+	}
+
+	pOne3Req := Party{Address: "one", Role: 3, Optional: false}
+	pOne3Opt := Party{Address: "one", Role: 3, Optional: true}
+	pOne4Req := Party{Address: "one", Role: 4, Optional: false}
+	pOne4Opt := Party{Address: "one", Role: 4, Optional: true}
+	pTwo3Req := Party{Address: "two", Role: 3, Optional: false}
+	pTwo3Opt := Party{Address: "two", Role: 3, Optional: true}
+	pTwo4Req := Party{Address: "two", Role: 4, Optional: false}
+	pTwo4Opt := Party{Address: "two", Role: 4, Optional: true}
+
+	// Note: PartyType_PARTY_TYPE_INVESTOR = 3, PartyType_PARTY_TYPE_CUSTODIAN = 4
+
+	tests := []struct {
+		name     string
+		required []Party
+		toCheck  []Party
+		expected []Party
+	}{
+		{
+			name:     "nil nil",
+			required: nil,
+			toCheck:  nil,
+			expected: nil,
+		},
+		{
+			name:     "empty nil",
+			required: pz(),
+			toCheck:  nil,
+			expected: nil,
+		},
+		{
+			name:     "nil empty",
+			required: nil,
+			toCheck:  pz(),
+			expected: nil,
+		},
+		{
+			name:     "empty empty",
+			required: pz(),
+			toCheck:  pz(),
+			expected: nil,
+		},
+
+		{
+			name:     "nil VS one3",
+			required: nil,
+			toCheck:  pz(pOne3Req),
+			expected: nil,
+		},
+		{
+			name:     "empty VS one3",
+			required: pz(),
+			toCheck:  pz(pOne3Req),
+			expected: nil,
+		},
+
+		{
+			name:     "one3req VS one3req",
+			required: pz(pOne3Req),
+			toCheck:  pz(pOne3Req),
+			expected: nil,
+		},
+		{
+			name:     "one3req VS one3opt",
+			required: pz(pOne3Req),
+			toCheck:  pz(pOne3Opt),
+			expected: nil,
+		},
+		{
+			name:     "one3opt VS one3req",
+			required: pz(pOne3Opt),
+			toCheck:  pz(pOne3Req),
+			expected: nil,
+		},
+		{
+			name:     "one3opt VS one3opt",
+			required: pz(pOne3Opt),
+			toCheck:  pz(pOne3Opt),
+			expected: nil,
+		},
+
+		{
+			name:     "one3 one4 two3 two4 req VS one4 one3 two4 two3 req",
+			required: pz(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
+			toCheck:  pz(pOne4Req, pOne3Req, pTwo4Req, pTwo3Req),
+			expected: nil,
+		},
+		{
+			name:     "one3 one4 two3 two4 req VS one4 one3 two4 two3 opt",
+			required: pz(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
+			toCheck:  pz(pOne4Opt, pOne3Opt, pTwo4Opt, pTwo3Opt),
+			expected: nil,
+		},
+		{
+			name:     "one3 one4 two3 two4 opt vs one4 one3 two4 two3 req",
+			required: pz(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
+			toCheck:  pz(pOne4Req, pOne3Req, pTwo4Req, pTwo3Req),
+			expected: nil,
+		},
+		{
+			name:     "one3 one4 two3 two4 opt vs one4 one3 two4 two3 opt",
+			required: pz(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
+			toCheck:  pz(pOne4Opt, pOne3Opt, pTwo4Opt, pTwo3Opt),
+			expected: nil,
+		},
+
+		{
+			name:     "one3 two4 VS nil",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  nil,
+			expected: pz(pOne3Opt, pTwo4Req),
+		},
+		{
+			name:     "one3 two4 VS empty",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(),
+			expected: pz(pOne3Opt, pTwo4Req),
+		},
+		{
+			name:     "one3 two4 VS one3",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pOne3Req),
+			expected: pz(pTwo4Req),
+		},
+		{
+			name:     "one3 two4 VS one4",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pOne4Opt),
+			expected: pz(pOne3Opt, pTwo4Req),
+		},
+		{
+			name:     "one3 two4 VS two3",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pTwo3Opt),
+			expected: pz(pOne3Opt, pTwo4Req),
+		},
+		{
+			name:     "one3 two4 VS two4",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pTwo4Opt),
+			expected: pz(pOne3Opt),
+		},
+
+		{
+			name:     "one3req two4opt VS two4req one3opt",
+			required: pz(pOne3Req, pTwo4Opt),
+			toCheck:  pz(pTwo4Req, pOne3Opt),
+			expected: nil,
+		},
+		{
+			name:     "one3opt two4req VS two4opt one3req",
+			required: pz(pOne3Opt, pTwo4Req),
+			toCheck:  pz(pTwo4Opt, pOne3Req),
+			expected: nil,
+		},
+
+		{
+			name:     "one3opt VS all others req",
+			required: pz(pOne3Opt),
+			toCheck:  pz(pOne3Req, pOne4Req, pTwo3Req, pTwo4Req),
+			expected: nil,
+		},
+		{
+			name:     "one3req VS all others opt",
+			required: pz(pOne3Req),
+			toCheck:  pz(pOne3Opt, pOne4Opt, pTwo3Opt, pTwo4Opt),
+			expected: nil,
+		},
+		{
+			name:     "all req VS two3Opt",
+			required: pz(pOne4Req, pTwo3Req, pOne3Req, pTwo4Req),
+			toCheck:  pz(pTwo3Opt),
+			expected: pz(pOne4Req, pOne3Req, pTwo4Req),
+		},
+		{
+			name:     "all opt VS two3Req",
+			required: pz(pOne4Opt, pOne3Opt, pTwo3Opt, pTwo4Opt),
+			toCheck:  pz(pTwo3Req),
+			expected: pz(pOne4Opt, pOne3Opt, pTwo4Opt),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := FindMissingParties(tc.required, tc.toCheck)
+			assert.Equal(t, tc.expected, actual, "findMissingParties")
+		})
+	}
+}
+
 type otherParty struct {
 	address  string
 	role     PartyType

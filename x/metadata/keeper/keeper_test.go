@@ -124,6 +124,11 @@ func addrsToStrings(addrs []sdk.AccAddress) []string {
 	return rv
 }
 
+// FreshCtx returns a new sdk.Context with a types.AuthzCache in it.
+func FreshCtx(app *simapp.App) sdk.Context {
+	return types.AddAuthzCacheToContext(app.NewContext(false))
+}
+
 // needsUpdate runs a sub-test that fails. Use it to indicate that a set of tests needs to be updated.
 // TODO[2137]: Delete this needsUpdate method.
 func needsUpdate(t *testing.T) {

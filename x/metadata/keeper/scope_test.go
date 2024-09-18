@@ -88,7 +88,7 @@ func (s *ScopeKeeperTestSuite) SetupTest() {
 }
 
 func (s *ScopeKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
+	return FreshCtx(s.app)
 }
 
 // AssertErrorValue asserts that:
@@ -3056,7 +3056,7 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 				msg := maker.make(tc.signers)
 				ctx := s.FreshCtx()
 				if len(tc.wasmAddrs) > 0 {
-					cache := keeper.GetAuthzCache(ctx)
+					cache := types.GetAuthzCache(ctx)
 					for _, addr := range tc.wasmAddrs {
 						cache.SetIsWasm(addr, true)
 					}

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/provenance-io/provenance/internal/provutils"
 )
 
 const (
@@ -529,6 +531,12 @@ p1Loop:
 		return false
 	}
 	return true
+}
+
+// FindMissingParties returns all parties from the required list that don't have a same party in the toCheck list.
+// Uses the SamePartiers function to evaluate sameness.
+func FindMissingParties(required, toCheck []Party) []Party {
+	return provutils.FindMissingFunc(required, toCheck, func(r, c Party) bool { return SamePartiers(&r, &c) })
 }
 
 // GetPartyAddresses gets the addresses of all of the parties. Each address can only appear once in the return value.
