@@ -15,11 +15,8 @@ func Ternary[V any](test bool, ifTrue V, ifFalse V) V {
 // E.g. Pluralize(parties, "party", "parties")
 //
 // If the only difference between ifOne and ifOther is an additional "s", consider using PluralEnding.
-func Pluralize[S ~[]any](vals S, ifOne, ifOther string) string {
-	if len(vals) == 1 {
-		return ifOne
-	}
-	return ifOther
+func Pluralize[S ~[]E, E any](vals S, ifOne, ifOther string) string {
+	return Ternary(len(vals) == 1, ifOne, ifOther)
 }
 
 // PluralEnding returns an empty string if vals has length 1, otherwise returns "s".
@@ -28,8 +25,5 @@ func Pluralize[S ~[]any](vals S, ifOne, ifOther string) string {
 //
 // If you need more than the addition of an "s", use Pluralize.
 func PluralEnding[S ~[]E, E any](vals S) string {
-	if len(vals) == 1 {
-		return ""
-	}
-	return "s"
+	return Ternary(len(vals) == 1, "", "s")
 }

@@ -11,6 +11,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+
+	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
 // emptySdkContext creates a new sdk.Context that only has an empty background context.
@@ -388,7 +390,111 @@ func TestBuildPartyDetails(t *testing.T) {
 	}
 }
 
-// TODO[2137]: func TestPartyDetails_Copy(t *testing.T)
+func TestPartyDetails_Copy(t *testing.T) {
+	tests := []struct {
+		name string
+		pd   *PartyDetails
+	}{
+		{
+			name: "nil",
+			pd:   nil,
+		},
+		{
+			name: "empty",
+			pd:   &PartyDetails{},
+		},
+		{
+			name: "just address",
+			pd:   &PartyDetails{address: "address_value"},
+		},
+		{
+			name: "just role",
+			pd:   &PartyDetails{role: PartyType_PARTY_TYPE_OMNIBUS},
+		},
+		{
+			name: "just optional",
+			pd:   &PartyDetails{optional: true},
+		},
+		{
+			name: "just acc",
+			pd:   &PartyDetails{acc: sdk.AccAddress("acc_value")},
+		},
+		{
+			name: "just signer",
+			pd:   &PartyDetails{signer: "signer_value"},
+		},
+		{
+			name: "just signerAcc",
+			pd:   &PartyDetails{signerAcc: sdk.AccAddress("signerAcc_value")},
+		},
+		{
+			name: "just canBeUsedBySpec",
+			pd:   &PartyDetails{canBeUsedBySpec: true},
+		},
+		{
+			name: "just usedBySpec",
+			pd:   &PartyDetails{usedBySpec: true},
+		},
+		{
+			name: "required party",
+			pd: WrapRequiredParty(Party{
+				Address:  "required_address",
+				Role:     PartyType_PARTY_TYPE_CUSTODIAN,
+				Optional: false,
+			}),
+		},
+		{
+			name: "available party",
+			pd: WrapAvailableParty(Party{
+				Address:  "available_address",
+				Role:     PartyType_PARTY_TYPE_ORIGINATOR,
+				Optional: true,
+			}),
+		},
+		{
+			name: "everything populated",
+			pd: &PartyDetails{
+				address:         "another_address",
+				role:            PartyType_PARTY_TYPE_AFFILIATE,
+				optional:        true,
+				acc:             sdk.AccAddress("the_acc_field"),
+				signer:          "another_signer",
+				signerAcc:       sdk.AccAddress("the_signerAcc_field"),
+				canBeUsedBySpec: true,
+				usedBySpec:      true,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual *PartyDetails
+			testFunc := func() {
+				actual = tc.pd.Copy()
+			}
+			require.NotPanics(t, testFunc, "Copy()")
+			require.Equal(t, tc.pd, actual, "result of Copy()")
+			if tc.pd != nil && actual != nil {
+				assert.NotSame(t, tc.pd, actual, "result of Copy()")
+				assert.NotSame(t, tc.pd.acc, actual.acc, "acc field")
+				if len(actual.acc) > 0 {
+					// Change the first byte in the copy to make sure it doesn't also change in the original.
+					actual.acc[0] = actual.acc[0] + 1
+					assert.NotEqual(t, tc.pd.acc, actual.acc, "the acc field after changing it in the copy")
+					// And put it back so we don't mess up anything else.
+					actual.acc[0] = actual.acc[0] - 1
+				}
+				assert.NotSame(t, tc.pd.signerAcc, actual.signerAcc, "signerAcc field")
+				if len(actual.signerAcc) > 0 {
+					// Change the first byte in the copy to make sure it doesn't also change in the original.
+					actual.signerAcc[0] = actual.signerAcc[0] + 1
+					assert.NotEqual(t, tc.pd.signerAcc, actual.signerAcc, "the signerAcc field after changing it in the copy")
+					actual.signerAcc[0] = actual.signerAcc[0] - 1
+				}
+			}
+		})
+	}
+}
 
 func TestPartyDetails_SetAddress(t *testing.T) {
 	// pd is a short way to create a PartyDetails with only what we care about in this test.
@@ -1683,7 +1789,50 @@ func TestGetUsedSigners(t *testing.T) {
 	}
 }
 
-// TODO[2137]: func TestNewTestablePartyDetails(t *testing.T)
+func TestNewTestablePartyDetails(t *testing.T) {
+	t.Run("nil panics", func(t *testing.T) {
+		expPanic := "runtime error: invalid memory address or nil pointer dereference"
+		testFunc := func() {
+			_ = NewTestablePartyDetails(nil)
+		}
+		assertions.RequirePanicEquals(t, testFunc, expPanic, "NewTestablePartyDetails")
+	})
+
+	t.Run("normal", func(t *testing.T) {
+		expected := TestablePartyDetails{
+			Address:         "address",
+			Role:            10,
+			Optional:        true,
+			Acc:             sdk.AccAddress("acc"),
+			Signer:          "signer",
+			SignerAcc:       sdk.AccAddress("signer_acc"),
+			CanBeUsedBySpec: true,
+			UsedBySpec:      true,
+		}
+		pd := &PartyDetails{
+			address:         "address",
+			role:            10,
+			optional:        true,
+			acc:             sdk.AccAddress("acc"),
+			signer:          "signer",
+			signerAcc:       sdk.AccAddress("signer_acc"),
+			canBeUsedBySpec: true,
+			usedBySpec:      true,
+		}
+		var actual TestablePartyDetails
+		testFunc := func() {
+			actual = NewTestablePartyDetails(pd)
+		}
+		require.NotPanics(t, testFunc, "NewTestablePartyDetails")
+		assert.Equal(t, expected, actual, "result of NewTestablePartyDetails")
+		assert.NotSame(t, pd.acc, actual.Acc, "the acc field")
+		actual.Acc[0] = actual.Acc[0] + 1
+		assert.NotEqual(t, pd.acc, actual.Acc, "the acc field after a change to it in the result")
+		assert.NotSame(t, pd.signerAcc, actual.SignerAcc, "the signerAcc field")
+		actual.SignerAcc[0] = actual.SignerAcc[0] + 1
+		assert.NotEqual(t, pd.signerAcc, actual.SignerAcc, "the signerAcc field after a change to it in the result")
+	})
+}
 
 func TestUsedSignersMap(t *testing.T) {
 	tests := []struct {
@@ -2075,9 +2224,168 @@ func TestAuthzCache_GetIsWasm(t *testing.T) {
 	}
 }
 
-// TODO[2137]: func TestAuthzCache_GetAcceptableMap(t *testing.T)
+func TestAuthzCache_GetAcceptableMap(t *testing.T) {
+	makeCache := func(counts ...int32) *AuthzCache {
+		rv := NewAuthzCache()
+		for i, count := range counts {
+			rv.acceptable[fmt.Sprintf("key_%d__%d", i, count)] = &authz.CountAuthorization{
+				Msg:                   fmt.Sprintf("msgTypeURL%d", i),
+				AllowedAuthorizations: count,
+			}
+		}
+		return rv
+	}
 
-// TODO[2137]: func TestAuthzCache_GetIsWasmMap(t *testing.T)
+	tests := []struct {
+		name  string
+		cache *AuthzCache
+	}{
+		{
+			name:  "nil",
+			cache: nil,
+		},
+		{
+			name:  "nil map",
+			cache: &AuthzCache{},
+		},
+		{
+			name:  "empty map",
+			cache: makeCache(),
+		},
+		{
+			name:  "one entry",
+			cache: makeCache(5),
+		},
+		{
+			name:  "three entries",
+			cache: makeCache(52, 1, 12),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var expected map[string]authz.Authorization
+			if tc.cache != nil {
+				expected = tc.cache.acceptable
+			}
+			var actual map[string]authz.Authorization
+			testFunc := func() {
+				actual = tc.cache.GetAcceptableMap()
+			}
+			require.NotPanics(t, testFunc, "GetAcceptableMap")
+			if expected != nil && actual != nil {
+				require.NotSame(t, tc.cache.acceptable, actual, "result from GetAcceptableMap")
+			}
+			require.Equal(t, expected, actual, "result from GetAcceptableMap")
+			if len(actual) > 0 {
+				key := ""
+				for k := range actual {
+					if len(key) == 0 || k < key {
+						key = k
+					}
+				}
+				actual[key] = &authz.GenericAuthorization{Msg: "changed"}
+				assert.NotEqual(t, tc.cache.acceptable, actual, "after change to result from GetAcceptableMap")
+			}
+		})
+	}
+}
+
+func TestAuthzCache_GetIsWasmMap(t *testing.T) {
+	makeCache := func(bools ...bool) *AuthzCache {
+		rv := NewAuthzCache()
+		for i, b := range bools {
+			rv.isWasm[fmt.Sprintf("key_%d__%t", i, b)] = b
+		}
+		return rv
+	}
+
+	tests := []struct {
+		name  string
+		cache *AuthzCache
+	}{
+		{
+			name:  "nil",
+			cache: nil,
+		},
+		{
+			name:  "nil map",
+			cache: &AuthzCache{},
+		},
+		{
+			name:  "empty map",
+			cache: makeCache(),
+		},
+		{
+			name:  "one true entry",
+			cache: makeCache(true),
+		},
+		{
+			name:  "one false entry",
+			cache: makeCache(false),
+		},
+		{
+			name:  "three entries: true true true",
+			cache: makeCache(true, true, true),
+		},
+		{
+			name:  "three entries: true true false",
+			cache: makeCache(true, true, false),
+		},
+		{
+			name:  "three entries: true false true",
+			cache: makeCache(true, false, true),
+		},
+		{
+			name:  "three entries: false true true",
+			cache: makeCache(false, true, true),
+		},
+		{
+			name:  "three entries: true false false",
+			cache: makeCache(true, false, false),
+		},
+		{
+			name:  "three entries: false true false",
+			cache: makeCache(false, true, false),
+		},
+		{
+			name:  "three entries: false false true",
+			cache: makeCache(false, false, true),
+		},
+		{
+			name:  "three entries: false false false",
+			cache: makeCache(false, false, false),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var expected map[string]bool
+			if tc.cache != nil {
+				expected = tc.cache.isWasm
+			}
+			var actual map[string]bool
+			testFunc := func() {
+				actual = tc.cache.GetIsWasmMap()
+			}
+			require.NotPanics(t, testFunc, "GetIsWasmMap")
+			if expected != nil && actual != nil {
+				require.NotSame(t, tc.cache.isWasm, actual, "result from GetIsWasmMap")
+			}
+			require.Equal(t, expected, actual, "result from GetIsWasmMap")
+			if len(actual) > 0 {
+				key := ""
+				for k := range actual {
+					if len(key) == 0 || k < key {
+						key = k
+					}
+				}
+				actual[key] = !actual[key]
+				assert.NotEqual(t, tc.cache.isWasm, actual, "after change to result from GetIsWasmMap")
+			}
+		})
+	}
+}
 
 func TestAddAuthzCacheToContext(t *testing.T) {
 	t.Run("context does not already have the key", func(t *testing.T) {

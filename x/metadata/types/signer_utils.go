@@ -245,7 +245,8 @@ type TestablePartyDetails struct {
 }
 
 // NewTestablePartyDetails converts a PartyDetails into a TestablePartyDetails.
-func NewTestablePartyDetails(orig *PartyDetails) TestablePartyDetails {
+func NewTestablePartyDetails(pd *PartyDetails) TestablePartyDetails {
+	orig := pd.Copy()
 	return TestablePartyDetails{
 		Address:         orig.address,
 		Role:            orig.role,
@@ -371,7 +372,7 @@ func (c *AuthzCache) GetIsWasm(addr sdk.AccAddress) bool {
 // GetAcceptableMap returns a copy of the map of acceptable authorizations in this AuthzCache.
 // It only exists for unit testing purposes.
 func (c *AuthzCache) GetAcceptableMap() map[string]authz.Authorization {
-	if c.acceptable == nil {
+	if c == nil || c.acceptable == nil {
 		return nil
 	}
 	rv := make(map[string]authz.Authorization, len(c.acceptable))
@@ -384,7 +385,7 @@ func (c *AuthzCache) GetAcceptableMap() map[string]authz.Authorization {
 // GetIsWasmMap returns a copy of the map of previously made IsWasm checks.
 // It only exists for unit testing purposes.
 func (c *AuthzCache) GetIsWasmMap() map[string]bool {
-	if c.isWasm == nil {
+	if c == nil || c.isWasm == nil {
 		return nil
 	}
 	rv := make(map[string]bool, len(c.isWasm))
