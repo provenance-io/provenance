@@ -570,7 +570,7 @@ func (k Keeper) ValidateDeleteScope(ctx sdk.Context, msg *types.MsgDeleteScopeRe
 	if err != nil {
 		return nil, err
 	}
-	return transferAgents, err
+	return transferAgents, nil
 }
 
 // ValidateSetScopeAccountData makes sure that the msg signers have proper authority to

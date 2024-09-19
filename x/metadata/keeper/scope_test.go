@@ -1883,8 +1883,6 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
-	needsUpdate(s.T()) // TODO[2137]: Update TestValidateDeleteScope to account for recent changes.
-
 	pt := func(addr string, role types.PartyType, opt bool) types.Party {
 		return types.Party{
 			Address:  addr,
@@ -1897,6 +1895,9 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		rv = append(rv, parties...)
 		return rv
 	}
+
+	owner := types.PartyType_PARTY_TYPE_OWNER
+	servicer := types.PartyType_PARTY_TYPE_SERVICER
 
 	ctx := s.FreshCtx()
 	markerDenom := "testcoins2"
@@ -1926,7 +1927,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		DataAccess:        nil,
 		ValueOwnerAddress: "",
 	}
-	s.app.MetadataKeeper.SetScope(ctx, scopeNoValueOwner)
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, scopeNoValueOwner), "SetScope(scopeNoValueOwner)")
 
 	scopeMarkerValueOwner := types.Scope{
 		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
@@ -1935,7 +1936,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		DataAccess:        nil,
 		ValueOwnerAddress: markerAddr,
 	}
-	s.app.MetadataKeeper.SetScope(ctx, scopeMarkerValueOwner)
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, scopeMarkerValueOwner), "SetScope(scopeMarkerValueOwner)")
 
 	scopeUserValueOwner := types.Scope{
 		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
@@ -1944,10 +1945,31 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		DataAccess:        nil,
 		ValueOwnerAddress: s.user1,
 	}
-	s.app.MetadataKeeper.SetScope(ctx, scopeUserValueOwner)
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, scopeUserValueOwner), "SetScope(scopeUserValueOwner)")
 
-	owner := types.PartyType_PARTY_TYPE_OWNER
-	servicer := types.PartyType_PARTY_TYPE_SERVICER
+	scopeSCValueOwner := types.Scope{
+		ScopeId:         types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
+		Owners: ptz(
+			pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, true),
+			pt(s.user1, owner, false),
+		),
+		ValueOwnerAddress:  s.scUser,
+		RequirePartyRollup: true,
+	}
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, scopeSCValueOwner), "SetScope(scopeSCValueOwner)")
+
+	scopeUserValueOwnerWithSC := types.Scope{
+		ScopeId:         types.ScopeMetadataAddress(uuid.New()),
+		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
+		Owners: ptz(
+			pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, true),
+			pt(s.user2, owner, false),
+		),
+		ValueOwnerAddress:  s.user1,
+		RequirePartyRollup: true,
+	}
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, scopeUserValueOwnerWithSC), "SetScope(scopeUserValueOwnerWithSC)")
 
 	scopeSpec := types.ScopeSpecification{
 		SpecificationId: types.ScopeSpecMetadataAddress(uuid.New()),
@@ -1958,7 +1980,8 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 	}
 	s.app.MetadataKeeper.SetScopeSpecification(ctx, scopeSpec)
 
-	otherUser := sdk.AccAddress("some_other_user_____").String()
+	otherUserAddr := sdk.AccAddress("some_other_user_____")
+	otherUser := otherUserAddr.String()
 
 	// with rollup no scope spec req party not signed
 	scopeRollupNoSpecReq := types.Scope{
@@ -1969,7 +1992,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		ValueOwnerAddress:  "",
 		RequirePartyRollup: true,
 	}
-	s.app.MetadataKeeper.SetScope(ctx, scopeRollupNoSpecReq)
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, scopeRollupNoSpecReq), "SetScope(scopeRollupNoSpecReq)")
 
 	// with rollup no scope spec all optional parties signer not involved
 	scopeRollupNoSpecAllOpt := types.Scope{
@@ -1980,7 +2003,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		ValueOwnerAddress:  "",
 		RequirePartyRollup: true,
 	}
-	s.app.MetadataKeeper.SetScope(ctx, scopeRollupNoSpecAllOpt)
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, scopeRollupNoSpecAllOpt), "SetScope(scopeRollupNoSpecAllOpt)")
 
 	// with rollup req scope owner not signed
 	// with rollup req role not signed
@@ -1993,7 +2016,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		ValueOwnerAddress:  "",
 		RequirePartyRollup: true,
 	}
-	s.app.MetadataKeeper.SetScope(ctx, scopeRollup)
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, scopeRollup), "SetScope(scopeRollup)")
 
 	// with rollup marker value owner no signer has withdraw
 	scopeRollupMarkerValueOwner := types.Scope{
@@ -2003,7 +2026,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		DataAccess:        nil,
 		ValueOwnerAddress: markerAddr,
 	}
-	s.app.MetadataKeeper.SetScope(ctx, scopeRollupMarkerValueOwner)
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, scopeRollupMarkerValueOwner), "SetScope(scopeRollupMarkerValueOwner)")
 
 	// with rollup value owner not signed
 	scopeRollupUserValueOwner := types.Scope{
@@ -2013,7 +2036,7 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 		DataAccess:        nil,
 		ValueOwnerAddress: s.user1,
 	}
-	s.app.MetadataKeeper.SetScope(ctx, scopeRollupUserValueOwner)
+	s.Require().NoError(s.app.MetadataKeeper.SetScope(ctx, scopeRollupUserValueOwner), "SetScope(scopeRollupUserValueOwner)")
 
 	dneScopeID := types.ScopeMetadataAddress(uuid.New())
 
@@ -2027,28 +2050,29 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 
 	tests := []struct {
 		name     string
+		bankK    *MockBankKeeper
 		scope    types.Scope
 		signers  []string
 		expAddrs []sdk.AccAddress
 		expErr   string
 	}{
 		{
-			name:    "no value owner all signers",
-			scope:   scopeNoValueOwner,
-			signers: []string{s.user1, s.user2},
-			expErr:  "",
+			name:     "no value owner all signers",
+			scope:    scopeNoValueOwner,
+			signers:  []string{s.user1, s.user2},
+			expAddrs: []sdk.AccAddress{s.user1Addr, s.user2Addr},
 		},
 		{
-			name:    "no value owner all signers reversed",
-			scope:   scopeNoValueOwner,
-			signers: []string{s.user1, s.user2},
-			expErr:  "",
+			name:     "no value owner all signers reversed",
+			scope:    scopeNoValueOwner,
+			signers:  []string{s.user2, s.user1},
+			expAddrs: []sdk.AccAddress{s.user2Addr, s.user1Addr},
 		},
 		{
-			name:    "no value owner extra signer",
-			scope:   scopeNoValueOwner,
-			signers: []string{s.user1, s.user2, s.user3},
-			expErr:  "",
+			name:     "no value owner extra signer",
+			scope:    scopeNoValueOwner,
+			signers:  []string{s.user1, s.user2, s.user3},
+			expAddrs: []sdk.AccAddress{s.user1Addr, s.user2Addr, s.user3Addr},
 		},
 		{
 			name:    "no value owner missing signer 1",
@@ -2075,16 +2099,16 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 			expErr:  missing2Sigs(s.user1, s.user2),
 		},
 		{
-			name:    "marker value owner signed by owner and user with auth", // TODO[2137]: Figure out what to do with this case.
-			scope:   scopeMarkerValueOwner,
-			signers: []string{s.user1, s.user2},
-			expErr:  "",
+			name:     "marker value owner signed by owner and user with auth",
+			scope:    scopeMarkerValueOwner,
+			signers:  []string{s.user1, s.user2},
+			expAddrs: []sdk.AccAddress{s.user1Addr, s.user2Addr},
 		},
 		{
-			name:    "marker value owner signed by owner and user with auth reversed", // TODO[2137]: Figure out what to do with this case.
-			scope:   scopeMarkerValueOwner,
-			signers: []string{s.user2, s.user1},
-			expErr:  "",
+			name:     "marker value owner signed by owner and user with auth reversed",
+			scope:    scopeMarkerValueOwner,
+			signers:  []string{s.user2, s.user1},
+			expAddrs: []sdk.AccAddress{s.user2Addr, s.user1Addr},
 		},
 		{
 			name:    "marker value owner not signed by owner",
@@ -2093,22 +2117,16 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 			expErr:  missing1Sig(s.user2),
 		},
 		{
-			name:    "marker value owner not signed by user with auth", // TODO[2137]: Figure out what to do with this case.
-			scope:   scopeMarkerValueOwner,
-			signers: []string{s.user2},
-			expErr:  fmt.Sprintf("missing signature for %s (testcoins2) with authority to withdraw/remove it as scope value owner", markerAddr),
+			name:     "user value owner signed by owner and value owner",
+			scope:    scopeUserValueOwner,
+			signers:  []string{s.user1, s.user2},
+			expAddrs: []sdk.AccAddress{s.user1Addr, s.user2Addr},
 		},
 		{
-			name:    "user value owner signed by owner and value owner",
-			scope:   scopeUserValueOwner,
-			signers: []string{s.user1, s.user2},
-			expErr:  "",
-		},
-		{
-			name:    "user value owner signed by owner and value owner reversed",
-			scope:   scopeUserValueOwner,
-			signers: []string{s.user2, s.user1},
-			expErr:  "",
+			name:     "user value owner signed by owner and value owner reversed",
+			scope:    scopeUserValueOwner,
+			signers:  []string{s.user2, s.user1},
+			expAddrs: []sdk.AccAddress{s.user2Addr, s.user1Addr},
 		},
 		{
 			name:    "user value owner not signed by owner",
@@ -2120,43 +2138,43 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 			name:    "user value owner not signed by value owner",
 			scope:   scopeUserValueOwner,
 			signers: []string{s.user2},
-			expErr:  fmt.Sprintf("missing signature from existing value owner %s", s.user1),
+			expErr:  "missing signature from existing value owner \"" + s.user1 + "\"",
 		},
 		{
 			name:    "scope does not exist",
 			scope:   types.Scope{ScopeId: dneScopeID},
 			signers: []string{},
-			expErr:  fmt.Sprintf("scope not found with id %s", dneScopeID),
+			expErr:  "scope not found with id " + dneScopeID.String(),
 		},
 		{
 			name:    "with rollup no scope spec neither req party signed",
 			scope:   scopeRollupNoSpecReq,
 			signers: []string{otherUser},
-			expErr:  "missing signatures: " + s.user1 + ", " + s.user2 + "",
+			expErr:  missing2Sigs(s.user1, s.user2),
 		},
 		{
 			name:    "with rollup no scope spec req party 1 not signed",
 			scope:   scopeRollupNoSpecReq,
 			signers: []string{s.user2},
-			expErr:  "missing signature: " + s.user1,
+			expErr:  missing1Sig(s.user1),
 		},
 		{
 			name:    "with rollup no scope spec req party 2 not signed",
 			scope:   scopeRollupNoSpecReq,
 			signers: []string{s.user1},
-			expErr:  "missing signature: " + s.user2,
+			expErr:  missing1Sig(s.user2),
 		},
 		{
-			name:    "with rollup no scope spec both req parties signed",
-			scope:   scopeRollupNoSpecReq,
-			signers: []string{s.user1, s.user2},
-			expErr:  "",
+			name:     "with rollup no scope spec both req parties signed",
+			scope:    scopeRollupNoSpecReq,
+			signers:  []string{s.user1, s.user2},
+			expAddrs: []sdk.AccAddress{s.user1Addr, s.user2Addr},
 		},
 		{
-			name:    "with rollup no scope spec all optional parties signer not involved",
-			scope:   scopeRollupNoSpecAllOpt,
-			signers: []string{otherUser},
-			expErr:  "",
+			name:     "with rollup no scope spec all optional parties signer not involved",
+			scope:    scopeRollupNoSpecAllOpt,
+			signers:  []string{otherUser},
+			expAddrs: []sdk.AccAddress{otherUserAddr},
 		},
 		{
 			name:    "with rollup req scope owner not signed",
@@ -2171,44 +2189,54 @@ func (s *ScopeKeeperTestSuite) TestValidateDeleteScope() {
 			expErr:  "missing signers for roles required by spec: SERVICER need 1 have 0",
 		},
 		{
-			name:    "with rollup req scope owner and req roles signed",
-			scope:   scopeRollup,
-			signers: []string{s.user1, s.user2},
-			expErr:  "",
-		},
-		{
-			name:    "with rollup marker value owner no signer has withdraw", // TODO[2137]: Figure out what to do with this case.
-			scope:   scopeRollupMarkerValueOwner,
-			signers: []string{s.user2},
-			expErr:  "missing signature for " + markerAddr + " (testcoins2) with authority to withdraw/remove it as scope value owner",
-		},
-		{
-			name:    "with rollup marker value owner signer has withdraw", // TODO[2137]: Figure out what to do with this case.
-			scope:   scopeRollupMarkerValueOwner,
-			signers: []string{s.user1, s.user2},
-			expErr:  "",
+			name:     "with rollup req scope owner and req roles signed",
+			scope:    scopeRollup,
+			signers:  []string{s.user1, s.user2},
+			expAddrs: []sdk.AccAddress{s.user1Addr, s.user2Addr},
 		},
 		{
 			name:    "with rollup value owner not signed",
 			scope:   scopeRollupUserValueOwner,
 			signers: []string{s.user2},
-			expErr:  "missing signature from existing value owner " + s.user1,
+			expErr:  "missing signature from existing value owner \"" + s.user1 + "\"",
 		},
 		{
-			name:    "with rollup value owner signed",
-			scope:   scopeRollupUserValueOwner,
+			name:     "with rollup value owner signed",
+			scope:    scopeRollupUserValueOwner,
+			signers:  []string{s.user1, s.user2},
+			expAddrs: []sdk.AccAddress{s.user1Addr, s.user2Addr},
+		},
+		{
+			name:    "error getting current value owner",
+			bankK:   NewMockBankKeeper().WithDenomOwnerError(scopeUserValueOwner.ScopeId, "oopsies: no worky"),
+			scope:   scopeUserValueOwner,
 			signers: []string{s.user1, s.user2},
-			expErr:  "",
+			expErr:  "error identifying current value owner of \"" + scopeUserValueOwner.ScopeId.String() + "\": oopsies: no worky",
+		},
+		{
+			name:    "first signer is smart contract and not value owner",
+			scope:   scopeUserValueOwnerWithSC,
+			signers: []string{s.scUser, s.user1, s.user2},
+			expErr:  "missing signature from existing value owner \"" + s.user1 + "\"",
+		},
+		{
+			name:     "first signer is smart contract and value owner",
+			scope:    scopeSCValueOwner,
+			signers:  []string{s.scUser, s.user1},
+			expAddrs: []sdk.AccAddress{s.scUserAddr}, // Just the first signers since it's sc.
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			if tc.bankK != nil {
+				defer s.SwapBankKeeper(tc.bankK)()
+			}
+
 			msg := &types.MsgDeleteScopeRequest{
 				ScopeId: tc.scope.ScopeId,
 				Signers: tc.signers,
 			}
-			// TODO[2137]: Define the expAddrs in these test cases.
 			var addrs []sdk.AccAddress
 			testFunc := func() {
 				addrs, err = s.app.MetadataKeeper.ValidateDeleteScope(s.FreshCtx(), msg)
