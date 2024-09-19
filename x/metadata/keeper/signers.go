@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -431,16 +430,10 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 	proposed string,
 	msg types.MetadataMsg,
 ) ([]sdk.AccAddress, types.UsedSignersMap, error) {
-	if len(existingOwners) == 0 {
-		return nil, nil, nil
-	}
+	// If there's only one existing owner and it equals the proposed, then there's no need
+	// for transfer agents (nothing needs to be sent); we can return early.
 	if len(existingOwners) == 1 && existingOwners[0].String() == proposed {
-		return nil, nil, nil
-	}
-
-	signerStrs := msg.GetSignerStrs()
-	if len(signerStrs) == 0 {
-		return nil, nil, errors.New("no signers provided")
+		return nil, types.NewUsedSignersMap(), nil
 	}
 
 	// If the first signer is a smart contract, ignore all other signers in the msg.
@@ -448,25 +441,28 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 	// If it's a smart contract doing this, it'll be the first signer provided, and we ignore all other signers.
 	// So the smart contract must either be the existing owner or else all existing owners must have an authz
 	// grant for it. It's probably not a good idea to authz grant a smart contract though, but it's allowed.
+	signerStrs := msg.GetSignerStrs()
 	var signerAccs []sdk.AccAddress
-	signer0, err := sdk.AccAddressFromBech32(signerStrs[0])
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid signer address %q: %w", signerStrs[0], err)
-	}
-	if k.isWasmAccount(ctx, signer0) {
-		signerAccs = make([]sdk.AccAddress, 1)
-		if len(signerStrs) > 1 {
-			signerStrs = signerStrs[:1]
-		}
-	} else {
-		signerAccs = make([]sdk.AccAddress, len(signerStrs))
-	}
-	signerAccs[0] = signer0
-	for i := 1; i < len(signerStrs); i++ {
-		signerStr := signerStrs[i]
-		signerAccs[i], err = sdk.AccAddressFromBech32(signerStr)
+	if len(signerStrs) > 0 {
+		signer0, err := sdk.AccAddressFromBech32(signerStrs[0])
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid signer[%d] address %q: %w", i, signerStr, err)
+			return nil, nil, fmt.Errorf("invalid signer address %q: %w", signerStrs[0], err)
+		}
+		if k.isWasmAccount(ctx, signer0) {
+			signerAccs = make([]sdk.AccAddress, 1)
+			if len(signerStrs) > 1 {
+				signerStrs = signerStrs[:1]
+			}
+		} else {
+			signerAccs = make([]sdk.AccAddress, len(signerStrs))
+		}
+		signerAccs[0] = signer0
+		for i := 1; i < len(signerStrs); i++ {
+			signerStr := signerStrs[i]
+			signerAccs[i], err = sdk.AccAddressFromBech32(signerStr)
+			if err != nil {
+				return nil, nil, fmt.Errorf("invalid signer[%d] address %q: %w", i, signerStr, err)
+			}
 		}
 	}
 
@@ -483,7 +479,7 @@ func (k Keeper) ValidateScopeValueOwnersSigners(
 			continue
 		}
 
-		// If it's one of the signers, there's nothing more to check for this one.
+		// If it's one of the usable signers, there's nothing more to check for this one.
 		if containsAddr(signerAccs, existing) {
 			usedSigners.Use(existingStr)
 			continue
@@ -607,9 +603,5 @@ func validatePartiesArePresent(required, available []types.Party) error {
 	for i, party := range missing {
 		parts[i] = fmt.Sprintf("%s (%s)", party.Address, party.Role.SimpleString())
 	}
-	word := "party"
-	if len(missing) != 1 {
-		word = "parties"
-	}
-	return fmt.Errorf("missing %s: %s", word, strings.Join(parts, ", "))
+	return fmt.Errorf("missing %s: %s", provutils.Pluralize(missing, "party", "parties"), strings.Join(parts, ", "))
 }
