@@ -1140,7 +1140,6 @@ func (s *ScopeKeeperTestSuite) TestMetadataScopeIterator() {
 }
 
 func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
-	needsUpdate(s.T()) // TODO[2137]: Update TestValidateWriteScope to account for recent changes.
 	ns := func(scopeID, scopeSpecification types.MetadataAddress, owners []types.Party, dataAccess []string, valueOwner string) *types.Scope {
 		return &types.Scope{
 			ScopeId:           scopeID,
@@ -1204,13 +1203,13 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 	s.app.MetadataKeeper.SetScopeSpecification(ctx, *scopeSpecSC)
 
 	scopeID := types.ScopeMetadataAddress(uuid.New())
-	scopeID2 := types.ScopeMetadataAddress(uuid.New())
 
 	// Give user 3 authority to sign for user 1 for scope updates.
 	a := authz.NewGenericAuthorization(types.TypeURLMsgWriteScopeRequest)
 	s.Require().NoError(s.app.AuthzKeeper.SaveGrant(ctx, s.user3Addr, s.user1Addr, a, nil), "authz SaveGrant user1 to user3")
 
-	otherAddr := sdk.AccAddress("other_address_______").String()
+	otherAddr := sdk.AccAddress("other_address_______")
+	otherAddrStr := otherAddr.String()
 
 	cases := []struct {
 		name     string
@@ -1218,6 +1217,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 		proposed types.Scope
 		signers  []string
 		authzK   *MockAuthzKeeper
+		bankK    *MockBankKeeper
 		errorMsg string
 		expAddrs []sdk.AccAddress // TODO[2137]: Define this in each test case and make sure it's fully tested.
 	}{
@@ -1226,31 +1226,24 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			existing: nil,
 			proposed: types.Scope{},
 			signers:  []string{s.user1},
-			errorMsg: "address is empty",
+			errorMsg: "invalid scope metadata address MetadataAddress(nil): address is empty",
 		},
 		{
 			name:     "valid proposed with nil existing doesn't error",
 			existing: nil,
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
 		},
 		{
-			name:     "can't change scope id in update",
-			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
-			proposed: *ns(scopeID2, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
-			signers:  []string{s.user1},
-			errorMsg: fmt.Sprintf("cannot update scope identifier. expected %s, got %s", scopeID.String(), scopeID2.String()),
-		},
-		{
-			name:     "missing existing owner signer on update fails",
+			name:     "missing existing owner signer on update fails: adding data access",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, ""),
 			signers:  []string{s.user2},
 			errorMsg: fmt.Sprintf("missing signature: %s", s.user1),
 		},
 		{
-			name:     "missing existing owner signer on update fails",
+			name:     "missing existing owner signer on update fails: changing owner",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, ""),
 			signers:  []string{s.user2},
@@ -1261,7 +1254,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user1}, ""),
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
 		},
 		{
 			name:     "no error when there are no updates regardless of signatures",
@@ -1269,18 +1262,19 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			signers:  []string{},
 			errorMsg: "",
+			expAddrs: nil,
 		},
 		{
 			name:     "setting value owner when unset does not error",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
 		},
 		{
 			name:     "setting value owner when unset requires current owner signature",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
-			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
+			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{},
 			errorMsg: fmt.Sprintf("missing signature: %s", s.user1),
 		},
@@ -1289,98 +1283,98 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, ""),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
 		},
 		{
 			name:     "setting value owner to new user does not require their signature",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
 		},
 		{
 			name:     "no change to value owner should not error",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: nil,
 		},
 		{
-			name:     "setting a new value owner should not error with withdraw permission",
+			name:     "changing value owner from marker succeeds",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, markerAddr),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
 		},
 		{
-			name:     "with rollup setting a new value owner should not error with withdraw permission",
+			name:     "with rollup changing value owner from marker succeeds",
 			existing: rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user1), markerAddr),
 			proposed: *rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user1), s.user1),
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
 		},
 		{
-			name:     "setting a new value owner fails if missing withdraw permission",
-			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, markerAddr),
-			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, s.user2),
-			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature for %s (testcoin) with authority to withdraw/remove it as scope value owner", markerAddr),
-		},
-		{
-			name:     "with rollup setting a new value owner fails if missing withdraw permission",
-			existing: rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user2), markerAddr),
-			proposed: *rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user2), s.user2),
-			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature for %s (testcoin) with authority to withdraw/remove it as scope value owner", markerAddr),
-		},
-		{
-			name:     "setting a new value owner fails if missing deposit permission",
+			name:     "setting a new value owner to a marker succeeds",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, ""),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, markerAddr),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature for %s (testcoin) with authority to deposit/add it as scope value owner", markerAddr),
+			expAddrs: []sdk.AccAddress{s.user2Addr},
 		},
 		{
-			name:     "with rollup setting a new value owner fails if missing deposit permission",
+			name:     "with rollup setting a new value owner to a marker succeeds",
 			existing: rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user2), ""),
 			proposed: *rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user2), markerAddr),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature for %s (testcoin) with authority to deposit/add it as scope value owner", markerAddr),
+			expAddrs: []sdk.AccAddress{s.user2Addr},
+		},
+		{
+			name:     "changing value owner to a marker succeeds when existing is a signer",
+			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, s.user2),
+			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user2), []string{}, markerAddr),
+			signers:  []string{s.user2},
+			expAddrs: []sdk.AccAddress{s.user2Addr},
+		},
+		{
+			name:     "with rollup changing value owner to a marker succeeds when existing is a signer",
+			existing: rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user2), s.user2),
+			proposed: *rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user2), markerAddr),
+			signers:  []string{s.user2},
+			expAddrs: []sdk.AccAddress{s.user2Addr},
 		},
 		{
 			name:     "setting a new value owner fails for scope owner when value owner signature is missing",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			errorMsg: fmt.Sprintf("missing signature from existing value owner %s", s.user2),
+			errorMsg: "missing signature from existing value owner \"" + s.user2 + "\"",
 		},
 		{
 			name:     "with rollup setting a new value owner fails for scope owner when value owner signature is missing",
 			existing: rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user1), s.user2),
 			proposed: *rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user1), s.user1),
 			signers:  []string{s.user1},
-			errorMsg: fmt.Sprintf("missing signature from existing value owner %s", s.user2),
+			errorMsg: "missing signature from existing value owner \"" + s.user2 + "\"",
 		},
 		{
 			name:     "changing only value owner only requires value owner sig",
-			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2), []string{}, otherAddr),
+			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2), []string{}, otherAddrStr),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2), []string{}, s.user1),
-			signers:  []string{otherAddr},
-			errorMsg: "",
+			signers:  []string{otherAddrStr},
+			expAddrs: []sdk.AccAddress{otherAddr},
 		},
 		{
 			name:     "with rollup changing only value owner only requires value owner sig",
-			existing: rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2), otherAddr),
+			existing: rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2), otherAddrStr),
 			proposed: *rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2), s.user1),
-			signers:  []string{otherAddr},
-			errorMsg: "",
+			signers:  []string{otherAddrStr},
+			expAddrs: []sdk.AccAddress{otherAddr},
 		},
 		{
 			name:     "unsetting all fields on a scope should be successful",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			proposed: types.Scope{ScopeId: scopeID, SpecificationId: scopeSpecID, Owners: ownerPartyList(s.user1)},
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
 		},
 		{
 			name:     "setting specification id to nil should fail",
@@ -1401,42 +1395,40 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user2}, s.user1),
 			signers:  []string{s.user3}, // user 1 has granted scope-write to user 3
-			errorMsg: "",
 		},
 		{
 			name:     "multi owner adding data access with authz grant should be successful",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2), []string{}, s.user1),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2), []string{s.user2}, s.user1),
 			signers:  []string{s.user2, s.user3}, // user 1 has granted scope-write to user 3
-			errorMsg: "",
 		},
 		{
 			name:     "changing value owner with authz grant should be successful",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{s.user3}, // user 1 has granted scope-write to user 3
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user3Addr},
 		},
 		{
 			name:     "changing value owner by authz granter should be successful",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
 		},
 		{
 			name:     "changing value owner by non-authz grantee should fail",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			signers:  []string{s.user2},
-			errorMsg: fmt.Sprintf("missing signature from existing value owner %s", s.user1),
+			errorMsg: "missing signature from existing value owner \"" + s.user1 + "\"",
 		},
 		{
 			name:     "changing value owner from non-authz granter with different signer should fail",
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user2),
 			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user3},
-			errorMsg: fmt.Sprintf("missing signature from existing value owner %s", s.user2),
+			errorMsg: "missing signature from existing value owner \"" + s.user2 + "\"",
 		},
 		{
 			name:     "setting value owner from nothing to non-owner only signed by non-owner should fail",
@@ -1456,8 +1448,8 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			name:     "with rollup without existing but has req role and signer not involved in scope",
 			existing: nil,
 			proposed: *rollupScope(scopeID, scopeSpecID, ownerPartyList(s.user1), ""),
-			signers:  []string{otherAddr},
-			errorMsg: "",
+			signers:  []string{otherAddrStr},
+			expAddrs: []sdk.AccAddress{otherAddr},
 		},
 		{
 			name:     "with rollup existing required owner is not signer",
@@ -1478,7 +1470,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			existing: rollupScope(scopeID, scopeSpecID, ptz(pt(s.user1, owner, true), pt(s.user2, owner, true)), ""),
 			proposed: *rollupScope(scopeID, scopeSpecID, ptz(pt(s.user2, owner, true)), ""),
 			signers:  []string{s.user2},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user2Addr},
 		},
 		{
 			name:     "smart contract account is not PROVENANCE role",
@@ -1543,7 +1535,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				ValueOwnerAddress: s.scUser,
 			},
 			signers:  []string{s.scUser, s.user1},
-			errorMsg: "smart contract signer " + s.scUser + " is not authorized",
+			errorMsg: "missing signature from existing value owner \"" + s.user1 + "\"",
 		},
 		{
 			name: "with rollup only change is value owner signed by smart contract",
@@ -1563,10 +1555,10 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				RequirePartyRollup: true,
 			},
 			signers:  []string{s.scUser, s.user1},
-			errorMsg: "smart contract signer " + s.scUser + " is not authorized",
+			errorMsg: "missing signature from existing value owner \"" + s.user1 + "\"",
 		},
 		{
-			name: "only change is value owner signed by smart contract and authorized",
+			name: "only change is value owner signed by smart contract: with authz",
 			existing: &types.Scope{
 				ScopeId:           scopeID,
 				SpecificationId:   scopeSpecSC.SpecificationId,
@@ -1592,10 +1584,10 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 					},
 				},
 			),
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.scUserAddr},
 		},
 		{
-			name: "with rollup only change is value owner signed by smart contract",
+			name: "with rollup only change is value owner signed by smart contract: with authz",
 			existing: &types.Scope{
 				ScopeId:            scopeID,
 				SpecificationId:    scopeSpecSC.SpecificationId,
@@ -1623,7 +1615,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 					},
 				},
 			),
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.scUserAddr},
 		},
 		{
 			name: "only change is smart contract value owner signed by smart contract",
@@ -1642,7 +1634,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				RequirePartyRollup: true,
 			},
 			signers:  []string{s.scUser},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.scUserAddr},
 		},
 		{
 			name: "with rollup only change is smart contract value owner signed by smart contract",
@@ -1659,7 +1651,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				ValueOwnerAddress: s.user1,
 			},
 			signers:  []string{s.scUser},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.scUserAddr},
 		},
 		{
 			name: "only change is value owner roles not checked with spec",
@@ -1678,7 +1670,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				ValueOwnerAddress: s.user2,
 			},
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
 		},
 		{
 			name: "only change is value owner provenance roles not checked",
@@ -1697,22 +1689,114 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				ValueOwnerAddress: s.user2,
 			},
 			signers:  []string{s.user1},
-			errorMsg: "",
+			expAddrs: []sdk.AccAddress{s.user1Addr},
+		},
+		{
+			name:     "multiple signers with a value owner change to a marker",
+			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2, s.user3), nil, s.user1),
+			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2, s.user3), nil, markerAddr),
+			// Only the value owner is changing, so only the existing one needs to sign. But maybe user2
+			// is the one with deposit, so it should be included in the returned addresses.
+			signers:  []string{s.user1, s.user2},
+			authzK:   NewMockAuthzKeeper(), // So that there's no authz grants involved.
+			expAddrs: []sdk.AccAddress{s.user1Addr, s.user2Addr},
+		},
+		{
+			name:     "multiple signers with just a value owner change from a marker",
+			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2, s.user3), nil, markerAddr),
+			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2, s.user3), nil, s.user1),
+			// Only the value owner is changing, so only the existing one needs to sign. However, since the
+			// existing is a marker, it can't sign. Validation should pass and all the signers should be
+			// returned as transfer agents so their marker permissions can be used during the SendCoins.
+			signers:  []string{s.user1, s.user2},
+			authzK:   NewMockAuthzKeeper(), // So that there's no authz grants involved.
+			expAddrs: []sdk.AccAddress{s.user1Addr, s.user2Addr},
+		},
+		{
+			name:     "multiple signers with just a value owner change, first signer and value owner is smart contract",
+			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2, s.user3), nil, s.scUser),
+			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1, s.user2, s.user3), nil, s.user1),
+			signers:  []string{s.scUser, s.user1},
+			expAddrs: []sdk.AccAddress{s.scUserAddr},
+		},
+		{
+			name:     "updating, no proposed value owner: getting current value owner would give error",
+			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), nil, s.user3),
+			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user2}, ""),
+			signers:  []string{s.user1},
+			authzK:   NewMockAuthzKeeper(), // So that there's no authz grants involved.
+			bankK:    NewMockBankKeeper().WithDenomOwnerError(scopeID, "this error should not be triggered"),
+			expAddrs: []sdk.AccAddress{s.user1Addr},
+		},
+		{
+			name:     "updating, with proposed value owner: error getting current value owner",
+			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), nil, s.user3),
+			proposed: *ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{s.user2}, s.user3),
+			signers:  []string{s.user1},
+			authzK:   NewMockAuthzKeeper(), // So that there's no authz grants involved.
+			bankK:    NewMockBankKeeper().WithDenomOwnerError(scopeID, "this is an injected error"),
+			errorMsg: "error identifying current value owner of \"" + scopeID.String() + "\": this is an injected error",
+		},
+		{
+			name: "changing value owner and data access, scope has provenance role, two signers: smart contract, existing",
+			existing: &types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				DataAccess:        nil,
+				ValueOwnerAddress: s.user1,
+			},
+			proposed: types.Scope{
+				ScopeId:           scopeID,
+				SpecificationId:   scopeSpecSC.SpecificationId,
+				Owners:            ptz(pt(s.scUser, types.PartyType_PARTY_TYPE_PROVENANCE, false)),
+				DataAccess:        []string{s.user1},
+				ValueOwnerAddress: s.user2,
+			},
+			signers: []string{s.scUser, s.user1},
+			// The second signer should be ignored for value owner signer checking because first is a smart contract.
+			errorMsg: "missing signature from existing value owner \"" + s.user1 + "\"",
 		},
 	}
 
 	for _, tc := range cases {
 		s.Run(tc.name, func() {
 			if tc.authzK != nil {
-				origAuthzK := s.app.MetadataKeeper.SetAuthzKeeper(tc.authzK)
-				defer s.app.MetadataKeeper.SetAuthzKeeper(origAuthzK)
+				defer s.SwapAuthzKeeper(tc.authzK)()
 			}
+			if tc.bankK == nil {
+				tc.bankK = NewMockBankKeeper()
+			}
+			if tc.existing != nil && len(tc.existing.ValueOwnerAddress) > 0 {
+				// If there's supposed to be an existing value owner, and it hasn't been mocked yet,
+				// mock it now so that it can be properly looked up from the mock bank keeper later.
+				if _, has := tc.bankK.DenomOwnerResults[tc.existing.ScopeId.Denom()]; !has {
+					var addr sdk.AccAddress
+					addr, err = sdk.AccAddressFromBech32(tc.existing.ValueOwnerAddress)
+					s.Require().NoError(err, "existing value owner: sdk.AccAddressFromBech32(%q)", tc.existing.ValueOwnerAddress)
+					tc.bankK = tc.bankK.WithDenomOwnerResult(tc.existing.ScopeId, addr)
+				}
+			}
+			defer s.SwapBankKeeper(tc.bankK)()
+
+			// Use a cache context so the cases don't interact.
+			ctx, _ = s.FreshCtx().CacheContext()
+			if tc.existing != nil {
+				writeScope := func() {
+					s.app.MetadataKeeper.WriteScopeToState(ctx, *tc.existing)
+				}
+				s.Require().NotPanics(writeScope, "writeScopeToState")
+			}
+
 			msg := &types.MsgWriteScopeRequest{
 				Scope:   tc.proposed,
 				Signers: tc.signers,
 			}
-			// TODO[2137]: Set tc.existing in state so it can be retrieved.
-			addrs, err := s.app.MetadataKeeper.ValidateWriteScope(s.FreshCtx(), msg)
+			var addrs []sdk.AccAddress
+			testFunc := func() {
+				addrs, err = s.app.MetadataKeeper.ValidateWriteScope(ctx, msg)
+			}
+			s.Require().NotPanics(testFunc, "ValidateWriteScope")
 			s.AssertErrorValue(err, tc.errorMsg, "error from ValidateWriteScope")
 			s.Assert().Equal(tc.expAddrs, addrs, "addrs from ValidateWriteScope")
 		})

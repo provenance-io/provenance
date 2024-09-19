@@ -46,6 +46,11 @@ func (k *Keeper) SetMarkerKeeper(markerKeeper MarkerKeeper) MarkerKeeper {
 	return rv
 }
 
+// WriteScopeToState is a TEST ONLY exposure of writeScopeToState.
+func (k *Keeper) WriteScopeToState(ctx sdk.Context, scope types.Scope) {
+	k.writeScopeToState(ctx, scope)
+}
+
 // ValidateAllRequiredPartiesSigned is a TEST ONLY exposure of validateAllRequiredPartiesSigned.
 func (k Keeper) ValidateAllRequiredPartiesSigned(
 	ctx sdk.Context,

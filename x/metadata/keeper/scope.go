@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/internal/provutils"
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -412,6 +411,10 @@ func (k Keeper) ValidateWriteScope(
 	if err := proposed.ValidateBasic(); err != nil {
 		return nil, err
 	}
+	// TODO[2137]: Get rid of this if we decided to add this check to ValidateBasic.
+	if proposed.SpecificationId.Empty() {
+		return nil, errors.New("invalid specification id: address is empty")
+	}
 
 	var existing *types.Scope
 	if e, found := k.GetScope(ctx, msg.Scope.ScopeId); found {
@@ -430,7 +433,7 @@ func (k Keeper) ValidateWriteScope(
 		if err != nil {
 			return nil, fmt.Errorf("error identifying current value owner of %q: %w", proposed.ScopeId, err)
 		}
-		// It is possible for older scopes to not have a value owner.
+		// It is possible for scopes to not have a value owner.
 		if len(vo) > 0 {
 			existing.ValueOwnerAddress = vo.String()
 			existingVOAddrs = append(existingVOAddrs, vo)
