@@ -120,7 +120,6 @@ func partiesReversed(parties []*types.PartyDetails) []*types.PartyDetails {
 }
 
 func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
-	needsUpdate(s.T()) // TODO[2137]: Update TestWriteScopeSmartContractValueOwnerAuthz to account for recent changes.
 	// Setup:
 	// Alice and Bob have both granted smart contract "Sam" the ability to WriteScope for them.
 	// They are each the value owner of their own scope.
@@ -195,7 +194,7 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 			name:     "smart contract updating value owner of wrong scope",
 			existing: newScope(addrBob),
 			msg:      newMsg(addrAlice, addrSam.String(), addrAlice.String()),
-			expErr:   "",
+			expAddrs: []sdk.AccAddress{addrSam},
 		},
 		{
 			// Bob makes a call to Sam to do stuff that causes Sam to try to change Alice's Scope's value owner to Bob.
@@ -203,28 +202,28 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 			name:     "smart contract updating value owner of other scope but invoker is authorized",
 			existing: newScope(addrAlice),
 			msg:      newMsg(addrBob, addrSam.String(), addrBob.String()),
-			expErr:   "",
+			expAddrs: []sdk.AccAddress{addrSam},
 		},
 		{
 			// If the value owner is the smart contract, it can be updated to Alice by Alice invoking the smart contract
 			name:     "value owner is smart contract updating to invoker",
 			existing: newScope(addrSam),
 			msg:      newMsg(addrAlice, addrSam.String(), addrAlice.String()),
-			expErr:   "",
+			expAddrs: []sdk.AccAddress{addrSam},
 		},
 		{
 			// If the value owner is the smart contract, it can be updated to Bob by Alice invoking the smart contract
 			name:     "value owner is smart contract updating to non-invoker",
 			existing: newScope(addrSam),
 			msg:      newMsg(addrBob, addrSam.String(), addrAlice.String()),
-			expErr:   "",
+			expAddrs: []sdk.AccAddress{addrSam},
 		},
 		{
 			// If the value owner is the smart contract, it can be updated to Alice by Bob invoking the smart contract
 			name:     "value owner is smart contract updating to non-invoker with authz",
 			existing: newScope(addrSam),
 			msg:      newMsg(addrAlice, addrSam.String(), addrBob.String()),
-			expErr:   "",
+			expAddrs: []sdk.AccAddress{addrSam},
 		},
 	}
 
@@ -237,8 +236,12 @@ func (s *AuthzTestSuite) TestWriteScopeSmartContractValueOwnerAuthz() {
 				defer WriteTempScope(s.T(), s.app.MetadataKeeper, s.FreshCtx(), *tc.existing)()
 			}
 
-			// TODO[2137]: Update the test cases to set the expAddrs values, and maybe a negative test case or two.
-			addrs, err := mdKeeper.ValidateWriteScope(s.FreshCtx(), tc.msg)
+			var addrs []sdk.AccAddress
+			var err error
+			testFunc := func() {
+				addrs, err = mdKeeper.ValidateWriteScope(s.FreshCtx(), tc.msg)
+			}
+			s.Require().NotPanics(testFunc, "ValidateWriteScope")
 			s.AssertErrorValue(err, tc.expErr, "error from ValidateWriteScope")
 			s.Assert().Equal(tc.expAddrs, addrs, "addresses from ValidateWriteScope")
 		})
