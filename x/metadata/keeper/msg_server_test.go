@@ -128,8 +128,6 @@ func (s *MsgServerTestSuite) MakeNonWasmAccounts(bech32s ...string) {
 // TODO: DeleteScope tests
 
 func (s *MsgServerTestSuite) TestAddAndDeleteScopeDataAccess() {
-	needsUpdate(s.T()) // TODO[2137]: Update TestAddAndDeleteScopeDataAccess to account for recent changes.
-
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
 	scopeID := types.ScopeMetadataAddress(uuid.New())
@@ -258,7 +256,7 @@ func (s *MsgServerTestSuite) TestAddAndDeleteScopeDataAccess() {
 		_, errDel := s.msgServer.DeleteScopeDataAccess(s.ctx, msgDel)
 		require.NoError(t, errDel, "Failed to make DeleteScopeDataAccessRequest call")
 
-		scopeB, foundB := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		scopeB, foundB := s.app.MetadataKeeper.GetScopeWithValueOwner(s.ctx, scopeA.ScopeId)
 		require.Truef(t, foundB, "Scope %s not found after DeleteScopeOwnerRequest call.", scopeA.ScopeId)
 
 		assert.Equal(t, scopeA.ScopeId, scopeB.ScopeId, "del ScopeId")
@@ -281,7 +279,7 @@ func (s *MsgServerTestSuite) TestAddAndDeleteScopeDataAccess() {
 		_, errAdd := s.msgServer.AddScopeDataAccess(s.ctx, msgAdd)
 		require.NoError(t, errAdd, "Failed to make AddScopeDataAccessRequest call")
 
-		scopeC, foundC := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		scopeC, foundC := s.app.MetadataKeeper.GetScopeWithValueOwner(s.ctx, scopeA.ScopeId)
 		require.Truef(t, foundC, "Scope %s not found after AddScopeOwnerRequest call.", scopeA.ScopeId)
 
 		assert.Equal(t, scopeA.ScopeId, scopeC.ScopeId, "add ScopeId")
@@ -293,8 +291,6 @@ func (s *MsgServerTestSuite) TestAddAndDeleteScopeDataAccess() {
 }
 
 func (s *MsgServerTestSuite) TestAddAndDeleteScopeOwners() {
-	needsUpdate(s.T()) // TODO[2137]: Update TestAddAndDeleteScopeOwners to account for recent changes.
-
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
 	scopeSpec := types.NewScopeSpecification(scopeSpecID, nil, []string{s.user1}, []types.PartyType{types.PartyType_PARTY_TYPE_OWNER}, []types.MetadataAddress{})
 	scopeID := types.ScopeMetadataAddress(uuid.New())
@@ -413,8 +409,9 @@ func (s *MsgServerTestSuite) TestAddAndDeleteScopeOwners() {
 			ContractSpecIds: nil,
 		}
 
-		s.app.MetadataKeeper.SetScope(s.ctx, scopeA)
+		s.Require().NoError(s.app.MetadataKeeper.SetScope(s.ctx, scopeA), "SetScope(scopeA)")
 		s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpecA)
+		s.MakeNonWasmAccounts(addrOriginator, addrServicer)
 
 		msgDel := types.NewMsgDeleteScopeOwnerRequest(
 			scopeA.ScopeId,
@@ -425,7 +422,7 @@ func (s *MsgServerTestSuite) TestAddAndDeleteScopeOwners() {
 		_, errDel := s.msgServer.DeleteScopeOwner(s.ctx, msgDel)
 		require.NoError(t, errDel, "Failed to make DeleteScopeOwnerRequest call")
 
-		scopeB, foundB := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		scopeB, foundB := s.app.MetadataKeeper.GetScopeWithValueOwner(s.ctx, scopeA.ScopeId)
 		require.Truef(t, foundB, "Scope %s not found after DeleteScopeOwnerRequest call.", scopeA.ScopeId)
 
 		assert.Equal(t, scopeA.ScopeId, scopeB.ScopeId, "del ScopeId")
@@ -448,7 +445,7 @@ func (s *MsgServerTestSuite) TestAddAndDeleteScopeOwners() {
 		_, errAdd := s.msgServer.AddScopeOwner(s.ctx, msgAdd)
 		require.NoError(t, errAdd, "Failed to make DeleteScopeOwnerRequest call")
 
-		scopeC, foundC := s.app.MetadataKeeper.GetScope(s.ctx, scopeA.ScopeId)
+		scopeC, foundC := s.app.MetadataKeeper.GetScopeWithValueOwner(s.ctx, scopeA.ScopeId)
 		require.Truef(t, foundC, "Scope %s not found after AddScopeOwnerRequest call.", scopeA.ScopeId)
 
 		assert.Equal(t, scopeA.ScopeId, scopeC.ScopeId, "add ScopeId")
