@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"testing"
@@ -130,6 +131,12 @@ func (s *ScopeKeeperTestSuite) SwapMarkerKeeper(mk keeper.MarkerKeeper) func() {
 	return func() {
 		s.app.MetadataKeeper.SetMarkerKeeper(orig)
 	}
+}
+
+func (s *ScopeKeeperTestSuite) AccAddressFromBech32(addr string, msg string) sdk.AccAddress {
+	rv, err := sdk.AccAddressFromBech32(addr)
+	s.Require().NoError(err, "%s sdk.AccAddressFromBech32(%q)", msg, addr)
+	return rv
 }
 
 // WriteTempScope will call SetScope on the provided scope and return a func that will call RemoveScope for it.
@@ -970,126 +977,200 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 }
 
 func (s *ScopeKeeperTestSuite) TestSetScopeValueOwners() {
-	needsUpdate(s.T()) // TODO[2137]: Update TestSetScopeValueOwners to account for recent changes.
-	// Setup
-	// Three scopes, each with different value owners.
-	// 1st has the value owner also in owners.
-	// 2nd has the value owner also in data access.
-	// 3rd does not have the value owner in either data access or owners.
-	// We will call SetScopeValueOwners once to update all three to a new value owner.
-	// We will then do some state checking to make sure things are as expected.
-	addrAlsoOwnerAcc := sdk.AccAddress("addrAlsoOwner_______")
-	addrAlsoDataAccessAcc := sdk.AccAddress("addrAlsoDataAccess__")
-	addrSoloAcc := sdk.AccAddress("addrSolo____________")
-	addrAlsoOwner := addrAlsoOwnerAcc.String()
-	addrAlsoDataAccess := addrAlsoDataAccessAcc.String()
-	addrSolo := addrSoloAcc.String()
-	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
-	scopeWOwner := types.Scope{
-		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
-		SpecificationId:   scopeSpecID,
-		Owners:            []types.Party{{Address: addrAlsoOwner, Role: types.PartyType_PARTY_TYPE_OWNER}},
-		DataAccess:        nil,
-		ValueOwnerAddress: addrAlsoOwner,
-	}
-	scopeWDataAccess := types.Scope{
-		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
-		SpecificationId:   scopeSpecID,
-		Owners:            nil,
-		DataAccess:        []string{addrAlsoDataAccess},
-		ValueOwnerAddress: addrAlsoOwner,
-	}
-	scopeSolo := types.Scope{
-		ScopeId:           types.ScopeMetadataAddress(uuid.New()),
-		SpecificationId:   scopeSpecID,
-		Owners:            nil,
-		DataAccess:        nil,
-		ValueOwnerAddress: addrSolo,
-	}
-
-	ctx := s.FreshCtx()
-	mdKeeper := s.app.MetadataKeeper
-	mdKeeper.SetScope(ctx, scopeWOwner)
-	mdKeeper.SetScope(ctx, scopeWDataAccess)
-	mdKeeper.SetScope(ctx, scopeSolo)
-
-	// Get a fresh context without any events.
-	ctx = s.FreshCtx()
-
-	newUpdateEvent := func(scopeID types.MetadataAddress) sdk.Event {
-		tev := types.NewEventScopeUpdated(scopeID)
-		event, err := sdk.TypedEventToEvent(tev)
-		if err != nil {
-			panic(err)
+	scopeCoins := func(scopeIDs ...types.MetadataAddress) sdk.Coins {
+		var rv sdk.Coins
+		for _, scopeID := range scopeIDs {
+			rv = rv.Add(scopeID.Coin())
 		}
-		return event
+		return rv
 	}
-
-	scopes := []*types.Scope{&scopeWOwner, &scopeWDataAccess, &scopeSolo}
-	_ = scopes
-	addrNewValueOwnerAcc := sdk.AccAddress("addrNewValueOwner___")
-	addrNewValueOwner := addrNewValueOwnerAcc.String()
-	testFunc := func() {
-		// TODO[2137]: Provide the correct 2nd arg here, and pay attention to the error.
-		mdKeeper.SetScopeValueOwners(ctx, nil, addrNewValueOwner)
-	}
-	s.Require().NotPanics(testFunc, "SetScopeValueOwners")
-
-	s.Run("emitted events", func() {
-		expectedEvents := sdk.Events{
-			newUpdateEvent(scopeWOwner.ScopeId),
-			newUpdateEvent(scopeWDataAccess.ScopeId),
-			newUpdateEvent(scopeSolo.ScopeId),
+	sendCall := func(from, to sdk.AccAddress, scopeIDs ...types.MetadataAddress) *SendCoinsCall {
+		return &SendCoinsCall{
+			FromAddr: from,
+			ToAddr:   to,
+			Amt:      scopeCoins(scopeIDs...),
 		}
-		events := ctx.EventManager().Events()
-		s.Assert().Equal(expectedEvents, events, "events emitted during SetScopeValueOwners")
-	})
+	}
+	newUUID := func(b byte) uuid.UUID {
+		return uuid.UUID(bytes.Repeat([]byte{b}, 16))
+	}
+	newScopeID := func(b byte) types.MetadataAddress {
+		return types.ScopeMetadataAddress(newUUID(b))
+	}
+
+	scopeID1 := newScopeID('1') // scope1qqcnzvf3xycnzvf3xycnzvf3xycs2xyeyk
+	scopeID2 := newScopeID('2') // scope1qqeryv3jxgeryv3jxgeryv3jxgeqy48g0a
+	scopeID3 := newScopeID('3') // scope1qqenxvenxvenxvenxvenxvenxvesqa360g
+	scopeID4 := newScopeID('4') // scope1qq6rgdp5xs6rgdp5xs6rgdp5xs6qzkf4tk
+	scopeID5 := newScopeID('5') // scope1qq6n2df4x56n2df4x56n2df4x56sx7l8tr
+
+	scopeSpecID := types.ScopeSpecMetadataAddress(newUUID('x')) // scopespec1q3u8s7rc0pu8s7rc0pu8s7rc0puq8g8xl0
+
+	addr1 := sdk.AccAddress("1addr_______________") // cosmos1x9skgerjta047h6lta047h6lta047h6l4429yc
+	addr2 := sdk.AccAddress("2addr_______________") // cosmos1xfskgerjta047h6lta047h6lta047h6lh0rr9a
+	addr3 := sdk.AccAddress("3addr_______________") // cosmos1xdskgerjta047h6lta047h6lta047h6lw7ypa7
+	addr4 := sdk.AccAddress("4addr_______________") // cosmos1x3skgerjta047h6lta047h6lta047h6lnj308h
 
 	tests := []struct {
-		name          string
-		scope         *types.Scope
-		expIndexes    [][]byte
-		expRemIndexes [][]byte
+		name           string
+		bankK          *MockBankKeeper
+		links          types.AccMDLinks
+		newVO          string
+		expErr         string
+		expBlockedCall bool
+		expSendCalls   []*SendCoinsCall
 	}{
 		{
-			name:  "scopeWOwner",
-			scope: &scopeWOwner,
-			expIndexes: [][]byte{
-				types.GetAddressScopeCacheKey(addrAlsoOwnerAcc, scopeWOwner.ScopeId),
+			name:   "nil links",
+			links:  nil,
+			newVO:  addr4.String(),
+			expErr: "",
+		},
+		{
+			name:   "empty links",
+			links:  make(types.AccMDLinks, 0),
+			newVO:  addr4.String(),
+			expErr: "",
+		},
+		{
+			name:   "link without acc address",
+			links:  types.AccMDLinks{types.NewAccMDLink(nil, scopeID1)},
+			newVO:  addr4.String(),
+			expErr: "no account address associated with metadata address \"" + scopeID1.String() + "\"",
+		},
+		{
+			name:   "link without md address",
+			links:  types.AccMDLinks{types.NewAccMDLink(addr1, nil)},
+			newVO:  addr4.String(),
+			expErr: "invalid scope metadata address MetadataAddress(nil): address is empty",
+		},
+		{
+			name:   "link with scope spec md address",
+			links:  types.AccMDLinks{types.NewAccMDLink(addr1, scopeSpecID)},
+			newVO:  addr4.String(),
+			expErr: "invalid scope id \"" + scopeSpecID.String() + "\": wrong type",
+		},
+		{
+			name:   "two links with same md address",
+			links:  types.AccMDLinks{types.NewAccMDLink(addr1, scopeID1), types.NewAccMDLink(addr2, scopeID1)},
+			newVO:  addr4.String(),
+			expErr: "duplicate metadata address \"" + scopeID1.String() + "\" not allowed",
+		},
+		{
+			name:   "empty new value owner",
+			links:  types.AccMDLinks{types.NewAccMDLink(addr1, scopeID1)},
+			newVO:  "",
+			expErr: "invalid new value owner address \"\": empty address string is not allowed",
+		},
+		{
+			name:   "invalid new value owner",
+			links:  types.AccMDLinks{types.NewAccMDLink(addr1, scopeID1)},
+			newVO:  "nope",
+			expErr: "invalid new value owner address \"nope\": decoding bech32 failed: invalid bech32 string length 4",
+		},
+		{
+			name:           "blocked address",
+			bankK:          NewMockBankKeeper().WithBlockedAddr(addr4),
+			links:          types.AccMDLinks{types.NewAccMDLink(addr1, scopeID1)},
+			newVO:          addr4.String(),
+			expErr:         "new value owner " + addr4.String() + " is not allowed to receive funds: unauthorized",
+			expBlockedCall: true,
+		},
+		{
+			name:           "one link: new value owner is different",
+			links:          types.AccMDLinks{types.NewAccMDLink(addr1, scopeID1)},
+			newVO:          addr4.String(),
+			expBlockedCall: true,
+			expSendCalls:   []*SendCoinsCall{sendCall(addr1, addr4, scopeID1)},
+		},
+		{
+			name:           "one link: new value owner is same",
+			links:          types.AccMDLinks{types.NewAccMDLink(addr1, scopeID1)},
+			newVO:          addr1.String(),
+			expBlockedCall: true,
+		},
+		{
+			name:  "one link: error sending coins",
+			bankK: NewMockBankKeeper().WithSendCoinsError(addr1, "not a real error"),
+			links: types.AccMDLinks{types.NewAccMDLink(addr1, scopeID1)},
+			newVO: addr4.String(),
+			expErr: "could not send scope coins \"" + scopeCoins(scopeID1).String() + "\" " +
+				"from " + addr1.String() + " to " + addr4.String() + ": not a real error",
+			expBlockedCall: true,
+			expSendCalls:   []*SendCoinsCall{sendCall(addr1, addr4, scopeID1)},
+		},
+		{
+			name:           "two links: same acc addresses",
+			links:          types.AccMDLinks{types.NewAccMDLink(addr1, scopeID1), types.NewAccMDLink(addr1, scopeID2)},
+			newVO:          addr4.String(),
+			expBlockedCall: true,
+			expSendCalls:   []*SendCoinsCall{sendCall(addr1, addr4, scopeID1, scopeID2)},
+		},
+		{
+			name:           "two links: different acc addresses",
+			links:          types.AccMDLinks{types.NewAccMDLink(addr1, scopeID1), types.NewAccMDLink(addr2, scopeID2)},
+			newVO:          addr4.String(),
+			expBlockedCall: true,
+			expSendCalls:   []*SendCoinsCall{sendCall(addr1, addr4, scopeID1), sendCall(addr2, addr4, scopeID2)},
+		},
+		{
+			name: "mix of same and different acc addresses, one is new value owner",
+			links: types.AccMDLinks{
+				types.NewAccMDLink(addr1, scopeID1),
+				types.NewAccMDLink(addr2, scopeID2),
+				types.NewAccMDLink(addr1, scopeID3),
+				types.NewAccMDLink(addr4, scopeID4),
+				types.NewAccMDLink(addr3, scopeID5),
+			},
+			newVO:          addr4.String(),
+			expBlockedCall: true,
+			expSendCalls: []*SendCoinsCall{
+				sendCall(addr1, addr4, scopeID1, scopeID3),
+				sendCall(addr2, addr4, scopeID2),
+				sendCall(addr3, addr4, scopeID5),
 			},
 		},
 		{
-			name:  "scopeWDataAccess",
-			scope: &scopeWDataAccess,
-			expIndexes: [][]byte{
-				types.GetAddressScopeCacheKey(addrAlsoDataAccessAcc, scopeWDataAccess.ScopeId),
+			name:  "three links: error sending from second",
+			bankK: NewMockBankKeeper().WithSendCoinsError(addr2, "fake error is fake"),
+			links: types.AccMDLinks{
+				types.NewAccMDLink(addr1, scopeID1),
+				types.NewAccMDLink(addr2, scopeID2),
+				types.NewAccMDLink(addr3, scopeID3),
 			},
-		},
-		{
-			name:  "scopeSolo",
-			scope: &scopeSolo,
-			expRemIndexes: [][]byte{
-				types.GetAddressScopeCacheKey(addrSoloAcc, scopeWDataAccess.ScopeId),
+			newVO: addr4.String(),
+			expErr: "could not send scope coins \"" + scopeCoins(scopeID2).String() + "\" " +
+				"from " + addr2.String() + " to " + addr4.String() + ": fake error is fake",
+			expBlockedCall: true,
+			expSendCalls: []*SendCoinsCall{
+				sendCall(addr1, addr4, scopeID1),
+				sendCall(addr2, addr4, scopeID2),
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			ctx = s.FreshCtx()
-			newScope, found := mdKeeper.GetScope(ctx, tc.scope.ScopeId)
-			if s.Assert().True(found, "GetScope found") {
-				s.Assert().Equal(addrNewValueOwner, newScope.ValueOwnerAddress, "stored scope's value owner address")
+			if tc.bankK == nil {
+				tc.bankK = NewMockBankKeeper()
 			}
-			s.Assert().NotEqual(addrNewValueOwner, tc.scope.ValueOwnerAddress, "old scope's value owner address")
+			defer s.SwapBankKeeper(tc.bankK)()
 
-			store := ctx.KVStore(mdKeeper.GetStoreKey())
-			for i, exp := range tc.expIndexes {
-				s.Assert().True(store.Has(exp), "expected index [%d]", i)
+			expBKCalls := BankKeeperCalls{
+				SendCoins: tc.expSendCalls,
 			}
-			for i, notExp := range tc.expRemIndexes {
-				s.Assert().False(store.Has(notExp), "expected index to be removed [%d]", i)
+			if tc.expBlockedCall {
+				addr := s.AccAddressFromBech32(tc.newVO, "new value owner")
+				expBKCalls.BlockedAddr = append(expBKCalls.BlockedAddr, addr)
 			}
+
+			var err error
+			testFunc := func() {
+				err = s.app.MetadataKeeper.SetScopeValueOwners(s.FreshCtx(), tc.links, tc.newVO)
+			}
+			s.Require().NotPanics(testFunc, "SetScopeValueOwners")
+			s.AssertErrorValue(err, tc.expErr, "error from SetScopeValueOwners")
+			tc.bankK.AssertCalls(s.T(), expBKCalls)
 		})
 	}
 }
@@ -1771,9 +1852,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 				// If there's supposed to be an existing value owner, and it hasn't been mocked yet,
 				// mock it now so that it can be properly looked up from the mock bank keeper later.
 				if _, has := tc.bankK.DenomOwnerResults[tc.existing.ScopeId.Denom()]; !has {
-					var addr sdk.AccAddress
-					addr, err = sdk.AccAddressFromBech32(tc.existing.ValueOwnerAddress)
-					s.Require().NoError(err, "existing value owner: sdk.AccAddressFromBech32(%q)", tc.existing.ValueOwnerAddress)
+					addr := s.AccAddressFromBech32(tc.existing.ValueOwnerAddress, "existing value owner")
 					tc.bankK = tc.bankK.WithDenomOwnerResult(tc.existing.ScopeId, addr)
 				}
 			}
