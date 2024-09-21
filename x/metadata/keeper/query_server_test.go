@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
@@ -97,6 +98,32 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.recSpecID = types.RecordSpecMetadataAddress(s.cSpecUUID, s.recordName)
 
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
+}
+
+// AssertErrorValue is a wrapper on assertions.AssertErrorValue using this suite's current T().
+func (s *QueryServerTestSuite) AssertErrorValue(theError error, expected string, msgAndArgs ...interface{}) bool {
+	s.T().Helper()
+	return assertions.AssertErrorValue(s.T(), theError, expected, msgAndArgs...)
+}
+
+// AssertEqualPageResponses will assert that the provided PageResponse values are equal
+// with friendlier failure messages than if you just used s.Assert()..Equal(expected, actual).
+func (s *QueryServerTestSuite) AssertEqualPageResponses(expected, actual *query.PageResponse, fieldName string) bool {
+	s.T().Helper()
+	// Check the individual fields first in a friendlier way than when all combined.
+	pOK := true
+	if expected != nil && actual != nil {
+		// Compare the Total as ints because failures on uint64 show the values in hex, which isn't very handy.
+		pOK = s.Assert().Equal(int(expected.Total), int(actual.Total), fieldName+".Total (as an int)") && pOK
+		// Compare the NextKey directly. The failure message will list the bytes in multiple formats (int and char).
+		pOK = s.Assert().Equalf(expected.NextKey, actual.NextKey, fieldName+".NextKey") && pOK
+	}
+	// If one of those failed, we can stop now.
+	if !pOK {
+		return false
+	}
+	// Run the comparison on them as a whole, just to be sure (and handle when one of them is nil).
+	return s.Assert().Equal(expected, actual, fieldName)
 }
 
 // dataSetup is a collection metadata entries (scopes, sessions, records) generated for testing.
@@ -904,7 +931,7 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 				actResp, err = s.queryClient.Scope(gocontext.Background(), &tc.req)
 			}
 			s.Require().NotPanics(testFunc, "queryClient.Scope(...)")
-			assertions.AssertErrorValue(s.T(), err, tc.expErr, "error from queryClient.Scope(...)")
+			s.AssertErrorValue(err, tc.expErr, "error from queryClient.Scope(...)")
 			if s.Assert().Equal(tc.expResp, actResp, "response from queryClient.Scope(...)") || tc.expResp == nil || actResp == nil {
 				// If they're not equal and both not nil, I want to run some extra tests to maybe help identify what's wrong.
 				// But if they're equal, we're all good. And if either is nil, that'll be obvious in the failure message, so we're done.
@@ -937,6 +964,119 @@ func (s *QueryServerTestSuite) TestScopeQuery() {
 
 			// The request is all strings and bools so it'll look just fine in the failure output.
 			s.Assert().Equal(tc.expResp.Request, actResp.Request, "response.Request")
+		})
+	}
+}
+
+func (s *QueryServerTestSuite) TestScopesAll() {
+	// six scopes with various numbers of sessions and records.
+	data := s.createData([][]int{{1}, {2}, {3}, {2, 1}, {1, 1, 1}, {1, 2}})
+	// Valid Scopes indexes (6): [0] [1] [2] [3] [4] [5]
+
+	tests := []struct {
+		name    string
+		req     types.ScopesAllRequest
+		expResp *types.ScopesAllResponse
+		expErr  string
+	}{
+		{
+			name:    "empty request",
+			req:     types.ScopesAllRequest{},
+			expResp: &types.ScopesAllResponse{Scopes: wrapScopes(data.AllScopes, true)},
+		},
+		{
+			name:    "exclude id info",
+			req:     types.ScopesAllRequest{ExcludeIdInfo: true},
+			expResp: &types.ScopesAllResponse{Scopes: wrapScopes(data.AllScopes, false)},
+		},
+		{
+			name: "include request",
+			req:  types.ScopesAllRequest{IncludeRequest: true},
+			expResp: &types.ScopesAllResponse{
+				Scopes:  wrapScopes(data.AllScopes, true),
+				Request: nil, // The test runner will populate this for us.
+			},
+		},
+		{
+			name: "exclude id info and include request",
+			req:  types.ScopesAllRequest{ExcludeIdInfo: true, IncludeRequest: true},
+			expResp: &types.ScopesAllResponse{
+				Scopes:  wrapScopes(data.AllScopes, false),
+				Request: nil, // The test runner will populate this for us.
+			},
+		},
+		{
+			name: "limit 2, offset 1",
+			req:  types.ScopesAllRequest{Pagination: &query.PageRequest{Offset: 1, Limit: 2}},
+			expResp: &types.ScopesAllResponse{
+				Scopes:     wrapScopes(data.AllScopes[1:3], true),
+				Pagination: &query.PageResponse{NextKey: data.ScopeUUIDs[3][:]},
+			},
+		},
+		{
+			name: "next key of 3rd, limit 2",
+			req:  types.ScopesAllRequest{Pagination: &query.PageRequest{Limit: 2, Key: data.ScopeUUIDs[2][:]}},
+			expResp: &types.ScopesAllResponse{
+				Scopes:     wrapScopes(data.AllScopes[2:4], true),
+				Pagination: &query.PageResponse{NextKey: data.ScopeUUIDs[4][:]},
+			},
+		},
+		{
+			name: "limit 1, reversed",
+			req:  types.ScopesAllRequest{Pagination: &query.PageRequest{Limit: 1, Reverse: true}},
+			expResp: &types.ScopesAllResponse{
+				Scopes:     wrapScopes(data.AllScopes[5:6], true),
+				Pagination: &query.PageResponse{NextKey: data.ScopeUUIDs[4][:]},
+			},
+		},
+		{
+			name: "limit 3, count total, exclude id info, include request",
+			req: types.ScopesAllRequest{
+				ExcludeIdInfo:  true,
+				IncludeRequest: true,
+				Pagination:     &query.PageRequest{Limit: 3, CountTotal: true},
+			},
+			expResp: &types.ScopesAllResponse{
+				Scopes:     wrapScopes(data.AllScopes[0:3], false),
+				Request:    nil, // The test runner will populate this for us.
+				Pagination: &query.PageResponse{Total: 6, NextKey: data.ScopeUUIDs[3][:]},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.req.IncludeRequest && tc.expResp != nil {
+				tc.expResp.Request = &tc.req
+			}
+			if tc.expResp != nil && tc.expResp.Pagination == nil {
+				tc.expResp.Pagination = &query.PageResponse{}
+			}
+
+			var actResp *types.ScopesAllResponse
+			var err error
+			testFunc := func() {
+				actResp, err = s.queryClient.ScopesAll(gocontext.Background(), &tc.req)
+			}
+			s.Require().NotPanics(testFunc, "queryClient.ScopesAll(...)")
+			s.AssertErrorValue(err, tc.expErr, "error from queryClient.ScopesAll(...)")
+			if s.Assert().Equal(tc.expResp, actResp, "response from queryClient.ScopesAll(...)") || tc.expResp == nil || actResp == nil {
+				// If they're not equal and both not nil, I want to run some extra tests to maybe help identify what's wrong.
+				// But if they're equal, we're all good. And if either is nil, that'll be obvious in the failure message, so we're done.
+				return
+			}
+
+			expScopeNames := data.IdentifyScopes(tc.expResp.Scopes)
+			actScopeNames := data.IdentifyScopes(actResp.Scopes)
+			if s.Assert().Equal(expScopeNames, actScopeNames, "names for response.Scopes") {
+				// If those are equal, make sure each individual entry is equal too (just to be safe).
+				for i := range tc.expResp.Scopes {
+					s.Assert().Equal(tc.expResp.Scopes[i], actResp.Scopes[i], "response.Scopes[%d]", i)
+				}
+			}
+
+			s.Assert().Equal(tc.expResp.Request, actResp.Request, "response.Request")
+			s.AssertEqualPageResponses(tc.expResp.Pagination, actResp.Pagination, "response.Pagination")
 		})
 	}
 }
