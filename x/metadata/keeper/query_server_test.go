@@ -1,8 +1,11 @@
 package keeper_test
 
 import (
+	"bytes"
 	gocontext "context"
 	"fmt"
+	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -19,8 +22,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
+
+func TestQuerierTestSuite(t *testing.T) {
+	suite.Run(t, new(QueryServerTestSuite))
+}
 
 type QueryServerTestSuite struct {
 	suite.Suite
@@ -91,86 +99,847 @@ func (s *QueryServerTestSuite) SetupTest() {
 	s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr))
 }
 
-func TestQuerierTestSuite(t *testing.T) {
-	suite.Run(t, new(QueryServerTestSuite))
+// dataSetup is a collection metadata entries (scopes, sessions, records) generated for testing.
+type dataSetup struct {
+	// Scopes are each of the scopes in the order they're created.
+	Scopes []*types.Scope
+	// Sessions are each of the sessions for each scope in the order they're created.
+	// E.g. Sessions[0] are all the sessions in Scopes[0].
+	Sessions [][]*types.Session
+	// Records are each of the records for each session for each scope in they order they're created.
+	// E.g Records[1][0] are all of the records in Sessions[1][0] (which are all in Scopes[1]).
+	Records [][][]*types.Record
+
+	// ScopeIDs are the scope metadata addresses for each of the scopes.
+	// E.g. ScopeIDs[0] is equal to Scopes[0].ScopeId.
+	ScopeIDs []types.MetadataAddress
+	// ScopeUUIDs are the uuids in the scope metadata addresses for each of the scopes.
+	// E.g. ScopeUUIDs[0] is the uuid from Scopes[0].ScopeId (which is also ScopeIDs[0]).
+	ScopeUUIDs []uuid.UUID
+	// SessionIDs are the session metadata addresses for each of the sessions for each scope.
+	// E.g. SessionIDs[1][0] is the session metadata address for Sessions[1][0], (which is in Scopes[1]) etc.
+	SessionIDs [][]types.MetadataAddress
+	// SessionUUIDs are the secondary uuids for each of the sessions for each scope.
+	// E.g. SessionIDs[1][0] = SessionMetadataAddress(ScopeUUIDs[1], SessionUUIDs[0]).
+	SessionUUIDs [][]uuid.UUID
+	// RecordIDs are the record metadata addresses of each of the records in each session of each scope.
+	// E.g. RecordIDs[2][1][0] is equal to Records[2][1][0].GetRecordAddress().
+	RecordIDs [][][]types.MetadataAddress
+	// RecordNames are the names of each of the records in each sesson of each scope.
+	// E.g. RecordNames[2][1][0] is equal to Records[2][1][0].Name.
+	RecordNames [][][]string
+
+	// AllScopeSessions is all of the sessions for each scope. Each slice is sorted by address.
+	// e.g. AllScopeSessions[1] is all of the sessions for Scopes[1], sorted the same as in state.
+	// The secondary index of this field doesn't correlate to any other slices, only the first index.
+	AllScopeSessions [][]*types.Session
+	// AllScopeRecords is all of the records for each scope. Each slice is sorted by address.
+	// e.g. AllScopeRecords[1] is all of the records for Scopes[1], sorted the same as in state.
+	// The secondary index of this field doesn't correlate to any other slices, only the first index.
+	AllScopeRecords [][]*types.Record
+
+	// AllScopes is all of the Scopes sorted by address (same order as in state).
+	// The index in this field doesn't correlate to any other slices.
+	AllScopes []*types.Scope
+	// AllSessions is all of the Sessions sorted by address (same order as in state).
+	// The index in this field doesn't correlate to any other slices.
+	AllSessions []*types.Session
+	// AllRecords is all of the records sorted by address (same order as in state).
+	// The index in this field doesn't correlate to any other slices.
+	AllRecords []*types.Record
+}
+
+// createDataSetup will create all the scopes, sessions, and records needed to fill the provided counts.
+// len(counts) = number of scopes.
+// len(counts[i]) = number of sessions for scope[i].
+// counts[i][j] = number of records for session j (which is part of scope i).
+func createDataSetup(counts [][]int) *dataSetup {
+	newAccAddr := func(i int) string {
+		return sdk.AccAddress(fmt.Sprintf("%02d_acc_address______", i)).String()
+	}
+	newOwners := func(i int) []types.Party {
+		rv := ownerPartyList(newAccAddr(i))
+		if i%2 != 0 {
+			rv = append(rv, types.Party{Address: newAccAddr(i + 10), Role: 1})
+		}
+		return rv
+	}
+	newScope := func(i int) *types.Scope {
+		rv := &types.Scope{
+			ScopeId:            types.ScopeMetadataAddress(newTestUUID(i)),
+			SpecificationId:    types.ScopeSpecMetadataAddress(newTestUUID(i + 16)),
+			Owners:             newOwners(i),
+			DataAccess:         []string{newAccAddr(i + 20)},
+			ValueOwnerAddress:  newAccAddr(i + 40),
+			RequirePartyRollup: i%2 == 0,
+		}
+		if i > 2 {
+			rv.DataAccess = append(rv.DataAccess, newAccAddr(i+30))
+		}
+		return rv
+	}
+	sessionAddr := func(iScope, iSession int) types.MetadataAddress {
+		return types.SessionMetadataAddress(newTestUUID(iScope), newTestUUID(80+iScope*16+iSession))
+	}
+	cSpecAddr := func(iScope, iSession int) types.MetadataAddress {
+		return types.ContractSpecMetadataAddress(newTestUUID(160 + iScope*16 + iSession))
+	}
+	newSession := func(iScope, iSession int) *types.Session {
+		return &types.Session{
+			SessionId:       sessionAddr(iScope, iSession),
+			SpecificationId: cSpecAddr(iScope, iSession),
+			Parties:         newOwners(iScope),
+			Name:            fmt.Sprintf("Scope_%02d_TestSession_%02d", iScope, iSession),
+		}
+	}
+	newRecord := func(iScope, iSession, iRecord int) *types.Record {
+		rName := fmt.Sprintf("Scope_%02d_TestRecord_%02d_%02d", iScope, iSession, iRecord)
+		id := fmt.Sprintf("%02d_%02d_%02d", iScope, iSession, iRecord)
+		return &types.Record{
+			Name:      rName,
+			SessionId: sessionAddr(iScope, iSession),
+			Process: types.Process{
+				Name:      "process_name_" + id,
+				ProcessId: &types.Process_Hash{Hash: "process_id_hash_" + id},
+				Method:    "process_method_" + id,
+			},
+			Inputs: []types.RecordInput{
+				{
+					Name:     "inputs[0]_name_" + id,
+					Source:   &types.RecordInput_Hash{Hash: "inputs[0]_source_hash_" + id},
+					TypeName: "inputs[0]_type_" + id,
+					Status:   types.RecordInputStatus_Record,
+				},
+			},
+			Outputs: []types.RecordOutput{
+				{
+					Hash:   "outputs[0]_hash_" + id,
+					Status: types.ResultStatus_RESULT_STATUS_PASS,
+				},
+			},
+			SpecificationId: cSpecAddr(iScope, iSession).MustGetAsRecordSpecAddress(rName),
+		}
+	}
+
+	rv := &dataSetup{
+		Scopes:           make([]*types.Scope, len(counts)),
+		Sessions:         make([][]*types.Session, len(counts)),
+		Records:          make([][][]*types.Record, len(counts)),
+		ScopeIDs:         make([]types.MetadataAddress, len(counts)),
+		ScopeUUIDs:       make([]uuid.UUID, len(counts)),
+		SessionIDs:       make([][]types.MetadataAddress, len(counts)),
+		SessionUUIDs:     make([][]uuid.UUID, len(counts)),
+		RecordIDs:        make([][][]types.MetadataAddress, len(counts)),
+		RecordNames:      make([][][]string, len(counts)),
+		AllScopeSessions: make([][]*types.Session, len(counts)),
+		AllScopeRecords:  make([][]*types.Record, len(counts)),
+	}
+
+	for iScope := range rv.Records {
+		scope := newScope(iScope)
+		rv.Scopes[iScope] = scope
+		rv.ScopeIDs[iScope] = scope.ScopeId
+		rv.ScopeUUIDs[iScope], _ = scope.ScopeId.ScopeUUID()
+		rv.AllScopes = append(rv.AllScopes, scope)
+
+		sessionCount := len(counts[iScope])
+		rv.Sessions[iScope] = make([]*types.Session, sessionCount)
+		rv.SessionIDs[iScope] = make([]types.MetadataAddress, sessionCount)
+		rv.SessionUUIDs[iScope] = make([]uuid.UUID, sessionCount)
+		rv.Records[iScope] = make([][]*types.Record, sessionCount)
+		rv.RecordIDs[iScope] = make([][]types.MetadataAddress, sessionCount)
+		rv.RecordNames[iScope] = make([][]string, sessionCount)
+
+		for iSession := range rv.Records[iScope] {
+			session := newSession(iScope, iSession)
+			rv.Sessions[iScope][iSession] = session
+			rv.SessionIDs[iScope][iSession] = session.SessionId
+			rv.SessionUUIDs[iScope][iSession], _ = session.SessionId.SessionUUID()
+			rv.AllSessions = append(rv.AllSessions, session)
+			rv.AllScopeSessions[iScope] = append(rv.AllScopeSessions[iScope], session)
+
+			recordCount := counts[iScope][iSession]
+			rv.Records[iScope][iSession] = make([]*types.Record, recordCount)
+			rv.RecordIDs[iScope][iSession] = make([]types.MetadataAddress, recordCount)
+			rv.RecordNames[iScope][iSession] = make([]string, recordCount)
+
+			for iRecord := range rv.Records[iScope][iSession] {
+				record := newRecord(iScope, iSession, iRecord)
+				rv.Records[iScope][iSession][iRecord] = record
+				rv.RecordIDs[iScope][iSession][iRecord] = record.GetRecordAddress()
+				rv.RecordNames[iScope][iSession][iRecord] = record.Name
+				rv.AllRecords = append(rv.AllRecords, record)
+				rv.AllScopeRecords[iScope] = append(rv.AllScopeRecords[iScope], record)
+			}
+		}
+
+		slices.SortFunc(rv.AllScopeSessions[iScope], compareSessions)
+		slices.SortFunc(rv.AllScopeRecords[iScope], compareRecords)
+	}
+
+	slices.SortFunc(rv.AllScopes, compareScopes)
+	slices.SortFunc(rv.AllSessions, compareSessions)
+	slices.SortFunc(rv.AllRecords, compareRecords)
+
+	return rv
+}
+
+// identifyScope will return a human-readable string indicating which scope from this dataSetup is in the provided wrapper.
+func (d dataSetup) IdentifyScope(w *types.ScopeWrapper) string {
+	if w == nil {
+		return fmt.Sprintf("%#v", w)
+	}
+	for i, scope := range d.Scopes {
+		if w.Scope != nil && w.Scope.ScopeId.Equals(scope.ScopeId) {
+			return fmt.Sprintf("Scopes[%d]", i)
+		}
+		if w.Scope == nil && w.ScopeIdInfo != nil && w.ScopeIdInfo.ScopeId.Equals(scope.ScopeId) {
+			return fmt.Sprintf("Scopes[%d]<not found>", i)
+		}
+	}
+	return fmt.Sprintf("%#v", w)
+}
+
+// IdentifyScopes will call IdentifyScope on each of the provided scope wrappers.
+func (d dataSetup) IdentifyScopes(scopes []*types.ScopeWrapper) []string {
+	if scopes == nil {
+		return nil
+	}
+	rv := make([]string, len(scopes))
+	for i, scope := range scopes {
+		rv[i] = d.IdentifyScope(scope)
+	}
+	return rv
+}
+
+// IdentifySession will return a human-readable string indicating which session from this dataSetup is in the provided wrapper.
+func (d dataSetup) IdentifySession(w *types.SessionWrapper) string {
+	if w == nil {
+		return fmt.Sprintf("%#v", w)
+	}
+	for i := range d.Sessions {
+		for j, session := range d.Sessions[i] {
+			if w.Session != nil && w.Session.SessionId.Equals(session.SessionId) {
+				return fmt.Sprintf("Sessions[%d][%d]", i, j)
+			}
+			if w.Session == nil && w.SessionIdInfo != nil && w.SessionIdInfo.SessionId.Equals(session.SessionId) {
+				return fmt.Sprintf("Sessions[%d][%d]<not found>", i, j)
+			}
+		}
+	}
+	if w.Session != nil && len(w.Session.Name) > 0 {
+		return w.Session.Name
+	}
+	return fmt.Sprintf("%#v", w)
+}
+
+// IdentifySessions will call IdentifySession on each of the provided session wrappers.
+func (d dataSetup) IdentifySessions(sessions []*types.SessionWrapper) []string {
+	if sessions == nil {
+		return nil
+	}
+	rv := make([]string, len(sessions))
+	for i, session := range sessions {
+		rv[i] = d.IdentifySession(session)
+	}
+	return rv
+}
+
+// IdentifyRecord will return a human-readable string indicating which record from this dataSetup is in the provided wrapper.
+func (d dataSetup) IdentifyRecord(w *types.RecordWrapper) string {
+	if w == nil {
+		return fmt.Sprintf("%#v", w)
+	}
+	for i := range d.Records {
+		for j := range d.Records[i] {
+			for k, record := range d.Records[i][j] {
+				if w.Record != nil && w.Record.Name == record.Name && w.Record.SessionId.Equals(record.SessionId) {
+					return fmt.Sprintf("Records[%d][%d][%d]", i, j, k)
+				}
+				if w.Record == nil && w.RecordIdInfo != nil && w.RecordIdInfo.RecordId.Equals(record.GetRecordAddress()) {
+					return fmt.Sprintf("Records[%d][%d][%d]<not found>", i, j, k)
+				}
+			}
+		}
+	}
+	if w.Record != nil && len(w.Record.Name) > 0 {
+		return w.Record.Name
+	}
+	return fmt.Sprintf("%#v", w)
+}
+
+// IdentifyRecords will call IdentifyRecord on each of the provided record wrappers.
+func (d dataSetup) IdentifyRecords(records []*types.RecordWrapper) []string {
+	if records == nil {
+		return nil
+	}
+	rv := make([]string, len(records))
+	for i, record := range records {
+		rv[i] = d.IdentifyRecord(record)
+	}
+	return rv
+}
+
+// newTestUUID creates a new UUID by converting the provided int into a two char
+// hex code then repeating those two chars 8 times (for 16 total bytes).
+func newTestUUID(i int) uuid.UUID {
+	return uuid.UUID([]byte(strings.Repeat(fmt.Sprintf("%02X", i), 8)))
+}
+
+// compareScopes is used to sort scopes by their id (which is how they are sorted in state).
+// It returns -1 if a < b, or 0 if a == b, or 1 if a > b.
+// E.g To test if a > b, you could do if compareRecords(a, b) > 0.
+func compareScopes(a, b *types.Scope) int {
+	var addrA, addrB types.MetadataAddress
+	if a != nil {
+		addrA = a.ScopeId
+	}
+	if b != nil {
+		addrB = b.ScopeId
+	}
+	return bytes.Compare(addrA, addrB)
+}
+
+// compareSessions is used to sort sessions by their id (which is how they are sorted in state).
+// It returns -1 if a < b, or 0 if a == b, or 1 if a > b.
+// E.g To test if a > b, you could do if compareRecords(a, b) > 0.
+func compareSessions(a, b *types.Session) int {
+	var addrA, addrB types.MetadataAddress
+	if a != nil {
+		addrA = a.SessionId
+	}
+	if b != nil {
+		addrB = b.SessionId
+	}
+	return bytes.Compare(addrA, addrB)
+}
+
+// compareRecords is used to sort records by their id (which is how they are sorted in state).
+// It's not all that efficient, but should be fine or small quantities of records.
+// It returns -1 if a < b, or 0 if a == b, or 1 if a > b.
+// E.g To test if a > b, you could do if compareRecords(a, b) > 0.
+func compareRecords(a, b *types.Record) int {
+	var addrA, addrB types.MetadataAddress
+	if a != nil {
+		addrA = a.GetRecordAddress()
+	}
+	if b != nil {
+		addrB = b.GetRecordAddress()
+	}
+	return bytes.Compare(addrA, addrB)
+}
+
+// setData will write all the data in the provided dataSetup to state.
+func (s *QueryServerTestSuite) setData(data *dataSetup) {
+	for i, scope := range data.Scopes {
+		assertions.RequireNotPanicsNoError(s.T(), func() error {
+			return s.app.MetadataKeeper.SetScope(s.ctx, *scope)
+		}, "[%d]: SetScope(%#v)", i, scope)
+	}
+	for i := range data.Sessions {
+		for j, session := range data.Sessions[i] {
+			s.Require().NotPanics(func() {
+				s.app.MetadataKeeper.SetSession(s.ctx, *session)
+			}, "[%d][%d]: SetSession(%#v)", i, j, session)
+		}
+	}
+	for i := range data.Records {
+		for j := range data.Records[i] {
+			for k, record := range data.Records[i][j] {
+				s.Require().NotPanics(func() {
+					s.app.MetadataKeeper.SetRecord(s.ctx, *record)
+				}, "[%d][%d][%d]: SetRecord(%#v)", i, j, k, record)
+			}
+		}
+	}
+}
+
+// createDataSetup will create a dataSetup from the provided emptyRecords and write it to state.
+func (s *QueryServerTestSuite) createData(emptyRecords [][]int) *dataSetup {
+	data := createDataSetup(emptyRecords)
+	s.setData(data)
+	return data
+}
+
+// wrapScopes creates a ScopeWrapper with each of the provided scopes.
+func wrapScopes(scopes []*types.Scope, includeIDInfo bool) []*types.ScopeWrapper {
+	if scopes == nil {
+		return nil
+	}
+	rv := make([]*types.ScopeWrapper, len(scopes))
+	for i, scope := range scopes {
+		rv[i] = types.WrapScope(scope, includeIDInfo)
+	}
+	return rv
+}
+
+// wrapSessions creates a SessionWrapper with each of the provided sessions.
+func wrapSessions(sessions []*types.Session, includeIDInfo bool) []*types.SessionWrapper {
+	if sessions == nil {
+		return nil
+	}
+	rv := make([]*types.SessionWrapper, len(sessions))
+	for i, session := range sessions {
+		rv[i] = types.WrapSession(session, includeIDInfo)
+	}
+	return rv
+}
+
+// wrapRecords creates a RecordWrapper with each of the provided records.
+func wrapRecords(records []*types.Record, includeIDInfo bool) []*types.RecordWrapper {
+	if records == nil {
+		return nil
+	}
+	rv := make([]*types.RecordWrapper, len(records))
+	for i, record := range records {
+		rv[i] = types.WrapRecord(record, includeIDInfo)
+	}
+	return rv
 }
 
 // TODO: Params tests
 
 func (s *QueryServerTestSuite) TestScopeQuery() {
-	needsUpdate(s.T()) // TODO[2137]: Update TestScopeQuery to account for recent changes.
+	// Make 3 scopes:
+	//   scopes[0]: one session with one record.
+	//   scopes[1]: one session with two records.
+	//   scopes[2]: two sessions, one record and two records.
+	data := s.createData([][]int{{1}, {2}, {1, 2}})
+	// Valid Scopes indexes: [0] [1] [2]
+	// Valid Session indexes: [0][0] [1][0] [2][0] [2][1]
+	// Valid Record indexes: [0][0][0] [1][0][0] [1][0][1] [2][0][0] [2][1][0] [2][1][1]
 
-	app, ctx, queryClient, user1, user2, recordName, sessionName := s.app, s.ctx, s.queryClient, s.user1, s.user2, s.recordName, s.sessionName
-
-	testIDs := make([]types.MetadataAddress, 10)
-	for i := 0; i < 10; i++ {
-		valueOwner := ""
-		if i == 5 {
-			valueOwner = user2
-		}
-
-		scopeUUID := uuid.New()
-		testIDs[i] = types.ScopeMetadataAddress(scopeUUID)
-		ns := types.NewScope(testIDs[i], nil, ownerPartyList(user1), []string{user1}, valueOwner, false)
-		app.MetadataKeeper.SetScope(ctx, *ns)
-
-		sessionUUID := uuid.New()
-		sessionID := types.SessionMetadataAddress(scopeUUID, sessionUUID)
-		sName := fmt.Sprintf("%s%d", sessionName, i)
-		session := types.NewSession(sName, sessionID, s.cSpecID, ownerPartyList(user1), nil)
-		app.MetadataKeeper.SetSession(ctx, *session)
-
-		rName := fmt.Sprintf("%s%d", recordName, i)
-		process := types.NewProcess("processname", &types.Process_Hash{Hash: "HASH"}, "process_method")
-		record := types.NewRecord(rName, sessionID, *process, []types.RecordInput{}, []types.RecordOutput{}, s.recSpecID)
-		app.MetadataKeeper.SetRecord(ctx, *record)
+	tests := []struct {
+		name    string
+		req     types.ScopeRequest
+		expResp *types.ScopeResponse
+		expErr  string
+	}{
+		{
+			name:   "empty request",
+			req:    types.ScopeRequest{},
+			expErr: "empty request parameters: invalid request",
+		},
+		{
+			name:   "invalid scope id",
+			req:    types.ScopeRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"},
+			expErr: "could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format): invalid request",
+		},
+		{
+			name:   "invalid session",
+			req:    types.ScopeRequest{SessionAddr: "nope"},
+			expErr: "could not parse [nope] into a session address: decoding bech32 failed: invalid bech32 string length 4: invalid request",
+		},
+		{
+			name:   "invalid record",
+			req:    types.ScopeRequest{RecordAddr: "alsonope"},
+			expErr: "could not parse [alsonope] into a record address: decoding bech32 failed: invalid separator index -1: invalid request",
+		},
+		{
+			name: "scope uuid and other session",
+			req: types.ScopeRequest{
+				ScopeId:     data.ScopeUUIDs[0].String(),
+				SessionAddr: data.SessionIDs[1][0].String(),
+			},
+			expErr: "session " + data.SessionIDs[1][0].String() + " is not in scope " + data.ScopeIDs[0].String() + ": invalid request",
+		},
+		{
+			name: "scope addr and other session",
+			req: types.ScopeRequest{
+				ScopeId:     data.ScopeIDs[1].String(),
+				SessionAddr: data.SessionIDs[2][0].String(),
+			},
+			expErr: "session " + data.SessionIDs[2][0].String() + " is not in scope " +
+				data.ScopeIDs[1].String() + ": invalid request",
+		},
+		{
+			name: "scope uuid and other record",
+			req: types.ScopeRequest{
+				ScopeId:    data.ScopeUUIDs[2].String(),
+				RecordAddr: data.RecordIDs[0][0][0].String(),
+			},
+			expErr: "record " + data.RecordIDs[0][0][0].String() + " is not part of scope " +
+				data.ScopeIDs[2].String() + ": invalid request",
+		},
+		{
+			name: "scope addr and other record",
+			req: types.ScopeRequest{
+				ScopeId:    data.ScopeIDs[1].String(),
+				RecordAddr: data.RecordIDs[2][0][0].String(),
+			},
+			expErr: "record " + data.RecordIDs[2][0][0].String() + " is not part of scope " +
+				data.ScopeIDs[1].String() + ": invalid request",
+		},
+		{
+			name: "session and other record",
+			req: types.ScopeRequest{
+				SessionAddr: data.SessionIDs[0][0].String(),
+				RecordAddr:  data.RecordIDs[2][1][1].String(),
+			},
+			expErr: "session " + data.SessionIDs[0][0].String() + " and record " +
+				data.RecordIDs[2][1][1].String() + " are not associated with the same scope: invalid request",
+		},
+		{
+			name: "unknown scope uuid",
+			req:  types.ScopeRequest{ScopeId: newTestUUID(21).String()},
+			expResp: &types.ScopeResponse{
+				Scope: types.WrapScopeNotFound(types.ScopeMetadataAddress(newTestUUID(21))),
+			},
+		},
+		{
+			name: "unknown scope addr",
+			req:  types.ScopeRequest{ScopeId: types.ScopeMetadataAddress(newTestUUID(22)).String()},
+			expResp: &types.ScopeResponse{
+				Scope: types.WrapScopeNotFound(types.ScopeMetadataAddress(newTestUUID(22))),
+			},
+		},
+		{
+			name: "unknown session",
+			req:  types.ScopeRequest{SessionAddr: types.SessionMetadataAddress(newTestUUID(23), newTestUUID(24)).String()},
+			expResp: &types.ScopeResponse{
+				Scope: types.WrapScopeNotFound(types.ScopeMetadataAddress(newTestUUID(23))),
+			},
+		},
+		{
+			name: "unknown record",
+			req:  types.ScopeRequest{RecordAddr: types.RecordMetadataAddress(newTestUUID(25), newTestUUID(26).String()).String()},
+			expResp: &types.ScopeResponse{
+				Scope: types.WrapScopeNotFound(types.ScopeMetadataAddress(newTestUUID(25))),
+			},
+		},
+		{
+			name: "unknown scope: include request",
+			req: types.ScopeRequest{
+				ScopeId:        types.ScopeMetadataAddress(newTestUUID(27)).String(),
+				IncludeRequest: true,
+			},
+			expResp: &types.ScopeResponse{
+				Scope: types.WrapScopeNotFound(types.ScopeMetadataAddress(newTestUUID(27))),
+				Request: &types.ScopeRequest{
+					ScopeId:        types.ScopeMetadataAddress(newTestUUID(27)).String(),
+					IncludeRequest: true,
+				},
+			},
+		},
+		{
+			name:    "just scope: scope uuid",
+			req:     types.ScopeRequest{ScopeId: data.ScopeUUIDs[0].String()},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[0], true)},
+		},
+		{
+			name:    "just scope: scope addr",
+			req:     types.ScopeRequest{ScopeId: data.ScopeIDs[1].String()},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[1], true)},
+		},
+		{
+			name:    "just scope: session addr",
+			req:     types.ScopeRequest{SessionAddr: data.SessionIDs[2][0].String()},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[2], true)},
+		},
+		{
+			name:    "just scope: record addr",
+			req:     types.ScopeRequest{RecordAddr: data.RecordIDs[1][0][1].String()},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[1], true)},
+		},
+		{
+			name:    "just scope: scope uuid and session",
+			req:     types.ScopeRequest{ScopeId: data.ScopeUUIDs[2].String(), SessionAddr: data.SessionIDs[2][1].String()},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[2], true)},
+		},
+		{
+			name:    "just scope: scope addr and session",
+			req:     types.ScopeRequest{ScopeId: data.ScopeIDs[0].String(), SessionAddr: data.SessionIDs[0][0].String()},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[0], true)},
+		},
+		{
+			name:    "just scope: scope uuid and record",
+			req:     types.ScopeRequest{ScopeId: data.ScopeUUIDs[1].String(), RecordAddr: data.RecordIDs[1][0][0].String()},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[1], true)},
+		},
+		{
+			name:    "just scope: scope addr and record",
+			req:     types.ScopeRequest{ScopeId: data.ScopeIDs[1].String(), RecordAddr: data.RecordIDs[1][0][1].String()},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[1], true)},
+		},
+		{
+			name:    "just scope: session and record from same session",
+			req:     types.ScopeRequest{SessionAddr: data.SessionIDs[0][0].String(), RecordAddr: data.RecordIDs[0][0][0].String()},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[0], true)},
+		},
+		{
+			name:    "just scope: session and record from other session but same scope",
+			req:     types.ScopeRequest{SessionAddr: data.SessionIDs[2][0].String(), RecordAddr: data.RecordIDs[2][1][0].String()},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[2], true)},
+		},
+		{
+			name: "just scope: scope uuid and session and record",
+			req: types.ScopeRequest{
+				ScopeId:     data.ScopeUUIDs[1].String(),
+				SessionAddr: data.SessionIDs[1][0].String(),
+				RecordAddr:  data.RecordIDs[1][0][1].String(),
+			},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[1], true)},
+		},
+		{
+			name: "just scope: scope addr and session and record",
+			req: types.ScopeRequest{
+				ScopeId:     data.ScopeIDs[2].String(),
+				SessionAddr: data.SessionIDs[2][1].String(),
+				RecordAddr:  data.RecordIDs[2][1][1].String(),
+			},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[2], true)},
+		},
+		{
+			name: "with sessions: scope uuid",
+			req:  types.ScopeRequest{ScopeId: data.ScopeUUIDs[0].String(), IncludeSessions: true},
+			expResp: &types.ScopeResponse{
+				Scope:    types.WrapScope(data.Scopes[0], true),
+				Sessions: wrapSessions(data.AllScopeSessions[0], true),
+			},
+		},
+		{
+			name: "with sessions: scope addr",
+			req:  types.ScopeRequest{ScopeId: data.ScopeUUIDs[2].String(), IncludeSessions: true},
+			expResp: &types.ScopeResponse{
+				Scope:    types.WrapScope(data.Scopes[2], true),
+				Sessions: wrapSessions(data.AllScopeSessions[2], true),
+			},
+		},
+		{
+			name: "with sessions: session",
+			req:  types.ScopeRequest{SessionAddr: data.SessionIDs[1][0].String(), IncludeSessions: true},
+			expResp: &types.ScopeResponse{
+				Scope:    types.WrapScope(data.Scopes[1], true),
+				Sessions: wrapSessions(data.AllScopeSessions[1], true),
+			},
+		},
+		{
+			name: "with sessions: record",
+			req:  types.ScopeRequest{RecordAddr: data.RecordIDs[2][0][0].String(), IncludeSessions: true},
+			expResp: &types.ScopeResponse{
+				Scope:    types.WrapScope(data.Scopes[2], true),
+				Sessions: wrapSessions(data.AllScopeSessions[2], true),
+			},
+		},
+		{
+			name: "with records: scope uuid",
+			req:  types.ScopeRequest{ScopeId: data.ScopeUUIDs[2].String(), IncludeRecords: true},
+			expResp: &types.ScopeResponse{
+				Scope:   types.WrapScope(data.Scopes[2], true),
+				Records: wrapRecords(data.AllScopeRecords[2], true),
+			},
+		},
+		{
+			name: "with records: scope addr",
+			req:  types.ScopeRequest{ScopeId: data.ScopeIDs[1].String(), IncludeRecords: true},
+			expResp: &types.ScopeResponse{
+				Scope:   types.WrapScope(data.Scopes[1], true),
+				Records: wrapRecords(data.AllScopeRecords[1], true),
+			},
+		},
+		{
+			name: "with records: session",
+			req:  types.ScopeRequest{SessionAddr: data.SessionIDs[2][0].String(), IncludeRecords: true},
+			expResp: &types.ScopeResponse{
+				Scope: types.WrapScope(data.Scopes[2], true),
+				// Should be all the records in the scope, not just the ones in the provided session.
+				Records: wrapRecords(data.AllScopeRecords[2], true),
+			},
+		},
+		{
+			name: "with records: record",
+			req:  types.ScopeRequest{RecordAddr: data.RecordIDs[0][0][0].String(), IncludeRecords: true},
+			expResp: &types.ScopeResponse{
+				Scope:   types.WrapScope(data.Scopes[0], true),
+				Records: wrapRecords(data.AllScopeRecords[0], true),
+			},
+		},
+		{
+			name: "with request: scope uuid",
+			req:  types.ScopeRequest{ScopeId: data.ScopeUUIDs[0].String(), IncludeRequest: true},
+			expResp: &types.ScopeResponse{
+				Scope:   types.WrapScope(data.Scopes[0], true),
+				Request: &types.ScopeRequest{ScopeId: data.ScopeUUIDs[0].String(), IncludeRequest: true},
+			},
+		},
+		{
+			name: "with request: scope addr",
+			req:  types.ScopeRequest{ScopeId: data.ScopeIDs[1].String(), IncludeRequest: true},
+			expResp: &types.ScopeResponse{
+				Scope:   types.WrapScope(data.Scopes[1], true),
+				Request: &types.ScopeRequest{ScopeId: data.ScopeIDs[1].String(), IncludeRequest: true},
+			},
+		},
+		{
+			name: "with request: session",
+			req:  types.ScopeRequest{SessionAddr: data.SessionIDs[2][0].String(), IncludeRequest: true},
+			expResp: &types.ScopeResponse{
+				Scope:   types.WrapScope(data.Scopes[2], true),
+				Request: &types.ScopeRequest{SessionAddr: data.SessionIDs[2][0].String(), IncludeRequest: true},
+			},
+		},
+		{
+			name: "with request: record",
+			req:  types.ScopeRequest{RecordAddr: data.RecordIDs[2][1][0].String(), IncludeRequest: true},
+			expResp: &types.ScopeResponse{
+				Scope:   types.WrapScope(data.Scopes[2], true),
+				Request: &types.ScopeRequest{RecordAddr: data.RecordIDs[2][1][0].String(), IncludeRequest: true},
+			},
+		},
+		{
+			name:    "no id info: scope uuid",
+			req:     types.ScopeRequest{ScopeId: data.ScopeUUIDs[1].String(), ExcludeIdInfo: true},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[1], false)},
+		},
+		{
+			name:    "no id info: scope addr",
+			req:     types.ScopeRequest{ScopeId: data.ScopeIDs[0].String(), ExcludeIdInfo: true},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[0], false)},
+		},
+		{
+			name:    "no id info: session",
+			req:     types.ScopeRequest{SessionAddr: data.SessionIDs[1][0].String(), ExcludeIdInfo: true},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[1], false)},
+		},
+		{
+			name:    "no id info: record",
+			req:     types.ScopeRequest{RecordAddr: data.RecordIDs[2][0][0].String(), ExcludeIdInfo: true},
+			expResp: &types.ScopeResponse{Scope: types.WrapScope(data.Scopes[2], false)},
+		},
+		{
+			name: "with sessions, records, request and no id info: scope uuid",
+			req: types.ScopeRequest{
+				ScopeId:         data.ScopeUUIDs[0].String(),
+				IncludeSessions: true,
+				IncludeRecords:  true,
+				ExcludeIdInfo:   true,
+				IncludeRequest:  true,
+			},
+			expResp: &types.ScopeResponse{
+				Scope:    types.WrapScope(data.Scopes[0], false),
+				Sessions: wrapSessions(data.AllScopeSessions[0], false),
+				Records:  wrapRecords(data.AllScopeRecords[0], false),
+				Request: &types.ScopeRequest{
+					ScopeId:         data.ScopeUUIDs[0].String(),
+					IncludeSessions: true,
+					IncludeRecords:  true,
+					ExcludeIdInfo:   true,
+					IncludeRequest:  true,
+				},
+			},
+		},
+		{
+			name: "with sessions, records, request and no id info: scope addr",
+			req: types.ScopeRequest{
+				ScopeId:         data.ScopeIDs[1].String(),
+				IncludeSessions: true,
+				IncludeRecords:  true,
+				ExcludeIdInfo:   true,
+				IncludeRequest:  true,
+			},
+			expResp: &types.ScopeResponse{
+				Scope:    types.WrapScope(data.Scopes[1], false),
+				Sessions: wrapSessions(data.AllScopeSessions[1], false),
+				Records:  wrapRecords(data.AllScopeRecords[1], false),
+				Request: &types.ScopeRequest{
+					ScopeId:         data.ScopeIDs[1].String(),
+					IncludeSessions: true,
+					IncludeRecords:  true,
+					ExcludeIdInfo:   true,
+					IncludeRequest:  true,
+				},
+			},
+		},
+		{
+			name: "with sessions, records, request and no id info: session",
+			req: types.ScopeRequest{
+				SessionAddr:     data.SessionIDs[2][0].String(),
+				IncludeSessions: true,
+				IncludeRecords:  true,
+				ExcludeIdInfo:   true,
+				IncludeRequest:  true,
+			},
+			expResp: &types.ScopeResponse{
+				Scope:    types.WrapScope(data.Scopes[2], false),
+				Sessions: wrapSessions(data.AllScopeSessions[2], false),
+				Records:  wrapRecords(data.AllScopeRecords[2], false),
+				Request: &types.ScopeRequest{
+					SessionAddr:     data.SessionIDs[2][0].String(),
+					IncludeSessions: true,
+					IncludeRecords:  true,
+					ExcludeIdInfo:   true,
+					IncludeRequest:  true,
+				},
+			},
+		},
+		{
+			name: "with sessions, records, request and no id info: record",
+			req: types.ScopeRequest{
+				RecordAddr:      data.RecordIDs[2][1][0].String(),
+				IncludeSessions: true,
+				IncludeRecords:  true,
+				ExcludeIdInfo:   true,
+				IncludeRequest:  true,
+			},
+			expResp: &types.ScopeResponse{
+				Scope:    types.WrapScope(data.Scopes[2], false),
+				Sessions: wrapSessions(data.AllScopeSessions[2], false),
+				Records:  wrapRecords(data.AllScopeRecords[2], false),
+				Request: &types.ScopeRequest{
+					RecordAddr:      data.RecordIDs[2][1][0].String(),
+					IncludeSessions: true,
+					IncludeRecords:  true,
+					ExcludeIdInfo:   true,
+					IncludeRequest:  true,
+				},
+			},
+		},
 	}
-	scope0UUID, err := testIDs[0].ScopeUUID()
-	s.NoError(err, "ScopeUUID error")
 
-	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{})
-	s.EqualError(err, "empty request parameters: invalid request", "empty request error")
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var actResp *types.ScopeResponse
+			var err error
+			testFunc := func() {
+				actResp, err = s.queryClient.Scope(gocontext.Background(), &tc.req)
+			}
+			s.Require().NotPanics(testFunc, "queryClient.Scope(...)")
+			assertions.AssertErrorValue(s.T(), err, tc.expErr, "error from queryClient.Scope(...)")
+			if s.Assert().Equal(tc.expResp, actResp, "response from queryClient.Scope(...)") || tc.expResp == nil || actResp == nil {
+				// If they're not equal and both not nil, I want to run some extra tests to maybe help identify what's wrong.
+				// But if they're equal, we're all good. And if either is nil, that'll be obvious in the failure message, so we're done.
+				return
+			}
 
-	_, err = queryClient.Scope(gocontext.Background(), &types.ScopeRequest{ScopeId: "6332c1a4-foo1-bare-895b-invalid65cb6"})
-	s.EqualError(err, "could not parse [6332c1a4-foo1-bare-895b-invalid65cb6] into either a scope address (decoding bech32 failed: invalid character not part of charset: 45) or uuid (invalid UUID format): invalid request", "invalid uuid in request error")
+			expScopeName := data.IdentifyScope(tc.expResp.Scope)
+			actScopeName := data.IdentifyScope(actResp.Scope)
+			if s.Assert().Equal(expScopeName, actScopeName, "names for response.Scope") {
+				// If those are equal, just make sure the actual scopes are equal too.
+				s.Assert().Equal(tc.expResp.Scope, actResp.Scope, "response.Scope")
+			}
 
-	// TODO: expand this to test new features/failures of the Scope query.
+			expSessionNames := data.IdentifySessions(tc.expResp.Sessions)
+			actSessionNames := data.IdentifySessions(actResp.Sessions)
+			if s.Assert().Equal(expSessionNames, actSessionNames, "names for response.Sessions") {
+				// If those are equal, make sure each individual entry is equal too (just to be safe).
+				for i := range tc.expResp.Sessions {
+					s.Assert().Equal(tc.expResp.Sessions[i], actResp.Sessions[i], "response.Sessions[%d]", i)
+				}
+			}
 
-	fullReq0 := types.ScopeRequest{
-		ScopeId:         scope0UUID.String(),
-		IncludeSessions: true,
-		IncludeRecords:  true,
+			expRecordNames := data.IdentifyRecords(tc.expResp.Records)
+			actRecordNames := data.IdentifyRecords(actResp.Records)
+			if s.Assert().Equal(expRecordNames, actRecordNames, "names for response.Records") {
+				for i := range tc.expResp.Records {
+					s.Assert().Equal(tc.expResp.Records[i], actResp.Records[i], "response.Records[%d]", i)
+				}
+			}
+
+			// The request is all strings and bools so it'll look just fine in the failure output.
+			s.Assert().Equal(tc.expResp.Request, actResp.Request, "response.Request")
+		})
 	}
-	scopeResponse, err := queryClient.Scope(gocontext.Background(), &fullReq0)
-	s.NoError(err, "valid request error")
-	s.NotNil(scopeResponse.Scope, "scope in scope response")
-	s.Equal(testIDs[0], scopeResponse.Scope.Scope.ScopeId, "scopeId")
-
-	record0Name := fmt.Sprintf("%s%v", recordName, 0)
-	s.Equal(1, len(scopeResponse.Records), "records count")
-	s.Equal(record0Name, scopeResponse.Records[0].Record.Name, "record name")
-
-	session0Name := fmt.Sprintf("%s%v", sessionName, 0)
-	s.Equal(1, len(scopeResponse.Sessions), "session count")
-	s.Equal(session0Name, scopeResponse.Sessions[0].Session.Name, "session name")
-
-	// only one scope has value owner set (user2)
-	valueResponse, err := queryClient.ValueOwnership(gocontext.Background(), &types.ValueOwnershipRequest{Address: user2})
-	s.NoError(err)
-	s.Len(valueResponse.ScopeUuids, 1)
-
-	// 10 entries as all scopes have user1 as data_owner
-	ownerResponse, err := queryClient.Ownership(gocontext.Background(), &types.OwnershipRequest{Address: user1})
-	s.NoError(err)
-	s.Len(ownerResponse.ScopeUuids, 10)
-
-	// one entry for user2 (as value owner)
-	ownerResponse, err = queryClient.Ownership(gocontext.Background(), &types.OwnershipRequest{Address: user2})
-	s.NoError(err)
-	s.Len(ownerResponse.ScopeUuids, 1)
 }
-
-// TODO: ScopesAll tests
 
 func (s *QueryServerTestSuite) TestSessionsQuery() {
 	app, ctx, queryClient := s.app, s.ctx, s.queryClient

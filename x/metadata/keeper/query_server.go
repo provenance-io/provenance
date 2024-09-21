@@ -85,7 +85,7 @@ func (k Keeper) Scope(c context.Context, req *types.ScopeRequest) (*types.ScopeR
 		case scopeAddr.Empty():
 			scopeAddr = scopeAddr2
 		case !scopeAddr.Equals(scopeAddr2):
-			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("session %s is not part of scope %s", recordAddr, scopeAddr)
+			return &retval, sdkerrors.ErrInvalidRequest.Wrapf("record %s is not part of scope %s", recordAddr, scopeAddr)
 		}
 	}
 
