@@ -1053,11 +1053,38 @@ $ %[1]s tx marker account-data hotdogcoin --%[4]s`,
 // GetCmdAddNetAssetValues returns a CLI command for adding/updating marker net asset values.
 func GetCmdAddNetAssetValues() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "add-net-asset-values <denom> " + attrcli.AccountDataFlagsUse,
+		Use:     "add-net-asset-values <denom> <valuation[;valutation...]>",
 		Aliases: []string{"add-navs", "anavs"},
-		Short:   "Add/updates net asset values for a marker",
-		Example: fmt.Sprintf(`$ %[1]s tx marker add-net-asset-values hotdogcoin 1usd,1;2nhash,3`,
-			version.AppName),
+		Short:   "Provide net asset values for a marker",
+		Long: `
+Proved net asset valuations for a marker.  Net asset values are expressed as a ratio
+between an amount of coin paid (price) and a volume of token which are equivalent.
+
+The denomination of the amount paid (price) must exist on chain as a separate marker
+or be supplied as a [usd] integer which is valued in mils (0.001) USD.  The volume
+is supplied as an integer count of the current token.
+`,
+		Example: fmt.Sprintf(`
+  Set a value of $1 = 1markercoin (Note USD is denominated in mils)
+  $ %[1]s tx %[2]s add-net-asset-values markercoin 1000usd,1
+  
+  Provide more than one valuation in a single call
+  $ %[1]s tx %[2]s add-net-asset-values markercoin 1000usd,1;5000000000nhash,1
+
+  Valuations for larger trades with volumes greater than 1
+  $ %[1]s tx %[2]s add-net-asset-values markercoin 100000usd,199;1000stake,19
+
+  All values must be represented as whole integers.  If a decimal value is required
+  then the ratio between the price and volume must be adjusted to achieve the decimal
+  required.
+
+  Note: When the valuations are recorded, each will indicate the address of the admin
+  who provided the value. This will be published in the associated event data and 
+  captured in the NAV record.  For NAVs set by other modules such as x/exchange the
+  protocol will indicate these sources.  This separates estabished values from
+  the owner (self-attestation) from those set through blockchain transactions.
+		`,
+			version.AppName, types.ModuleName),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
