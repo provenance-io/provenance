@@ -1057,12 +1057,21 @@ func GetCmdAddNetAssetValues() *cobra.Command {
 		Aliases: []string{"add-navs", "anavs"},
 		Short:   "Provide net asset values for a marker",
 		Long: `
-Proved net asset valuations for a marker.  Net asset values are expressed as a ratio
-between an amount of coin paid (price) and a volume of token which are equivalent.
+Provide net asset valuations for a marker. Net asset values are used to establish 
+the relative value of the marker in relation to other assets or currencies.
 
-The denomination of the amount paid (price) must exist on chain as a separate marker
-or be supplied as a [usd] integer which is valued in mils (0.001) USD.  The volume
-is supplied as an integer count of the current token.
+Net asset values are expressed as a ratio between an amount of coin paid (price) 
+and a volume of the marker's tokens which are considered equivalent in value.
+
+The denomination of the amount paid (price) must either:
+1) Exist on-chain as a separate marker, or
+2) Be supplied as [1000usd], an integer valued in mils (1000 mils = $1 USD).
+
+The volume is supplied as an integer count of the current marker's tokens.
+
+IMPORTANT: All values must be represented as whole integers. If a decimal value 
+is required, adjust the ratio between the price and volume to achieve the 
+desired precision.
 `,
 		Example: fmt.Sprintf(`
   Set a value of $1 = 1markercoin (Note USD is denominated in mils)
