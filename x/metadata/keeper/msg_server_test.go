@@ -6,17 +6,24 @@ import (
 	"strings"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -28,11 +35,9 @@ type MsgServerTestSuite struct {
 	ctx       sdk.Context
 	msgServer types.MsgServer
 
-	pubkey1   cryptotypes.PubKey
 	user1     string
 	user1Addr sdk.AccAddress
 
-	pubkey2   cryptotypes.PubKey
 	user2     string
 	user2Addr sdk.AccAddress
 }
@@ -42,21 +47,12 @@ func (s *MsgServerTestSuite) SetupTest() {
 	s.ctx = FreshCtx(s.app)
 	s.msgServer = keeper.NewMsgServerImpl(s.app.MetadataKeeper)
 
-	s.pubkey1 = secp256k1.GenPrivKey().PubKey()
-	s.user1Addr = sdk.AccAddress(s.pubkey1.Address())
+	s.user1Addr = s.createAccountFromPubKey(secp256k1.GenPrivKey().PubKey())
 	s.user1 = s.user1Addr.String()
-	user1Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user1Addr)
-	s.Require().NoError(user1Acc.SetPubKey(s.pubkey1), "SetPubKey user1")
 
 	privKey, _ := secp256r1.GenPrivKey()
-	s.pubkey2 = privKey.PubKey()
-	s.user2Addr = sdk.AccAddress(s.pubkey2.Address())
+	s.user2Addr = s.createAccountFromPubKey(privKey.PubKey())
 	s.user2 = s.user2Addr.String()
-	user2Acc := s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.user2Addr)
-	s.Require().NoError(user2Acc.SetPubKey(s.pubkey1), "SetPubKey user2")
-
-	s.app.AccountKeeper.SetAccount(s.ctx, user1Acc)
-	s.app.AccountKeeper.SetAccount(s.ctx, user2Acc)
 }
 
 func TestMsgServerTestSuite(t *testing.T) {
@@ -68,6 +64,70 @@ func TestMsgServerTestSuite(t *testing.T) {
 //   - If errorString is not empty, theError must equal the errorString.
 func (s *MsgServerTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
 	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
+}
+
+// AssertEqualEvents asserts that the expected events equal the actual ones
+// in a way that helps identify problems when there are failures.
+func (s *MsgServerTestSuite) AssertEqualEvents(expected, actual sdk.Events, msgAndArgs ...interface{}) bool {
+	return assertions.AssertEqualEvents(s.T(), expected, actual, msgAndArgs...)
+}
+
+// newAddr creates a new sdk.AccAddress using the provided name as the starting bytes.
+func newAddr(name string) sdk.AccAddress {
+	switch {
+	case len(name) < 20:
+		// If it's less than 19 bytes long, pad it to 20 chars.
+		return sdk.AccAddress(name + strings.Repeat("_", 20-len(name)))
+	case len(name) > 20 && len(name) < 32:
+		// If it's 21 to 31 bytes long, pad it to 32 chars.
+		return sdk.AccAddress(name + strings.Repeat("_", 32-len(name)))
+	}
+	// If the name is exactly 20 long already, or longer than 32, don't include any padding.
+	return sdk.AccAddress(name)
+}
+
+// storeUserAccount will create/update the account at the given address.
+// The resulting account should not appear to be a smart contract account (e.g. k.IsWasmAccount should return false).
+func (s *MsgServerTestSuite) storeUserAccount(addr sdk.AccAddress, pubKey cryptotypes.PubKey) sdk.AccAddress {
+	acct := s.app.AccountKeeper.GetAccount(s.ctx, addr)
+	if acct == nil {
+		acct = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr)
+	}
+	if acct.GetSequence() == uint64(0) {
+		s.Require().NoError(acct.SetSequence(1), "%s.SetSequence(1)", addr)
+	}
+	if pubKey != nil {
+		s.Require().NoError(acct.SetPubKey(pubKey), "%s: SetPubKey", addr)
+	}
+	s.app.AccountKeeper.SetAccount(s.ctx, acct)
+	return addr
+}
+
+// createAccountFromPubKey creates/updates an account using the provided public key.
+// The newly created account should not appear to be a smart contract account (e.g. k.IsWasmAccount should return false).
+func (s *MsgServerTestSuite) createAccountFromPubKey(pubKey cryptotypes.PubKey) sdk.AccAddress {
+	return s.storeUserAccount(sdk.AccAddress(pubKey.Address()), pubKey)
+}
+
+// setUserAccount creates/updates the account with the given address.
+// The resulting account should not appear to be a smart contract account (e.g. k.IsWasmAccount should return false).
+func (s *MsgServerTestSuite) setUserAccount(addr sdk.AccAddress) sdk.AccAddress {
+	return s.storeUserAccount(addr, nil)
+}
+
+// setNamedUserAccount creates/updates an account with an address based off the provided name.
+// The resulting account should not appear to be a smart contract account (e.g. k.IsWasmAccount should return false).
+func (s *MsgServerTestSuite) setNamedUserAccount(name string) sdk.AccAddress {
+	return s.storeUserAccount(newAddr(name), nil)
+}
+
+// setNamedSmartContractAccount will create an account that looks like a smart
+// contract account and uses the provided name as the basis for its address.
+func (s *MsgServerTestSuite) setNamedSmartContractAccount(name string) sdk.AccAddress {
+	addr := newAddr(name)
+	acct := s.app.AccountKeeper.NewAccount(s.ctx, &authtypes.BaseAccount{Address: addr.String()})
+	s.app.AccountKeeper.SetAccount(s.ctx, acct)
+	return addr
 }
 
 // newUUID will create a new UUID using the provided name and index to define the bytes.
@@ -83,6 +143,16 @@ func (s *MsgServerTestSuite) newUUID(name string, i int) uuid.UUID {
 	rv, err := uuid.FromBytes([]byte(str))
 	s.Require().NoError(err, "uuid.FromBytes([]byte(%q))", str)
 	return rv
+}
+
+// scopeID creates a new Scope MetadataAddress based on the provided number.
+func (s *MsgServerTestSuite) scopeID(i int) types.MetadataAddress {
+	return types.ScopeMetadataAddress(s.newUUID("scope", i))
+}
+
+// scopeID creates a new ScopeSpecification MetadataAddress using the provided name and i in the uuid bytes.
+func (s *MsgServerTestSuite) scopeSpecID(name string, i int) types.MetadataAddress {
+	return types.ScopeSpecMetadataAddress(s.newUUID(name, i))
 }
 
 // namedValue is a way to associate a variable name with its value for use with logNamedValues.
@@ -106,25 +176,426 @@ func logNamedValues(t *testing.T, header string, entries []namedValue) {
 	t.Logf("%s:\n%s", header, strings.Join(lines, "\n"))
 }
 
+// untypeEvent calls TypedEventToEvent requiring it to not error.
+func (s *MsgServerTestSuite) untypeEvent(event proto.Message) sdk.Event {
+	rv, err := sdk.TypedEventToEvent(event)
+	s.Require().NoError(err, "sdk.TypedEventToEvent(%#v)", event)
+	return rv
+}
+
+// fromBech32 calls AccAddressFromBech32 requiring it to not error.
+func (s *MsgServerTestSuite) fromBech32(bech32 string) sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(bech32)
+	s.Require().NoError(err, "sdk.AccAddressFromBech32(%q)", bech32)
+	return addr
+}
+
 // MakeNonWasmAccount will make sure the account with the provided bech32 string has a sequence of 1.
 // This will cause the isWasmAccount test to report that the account is NOT a wasm account.
 func (s *MsgServerTestSuite) MakeNonWasmAccounts(bech32s ...string) {
 	s.T().Helper()
-	for i, bech32 := range bech32s {
-		addr, err := sdk.AccAddressFromBech32(bech32)
-		s.Require().NoError(err, "[%d]: sdk.AccAddressFromBech32(%q)", i, bech32)
-		acct := s.app.AccountKeeper.GetAccount(s.ctx, addr)
-		if acct == nil {
-			acct = s.app.AccountKeeper.NewAccountWithAddress(s.ctx, addr)
-		}
-		if acct.GetSequence() == uint64(0) {
-			s.Require().NoError(acct.SetSequence(1), "[%d]: %q.SetSequence(1)", i, bech32)
-			s.app.AccountKeeper.SetAccount(s.ctx, acct)
-		}
+	for _, bech32 := range bech32s {
+		addr := s.fromBech32(bech32)
+		s.setUserAccount(addr)
 	}
 }
 
-// TODO: WriteScope tests
+func (s *MsgServerTestSuite) TestWriteScope() {
+	// It's assumed that individual parts of the WriteScope process are unit tested.
+	// These tests focus more on module interaction.
+
+	scUserAddr := s.setNamedSmartContractAccount("scUser")            // cosmos1wd342um9wf047h6lta047h6lta047h6lj6q23g
+	userWithWithdrawAddr := s.setNamedUserAccount("userWithWithdraw") // cosmos1w4ek2ujhd96xs4mfw35xgunpwa047h6l3fyz9d
+	userWithDepositAddr := s.setNamedUserAccount("userWithDeposit")   // cosmos1w4ek2ujhd96xs3r9wphhx6t5ta047h6lw5vyqg
+	userWithBothAddr := s.setNamedUserAccount("userWithBoth")         // cosmos1w4ek2ujhd96xssn0w3597h6lta047h6ly0muct
+	userWithNeitherAddr := s.setNamedUserAccount("userWithNeither")   // cosmos1w4ek2ujhd96xsnn9d96xsetjta047h6l7q4hkf
+	scopeOwnerAddr := s.setNamedUserAccount("scopeOwner")             // cosmos1wd342um9wf047h6lta047h6lta047h6lj6q23g
+	specOwnerAddr := s.setNamedUserAccount("specOwner")               // cosmos1wdcx2c60wahx2ujlta047h6lta047h6lw9t9w4
+	otherAddr1 := newAddr("1_other")                                  // cosmos1x90k7argv4e97h6lta047h6lta047h6lfrgsqs
+	otherAddr2 := newAddr("2_other")                                  // cosmos1xf0k7argv4e97h6lta047h6lta047h6ltepkp4
+	otherAddr3 := newAddr("3_other")                                  // cosmos1xd0k7argv4e97h6lta047h6lta047h6ljgx5ek
+	moduleAddr := authtypes.NewModuleAddress(types.ModuleName)        // cosmos1g4z8k7hm6hj5fa7s780slnxjvq2dnpgpj2jy0e
+
+	newMarker := func(denom string, withdrawAddr, depAddr sdk.AccAddress) sdk.AccAddress {
+		addr, err := markertypes.MarkerAddress(denom)
+		s.Require().NoError(err, "markertypes.MarkerAddress(%q)", denom)
+
+		marker := &markertypes.MarkerAccount{
+			BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
+			AccessControl: []markertypes.AccessGrant{
+				{
+					Address:     userWithBothAddr.String(),
+					Permissions: markertypes.AccessList{markertypes.Access_Deposit, markertypes.Access_Withdraw},
+				},
+				{
+					Address: userWithNeitherAddr.String(),
+					Permissions: markertypes.AccessList{
+						markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Delete,
+						markertypes.Access_Admin, markertypes.Access_Transfer, markertypes.Access_ForceTransfer,
+					},
+				},
+			},
+			Status:                 markertypes.StatusProposed,
+			Denom:                  denom,
+			Supply:                 sdkmath.NewInt(1000),
+			MarkerType:             markertypes.MarkerType_RestrictedCoin,
+			SupplyFixed:            true,
+			AllowGovernanceControl: true,
+		}
+		if len(withdrawAddr) > 0 {
+			marker.AccessControl = append(marker.AccessControl, markertypes.AccessGrant{
+				Address:     withdrawAddr.String(),
+				Permissions: markertypes.AccessList{markertypes.Access_Withdraw},
+			})
+		}
+		if len(depAddr) > 0 {
+			marker.AccessControl = append(marker.AccessControl, markertypes.AccessGrant{
+				Address:     depAddr.String(),
+				Permissions: markertypes.AccessList{markertypes.Access_Deposit},
+			})
+		}
+
+		nav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(denom, 1), 1)
+		err = s.app.MarkerKeeper.SetNetAssetValue(s.ctx, marker, nav, "testing")
+		s.Require().NoError(err, "%q: SetNetAssetValue", denom)
+		err = s.app.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
+		s.Require().NoError(err, "%q: AddFinalizeAndActivateMarker", denom)
+		return addr
+	}
+
+	fromMarkerAddr := newMarker("falcon", userWithWithdrawAddr, nil) // cosmos1wd342um9wfqkgerjta047h6lta047h6lqhvjhz
+	toMarkerAddr := newMarker("tiger", nil, userWithDepositAddr)     // cosmos1w4ek2ujhd96xs4mfw35xgunpwa047h6l3fyz9d
+
+	_, _, _ = scUserAddr, fromMarkerAddr, toMarkerAddr // TODO[2137]: Delete this line.
+
+	scopeSpecUUID := s.newUUID("scope_spec", 1)
+	scopeSpecID := types.ScopeSpecMetadataAddress(scopeSpecUUID)
+	scopeSpec := types.ScopeSpecification{
+		SpecificationId: scopeSpecID,
+		OwnerAddresses:  []string{specOwnerAddr.String()},
+		PartiesInvolved: []types.PartyType{types.PartyType_PARTY_TYPE_OWNER},
+	}
+	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpec)
+
+	newScope := func(i int, valueOwner sdk.AccAddress) types.Scope {
+		return types.Scope{
+			ScopeId:           s.scopeID(i),
+			SpecificationId:   scopeSpecID,
+			Owners:            ownerPartyList(scopeOwnerAddr.String()),
+			ValueOwnerAddress: valueOwner.String(),
+		}
+	}
+	setupScope := func(i int, valueOwner sdk.AccAddress) func(ctx sdk.Context) {
+		return func(ctx sdk.Context) {
+			scope := newScope(i, valueOwner)
+			err := s.app.MetadataKeeper.SetScope(ctx, scope)
+			s.Require().NoError(err, "SetScope %d, %q", i, scope.ValueOwnerAddress)
+		}
+	}
+
+	tests := []struct {
+		name              string
+		setup             func(ctx sdk.Context)
+		msg               types.MsgWriteScopeRequest
+		expErr            string
+		expScope          *types.Scope // If nil, msg.Scope is used.
+		expEventsNAV      bool
+		expEventsMint     bool           // Also causes the transfer events to be expected.
+		expEventsTrans    sdk.AccAddress // The "from" address for the transfer events.
+		expEventsTransErr bool
+		expEventsCreate   bool
+		expEventsUpdate   bool
+	}{
+		{
+			name: "invalid scope",
+			msg: types.MsgWriteScopeRequest{
+				Scope: types.Scope{
+					ScopeId:         s.scopeID(1)[:2],
+					SpecificationId: scopeSpecID,
+					Owners:          ownerPartyList(scopeOwnerAddr.String()),
+				},
+				Signers: []string{scopeOwnerAddr.String()},
+			},
+			expErr: "invalid scope metadata address MetadataAddress{0x0, 0x31}: " +
+				"incorrect address length (expected: 17, actual: 2): invalid request",
+		},
+		{
+			name: "new scope with value owner",
+			msg: types.MsgWriteScopeRequest{
+				Scope:    newScope(2, otherAddr2),
+				Signers:  []string{scopeOwnerAddr.String()},
+				UsdMills: 555,
+			},
+			expEventsNAV:    true,
+			expEventsMint:   true,
+			expEventsCreate: true,
+		},
+		{
+			name: "new scope without value owner",
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(2, nil),
+				Signers: []string{otherAddr1.String()},
+			},
+			expEventsNAV:    true,
+			expEventsCreate: true,
+		},
+		{
+			name: "using optional fields",
+			msg: types.MsgWriteScopeRequest{
+				Scope:     types.Scope{Owners: ownerPartyList(scopeOwnerAddr.String())},
+				Signers:   []string{scopeOwnerAddr.String()},
+				ScopeUuid: s.newUUID("scope", 4).String(),
+				SpecUuid:  scopeSpecUUID.String(),
+			},
+			expScope: &types.Scope{
+				ScopeId:         s.scopeID(4),
+				SpecificationId: scopeSpecID,
+				Owners:          ownerPartyList(scopeOwnerAddr.String()),
+			},
+			expEventsNAV:    true,
+			expEventsCreate: true,
+		},
+		{
+			name:  "updating scope: already has value owner, but no value owner in request",
+			setup: setupScope(10, otherAddr2),
+			msg: types.MsgWriteScopeRequest{
+				Scope: types.Scope{
+					ScopeId:           s.scopeID(10),
+					SpecificationId:   scopeSpecID,
+					Owners:            ownerPartyList(scopeOwnerAddr.String()),
+					DataAccess:        []string{otherAddr3.String()},
+					ValueOwnerAddress: "",
+				},
+				Signers:  []string{scopeOwnerAddr.String()},
+				UsdMills: 12345,
+			},
+			expScope: &types.Scope{
+				ScopeId:           s.scopeID(10),
+				SpecificationId:   scopeSpecID,
+				Owners:            ownerPartyList(scopeOwnerAddr.String()),
+				DataAccess:        []string{otherAddr3.String()},
+				ValueOwnerAddress: otherAddr2.String(),
+			},
+			expEventsNAV:    true,
+			expEventsUpdate: true,
+		},
+		{
+			name:  "value owner change: empty to user",
+			setup: setupScope(11, nil),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(11, otherAddr2),
+				Signers: []string{scopeOwnerAddr.String()},
+			},
+			expEventsNAV:    true,
+			expEventsMint:   true,
+			expEventsUpdate: true,
+		},
+		{
+			name:  "value owner change: empty to marker: no signer with deposit",
+			setup: setupScope(12, nil),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(12, toMarkerAddr),
+				Signers: []string{scopeOwnerAddr.String()},
+			},
+			expErr: "could not write scope \"" + s.scopeID(12).String() + "\": could not set value owner: " +
+				"could not send scope coin \"1nft/" + s.scopeID(12).String() + "\" " +
+				"from " + moduleAddr.String() + " to " + toMarkerAddr.String() + ": " +
+				scopeOwnerAddr.String() + " does not have ACCESS_DEPOSIT on " +
+				"tiger marker (" + toMarkerAddr.String() + ")",
+			expEventsNAV:      true,
+			expEventsMint:     true,
+			expEventsTransErr: true,
+		},
+		{
+			name:  "value owner change: empty to marker: signer with withdraw on other marker",
+			setup: setupScope(12, nil),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(12, toMarkerAddr),
+				Signers: []string{scopeOwnerAddr.String(), userWithWithdrawAddr.String()},
+			},
+			expErr: "could not write scope \"" + s.scopeID(12).String() + "\": could not set value owner: " +
+				"could not send scope coin \"1nft/" + s.scopeID(12).String() + "\" " +
+				"from " + moduleAddr.String() + " to " + toMarkerAddr.String() + ": " +
+				"none of [\"" + scopeOwnerAddr.String() + "\" \"" + userWithWithdrawAddr.String() + "\"] have permission ACCESS_DEPOSIT on " +
+				"tiger marker (" + toMarkerAddr.String() + ")",
+			expEventsNAV:      true,
+			expEventsMint:     true,
+			expEventsTransErr: true,
+		},
+		{
+			name:  "value owner change: empty to marker: signer with deposit",
+			setup: setupScope(13, nil),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(13, toMarkerAddr),
+				Signers: []string{scopeOwnerAddr.String(), userWithDepositAddr.String()},
+			},
+			expEventsNAV:    true,
+			expEventsMint:   true,
+			expEventsUpdate: true,
+		},
+		{
+			name:  "value owner change: user to user: wrong signer",
+			setup: setupScope(14, otherAddr1),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(14, otherAddr2),
+				Signers: []string{scopeOwnerAddr.String()},
+			},
+			expErr: "missing signature from existing value owner \"" + otherAddr1.String() + "\": invalid request",
+		},
+		{
+			name:  "value owner change: user to user: right signer",
+			setup: setupScope(14, otherAddr1),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(14, otherAddr2),
+				Signers: []string{otherAddr1.String()},
+			},
+			expEventsNAV:    true,
+			expEventsTrans:  otherAddr1,
+			expEventsUpdate: true,
+		},
+		// TODO[2137]: Finish these WriteScope tests.
+		// value owner change: marker to user: no signer with withdraw
+		// value owner change: marker to user: signer with other permissions
+		// value owner change: marker to user: signer with withdraw
+		// value owner change: user to marker: not signed by user
+		// value owner change: user to marker: signer does not have deposit
+		// value owner change: user to marker: signer has deposit
+		// value owner change: user to marker: other signer has deposit
+		// value owner change: marker to marker: with only withdraw
+		// value owner change: marker to marker: with only deposit
+		// value owner change: marker to marker: with other permissions
+		// value owner change: marker to marker: signer with both permissions
+		// value owner change: marker to marker: different signers with deposit and withdraw
+		// value owner change: smart contract to marker with transfer agent
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Set the expected scope if it wasn't provided.
+			if tc.expScope == nil {
+				tc.expScope = &tc.msg.Scope
+			}
+
+			// Identify the id of the scope in question so we can use it in the expected stuff.
+			var scopeID types.MetadataAddress
+			switch {
+			case tc.expScope != nil && len(tc.expScope.ScopeId) > 0:
+				scopeID = tc.expScope.ScopeId
+			case len(tc.msg.Scope.ScopeId) > 0:
+				scopeID = tc.msg.Scope.ScopeId
+			case len(tc.msg.ScopeUuid) > 0:
+				uid, err := uuid.Parse(tc.msg.ScopeUuid)
+				s.Require().NoError(err, "uuid.Parse(%q)", tc.msg.ScopeUuid)
+				types.ScopeMetadataAddress(uid)
+			}
+
+			// Create the expected response.
+			var expResp *types.MsgWriteScopeResponse
+			if len(tc.expErr) == 0 {
+				expResp = types.NewMsgWriteScopeResponse(scopeID)
+			}
+
+			// Create the list of expected events.
+			var expEvents sdk.Events
+			if tc.expEventsNAV {
+				event := s.untypeEvent(&types.EventSetNetAssetValue{
+					ScopeId: scopeID.String(),
+					Price:   fmt.Sprintf("%dusd", tc.msg.UsdMills),
+					Source:  types.ModuleName,
+				})
+				expEvents = append(expEvents, event)
+			}
+			if tc.expEventsMint || len(tc.expEventsTrans) > 0 {
+				var from string
+				if tc.expEventsMint {
+					from = moduleAddr.String()
+				} else {
+					from = tc.expEventsTrans.String()
+				}
+				to := tc.expScope.ValueOwnerAddress
+				amount := scopeID.Coin().String()
+				if tc.expEventsMint {
+					expEvents = append(expEvents,
+						sdk.Event{Type: "coin_received", Attributes: []abci.EventAttribute{
+							{Key: "receiver", Value: from},
+							{Key: "amount", Value: amount},
+						}},
+						sdk.Event{Type: "coinbase", Attributes: []abci.EventAttribute{
+							{Key: "minter", Value: from},
+							{Key: "amount", Value: amount},
+						}},
+					)
+				}
+				expEvents = append(expEvents,
+					sdk.Event{Type: "coin_spent", Attributes: []abci.EventAttribute{
+						{Key: "spender", Value: from},
+						{Key: "amount", Value: amount},
+					}},
+				)
+				if !tc.expEventsTransErr {
+					expEvents = append(expEvents,
+						sdk.Event{Type: "coin_received", Attributes: []abci.EventAttribute{
+							{Key: "receiver", Value: to},
+							{Key: "amount", Value: amount},
+						}},
+						sdk.Event{Type: "transfer", Attributes: []abci.EventAttribute{
+							{Key: "recipient", Value: to},
+							{Key: "sender", Value: from},
+							{Key: "amount", Value: amount},
+						}},
+						sdk.Event{Type: "message", Attributes: []abci.EventAttribute{
+							{Key: "sender", Value: from},
+						}},
+					)
+				}
+			}
+			if tc.expEventsCreate {
+				event := s.untypeEvent(types.NewEventScopeCreated(scopeID))
+				expEvents = append(expEvents, event)
+			}
+			if tc.expEventsUpdate {
+				event := s.untypeEvent(types.NewEventScopeUpdated(scopeID))
+				expEvents = append(expEvents, event)
+			}
+			if len(tc.expErr) == 0 {
+				event := s.untypeEvent(&types.EventTxCompleted{
+					Module:   types.ModuleName,
+					Endpoint: string(types.TxEndpoint_WriteScope),
+					Signers:  tc.msg.Signers,
+				})
+				expEvents = append(expEvents, event)
+			}
+
+			// Use a cache context so that each case is independent.
+			ctx, _ := s.ctx.CacheContext()
+			if tc.setup != nil {
+				tc.setup(ctx)
+			}
+
+			em := sdk.NewEventManager()
+			ctx = ctx.WithEventManager(em)
+			var actResp *types.MsgWriteScopeResponse
+			var err error
+			testFunc := func() {
+				actResp, err = s.msgServer.WriteScope(ctx, &tc.msg)
+			}
+			s.Require().NotPanics(testFunc, "msgServer.WriteScope")
+			s.AssertErrorValue(err, tc.expErr, "error from msgServer.WriteScope")
+			s.Assert().Equal(expResp, actResp, "response from msgServer.WriteScope")
+
+			actEvents := em.Events()
+			s.AssertEqualEvents(expEvents, actEvents, "events emitted during msgServer.WriteScope")
+
+			if err == nil && len(tc.expErr) == 0 {
+				actScope, found := s.app.MetadataKeeper.GetScopeWithValueOwner(ctx, tc.expScope.ScopeId)
+				if s.Assert().True(found, "found bool from GetScopeWithValueOwner after msgServer.WriteScope") {
+					s.Assert().Equal(tc.expScope, &actScope, "scope after msgServer.WriteScope")
+				}
+			}
+		})
+	}
+}
+
 // TODO: DeleteScope tests
 
 func (s *MsgServerTestSuite) TestAddAndDeleteScopeDataAccess() {
