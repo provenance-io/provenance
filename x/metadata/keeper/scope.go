@@ -421,8 +421,6 @@ func (k Keeper) ValidateWriteScope(
 		existing = &e
 	}
 
-	// TODO[2137]: Evaluate whether we should require a value owner when creating a scope.
-
 	// If the scope already exists:
 	//   - Lack of a proposed value owner means there is no desired change to it and we don't need to look it up.
 	//   - Presence of a proposed value owner means we need to look up the existing one

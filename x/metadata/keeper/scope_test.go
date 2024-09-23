@@ -1300,7 +1300,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 		authzK   *MockAuthzKeeper
 		bankK    *MockBankKeeper
 		errorMsg string
-		expAddrs []sdk.AccAddress // TODO[2137]: Define this in each test case and make sure it's fully tested.
+		expAddrs []sdk.AccAddress
 	}{
 		{
 			name:     "nil previous, proposed throws address error",
