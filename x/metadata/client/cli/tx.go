@@ -1190,11 +1190,44 @@ $ %[1]s tx metadata account-data %[2]s --%[5]s
 // GetCmdAddNetAssetValues returns a CLI command for adding/updating scopes net asset values.
 func GetCmdAddNetAssetValues() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "add-net-asset-values <scope-metadata-address> " + attrcli.AccountDataFlagsUse,
-		Aliases: []string{"add-navs", "anavs"},
-		Short:   "Add/updates net asset values for a scope",
-		Example: fmt.Sprintf(`$ %[1]s tx marker add-net-asset-values scope1234... 1usd,1;2nhash,3`,
-			version.AppName),
+		Use:     "add-net-asset-values <scope-metadata-address> <valuation[;valuation...]>",
+		Aliases: []string{"add-nav", "nav"},
+		Short:   "Provide net asset value for a scope",
+		Long: `
+Provide net asset valuation for a scope. Net asset values are used to establish 
+the relative value of the digital asset in relation to other assets or currencies.
+
+Net asset values are expressed as a ratio between an amount of coin paid (price) 
+and the scope (generally one) which are considered equivalent in value.
+
+The denomination of the amount paid (price) must either:
+
+  1) Exist on-chain as a marker, or
+  2) Be supplied as [1000usd], an integer valued in mils (1000 mils = $1 USD).
+
+IMPORTANT: The net asset value contains a volume which should be set to one
+in almost all cases. All values must be represented as whole integers. If a 
+decimal value is required, adjust the ratio between the price and volume as the
+least common denominator to achieve the desired precision.
+`,
+		Example: fmt.Sprintf(`
+  Set a value of $1 (Note USD is denominated in mils)
+  $ %[1]s tx %[2]s add-net-asset-values %[3]s 1000usd,1
+  
+  Provide more than one valuation in a single call
+  $ %[1]s tx %[2]s add-net-asset-values %[3]s 1000usd,1;5000000000nhash,1
+
+  Valuation for asset with volumes greater than 1 to adjust for high value price denom
+  $ %[1]s tx %[2]s add-net-asset-values %[3]s 1btc,60000
+
+  Note: When the valuations are recorded, each will indicate the address of the admin
+  who provided the value. This will be published in the associated event data and 
+  captured in the NAV record.  For NAVs set by other modules such as x/exchange the
+  protocol will indicate these sources.  This separates established values from
+  the owner (self-attestation) from those set through blockchain transactions.
+		`,
+			version.AppName, types.ModuleName, "scope1qzhp...tsk0cn"),
+
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
