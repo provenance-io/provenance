@@ -1053,7 +1053,7 @@ $ %[1]s tx marker account-data hotdogcoin --%[4]s`,
 // GetCmdAddNetAssetValues returns a CLI command for adding/updating marker net asset values.
 func GetCmdAddNetAssetValues() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "add-net-asset-values <denom> <valuation[;valutation...]>",
+		Use:     "add-net-asset-values <denom> <valuation[;valuation...]>",
 		Aliases: []string{"add-navs", "anavs"},
 		Short:   "Provide net asset values for a marker",
 		Long: `
@@ -1090,7 +1090,7 @@ desired precision.
   Note: When the valuations are recorded, each will indicate the address of the admin
   who provided the value. This will be published in the associated event data and 
   captured in the NAV record.  For NAVs set by other modules such as x/exchange the
-  protocol will indicate these sources.  This separates estabished values from
+  protocol will indicate these sources.  This separates established values from
   the owner (self-attestation) from those set through blockchain transactions.
 		`,
 			version.AppName, types.ModuleName),
