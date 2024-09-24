@@ -3860,7 +3860,7 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 		},
 		{
 			name: "successful with multi net asset values",
-			args: argsWStdFlags(scopeID, "1usd,2jackthecat"),
+			args: argsWStdFlags(scopeID, "1usd;2jackthecat"),
 		},
 	}
 
