@@ -1327,7 +1327,6 @@ func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValu
 		} else {
 			netAssetValues[i] = types.NewNetAssetValue(coin, 1)
 		}
-
 	}
 	return netAssetValues, nil
 }
