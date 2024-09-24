@@ -861,7 +861,7 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 			expCallBA:   addr1,
 			expCallDO:   true,
 			expCallMint: true,
-			expCallSend: NewSendCoinsCall(moduleAddr, addr1, sdk.Coins{scopeID.Coin()}),
+			expCallSend: NewSendCoinsCall(moduleAddr, addr1, scopeID.Coins()),
 		},
 		{
 			name:          "no current owner to new owner: okay",
@@ -870,7 +870,7 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 			expCallBA:     addr1,
 			expCallDO:     true,
 			expCallMint:   true,
-			expCallSend:   NewSendCoinsCall(moduleAddr, addr1, sdk.Coins{scopeID.Coin()}),
+			expCallSend:   NewSendCoinsCall(moduleAddr, addr1, scopeID.Coins()),
 		},
 		{
 			name:          "current owner to self",
@@ -891,7 +891,7 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 				scopeIDStr, addr1.String(), addr2.String()),
 			expCallBA:   addr2,
 			expCallDO:   true,
-			expCallSend: NewSendCoinsCall(addr1, addr2, sdk.Coins{scopeID.Coin()}),
+			expCallSend: NewSendCoinsCall(addr1, addr2, scopeID.Coins()),
 		},
 		{
 			name:          "current owner to new owner: okay",
@@ -900,7 +900,7 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 			newValueOwner: addr2.String(),
 			expCallBA:     addr2,
 			expCallDO:     true,
-			expCallSend:   NewSendCoinsCall(addr1, addr2, sdk.Coins{scopeID.Coin()}),
+			expCallSend:   NewSendCoinsCall(addr1, addr2, scopeID.Coins()),
 		},
 		{
 			name:          "current owner to empty new owner: error sending",
@@ -911,7 +911,7 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 			expErr: fmt.Sprintf("could not send scope coin \"1nft/%s\" from %s to %s: finders keepers",
 				scopeIDStr, addr1.String(), moduleAddr.String()),
 			expCallDO:   true,
-			expCallSend: NewSendCoinsCall(addr1, moduleAddr, sdk.Coins{scopeID.Coin()}),
+			expCallSend: NewSendCoinsCall(addr1, moduleAddr, scopeID.Coins()),
 		},
 		{
 			name:          "current owner to empty new owner: error burning",
@@ -921,7 +921,7 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 			newValueOwner: "",
 			expErr:        fmt.Sprintf("could not burn scope coin \"1nft/%s\": too wet", scopeIDStr),
 			expCallDO:     true,
-			expCallSend:   NewSendCoinsCall(addr1, moduleAddr, sdk.Coins{scopeID.Coin()}),
+			expCallSend:   NewSendCoinsCall(addr1, moduleAddr, scopeID.Coins()),
 			expCallBurn:   true,
 		},
 		{
@@ -930,7 +930,7 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 			scopeID:       scopeID,
 			newValueOwner: "",
 			expCallDO:     true,
-			expCallSend:   NewSendCoinsCall(addr1, moduleAddr, sdk.Coins{scopeID.Coin()}),
+			expCallSend:   NewSendCoinsCall(addr1, moduleAddr, scopeID.Coins()),
 			expCallBurn:   true,
 		},
 	}
@@ -943,10 +943,10 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 				expBKCalls.BlockedAddr = append(expBKCalls.BlockedAddr, tc.expCallBA)
 			}
 			if tc.expCallMint {
-				expBKCalls.MintCoins = append(expBKCalls.MintCoins, NewMintBurnCall(types.ModuleName, sdk.Coins{tc.scopeID.Coin()}))
+				expBKCalls.MintCoins = append(expBKCalls.MintCoins, NewMintBurnCall(types.ModuleName, tc.scopeID.Coins()))
 			}
 			if tc.expCallBurn {
-				expBKCalls.BurnCoins = append(expBKCalls.BurnCoins, NewMintBurnCall(types.ModuleName, sdk.Coins{tc.scopeID.Coin()}))
+				expBKCalls.BurnCoins = append(expBKCalls.BurnCoins, NewMintBurnCall(types.ModuleName, tc.scopeID.Coins()))
 			}
 			if tc.expCallSend != nil {
 				expBKCalls.SendCoins = append(expBKCalls.SendCoins, tc.expCallSend)

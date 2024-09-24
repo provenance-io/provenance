@@ -2289,16 +2289,26 @@ func (s *AddressTestSuite) TestCoin() {
 
 	for i, tc := range tests {
 		s.Run(fmt.Sprintf("[%d]%s...%s", i, tc[:strings.Index(tc, "1")], tc[len(tc)-2:]), func() {
-			exp := sdk.Coin{Denom: DenomPrefix + tc, Amount: sdkmath.OneInt()}
+			expCoin := sdk.Coin{Denom: DenomPrefix + tc, Amount: sdkmath.OneInt()}
+			expCoins := sdk.Coins{expCoin}
 			addr, err := MetadataAddressFromBech32(tc)
 			s.Require().NoError(err, "MetadataAddressFromBech32(%q)", tc)
 
-			var act sdk.Coin
-			testFunc := func() {
-				act = addr.Coin()
+			var actCoin sdk.Coin
+			testCoin := func() {
+				actCoin = addr.Coin()
 			}
-			s.Require().NotPanics(testFunc, "%#v.Coin()", addr)
-			s.Assert().Equal(exp, act, "%#v.Coin()", addr)
+			if s.Assert().NotPanics(testCoin, "%#v.Coin()", addr) {
+				s.Assert().Equal(expCoin, actCoin, "%#v.Coin()", addr)
+			}
+
+			var actCoins sdk.Coins
+			testCoins := func() {
+				actCoins = addr.Coins()
+			}
+			if s.Assert().NotPanics(testCoins, "%#v.Coins()", addr) {
+				s.Assert().Equal(expCoins, actCoins, "%#v.Coins()", addr)
+			}
 		})
 	}
 }

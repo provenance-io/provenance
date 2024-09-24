@@ -869,6 +869,11 @@ func (ma MetadataAddress) Coin() sdk.Coin {
 	return sdk.NewInt64Coin(ma.Denom(), 1)
 }
 
+// Coins creates a Coins with just the singular coin that represents this MetadataAddress.
+func (ma MetadataAddress) Coins() sdk.Coins {
+	return sdk.Coins{sdk.NewInt64Coin(ma.Denom(), 1)}
+}
+
 // AccMDLink associates an account address with a metadata address.
 type AccMDLink struct {
 	AccAddr sdk.AccAddress
