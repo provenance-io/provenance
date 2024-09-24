@@ -159,8 +159,7 @@ func (k Keeper) ScopesAll(c context.Context, req *types.ScopesAllRequest) (*type
 	prefixStore := prefix.NewStore(kvStore, types.ScopeKeyPrefix)
 
 	pageRes, err := query.Paginate(prefixStore, pageRequest, func(key, value []byte) error {
-		var scope types.Scope
-		vErr := scope.Unmarshal(value)
+		scope, vErr := k.readScopeBz(value)
 		if vErr == nil {
 			k.PopulateScopeValueOwner(ctx, &scope)
 			retval.Scopes = append(retval.Scopes, types.WrapScope(&scope, incInfo))

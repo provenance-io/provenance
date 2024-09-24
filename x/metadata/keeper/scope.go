@@ -20,8 +20,7 @@ func (k Keeper) IterateScopes(ctx sdk.Context, handler func(types.Scope) (stop b
 	it := storetypes.KVStorePrefixIterator(store, types.ScopeKeyPrefix)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
-		var scope types.Scope
-		k.cdc.MustUnmarshal(it.Value(), &scope)
+		scope := k.mustReadScopeBz(it.Value())
 		k.PopulateScopeValueOwner(ctx, &scope)
 		if handler(scope) {
 			break
@@ -68,19 +67,40 @@ func (k Keeper) IterateScopesForScopeSpec(ctx sdk.Context, scopeSpecID types.Met
 	return nil
 }
 
-// GetScope returns the scope with the given id. The value owner field will always be empty from this method.
+// GetScope returns the scope with the given id. The ValueOwnerAddress field will always be empty from this method.
 // See also: GetScopeWithValueOwner, PopulateScopeValueOwner and GetScopeValueOwner.
-func (k Keeper) GetScope(ctx sdk.Context, id types.MetadataAddress) (scope types.Scope, found bool) {
+func (k Keeper) GetScope(ctx sdk.Context, id types.MetadataAddress) (types.Scope, bool) {
 	if !id.IsScopeAddress() {
-		return scope, false
+		return types.Scope{}, false
 	}
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(id.Bytes())
 	if b == nil {
 		return types.Scope{}, false
 	}
-	k.cdc.MustUnmarshal(b, &scope)
-	return scope, true
+	return k.mustReadScopeBz(b), true
+}
+
+// readScopeBz will unmarshal the given bytes into a Scope.
+// The ValueOwnerAddress will always be empty. See also: GetScopeValueOwner, PopulateScopeValueOwner.
+func (k Keeper) readScopeBz(bz []byte) (types.Scope, error) {
+	var scope types.Scope
+	err := k.cdc.Unmarshal(bz, &scope)
+	// In the viridian upgrade, we switched to using the bank module to track the ValueOwnerAddress,
+	// but we didn't update all the scopes to remove the data from that field. Any value in that field
+	// in state is therefore not to be trusted (probably out of date), so we clear it out here.
+	scope.ValueOwnerAddress = ""
+	return scope, err
+}
+
+// mustReadScopeBz will unmarshal the given bytes into a Scope, panicking if there's an error.
+// The ValueOwnerAddress will always be empty. See also: GetScopeValueOwner, PopulateScopeValueOwner.
+func (k Keeper) mustReadScopeBz(bz []byte) types.Scope {
+	scope, err := k.readScopeBz(bz)
+	if err != nil {
+		panic(err)
+	}
+	return scope
 }
 
 // GetScopeWithValueOwner will get a scope from state and also look up and set its value owner field.
@@ -131,11 +151,13 @@ func (k Keeper) writeScopeToState(ctx sdk.Context, scope types.Scope) {
 	if store.Has(scope.ScopeId) {
 		event = types.NewEventScopeUpdated(scope.ScopeId)
 		action = types.TLAction_Updated
-		if oldScopeBytes := store.Get(scope.ScopeId); oldScopeBytes != nil {
-			oldScope = &types.Scope{}
-			if err := k.cdc.Unmarshal(oldScopeBytes, oldScope); err != nil {
-				k.Logger(ctx).Error("could not unmarshal old scope", "err", err, "scopeId", scope.ScopeId.String(), "oldScopeBytes", oldScopeBytes)
-				oldScope = nil
+		if oldScopeBytes := store.Get(scope.ScopeId); len(oldScopeBytes) > 0 {
+			os, err := k.readScopeBz(oldScopeBytes)
+			if err != nil {
+				k.Logger(ctx).Error("could not unmarshal old scope", "err", err,
+					"scopeId", scope.ScopeId.String(), "oldScopeBytes", oldScopeBytes)
+			} else {
+				oldScope = &os
 			}
 		}
 	}
