@@ -762,7 +762,7 @@ func (k Keeper) SetNetAssetValueWithBlockHeight(ctx sdk.Context, scopeID types.M
 		return err
 	}
 
-	setNetAssetValueEvent := types.NewEventSetNetAssetValue(scopeID, netAssetValue.Price, 1, source)
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(scopeID, netAssetValue.Price, netAssetValue.Volume, source)
 	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
 		return err
 	}
