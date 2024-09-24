@@ -208,12 +208,12 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 	userWithWithdrawAddr := s.setNamedUserAccount("userWithWithdraw") // cosmos1w4ek2ujhd96xs4mfw35xgunpwa047h6l3fyz9d
 	userWithDepositAddr := s.setNamedUserAccount("userWithDeposit")   // cosmos1w4ek2ujhd96xs3r9wphhx6t5ta047h6lw5vyqg
 	userWithBothAddr := s.setNamedUserAccount("userWithBoth")         // cosmos1w4ek2ujhd96xssn0w3597h6lta047h6ly0muct
-	userWithNeitherAddr := s.setNamedUserAccount("userWithNeither")   // cosmos1w4ek2ujhd96xsnn9d96xsetjta047h6l7q4hkf
+	userWithAllAddr := s.setNamedUserAccount("userWithAll")           // cosmos1w4ek2ujhd96xsstvd3047h6lta047h6lk0katc
 	scopeOwnerAddr := s.setNamedUserAccount("scopeOwner")             // cosmos1wd342um9wf047h6lta047h6lta047h6lj6q23g
 	specOwnerAddr := s.setNamedUserAccount("specOwner")               // cosmos1wdcx2c60wahx2ujlta047h6lta047h6lw9t9w4
-	otherAddr1 := newAddr("1_other")                                  // cosmos1x90k7argv4e97h6lta047h6lta047h6lfrgsqs
-	otherAddr2 := newAddr("2_other")                                  // cosmos1xf0k7argv4e97h6lta047h6lta047h6ltepkp4
-	otherAddr3 := newAddr("3_other")                                  // cosmos1xd0k7argv4e97h6lta047h6lta047h6ljgx5ek
+	otherAddr1 := s.setNamedUserAccount("1_other")                    // cosmos1x90k7argv4e97h6lta047h6lta047h6lfrgsqs
+	otherAddr2 := s.setNamedUserAccount("2_other")                    // cosmos1xf0k7argv4e97h6lta047h6lta047h6ltepkp4
+	otherAddr3 := s.setNamedUserAccount("3_other")                    // cosmos1xd0k7argv4e97h6lta047h6lta047h6ljgx5ek
 	moduleAddr := authtypes.NewModuleAddress(types.ModuleName)        // cosmos1g4z8k7hm6hj5fa7s780slnxjvq2dnpgpj2jy0e
 
 	newMarker := func(denom string, withdrawAddr, depAddr sdk.AccAddress) sdk.AccAddress {
@@ -228,8 +228,9 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 					Permissions: markertypes.AccessList{markertypes.Access_Deposit, markertypes.Access_Withdraw},
 				},
 				{
-					Address: userWithNeitherAddr.String(),
+					Address: userWithAllAddr.String(),
 					Permissions: markertypes.AccessList{
+						markertypes.Access_Deposit, markertypes.Access_Withdraw,
 						markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Delete,
 						markertypes.Access_Admin, markertypes.Access_Transfer, markertypes.Access_ForceTransfer,
 					},
@@ -266,8 +267,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 	fromMarkerAddr := newMarker("falcon", userWithWithdrawAddr, nil) // cosmos1wd342um9wfqkgerjta047h6lta047h6lqhvjhz
 	toMarkerAddr := newMarker("tiger", nil, userWithDepositAddr)     // cosmos1w4ek2ujhd96xs4mfw35xgunpwa047h6l3fyz9d
 
-	_, _, _ = scUserAddr, fromMarkerAddr, toMarkerAddr // TODO[2137]: Delete this line.
-
 	scopeSpecUUID := s.newUUID("scope_spec", 1)
 	scopeSpecID := types.ScopeSpecMetadataAddress(scopeSpecUUID)
 	scopeSpec := types.ScopeSpecification{
@@ -277,34 +276,64 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 	}
 	s.app.MetadataKeeper.SetScopeSpecification(s.ctx, scopeSpec)
 
-	newScope := func(i int, valueOwner sdk.AccAddress) types.Scope {
+	newScope := func(i int, valueOwner sdk.AccAddress, dataAccess ...string) types.Scope {
 		return types.Scope{
 			ScopeId:           s.scopeID(i),
 			SpecificationId:   scopeSpecID,
 			Owners:            ownerPartyList(scopeOwnerAddr.String()),
+			DataAccess:        dataAccess,
 			ValueOwnerAddress: valueOwner.String(),
 		}
 	}
-	setupScope := func(i int, valueOwner sdk.AccAddress) func(ctx sdk.Context) {
+	setupScope := func(i int, valueOwner sdk.AccAddress, dataAccess ...string) func(ctx sdk.Context) {
 		return func(ctx sdk.Context) {
-			scope := newScope(i, valueOwner)
-			err := s.app.MetadataKeeper.SetScope(ctx, scope)
-			s.Require().NoError(err, "SetScope %d, %q", i, scope.ValueOwnerAddress)
+			scope := newScope(i, valueOwner, dataAccess...)
+			err := s.app.MetadataKeeper.SetScope(markertypes.WithTransferAgents(ctx, userWithAllAddr), scope)
+			s.Require().NoError(err, "setupScope: SetScope %d, %q", i, scope.ValueOwnerAddress)
+		}
+	}
+	newSCScope := func(i int, valueOwner sdk.AccAddress, dataAccess ...string) types.Scope {
+		return types.Scope{
+			ScopeId:         s.scopeID(i),
+			SpecificationId: scopeSpecID,
+			Owners: []types.Party{
+				{Address: scopeOwnerAddr.String(), Role: types.PartyType_PARTY_TYPE_OWNER},
+				{Address: scUserAddr.String(), Role: types.PartyType_PARTY_TYPE_PROVENANCE},
+			},
+			DataAccess:        dataAccess,
+			ValueOwnerAddress: valueOwner.String(),
+		}
+	}
+	setupSCScope := func(i int, valueOwner sdk.AccAddress, dataAccess ...string) func(ctx sdk.Context) {
+		return func(ctx sdk.Context) {
+			scope := newSCScope(i, valueOwner, dataAccess...)
+			err := s.app.MetadataKeeper.SetScope(markertypes.WithTransferAgents(ctx, userWithAllAddr), scope)
+			s.Require().NoError(err, "setupSCScope: SetScope %d, %q", i, scope.ValueOwnerAddress)
 		}
 	}
 
 	tests := []struct {
-		name              string
-		setup             func(ctx sdk.Context)
-		msg               types.MsgWriteScopeRequest
-		expErr            string
-		expScope          *types.Scope // If nil, msg.Scope is used.
-		expEventsNAV      bool
-		expEventsMint     bool           // Also causes the transfer events to be expected.
-		expEventsTrans    sdk.AccAddress // The "from" address for the transfer events.
+		name   string
+		setup  func(ctx sdk.Context)
+		msg    types.MsgWriteScopeRequest
+		expErr string
+		// expScope is the scope (including value owner) that is expected after a successful WriteScope call.
+		// If not defined, msg.Scope will be used.
+		expScope *types.Scope
+		// expEventsNAV should be true if you expect a NAV event to be emitted.
+		expEventsNAV bool
+		// expEventsMint should be true if you expect events related to minting a coin to be emitted.
+		expEventsMint bool
+		// expEventsTrans should be the "from" address for the transfer events (if the transfer events are expected).
+		// If true, the expEventsTrans field is ignored, and the moduleAddr is used for that.
+		expEventsTrans sdk.AccAddress
+		// expEventsTransErr should be true if you expect an error from the SendCoins call. When that happens,
+		// only some of the transfer events get emitted, but you'll need to also provide an expEventsTrans.
 		expEventsTransErr bool
-		expEventsCreate   bool
-		expEventsUpdate   bool
+		// expEventsCreate should be true if you expected a EventScopeCreated to be emitted.
+		expEventsCreate bool
+		// expEventsCreate should be true if you expected a EventScopeUpdated to be emitted.
+		expEventsUpdate bool
 	}{
 		{
 			name: "invalid scope",
@@ -453,20 +482,220 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 			expEventsTrans:  otherAddr1,
 			expEventsUpdate: true,
 		},
-		// TODO[2137]: Finish these WriteScope tests.
-		// value owner change: marker to user: no signer with withdraw
-		// value owner change: marker to user: signer with other permissions
-		// value owner change: marker to user: signer with withdraw
-		// value owner change: user to marker: not signed by user
-		// value owner change: user to marker: signer does not have deposit
-		// value owner change: user to marker: signer has deposit
-		// value owner change: user to marker: other signer has deposit
-		// value owner change: marker to marker: with only withdraw
-		// value owner change: marker to marker: with only deposit
-		// value owner change: marker to marker: with other permissions
-		// value owner change: marker to marker: signer with both permissions
-		// value owner change: marker to marker: different signers with deposit and withdraw
-		// value owner change: smart contract to marker with transfer agent
+		{
+			name:  "value owner change: marker to user: no signer with withdraw",
+			setup: setupScope(15, fromMarkerAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(15, otherAddr2),
+				Signers: []string{scopeOwnerAddr.String()},
+			},
+			expErr: "could not write scope \"" + s.scopeID(15).String() + "\": could not set value owner: " +
+				"could not send scope coin \"1nft/" + s.scopeID(15).String() + "\" " +
+				"from " + fromMarkerAddr.String() + " to " + otherAddr2.String() + ": " +
+				scopeOwnerAddr.String() + " does not have ACCESS_WITHDRAW on " +
+				"falcon marker (" + fromMarkerAddr.String() + ")",
+			expEventsNAV:      true,
+			expEventsTrans:    fromMarkerAddr,
+			expEventsTransErr: true,
+		},
+		{
+			name:  "value owner change: marker to user: signer with withdraw",
+			setup: setupScope(16, fromMarkerAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(16, otherAddr2),
+				Signers: []string{userWithWithdrawAddr.String()},
+			},
+			expEventsNAV:    true,
+			expEventsTrans:  fromMarkerAddr,
+			expEventsUpdate: true,
+		},
+		{
+			name:  "value owner change: user to marker: not signed by user",
+			setup: setupScope(17, otherAddr1),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(17, toMarkerAddr),
+				Signers: []string{scopeOwnerAddr.String()},
+			},
+			expErr: "missing signature from existing value owner \"" + otherAddr1.String() + "\": invalid request",
+		},
+		{
+			name:  "value owner change: user to marker: signer does not have deposit",
+			setup: setupScope(18, userWithWithdrawAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(18, toMarkerAddr),
+				Signers: []string{userWithWithdrawAddr.String()},
+			},
+			expErr: "could not write scope \"" + s.scopeID(18).String() + "\": could not set value owner: " +
+				"could not send scope coin \"1nft/" + s.scopeID(18).String() + "\" " +
+				"from " + userWithWithdrawAddr.String() + " to " + toMarkerAddr.String() + ": " +
+				userWithWithdrawAddr.String() + " does not have ACCESS_DEPOSIT on " +
+				"tiger marker (" + toMarkerAddr.String() + ")",
+			expEventsNAV:      true,
+			expEventsTrans:    userWithWithdrawAddr,
+			expEventsTransErr: true,
+		},
+		{
+			name:  "value owner change: user to marker: signer has deposit",
+			setup: setupScope(19, userWithDepositAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(19, toMarkerAddr),
+				Signers: []string{userWithDepositAddr.String()},
+			},
+			expEventsNAV:    true,
+			expEventsTrans:  userWithDepositAddr,
+			expEventsUpdate: true,
+		},
+		{
+			name:  "value owner change: user to marker: other signer has deposit",
+			setup: setupScope(19, otherAddr3),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(19, toMarkerAddr),
+				Signers: []string{otherAddr3.String(), userWithDepositAddr.String()},
+			},
+			expEventsNAV:    true,
+			expEventsTrans:  otherAddr3,
+			expEventsUpdate: true,
+		},
+		{
+			name:  "value owner change: marker to marker: no signers with permissions",
+			setup: setupScope(30, fromMarkerAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(30, toMarkerAddr),
+				Signers: []string{otherAddr1.String(), otherAddr2.String(), otherAddr3.String()},
+			},
+			expErr: "could not write scope \"" + s.scopeID(30).String() + "\": could not set value owner: " +
+				"could not send scope coin \"1nft/" + s.scopeID(30).String() + "\" " +
+				"from " + fromMarkerAddr.String() + " to " + toMarkerAddr.String() + ": " +
+				"none of [\"" + otherAddr1.String() + "\" \"" + otherAddr2.String() + "\" \"" + otherAddr3.String() +
+				"\"] have permission ACCESS_WITHDRAW on falcon marker (" + fromMarkerAddr.String() + ")",
+			expEventsNAV:      true,
+			expEventsTrans:    fromMarkerAddr,
+			expEventsTransErr: true,
+		},
+		{
+			name:  "value owner change: marker to marker: with only withdraw",
+			setup: setupScope(31, fromMarkerAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(31, toMarkerAddr),
+				Signers: []string{userWithWithdrawAddr.String()},
+			},
+			expErr: "could not write scope \"" + s.scopeID(31).String() + "\": could not set value owner: " +
+				"could not send scope coin \"1nft/" + s.scopeID(31).String() + "\" " +
+				"from " + fromMarkerAddr.String() + " to " + toMarkerAddr.String() + ": " +
+				userWithWithdrawAddr.String() + " does not have ACCESS_DEPOSIT on " +
+				"tiger marker (" + toMarkerAddr.String() + ")",
+			expEventsNAV:      true,
+			expEventsTrans:    fromMarkerAddr,
+			expEventsTransErr: true,
+		},
+		{
+			name:  "value owner change: marker to marker: with only deposit",
+			setup: setupScope(32, fromMarkerAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(32, toMarkerAddr),
+				Signers: []string{userWithDepositAddr.String()},
+			},
+			expErr: "could not write scope \"" + s.scopeID(32).String() + "\": could not set value owner: " +
+				"could not send scope coin \"1nft/" + s.scopeID(32).String() + "\" " +
+				"from " + fromMarkerAddr.String() + " to " + toMarkerAddr.String() + ": " +
+				userWithDepositAddr.String() + " does not have ACCESS_WITHDRAW on " +
+				"falcon marker (" + fromMarkerAddr.String() + ")",
+			expEventsNAV:      true,
+			expEventsTrans:    fromMarkerAddr,
+			expEventsTransErr: true,
+		},
+		{
+			name:  "value owner change: marker to marker: one signer with both permissions",
+			setup: setupScope(35, fromMarkerAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(35, toMarkerAddr),
+				Signers: []string{userWithBothAddr.String()},
+			},
+			expEventsNAV:    true,
+			expEventsTrans:  fromMarkerAddr,
+			expEventsUpdate: true,
+		},
+		{
+			name:  "value owner change: marker to marker: different signers with deposit and withdraw",
+			setup: setupScope(36, fromMarkerAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(36, toMarkerAddr),
+				Signers: []string{userWithDepositAddr.String(), userWithWithdrawAddr.String()},
+			},
+			expEventsNAV:    true,
+			expEventsTrans:  fromMarkerAddr,
+			expEventsUpdate: true,
+		},
+		{
+			name:  "value owner change: marker to marker: different signers with withdraw and deposit",
+			setup: setupScope(37, fromMarkerAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newScope(37, toMarkerAddr),
+				Signers: []string{userWithWithdrawAddr.String(), userWithDepositAddr.String()},
+			},
+			expEventsNAV:    true,
+			expEventsTrans:  fromMarkerAddr,
+			expEventsUpdate: true,
+		},
+		{
+			name:  "value owner change: smart contract to marker with ignored transfer agent",
+			setup: setupSCScope(38, scUserAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newSCScope(38, toMarkerAddr),
+				Signers: []string{scUserAddr.String(), userWithDepositAddr.String()},
+			},
+			// Because the first signer is a smart contract, the other signers should not be considered
+			// when transferring the scope coin. That means that this error should not contain them.
+			expErr: "could not write scope \"" + s.scopeID(38).String() + "\": could not set value owner: " +
+				"could not send scope coin \"1nft/" + s.scopeID(38).String() + "\" " +
+				"from " + scUserAddr.String() + " to " + toMarkerAddr.String() + ": " +
+				scUserAddr.String() + " does not have ACCESS_DEPOSIT on " +
+				"tiger marker (" + toMarkerAddr.String() + ")",
+			expEventsNAV:      true,
+			expEventsTrans:    scUserAddr,
+			expEventsTransErr: true,
+		},
+		{
+			name:  "value owner and data access change: smart contract to marker with ignored transfer agent",
+			setup: setupSCScope(39, scUserAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newSCScope(39, toMarkerAddr, otherAddr1.String()),
+				Signers: []string{scUserAddr.String(), scopeOwnerAddr.String(), userWithBothAddr.String()},
+			},
+			// The scUserAddr and scopeOwnerAddr signers are used to allow the data access change.
+			// But since the first signer is a smart contract, the other two signers should not be considered
+			// when transferring the scope coin. That means that this error should not contain them.
+			expErr: "could not write scope \"" + s.scopeID(39).String() + "\": could not set value owner: " +
+				"could not send scope coin \"1nft/" + s.scopeID(39).String() + "\" " +
+				"from " + scUserAddr.String() + " to " + toMarkerAddr.String() + ": " +
+				scUserAddr.String() + " does not have ACCESS_DEPOSIT on " +
+				"tiger marker (" + toMarkerAddr.String() + ")",
+			expEventsNAV:      true,
+			expEventsTrans:    scUserAddr,
+			expEventsTransErr: true,
+		},
+		{
+			name:  "value owner change: smart contract to user",
+			setup: setupSCScope(40, scUserAddr),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newSCScope(40, otherAddr2),
+				Signers: []string{scUserAddr.String()},
+			},
+			expEventsNAV:    true,
+			expEventsTrans:  scUserAddr,
+			expEventsUpdate: true,
+		},
+		{
+			name:  "value owner change: user to smart contract by smart contract",
+			setup: setupSCScope(41, otherAddr1),
+			msg: types.MsgWriteScopeRequest{
+				Scope:   newSCScope(40, scUserAddr),
+				Signers: []string{scUserAddr.String(), otherAddr1.String()},
+			},
+			// Because the first signer is a smart contract, the second signer is ignored for the purposes of
+			// validating a change to the value owner. So even though they're in the signers list, they don't count.
+			expErr: "smart contract signer " + scUserAddr.String() + " is not authorized: invalid request",
+		},
 	}
 
 	for _, tc := range tests {
