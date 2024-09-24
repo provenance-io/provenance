@@ -24,6 +24,7 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -456,29 +457,33 @@ func compareRecords(a, b *types.Record) int {
 	return bytes.Compare(addrA, addrB)
 }
 
-// setData will write all the data in the provided dataSetup to state.
-func (s *QueryServerTestSuite) setData(data *dataSetup) {
+func writeData(t *testing.T, ctx sdk.Context, metadataKeeper keeper.Keeper, data *dataSetup) {
 	for i, scope := range data.Scopes {
-		assertions.RequireNotPanicsNoError(s.T(), func() error {
-			return s.app.MetadataKeeper.SetScope(s.ctx, *scope)
+		assertions.RequireNotPanicsNoError(t, func() error {
+			return metadataKeeper.SetScope(ctx, *scope)
 		}, "[%d]: SetScope(%#v)", i, scope)
 	}
 	for i := range data.Sessions {
 		for j, session := range data.Sessions[i] {
-			s.Require().NotPanics(func() {
-				s.app.MetadataKeeper.SetSession(s.ctx, *session)
+			require.NotPanics(t, func() {
+				metadataKeeper.SetSession(ctx, *session)
 			}, "[%d][%d]: SetSession(%#v)", i, j, session)
 		}
 	}
 	for i := range data.Records {
 		for j := range data.Records[i] {
 			for k, record := range data.Records[i][j] {
-				s.Require().NotPanics(func() {
-					s.app.MetadataKeeper.SetRecord(s.ctx, *record)
+				require.NotPanics(t, func() {
+					metadataKeeper.SetRecord(ctx, *record)
 				}, "[%d][%d][%d]: SetRecord(%#v)", i, j, k, record)
 			}
 		}
 	}
+}
+
+// setData will write all the data in the provided dataSetup to state.
+func (s *QueryServerTestSuite) setData(data *dataSetup) {
+	writeData(s.T(), s.ctx, s.app.MetadataKeeper, data)
 }
 
 // createDataSetup will create a dataSetup from the provided emptyRecords and write it to state.
