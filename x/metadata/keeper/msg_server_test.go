@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,6 +21,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil"
 	"github.com/provenance-io/provenance/testutil/assertions"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
@@ -150,9 +150,15 @@ func (s *MsgServerTestSuite) scopeID(i int) types.MetadataAddress {
 	return types.ScopeMetadataAddress(s.newUUID("scope", i))
 }
 
-// scopeID creates a new ScopeSpecification MetadataAddress using the provided name and i in the uuid bytes.
-func (s *MsgServerTestSuite) scopeSpecID(name string, i int) types.MetadataAddress {
-	return types.ScopeSpecMetadataAddress(s.newUUID(name, i))
+// sessionID creates a new Session MetadataAddress based on the provided numbers.
+func (s *MsgServerTestSuite) sessionID(i, j int) types.MetadataAddress {
+	rv, _ := s.scopeID(i).AsSessionAddress(s.newUUID("session", j))
+	return rv
+}
+
+// scopeSpecID creates a new ScopeSpecification MetadataAddress based on the provided number.
+func (s *MsgServerTestSuite) scopeSpecID(i int) types.MetadataAddress {
+	return types.ScopeSpecMetadataAddress(s.newUUID("scope_spec", i))
 }
 
 // namedValue is a way to associate a variable name with its value for use with logNamedValues.
@@ -725,14 +731,13 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 			}
 
 			// Create the list of expected events.
-			var expEvents sdk.Events
+			eventsBuilder := testutil.NewEventsBuilder(s.T())
 			if tc.expEventsNAV {
-				event := s.untypeEvent(&types.EventSetNetAssetValue{
+				eventsBuilder.AddTypedEvent(&types.EventSetNetAssetValue{
 					ScopeId: scopeID.String(),
 					Price:   fmt.Sprintf("%dusd", tc.msg.UsdMills),
 					Source:  types.ModuleName,
 				})
-				expEvents = append(expEvents, event)
 			}
 			if tc.expEventsMint || len(tc.expEventsTrans) > 0 {
 				var from string
@@ -744,56 +749,24 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				to := tc.expScope.ValueOwnerAddress
 				amount := scopeID.Coin().String()
 				if tc.expEventsMint {
-					expEvents = append(expEvents,
-						sdk.Event{Type: "coin_received", Attributes: []abci.EventAttribute{
-							{Key: "receiver", Value: from},
-							{Key: "amount", Value: amount},
-						}},
-						sdk.Event{Type: "coinbase", Attributes: []abci.EventAttribute{
-							{Key: "minter", Value: from},
-							{Key: "amount", Value: amount},
-						}},
-					)
+					eventsBuilder.AddMintCoinsStrs(from, amount)
 				}
-				expEvents = append(expEvents,
-					sdk.Event{Type: "coin_spent", Attributes: []abci.EventAttribute{
-						{Key: "spender", Value: from},
-						{Key: "amount", Value: amount},
-					}},
-				)
-				if !tc.expEventsTransErr {
-					expEvents = append(expEvents,
-						sdk.Event{Type: "coin_received", Attributes: []abci.EventAttribute{
-							{Key: "receiver", Value: to},
-							{Key: "amount", Value: amount},
-						}},
-						sdk.Event{Type: "transfer", Attributes: []abci.EventAttribute{
-							{Key: "recipient", Value: to},
-							{Key: "sender", Value: from},
-							{Key: "amount", Value: amount},
-						}},
-						sdk.Event{Type: "message", Attributes: []abci.EventAttribute{
-							{Key: "sender", Value: from},
-						}},
-					)
+				if tc.expEventsTransErr {
+					eventsBuilder.AddFailedSendCoinsStrs(from, amount)
+				} else {
+					eventsBuilder.AddSendCoinsStrs(from, to, amount)
 				}
 			}
 			if tc.expEventsCreate {
-				event := s.untypeEvent(types.NewEventScopeCreated(scopeID))
-				expEvents = append(expEvents, event)
+				eventsBuilder.AddTypedEvent(types.NewEventScopeCreated(scopeID))
 			}
 			if tc.expEventsUpdate {
-				event := s.untypeEvent(types.NewEventScopeUpdated(scopeID))
-				expEvents = append(expEvents, event)
+				eventsBuilder.AddTypedEvent(types.NewEventScopeUpdated(scopeID))
 			}
 			if len(tc.expErr) == 0 {
-				event := s.untypeEvent(&types.EventTxCompleted{
-					Module:   types.ModuleName,
-					Endpoint: string(types.TxEndpoint_WriteScope),
-					Signers:  tc.msg.Signers,
-				})
-				expEvents = append(expEvents, event)
+				eventsBuilder.AddTypedEvent(types.NewEventTxCompleted(types.TxEndpoint_WriteScope, tc.msg.Signers))
 			}
+			expEvents := eventsBuilder.Build()
 
 			// Use a cache context so that each case is independent.
 			ctx, _ := s.ctx.CacheContext()
@@ -825,7 +798,321 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 	}
 }
 
-// TODO: DeleteScope tests
+func (s *MsgServerTestSuite) TestDeleteScope() {
+	scUserAddr := s.setNamedSmartContractAccount("scUser")     // cosmos1wd342um9wf047h6lta047h6lta047h6lj6q23g
+	scopeOwnerAddr := s.setNamedUserAccount("scopeOwner")      // cosmos1wd342um9wf047h6lta047h6lta047h6lj6q23g
+	otherAddr1 := s.setNamedUserAccount("1_other")             // cosmos1x90k7argv4e97h6lta047h6lta047h6lfrgsqs
+	otherAddr2 := s.setNamedUserAccount("2_other")             // cosmos1xf0k7argv4e97h6lta047h6lta047h6ltepkp4
+	moduleAddr := authtypes.NewModuleAddress(types.ModuleName) // cosmos1g4z8k7hm6hj5fa7s780slnxjvq2dnpgpj2jy0e
+
+	recordID := func(scopeI int, suffix string) types.MetadataAddress {
+		return s.scopeID(scopeI).MustGetAsRecordAddress("record_" + suffix)
+	}
+	newRecord := func(suffix string, scopeI, sessionI int) *types.Record {
+		rv := &types.Record{
+			Name:      "record_" + suffix,
+			SessionId: s.sessionID(scopeI, sessionI),
+			Process: types.Process{
+				Name:      "process_name_" + suffix,
+				ProcessId: &types.Process_Hash{Hash: "process_id_hash_" + suffix},
+				Method:    "process_method_" + suffix,
+			},
+			Inputs: []types.RecordInput{
+				{
+					Name:     "inputs[0]_name_" + suffix,
+					Source:   &types.RecordInput_Hash{Hash: "inputs[0]_source_hash_" + suffix},
+					TypeName: "inputs[0]_type_" + suffix,
+					Status:   types.RecordInputStatus_Record,
+				},
+			},
+			Outputs: []types.RecordOutput{
+				{
+					Hash:   "outputs[0]_hash_" + suffix,
+					Status: types.ResultStatus_RESULT_STATUS_PASS,
+				},
+			},
+		}
+		rv.SpecificationId = types.RecordSpecMetadataAddress(s.newUUID("cspec", sessionI), rv.Name)
+		return rv
+	}
+
+	tests := []struct {
+		name      string
+		setup     func(ctx sdk.Context)
+		msg       types.MsgDeleteScopeRequest
+		expErr    string
+		expEvents sdk.Events
+	}{
+		{
+			name: "no such scope",
+			msg: types.MsgDeleteScopeRequest{
+				ScopeId: s.scopeID(1),
+				Signers: []string{otherAddr1.String()},
+			},
+			expErr: "scope not found with id " + s.scopeID(1).String() + ": invalid request",
+		},
+		{
+			name: "just the scope to delete",
+			setup: func(ctx sdk.Context) {
+				scope := types.Scope{
+					ScopeId:         s.scopeID(2),
+					SpecificationId: s.scopeSpecID(2),
+					Owners:          ownerPartyList(scopeOwnerAddr.String()),
+				}
+				err := s.app.MetadataKeeper.SetScope(ctx, scope)
+				s.Require().NoError(err, "SetScope")
+			},
+			msg: types.MsgDeleteScopeRequest{
+				ScopeId: s.scopeID(2),
+				Signers: []string{scopeOwnerAddr.String()},
+			},
+			expEvents: testutil.NewEventsBuilder(s.T()).
+				AddTypedEvent(types.NewEventScopeDeleted(s.scopeID(2))).
+				Build(),
+		},
+		{
+			name: "with value owner but no sessions or records",
+			setup: func(ctx sdk.Context) {
+				scope := types.Scope{
+					ScopeId:           s.scopeID(3),
+					SpecificationId:   s.scopeSpecID(3),
+					Owners:            ownerPartyList(scopeOwnerAddr.String()),
+					ValueOwnerAddress: otherAddr2.String(),
+				}
+				err := s.app.MetadataKeeper.SetScope(ctx, scope)
+				s.Require().NoError(err, "SetScope")
+			},
+			msg: types.MsgDeleteScopeRequest{
+				ScopeId: s.scopeID(3),
+				Signers: []string{scopeOwnerAddr.String(), otherAddr2.String()},
+			},
+			expEvents: testutil.NewEventsBuilder(s.T()).
+				AddSendCoins(otherAddr2, moduleAddr, s.scopeID(3).Coins()).
+				AddBurnCoinsStrs(moduleAddr.String(), s.scopeID(3).Coins().String()).
+				AddTypedEvent(types.NewEventScopeDeleted(s.scopeID(3))).
+				Build(),
+		},
+		{
+			name: "one record one session",
+			setup: func(ctx sdk.Context) {
+				writeData(s.T(), ctx, s.app.MetadataKeeper, &dataSetup{
+					Scopes: []*types.Scope{{
+						ScopeId:         s.scopeID(3),
+						SpecificationId: s.scopeSpecID(3),
+						Owners:          ownerPartyList(scopeOwnerAddr.String()),
+					}},
+					Sessions: [][]*types.Session{{{
+						SessionId:       s.sessionID(3, 1),
+						SpecificationId: types.ContractSpecMetadataAddress(s.newUUID("cspec", 1)),
+						Parties:         ownerPartyList(scopeOwnerAddr.String()),
+						Name:            "first",
+					}}},
+					Records: [][][]*types.Record{{{newRecord("one", 3, 1)}}},
+				})
+			},
+			msg: types.MsgDeleteScopeRequest{
+				ScopeId: s.scopeID(3),
+				Signers: []string{scopeOwnerAddr.String()},
+			},
+			expEvents: testutil.NewEventsBuilder(s.T()).
+				AddTypedEvent(types.NewEventRecordDeleted(recordID(3, "one"))).
+				AddTypedEvent(types.NewEventSessionDeleted(s.sessionID(3, 1))).
+				AddTypedEvent(types.NewEventScopeDeleted(s.scopeID(3))).
+				Build(),
+		},
+		{
+			name: "one record one session with value owner",
+			setup: func(ctx sdk.Context) {
+				writeData(s.T(), ctx, s.app.MetadataKeeper, &dataSetup{
+					Scopes: []*types.Scope{{
+						ScopeId:           s.scopeID(4),
+						SpecificationId:   s.scopeSpecID(4),
+						Owners:            ownerPartyList(scopeOwnerAddr.String()),
+						ValueOwnerAddress: otherAddr1.String(),
+					}},
+					Sessions: [][]*types.Session{{{
+						SessionId:       s.sessionID(4, 1),
+						SpecificationId: types.ContractSpecMetadataAddress(s.newUUID("cspec", 1)),
+						Parties:         ownerPartyList(scopeOwnerAddr.String()),
+						Name:            "first",
+					}}},
+					Records: [][][]*types.Record{{{newRecord("one", 4, 1)}}},
+				})
+			},
+			msg: types.MsgDeleteScopeRequest{
+				ScopeId: s.scopeID(4),
+				Signers: []string{scopeOwnerAddr.String(), otherAddr1.String()},
+			},
+			expEvents: testutil.NewEventsBuilder(s.T()).
+				AddSendCoins(otherAddr1, moduleAddr, s.scopeID(4).Coins()).
+				AddBurnCoinsStrs(moduleAddr.String(), s.scopeID(4).Coins().String()).
+				AddTypedEvent(types.NewEventRecordDeleted(recordID(4, "one"))).
+				AddTypedEvent(types.NewEventSessionDeleted(s.sessionID(4, 1))).
+				AddTypedEvent(types.NewEventScopeDeleted(s.scopeID(4))).
+				Build(),
+		},
+		{
+			name: "value owner and two sessions with one record and three records and navs",
+			setup: func(ctx sdk.Context) {
+				writeData(s.T(), ctx, s.app.MetadataKeeper, &dataSetup{
+					Scopes: []*types.Scope{{
+						ScopeId:           s.scopeID(5),
+						SpecificationId:   s.scopeSpecID(5),
+						Owners:            ownerPartyList(scopeOwnerAddr.String()),
+						ValueOwnerAddress: otherAddr2.String(),
+					}},
+					Sessions: [][]*types.Session{{
+						{
+							SessionId:       s.sessionID(5, 1),
+							SpecificationId: types.ContractSpecMetadataAddress(s.newUUID("cspec", 1)),
+							Parties:         ownerPartyList(scopeOwnerAddr.String()),
+							Name:            "first",
+						},
+						{
+							SessionId:       s.sessionID(5, 2),
+							SpecificationId: types.ContractSpecMetadataAddress(s.newUUID("cspec", 2)),
+							Parties:         ownerPartyList(scopeOwnerAddr.String()),
+							Name:            "second",
+						},
+					}},
+					Records: [][][]*types.Record{{
+						{newRecord("one", 5, 1)},
+						{newRecord("two", 5, 2)},
+						{newRecord("three", 5, 2)},
+						{newRecord("four", 5, 2)},
+					}},
+				})
+				navs := []types.NetAssetValue{
+					{Price: sdk.NewInt64Coin("alabama", 22)},
+					{Price: sdk.NewInt64Coin("california", 31)},
+					{Price: sdk.NewInt64Coin("delaware", 1)},
+					{Price: sdk.NewInt64Coin("hawaii", 50)},
+				}
+				for i, nav := range navs {
+					err := s.app.MetadataKeeper.SetNetAssetValue(ctx, s.scopeID(5), nav, "testing")
+					s.Require().NoError(err, "[%d]: SetNetAssetValue(%#v)", i, nav)
+				}
+			},
+			msg: types.MsgDeleteScopeRequest{
+				ScopeId: s.scopeID(5),
+				Signers: []string{scopeOwnerAddr.String(), otherAddr2.String()},
+			},
+			expEvents: testutil.NewEventsBuilder(s.T()).
+				AddSendCoins(otherAddr2, moduleAddr, s.scopeID(5).Coins()).
+				AddBurnCoinsStrs(moduleAddr.String(), s.scopeID(5).Coins().String()).
+				AddTypedEvent(types.NewEventRecordDeleted(recordID(5, "two"))).
+				AddTypedEvent(types.NewEventRecordDeleted(recordID(5, "four"))).
+				AddTypedEvent(types.NewEventRecordDeleted(recordID(5, "one"))).
+				AddTypedEvent(types.NewEventSessionDeleted(s.sessionID(5, 1))).
+				AddTypedEvent(types.NewEventRecordDeleted(recordID(5, "three"))).
+				AddTypedEvent(types.NewEventSessionDeleted(s.sessionID(5, 2))).
+				AddTypedEvent(types.NewEventScopeDeleted(s.scopeID(5))).
+				Build(),
+		},
+		{
+			name: "smart contract signer for scope with other value owner",
+			setup: func(ctx sdk.Context) {
+				scope := types.Scope{
+					ScopeId:           s.scopeID(6),
+					SpecificationId:   s.scopeSpecID(6),
+					Owners:            ownerPartyList(scUserAddr.String()),
+					ValueOwnerAddress: otherAddr2.String(),
+				}
+				err := s.app.MetadataKeeper.SetScope(ctx, scope)
+				s.Require().NoError(err, "SetScope")
+			},
+			msg: types.MsgDeleteScopeRequest{
+				ScopeId: s.scopeID(6),
+				Signers: []string{scUserAddr.String(), otherAddr2.String()},
+			},
+			// Since the first signer is a smart contract, the second cannot sign as value owner.
+			expErr: "missing signature from existing value owner \"" + otherAddr2.String() + "\": invalid request",
+		},
+		{
+			name: "not signed by value owner",
+			setup: func(ctx sdk.Context) {
+				scope := types.Scope{
+					ScopeId:           s.scopeID(7),
+					SpecificationId:   s.scopeSpecID(7),
+					Owners:            ownerPartyList(scopeOwnerAddr.String()),
+					ValueOwnerAddress: otherAddr2.String(),
+				}
+				err := s.app.MetadataKeeper.SetScope(ctx, scope)
+				s.Require().NoError(err, "SetScope")
+			},
+			msg: types.MsgDeleteScopeRequest{
+				ScopeId: s.scopeID(7),
+				Signers: []string{scopeOwnerAddr.String()},
+			},
+			expErr: "missing signature from existing value owner \"" + otherAddr2.String() + "\": invalid request",
+		},
+		{
+			name: "not signed by owner",
+			setup: func(ctx sdk.Context) {
+				scope := types.Scope{
+					ScopeId:           s.scopeID(8),
+					SpecificationId:   s.scopeSpecID(8),
+					Owners:            ownerPartyList(scopeOwnerAddr.String()),
+					ValueOwnerAddress: otherAddr2.String(),
+				}
+				err := s.app.MetadataKeeper.SetScope(ctx, scope)
+				s.Require().NoError(err, "SetScope")
+			},
+			msg: types.MsgDeleteScopeRequest{
+				ScopeId: s.scopeID(8),
+				Signers: []string{otherAddr2.String()},
+			},
+			expErr: "missing signature: " + scopeOwnerAddr.String() + ": invalid request",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var expResp *types.MsgDeleteScopeResponse
+			if len(tc.expErr) == 0 {
+				expResp = &types.MsgDeleteScopeResponse{}
+				event := s.untypeEvent(types.NewEventTxCompleted(types.TxEndpoint_DeleteScope, tc.msg.Signers))
+				tc.expEvents = append(tc.expEvents, event)
+			}
+
+			// Use a cache context so that each case is independent.
+			ctx, _ := s.ctx.CacheContext()
+			if tc.setup != nil {
+				tc.setup(ctx)
+			}
+
+			em := sdk.NewEventManager()
+			ctx = ctx.WithEventManager(em)
+			var actResp *types.MsgDeleteScopeResponse
+			var err error
+			testFunc := func() {
+				actResp, err = s.msgServer.DeleteScope(ctx, &tc.msg)
+			}
+			s.Require().NotPanics(testFunc, "msgServer.DeleteScope")
+			s.AssertErrorValue(err, tc.expErr, "error from msgServer.DeleteScope")
+			s.Assert().Equal(expResp, actResp, "response from msgServer.DeleteScope")
+
+			actEvents := em.Events()
+			s.AssertEqualEvents(tc.expEvents, actEvents, "events emitted during msgServer.WriteScope")
+
+			// If we were expecting an error and/or we got an error, skip the rest of the checks.
+			if err != nil || len(tc.expErr) > 0 {
+				return
+			}
+
+			_, found := s.app.MetadataKeeper.GetScope(ctx, tc.msg.ScopeId)
+			s.Assert().False(found, "found bool returned from GetScope(%q) after msgServer.DeleteScope", tc.msg.ScopeId)
+
+			var navs []types.NetAssetValue
+			err = s.app.MetadataKeeper.IterateNetAssetValues(ctx, tc.msg.ScopeId, func(nav types.NetAssetValue) bool {
+				navs = append(navs, nav)
+				return false
+			})
+			s.Require().NoError(err, "error from IterateNetAssetValues(%q) after msgServer.DeleteScope", tc.msg.ScopeId)
+			s.Assert().Empty(navs, "navs for %s after msgServer.DeleteScope", tc.msg.ScopeId)
+		})
+	}
+}
 
 func (s *MsgServerTestSuite) TestAddAndDeleteScopeDataAccess() {
 	scopeSpecID := types.ScopeSpecMetadataAddress(uuid.New())
