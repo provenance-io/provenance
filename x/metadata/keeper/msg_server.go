@@ -47,7 +47,7 @@ func (k msgServer) WriteScope(
 	}
 
 	usdMills := sdkmath.NewIntFromUint64(msg.UsdMills)
-	nav := types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills))
+	nav := types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills), 1)
 	err := k.AddSetNetAssetValues(ctx, msg.Scope.ScopeId, []types.NetAssetValue{nav}, types.ModuleName)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())

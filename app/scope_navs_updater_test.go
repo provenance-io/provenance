@@ -23,12 +23,12 @@ func TestReadScopeNAVs(t *testing.T) {
 			expCount: 1101,
 			expFirst: ScopeNAV{
 				ScopeUUID:     "2f389a9f-873d-4920-85a6-7734f27e1738",
-				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 398820670)),
+				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 398820670), 1),
 				Height:        23056719,
 			},
 			expLast: ScopeNAV{
 				ScopeUUID:     "65939db0-6d7a-42ef-9443-378304d33225",
-				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 93661920)),
+				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 93661920), 1),
 				Height:        23056719,
 			},
 		},
@@ -37,12 +37,12 @@ func TestReadScopeNAVs(t *testing.T) {
 			expCount: 215558,
 			expFirst: ScopeNAV{
 				ScopeUUID:     "b0b97639-5ecf-4808-b679-99c11a5cda47",
-				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 47395000)),
+				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 47395000), 1),
 				Height:        14871216,
 			},
 			expLast: ScopeNAV{
 				ScopeUUID:     "98503480-12be-4142-bd9d-e80c6e017e22",
-				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 43768160)),
+				NetAssetValue: metadatatypes.NewNetAssetValue(sdk.NewInt64Coin(metadatatypes.UsdDenom, 43768160), 1),
 				Height:        9787583,
 			},
 		},

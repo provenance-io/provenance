@@ -2,7 +2,9 @@ package cli
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -1212,10 +1214,13 @@ least common denominator to achieve the desired precision.
 `,
 		Example: fmt.Sprintf(`
   Set a value of $1 (Note USD is denominated in mils)
+  $ %[1]s tx %[2]s add-net-asset-values %[3]s 1000usd
+
+  Set a value of $1 (Note USD is denominated in mils) and include optional volume
   $ %[1]s tx %[2]s add-net-asset-values %[3]s 1000usd,1
-  
+
   Provide more than one valuation in a single call
-  $ %[1]s tx %[2]s add-net-asset-values %[3]s 1000usd,1;5000000000nhash,1
+  $ %[1]s tx %[2]s add-net-asset-values %[3]s 1000usd;5000000000nhash,1
 
   Valuation for asset with volumes greater than 1 to adjust for high value price denom
   $ %[1]s tx %[2]s add-net-asset-values %[3]s 1btc,60000
@@ -1297,19 +1302,32 @@ func validateAccAddress(addr, argName string) (string, error) {
 	return addr, nil
 }
 
-// ParseNetAssetValueString splits string (example 1hotdog,2jackthecat) to list of NetAssetValue's
+// ParseNetAssetValueString splits string (example 1hotdog,1;2jackthecat100,...) to list of NetAssetValue's
 func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValue, error) {
-	navs := strings.Split(netAssetValuesString, ",")
+	navs := strings.Split(netAssetValuesString, ";")
 	if len(navs) == 1 && len(navs[0]) == 0 {
 		return []types.NetAssetValue{}, nil
 	}
 	netAssetValues := make([]types.NetAssetValue, len(navs))
 	for i, nav := range navs {
-		coin, err := sdk.ParseCoinNormalized(nav)
-		if err != nil {
-			return []types.NetAssetValue{}, fmt.Errorf("invalid net asset value coin : %s", nav)
+		parts := strings.Split(nav, ",")
+		if len(parts) != 1 && len(parts) != 2 {
+			return []types.NetAssetValue{}, errors.New("invalid net asset value, expected [coin,volume] or [coin]")
 		}
-		netAssetValues[i] = types.NewNetAssetValue(coin)
+		coin, err := sdk.ParseCoinNormalized(parts[0])
+		if err != nil {
+			return []types.NetAssetValue{}, fmt.Errorf("invalid net asset value coin : %s", parts[0])
+		}
+		if len(parts) == 2 {
+			volume, err := strconv.ParseUint(parts[1], 10, 64)
+			if err != nil {
+				return []types.NetAssetValue{}, fmt.Errorf("invalid volume : %s", parts[1])
+			}
+			netAssetValues[i] = types.NewNetAssetValue(coin, volume)
+		} else {
+			netAssetValues[i] = types.NewNetAssetValue(coin, 1)
+		}
+
 	}
 	return netAssetValues, nil
 }
