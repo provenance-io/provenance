@@ -1320,7 +1320,7 @@ func ParseNetAssetValueString(netAssetValuesString string) ([]types.NetAssetValu
 		}
 		if len(parts) == 2 {
 			volume, err := strconv.ParseUint(parts[1], 10, 64)
-			if err != nil {
+			if err != nil || volume < 1 {
 				return []types.NetAssetValue{}, fmt.Errorf("invalid volume : %s", parts[1])
 			}
 			netAssetValues[i] = types.NewNetAssetValue(coin, volume)
