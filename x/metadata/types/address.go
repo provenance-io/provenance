@@ -1015,3 +1015,14 @@ func (a AccMDLinks) GetPrimaryUUIDs() []string {
 	}
 	return rv
 }
+
+// GetMDAddrsForAccAddr returns all of the MDAddrs associated with the provided AccAddr.
+func (a AccMDLinks) GetMDAddrsForAccAddr(addr sdk.AccAddress) []MetadataAddress {
+	var rv []MetadataAddress
+	for _, link := range a {
+		if addr.Equals(link.AccAddr) {
+			rv = append(rv, link.MDAddr)
+		}
+	}
+	return rv
+}

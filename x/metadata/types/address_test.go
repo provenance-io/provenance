@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/testutil/testlog"
 )
 
 type AddressTestSuite struct {
@@ -61,6 +62,19 @@ func mapToStrings[S ~[]E, E fmt.Stringer](vals S) []string {
 	rv := make([]string, len(vals))
 	for i, v := range vals {
 		rv[i] = v.String()
+	}
+	return rv
+}
+
+// subSet creates a new slice containing the entries of vals that have the given indexes.
+// The resulting entries will be in the order that the indexes are provided.
+func subSet[S ~[]E, E any](vals S, indexes ...int) S {
+	if len(indexes) == 0 {
+		return nil
+	}
+	rv := make(S, 0, len(indexes))
+	for _, i := range indexes {
+		rv = append(rv, vals[i])
 	}
 	return rv
 }
@@ -3079,6 +3093,275 @@ func (s *AddressTestSuite) TestAccMDLinks_GetPrimaryUUIDs() {
 			}
 			s.Require().NotPanics(testFunc, "GetPrimaryUUIDs")
 			s.Assert().Equal(tc.exp, act, "result from GetPrimaryUUIDs")
+		})
+	}
+}
+
+func (s *AddressTestSuite) TestAccMDLinks_GetMDAddrsForAccAddr() {
+	newUUID := func(name string) uuid.UUID {
+		s.Require().LessOrEqual(len(name), 16, "newUUID(%q): name too long")
+		if len(name) < 16 {
+			name = name + strings.Repeat("_", 16-len(name))
+		}
+		rv, err := uuid.FromBytes([]byte(name))
+		s.Require().NoError(err, "uuid.FromBytes([]byte(%q))", name)
+		return rv
+	}
+	newAddr := func(name string) sdk.AccAddress {
+		switch {
+		case len(name) < 20:
+			name = name + strings.Repeat("_", 20-len(name))
+		case len(name) > 20 && len(name) < 32:
+			name = name + strings.Repeat("_", 32-len(name))
+		}
+		return sdk.AccAddress(name)
+	}
+
+	accAddrs := []sdk.AccAddress{
+		newAddr("0_addr"), // cosmos1xp0kzerywf047h6lta047h6lta047h6ln9q3ue
+		newAddr("1_addr"), // cosmos1x90kzerywf047h6lta047h6lta047h6l258ny6
+		newAddr("2_addr"), // cosmos1xf0kzerywf047h6lta047h6lta047h6lgww49l
+		newAddr("3_addr"), // cosmos1xd0kzerywf047h6lta047h6lta047h6l3lfhau
+		newAddr("4_addr"), // cosmos1x30kzerywf047h6lta047h6lta047h6lvnue84
+	}
+	testlog.WriteSlice(s.T(), "accAddrs", accAddrs)
+
+	mdAddrs := []MetadataAddress{
+		ScopeMetadataAddress(newUUID("0_scope")),                                  // scope1qqc97umrdacx2h6lta047h6lta0s4e2vmr
+		ScopeMetadataAddress(newUUID("1_scope")),                                  // scope1qqc47umrdacx2h6lta047h6lta0sfyvr90
+		ScopeMetadataAddress(newUUID("2_scope")),                                  // scope1qqe97umrdacx2h6lta047h6lta0sk6uj0g
+		ScopeMetadataAddress(newUUID("3_scope")),                                  // scope1qqe47umrdacx2h6lta047h6lta0s286a3y
+		ScopeMetadataAddress(newUUID("4_scope")),                                  // scope1qq697umrdacx2h6lta047h6lta0snl0e64
+		SessionMetadataAddress(newUUID("5_session_1"), newUUID("5_session_2")),    // session1qy647um9wdekjmmwtuc47h6lta0n2hmnv4ehx6t0de0nyh6lta047fgqzjx
+		RecordMetadataAddress(newUUID("6_record"), "6_record_name"),               // record1qgm97un9vdhhyezlta047h6lta05sqnucqwnxlr6pxatcmq9sf0f5u999l2
+		ScopeSpecMetadataAddress(newUUID("7_scope_spec")),                         // scopespec1qsm47umrdacx2hmnwpjkxh6lta0sz95anh
+		ContractSpecMetadataAddress(newUUID("8_contract_spec")),                   // contractspec1qvu97cm0de68yctrw30hxur9vd0smvmt09
+		RecordSpecMetadataAddress(newUUID("9_record_spec"), "9_record_spec_name"), // recspec1q5u47un9vdhhyezlwdcx2c6lta0julrf7q442a5js2y8sm4gcnx8u98dcxq
+	}
+	testlog.WriteSlice(s.T(), "mdAddrs", mdAddrs)
+
+	tests := []struct {
+		name  string
+		links AccMDLinks
+		addr  sdk.AccAddress
+		exp   []MetadataAddress
+	}{
+		{
+			name:  "nil links",
+			links: nil,
+			addr:  accAddrs[0],
+			exp:   nil,
+		},
+		{
+			name:  "empty links",
+			links: make(AccMDLinks, 0),
+			addr:  accAddrs[0],
+			exp:   nil,
+		},
+		{
+			name:  "one link: other addr",
+			links: AccMDLinks{NewAccMDLink(accAddrs[0], mdAddrs[0])},
+			addr:  accAddrs[1],
+			exp:   nil,
+		},
+		{
+			name:  "one link: same addr",
+			links: AccMDLinks{NewAccMDLink(accAddrs[0], mdAddrs[0])},
+			addr:  accAddrs[0],
+			exp:   subSet(mdAddrs, 0),
+		},
+		{
+			name:  "two links with same AccAddr: other addr",
+			links: AccMDLinks{NewAccMDLink(accAddrs[2], mdAddrs[0]), NewAccMDLink(accAddrs[2], mdAddrs[1])},
+			addr:  accAddrs[3],
+			exp:   nil,
+		},
+		{
+			name:  "two links with same AccAddr: that addr",
+			links: AccMDLinks{NewAccMDLink(accAddrs[2], mdAddrs[0]), NewAccMDLink(accAddrs[2], mdAddrs[1])},
+			addr:  accAddrs[2],
+			exp:   subSet(mdAddrs, 0, 1),
+		},
+		{
+			name:  "two links with same AccAddr: that addr, opposite order",
+			links: AccMDLinks{NewAccMDLink(accAddrs[2], mdAddrs[1]), NewAccMDLink(accAddrs[2], mdAddrs[0])},
+			addr:  accAddrs[2],
+			exp:   subSet(mdAddrs, 1, 0),
+		},
+		{
+			name: "three links with diff AccAddr: get none",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[0], mdAddrs[0]),
+				NewAccMDLink(accAddrs[1], mdAddrs[1]),
+				NewAccMDLink(accAddrs[2], mdAddrs[2]),
+			},
+			addr: accAddrs[3],
+			exp:  nil,
+		},
+		{
+			name: "three links with diff AccAddr: get first",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[0], mdAddrs[0]),
+				NewAccMDLink(accAddrs[1], mdAddrs[1]),
+				NewAccMDLink(accAddrs[2], mdAddrs[2]),
+			},
+			addr: accAddrs[0],
+			exp:  subSet(mdAddrs, 0),
+		},
+		{
+			name: "three links with diff AccAddr: get second",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[0], mdAddrs[0]),
+				NewAccMDLink(accAddrs[1], mdAddrs[1]),
+				NewAccMDLink(accAddrs[2], mdAddrs[2]),
+			},
+			addr: accAddrs[1],
+			exp:  subSet(mdAddrs, 1),
+		},
+		{
+			name: "three links with diff AccAddr: get third",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[0], mdAddrs[0]),
+				NewAccMDLink(accAddrs[1], mdAddrs[1]),
+				NewAccMDLink(accAddrs[2], mdAddrs[2]),
+			},
+			addr: accAddrs[2],
+			exp:  subSet(mdAddrs, 2),
+		},
+		{
+			name: "three links two with same AccAddr: get first and second",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[3], mdAddrs[1]),
+				NewAccMDLink(accAddrs[3], mdAddrs[2]),
+				NewAccMDLink(accAddrs[0], mdAddrs[3]),
+			},
+			addr: accAddrs[3],
+			exp:  subSet(mdAddrs, 1, 2),
+		},
+		{
+			name: "three links two with same AccAddr: get third",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[3], mdAddrs[1]),
+				NewAccMDLink(accAddrs[3], mdAddrs[2]),
+				NewAccMDLink(accAddrs[0], mdAddrs[3]),
+			},
+			addr: accAddrs[0],
+			exp:  subSet(mdAddrs, 3),
+		},
+		{
+			name: "three links two with same AccAddr: get first and third",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[3], mdAddrs[1]),
+				NewAccMDLink(accAddrs[0], mdAddrs[2]),
+				NewAccMDLink(accAddrs[3], mdAddrs[3]),
+			},
+			addr: accAddrs[3],
+			exp:  subSet(mdAddrs, 1, 3),
+		},
+		{
+			name: "three links two with same AccAddr: get second",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[3], mdAddrs[1]),
+				NewAccMDLink(accAddrs[0], mdAddrs[2]),
+				NewAccMDLink(accAddrs[3], mdAddrs[3]),
+			},
+			addr: accAddrs[0],
+			exp:  subSet(mdAddrs, 2),
+		},
+		{
+			name: "three links two with same AccAddr: get second and third",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[0], mdAddrs[1]),
+				NewAccMDLink(accAddrs[3], mdAddrs[2]),
+				NewAccMDLink(accAddrs[3], mdAddrs[3]),
+			},
+			addr: accAddrs[3],
+			exp:  subSet(mdAddrs, 2, 3),
+		},
+		{
+			name: "three links two with same AccAddr: get first",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[0], mdAddrs[1]),
+				NewAccMDLink(accAddrs[3], mdAddrs[2]),
+				NewAccMDLink(accAddrs[3], mdAddrs[3]),
+			},
+			addr: accAddrs[0],
+			exp:  subSet(mdAddrs, 1),
+		},
+		{
+			name: "three links all with same AccAddr: get none",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[4], mdAddrs[1]),
+				NewAccMDLink(accAddrs[4], mdAddrs[2]),
+				NewAccMDLink(accAddrs[4], mdAddrs[3]),
+			},
+			addr: accAddrs[3],
+			exp:  nil,
+		},
+		{
+			name: "three links all with same AccAddr: get all",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[4], mdAddrs[1]),
+				NewAccMDLink(accAddrs[4], mdAddrs[2]),
+				NewAccMDLink(accAddrs[4], mdAddrs[3]),
+			},
+			addr: accAddrs[4],
+			exp:  subSet(mdAddrs, 1, 2, 3),
+		},
+		{
+			name: "five links: get two",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[0], mdAddrs[0]),
+				NewAccMDLink(accAddrs[1], mdAddrs[1]),
+				NewAccMDLink(accAddrs[2], mdAddrs[2]),
+				NewAccMDLink(accAddrs[1], mdAddrs[3]),
+				NewAccMDLink(accAddrs[4], mdAddrs[4]),
+			},
+			addr: accAddrs[1],
+			exp:  subSet(mdAddrs, 1, 3),
+		},
+		{
+			name: "six links with diff MDAddr types: get three",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[0], mdAddrs[4]),
+				NewAccMDLink(accAddrs[1], mdAddrs[5]),
+				NewAccMDLink(accAddrs[0], mdAddrs[6]),
+				NewAccMDLink(accAddrs[2], mdAddrs[7]),
+				NewAccMDLink(accAddrs[2], mdAddrs[8]),
+				NewAccMDLink(accAddrs[0], mdAddrs[9]),
+			},
+			addr: accAddrs[0],
+			exp:  subSet(mdAddrs, 4, 6, 9),
+		},
+		{
+			name: "six links with diff MDAddr types: get all",
+			links: AccMDLinks{
+				NewAccMDLink(accAddrs[0], mdAddrs[4]),
+				NewAccMDLink(accAddrs[0], mdAddrs[5]),
+				NewAccMDLink(accAddrs[0], mdAddrs[6]),
+				NewAccMDLink(accAddrs[0], mdAddrs[7]),
+				NewAccMDLink(accAddrs[0], mdAddrs[8]),
+				NewAccMDLink(accAddrs[0], mdAddrs[9]),
+			},
+			addr: accAddrs[0],
+			exp:  subSet(mdAddrs, 4, 5, 6, 7, 8, 9),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var act []MetadataAddress
+			testFunc := func() {
+				act = tc.links.GetMDAddrsForAccAddr(tc.addr)
+			}
+			s.Require().NotPanics(testFunc, "GetMDAddrsForAccAddr")
+			// Compare them as strings first since that failure message is probably easier to understand.
+			expStrs := mapToStrings(tc.exp)
+			actStrs := mapToStrings(act)
+			if s.Assert().Equal(expStrs, actStrs, "result of GetMDAddrsForAccAddr (as strings)") {
+				// The strings are equal, make sure that means they're actually equal.
+				s.Assert().Equal(tc.exp, act, "result of GetMDAddrsForAccAddr")
+			}
 		})
 	}
 }
