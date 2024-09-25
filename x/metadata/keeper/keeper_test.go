@@ -231,7 +231,6 @@ func (s *KeeperTestSuite) TestDeleteOSLocator() {
 		r, found := s.app.MetadataKeeper.GetOsLocatorRecord(s.ctx, s.user1Addr)
 		s.Require().Empty(r)
 		s.Require().False(found)
-
 	})
 }
 
