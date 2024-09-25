@@ -17,6 +17,7 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/testutil/testlog"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
@@ -113,12 +114,12 @@ func (s *BankTestSuite) TestDenomOwner() {
 	addr2 := sdk.AccAddress("2_addr______________") // cosmos1xf0kzerywf047h6lta047h6lta047h6lgww49l
 	addr3 := sdk.AccAddress("3_addr______________") // cosmos1xd0kzerywf047h6lta047h6lta047h6l3lfhau
 	addr4 := sdk.AccAddress("4_addr______________") // cosmos1x30kzerywf047h6lta047h6lta047h6lvnue84
-	logNamedValues(s.T(), "addresses", []namedValue{
-		{name: "addr1", value: addr1.String()},
-		{name: "addr2", value: addr2.String()},
-		{name: "addr3", value: addr3.String()},
-		{name: "addr4", value: addr4.String()},
-	})
+	testlog.WriteVariables(s.T(), "addresses",
+		"addr1", addr1,
+		"addr2", addr2,
+		"addr3", addr3,
+		"addr4", addr4,
+	)
 
 	// subOne reduces the last character by 1 (ignoring overflow).
 	subOne := func(val string) string {
@@ -133,12 +134,12 @@ func (s *BankTestSuite) TestDenomOwner() {
 	scopeDenom := scopeID.Denom()                                // nft/scope1qp5sz2h597jyfk46uswpxjqrvtys3y0ghw
 	scopeDenomBefore := subOne(scopeDenom)                       // nft/scope1qp5sz2h597jyfk46uswpxjqrvtys3y0ghv
 	scopeDenomAfter := addOne(scopeDenom)                        // nft/scope1qp5sz2h597jyfk46uswpxjqrvtys3y0ghx
-	logNamedValues(s.T(), "ids and denoms", []namedValue{
-		{name: "scopeID", value: scopeID.String()},
-		{name: "scopeDenom", value: scopeDenom},
-		{name: "scopeDenomBefore", value: scopeDenomBefore},
-		{name: "scopeDenomAfter", value: scopeDenomAfter},
-	})
+	testlog.WriteVariables(s.T(), "ids and denoms",
+		"scopeID", scopeID,
+		"scopeDenom", scopeDenom,
+		"scopeDenomBefore", scopeDenomBefore,
+		"scopeDenomAfter", scopeDenomAfter,
+	)
 
 	tests := []struct {
 		name     string
@@ -215,11 +216,11 @@ func (s *BankTestSuite) TestGetScopesForValueOwner() {
 	addr1 := sdk.AccAddress("1_addr______________") // cosmos1x90kzerywf047h6lta047h6lta047h6l258ny6
 	addr2 := sdk.AccAddress("2_addr______________") // cosmos1xf0kzerywf047h6lta047h6lta047h6lgww49l
 	addr3 := sdk.AccAddress("3_addr______________") // cosmos1xd0kzerywf047h6lta047h6lta047h6l3lfhau
-	logNamedValues(s.T(), "addresses", []namedValue{
-		{name: "addr1", value: addr1.String()},
-		{name: "addr2", value: addr2.String()},
-		{name: "addr3", value: addr3.String()},
-	})
+	testlog.WriteVariables(s.T(), "addresses",
+		"addr1", addr1,
+		"addr2", addr2,
+		"addr3", addr3,
+	)
 
 	scopeID1 := s.scopeID("4CDFD0C4-F08C-403E-A8F7-EC723E7A0001") // scope1qpxdl5xy7zxyq04g7lk8y0n6qqqspk95yz
 	scopeID2 := s.scopeID("4CDFD0C4-F08C-403E-A8F7-EC723E7A0002") // scope1qpxdl5xy7zxyq04g7lk8y0n6qqpqm2zk6h
@@ -232,14 +233,14 @@ func (s *BankTestSuite) TestGetScopesForValueOwner() {
 	// and bytes in a bech32 address string. But if the prefix does not have that "1", a scope spec entry would
 	// end up being included in the results (which we don't want).
 	scopeSpecID := s.scopeSpecID("4CDFD0C4-F08C-403E-A8F7-EC723E7A0001") // scopespec1q3xdl5xy7zxyq04g7lk8y0n6qqqs0su6rh
-	logNamedValues(s.T(), "addresses", []namedValue{
-		{name: "scopeID1", value: scopeID1.String()},
-		{name: "scopeID2", value: scopeID2.String()},
-		{name: "scopeID3", value: scopeID3.String()},
-		{name: "scopeID4", value: scopeID4.String()},
-		{name: "scopeID5", value: scopeID5.String()},
-		{name: "scopeSpecID", value: scopeSpecID.String()},
-	})
+	testlog.WriteVariables(s.T(), "ids",
+		"scopeID1", scopeID1,
+		"scopeID2", scopeID2,
+		"scopeID3", scopeID3,
+		"scopeID4", scopeID4,
+		"scopeID5", scopeID5,
+		"scopeSpecID", scopeSpecID,
+	)
 
 	logMsg := func(owner sdk.AccAddress, denom, err string) string {
 		return "ERR invalid metadata balance entry for account \"" + owner.String() + "\": " +

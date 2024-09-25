@@ -161,27 +161,6 @@ func (s *MsgServerTestSuite) scopeSpecID(i int) types.MetadataAddress {
 	return types.ScopeSpecMetadataAddress(s.newUUID("scope_spec", i))
 }
 
-// namedValue is a way to associate a variable name with its value for use with logNamedValues.
-type namedValue struct {
-	name  string
-	value string
-}
-
-// logNamedValues will log the provided entries under the given header.
-func (s *MsgServerTestSuite) logNamedValues(header string, entries []namedValue) {
-	// Note: This func might not be called by checked-in code, but it's handy when troubleshooting, so don't delete it.
-	logNamedValues(s.T(), header, entries)
-}
-
-// logNamedValues will log the provided entries under the given header.
-func logNamedValues(t *testing.T, header string, entries []namedValue) {
-	lines := make([]string, len(entries))
-	for i, entry := range entries {
-		lines[i] = fmt.Sprintf("%20s = %s", entry.name, entry.value)
-	}
-	t.Logf("%s:\n%s", header, strings.Join(lines, "\n"))
-}
-
 // untypeEvent calls TypedEventToEvent requiring it to not error.
 func (s *MsgServerTestSuite) untypeEvent(event proto.Message) sdk.Event {
 	rv, err := sdk.TypedEventToEvent(event)
