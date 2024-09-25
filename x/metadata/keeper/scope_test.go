@@ -22,6 +22,7 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/testutil/assertions"
+	"github.com/provenance-io/provenance/testutil/testlog"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -3115,16 +3116,29 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 		s.Require().NoError(err, "uuid.Parse(%q)", str)
 		return rv
 	}
-	scopeID1 := types.ScopeMetadataAddress(newUUID("1"))
-	scopeID2 := types.ScopeMetadataAddress(newUUID("2"))
-	scopeID3 := types.ScopeMetadataAddress(newUUID("3"))
-	scopeID4 := types.ScopeMetadataAddress(newUUID("4"))
+	scopeID1 := types.ScopeMetadataAddress(newUUID("1")) // scope1qqg3zyg3zyg3zyg3zyg3zyg3zygsd65l7v
+	scopeID2 := types.ScopeMetadataAddress(newUUID("2")) // scope1qq3zyg3zyg3zyg3zyg3zyg3zyg3qnhc8wg
+	scopeID3 := types.ScopeMetadataAddress(newUUID("3")) // scope1qqenxvenxvenxvenxvenxvenxvesqa360g
+	scopeID4 := types.ScopeMetadataAddress(newUUID("4")) // scope1qpzyg3zyg3zyg3zyg3zyg3zyg3zqyvqcrf
+	testlog.WriteVariables(s.T(), "scopes",
+		"scopeID1", scopeID1,
+		"scopeID2", scopeID2,
+		"scopeID3", scopeID3,
+		"scopeID4", scopeID4,
+	)
 
 	addr1 := sdk.AccAddress("1addr_______________") // cosmos1x9skgerjta047h6lta047h6lta047h6l4429yc
 	addr2 := sdk.AccAddress("2addr_______________") // cosmos1xfskgerjta047h6lta047h6lta047h6lh0rr9a
 	addr3 := sdk.AccAddress("3addr_______________") // cosmos1xdskgerjta047h6lta047h6lta047h6lw7ypa7
 	addr4 := sdk.AccAddress("4addr_______________") // cosmos1x3skgerjta047h6lta047h6lta047h6lnj308h
 	addr5 := sdk.AccAddress("5addr_______________") // cosmos1x4skgerjta047h6lta047h6lta047h6l2rkdl5
+	testlog.WriteVariables(s.T(), "addresses",
+		"addr1", addr1,
+		"addr2", addr2,
+		"addr3", addr3,
+		"addr4", addr4,
+		"addr5", addr5,
+	)
 
 	accStrs := func(addrs []sdk.AccAddress) []string {
 		if addrs == nil {
@@ -3199,6 +3213,27 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 			name:   "duplicate md addr in links",
 			links:  types.AccMDLinks{{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr1, MDAddr: scopeID1}},
 			expErr: "duplicate metadata address \"" + scopeID1.String() + "\" not allowed",
+		},
+		{
+			name:     "one of the links already has the proposed acc address",
+			links:    types.AccMDLinks{{AccAddr: addr1, MDAddr: scopeID1}, {AccAddr: addr2, MDAddr: scopeID2}},
+			proposed: addr2.String(),
+			signers:  []sdk.AccAddress{addr1, addr2},
+			expErr: "scope \"" + scopeID2.String() + "\" " +
+				"already has the proposed value owner \"" + addr2.String() + "\"",
+		},
+		{
+			name: "two of the links already has the proposed acc address",
+			links: types.AccMDLinks{
+				{AccAddr: addr1, MDAddr: scopeID1},
+				{AccAddr: addr2, MDAddr: scopeID2},
+				{AccAddr: addr1, MDAddr: scopeID3},
+				{AccAddr: addr4, MDAddr: scopeID4},
+			},
+			proposed: addr1.String(),
+			signers:  []sdk.AccAddress{addr1, addr2, addr4},
+			expErr: "scopes [\"" + scopeID1.String() + "\" \"" + scopeID3.String() + "\"] " +
+				"already have the proposed value owner \"" + addr1.String() + "\"",
 		},
 		{
 			name:      "first signer is wasm: only first signer returned",

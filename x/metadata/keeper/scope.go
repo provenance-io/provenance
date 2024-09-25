@@ -815,6 +815,12 @@ func (k Keeper) ValidateUpdateValueOwners(
 	if err := links.ValidateForScopes(); err != nil {
 		return nil, err
 	}
+	if ids := links.GetMDAddrsForAccAddr(proposed); len(ids) > 0 {
+		if len(ids) == 1 {
+			return nil, fmt.Errorf("scope %q already has the proposed value owner %q", ids[0], proposed)
+		}
+		return nil, fmt.Errorf("scopes %q already have the proposed value owner %q", ids, proposed)
+	}
 
 	transferAgents, _, err := k.ValidateScopeValueOwnersSigners(ctx, links.GetAccAddrs(), proposed, msg)
 	return transferAgents, err
