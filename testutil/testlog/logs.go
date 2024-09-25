@@ -12,6 +12,7 @@ import (
 // The first line will have a header with the name and length.
 // Then, there'll be one line for eac entry, each with the format "<name>[<index>] = <value>" (with the = lined up).
 func WriteSlice[S ~[]E, E any](t testing.TB, name string, vals S) {
+	t.Helper()
 	t.Log(createSliceLogString(name, vals))
 }
 
@@ -29,11 +30,13 @@ func WriteSlice[S ~[]E, E any](t testing.TB, name string, vals S) {
 //
 // See also: WriteSlice.
 func WriteVariables(t testing.TB, header string, namesAndValues ...interface{}) {
+	t.Helper()
 	t.Log(newNamedValues(t, namesAndValues).GetLogString(header))
 }
 
 // WriteVariable writes the provided named variable to the test logs in the format "<name> = <value>".
 func WriteVariable(t testing.TB, name string, value interface{}) {
+	t.Helper()
 	t.Logf("%s = %s", name, valueString(value))
 }
 
@@ -65,6 +68,7 @@ type namedValues []*namedValue
 //
 // E.g. newNamedValues(t, "addr1", addr1, "addr2", addr2)
 func newNamedValues(t testing.TB, namesAndValues []interface{}) namedValues {
+	t.Helper()
 	if len(namesAndValues) == 0 {
 		return nil
 	}
