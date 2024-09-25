@@ -98,7 +98,7 @@ func (s *ScopeKeeperTestSuite) FreshCtx() sdk.Context {
 //   - If errorString is not empty, theError must equal the errorString.
 func (s *ScopeKeeperTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
 	s.T().Helper()
-	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
+	return assertions.AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
 }
 
 // SwapBankKeeper will set the bank keeper (in the metadata keeper) to the one provided

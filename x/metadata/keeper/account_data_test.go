@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/provenance-io/provenance/app"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -75,7 +76,7 @@ func TestValidateSetAccountData(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := app.MetadataKeeper.ValidateSetAccountData(FreshCtx(app), tc.msg)
-			AssertErrorValue(t, err, tc.exp, "ValidateSetAccountData")
+			assertions.AssertErrorValue(t, err, tc.exp, "ValidateSetAccountData")
 		})
 	}
 }

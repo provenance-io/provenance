@@ -22,6 +22,7 @@ import (
 
 	simapp "github.com/provenance-io/provenance/app"
 	"github.com/provenance-io/provenance/internal/pioconfig"
+	"github.com/provenance-io/provenance/testutil/assertions"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
@@ -77,20 +78,9 @@ func (s *AuthzTestSuite) FreshCtx() sdk.Context {
 // AssertErrorValue asserts that:
 //   - If errorString is empty, theError must be nil
 //   - If errorString is not empty, theError must equal the errorString.
-func AssertErrorValue(t *testing.T, theError error, errorString string, msgAndArgs ...interface{}) bool {
-	t.Helper()
-	if len(errorString) > 0 {
-		return assert.EqualError(t, theError, errorString, msgAndArgs...)
-	}
-	return assert.NoError(t, theError, msgAndArgs...)
-}
-
-// AssertErrorValue asserts that:
-//   - If errorString is empty, theError must be nil
-//   - If errorString is not empty, theError must equal the errorString.
 func (s *AuthzTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
 	s.T().Helper()
-	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
+	return assertions.AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
 }
 
 // partiesCopy creates a new []*types.PartyDetails with copies of each provided entry.
@@ -5907,7 +5897,7 @@ func (s *AuthzTestSuite) TestValidateAllRequiredSigned() {
 	for _, tc := range tests {
 		s.T().Run(tc.name, func(t *testing.T) {
 			actual, err := s.app.MetadataKeeper.ValidateAllRequiredSigned(s.FreshCtx(), tc.owners, tc.msg)
-			AssertErrorValue(t, err, tc.errorMsg, "ValidateSignersWithoutParties unexpected error")
+			s.AssertErrorValue(err, tc.errorMsg, "ValidateSignersWithoutParties unexpected error")
 			assert.Equal(t, tc.exp, actual, "ValidateSignersWithoutParties validated parties")
 		})
 	}
@@ -6194,7 +6184,7 @@ func TestValidateRolesPresent(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := keeper.ValidateRolesPresent(tc.parties, tc.reqRoles)
-			AssertErrorValue(t, err, tc.exp, "validateRolesPresent")
+			assertions.AssertErrorValue(t, err, tc.exp, "validateRolesPresent")
 		})
 	}
 }
@@ -6295,7 +6285,7 @@ func TestValidatePartiesArePresent(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := keeper.ValidatePartiesArePresent(tc.required, tc.available)
-			AssertErrorValue(t, err, tc.exp, "validatePartiesArePresent")
+			assertions.AssertErrorValue(t, err, tc.exp, "validatePartiesArePresent")
 		})
 	}
 }

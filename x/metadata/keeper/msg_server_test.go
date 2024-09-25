@@ -63,7 +63,7 @@ func TestMsgServerTestSuite(t *testing.T) {
 //   - If errorString is empty, theError must be nil
 //   - If errorString is not empty, theError must equal the errorString.
 func (s *MsgServerTestSuite) AssertErrorValue(theError error, errorString string, msgAndArgs ...interface{}) bool {
-	return AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
+	return assertions.AssertErrorValue(s.T(), theError, errorString, msgAndArgs...)
 }
 
 // AssertEqualEvents asserts that the expected events equal the actual ones
@@ -1584,7 +1584,7 @@ func (s *MsgServerTestSuite) TestUpdateValueOwners() {
 			},
 			scopeIDs: []types.MetadataAddress{scopeID1, scopeID2, scopeID4},
 			signers:  []string{valueOwner1},
-			expErr:   "TODO",
+			expErr:   "scope \"" + scopeID4.String() + "\" already has the proposed value owner \"" + newValueOwner + "\": invalid request",
 		},
 	}
 
