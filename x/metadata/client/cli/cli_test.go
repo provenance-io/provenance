@@ -1821,7 +1821,6 @@ func runTxCmdTestCases(s *IntegrationCLITestSuite, testCases []txCmdTestCase) {
 }
 
 func (s *IntegrationCLITestSuite) TestScopeTxCommands() {
-	needsUpdate(s.T()) // TODO[2137]: Update TestScopeTxCommands to account for recent changes.
 	scopeID := metadatatypes.ScopeMetadataAddress(uuid.New()).String()
 	scopeSpecID := metadatatypes.ScopeSpecMetadataAddress(uuid.New()).String()
 	testCases := []txCmdTestCase{
