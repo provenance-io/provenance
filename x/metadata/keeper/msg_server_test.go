@@ -1453,6 +1453,7 @@ func (s *MsgServerTestSuite) TestUpdateValueOwners() {
 	scopeID3Same1 := types.ScopeMetadataAddress(s.newUUID("scope_3_same", 1)) // scope1qqc47umrdacx2hentaekzmt9ta0sc9gw9t
 	scopeID3Same2 := types.ScopeMetadataAddress(s.newUUID("scope_3_same", 2)) // scope1qqe97umrdacx2hentaekzmt9ta0s8mcl0v
 	scopeID3Same3 := types.ScopeMetadataAddress(s.newUUID("scope_3_same", 3)) // scope1qqe47umrdacx2hentaekzmt9ta0smx7s3q
+	scopeID4 := types.ScopeMetadataAddress(s.newUUID("scope", 4))             // scope1qq697umrdacx2h6lta047h6lta0snl0e64
 
 	owner1 := sdk.AccAddress("owner1______________").String()      // cosmos1damkuetjx9047h6lta047h6lta047h6lccgedl
 	owner2 := sdk.AccAddress("owner2______________").String()      // cosmos1damkuetjxf047h6lta047h6lta047h6lsp5nql
@@ -1583,29 +1584,59 @@ func (s *MsgServerTestSuite) TestUpdateValueOwners() {
 			signers:  []string{valueOwner3Same},
 			expErr:   "",
 		},
+		{
+			name: "three scopes: no signer for third",
+			starters: []types.Scope{
+				ns(scopeID1, owner1, dataAccess1, valueOwner1),
+				ns(scopeID2, owner1, dataAccess1, valueOwner1),
+				ns(scopeID4, owner1, dataAccess1, valueOwner2),
+			},
+			scopeIDs: []types.MetadataAddress{scopeID1, scopeID2, scopeID4},
+			signers:  []string{valueOwner1},
+			expErr:   "missing signature from existing value owner \"" + valueOwner2 + "\": invalid request",
+		},
+		{
+			// This test is the same as above except the third scope already has the desired value owner.
+			name: "three scopes: signer for first two and third already owned by desired",
+			starters: []types.Scope{
+				ns(scopeID1, owner1, dataAccess1, valueOwner1),
+				ns(scopeID2, owner1, dataAccess1, valueOwner1),
+				ns(scopeID4, owner1, dataAccess1, newValueOwner),
+			},
+			scopeIDs: []types.MetadataAddress{scopeID1, scopeID2, scopeID4},
+			signers:  []string{valueOwner1},
+			expErr:   "TODO",
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			// Using a CacheContext so that the test cases don't interact.
+			ctx, _ := s.ctx.CacheContext()
 			for _, scope := range tc.starters {
-				defer WriteTempScope(s.T(), s.app.MetadataKeeper, s.ctx, scope)()
+				assertions.RequireNotPanicsNoError(s.T(), func() error {
+					return s.app.MetadataKeeper.SetScope(ctx, scope)
+				}, "SetScope")
 			}
+
 			msg := types.MsgUpdateValueOwnersRequest{
 				ScopeIds:          tc.scopeIDs,
 				ValueOwnerAddress: newValueOwner,
 				Signers:           tc.signers,
 			}
+
 			em := sdk.NewEventManager()
-			ctx := s.ctx.WithEventManager(em)
+			ctx = ctx.WithEventManager(em)
+			var err error
+			testFunc := func() {
+				_, err = s.msgServer.UpdateValueOwners(ctx, &msg)
+			}
+			s.Require().NotPanics(testFunc, "UpdateValueOwners(%#v)", msg)
+			s.AssertErrorValue(err, tc.expErr, "error from UpdateValueOwners")
 
-			_, err := s.msgServer.UpdateValueOwners(ctx, &msg)
-			if len(tc.expErr) > 0 {
-				s.Assert().EqualError(err, tc.expErr, "error from UpdateValueOwners")
-			} else {
-				s.Require().NoError(err, "error from UpdateValueOwners")
-
+			if err == nil && len(tc.expErr) == 0 {
 				for i, scopeID := range tc.scopeIDs {
-					actVO, err2 := s.app.MetadataKeeper.GetScopeValueOwner(s.ctx, scopeID)
+					actVO, err2 := s.app.MetadataKeeper.GetScopeValueOwner(ctx, scopeID)
 					if s.Assert().NoError(err2, "[%d]: error from GetScopeValueOwner(%q)", i, scopeID) {
 						s.Assert().Equal(msg.ValueOwnerAddress, actVO.String(), "[%d]: addr from GetScopeValueOwner(%q)", i, scopeID)
 					}
