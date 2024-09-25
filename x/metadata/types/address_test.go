@@ -3159,6 +3159,24 @@ func (s *AddressTestSuite) TestAccMDLinks_GetMDAddrsForAccAddr() {
 			exp:   nil,
 		},
 		{
+			name:  "one link: nil",
+			links: AccMDLinks{nil},
+			addr:  nil,
+			exp:   nil,
+		},
+		{
+			name:  "one link: nil AccAddr",
+			links: AccMDLinks{NewAccMDLink(nil, mdAddrs[0])},
+			addr:  accAddrs[0],
+			exp:   nil,
+		},
+		{
+			name:  "one link: empty AccAddr",
+			links: AccMDLinks{NewAccMDLink(make(sdk.AccAddress, 0), mdAddrs[0])},
+			addr:  accAddrs[0],
+			exp:   nil,
+		},
+		{
 			name:  "one link: other addr",
 			links: AccMDLinks{NewAccMDLink(accAddrs[0], mdAddrs[0])},
 			addr:  accAddrs[1],
@@ -3352,7 +3370,7 @@ func (s *AddressTestSuite) TestAccMDLinks_GetMDAddrsForAccAddr() {
 		s.Run(tc.name, func() {
 			var act []MetadataAddress
 			testFunc := func() {
-				act = tc.links.GetMDAddrsForAccAddr(tc.addr)
+				act = tc.links.GetMDAddrsForAccAddr(tc.addr.String())
 			}
 			s.Require().NotPanics(testFunc, "GetMDAddrsForAccAddr")
 			// Compare them as strings first since that failure message is probably easier to understand.

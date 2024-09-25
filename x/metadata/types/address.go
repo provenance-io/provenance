@@ -1017,10 +1017,10 @@ func (a AccMDLinks) GetPrimaryUUIDs() []string {
 }
 
 // GetMDAddrsForAccAddr returns all of the MDAddrs associated with the provided AccAddr.
-func (a AccMDLinks) GetMDAddrsForAccAddr(addr sdk.AccAddress) []MetadataAddress {
+func (a AccMDLinks) GetMDAddrsForAccAddr(addr string) []MetadataAddress {
 	var rv []MetadataAddress
 	for _, link := range a {
-		if addr.Equals(link.AccAddr) {
+		if link != nil && addr == link.AccAddr.String() {
 			rv = append(rv, link.MDAddr)
 		}
 	}
