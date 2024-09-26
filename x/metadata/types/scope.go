@@ -51,10 +51,8 @@ func (s Scope) ValidateBasic() error {
 		return err
 	}
 
-	if !s.SpecificationId.Empty() { // TODO[2137]: Figure out when it'd be valid to not have a spec id here. Add a comment or require there to be one.
-		if err = s.SpecificationId.ValidateIsScopeSpecificationAddress(); err != nil {
-			return err
-		}
+	if err = s.SpecificationId.ValidateIsScopeSpecificationAddress(); err != nil {
+		return err
 	}
 
 	if err = s.ValidateOwnersBasic(); err != nil {

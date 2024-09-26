@@ -1463,7 +1463,7 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			existing: ns(scopeID, scopeSpecID, ownerPartyList(s.user1), []string{}, s.user1),
 			proposed: *ns(scopeID, nil, ownerPartyList(s.user1), []string{}, s.user1),
 			signers:  []string{s.user1},
-			errorMsg: "invalid specification id: address is empty",
+			errorMsg: "invalid scope specification metadata address MetadataAddress(nil): address is empty",
 		},
 		{
 			name:     "setting unknown specification id should fail",

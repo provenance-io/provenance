@@ -97,6 +97,11 @@ func (s *ScopeTestSuite) TestScopeValidateBasic() {
 			expErr: "invalid scope id \"" + ScopeSpecMetadataAddress(newUUID("1")).String() + "\": wrong type",
 		},
 		{
+			name:   "nil spec id",
+			scope:  ns(ScopeMetadataAddress(uuid.New()), nil, []Party{}, []string{}, ""),
+			expErr: "invalid scope specification metadata address MetadataAddress(nil): address is empty",
+		},
+		{
 			name:   "invalid spec id",
 			scope:  ns(ScopeMetadataAddress(uuid.New()), MetadataAddress{0xa0, 0x1, 0x2}, []Party{}, []string{}, ""),
 			expErr: "invalid scope specification metadata address MetadataAddress{0xa0, 0x1, 0x2}: invalid metadata address type: 160",

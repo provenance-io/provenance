@@ -433,10 +433,6 @@ func (k Keeper) ValidateWriteScope(
 	if err := proposed.ValidateBasic(); err != nil {
 		return nil, err
 	}
-	// TODO[2137]: Get rid of this if we decided to add this check to ValidateBasic.
-	if proposed.SpecificationId.Empty() {
-		return nil, errors.New("invalid specification id: address is empty")
-	}
 
 	var existing *types.Scope
 	if e, found := k.GetScope(ctx, msg.Scope.ScopeId); found {
