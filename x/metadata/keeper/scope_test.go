@@ -1862,10 +1862,10 @@ func (s *ScopeKeeperTestSuite) TestValidateWriteScope() {
 			// Use a cache context so the cases don't interact.
 			ctx, _ = s.FreshCtx().CacheContext()
 			if tc.existing != nil {
-				writeScope := func() {
+				testWriteScope := func() {
 					s.app.MetadataKeeper.WriteScopeToState(ctx, *tc.existing)
 				}
-				s.Require().NotPanics(writeScope, "writeScopeToState")
+				s.Require().NotPanics(testWriteScope, "writeScopeToState")
 			}
 
 			msg := &types.MsgWriteScopeRequest{
