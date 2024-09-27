@@ -122,7 +122,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3To4); err != nil {
 		panic(fmt.Sprintf("failed to register x/metadata migration from version 3 to 4: %v", err))
 	}
 }

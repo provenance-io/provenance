@@ -137,3 +137,17 @@ var (
 	// SafeBech32ToAccAddresses is a TEST ONLY exposure of safeBech32ToAccAddresses.
 	SafeBech32ToAccAddresses = safeBech32ToAccAddresses
 )
+
+var (
+	// NewKeeper3To4 is a TEST ONLY exposure of newKeeper3To4.
+	NewKeeper3To4 = newKeeper3To4
+	// MigrateValueOwners is a TEST ONLY exposure of migrateValueOwners.
+	MigrateValueOwners = migrateValueOwners
+	// MigrateValueOwnerToBank is a TEST ONLY exposure of migrateValueOwnerToBank.
+	MigrateValueOwnerToBank = migrateValueOwnerToBank
+	// DeleteValueOwnerIndexEntries is a TEST ONLY exposure of deleteValueOwnerIndexEntries.
+	DeleteValueOwnerIndexEntries = deleteValueOwnerIndexEntries
+)
+
+// Keeper3To4 is a TEST ONLY exposure of keeper3To4.
+type Keeper3To4 = keeper3To4
