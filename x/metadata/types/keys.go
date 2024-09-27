@@ -70,8 +70,6 @@ var (
 	AddressScopeCacheKeyPrefix = []byte{0x17}
 	// ScopeSpecScopeCacheKeyPrefix for scope to scope specification cache lookup
 	ScopeSpecScopeCacheKeyPrefix = []byte{0x11}
-	// TODO[2137]: Move this to the migration stuff so those entries can be deleted.
-	ValueOwnerScopeCacheKeyPrefix = []byte{0x18}
 
 	// AddressScopeSpecCacheKeyPrefix for scope spec lookup by address
 	AddressScopeSpecCacheKeyPrefix = []byte{0x19}
