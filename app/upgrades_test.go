@@ -1022,3 +1022,21 @@ func (s *UpgradeTestSuite) TestExecuteStoreCodeMsg() {
 		})
 	}
 }
+
+func (s *UpgradeTestSuite) TestViridianRC1() {
+	expInLog := []string{
+		"INF Pruning expired consensus states for IBC.",
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Removing inactive validator delegations.",
+	}
+	s.AssertUpgradeHandlerLogs("viridian-rc1", expInLog, nil)
+}
+
+func (s *UpgradeTestSuite) TestViridian() {
+	expInLog := []string{
+		"INF Pruning expired consensus states for IBC.",
+		"INF Starting module migrations. This may take a significant amount of time to complete. Do not restart node.",
+		"INF Removing inactive validator delegations.",
+	}
+	s.AssertUpgradeHandlerLogs("viridian", expInLog, nil)
+}
