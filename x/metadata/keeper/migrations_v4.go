@@ -71,7 +71,7 @@ func (k Keeper) V3WriteNewScope(ctx sdk.Context, scope types.Scope) error {
 	if len(scope.ValueOwnerAddress) > 0 {
 		vo := sdk.MustAccAddressFromBech32(scope.ValueOwnerAddress)
 		k1 := types.GetAddressScopeCacheKey(vo, scope.ScopeId)
-		k2 := getValueOwnerScopeCacheKey(vo, scope.ScopeId)
+		k2 := GetValueOwnerScopeCacheKey(vo, scope.ScopeId)
 		store.Set(k1, []byte{0x01})
 		store.Set(k2, []byte{0x01})
 	}
@@ -131,8 +131,8 @@ func getValueOwnerScopeCacheIteratorPrefix(addr sdk.AccAddress) []byte {
 	return append(valueOwnerScopeCacheKeyPrefix, address.MustLengthPrefix(addr.Bytes())...)
 }
 
-// getValueOwnerScopeCacheKey returns the store key for an address cache entry
-func getValueOwnerScopeCacheKey(addr sdk.AccAddress, scopeID types.MetadataAddress) []byte {
+// GetValueOwnerScopeCacheKey returns the store key for an address cache entry
+func GetValueOwnerScopeCacheKey(addr sdk.AccAddress, scopeID types.MetadataAddress) []byte {
 	return append(getValueOwnerScopeCacheIteratorPrefix(addr), scopeID.Bytes()...)
 }
 
@@ -143,7 +143,7 @@ func deleteValueOwnerIndexEntries(store storetypes.KVStore, scope types.Scope) {
 	vo := sdk.MustAccAddressFromBech32(scope.ValueOwnerAddress)
 
 	// Delete the value owner -> scope index entry (that's now a denom owners thing).
-	key := getValueOwnerScopeCacheKey(vo, scope.ScopeId)
+	key := GetValueOwnerScopeCacheKey(vo, scope.ScopeId)
 	store.Delete(key)
 
 	// The address -> scope index no longer associates a value owner with a scope; it only applies to the Owners.
