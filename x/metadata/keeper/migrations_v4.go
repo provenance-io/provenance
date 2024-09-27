@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/gogoproto/proto"
 
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -85,6 +86,15 @@ func migrateValueOwners(ctx sdk.Context, kpr keeper3To4I) error {
 	store := kpr.GetStore(ctx)
 	it := storetypes.KVStorePrefixIterator(store, types.ScopeKeyPrefix)
 	defer it.Close()
+
+	// If a scope's value owner is a marker, someone had the required deposit permission.
+	// But we don't have that permission here, and have no way to get it again. So, we
+	// bypass the marker send restrictions under the assumption that if a scope has a
+	// marker for a value owner, it was set that way by someone with proper permissions.
+	// We do NOT bypass the quarantine send restrictions though because we don't
+	// actually know that the value owner wanted to be the value owner of the scope.
+	ctx = markertypes.WithBypass(ctx)
+
 	scopeCount := 0
 	valueOwnerCount := 0
 	for ; it.Valid(); it.Next() {
