@@ -108,6 +108,23 @@ func getLogOutput(t *testing.T, logBuffer bytes.Buffer, msg string, args ...inte
 	return internal.SplitLogLines(logOutput)
 }
 
+func writeScope(t *testing.T, kpr keeper.Keeper, ctx sdk.Context, scope types.Scope, msgAndArgs ...interface{}) {
+	if len(msgAndArgs) == 0 {
+		msgAndArgs = append(msgAndArgs, "V3WriteNewScope")
+	} else {
+		switch v := msgAndArgs[0].(type) {
+		case string:
+			msgAndArgs[0] = "V3WriteNewScope: " + v
+		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+			if len(msgAndArgs) == 1 {
+				msgAndArgs = []interface{}{"[%d]: V3WriteNewScope", v}
+			}
+		}
+	}
+	err := kpr.V3WriteNewScope(ctx, scope)
+	require.NoError(t, err, msgAndArgs...)
+}
+
 func TestMigrate3to4(t *testing.T) {
 	addrs := []string{
 		newAddr("one").String(),   // cosmos1dahx2h6lta047h6lta047h6lta047h6lq2tdll
@@ -174,7 +191,7 @@ func TestMigrate3to4(t *testing.T) {
 		if i%2 == 0 {
 			j = 1_000_000_000_000_000 - j
 		}
-		app.MetadataKeeper.WriteScopeToState(ctx1, newScope(i))
+		writeScope(t, app.MetadataKeeper, ctx1, newScope(i), i)
 	}
 
 	tests := []struct {
@@ -290,7 +307,7 @@ func TestMigrateValueOwners(t *testing.T) {
 		{
 			name: "one scope: unmarshal error",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(123_456_789, "vo_addr1"))
+				writeScope(t, app.MetadataKeeper, ctx, newScope(123_456_789, "vo_addr1"))
 			},
 			injUnmarshalErrs: []string{"yoko was not wrong"},
 			expErr:           "error reading scope " + newScopeID(123_456_789).String() + " from state: yoko was not wrong",
@@ -303,7 +320,7 @@ func TestMigrateValueOwners(t *testing.T) {
 		{
 			name: "one scope: set error",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(23, "vo_addr2"))
+				writeScope(t, app.MetadataKeeper, ctx, newScope(23, "vo_addr2"))
 			},
 			injSetErrs: []string{"maybe jethro tull was the greatest"},
 			expErr: "could not migrate scope " + newScopeID(23).String() + " value owner \"" +
@@ -317,7 +334,7 @@ func TestMigrateValueOwners(t *testing.T) {
 		{
 			name: "one scope: no value owner",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(37373, ""))
+				writeScope(t, app.MetadataKeeper, ctx, newScope(37373, ""))
 			},
 			expLogs: []string{
 				"INF Moving scope value owner data into x/bank ledger.",
@@ -329,7 +346,7 @@ func TestMigrateValueOwners(t *testing.T) {
 		{
 			name: "one scope: with value owner",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(37373, "mineminemine"))
+				writeScope(t, app.MetadataKeeper, ctx, newScope(37373, "mineminemine"))
 			},
 			expLogs: []string{
 				"INF Moving scope value owner data into x/bank ledger.",
@@ -341,9 +358,9 @@ func TestMigrateValueOwners(t *testing.T) {
 		{
 			name: "three scopes: unmarshal error from second",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(5, "addr1", "addr1"))
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(6, "addr2"))
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(7, "addr3"))
+				writeScope(t, app.MetadataKeeper, ctx, newScope(5, "addr1", "addr1"), 1)
+				writeScope(t, app.MetadataKeeper, ctx, newScope(6, "addr2"), 2)
+				writeScope(t, app.MetadataKeeper, ctx, newScope(7, "addr3"), 3)
 			},
 			injUnmarshalErrs: []string{"", "radiohead is only okay"},
 			expErr:           "error reading scope " + newScopeID(6).String() + " from state: radiohead is only okay",
@@ -358,9 +375,9 @@ func TestMigrateValueOwners(t *testing.T) {
 		{
 			name: "three scopes: set error from second",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(71, "ayyy", "ayyy"))
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(82, "bee"))
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(93, "see"))
+				writeScope(t, app.MetadataKeeper, ctx, newScope(71, "ayyy", "ayyy"), 1)
+				writeScope(t, app.MetadataKeeper, ctx, newScope(82, "bee"), 2)
+				writeScope(t, app.MetadataKeeper, ctx, newScope(93, "see"), 3)
 			},
 			injSetErrs: []string{"", "fatboy slim lost that fight"},
 			expErr: "could not migrate scope " + newScopeID(82).String() + " value owner \"" +
@@ -374,9 +391,9 @@ func TestMigrateValueOwners(t *testing.T) {
 		{
 			name: "three scopes: no value owner in second",
 			setup: func(t *testing.T, ctx sdk.Context) {
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(765, "one", "one"))
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(876, "", "two"))
-				app.MetadataKeeper.WriteScopeToState(ctx, newScope(987, "three"))
+				writeScope(t, app.MetadataKeeper, ctx, newScope(765, "one", "one"), 1)
+				writeScope(t, app.MetadataKeeper, ctx, newScope(876, "", "two"), 2)
+				writeScope(t, app.MetadataKeeper, ctx, newScope(987, "three"), 3)
 			},
 			expLogs: []string{
 				"INF Moving scope value owner data into x/bank ledger.",
@@ -418,7 +435,7 @@ func TestMigrateValueOwners(t *testing.T) {
 							scope.Owners[o].Role = types.PartyType(1 + (i+o)%11) // 11 different roles, 1 to 11.
 						}
 					}
-					app.MetadataKeeper.WriteScopeToState(ctx, scope)
+					writeScope(t, app.MetadataKeeper, ctx, scope, i)
 				}
 			},
 			expLogs: []string{

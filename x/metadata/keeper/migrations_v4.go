@@ -53,6 +53,31 @@ func (k keeper3To4) Unmarshal(bz []byte, ptr proto.Message) error {
 	return k.Keeper.cdc.Unmarshal(bz, ptr)
 }
 
+// V3WriteNewScope writes a new scope to state in the way v3 of the metadata module did.
+// Deprecated: Only exists to facilitate testing of the migration of the metadata module from v3 to v4.
+func (k Keeper) V3WriteNewScope(ctx sdk.Context, scope types.Scope) error {
+	store := ctx.KVStore(k.storeKey)
+	if store.Has(scope.ScopeId) {
+		return fmt.Errorf("scope %s already exists", scope.ScopeId)
+	}
+	bz, err := k.cdc.Marshal(&scope)
+	if err != nil {
+		return fmt.Errorf("could not marshal scope %s: %w", scope.ScopeId, err)
+	}
+	store.Set(scope.ScopeId, bz)
+	k.indexScope(store, &scope, nil)
+	// indexScope no longer does anything with the value owner address, but
+	// we used to have a couple index entries for it.
+	if len(scope.ValueOwnerAddress) > 0 {
+		vo := sdk.MustAccAddressFromBech32(scope.ValueOwnerAddress)
+		k1 := types.GetAddressScopeCacheKey(vo, scope.ScopeId)
+		k2 := getValueOwnerScopeCacheKey(vo, scope.ScopeId)
+		store.Set(k1, []byte{0x01})
+		store.Set(k2, []byte{0x01})
+	}
+	return nil
+}
+
 // migrateValueOwners will loop through all scopes and move the value owner info into the bank module.
 func migrateValueOwners(ctx sdk.Context, kpr keeper3To4I) error {
 	logger := kpr.Logger(ctx)
