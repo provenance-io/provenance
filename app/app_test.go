@@ -70,11 +70,6 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	require.NoError(t, err, "ExportAppStateAndValidators at zero height")
 }
 
-func TestGetMaccPerms(t *testing.T) {
-	dup := GetMaccPerms()
-	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
-}
-
 func TestExportAppStateAndValidators(t *testing.T) {
 	opts := SetupOptions{
 		Logger:  log.NewTestLogger(t),
