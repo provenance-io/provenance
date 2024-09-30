@@ -385,7 +385,7 @@ func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.Net
 	for _, denom := range metadataDenoms {
 		scopeID, err := metadatatypes.MetadataAddressFromDenom(denom)
 		if err != nil {
-			k.logErrorf(ctx, "error getting metadata address: %w", err)
+			k.logErrorf(ctx, "error getting metadata address: %v", err)
 			k.emitMetadataNAVEvents(ctx, denom, metadataNAVs[denom], source)
 			continue
 		}
