@@ -3301,6 +3301,92 @@ func (s *ScopeKeeperTestSuite) TestValidateUpdateValueOwners() {
 	}
 }
 
+func (s *ScopeKeeperTestSuite) TestGetNetAssetValue() {
+	toUUID := func(base string) uuid.UUID {
+		rv, err := uuid.FromBytes([]byte(base))
+		s.Require().NoError(err, "uuid.FromBytes([]byte(%q))", base)
+		return rv
+	}
+	scopeIDDNE := types.ScopeMetadataAddress(toUUID("does_not_exist__"))
+	scopeIDBad := types.ScopeMetadataAddress(toUUID("bad_bad_bad_bad_"))
+	priceDenomBad := "aproblem"
+	scopeIDOK := types.ScopeMetadataAddress(toUUID("okayokayokayokay"))
+	priceDenomOK := "aokay"
+	okNAV := types.NetAssetValue{
+		Price: sdk.NewInt64Coin(priceDenomOK, 987_123_654),
+		// TODO[2153]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
+	}
+
+	setupStore := func() {
+		ctx := s.FreshCtx()
+		err := s.app.MetadataKeeper.SetNetAssetValue(ctx, scopeIDOK, okNAV, "testing")
+		s.Require().NoError(err)
+
+		store := ctx.KVStore(s.app.MetadataKeeper.GetStoreKey())
+		badKey := types.NetAssetValueKey(scopeIDBad, priceDenomBad)
+		badVal := []byte{0, 0, 0}
+		store.Set(badKey, badVal)
+	}
+	setupStore()
+
+	tests := []struct {
+		name    string
+		mdDenom string
+		pDenom  string
+		expNAV  *types.NetAssetValue
+		expErr  string
+	}{
+		{
+			name:    "not a metadata denom",
+			mdDenom: "nope",
+			pDenom:  "whatever",
+			expErr:  "could not get metadata address: denom \"nope\" is not a MetadataAddress denom",
+		},
+		{
+			name:    "scope does not exist",
+			mdDenom: scopeIDDNE.Denom(),
+			pDenom:  "whatever",
+			expNAV:  nil,
+		},
+		{
+			name:    "nav does not exist",
+			mdDenom: scopeIDOK.Denom(),
+			pDenom:  "whatever",
+			expNAV:  nil,
+		},
+		{
+			name:    "invalid nav data in state",
+			mdDenom: scopeIDBad.Denom(),
+			pDenom:  priceDenomBad,
+			expErr:  "could not read nav for \"" + scopeIDBad.String() + "\" with price denom \"" + priceDenomBad + "\": proto: NetAssetValue: illegal tag 0 (wire type 0)",
+		},
+		{
+			name:    "okay",
+			mdDenom: scopeIDOK.Denom(),
+			pDenom:  priceDenomOK,
+			expNAV:  &okNAV,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			ctx := s.FreshCtx()
+			var actNAV *types.NetAssetValue
+			var err error
+			testFunc := func() {
+				actNAV, err = s.app.MetadataKeeper.GetNetAssetValue(ctx, tc.mdDenom, tc.pDenom)
+			}
+			s.Require().NotPanics(testFunc, "GetNetAssetValue")
+			s.AssertErrorValue(err, tc.expErr, "error returned from GetNetAssetValue")
+			if !s.Assert().Equal(tc.expNAV, actNAV, "NAV returned from GetNetAssetValue") && tc.expNAV != nil && actNAV != nil {
+				s.Assert().Equal(tc.expNAV.Price.String(), actNAV.Price.String(), "NAV.Price (string)")
+				s.Assert().Equal(fmt.Sprintf("%d", tc.expNAV.UpdatedBlockHeight), fmt.Sprintf("%d", actNAV.UpdatedBlockHeight), "UpdatedBlockHeight (string)")
+				// TODO[2153]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
+			}
+		})
+	}
+}
+
 func (s *ScopeKeeperTestSuite) TestAddSetNetAssetValues() {
 	markerDenom := "jackthecat"
 	mAccount := authtypes.NewBaseAccount(markertypes.MustGetMarkerAddress(markerDenom), nil, 0, 0)

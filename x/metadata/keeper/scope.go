@@ -839,6 +839,30 @@ func (k Keeper) AddSetNetAssetValues(ctx sdk.Context, scopeID types.MetadataAddr
 	return nil
 }
 
+// GetNetAssetValue gets the NAV record for the given scopeID with the given price denom.
+// If it doesn't exist then nil, nil is returned.
+func (k Keeper) GetNetAssetValue(ctx sdk.Context, metadataDenom, priceDenom string) (*types.NetAssetValue, error) {
+	scopeID, err := types.MetadataAddressFromDenom(metadataDenom)
+	if err != nil {
+		return nil, fmt.Errorf("could not get metadata address: %w", err)
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	key := types.NetAssetValueKey(scopeID, priceDenom)
+	value := store.Get(key)
+	if len(value) == 0 {
+		return nil, nil
+	}
+
+	var scopeNAV types.NetAssetValue
+	err = k.cdc.Unmarshal(value, &scopeNAV)
+	if err != nil {
+		return nil, fmt.Errorf("could not read nav for %q with price denom %q: %w", scopeID, priceDenom, err)
+	}
+
+	return &scopeNAV, nil
+}
+
 // SetNetAssetValue adds/updates a net asset value to scope
 func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress, netAssetValue types.NetAssetValue, source string) error {
 	netAssetValue.UpdatedBlockHeight = uint64(ctx.BlockHeight())
