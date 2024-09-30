@@ -22,8 +22,6 @@ They group and identify information.
 
 ### Scopes
 
-<!-- TODO[2137]: Update this to reflect new value owner storage. -->
-
 A scope is a high-level grouping of information combined with some access control.
 
 * A scope must conform to a pre-determined scope specification.
@@ -82,6 +80,15 @@ message Scope {
 }
 ```
 
+Before a scope is stored in state, the `value_owner_address` is cleared out (set to an empty string).
+The scope is then protobuf encoded, and those bytes are the value stored in state.
+
+#### Scope Value Owners
+
+The `value_owner_address` is tracked using the `x/bank` module. When a scope first gets a value owner (either upon scope
+creation, or later with an update), a single coin with the denom `nft/<scope_id>` is minted and placed in the value
+owner's account. That coin can be transferred or traded the same ways as any other on-chain funds, e.g. via `MsgSend`.
+
 #### Scope Indexes
 
 Scopes by owner:
@@ -93,11 +100,6 @@ Scopes by owner:
 Scopes by Scope Specification:
 * Type byte: `0x11`
 * Part 1: All bytes of the scope specification key
-* Part 2: All bytes of the scope key
-
-Scopes by value owner:
-* Type byte: `0x18`
-* Part 1: The value owner address (length byte then value bytes)
 * Part 2: All bytes of the scope key
 
 
