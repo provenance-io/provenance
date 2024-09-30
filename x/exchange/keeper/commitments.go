@@ -264,14 +264,14 @@ func (k Keeper) ValidateAndCollectCommitmentCreationFee(ctx sdk.Context, marketI
 	return nil
 }
 
-// lookupNav gets a nav from the provided known navs, or if not known, gets it from the marker module.
-func (k Keeper) lookupNav(ctx sdk.Context, markerDenom, priceDenom string, known []exchange.NetAssetPrice) *exchange.NetAssetPrice {
+// lookupNav gets a nav from the provided known navs, or if not known, gets it from the marker or metadata module.
+func (k Keeper) lookupNav(ctx sdk.Context, assetsDenom, priceDenom string, known []exchange.NetAssetPrice) *exchange.NetAssetPrice {
 	for _, nav := range known {
-		if nav.Assets.Denom == markerDenom && nav.Price.Denom == priceDenom {
+		if nav.Assets.Denom == assetsDenom && nav.Price.Denom == priceDenom {
 			return &nav
 		}
 	}
-	return k.GetNav(ctx, markerDenom, priceDenom)
+	return k.GetNav(ctx, assetsDenom, priceDenom)
 }
 
 // CalculateCommitmentSettlementFee calculates the fee that the exchange must be paid (by the market) for the provided

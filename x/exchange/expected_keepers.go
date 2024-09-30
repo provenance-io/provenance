@@ -8,6 +8,7 @@ import (
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type AccountKeeper interface {
@@ -38,4 +39,9 @@ type MarkerKeeper interface {
 	GetMarker(ctx sdk.Context, address sdk.AccAddress) (markertypes.MarkerAccountI, error)
 	AddSetNetAssetValues(ctx sdk.Context, marker markertypes.MarkerAccountI, netAssetValues []markertypes.NetAssetValue, source string) error
 	GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*markertypes.NetAssetValue, error)
+}
+
+type MetadataKeeper interface {
+	AddSetNetAssetValues(ctx sdk.Context, scopeID metadatypes.MetadataAddress, netAssetValues []metadatypes.NetAssetValue, source string) error
+	GetNetAssetValue(ctx sdk.Context, metadataDenom, priceDenom string) (*metadatypes.NetAssetValue, error)
 }

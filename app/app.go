@@ -591,6 +591,7 @@ func New(
 	app.ExchangeKeeper = exchangekeeper.NewKeeper(
 		appCodec, keys[exchange.StoreKey], authtypes.FeeCollectorName,
 		app.AccountKeeper, app.AttributeKeeper, app.BankKeeper, app.HoldKeeper, app.MarkerKeeper,
+		app.MetadataKeeper,
 	)
 
 	pioMessageRouter := MessageRouterFunc(func(msg sdk.Msg) baseapp.MsgServiceHandler {

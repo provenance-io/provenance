@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 // sumAssetsAndPrice gets the sum of assets, and the sum of prices of the provided orders.
@@ -330,50 +332,86 @@ func (k Keeper) closeSettlement(ctx sdk.Context, store storetypes.KVStore, marke
 func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.NetAssetPrice) {
 	source := fmt.Sprintf("x/exchange market %d", marketID)
 
-	// convert them to what the marker module needs.
+	// convert them to what the marker and/or metadata modules need.
+	var markerDenoms, metadataDenoms []string
 	markerNAVs := make(map[string][]markertypes.NetAssetValue)
-	var denomOrder []string
+	metadataNAVs := make(map[string][]metadatatypes.NetAssetValue)
 	for _, nav := range navs {
+		isMetadataDenom := strings.HasPrefix(nav.Assets.Denom, metadatatypes.DenomPrefix)
+
 		if !nav.Assets.Amount.IsUint64() {
 			k.logErrorf(ctx, "could not record net-asset-value of %q at a price of %q: asset volume greater than max uint64",
 				nav.Assets, nav.Price)
-			k.emitEvent(ctx, &markertypes.EventSetNetAssetValue{
-				Denom:  nav.Assets.Denom,
-				Price:  nav.Price.String(),
-				Volume: nav.Assets.Amount.String(),
-				Source: source,
-			})
+			if isMetadataDenom {
+				k.emitEvent(ctx, &metadatatypes.EventSetNetAssetValue{
+					ScopeId: strings.TrimPrefix(nav.Assets.Denom, metadatatypes.DenomPrefix),
+					Price:   nav.Price.String(),
+					// Volume: nav.Assets.Amount.String(), TODO[2137]: Uncomment once https://github.com/provenance-io/provenance/pull/2160 has merged.
+					Source: source,
+				})
+			} else {
+				k.emitEvent(ctx, &markertypes.EventSetNetAssetValue{
+					Denom:  nav.Assets.Denom,
+					Price:  nav.Price.String(),
+					Volume: nav.Assets.Amount.String(),
+					Source: source,
+				})
+			}
 			continue
 		}
 
-		if _, known := markerNAVs[nav.Assets.Denom]; !known {
-			denomOrder = append(denomOrder, nav.Assets.Denom)
+		if isMetadataDenom {
+			if _, known := metadataNAVs[nav.Assets.Denom]; !known {
+				metadataDenoms = append(metadataDenoms, nav.Assets.Denom)
+			}
+			metadataNAV := metadatatypes.NetAssetValue{
+				Price: nav.Price,
+				// Volume: nav.Assets.Amount.Uint64(), TODO[2137]: Uncomment once https://github.com/provenance-io/provenance/pull/2160 has merged.
+			}
+			metadataNAVs[nav.Assets.Denom] = append(metadataNAVs[nav.Assets.Denom], metadataNAV)
+		} else {
+			if _, known := markerNAVs[nav.Assets.Denom]; !known {
+				markerDenoms = append(markerDenoms, nav.Assets.Denom)
+			}
+			markerNAV := markertypes.NetAssetValue{
+				Price:  nav.Price,
+				Volume: nav.Assets.Amount.Uint64(),
+			}
+			markerNAVs[nav.Assets.Denom] = append(markerNAVs[nav.Assets.Denom], markerNAV)
 		}
-
-		markerNAV := markertypes.NetAssetValue{
-			Price:  nav.Price,
-			Volume: nav.Assets.Amount.Uint64(),
-		}
-		markerNAVs[nav.Assets.Denom] = append(markerNAVs[nav.Assets.Denom], markerNAV)
 	}
 
-	// Get the markers and record the NAVs.
-	for _, denom := range denomOrder {
+	// Record the metadata NAVs.
+	for _, denom := range metadataDenoms {
+		scopeID, err := metadatatypes.MetadataAddressFromDenom(denom)
+		if err != nil {
+			k.logErrorf(ctx, "error getting metadata address: %w", err)
+			k.emitMetadataNAVEvents(ctx, denom, metadataNAVs[denom], source)
+			continue
+		}
+		err = k.metadataKeeper.AddSetNetAssetValues(ctx, scopeID, metadataNAVs[denom], source)
+		if err != nil {
+			k.logErrorf(ctx, "error setting net-asset-values for %q: %v", denom, err)
+		}
+	}
+
+	// Record the marker NAVs.
+	for _, denom := range markerDenoms {
 		markerAddr, err := markertypes.MarkerAddress(denom)
 		if err != nil {
 			k.logErrorf(ctx, "error creating marker address for asset denom %q: %v", denom, err)
-			k.emitNAVEvents(ctx, denom, markerNAVs[denom], source)
+			k.emitMarkerNAVEvents(ctx, denom, markerNAVs[denom], source)
 			continue
 		}
 		marker, err := k.markerKeeper.GetMarker(ctx, markerAddr)
 		if err != nil {
 			k.logErrorf(ctx, "error getting asset marker %q: %v", denom, err)
-			k.emitNAVEvents(ctx, denom, markerNAVs[denom], source)
+			k.emitMarkerNAVEvents(ctx, denom, markerNAVs[denom], source)
 			continue
 		}
 		if marker == nil {
 			k.logInfof(ctx, "no marker found for asset denom %q", denom)
-			k.emitNAVEvents(ctx, denom, markerNAVs[denom], source)
+			k.emitMarkerNAVEvents(ctx, denom, markerNAVs[denom], source)
 			continue
 		}
 
@@ -384,9 +422,9 @@ func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.Net
 	}
 }
 
-// emitNAVEvents emits the marker module's EventSetNetAssetValue events for the given navs.
+// emitMarkerNAVEvents emits the marker module's EventSetNetAssetValue events for the given navs.
 // The AddSetNetAssetValues func does this too, so this should only be used when that isn't being called.
-func (k Keeper) emitNAVEvents(ctx sdk.Context, denom string, navs []markertypes.NetAssetValue, source string) {
+func (k Keeper) emitMarkerNAVEvents(ctx sdk.Context, denom string, navs []markertypes.NetAssetValue, source string) {
 	events := make([]proto.Message, len(navs))
 	for i, nav := range navs {
 		events[i] = markertypes.NewEventSetNetAssetValue(denom, nav.Price, nav.Volume, source)
@@ -394,8 +432,36 @@ func (k Keeper) emitNAVEvents(ctx sdk.Context, denom string, navs []markertypes.
 	k.emitEvents(ctx, events)
 }
 
-// GetNav looks up a NAV from the marker module and returns it as a NetAssetPrice.
+// emitMetadataNAVEvents emits the metadata module's EventSetNetAssetValue events for the given navs.
+// The AddSetNetAssetValues func does this too, so this should only be used when that isn't being called.
+func (k Keeper) emitMetadataNAVEvents(ctx sdk.Context, denom string, navs []metadatatypes.NetAssetValue, source string) {
+	events := make([]proto.Message, len(navs))
+	for i, nav := range navs {
+		events[i] = &metadatatypes.EventSetNetAssetValue{
+			ScopeId: denom,
+			Price:   nav.Price.String(),
+			Source:  source,
+			// TODO[2153]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
+		}
+	}
+	k.emitEvents(ctx, events)
+}
+
+// GetNav looks up a NAV from the marker or metadata module and returns it as a NetAssetPrice.
 func (k Keeper) GetNav(ctx sdk.Context, assetsDenom, priceDenom string) *exchange.NetAssetPrice {
+	if strings.HasPrefix(assetsDenom, metadatatypes.DenomPrefix) {
+		// Get the nav from the metadata module.
+		nav, _ := k.metadataKeeper.GetNetAssetValue(ctx, assetsDenom, priceDenom)
+		if nav == nil {
+			return nil
+		}
+		return &exchange.NetAssetPrice{
+			Assets: sdk.Coin{Denom: assetsDenom, Amount: sdkmath.NewIntFromUint64(1)}, // TODO[2137]: Switch to nav.Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
+			Price:  nav.Price,
+		}
+	}
+
+	// Look for the nav in the marker module.
 	nav, _ := k.markerKeeper.GetNetAssetValue(ctx, assetsDenom, priceDenom)
 	if nav == nil {
 		return nil
