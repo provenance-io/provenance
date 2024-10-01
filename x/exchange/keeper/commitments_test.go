@@ -12,6 +12,7 @@ import (
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/exchange/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 func (s *TestSuite) TestKeeper_GetCommitmentAmount() {
@@ -1811,15 +1812,19 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 	navSource := func(marketID uint32) string {
 		return fmt.Sprintf("x/exchange market %d", marketID)
 	}
+	scopeID1 := s.scopeID("1_scope")
+	scopeID2 := s.scopeID("2_scope")
 
 	tests := []struct {
 		name           string
 		setup          func()
+		mdKeeper       *MockMetadataKeeper
 		markerKeeper   *MockMarkerKeeper
 		holdKeeper     *MockHoldKeeper
 		bankKeeper     *MockBankKeeper
 		req            *exchange.MsgMarketCommitmentSettleRequest
 		expEvents      sdk.Events
+		expMDCalls     MetadataCalls
 		expMarkerCalls MarkerCalls
 		expHoldCalls   HoldCalls
 		expBankCalls   BankCalls
@@ -1926,12 +1931,36 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 					{Assets: s.coin("11apple"), Price: s.coin("700nhash")},
 					{Assets: s.coin("12banana"), Price: s.coin("62cherry")},
 					{Assets: s.coin("13banana"), Price: s.coin("1500nhash")},
+					{Assets: scopeID1.Coin(), Price: s.coin("71cherry")},
+					{Assets: scopeID1.Coin(), Price: s.coin("400nhash")},
+					{Assets: scopeID2.Coin(), Price: s.coin("5cherry")},
+					{Assets: scopeID2.Coin(), Price: s.coin("6600nhash")},
 				},
 				EventTag: "testtag3",
 			},
 			expEvents: sdk.Events{
 				s.untypeEvent(exchange.NewEventCommitmentReleased(s.addr3.String(), 4, s.coins("10apple,10banana"), "testtag3")),
 				s.untypeEvent(exchange.NewEventFundsCommitted(s.addr5.String(), 4, s.coins("10apple,10banana"), "testtag3")),
+			},
+			expMDCalls: MetadataCalls{
+				AddSetNetAssetValues: []*MDAddSetNetAssetValuesArgs{
+					{
+						ScopeID: scopeID1,
+						NAVs: []metadatatypes.NetAssetValue{
+							{Price: s.coin("71cherry")},
+							{Price: s.coin("400nhash")},
+						},
+						Source: navSource(4),
+					},
+					{
+						ScopeID: scopeID2,
+						NAVs: []metadatatypes.NetAssetValue{
+							{Price: s.coin("5cherry")},
+							{Price: s.coin("6600nhash")},
+						},
+						Source: navSource(4),
+					},
+				},
 			},
 			expMarkerCalls: MarkerCalls{
 				GetMarker: []sdk.AccAddress{appleMarker.GetAddress(), bananaMarker.GetAddress()},
@@ -2147,6 +2176,9 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 				tc.setup()
 			}
 
+			if tc.mdKeeper == nil {
+				tc.mdKeeper = NewMockMetadataKeeper()
+			}
 			if tc.markerKeeper == nil {
 				tc.markerKeeper = NewMockMarkerKeeper()
 			}
@@ -2169,6 +2201,7 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 			}
 
 			kpr := s.k.
+				WithMetadataKeeper(tc.mdKeeper).
 				WithMarkerKeeper(tc.markerKeeper).
 				WithBankKeeper(tc.bankKeeper).
 				WithHoldKeeper(tc.holdKeeper)
@@ -2183,6 +2216,7 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 
 			actEvents := em.Events()
 			s.assertEqualEvents(tc.expEvents, actEvents, "events emitted during SettleCommitments")
+			s.assertMetadataKeeperCalls(tc.mdKeeper, tc.expMDCalls, "SettleCommitments")
 			s.assertMarkerKeeperCalls(tc.markerKeeper, tc.expMarkerCalls, "SettleCommitments")
 			s.assertBankKeeperCalls(tc.bankKeeper, tc.expBankCalls, "SettleCommitments")
 			s.assertHoldKeeperCalls(tc.holdKeeper, tc.expHoldCalls, "SettleCommitments")

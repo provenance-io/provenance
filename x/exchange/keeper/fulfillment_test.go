@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"github.com/google/uuid"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -535,7 +533,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
-			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
+			adlEvents:    sdk.Events{s.markerNavSetEvent("12apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
@@ -566,7 +564,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
-			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
+			adlEvents:    sdk.Events{s.markerNavSetEvent("12apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
@@ -598,7 +596,7 @@ func (s *TestSuite) TestKeeper_FillBids() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "184467440737095516150apple", Price: "60plum", MarketId: 6},
 			},
-			adlEvents:    sdk.Events{s.navSetEvent("184467440737095516150apple", "60plum", 6)},
+			adlEvents:    sdk.Events{s.markerNavSetEvent("184467440737095516150apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("60plum")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr2, s.addr5},
@@ -1398,7 +1396,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
-			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
+			adlEvents:    sdk.Events{s.markerNavSetEvent("12apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
@@ -1429,7 +1427,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "12apple", Price: "60plum", MarketId: 6},
 			},
-			adlEvents:    sdk.Events{s.navSetEvent("12apple", "60plum", 6)},
+			adlEvents:    sdk.Events{s.markerNavSetEvent("12apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("12apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
@@ -1460,7 +1458,7 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 			expEvents: []*exchange.EventOrderFilled{
 				{OrderId: 13, Assets: "184467440737095516150apple", Price: "60plum", MarketId: 6},
 			},
-			adlEvents:    sdk.Events{s.navSetEvent("184467440737095516150apple", "60plum", 6)},
+			adlEvents:    sdk.Events{s.markerNavSetEvent("184467440737095516150apple", "60plum", 6)},
 			expHoldCalls: HoldCalls{ReleaseHold: []*ReleaseHoldArgs{{addr: s.addr2, funds: s.coins("184467440737095516150apple")}}},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr5, s.addr2},
@@ -1733,12 +1731,14 @@ func (s *TestSuite) TestKeeper_FillAsks() {
 
 func (s *TestSuite) TestKeeper_SettleOrders() {
 	appleMarker := s.markerAccount("1000000000apple")
+	scopeID1 := s.scopeID("1_scopeID1")
 
 	tests := []struct {
 		name           string
 		bankKeeper     *MockBankKeeper
 		holdKeeper     *MockHoldKeeper
 		markerKeeper   *MockMarkerKeeper
+		mdKeeper       *MockMetadataKeeper
 		setup          func()
 		marketID       uint32
 		askOrderIDs    []uint64
@@ -1751,6 +1751,7 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 		expHoldCalls   HoldCalls
 		expBankCalls   BankCalls
 		expMarkerCalls MarkerCalls
+		expMDCalls     MetadataCalls
 		expLog         []string
 	}{
 		// Tests on error conditions.
@@ -2037,6 +2038,49 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			},
 		},
 		{
+			name: "one ask one bid: scope",
+			setup: func() {
+				s.requireCreateMarket(exchange.Market{MarketId: 1})
+				store := s.getStore()
+				s.requireSetOrderInStore(store, exchange.NewOrder(1).WithAsk(&exchange.AskOrder{
+					Assets: scopeID1.Coin(), Price: s.coin("5peach"), MarketId: 1, Seller: s.addr3.String(),
+				}))
+				s.requireSetOrderInStore(store, exchange.NewOrder(5).WithBid(&exchange.BidOrder{
+					Assets: scopeID1.Coin(), Price: s.coin("5peach"), MarketId: 1, Buyer: s.addr4.String(),
+				}))
+			},
+			marketID:      1,
+			askOrderIDs:   []uint64{1},
+			bidOrderIDs:   []uint64{5},
+			expectPartial: false,
+			expEvents: []proto.Message{
+				&exchange.EventOrderFilled{OrderId: 1, Assets: scopeID1.Coin().String(), Price: "5peach", MarketId: 1},
+				&exchange.EventOrderFilled{OrderId: 5, Assets: scopeID1.Coin().String(), Price: "5peach", MarketId: 1},
+			},
+			expHoldCalls: HoldCalls{
+				ReleaseHold: []*ReleaseHoldArgs{
+					{addr: s.addr3, funds: scopeID1.Coins()},
+					{addr: s.addr4, funds: s.coins("5peach")},
+				},
+			},
+			expBankCalls: BankCalls{
+				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
+				SendCoins: []*SendCoinsArgs{
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr3, toAddr: s.addr4, amt: scopeID1.Coins()},
+					{ctxHasQuarantineBypass: true, fromAddr: s.addr4, toAddr: s.addr3, amt: s.coins("5peach")},
+				},
+			},
+			expMDCalls: MetadataCalls{
+				AddSetNetAssetValues: []*MDAddSetNetAssetValuesArgs{
+					{
+						ScopeID: scopeID1,
+						NAVs:    []metadatatypes.NetAssetValue{{Price: s.coin("5peach")}},
+						Source:  "x/exchange market 1",
+					},
+				},
+			},
+		},
+		{
 			name:         "one ask one bid: both full, no fees, error getting marker",
 			markerKeeper: NewMockMarkerKeeper().WithGetMarkerErr(appleMarker.GetAddress(), "sample apple error"),
 			setup: func() {
@@ -2057,7 +2101,7 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 				&exchange.EventOrderFilled{OrderId: 1, Assets: "1apple", Price: "5peach", MarketId: 1},
 				&exchange.EventOrderFilled{OrderId: 5, Assets: "1apple", Price: "5peach", MarketId: 1},
 			},
-			adlEvents: sdk.Events{s.navSetEvent("1apple", "5peach", 1)},
+			adlEvents: sdk.Events{s.markerNavSetEvent("1apple", "5peach", 1)},
 			expHoldCalls: HoldCalls{
 				ReleaseHold: []*ReleaseHoldArgs{
 					{addr: s.addr3, funds: s.coins("1apple")},
@@ -2096,7 +2140,7 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 				&exchange.EventOrderFilled{OrderId: 1, Assets: "1apple", Price: "5peach", MarketId: 1},
 				&exchange.EventOrderFilled{OrderId: 5, Assets: "1apple", Price: "5peach", MarketId: 1},
 			},
-			adlEvents: sdk.Events{s.navSetEvent("1apple", "5peach", 1)},
+			adlEvents: sdk.Events{s.markerNavSetEvent("1apple", "5peach", 1)},
 			expHoldCalls: HoldCalls{
 				ReleaseHold: []*ReleaseHoldArgs{
 					{addr: s.addr3, funds: s.coins("1apple")},
@@ -2142,7 +2186,7 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 					{addr: s.addr4, funds: s.coins("5peach")},
 				},
 			},
-			adlEvents: sdk.Events{s.navSetEvent("184467440737095516150apple", "5peach", 1)},
+			adlEvents: sdk.Events{s.markerNavSetEvent("184467440737095516150apple", "5peach", 1)},
 			expBankCalls: BankCalls{
 				BlockedAddr: []sdk.AccAddress{s.addr4, s.addr3},
 				SendCoins: []*SendCoinsArgs{
@@ -2495,6 +2539,9 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			if tc.markerKeeper == nil {
 				tc.markerKeeper = NewMockMarkerKeeper()
 			}
+			if tc.mdKeeper == nil {
+				tc.mdKeeper = NewMockMetadataKeeper()
+			}
 
 			expEvents := untypeEvents(s, tc.expEvents)
 			if len(tc.adlEvents) > 0 {
@@ -2524,7 +2571,8 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			kpr := s.k.WithAccountKeeper(s.accKeeper).
 				WithBankKeeper(tc.bankKeeper).
 				WithHoldKeeper(tc.holdKeeper).
-				WithMarkerKeeper(tc.markerKeeper)
+				WithMarkerKeeper(tc.markerKeeper).
+				WithMetadataKeeper(tc.mdKeeper)
 			s.logBuffer.Reset()
 			var err error
 			testFunc := func() {
@@ -2537,6 +2585,7 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 			s.assertHoldKeeperCalls(tc.holdKeeper, tc.expHoldCalls, "SettleOrders")
 			s.assertBankKeeperCalls(tc.bankKeeper, tc.expBankCalls, "SettleOrders")
 			s.assertMarkerKeeperCalls(tc.markerKeeper, tc.expMarkerCalls, "SettleOrders")
+			s.assertMetadataKeeperCalls(tc.mdKeeper, tc.expMDCalls, "SettleOrders")
 
 			outputLog := s.getLogOutput("SettleOrders")
 			actLog := s.splitOutputLog(outputLog)
@@ -2570,9 +2619,7 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 }
 
 func (s *TestSuite) TestKeeper_GetNav() {
-	scopeUUID, err := uuid.FromBytes([]byte("scope_uuid______"))
-	s.Require().NoError(err, "uuid.FromBytes([]byte(\"scope_uuid______\"))")
-	scopeDenom := metadatatypes.ScopeMetadataAddress(scopeUUID).Denom()
+	scopeDenom := s.scopeID("scope_uuid").Denom()
 	tests := []struct {
 		name            string
 		metadataKeeper  *MockMetadataKeeper
