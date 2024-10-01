@@ -123,7 +123,6 @@ func migrateValueOwners(ctx sdk.Context, kpr keeper3To4I) error {
 }
 
 // migrateValueOwnerToBank will switch a scope's value owner to be maintained by the bank module instead of in the scope.
-// Panics if the scope does not have a ValueOwnerAddress.
 func migrateValueOwnerToBank(ctx sdk.Context, kpr keeper3To4I, store storetypes.KVStore, scope types.Scope) error {
 	if err := kpr.SetScopeValueOwner(ctx, scope.ScopeId, scope.ValueOwnerAddress); err != nil {
 		return fmt.Errorf("could not migrate scope %s value owner %q to bank module: %w",
@@ -147,10 +146,12 @@ func GetValueOwnerScopeCacheKey(addr sdk.AccAddress, scopeID types.MetadataAddre
 }
 
 // deleteValueOwnerIndexEntries will delete the index entries involving a scope's value owner.
-// Panics if the scope does not have a ValueOwnerAddress.
 func deleteValueOwnerIndexEntries(store storetypes.KVStore, scope types.Scope) {
-	// Assuming this won't panic here because SetScopeValueOwner fails if the value owner is invalid.
-	vo := sdk.MustAccAddressFromBech32(scope.ValueOwnerAddress)
+	// Don't do anything without a valid value owner.
+	vo, err := sdk.AccAddressFromBech32(scope.ValueOwnerAddress)
+	if err != nil || len(vo) == 0 {
+		return
+	}
 
 	// Delete the value owner -> scope index entry (that's now a denom owners thing).
 	key := GetValueOwnerScopeCacheKey(vo, scope.ScopeId)

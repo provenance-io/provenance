@@ -578,44 +578,47 @@ func TestDeleteValueOwnerIndexEntries(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		scope    types.Scope
-		expPanic bool
-		expDel2  bool
+		name    string
+		scope   types.Scope
+		expDel1 bool
+		expDel2 bool // if true, expDel1 is also treated as true.
 	}{
 		{
-			name:     "empty value owner address",
-			scope:    newScope(scopeID1, ""),
-			expPanic: true,
+			name:  "empty value owner address",
+			scope: newScope(scopeID1, ""),
+		},
+		{
+			name:  "invalid value owner address",
+			scope: newScope(scopeID1, "nope"),
+		},
+		{
+			name:    "value owner also first owner of three",
+			scope:   newScope(scopeID3, owner1),
+			expDel1: true,
+		},
+		{
+			name:    "value owner also second owner of three",
+			scope:   newScope(scopeID2, owner2),
+			expDel1: true,
+		},
+		{
+			name:    "value owner also third owner of three",
+			scope:   newScope(scopeID1, owner3),
+			expDel1: true,
 		},
 		{
 			name:    "value owner not owner",
 			scope:   newScope(scopeID2, otherAddr),
 			expDel2: true,
 		},
-		{
-			name:  "value owner also first owner of three",
-			scope: newScope(scopeID3, owner1),
-		},
-		{
-			name:  "value owner also second owner of three",
-			scope: newScope(scopeID2, owner2),
-		},
-		{
-			name:  "value owner also third owner of three",
-			scope: newScope(scopeID1, owner3),
-		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var expPanic string
 			var expDels [][]byte
-			if tc.expPanic {
-				expPanic = "empty address string is not allowed"
-			} else {
+			if tc.expDel1 || tc.expDel2 {
 				expDels = make([][]byte, 1, 2)
-				// If the value owner isn't valid, we should be expecting a panic.
+				// If the value owner isn't valid, we shouldn't be expecting any deletions.
 				vo, _ := sdk.AccAddressFromBech32(tc.scope.ValueOwnerAddress)
 				expDels[0] = append(expDels[0], 0x18)
 				expDels[0] = append(expDels[0], byte(len(vo)))
@@ -630,7 +633,7 @@ func TestDeleteValueOwnerIndexEntries(t *testing.T) {
 			testFunc := func() {
 				keeper.DeleteValueOwnerIndexEntries(store, tc.scope)
 			}
-			assertions.RequirePanicEquals(t, testFunc, expPanic, "deleteValueOwnerIndexEntries")
+			require.NotPanics(t, testFunc, "deleteValueOwnerIndexEntries")
 			actDels := store.calls.Deletions
 			assert.Equal(t, expDels, actDels, "store deletions")
 		})

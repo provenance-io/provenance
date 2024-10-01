@@ -934,6 +934,15 @@ func (s *ScopeKeeperTestSuite) TestSetScopeValueOwner() {
 			expCallSend:   NewSendCoinsCall(addr1, moduleAddr, scopeID.Coins()),
 			expCallBurn:   true,
 		},
+		{
+			name:          "no coin yet with an empty value owner",
+			scopeID:       scopeID,
+			newValueOwner: "",
+			expCallDO:     true, // DenomOwner called, then nothing else happens here.
+			expCallMint:   false,
+			expCallSend:   nil,
+			expCallBurn:   false,
+		},
 	}
 
 	for _, tc := range tests {
