@@ -346,7 +346,7 @@ func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.Net
 				k.emitEvent(ctx, &metadatatypes.EventSetNetAssetValue{
 					ScopeId: strings.TrimPrefix(nav.Assets.Denom, metadatatypes.DenomPrefix),
 					Price:   nav.Price.String(),
-					// Volume: nav.Assets.Amount.String(), TODO[2137]: Uncomment once https://github.com/provenance-io/provenance/pull/2160 has merged.
+					// Volume: nav.Assets.Amount.String(), TODO[2160]: Uncomment once https://github.com/provenance-io/provenance/pull/2160 has merged.
 					Source: source,
 				})
 			} else {
@@ -366,7 +366,7 @@ func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.Net
 			}
 			metadataNAV := metadatatypes.NetAssetValue{
 				Price: nav.Price,
-				// Volume: nav.Assets.Amount.Uint64(), TODO[2137]: Uncomment once https://github.com/provenance-io/provenance/pull/2160 has merged.
+				// Volume: nav.Assets.Amount.Uint64(), TODO[2160]: Uncomment once https://github.com/provenance-io/provenance/pull/2160 has merged.
 			}
 			metadataNAVs[nav.Assets.Denom] = append(metadataNAVs[nav.Assets.Denom], metadataNAV)
 		} else {
@@ -441,7 +441,7 @@ func (k Keeper) emitMetadataNAVEvents(ctx sdk.Context, denom string, navs []meta
 			ScopeId: denom,
 			Price:   nav.Price.String(),
 			Source:  source,
-			// TODO[2153]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
+			// TODO[2160]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
 		}
 	}
 	k.emitEvents(ctx, events)
@@ -456,7 +456,7 @@ func (k Keeper) GetNav(ctx sdk.Context, assetsDenom, priceDenom string) *exchang
 			return nil
 		}
 		return &exchange.NetAssetPrice{
-			Assets: sdk.Coin{Denom: assetsDenom, Amount: sdkmath.NewIntFromUint64(1)}, // TODO[2137]: Switch to nav.Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
+			Assets: sdk.Coin{Denom: assetsDenom, Amount: sdkmath.NewIntFromUint64(1)}, // TODO[2160]: Switch to nav.Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
 			Price:  nav.Price,
 		}
 	}

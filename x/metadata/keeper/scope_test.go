@@ -3314,7 +3314,7 @@ func (s *ScopeKeeperTestSuite) TestGetNetAssetValue() {
 	priceDenomOK := "aokay"
 	okNAV := types.NetAssetValue{
 		Price: sdk.NewInt64Coin(priceDenomOK, 987_123_654),
-		// TODO[2153]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
+		// TODO[2160]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
 	}
 
 	setupStore := func() {
@@ -3381,7 +3381,7 @@ func (s *ScopeKeeperTestSuite) TestGetNetAssetValue() {
 			if !s.Assert().Equal(tc.expNAV, actNAV, "NAV returned from GetNetAssetValue") && tc.expNAV != nil && actNAV != nil {
 				s.Assert().Equal(tc.expNAV.Price.String(), actNAV.Price.String(), "NAV.Price (string)")
 				s.Assert().Equal(fmt.Sprintf("%d", tc.expNAV.UpdatedBlockHeight), fmt.Sprintf("%d", actNAV.UpdatedBlockHeight), "UpdatedBlockHeight (string)")
-				// TODO[2153]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
+				// TODO[2160]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
 			}
 		})
 	}
