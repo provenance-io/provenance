@@ -1,12 +1,15 @@
 package keeper_test
 
 import (
+	"github.com/google/uuid"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 func (s *TestSuite) TestKeeper_FillBids() {
@@ -2567,28 +2570,36 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 }
 
 func (s *TestSuite) TestKeeper_GetNav() {
+	scopeUUID, err := uuid.FromBytes([]byte("scope_uuid______"))
+	s.Require().NoError(err, "uuid.FromBytes([]byte(\"scope_uuid______\"))")
+	scopeDenom := metadatatypes.ScopeMetadataAddress(scopeUUID).Denom()
 	tests := []struct {
-		name         string
-		markerKeeper *MockMarkerKeeper
-		assetsDenom  string
-		priceDenom   string
-		expNav       *exchange.NetAssetPrice
+		name            string
+		metadataKeeper  *MockMetadataKeeper
+		markerKeeper    *MockMarkerKeeper
+		assetsDenom     string
+		priceDenom      string
+		expNav          *exchange.NetAssetPrice
+		expMetadataCall bool
+		expMarkerCall   bool
 	}{
 		{
-			name:         "error getting nav",
-			markerKeeper: NewMockMarkerKeeper().WithGetNetAssetValueError("apple", "pear", "injected test error"),
-			assetsDenom:  "apple",
-			priceDenom:   "pear",
-			expNav:       nil,
+			name:          "marker: error getting nav",
+			markerKeeper:  NewMockMarkerKeeper().WithGetNetAssetValueError("apple", "pear", "injected test error"),
+			assetsDenom:   "apple",
+			priceDenom:    "pear",
+			expNav:        nil,
+			expMarkerCall: true,
 		},
 		{
-			name:        "no nav found",
-			assetsDenom: "apple",
-			priceDenom:  "pear",
-			expNav:      nil,
+			name:          "marker: no nav found",
+			assetsDenom:   "apple",
+			priceDenom:    "pear",
+			expNav:        nil,
+			expMarkerCall: true,
 		},
 		{
-			name: "nav exists",
+			name: "marker: nav exists",
 			markerKeeper: NewMockMarkerKeeper().
 				WithGetNetAssetValueResult(sdk.NewInt64Coin("apple", 500), sdk.NewInt64Coin("pear", 12)),
 			assetsDenom: "apple",
@@ -2597,16 +2608,55 @@ func (s *TestSuite) TestKeeper_GetNav() {
 				Assets: sdk.NewInt64Coin("apple", 500),
 				Price:  sdk.NewInt64Coin("pear", 12),
 			},
+			expMarkerCall: true,
+		},
+		{
+			name:            "metadata: error getting nav",
+			metadataKeeper:  NewMockMetadataKeeper().WithGetNetAssetValueErrors("injected test problem"),
+			assetsDenom:     scopeDenom,
+			priceDenom:      "pear",
+			expNav:          nil,
+			expMetadataCall: true,
+		},
+		{
+			name:            "metadata: no nav found",
+			assetsDenom:     scopeDenom,
+			priceDenom:      "pear",
+			expNav:          nil,
+			expMetadataCall: true,
+		},
+		{
+			name:           "metadata: nav exists",
+			metadataKeeper: NewMockMetadataKeeper().WithGetNetAssetValueResult(sdk.NewInt64Coin("pear", 53)),
+			assetsDenom:    scopeDenom,
+			priceDenom:     "pear",
+			expNav: &exchange.NetAssetPrice{
+				Assets: sdk.NewInt64Coin(scopeDenom, 1),
+				Price:  sdk.NewInt64Coin("pear", 53),
+			},
+			expMetadataCall: true,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			var expMetadataCalls MetadataCalls
+			if tc.expMetadataCall {
+				expMetadataCalls.WithGetNetAssetValue(tc.assetsDenom, tc.priceDenom)
+			}
+			var expMarkerCalls MarkerCalls
+			if tc.expMarkerCall {
+				expMarkerCalls.WithGetNetAssetValue(tc.assetsDenom, tc.priceDenom)
+			}
+
+			if tc.metadataKeeper == nil {
+				tc.metadataKeeper = NewMockMetadataKeeper()
+			}
 			if tc.markerKeeper == nil {
 				tc.markerKeeper = NewMockMarkerKeeper()
 			}
 
-			kpr := s.k.WithMarkerKeeper(tc.markerKeeper)
+			kpr := s.k.WithMarkerKeeper(tc.markerKeeper).WithMetadataKeeper(tc.metadataKeeper)
 			var actNav *exchange.NetAssetPrice
 			testFunc := func() {
 				actNav = kpr.GetNav(s.ctx, tc.assetsDenom, tc.priceDenom)
@@ -2616,6 +2666,8 @@ func (s *TestSuite) TestKeeper_GetNav() {
 				s.Assert().Equal(tc.expNav.Assets.String(), actNav.Assets.String(), "assets (string)")
 				s.Assert().Equal(tc.expNav.Price.String(), actNav.Price.String(), "price (string)")
 			}
+			s.assertMetadataKeeperCalls(tc.metadataKeeper, expMetadataCalls, "GetNav(%q, %q)", tc.assetsDenom, tc.priceDenom)
+			s.assertMarkerKeeperCalls(tc.markerKeeper, expMarkerCalls, "GetNav(%q, %q)", tc.assetsDenom, tc.priceDenom)
 		})
 	}
 }

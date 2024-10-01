@@ -4,15 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/provenance-io/provenance/internal/provutils"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/provenance-io/provenance/x/quarantine"
 )
 
@@ -297,7 +300,7 @@ func NewMockBankKeeper() *MockBankKeeper {
 }
 
 // WithSendCoinsResults queues up the provided error strings to be returned from SendCoins.
-// An empty string means no error. Each entry is used only once. If entries run out, nil is returned.
+// An empty string means no result or error. Each entry is used only once. If entries run out, nil is returned.
 // This method both updates the receiver and returns it.
 func (k *MockBankKeeper) WithSendCoinsResults(errs ...string) *MockBankKeeper {
 	k.SendCoinsResultsQueue = append(k.SendCoinsResultsQueue, errs...)
@@ -830,10 +833,7 @@ func (k *MockMarkerKeeper) AddSetNetAssetValues(_ sdk.Context, marker markertype
 }
 
 func (k *MockMarkerKeeper) GetNetAssetValue(_ sdk.Context, markerDenom, priceDenom string) (*markertypes.NetAssetValue, error) {
-	k.Calls.GetNetAssetValue = append(k.Calls.GetNetAssetValue, &GetNetAssetValueArgs{
-		markerDenom: markerDenom,
-		priceDenom:  priceDenom,
-	})
+	k.Calls.WithGetNetAssetValue(markerDenom, priceDenom)
 	var nav *markertypes.NetAssetValue
 	var err error
 	if k.GetNetAssetValueMap != nil && k.GetNetAssetValueMap[markerDenom] != nil && k.GetNetAssetValueMap[markerDenom][priceDenom] != nil {
@@ -872,6 +872,14 @@ func (s *TestSuite) assertMarkerKeeperCalls(mk *MockMarkerKeeper, expected Marke
 	return s.assertGetNetAssetValueCalls(mk, expected.GetNetAssetValue, msg, args...) && rv
 }
 
+// WithGetNetAssetValue adds the provided args to the GetNetAssetValue list.
+func (c *MarkerCalls) WithGetNetAssetValue(markerDenom, priceDenom string) {
+	c.GetNetAssetValue = append(c.GetNetAssetValue, &GetNetAssetValueArgs{
+		markerDenom: markerDenom,
+		priceDenom:  priceDenom,
+	})
+}
+
 // NewAddSetNetAssetValuesArgs creates a new record of args provided to a call to AddSetNetAssetValues.
 func NewAddSetNetAssetValuesArgs(marker markertypes.MarkerAccountI, netAssetValues []markertypes.NetAssetValue, source string) *AddSetNetAssetValuesArgs {
 	return &AddSetNetAssetValuesArgs{
@@ -903,4 +911,191 @@ func (s *TestSuite) getNetAssetValueArgsString(args *GetNetAssetValueArgs) strin
 		pd = `""`
 	}
 	return fmt.Sprintf("%q->%q", md, pd)
+}
+
+// #############################################################################
+// ###########################                      ############################
+// #########################    MockMetadataKeeper    ##########################
+// ###########################                      ############################
+// #############################################################################
+
+var _ exchange.MetadataKeeper = (*MockMetadataKeeper)(nil)
+
+// MockMetadataKeeper satisfies the exchange.MetadataKeeper interface but just records the calls and allows dictation of results.
+type MockMetadataKeeper struct {
+	Calls                            MetadataCalls
+	AddSetNetAssetValuesResultsQueue []string
+	GetNetAssetValueResultsQueue     []*MdGetNetAssetValueResult
+}
+
+// MetadataCalls contains all the calls that the mock metadata keeper makes.
+type MetadataCalls struct {
+	AddSetNetAssetValues []*MdAddSetNetAssetValuesArgs
+	GetNetAssetValue     []*MdGetNetAssetValueArgs
+}
+
+// MdAddSetNetAssetValuesArgs is a record of a call that is made to AddSetNetAssetValues (in the metadata module).
+type MdAddSetNetAssetValuesArgs struct {
+	ScopeID metadatatypes.MetadataAddress
+	NAVs    []metadatatypes.NetAssetValue
+	Source  string
+}
+
+type MdGetNetAssetValueResult provutils.Pair[*metadatatypes.NetAssetValue, string]
+
+// MdGetNetAssetValueArgs is a record of a call that is made to GetNetAssetValue (in the metadata module).
+type MdGetNetAssetValueArgs provutils.Pair[string, string]
+
+// NewMockMetadataKeeper creates a new empty MockMetadataKeeper.
+// Follow it up with WithAddSetNetAssetValuesErrors, WithGetNetAssetValueErrors,
+// and/or WithGetNetAssetValueResults to dictate results.
+func NewMockMetadataKeeper() *MockMetadataKeeper {
+	return &MockMetadataKeeper{}
+}
+
+// WithAddSetNetAssetValuesErrors queues up the provided error strings to be returned from AddSetNetAssetValues.
+// An empty string means no error. Each entry is used only once. If entries run out, nil is returned.
+// This method both updates the receiver and returns it.
+func (k *MockMetadataKeeper) WithAddSetNetAssetValuesErrors(errs ...string) *MockMetadataKeeper {
+	k.AddSetNetAssetValuesResultsQueue = append(k.AddSetNetAssetValuesResultsQueue, errs...)
+	return k
+}
+
+// WithGetNetAssetValueErrors queues up the provided error strings to be returned from GetNetAssetValue.
+// An empty string means no error. Each entry is used only once. If entries run out, nil is returned.
+// This method both updates the receiver and returns it.
+// See also: WithGetNetAssetValueResults.
+func (k *MockMetadataKeeper) WithGetNetAssetValueErrors(errs ...string) *MockMetadataKeeper {
+	for _, err := range errs {
+		k.GetNetAssetValueResultsQueue = append(k.GetNetAssetValueResultsQueue, NewMdGetNetAssetValueResult(nil, err))
+	}
+	return k
+}
+
+func (k *MockMetadataKeeper) WithGetNetAssetValueResult(price sdk.Coin) *MockMetadataKeeper {
+	k.GetNetAssetValueResultsQueue = append(k.GetNetAssetValueResultsQueue,
+		NewMdGetNetAssetValueResult(&metadatatypes.NetAssetValue{Price: price}, ""))
+	return k
+}
+
+func (k *MockMetadataKeeper) AddSetNetAssetValues(_ sdk.Context, scopeID metadatatypes.MetadataAddress, navs []metadatatypes.NetAssetValue, source string) error {
+	k.Calls.WithAddSetNetAssetValues(scopeID, navs, source)
+	if len(k.AddSetNetAssetValuesResultsQueue) > 0 {
+		rv := k.AddSetNetAssetValuesResultsQueue[0]
+		k.AddSetNetAssetValuesResultsQueue = k.AddSetNetAssetValuesResultsQueue[1:]
+		if len(rv) > 0 {
+			return errors.New(rv)
+		}
+	}
+	return nil
+}
+
+func (k *MockMetadataKeeper) GetNetAssetValue(_ sdk.Context, metadataDenom, priceDenom string) (*metadatatypes.NetAssetValue, error) {
+	k.Calls.WithGetNetAssetValue(metadataDenom, priceDenom)
+	if len(k.GetNetAssetValueResultsQueue) > 0 {
+		rv := k.GetNetAssetValueResultsQueue[0]
+		k.GetNetAssetValueResultsQueue = k.GetNetAssetValueResultsQueue[1:]
+		return rv.Nav(), rv.Err()
+	}
+	return nil, nil
+}
+
+// assertSendCoinsCalls asserts that a mock keeper's Calls.AddSetNetAssetValues match the provided expected calls.
+func (s *TestSuite) assertAddSetNetAssetValues(mk *MockMetadataKeeper, expected []*MdAddSetNetAssetValuesArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.AddSetNetAssetValues, mdAddNAVArgsString,
+		msg+" AddSetNetAsset calls", args...)
+}
+
+// assertMdGetNetAssetValueCalls asserts that a mock keeper's Calls.GetNetAssetValue match the provided expected calls.
+func (s *TestSuite) assertMdGetNetAssetValueCalls(mk *MockMetadataKeeper, expected []*MdGetNetAssetValueArgs, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	return assertEqualSlice(s, expected, mk.Calls.GetNetAssetValue, mdNAVString,
+		msg+" GetNetAssetValue calls", args...)
+}
+
+// assertMetadataKeeperCalls asserts that all the calls made to a mock metadata keeper match the provided expected calls.
+func (s *TestSuite) assertMetadataKeeperCalls(mk *MockMetadataKeeper, expected MetadataCalls, msg string, args ...interface{}) bool {
+	s.T().Helper()
+	rv := s.assertAddSetNetAssetValues(mk, expected.AddSetNetAssetValues, msg, args...)
+	return s.assertMdGetNetAssetValueCalls(mk, expected.GetNetAssetValue, msg, args...) && rv
+}
+
+// WithAddSetNetAssetValues adds the provided args to the AddSetNetAssetValues list.
+func (c *MetadataCalls) WithAddSetNetAssetValues(scopeID metadatatypes.MetadataAddress, navs []metadatatypes.NetAssetValue, source string) {
+	c.AddSetNetAssetValues = append(c.AddSetNetAssetValues, NewMdAddSetNetAssetValuesArgs(scopeID, navs, source))
+}
+
+// WithGetNetAssetValue adds the provided args to the GetNetAssetValue list.
+func (c *MetadataCalls) WithGetNetAssetValue(metadataDenom, priceDenom string) {
+	c.GetNetAssetValue = append(c.GetNetAssetValue, NewMdGetNetAssetValueArgs(metadataDenom, priceDenom))
+}
+
+// NewMdAddSetNetAssetValuesArgs creates a new record of the args provided to a call to the metadata keeper's AddSetNetAssetValues method.
+func NewMdAddSetNetAssetValuesArgs(scopeID metadatatypes.MetadataAddress, navs []metadatatypes.NetAssetValue, source string) *MdAddSetNetAssetValuesArgs {
+	return &MdAddSetNetAssetValuesArgs{
+		ScopeID: scopeID,
+		NAVs:    navs,
+		Source:  source,
+	}
+}
+
+// String returns a string of this MdAddSetNetAssetValuesArgs.
+func (a MdAddSetNetAssetValuesArgs) String() string {
+	navStrs := sliceStrings(a.NAVs, func(nav metadatatypes.NetAssetValue) string {
+		return nav.String()
+	})
+	return fmt.Sprintf("%s(%s):%s",
+		a.ScopeID.String(),
+		a.Source,
+		strings.Join(navStrs, ","),
+	)
+}
+
+// mdAddNAVArgsString is the same as MdAddSetNetAssetValuesArgs.String but with a pointer arg.
+func mdAddNAVArgsString(p *MdAddSetNetAssetValuesArgs) string {
+	return p.String()
+}
+
+// NewMdGetNetAssetValueArgs creates a new record of the args provided to a call to the metadata keeper's GetNetAssetValue method.
+func NewMdGetNetAssetValueArgs(metadataDenom, priceDenom string) *MdGetNetAssetValueArgs {
+	return (*MdGetNetAssetValueArgs)(provutils.NewPair(metadataDenom, priceDenom))
+}
+
+// MetadataDenom gets the metadataDenom string associated with the GetNetAssetValue method.
+func (p MdGetNetAssetValueArgs) MetadataDenom() string {
+	return p.A
+}
+
+// PriceDenom gets the priceDenom string associated with the GetNetAssetValue method.
+func (p MdGetNetAssetValueArgs) PriceDenom() string {
+	return p.B
+}
+
+// String returns a string of this MdGetNetAssetValueArgs.
+func (p MdGetNetAssetValueArgs) String() string {
+	return fmt.Sprintf("%s:%s", p.MetadataDenom(), p.PriceDenom())
+}
+
+// mdNAVString is the same as MdGetNetAssetValueArgs.String but with a pointer arg.
+func mdNAVString(p *MdGetNetAssetValueArgs) string {
+	return p.String()
+}
+
+// NewMdGetNetAssetValueResult creates a record of things associated with the GetNetAssetValue return values.
+func NewMdGetNetAssetValueResult(nav *metadatatypes.NetAssetValue, err string) *MdGetNetAssetValueResult {
+	return (*MdGetNetAssetValueResult)(provutils.NewPair(nav, err))
+}
+
+// Nav returns the Net Asset Value arg of this MdGetNetAssetValueResult.
+func (p MdGetNetAssetValueResult) Nav() *metadatatypes.NetAssetValue {
+	return p.A
+}
+
+// Err returns the error arg of this MdGetNetAssetValueResult by converting it's string (B) into either an error or nil.
+func (p MdGetNetAssetValueResult) Err() error {
+	if len(p.B) == 0 {
+		return nil
+	}
+	return errors.New(p.B)
 }
