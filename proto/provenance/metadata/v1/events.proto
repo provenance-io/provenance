@@ -181,4 +181,5 @@ message EventSetNetAssetValue {
   string scope_id = 1;
   string price    = 2;
   string source   = 3;
+  string volume   = 4;
 }

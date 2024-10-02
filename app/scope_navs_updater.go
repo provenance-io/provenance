@@ -72,7 +72,7 @@ func ReadScopeNAVs(fileName string) ([]ScopeNAV, error) {
 
 		asset := ScopeNAV{
 			ScopeUUID:     scopeUUID,
-			NetAssetValue: metadatatypes.NewNetAssetValue(price),
+			NetAssetValue: metadatatypes.NewNetAssetValue(price, 1),
 			Height:        height,
 		}
 

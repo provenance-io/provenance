@@ -108,12 +108,6 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 					Manager:    s.owner1,
 					MarkerType: types.MarkerType_Coin.String(),
 				},
-				&types.EventSetNetAssetValue{
-					Denom:  denom,
-					Price:  "0usd",
-					Volume: "0",
-					Source: types.ModuleName,
-				},
 			},
 		},
 		{
@@ -212,12 +206,6 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 					Manager:    s.owner1,
 					MarkerType: types.MarkerType_Coin.String(),
 				},
-				&types.EventSetNetAssetValue{
-					Denom:  denomWithDashPeriod,
-					Price:  "0usd",
-					Volume: "0",
-					Source: types.ModuleName,
-				},
 			},
 		},
 		{
@@ -241,12 +229,6 @@ func (s *MsgServerTestSuite) TestMsgAddMarkerRequest() {
 					Status:     "proposed",
 					Manager:    s.owner1,
 					MarkerType: types.MarkerType_RestrictedCoin.String(),
-				},
-				&types.EventSetNetAssetValue{
-					Denom:  rdenom,
-					Price:  "0usd",
-					Volume: "0",
-					Source: types.ModuleName,
 				},
 			},
 		},
@@ -311,11 +293,6 @@ func (s *MsgServerTestSuite) TestMsgFinalizeMarkerRequest() {
 		msg    types.MsgFinalizeRequest
 		expErr string
 	}{
-		{
-			name:   "marker does not have net asset value",
-			msg:    types.MsgFinalizeRequest{Denom: noNavMarker.Denom, Administrator: authUser.String()},
-			expErr: "marker nonav does not have any net asset values assigned: invalid request",
-		},
 		{
 			name: "successfully finalize",
 			msg:  types.MsgFinalizeRequest{Denom: validMarker.Denom, Administrator: authUser.String()},

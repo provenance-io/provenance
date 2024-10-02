@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strconv"
+
 	"github.com/hashicorp/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -277,10 +279,11 @@ func NewEventOSLocatorDeleted(owner string) *EventOSLocatorDeleted {
 }
 
 // NewEventSetNetAssetValue returns a new instance of EventSetNetAssetValue
-func NewEventSetNetAssetValue(scopeID MetadataAddress, price sdk.Coin, source string) *EventSetNetAssetValue {
+func NewEventSetNetAssetValue(scopeID MetadataAddress, price sdk.Coin, volume uint64, source string) *EventSetNetAssetValue {
 	return &EventSetNetAssetValue{
 		ScopeId: scopeID.String(),
 		Price:   price.String(),
 		Source:  source,
+		Volume:  strconv.FormatUint(volume, 10),
 	}
 }
