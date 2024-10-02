@@ -974,7 +974,7 @@ func (k *MockMetadataKeeper) WithGetNetAssetValueErrors(errs ...string) *MockMet
 
 func (k *MockMetadataKeeper) WithGetNetAssetValueResult(price sdk.Coin) *MockMetadataKeeper {
 	k.GetNetAssetValueResultsQueue = append(k.GetNetAssetValueResultsQueue,
-		NewMDGetNetAssetValueResult(&metadatatypes.NetAssetValue{Price: price}, ""))
+		NewMDGetNetAssetValueResult(&metadatatypes.NetAssetValue{Price: price, Volume: 1}, ""))
 	return k
 }
 

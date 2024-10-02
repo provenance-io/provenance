@@ -1947,16 +1947,16 @@ func (s *TestSuite) TestKeeper_SettleCommitments() {
 					{
 						ScopeID: scopeID1,
 						NAVs: []metadatatypes.NetAssetValue{
-							{Price: s.coin("71cherry")},
-							{Price: s.coin("400nhash")},
+							{Price: s.coin("71cherry"), Volume: 1},
+							{Price: s.coin("400nhash"), Volume: 1},
 						},
 						Source: navSource(4),
 					},
 					{
 						ScopeID: scopeID2,
 						NAVs: []metadatatypes.NetAssetValue{
-							{Price: s.coin("5cherry")},
-							{Price: s.coin("6600nhash")},
+							{Price: s.coin("5cherry"), Volume: 1},
+							{Price: s.coin("6600nhash"), Volume: 1},
 						},
 						Source: navSource(4),
 					},

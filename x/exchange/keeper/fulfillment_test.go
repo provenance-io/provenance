@@ -2074,7 +2074,7 @@ func (s *TestSuite) TestKeeper_SettleOrders() {
 				AddSetNetAssetValues: []*MDAddSetNetAssetValuesArgs{
 					{
 						ScopeID: scopeID1,
-						NAVs:    []metadatatypes.NetAssetValue{{Price: s.coin("5peach")}},
+						NAVs:    []metadatatypes.NetAssetValue{{Price: s.coin("5peach"), Volume: 1}},
 						Source:  "x/exchange market 1",
 					},
 				},
