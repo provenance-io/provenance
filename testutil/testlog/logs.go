@@ -10,7 +10,7 @@ import (
 // WriteSlice writes the contents of the provided slice to the test logs.
 //
 // The first line will have a header with the name and length.
-// Then, there'll be one line for eac entry, each with the format "<name>[<index>] = <value>" (with the = lined up).
+// Then, there'll be one line for each entry, each with the format "<name>[<index>] = <value>" (with the = lined up).
 func WriteSlice[S ~[]E, E any](t testing.TB, name string, vals S) {
 	t.Helper()
 	t.Log(createSliceLogString(name, vals))
@@ -23,7 +23,7 @@ func WriteSlice[S ~[]E, E any](t testing.TB, name string, vals S) {
 //
 // The test fails immediately if an odd number of namesAndValues are provided or if any name args are not a string.
 //
-// E.g. LogNamedValues(t, "addresses", "addr1", addr1, "addr2", addr2)
+// E.g. WriteVariables(t, "addresses", "addr1", addr1, "addr2", addr2)
 //
 // The first line will contain the provided header and a count of variables being logged.
 // Then, there'll be one line for each variable, each with the format "<name> = <value>" (with the = lined up).
