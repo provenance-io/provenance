@@ -224,7 +224,7 @@ func testCasesForFindMissing() []testCaseFindMissing {
 			expected: []string{"one"},
 		},
 		{
-			name:     "2 required - 1s5 not in 3 toCheck 2nd at 2 - 1st out",
+			name:     "2 required - 1st not in 3 toCheck 2nd at 2 - 1st out",
 			required: []string{"one", "two"},
 			toCheck:  []string{"neither", "nor", "two"},
 			expected: []string{"one"},
