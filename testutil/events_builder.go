@@ -162,8 +162,8 @@ func (b *EventsBuilder) AddBurnCoins(moduleName string, amount sdk.Coins) *Event
 
 // AddBurnCoinsStrs adds the events emitted during BurnCoins, but takes in the values as strings.
 // Note that the first argument should be the bech32 address string of the module account (not the module name).
-func (b *EventsBuilder) AddBurnCoinsStrs(moduleName, amount string) *EventsBuilder {
-	return b.AddEvents(BurnCoinsEventsStrs(moduleName, amount))
+func (b *EventsBuilder) AddBurnCoinsStrs(moduleAddr, amount string) *EventsBuilder {
+	return b.AddEvents(BurnCoinsEventsStrs(moduleAddr, amount))
 }
 
 // BurnCoinsEvents creates the events emitted during BurnCoins.
