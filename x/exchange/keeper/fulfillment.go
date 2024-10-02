@@ -386,7 +386,7 @@ func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.Net
 		scopeID, err := metadatatypes.MetadataAddressFromDenom(denom)
 		if err != nil {
 			k.logErrorf(ctx, "error getting metadata address: %v", err)
-			k.emitMetadataNAVEvents(ctx, denom, metadataNAVs[denom], source)
+			k.emitMetadataNAVEvents(ctx, scopeID, metadataNAVs[denom], source)
 			continue
 		}
 		err = k.metadataKeeper.AddSetNetAssetValues(ctx, scopeID, metadataNAVs[denom], source)
@@ -434,11 +434,11 @@ func (k Keeper) emitMarkerNAVEvents(ctx sdk.Context, denom string, navs []marker
 
 // emitMetadataNAVEvents emits the metadata module's EventSetNetAssetValue events for the given navs.
 // The AddSetNetAssetValues func does this too, so this should only be used when that isn't being called.
-func (k Keeper) emitMetadataNAVEvents(ctx sdk.Context, denom string, navs []metadatatypes.NetAssetValue, source string) {
+func (k Keeper) emitMetadataNAVEvents(ctx sdk.Context, scopeID metadatatypes.MetadataAddress, navs []metadatatypes.NetAssetValue, source string) {
 	events := make([]proto.Message, len(navs))
 	for i, nav := range navs {
 		events[i] = &metadatatypes.EventSetNetAssetValue{
-			ScopeId: denom,
+			ScopeId: scopeID.String(),
 			Price:   nav.Price.String(),
 			Source:  source,
 			// TODO[2160]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
