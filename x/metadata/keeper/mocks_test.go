@@ -434,14 +434,14 @@ func (k *MockBankKeeper) WithMintCoinsErrors(errs ...string) *MockBankKeeper {
 	return k
 }
 
-// WithMintCoinsErrors queues up the provided strings as errors to return from BurnCoins.
+// WithBurnCoinsErrors queues up the provided strings as errors to return from BurnCoins.
 // An entry of "" means no error will be returned for that entry.
 func (k *MockBankKeeper) WithBurnCoinsErrors(errs ...string) *MockBankKeeper {
 	k.BurnCoinsResults = append(k.BurnCoinsResults, errs...)
 	return k
 }
 
-// SendCoinsErrors makes the SendCoins return the provided err for the given fromAddr.
+// WithSendCoinsError makes the SendCoins return the provided err for the given fromAddr.
 // An err of "" means no error will be returned for that fromAddr.
 func (k *MockBankKeeper) WithSendCoinsError(fromAddr sdk.AccAddress, err string) *MockBankKeeper {
 	k.SendCoinsResults[string(fromAddr)] = err
@@ -607,10 +607,6 @@ func (k *MockBankKeeper) SendCoins(_ context.Context, fromAddr, toAddr sdk.AccAd
 		return errors.New(err)
 	}
 	return nil
-}
-
-func (k *MockBankKeeper) SpendableCoin(_ context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
-	panic("not implemented")
 }
 
 func (k *MockBankKeeper) DenomOwner(_ context.Context, denom string) (sdk.AccAddress, error) {

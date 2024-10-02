@@ -41,7 +41,6 @@ type BankKeeper interface {
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
-	SpendableCoin(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
 	// These are methods not in the bank keeper, but that we add using our own MDBankKeeper.
 
