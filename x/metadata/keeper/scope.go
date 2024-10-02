@@ -859,6 +859,11 @@ func (k Keeper) GetNetAssetValue(ctx sdk.Context, metadataDenom, priceDenom stri
 	if err != nil {
 		return nil, fmt.Errorf("could not read nav for %q with price denom %q: %w", scopeID, priceDenom, err)
 	}
+	// The Volume will be zero for NAVs written before that field was added. So if it's still 0,
+	// we switch it to 1 since that's what it was assumed to be before the Volume field was added.
+	if scopeNAV.Volume < 1 {
+		scopeNAV.Volume = 1
+	}
 
 	return &scopeNAV, nil
 }
