@@ -870,7 +870,12 @@ func (k Keeper) SetNetAssetValue(ctx sdk.Context, scopeID types.MetadataAddress,
 		return err
 	}
 
-	setNetAssetValueEvent := types.NewEventSetNetAssetValue(scopeID, netAssetValue.Price, source)
+	// Since this field was added we need to ensure the default value matches the previous behavior of always presuming one is used.
+	if netAssetValue.Volume < 1 {
+		netAssetValue.Volume = 1
+	}
+
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(scopeID, netAssetValue.Price, netAssetValue.Volume, source)
 	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
 		return err
 	}
@@ -926,7 +931,7 @@ func (k Keeper) SetNetAssetValueWithBlockHeight(ctx sdk.Context, scopeID types.M
 		return err
 	}
 
-	setNetAssetValueEvent := types.NewEventSetNetAssetValue(scopeID, netAssetValue.Price, source)
+	setNetAssetValueEvent := types.NewEventSetNetAssetValue(scopeID, netAssetValue.Price, netAssetValue.Volume, source)
 	if err := ctx.EventManager().EmitTypedEvent(setNetAssetValueEvent); err != nil {
 		return err
 	}

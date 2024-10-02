@@ -447,9 +447,6 @@ func (k Keeper) FinalizeMarker(ctx sdk.Context, caller sdk.Address, denom string
 	if err != nil {
 		return err
 	}
-	if len(navs) == 0 {
-		return fmt.Errorf("marker %v does not have any net asset values assigned", denom)
-	}
 
 	// transition to finalized state ... then to active once mint is complete
 	if err = m.SetStatus(types.StatusFinalized); err != nil {

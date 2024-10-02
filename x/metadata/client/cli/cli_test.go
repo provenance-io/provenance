@@ -3861,7 +3861,7 @@ func (s *IntegrationCLITestSuite) TestGetCmdAddNetAssetValues() {
 		},
 		{
 			name: "successful with multi net asset values",
-			args: argsWStdFlags(scopeID, "1usd,2jackthecat"),
+			args: argsWStdFlags(scopeID, "1usd;2jackthecat"),
 		},
 	}
 
@@ -3926,16 +3926,28 @@ func (s *IntegrationCLITestSuite) TestParseNetAssertValueString() {
 			expResult:      []types.NetAssetValue{},
 		},
 		{
+			name:           "invalid volume (previous format of comma separated coins is invalid)",
+			netAssetValues: "1hotdog,5cheesedog",
+			expErr:         "invalid volume : 5cheesedog",
+			expResult:      []types.NetAssetValue{},
+		},
+		{
 			name:           "successfully parse single nav",
+			netAssetValues: "1hotdog,10",
+			expErr:         "",
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 10}},
+		},
+		{
+			name:           "successfully parse single nav (no volume)",
 			netAssetValues: "1hotdog",
 			expErr:         "",
-			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1)}},
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 1}},
 		},
 		{
 			name:           "successfully parse multi nav",
-			netAssetValues: "1hotdog,20jackthecat",
+			netAssetValues: "1hotdog,20;20jackthecat",
 			expErr:         "",
-			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1)}, {Price: sdk.NewInt64Coin("jackthecat", 20)}},
+			expResult:      []types.NetAssetValue{{Price: sdk.NewInt64Coin("hotdog", 1), Volume: 20}, {Price: sdk.NewInt64Coin("jackthecat", 20), Volume: 1}},
 		},
 	}
 	for _, tc := range testCases {

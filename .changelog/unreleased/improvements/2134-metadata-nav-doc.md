@@ -1,0 +1,1 @@
+* Address missing documentation on metadata/scope nav command [#2134](https://github.com/provenance-io/provenance/issues/2134).

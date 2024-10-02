@@ -44,11 +44,16 @@ func (k msgServer) WriteScope(
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	usdMills := sdkmath.NewIntFromUint64(msg.UsdMills)
-	nav := types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills))
-	err = k.AddSetNetAssetValues(ctx, msg.Scope.ScopeId, []types.NetAssetValue{nav}, types.ModuleName)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	// Do not set a NAV entry at this time unless a value greater than zero is specified.  This avoids the common case of
+	// not having a NAV entry value at hand during a scope write request.  A zero value can still be set explicitly with
+	// an add NAV call made separately.
+	if msg.UsdMills > 0 {
+		usdMills := sdkmath.NewIntFromUint64(msg.UsdMills)
+		nav := types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills), 1)
+		err = k.AddSetNetAssetValues(ctx, msg.Scope.ScopeId, []types.NetAssetValue{nav}, types.ModuleName)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
 	}
 
 	err = k.SetScope(markertypes.WithTransferAgents(ctx, transferAgents...), msg.Scope)
