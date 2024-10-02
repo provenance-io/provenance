@@ -346,8 +346,8 @@ func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.Net
 				k.emitEvent(ctx, &metadatatypes.EventSetNetAssetValue{
 					ScopeId: strings.TrimPrefix(nav.Assets.Denom, metadatatypes.DenomPrefix),
 					Price:   nav.Price.String(),
-					// Volume: nav.Assets.Amount.String(), TODO[2160]: Uncomment once https://github.com/provenance-io/provenance/pull/2160 has merged.
-					Source: source,
+					Volume:  nav.Assets.Amount.String(),
+					Source:  source,
 				})
 			} else {
 				k.emitEvent(ctx, &markertypes.EventSetNetAssetValue{
@@ -365,8 +365,8 @@ func (k Keeper) recordNAVs(ctx sdk.Context, marketID uint32, navs []exchange.Net
 				metadataDenoms = append(metadataDenoms, nav.Assets.Denom)
 			}
 			metadataNAV := metadatatypes.NetAssetValue{
-				Price: nav.Price,
-				// Volume: nav.Assets.Amount.Uint64(), TODO[2160]: Uncomment once https://github.com/provenance-io/provenance/pull/2160 has merged.
+				Price:  nav.Price,
+				Volume: nav.Assets.Amount.Uint64(),
 			}
 			metadataNAVs[nav.Assets.Denom] = append(metadataNAVs[nav.Assets.Denom], metadataNAV)
 		} else {
@@ -437,12 +437,7 @@ func (k Keeper) emitMarkerNAVEvents(ctx sdk.Context, denom string, navs []marker
 func (k Keeper) emitMetadataNAVEvents(ctx sdk.Context, scopeID metadatatypes.MetadataAddress, navs []metadatatypes.NetAssetValue, source string) {
 	events := make([]proto.Message, len(navs))
 	for i, nav := range navs {
-		events[i] = &metadatatypes.EventSetNetAssetValue{
-			ScopeId: scopeID.String(),
-			Price:   nav.Price.String(),
-			Source:  source,
-			// TODO[2160]: Add Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
-		}
+		events[i] = metadatatypes.NewEventSetNetAssetValue(scopeID, nav.Price, nav.Volume, source)
 	}
 	k.emitEvents(ctx, events)
 }
@@ -456,7 +451,7 @@ func (k Keeper) GetNav(ctx sdk.Context, assetsDenom, priceDenom string) *exchang
 			return nil
 		}
 		return &exchange.NetAssetPrice{
-			Assets: sdk.Coin{Denom: assetsDenom, Amount: sdkmath.NewIntFromUint64(1)}, // TODO[2160]: Switch to nav.Volume once https://github.com/provenance-io/provenance/pull/2160 has merged.
+			Assets: sdk.Coin{Denom: assetsDenom, Amount: sdkmath.NewIntFromUint64(nav.Volume)},
 			Price:  nav.Price,
 		}
 	}
