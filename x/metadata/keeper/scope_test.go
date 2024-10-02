@@ -2550,7 +2550,7 @@ func (s *ScopeKeeperTestSuite) TestSetNetAssetValue() {
 			var expErrs []string
 			var expEvents sdk.Events
 			if len(tc.expErr) == 0 {
-				event := types.NewEventSetNetAssetValue(scopeID, tc.netAssetValue.Price, "test")
+				event := types.NewEventSetNetAssetValue(scopeID, tc.netAssetValue.Price, 1, "test")
 				eventU, err := sdk.TypedEventToEvent(event)
 				s.Require().NoError(err, "TypedEventToEvent(NewEventSetNetAssetValue)")
 				expEvents = sdk.Events{eventU}
@@ -2588,6 +2588,7 @@ func (s *ScopeKeeperTestSuite) TestRemoveNetAssetValues() {
 					Denom:  "usd",
 					Amount: sdkmath.NewInt(1000),
 				},
+				Volume: 1,
 			},
 			expErr: "",
 		},
@@ -2605,7 +2606,7 @@ func (s *ScopeKeeperTestSuite) TestRemoveNetAssetValues() {
 			})
 			s.Require().NoError(err, "IterateNetAssetValues err")
 			s.Require().Len(netAssetValues, 1, "Should have added a NAV")
-			s.Require().Equal(tc.netAssetValue, netAssetValues[0], "Should have added the test case nave.")
+			s.Require().Equal(tc.netAssetValue, netAssetValues[0], "Should have added the test case nav.")
 			s.app.MetadataKeeper.RemoveNetAssetValues(ctx, tc.scopeID)
 			netAssetValues = []types.NetAssetValue{}
 			err = s.app.MetadataKeeper.IterateNetAssetValues(ctx, tc.scopeID, func(state types.NetAssetValue) (stop bool) {

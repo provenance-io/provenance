@@ -229,4 +229,8 @@ message NetAssetValue {
   cosmos.base.v1beta1.Coin price = 1 [(gogoproto.nullable) = false];
   // updated_block_height is the block height of last update
   uint64 updated_block_height = 2;
+  // volume is the number of scope instances that were purchased for the price
+  // Typically this will be null (equivalent to one) or one.  The only reason this would be more than
+  // one is for cases where the precision of the price denom is insufficient to represent the actual price
+  uint64 volume = 3;
 }

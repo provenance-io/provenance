@@ -585,9 +585,10 @@ s2Loop:
 }
 
 // NewNetAssetValue returns a new instance of NetAssetValue
-func NewNetAssetValue(price sdk.Coin) NetAssetValue {
+func NewNetAssetValue(price sdk.Coin, volume uint64) NetAssetValue {
 	return NetAssetValue{
-		Price: price,
+		Price:  price,
+		Volume: volume,
 	}
 }
 

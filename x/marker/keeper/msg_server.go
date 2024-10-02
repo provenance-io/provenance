@@ -114,12 +114,17 @@ func (k msgServer) AddMarker(goCtx context.Context, msg *types.MsgAddMarkerReque
 		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
 	}
 
-	usdMills := sdkmath.NewIntFromUint64(msg.UsdMills)
-	nav := types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills), msg.Volume)
-	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{nav}, types.ModuleName)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	// Only create a NAV entry if an explicit value is given for a NAV.  If a zero value is desired this can be set explicitly in a followup call.
+	// This check prevents a proliferation of incorrect NAV entries being recorded when setting up markers.
+	if msg.UsdMills > 0 {
+		usdMills := sdkmath.NewIntFromUint64(msg.UsdMills)
+		nav := types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills), msg.Volume)
+		err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{nav}, types.ModuleName)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
 	}
+
 	// Note: The status can only be Active if this is being done via gov prop.
 	if ma.Status == types.StatusActive {
 		// Active markers should have supply set.
@@ -517,10 +522,14 @@ func (k msgServer) AddFinalizeActivateMarker(goCtx context.Context, msg *types.M
 		normalizedReqAttrs,
 	)
 
-	usdMills := sdkmath.NewIntFromUint64(msg.UsdMills)
-	err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills), msg.Volume)}, types.ModuleName)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+	// Only create a NAV entry if an explicit value is given for a NAV.  If a zero value is desired this can be set explicitly in a followup call.
+	// This check prevents a proliferation of incorrect NAV entries being recorded when setting up markers.
+	if msg.UsdMills > 0 {
+		usdMills := sdkmath.NewIntFromUint64(msg.UsdMills)
+		err = k.AddSetNetAssetValues(ctx, ma, []types.NetAssetValue{types.NewNetAssetValue(sdk.NewCoin(types.UsdDenom, usdMills), msg.Volume)}, types.ModuleName)
+		if err != nil {
+			return nil, sdkerrors.ErrInvalidRequest.Wrap(err.Error())
+		}
 	}
 
 	if err := k.Keeper.AddFinalizeAndActivateMarker(ctx, ma); err != nil {
