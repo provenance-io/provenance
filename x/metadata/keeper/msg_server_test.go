@@ -350,7 +350,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newScope(2, nil),
 				Signers: []string{otherAddr1.String()},
 			},
-			expEventsNAV:    true,
 			expEventsCreate: true,
 		},
 		{
@@ -366,7 +365,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				SpecificationId: scopeSpecID,
 				Owners:          ownerPartyList(scopeOwnerAddr.String()),
 			},
-			expEventsNAV:    true,
 			expEventsCreate: true,
 		},
 		{
@@ -400,7 +398,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newScope(11, otherAddr2),
 				Signers: []string{scopeOwnerAddr.String()},
 			},
-			expEventsNAV:    true,
 			expEventsMint:   true,
 			expEventsUpdate: true,
 		},
@@ -416,7 +413,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				"from " + moduleAddr.String() + " to " + toMarkerAddr.String() + ": " +
 				scopeOwnerAddr.String() + " does not have ACCESS_DEPOSIT on " +
 				"tiger marker (" + toMarkerAddr.String() + ")",
-			expEventsNAV:      true,
 			expEventsMint:     true,
 			expEventsTransErr: true,
 		},
@@ -432,7 +428,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				"from " + moduleAddr.String() + " to " + toMarkerAddr.String() + ": " +
 				"none of [\"" + scopeOwnerAddr.String() + "\" \"" + userWithWithdrawAddr.String() + "\"] have permission ACCESS_DEPOSIT on " +
 				"tiger marker (" + toMarkerAddr.String() + ")",
-			expEventsNAV:      true,
 			expEventsMint:     true,
 			expEventsTransErr: true,
 		},
@@ -443,7 +438,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newScope(13, toMarkerAddr),
 				Signers: []string{scopeOwnerAddr.String(), userWithDepositAddr.String()},
 			},
-			expEventsNAV:    true,
 			expEventsMint:   true,
 			expEventsUpdate: true,
 		},
@@ -463,7 +457,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newScope(14, otherAddr2),
 				Signers: []string{otherAddr1.String()},
 			},
-			expEventsNAV:    true,
 			expEventsTrans:  otherAddr1,
 			expEventsUpdate: true,
 		},
@@ -479,7 +472,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				"from " + fromMarkerAddr.String() + " to " + otherAddr2.String() + ": " +
 				scopeOwnerAddr.String() + " does not have ACCESS_WITHDRAW on " +
 				"falcon marker (" + fromMarkerAddr.String() + ")",
-			expEventsNAV:      true,
 			expEventsTrans:    fromMarkerAddr,
 			expEventsTransErr: true,
 		},
@@ -490,7 +482,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newScope(16, otherAddr2),
 				Signers: []string{userWithWithdrawAddr.String()},
 			},
-			expEventsNAV:    true,
 			expEventsTrans:  fromMarkerAddr,
 			expEventsUpdate: true,
 		},
@@ -515,7 +506,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				"from " + userWithWithdrawAddr.String() + " to " + toMarkerAddr.String() + ": " +
 				userWithWithdrawAddr.String() + " does not have ACCESS_DEPOSIT on " +
 				"tiger marker (" + toMarkerAddr.String() + ")",
-			expEventsNAV:      true,
 			expEventsTrans:    userWithWithdrawAddr,
 			expEventsTransErr: true,
 		},
@@ -526,7 +516,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newScope(19, toMarkerAddr),
 				Signers: []string{userWithDepositAddr.String()},
 			},
-			expEventsNAV:    true,
 			expEventsTrans:  userWithDepositAddr,
 			expEventsUpdate: true,
 		},
@@ -537,7 +526,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newScope(19, toMarkerAddr),
 				Signers: []string{otherAddr3.String(), userWithDepositAddr.String()},
 			},
-			expEventsNAV:    true,
 			expEventsTrans:  otherAddr3,
 			expEventsUpdate: true,
 		},
@@ -553,7 +541,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				"from " + fromMarkerAddr.String() + " to " + toMarkerAddr.String() + ": " +
 				"none of [\"" + otherAddr1.String() + "\" \"" + otherAddr2.String() + "\" \"" + otherAddr3.String() +
 				"\"] have permission ACCESS_WITHDRAW on falcon marker (" + fromMarkerAddr.String() + ")",
-			expEventsNAV:      true,
 			expEventsTrans:    fromMarkerAddr,
 			expEventsTransErr: true,
 		},
@@ -569,7 +556,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				"from " + fromMarkerAddr.String() + " to " + toMarkerAddr.String() + ": " +
 				userWithWithdrawAddr.String() + " does not have ACCESS_DEPOSIT on " +
 				"tiger marker (" + toMarkerAddr.String() + ")",
-			expEventsNAV:      true,
 			expEventsTrans:    fromMarkerAddr,
 			expEventsTransErr: true,
 		},
@@ -585,7 +571,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				"from " + fromMarkerAddr.String() + " to " + toMarkerAddr.String() + ": " +
 				userWithDepositAddr.String() + " does not have ACCESS_WITHDRAW on " +
 				"falcon marker (" + fromMarkerAddr.String() + ")",
-			expEventsNAV:      true,
 			expEventsTrans:    fromMarkerAddr,
 			expEventsTransErr: true,
 		},
@@ -596,7 +581,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newScope(35, toMarkerAddr),
 				Signers: []string{userWithBothAddr.String()},
 			},
-			expEventsNAV:    true,
 			expEventsTrans:  fromMarkerAddr,
 			expEventsUpdate: true,
 		},
@@ -607,7 +591,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newScope(36, toMarkerAddr),
 				Signers: []string{userWithDepositAddr.String(), userWithWithdrawAddr.String()},
 			},
-			expEventsNAV:    true,
 			expEventsTrans:  fromMarkerAddr,
 			expEventsUpdate: true,
 		},
@@ -618,7 +601,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newScope(37, toMarkerAddr),
 				Signers: []string{userWithWithdrawAddr.String(), userWithDepositAddr.String()},
 			},
-			expEventsNAV:    true,
 			expEventsTrans:  fromMarkerAddr,
 			expEventsUpdate: true,
 		},
@@ -636,7 +618,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				"from " + scUserAddr.String() + " to " + toMarkerAddr.String() + ": " +
 				scUserAddr.String() + " does not have ACCESS_DEPOSIT on " +
 				"tiger marker (" + toMarkerAddr.String() + ")",
-			expEventsNAV:      true,
 			expEventsTrans:    scUserAddr,
 			expEventsTransErr: true,
 		},
@@ -655,7 +636,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				"from " + scUserAddr.String() + " to " + toMarkerAddr.String() + ": " +
 				scUserAddr.String() + " does not have ACCESS_DEPOSIT on " +
 				"tiger marker (" + toMarkerAddr.String() + ")",
-			expEventsNAV:      true,
 			expEventsTrans:    scUserAddr,
 			expEventsTransErr: true,
 		},
@@ -666,7 +646,6 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 				Scope:   newSCScope(40, otherAddr2),
 				Signers: []string{scUserAddr.String()},
 			},
-			expEventsNAV:    true,
 			expEventsTrans:  scUserAddr,
 			expEventsUpdate: true,
 		},
@@ -716,6 +695,7 @@ func (s *MsgServerTestSuite) TestWriteScope() {
 					ScopeId: scopeID.String(),
 					Price:   fmt.Sprintf("%dusd", tc.msg.UsdMills),
 					Source:  types.ModuleName,
+					Volume:  "1",
 				})
 			}
 			if tc.expEventsMint || len(tc.expEventsTrans) > 0 {
