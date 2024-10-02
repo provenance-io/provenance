@@ -1880,11 +1880,11 @@ func TestUsedSignersMap(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.expected, tc.actual)
+			for _, addr := range tc.isUsed {
+				isUsed := tc.actual.IsUsed(addr)
+				assert.True(t, isUsed, "IsUsed(%q)", addr)
+			}
 		})
-		for _, addr := range tc.isUsed {
-			isUsed := tc.actual.IsUsed(addr)
-			assert.True(t, isUsed, "IsUsed(%q)", addr)
-		}
 	}
 }
 
