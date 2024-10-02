@@ -47,7 +47,7 @@ func WithTransferAgents[C context.Context](ctx C, transferAgents ...sdk.AccAddre
 // WithoutTransferAgents returns a new context without any marker transfer agents.
 func WithoutTransferAgents[C context.Context](ctx C) C {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx = sdkCtx.WithValue(transferAgentKey, sdk.AccAddress(nil))
+	sdkCtx = sdkCtx.WithValue(transferAgentKey, []sdk.AccAddress(nil))
 	return context.Context(sdkCtx).(C)
 }
 
