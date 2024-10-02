@@ -182,7 +182,7 @@ func (k Keeper) RemoveScope(ctx sdk.Context, id types.MetadataAddress) error {
 
 	// Burn the scope's value owner coin.
 	if err := k.SetScopeValueOwner(ctx, id, ""); err != nil {
-		panic(err)
+		return fmt.Errorf("could not remove scope %s value owner: %w", id, err)
 	}
 
 	// Remove all records. The sessions are deleted by RemoveRecord as the last record in each is deleted.
