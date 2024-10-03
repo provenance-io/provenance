@@ -48,7 +48,6 @@ endif
 
 HTTPS_GIT := https://github.com/provenance-io/provenance.git
 DOCKER := $(shell which docker)
-DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
 # The below include contains the tools target.
 include contrib/devtools/Makefile
@@ -478,11 +477,9 @@ proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-
 proto-checks: proto-update-deps proto-lint proto-check-breaking proto-check-breaking-third-party
 proto-regen: proto-format proto-gen proto-swagger-gen
 
-containerProtoVer=0.14.0
-containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
-containerProtoGen=prov-proto-gen-$(containerProtoVer)
-containerProtoGenSwagger=prov-proto-gen-swagger-$(containerProtoVer)
-containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
+protoVer=0.15.1
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
 # The proto gen stuff will update go.mod and go.sum in ways we don't want (due to docker stuff).
 # So we need to go mod tidy afterward, but it can't go in the scripts for the same reason that we need it.
@@ -490,50 +487,34 @@ containerProtoFmt=prov-proto-fmt-$(containerProtoVer)
 proto-gen:
 	@echo "Generating Protobuf files"
 	cp go.mod .go.mod.bak
-	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then \
-		docker start -a $(containerProtoGen); \
-	else \
-		docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
-			sh ./scripts/protocgen.sh; \
-	fi
+	$(protoImage) sh ./scripts/protocgen.sh
 	mv .go.mod.bak go.mod
 	$(GO) mod tidy
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
-	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then \
-		docker start -a $(containerProtoGenSwagger); \
-	else \
-		docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
-			sh ./scripts/protoc-swagger-gen.sh; \
-	fi
-	$(GO) mod tidy
+	$(protoImage) sh ./scripts/protoc-swagger-gen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then \
-		docker start -a $(containerProtoFmt); \
-	else \
-		docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
-			find . \
-				-not -path './third_party/*' \
-				-not -path './vendor/*' \
-				-not -path './protoBindings/*' \
-				-name '*.proto' \
-				-exec clang-format -i {} \; ; \
-	fi
+	$(protoImage) find . \
+			-not -path './third_party/*' \
+			-not -path './vendor/*' \
+			-not -path './protoBindings/*' \
+			-name '*.proto' \
+			-exec clang-format -i {} \; ; \
 
 proto-lint:
 	@echo "Linting Protobuf files"
-	$(DOCKER_BUF) lint --error-format=json
+	$(protoImage) buf lint --error-format=json
 
 proto-check-breaking:
 	@echo "Check breaking Protobuf files"
-	$(DOCKER_BUF) breaking proto --against '$(HTTPS_GIT)#branch=main,subdir=proto' --error-format=json
+	$(protoImage) buf breaking proto --against '$(HTTPS_GIT)#branch=main,subdir=proto' --error-format=json
 
 proto-check-breaking-third-party:
 	@echo "Check breaking 3rd party Protobuf files"
-	$(DOCKER_BUF) breaking third_party/proto --against '$(HTTPS_GIT)#branch=main,subdir=third_party/proto' --error-format=json
+	$(protoImage) buf breaking third_party/proto --against '$(HTTPS_GIT)#branch=main,subdir=third_party/proto' --error-format=json
 
 proto-update-check:
 	@echo "Checking for third_party Protobuf updates"
