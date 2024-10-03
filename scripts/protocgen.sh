@@ -14,7 +14,7 @@ fi
 proto_files=$( find ./proto -type f -name '*.proto' -print0 | xargs -0 grep -l 'option go_package.*provenance' )
 for file in $proto_files; do
   [ "$VERBOSE" ] && printf 'Generating proto code for %s\n' "$file"
-  bug generate --template proto/buf.gen.gogo.yaml "$file"
+  buf generate --template proto/buf.gen.gogo.yaml "$file"
 done
 
 # move proto files to the right places
