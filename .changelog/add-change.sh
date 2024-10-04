@@ -268,7 +268,7 @@ elif [[ "$num" =~ [^[:digit:]] ]]; then
 fi
 
 if [[ -z "$id" ]]; then
-    printf 'No <num> provided, and it could not be determined from the current branch name.\n'
+    printf 'No <id> provided, and it could not be determined from the current branch name.\n'
     exit 1
 elif [[ "$id" =~ [^-[:alnum:]] ]]; then
     printf 'Invalid <id>: [%s]. Can only contain alphanumeric characters and dashes.\n' "$id"
