@@ -131,7 +131,7 @@ while [[ "$#" -gt '0' ]]; do
                     id_sect_2="$1"
                 else
                     printf 'Unknown argument: [%s]. An <id> and <section> were already provided.\n' "$1"
-                    exit
+                    exit 1
                 fi
             else
                 printf 'Unknown argument: [%s].\n' "$1"
