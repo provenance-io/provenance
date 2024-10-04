@@ -6,6 +6,8 @@ ultimately to generate the release notes and changelog content for a release.
 <!-- TOC -->
   - [Overview](#overview)
   - [Adding Changes](#adding-changes)
+    - [Using add-change.sh](#using-add-changesh)
+    - [Using unclog](#using-unclog)
   - [Dependencies](#dependencies)
   - [Section Names](#section-names)
   - [Unclog](#unclog)
