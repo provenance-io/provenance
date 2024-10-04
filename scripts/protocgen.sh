@@ -6,7 +6,7 @@
 
 set -eo pipefail
 
-if [ "$1" == '-v' ] || [ "$1" == '--verbose' ]; then
+if [ "$1" = '-v' ] || [ "$1" = '--verbose' ]; then
     VERBOSE=1
 fi
 
