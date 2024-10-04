@@ -1,24 +1,42 @@
-<!-- This file is auto-generated. Please do not modify it yourself. -->
-# Protobuf Documentation
+{{if false}}
+<!--
+The default template can be found here: https://github.com/pseudomuto/protoc-gen-doc/blob/master/resources/markdown.tmpl
+
+Differences between this template and the default:
+* In the tables, backticks were added around the .Name values as well as the enum .Number values.
+* Changed all 'nobr .Description' into 'nobr .Description | replace "\n\n" "<br>"'.
+  Without either nobr or the replace, the line breaks in the proto comments break the markdown tables.
+  With just nobr, an empty comment line in the proto breaks the markdown tables.
+  With just the replace, it still messes up on multi-line comments. If the replace is just "\n" "<br>" then
+    the cell looks weird because there are line breaks in the middle of sentences.
+  By using 'nobr .Description | replace "\n\n" "<br>"', the <br> tags are put between comment paragraphs which
+    makes them more natural to read, and they're all put on a single line, which makes the tables happy.
+* Added this comment to the top in an 'if false' block so that it doesn't get included in the final markdown file.
+
+The comment below stating that this file is auto-generated, is not true for this template file.
+It is there so that the resulting markdown file has that comment at the top.
+-->
+{{end}}<!-- This file is auto-generated. Please do not modify it yourself. -->
+# Provenance API Documentation
 <a name="top"></a>
 
 ## Table of Contents
 {{range .Files}}
-{{$file_name := .Name}}- [{{.Name}}](#{{.Name}})
+{{$file_name := .Name}}- [{{.Name}}](#{{.Name | anchor}})
   {{- if .Messages }}
-  {{range .Messages}}  - [{{.LongName}}](#{{.FullName}})
+  {{range .Messages}}  - [{{.LongName}}](#{{.FullName | anchor}})
   {{end}}
   {{- end -}}
   {{- if .Enums }}
-  {{range .Enums}}  - [{{.LongName}}](#{{.FullName}})
+  {{range .Enums}}  - [{{.LongName}}](#{{.FullName | anchor}})
   {{end}}
   {{- end -}}
   {{- if .Extensions }}
-  {{range .Extensions}}  - [File-level Extensions](#{{$file_name}}-extensions)
+  {{range .Extensions}}  - [File-level Extensions](#{{$file_name | anchor}}-extensions)
   {{end}}
   {{- end -}}
   {{- if .Services }}
-  {{range .Services}}  - [{{.Name}}](#{{.FullName}})
+  {{range .Services}}  - [{{.Name}}](#{{.FullName | anchor}})
   {{end}}
   {{- end -}}
 {{end}}
@@ -26,14 +44,14 @@
 
 {{range .Files}}
 {{$file_name := .Name}}
-<a name="{{.Name}}"></a>
+<a name="{{.Name | anchor}}"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## {{.Name}}
 {{.Description}}
 
 {{range .Messages}}
-<a name="{{.FullName}}"></a>
+<a name="{{.FullName | anchor}}"></a>
 
 ### {{.LongName}}
 {{.Description}}
@@ -42,7 +60,7 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 {{range .Fields -}}
-  | `{{.Name}}` | [{{.LongType}}](#{{.FullType}}) | {{.Label}} | {{if (index .Options "deprecated"|default false)}}**Deprecated.** {{end}}{{nobr .Description}}{{if .DefaultValue}} Default: {{.DefaultValue}}{{end}} |
+  | `{{.Name}}` | [{{.LongType}}](#{{.FullType | anchor}}) | {{.Label}} | {{if (index .Options "deprecated"|default false)}}**Deprecated.** {{end}}{{nobr .Description | replace "\n\n" "<br>"}}{{if .DefaultValue}} Default: {{.DefaultValue}}{{end}} |
 {{end}}
 {{end}}
 
@@ -50,14 +68,14 @@
 | Extension | Type | Base | Number | Description |
 | --------- | ---- | ---- | ------ | ----------- |
 {{range .Extensions -}}
-  | `{{.Name}}` | {{.LongType}} | {{.ContainingLongType}} | {{.Number}} | {{nobr .Description}}{{if .DefaultValue}} Default: {{.DefaultValue}}{{end}} |
+  | `{{.Name}}` | {{.LongType}} | {{.ContainingLongType}} | {{.Number}} | {{nobr .Description | replace "\n\n" "<br>"}}{{if .DefaultValue}} Default: {{.DefaultValue}}{{end}} |
 {{end}}
 {{end}}
 
 {{end}} <!-- end messages -->
 
 {{range .Enums}}
-<a name="{{.FullName}}"></a>
+<a name="{{.FullName | anchor}}"></a>
 
 ### {{.LongName}}
 {{.Description}}
@@ -65,32 +83,32 @@
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 {{range .Values -}}
-  | {{.Name}} | {{.Number}} | {{nobr .Description}} |
+  | `{{.Name}}` | `{{.Number}}` | {{nobr .Description | replace "\n\n" "<br>"}} |
 {{end}}
 
 {{end}} <!-- end enums -->
 
 {{if .HasExtensions}}
-<a name="{{$file_name}}-extensions"></a>
+<a name="{{$file_name | anchor}}-extensions"></a>
 
 ### File-level Extensions
 | Extension | Type | Base | Number | Description |
 | --------- | ---- | ---- | ------ | ----------- |
 {{range .Extensions -}}
-  | `{{.Name}}` | {{.LongType}} | {{.ContainingLongType}} | {{.Number}} | {{nobr .Description}}{{if .DefaultValue}} Default: `{{.DefaultValue}}`{{end}} |
+  | `{{.Name}}` | {{.LongType}} | {{.ContainingLongType}} | {{.Number}} | {{nobr .Description | replace "\n\n" "<br>"}}{{if .DefaultValue}} Default: `{{.DefaultValue}}`{{end}} |
 {{end}}
 {{end}} <!-- end HasExtensions -->
 
 {{range .Services}}
-<a name="{{.FullName}}"></a>
+<a name="{{.FullName | anchor}}"></a>
 
 ### {{.Name}}
 {{.Description}}
 
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
 {{range .Methods -}}
-  | `{{.Name}}` | [{{.RequestLongType}}](#{{.RequestFullType}}){{if .RequestStreaming}} stream{{end}} | [{{.ResponseLongType}}](#{{.ResponseFullType}}){{if .ResponseStreaming}} stream{{end}} | {{nobr .Description}} | {{with (index .Options "google.api.http")}}{{range .Rules}}{{.Method}}|{{.Pattern}}{{end}}{{end}}|
+  | `{{.Name}}` | [{{.RequestLongType}}](#{{.RequestFullType | anchor}}){{if .RequestStreaming}} stream{{end}} | [{{.ResponseLongType}}](#{{.ResponseFullType | anchor}}){{if .ResponseStreaming}} stream{{end}} | {{nobr .Description | replace "\n\n" "<br>"}} |
 {{end}}
 {{end}} <!-- end services -->
 
@@ -101,5 +119,5 @@
 | .proto Type | Notes | C++ | Java | Python | Go | C# | PHP | Ruby |
 | ----------- | ----- | --- | ---- | ------ | -- | -- | --- | ---- |
 {{range .Scalars -}}
-  | <a name="{{.ProtoType}}" /> {{.ProtoType}} | {{.Notes}} | {{.CppType}} | {{.JavaType}} | {{.PythonType}} | {{.GoType}} | {{.CSharp}} | {{.PhpType}} | {{.RubyType}} |
+  | <a name="{{.ProtoType | anchor}}" /> {{.ProtoType}} | {{.Notes}} | {{.CppType}} | {{.JavaType}} | {{.PythonType}} | {{.GoType}} | {{.CSharp}} | {{.PhpType}} | {{.RubyType}} |
 {{end}}
