@@ -4,6 +4,22 @@
 # - protoc: https://grpc.io/docs/protoc-installation/
 # - protoc-gen-doc: https://github.com/pseudomuto/protoc-gen-doc
 
+# Note:
+# I couldn't get this to work using the docker image.
+# Here's the command I think is the closest to what's needed:
+#
+# docker run --rm -v docs:/out -v .:/protos pseudomuto/protoc-gen-doc \
+#   -I 'protos/proto' \
+#   -I 'protos/third_party/proto' \
+#   --doc_opt='./docs/protodoc-markdown.tmpl,proto-docs.md' \
+#   $( find "proto" -name '*.proto' | sed 's/^/protos\//' )
+#
+# The problem with that is that the image's entrypoint invokes protoc with the -Iprotos option.
+# That ends up giving protoc all the protos twice, so it complains about everything being defined twice.
+# If I try to use our proto dir for the /protos volume (-v proto:/protos), it complains about not finding
+# the third_party stuff. If I leave off either -I "protos/proto" or -I "protos/third_party/proto" it
+# complains about things not being found.
+
 ec=0
 
 if ! command -v protoc > /dev/null 2>&1; then
