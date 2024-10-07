@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/x/tx v0.13.5
 	cosmossdk.io/x/upgrade v0.1.3
 	github.com/CosmWasm/wasmd v0.52.0
-	github.com/CosmWasm/wasmvm/v2 v2.1.2
+	github.com/CosmWasm/wasmvm/v2 v2.1.3
 	github.com/cometbft/cometbft v0.38.12
 	github.com/cometbft/cometbft-db v0.11.0
 	github.com/cosmos/cosmos-db v1.0.2
@@ -43,7 +43,7 @@ require (
 	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0
 	golang.org/x/text v0.18.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
-	google.golang.org/grpc v1.67.0
+	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.34.2
 	sigs.k8s.io/yaml v1.4.0
 )

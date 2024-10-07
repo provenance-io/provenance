@@ -9,6 +9,7 @@ The metadata module emits the following events and telemetry information.
     - [EventScopeCreated](#eventscopecreated)
     - [EventScopeUpdated](#eventscopeupdated)
     - [EventScopeDeleted](#eventscopedeleted)
+    - [EventSetNetAssetValue](#eventsetnetassetvalue)
   - [Session](#session)
     - [EventSessionCreated](#eventsessioncreated)
     - [EventSessionUpdated](#eventsessionupdated)
@@ -74,6 +75,25 @@ This event is emitted whenever an existing scope is deleted.
 | Attribute Key         | Attribute Value                                   |
 | --------------------- | ------------------------------------------------- |
 | ScopeAddr             | The bech32 address string of the ScopeId          |
+
+### EventSetNetAssetValue
+
+This event is emitted whenever a `NetAssetValue` is added or updated for
+a scope. The Price is the value assigned to the scope and volume indicates
+if the price should be divided.  
+
+Note: Generally the volume should be set to one however if the units of the
+price token are not sufficiently precise the volume can be used to define a
+ratio of integers to represent the decimal.
+
+Type: `provenance.metadata.v1.EventSetNetAssetValue`
+
+| Attribute Key | Attribute Value                                           |
+|---------------|-----------------------------------------------------------|
+| ScopeId       | The bech32 address string of the ScopeId                  |
+| Price         | Token amount the scope is valued at for volume            |
+| Source        | Source address of caller or module name                   |
+| Volume        | Total volume associated with price (typically 1)          |
 
 ---
 ## Session

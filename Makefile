@@ -474,9 +474,9 @@ indexer-db-down:
 ##############################
 # Proto -> golang compilation
 ##############################
-proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-gen proto-swagger-gen
+proto-all: proto-update-deps proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-gen proto-swagger-gen proto-doc-gen
 proto-checks: proto-update-deps proto-lint proto-check-breaking proto-check-breaking-third-party
-proto-regen: proto-format proto-gen proto-swagger-gen
+proto-regen: proto-format proto-gen proto-swagger-gen proto-doc-gen
 
 containerProtoVer=0.14.0
 containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
@@ -508,6 +508,10 @@ proto-swagger-gen:
 			sh ./scripts/protoc-swagger-gen.sh; \
 	fi
 	$(GO) mod tidy
+
+proto-doc-gen:
+	@echo "Generating Protobuf Markdown"
+	./scripts/proto-doc-gen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"
@@ -543,7 +547,7 @@ proto-update-deps:
 	@echo "Updating Protobuf files"
 	sh ./scripts/proto-update-deps.sh
 
-.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check
+.PHONY: proto-all proto-checks proto-regen proto-gen proto-format proto-lint proto-check-breaking proto-check-breaking-third-party proto-update-deps proto-update-check proto-doc-gen
 
 
 ##############################
