@@ -242,6 +242,19 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/provenance/ibchooks/v1/query.swagger.json",
+      "tags": {
+        "add": [
+          "IBC Hooks"
+        ]
+      },
+      "operationIds": {
+        "rename": {
+          "Params": "IBCHooksParams"
+        }
+      }
+    },
+    {
       "url": "./client/docs/swagger_third_party.yaml",
       "dereference": {
         "circular": "ignore"

@@ -955,6 +955,7 @@ func _Msg_UpdateConversionFeeDenomProposal_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provenance.msgfees.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
