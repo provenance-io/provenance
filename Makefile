@@ -112,21 +112,30 @@ whitespace += $(whitespace)
 comma := ,
 build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
-ldflags = -w -s \
-	-X github.com/cosmos/cosmos-sdk/version.Name=Provenance \
+base_ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=Provenance \
 	-X github.com/cosmos/cosmos-sdk/version.AppName=provenanced \
-	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 	-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
+base_ldflags += $(LDFLAGS)
+ver_var = github.com/cosmos/cosmos-sdk/version.Version
 
-ldflags += $(LDFLAGS)
+ldflags = -w -s $(base_ldflags) -X $(ver_var)=$(VERSION)
 ldflags := $(strip $(ldflags))
 
-build_flags = -mod=readonly -tags "$(build_tags)" -ldflags '$(ldflags)' -trimpath
-build_flags += $(BUILD_FLAGS)
+ldflags_debug = $(base_ldflags) -X $(ver_var)=$(VERSION)-debug
+ldflags_debug := $(strip $(ldflags_debug))
+
+base_build_flags := -mod=readonly -tags "$(build_tags)" $(BUILD_FLAGS)
+
+build_flags = $(base_build_flags) -trimpath -ldflags '$(ldflags)'
 build_flags := $(strip $(build_flags))
 BUILD_FLAGS := $(build_flags)
+
+GCFLAGS ?= all=-N -l
+build_debug_flags = $(base_build_flags) -gcflags '$(GCFLAGS)' -ldflags '$(ldflags_debug)'
+build_debug_flags := $(strip $(build_debug_flags))
+BUILD_DEBUG_FLAGS := $(build_debug_flags)
 
 all: build format lint test
 
@@ -144,6 +153,10 @@ install: validate-go-version go.sum
 build: validate-go-version go.sum
 	mkdir -p $(BUILDDIR)
 	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_FLAGS) ./cmd/provenanced
+
+build-debug: validate-go-version go.sum
+	mkdir -p $(BUILDDIR)
+	CGO_LDFLAGS="$(CGO_LDFLAGS)" CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build -o $(BUILDDIR)/ $(BUILD_DEBUG_FLAGS) ./cmd/provenanced
 
 build-linux: go.sum
 	WITH_LEDGER=false GOOS=linux GOARCH=amd64 $(MAKE) build
@@ -173,7 +186,7 @@ else
 	$(BUILDDIR)/provenanced -t --home $(BUILDDIR)/run/provenanced start --custom-denom $(DENOM)
 endif
 
-.PHONY: install build build-linux run
+.PHONY: install build build-debug build-linux run
 
 ##############################
 # Release artifacts and plan #
