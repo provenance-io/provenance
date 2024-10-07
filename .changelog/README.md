@@ -6,6 +6,8 @@ ultimately to generate the release notes and changelog content for a release.
 <!-- TOC -->
   - [Overview](#overview)
   - [Adding Changes](#adding-changes)
+    - [Using add-change.sh](#using-add-changesh)
+    - [Using unclog](#using-unclog)
   - [Dependencies](#dependencies)
   - [Section Names](#section-names)
   - [Unclog](#unclog)
@@ -30,7 +32,73 @@ The `CHANGELOG.md` is usually only updated as part of the release process.
 ## Adding Changes
 
 When a change is being made to this repo, at least one changelog entry should be created about it.
-The easiest way to do this is using [unclog](https://github.com/informalsystems/unclog).
+The easiest way to do this is using `add-change.sh`, but [unclog](https://github.com/informalsystems/unclog) can also be used.
+
+
+### Using add-change.sh
+
+Usage:
+```plaintext
+Usage: add-change.sh [<num>] [<id>] [<section>] [<message>]
+
+Each argument can alternatively be provided using flags:
+    [-n|--issue|--issue-no|-p|--pr|--pull-request] <num>
+    [-i|--id] <id>
+    [-s|--section] <section>
+    [-m|--message] <message>
+```
+
+See `add-change.sh --help` for full usage details.
+In general, though, it tries to be as natural as possible to use.
+The `<num>` can be omitted if your branch name has the format `<user>/<num>-...`.
+The `<id>` can be omitted to just use the branch name (without the `<num>-` part if it has it).
+The `<section>` is a fuzzy-match field against the list of possible sections.
+E.g. you can provide "bug" and it'll convert that to "bug-fixes".
+If not provided (or there's confusion), you'll be prompted to select one using `fzf` (or get an error if `fzf` isn't available).
+If the `<message>` isn't provided, behavior depends on the `<section>`.
+If the section is "dependencies", then the `get-dep-changes.sh` script will be executed to create the message content.
+If it's any other section, the file will be created with a `TODO` entry.
+
+
+Example for changes that do **not** have a related GitHub issue:
+
+```console
+$ .changelog/add-change.sh 123 fix-the-thing bug 'Fix the thing that was broken'
+```
+
+If your branch is named `yourname/fix-the-thing`, then this next command is equivalent to the previous one:
+
+```console
+$ .changelog/add-change.sh 123 bug 'Fix the thing that was broken'
+```
+
+Example for changes that **do** have a related GitHub issue.
+
+```console
+$ .changelog/add-change.sh --issue 123 fix-the-thing bug 'Fix the thing that was broken'
+```
+
+If your branch is named `yourname/123-fix-the-thing`, then this next command is equivalent to the previous one:
+
+```console
+$ .changelog/add-change.sh bug 'Fix the thing that was broken'
+```
+
+All of these example commands will create the file `.changelog/unreleased/bug-fixes/123-fix-the-thing.md`
+with this content (respectively):
+
+```md
+* Fix the thing that was broken [PR 123](https://github.com/provenance-io/provenance/pull/123).
+```
+
+or
+
+```md
+* Fix the thing that was broken [#123](https://github.com/provenance-io/provenance/issues/123).
+```
+
+
+### Using unclog
 
 Example for changes that do **not** have a related GitHub issue:
 
@@ -39,6 +107,7 @@ $ unclog add --pull-request 123 --section bug-fixes --id fix-the-thing --message
 ```
 
 Example for changes that **do** have a related GitHub issue.
+
 ```console
 $ unclog add --issue-no 123 --section bug-fixes --id fix-the-thing --message 'Fix the thing that was broken'
 ```
@@ -204,8 +273,8 @@ To manually update the `.changelog/` entries:
 
 1. Move the `.changelog/unreleased` directory to `.changelog/<version>`, e.g. `mv .changelog/unreleased .changelog/v1.13.0`.
 2. Delete the old `.gitkeep` file, e.g. `rm .changelog/v1.13.0/.gitkeep`.
-2. Create a new `.changelog/unreleased` directory, e.g. `mkdir .changelog/unreleased`.
-3. Create the new `.gitkeep` file, e.g. `touch .changelog/unreleased/.gitkeep`.
+3. Create a new `.changelog/unreleased` directory, e.g. `mkdir .changelog/unreleased`.
+4. Create the new `.gitkeep` file, e.g. `touch .changelog/unreleased/.gitkeep`.
 
 
 

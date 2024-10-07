@@ -1,10 +1,10 @@
 version: v1
 
 plugins:
-  - name: swagger
+  - name: openapiv2
     out: ./tmp-swagger-gen
     opt:
       - logtostderr=true
-      - fqn_for_swagger_name=true
+      - fqn_for_openapi_name=true
       - simple_operation_ids=true
-    strategy: all
+      - json_names_for_fields=false
