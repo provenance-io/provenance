@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -52,35 +53,36 @@ func WrapAvailableParty(party Party) *PartyDetails {
 	}
 }
 
+// isSameAsF returns a function for use with slices.ContainsFunc to see if the given party is in a []*PartyDetails.
+func isSameAsF(party Party) func(known *PartyDetails) bool {
+	return func(known *PartyDetails) bool {
+		return party.IsSameAs(known)
+	}
+}
+
 // BuildPartyDetails creates the list of PartyDetails to be used in party/signer/role validation.
 func BuildPartyDetails(reqParties, availableParties []Party) []*PartyDetails {
 	details := make([]*PartyDetails, 0, len(availableParties))
 
 	// Start with creating details for each available party.
-availablePartiesLoop:
 	for _, party := range availableParties {
-		for _, known := range details {
-			if party.IsSameAs(known) {
-				continue availablePartiesLoop
-			}
+		if !slices.ContainsFunc(details, isSameAsF(party)) {
+			details = append(details, WrapAvailableParty(party))
 		}
-		details = append(details, WrapAvailableParty(party))
 	}
 
 	// Now update the details to include optional=false required parties.
 	// If an equal party is already in the details, just update its optional flag
 	// to false, otherwise, add it to the list.
-reqPartiesLoop:
 	for _, reqParty := range reqParties {
-		if !reqParty.Optional {
-			for _, party := range details {
-				if reqParty.IsSameAs(party) {
-					party.MakeRequired()
-					continue reqPartiesLoop
-				}
-			}
-			details = append(details, WrapRequiredParty(reqParty))
+		if reqParty.Optional {
+			continue
 		}
+		if i := slices.IndexFunc(details, isSameAsF(reqParty)); i >= 0 {
+			details[i].MakeRequired()
+			continue
+		}
+		details = append(details, WrapRequiredParty(reqParty))
 	}
 
 	return details
