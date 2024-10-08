@@ -9,8 +9,6 @@ import (
 )
 
 // PartyDetails is a struct used to help process party and signer validation.
-// Even though all the fields are public, you should usually use the Get/Set methods
-// which handle automatic bech32 conversion when needed and reduce duplicated efforts.
 type PartyDetails struct {
 	// address is the bech32 account address string of this party.
 	address string
