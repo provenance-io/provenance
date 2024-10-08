@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -23,6 +22,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
+	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -309,14 +309,11 @@ type App struct {
 }
 
 func init() {
-	DefaultNodeHome = os.ExpandEnv("$PIO_HOME")
-
-	if strings.TrimSpace(DefaultNodeHome) == "" {
-		configDir, err := os.UserConfigDir()
-		if err != nil {
-			panic(err)
-		}
-		DefaultNodeHome = filepath.Join(configDir, "Provenance")
+	clienthelpers.EnvPrefix = EnvPrefix
+	var err error
+	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory("Provenance")
+	if err != nil {
+		panic(err)
 	}
 
 	// 614,400 = 600 * 1024 = our wasm params maxWasmCodeSize value before it was removed in wasmd v0.27.
