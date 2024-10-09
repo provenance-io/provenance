@@ -341,7 +341,14 @@ func New(
 	})
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 	legacyAmino := codec.NewLegacyAmino()
-	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
+	txConfigOpts := authtx.ConfigOptions{
+		EnabledSignModes: authtx.DefaultSignModes,
+		SigningOptions:   &signingOptions,
+	}
+	txConfig, err := authtx.NewTxConfigWithOptions(appCodec, txConfigOpts)
+	if err != nil {
+		panic(err)
+	}
 
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
@@ -440,15 +447,13 @@ func New(
 	)
 
 	// optional: enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
-	enabledSignModes := authtx.DefaultSignModes
-	enabledSignModes = append(enabledSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := authtx.ConfigOptions{
-		EnabledSignModes:           enabledSignModes,
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
-	}
-	var err error
+	txConfigOpts.EnabledSignModes = append(txConfigOpts.EnabledSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
+	txConfigOpts.TextualCoinMetadataQueryFn = txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper)
 	txConfig, err = authtx.NewTxConfigWithOptions(appCodec, txConfigOpts)
 	if err != nil {
+		panic(err)
+	}
+	if err = txConfig.SigningContext().Validate(); err != nil {
 		panic(err)
 	}
 	app.txConfig = txConfig
