@@ -170,15 +170,15 @@ func (s *IntegrationCLIPageTestSuite) SetupSuite() {
 	//    i % 5 == 3: 20 of them are owned by s.accountAddr + s.user1Addr and value owner is s.user1Addr.
 	//    i % 5 == 4: 20 of them are owned by s.user1Addr and value owner is s.user1Addr.
 	//        Result:
-	//            s.user1Addr is owner of 80 (either owner or value owner or data access)
-	//            s.accountAddr is owner of 80 (either owner or value owner or data access)
-	//            s.user1Addr is value owner of 60 (just looking at value owner field)
-	//            s.accountAddr is value owner of 40 (just looking at value owner field)
+	//            s.user1Addr is in the Owners field of 60.
+	//            s.accountAddr is in the Owners field of 80.
+	//            s.user1Addr is the value owner of 60.
+	//            s.accountAddr is the value owner of 40.
 	// Sessions:
 	//    Use each c spec on the scope spec
 	// Records:
 	//    Use each record spec in the contract spec
-	s.user1ScopesOwned = 80
+	s.user1ScopesOwned = 60
 	s.accountScopesOwned = 80
 	s.user1ScopesValueOwned = 60
 	s.accountScopesValueOwned = 40

@@ -51,12 +51,16 @@ Scopes are identified using their `scope_id`.
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L93-L119
 
 The `scope_uuid` field is optional.
-It should be a uuid formated as a string using the standard UUID format.
+It should be a uuid formatted as a string using the standard UUID format.
 If supplied, it will be used to generate the appropriate scope id for use in the `scope.scope_id` field.
 
 The `spec_uuid` field is optional.
-It should be a uuid formated as a string using the standard UUID format.
+It should be a uuid formatted as a string using the standard UUID format.
 If supplied, it will be used to generate the appropriate scope specification id for use in the `scope.specification_id` field.
+
+An empty `scope.value_owner_address` indicates that there is no change to the scope's value owner. I.e. Once a scope has
+a value owner, it will always have a value owner (until the scope is deleted); it cannot be changed to an empty string.
+
 
 #### Response
 
@@ -227,7 +231,7 @@ The `session_id_components` field is optional.
 If supplied, it will be used to generate the appropriate session id for use in the `session.session_id` field.
 
 The `spec_uuid` field is optional.
-It should be a uuid formated as a string using the standard UUID format.
+It should be a uuid formatted as a string using the standard UUID format.
 If supplied, it will be used to generate the appropriate contract specification id for use in the `session.specification_id` field.
 
 #### Response
@@ -265,7 +269,7 @@ The `session_id_components` field is optional.
 If supplied, it will be used to generate the appropriate session id for use in the `record.session_id` field.
 
 The `contract_spec_uuid` field is optional.
-It should be a uuid formated as a string using the standard UUID format.
+It should be a uuid formatted as a string using the standard UUID format.
 If supplied, it will be used with `record.name` to generate the appropriate record specification id for use in the `record.specification_id` field.
 
 #### Response
@@ -300,7 +304,7 @@ This service message is expected to fail if:
 * The `inputs` list does not contain one or more inputs defined in the record specification.
 * An entry in `inputs` has a `type_name` different from its input specification.
 * An entry in `inputs` has a `source` type that doesn't match the input specification.
-* An entry in `inputs` has a `source` value that doesn't match the intput specification.
+* An entry in `inputs` has a `source` value that doesn't match the input specification.
 * The record specification has a result type of `record` but there isn't exactly one entry in `outputs`.
 * The record specification has a result type of `record_list` but the `outputs` list is empty.
 * The `signers` do not have permission to write the record.
@@ -340,7 +344,7 @@ Scope specifications are identified using their `specification_id`.
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L345-L363
 
 The `spec_uuid` field is optional.
-It should be a uuid formated as a string using the standard UUID format.
+It should be a uuid formatted as a string using the standard UUID format.
 If supplied, it will be used to generate the appropriate scope specification id for use in the `specification.specification_id` field.
 
 #### Response
@@ -393,7 +397,7 @@ Contract specifications are identified using their `specification_id`.
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L385-L403
 
 The `spec_uuid` field is optional.
-It should be a uuid formated as a string using the standard UUID format.
+It should be a uuid formatted as a string using the standard UUID format.
 If supplied, it will be used to generate the appropriate contract specification id for use in the `specification.specification_id` field.
 
 #### Response
@@ -496,7 +500,7 @@ Record specifications are identified using their `specification_id`.
 +++ https://github.com/provenance-io/provenance/blob/v1.19.0/proto/provenance/metadata/v1/tx.proto#L461-L479
 
 The `contract_spec_uuid` field is optional.
-It should be a uuid formated as a string using the standard UUID format.
+It should be a uuid formatted as a string using the standard UUID format.
 If supplied, it will be used with the `specification.name` to generate the appropriate record specification id for use in the `specification.specification_id` field.
 
 #### Response

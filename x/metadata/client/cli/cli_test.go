@@ -1576,7 +1576,7 @@ func (s *IntegrationCLITestSuite) TestGetOwnershipCmd() {
 		{
 			name:   "scope through value owner",
 			args:   []string{s.user2AddrStr},
-			expOut: []string{scopeUUIDsText},
+			expOut: []string{"scope_uuids: []", "total: \"0\""},
 		},
 		{
 			name:   "no result",
@@ -2233,7 +2233,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 					args: []string{
 						s.user1AddrStr, scopeID1, scopeSpecID,
 					},
-					expectErrMsg: fmt.Sprintf("invalid scope id %d %q: %s", 2, scopeSpecID, "not a scope identifier"),
+					expectErrMsg: "not a scope identifier: \"" + scopeSpecID + "\"",
 				},
 				{
 					name: "update: invalid signers",
@@ -2380,6 +2380,7 @@ func (s *IntegrationCLITestSuite) TestUpdateMigrateValueOwnersCmds() {
 					expectedCode: 18,
 				},
 			},
+			queries: queryTests(s.user1AddrStr, s.user1AddrStr, s.user2AddrStr),
 		},
 		{
 			// A single update of two scopes.

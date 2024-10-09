@@ -167,7 +167,7 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 		if err = validateRolesPresent(proposed.Parties, contractSpec.PartiesInvolved); err != nil {
 			return err
 		}
-		if err = k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Parties)); err != nil {
+		if err = k.validateProvenanceRole(ctx, types.BuildPartyDetails(nil, proposed.Parties)); err != nil {
 			return err
 		}
 		if err = k.ValidateSignersWithoutParties(ctx, scope.GetAllOwnerAddresses(), msg); err != nil {
@@ -193,7 +193,7 @@ func (k Keeper) ValidateWriteSession(ctx sdk.Context, existing *types.Session, m
 			if err = validateRolesPresent(proposed.Parties, contractSpec.PartiesInvolved); err != nil {
 				return err
 			}
-			if err = k.validateProvenanceRole(ctx, BuildPartyDetails(nil, proposed.Parties)); err != nil {
+			if err = k.validateProvenanceRole(ctx, types.BuildPartyDetails(nil, proposed.Parties)); err != nil {
 				return err
 			}
 			reqParties = append(reqParties, existing.Parties...)

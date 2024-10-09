@@ -15,10 +15,6 @@ import (
 	"github.com/provenance-io/provenance/testutil/assertions"
 )
 
-func init() {
-
-}
-
 func accAddressFromBech32(t *testing.T, addrStr string) sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(addrStr)
 	require.NoError(t, err)
@@ -572,6 +568,118 @@ func TestHasAccess(t *testing.T) {
 			}
 			require.NotPanics(t, testFunc, "ValidateAddressHasAccess(%s, %s)", string(tc.addr), tc.role)
 			assertions.AssertErrorValue(t, err, expErr, "ValidateAddressHasAccess(%s, %s) error", string(tc.addr), tc.role)
+		})
+	}
+}
+
+func TestValidateAtLeastOneAddrHasAccess(t *testing.T) {
+	addr1 := sdk.AccAddress("1_addr______________")
+	addr2 := sdk.AccAddress("2_addr______________")
+	addr3 := sdk.AccAddress("3_addr______________")
+
+	denom := "moomoo"
+	ma := &MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: MustGetMarkerAddress(denom).String()},
+		Denom:       denom,
+		AccessControl: []AccessGrant{
+			{Address: addr1.String(), Permissions: AccessList{Access_Mint, Access_Burn}},
+			{Address: addr2.String(), Permissions: AccessList{Access_Deposit, Access_Withdraw}},
+			{Address: addr3.String(), Permissions: AccessList{Access_Transfer, Access_Admin, Access_Delete}},
+		},
+	}
+	markerDesc := denom + " marker (" + ma.BaseAccount.Address + ")"
+
+	addrOther1 := sdk.AccAddress("one_other_addr______")
+	addrOther2 := sdk.AccAddress("two_other_addr______")
+	addrOther3 := sdk.AccAddress("three_other_addr____")
+
+	tests := []struct {
+		name  string
+		addrs []sdk.AccAddress
+		role  Access
+		exp   string
+	}{
+		{
+			name:  "nil addrs",
+			addrs: nil,
+			role:  Access_Mint,
+			exp:   "none of [] have permission ACCESS_MINT on " + markerDesc,
+		},
+		{
+			name:  "empty addrs",
+			addrs: []sdk.AccAddress{},
+			role:  Access_Mint,
+			exp:   "none of [] have permission ACCESS_MINT on " + markerDesc,
+		},
+		{
+			name:  "one addr: no perms",
+			addrs: []sdk.AccAddress{addrOther1},
+			role:  Access_Burn,
+			exp:   addrOther1.String() + " does not have ACCESS_BURN on " + markerDesc,
+		},
+		{
+			name:  "one addr: unknown role",
+			addrs: []sdk.AccAddress{addr1},
+			role:  55,
+			exp:   addr1.String() + " does not have 55 on " + markerDesc,
+		},
+		{
+			name:  "one addr: other role",
+			addrs: []sdk.AccAddress{addr1},
+			role:  Access_ForceTransfer,
+			exp:   addr1.String() + " does not have ACCESS_FORCE_TRANSFER on " + markerDesc,
+		},
+		{
+			name:  "one addr: has role",
+			addrs: []sdk.AccAddress{addr1},
+			role:  Access_Mint,
+			exp:   "",
+		},
+		{
+			name:  "three addrs: no match",
+			addrs: []sdk.AccAddress{addrOther1, addrOther2, addrOther3},
+			role:  Access_Withdraw,
+			exp: "none of [\"" + addrOther1.String() + "\" \"" + addrOther2.String() + "\" \"" +
+				addrOther3.String() + "\"] have permission ACCESS_WITHDRAW on " + markerDesc,
+		},
+		{
+			name:  "three addrs: match first",
+			addrs: []sdk.AccAddress{addr1, addrOther2, addrOther3},
+			role:  Access_Burn,
+			exp:   "",
+		},
+		{
+			name:  "three addrs: match second",
+			addrs: []sdk.AccAddress{addrOther1, addr2, addrOther3},
+			role:  Access_Deposit,
+			exp:   "",
+		},
+		{
+			name:  "three addrs: match third",
+			addrs: []sdk.AccAddress{addrOther1, addrOther2, addr3},
+			role:  Access_Admin,
+			exp:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			expIs := len(tc.exp) == 0
+			var actIs bool
+			testIsFunc := func() {
+				actIs = AtLeastOneAddrHasAccess(ma, tc.addrs, tc.role)
+			}
+			if assert.NotPanics(t, testIsFunc, "AtLeastOneAddrHasAccess") {
+				assert.Equal(t, expIs, actIs, "result from AtLeastOneAddrHasAccess")
+			}
+
+			var err error
+			testValFunc := func() {
+				err = ValidateAtLeastOneAddrHasAccess(ma, tc.addrs, tc.role)
+			}
+			if assert.NotPanics(t, testValFunc, "ValidateAtLeastOneAddrHasAccess") {
+				assertions.AssertErrorValue(t, err, tc.exp, "result from ValidateAtLeastOneAddrHasAccess")
+			}
 		})
 	}
 }

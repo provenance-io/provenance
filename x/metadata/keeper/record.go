@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 
+	"github.com/provenance-io/provenance/internal/provutils"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -228,13 +229,13 @@ func (k Keeper) ValidateWriteRecord(
 		inputSpecNames[i] = inputSpec.Name
 		inputSpecMap[inputSpec.Name] = *inputSpec
 	}
-	missingInputNames := findMissing(inputSpecNames, inputNames)
+	missingInputNames := provutils.FindMissing(inputSpecNames, inputNames)
 	if len(missingInputNames) > 0 {
-		return fmt.Errorf("missing input%s %v", pluralEnding(len(missingInputNames)), missingInputNames)
+		return fmt.Errorf("missing input%s %v", provutils.PluralEnding(missingInputNames), missingInputNames)
 	}
-	extraInputNames := findMissing(inputNames, inputSpecNames)
+	extraInputNames := provutils.FindMissing(inputNames, inputSpecNames)
 	if len(extraInputNames) > 0 {
-		return fmt.Errorf("extra input%s %v", pluralEnding(len(extraInputNames)), extraInputNames)
+		return fmt.Errorf("extra input%s %v", provutils.PluralEnding(extraInputNames), extraInputNames)
 	}
 
 	// Make sure all the inputs conform to their spec.

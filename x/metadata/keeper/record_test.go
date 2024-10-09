@@ -15,7 +15,6 @@ import (
 
 	"github.com/provenance-io/provenance/app"
 	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -90,7 +89,7 @@ func (s *RecordKeeperTestSuite) SetupTest() {
 }
 
 func (s *RecordKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
+	return FreshCtx(s.app)
 }
 
 func TestRecordKeeperTestSuite(t *testing.T) {

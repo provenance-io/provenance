@@ -3,8 +3,6 @@ package keeper
 import (
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -32,96 +30,25 @@ func (k *Keeper) SetAuthzKeeper(authzKeeper AuthzKeeper) AuthzKeeper {
 	return rv
 }
 
-// TestablePartyDetails is the same as PartyDetails, but with
-// public fields so that they can be created in unit tests as needed.
-// Use the Real() method to convert it to a PartyDetails.
-// I went this way instead of a NewTestPartyDetails constructor due to the
-// number of arguments that one would need. Having named parameters (e.g. when
-// defining a struct) is much easier to read and maintain.
-type TestablePartyDetails struct {
-	Address  string
-	Role     types.PartyType
-	Optional bool
-
-	Acc       sdk.AccAddress
-	Signer    string
-	SignerAcc sdk.AccAddress
-
-	CanBeUsedBySpec bool
-	UsedBySpec      bool
-}
-
-// Real returns the PartyDetails version of this.
-func (p TestablePartyDetails) Real() *PartyDetails {
-	return &PartyDetails{
-		address:         p.Address,
-		role:            p.Role,
-		optional:        p.Optional,
-		acc:             p.Acc,
-		signer:          p.Signer,
-		signerAcc:       p.SignerAcc,
-		canBeUsedBySpec: p.CanBeUsedBySpec,
-		usedBySpec:      p.UsedBySpec,
-	}
-}
-
-// Testable is a TEST ONLY function that converts a PartyDetails into a TestablePartyDetails.
-func (p *PartyDetails) Testable() TestablePartyDetails {
-	return TestablePartyDetails{
-		Address:         p.address,
-		Role:            p.role,
-		Optional:        p.optional,
-		Acc:             p.acc,
-		Signer:          p.signer,
-		SignerAcc:       p.signerAcc,
-		CanBeUsedBySpec: p.canBeUsedBySpec,
-		UsedBySpec:      p.usedBySpec,
-	}
-}
-
-// Copy is a TEST ONLY function that copies a PartyDetails.
-func (p *PartyDetails) Copy() *PartyDetails {
-	if p == nil {
-		return nil
-	}
-	rv := &PartyDetails{
-		address:         p.address,
-		role:            p.role,
-		optional:        p.optional,
-		acc:             nil,
-		signer:          p.signer,
-		signerAcc:       nil,
-		canBeUsedBySpec: p.canBeUsedBySpec,
-		usedBySpec:      p.usedBySpec,
-	}
-	if p.acc != nil {
-		rv.acc = make(sdk.AccAddress, len(p.acc))
-		copy(rv.acc, p.acc)
-	}
-	if p.signerAcc != nil {
-		rv.signerAcc = make(sdk.AccAddress, len(p.signerAcc))
-		copy(rv.signerAcc, p.signerAcc)
-	}
+// SetBankKeeper is a TEST ONLY setter for the keeper's bank keeper.
+// It returns the previously defined BankKeeper
+func (k *Keeper) SetBankKeeper(bankKeeper BankKeeper) BankKeeper {
+	rv := k.bankKeeper
+	k.bankKeeper = bankKeeper
 	return rv
 }
 
-var (
-	// AuthzCacheAcceptableKey is a TEST ONLY exposure of authzCacheAcceptableKey.
-	AuthzCacheAcceptableKey = authzCacheAcceptableKey
-	// AuthzCacheIsWasmKey is a TEST ONLY exposure of authzCacheIsWasmKey.
-	AuthzCacheIsWasmKey = authzCacheIsWasmKey
-	// AuthzCacheContextKey is a TEST ONLY exposure of authzCacheContextKey.
-	AuthzCacheContextKey = authzCacheContextKey
-)
-
-// AcceptableMap is a TEST ONLY exposure of the AuthzCache.acceptable map.
-func (c *AuthzCache) AcceptableMap() map[string]authz.Authorization {
-	return c.acceptable
+// SetBankKeeper is a TEST ONLY setter for the keeper's marker keeper.
+// It returns the previously defined MarkerKeeper
+func (k *Keeper) SetMarkerKeeper(markerKeeper MarkerKeeper) MarkerKeeper {
+	rv := k.markerKeeper
+	k.markerKeeper = markerKeeper
+	return rv
 }
 
-// IsWasmMap is a TEST ONLY exposure of the AuthzCache.isWasm map.
-func (c *AuthzCache) IsWasmMap() map[string]bool {
-	return c.isWasm
+// WriteScopeToState is a TEST ONLY exposure of writeScopeToState.
+func (k *Keeper) WriteScopeToState(ctx sdk.Context, scope types.Scope) {
+	k.writeScopeToState(ctx, scope)
 }
 
 // ValidateAllRequiredPartiesSigned is a TEST ONLY exposure of validateAllRequiredPartiesSigned.
@@ -130,7 +57,7 @@ func (k Keeper) ValidateAllRequiredPartiesSigned(
 	reqParties, availableParties []types.Party,
 	reqRoles []types.PartyType,
 	msg types.MetadataMsg,
-) ([]*PartyDetails, error) {
+) ([]*types.PartyDetails, error) {
 	return k.validateAllRequiredPartiesSigned(ctx, reqParties, availableParties, reqRoles, msg)
 }
 
@@ -160,10 +87,10 @@ func (k Keeper) FindAuthzGrantee(
 // AssociateAuthorizations is a TEST ONLY exposure of associateAuthorizations.
 func (k Keeper) AssociateAuthorizations(
 	ctx sdk.Context,
-	parties []*PartyDetails,
+	parties []*types.PartyDetails,
 	signers *SignersWrapper,
 	msg types.MetadataMsg,
-	onAssociation func(party *PartyDetails) (stop bool),
+	onAssociation func(party *types.PartyDetails) (stop bool),
 ) error {
 	return k.associateAuthorizations(ctx, parties, signers, msg, onAssociation)
 }
@@ -172,7 +99,7 @@ func (k Keeper) AssociateAuthorizations(
 func (k Keeper) AssociateAuthorizationsForRoles(
 	ctx sdk.Context,
 	roles []types.PartyType,
-	parties []*PartyDetails,
+	parties []*types.PartyDetails,
 	signers *SignersWrapper,
 	msg types.MetadataMsg,
 ) (bool, error) {
@@ -180,7 +107,7 @@ func (k Keeper) AssociateAuthorizationsForRoles(
 }
 
 // ValidateProvenanceRole is a TEST ONLY exposure of validateProvenanceRole.
-func (k Keeper) ValidateProvenanceRole(ctx sdk.Context, parties []*PartyDetails) error {
+func (k Keeper) ValidateProvenanceRole(ctx sdk.Context, parties []*types.PartyDetails) error {
 	return k.validateProvenanceRole(ctx, parties)
 }
 
@@ -190,32 +117,13 @@ func (k Keeper) IsWasmAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 }
 
 // ValidateAllRequiredSigned is a TEST ONLY exposure of validateAllRequiredSigned.
-func (k Keeper) ValidateAllRequiredSigned(ctx sdk.Context, required []string, msg types.MetadataMsg) ([]*PartyDetails, error) {
+func (k Keeper) ValidateAllRequiredSigned(ctx sdk.Context, required []string, msg types.MetadataMsg) ([]*types.PartyDetails, error) {
 	return k.validateAllRequiredSigned(ctx, required, msg)
 }
 
 // ValidateSmartContractSigners is a TEST ONLY exposure of validateSmartContractSigners.
-func (k Keeper) ValidateSmartContractSigners(ctx sdk.Context, usedSigners UsedSignersMap, msg types.MetadataMsg) error {
+func (k Keeper) ValidateSmartContractSigners(ctx sdk.Context, usedSigners types.UsedSignersMap, msg types.MetadataMsg) error {
 	return k.validateSmartContractSigners(ctx, usedSigners, msg)
-}
-
-// ValidateScopeValueOwnerChangeFromExisting is a TEST ONLY exposure of validateScopeValueOwnerChangeFromExisting.
-func (k Keeper) ValidateScopeValueOwnerChangeFromExisting(
-	ctx sdk.Context,
-	existing string,
-	signers *SignersWrapper,
-	msg types.MetadataMsg,
-) (UsedSignersMap, error) {
-	return k.validateScopeValueOwnerChangeFromExisting(ctx, existing, signers, msg)
-}
-
-// ValidateScopeValueOwnerChangeToProposed is a TEST ONLY exposure of validateScopeValueOwnerChangeToProposed.
-func (k Keeper) ValidateScopeValueOwnerChangeToProposed(
-	ctx sdk.Context,
-	proposed string,
-	signers *SignersWrapper,
-) (UsedSignersMap, error) {
-	return k.validateScopeValueOwnerChangeToProposed(ctx, proposed, signers)
 }
 
 var (
@@ -223,20 +131,23 @@ var (
 	ValidateRolesPresent = validateRolesPresent
 	// ValidatePartiesArePresent is a TEST ONLY exposure of validatePartiesArePresent.
 	ValidatePartiesArePresent = validatePartiesArePresent
-	// FindMissing is a TEST ONLY exposure of findMissing.
-	FindMissing = findMissing
-	// FindMissingParties is a TEST ONLY exposure of findMissingParties.
-	FindMissingParties = findMissingParties
 )
 
-// FindMissingComp is a TEST ONLY exposure of findMissingComp.
-func FindMissingComp[R any, C any](required []R, toCheck []C, comp func(R, C) bool) []R {
-	return findMissingComp(required, toCheck, comp)
-}
-
 var (
-	// PluralEnding is a TEST ONLY exposure of pluralEnding.
-	PluralEnding = pluralEnding
 	// SafeBech32ToAccAddresses is a TEST ONLY exposure of safeBech32ToAccAddresses.
 	SafeBech32ToAccAddresses = safeBech32ToAccAddresses
 )
+
+var (
+	// NewKeeper3To4 is a TEST ONLY exposure of newKeeper3To4.
+	NewKeeper3To4 = newKeeper3To4
+	// MigrateValueOwners is a TEST ONLY exposure of migrateValueOwners.
+	MigrateValueOwners = migrateValueOwners
+	// MigrateValueOwnerToBank is a TEST ONLY exposure of migrateValueOwnerToBank.
+	MigrateValueOwnerToBank = migrateValueOwnerToBank
+	// DeleteValueOwnerIndexEntries is a TEST ONLY exposure of deleteValueOwnerIndexEntries.
+	DeleteValueOwnerIndexEntries = deleteValueOwnerIndexEntries
+)
+
+// Keeper3To4 is a TEST ONLY exposure of keeper3To4.
+type Keeper3To4 = keeper3To4

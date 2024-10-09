@@ -110,8 +110,20 @@ type Scope struct {
 	Owners []Party `protobuf:"bytes,3,rep,name=owners,proto3" json:"owners"`
 	// Addresses in this list are authorized to receive off-chain data associated with this scope.
 	DataAccess []string `protobuf:"bytes,4,rep,name=data_access,json=dataAccess,proto3" json:"data_access,omitempty"`
-	// An address that controls the value associated with this scope.  Standard blockchain accounts and marker accounts
-	// are supported for this value.  This attribute may only be changed by the entity indicated once it is set.
+	// The address that controls the value associated with this scope.
+	//
+	// The value owner is actually tracked by the bank module using a coin with the denom "nft/<scope_id>".
+	// The value owner can be changed using WriteScope or anything that transfers funds, e.g. MsgSend.
+	//
+	// During WriteScope:
+	//  - If this field is empty, it indicates that there should not be a change to the value owner.
+	//    I.e. Once a scope has a value owner, it will always have one (until it's deleted).
+	//  - If this field has a value, the existing value owner will be looked up, and
+	//    - If there's already an existing value owner, they must be a signer,
+	//      and the coin will be transferred to the new value owner.
+	//    - If there isn't yet a value owner, the coin will be minted and sent to the new value owner.
+	//      If the scope already exists, the owners must be signers (just like changing other fields).
+	//      If it's a new scope, there's no special signer limitations related to the value owner.
 	ValueOwnerAddress string `protobuf:"bytes,5,opt,name=value_owner_address,json=valueOwnerAddress,proto3" json:"value_owner_address,omitempty"`
 	// Whether all parties in this scope and its sessions must be present in this scope's owners field.
 	// This also enables use of optional=true scope owners and session parties.

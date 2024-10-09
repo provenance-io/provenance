@@ -7,10 +7,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -1009,8 +1011,8 @@ func (s *TestSuite) markerAccount(supplyCoinStr string) markertypes.MarkerAccoun
 	}
 }
 
-// navSetEvent returns a new EventSetNetAssetValue converted to sdk.Event.
-func (s *TestSuite) navSetEvent(assetsStr, priceStr string, marketID uint32) sdk.Event {
+// markerNavSetEvent returns a new marke module EventSetNetAssetValue converted to sdk.Event.
+func (s *TestSuite) markerNavSetEvent(assetsStr, priceStr string, marketID uint32) sdk.Event {
 	assets := s.coin(assetsStr)
 	event := &markertypes.EventSetNetAssetValue{
 		Denom:  assets.Denom,
@@ -1019,4 +1021,23 @@ func (s *TestSuite) navSetEvent(assetsStr, priceStr string, marketID uint32) sdk
 		Source: fmt.Sprintf("x/exchange market %d", marketID),
 	}
 	return s.untypeEvent(event)
+}
+
+// metadataNavSetEvent returns a new metadata module EventSetNetAssetValue converted to sdk.Event.
+func (s *TestSuite) metadataNavSetEvent(scopeID, priceStr string, marketID uint32) sdk.Event {
+	event := &metadatatypes.EventSetNetAssetValue{
+		ScopeId: scopeID,
+		Price:   priceStr,
+		Source:  fmt.Sprintf("x/exchange market %d", marketID),
+	}
+	return s.untypeEvent(event)
+}
+
+func (s *TestSuite) scopeID(base string) metadatatypes.MetadataAddress {
+	s.T().Helper()
+	s.Require().LessOrEqual(len(base), 16, "scopeID(%q): arg can only be 16 chars max")
+	bz := []byte(base + "________________")[:16]
+	uid, err := uuid.FromBytes(bz)
+	s.Require().NoError(err, "uuid.FromBytes(%q)", string(bz))
+	return metadatatypes.ScopeMetadataAddress(uid)
 }

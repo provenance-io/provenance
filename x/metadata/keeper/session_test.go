@@ -14,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/provenance-io/provenance/app"
-	"github.com/provenance-io/provenance/x/metadata/keeper"
 	"github.com/provenance-io/provenance/x/metadata/types"
 )
 
@@ -85,7 +84,7 @@ func (s *SessionKeeperTestSuite) SetupTest() {
 }
 
 func (s *SessionKeeperTestSuite) FreshCtx() sdk.Context {
-	return keeper.AddAuthzCacheToContext(s.app.BaseApp.NewContext(false))
+	return FreshCtx(s.app)
 }
 
 func TestSessionKeeperTestSuite(t *testing.T) {
